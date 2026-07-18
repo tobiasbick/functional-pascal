@@ -62,6 +62,7 @@ pub(super) fn register_record_type(
         fields,
         methods: Vec::new(),
         static_functions: Vec::new(),
+        static_procedures: Vec::new(),
         properties: Vec::new(),
         events: Vec::new(),
     });

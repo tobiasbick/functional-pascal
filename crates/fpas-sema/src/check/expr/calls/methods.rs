@@ -79,27 +79,49 @@ impl Checker {
         None
     }
 
-    fn is_static_function_symbol(
+    pub(in crate::check) fn resolve_static_procedure(
         &self,
         record_ty: &crate::types::RecordTy,
         method_name: &str,
-    ) -> bool {
-        if record_ty
-            .static_functions
+    ) -> Option<crate::types::ProcedureTy> {
+        if let Some((_, procedure_ty)) = record_ty
+            .static_procedures
             .iter()
-            .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
+            .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
         {
-            return true;
+            return Some(procedure_ty.clone());
         }
+
         if let Some(symbol) = self.scopes.lookup(&record_ty.name)
             && let Ty::Record(stored) = &symbol.ty
-        {
-            return stored
-                .static_functions
+            && let Some((_, procedure_ty)) = stored
+                .static_procedures
                 .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(method_name));
+                .find(|(name, _)| name.eq_ignore_ascii_case(method_name))
+        {
+            return Some(procedure_ty.clone());
         }
-        false
+        None
+    }
+
+    pub(in crate::check) fn static_routine_kind_on_record(
+        &self,
+        record_ty: &crate::types::RecordTy,
+        method_name: &str,
+    ) -> Option<&'static str> {
+        if self
+            .resolve_static_function(record_ty, method_name, "")
+            .is_some()
+        {
+            Some("function")
+        } else if self
+            .resolve_static_procedure(record_ty, method_name)
+            .is_some()
+        {
+            Some("procedure")
+        } else {
+            None
+        }
     }
 
     pub(in crate::check) fn check_method_call_args(
@@ -290,6 +312,28 @@ impl Checker {
                 ));
             }
 
+            if let Some(proc_ty) = self.resolve_static_procedure(&record_ty, &method_name) {
+                self.method_calls
+                    .insert(call_key, MethodCallTarget::Static(qualified.clone()));
+                self.check_static_call_args(
+                    &qualified,
+                    &proc_ty.type_params,
+                    &proc_ty.params,
+                    args,
+                    span,
+                );
+                if allow_procedure_result {
+                    return Some(Ty::Unit);
+                }
+                self.error_with_code(
+                    SEMA_TYPE_MISMATCH,
+                    format!("Static procedure `{qualified}` does not return a value"),
+                    "Use a static function instead if you need a return value.",
+                    span,
+                );
+                return Some(Ty::Error);
+            }
+
             if self
                 .resolve_method_kind(&record_ty, &method_name, &qualified)
                 .is_some()
@@ -313,16 +357,11 @@ impl Checker {
         }
 
         // Value receiver: instance methods only.
-        if self.is_static_function_symbol(&record_ty, &method_name)
-            || record_ty
-                .static_functions
-                .iter()
-                .any(|(name, _)| name.eq_ignore_ascii_case(&method_name))
-        {
+        if let Some(routine_kind) = self.static_routine_kind_on_record(&record_ty, &method_name) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "`{method_name}` is a static function and must be called through the type `{}.{}`",
+                    "`{method_name}` is a static {routine_kind} and must be called through the type `{}.{}`",
                     record_ty.name, method_name
                 ),
                 format!(

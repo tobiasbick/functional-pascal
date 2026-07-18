@@ -55,7 +55,9 @@ fn apply_record_type_source_id(record: &mut RecordType, source_id: u32) {
             RecordMethod::Function(function) | RecordMethod::StaticFunction(function) => {
                 apply_function_source_id(function, source_id)
             }
-            RecordMethod::Procedure(procedure) => apply_procedure_source_id(procedure, source_id),
+            RecordMethod::Procedure(procedure) | RecordMethod::StaticProcedure(procedure) => {
+                apply_procedure_source_id(procedure, source_id)
+            }
         }
     }
     for property in &mut record.properties {

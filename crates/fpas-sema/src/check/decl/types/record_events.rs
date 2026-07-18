@@ -27,7 +27,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{type_name}.{}`", event.name),
-                    "Each field, method, static function, property, and event name must be unique within the record type.",
+                    "Each field, method, static routine, property, and event name must be unique within the record type.",
                     event.span,
                 );
                 continue;
@@ -109,11 +109,15 @@ impl Checker {
             .static_functions
             .iter()
             .any(|(name, _)| name.eq_ignore_ascii_case(getter_name))
+            || record
+                .static_procedures
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(getter_name))
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Event `{type_name}.{}` cannot use static function `{getter_name}` as `read`",
+                    "Event `{type_name}.{}` cannot use static routine `{getter_name}` as `read`",
                     event.name
                 ),
                 "Use an instance function with signature `function Getter(Self: Record): Option of Handler`.",
@@ -211,11 +215,15 @@ impl Checker {
             .static_functions
             .iter()
             .any(|(name, _)| name.eq_ignore_ascii_case(setter_name))
+            || record
+                .static_procedures
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(setter_name))
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Event `{type_name}.{}` cannot use static function `{setter_name}` as `write`",
+                    "Event `{type_name}.{}` cannot use static routine `{setter_name}` as `write`",
                     event.name
                 ),
                 "Use an instance procedure with signature `procedure Setter(Self: Record; Value: Option of Handler)`.",

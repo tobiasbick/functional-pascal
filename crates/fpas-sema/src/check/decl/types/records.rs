@@ -13,6 +13,7 @@ use std::collections::HashSet;
 struct CheckedRecordMembers {
     instance_methods: Vec<(String, MethodKind)>,
     static_functions: Vec<(String, FunctionTy)>,
+    static_procedures: Vec<(String, ProcedureTy)>,
 }
 
 struct PendingMethodBody<'a> {
@@ -51,7 +52,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{}`", field.name),
-                    "Each field, method, static function, property, and event name must be unique within the record type.",
+                    "Each field, method, static routine, property, and event name must be unique within the record type.",
                     field.span,
                 );
                 continue;
@@ -92,6 +93,7 @@ impl Checker {
             fields,
             methods: Vec::new(),
             static_functions: Vec::new(),
+            static_procedures: Vec::new(),
             properties: Vec::new(),
             events: Vec::new(),
         };
@@ -103,6 +105,7 @@ impl Checker {
         if let Ty::Record(record_ty) = &mut ty {
             record_ty.methods = members.instance_methods;
             record_ty.static_functions = members.static_functions;
+            record_ty.static_procedures = members.static_procedures;
         }
 
         let properties =
@@ -141,6 +144,7 @@ impl Checker {
     ) -> (CheckedRecordMembers, Vec<PendingMethodBody<'a>>) {
         let mut checked_methods = Vec::new();
         let mut checked_static = Vec::new();
+        let mut checked_static_procedures = Vec::new();
         let mut pending_bodies = Vec::new();
 
         for method in methods {
@@ -177,6 +181,22 @@ impl Checker {
                         pending_bodies.push(pending);
                     }
                 }
+                RecordMethod::StaticProcedure(procedure) => {
+                    if !self.register_record_member_name(
+                        type_name,
+                        &procedure.name,
+                        procedure.span,
+                        seen_members,
+                    ) {
+                        continue;
+                    }
+                    if let Some((entry, pending)) =
+                        self.check_static_procedure(type_name, record_ty, procedure)
+                    {
+                        checked_static_procedures.push(entry);
+                        pending_bodies.push(pending);
+                    }
+                }
                 RecordMethod::Procedure(procedure) => {
                     if !self.register_record_member_name(
                         type_name,
@@ -200,6 +220,7 @@ impl Checker {
             CheckedRecordMembers {
                 instance_methods: checked_methods,
                 static_functions: checked_static,
+                static_procedures: checked_static_procedures,
             },
             pending_bodies,
         )
@@ -218,7 +239,7 @@ impl Checker {
         self.error_with_code(
             SEMA_DUPLICATE_DECLARATION,
             format!("Duplicate record member `{type_name}.{name}`"),
-            "Each field, method, static function, property, and event name must be unique within the record type.",
+            "Each field, method, static routine, property, and event name must be unique within the record type.",
             span,
         );
         false
@@ -418,6 +439,65 @@ impl Checker {
         ))
     }
 
+    fn check_static_procedure<'a>(
+        &mut self,
+        type_name: &str,
+        record_ty: &Ty,
+        procedure: &'a fpas_parser::ProcedureDecl,
+    ) -> Option<((String, ProcedureTy), PendingMethodBody<'a>)> {
+        self.check_unique_formal_param_names(&procedure.params);
+
+        let type_param_defs = Self::resolve_type_params(&procedure.type_params);
+        let params = self.with_type_params(&procedure.type_params, procedure.span, |checker| {
+            procedure
+                .params
+                .iter()
+                .map(|param| ParamTy {
+                    mutable: param.mutable,
+                    name: param.name.clone(),
+                    ty: checker.resolve_method_param_type(&param.type_expr, type_name, record_ty),
+                })
+                .collect::<Vec<_>>()
+        });
+
+        if !self.validate_static_routine_signature(
+            type_name,
+            &procedure.name,
+            &params,
+            procedure.span,
+            "procedure",
+        ) {
+            return None;
+        }
+
+        let procedure_ty = ProcedureTy {
+            type_params: type_param_defs,
+            variadic: false,
+            params: params.clone(),
+        };
+        let qualified = format!("{type_name}.{}", procedure.name);
+        self.scopes.define(
+            &qualified,
+            Symbol {
+                ty: Ty::Procedure(procedure_ty.clone()),
+                mutable: false,
+                kind: SymbolKind::Procedure,
+                task_bound: false,
+            },
+        );
+
+        Some((
+            (procedure.name.clone(), procedure_ty),
+            PendingMethodBody {
+                qualified_name: qualified,
+                type_params: &procedure.type_params,
+                params,
+                return_type: None,
+                body: &procedure.body,
+            },
+        ))
+    }
+
     fn validate_record_method_signature(
         &mut self,
         type_name: &str,
@@ -465,6 +545,17 @@ impl Checker {
         params: &[ParamTy],
         span: fpas_lexer::Span,
     ) -> bool {
+        self.validate_static_routine_signature(type_name, method_name, params, span, "function")
+    }
+
+    fn validate_static_routine_signature(
+        &mut self,
+        type_name: &str,
+        method_name: &str,
+        params: &[ParamTy],
+        span: fpas_lexer::Span,
+        routine_kind: &str,
+    ) -> bool {
         if params
             .iter()
             .any(|param| param.name.eq_ignore_ascii_case("Self"))
@@ -472,10 +563,10 @@ impl Checker {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Static record function `{type_name}.{method_name}` must not declare a `Self` parameter"
+                    "Static record {routine_kind} `{type_name}.{method_name}` must not declare a `Self` parameter"
                 ),
                 format!(
-                    "Remove `Self` and call the function through the type: `{type_name}.{method_name}(...)`."
+                    "Remove `Self` and call the {routine_kind} through the type: `{type_name}.{method_name}(...)`."
                 ),
                 span,
             );

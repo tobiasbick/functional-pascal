@@ -38,10 +38,10 @@ Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [run
   `TuiLayoutItem` are implemented as validated values. `TuiLayoutItems` provides ordered lists,
   exclusive root-or-nested ownership, cycle rejection, stable removal, and nested destruction.
   Immutable layout kinds select the algorithm; live `TuiLayoutSettings` applies margins and spacing.
-- **Implemented:** typed horizontal, vertical, and grid layouts; recursive headless allocation;
-  alignment; stretch/expanding slot growth; finite item maximum enforcement; grid spans; overlap
-  rejection; and deterministic item or track remainders.
-- Implement form and stacked layouts.
+- **Implemented:** typed horizontal, vertical, grid, form, and stacked layouts; recursive headless
+  allocation; alignment; stretch/expanding slot growth; finite item maximum enforcement; grid spans;
+  form rows; stable stacked measurement; current-page selection; overlap rejection; and deterministic
+  item or track remainders.
 - Integrate arrangement with containers and invalidation, then add terminal-too-small handling.
 - Add `TuiScrollView` for explicitly reachable overflow.
 
@@ -72,7 +72,8 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 6 — Full application chrome
 
-Add dialogs, menus, status lines, radio groups, stacked pages, memo/editor controls, text viewers, file selection, and advanced controls only after the earlier contracts remain stable.
+Add dialogs, menus, status lines, radio groups, memo/editor controls, text viewers, file selection,
+and advanced controls only after the earlier contracts remain stable.
 
 Custom layout callbacks and a general application message bus are not prerequisites for this phase
 sequence.

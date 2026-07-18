@@ -135,11 +135,11 @@ impl Checker {
         let qualified = format!("{}.{}", record_ty.name, method_name);
         let op_key = Self::postfix_operation_lookup_key(operation);
 
-        if self.is_static_function_on_record(record_ty, method_name) {
+        if let Some(routine_kind) = self.static_routine_kind_on_record(record_ty, method_name) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "`{method_name}` is a static function and must be called through the type `{}.{}`",
+                    "`{method_name}` is a static {routine_kind} and must be called through the type `{}.{}`",
                     record_ty.name, method_name
                 ),
                 format!(
@@ -225,15 +225,6 @@ impl Checker {
                 }
             }
         }
-    }
-
-    pub(crate) fn is_static_function_on_record(
-        &self,
-        record_ty: &crate::types::RecordTy,
-        method_name: &str,
-    ) -> bool {
-        self.resolve_static_function(record_ty, method_name, "")
-            .is_some()
     }
 
     /// Stable identity key for a postfix operation node in the AST.

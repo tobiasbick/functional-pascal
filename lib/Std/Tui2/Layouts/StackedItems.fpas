@@ -1,0 +1,60 @@
+unit Std.Tui2.Layouts.StackedItems;
+
+uses
+  Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems, Std.Tui2.Layouts.LayoutKind,
+  Std.Tui2.Layouts.StackedLayout, Std.Tui2.Layouts.StackedState;
+
+private procedure TuiStackedItemsRequire(Stacked: TuiStackedLayout);
+begin
+  if not Stacked.IsAlive() then
+  begin
+    panic('Tui2 cannot access a stale stacked layout')
+  end;
+  if Stacked.Layout.Kind <> TuiLayoutKind.Stacked then
+  begin
+    panic('Tui2 stacked handle does not identify a stacked layout')
+  end
+end;
+
+type
+  TuiStackedItems = record
+    static function Add(Stacked: TuiStackedLayout; Item: TuiLayoutItem): boolean;
+    begin
+      TuiStackedItemsRequire(Stacked);
+      if Item.Kind = TuiLayoutItemKind.Spacer then
+      begin
+        panic('Tui2 stacked layouts accept only view or nested layout pages')
+      end;
+      TuiLayoutItems.Add(Stacked.Layout, Item);
+      TuiStackedState.Normalize(Stacked.Layout);
+      return true
+    end;
+
+    static function Count(Stacked: TuiStackedLayout): integer;
+    begin
+      TuiStackedItemsRequire(Stacked);
+      return TuiLayoutItems.Count(Stacked.Layout)
+    end;
+
+    static function Get(Stacked: TuiStackedLayout; Index: integer): TuiLayoutItem;
+    begin
+      TuiStackedItemsRequire(Stacked);
+      return TuiLayoutItems.Get(Stacked.Layout, Index)
+    end;
+
+    static function RemoveAt(Stacked: TuiStackedLayout; Index: integer): boolean;
+    begin
+      TuiStackedItemsRequire(Stacked);
+      TuiLayoutItems.RemoveAt(Stacked.Layout, Index);
+      TuiStackedState.Normalize(Stacked.Layout);
+      return true
+    end;
+
+    static function Clear(Stacked: TuiStackedLayout): boolean;
+    begin
+      TuiStackedItemsRequire(Stacked);
+      TuiLayoutItems.Clear(Stacked.Layout);
+      TuiStackedState.Normalize(Stacked.Layout);
+      return true
+    end;
+  end;

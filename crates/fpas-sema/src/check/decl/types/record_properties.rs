@@ -26,7 +26,7 @@ impl Checker {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
                     format!("Duplicate record member `{type_name}.{}`", property.name),
-                    "Each field, method, static function, property, and event name must be unique within the record type.",
+                    "Each field, method, static routine, property, and event name must be unique within the record type.",
                     property.span,
                 );
                 continue;
@@ -89,11 +89,15 @@ impl Checker {
             .static_functions
             .iter()
             .any(|(name, _)| name.eq_ignore_ascii_case(getter_name))
+            || record
+                .static_procedures
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(getter_name))
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Property `{type_name}.{}` cannot use static function `{getter_name}` as `read`",
+                    "Property `{type_name}.{}` cannot use static routine `{getter_name}` as `read`",
                     property.name
                 ),
                 "Use an instance function with signature `function Getter(Self: Record): PropertyType`.",
@@ -194,11 +198,15 @@ impl Checker {
             .static_functions
             .iter()
             .any(|(name, _)| name.eq_ignore_ascii_case(setter_name))
+            || record
+                .static_procedures
+                .iter()
+                .any(|(name, _)| name.eq_ignore_ascii_case(setter_name))
         {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "Property `{type_name}.{}` cannot use static function `{setter_name}` as `write`",
+                    "Property `{type_name}.{}` cannot use static routine `{setter_name}` as `write`",
                     property.name
                 ),
                 "Use an instance procedure with signature `procedure Setter(Self: Record; Value: PropertyType)`.",

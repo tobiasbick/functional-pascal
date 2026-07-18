@@ -64,6 +64,11 @@ type
       end
     end;
 
+    static procedure Print(Value: PointImpl);
+    begin
+      Std.Console.WriteLn(Value.Sum())
+    end;
+
     function Sum(Self: PointImpl): integer;
     begin
       return Self.X + Self.Y
@@ -93,10 +98,10 @@ type
         &app_dir.join("src/main.fpas"),
         "\
 program App;
-uses Geom.Api, Std.Console;
+uses Geom.Api;
 begin
   var P: Point := Point.Create(3, 4);
-  WriteLn(P.Sum())
+  Point.Print(P)
 end.
 ",
     );

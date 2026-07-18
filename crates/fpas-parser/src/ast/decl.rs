@@ -127,6 +127,8 @@ pub enum RecordMethod {
     Function(FunctionDecl),
     /// Static function: called through the type, no implicit receiver.
     StaticFunction(FunctionDecl),
+    /// Static procedure: called through the type, no implicit receiver.
+    StaticProcedure(ProcedureDecl),
     /// Instance procedure: first parameter must be `Self`.
     Procedure(ProcedureDecl),
 }

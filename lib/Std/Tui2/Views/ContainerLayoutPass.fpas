@@ -1,0 +1,118 @@
+unit Std.Tui2.Views.ContainerLayoutPass;
+
+uses
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.LayoutArrange,
+  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.View;
+
+private mutable var TuiContainerLayoutPassApplicationIds: array of integer := [];
+private mutable var TuiContainerLayoutPassSlots: array of integer := [];
+private mutable var TuiContainerLayoutPassGenerations: array of integer := [];
+private mutable var TuiContainerLayoutPassWidths: array of integer := [];
+private mutable var TuiContainerLayoutPassHeights: array of integer := [];
+private mutable var TuiContainerLayoutPassCompleted: array of boolean := [];
+private mutable var TuiContainerLayoutPassActive: array of boolean := [];
+
+private function TuiContainerLayoutPassMatches(Index: integer; Container: TuiView): boolean;
+begin
+  return (((TuiContainerLayoutPassActive[Index] and (TuiContainerLayoutPassApplicationIds[Index] = Container.ApplicationId)) and (TuiContainerLayoutPassSlots[Index] = Container.Slot)) and (TuiContainerLayoutPassGenerations[Index] = Container.Generation))
+end;
+
+private function TuiContainerLayoutPassFind(Container: TuiView): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiContainerLayoutPassActive) - 1 do
+  begin
+    if TuiContainerLayoutPassMatches(I, Container) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiContainerLayoutPassRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Container: TuiView := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+    Kind := TuiViewKind.Custom;
+  end;
+  var Index: integer := TuiContainerLayoutPassFind(Container);
+  if Index >= 0 then
+  begin
+    TuiContainerLayoutPassActive[Index] := false
+  end
+end;
+
+private function TuiContainerLayoutPassEnsure(Container: TuiView): integer;
+begin
+  if not Container.IsAlive() then
+  begin
+    panic('Tui2 cannot perform layout for a stale container')
+  end;
+  var Existing: integer := TuiContainerLayoutPassFind(Container);
+  if Existing >= 0 then
+  begin
+    return Existing
+  end;
+  TuiContainerLayoutPassApplicationIds := Std.Array.Concat(TuiContainerLayoutPassApplicationIds, [
+                                                                                                   Container.ApplicationId
+
+                                                                                                 ]);
+  TuiContainerLayoutPassSlots := Std.Array.Concat(TuiContainerLayoutPassSlots, [Container.Slot]);
+  TuiContainerLayoutPassGenerations := Std.Array.Concat(TuiContainerLayoutPassGenerations, [
+                                                                                             Container.Generation
+
+                                                                                           ]);
+  TuiContainerLayoutPassWidths := Std.Array.Concat(TuiContainerLayoutPassWidths, [0]);
+  TuiContainerLayoutPassHeights := Std.Array.Concat(TuiContainerLayoutPassHeights, [0]);
+  TuiContainerLayoutPassCompleted := Std.Array.Concat(TuiContainerLayoutPassCompleted, [false]);
+  TuiContainerLayoutPassActive := Std.Array.Concat(TuiContainerLayoutPassActive, [true]);
+  var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiContainerLayoutPassRelease(ApplicationId, Slot, Generation)
+  end;
+  RegisterViewCleanup(Container, Cleanup);
+  return Std.Array.Length(TuiContainerLayoutPassActive) - 1
+end;
+
+function TuiContainerLayoutNeedsPass(Container: TuiView): boolean;
+begin
+  var Index: integer := TuiContainerLayoutPassEnsure(Container);
+  case TuiContainerLayoutRead(Container) of
+    None:
+    begin
+      return false
+    end;
+    Some(Layout):
+    begin
+      var Bounds: TuiRect := Container.Bounds;
+      return (((not TuiContainerLayoutPassCompleted[Index]) or (TuiContainerLayoutPassWidths[Index] <> Bounds.Width)) or (TuiContainerLayoutPassHeights[Index] <> Bounds.Height)) or
+             TuiLayoutInvalidation.IsDirty(Layout)
+    end
+  end
+end;
+
+function TuiContainerLayoutPerformPass(Container: TuiView): boolean;
+begin
+  if not TuiContainerLayoutNeedsPass(Container) then
+  begin
+    return false
+  end;
+  var Index: integer := TuiContainerLayoutPassEnsure(Container);
+  case TuiContainerLayoutRead(Container) of
+    None:
+    begin
+      return false
+    end;
+    Some(Layout):
+    begin
+      var Bounds: TuiRect := Container.Bounds;
+      var LocalBounds: TuiRect := TuiRect.Create(0, 0, Bounds.Width, Bounds.Height);
+      TuiLayoutArrange.Arrange(Layout, LocalBounds);
+      TuiContainerLayoutPassWidths[Index] := Bounds.Width;
+      TuiContainerLayoutPassHeights[Index] := Bounds.Height;
+      TuiContainerLayoutPassCompleted[Index] := true;
+      return true
+    end
+  end
+end;

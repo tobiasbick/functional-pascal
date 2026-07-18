@@ -1,0 +1,132 @@
+unit Std.Tui2.Layouts.StackedState;
+
+uses
+  Std.Array, Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItems,
+  Std.Tui2.Layouts.LayoutKind;
+
+private mutable var TuiStackedStateApplicationIds: array of integer := [];
+private mutable var TuiStackedStateSlots: array of integer := [];
+private mutable var TuiStackedStateGenerations: array of integer := [];
+private mutable var TuiStackedStateCurrentIndices: array of integer := [];
+private mutable var TuiStackedStatesActive: array of boolean := [];
+
+private procedure TuiStackedStateRequire(Layout: TuiLayout);
+begin
+  if not Layout.IsAlive() then
+  begin
+    panic('Tui2 cannot access a stale stacked layout')
+  end;
+  if Layout.Kind <> TuiLayoutKind.Stacked then
+  begin
+    panic('Tui2 stacked handle does not identify a stacked layout')
+  end
+end;
+
+private function TuiStackedStateMatches(Index: integer; Layout: TuiLayout): boolean;
+begin
+  return (((TuiStackedStatesActive[Index] and (TuiStackedStateApplicationIds[Index] = Layout.ApplicationId)) and (TuiStackedStateSlots[Index] = Layout.Slot)) and (TuiStackedStateGenerations[Index] = Layout.Generation))
+end;
+
+private function TuiStackedStateFind(Layout: TuiLayout): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiStackedStatesActive) - 1 do
+  begin
+    if TuiStackedStateMatches(I, Layout) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiStackedStateRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Layout: TuiLayout := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+  end;
+  var Index: integer := TuiStackedStateFind(Layout);
+  if Index >= 0 then
+  begin
+    TuiStackedStatesActive[Index] := false
+  end
+end;
+
+private function TuiStackedStateEnsure(Layout: TuiLayout): integer;
+begin
+  TuiStackedStateRequire(Layout);
+  var Existing: integer := TuiStackedStateFind(Layout);
+  if Existing >= 0 then
+  begin
+    return Existing
+  end;
+  TuiStackedStateApplicationIds := Std.Array.Concat(TuiStackedStateApplicationIds, [
+                                                                                     Layout.ApplicationId
+
+                                                                                   ]);
+  TuiStackedStateSlots := Std.Array.Concat(TuiStackedStateSlots, [Layout.Slot]);
+  TuiStackedStateGenerations := Std.Array.Concat(TuiStackedStateGenerations, [Layout.Generation]);
+  TuiStackedStateCurrentIndices := Std.Array.Concat(TuiStackedStateCurrentIndices, [-1]);
+  TuiStackedStatesActive := Std.Array.Concat(TuiStackedStatesActive, [true]);
+  var Cleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiStackedStateRelease(ApplicationId, Slot, Generation)
+  end;
+  RegisterLayoutCleanup(Layout, Cleanup);
+  return Std.Array.Length(TuiStackedStatesActive) - 1
+end;
+
+type
+  TuiStackedState = record
+    static function Normalize(Layout: TuiLayout): integer;
+    begin
+      var StateIndex: integer := TuiStackedStateEnsure(Layout);
+      var Count: integer := TuiLayoutItems.Count(Layout);
+      if Count = 0 then
+      begin
+        TuiStackedStateCurrentIndices[StateIndex] := -1
+      end
+      else
+      begin
+        if TuiStackedStateCurrentIndices[StateIndex] < 0 then
+        begin
+          TuiStackedStateCurrentIndices[StateIndex] := 0
+        end;
+        if TuiStackedStateCurrentIndices[StateIndex] >= Count then
+        begin
+          TuiStackedStateCurrentIndices[StateIndex] := Count - 1
+        end
+      end;
+      return TuiStackedStateCurrentIndices[StateIndex]
+    end;
+
+    static function CurrentIndex(Layout: TuiLayout): integer;
+    begin
+      return TuiStackedState.Normalize(Layout)
+    end;
+
+    static function SetCurrentIndex(Layout: TuiLayout; Index: integer): boolean;
+    begin
+      var StateIndex: integer := TuiStackedStateEnsure(Layout);
+      var Count: integer := TuiLayoutItems.Count(Layout);
+      if (Count = 0) and (Index = -1) then
+      begin
+        if TuiStackedStateCurrentIndices[StateIndex] <> -1 then
+        begin
+          TuiStackedStateCurrentIndices[StateIndex] := -1;
+          TuiLayoutInvalidation.Invalidate(Layout)
+        end;
+        return true
+      end;
+      if (Index < 0) or (Index >= Count) then
+      begin
+        panic('Tui2 stacked current index is out of bounds')
+      end;
+      if TuiStackedStateCurrentIndices[StateIndex] <> Index then
+      begin
+        TuiStackedStateCurrentIndices[StateIndex] := Index;
+        TuiLayoutInvalidation.Invalidate(Layout)
+      end;
+      return true
+    end;
+  end;

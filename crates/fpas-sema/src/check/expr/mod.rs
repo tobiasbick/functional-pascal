@@ -215,6 +215,7 @@ impl Checker {
             fields: field_types,
             methods: Vec::new(),
             static_functions: Vec::new(),
+            static_procedures: Vec::new(),
             properties: Vec::new(),
             events: Vec::new(),
         })

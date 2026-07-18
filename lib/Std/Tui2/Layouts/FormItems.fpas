@@ -1,0 +1,301 @@
+unit Std.Tui2.Layouts.FormItems;
+
+uses
+  Std.Array, Std.Tui2.Layouts.Alignment, Std.Tui2.Layouts.FormLayout, Std.Tui2.Layouts.GridItems,
+  Std.Tui2.Layouts.GridLayout, Std.Tui2.Layouts.GridPlacement, Std.Tui2.Layouts.Layout,
+  Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Views.View;
+
+private mutable var TuiFormRowOwnerApplicationIds: array of integer := [];
+private mutable var TuiFormRowOwnerSlots: array of integer := [];
+private mutable var TuiFormRowOwnerGenerations: array of integer := [];
+private mutable var TuiFormRowLabels: array of TuiView := [];
+private mutable var TuiFormRowFields: array of TuiView := [];
+private mutable var TuiFormRowsActive: array of boolean := [];
+private mutable var TuiFormCleanupApplicationIds: array of integer := [];
+private mutable var TuiFormCleanupSlots: array of integer := [];
+private mutable var TuiFormCleanupGenerations: array of integer := [];
+
+private function TuiFormRowsOwnerMatches(Index: integer; Layout: TuiLayout): boolean;
+begin
+  return (((TuiFormRowsActive[Index] and (TuiFormRowOwnerApplicationIds[Index] = Layout.ApplicationId)) and (TuiFormRowOwnerSlots[Index] = Layout.Slot)) and (TuiFormRowOwnerGenerations[Index] = Layout.Generation))
+end;
+
+private function TuiFormRowsSameView(Left: TuiView; Right: TuiView): boolean;
+begin
+  return ((Left.ApplicationId = Right.ApplicationId) and (Left.Slot = Right.Slot)) and
+         (Left.Generation = Right.Generation)
+end;
+
+private procedure TuiFormRowsRequire(Form: TuiFormLayout);
+begin
+  if not Form.IsAlive() then
+  begin
+    panic('Tui2 cannot access a stale form layout')
+  end;
+  if Form.Layout.Kind <> TuiLayoutKind.Form then
+  begin
+    panic('Tui2 form handle does not identify a form layout')
+  end
+end;
+
+private function TuiFormRowsFind(Form: TuiFormLayout; RowIndex: integer): integer;
+begin
+  if RowIndex < 0 then
+  begin
+    return -1
+  end;
+  mutable var Current: integer := 0;
+  for I: integer := 0 to Std.Array.Length(TuiFormRowsActive) - 1 do
+  begin
+    if TuiFormRowsOwnerMatches(I, Form.Layout) then
+    begin
+      if Current = RowIndex then
+      begin
+        return I
+      end;
+      Current := Current + 1
+    end
+  end;
+  return -1
+end;
+
+private function TuiFormRowsCount(Form: TuiFormLayout): integer;
+begin
+  mutable var Count: integer := 0;
+  for I: integer := 0 to Std.Array.Length(TuiFormRowsActive) - 1 do
+  begin
+    if TuiFormRowsOwnerMatches(I, Form.Layout) then
+    begin
+      Count := Count + 1
+    end
+  end;
+  return Count
+end;
+
+private function TuiFormRowsGrid(Form: TuiFormLayout): TuiGridLayout;
+begin
+  return record Layout := Form.Layout; end
+end;
+
+private function TuiFormRowsGridIndex(Form: TuiFormLayout; View: TuiView): integer;
+begin
+  var Grid: TuiGridLayout := TuiFormRowsGrid(Form);
+  for I: integer := 0 to TuiGridItems.Count(Grid) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiGridItems.Get(Grid, I);
+    if (Item.Kind = TuiLayoutItemKind.View) and TuiFormRowsSameView(Item.View, View) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiFormRowsReleaseOwner(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Layout: TuiLayout := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiFormRowsActive) - 1 do
+  begin
+    if TuiFormRowsOwnerMatches(I, Layout) then
+    begin
+      TuiFormRowsActive[I] := false
+    end
+  end
+end;
+
+private procedure TuiFormRowsDetachView(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Removed: TuiView := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+    Kind := TuiViewKind.Custom;
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiFormRowsActive) - 1 do
+  begin
+    if TuiFormRowsActive[I] and
+       (TuiFormRowsSameView(TuiFormRowLabels[I], Removed) or TuiFormRowsSameView(TuiFormRowFields[I], Removed)) then
+    begin
+      var Owner: TuiLayout := record
+        ApplicationId := TuiFormRowOwnerApplicationIds[I];
+        Slot := TuiFormRowOwnerSlots[I];
+        Generation := TuiFormRowOwnerGenerations[I];
+      end;
+      TuiFormRowsActive[I] := false;
+      if Owner.IsAlive() then
+      begin
+        var Form: TuiFormLayout := record Layout := Owner; end;
+        mutable var Partner: TuiView := TuiFormRowFields[I];
+        if TuiFormRowsSameView(Partner, Removed) then
+        begin
+          Partner := TuiFormRowLabels[I]
+        end;
+        var PartnerIndex: integer := TuiFormRowsGridIndex(Form, Partner);
+        if PartnerIndex >= 0 then
+        begin
+          TuiGridItems.RemoveAt(TuiFormRowsGrid(Form), PartnerIndex)
+        end
+      end
+    end
+  end
+end;
+
+private procedure TuiFormRowsEnsureCleanup(Form: TuiFormLayout);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiFormCleanupApplicationIds) - 1 do
+  begin
+    if ((TuiFormCleanupApplicationIds[I] = Form.Layout.ApplicationId) and (TuiFormCleanupSlots[I] = Form.Layout.Slot)) and
+       (TuiFormCleanupGenerations[I] = Form.Layout.Generation) then
+    begin
+      return
+    end
+  end;
+  TuiFormCleanupApplicationIds := Std.Array.Concat(TuiFormCleanupApplicationIds, [
+                                                                                   Form.Layout.ApplicationId
+
+                                                                                 ]);
+  TuiFormCleanupSlots := Std.Array.Concat(TuiFormCleanupSlots, [Form.Layout.Slot]);
+  TuiFormCleanupGenerations := Std.Array.Concat(TuiFormCleanupGenerations, [Form.Layout.Generation]);
+  var Cleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiFormRowsReleaseOwner(ApplicationId, Slot, Generation)
+  end;
+  RegisterLayoutCleanup(Form.Layout, Cleanup)
+end;
+
+private function TuiFormRowsNextGridRow(Form: TuiFormLayout): integer;
+begin
+  mutable var NextRow: integer := 0;
+  var Grid: TuiGridLayout := TuiFormRowsGrid(Form);
+  for I: integer := 0 to TuiGridItems.Count(Grid) - 1 do
+  begin
+    var Placement: TuiGridPlacement := TuiGridItems.PlacementAt(Grid, I);
+    if Placement.RowEnd() > NextRow then
+    begin
+      NextRow := Placement.RowEnd()
+    end
+  end;
+  return NextRow
+end;
+
+type
+  TuiFormItems = record
+    static function AddRow(Form: TuiFormLayout; LabelView: TuiView; FieldView: TuiView): boolean;
+    begin
+      var LabelAlignment: TuiAlignment := TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Center);
+      return TuiFormItems.AddRowItems(Form, TuiLayoutItem.ForView(LabelView, LabelAlignment, 0), TuiLayoutItem.ForView(FieldView, TuiAlignment.Fill(), 1))
+    end;
+
+    static function AddRowItems(Form: TuiFormLayout; LabelItem: TuiLayoutItem; FieldItem: TuiLayoutItem): boolean;
+    begin
+      TuiFormRowsRequire(Form);
+      if (LabelItem.Kind <> TuiLayoutItemKind.View) or (FieldItem.Kind <> TuiLayoutItemKind.View) then
+      begin
+        panic('Tui2 form rows require a label view and a field view')
+      end;
+      if TuiFormRowsSameView(LabelItem.View, FieldItem.View) then
+      begin
+        panic('Tui2 form row label and field must be different views')
+      end;
+      TuiFormRowsEnsureCleanup(Form);
+      var Grid: TuiGridLayout := TuiFormRowsGrid(Form);
+      var Row: integer := TuiFormRowsNextGridRow(Form);
+      var LabelPlacement: TuiGridPlacement := TuiGridPlacement.Cell(Row, 0);
+      var FieldPlacement: TuiGridPlacement := TuiGridPlacement.Cell(Row, 1);
+      if not TuiGridItems.CanAdd(Grid, LabelItem, LabelPlacement) or
+         not TuiGridItems.CanAdd(Grid, FieldItem, FieldPlacement) then
+      begin
+        panic('Tui2 form cannot attach the row; check view ownership and application')
+      end;
+      TuiGridItems.Add(Grid, LabelItem, LabelPlacement);
+      TuiGridItems.Add(Grid, FieldItem, FieldPlacement);
+      TuiFormRowOwnerApplicationIds := Std.Array.Concat(TuiFormRowOwnerApplicationIds, [
+                                                                                         Form.Layout.ApplicationId
+
+                                                                                       ]);
+      TuiFormRowOwnerSlots := Std.Array.Concat(TuiFormRowOwnerSlots, [Form.Layout.Slot]);
+      TuiFormRowOwnerGenerations := Std.Array.Concat(TuiFormRowOwnerGenerations, [
+                                                                                   Form.Layout.Generation
+
+                                                                                 ]);
+      TuiFormRowLabels := Std.Array.Concat(TuiFormRowLabels, [LabelItem.View]);
+      TuiFormRowFields := Std.Array.Concat(TuiFormRowFields, [FieldItem.View]);
+      TuiFormRowsActive := Std.Array.Concat(TuiFormRowsActive, [true]);
+      var LabelCleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiFormRowsDetachView(ApplicationId, Slot, Generation)
+      end;
+      var FieldCleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiFormRowsDetachView(ApplicationId, Slot, Generation)
+      end;
+      RegisterViewCleanup(LabelItem.View, LabelCleanup);
+      RegisterViewCleanup(FieldItem.View, FieldCleanup);
+      return true
+    end;
+
+    static function Count(Form: TuiFormLayout): integer;
+    begin
+      TuiFormRowsRequire(Form);
+      return TuiFormRowsCount(Form)
+    end;
+
+    static function LabelAt(Form: TuiFormLayout; Row: integer): TuiView;
+    begin
+      TuiFormRowsRequire(Form);
+      var Index: integer := TuiFormRowsFind(Form, Row);
+      if Index < 0 then
+      begin
+        panic('Tui2 form row index is out of bounds')
+      end;
+      return TuiFormRowLabels[Index]
+    end;
+
+    static function FieldAt(Form: TuiFormLayout; Row: integer): TuiView;
+    begin
+      TuiFormRowsRequire(Form);
+      var Index: integer := TuiFormRowsFind(Form, Row);
+      if Index < 0 then
+      begin
+        panic('Tui2 form row index is out of bounds')
+      end;
+      return TuiFormRowFields[Index]
+    end;
+
+    static function RemoveAt(Form: TuiFormLayout; Row: integer): boolean;
+    begin
+      TuiFormRowsRequire(Form);
+      var Index: integer := TuiFormRowsFind(Form, Row);
+      if Index < 0 then
+      begin
+        panic('Tui2 form row index is out of bounds')
+      end;
+      TuiFormRowsActive[Index] := false;
+      var LabelIndex: integer := TuiFormRowsGridIndex(Form, TuiFormRowLabels[Index]);
+      var FieldIndex: integer := TuiFormRowsGridIndex(Form, TuiFormRowFields[Index]);
+      if (LabelIndex < 0) or (FieldIndex < 0) then
+      begin
+        panic('Tui2 form row storage is inconsistent')
+      end;
+      if LabelIndex > FieldIndex then
+      begin
+        TuiGridItems.RemoveAt(TuiFormRowsGrid(Form), LabelIndex);
+        TuiGridItems.RemoveAt(TuiFormRowsGrid(Form), FieldIndex)
+      end
+      else
+      begin
+        TuiGridItems.RemoveAt(TuiFormRowsGrid(Form), FieldIndex);
+        TuiGridItems.RemoveAt(TuiFormRowsGrid(Form), LabelIndex)
+      end;
+      return true
+    end;
+
+    static function Clear(Form: TuiFormLayout): boolean;
+    begin
+      TuiFormRowsRequire(Form);
+      TuiFormRowsReleaseOwner(Form.Layout.ApplicationId, Form.Layout.Slot, Form.Layout.Generation);
+      TuiGridItems.Clear(TuiFormRowsGrid(Form));
+      return true
+    end;
+  end;

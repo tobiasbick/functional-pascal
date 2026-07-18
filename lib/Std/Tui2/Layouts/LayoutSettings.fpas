@@ -1,6 +1,6 @@
 unit Std.Tui2.Layouts.LayoutSettings;
 
-uses Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.Margins;
+uses Std.Array, Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.Margins;
 
 private mutable var TuiLayoutSettingsApplicationIds: array of integer := [];
 private mutable var TuiLayoutSettingsSlots: array of integer := [];
@@ -70,7 +70,13 @@ type
     static function SetMargins(Layout: TuiLayout; Margins: TuiMargins): boolean;
     begin
       var Index: integer := TuiLayoutSettingsEnsure(Layout);
-      TuiLayoutSettingsMargins[Index] := Margins;
+      var Existing: TuiMargins := TuiLayoutSettingsMargins[Index];
+      if (((Existing.Left <> Margins.Left) or (Existing.Top <> Margins.Top)) or (Existing.Right <> Margins.Right)) or
+         (Existing.Bottom <> Margins.Bottom) then
+      begin
+        TuiLayoutSettingsMargins[Index] := Margins;
+        TuiLayoutInvalidation.Invalidate(Layout)
+      end;
       return true
     end;
 
@@ -87,7 +93,11 @@ type
         panic('Tui2 layout spacing must not be negative')
       end;
       var Index: integer := TuiLayoutSettingsEnsure(Layout);
-      TuiLayoutSettingsSpacing[Index] := Spacing;
+      if TuiLayoutSettingsSpacing[Index] <> Spacing then
+      begin
+        TuiLayoutSettingsSpacing[Index] := Spacing;
+        TuiLayoutInvalidation.Invalidate(Layout)
+      end;
       return true
     end;
   end;

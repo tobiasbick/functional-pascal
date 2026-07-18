@@ -10,9 +10,10 @@ uses
   Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems,
   Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.HorizontalLayout,
   Std.Tui2.Layouts.VerticalLayout, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Layouts.GridPlacement,
-  Std.Tui2.Layouts.GridLayout, Std.Tui2.Layouts.GridItems, Std.Tui2.Layouts.LayoutMeasure,
-  Std.Tui2.Layouts.LayoutArrange, Std.Tui2.Actions.Command, Std.Tui2.Actions.Action,
-  Std.Tui2.Controls.Button;
+  Std.Tui2.Layouts.GridLayout, Std.Tui2.Layouts.GridItems, Std.Tui2.Layouts.FormLayout,
+  Std.Tui2.Layouts.FormItems, Std.Tui2.Layouts.StackedLayout, Std.Tui2.Layouts.StackedItems,
+  Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.LayoutArrange, Std.Tui2.Actions.Command,
+  Std.Tui2.Actions.Action, Std.Tui2.Controls.Button;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -54,6 +55,10 @@ type
   TuiGridPlacement = Std.Tui2.Layouts.GridPlacement.TuiGridPlacement;
   TuiGridLayout = Std.Tui2.Layouts.GridLayout.TuiGridLayout;
   TuiGridItems = Std.Tui2.Layouts.GridItems.TuiGridItems;
+  TuiFormLayout = Std.Tui2.Layouts.FormLayout.TuiFormLayout;
+  TuiFormItems = Std.Tui2.Layouts.FormItems.TuiFormItems;
+  TuiStackedLayout = Std.Tui2.Layouts.StackedLayout.TuiStackedLayout;
+  TuiStackedItems = Std.Tui2.Layouts.StackedItems.TuiStackedItems;
   TuiLayoutMeasure = Std.Tui2.Layouts.LayoutMeasure.TuiLayoutMeasure;
   TuiLayoutArrange = Std.Tui2.Layouts.LayoutArrange.TuiLayoutArrange;
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;

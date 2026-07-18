@@ -134,3 +134,40 @@ end.",
     );
     assert_eq!(out.lines, vec!["99"]);
 }
+
+#[test]
+fn static_record_procedure_runs_without_receiver() {
+    let out = compile_and_run(
+        "\
+program StaticProcedure;
+type Counter = record
+  static procedure Print(Value: integer);
+  begin
+    Std.Console.WriteLn(Value + 1)
+  end;
+end;
+begin
+  Counter.Print(4)
+end.",
+    );
+    assert_eq!(out.lines, vec!["5"]);
+}
+
+#[test]
+fn static_record_procedure_via_type_alias() {
+    let out = compile_and_run(
+        "\
+program StaticProcedureAlias;
+type Counter = record
+  static procedure Print(Value: integer);
+  begin
+    Std.Console.WriteLn(Value + 1)
+  end;
+end;
+type CounterAlias = Counter;
+begin
+  CounterAlias.Print(9)
+end.",
+    );
+    assert_eq!(out.lines, vec!["10"]);
+}

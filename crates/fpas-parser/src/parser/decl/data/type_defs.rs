@@ -223,7 +223,9 @@ impl Parser {
         }
     }
 
-    /// Parse `static function …` inside a record. Rejects `static procedure` and bare `static`.
+    /// Parse a static function or procedure inside a record.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     fn parse_static_record_method(&mut self) -> Option<RecordMethod> {
         let static_span = self.current_span();
         self.advance(); // consume `static`
@@ -231,22 +233,14 @@ impl Parser {
             Token::Function => Some(RecordMethod::StaticFunction(
                 self.parse_function_decl(Visibility::default()),
             )),
-            Token::Procedure => {
-                self.error_with_code(
-                    PARSE_INVALID_STATIC_PLACEMENT,
-                    "`static procedure` is not supported",
-                    "Only `static function` is allowed inside a record. Use an instance `procedure` with `Self`, or a `static function` that returns a value.",
-                    static_span,
-                );
-                // Recover by parsing the procedure so the rest of the record stays sync'd.
-                let _ = self.parse_procedure_decl(Visibility::default());
-                None
-            }
+            Token::Procedure => Some(RecordMethod::StaticProcedure(
+                self.parse_procedure_decl(Visibility::default()),
+            )),
             _ => {
                 self.error_with_code(
                     PARSE_INVALID_STATIC_PLACEMENT,
-                    "`static` must be followed by `function` inside a record",
-                    "Write `static function Name(...): ReturnType; begin … end;`.",
+                    "`static` must be followed by `function` or `procedure` inside a record",
+                    "Write `static function Name(...): ReturnType; begin … end;` or `static procedure Name(...); begin … end;`.",
                     static_span,
                 );
                 None

@@ -71,4 +71,8 @@ pub const SOURCES: &[(&str, &str)] = &[
         "record_with_static_function",
         "program T; type Point = record X: integer; Y: integer; static function Create(X: integer; Y: integer): Point; begin return record X := X; Y := Y; end end; end; begin end.",
     ),
+    (
+        "record_with_static_procedure",
+        "program T; type Point = record X: integer; static procedure Print(Value: Point); begin Std.Console.WriteLn(Value.X) end; end; begin end.",
+    ),
 ];

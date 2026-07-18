@@ -80,7 +80,8 @@ impl NameRewriter<'_> {
                                 &mut f.body,
                             );
                         }
-                        fpas_parser::RecordMethod::Procedure(p) => {
+                        fpas_parser::RecordMethod::Procedure(p)
+                        | fpas_parser::RecordMethod::StaticProcedure(p) => {
                             self.rewrite_callable(&mut p.params, None, &mut p.body);
                         }
                     }

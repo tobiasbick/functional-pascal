@@ -55,7 +55,8 @@ pub enum Token {
     Go,
     Dict,
     With,
-    /// Marks a static record function: `static function Create(...): T`.
+    /// Marks a static record routine: `static function Create(...): T` or
+    /// `static procedure Reset(...)`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     Static,

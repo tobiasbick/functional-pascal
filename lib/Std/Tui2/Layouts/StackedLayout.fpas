@@ -1,0 +1,42 @@
+unit Std.Tui2.Layouts.StackedLayout;
+
+uses
+  Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutKind, Std.Tui2.Layouts.StackedState,
+  Std.Tui2.Runtime.Application;
+
+type
+  TuiStackedLayout = record
+    Layout: TuiLayout;
+
+    static function Create(App: TuiApplication): TuiStackedLayout;
+    begin
+      return record Layout := TuiLayout.CreateKind(App, TuiLayoutKind.Stacked); end
+    end;
+
+    function AsLayout(Self: TuiStackedLayout): TuiLayout;
+    begin
+      return Self.Layout
+    end;
+
+    function IsAlive(Self: TuiStackedLayout): boolean;
+    begin
+      return Self.Layout.IsAlive()
+    end;
+
+    function ReadCurrentIndex(Self: TuiStackedLayout): integer;
+    begin
+      return TuiStackedState.CurrentIndex(Self.Layout)
+    end;
+
+    procedure WriteCurrentIndex(Self: TuiStackedLayout; Value: integer);
+    begin
+      TuiStackedState.SetCurrentIndex(Self.Layout, Value)
+    end;
+
+    procedure Destroy(Self: TuiStackedLayout);
+    begin
+      Self.Layout.Destroy()
+    end;
+
+    property CurrentIndex: integer read ReadCurrentIndex write WriteCurrentIndex;
+  end;

@@ -100,6 +100,10 @@ pub struct RecordTy {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-methods.md`
     pub static_functions: Vec<(String, FunctionTy)>,
+    /// Static procedures called through the type name (no receiver).
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-methods.md`
+    pub static_procedures: Vec<(String, ProcedureTy)>,
     /// Computed properties backed by instance accessors.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`

@@ -479,3 +479,92 @@ fn static_generic_function_valid() {
          end.",
     );
 }
+
+#[test]
+fn static_record_procedure_valid() {
+    check_ok(
+        "program T; uses Std.Console; \
+         type Counter = record \
+           static procedure Print(Value: integer); \
+           begin WriteLn(Value) end; \
+         end; \
+         begin \
+           Counter.Print(4) \
+         end.",
+    );
+}
+
+#[test]
+fn static_record_procedure_via_alias() {
+    check_ok(
+        "program T; \
+         type Counter = record \
+           static procedure Reset(Value: integer); \
+           begin end; \
+         end; \
+         type Alias = Counter; \
+         begin \
+           Alias.Reset(4) \
+         end.",
+    );
+}
+
+#[test]
+fn static_procedure_with_self_param_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Counter = record \
+           static procedure Reset(Self: Counter); begin end; \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error
+                    .message
+                    .contains("must not declare a `Self` parameter")
+        }),
+        "expected Self rejection, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_procedure_call_through_value_rejected() {
+    let errors = check_errors(
+        "program T; \
+         type Counter = record \
+           Value: integer; \
+           static procedure Reset(); begin end; \
+         end; \
+         begin \
+           var Value: Counter := record Value := 1; end; \
+           Value.Reset() \
+         end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error.message.contains("static procedure")
+        }),
+        "expected static-through-value error, got: {errors:#?}"
+    );
+}
+
+#[test]
+fn static_procedure_cannot_be_used_as_expression() {
+    let errors = check_errors(
+        "program T; \
+         type Counter = record \
+           static procedure Reset(); begin end; \
+         end; \
+         begin var Value: integer := Counter.Reset() end.",
+    );
+    assert!(
+        errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH
+                && error.message.contains("does not return a value")
+        }),
+        "expected procedure-value error, got: {errors:#?}"
+    );
+}

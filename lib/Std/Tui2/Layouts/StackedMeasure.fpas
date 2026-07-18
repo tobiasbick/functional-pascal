@@ -1,0 +1,73 @@
+unit Std.Tui2.Layouts.StackedMeasure;
+
+uses
+  Std.Tui2.Geometry.Size, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutSettings,
+  Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureAxis, Std.Tui2.Layouts.MeasureResult,
+  Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.StackedItems, Std.Tui2.Layouts.StackedLayout,
+  Std.Tui2.Views.View;
+
+type
+  TuiStackedMeasureCallback = function(Item: TuiLayoutItem; Spec: TuiMeasureSpec): TuiMeasureResult;
+
+private function TuiStackedMeasureVisible(Item: TuiLayoutItem): boolean;
+begin
+  if Item.Kind = TuiLayoutItemKind.View then
+  begin
+    return Item.View.Visible
+  end;
+  return true
+end;
+
+type
+  TuiStackedMeasure = record
+    static function Measure(
+  Stacked: TuiStackedLayout;
+  Spec: TuiMeasureSpec;
+  MeasureItem: TuiStackedMeasureCallback
+): TuiMeasureResult;
+    begin
+      mutable var MinimumWidth: integer := 0;
+      mutable var PreferredWidth: integer := 0;
+      mutable var MaximumWidth: integer := 0;
+      mutable var MinimumHeight: integer := 0;
+      mutable var PreferredHeight: integer := 0;
+      mutable var MaximumHeight: integer := 0;
+      mutable var CanGrow: boolean := false;
+      for I: integer := 0 to TuiStackedItems.Count(Stacked) - 1 do
+      begin
+        var Item: TuiLayoutItem := TuiStackedItems.Get(Stacked, I);
+        if TuiStackedMeasureVisible(Item) then
+        begin
+          var Measured: TuiMeasureResult := MeasureItem(Item, Spec);
+          MinimumWidth := TuiMeasureAxis.Max(MinimumWidth, Measured.Minimum.Width);
+          PreferredWidth := TuiMeasureAxis.Max(PreferredWidth, Measured.Preferred.Width);
+          MaximumWidth := TuiMeasureAxis.Max(MaximumWidth, Measured.Maximum.Width);
+          MinimumHeight := TuiMeasureAxis.Max(MinimumHeight, Measured.Minimum.Height);
+          PreferredHeight := TuiMeasureAxis.Max(PreferredHeight, Measured.Preferred.Height);
+          MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Measured.Maximum.Height);
+          if Item.Stretch > 0 then
+          begin
+            CanGrow := true
+          end
+        end
+      end;
+      var Margins: TuiMargins := TuiLayoutSettings.Margins(Stacked.AsLayout());
+      MinimumWidth := TuiMeasureAxis.Add(MinimumWidth, Margins.Horizontal());
+      PreferredWidth := TuiMeasureAxis.Add(PreferredWidth, Margins.Horizontal());
+      MaximumWidth := TuiMeasureAxis.Add(MaximumWidth, Margins.Horizontal());
+      MinimumHeight := TuiMeasureAxis.Add(MinimumHeight, Margins.Vertical());
+      PreferredHeight := TuiMeasureAxis.Add(PreferredHeight, Margins.Vertical());
+      MaximumHeight := TuiMeasureAxis.Add(MaximumHeight, Margins.Vertical());
+      if CanGrow and Spec.Width.IsBounded() then
+      begin
+        MaximumWidth := TuiMeasureAxis.Max(MaximumWidth, Spec.Width.Limit)
+      end;
+      if CanGrow and Spec.Height.IsBounded() then
+      begin
+        MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Spec.Height.Limit)
+      end;
+      var Width: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumWidth, PreferredWidth, MaximumWidth, Spec.Width);
+      var Height: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumHeight, PreferredHeight, MaximumHeight, Spec.Height);
+      return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum))
+    end;
+  end;

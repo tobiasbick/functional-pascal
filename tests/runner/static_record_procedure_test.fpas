@@ -1,0 +1,17 @@
+program StaticRecordProcedureTest;
+
+uses Std.Test;
+
+type
+  Verifier = record
+    static procedure Verify(Value: integer);
+    begin
+      AssertEquals(42, Value)
+    end;
+  end;
+  VerifierAlias = Verifier;
+
+begin
+  Verifier.Verify(42);
+  VerifierAlias.Verify(42)
+end.

@@ -65,4 +65,16 @@ type
       var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
       Parent.Remove(Child)
     end;
+
+    function NeedsLayout(Self: TuiDesktop): boolean;
+    begin
+      var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
+      return Parent.NeedsLayout()
+    end;
+
+    function PerformLayout(Self: TuiDesktop): boolean;
+    begin
+      var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
+      return Parent.PerformLayout()
+    end;
   end;

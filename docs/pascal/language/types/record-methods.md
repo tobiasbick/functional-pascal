@@ -1,7 +1,7 @@
 # Record methods
 
 Records can declare functions and procedures that operate on their data, and
-**static functions** that belong to the type itself.
+**static functions and procedures** that belong to the type itself.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_method`,
 `function_decl`, `procedure_decl`).
@@ -89,14 +89,14 @@ Rules:
   is expected — see [First-class functions](../functions/first-class.md).
 - Binding a method whose `Self` is `mutable` is rejected; use a capturing
   closure that explicitly closes over a `mutable var` instead.
-- Static functions are ordinary named callables (`Counter.Create`), not bound
+- Static routines are ordinary named callables (`Counter.Create`), not bound
   method values. Binding a static name through a value (`C.Create`) is an error.
 
-## Static functions
+## Static routines
 
-A record may declare a `static function` inside its type body. Static functions
-have no implicit receiver and must not declare a `Self` parameter. They are
-called through the type name:
+A record may declare a `static function` or `static procedure` inside its type
+body. Static routines have no implicit receiver and must not declare a `Self`
+parameter. They are called through the type name:
 
 ```pascal
 type
@@ -117,6 +117,11 @@ type
       return Point.Create(0, 0)
     end;
 
+    static procedure Print(Value: Point);
+    begin
+      WriteLn('(' + IntToStr(Value.X) + ', ' + IntToStr(Value.Y) + ')')
+    end;
+
     function Sum(Self: Point): integer;
     begin
       return Self.X + Self.Y
@@ -129,20 +134,23 @@ var
   P: Point := Point.Create(3, 4);
   O: Point := Point.Origin();
 begin
+  Point.Print(P);
   WriteLn(P.Sum())  { 7 }
 end.
 ```
 
 Rules:
 
-- Call through the type: `TypeName.FunctionName(Arguments)`.
-- Do not call a static function through a value (`Value.Create(...)` is an error).
+- Call through the type: `TypeName.RoutineName(Arguments)`.
+- A static function returns a value; a static procedure is a statement and does
+  not return a value.
+- Do not call a static routine through a value (`Value.Create(...)` is an error).
 - Do not call an instance method through the type (`TypeName.Sum(...)` is an error).
 - Static and instance members share one case-insensitive name set with fields and
   properties; duplicates are rejected.
-- FPAS has no function overloading: two static functions in one record need distinct names.
-- `static procedure`, static fields, and special constructors are not part of this feature.
-- A public type alias whose resolved type is a record exposes the same static functions
+- FPAS has no routine overloading: static routines in one record need distinct names.
+- Static fields and special constructors are not part of this feature.
+- A public type alias whose resolved type is a record exposes the same static routines
   under the alias name; the callable identity remains the resolved record type.
 
 Construction helpers often use distinct names such as `Create` and `From…`

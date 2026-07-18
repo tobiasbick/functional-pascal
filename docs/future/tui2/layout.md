@@ -79,7 +79,7 @@ Each layout supports outer margins and spacing between neighboring items. Alignm
 
 Implemented: `TuiMargins` validates outer cell counts and provides uniform and symmetric
 constructors. `TuiAlignment` combines independent `Leading`, `Center`, `Trailing`, or `Fill` choices
-for both axes. A common layout has an immutable horizontal, vertical, or grid kind;
+for both axes. A common layout has an immutable horizontal, vertical, grid, form, or stacked kind;
 `TuiLayoutSettings` retains margins and spacing for each live layout. Typed handles provide
 controlled `AsLayout()` conversion.
 
@@ -87,6 +87,10 @@ Implemented grid foundation: `TuiGridLayout` uses the same common handle identit
 `TuiGridPlacement` validates zero-based cells and positive row or column spans. `TuiGridItems`
 rejects overlap and one-dimensional spacers while preserving common view and nested-layout
 ownership. Rows and columns are inferred from visible placements.
+
+Implemented form and stacked layouts: `TuiFormLayout` owns paired label and field views in inferred
+two-column rows. `TuiStackedLayout` owns view or nested-layout pages, measures the maximum visible
+page geometry, and arranges only its selected `CurrentIndex` page.
 
 ## Measurement and allocation
 
@@ -108,10 +112,11 @@ Allocation follows these rules:
 Hidden views are excluded from measurement and allocation by default. Showing or hiding a view invalidates its parent layout.
 
 Implemented: `TuiLayoutMeasure.Measure` combines visible view hints, policies, nested layouts,
-spacers, spacing, margins, and grid spans. `TuiLayoutArrange.Arrange` performs a recursive headless
-pass and assigns view bounds. Box slots and grid tracks distribute stretch and expanding space in
-stable order while aligned items retain finite maximum sizes. Automatic invalidation and
-container-loop integration remain part of the runtime phase.
+spacers, spacing, margins, grid spans, form rows, and stacked pages.
+`TuiLayoutArrange.Arrange` performs a recursive headless pass and assigns view bounds. Box slots and
+grid tracks distribute stretch and expanding space in stable order while aligned items retain finite
+maximum sizes. Form rows reuse the grid allocator; stacks allocate only their selected visible page.
+Automatic invalidation and container-loop integration remain part of the runtime phase.
 
 ## Invalidation
 
@@ -129,7 +134,7 @@ Repeated invalidations before the next application iteration are coalesced. Layo
 
 ## Layout API
 
-The implemented horizontal, vertical, and grid surface is:
+The implemented layout surface is:
 
 ```pascal
 TuiHorizontalLayout.Create(App: TuiApplication): TuiHorizontalLayout
@@ -144,10 +149,12 @@ TuiGridLayout.Create(App: TuiApplication): TuiGridLayout
 TuiGridPlacement.Cell(Row: integer; Column: integer): TuiGridPlacement
 TuiGridPlacement.Create(Row: integer; Column: integer; RowSpan: integer; ColumnSpan: integer): TuiGridPlacement
 TuiGridItems.Add(Grid: TuiGridLayout; Item: TuiLayoutItem; Placement: TuiGridPlacement): boolean
-
-{ Planned layout families }
 TuiFormLayout.Create(App: TuiApplication): TuiFormLayout
+TuiFormItems.AddRow(Form: TuiFormLayout; LabelView: TuiView; FieldView: TuiView): boolean
+TuiFormItems.AddRowItems(Form: TuiFormLayout; LabelItem: TuiLayoutItem; FieldItem: TuiLayoutItem): boolean
 TuiStackedLayout.Create(App: TuiApplication): TuiStackedLayout
+TuiStackedItems.Add(Stacked: TuiStackedLayout; Item: TuiLayoutItem): boolean
+Stacked.CurrentIndex: integer
 
 TuiLayoutItems.Add(Layout: TuiLayout; Item: TuiLayoutItem)
 TuiLayoutItems.Count(Layout: TuiLayout)
@@ -160,8 +167,8 @@ TuiView.SetSizePolicy(View: TuiView; Policy: TuiSizePolicy)
 TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
 ```
 
-The item-list functions above are implemented. Per-item stretch replacement, form, stacked, and
-control-specific measurement remain planned.
+The item-list and specialized layout functions above are implemented. Per-item stretch replacement
+and control-specific measurement remain planned.
 
 ## Terminal overflow
 

@@ -22,7 +22,7 @@ pub enum MethodCallTarget {
         /// Property getter reads needed while evaluating the receiver designator.
         receiver_reads: Vec<PropertyReadInfo>,
     },
-    /// Static function: emit only the explicit arguments (no receiver).
+    /// Static record routine: emit only the explicit arguments (no receiver).
     Static(String),
 }
 

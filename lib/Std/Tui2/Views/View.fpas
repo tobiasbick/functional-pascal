@@ -11,6 +11,7 @@ type
     Custom;
   end;
   TuiViewCleanupCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
+  TuiViewLayoutInputCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
 
 private mutable var TuiViewApplicationIds: array of integer := [];
 private mutable var TuiViewGenerations: array of integer := [];
@@ -25,6 +26,29 @@ private mutable var TuiViewCleanupApplicationIds: array of integer := [];
 private mutable var TuiViewCleanupSlots: array of integer := [];
 private mutable var TuiViewCleanupGenerations: array of integer := [];
 private mutable var TuiViewCleanupCallbacks: array of TuiViewCleanupCallback := [];
+private mutable var TuiViewLayoutInputApplicationIds: array of integer := [];
+private mutable var TuiViewLayoutInputSlots: array of integer := [];
+private mutable var TuiViewLayoutInputGenerations: array of integer := [];
+private mutable var TuiViewLayoutInputCallbacks: array of TuiViewLayoutInputCallback := [];
+
+private procedure TuiViewNotifyLayoutInput(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiViewLayoutInputCallbacks) - 1 do
+  begin
+    if ((TuiViewLayoutInputApplicationIds[I] = ApplicationId) and (TuiViewLayoutInputSlots[I] = Slot)) and
+       (TuiViewLayoutInputGenerations[I] = Generation) then
+    begin
+      var Callback: TuiViewLayoutInputCallback := TuiViewLayoutInputCallbacks[I];
+      Callback(ApplicationId, Slot, Generation)
+    end
+  end
+end;
+
+private function TuiViewMeasureResultEquals(Left: TuiMeasureResult; Right: TuiMeasureResult): boolean;
+begin
+  return (((((Left.Minimum.Width = Right.Minimum.Width) and (Left.Minimum.Height = Right.Minimum.Height)) and (Left.Preferred.Width = Right.Preferred.Width)) and (Left.Preferred.Height = Right.Preferred.Height)) and (Left.Maximum.Width = Right.Maximum.Width)) and
+         (Left.Maximum.Height = Right.Maximum.Height)
+end;
 
 private procedure TuiViewRunCleanups(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
@@ -200,7 +224,11 @@ type
     procedure WriteVisible(Self: TuiView; Value: boolean);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewVisible[Self.Slot - 1] := Value
+      if TuiViewVisible[Self.Slot - 1] <> Value then
+      begin
+        TuiViewVisible[Self.Slot - 1] := Value;
+        TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation)
+      end
     end;
 
     function ReadEnabled(Self: TuiView): boolean;
@@ -224,7 +252,11 @@ type
     procedure WriteSizeHint(Self: TuiView; Value: TuiMeasureResult);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewSizeHints[Self.Slot - 1] := Value
+      if not TuiViewMeasureResultEquals(TuiViewSizeHints[Self.Slot - 1], Value) then
+      begin
+        TuiViewSizeHints[Self.Slot - 1] := Value;
+        TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation)
+      end
     end;
 
     function ReadSizePolicy(Self: TuiView): TuiSizePolicy;
@@ -236,7 +268,12 @@ type
     procedure WriteSizePolicy(Self: TuiView; Value: TuiSizePolicy);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewSizePolicies[Self.Slot - 1] := Value
+      var Existing: TuiSizePolicy := TuiViewSizePolicies[Self.Slot - 1];
+      if (Existing.Horizontal <> Value.Horizontal) or (Existing.Vertical <> Value.Vertical) then
+      begin
+        TuiViewSizePolicies[Self.Slot - 1] := Value;
+        TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation)
+      end
     end;
 
     procedure Destroy(Self: TuiView);
@@ -264,4 +301,16 @@ begin
   TuiViewCleanupSlots := Std.Array.Concat(TuiViewCleanupSlots, [View.Slot]);
   TuiViewCleanupGenerations := Std.Array.Concat(TuiViewCleanupGenerations, [View.Generation]);
   TuiViewCleanupCallbacks := Std.Array.Concat(TuiViewCleanupCallbacks, [Callback])
+end;
+
+procedure RegisterViewLayoutInput(View: TuiView; Callback: TuiViewLayoutInputCallback);
+begin
+  TuiViewRequire(View.ApplicationId, View.Slot, View.Generation);
+  TuiViewLayoutInputApplicationIds := Std.Array.Concat(TuiViewLayoutInputApplicationIds, [
+                                                                                           View.ApplicationId
+
+                                                                                         ]);
+  TuiViewLayoutInputSlots := Std.Array.Concat(TuiViewLayoutInputSlots, [View.Slot]);
+  TuiViewLayoutInputGenerations := Std.Array.Concat(TuiViewLayoutInputGenerations, [View.Generation]);
+  TuiViewLayoutInputCallbacks := Std.Array.Concat(TuiViewLayoutInputCallbacks, [Callback])
 end;

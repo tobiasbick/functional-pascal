@@ -1,8 +1,8 @@
 unit Std.Tui2.Layouts.LayoutItems;
 
 uses
-  Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutOwnership,
-  Std.Tui2.Views.View;
+  Std.Array, Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem,
+  Std.Tui2.Layouts.LayoutOwnership, Std.Tui2.Views.View;
 
 private mutable var TuiLayoutItemOwnerApplicationIds: array of integer := [];
 private mutable var TuiLayoutItemOwnerSlots: array of integer := [];
@@ -39,6 +39,32 @@ begin
   return false
 end;
 
+private procedure TuiLayoutItemsInvalidateViewOwner(
+  Owner: TuiLayout;
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer
+);
+begin
+  if not Owner.IsAlive() then
+  begin
+    return
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiLayoutItemsActive) - 1 do
+  begin
+    var Item: TuiLayoutItem := TuiLayoutItemValues[I];
+    if TuiLayoutItemsOwnerMatches(I, Owner) and (Item.Kind = TuiLayoutItemKind.View) then
+    begin
+      if ((Item.View.ApplicationId = ApplicationId) and (Item.View.Slot = Slot)) and
+         (Item.View.Generation = Generation) then
+      begin
+        TuiLayoutInvalidation.Invalidate(Owner);
+        return
+      end
+    end
+  end
+end;
+
 private function TuiLayoutItemsCanReach(Start: TuiLayout; Target: TuiLayout): boolean;
 begin
   if TuiLayoutItemsSame(Start, Target) then
@@ -67,7 +93,16 @@ begin
     if (TuiLayoutItemsActive[I] and (Item.Kind = TuiLayoutItemKind.View)) and
        (((Item.View.ApplicationId = ApplicationId) and (Item.View.Slot = Slot)) and (Item.View.Generation = Generation)) then
     begin
-      TuiLayoutItemsActive[I] := false
+      var Owner: TuiLayout := record
+        ApplicationId := TuiLayoutItemOwnerApplicationIds[I];
+        Slot := TuiLayoutItemOwnerSlots[I];
+        Generation := TuiLayoutItemOwnerGenerations[I];
+      end;
+      TuiLayoutItemsActive[I] := false;
+      if Owner.IsAlive() then
+      begin
+        TuiLayoutInvalidation.Invalidate(Owner)
+      end
     end
   end
 end;
@@ -80,7 +115,16 @@ begin
     if (TuiLayoutItemsActive[I] and (Item.Kind = TuiLayoutItemKind.Layout)) and
        (((Item.Layout.ApplicationId = ApplicationId) and (Item.Layout.Slot = Slot)) and (Item.Layout.Generation = Generation)) then
     begin
-      TuiLayoutItemsActive[I] := false
+      var Owner: TuiLayout := record
+        ApplicationId := TuiLayoutItemOwnerApplicationIds[I];
+        Slot := TuiLayoutItemOwnerSlots[I];
+        Generation := TuiLayoutItemOwnerGenerations[I];
+      end;
+      TuiLayoutItemsActive[I] := false;
+      if Owner.IsAlive() then
+      begin
+        TuiLayoutInvalidation.Invalidate(Owner)
+      end
     end
   end;
   TuiLayoutOwnershipDetach(ApplicationId, Slot, Generation)
@@ -212,19 +256,33 @@ type
           var ViewCleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
             TuiLayoutItemsDetachView(ApplicationId, Slot, Generation)
           end;
-          RegisterViewCleanup(Item.View, ViewCleanup)
+          RegisterViewCleanup(Item.View, ViewCleanup);
+          var Owner: TuiLayout := Layout;
+          var LayoutInput: TuiViewLayoutInputCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            TuiLayoutItemsInvalidateViewOwner(Owner, ApplicationId, Slot, Generation)
+          end;
+          RegisterViewLayoutInput(Item.View, LayoutInput)
         end;
         TuiLayoutItemKind.Layout:
         begin
           var LayoutCleanup: TuiLayoutCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
             TuiLayoutItemsDetachLayout(ApplicationId, Slot, Generation)
           end;
-          RegisterLayoutCleanup(Item.Layout, LayoutCleanup)
+          RegisterLayoutCleanup(Item.Layout, LayoutCleanup);
+          var Owner: TuiLayout := Layout;
+          var ChildInvalidation: TuiLayoutInvalidationCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            if Owner.IsAlive() then
+            begin
+              TuiLayoutInvalidation.Invalidate(Owner)
+            end
+          end;
+          TuiLayoutInvalidation.Register(Item.Layout, ChildInvalidation)
         end;
         TuiLayoutItemKind.Spacer:
         begin
         end
       end;
+      TuiLayoutInvalidation.Invalidate(Layout);
       return true
     end;
 
@@ -271,6 +329,7 @@ type
         panic('Tui2 layout item index is out of bounds')
       end;
       TuiLayoutItemsActive[StorageIndex] := false;
+      TuiLayoutInvalidation.Invalidate(Layout);
       var Item: TuiLayoutItem := TuiLayoutItemValues[StorageIndex];
       if Item.Kind = TuiLayoutItemKind.Layout then
       begin
@@ -290,6 +349,7 @@ type
         panic('Tui2 cannot clear a stale layout')
       end;
       TuiLayoutItemsClearOwned(Layout.ApplicationId, Layout.Slot, Layout.Generation);
+      TuiLayoutInvalidation.Invalidate(Layout);
       return true
     end;
   end;

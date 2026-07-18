@@ -1,33 +1,15 @@
 unit Std.Tui2.Layouts.GridArrange;
 
 uses
-  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Alignment,
-  Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.GridItems, Std.Tui2.Layouts.GridLayout,
-  Std.Tui2.Layouts.GridPlacement, Std.Tui2.Layouts.GridTracks, Std.Tui2.Layouts.Layout,
-  Std.Tui2.Layouts.LayoutContent, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutMeasure,
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Direction,
+  Std.Tui2.Layouts.GridItems, Std.Tui2.Layouts.GridLayout, Std.Tui2.Layouts.GridPlacement,
+  Std.Tui2.Layouts.GridTracks, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutContent,
+  Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItemBounds, Std.Tui2.Layouts.LayoutMeasure,
   Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureResult,
   Std.Tui2.Layouts.MeasureSpec;
 
 type
   TuiGridArrangeCallback = function(Layout: TuiLayout; Bounds: TuiRect): boolean;
-
-private function TuiGridArrangeMin(Left: integer; Right: integer): integer;
-begin
-  if Left < Right then
-  begin
-    return Left
-  end;
-  return Right
-end;
-
-private function TuiGridArrangeMax(Left: integer; Right: integer): integer;
-begin
-  if Left > Right then
-  begin
-    return Left
-  end;
-  return Right
-end;
 
 private function TuiGridArrangeVisible(Item: TuiLayoutItem): boolean;
 begin
@@ -143,50 +125,6 @@ begin
   return Extent
 end;
 
-private function TuiGridArrangeItemExtent(
-  Minimum: integer;
-  Preferred: integer;
-  Maximum: integer;
-  Available: integer;
-  Alignment: TuiAlignmentKind
-): integer;
-begin
-  mutable var Extent: integer := Preferred;
-  if Alignment = TuiAlignmentKind.Fill then
-  begin
-    Extent := TuiGridArrangeMin(Available, Maximum)
-  end;
-  Extent := TuiGridArrangeMax(Minimum, Extent);
-  if Available >= Minimum then
-  begin
-    Extent := TuiGridArrangeMin(Extent, Available)
-  end;
-  return Extent
-end;
-
-private function TuiGridArrangeItemOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
-begin
-  case Alignment of
-    TuiAlignmentKind.Leading:
-    begin
-      return 0
-    end;
-    TuiAlignmentKind.Center:
-    begin
-      return (Available - Extent) div 2
-    end;
-    TuiAlignmentKind.Trailing:
-    begin
-      return Available - Extent
-    end;
-    TuiAlignmentKind.Fill:
-    begin
-      return 0
-    end
-  end;
-  return 0
-end;
-
 type
   TuiGridArrange = record
     static function Arrange(Grid: TuiGridLayout; Bounds: TuiRect; ArrangeNested: TuiGridArrangeCallback): boolean;
@@ -214,13 +152,8 @@ type
           var CellWidth: integer := TuiGridArrangeTrackExtent(Widths, Placement.Column, Placement.ColumnSpan, Spacing);
           var CellHeight: integer := TuiGridArrangeTrackExtent(Heights, Placement.Row, Placement.RowSpan, Spacing);
           var Measured: TuiMeasureResult := MeasureItem(Item, Spec);
-          var ItemWidth: integer := TuiGridArrangeItemExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, CellWidth, Item.Alignment.Horizontal);
-          var ItemHeight: integer := TuiGridArrangeItemExtent(Measured.Minimum.Height, Measured.Preferred.Height, Measured.Maximum.Height, CellHeight, Item.Alignment.Vertical);
-          var ItemX: integer := CellX +
-                                TuiGridArrangeItemOffset(CellWidth, ItemWidth, Item.Alignment.Horizontal);
-          var ItemY: integer := CellY +
-                                TuiGridArrangeItemOffset(CellHeight, ItemHeight, Item.Alignment.Vertical);
-          var ItemBounds: TuiRect := TuiRect.Create(ItemX, ItemY, ItemWidth, ItemHeight);
+          var Cell: TuiRect := TuiRect.Create(CellX, CellY, CellWidth, CellHeight);
+          var ItemBounds: TuiRect := TuiLayoutItemBounds.Align(Measured, Item.Alignment, Cell);
           case Item.Kind of
             TuiLayoutItemKind.View:
             begin

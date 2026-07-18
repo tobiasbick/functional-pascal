@@ -39,7 +39,7 @@ a local, parameter, or enclosing capture that is not declared by the closure its
 | `mutable var` local or `mutable` parameter | Capture one shared mutable cell. |
 | Enclosing closure capture | Reuse the same value or mutable cell. |
 | Unit or program variable | Resolve normally; not stored in the closure environment. |
-| Routine, static function, or constant | Resolve normally; not stored as runtime data. |
+| Routine, static record routine, or constant | Resolve normally; not stored as runtime data. |
 
 All closures created by one activation and capturing the same mutable local observe
 the same cell. The cell survives until the final closure that references it is released.

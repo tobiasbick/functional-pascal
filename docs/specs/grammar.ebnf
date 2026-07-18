@@ -224,8 +224,7 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* compiler substitutes the default automatically.  Fields without  *)
 (* a default must be supplied in every record literal.              *)
 
-record_method       = [ 'static' ] function_decl
-                    | procedure_decl ;
+record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
 
 (* Instance record methods must declare Self as the first parameter, *)
 (* typed as the enclosing record. Callers use value dot notation;    *)

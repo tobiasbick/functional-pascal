@@ -125,6 +125,19 @@ impl Checker {
                 return true;
             }
 
+            if let Some(proc_ty) = self.resolve_static_procedure(&record_ty, &method_name) {
+                self.method_calls
+                    .insert(call_key, MethodCallTarget::Static(qualified.clone()));
+                self.check_static_call_args(
+                    &qualified,
+                    &proc_ty.type_params,
+                    &proc_ty.params,
+                    args,
+                    span,
+                );
+                return true;
+            }
+
             if self
                 .resolve_method_kind(&record_ty, &method_name, &qualified)
                 .is_some()
@@ -147,11 +160,11 @@ impl Checker {
             return false;
         }
 
-        if self.is_static_on_record(&record_ty, &method_name) {
+        if let Some(routine_kind) = self.static_routine_kind_on_record(&record_ty, &method_name) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!(
-                    "`{method_name}` is a static function and must be called through the type `{}.{}`",
+                    "`{method_name}` is a static {routine_kind} and must be called through the type `{}.{}`",
                     record_ty.name, method_name
                 ),
                 format!(
@@ -194,16 +207,6 @@ impl Checker {
 
         self.check_stmt_method_kind(&qualified, &method_kind, args, span);
         true
-    }
-
-    fn is_static_on_record(&self, record_ty: &crate::types::RecordTy, method_name: &str) -> bool {
-        record_ty
-            .static_functions
-            .iter()
-            .any(|(name, _)| name.eq_ignore_ascii_case(method_name))
-            || self
-                .resolve_static_function(record_ty, method_name, "")
-                .is_some()
     }
 
     fn check_stmt_method_kind(

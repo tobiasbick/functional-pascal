@@ -42,7 +42,7 @@ impl Compiler {
                 let qualified = format!("{type_name}.{}", function.name);
                 self.compile_callable(&qualified, &function.params, &function.body, function.span)
             }
-            RecordMethod::Procedure(procedure) => {
+            RecordMethod::Procedure(procedure) | RecordMethod::StaticProcedure(procedure) => {
                 let qualified = format!("{type_name}.{}", procedure.name);
                 self.compile_callable(
                     &qualified,

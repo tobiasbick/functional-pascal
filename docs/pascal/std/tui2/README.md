@@ -1,9 +1,9 @@
 # Std.Tui2
 
 `Std.Tui2` provides terminal UI value types plus a headless live-object surface for applications,
-actions, buttons, views, and layouts. Horizontal, vertical, and grid layouts can be measured and
-arranged without a terminal. Interactive rendering, terminal acquisition, and input are not exposed
-yet.
+actions, buttons, views, and layouts. Horizontal, vertical, grid, form, and stacked layouts can be
+measured and arranged without a terminal. Interactive rendering, terminal acquisition, and input are
+not exposed yet.
 
 ```pascal
 program Geometry;
@@ -48,13 +48,17 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiLayoutItem` | A validated view, nested-layout, or spacer description. |
 | `TuiLayoutItems` | Ordered live item-list operations for a layout. |
 | `TuiLayoutDirection` | Horizontal or vertical main-axis direction. |
-| `TuiLayoutKind` | Horizontal, vertical, or grid layout dispatch kind. |
+| `TuiLayoutKind` | Horizontal, vertical, grid, form, or stacked layout dispatch kind. |
 | `TuiLayoutSettings` | Live margins and spacing operations. |
 | `TuiHorizontalLayout` | Typed horizontal layout handle. |
 | `TuiVerticalLayout` | Typed vertical layout handle. |
 | `TuiGridPlacement` | A zero-based grid cell with row and column spans. |
 | `TuiGridLayout` | Typed row-and-column layout handle. |
 | `TuiGridItems` | Grid item placement and removal operations. |
+| `TuiFormLayout` | Typed two-column label-and-field layout handle. |
+| `TuiFormItems` | Form row insertion, lookup, and removal operations. |
+| `TuiStackedLayout` | Typed shared-area page layout with a current-index property. |
+| `TuiStackedItems` | Stacked page insertion, lookup, and removal operations. |
 | `TuiLayoutMeasure` | Recursive headless layout measurement. |
 | `TuiLayoutArrange` | Recursive headless rectangle allocation. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
@@ -205,12 +209,13 @@ ordered item list for each live layout.
 `TuiLayout.CreateKind(App, Kind)` creates a common handle with an explicit immutable kind;
 `Create(App)` is its horizontal shorthand. Applications normally use the typed constructors below.
 
-`TuiHorizontalLayout.Create(App)`, `TuiVerticalLayout.Create(App)`, and
-`TuiGridLayout.Create(App)` create typed handles. `AsLayout()` returns the common identity accepted
-by settings, measurement, arrangement, nesting, and container operations. `IsAlive()` and
-`Destroy()` retain the normal generational-handle behavior.
+`TuiHorizontalLayout.Create(App)`, `TuiVerticalLayout.Create(App)`, `TuiGridLayout.Create(App)`,
+`TuiFormLayout.Create(App)`, and `TuiStackedLayout.Create(App)` create typed handles. `AsLayout()`
+returns the common identity accepted by settings, measurement, arrangement, nesting, and container
+operations. `IsAlive()` and `Destroy()` retain the normal generational-handle behavior.
 
-The common layout's read-only `Kind` property identifies its horizontal, vertical, or grid family.
+The common layout's read-only `Kind` property identifies its horizontal, vertical, grid, form, or
+stacked family.
 `TuiLayoutSettings` retains non-negative margins and non-negative spacing. A generic `TuiLayout`
 defaults to horizontal kind with zero margins and spacing. The settings belong to the live registry
 generation and are discarded when the layout is destroyed.
@@ -279,10 +284,22 @@ placements may not overlap. `TuiGridItems.Add`, `Count`, `Get`, `PlacementAt`, `
 `Clear` retain the same view and nested-layout ownership rules as the common list. A one-dimensional
 `TuiSpacer` is not a valid grid item.
 
+Form layouts are specialized two-column grids. `TuiFormItems.AddRow(Form, LabelView, FieldView)`
+adds a label aligned trailing and centered beside a fill-aligned field. `AddRowItems` accepts two
+explicit view items when different alignment or stretch values are needed. `Count`, `LabelAt`,
+`FieldAt`, `RemoveAt`, and `Clear` address zero-based rows. Removing a row detaches both views but
+does not destroy them. Destroying either view directly removes the complete row and detaches the
+remaining view.
+
+Stacked layouts use `TuiStackedItems.Add`, `Count`, `Get`, `RemoveAt`, and `Clear` for view or nested
+layout pages; spacers are rejected. `CurrentIndex` is a read-write zero-based property. It is `-1`
+for an empty stack, selects the first page after the first insertion, and is clamped after page
+removal. Assigning any index outside the current page range is rejected.
+
 ## Headless layout allocation
 
-`TuiLayoutArrange.Arrange(Layout, Bounds)` performs a complete recursive layout pass for box and grid
-layouts. It reserves margins and inter-item spacing, assigns minimum sizes, moves items toward
+`TuiLayoutArrange.Arrange(Layout, Bounds)` performs a complete recursive layout pass for box, grid,
+form, and stacked layouts. It reserves margins and inter-item spacing, assigns minimum sizes, moves items toward
 preferred sizes, and then distributes remaining cells by stretch weight or expanding policy.
 Indivisible cells go to earlier items or tracks in stable order. Stretch enlarges an allocated slot;
 the item inside that slot still respects its finite maximum size and alignment.
@@ -305,6 +322,11 @@ TuiLayoutArrange.Arrange(Row.AsLayout(), TuiRect.Create(0, 0, 40, 10));
 A grid infers its rows and columns from its visible placements. Spanning items contribute their size
 requirements across every covered track, while fixed spacing is counted once between adjacent
 tracks. Item stretch provides the relative growth weight for every covered row and column.
+
+A form uses the same two-axis measurement and allocation rules with one inferred row per label-field
+pair. A stack measures the component-wise maximum of every visible page, so changing
+`CurrentIndex` does not resize its parent. Arrangement assigns bounds only to the selected visible
+page; other pages retain their previous bounds until selected.
 
 ## Commands and actions
 

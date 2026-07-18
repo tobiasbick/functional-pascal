@@ -136,20 +136,25 @@ fn record_static_and_instance_methods_together() {
 }
 
 #[test]
-fn static_procedure_in_record_is_rejected() {
-    let (_p, errs) = parse_with_errors(
+fn record_with_static_procedure() {
+    let p = parse_ok(
         "program T; type Point = record X: integer; \
          static procedure Reset(X: integer); begin end; \
          end; begin end.",
     );
-    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
-    let d = parse_err.expect("expected parser diagnostic");
-    assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
-    assert!(
-        d.message.contains("static procedure"),
-        "message: {}",
-        d.message
-    );
+    match &p.declarations[0] {
+        Decl::TypeDef(td) => match &td.body {
+            TypeBody::Record(r) => match &r.methods[0] {
+                RecordMethod::StaticProcedure(procedure) => {
+                    assert_eq!(procedure.name, "Reset");
+                    assert_eq!(procedure.params.len(), 1);
+                }
+                other => panic!("expected StaticProcedure, got {other:?}"),
+            },
+            _ => panic!("expected Record"),
+        },
+        _ => panic!("expected TypeDef"),
+    }
 }
 
 #[test]
@@ -162,7 +167,22 @@ fn static_at_program_level_is_rejected() {
     assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
     assert!(
         d.message
-            .contains("only valid on a function declared inside a record"),
+            .contains("only valid on a function or procedure declared inside a record"),
+        "message: {}",
+        d.message
+    );
+}
+
+#[test]
+fn static_procedure_at_program_level_is_rejected() {
+    let (_p, errs) =
+        parse_with_errors("program T; static procedure Reset(); begin end; begin end.");
+    let parse_err = errs.iter().find_map(ParseDiagnostic::as_parser_error);
+    let d = parse_err.expect("expected parser diagnostic");
+    assert_eq!(d.code, PARSE_INVALID_STATIC_PLACEMENT);
+    assert!(
+        d.message
+            .contains("only valid on a function or procedure declared inside a record"),
         "message: {}",
         d.message
     );

@@ -3,10 +3,12 @@ unit Std.Tui2.Layouts.LayoutArrange;
 uses
   Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.Alignment,
   Std.Tui2.Layouts.Direction, Std.Tui2.Layouts.GridArrange, Std.Tui2.Layouts.GridLayout,
-  Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutKind,
-  Std.Tui2.Layouts.LayoutContent, Std.Tui2.Layouts.LayoutItems, Std.Tui2.Layouts.LayoutMeasure,
-  Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureResult,
-  Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer;
+  Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutItem,
+  Std.Tui2.Layouts.LayoutKind, Std.Tui2.Layouts.LayoutContent, Std.Tui2.Layouts.LayoutItems,
+  Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins,
+  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.SizePolicy,
+  Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.StackedArrange, Std.Tui2.Layouts.StackedItems,
+  Std.Tui2.Layouts.StackedLayout;
 
 private type TuiLayoutSlot = record
   Item: TuiLayoutItem;
@@ -140,13 +142,50 @@ type
       begin
         panic('Tui2 cannot arrange a stale layout')
       end;
-      if Layout.Kind = TuiLayoutKind.Grid then
+      if (Layout.Kind = TuiLayoutKind.Grid) or (Layout.Kind = TuiLayoutKind.Form) then
       begin
         var Grid: TuiGridLayout := record Layout := Layout; end;
         var ArrangeNested: TuiGridArrangeCallback := function(Nested: TuiLayout; NestedBounds: TuiRect): boolean begin
           return TuiLayoutArrange.Arrange(Nested, NestedBounds)
         end;
-        return TuiGridArrange.Arrange(Grid, Bounds, ArrangeNested)
+        var Arranged: boolean := TuiGridArrange.Arrange(Grid, Bounds, ArrangeNested);
+        if Arranged then
+        begin
+          TuiLayoutInvalidation.MarkClean(Layout)
+        end;
+        return Arranged
+      end;
+      if Layout.Kind = TuiLayoutKind.Stacked then
+      begin
+        var Stacked: TuiStackedLayout := record Layout := Layout; end;
+        var CurrentIndex: integer := Stacked.CurrentIndex;
+        if CurrentIndex < 0 then
+        begin
+          TuiLayoutInvalidation.MarkClean(Layout);
+          return true
+        end;
+        var Page: TuiLayoutItem := TuiStackedItems.Get(Stacked, CurrentIndex);
+        if Page.Kind = TuiLayoutItemKind.View then
+        begin
+          if not Page.View.Visible then
+          begin
+            TuiLayoutInvalidation.MarkClean(Layout);
+            return true
+          end
+        end;
+        var PageMargins: TuiMargins := TuiLayoutSettings.Margins(Layout);
+        var PageContent: TuiRect := TuiLayoutContent.Inset(Bounds, PageMargins);
+        var PageSpec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(PageContent.Width, PageContent.Height));
+        var PageMeasured: TuiMeasureResult := TuiLayoutMeasure.MeasureItem(Page, TuiLayoutDirection.Horizontal, PageSpec);
+        var ArrangePage: TuiStackedArrangeCallback := function(Nested: TuiLayout; NestedBounds: TuiRect): boolean begin
+          return TuiLayoutArrange.Arrange(Nested, NestedBounds)
+        end;
+        var Arranged: boolean := TuiStackedArrange.Arrange(Stacked, Bounds, PageMeasured, ArrangePage);
+        if Arranged then
+        begin
+          TuiLayoutInvalidation.MarkClean(Layout)
+        end;
+        return Arranged
       end;
       mutable var Direction: TuiLayoutDirection := TuiLayoutDirection.Horizontal;
       if Layout.Kind = TuiLayoutKind.Vertical then
@@ -310,6 +349,7 @@ type
         end;
         Cursor := (Cursor + Slot.MainExtent) + Spacing
       end;
+      TuiLayoutInvalidation.MarkClean(Layout);
       return true
     end;
   end;

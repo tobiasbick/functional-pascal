@@ -48,10 +48,12 @@ impl Checker {
                     return self.reject_bare_event_read(&record_ty.name, member, span);
                 }
 
-                if self.is_static_function_on_record(record_ty, member) {
+                if let Some(routine_kind) = self.static_routine_kind_on_record(record_ty, member) {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        format!("`{member}` is a static function and cannot be bound from a value"),
+                        format!(
+                            "`{member}` is a static {routine_kind} and cannot be bound from a value"
+                        ),
                         format!(
                             "Call it through the type as `{}.{}`, or use an instance method.",
                             record_ty.name, member

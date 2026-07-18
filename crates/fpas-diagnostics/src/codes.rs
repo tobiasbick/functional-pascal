@@ -59,7 +59,7 @@ define_codes!(PARSE_ALLOCATED_CODES => {
 
     /// Visibility modifier (`public`/`private`) used outside a `unit` file.
     PARSE_INVALID_VISIBILITY = 1007;
-    /// `static` used outside a supported `static function` record member.
+    /// `static` used outside a supported static record routine.
     PARSE_INVALID_STATIC_PLACEMENT = 1008;
 });
 

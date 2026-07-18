@@ -35,13 +35,13 @@ impl Parser {
         decls
     }
 
-    /// `static` is only valid as `static function` inside a record type body.
+    /// `static` is only valid on a function or procedure inside a record type body.
     fn recover_invalid_static_decl(&mut self) {
         let span = self.current_span();
         self.error_with_code(
             PARSE_INVALID_STATIC_PLACEMENT,
-            "`static` is only valid on a function declared inside a record",
-            "Move the function into a `record … end` body and write `static function Name(...): T;`.",
+            "`static` is only valid on a function or procedure declared inside a record",
+            "Move the routine into a `record … end` body and write `static function Name(...): T;` or `static procedure Name(...);`.",
             span,
         );
         self.advance(); // consume `static`

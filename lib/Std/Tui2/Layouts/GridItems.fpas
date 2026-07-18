@@ -124,7 +124,7 @@ begin
   begin
     panic('Tui2 cannot access a stale grid layout')
   end;
-  if Grid.Layout.Kind <> TuiLayoutKind.Grid then
+  if (Grid.Layout.Kind <> TuiLayoutKind.Grid) and (Grid.Layout.Kind <> TuiLayoutKind.Form) then
   begin
     panic('Tui2 grid handle no longer identifies a grid layout')
   end

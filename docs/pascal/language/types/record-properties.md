@@ -36,7 +36,7 @@ Rules:
   match the property type. `Self` and a setter's value parameter are passed by
   value; neither may be declared `mutable`.
 - Property names share the case-insensitive member namespace with fields, methods,
-  and static functions.
+  and static routines.
 - `read` and `write` are contextual words in the declaration, not reserved
   keywords elsewhere.
 - Type aliases expose properties from the resolved record type.

@@ -58,6 +58,9 @@ and spacing, hidden-view exclusion, constrained recursive measurement, policy ev
 remainder allocation, finite maximum sizes, alignment, and nested rectangle assignment.
 Grid coverage additionally verifies placement overlap rejection, positive spans, inferred tracks,
 span measurement, stable two-axis growth, per-axis alignment, direct child cleanup, and nesting
-through the common layout dispatcher.
+through the common layout dispatcher. Form coverage verifies paired insertion, two-column
+measurement and allocation, typed row lookup, non-destructive row removal, and cleanup after direct
+view destruction. Stacked coverage verifies stable maximum-page measurement, hidden-page exclusion,
+active-page allocation, current-index changes, removal clamping, and empty-stack normalization.
 
 Interactive smoke tests remain useful for terminal compatibility, but they are not the primary regression mechanism.

@@ -6,7 +6,8 @@ uses
   Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems, Std.Tui2.Layouts.LayoutKind,
   Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureAxis,
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
-  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer, Std.Tui2.Views.View;
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.StackedLayout,
+  Std.Tui2.Layouts.StackedMeasure, Std.Tui2.Views.View;
 
 private function TuiLayoutMeasurePolicy(
   Minimum: integer;
@@ -114,13 +115,21 @@ type
       begin
         panic('Tui2 cannot measure a stale layout')
       end;
-      if Layout.Kind = TuiLayoutKind.Grid then
+      if (Layout.Kind = TuiLayoutKind.Grid) or (Layout.Kind = TuiLayoutKind.Form) then
       begin
         var Grid: TuiGridLayout := record Layout := Layout; end;
         var MeasureItem: TuiGridMeasureCallback := function(Item: TuiLayoutItem; ChildSpec: TuiMeasureSpec): TuiMeasureResult begin
           return TuiLayoutMeasure.MeasureItem(Item, TuiLayoutDirection.Horizontal, ChildSpec)
         end;
         return TuiGridMeasure.Measure(Grid, Spec, MeasureItem)
+      end;
+      if Layout.Kind = TuiLayoutKind.Stacked then
+      begin
+        var Stacked: TuiStackedLayout := record Layout := Layout; end;
+        var MeasurePage: TuiStackedMeasureCallback := function(Item: TuiLayoutItem; ChildSpec: TuiMeasureSpec): TuiMeasureResult begin
+          return TuiLayoutMeasure.MeasureItem(Item, TuiLayoutDirection.Horizontal, ChildSpec)
+        end;
+        return TuiStackedMeasure.Measure(Stacked, Spec, MeasurePage)
       end;
       mutable var Direction: TuiLayoutDirection := TuiLayoutDirection.Horizontal;
       if Layout.Kind = TuiLayoutKind.Vertical then

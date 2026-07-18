@@ -133,20 +133,26 @@ Views expose minimum, preferred, and maximum sizes plus independent horizontal a
 TuiHorizontalLayout.Create(App: TuiApplication): TuiHorizontalLayout
 TuiVerticalLayout.Create(App: TuiApplication): TuiVerticalLayout
 TuiGridLayout.Create(App: TuiApplication): TuiGridLayout
+TuiFormLayout.Create(App: TuiApplication): TuiFormLayout
+TuiStackedLayout.Create(App: TuiApplication): TuiStackedLayout
 Horizontal.AsLayout(): TuiLayout
 Vertical.AsLayout(): TuiLayout
 Grid.AsLayout(): TuiLayout
+Form.AsLayout(): TuiLayout
+Stacked.AsLayout(): TuiLayout
 TuiGridPlacement.Create(Row: integer; Column: integer; RowSpan: integer; ColumnSpan: integer): TuiGridPlacement
 TuiGridItems.Add(Grid: TuiGridLayout; Item: TuiLayoutItem; Placement: TuiGridPlacement): boolean
+TuiFormItems.AddRow(Form: TuiFormLayout; LabelView: TuiView; FieldView: TuiView): boolean
+TuiStackedItems.Add(Stacked: TuiStackedLayout; Item: TuiLayoutItem): boolean
+Stacked.CurrentIndex: integer                    { read-write property }
 TuiLayoutSettings.SetMargins(Layout: TuiLayout; Margins: TuiMargins): boolean
 TuiLayoutSettings.SetSpacing(Layout: TuiLayout; Spacing: integer): boolean
 TuiLayoutMeasure.Measure(Layout: TuiLayout; Spec: TuiMeasureSpec): TuiMeasureResult
 TuiLayoutArrange.Arrange(Layout: TuiLayout; Bounds: TuiRect): boolean
 ```
 
-Grid construction, validated cell or span placement, and recursive grid measurement/allocation are
-also implemented. Form and stacked layouts, automatic container invalidation, and control-specific
-measurement remain planned.
+Grid construction, form rows, stacked pages, and recursive measurement/allocation are implemented.
+Automatic container invalidation and control-specific measurement remain planned.
 
 ### Containers and top-level views
 

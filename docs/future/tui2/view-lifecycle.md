@@ -25,6 +25,10 @@ Attaching the configured view starts its live tree lifecycle.
 
 `OnStart` and `OnStop` name observable run-loop boundaries. They do not replace explicit application construction or close operations.
 
+Implemented headless delivery: `RunIterations` invokes `OnStart` once before its first iteration.
+Budget exhaustion leaves the application started and open for another bounded run. `Quit` invokes
+`OnStop` once at orderly close; a posted quit request is honored before `OnTick`.
+
 ## View lifecycle hooks
 
 | Hook | Timing | Return |

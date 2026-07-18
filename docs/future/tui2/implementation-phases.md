@@ -53,12 +53,14 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 
 ## Phase 4 — Lifecycle, event routing, and actions
 
-- **Next:** implement the bounded application loop, posted callback draining, invalidation, and
-  resize handling.
+- **Implemented headless core:** bounded application iterations, automatic start, orderly quit,
+  posted callback boundaries, dirty desktop layout completion, retained application size, and
+  desktop resize propagation.
 - **Partial foundation.** Headless application lifecycle events, live action state,
   `TuiAction.OnExecute`, button action binding, and action-before-`OnClick` dispatch are implemented.
 - Integrate the existing lifecycle events with the bounded loop and terminal lifecycle.
-- Implement attach, detach, measure, resize, paint, focus, blur, close-request, and closed transitions.
+- **Next:** implement attach, detach, and resize lifecycle transitions, then add measure, paint,
+  focus, blur, close-request, and closed transitions.
 - Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.

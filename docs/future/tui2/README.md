@@ -47,5 +47,6 @@ Implemented behavior is documented in the current
 [`Std.Tui2` reference](../../pascal/std/tui2/README.md). Phase 3 now has recursive horizontal,
 vertical, grid, form, and stacked measurement/allocation plus explicit container invalidation passes.
 Terminal-too-small detection and the headless `TuiScrollView` viewport are also implemented. The
-next ordered work is the bounded application loop at the start of Phase 4 in
+bounded headless application loop, orderly quit, desktop layout phase, and resize propagation now
+start Phase 4. The next ordered work is attach, detach, and resize lifecycle delivery in
 [implementation-phases.md](implementation-phases.md).

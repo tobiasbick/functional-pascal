@@ -1,44 +1,20 @@
 unit Std.Tui2.Runtime.Application;
 
-uses Std.Array, Std.Tui2.Geometry.Size;
+uses
+  Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationLayout,
+  Std.Tui2.Runtime.ApplicationLoop, Std.Tui2.Runtime.ApplicationPosts,
+  Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.ApplicationResize;
 
 type
   TuiApplicationCallback = procedure(ApplicationId: integer);
   TuiApplicationTickCallback = procedure(ApplicationId: integer; DeltaMilliseconds: integer);
   TuiApplicationCleanupCallback = procedure(ApplicationId: integer);
-  TuiApplicationPostCallback = procedure();
 
-private mutable var TuiApplicationGenerations: array of integer := [];
-private mutable var TuiApplicationAlive: array of boolean := [];
-private mutable var TuiApplicationStarted: array of boolean := [];
-private mutable var TuiApplicationClosing: array of boolean := [];
-private mutable var TuiApplicationTags: array of integer := [];
-private mutable var TuiApplicationSizes: array of TuiSize := [];
 private mutable var TuiApplicationOnStart: array of option of TuiApplicationCallback := [];
 private mutable var TuiApplicationOnStop: array of option of TuiApplicationCallback := [];
 private mutable var TuiApplicationOnTick: array of option of TuiApplicationTickCallback := [];
 private mutable var TuiCleanupApplicationIds: array of integer := [];
 private mutable var TuiCleanupCallbacks: array of TuiApplicationCleanupCallback := [];
-private mutable var TuiPostApplicationIds: array of integer := [];
-private mutable var TuiPostCallbacks: array of TuiApplicationPostCallback := [];
-private mutable var TuiPostQueued: array of boolean := [];
-
-private procedure TuiApplicationRequire(ApplicationId: integer; Generation: integer);
-begin
-  if (ApplicationId <= 0) or (ApplicationId > Std.Array.Length(TuiApplicationGenerations)) then
-  begin
-    panic('Tui2 application handle has an invalid registry slot')
-  end;
-  var Alive: boolean := TuiApplicationAlive[ApplicationId - 1];
-  if not Alive then
-  begin
-    panic('Tui2 application handle is stale')
-  end;
-  if TuiApplicationGenerations[ApplicationId - 1] <> Generation then
-  begin
-    panic('Tui2 application handle generation does not match the registry')
-  end
-end;
 
 procedure RegisterApplicationCleanup(
   ApplicationId: integer;
@@ -46,39 +22,9 @@ procedure RegisterApplicationCleanup(
   Callback: TuiApplicationCleanupCallback
 );
 begin
-  TuiApplicationRequire(ApplicationId, Generation);
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
   TuiCleanupApplicationIds := Std.Array.Concat(TuiCleanupApplicationIds, [ApplicationId]);
   TuiCleanupCallbacks := Std.Array.Concat(TuiCleanupCallbacks, [Callback])
-end;
-
-private procedure TuiApplicationDrainPosts(ApplicationId: integer; Generation: integer);
-begin
-  var Last: integer := Std.Array.Length(TuiPostQueued);
-  for I: integer := 0 to Last - 1 do
-  begin
-    if TuiPostQueued[I] and (TuiPostApplicationIds[I] = ApplicationId) then
-    begin
-      TuiPostQueued[I] := false;
-      var Callback: TuiApplicationPostCallback := TuiPostCallbacks[I];
-      Callback();
-      if not TuiApplicationAlive[ApplicationId - 1] or
-         (TuiApplicationGenerations[ApplicationId - 1] <> Generation) then
-      begin
-        return
-      end
-    end
-  end
-end;
-
-private procedure TuiApplicationDiscardPosts(ApplicationId: integer);
-begin
-  for I: integer := 0 to Std.Array.Length(TuiPostQueued) - 1 do
-  begin
-    if TuiPostApplicationIds[I] = ApplicationId then
-    begin
-      TuiPostQueued[I] := false
-    end
-  end
 end;
 
 type
@@ -88,43 +34,53 @@ type
 
     static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
-      TuiApplicationGenerations := Std.Array.Concat(TuiApplicationGenerations, [1]);
-      TuiApplicationAlive := Std.Array.Concat(TuiApplicationAlive, [true]);
-      TuiApplicationStarted := Std.Array.Concat(TuiApplicationStarted, [false]);
-      TuiApplicationClosing := Std.Array.Concat(TuiApplicationClosing, [false]);
-      TuiApplicationTags := Std.Array.Concat(TuiApplicationTags, [0]);
-      TuiApplicationSizes := Std.Array.Concat(TuiApplicationSizes, [Size]);
+      var ApplicationId: integer := TuiApplicationRegistryOpen(Size);
+      TuiApplicationLoopInitialize(ApplicationId);
       TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
       TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
       TuiApplicationOnTick := Std.Array.Concat(TuiApplicationOnTick, [None]);
-      return record Id := Std.Array.Length(TuiApplicationGenerations); Generation := 1; end
+      return record
+        Id := ApplicationId;
+        Generation := TuiApplicationRegistryGeneration(ApplicationId);
+      end
     end;
 
     function IsOpen(Self: TuiApplication): boolean;
     begin
-      if (Self.Id <= 0) or (Self.Id > Std.Array.Length(TuiApplicationGenerations)) then
-      begin
-        return false
-      end;
-      return TuiApplicationAlive[Self.Id - 1] and
-             (TuiApplicationGenerations[Self.Id - 1] = Self.Generation)
+      return TuiApplicationRegistryIsOpen(Self.Id, Self.Generation)
     end;
 
     function ReadTag(Self: TuiApplication): integer;
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
-      return TuiApplicationTags[Self.Id - 1]
+      return TuiApplicationRegistryReadTag(Self.Id, Self.Generation)
     end;
 
     procedure WriteTag(Self: TuiApplication; Value: integer);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
-      TuiApplicationTags[Self.Id - 1] := Value
+      TuiApplicationRegistryWriteTag(Self.Id, Self.Generation, Value)
+    end;
+
+    function ReadSize(Self: TuiApplication): TuiSize;
+    begin
+      return TuiApplicationRegistryReadSize(Self.Id, Self.Generation)
+    end;
+
+    procedure ResizeForTest(Self: TuiApplication; Size: TuiSize);
+    begin
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if TuiApplicationRegistryIsClosing(Self.Id) then
+      begin
+        panic('Tui2 application cannot resize while closing')
+      end;
+      if TuiApplicationRegistryWriteSize(Self.Id, Self.Generation, Size) then
+      begin
+        TuiApplicationResizeDispatch(Self.Id, Self.Generation, Size)
+      end
     end;
 
     function ReadOnStart(Self: TuiApplication): option of procedure(Sender: TuiApplication);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case TuiApplicationOnStart[Self.Id - 1] of
         Some(Callback):
         begin
@@ -141,7 +97,7 @@ type
 
     procedure WriteOnStart(Self: TuiApplication; Handler: option of procedure(Sender: TuiApplication));
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case Handler of
         Some(Value):
         begin
@@ -163,7 +119,7 @@ type
 
     function ReadOnStop(Self: TuiApplication): option of procedure(Sender: TuiApplication);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case TuiApplicationOnStop[Self.Id - 1] of
         Some(Callback):
         begin
@@ -180,7 +136,7 @@ type
 
     procedure WriteOnStop(Self: TuiApplication; Handler: option of procedure(Sender: TuiApplication));
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case Handler of
         Some(Value):
         begin
@@ -202,7 +158,7 @@ type
 
     function ReadOnTick(Self: TuiApplication): option of procedure(Sender: TuiApplication; DeltaMilliseconds: integer);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case TuiApplicationOnTick[Self.Id - 1] of
         Some(Callback):
         begin
@@ -222,7 +178,7 @@ type
   Handler: option of procedure(Sender: TuiApplication; DeltaMilliseconds: integer)
 );
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
       case Handler of
         Some(Value):
         begin
@@ -244,12 +200,8 @@ type
 
     procedure Start(Self: TuiApplication);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
-      if TuiApplicationStarted[Self.Id - 1] then
-      begin
-        panic('Tui2 application has already started')
-      end;
-      TuiApplicationStarted[Self.Id - 1] := true;
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      TuiApplicationLoopMarkStarted(Self.Id);
       if Assigned(Self.OnStart) then
       begin
         Self.OnStart(Self)
@@ -258,22 +210,19 @@ type
 
     function Post(Self: TuiApplication; Handler: procedure()): boolean;
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
-      if TuiApplicationClosing[Self.Id - 1] then
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if TuiApplicationRegistryIsClosing(Self.Id) then
       begin
         return false
       end;
-      TuiPostApplicationIds := Std.Array.Concat(TuiPostApplicationIds, [Self.Id]);
-      TuiPostCallbacks := Std.Array.Concat(TuiPostCallbacks, [Handler]);
-      TuiPostQueued := Std.Array.Concat(TuiPostQueued, [true]);
+      TuiApplicationPostsEnqueue(Self.Id, Self.Generation, Handler);
       return true
     end;
 
     procedure Tick(Self: TuiApplication; DeltaMilliseconds: integer);
     begin
-      TuiApplicationRequire(Self.Id, Self.Generation);
-      var Started: boolean := TuiApplicationStarted[Self.Id - 1];
-      if not Started then
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if not TuiApplicationLoopIsStarted(Self.Id) then
       begin
         panic('Tui2 application must be started before ticking')
       end;
@@ -281,8 +230,13 @@ type
       begin
         panic('Tui2 tick delta must not be negative')
       end;
-      TuiApplicationDrainPosts(Self.Id, Self.Generation);
-      if not Self.IsOpen() then
+      TuiApplicationPostsDrain(Self.Id, Self.Generation);
+      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
+      begin
+        return
+      end;
+      TuiApplicationLayoutPerform(Self.Id, Self.Generation);
+      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
       begin
         return
       end;
@@ -290,9 +244,58 @@ type
       begin
         Self.OnTick(Self, DeltaMilliseconds)
       end;
-      if Self.IsOpen() then
+      if Self.IsOpen() and (not TuiApplicationLoopShouldQuit(Self.Id)) then
       begin
-        TuiApplicationDrainPosts(Self.Id, Self.Generation)
+        TuiApplicationPostsDrain(Self.Id, Self.Generation)
+      end
+    end;
+
+    procedure RunIterations(Self: TuiApplication; IterationCount: integer; DeltaMilliseconds: integer);
+    begin
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if TuiApplicationRegistryIsClosing(Self.Id) then
+      begin
+        panic('Tui2 application cannot run while closing')
+      end;
+      if IterationCount < 0 then
+      begin
+        panic('Tui2 iteration count must not be negative')
+      end;
+      if DeltaMilliseconds < 0 then
+      begin
+        panic('Tui2 tick delta must not be negative')
+      end;
+      TuiApplicationLoopBegin(Self.Id);
+      if not TuiApplicationLoopIsStarted(Self.Id) then
+      begin
+        Self.Start()
+      end;
+      for I: integer := 0 to IterationCount - 1 do
+      begin
+        if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
+        begin
+          break
+        end;
+        Self.Tick(DeltaMilliseconds)
+      end;
+      var QuitRequested: boolean := TuiApplicationLoopShouldQuit(Self.Id);
+      TuiApplicationLoopEnd(Self.Id);
+      if QuitRequested and Self.IsOpen() then
+      begin
+        Self.Close()
+      end
+    end;
+
+    procedure Quit(Self: TuiApplication);
+    begin
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if TuiApplicationLoopIsRunning(Self.Id) then
+      begin
+        TuiApplicationLoopRequestQuit(Self.Id)
+      end
+      else
+      begin
+        Self.Close()
       end
     end;
 
@@ -302,16 +305,15 @@ type
       begin
         return
       end;
-      if TuiApplicationClosing[Self.Id - 1] then
+      if not TuiApplicationRegistryBeginClose(Self.Id, Self.Generation) then
       begin
         return
       end;
-      TuiApplicationClosing[Self.Id - 1] := true;
-      if TuiApplicationStarted[Self.Id - 1] and Assigned(Self.OnStop) then
+      if TuiApplicationLoopIsStarted(Self.Id) and Assigned(Self.OnStop) then
       begin
         Self.OnStop(Self)
       end;
-      TuiApplicationDiscardPosts(Self.Id);
+      TuiApplicationPostsDiscard(Self.Id, Self.Generation);
       for I: integer := 0 to Std.Array.Length(TuiCleanupApplicationIds) - 1 do
       begin
         if TuiCleanupApplicationIds[I] = Self.Id then
@@ -320,16 +322,17 @@ type
           Callback(Self.Id)
         end
       end;
+      TuiApplicationLayoutRelease(Self.Id, Self.Generation);
+      TuiApplicationResizeRelease(Self.Id, Self.Generation);
+      TuiApplicationLoopRelease(Self.Id);
       TuiApplicationOnStart[Self.Id - 1] := None;
       TuiApplicationOnStop[Self.Id - 1] := None;
       TuiApplicationOnTick[Self.Id - 1] := None;
-      TuiApplicationStarted[Self.Id - 1] := false;
-      TuiApplicationAlive[Self.Id - 1] := false;
-      TuiApplicationClosing[Self.Id - 1] := false;
-      TuiApplicationGenerations[Self.Id - 1] := Self.Generation + 1
+      TuiApplicationRegistryFinishClose(Self.Id, Self.Generation)
     end;
 
     property Tag: integer read ReadTag write WriteTag;
+    property Size: TuiSize read ReadSize;
 
     event OnStart: procedure(Sender: TuiApplication) read ReadOnStart write WriteOnStart;
     event OnStop: procedure(Sender: TuiApplication) read ReadOnStop write WriteOnStop;

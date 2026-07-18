@@ -1,0 +1,84 @@
+unit Std.Tui2.Runtime.ApplicationLoop;
+
+uses Std.Array;
+
+private mutable var TuiApplicationLoopStarted: array of boolean := [];
+private mutable var TuiApplicationLoopRunning: array of boolean := [];
+private mutable var TuiApplicationLoopQuitRequested: array of boolean := [];
+
+private procedure TuiApplicationLoopRequire(ApplicationId: integer);
+begin
+  if (ApplicationId <= 0) or (ApplicationId > Std.Array.Length(TuiApplicationLoopStarted)) then
+  begin
+    panic('Tui2 application loop has an invalid registry slot')
+  end
+end;
+
+procedure TuiApplicationLoopInitialize(ApplicationId: integer);
+begin
+  if ApplicationId <> Std.Array.Length(TuiApplicationLoopStarted) + 1 then
+  begin
+    panic('Tui2 application loop registry is out of sync')
+  end;
+  TuiApplicationLoopStarted := Std.Array.Concat(TuiApplicationLoopStarted, [false]);
+  TuiApplicationLoopRunning := Std.Array.Concat(TuiApplicationLoopRunning, [false]);
+  TuiApplicationLoopQuitRequested := Std.Array.Concat(TuiApplicationLoopQuitRequested, [false])
+end;
+
+function TuiApplicationLoopIsStarted(ApplicationId: integer): boolean;
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  return TuiApplicationLoopStarted[ApplicationId - 1]
+end;
+
+procedure TuiApplicationLoopMarkStarted(ApplicationId: integer);
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  if TuiApplicationLoopStarted[ApplicationId - 1] then
+  begin
+    panic('Tui2 application has already started')
+  end;
+  TuiApplicationLoopStarted[ApplicationId - 1] := true
+end;
+
+procedure TuiApplicationLoopBegin(ApplicationId: integer);
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  if TuiApplicationLoopRunning[ApplicationId - 1] then
+  begin
+    panic('Tui2 application loop cannot be entered recursively')
+  end;
+  TuiApplicationLoopRunning[ApplicationId - 1] := true
+end;
+
+procedure TuiApplicationLoopEnd(ApplicationId: integer);
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  TuiApplicationLoopRunning[ApplicationId - 1] := false
+end;
+
+function TuiApplicationLoopIsRunning(ApplicationId: integer): boolean;
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  return TuiApplicationLoopRunning[ApplicationId - 1]
+end;
+
+procedure TuiApplicationLoopRequestQuit(ApplicationId: integer);
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  TuiApplicationLoopQuitRequested[ApplicationId - 1] := true
+end;
+
+function TuiApplicationLoopShouldQuit(ApplicationId: integer): boolean;
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  return TuiApplicationLoopQuitRequested[ApplicationId - 1]
+end;
+
+procedure TuiApplicationLoopRelease(ApplicationId: integer);
+begin
+  TuiApplicationLoopRequire(ApplicationId);
+  TuiApplicationLoopStarted[ApplicationId - 1] := false;
+  TuiApplicationLoopRunning[ApplicationId - 1] := false;
+  TuiApplicationLoopQuitRequested[ApplicationId - 1] := false
+end;

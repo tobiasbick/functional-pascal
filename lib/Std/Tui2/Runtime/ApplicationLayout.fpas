@@ -1,0 +1,56 @@
+unit Std.Tui2.Runtime.ApplicationLayout;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationLayoutCallback = procedure(ApplicationId: integer);
+
+private mutable var TuiApplicationLayoutApplicationIds: array of integer := [];
+private mutable var TuiApplicationLayoutGenerations: array of integer := [];
+private mutable var TuiApplicationLayoutCallbacks: array of TuiApplicationLayoutCallback := [];
+private mutable var TuiApplicationLayoutActive: array of boolean := [];
+
+procedure RegisterApplicationLayout(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationLayoutCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationLayoutApplicationIds := Std.Array.Concat(TuiApplicationLayoutApplicationIds, [
+                                                                                               ApplicationId
+
+                                                                                             ]);
+  TuiApplicationLayoutGenerations := Std.Array.Concat(TuiApplicationLayoutGenerations, [Generation]);
+  TuiApplicationLayoutCallbacks := Std.Array.Concat(TuiApplicationLayoutCallbacks, [Callback]);
+  TuiApplicationLayoutActive := Std.Array.Concat(TuiApplicationLayoutActive, [true])
+end;
+
+procedure TuiApplicationLayoutPerform(ApplicationId: integer; Generation: integer);
+begin
+  var Last: integer := Std.Array.Length(TuiApplicationLayoutActive);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if (((TuiApplicationLayoutActive[I] and (TuiApplicationLayoutApplicationIds[I] = ApplicationId)) and (TuiApplicationLayoutGenerations[I] = Generation))) then
+    begin
+      var Callback: TuiApplicationLayoutCallback := TuiApplicationLayoutCallbacks[I];
+      Callback(ApplicationId);
+      if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+      begin
+        return
+      end
+    end
+  end
+end;
+
+procedure TuiApplicationLayoutRelease(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiApplicationLayoutActive) - 1 do
+  begin
+    if (TuiApplicationLayoutApplicationIds[I] = ApplicationId) and
+       (TuiApplicationLayoutGenerations[I] = Generation) then
+    begin
+      TuiApplicationLayoutActive[I] := false
+    end
+  end
+end;

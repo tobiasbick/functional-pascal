@@ -151,8 +151,10 @@ var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ## Headless applications and lifecycle events
 
 `TuiApplication.OpenForTest(Size)` creates an application-scoped registry without changing terminal
-modes. `Start`, `Tick`, and `Close` expose deterministic lifecycle boundaries for headless code.
-`Close` is idempotent and invalidates every action and button owned by the application.
+modes. Its read-only `Size` property retains that extent. `ResizeForTest(Size)` changes it and
+immediately resizes an existing desktop root. `Start`, `Tick`, and `Close` expose deterministic
+lifecycle boundaries for headless code. `Close` is idempotent and invalidates every live handle
+owned by the application.
 
 ```pascal
 var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
@@ -164,11 +166,22 @@ App.Tick(16);
 App.Close()
 ```
 
+`RunIterations(IterationCount, DeltaMilliseconds)` is the bounded headless loop. It starts the
+application once when needed, runs at most the requested non-negative number of iterations, and
+leaves the application open when that budget is exhausted. Each iteration drains posted callbacks,
+performs invalid desktop layout, invokes `OnTick`, and drains callbacks again. A negative iteration
+count or tick delta is rejected.
+
+`Quit()` requests orderly shutdown while `RunIterations` is active. The current callback returns,
+the remaining iteration phases are skipped, `OnStop` runs once, and the application closes. Calling
+`Quit` while no loop is active closes immediately. A posted quit request is observed before layout
+and `OnTick`.
+
 `Post(Handler)` appends a parameterless callback and returns `true` while the application is open.
 `Tick` drains pending callbacks in FIFO order before and after `OnTick`; callbacks posted while a drain
 is in progress run in the next drain. Closing an application discards callbacks that have not started,
-and `Post` then returns `false`. This is currently deterministic headless scheduling; worker-task
-transfer and terminal-loop integration are not exposed yet.
+and `Post` returns `false` once shutdown has begun. Access through the stale handle after close is
+rejected.
 
 The lifecycle members are single-handler [record events](../../language/types/record-events.md).
 Assigning another compatible handler replaces the previous handler; assigning `nil` clears it.
@@ -216,8 +229,9 @@ need to run a layout pass first.
 
 `TuiDesktop.Create(App)` creates the one explicit headless root container for an open application.
 It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, `PerformLayout`, and read-only
-`LayoutFit` surface, and becomes stale when its application closes. The eventual `App.Desktop`
-property is not exposed yet.
+`LayoutFit` surface, and becomes stale when its application closes. No implicit desktop is created.
+The desktop starts at the application size, follows `ResizeForTest`, and its dirty root layout is
+completed by `Tick` or `RunIterations`.
 
 ## Headless scroll views
 

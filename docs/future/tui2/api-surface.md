@@ -103,6 +103,11 @@ App.Desktop: TuiDesktop                          { read-only property }
 TuiApplication.Post(App: TuiApplication; Handler: procedure()): boolean
 ```
 
+The implemented headless application additionally exposes `Size`, `ResizeForTest`,
+`RunIterations`, and `Quit`. `RunIterations` performs posted-callback, desktop-layout, and tick
+phases with a deterministic iteration budget; the terminal-backed `Run` above remains the intended
+interactive entry point.
+
 ### Common views
 
 ```pascal

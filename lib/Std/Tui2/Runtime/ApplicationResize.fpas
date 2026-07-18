@@ -1,0 +1,56 @@
+unit Std.Tui2.Runtime.ApplicationResize;
+
+uses Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationResizeCallback = procedure(ApplicationId: integer; Size: TuiSize);
+
+private mutable var TuiApplicationResizeApplicationIds: array of integer := [];
+private mutable var TuiApplicationResizeGenerations: array of integer := [];
+private mutable var TuiApplicationResizeCallbacks: array of TuiApplicationResizeCallback := [];
+private mutable var TuiApplicationResizeActive: array of boolean := [];
+
+procedure RegisterApplicationResize(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationResizeCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationResizeApplicationIds := Std.Array.Concat(TuiApplicationResizeApplicationIds, [
+                                                                                               ApplicationId
+
+                                                                                             ]);
+  TuiApplicationResizeGenerations := Std.Array.Concat(TuiApplicationResizeGenerations, [Generation]);
+  TuiApplicationResizeCallbacks := Std.Array.Concat(TuiApplicationResizeCallbacks, [Callback]);
+  TuiApplicationResizeActive := Std.Array.Concat(TuiApplicationResizeActive, [true])
+end;
+
+procedure TuiApplicationResizeDispatch(ApplicationId: integer; Generation: integer; Size: TuiSize);
+begin
+  var Last: integer := Std.Array.Length(TuiApplicationResizeActive);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if (((TuiApplicationResizeActive[I] and (TuiApplicationResizeApplicationIds[I] = ApplicationId)) and (TuiApplicationResizeGenerations[I] = Generation))) then
+    begin
+      var Callback: TuiApplicationResizeCallback := TuiApplicationResizeCallbacks[I];
+      Callback(ApplicationId, Size);
+      if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+      begin
+        return
+      end
+    end
+  end
+end;
+
+procedure TuiApplicationResizeRelease(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiApplicationResizeActive) - 1 do
+  begin
+    if (TuiApplicationResizeApplicationIds[I] = ApplicationId) and
+       (TuiApplicationResizeGenerations[I] = Generation) then
+    begin
+      TuiApplicationResizeActive[I] := false
+    end
+  end
+end;

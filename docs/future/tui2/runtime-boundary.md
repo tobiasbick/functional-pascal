@@ -9,8 +9,10 @@ Calling them from a spawned task is a programming error with a diagnostic that i
 ## Posting from workers
 
 Implemented headless foundation: `TuiApplication.Post` stores parameterless callbacks in an
-application-scoped FIFO queue and `Tick` drains it before and after `OnTick`. Posts added during a
-drain run in the following drain; closing the application discards callbacks that have not started.
+application-scoped FIFO queue. `Tick` and `RunIterations` drain it before desktop layout and after
+`OnTick`. Posts added during a drain run in the following drain; closing the application discards
+callbacks that have not started. A posted `Quit` skips the remaining iteration phases and closes at
+the loop boundary.
 
 The runtime later extends this to a generic typed main-task queue. Tui2 exposes it through this
 conceptual API:

@@ -1,0 +1,56 @@
+unit Std.Tui2.Runtime.ApplicationPosts;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationPostCallback = procedure();
+
+private mutable var TuiApplicationPostApplicationIds: array of integer := [];
+private mutable var TuiApplicationPostGenerations: array of integer := [];
+private mutable var TuiApplicationPostCallbacks: array of TuiApplicationPostCallback := [];
+private mutable var TuiApplicationPostQueued: array of boolean := [];
+
+procedure TuiApplicationPostsEnqueue(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationPostCallback
+);
+begin
+  TuiApplicationPostApplicationIds := Std.Array.Concat(TuiApplicationPostApplicationIds, [
+                                                                                           ApplicationId
+
+                                                                                         ]);
+  TuiApplicationPostGenerations := Std.Array.Concat(TuiApplicationPostGenerations, [Generation]);
+  TuiApplicationPostCallbacks := Std.Array.Concat(TuiApplicationPostCallbacks, [Callback]);
+  TuiApplicationPostQueued := Std.Array.Concat(TuiApplicationPostQueued, [true])
+end;
+
+procedure TuiApplicationPostsDrain(ApplicationId: integer; Generation: integer);
+begin
+  var Last: integer := Std.Array.Length(TuiApplicationPostQueued);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if ((TuiApplicationPostQueued[I] and (TuiApplicationPostApplicationIds[I] = ApplicationId)) and (TuiApplicationPostGenerations[I] = Generation)) then
+    begin
+      TuiApplicationPostQueued[I] := false;
+      var Callback: TuiApplicationPostCallback := TuiApplicationPostCallbacks[I];
+      Callback();
+      if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+      begin
+        return
+      end
+    end
+  end
+end;
+
+procedure TuiApplicationPostsDiscard(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiApplicationPostQueued) - 1 do
+  begin
+    if (TuiApplicationPostApplicationIds[I] = ApplicationId) and
+       (TuiApplicationPostGenerations[I] = Generation) then
+    begin
+      TuiApplicationPostQueued[I] := false
+    end
+  end
+end;

@@ -41,7 +41,9 @@ cleanup, and terminal-open rollback.
 Implemented registry coverage includes `TuiView` slot reuse, stale generations, tags, bounds,
 visibility, enabled state, size hints, size policies, default restoration, and application-close
 cleanup, plus direct container attachment and destructive removal.
-Application coverage verifies FIFO callback posting, including callbacks posted during a drain.
+Application coverage verifies FIFO callback posting, including callbacks posted during a drain;
+bounded iteration budgets; automatic single start; orderly quit and stop; pre-tick posted quit;
+retained application size; desktop resize propagation; and automatic dirty desktop layout passes.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

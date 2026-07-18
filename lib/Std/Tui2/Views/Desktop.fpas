@@ -1,8 +1,9 @@
 unit Std.Tui2.Views.Desktop;
 
 uses
-  Std.Array, Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application, Std.Tui2.Views.Container,
-  Std.Tui2.Views.View;
+  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.LayoutFit,
+  Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationLayout,
+  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Views.Container, Std.Tui2.Views.View;
 
 private mutable var TuiDesktopApplicationIds: array of integer := [];
 private mutable var TuiDesktopContainers: array of TuiContainer := [];
@@ -26,8 +27,26 @@ type
         end
       end;
       var Container: TuiContainer := TuiContainer.Create(App);
+      var View: TuiView := TuiContainer.AsView(Container);
+      var Size: TuiSize := App.Size;
+      View.Bounds := TuiRect.Create(0, 0, Size.Width, Size.Height);
       TuiDesktopApplicationIds := Std.Array.Concat(TuiDesktopApplicationIds, [App.Id]);
       TuiDesktopContainers := Std.Array.Concat(TuiDesktopContainers, [Container]);
+      var LayoutCallback: TuiApplicationLayoutCallback := procedure(ApplicationId: integer) begin
+        if (ApplicationId = App.Id) and Container.IsAlive() then
+        begin
+          Container.PerformLayout()
+        end
+      end;
+      RegisterApplicationLayout(App.Id, App.Generation, LayoutCallback);
+      var ResizeCallback: TuiApplicationResizeCallback := procedure(ApplicationId: integer; NewSize: TuiSize) begin
+        if (ApplicationId = App.Id) and Container.IsAlive() then
+        begin
+          var DesktopView: TuiView := TuiContainer.AsView(Container);
+          DesktopView.Bounds := TuiRect.Create(0, 0, NewSize.Width, NewSize.Height)
+        end
+      end;
+      RegisterApplicationResize(App.Id, App.Generation, ResizeCallback);
       return record ApplicationId := App.Id; Container := Container; end
     end;
 

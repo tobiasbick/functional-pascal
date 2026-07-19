@@ -1,0 +1,188 @@
+unit Std.Tui2.Controls.Label;
+
+uses
+  Std.Array, Std.Console, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole, Std.Tui2.Geometry.Size,
+  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Views.View;
+
+private mutable var LabelApps: array of integer := [];
+private mutable var LabelGens: array of integer := [];
+private mutable var LabelAlive: array of boolean := [];
+private mutable var LabelTexts: array of string := [];
+private mutable var LabelViews: array of TuiView := [];
+
+private procedure LabelRequire(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Std.Array.Length(LabelGens)) then
+  begin
+    panic('Tui2 label handle has an invalid registry slot')
+  end;
+  if not LabelAlive[Slot - 1] then
+  begin
+    panic('Tui2 label handle is stale')
+  end;
+  if LabelGens[Slot - 1] <> Generation then
+  begin
+    panic('Tui2 label handle generation does not match the registry')
+  end;
+  if LabelApps[Slot - 1] <> ApplicationId then
+  begin
+    panic('Tui2 label belongs to a different application')
+  end;
+  var View: TuiView := LabelViews[Slot - 1];
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 label owns a stale view')
+  end;
+  var App: TuiApplication := record Id := ApplicationId; Generation := 1; end;
+  if not App.IsOpen() then
+  begin
+    panic('Tui2 label belongs to a closed application')
+  end
+end;
+
+private function LabelWidth(Text: string): integer;
+begin
+  mutable var Width: integer := 0;
+  for Glyph: string in Std.Console.SplitGraphemes(Text) do
+  begin
+    Width := Width + TuiCell.Create(Glyph, TuiStyleRole.Normal).Width()
+  end;
+  return Width
+end;
+
+private procedure LabelRelease(App: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot > 0) and (Slot <= Std.Array.Length(LabelGens)) then
+  begin
+    if ((LabelApps[Slot - 1] = App) and (LabelGens[Slot - 1] = Generation)) and LabelAlive[Slot - 1] then
+    begin
+      LabelAlive[Slot - 1] := false;
+      LabelGens[Slot - 1] := Generation + 1
+    end
+  end
+end;
+
+type
+  TuiLabel = record
+    ApplicationId: integer;
+    Slot: integer;
+    Generation: integer;
+
+    static function Create(App: TuiApplication; Text: string): TuiLabel;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a label for a closed application')
+      end;
+      var View: TuiView := TuiView.Create(App);
+      View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(LabelWidth(Text), 1));
+      LabelApps := Std.Array.Concat(LabelApps, [App.Id]);
+      LabelGens := Std.Array.Concat(LabelGens, [1]);
+      LabelAlive := Std.Array.Concat(LabelAlive, [true]);
+      LabelTexts := Std.Array.Concat(LabelTexts, [Text]);
+      LabelViews := Std.Array.Concat(LabelViews, [View]);
+      var Label: TuiLabel := record
+        ApplicationId := App.Id;
+        Slot := Std.Array.Length(LabelGens);
+        Generation := 1;
+      end;
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        LabelRelease(ApplicationId, Label.Slot, Label.Generation)
+      end;
+      RegisterViewCleanup(View, Cleanup);
+      var ApplicationCleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
+        LabelRelease(ApplicationId, Label.Slot, Label.Generation)
+      end;
+      RegisterApplicationCleanup(App.Id, App.Generation, ApplicationCleanup);
+      return Label
+    end;
+
+    function IsAlive(Self: TuiLabel): boolean;
+    begin
+      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(LabelGens)) then
+      begin
+        return false
+      end;
+      var View: TuiView := LabelViews[Self.Slot - 1];
+      return ((LabelAlive[Self.Slot - 1] and (LabelGens[Self.Slot - 1] = Self.Generation)) and ((LabelApps[Self.Slot -
+                                                                                                           1] = Self.ApplicationId) and View.IsAlive()))
+    end;
+
+    static function AsView(Label: TuiLabel): TuiView;
+    begin
+      LabelRequire(Label.ApplicationId, Label.Slot, Label.Generation);
+      var View: TuiView := LabelViews[Label.Slot - 1];
+      return record
+        ApplicationId := View.ApplicationId;
+        Slot := View.Slot;
+        Generation := View.Generation;
+        Kind := TuiViewKind.Label;
+      end
+    end;
+
+    function ReadText(Self: TuiLabel): string;
+    begin
+      LabelRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return LabelTexts[Self.Slot - 1]
+    end;
+
+    procedure WriteText(Self: TuiLabel; Value: string);
+    begin
+      LabelRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if LabelTexts[Self.Slot - 1] <> Value then
+      begin
+        LabelTexts[Self.Slot - 1] := Value;
+        var View: TuiView := LabelViews[Self.Slot - 1];
+        View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(LabelWidth(Value), 1));
+        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
+      end
+    end;
+
+    procedure Destroy(Self: TuiLabel);
+    begin
+      LabelRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      var View: TuiView := LabelViews[Self.Slot - 1];
+      View.Destroy()
+    end;
+
+    property Text: string read ReadText write WriteText;
+  end;
+
+function TuiLabelMatchesView(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  for I: integer := 0 to Std.Array.Length(LabelAlive) - 1 do
+  begin
+    if LabelAlive[I] then
+    begin
+      var LabelView: TuiView := LabelViews[I];
+      if ((LabelView.ApplicationId = View.ApplicationId) and (LabelView.Slot = View.Slot)) and
+         (LabelView.Generation = View.Generation) then
+      begin
+        return true
+      end
+    end
+  end;
+  return false
+end;
+
+function TuiLabelTextForView(View: TuiView): string;
+begin
+  for I: integer := 0 to Std.Array.Length(LabelAlive) - 1 do
+  begin
+    if LabelAlive[I] then
+    begin
+      var LabelView: TuiView := LabelViews[I];
+      if ((LabelView.ApplicationId = View.ApplicationId) and (LabelView.Slot = View.Slot)) and
+         (LabelView.Generation = View.Generation) then
+      begin
+        return LabelTexts[I]
+      end
+    end
+  end;
+  panic('Tui2 view is not a live label')
+end;

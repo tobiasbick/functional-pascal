@@ -1,0 +1,47 @@
+program Tui2LabelControlTest;
+
+uses Std.Option, Std.Test, Std.Tui2;
+
+function CellAt(Surface: TuiSurface; X: integer; Y: integer): TuiCell;
+begin
+  return Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(X, Y)))
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Container: TuiContainer := TuiContainer.Create(App);
+  var ContainerView: TuiView := TuiContainer.AsView(Container);
+  ContainerView.Bounds := TuiRect.Create(0, 0, 20, 4);
+  var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  var Label: TuiLabel := TuiLabel.Create(App, 'Save');
+  var View: TuiView := TuiLabel.AsView(Label);
+  AssertTrue(View.Kind = TuiViewKind.Label);
+  AssertTrue(TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(View, TuiAlignment.Leading(), 0)));
+  Container.Layout := Some(Row.AsLayout());
+  Container.Add(View);
+  Desktop.Add(ContainerView);
+  AssertTrue(Container.PerformLayout());
+  App.RunIterations(1, 0);
+  AssertEquals(4, View.Bounds.Width);
+  mutable var Surface: TuiSurface := App.Surface;
+  AssertEquals('S', CellAt(Surface, 0, 0).Glyph);
+  AssertEquals('e', CellAt(Surface, 3, 0).Glyph);
+  AssertTrue(CellAt(Surface, 0, 0).Role = TuiStyleRole.Normal);
+  Label.Text := 'Go';
+  AssertTrue(Container.NeedsLayout());
+  AssertTrue(Container.PerformLayout());
+  App.RunIterations(1, 0);
+  AssertEquals(2, View.Bounds.Width);
+  Surface := App.Surface;
+  AssertEquals('G', CellAt(Surface, 0, 0).Glyph);
+  AssertEquals('o', CellAt(Surface, 1, 0).Glyph);
+  AssertEquals(' ', CellAt(Surface, 2, 0).Glyph);
+  View.Enabled := false;
+  App.RunIterations(1, 0);
+  Surface := App.Surface;
+  AssertTrue(CellAt(Surface, 0, 0).Role = TuiStyleRole.Disabled);
+  Label.Destroy();
+  AssertFalse(Label.IsAlive());
+  App.Close()
+end.

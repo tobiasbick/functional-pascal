@@ -1,11 +1,11 @@
 unit Std.Tui2.Views.CustomViewPaint;
 
 uses
-  Std.Array, Std.Tui2.Cells.Palette, Std.Tui2.Controls.ButtonPaint, Std.Tui2.Drawing.Canvas,
-  Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect,
-  Std.Tui2.Runtime.ApplicationFocus, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Surface.Surface,
-  Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks, Std.Tui2.Views.ViewPaintGeometry,
-  Std.Tui2.Views.ViewTreeOrder;
+  Std.Array, Std.Tui2.Cells.Palette, Std.Tui2.Controls.ButtonPaint, Std.Tui2.Controls.LabelPaint,
+  Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Point,
+  Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.ApplicationFocus, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Surface.Surface, Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks,
+  Std.Tui2.Views.ViewPaintGeometry, Std.Tui2.Views.ViewTreeOrder;
 
 type
   TuiCustomViewPaintCallback = procedure(
@@ -144,7 +144,8 @@ begin
   for I: integer := 0 to Std.Array.Length(Views) - 1 do
   begin
     TuiCustomViewPaintOne(Views[I], Surface);
-    TuiButtonPaintOne(Views[I], Surface)
+    TuiButtonPaintOne(Views[I], Surface);
+    TuiLabelPaintOne(Views[I], Surface)
   end
 end;
 

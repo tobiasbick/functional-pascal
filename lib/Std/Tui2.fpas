@@ -17,7 +17,7 @@ uses
   Std.Tui2.Layouts.FormLayout, Std.Tui2.Layouts.FormItems, Std.Tui2.Layouts.StackedLayout,
   Std.Tui2.Layouts.StackedItems, Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.LayoutArrange,
   Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button,
-  Std.Tui2.Controls.ScrollView;
+  Std.Tui2.Controls.Label, Std.Tui2.Controls.ScrollView;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -88,4 +88,5 @@ type
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;
+  TuiLabel = Std.Tui2.Controls.Label.TuiLabel;
   TuiScrollView = Std.Tui2.Controls.ScrollView.TuiScrollView;

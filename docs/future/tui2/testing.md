@@ -69,6 +69,8 @@ activation, action source identity, direct-event ordering, disabled exclusion, a
 cleanup. Button paint coverage verifies text redraw, normal/focused/disabled roles, and clearing of
 former text cells after a shorter replacement label. Button layout coverage verifies intrinsic
 bracketed label sizing and an owning layout invalidation after text replacement.
+Label coverage verifies retained attachment, fixed grapheme-width measurement, normal and disabled
+painting, layout invalidation after text replacement, repaint clearing, and destruction cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

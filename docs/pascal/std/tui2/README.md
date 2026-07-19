@@ -634,6 +634,22 @@ A button's intrinsic measurement is one cell high and its label's grapheme width
 the brackets. This result is fixed on both axes. Replacing `Text` invalidates every owning layout,
 so the next headless layout pass uses the new intrinsic width.
 
+## Labels
+
+`TuiLabel.Create(App, Text)` creates a non-focusable retained text label. `AsView` returns its live,
+attachable view identity and `Text` is a writable registry-backed property.
+
+```pascal
+var Label: TuiLabel := TuiLabel.Create(App, 'Name');
+Desktop.Add(TuiLabel.AsView(Label));
+```
+
+An attached visible label paints its text at the local origin. It uses the `Normal` role, or the
+`Disabled` role when the label or an ancestor is disabled. Its fixed intrinsic size is one cell high
+and the grapheme display width of `Text`. Replacing `Text` invalidates both its paint and every
+owning layout, so the next layout pass uses the new width. `Destroy` releases the backing view and
+makes the label handle stale.
+
 ## Implementation (contributors)
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).

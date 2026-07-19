@@ -2,8 +2,9 @@ unit Std.Tui2.Views.Container;
 
 uses
   Std.Array, Std.Tui2.Layouts.Layout, Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application,
-  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.ContainerLayoutFit,
-  Std.Tui2.Views.ContainerLayoutPass, Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks;
+  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.ContainerLayout,
+  Std.Tui2.Views.ContainerLayoutFit, Std.Tui2.Views.ContainerLayoutPass, Std.Tui2.Views.View,
+  Std.Tui2.Views.ViewLifecycleHooks;
 
 private mutable var TuiContainerParentApplicationIds: array of integer := [];
 private mutable var TuiContainerParentSlots: array of integer := [];
@@ -12,6 +13,7 @@ private mutable var TuiContainerChildApplicationIds: array of integer := [];
 private mutable var TuiContainerChildSlots: array of integer := [];
 private mutable var TuiContainerChildGenerations: array of integer := [];
 private mutable var TuiContainerAttached: array of boolean := [];
+private mutable var TuiContainerOrders: array of integer := [];
 
 private procedure TuiContainerRequire(Container: TuiView);
 begin
@@ -34,6 +36,20 @@ begin
   return -1
 end;
 
+private function TuiContainerChildCount(Container: TuiView): integer;
+begin
+  mutable var Count: integer := 0;
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerParentSlots[I] = Container.Slot)) and
+       (TuiContainerParentGenerations[I] = Container.Generation) then
+    begin
+      Count := Count + 1
+    end
+  end;
+  return Count
+end;
+
 function TuiContainerParentOf(Child: TuiView): option of TuiView;
 begin
   if not Child.IsAlive() then
@@ -54,6 +70,29 @@ begin
     end
   end;
   return None
+end;
+
+function TuiContainerChildrenOf(Container: TuiView): array of TuiView;
+begin
+  mutable var Children: array of TuiView := [];
+  var Count: integer := TuiContainerChildCount(Container);
+  for Order: integer := 0 to Count - 1 do
+  begin
+    for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+    begin
+      if ((((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerParentGenerations[I] = Container.Generation)) and (TuiContainerOrders[I] = Order)) then
+      begin
+        var Child: TuiView := record
+          ApplicationId := TuiContainerChildApplicationIds[I];
+          Slot := TuiContainerChildSlots[I];
+          Generation := TuiContainerChildGenerations[I];
+          Kind := TuiViewKind.Custom;
+        end;
+        Children := Std.Array.Concat(Children, [Child])
+      end
+    end
+  end;
+  return Children
 end;
 
 private function TuiContainerSameView(Left: TuiView; Right: TuiView): boolean;
@@ -80,28 +119,6 @@ begin
   end
 end;
 
-private procedure TuiContainerDestroyChildren(ApplicationId: integer; Slot: integer; Generation: integer);
-begin
-  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
-  begin
-    if ((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = ApplicationId)) and (TuiContainerParentSlots[I] = Slot)) and
-       (TuiContainerParentGenerations[I] = Generation) then
-    begin
-      TuiContainerAttached[I] := false;
-      var Child: TuiView := record
-        ApplicationId := TuiContainerChildApplicationIds[I];
-        Slot := TuiContainerChildSlots[I];
-        Generation := TuiContainerChildGenerations[I];
-        Kind := TuiViewKind.Custom;
-      end;
-      if Child.IsAlive() then
-      begin
-        Child.Destroy()
-      end
-    end
-  end
-end;
-
 private procedure TuiContainerDetachChild(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
   for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
@@ -109,7 +126,38 @@ begin
     if ((TuiContainerAttached[I] and (TuiContainerChildApplicationIds[I] = ApplicationId)) and (TuiContainerChildSlots[I] = Slot)) and
        (TuiContainerChildGenerations[I] = Generation) then
     begin
-      TuiContainerAttached[I] := false
+      var ParentApplicationId: integer := TuiContainerParentApplicationIds[I];
+      var ParentSlot: integer := TuiContainerParentSlots[I];
+      var ParentGeneration: integer := TuiContainerParentGenerations[I];
+      var RemovedOrder: integer := TuiContainerOrders[I];
+      TuiContainerAttached[I] := false;
+      for J: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+      begin
+        if ((((TuiContainerAttached[J] and (TuiContainerParentApplicationIds[J] = ParentApplicationId)) and (TuiContainerParentSlots[J] = ParentSlot)) and (TuiContainerParentGenerations[J] = ParentGeneration)) and (TuiContainerOrders[J] > RemovedOrder)) then
+        begin
+          TuiContainerOrders[J] := TuiContainerOrders[J] - 1
+        end
+      end
+    end
+  end
+end;
+
+private procedure TuiContainerDestroyChildren(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var Parent: TuiView := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+    Kind := TuiViewKind.Custom;
+  end;
+  var Children: array of TuiView := TuiContainerChildrenOf(Parent);
+  for I: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    var Child: TuiView := Children[I];
+    TuiContainerDetachChild(Child.ApplicationId, Child.Slot, Child.Generation);
+    if Child.IsAlive() then
+    begin
+      Child.Destroy()
     end
   end
 end;
@@ -135,6 +183,53 @@ begin
     end
   end;
   return false
+end;
+
+private function TuiContainerMoveToFront(Container: TuiView; Child: TuiView): boolean;
+begin
+  var Index: integer := TuiContainerFindChild(Container, Child);
+  if Index < 0 then
+  begin
+    panic('Tui2 container does not own the view')
+  end;
+  var LastOrder: integer := TuiContainerChildCount(Container) - 1;
+  var OldOrder: integer := TuiContainerOrders[Index];
+  if OldOrder = LastOrder then
+  begin
+    return false
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerParentGenerations[I] = Container.Generation)) and (TuiContainerOrders[I] > OldOrder)) then
+    begin
+      TuiContainerOrders[I] := TuiContainerOrders[I] - 1
+    end
+  end;
+  TuiContainerOrders[Index] := LastOrder;
+  return true
+end;
+
+private function TuiContainerMoveToBack(Container: TuiView; Child: TuiView): boolean;
+begin
+  var Index: integer := TuiContainerFindChild(Container, Child);
+  if Index < 0 then
+  begin
+    panic('Tui2 container does not own the view')
+  end;
+  var OldOrder: integer := TuiContainerOrders[Index];
+  if OldOrder = 0 then
+  begin
+    return false
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((((TuiContainerAttached[I] and (TuiContainerParentApplicationIds[I] = Container.ApplicationId)) and (TuiContainerParentSlots[I] = Container.Slot)) and (TuiContainerParentGenerations[I] = Container.Generation)) and (TuiContainerOrders[I] < OldOrder)) then
+    begin
+      TuiContainerOrders[I] := TuiContainerOrders[I] + 1
+    end
+  end;
+  TuiContainerOrders[Index] := 0;
+  return true
 end;
 
 type
@@ -212,6 +307,10 @@ type
 
                                                                                      ]);
       TuiContainerAttached := Std.Array.Concat(TuiContainerAttached, [true]);
+      TuiContainerOrders := Std.Array.Concat(TuiContainerOrders, [
+                                                                   TuiContainerChildCount(Self.View) - 1
+
+                                                                 ]);
       var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
         TuiContainerDetachChild(ApplicationId, Slot, Generation)
       end;
@@ -233,11 +332,33 @@ type
       begin
         panic('Tui2 container does not own the view')
       end;
-      TuiContainerAttached[Index] := false;
+      TuiContainerDetachChild(Child.ApplicationId, Child.Slot, Child.Generation);
       if Child.IsAlive() then
       begin
         Child.Destroy()
       end
+    end;
+
+    function BringToFront(Self: TuiContainer; Child: TuiView): boolean;
+    begin
+      TuiContainerRequire(Self.View);
+      var Changed: boolean := TuiContainerMoveToFront(Self.View, Child);
+      if Changed then
+      begin
+        TuiApplicationPaintInvalidate(Self.View.ApplicationId, 1)
+      end;
+      return Changed
+    end;
+
+    function SendToBack(Self: TuiContainer; Child: TuiView): boolean;
+    begin
+      TuiContainerRequire(Self.View);
+      var Changed: boolean := TuiContainerMoveToBack(Self.View, Child);
+      if Changed then
+      begin
+        TuiApplicationPaintInvalidate(Self.View.ApplicationId, 1)
+      end;
+      return Changed
     end;
 
     function NeedsLayout(Self: TuiContainer): boolean;

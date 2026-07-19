@@ -1,0 +1,48 @@
+unit Std.Tui2.Views.DesktopState;
+
+uses Std.Array, Std.Tui2.Views.Container, Std.Tui2.Views.View;
+
+private mutable var TuiDesktopStateApplicationIds: array of integer := [];
+private mutable var TuiDesktopStateContainers: array of TuiContainer := [];
+
+function TuiDesktopStateRoot(ApplicationId: integer): option of TuiView;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiDesktopStateApplicationIds) - 1 do
+  begin
+    if (TuiDesktopStateApplicationIds[I] = ApplicationId) and TuiDesktopStateContainers[I].IsAlive() then
+    begin
+      return Some(TuiContainer.AsView(TuiDesktopStateContainers[I]))
+    end
+  end;
+  return None
+end;
+
+function TuiDesktopStateOwnsRoot(View: TuiView): boolean;
+begin
+  case TuiDesktopStateRoot(View.ApplicationId) of
+    None:
+    begin
+      return false
+    end;
+    Some(Root):
+    begin
+      return ((Root.ApplicationId = View.ApplicationId) and (Root.Slot = View.Slot)) and
+             (Root.Generation = View.Generation)
+    end
+  end
+end;
+
+procedure TuiDesktopStateRegister(ApplicationId: integer; Container: TuiContainer);
+begin
+  case TuiDesktopStateRoot(ApplicationId) of
+    Some(Root):
+    begin
+      panic('Tui2 application already has a desktop root')
+    end;
+    None:
+    begin
+    end
+  end;
+  TuiDesktopStateApplicationIds := Std.Array.Concat(TuiDesktopStateApplicationIds, [ApplicationId]);
+  TuiDesktopStateContainers := Std.Array.Concat(TuiDesktopStateContainers, [Container])
+end;

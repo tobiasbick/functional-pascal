@@ -1,6 +1,6 @@
 unit Std.Tui2.Views.ViewTreeState;
 
-uses Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Views.View;
+uses Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View;
 
 function TuiViewTreeIsInteractive(View: TuiView): boolean;
 begin
@@ -15,7 +15,7 @@ begin
   case TuiContainerParentOf(View) of
     None:
     begin
-      return TuiDesktopOwnsRoot(View)
+      return TuiDesktopStateOwnsRoot(View)
     end;
     Some(Parent):
     begin

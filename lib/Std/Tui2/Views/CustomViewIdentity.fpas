@@ -1,0 +1,41 @@
+unit Std.Tui2.Views.CustomViewIdentity;
+
+uses Std.Array, Std.Tui2.Views.View;
+
+private mutable var TuiCustomViewIdentityApplicationIds: array of integer := [];
+private mutable var TuiCustomViewIdentitySlots: array of integer := [];
+private mutable var TuiCustomViewIdentityGenerations: array of integer := [];
+
+procedure TuiCustomViewIdentityRegister(View: TuiView);
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 cannot register a stale custom view identity')
+  end;
+  TuiCustomViewIdentityApplicationIds := Std.Array.Concat(TuiCustomViewIdentityApplicationIds, [
+                                                                                                 View.ApplicationId
+
+                                                                                               ]);
+  TuiCustomViewIdentitySlots := Std.Array.Concat(TuiCustomViewIdentitySlots, [View.Slot]);
+  TuiCustomViewIdentityGenerations := Std.Array.Concat(TuiCustomViewIdentityGenerations, [
+                                                                                           View.Generation
+
+                                                                                         ])
+end;
+
+function TuiCustomViewIdentityMatches(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiCustomViewIdentitySlots) - 1 do
+  begin
+    if ((TuiCustomViewIdentityApplicationIds[I] = View.ApplicationId) and (TuiCustomViewIdentitySlots[I] = View.Slot)) and
+       (TuiCustomViewIdentityGenerations[I] = View.Generation) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;

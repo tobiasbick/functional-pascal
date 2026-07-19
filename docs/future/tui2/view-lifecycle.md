@@ -106,8 +106,9 @@ Violations produce a clear runtime diagnostic rather than silently corrupting th
 
 `OnFocus` and `OnBlur` describe completed focus transitions. They are notifications, not veto points. Focus eligibility is decided before the transition by view state and modal routing.
 
-The headless implementation currently derives eligibility from attachment to the desktop plus the
-view's complete visible and enabled ancestor chain. Modal routing and traversal policy remain part of
+The headless implementation derives eligibility from attachment to the desktop plus the view's
+complete visible and enabled ancestor chain. Forward and backward traversal follow retained
+depth-first child order, wrap, and use the same eligibility rule. Modal restriction remains part of
 the input-routing work.
 
 ## Close lifecycle

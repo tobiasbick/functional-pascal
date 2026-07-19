@@ -52,6 +52,11 @@ old-blur-before-new-focus ordering, idempotent requests, explicit blur, focus-aw
 non-recursive callback redirection. Close coverage verifies veto preservation, ordered
 request/blur/detach/closed delivery, live sender inspection, direct-destroy separation, and
 self-destruction from the request handler.
+Z-order and routing-geometry coverage verifies later-sibling precedence, front/back idempotency,
+paint invalidation, identical paint and hit-test winners, nested ancestor clipping, and hidden or
+effectively disabled exclusion. Focus-traversal coverage verifies depth-first retained order,
+forward and backward wrapping, nested subtrees, Z-order updates, eligibility filtering, and the
+empty-candidate result.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

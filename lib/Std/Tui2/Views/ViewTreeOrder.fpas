@@ -1,0 +1,28 @@
+unit Std.Tui2.Views.ViewTreeOrder;
+
+uses Std.Array, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View;
+
+private function TuiViewTreeOrderSubtree(Root: TuiView): array of TuiView;
+begin
+  mutable var Ordered: array of TuiView := [Root];
+  var Children: array of TuiView := TuiContainerChildrenOf(Root);
+  for I: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    Ordered := Std.Array.Concat(Ordered, TuiViewTreeOrderSubtree(Children[I]))
+  end;
+  return Ordered
+end;
+
+function TuiViewTreeOrderedViews(ApplicationId: integer): array of TuiView;
+begin
+  case TuiDesktopStateRoot(ApplicationId) of
+    None:
+    begin
+      return []
+    end;
+    Some(Root):
+    begin
+      return TuiViewTreeOrderSubtree(Root)
+    end
+  end
+end;

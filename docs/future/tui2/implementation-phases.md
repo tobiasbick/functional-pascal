@@ -70,8 +70,11 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** vetoable custom-view `Close`, ordered blur/detach/closed delivery,
   live sender inspection during `OnClosed`, non-veto ownership destruction, and container ownership
   cycle rejection.
-- **Next:** implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw
-  fallback handlers.
+- **Implemented headless core:** stable container Z-order with subtree ordering, central tree-ordered
+  custom-view painting, topmost hit-testing through the resolved paint clip, and wrapped forward or
+  backward focus traversal with effective visibility and enabled-state filtering.
+- **Next:** define raw key and pointer input, then implement pointer capture, modal roots, routed
+  custom-view handlers, and application fallback handlers.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active

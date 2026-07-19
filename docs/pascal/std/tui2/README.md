@@ -43,8 +43,8 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiBlurHandler` | Handler invoked after a custom view loses focus. |
 | `TuiCloseRequestHandler` | Handler that accepts or rejects an explicit custom-view close. |
 | `TuiClosedHandler` | Handler invoked before an explicitly closed custom-view handle becomes stale. |
-| `TuiContainer` | A headless owner of directly attached views. |
-| `TuiDesktop` | The explicit headless root container for one application. |
+| `TuiContainer` | A headless owner with ordered children and explicit Z-order changes. |
+| `TuiDesktop` | The root container with hit-testing and focus traversal. |
 | `TuiLayout` | A headless application-scoped layout identity. |
 | `TuiMeasureConstraint` | An unbounded or at-most constraint for one measurement axis. |
 | `TuiMeasureSpec` | Width and height constraints passed into measurement. |
@@ -292,9 +292,10 @@ when nothing is invalid, another iteration does not call `OnPaint`. `TuiApplicat
 the latest retained surface for deterministic inspection. The surface is initialized immediately and
 uses the new blank extent immediately after `ResizeForTest`, before the next paint pass.
 
-The current headless renderer dispatches registered custom views deterministically. Interactive
-z-order, focus traversal, terminal presentation, and runtime enforcement of callback mutation and
-canvas lifetime restrictions are not implemented.
+The headless renderer walks the retained tree from back to front within each container. A complete
+child subtree stays together in that ordering, and later siblings paint over earlier siblings.
+Terminal presentation, pointer capture, modal routing, raw input dispatch, and runtime enforcement
+of callback mutation and canvas lifetime restrictions are not implemented.
 
 ## Headless containers
 
@@ -304,6 +305,12 @@ create an ownership cycle. `Contains(Child)` reports the current direct ownershi
 `Remove(Child)` removes and destroys that child, so its handle becomes stale. Containers may be
 nested: destroying a container's `AsView()` handle or removing an attached container destroys every
 descendant depth-first.
+
+Direct children have a stable back-to-front order. A newly added child starts at the front.
+`BringToFront(Child)` and `SendToBack(Child)` return `true` when they change that order and invalidate
+the next frame; repeating the already satisfied operation returns `false`. Moving a container moves
+its complete descendant subtree as one Z-order unit. Layout item order and resolved bounds are not
+changed by these operations.
 
 `Layout` is an `option of TuiLayout` property. Assign `Some(Layout)` to attach the one layout owned
 by the container. Assigning `None`, assigning a different layout, or destroying the container destroys
@@ -332,6 +339,16 @@ It exposes the same `Add`, `Contains`, `Remove`, `NeedsLayout`, `PerformLayout`,
 `LayoutFit` surface, and becomes stale when its application closes. No implicit desktop is created.
 The desktop starts at the application size, follows `ResizeForTest`, and its dirty root layout is
 completed by `Tick` or `RunIterations`.
+
+`HitTest(Point)` accepts zero-based application coordinates and returns the topmost custom view whose
+resolved paint clip contains the point. Hidden views, effectively disabled views, clipped portions,
+containers, and points outside the application surface do not produce a hit. Hit-testing therefore
+cannot select a cell that the same view could not paint.
+
+`FocusNext()` and `FocusPrevious()` traverse attached custom views in retained depth-first child
+order, wrap at both ends, and skip hidden or effectively disabled subtrees. With no current focus,
+forward traversal starts at the first eligible view and backward traversal at the last. They return
+`false` when no eligible custom view exists. Z-order changes update this retained traversal order.
 
 ## Headless scroll views
 

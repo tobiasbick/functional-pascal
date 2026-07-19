@@ -126,10 +126,19 @@ TuiView.Measure(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult
 
 TuiContainer.Add(Container: TuiContainer; View: TuiView)
 TuiContainer.Remove(Container: TuiContainer; View: TuiView)
+Container.BringToFront(View: TuiView): boolean
+Container.SendToBack(View: TuiView): boolean
 Container.Layout: TuiLayout                      { read-write property }
+
+Desktop.HitTest(Point: TuiPoint): option of TuiView
+Desktop.FocusNext(): boolean
+Desktop.FocusPrevious(): boolean
 ```
 
 Typed view handles use explicit `AsView` operations so containers can accept different controls without discarding type-specific operations. Layout handles use matching `AsLayout` operations. Downcasts are not public.
+
+The headless Z-order, hit-test, and focus-traversal operations above are implemented. Hit-testing
+currently returns custom views; later retained controls join the same target registry.
 
 Views expose minimum, preferred, and maximum sizes plus independent horizontal and vertical size policies. Containers may attach nested layouts that assign the resolved bounds. See [layout.md](layout.md).
 

@@ -1,6 +1,8 @@
 unit Std.Tui2.Views.ViewPaintGeometry;
 
-uses Std.Tui2.Geometry.Rect, Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Views.View;
+uses
+  Std.Tui2.Geometry.Rect, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState,
+  Std.Tui2.Views.View;
 
 type
   TuiViewPaintGeometry = record
@@ -23,7 +25,7 @@ begin
   case TuiContainerParentOf(View) of
     None:
     begin
-      if not TuiDesktopOwnsRoot(View) then
+      if not TuiDesktopStateOwnsRoot(View) then
       begin
         return None
       end;

@@ -52,6 +52,7 @@ start Phase 4. Typed custom-view attach, detach, and coalesced resize delivery a
 Custom-view measurement, retained headless surfaces, explicit paint invalidation, local paint
 coordinates, and ancestor clipping are implemented as well. Custom views now also have one
 application-scoped focus owner, ordered focus/blur delivery, focus-aware paint, vetoable close, and
-ordered detach/closed delivery. The next ordered work is z-order, hit-testing, focus traversal,
-pointer capture, modal roots, and raw fallback routing in
+ordered detach/closed delivery. Stable subtree Z-order, tree-ordered painting, clipped topmost
+hit-testing, and wrapped focus traversal are implemented as well. The next ordered work is raw key
+and pointer input followed by pointer capture, modal roots, routed handlers, and fallback routing in
 [implementation-phases.md](implementation-phases.md).

@@ -3,8 +3,9 @@ unit Std.Tui2.Views.CustomView;
 uses
   Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect,
   Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Runtime.Application,
-  Std.Tui2.Views.CustomViewClose, Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewLifecycle,
-  Std.Tui2.Views.CustomViewMeasure, Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
+  Std.Tui2.Views.CustomViewClose, Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewIdentity,
+  Std.Tui2.Views.CustomViewLifecycle, Std.Tui2.Views.CustomViewMeasure,
+  Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
 
 type
   TuiCustomView = record
@@ -13,6 +14,7 @@ type
     static function Create(App: TuiApplication): TuiCustomView;
     begin
       var View: TuiView := TuiView.Create(App);
+      TuiCustomViewIdentityRegister(View);
       TuiCustomViewFocusEnsure(View);
       TuiCustomViewLifecycleEnsure(View);
       TuiCustomViewMeasureEnsure(View);

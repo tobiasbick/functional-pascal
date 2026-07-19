@@ -1,29 +1,10 @@
 unit Std.Tui2.Views.Desktop;
 
 uses
-  Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.LayoutFit,
-  Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationLayout,
-  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Views.Container, Std.Tui2.Views.View;
-
-private mutable var TuiDesktopApplicationIds: array of integer := [];
-private mutable var TuiDesktopContainers: array of TuiContainer := [];
-
-function TuiDesktopOwnsRoot(View: TuiView): boolean;
-begin
-  for I: integer := 0 to Std.Array.Length(TuiDesktopApplicationIds) - 1 do
-  begin
-    if TuiDesktopContainers[I].IsAlive() then
-    begin
-      var Root: TuiView := TuiContainer.AsView(TuiDesktopContainers[I]);
-      if ((Root.ApplicationId = View.ApplicationId) and (Root.Slot = View.Slot)) and
-         (Root.Generation = View.Generation) then
-      begin
-        return true
-      end
-    end
-  end;
-  return false
-end;
+  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size,
+  Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationLayout,
+  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState,
+  Std.Tui2.Views.View, Std.Tui2.Views.ViewFocusTraversal, Std.Tui2.Views.ViewHitTesting;
 
 type
   TuiDesktop = record
@@ -36,19 +17,20 @@ type
       begin
         panic('Tui2 cannot create a desktop for a closed application')
       end;
-      for I: integer := 0 to Std.Array.Length(TuiDesktopApplicationIds) - 1 do
-      begin
-        if (TuiDesktopApplicationIds[I] = App.Id) and TuiDesktopContainers[I].IsAlive() then
+      case TuiDesktopStateRoot(App.Id) of
+        Some(Root):
         begin
           panic('Tui2 application already has a desktop root')
+        end;
+        None:
+        begin
         end
       end;
       var Container: TuiContainer := TuiContainer.Create(App);
       var View: TuiView := TuiContainer.AsView(Container);
       var Size: TuiSize := App.Size;
       View.Bounds := TuiRect.Create(0, 0, Size.Width, Size.Height);
-      TuiDesktopApplicationIds := Std.Array.Concat(TuiDesktopApplicationIds, [App.Id]);
-      TuiDesktopContainers := Std.Array.Concat(TuiDesktopContainers, [Container]);
+      TuiDesktopStateRegister(App.Id, Container);
       var LayoutCallback: TuiApplicationLayoutCallback := procedure(ApplicationId: integer) begin
         if (ApplicationId = App.Id) and Container.IsAlive() then
         begin
@@ -102,6 +84,24 @@ type
     begin
       var Parent: TuiContainer := TuiDesktop.AsContainer(Self);
       Parent.Remove(Child)
+    end;
+
+    function HitTest(Self: TuiDesktop; Point: TuiPoint): option of TuiView;
+    begin
+      TuiDesktop.AsContainer(Self);
+      return TuiViewHitTest(Self.ApplicationId, 1, Point)
+    end;
+
+    function FocusNext(Self: TuiDesktop): boolean;
+    begin
+      TuiDesktop.AsContainer(Self);
+      return TuiViewFocusMove(Self.ApplicationId, 1, true)
+    end;
+
+    function FocusPrevious(Self: TuiDesktop): boolean;
+    begin
+      TuiDesktop.AsContainer(Self);
+      return TuiViewFocusMove(Self.ApplicationId, 1, false)
     end;
 
     function NeedsLayout(Self: TuiDesktop): boolean;

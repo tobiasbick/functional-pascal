@@ -1,0 +1,59 @@
+unit Std.Tui2.Views.ViewFocusTraversal;
+
+uses
+  Std.Array, Std.Tui2.Runtime.ApplicationFocus, Std.Tui2.Views.CustomViewFocus,
+  Std.Tui2.Views.CustomViewIdentity, Std.Tui2.Views.View, Std.Tui2.Views.ViewTreeOrder,
+  Std.Tui2.Views.ViewTreeState;
+
+private function TuiViewFocusTraversalCandidates(ApplicationId: integer): array of TuiView;
+begin
+  var Views: array of TuiView := TuiViewTreeOrderedViews(ApplicationId);
+  mutable var Candidates: array of TuiView := [];
+  for I: integer := 0 to Std.Array.Length(Views) - 1 do
+  begin
+    if TuiCustomViewIdentityMatches(Views[I]) and TuiViewTreeIsInteractive(Views[I]) then
+    begin
+      Candidates := Std.Array.Concat(Candidates, [Views[I]])
+    end
+  end;
+  return Candidates
+end;
+
+function TuiViewFocusMove(ApplicationId: integer; Generation: integer; Forward: boolean): boolean;
+begin
+  var Candidates: array of TuiView := TuiViewFocusTraversalCandidates(ApplicationId);
+  var Count: integer := Std.Array.Length(Candidates);
+  if Count = 0 then
+  begin
+    return false
+  end;
+  mutable var Current: integer := -1;
+  for I: integer := 0 to Count - 1 do
+  begin
+    if TuiApplicationFocusMatches(ApplicationId, Generation, Candidates[I].Slot, Candidates[I].Generation) then
+    begin
+      Current := I
+    end
+  end;
+  mutable var Target: integer := 0;
+  if Forward then
+  begin
+    if Current >= 0 then
+    begin
+      Target := (Current + 1) mod Count
+    end
+  end
+  else if Current < 0 then
+  begin
+    Target := Count - 1
+  end
+  else if Current = 0 then
+  begin
+    Target := Count - 1
+  end
+  else
+  begin
+    Target := Current - 1
+  end;
+  return TuiCustomViewRequestFocus(Candidates[Target])
+end;

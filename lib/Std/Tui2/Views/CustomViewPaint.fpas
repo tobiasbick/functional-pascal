@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Tui2.Cells.Palette, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
   Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.ApplicationFocus,
   Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Surface.Surface, Std.Tui2.Views.View,
-  Std.Tui2.Views.ViewLifecycleHooks, Std.Tui2.Views.ViewPaintGeometry;
+  Std.Tui2.Views.ViewLifecycleHooks, Std.Tui2.Views.ViewPaintGeometry, Std.Tui2.Views.ViewTreeOrder;
 
 type
   TuiCustomViewPaintCallback = procedure(
@@ -21,6 +21,19 @@ private mutable var TuiCustomViewPaintGenerations: array of integer := [];
 private mutable var TuiCustomViewPaintHandlers: array of option of TuiCustomViewPaintCallback := [];
 private mutable var TuiCustomViewPaintAttached: array of boolean := [];
 private mutable var TuiCustomViewPaintActive: array of boolean := [];
+private mutable var TuiCustomViewPaintRegisteredApplicationIds: array of integer := [];
+
+private function TuiCustomViewPaintApplicationRegistered(ApplicationId: integer): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiCustomViewPaintRegisteredApplicationIds) - 1 do
+  begin
+    if TuiCustomViewPaintRegisteredApplicationIds[I] = ApplicationId then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
 
 private function TuiCustomViewPaintFind(ApplicationId: integer; Slot: integer; Generation: integer): integer;
 begin
@@ -124,6 +137,15 @@ begin
   end
 end;
 
+private procedure TuiCustomViewPaintAll(ApplicationId: integer; Surface: TuiSurface);
+begin
+  var Views: array of TuiView := TuiViewTreeOrderedViews(ApplicationId);
+  for I: integer := 0 to Std.Array.Length(Views) - 1 do
+  begin
+    TuiCustomViewPaintOne(Views[I], Surface)
+  end
+end;
+
 function TuiCustomViewPaintEnsure(View: TuiView): integer;
 begin
   if not View.IsAlive() then
@@ -163,13 +185,17 @@ begin
     TuiCustomViewPaintReleased(ApplicationId, Slot, Generation)
   end;
   RegisterViewLifecycleHooks(View.ApplicationId, View.Slot, View.Generation, AttachHook, BeforeReleaseHook, BoundsChangedHook, ReleasedHook);
-  var PaintCallback: TuiApplicationPaintCallback := procedure(ApplicationId: integer; Surface: TuiSurface) begin
-    if ApplicationId = View.ApplicationId then
-    begin
-      TuiCustomViewPaintOne(View, Surface)
-    end
+  if not TuiCustomViewPaintApplicationRegistered(View.ApplicationId) then
+  begin
+    TuiCustomViewPaintRegisteredApplicationIds := Std.Array.Concat(TuiCustomViewPaintRegisteredApplicationIds, [
+                                                                                                                 View.ApplicationId
+
+                                                                                                               ]);
+    var PaintCallback: TuiApplicationPaintCallback := procedure(ApplicationId: integer; Surface: TuiSurface) begin
+      TuiCustomViewPaintAll(ApplicationId, Surface)
+    end;
+    RegisterApplicationPaint(View.ApplicationId, 1, PaintCallback)
   end;
-  RegisterApplicationPaint(View.ApplicationId, 1, PaintCallback);
   return Std.Array.Length(TuiCustomViewPaintActive) - 1
 end;
 

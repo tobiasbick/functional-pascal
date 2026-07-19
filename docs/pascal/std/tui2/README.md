@@ -585,10 +585,16 @@ Save.OnExecute :=
   end;
 ```
 
-An action provides live `Command`, `Text`, `Enabled`, `Visible`, and `Checked` properties.
-`Activate(Source)` invokes `OnExecute` synchronously when enabled and returns whether activation was
-accepted. The source must belong to the same application. `Destroy` invalidates the action and
-releases its handler.
+An action provides live `Command`, `Text`, `Enabled`, `Visible`, `Checked`, and optional `Shortcut`
+properties. `Activate(Source)` invokes `OnExecute` synchronously when enabled and returns whether
+activation was accepted. The source must belong to the same application. `Destroy` invalidates the
+action and releases its handler.
+
+Assign a `Some(TuiKeyEvent)` shortcut to activate an action from injected input. Key matching compares
+the key kind, character, and every modifier exactly. After an unconsumed focused custom-view key
+handler, the router checks shortcuts before `App.Input.OnKey`. When multiple enabled actions use the
+same shortcut, the first created action wins; disabled actions do not consume it. Shortcut activation
+uses `TuiViewKind.Empty` as its source.
 
 ## Buttons and direct events
 

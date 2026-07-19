@@ -76,9 +76,12 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** canonical console key values, normalized pointer values, FIFO test
   injection, one-input-per-iteration routing, focused and topmost custom-view handlers, pointer
   capture, nested modal roots, focus restoration, and application fallback handlers.
-- **Next:** extend actions with shortcuts and route keyboard and pointer activation into every bound
-  control type.
-- Extend the existing action registry with shortcuts and propagation to every bound-control type.
+- **Implemented headless core:** action shortcuts with exact key and modifier matching, deterministic
+  creation-order conflict resolution, and routing after an unconsumed focused custom-view key handler
+  but before the application fallback.
+- **Next:** turn the semantic button into a retained focusable control and route Enter, Space, and
+  pointer-down activation through its action and `OnClick` behavior.
+- Propagate the existing action registry through every subsequent view-backed control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.

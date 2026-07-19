@@ -1,7 +1,7 @@
 unit Std.Tui2.Runtime.ApplicationInputRoute;
 
 uses
-  Std.Console, Std.Tui2.Input.ApplicationInput, Std.Tui2.Input.PointerEvent,
+  Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Input.ApplicationInput, Std.Tui2.Input.PointerEvent,
   Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.ApplicationFocus,
   Std.Tui2.Runtime.ApplicationInputPhase, Std.Tui2.Runtime.ApplicationInputQueue,
   Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.PointerCapture,
@@ -32,6 +32,20 @@ begin
     begin
       return true
     end
+  end;
+  if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+  begin
+    return true
+  end;
+  var Source: TuiView := record
+    ApplicationId := ApplicationId;
+    Slot := 0;
+    Generation := 0;
+    Kind := TuiViewKind.Empty;
+  end;
+  if TuiActionDispatchShortcut(ApplicationId, Key, Source) then
+  begin
+    return true
   end;
   if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
   begin

@@ -62,6 +62,8 @@ Raw-input coverage verifies FIFO one-per-iteration delivery, focused key routing
 routing, pointer-down focus, consumed and fallback paths, capture outside the hit rectangle, explicit
 capture release, modal hit and focus isolation, capture repair, and focus restoration after closing
 the modal root.
+Action coverage verifies exact shortcut matching, focused raw-key precedence, deterministic duplicate
+shortcut resolution, disabled-action fallthrough, and application fallback for an unhandled shortcut.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

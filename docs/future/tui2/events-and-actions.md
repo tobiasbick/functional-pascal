@@ -91,8 +91,11 @@ Ordinary state uses computed record properties; events use the specialized event
 the language plan. Both resolve through accessors to the canonical live registry entry. Type-owned
 functions remain for construction, conversions, commands, and operations that are not state-shaped.
 
-Buttons, menu items, status items, shortcuts, tests, and direct command activation all call
-`TuiAction.Activate`. Activation verifies enabled state and raises `OnExecute` synchronously.
+Buttons, menu items, status items, shortcuts, tests, and direct command activation call
+`TuiAction.Activate`. Activation verifies enabled state and raises `OnExecute` synchronously. The
+implemented shortcut router runs after an unconsumed focused custom-view key handler and before the
+application fallback. It matches every key field exactly; the first created enabled matching action
+wins, and shortcut activation uses `TuiViewKind.Empty` as the source.
 
 `TuiCommand` keeps a positive integer identity. Zero is invalid, `1..1023` is reserved for Std.Tui2,
 and application commands start at `1024`.
@@ -241,13 +244,14 @@ values and define its own ordering and lifetime rules.
 ## Remaining implementation
 
 1. Add typed value-change events and `TuiChangeOrigin` behavior.
-2. Route action activation from menus, shortcuts, injected tests, and commands.
+2. Route action activation from menus and direct commands, then propagate it through view-backed
+   controls.
 3. Extend the headless post queue with worker-transfer enforcement.
 4. Complete closure release, panic cleanup, and shutdown canaries.
 
 ## Remaining tests
 
-- action activation from menu, shortcut, injected input, and command;
+- action activation from menu and direct command;
 - change origin and no event for assignment of unchanged property values;
 - captured stale handle diagnostic;
 - event closure release on view destruction;

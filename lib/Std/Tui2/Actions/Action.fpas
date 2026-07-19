@@ -1,6 +1,8 @@
 unit Std.Tui2.Actions.Action;
 
-uses Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View, Std.Tui2.Actions.Command;
+uses
+  Std.Array, Std.Console, Std.Tui2.Actions.Command, Std.Tui2.Runtime.Application,
+  Std.Tui2.Views.View;
 
 type
   TuiActionCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer; Source: TuiView);
@@ -13,6 +15,7 @@ private mutable var TuiActionTexts: array of string := [];
 private mutable var TuiActionEnabled: array of boolean := [];
 private mutable var TuiActionVisible: array of boolean := [];
 private mutable var TuiActionChecked: array of boolean := [];
+private mutable var TuiActionShortcuts: array of option of Std.Console.KeyEvent := [];
 private mutable var TuiActionOnExecute: array of option of TuiActionCallback := [];
 
 private procedure TuiActionRequire(ApplicationId: integer; Slot: integer; Generation: integer);
@@ -50,6 +53,7 @@ begin
   if ((TuiActionApplicationIds[Slot - 1] = ApplicationId) and (TuiActionGenerations[Slot - 1] = Generation)) and
      TuiActionAlive[Slot - 1] then
   begin
+    TuiActionShortcuts[Slot - 1] := None;
     TuiActionOnExecute[Slot - 1] := None;
     TuiActionAlive[Slot - 1] := false;
     TuiActionGenerations[Slot - 1] := Generation + 1
@@ -80,6 +84,7 @@ type
       TuiActionEnabled := Std.Array.Concat(TuiActionEnabled, [true]);
       TuiActionVisible := Std.Array.Concat(TuiActionVisible, [true]);
       TuiActionChecked := Std.Array.Concat(TuiActionChecked, [false]);
+      TuiActionShortcuts := Std.Array.Concat(TuiActionShortcuts, [None]);
       TuiActionOnExecute := Std.Array.Concat(TuiActionOnExecute, [None]);
       var Action: TuiAction := record
         ApplicationId := App.Id;
@@ -157,6 +162,18 @@ type
       TuiActionChecked[Self.Slot - 1] := Value
     end;
 
+    function ReadShortcut(Self: TuiAction): option of Std.Console.KeyEvent;
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return TuiActionShortcuts[Self.Slot - 1]
+    end;
+
+    procedure WriteShortcut(Self: TuiAction; Value: option of Std.Console.KeyEvent);
+    begin
+      TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      TuiActionShortcuts[Self.Slot - 1] := Value
+    end;
+
     function ReadOnExecute(Self: TuiAction): option of procedure(Sender: TuiAction; Source: TuiView);
     begin
       TuiActionRequire(Self.ApplicationId, Self.Slot, Self.Generation);
@@ -229,6 +246,48 @@ type
     property Enabled: boolean read ReadEnabled write WriteEnabled;
     property Visible: boolean read ReadVisible write WriteVisible;
     property Checked: boolean read ReadChecked write WriteChecked;
+    property Shortcut: option of Std.Console.KeyEvent read ReadShortcut write WriteShortcut;
 
     event OnExecute: procedure(Sender: TuiAction; Source: TuiView) read ReadOnExecute write WriteOnExecute;
   end;
+
+private function TuiActionShortcutMatches(Left: Std.Console.KeyEvent; Right: Std.Console.KeyEvent): boolean;
+begin
+  return (((((Left.kind = Right.kind) and (Left.ch = Right.ch)) and (Left.shift = Right.shift)) and (Left.ctrl = Right.ctrl)) and (Left.alt = Right.alt)) and
+         (Left.meta = Right.meta)
+end;
+
+function TuiActionDispatchShortcut(
+  ApplicationId: integer;
+  Key: Std.Console.KeyEvent;
+  Source: TuiView
+): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiActionAlive) - 1 do
+  begin
+    if TuiActionAlive[I] and (TuiActionApplicationIds[I] = ApplicationId) then
+    begin
+      case TuiActionShortcuts[I] of
+        None:
+        begin
+        end;
+        Some(Shortcut):
+        begin
+          if TuiActionShortcutMatches(Key, Shortcut) then
+          begin
+            var Action: TuiAction := record
+              ApplicationId := ApplicationId;
+              Slot := I + 1;
+              Generation := TuiActionGenerations[I];
+            end;
+            if Action.Activate(Source) then
+            begin
+              return true
+            end
+          end
+        end
+      end
+    end
+  end;
+  return false
+end;

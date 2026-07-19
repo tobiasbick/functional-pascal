@@ -1,0 +1,77 @@
+program Tui2ActionShortcutRoutingTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Custom: TuiCustomView := TuiCustomView.Create(App);
+  var CustomView: TuiView := TuiCustomView.AsView(Custom);
+  CustomView.Bounds := TuiRect.Create(0, 0, 8, 3);
+  Desktop.Add(CustomView);
+  AssertTrue(Custom.Focus());
+  var CtrlS: TuiKeyEvent := record
+    kind := TuiKeyKind.Character;
+    ch := 's';
+    shift := false;
+    ctrl := true;
+    alt := false;
+    meta := false;
+  end;
+  var First: TuiAction := TuiAction.Create(App, TuiCommand.Create(1024), 'First');
+  var Second: TuiAction := TuiAction.Create(App, TuiCommand.Create(1025), 'Second');
+  First.Shortcut := Some(CtrlS);
+  Second.Shortcut := Some(CtrlS);
+  First.Enabled := false;
+  mutable var Sequence: integer := 0;
+  First.OnExecute := procedure(Sender: TuiAction; Source: TuiView) begin
+    AssertTrue(Source.Kind = TuiViewKind.Empty);
+    Sequence := Sequence * 10 + 1
+  end;
+  Second.OnExecute := procedure(Sender: TuiAction; Source: TuiView) begin
+    AssertTrue(Source.Kind = TuiViewKind.Empty);
+    Sequence := Sequence * 10 + 2
+  end;
+  var Input: TuiViewInput := Custom.Input;
+  Input.OnKey := function(Sender: TuiView; Key: TuiKeyEvent): boolean begin
+    return false
+  end;
+  var AppInput: TuiApplicationInput := App.Input;
+  AppInput.OnKey := function(Key: TuiKeyEvent): boolean begin
+    Sequence := Sequence * 10 + 9;
+    return true
+  end;
+  AssertTrue(AppInput.InjectKeyForTest(CtrlS));
+  App.RunIterations(1, 0);
+  AssertEquals(2, Sequence);
+  First.Enabled := true;
+  AssertTrue(AppInput.InjectKeyForTest(CtrlS));
+  App.RunIterations(1, 0);
+  AssertEquals(21, Sequence);
+  var PlainS: TuiKeyEvent := record
+    kind := TuiKeyKind.Character;
+    ch := 's';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  AssertTrue(AppInput.InjectKeyForTest(PlainS));
+  App.RunIterations(1, 0);
+  AssertEquals(219, Sequence);
+  Input.OnKey := function(Sender: TuiView; Key: TuiKeyEvent): boolean begin
+    return true
+  end;
+  AssertTrue(AppInput.InjectKeyForTest(CtrlS));
+  App.RunIterations(1, 0);
+  AssertEquals(219, Sequence);
+  Input.OnKey := function(Sender: TuiView; Key: TuiKeyEvent): boolean begin
+    return false
+  end;
+  First.Enabled := false;
+  Second.Enabled := false;
+  AssertTrue(AppInput.InjectKeyForTest(CtrlS));
+  App.RunIterations(1, 0);
+  AssertEquals(2199, Sequence);
+  App.Close()
+end.

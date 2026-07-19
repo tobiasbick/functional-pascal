@@ -6,6 +6,7 @@ use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_lexer::Span;
 use fpas_parser::{EnumType, TypeDef};
 use std::collections::HashSet;
+use std::sync::Arc;
 
 impl Checker {
     pub(super) fn check_enum_type_def(&mut self, td: &TypeDef, enum_ty: &EnumType) {
@@ -56,10 +57,10 @@ impl Checker {
             });
         }
 
-        let ty = Ty::Enum(EnumTy {
+        let ty = Ty::Enum(Arc::new(EnumTy {
             name: td.name.clone(),
             variants: variants.clone(),
-        });
+        }));
 
         for (member, variant) in enum_ty.members.iter().zip(variants.iter()) {
             let kind = if variant.fields.is_empty() {

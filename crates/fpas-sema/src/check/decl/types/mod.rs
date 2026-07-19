@@ -4,6 +4,7 @@ use crate::types::{EnumTy, GenericParamDef, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_UNKNOWN_TYPE};
 use fpas_lexer::Span;
 use fpas_parser::{TypeBody, TypeDef, TypeParam};
+use std::sync::Arc;
 
 mod enums;
 mod record_events;
@@ -31,7 +32,7 @@ impl Checker {
     }
 
     /// Expose qualified enum variants through an alias without adding ambiguous short names.
-    fn register_enum_alias_variant_symbols(&mut self, td: &TypeDef, enum_ty: &EnumTy) {
+    fn register_enum_alias_variant_symbols(&mut self, td: &TypeDef, enum_ty: &Arc<EnumTy>) {
         for variant in &enum_ty.variants {
             let kind = if variant.fields.is_empty() {
                 SymbolKind::EnumMember

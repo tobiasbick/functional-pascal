@@ -7,6 +7,7 @@ use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
 use fpas_std::std_symbols as s;
+use std::sync::Arc;
 
 /// Register the user-facing `Std.Json` API.
 ///
@@ -42,10 +43,10 @@ pub(super) fn register_std_json(checker: &mut Checker) {
             )],
         },
     ];
-    let json_ty = Ty::Enum(EnumTy {
+    let json_ty = Ty::Enum(Arc::new(EnumTy {
         name: s::STD_JSON_VALUE.into(),
         variants: variants.clone(),
-    });
+    }));
 
     checker.scopes.define(
         s::STD_JSON_VALUE,

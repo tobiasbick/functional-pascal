@@ -7,6 +7,7 @@ use crate::check::spans::synthetic_span;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, RecordTy, Ty};
 use fpas_parser::Expr;
+use std::sync::Arc;
 
 /// Register a simple enum type and expose each variant as a qualified enum member.
 pub(super) fn register_enum_type(
@@ -21,10 +22,10 @@ pub(super) fn register_enum_type(
             fields: vec![],
         })
         .collect();
-    let enum_ty = Ty::Enum(EnumTy {
+    let enum_ty = Ty::Enum(Arc::new(EnumTy {
         name: qualified_name.into(),
         variants: variants.clone(),
-    });
+    }));
     checker.scopes.define(
         qualified_name,
         Symbol {
@@ -57,7 +58,7 @@ pub(super) fn register_record_type(
     qualified_name: &str,
     fields: Vec<(String, Ty)>,
 ) -> Ty {
-    let record_ty = Ty::Record(RecordTy {
+    let record_ty = Ty::Record(Arc::new(RecordTy {
         name: qualified_name.into(),
         fields,
         methods: Vec::new(),
@@ -65,7 +66,7 @@ pub(super) fn register_record_type(
         static_procedures: Vec::new(),
         properties: Vec::new(),
         events: Vec::new(),
-    });
+    }));
     checker.scopes.define(
         qualified_name,
         Symbol {

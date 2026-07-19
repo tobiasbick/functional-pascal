@@ -9,6 +9,7 @@ use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, T
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH};
 use fpas_parser::{FuncBody, FunctionDecl, RecordMethod, RecordType, TypeDef, TypeParam};
 use std::collections::HashSet;
+use std::sync::Arc;
 
 struct CheckedRecordMembers {
     instance_methods: Vec<(String, MethodKind)>,
@@ -97,12 +98,13 @@ impl Checker {
             properties: Vec::new(),
             events: Vec::new(),
         };
-        let mut ty = Ty::Record(record_ty);
+        let mut ty = Ty::Record(Arc::new(record_ty));
 
         let (members, pending_bodies) =
             self.check_record_methods(&td.name, &ty, &record.methods, &mut seen_members);
 
         if let Ty::Record(record_ty) = &mut ty {
+            let record_ty = Arc::make_mut(record_ty);
             record_ty.methods = members.instance_methods;
             record_ty.static_functions = members.static_functions;
             record_ty.static_procedures = members.static_procedures;
@@ -111,11 +113,13 @@ impl Checker {
         let properties =
             self.check_record_properties(&td.name, &ty, &record.properties, &mut seen_members);
         if let Ty::Record(record_ty) = &mut ty {
+            let record_ty = Arc::make_mut(record_ty);
             record_ty.properties = properties;
         }
 
         let events = self.check_record_events(&td.name, &ty, &record.events, &mut seen_members);
         if let Ty::Record(record_ty) = &mut ty {
+            let record_ty = Arc::make_mut(record_ty);
             record_ty.events = events;
         }
 

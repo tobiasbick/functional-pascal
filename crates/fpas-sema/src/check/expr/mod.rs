@@ -210,7 +210,7 @@ impl Checker {
             .map(|field| (field.name.clone(), self.check_expr(&field.value)))
             .collect();
 
-        Ty::Record(crate::types::RecordTy {
+        Ty::Record(std::sync::Arc::new(crate::types::RecordTy {
             name: "<anonymous>".into(),
             fields: field_types,
             methods: Vec::new(),
@@ -218,7 +218,7 @@ impl Checker {
             static_procedures: Vec::new(),
             properties: Vec::new(),
             events: Vec::new(),
-        })
+        }))
     }
 
     /// Type-check a record update expression: `base with Field := Value; … end`.

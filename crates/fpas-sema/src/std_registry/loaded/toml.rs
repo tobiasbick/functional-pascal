@@ -7,6 +7,7 @@ use crate::check::Checker;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
 use fpas_std::std_symbols as s;
+use std::sync::Arc;
 
 /// Register the user-facing `Std.Toml` API.
 ///
@@ -46,10 +47,10 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
             )],
         },
     ];
-    let toml_ty = Ty::Enum(EnumTy {
+    let toml_ty = Ty::Enum(Arc::new(EnumTy {
         name: s::STD_TOML_VALUE.into(),
         variants: variants.clone(),
-    });
+    }));
 
     checker.scopes.define(
         s::STD_TOML_VALUE,

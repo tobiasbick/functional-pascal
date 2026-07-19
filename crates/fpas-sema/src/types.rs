@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 /// Built-in type constraints for generic parameters.
 ///
 /// **Documentation:** `docs/pascal/language/types/generics.md` (Generics — Constraints)
@@ -64,10 +66,15 @@ pub enum Ty {
     String,
     /// Procedure / void result (e.g. `Std.Array.Push`).
     Unit,
+    /// An array whose elements have the enclosed type.
     Array(Box<Ty>),
-    Record(RecordTy),
-    Enum(EnumTy),
+    /// Shared descriptor for a record type.
+    Record(Arc<RecordTy>),
+    /// Shared descriptor for an enum type.
+    Enum(Arc<EnumTy>),
+    /// Function signature.
     Function(FunctionTy),
+    /// Procedure signature.
     Procedure(ProcedureTy),
     /// A named type not yet resolved or unknown.
     Named(String),
@@ -355,7 +362,44 @@ impl Ty {
 
 #[cfg(test)]
 mod tests {
-    use super::{ParamTy, ProcedureTy, Ty};
+    use std::sync::Arc;
+
+    use super::{EnumTy, ParamTy, ProcedureTy, RecordTy, Ty};
+
+    #[test]
+    fn cloning_record_type_shares_immutable_descriptor() {
+        let ty = Ty::Record(Arc::new(RecordTy {
+            name: "Point".to_string(),
+            fields: vec![("X".to_string(), Ty::Integer)],
+            methods: Vec::new(),
+            static_functions: Vec::new(),
+            static_procedures: Vec::new(),
+            properties: Vec::new(),
+            events: Vec::new(),
+        }));
+
+        let cloned = ty.clone();
+        let (Ty::Record(original), Ty::Record(cloned)) = (&ty, &cloned) else {
+            panic!("test values must remain record types");
+        };
+
+        assert!(Arc::ptr_eq(original, cloned));
+    }
+
+    #[test]
+    fn cloning_enum_type_shares_immutable_descriptor() {
+        let ty = Ty::Enum(Arc::new(EnumTy {
+            name: "Direction".to_string(),
+            variants: Vec::new(),
+        }));
+
+        let cloned = ty.clone();
+        let (Ty::Enum(original), Ty::Enum(cloned)) = (&ty, &cloned) else {
+            panic!("test values must remain enum types");
+        };
+
+        assert!(Arc::ptr_eq(original, cloned));
+    }
 
     #[test]
     fn procedure_types_require_matching_variadic_flag_and_param_count() {

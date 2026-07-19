@@ -64,6 +64,9 @@ capture release, modal hit and focus isolation, capture repair, and focus restor
 the modal root.
 Action coverage verifies exact shortcut matching, focused raw-key precedence, deterministic duplicate
 shortcut resolution, disabled-action fallthrough, and application fallback for an unhandled shortcut.
+Button coverage verifies retained attachment, focus traversal, hit testing, Enter, Space, left-pointer
+activation, action source identity, direct-event ordering, disabled exclusion, and view-destruction
+cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

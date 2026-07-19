@@ -79,8 +79,9 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** action shortcuts with exact key and modifier matching, deterministic
   creation-order conflict resolution, and routing after an unconsumed focused custom-view key handler
   but before the application fallback.
-- **Next:** turn the semantic button into a retained focusable control and route Enter, Space, and
-  pointer-down activation through its action and `OnClick` behavior.
+- **Implemented headless core:** retained, attachable buttons with focus traversal, hit testing,
+  Enter, Space, and left-pointer-down activation through the existing action-before-`OnClick` order.
+- **Next:** render the retained button and preserve its behavior through layout and paint invalidation.
 - Propagate the existing action registry through every subsequent view-backed control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
@@ -91,8 +92,8 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 5 — First usable controls
 
-- Add a frame or window, label, input line, check box, list box, and scroll bar; turn the existing
-  semantic button into a rendered, focusable control.
+- Add a frame or window, label, input line, check box, list box, and scroll bar; render the existing
+  retained, focusable button.
 - Bind buttons, menus, status items, and shortcuts to reusable actions.
 - Add a minimal interactive application and a fully headless equivalent test.
 - Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.

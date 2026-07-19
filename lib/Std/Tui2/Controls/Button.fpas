@@ -1,8 +1,9 @@
 unit Std.Tui2.Controls.Button;
 
 uses
-  Std.Array, Std.Tui2.Runtime.Application, Std.Tui2.Views.View, Std.Tui2.Actions.Command,
-  Std.Tui2.Actions.Action;
+  Std.Array, Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Actions.Command,
+  Std.Tui2.Input.PointerEvent, Std.Tui2.Runtime.Application, Std.Tui2.Views.CustomViewFocus,
+  Std.Tui2.Views.View;
 
 type
   TuiButtonCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
@@ -11,7 +12,7 @@ private mutable var TuiButtonApplicationIds: array of integer := [];
 private mutable var TuiButtonGenerations: array of integer := [];
 private mutable var TuiButtonAlive: array of boolean := [];
 private mutable var TuiButtonTexts: array of string := [];
-private mutable var TuiButtonEnabled: array of boolean := [];
+private mutable var TuiButtonViews: array of TuiView := [];
 private mutable var TuiButtonHasAction: array of boolean := [];
 private mutable var TuiButtonActions: array of TuiAction := [];
 private mutable var TuiButtonOnClick: array of option of TuiButtonCallback := [];
@@ -34,6 +35,11 @@ begin
   if TuiButtonApplicationIds[Slot - 1] <> ApplicationId then
   begin
     panic('Tui2 button belongs to a different application')
+  end;
+  var View: TuiView := TuiButtonViews[Slot - 1];
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 button owns a stale view')
   end;
   var App: TuiApplication := record Id := ApplicationId; Generation := 1; end;
   if not App.IsOpen() then
@@ -70,11 +76,12 @@ type
       begin
         panic('Tui2 cannot create a button for a closed application')
       end;
+      var View: TuiView := TuiView.Create(App);
       TuiButtonApplicationIds := Std.Array.Concat(TuiButtonApplicationIds, [App.Id]);
       TuiButtonGenerations := Std.Array.Concat(TuiButtonGenerations, [1]);
       TuiButtonAlive := Std.Array.Concat(TuiButtonAlive, [true]);
       TuiButtonTexts := Std.Array.Concat(TuiButtonTexts, [Text]);
-      TuiButtonEnabled := Std.Array.Concat(TuiButtonEnabled, [true]);
+      TuiButtonViews := Std.Array.Concat(TuiButtonViews, [View]);
       TuiButtonHasAction := Std.Array.Concat(TuiButtonHasAction, [false]);
       var EmptyAction: TuiAction := record ApplicationId := 0; Slot := 0; Generation := 0; end;
       TuiButtonActions := Std.Array.Concat(TuiButtonActions, [EmptyAction]);
@@ -84,6 +91,10 @@ type
         Slot := Std.Array.Length(TuiButtonGenerations);
         Generation := 1;
       end;
+      var ViewCleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiButtonRelease(ApplicationId, Button.Slot, Button.Generation)
+      end;
+      RegisterViewCleanup(View, ViewCleanup);
       var Cleanup: TuiApplicationCleanupCallback := procedure(ApplicationId: integer) begin
         TuiButtonRelease(ApplicationId, Button.Slot, Button.Generation)
       end;
@@ -97,17 +108,20 @@ type
       begin
         return false
       end;
-      return (TuiButtonAlive[Self.Slot - 1] and (TuiButtonGenerations[Self.Slot - 1] = Self.Generation)) and
-             (TuiButtonApplicationIds[Self.Slot - 1] = Self.ApplicationId)
+      var View: TuiView := TuiButtonViews[Self.Slot - 1];
+      return ((TuiButtonAlive[Self.Slot - 1] and (TuiButtonGenerations[Self.Slot - 1] = Self.Generation)) and (TuiButtonApplicationIds[Self.Slot -
+                                                                                                                                       1] = Self.ApplicationId)) and
+             View.IsAlive()
     end;
 
     static function AsView(Button: TuiButton): TuiView;
     begin
       TuiButtonRequire(Button.ApplicationId, Button.Slot, Button.Generation);
+      var View: TuiView := TuiButtonViews[Button.Slot - 1];
       return record
-        ApplicationId := Button.ApplicationId;
-        Slot := Button.Slot;
-        Generation := Button.Generation;
+        ApplicationId := View.ApplicationId;
+        Slot := View.Slot;
+        Generation := View.Generation;
         Kind := TuiViewKind.Button;
       end
     end;
@@ -127,13 +141,18 @@ type
     function ReadEnabled(Self: TuiButton): boolean;
     begin
       TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      return TuiButtonEnabled[Self.Slot - 1]
+      var View: TuiView := TuiButtonViews[Self.Slot - 1];
+      return View.Enabled
     end;
 
     procedure WriteEnabled(Self: TuiButton; Value: boolean);
     begin
       TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiButtonEnabled[Self.Slot - 1] := Value
+      var View: TuiView := TuiButtonViews[Self.Slot - 1];
+      if View.Enabled <> Value then
+      begin
+        View.Enabled := Value
+      end
     end;
 
     function ReadAction(Self: TuiButton): TuiAction;
@@ -204,7 +223,7 @@ type
     function Click(Self: TuiButton): boolean;
     begin
       TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      if not TuiButtonEnabled[Self.Slot - 1] then
+      if not Self.Enabled then
       begin
         return false
       end;
@@ -228,12 +247,94 @@ type
     procedure Destroy(Self: TuiButton);
     begin
       TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiButtonRelease(Self.ApplicationId, Self.Slot, Self.Generation)
+      var View: TuiView := TuiButtonViews[Self.Slot - 1];
+      View.Destroy()
+    end;
+
+    function Focus(Self: TuiButton): boolean;
+    begin
+      return TuiCustomViewRequestFocus(TuiButton.AsView(Self))
+    end;
+
+    function ReadFocused(Self: TuiButton): boolean;
+    begin
+      return TuiCustomViewIsFocused(TuiButton.AsView(Self))
     end;
 
     property Text: string read ReadText write WriteText;
     property Enabled: boolean read ReadEnabled write WriteEnabled;
     property Action: TuiAction read ReadAction write WriteAction;
+    property Focused: boolean read ReadFocused;
 
     event OnClick: procedure(Sender: TuiButton) read ReadOnClick write WriteOnClick;
   end;
+
+function TuiButtonMatchesView(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiButtonAlive) - 1 do
+  begin
+    if TuiButtonAlive[I] then
+    begin
+      var ButtonView: TuiView := TuiButtonViews[I];
+      if ((ButtonView.ApplicationId = View.ApplicationId) and (ButtonView.Slot = View.Slot)) and
+         (ButtonView.Generation = View.Generation) then
+      begin
+        return true
+      end
+    end
+  end;
+  return false
+end;
+
+private function TuiButtonFromView(View: TuiView): TuiButton;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiButtonAlive) - 1 do
+  begin
+    if TuiButtonAlive[I] then
+    begin
+      var ButtonView: TuiView := TuiButtonViews[I];
+      if ((ButtonView.ApplicationId = View.ApplicationId) and (ButtonView.Slot = View.Slot)) and
+         (ButtonView.Generation = View.Generation) then
+      begin
+        return record
+          ApplicationId := TuiButtonApplicationIds[I];
+          Slot := I + 1;
+          Generation := TuiButtonGenerations[I];
+        end
+      end
+    end
+  end;
+  panic('Tui2 view is not a live button')
+end;
+
+function TuiButtonTryActivateKey(View: TuiView; Key: Std.Console.KeyEvent): boolean;
+begin
+  if not TuiButtonMatchesView(View) then
+  begin
+    return false
+  end;
+  if (Key.kind <> Std.Console.KeyKind.Enter) and (Key.kind <> Std.Console.KeyKind.Space) then
+  begin
+    return false
+  end;
+  var Button: TuiButton := TuiButtonFromView(View);
+  return Button.Click()
+end;
+
+function TuiButtonTryActivatePointer(View: TuiView; Pointer: TuiPointerEvent): boolean;
+begin
+  if not TuiButtonMatchesView(View) then
+  begin
+    return false
+  end;
+  if (Pointer.Action <> Std.Console.MouseAction.Down) or (Pointer.Button <> TuiPointerButton.Left) then
+  begin
+    return false
+  end;
+  var Button: TuiButton := TuiButtonFromView(View);
+  return Button.Click()
+end;

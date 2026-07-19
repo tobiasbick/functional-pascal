@@ -1,8 +1,8 @@
 unit Std.Tui2.Runtime.ApplicationInputRoute;
 
 uses
-  Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Input.ApplicationInput, Std.Tui2.Input.PointerEvent,
-  Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.ApplicationFocus,
+  Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button, Std.Tui2.Input.ApplicationInput,
+  Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.ApplicationFocus,
   Std.Tui2.Runtime.ApplicationInputPhase, Std.Tui2.Runtime.ApplicationInputQueue,
   Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.PointerCapture,
   Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewIdentity, Std.Tui2.Views.View,
@@ -11,6 +11,12 @@ uses
 private function TuiApplicationInputRouteEligible(View: TuiView): boolean;
 begin
   return TuiCustomViewIdentityMatches(View) and TuiViewTreeIsInteractive(View)
+end;
+
+private function TuiApplicationInputRouteTargetEligible(View: TuiView): boolean;
+begin
+  return (TuiCustomViewIdentityMatches(View) or TuiButtonMatchesView(View)) and
+         TuiViewTreeIsInteractive(View)
 end;
 
 private function TuiApplicationInputRouteKey(
@@ -28,7 +34,14 @@ begin
       Generation := TuiApplicationFocusCurrentViewGeneration(ApplicationId, Generation);
       Kind := TuiViewKind.Custom;
     end;
-    if TuiApplicationInputRouteEligible(Focused) and TuiViewInputDispatchKey(Focused, Key) then
+    if TuiButtonMatchesView(Focused) and TuiApplicationInputRouteTargetEligible(Focused) then
+    begin
+      if TuiButtonTryActivateKey(Focused, Key) then
+      begin
+        return true
+      end
+    end
+    else if TuiApplicationInputRouteEligible(Focused) and TuiViewInputDispatchKey(Focused, Key) then
     begin
       return true
     end
@@ -98,7 +111,14 @@ begin
       begin
         TuiCustomViewRequestFocus(Target)
       end;
-      if TuiApplicationInputRouteEligible(Target) then
+      if TuiButtonMatchesView(Target) and TuiApplicationInputRouteTargetEligible(Target) then
+      begin
+        if TuiButtonTryActivatePointer(Target, Pointer) then
+        begin
+          return true
+        end
+      end
+      else if TuiApplicationInputRouteEligible(Target) then
       begin
         if TuiViewInputDispatchPointer(Target, Pointer) then
         begin

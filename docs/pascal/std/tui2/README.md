@@ -598,13 +598,15 @@ uses `TuiViewKind.Empty` as its source.
 
 ## Buttons and direct events
 
-`TuiButton.Create(App, Text)` creates a headless semantic button. Its `Text`, `Enabled`, and `Action`
-properties use registry state; `OnClick` is a single-handler event.
+`TuiButton.Create(App, Text)` creates a headless retained button. `AsView` returns its live,
+attachable view identity; `Text`, `Enabled`, and `Action` use registry state; `Focused` reports the
+application focus owner; and `OnClick` is a single-handler event.
 
 ```pascal
 var Button: TuiButton := TuiButton.Create(App, 'Save');
 Button.Action := Save;
 Button.OnClick := procedure(Sender: TuiButton) begin ... end;
+Desktop.Add(TuiButton.AsView(Button));
 Button.Click()
 ```
 
@@ -615,9 +617,12 @@ Button.Click()
 3. revalidate the button;
 4. invoke `OnClick` when the button still exists.
 
-If the action destroys the button or closes its application, `OnClick` is skipped. `AsView` returns
-the source identity supplied to the action. This API models semantic activation only; keyboard,
-mouse, painting, and layout behavior are not implemented by the current button.
+If the action destroys the button or closes its application, `OnClick` is skipped. `Focus()` requests
+focus for an attached eligible button. A focused button accepts `Enter` and `Space`; a left pointer
+down inside its retained bounds focuses and activates it. Both paths call `Click`, preserving the
+action-before-`OnClick` order and supplying `TuiViewKind.Button` as the action source. Disabled
+buttons are excluded from focus and hit testing, so their input falls through to the application
+fallback. Button painting is not implemented yet.
 
 ## Implementation (contributors)
 

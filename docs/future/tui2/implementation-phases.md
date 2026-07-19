@@ -83,8 +83,9 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   Enter, Space, and left-pointer-down activation through the existing action-before-`OnClick` order.
 - **Implemented headless core:** retained button painting with normal, focused, and disabled roles,
   text invalidation, and central tree-ordered composition with custom views.
-- **Next:** preserve retained button behavior through layout measurement and invalidation.
-- Propagate the existing action registry through every subsequent view-backed control type.
+- **Implemented headless core:** intrinsic retained-button measurement from bracketed grapheme text,
+  with layout invalidation after a text replacement.
+- **Next:** propagate the existing action registry through every subsequent view-backed control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.

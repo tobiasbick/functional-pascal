@@ -1,8 +1,9 @@
 unit Std.Tui2.Controls.Button;
 
 uses
-  Std.Array, Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Actions.Command,
-  Std.Tui2.Input.PointerEvent, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Array, Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Actions.Command, Std.Tui2.Cells.Cell,
+  Std.Tui2.Cells.StyleRole, Std.Tui2.Geometry.Size, Std.Tui2.Input.PointerEvent,
+  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
   Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.View;
 
 type
@@ -16,6 +17,16 @@ private mutable var TuiButtonViews: array of TuiView := [];
 private mutable var TuiButtonHasAction: array of boolean := [];
 private mutable var TuiButtonActions: array of TuiAction := [];
 private mutable var TuiButtonOnClick: array of option of TuiButtonCallback := [];
+
+private function TuiButtonTextWidth(Text: string): integer;
+begin
+  mutable var Width: integer := 2;
+  for Glyph: string in Std.Console.SplitGraphemes(Text) do
+  begin
+    Width := Width + TuiCell.Create(Glyph, TuiStyleRole.Normal).Width()
+  end;
+  return Width
+end;
 
 private procedure TuiButtonRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
@@ -77,6 +88,7 @@ type
         panic('Tui2 cannot create a button for a closed application')
       end;
       var View: TuiView := TuiView.Create(App);
+      View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(TuiButtonTextWidth(Text), 1));
       TuiButtonApplicationIds := Std.Array.Concat(TuiButtonApplicationIds, [App.Id]);
       TuiButtonGenerations := Std.Array.Concat(TuiButtonGenerations, [1]);
       TuiButtonAlive := Std.Array.Concat(TuiButtonAlive, [true]);
@@ -138,6 +150,8 @@ type
       if TuiButtonTexts[Self.Slot - 1] <> Value then
       begin
         TuiButtonTexts[Self.Slot - 1] := Value;
+        var View: TuiView := TuiButtonViews[Self.Slot - 1];
+        View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(TuiButtonTextWidth(Value), 1));
         TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
       end
     end;

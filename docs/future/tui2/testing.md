@@ -67,7 +67,8 @@ shortcut resolution, disabled-action fallthrough, and application fallback for a
 Button coverage verifies retained attachment, focus traversal, hit testing, Enter, Space, left-pointer
 activation, action source identity, direct-event ordering, disabled exclusion, and view-destruction
 cleanup. Button paint coverage verifies text redraw, normal/focused/disabled roles, and clearing of
-former text cells after a shorter replacement label.
+former text cells after a shorter replacement label. Button layout coverage verifies intrinsic
+bracketed label sizing and an owning layout invalidation after text replacement.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

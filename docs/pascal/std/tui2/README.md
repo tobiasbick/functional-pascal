@@ -630,6 +630,10 @@ The remaining cells in the resolved button bounds are cleared with that same rol
 enabled-state changes, and focus transitions invalidate the next headless frame; button paint
 participates in the same retained tree order as custom views.
 
+A button's intrinsic measurement is one cell high and its label's grapheme width plus two cells for
+the brackets. This result is fixed on both axes. Replacing `Text` invalidates every owning layout,
+so the next headless layout pass uses the new intrinsic width.
+
 ## Implementation (contributors)
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).

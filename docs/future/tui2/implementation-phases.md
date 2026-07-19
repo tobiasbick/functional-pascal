@@ -87,7 +87,11 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   with layout invalidation after a text replacement.
 - **Implemented headless core:** attachable labels with grapheme-aware fixed measurement, retained
   normal/disabled painting, text replacement invalidation, and generational cleanup.
-- **Next:** propagate the existing action registry through the next interactive view-backed control.
+- **Implemented headless core:** retained input lines built on the custom-view input and focus path,
+  with bounded single-line editing, pointer cursor placement, fixed measurement, and retained
+  normal/focused/disabled painting.
+- **Next:** add typed value-change events and propagate the existing action registry through the
+  next interactive view-backed control.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.
@@ -97,8 +101,7 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 5 — First usable controls
 
-- Add a frame or window, input line, check box, list box, and scroll bar; render the existing
-  retained controls.
+- Add a frame or window, check box, list box, and scroll bar; render the existing retained controls.
 - Bind buttons, menus, status items, and shortcuts to reusable actions.
 - Add a minimal interactive application and a fully headless equivalent test.
 - Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.

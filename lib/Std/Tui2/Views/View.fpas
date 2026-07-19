@@ -9,6 +9,7 @@ type
   TuiViewKind = enum
     Empty;
     Button;
+    InputLine;
     Label;
     Custom;
   end;

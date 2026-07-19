@@ -650,6 +650,24 @@ and the grapheme display width of `Text`. Replacing `Text` invalidates both its 
 owning layout, so the next layout pass uses the new width. `Destroy` releases the backing view and
 makes the label handle stale.
 
+## Input lines
+
+`TuiInputLine.Create(App, MaxLength)` creates a focusable retained one-line text field. `MaxLength`
+must be positive and is its fixed width in cells. The read-only `MaxLength`, read-write `Text`, and
+read-only `Focused` properties validate the live handle.
+
+```pascal
+var Name: TuiInputLine := TuiInputLine.Create(App, 20);
+Desktop.Add(TuiInputLine.AsView(Name));
+Name.Focus()
+```
+
+Focused input lines consume plain character and Space keys, plus Left, Right, Home, Backspace, and
+Delete. A left pointer-down focuses the field and places its character cursor. Input beyond
+`MaxLength` is not accepted; assigning an overlong `Text` value is rejected. Attached visible
+input lines paint their text at the local origin with the `Normal`, `Focused`, or `Disabled` role.
+`Destroy` releases the backing view and makes the handle stale.
+
 ## Implementation (contributors)
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).

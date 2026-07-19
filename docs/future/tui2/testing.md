@@ -71,6 +71,8 @@ former text cells after a shorter replacement label. Button layout coverage veri
 bracketed label sizing and an owning layout invalidation after text replacement.
 Label coverage verifies retained attachment, fixed grapheme-width measurement, normal and disabled
 painting, layout invalidation after text replacement, repaint clearing, and destruction cleanup.
+Input-line coverage verifies bounded character editing, cursor navigation, pointer placement,
+fixed measurement, normal/focused/disabled painting, and destruction cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

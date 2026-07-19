@@ -81,7 +81,9 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   but before the application fallback.
 - **Implemented headless core:** retained, attachable buttons with focus traversal, hit testing,
   Enter, Space, and left-pointer-down activation through the existing action-before-`OnClick` order.
-- **Next:** render the retained button and preserve its behavior through layout and paint invalidation.
+- **Implemented headless core:** retained button painting with normal, focused, and disabled roles,
+  text invalidation, and central tree-ordered composition with custom views.
+- **Next:** preserve retained button behavior through layout measurement and invalidation.
 - Propagate the existing action registry through every subsequent view-backed control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active

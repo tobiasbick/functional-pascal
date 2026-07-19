@@ -622,7 +622,13 @@ focus for an attached eligible button. A focused button accepts `Enter` and `Spa
 down inside its retained bounds focuses and activates it. Both paths call `Click`, preserving the
 action-before-`OnClick` order and supplying `TuiViewKind.Button` as the action source. Disabled
 buttons are excluded from focus and hit testing, so their input falls through to the application
-fallback. Button painting is not implemented yet.
+fallback.
+
+Attached visible buttons paint their bounded local text as `[Text]`. Normal buttons use the
+`Normal` role, focused buttons use `Focused`, and effectively disabled buttons use `Disabled`.
+The remaining cells in the resolved button bounds are cleared with that same role. Text changes,
+enabled-state changes, and focus transitions invalidate the next headless frame; button paint
+participates in the same retained tree order as custom views.
 
 ## Implementation (contributors)
 

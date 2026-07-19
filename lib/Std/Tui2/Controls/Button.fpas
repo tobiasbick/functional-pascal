@@ -2,8 +2,8 @@ unit Std.Tui2.Controls.Button;
 
 uses
   Std.Array, Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Actions.Command,
-  Std.Tui2.Input.PointerEvent, Std.Tui2.Runtime.Application, Std.Tui2.Views.CustomViewFocus,
-  Std.Tui2.Views.View;
+  Std.Tui2.Input.PointerEvent, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.View;
 
 type
   TuiButtonCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);
@@ -135,7 +135,11 @@ type
     procedure WriteText(Self: TuiButton; Value: string);
     begin
       TuiButtonRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiButtonTexts[Self.Slot - 1] := Value
+      if TuiButtonTexts[Self.Slot - 1] <> Value then
+      begin
+        TuiButtonTexts[Self.Slot - 1] := Value;
+        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
+      end
     end;
 
     function ReadEnabled(Self: TuiButton): boolean;
@@ -309,6 +313,12 @@ begin
     end
   end;
   panic('Tui2 view is not a live button')
+end;
+
+function TuiButtonTextForView(View: TuiView): string;
+begin
+  var Button: TuiButton := TuiButtonFromView(View);
+  return Button.Text
 end;
 
 function TuiButtonTryActivateKey(View: TuiView; Key: Std.Console.KeyEvent): boolean;

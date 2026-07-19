@@ -4,8 +4,8 @@ uses
   Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size,
   Std.Tui2.Layouts.LayoutFit, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationLayout,
   Std.Tui2.Runtime.ApplicationInputRoute, Std.Tui2.Runtime.ApplicationResize,
-  Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View,
-  Std.Tui2.Views.ViewFocusTraversal, Std.Tui2.Views.ViewHitTesting;
+  Std.Tui2.Views.Container, Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.DesktopState,
+  Std.Tui2.Views.View, Std.Tui2.Views.ViewFocusTraversal, Std.Tui2.Views.ViewHitTesting;
 
 type
   TuiDesktop = record
@@ -33,6 +33,7 @@ type
       View.Bounds := TuiRect.Create(0, 0, Size.Width, Size.Height);
       TuiDesktopStateRegister(App.Id, Container);
       TuiApplicationInputRouteEnsure(App.Id, App.Generation);
+      TuiViewPaintEnsure(App.Id, App.Generation);
       var LayoutCallback: TuiApplicationLayoutCallback := procedure(ApplicationId: integer) begin
         if (ApplicationId = App.Id) and Container.IsAlive() then
         begin

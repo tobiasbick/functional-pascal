@@ -39,6 +39,10 @@ type
   TuiResizeHandler = Std.Tui2.Views.CustomView.TuiResizeHandler;
   TuiMeasureHandler = Std.Tui2.Views.CustomView.TuiMeasureHandler;
   TuiPaintHandler = Std.Tui2.Views.CustomView.TuiPaintHandler;
+  TuiFocusHandler = Std.Tui2.Views.CustomView.TuiFocusHandler;
+  TuiBlurHandler = Std.Tui2.Views.CustomView.TuiBlurHandler;
+  TuiCloseRequestHandler = Std.Tui2.Views.CustomView.TuiCloseRequestHandler;
+  TuiClosedHandler = Std.Tui2.Views.CustomView.TuiClosedHandler;
   TuiContainer = Std.Tui2.Views.Container.TuiContainer;
   TuiDesktop = Std.Tui2.Views.Desktop.TuiDesktop;
   TuiLayout = Std.Tui2.Layouts.Layout.TuiLayout;

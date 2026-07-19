@@ -1,0 +1,93 @@
+program Tui2CustomViewCloseTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Parent: TuiContainer := TuiContainer.Create(App);
+  var ParentView: TuiView := TuiContainer.AsView(Parent);
+  var Custom: TuiCustomView := TuiCustomView.Create(App);
+  var View: TuiView := TuiCustomView.AsView(Custom);
+  Parent.Add(View);
+  Desktop.Add(ParentView);
+  AssertTrue(Custom.Focus());
+  mutable var Sequence: string := '';
+  Custom.OnCloseRequest := function(Sender: TuiCustomView): boolean begin
+    Sequence := Sequence + 'R';
+    AssertTrue(Sender.IsAlive());
+    return false
+  end;
+  Custom.OnBlur := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'B'
+  end;
+  Custom.OnDetach := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'D'
+  end;
+  Custom.OnClosed := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'C'
+  end;
+  AssertFalse(Custom.Close());
+  AssertTrue(Custom.IsAlive());
+  AssertTrue(Parent.Contains(View));
+  AssertTrue(Custom.Focused);
+  AssertEquals('R', Sequence);
+  Sequence := '';
+  Custom.OnCloseRequest := function(Sender: TuiCustomView): boolean begin
+    Sequence := Sequence + 'R';
+    return true
+  end;
+  Custom.OnClosed := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'C';
+    AssertTrue(Sender.IsAlive());
+    AssertFalse(Parent.Contains(TuiCustomView.AsView(Sender)));
+    AssertFalse(Sender.Focused)
+  end;
+  AssertTrue(Custom.Close());
+  AssertEquals('RBDC', Sequence);
+  AssertFalse(Custom.IsAlive());
+  AssertFalse(Parent.Contains(View));
+  mutable var OrdinaryRequestCount: integer := 0;
+  mutable var OrdinaryClosedCount: integer := 0;
+  mutable var OrdinaryBlurCount: integer := 0;
+  mutable var OrdinaryDetachCount: integer := 0;
+  var Ordinary: TuiCustomView := TuiCustomView.Create(App);
+  var OrdinaryView: TuiView := TuiCustomView.AsView(Ordinary);
+  Ordinary.OnCloseRequest := function(Sender: TuiCustomView): boolean begin
+    OrdinaryRequestCount := OrdinaryRequestCount + 1;
+    return true
+  end;
+  Ordinary.OnClosed := procedure(Sender: TuiCustomView) begin
+    OrdinaryClosedCount := OrdinaryClosedCount + 1
+  end;
+  Ordinary.OnBlur := procedure(Sender: TuiCustomView) begin
+    OrdinaryBlurCount := OrdinaryBlurCount + 1
+  end;
+  Ordinary.OnDetach := procedure(Sender: TuiCustomView) begin
+    OrdinaryDetachCount := OrdinaryDetachCount + 1
+  end;
+  Parent.Add(OrdinaryView);
+  AssertTrue(Ordinary.Focus());
+  Ordinary.Destroy();
+  AssertEquals(0, OrdinaryRequestCount);
+  AssertEquals(0, OrdinaryClosedCount);
+  AssertEquals(1, OrdinaryBlurCount);
+  AssertEquals(1, OrdinaryDetachCount);
+  mutable var DestroyingSequence: string := '';
+  var Destroying: TuiCustomView := TuiCustomView.Create(App);
+  var DestroyingView: TuiView := TuiCustomView.AsView(Destroying);
+  Parent.Add(DestroyingView);
+  Destroying.OnCloseRequest := function(Sender: TuiCustomView): boolean begin
+    DestroyingSequence := DestroyingSequence + 'R';
+    Sender.Destroy();
+    return false
+  end;
+  Destroying.OnClosed := procedure(Sender: TuiCustomView) begin
+    DestroyingSequence := DestroyingSequence + 'C';
+    AssertTrue(Sender.IsAlive())
+  end;
+  AssertTrue(Destroying.Close());
+  AssertEquals('RC', DestroyingSequence);
+  AssertFalse(Destroying.IsAlive());
+  App.Close()
+end.

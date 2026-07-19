@@ -7,10 +7,11 @@ Std.Tui2 defines a deterministic lifecycle for applications and views. Built-in 
 Std.Tui2 does not define a general `OnInit` callback. Construction and configuration happen explicitly before a view is attached:
 
 ```pascal
-var View: TuiCustomView := TuiCustomView.New(App);
-TuiView.SetSizePolicy(TuiCustomView.AsView(View), Policy);
+var View: TuiCustomView := TuiCustomView.Create(App);
+var Base: TuiView := TuiCustomView.AsView(View);
+Base.SizePolicy := Policy;
 View.OnPaint := PaintContent;
-TuiContainer.Add(Parent, TuiCustomView.AsView(View))
+Parent.Add(Base)
 ```
 
 Attaching the configured view starts its live tree lifecycle.
@@ -48,9 +49,11 @@ Implemented headless transitions: `TuiCustomView.OnAttach` runs after its parent
 and new bounds after layout and before `OnTick`; multiple pending changes coalesce, and changes from
 inside the handler wait for a later iteration. Dispatch revalidates handles after each callback.
 `OnMeasure` supplies intrinsic custom-view sizing to the existing measure-policy pipeline. `OnPaint`
-receives local bounds and an ancestor-clipped canvas during the headless paint phase. Focus, blur,
-close-request, and closed delivery remain in the ordered work below. Runtime enforcement of the
-measurement and paint mutation rules also remains open.
+receives local bounds and an ancestor-clipped canvas during the headless paint phase. One attached,
+visible, and effectively enabled custom view may own application focus. Focus changes deliver
+`OnBlur` before `OnFocus`, and callback-initiated focus requests are deferred until the current
+transition completes. `Close` implements vetoable close-request and ordered closed delivery. Runtime
+enforcement of the measurement and paint mutation rules remains open.
 
 For `OnCloseRequest`, `true` allows closing and `false` cancels it. This meaning differs intentionally from raw input handlers, where `true` means consumed.
 
@@ -103,6 +106,10 @@ Violations produce a clear runtime diagnostic rather than silently corrupting th
 
 `OnFocus` and `OnBlur` describe completed focus transitions. They are notifications, not veto points. Focus eligibility is decided before the transition by view state and modal routing.
 
+The headless implementation currently derives eligibility from attachment to the desktop plus the
+view's complete visible and enabled ancestor chain. Modal routing and traversal policy remain part of
+the input-routing work.
+
 ## Close lifecycle
 
 Only closeable views receive `OnCloseRequest`. A rejected request leaves the view attached and focused state unchanged when possible.
@@ -114,6 +121,10 @@ Once closing is accepted:
 3. detach the subtree;
 4. invoke `OnClosed`;
 5. invalidate affected handles according to the ownership contract.
+
+The current custom-view order is close request, ownership removal, blur when focused, detach, closed,
+and handle invalidation. `OnClosed` receives a live sender for inspection. Direct destruction,
+container removal, and application stop do not invoke the vetoable close path.
 
 An application stop is not required to ask every child for permission. Application-specific unsaved-work behavior belongs in an application action or top-level close handler.
 

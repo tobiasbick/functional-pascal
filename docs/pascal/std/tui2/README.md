@@ -35,10 +35,14 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
 | `TuiCommand` | A validated positive command identity. |
 | `TuiView` | A headless application-scoped view handle and action source identity. |
-| `TuiCustomView` | A typed headless view with attach, detach, and resize lifecycle events. |
+| `TuiCustomView` | A typed headless view with measure, paint, focus, and close lifecycle events. |
 | `TuiAttachHandler` | Handler invoked after a custom view is attached. |
 | `TuiDetachHandler` | Handler invoked before an attached custom view is released. |
 | `TuiResizeHandler` | Handler receiving the previous and resolved custom-view bounds. |
+| `TuiFocusHandler` | Handler invoked after a custom view gains focus. |
+| `TuiBlurHandler` | Handler invoked after a custom view loses focus. |
+| `TuiCloseRequestHandler` | Handler that accepts or rejects an explicit custom-view close. |
+| `TuiClosedHandler` | Handler invoked before an explicitly closed custom-view handle becomes stale. |
 | `TuiContainer` | A headless owner of directly attached views. |
 | `TuiDesktop` | The explicit headless root container for one application. |
 | `TuiLayout` | A headless application-scoped layout identity. |
@@ -208,12 +212,15 @@ an action-source sentinel and is not a destroyable registry view.
 returns the identity accepted by containers and layouts. `IsAlive()` and `Destroy()` retain the
 normal generational-handle behavior.
 
-The implemented lifecycle surface consists of three single-handler record events:
+Attach, detach, resize, focus, blur, close-request, and closed notifications are single-handler
+record events:
 
 ```pascal
 Custom.OnAttach := procedure(Sender: TuiCustomView) begin ... end;
 Custom.OnDetach := procedure(Sender: TuiCustomView) begin ... end;
 Custom.OnResize := procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect) begin ... end;
+Custom.OnFocus := procedure(Sender: TuiCustomView) begin ... end;
+Custom.OnBlur := procedure(Sender: TuiCustomView) begin ... end;
 ```
 
 `OnAttach` runs synchronously after the parent relation becomes visible and before the first layout.
@@ -228,6 +235,20 @@ made inside `OnResize` is delivered during a later iteration rather than recursi
 Lifecycle dispatch revalidates handles after callbacks. Destroying the sender from `OnAttach`,
 `OnDetach`, or `OnResize` is safe, and a destroyed view receives no later pending resize event.
 Replacing an event handler replaces the previous handler; assigning `nil` clears it.
+
+One custom view per application may be focused. `Focus()` succeeds only when the view is attached
+through visible, enabled ancestors to the application's desktop. `Blur()` returns `false` when the
+view did not own focus. The read-only `Focused` property observes the current owner. Moving focus
+delivers the old view's `OnBlur` before the new view's `OnFocus`; hiding or disabling the focused
+view or one of its ancestors blurs it immediately. A focus request made from a focus callback is
+queued until the current transition completes, so callbacks do not recurse.
+
+`Close()` is the explicit, vetoable custom-view close path. `OnCloseRequest` returns `true` to
+accept or `false` to leave the view attached, live, and focused. An accepted close removes ownership,
+blurs the view when needed, delivers `OnDetach`, then invokes `OnClosed` while the sender remains
+live for inspection. The handle becomes stale when `Close()` returns. Direct `Destroy()`, container
+removal, and application shutdown are ownership teardown operations and do not invoke
+`OnCloseRequest` or `OnClosed`.
 
 ## Headless custom-view measurement and paint
 
@@ -261,8 +282,8 @@ Custom.OnPaint :=
 `Context.Bounds` starts at `(0, 0)` and has the view's resolved extent. `Context.Clip` is expressed
 in the same local coordinates and intersects the application surface, the view, and every visible
 ancestor. Canvas operations use local coordinates and cannot write outside that clip. `Enabled`
-combines the view and all ancestors; `Focused` is currently `false` because focus routing is not yet
-implemented. The context uses the default palette.
+combines the view and all ancestors; `Focused` reflects the application's current custom-view focus
+owner. The context uses the default palette.
 
 `Invalidate()` schedules a later repaint without invoking `OnPaint` recursively. Bounds, visibility,
 enabled state, handler replacement, attachment, removal, and application resize also invalidate the
@@ -272,16 +293,17 @@ the latest retained surface for deterministic inspection. The surface is initial
 uses the new blank extent immediately after `ResizeForTest`, before the next paint pass.
 
 The current headless renderer dispatches registered custom views deterministically. Interactive
-z-order, focus state, terminal presentation, and runtime enforcement of callback mutation and canvas
-lifetime restrictions are not implemented.
+z-order, focus traversal, terminal presentation, and runtime enforcement of callback mutation and
+canvas lifetime restrictions are not implemented.
 
 ## Headless containers
 
 `TuiContainer.Create(App)` creates a live container backed by a view handle. `Add(Child)` accepts one
-live view from the same application and rejects an already attached view. `Contains(Child)` reports
-the current direct ownership relation. `Remove(Child)` removes and destroys that child, so its handle
-becomes stale. Containers may be nested: destroying a container's `AsView()` handle or removing an
-attached container destroys every descendant depth-first.
+live view from the same application and rejects an already attached view or an attachment that would
+create an ownership cycle. `Contains(Child)` reports the current direct ownership relation.
+`Remove(Child)` removes and destroys that child, so its handle becomes stale. Containers may be
+nested: destroying a container's `AsView()` handle or removing an attached container destroys every
+descendant depth-first.
 
 `Layout` is an `option of TuiLayout` property. Assign `Some(Layout)` to attach the one layout owned
 by the container. Assigning `None`, assigning a different layout, or destroying the container destroys

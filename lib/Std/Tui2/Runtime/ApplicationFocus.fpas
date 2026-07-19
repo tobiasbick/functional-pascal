@@ -1,0 +1,216 @@
+unit Std.Tui2.Runtime.ApplicationFocus;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationFocusEligibilityCallback = function(ApplicationId: integer; Slot: integer; Generation: integer): boolean;
+  TuiApplicationFocusChangedCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer; Focused: boolean);
+
+private mutable var TuiApplicationFocusGenerations: array of integer := [];
+private mutable var TuiApplicationFocusSlots: array of integer := [];
+private mutable var TuiApplicationFocusViewGenerations: array of integer := [];
+private mutable var TuiApplicationFocusTransitioning: array of boolean := [];
+private mutable var TuiApplicationFocusPending: array of boolean := [];
+private mutable var TuiApplicationFocusPendingSlots: array of integer := [];
+private mutable var TuiApplicationFocusPendingGenerations: array of integer := [];
+private mutable var TuiApplicationFocusEligibility: array of option of TuiApplicationFocusEligibilityCallback := [];
+private mutable var TuiApplicationFocusCallbackApplicationIds: array of integer := [];
+private mutable var TuiApplicationFocusCallbackGenerations: array of integer := [];
+private mutable var TuiApplicationFocusCallbacks: array of TuiApplicationFocusChangedCallback := [];
+private mutable var TuiApplicationFocusCallbackActive: array of boolean := [];
+
+private function TuiApplicationFocusEligible(ApplicationId: integer; Slot: integer; Generation: integer): boolean;
+begin
+  if Slot = 0 then
+  begin
+    return true
+  end;
+  case TuiApplicationFocusEligibility[ApplicationId - 1] of
+    None:
+    begin
+      return false
+    end;
+    Some(Callback):
+    begin
+      return Callback(ApplicationId, Slot, Generation)
+    end
+  end
+end;
+
+private procedure TuiApplicationFocusEmit(
+  ApplicationId: integer;
+  AppGeneration: integer;
+  Slot: integer;
+  ViewGeneration: integer;
+  Focused: boolean
+);
+begin
+  var Last: integer := Std.Array.Length(TuiApplicationFocusCallbackActive);
+  for I: integer := 0 to Last - 1 do
+  begin
+    if ((TuiApplicationFocusCallbackActive[I] and (TuiApplicationFocusCallbackApplicationIds[I] = ApplicationId)) and (TuiApplicationFocusCallbackGenerations[I] = AppGeneration)) then
+    begin
+      var Callback: TuiApplicationFocusChangedCallback := TuiApplicationFocusCallbacks[I];
+      Callback(ApplicationId, Slot, ViewGeneration, Focused)
+    end
+  end
+end;
+
+procedure TuiApplicationFocusInitialize(ApplicationId: integer; Generation: integer);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationFocusGenerations := Std.Array.Concat(TuiApplicationFocusGenerations, [Generation]);
+  TuiApplicationFocusSlots := Std.Array.Concat(TuiApplicationFocusSlots, [0]);
+  TuiApplicationFocusViewGenerations := Std.Array.Concat(TuiApplicationFocusViewGenerations, [0]);
+  TuiApplicationFocusTransitioning := Std.Array.Concat(TuiApplicationFocusTransitioning, [false]);
+  TuiApplicationFocusPending := Std.Array.Concat(TuiApplicationFocusPending, [false]);
+  TuiApplicationFocusPendingSlots := Std.Array.Concat(TuiApplicationFocusPendingSlots, [0]);
+  TuiApplicationFocusPendingGenerations := Std.Array.Concat(TuiApplicationFocusPendingGenerations, [
+                                                                                                     0
+
+                                                                                                   ]);
+  TuiApplicationFocusEligibility := Std.Array.Concat(TuiApplicationFocusEligibility, [None])
+end;
+
+procedure RegisterApplicationFocusEligibility(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationFocusEligibilityCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationFocusEligibility[ApplicationId - 1] := Some(Callback)
+end;
+
+procedure RegisterApplicationFocusChanged(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationFocusChangedCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationFocusCallbackApplicationIds := Std.Array.Concat(TuiApplicationFocusCallbackApplicationIds, [
+                                                                                                             ApplicationId
+
+                                                                                                           ]);
+  TuiApplicationFocusCallbackGenerations := Std.Array.Concat(TuiApplicationFocusCallbackGenerations, [
+                                                                                                       Generation
+
+                                                                                                     ]);
+  TuiApplicationFocusCallbacks := Std.Array.Concat(TuiApplicationFocusCallbacks, [Callback]);
+  TuiApplicationFocusCallbackActive := Std.Array.Concat(TuiApplicationFocusCallbackActive, [true])
+end;
+
+procedure TuiApplicationFocusRequest(
+  ApplicationId: integer;
+  AppGeneration: integer;
+  Slot: integer;
+  ViewGeneration: integer
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, AppGeneration);
+  var Index: integer := ApplicationId - 1;
+  if TuiApplicationFocusTransitioning[Index] then
+  begin
+    TuiApplicationFocusPending[Index] := true;
+    TuiApplicationFocusPendingSlots[Index] := Slot;
+    TuiApplicationFocusPendingGenerations[Index] := ViewGeneration;
+    return
+  end;
+  mutable var RequestedSlot: integer := Slot;
+  mutable var RequestedGeneration: integer := ViewGeneration;
+  mutable var ContinueTransition: boolean := true;
+  while ContinueTransition do
+  begin
+    ContinueTransition := false;
+    var OldSlot: integer := TuiApplicationFocusSlots[Index];
+    var OldGeneration: integer := TuiApplicationFocusViewGenerations[Index];
+    if (OldSlot <> RequestedSlot) or (OldGeneration <> RequestedGeneration) then
+    begin
+      TuiApplicationFocusSlots[Index] := 0;
+      TuiApplicationFocusViewGenerations[Index] := 0;
+      TuiApplicationFocusTransitioning[Index] := true;
+      if OldSlot <> 0 then
+      begin
+        TuiApplicationPaintInvalidate(ApplicationId, AppGeneration);
+        TuiApplicationFocusEmit(ApplicationId, AppGeneration, OldSlot, OldGeneration, false)
+      end;
+      if not TuiApplicationRegistryIsOpen(ApplicationId, AppGeneration) then
+      begin
+        return
+      end;
+      if TuiApplicationFocusPending[Index] then
+      begin
+        RequestedSlot := TuiApplicationFocusPendingSlots[Index];
+        RequestedGeneration := TuiApplicationFocusPendingGenerations[Index];
+        TuiApplicationFocusPending[Index] := false
+      end;
+      if TuiApplicationFocusEligible(ApplicationId, RequestedSlot, RequestedGeneration) then
+      begin
+        TuiApplicationFocusSlots[Index] := RequestedSlot;
+        TuiApplicationFocusViewGenerations[Index] := RequestedGeneration;
+        if RequestedSlot <> 0 then
+        begin
+          TuiApplicationPaintInvalidate(ApplicationId, AppGeneration);
+          TuiApplicationFocusEmit(ApplicationId, AppGeneration, RequestedSlot, RequestedGeneration, true)
+        end
+      end;
+      if not TuiApplicationRegistryIsOpen(ApplicationId, AppGeneration) then
+      begin
+        return
+      end;
+      TuiApplicationFocusTransitioning[Index] := false;
+      if TuiApplicationFocusPending[Index] then
+      begin
+        RequestedSlot := TuiApplicationFocusPendingSlots[Index];
+        RequestedGeneration := TuiApplicationFocusPendingGenerations[Index];
+        TuiApplicationFocusPending[Index] := false;
+        ContinueTransition := true
+      end
+    end
+  end
+end;
+
+procedure TuiApplicationFocusRevalidate(ApplicationId: integer; AppGeneration: integer);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, AppGeneration);
+  var Slot: integer := TuiApplicationFocusSlots[ApplicationId - 1];
+  if Slot = 0 then
+  begin
+    return
+  end;
+  var ViewGeneration: integer := TuiApplicationFocusViewGenerations[ApplicationId - 1];
+  if not TuiApplicationFocusEligible(ApplicationId, Slot, ViewGeneration) then
+  begin
+    TuiApplicationFocusRequest(ApplicationId, AppGeneration, 0, 0)
+  end
+end;
+
+function TuiApplicationFocusMatches(
+  ApplicationId: integer;
+  AppGeneration: integer;
+  Slot: integer;
+  ViewGeneration: integer
+): boolean;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, AppGeneration);
+  return (TuiApplicationFocusSlots[ApplicationId - 1] = Slot) and
+         (TuiApplicationFocusViewGenerations[ApplicationId - 1] = ViewGeneration)
+end;
+
+procedure TuiApplicationFocusRelease(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiApplicationFocusCallbackActive) - 1 do
+  begin
+    if (TuiApplicationFocusCallbackApplicationIds[I] = ApplicationId) and
+       (TuiApplicationFocusCallbackGenerations[I] = Generation) then
+    begin
+      TuiApplicationFocusCallbackActive[I] := false
+    end
+  end;
+  TuiApplicationFocusSlots[ApplicationId - 1] := 0;
+  TuiApplicationFocusViewGenerations[ApplicationId - 1] := 0;
+  TuiApplicationFocusTransitioning[ApplicationId - 1] := false;
+  TuiApplicationFocusPending[ApplicationId - 1] := false;
+  TuiApplicationFocusEligibility[ApplicationId - 1] := None
+end;

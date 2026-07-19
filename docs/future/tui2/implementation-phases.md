@@ -64,8 +64,14 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** custom-view measurement integrated with measure specs and size
   policies, explicit paint invalidation, local paint coordinates, ancestor clipping, retained
   headless surfaces, and paint delivery after resize and before `OnTick`.
-- **Next:** add focus, blur, close-request, and closed transitions.
-- Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
+- **Implemented headless core:** one focus owner per application, eligibility through the attached
+  visible and enabled ancestor chain, ordered blur-before-focus notification, deferred reentrant
+  focus requests, focus-aware paint context, and synchronous repair after eligibility changes.
+- **Implemented headless core:** vetoable custom-view `Close`, ordered blur/detach/closed delivery,
+  live sender inspection during `OnClosed`, non-veto ownership destruction, and container ownership
+  cycle rejection.
+- **Next:** implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw
+  fallback handlers.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active

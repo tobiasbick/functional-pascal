@@ -233,9 +233,10 @@ Controls with values expose one typed event per semantic change.
 
 Raw key and mouse handlers return `boolean` to participate in input propagation. Action handlers and typed change notifications do not return `boolean`.
 
-`TuiAttachHandler`, `TuiDetachHandler`, and `TuiResizeHandler` are implemented on `TuiCustomView`.
-The resize handler receives both old and new bounds and is delivered after layout. The remaining
-custom-view handler types in this inventory are still planned.
+`TuiAttachHandler`, `TuiDetachHandler`, `TuiMeasureHandler`, `TuiResizeHandler`, `TuiPaintHandler`,
+`TuiFocusHandler`, `TuiBlurHandler`, `TuiCloseRequestHandler`, and `TuiClosedHandler` are implemented
+on `TuiCustomView`. The remaining handler types in this inventory belong to input routing and future
+value controls.
 
 The core does not provide general multicast publish/subscribe. See
 [events-and-actions.md](events-and-actions.md) for the full contract.

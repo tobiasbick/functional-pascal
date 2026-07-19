@@ -1,0 +1,25 @@
+unit Std.Tui2.Views.ViewTreeState;
+
+uses Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Views.View;
+
+function TuiViewTreeIsInteractive(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  if (not View.Visible) or (not View.Enabled) then
+  begin
+    return false
+  end;
+  case TuiContainerParentOf(View) of
+    None:
+    begin
+      return TuiDesktopOwnsRoot(View)
+    end;
+    Some(Parent):
+    begin
+      return TuiViewTreeIsInteractive(Parent)
+    end
+  end
+end;

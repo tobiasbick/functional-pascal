@@ -50,6 +50,8 @@ Terminal-too-small detection and the headless `TuiScrollView` viewport are also 
 bounded headless application loop, orderly quit, desktop layout phase, and resize propagation now
 start Phase 4. Typed custom-view attach, detach, and coalesced resize delivery are also implemented.
 Custom-view measurement, retained headless surfaces, explicit paint invalidation, local paint
-coordinates, and ancestor clipping are implemented as well. The next ordered work is focus, blur,
-close-request, and closed transitions in
+coordinates, and ancestor clipping are implemented as well. Custom views now also have one
+application-scoped focus owner, ordered focus/blur delivery, focus-aware paint, vetoable close, and
+ordered detach/closed delivery. The next ordered work is z-order, hit-testing, focus traversal,
+pointer capture, modal roots, and raw fallback routing in
 [implementation-phases.md](implementation-phases.md).

@@ -1,0 +1,108 @@
+program Tui2CustomViewFocusTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Parent: TuiContainer := TuiContainer.Create(App);
+  var ParentView: TuiView := TuiContainer.AsView(Parent);
+  ParentView.Bounds := TuiRect.Create(0, 0, 20, 8);
+  var First: TuiCustomView := TuiCustomView.Create(App);
+  var Second: TuiCustomView := TuiCustomView.Create(App);
+  var FirstView: TuiView := TuiCustomView.AsView(First);
+  var SecondView: TuiView := TuiCustomView.AsView(Second);
+  FirstView.Bounds := TuiRect.Create(0, 0, 5, 2);
+  SecondView.Bounds := TuiRect.Create(5, 0, 5, 2);
+  AssertFalse(First.Focus());
+  AssertFalse(First.Focused);
+  Parent.Add(FirstView);
+  Parent.Add(SecondView);
+  Desktop.Add(ParentView);
+  mutable var Sequence: string := '';
+  First.OnFocus := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'F1'
+  end;
+  First.OnBlur := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'B1'
+  end;
+  Second.OnFocus := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'F2'
+  end;
+  Second.OnBlur := procedure(Sender: TuiCustomView) begin
+    Sequence := Sequence + 'B2'
+  end;
+  AssertTrue(First.Focus());
+  AssertTrue(First.Focused);
+  AssertEquals('F1', Sequence);
+  AssertTrue(First.Focus());
+  AssertEquals('F1', Sequence);
+  AssertTrue(Second.Focus());
+  AssertFalse(First.Focused);
+  AssertTrue(Second.Focused);
+  AssertEquals('F1B1F2', Sequence);
+  AssertTrue(Second.Blur());
+  AssertFalse(Second.Focused);
+  AssertFalse(Second.Blur());
+  AssertEquals('F1B1F2B2', Sequence);
+  Sequence := '';
+  AssertTrue(First.Focus());
+  ParentView.Enabled := false;
+  AssertFalse(First.Focused);
+  AssertEquals('F1B1', Sequence);
+  AssertFalse(First.Focus());
+  ParentView.Enabled := true;
+  Sequence := '';
+  AssertTrue(First.Focus());
+  ParentView.Visible := false;
+  AssertFalse(First.Focused);
+  AssertEquals('F1B1', Sequence);
+  ParentView.Visible := true;
+  mutable var PaintedFocused: boolean := false;
+  First.OnPaint := procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) begin
+    PaintedFocused := Context.Focused
+  end;
+  AssertTrue(First.Focus());
+  App.RunIterations(1, 0);
+  AssertTrue(PaintedFocused);
+  AssertTrue(First.Blur());
+  mutable var CallbackDepth: integer := 0;
+  mutable var MaximumDepth: integer := 0;
+  mutable var RedirectResult: boolean := true;
+  Sequence := '';
+  First.OnFocus := procedure(Sender: TuiCustomView) begin
+    CallbackDepth := CallbackDepth + 1;
+    if CallbackDepth > MaximumDepth then
+    begin
+      MaximumDepth := CallbackDepth
+    end;
+    Sequence := Sequence + 'F1';
+    RedirectResult := Second.Focus();
+    CallbackDepth := CallbackDepth - 1
+  end;
+  First.OnBlur := procedure(Sender: TuiCustomView) begin
+    CallbackDepth := CallbackDepth + 1;
+    if CallbackDepth > MaximumDepth then
+    begin
+      MaximumDepth := CallbackDepth
+    end;
+    Sequence := Sequence + 'B1';
+    CallbackDepth := CallbackDepth - 1
+  end;
+  Second.OnFocus := procedure(Sender: TuiCustomView) begin
+    CallbackDepth := CallbackDepth + 1;
+    if CallbackDepth > MaximumDepth then
+    begin
+      MaximumDepth := CallbackDepth
+    end;
+    Sequence := Sequence + 'F2';
+    CallbackDepth := CallbackDepth - 1
+  end;
+  AssertFalse(First.Focus());
+  AssertFalse(RedirectResult);
+  AssertFalse(First.Focused);
+  AssertTrue(Second.Focused);
+  AssertEquals('F1B1F2', Sequence);
+  AssertEquals(1, MaximumDepth);
+  App.Close()
+end.

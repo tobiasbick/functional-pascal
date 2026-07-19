@@ -47,7 +47,11 @@ retained application size; desktop resize propagation; and automatic dirty deskt
 Custom-view lifecycle coverage verifies visible parent state during attach, structural cleanup before
 detach, live senders during detach, post-layout resize ordering, resize coalescing, deferred changes
 from inside a resize callback, self-destruction, continued sibling delivery, and application-close
-detachment.
+detachment. Focus coverage verifies attachment eligibility, effective visibility and enabled state,
+old-blur-before-new-focus ordering, idempotent requests, explicit blur, focus-aware painting, and
+non-recursive callback redirection. Close coverage verifies veto preservation, ordered
+request/blur/detach/closed delivery, live sender inspection, direct-destroy separation, and
+self-destruction from the request handler.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

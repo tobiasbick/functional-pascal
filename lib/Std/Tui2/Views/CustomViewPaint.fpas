@@ -2,9 +2,9 @@ unit Std.Tui2.Views.CustomViewPaint;
 
 uses
   Std.Array, Std.Tui2.Cells.Palette, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
-  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.ApplicationPaint,
-  Std.Tui2.Surface.Surface, Std.Tui2.Views.View, Std.Tui2.Views.ViewLifecycleHooks,
-  Std.Tui2.Views.ViewPaintGeometry;
+  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.ApplicationFocus,
+  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Surface.Surface, Std.Tui2.Views.View,
+  Std.Tui2.Views.ViewLifecycleHooks, Std.Tui2.Views.ViewPaintGeometry;
 
 type
   TuiCustomViewPaintCallback = procedure(
@@ -116,7 +116,7 @@ begin
           var LocalClip: TuiRect := TuiRect.Create(Geometry.Clip.X - Geometry.Bounds.X, Geometry.Clip.Y -
                                                                                         Geometry.Bounds.Y, Geometry.Clip.Width, Geometry.Clip.Height);
           var Canvas: TuiCanvas := TuiCanvas.CreateLocal(Surface, TuiPoint.Create(Geometry.Bounds.X, Geometry.Bounds.Y), LocalClip);
-          var Context: TuiPaintContext := TuiPaintContext.Create(LocalBounds, LocalClip, Geometry.Enabled, false, TuiPalette.Default());
+          var Context: TuiPaintContext := TuiPaintContext.Create(LocalBounds, LocalClip, Geometry.Enabled, TuiApplicationFocusMatches(View.ApplicationId, 1, View.Slot, View.Generation), TuiPalette.Default());
           Callback(View.ApplicationId, View.Slot, View.Generation, Canvas, Context)
         end
       end

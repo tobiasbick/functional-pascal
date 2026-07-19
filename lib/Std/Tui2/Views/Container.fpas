@@ -56,6 +56,30 @@ begin
   return None
 end;
 
+private function TuiContainerSameView(Left: TuiView; Right: TuiView): boolean;
+begin
+  return ((Left.ApplicationId = Right.ApplicationId) and (Left.Slot = Right.Slot)) and
+         (Left.Generation = Right.Generation)
+end;
+
+private function TuiContainerWouldCreateCycle(Container: TuiView; Child: TuiView): boolean;
+begin
+  if TuiContainerSameView(Container, Child) then
+  begin
+    return true
+  end;
+  case TuiContainerParentOf(Container) of
+    None:
+    begin
+      return false
+    end;
+    Some(Parent):
+    begin
+      return TuiContainerWouldCreateCycle(Parent, Child)
+    end
+  end
+end;
+
 private procedure TuiContainerDestroyChildren(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
   for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
@@ -160,6 +184,10 @@ type
       if Child.ApplicationId <> Self.View.ApplicationId then
       begin
         panic('Tui2 container child belongs to a different application')
+      end;
+      if TuiContainerWouldCreateCycle(Self.View, Child) then
+      begin
+        panic('Tui2 container attachment would create an ownership cycle')
       end;
       if TuiContainerIsAttached(Child) then
       begin

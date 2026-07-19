@@ -2,8 +2,8 @@ unit Std.Tui2.Views.View;
 
 uses
   Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.MeasureResult,
-  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
-  Std.Tui2.Views.ViewLifecycleHooks;
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationFocus,
+  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.ViewLifecycleHooks;
 
 type
   TuiViewKind = enum
@@ -258,6 +258,7 @@ type
       begin
         TuiViewVisible[Self.Slot - 1] := Value;
         TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation);
+        TuiApplicationFocusRevalidate(Self.ApplicationId, 1);
         TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
       end
     end;
@@ -274,6 +275,7 @@ type
       if TuiViewEnabled[Self.Slot - 1] <> Value then
       begin
         TuiViewEnabled[Self.Slot - 1] := Value;
+        TuiApplicationFocusRevalidate(Self.ApplicationId, 1);
         TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
       end
     end;

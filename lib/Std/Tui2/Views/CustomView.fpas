@@ -3,8 +3,8 @@ unit Std.Tui2.Views.CustomView;
 uses
   Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect,
   Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Runtime.Application,
-  Std.Tui2.Views.CustomViewLifecycle, Std.Tui2.Views.CustomViewMeasure,
-  Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
+  Std.Tui2.Views.CustomViewClose, Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewLifecycle,
+  Std.Tui2.Views.CustomViewMeasure, Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
 
 type
   TuiCustomView = record
@@ -13,9 +13,11 @@ type
     static function Create(App: TuiApplication): TuiCustomView;
     begin
       var View: TuiView := TuiView.Create(App);
+      TuiCustomViewFocusEnsure(View);
       TuiCustomViewLifecycleEnsure(View);
       TuiCustomViewMeasureEnsure(View);
       TuiCustomViewPaintEnsure(View);
+      TuiCustomViewCloseEnsure(View);
       return record View := View; end
     end;
 
@@ -264,6 +266,197 @@ type
       end
     end;
 
+    function ReadOnFocus(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
+    begin
+      case TuiCustomViewFocusReadFocus(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnFocus(Self: TuiCustomView; Handler: option of procedure(Sender: TuiCustomView));
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewFocusWriteFocus(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewFocusHandler := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender)
+          end;
+          TuiCustomViewFocusWriteFocus(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadOnBlur(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
+    begin
+      case TuiCustomViewFocusReadBlur(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnBlur(Self: TuiCustomView; Handler: option of procedure(Sender: TuiCustomView));
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewFocusWriteBlur(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewFocusHandler := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender)
+          end;
+          TuiCustomViewFocusWriteBlur(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadOnCloseRequest(Self: TuiCustomView): option of function(Sender: TuiCustomView): boolean;
+    begin
+      case TuiCustomViewCloseReadRequest(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(function(Sender: TuiCustomView): boolean begin
+            return Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnCloseRequest(
+  Self: TuiCustomView;
+  Handler: option of function(Sender: TuiCustomView): boolean
+);
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewCloseWriteRequest(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewCloseRequestHandler := function(ApplicationId: integer; Slot: integer; Generation: integer): boolean begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            return Value(Sender)
+          end;
+          TuiCustomViewCloseWriteRequest(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadOnClosed(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
+    begin
+      case TuiCustomViewCloseReadClosed(TuiCustomView.AsView(Self)) of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiCustomView) begin
+            Callback(Sender.View.ApplicationId, Sender.View.Slot, Sender.View.Generation)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnClosed(Self: TuiCustomView; Handler: option of procedure(Sender: TuiCustomView));
+    begin
+      var View: TuiView := TuiCustomView.AsView(Self);
+      case Handler of
+        None:
+        begin
+          TuiCustomViewCloseWriteClosed(View, None)
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiCustomViewClosedHandler := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+            var Sender: TuiCustomView := record
+              View := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+              Kind := TuiViewKind.Custom;
+            end;
+            end;
+            Value(Sender)
+          end;
+          TuiCustomViewCloseWriteClosed(View, Some(Callback))
+        end
+      end
+    end;
+
+    function ReadFocused(Self: TuiCustomView): boolean;
+    begin
+      return TuiCustomViewIsFocused(TuiCustomView.AsView(Self))
+    end;
+
+    function Focus(Self: TuiCustomView): boolean;
+    begin
+      return TuiCustomViewRequestFocus(TuiCustomView.AsView(Self))
+    end;
+
+    function Blur(Self: TuiCustomView): boolean;
+    begin
+      return TuiCustomViewRequestBlur(TuiCustomView.AsView(Self))
+    end;
+
+    function Close(Self: TuiCustomView): boolean;
+    begin
+      return TuiCustomViewRequestClose(TuiCustomView.AsView(Self))
+    end;
+
     procedure Invalidate(Self: TuiCustomView);
     begin
       TuiCustomViewInvalidatePaint(TuiCustomView.AsView(Self))
@@ -274,14 +467,24 @@ type
       TuiCustomView.AsView(Self).Destroy()
     end;
 
+    property Focused: boolean read ReadFocused;
+
     event OnAttach: procedure(Sender: TuiCustomView) read ReadOnAttach write WriteOnAttach;
     event OnDetach: procedure(Sender: TuiCustomView) read ReadOnDetach write WriteOnDetach;
     event OnResize: procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect) read ReadOnResize write WriteOnResize;
     event OnMeasure: function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult read ReadOnMeasure write WriteOnMeasure;
     event OnPaint: procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) read ReadOnPaint write WriteOnPaint;
+    event OnFocus: procedure(Sender: TuiCustomView) read ReadOnFocus write WriteOnFocus;
+    event OnBlur: procedure(Sender: TuiCustomView) read ReadOnBlur write WriteOnBlur;
+    event OnCloseRequest: function(Sender: TuiCustomView): boolean read ReadOnCloseRequest write WriteOnCloseRequest;
+    event OnClosed: procedure(Sender: TuiCustomView) read ReadOnClosed write WriteOnClosed;
   end;
   TuiAttachHandler = procedure(Sender: TuiCustomView);
   TuiDetachHandler = procedure(Sender: TuiCustomView);
   TuiResizeHandler = procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect);
   TuiMeasureHandler = function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult;
   TuiPaintHandler = procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext);
+  TuiFocusHandler = procedure(Sender: TuiCustomView);
+  TuiBlurHandler = procedure(Sender: TuiCustomView);
+  TuiCloseRequestHandler = function(Sender: TuiCustomView): boolean;
+  TuiClosedHandler = procedure(Sender: TuiCustomView);

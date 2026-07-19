@@ -1,11 +1,11 @@
 unit Std.Tui2.Runtime.Application;
 
 uses
-  Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationLayout,
-  Std.Tui2.Runtime.ApplicationLifecycle, Std.Tui2.Runtime.ApplicationLoop,
-  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Runtime.ApplicationPosts,
-  Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.ApplicationResize,
-  Std.Tui2.Surface.Surface;
+  Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationFocus,
+  Std.Tui2.Runtime.ApplicationLayout, Std.Tui2.Runtime.ApplicationLifecycle,
+  Std.Tui2.Runtime.ApplicationLoop, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Runtime.ApplicationPosts, Std.Tui2.Runtime.ApplicationRegistry,
+  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Surface.Surface;
 
 type
   TuiApplicationCallback = procedure(ApplicationId: integer);
@@ -38,6 +38,7 @@ type
     begin
       var ApplicationId: integer := TuiApplicationRegistryOpen(Size);
       TuiApplicationLoopInitialize(ApplicationId);
+      TuiApplicationFocusInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
       TuiApplicationPaintInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId), Size);
       TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
       TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
@@ -343,6 +344,7 @@ type
       end;
       TuiApplicationLayoutRelease(Self.Id, Self.Generation);
       TuiApplicationLifecycleRelease(Self.Id, Self.Generation);
+      TuiApplicationFocusRelease(Self.Id, Self.Generation);
       TuiApplicationPaintRelease(Self.Id, Self.Generation);
       TuiApplicationResizeRelease(Self.Id, Self.Generation);
       TuiApplicationLoopRelease(Self.Id);

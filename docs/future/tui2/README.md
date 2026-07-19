@@ -49,5 +49,7 @@ vertical, grid, form, and stacked measurement/allocation plus explicit container
 Terminal-too-small detection and the headless `TuiScrollView` viewport are also implemented. The
 bounded headless application loop, orderly quit, desktop layout phase, and resize propagation now
 start Phase 4. Typed custom-view attach, detach, and coalesced resize delivery are also implemented.
-The next ordered work is custom-view measurement and clipped painting in
+Custom-view measurement, retained headless surfaces, explicit paint invalidation, local paint
+coordinates, and ancestor clipping are implemented as well. The next ordered work is focus, blur,
+close-request, and closed transitions in
 [implementation-phases.md](implementation-phases.md).

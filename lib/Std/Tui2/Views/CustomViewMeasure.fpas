@@ -1,0 +1,106 @@
+unit Std.Tui2.Views.CustomViewMeasure;
+
+uses Std.Array, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Views.View;
+
+type
+  TuiCustomViewMeasureCallback = function(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Spec: TuiMeasureSpec
+): TuiMeasureResult;
+
+private mutable var TuiCustomViewMeasureApplicationIds: array of integer := [];
+private mutable var TuiCustomViewMeasureSlots: array of integer := [];
+private mutable var TuiCustomViewMeasureGenerations: array of integer := [];
+private mutable var TuiCustomViewMeasureHandlers: array of option of TuiCustomViewMeasureCallback := [];
+private mutable var TuiCustomViewMeasureActive: array of boolean := [];
+
+private function TuiCustomViewMeasureFind(View: TuiView): integer;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiCustomViewMeasureActive) - 1 do
+  begin
+    if (((TuiCustomViewMeasureActive[I] and (TuiCustomViewMeasureApplicationIds[I] = View.ApplicationId)) and (TuiCustomViewMeasureSlots[I] = View.Slot)) and (TuiCustomViewMeasureGenerations[I] = View.Generation)) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiCustomViewMeasureRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  var View: TuiView := record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := Generation;
+    Kind := TuiViewKind.Custom;
+  end;
+  var Index: integer := TuiCustomViewMeasureFind(View);
+  if Index >= 0 then
+  begin
+    TuiCustomViewMeasureHandlers[Index] := None;
+    TuiCustomViewMeasureActive[Index] := false
+  end
+end;
+
+function TuiCustomViewMeasureEnsure(View: TuiView): integer;
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 custom view handle is stale')
+  end;
+  var Existing: integer := TuiCustomViewMeasureFind(View);
+  if Existing >= 0 then
+  begin
+    return Existing
+  end;
+  TuiCustomViewMeasureApplicationIds := Std.Array.Concat(TuiCustomViewMeasureApplicationIds, [
+                                                                                               View.ApplicationId
+
+                                                                                             ]);
+  TuiCustomViewMeasureSlots := Std.Array.Concat(TuiCustomViewMeasureSlots, [View.Slot]);
+  TuiCustomViewMeasureGenerations := Std.Array.Concat(TuiCustomViewMeasureGenerations, [
+                                                                                         View.Generation
+
+                                                                                       ]);
+  TuiCustomViewMeasureHandlers := Std.Array.Concat(TuiCustomViewMeasureHandlers, [None]);
+  TuiCustomViewMeasureActive := Std.Array.Concat(TuiCustomViewMeasureActive, [true]);
+  var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiCustomViewMeasureRelease(ApplicationId, Slot, Generation)
+  end;
+  RegisterViewCleanup(View, Cleanup);
+  return Std.Array.Length(TuiCustomViewMeasureActive) - 1
+end;
+
+function TuiCustomViewMeasureRead(View: TuiView): option of TuiCustomViewMeasureCallback;
+begin
+  var Index: integer := TuiCustomViewMeasureEnsure(View);
+  return TuiCustomViewMeasureHandlers[Index]
+end;
+
+procedure TuiCustomViewMeasureWrite(View: TuiView; Handler: option of TuiCustomViewMeasureCallback);
+begin
+  var Index: integer := TuiCustomViewMeasureEnsure(View);
+  TuiCustomViewMeasureHandlers[Index] := Handler;
+  InvalidateViewMeasurement(View)
+end;
+
+function TuiCustomViewMeasureTry(View: TuiView; Spec: TuiMeasureSpec): option of TuiMeasureResult;
+begin
+  var Index: integer := TuiCustomViewMeasureFind(View);
+  if Index < 0 then
+  begin
+    return None
+  end;
+  case TuiCustomViewMeasureHandlers[Index] of
+    None:
+    begin
+      return None
+    end;
+    Some(Callback):
+    begin
+      return Some(Callback(View.ApplicationId, View.Slot, View.Generation, Spec))
+    end
+  end
+end;

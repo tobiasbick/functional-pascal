@@ -47,7 +47,10 @@ Implemented headless transitions: `TuiCustomView.OnAttach` runs after its parent
 `OnDetach` runs after parent and layout cleanup while the sender remains live. `OnResize` receives old
 and new bounds after layout and before `OnTick`; multiple pending changes coalesce, and changes from
 inside the handler wait for a later iteration. Dispatch revalidates handles after each callback.
-Measure, paint, focus, blur, close-request, and closed delivery remain in the ordered work below.
+`OnMeasure` supplies intrinsic custom-view sizing to the existing measure-policy pipeline. `OnPaint`
+receives local bounds and an ancestor-clipped canvas during the headless paint phase. Focus, blur,
+close-request, and closed delivery remain in the ordered work below. Runtime enforcement of the
+measurement and paint mutation rules also remains open.
 
 For `OnCloseRequest`, `true` allows closing and `false` cancels it. This meaning differs intentionally from raw input handlers, where `true` means consumed.
 

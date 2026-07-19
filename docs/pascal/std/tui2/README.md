@@ -173,8 +173,9 @@ App.Close()
 `RunIterations(IterationCount, DeltaMilliseconds)` is the bounded headless loop. It starts the
 application once when needed, runs at most the requested non-negative number of iterations, and
 leaves the application open when that budget is exhausted. Each iteration drains posted callbacks,
-performs invalid desktop layout, delivers pending view lifecycle notifications, invokes `OnTick`,
-and drains callbacks again. A negative iteration count or tick delta is rejected.
+performs invalid desktop layout, delivers pending view lifecycle notifications, repaints an invalid
+headless surface, invokes `OnTick`, and drains callbacks again. A negative iteration count or tick
+delta is rejected.
 
 `Quit()` requests orderly shutdown while `RunIterations` is active. The current callback returns,
 the remaining iteration phases are skipped, `OnStop` runs once, and the application closes. Calling
@@ -228,6 +229,52 @@ Lifecycle dispatch revalidates handles after callbacks. Destroying the sender fr
 `OnDetach`, or `OnResize` is safe, and a destroyed view receives no later pending resize event.
 Replacing an event handler replaces the previous handler; assigning `nil` clears it.
 
+## Headless custom-view measurement and paint
+
+`TuiCustomView.OnMeasure` is a function event that receives the exact `TuiMeasureSpec` requested by
+the layout engine and returns the view's intrinsic `TuiMeasureResult`:
+
+```pascal
+Custom.OnMeasure :=
+  function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult
+  begin
+    return TuiMeasureResult.Fixed(TuiSize.Create(12, 3))
+  end;
+```
+
+The existing per-axis `SizePolicy` and measure constraints are applied after the handler returns.
+With no assigned handler, measurement uses the view's `SizeHint`. Assigning, replacing, or clearing
+`OnMeasure` invalidates an owning layout. Measurement callbacks may run more than once and must be
+deterministic and free of application or view-tree mutation.
+
+`TuiCustomView.OnPaint` receives a `TuiCanvas` and `TuiPaintContext` after layout and pending resize
+delivery, before `OnTick`:
+
+```pascal
+Custom.OnPaint :=
+  procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext)
+  begin
+    Canvas.FillRect(Context.Bounds, TuiCell.Create(' ', TuiStyleRole.Normal))
+  end;
+```
+
+`Context.Bounds` starts at `(0, 0)` and has the view's resolved extent. `Context.Clip` is expressed
+in the same local coordinates and intersects the application surface, the view, and every visible
+ancestor. Canvas operations use local coordinates and cannot write outside that clip. `Enabled`
+combines the view and all ancestors; `Focused` is currently `false` because focus routing is not yet
+implemented. The context uses the default palette.
+
+`Invalidate()` schedules a later repaint without invoking `OnPaint` recursively. Bounds, visibility,
+enabled state, handler replacement, attachment, removal, and application resize also invalidate the
+headless frame. A frame repaint starts with blank cells and redraws attached visible custom views;
+when nothing is invalid, another iteration does not call `OnPaint`. `TuiApplication.Surface` exposes
+the latest retained surface for deterministic inspection. The surface is initialized immediately and
+uses the new blank extent immediately after `ResizeForTest`, before the next paint pass.
+
+The current headless renderer dispatches registered custom views deterministically. Interactive
+z-order, focus state, terminal presentation, and runtime enforcement of callback mutation and canvas
+lifetime restrictions are not implemented.
+
 ## Headless containers
 
 `TuiContainer.Create(App)` creates a live container backed by a view handle. `Add(Child)` accepts one
@@ -279,8 +326,9 @@ when it is next observed or laid out.
 
 `NeedsLayout()` reports root invalidation or viewport resizing. `PerformLayout()` arranges content at
 the negative local origin `(-Offset.X, -Offset.Y)` using the complete content size. This makes the
-resolved child bounds deterministic in headless applications. Interactive paint clipping, scroll
-input, and scroll bars are not part of this headless control.
+resolved child bounds deterministic in headless applications. Custom-view descendants are clipped
+to the scroll view bounds by the headless paint pass. Scroll input and scroll bars are not part of
+this headless control.
 
 Destroying a scroll view destroys its internal container and root layout. Views referenced by the
 layout remain governed by the view tree and are not destroyed merely because the layout is destroyed.
@@ -394,9 +442,9 @@ the item inside that slot still respects its finite maximum size and alignment.
 expanding spacers consume main-axis space but do not receive view bounds. Hidden views keep their
 previous bounds and are excluded from the pass. When the supplied bounds are below the combined
 minimum, items keep their minimum geometry and can extend beyond the supplied rectangle; a parent
-container is responsible for clipping that overflow. `Container.LayoutFit` reports the exact
-shortage without reducing item bounds. Headless layout therefore detects terminal-too-small state;
-paint clipping will be applied by the interactive rendering layer.
+container clips custom-view painting of that overflow. `Container.LayoutFit` reports the exact
+shortage without reducing item bounds. Headless layout therefore detects terminal-too-small state
+without altering the minimum geometry.
 
 ```pascal
 var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);

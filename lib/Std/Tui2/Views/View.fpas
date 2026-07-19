@@ -2,7 +2,8 @@ unit Std.Tui2.Views.View;
 
 uses
   Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.MeasureResult,
-  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application, Std.Tui2.Views.ViewLifecycleHooks;
+  Std.Tui2.Layouts.SizePolicy, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Views.ViewLifecycleHooks;
 
 type
   TuiViewKind = enum
@@ -239,7 +240,8 @@ type
          (Existing.Height <> Value.Height) then
       begin
         TuiViewBounds[Self.Slot - 1] := Value;
-        TuiViewLifecycleNotifyBoundsChanged(Self.ApplicationId, Self.Slot, Self.Generation, Existing, Value)
+        TuiViewLifecycleNotifyBoundsChanged(Self.ApplicationId, Self.Slot, Self.Generation, Existing, Value);
+        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
       end
     end;
 
@@ -255,7 +257,8 @@ type
       if TuiViewVisible[Self.Slot - 1] <> Value then
       begin
         TuiViewVisible[Self.Slot - 1] := Value;
-        TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation)
+        TuiViewNotifyLayoutInput(Self.ApplicationId, Self.Slot, Self.Generation);
+        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
       end
     end;
 
@@ -268,7 +271,11 @@ type
     procedure WriteEnabled(Self: TuiView; Value: boolean);
     begin
       TuiViewRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      TuiViewEnabled[Self.Slot - 1] := Value
+      if TuiViewEnabled[Self.Slot - 1] <> Value then
+      begin
+        TuiViewEnabled[Self.Slot - 1] := Value;
+        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
+      end
     end;
 
     function ReadSizeHint(Self: TuiView): TuiMeasureResult;
@@ -340,4 +347,10 @@ begin
   TuiViewLayoutInputSlots := Std.Array.Concat(TuiViewLayoutInputSlots, [View.Slot]);
   TuiViewLayoutInputGenerations := Std.Array.Concat(TuiViewLayoutInputGenerations, [View.Generation]);
   TuiViewLayoutInputCallbacks := Std.Array.Concat(TuiViewLayoutInputCallbacks, [Callback])
+end;
+
+procedure InvalidateViewMeasurement(View: TuiView);
+begin
+  TuiViewRequire(View.ApplicationId, View.Slot, View.Generation);
+  TuiViewNotifyLayoutInput(View.ApplicationId, View.Slot, View.Generation)
 end;

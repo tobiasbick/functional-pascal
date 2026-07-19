@@ -1,0 +1,42 @@
+program Tui2CustomViewMeasureTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
+  var Parent: TuiContainer := TuiContainer.Create(App);
+  var Custom: TuiCustomView := TuiCustomView.Create(App);
+  var View: TuiView := TuiCustomView.AsView(Custom);
+  var Layout: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  Parent.Add(View);
+  AssertTrue(TuiLayoutItems.Add(Layout.AsLayout(), TuiLayoutItem.ForView(View, TuiAlignment.Leading(), 0)));
+  Parent.Layout := Some(Layout.AsLayout());
+  AssertTrue(Parent.PerformLayout());
+  AssertFalse(Parent.NeedsLayout());
+  mutable var MeasureCount: integer := 0;
+  Custom.OnMeasure := function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult begin
+    MeasureCount := MeasureCount + 1;
+    AssertTrue(Sender.IsAlive());
+    AssertTrue(Spec.Width.IsBounded());
+    AssertTrue(Spec.Height.IsBounded());
+    AssertEquals(6, Spec.Width.Limit);
+    AssertEquals(3, Spec.Height.Limit);
+    return TuiMeasureResult.Create(TuiSize.Create(2, 1), TuiSize.Create(5, 2), TuiSize.Create(9, 4))
+  end;
+  AssertTrue(Parent.NeedsLayout());
+  var Measured: TuiMeasureResult := TuiLayoutMeasure.MeasureItem(TuiLayoutItem.ForView(View, TuiAlignment.Leading(), 0), TuiLayoutDirection.Horizontal, TuiMeasureSpec.AtMost(TuiSize.Create(6, 3)));
+  AssertEquals(1, MeasureCount);
+  AssertEquals(2, Measured.Minimum.Width);
+  AssertEquals(1, Measured.Minimum.Height);
+  AssertEquals(5, Measured.Preferred.Width);
+  AssertEquals(2, Measured.Preferred.Height);
+  AssertEquals(6, Measured.Maximum.Width);
+  AssertEquals(3, Measured.Maximum.Height);
+  Custom.OnMeasure := nil;
+  View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(3, 2));
+  var Fallback: TuiMeasureResult := TuiLayoutMeasure.MeasureItem(TuiLayoutItem.ForView(View, TuiAlignment.Leading(), 0), TuiLayoutDirection.Horizontal, TuiMeasureSpec.Unbounded());
+  AssertEquals(1, MeasureCount);
+  AssertEquals(3, Fallback.Preferred.Width);
+  AssertEquals(2, Fallback.Preferred.Height);
+  App.Close()
+end.

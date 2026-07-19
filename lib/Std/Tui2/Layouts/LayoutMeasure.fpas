@@ -7,7 +7,7 @@ uses
   Std.Tui2.Layouts.LayoutSettings, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.MeasureAxis,
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
   Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.StackedLayout,
-  Std.Tui2.Layouts.StackedMeasure, Std.Tui2.Views.View;
+  Std.Tui2.Layouts.StackedMeasure, Std.Tui2.Views.CustomViewMeasure, Std.Tui2.Views.View;
 
 private function TuiLayoutMeasurePolicy(
   Minimum: integer;
@@ -43,7 +43,16 @@ end;
 
 private function TuiLayoutMeasureView(View: TuiView; Spec: TuiMeasureSpec): TuiMeasureResult;
 begin
-  var Hint: TuiMeasureResult := View.SizeHint;
+  mutable var Hint: TuiMeasureResult := View.SizeHint;
+  case TuiCustomViewMeasureTry(View, Spec) of
+    Some(Measured):
+    begin
+      Hint := Measured
+    end;
+    None:
+    begin
+    end
+  end;
   var Policy: TuiSizePolicy := View.SizePolicy;
   var WidthPolicy: TuiSize := TuiLayoutMeasurePolicy(Hint.Minimum.Width, Hint.Preferred.Width, Hint.Maximum.Width, Policy.Horizontal);
   var HeightPolicy: TuiSize := TuiLayoutMeasurePolicy(Hint.Minimum.Height, Hint.Preferred.Height, Hint.Maximum.Height, Policy.Vertical);

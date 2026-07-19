@@ -34,6 +34,28 @@ begin
   return -1
 end;
 
+function TuiContainerParentOf(Child: TuiView): option of TuiView;
+begin
+  if not Child.IsAlive() then
+  begin
+    return None
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do
+  begin
+    if ((TuiContainerAttached[I] and (TuiContainerChildApplicationIds[I] = Child.ApplicationId)) and (TuiContainerChildSlots[I] = Child.Slot)) and
+       (TuiContainerChildGenerations[I] = Child.Generation) then
+    begin
+      return Some(record
+        ApplicationId := TuiContainerParentApplicationIds[I];
+        Slot := TuiContainerParentSlots[I];
+        Generation := TuiContainerParentGenerations[I];
+        Kind := TuiViewKind.Custom;
+      end)
+    end
+  end;
+  return None
+end;
+
 private procedure TuiContainerDestroyChildren(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
   for I: integer := 0 to Std.Array.Length(TuiContainerAttached) - 1 do

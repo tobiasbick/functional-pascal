@@ -8,6 +8,23 @@ uses
 private mutable var TuiDesktopApplicationIds: array of integer := [];
 private mutable var TuiDesktopContainers: array of TuiContainer := [];
 
+function TuiDesktopOwnsRoot(View: TuiView): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiDesktopApplicationIds) - 1 do
+  begin
+    if TuiDesktopContainers[I].IsAlive() then
+    begin
+      var Root: TuiView := TuiContainer.AsView(TuiDesktopContainers[I]);
+      if ((Root.ApplicationId = View.ApplicationId) and (Root.Slot = View.Slot)) and
+         (Root.Generation = View.Generation) then
+      begin
+        return true
+      end
+    end
+  end;
+  return false
+end;
+
 type
   TuiDesktop = record
     ApplicationId: integer;

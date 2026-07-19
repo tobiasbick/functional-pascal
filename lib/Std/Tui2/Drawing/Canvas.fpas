@@ -8,10 +8,20 @@ type
   TuiCanvas = record
     Surface: TuiSurface;
     Clip: TuiRect;
+    Origin: TuiPoint;
 
     static function Create(Surface: TuiSurface; Bounds: TuiRect): TuiCanvas;
     begin
-      return record Surface := Surface; Clip := Bounds.Intersect(Surface.Bounds()); end
+      return record
+        Surface := Surface;
+        Clip := Bounds.Intersect(Surface.Bounds());
+        Origin := TuiPoint.Create(0, 0);
+      end
+    end;
+
+    static function CreateLocal(Surface: TuiSurface; Origin: TuiPoint; Clip: TuiRect): TuiCanvas;
+    begin
+      return record Surface := Surface; Clip := Clip; Origin := Origin; end
     end;
 
     procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
@@ -23,10 +33,10 @@ type
       var CellWidth: integer := Cell.Width();
       if (CellWidth = 2) and not Self.Clip.Contains(TuiPoint.Create(Position.X + 1, Position.Y)) then
       begin
-        Self.Surface.PutCell(Position, TuiCell.Create(' ', TuiStyleRole.Normal));
+        Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
         return
       end;
-      Self.Surface.PutCell(Position, Cell)
+      Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell)
     end;
 
     procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
@@ -41,7 +51,7 @@ type
       begin
         for X: integer := Visible.X to Visible.Right() - 1 do
         begin
-          Self.Surface.PutCell(TuiPoint.Create(X, Y), Cell)
+          Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + X, Self.Origin.Y + Y), Cell)
         end
       end
     end;

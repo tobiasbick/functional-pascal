@@ -61,12 +61,15 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - Integrate the existing lifecycle events with the bounded loop and terminal lifecycle.
 - **Implemented headless core:** typed custom views with synchronous attach, structural detach before
   release, coalesced post-layout resize delivery, and callback revalidation.
-- **Next:** implement custom-view measure and clipped paint transitions, then add focus, blur,
-  close-request, and closed transitions.
+- **Implemented headless core:** custom-view measurement integrated with measure specs and size
+  policies, explicit paint invalidation, local paint coordinates, ancestor clipping, retained
+  headless surfaces, and paint delivery after resize and before `OnTick`.
+- **Next:** add focus, blur, close-request, and closed transitions.
 - Implement z-order, hit-testing, focus traversal, pointer capture, modal roots, and raw fallback handlers.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
-- Add `TuiCustomView` with pure measurement and clipped paint events.
+- Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
+  paint callback.
 
 Completion contracts: [event-loop.md](event-loop.md),
 [events-and-actions.md](events-and-actions.md), and [view-lifecycle.md](view-lifecycle.md).

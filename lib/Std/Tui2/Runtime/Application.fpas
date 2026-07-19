@@ -3,8 +3,9 @@ unit Std.Tui2.Runtime.Application;
 uses
   Std.Array, Std.Tui2.Geometry.Size, Std.Tui2.Runtime.ApplicationLayout,
   Std.Tui2.Runtime.ApplicationLifecycle, Std.Tui2.Runtime.ApplicationLoop,
-  Std.Tui2.Runtime.ApplicationPosts, Std.Tui2.Runtime.ApplicationRegistry,
-  Std.Tui2.Runtime.ApplicationResize;
+  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Runtime.ApplicationPosts,
+  Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.ApplicationResize,
+  Std.Tui2.Surface.Surface;
 
 type
   TuiApplicationCallback = procedure(ApplicationId: integer);
@@ -37,6 +38,7 @@ type
     begin
       var ApplicationId: integer := TuiApplicationRegistryOpen(Size);
       TuiApplicationLoopInitialize(ApplicationId);
+      TuiApplicationPaintInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId), Size);
       TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
       TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
       TuiApplicationOnTick := Std.Array.Concat(TuiApplicationOnTick, [None]);
@@ -75,8 +77,14 @@ type
       end;
       if TuiApplicationRegistryWriteSize(Self.Id, Self.Generation, Size) then
       begin
+        TuiApplicationPaintResize(Self.Id, Self.Generation, Size);
         TuiApplicationResizeDispatch(Self.Id, Self.Generation, Size)
       end
+    end;
+
+    function ReadSurface(Self: TuiApplication): TuiSurface;
+    begin
+      return TuiApplicationPaintReadSurface(Self.Id, Self.Generation)
     end;
 
     function ReadOnStart(Self: TuiApplication): option of procedure(Sender: TuiApplication);
@@ -246,6 +254,11 @@ type
       begin
         return
       end;
+      TuiApplicationPaintPerform(Self.Id, Self.Generation);
+      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
+      begin
+        return
+      end;
       if Assigned(Self.OnTick) then
       begin
         Self.OnTick(Self, DeltaMilliseconds)
@@ -330,6 +343,7 @@ type
       end;
       TuiApplicationLayoutRelease(Self.Id, Self.Generation);
       TuiApplicationLifecycleRelease(Self.Id, Self.Generation);
+      TuiApplicationPaintRelease(Self.Id, Self.Generation);
       TuiApplicationResizeRelease(Self.Id, Self.Generation);
       TuiApplicationLoopRelease(Self.Id);
       TuiApplicationOnStart[Self.Id - 1] := None;
@@ -340,6 +354,7 @@ type
 
     property Tag: integer read ReadTag write WriteTag;
     property Size: TuiSize read ReadSize;
+    property Surface: TuiSurface read ReadSurface;
 
     event OnStart: procedure(Sender: TuiApplication) read ReadOnStart write WriteOnStart;
     event OnStop: procedure(Sender: TuiApplication) read ReadOnStop write WriteOnStop;

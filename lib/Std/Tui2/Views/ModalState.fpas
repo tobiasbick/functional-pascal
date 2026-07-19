@@ -1,0 +1,157 @@
+unit Std.Tui2.Views.ModalState;
+
+uses Std.Array, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View;
+
+private mutable var TuiModalApplicationIds: array of integer := [];
+private mutable var TuiModalTokens: array of integer := [];
+private mutable var TuiModalRoots: array of TuiView := [];
+private mutable var TuiModalPreviousFocusSlots: array of integer := [];
+private mutable var TuiModalPreviousFocusGenerations: array of integer := [];
+private mutable var TuiModalActive: array of boolean := [];
+private mutable var TuiModalNextToken: integer := 1;
+
+private function TuiModalStateSameView(Left: TuiView; Right: TuiView): boolean;
+begin
+  return ((Left.ApplicationId = Right.ApplicationId) and (Left.Slot = Right.Slot)) and
+         (Left.Generation = Right.Generation)
+end;
+
+private function TuiModalStateAttached(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  case TuiContainerParentOf(View) of
+    Some(Parent):
+    begin
+      return TuiModalStateAttached(Parent)
+    end;
+    None:
+    begin
+      return TuiDesktopStateOwnsRoot(View)
+    end
+  end
+end;
+
+private function TuiModalStateWithin(View: TuiView; Root: TuiView): boolean;
+begin
+  if TuiModalStateSameView(View, Root) then
+  begin
+    return true
+  end;
+  case TuiContainerParentOf(View) of
+    Some(Parent):
+    begin
+      return TuiModalStateWithin(Parent, Root)
+    end;
+    None:
+    begin
+      return false
+    end
+  end
+end;
+
+private function TuiModalStateTopIndex(ApplicationId: integer): integer;
+begin
+  for I: integer := Std.Array.Length(TuiModalActive) - 1 downto 0 do
+  begin
+    if TuiModalActive[I] and (TuiModalApplicationIds[I] = ApplicationId) then
+    begin
+      return I
+    end
+  end;
+  return -1
+end;
+
+function TuiModalStateBegin(
+  Root: TuiView;
+  PreviousFocusSlot: integer;
+  PreviousFocusGeneration: integer
+): integer;
+begin
+  if not TuiModalStateAttached(Root) then
+  begin
+    panic('Tui2 modal root must be attached to its desktop')
+  end;
+  for I: integer := 0 to Std.Array.Length(TuiModalActive) - 1 do
+  begin
+    if TuiModalActive[I] and TuiModalStateSameView(TuiModalRoots[I], Root) then
+    begin
+      panic('Tui2 container is already an active modal root')
+    end
+  end;
+  var Token: integer := TuiModalNextToken;
+  TuiModalNextToken := TuiModalNextToken + 1;
+  TuiModalApplicationIds := Std.Array.Concat(TuiModalApplicationIds, [Root.ApplicationId]);
+  TuiModalTokens := Std.Array.Concat(TuiModalTokens, [Token]);
+  TuiModalRoots := Std.Array.Concat(TuiModalRoots, [Root]);
+  TuiModalPreviousFocusSlots := Std.Array.Concat(TuiModalPreviousFocusSlots, [PreviousFocusSlot]);
+  TuiModalPreviousFocusGenerations := Std.Array.Concat(TuiModalPreviousFocusGenerations, [
+                                                                                           PreviousFocusGeneration
+
+                                                                                         ]);
+  TuiModalActive := Std.Array.Concat(TuiModalActive, [true]);
+  return Token
+end;
+
+function TuiModalStateIsActive(ApplicationId: integer; Token: integer): boolean;
+begin
+  for I: integer := 0 to Std.Array.Length(TuiModalActive) - 1 do
+  begin
+    if (TuiModalActive[I] and (TuiModalApplicationIds[I] = ApplicationId)) and
+       (TuiModalTokens[I] = Token) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+function TuiModalStateEnd(ApplicationId: integer; Token: integer): option of TuiView;
+begin
+  var Index: integer := TuiModalStateTopIndex(ApplicationId);
+  if (Index < 0) or (TuiModalTokens[Index] <> Token) then
+  begin
+    return None
+  end;
+  TuiModalActive[Index] := false;
+  return Some(record
+    ApplicationId := ApplicationId;
+    Slot := TuiModalPreviousFocusSlots[Index];
+    Generation := TuiModalPreviousFocusGenerations[Index];
+    Kind := TuiViewKind.Custom;
+  end)
+end;
+
+procedure TuiModalStateRemove(ApplicationId: integer; Token: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiModalActive) - 1 do
+  begin
+    if (TuiModalApplicationIds[I] = ApplicationId) and (TuiModalTokens[I] = Token) then
+    begin
+      TuiModalActive[I] := false
+    end
+  end
+end;
+
+function TuiModalStateAllows(View: TuiView): boolean;
+begin
+  var Index: integer := TuiModalStateTopIndex(View.ApplicationId);
+  if Index < 0 then
+  begin
+    return true
+  end;
+  return TuiModalStateWithin(View, TuiModalRoots[Index])
+end;
+
+procedure TuiModalStateRelease(ApplicationId: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiModalActive) - 1 do
+  begin
+    if TuiModalApplicationIds[I] = ApplicationId then
+    begin
+      TuiModalActive[I] := false
+    end
+  end
+end;

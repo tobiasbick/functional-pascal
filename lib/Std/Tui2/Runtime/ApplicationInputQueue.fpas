@@ -1,0 +1,106 @@
+unit Std.Tui2.Runtime.ApplicationInputQueue;
+
+uses
+  Std.Array, Std.Console, Std.Tui2.Geometry.Point, Std.Tui2.Input.PointerEvent,
+  Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiQueuedInputKind = enum
+    Key;
+    Pointer;
+  end;
+  TuiQueuedInput = record
+    Kind: TuiQueuedInputKind;
+    Key: Std.Console.KeyEvent;
+    Pointer: TuiPointerEvent;
+  end;
+
+private mutable var TuiInputQueueApplicationIds: array of integer := [];
+private mutable var TuiInputQueueGenerations: array of integer := [];
+private mutable var TuiInputQueueEvents: array of TuiQueuedInput := [];
+private mutable var TuiInputQueuePending: array of boolean := [];
+
+private function TuiInputQueueUnknownKey(): Std.Console.KeyEvent;
+begin
+  return record
+    kind := Std.Console.KeyKind.Unknown;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+private function TuiInputQueueEmptyPointer(): TuiPointerEvent;
+begin
+  return TuiPointerEvent.Create(Std.Console.MouseAction.Unknown, TuiPointerButton.NoButton, TuiPoint.Create(0, 0))
+end;
+
+function TuiApplicationInputQueuePushKey(
+  ApplicationId: integer;
+  Generation: integer;
+  Key: Std.Console.KeyEvent
+): boolean;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  if TuiApplicationRegistryIsClosing(ApplicationId) then
+  begin
+    return false
+  end;
+  TuiInputQueueApplicationIds := Std.Array.Concat(TuiInputQueueApplicationIds, [ApplicationId]);
+  TuiInputQueueGenerations := Std.Array.Concat(TuiInputQueueGenerations, [Generation]);
+  TuiInputQueueEvents := Std.Array.Concat(TuiInputQueueEvents, [
+                                                                 record Kind := TuiQueuedInputKind.Key; Key := Key; Pointer := TuiInputQueueEmptyPointer(); end
+
+                                                               ]);
+  TuiInputQueuePending := Std.Array.Concat(TuiInputQueuePending, [true]);
+  return true
+end;
+
+function TuiApplicationInputQueuePushPointer(
+  ApplicationId: integer;
+  Generation: integer;
+  Pointer: TuiPointerEvent
+): boolean;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  if TuiApplicationRegistryIsClosing(ApplicationId) then
+  begin
+    return false
+  end;
+  TuiInputQueueApplicationIds := Std.Array.Concat(TuiInputQueueApplicationIds, [ApplicationId]);
+  TuiInputQueueGenerations := Std.Array.Concat(TuiInputQueueGenerations, [Generation]);
+  TuiInputQueueEvents := Std.Array.Concat(TuiInputQueueEvents, [
+                                                                 record Kind := TuiQueuedInputKind.Pointer; Key := TuiInputQueueUnknownKey(); Pointer := Pointer; end
+
+                                                               ]);
+  TuiInputQueuePending := Std.Array.Concat(TuiInputQueuePending, [true]);
+  return true
+end;
+
+function TuiApplicationInputQueuePop(ApplicationId: integer; Generation: integer): option of TuiQueuedInput;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  for I: integer := 0 to Std.Array.Length(TuiInputQueuePending) - 1 do
+  begin
+    if ((TuiInputQueuePending[I] and (TuiInputQueueApplicationIds[I] = ApplicationId)) and (TuiInputQueueGenerations[I] = Generation)) then
+    begin
+      TuiInputQueuePending[I] := false;
+      return Some(TuiInputQueueEvents[I])
+    end
+  end;
+  return None
+end;
+
+procedure TuiApplicationInputQueueRelease(ApplicationId: integer; Generation: integer);
+begin
+  for I: integer := 0 to Std.Array.Length(TuiInputQueuePending) - 1 do
+  begin
+    if (TuiInputQueueApplicationIds[I] = ApplicationId) and
+       (TuiInputQueueGenerations[I] = Generation) then
+    begin
+      TuiInputQueuePending[I] := false
+    end
+  end
+end;

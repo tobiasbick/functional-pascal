@@ -2,9 +2,9 @@
 
 ## Status and authority
 
-Implemented application, action, and semantic-button behavior is documented in the current
-[`Std.Tui2` reference](../../pascal/std/tui2/README.md). This plan covers the remaining custom-view,
-typed-change, raw-input, posting, and interactive-routing event surface.
+Implemented application, custom-view lifecycle, raw-input, action, and semantic-button behavior is
+documented in the current [`Std.Tui2` reference](../../pascal/std/tui2/README.md). This plan covers
+the remaining typed-change and interactive control-routing surface.
 
 ## Design
 
@@ -65,8 +65,16 @@ event signature merely to compensate for a missing closure feature.
 
 ```pascal
 var SaveAction: TuiAction := TuiAction.Create(App, CM_SAVE, 'Save');
+var CtrlS: TuiKeyEvent := record
+  kind := TuiKeyKind.Character;
+  ch := 's';
+  shift := false;
+  ctrl := true;
+  alt := false;
+  meta := false;
+end;
 
-SaveAction.Shortcut := TuiKey.Parse('Ctrl+S');
+SaveAction.Shortcut := Some(CtrlS);
 SaveAction.Enabled := CanSave;
 
 SaveAction.OnExecute :=
@@ -131,21 +139,22 @@ raw boolean input events are treated as `false` by the router.
 
 ## Raw input events
 
-Custom views may assign:
+Custom views assign raw handlers through their focused input capability:
 
 ```pascal
-View.OnKey :=
-  function(Sender: TuiCustomView; Key: TuiKey): boolean
+var Input: TuiViewInput := View.Input;
+Input.OnKey :=
+  function(Sender: TuiView; Key: TuiKeyEvent): boolean
   begin
     return false
   end;
 
-View.OnMouse := HandleMouse;
+Input.OnPointer := HandlePointer;
 ```
 
-Application fallback events receive input that normal routing did not consume. Returning `true`
-consumes the input; `false` continues to the next documented routing step. Raw events must not
-replace actions for ordinary buttons, menus, or shortcuts.
+Application fallback events live on `App.Input` and receive input that view routing did not consume.
+Returning `true` consumes the input; `false` leaves it unhandled. Raw events must not replace actions
+for ordinary buttons, menus, or shortcuts.
 
 ## Application state
 
@@ -231,19 +240,15 @@ values and define its own ordering and lifetime rules.
 
 ## Remaining implementation
 
-1. Add registry-backed lifecycle and raw-input events to `TuiCustomView` after its measure, canvas,
-   and generic view-registry prerequisites exist.
-2. Add typed value-change events and `TuiChangeOrigin` behavior.
-3. Route action activation from menus, shortcuts, injected tests, and commands.
-4. Add application fallback events and consumed/unconsumed raw-input routing.
-5. Add the main-task post queue and its worker-transfer enforcement.
-6. Complete closure release, panic cleanup, and shutdown canaries.
+1. Add typed value-change events and `TuiChangeOrigin` behavior.
+2. Route action activation from menus, shortcuts, injected tests, and commands.
+3. Extend the headless post queue with worker-transfer enforcement.
+4. Complete closure release, panic cleanup, and shutdown canaries.
 
 ## Remaining tests
 
 - action activation from menu, shortcut, injected input, and command;
 - change origin and no event for assignment of unchanged property values;
-- raw input consumed and unconsumed paths;
 - captured stale handle diagnostic;
 - event closure release on view destruction;
 - callback panic preserves the primary diagnostic and restores terminal modes;
@@ -252,9 +257,8 @@ values and define its own ordering and lifetime rules.
 
 ## Remaining acceptance criteria
 
-- custom-view and typed-change events use the same registry-backed single-handler model;
+- typed-change events use the same registry-backed single-handler model;
 - actions activate consistently from every supported source;
-- raw handlers have deterministic consumption and fallback behavior;
 - posting preserves FIFO order and the task-transfer rules;
 - destruction and panic paths release every remaining closure environment;
 - complete Rust, FPAS, formatter, Clippy, and diff verification passes.

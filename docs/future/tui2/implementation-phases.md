@@ -73,8 +73,11 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** stable container Z-order with subtree ordering, central tree-ordered
   custom-view painting, topmost hit-testing through the resolved paint clip, and wrapped forward or
   backward focus traversal with effective visibility and enabled-state filtering.
-- **Next:** define raw key and pointer input, then implement pointer capture, modal roots, routed
-  custom-view handlers, and application fallback handlers.
+- **Implemented headless core:** canonical console key values, normalized pointer values, FIFO test
+  injection, one-input-per-iteration routing, focused and topmost custom-view handlers, pointer
+  capture, nested modal roots, focus restoration, and application fallback handlers.
+- **Next:** extend actions with shortcuts and route keyboard and pointer activation into every bound
+  control type.
 - Extend the existing action registry with shortcuts and propagation to every bound-control type.
 - Implement typed single-handler event properties with `TuiChangeOrigin`.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active

@@ -1,0 +1,54 @@
+unit Std.Tui2.Input.PointerEvent;
+
+uses Std.Console, Std.Tui2.Geometry.Point;
+
+type
+  TuiPointerButton = enum
+    NoButton;
+    Left;
+    Right;
+    Middle;
+  end;
+  TuiPointerEvent = record
+    Action: Std.Console.MouseAction;
+    Button: TuiPointerButton;
+    Position: TuiPoint;
+    Shift: boolean;
+    Ctrl: boolean;
+    Alt: boolean;
+    Meta: boolean;
+
+    static function Create(Action: Std.Console.MouseAction; Button: TuiPointerButton; Position: TuiPoint): TuiPointerEvent;
+    begin
+      return record
+        Action := Action;
+        Button := Button;
+        Position := Position;
+        Shift := false;
+        Ctrl := false;
+        Alt := false;
+        Meta := false;
+      end
+    end;
+
+    static function WithModifiers(
+  Action: Std.Console.MouseAction;
+  Button: TuiPointerButton;
+  Position: TuiPoint;
+  Shift: boolean;
+  Ctrl: boolean;
+  Alt: boolean;
+  Meta: boolean
+): TuiPointerEvent;
+    begin
+      return record
+        Action := Action;
+        Button := Button;
+        Position := Position;
+        Shift := Shift;
+        Ctrl := Ctrl;
+        Alt := Alt;
+        Meta := Meta;
+      end
+    end;
+  end;

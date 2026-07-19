@@ -198,6 +198,18 @@ begin
          (TuiApplicationFocusViewGenerations[ApplicationId - 1] = ViewGeneration)
 end;
 
+function TuiApplicationFocusCurrentSlot(ApplicationId: integer; AppGeneration: integer): integer;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, AppGeneration);
+  return TuiApplicationFocusSlots[ApplicationId - 1]
+end;
+
+function TuiApplicationFocusCurrentViewGeneration(ApplicationId: integer; AppGeneration: integer): integer;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, AppGeneration);
+  return TuiApplicationFocusViewGenerations[ApplicationId - 1]
+end;
+
 procedure TuiApplicationFocusRelease(ApplicationId: integer; Generation: integer);
 begin
   for I: integer := 0 to Std.Array.Length(TuiApplicationFocusCallbackActive) - 1 do

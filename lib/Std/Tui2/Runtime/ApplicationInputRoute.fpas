@@ -1,0 +1,134 @@
+unit Std.Tui2.Runtime.ApplicationInputRoute;
+
+uses
+  Std.Console, Std.Tui2.Input.ApplicationInput, Std.Tui2.Input.PointerEvent,
+  Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.ApplicationFocus,
+  Std.Tui2.Runtime.ApplicationInputPhase, Std.Tui2.Runtime.ApplicationInputQueue,
+  Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Runtime.PointerCapture,
+  Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewIdentity, Std.Tui2.Views.View,
+  Std.Tui2.Views.ViewHitTesting, Std.Tui2.Views.ViewTreeState;
+
+private function TuiApplicationInputRouteEligible(View: TuiView): boolean;
+begin
+  return TuiCustomViewIdentityMatches(View) and TuiViewTreeIsInteractive(View)
+end;
+
+private function TuiApplicationInputRouteKey(
+  ApplicationId: integer;
+  Generation: integer;
+  Key: Std.Console.KeyEvent
+): boolean;
+begin
+  var Slot: integer := TuiApplicationFocusCurrentSlot(ApplicationId, Generation);
+  if Slot <> 0 then
+  begin
+    var Focused: TuiView := record
+      ApplicationId := ApplicationId;
+      Slot := Slot;
+      Generation := TuiApplicationFocusCurrentViewGeneration(ApplicationId, Generation);
+      Kind := TuiViewKind.Custom;
+    end;
+    if TuiApplicationInputRouteEligible(Focused) and TuiViewInputDispatchKey(Focused, Key) then
+    begin
+      return true
+    end
+  end;
+  if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+  begin
+    return true
+  end;
+  return TuiApplicationInputDispatchKey(ApplicationId, Generation, Key)
+end;
+
+private function TuiApplicationInputRoutePointer(
+  ApplicationId: integer;
+  Generation: integer;
+  Pointer: TuiPointerEvent
+): boolean;
+begin
+  case TuiPointerCaptureCurrent(ApplicationId, Generation) of
+    Some(View):
+    begin
+      if not TuiApplicationInputRouteEligible(View) then
+      begin
+        TuiPointerCaptureClear(ApplicationId, Generation)
+      end
+      else
+      begin
+        if TuiViewInputDispatchPointer(View, Pointer) then
+        begin
+          return true
+        end;
+        if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+        begin
+          return true
+        end;
+        return TuiApplicationInputDispatchPointer(ApplicationId, Generation, Pointer)
+      end
+    end;
+    None:
+    begin
+    end
+  end;
+  if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+  begin
+    return true
+  end;
+  case TuiViewHitTest(ApplicationId, Generation, Pointer.Position) of
+    None:
+    begin
+    end;
+    Some(Target):
+    begin
+      if Pointer.Action = Std.Console.MouseAction.Down then
+      begin
+        TuiCustomViewRequestFocus(Target)
+      end;
+      if TuiApplicationInputRouteEligible(Target) then
+      begin
+        if TuiViewInputDispatchPointer(Target, Pointer) then
+        begin
+          return true
+        end
+      end
+    end
+  end;
+  if not TuiApplicationRegistryIsOpen(ApplicationId, Generation) then
+  begin
+    return true
+  end;
+  return TuiApplicationInputDispatchPointer(ApplicationId, Generation, Pointer)
+end;
+
+function TuiApplicationInputRouteOne(ApplicationId: integer; Generation: integer): boolean;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  case TuiApplicationInputQueuePop(ApplicationId, Generation) of
+    None:
+    begin
+      return false
+    end;
+    Some(Input):
+    begin
+      case Input.Kind of
+        TuiQueuedInputKind.Key:
+        begin
+          TuiApplicationInputRouteKey(ApplicationId, Generation, Input.Key)
+        end;
+        TuiQueuedInputKind.Pointer:
+        begin
+          TuiApplicationInputRoutePointer(ApplicationId, Generation, Input.Pointer)
+        end
+      end;
+      return true
+    end
+  end
+end;
+
+procedure TuiApplicationInputRouteEnsure(ApplicationId: integer; Generation: integer);
+begin
+  var Route: TuiApplicationInputRouteCallback := function(ApplicationId: integer; Generation: integer): boolean begin
+    return TuiApplicationInputRouteOne(ApplicationId, Generation)
+  end;
+  RegisterApplicationInputRoute(ApplicationId, Generation, Route)
+end;

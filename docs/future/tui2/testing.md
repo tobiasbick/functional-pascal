@@ -8,7 +8,8 @@ The implemented headless application registry is documented in the current
 [`Std.Tui2` reference](../../pascal/std/tui2/README.md). Its future layout, routing, and rendering
 state must remain identical to the interactive application without changing terminal modes.
 
-Tests inject `Std.Console.Event` values into the application's event source and advance the loop one iteration at a time.
+Tests inject `TuiKeyEvent` or `TuiPointerEvent` values through `App.Input` and advance the loop one
+iteration at a time.
 
 ## Determinism
 
@@ -57,6 +58,10 @@ paint invalidation, identical paint and hit-test winners, nested ancestor clippi
 effectively disabled exclusion. Focus-traversal coverage verifies depth-first retained order,
 forward and backward wrapping, nested subtrees, Z-order updates, eligibility filtering, and the
 empty-candidate result.
+Raw-input coverage verifies FIFO one-per-iteration delivery, focused key routing, topmost pointer
+routing, pointer-down focus, consumed and fallback paths, capture outside the hit rectangle, explicit
+capture release, modal hit and focus isolation, capture repair, and focus restoration after closing
+the modal root.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

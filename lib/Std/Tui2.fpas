@@ -1,11 +1,13 @@
 unit Std.Tui2;
 
 uses
-  Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Size, Std.Tui2.Geometry.Rect, Std.Tui2.Cells.Color,
-  Std.Tui2.Cells.StyleRole, Std.Tui2.Cells.Style, Std.Tui2.Cells.Cell, Std.Tui2.Cells.Palette,
-  Std.Tui2.Surface.Surface, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
-  Std.Tui2.Runtime.Application, Std.Tui2.Views.View, Std.Tui2.Views.CustomView,
-  Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Layouts.Layout,
+  Std.Console, Std.Tui2.Geometry.Point, Std.Tui2.Geometry.Size, Std.Tui2.Geometry.Rect,
+  Std.Tui2.Cells.Color, Std.Tui2.Cells.StyleRole, Std.Tui2.Cells.Style, Std.Tui2.Cells.Cell,
+  Std.Tui2.Cells.Palette, Std.Tui2.Surface.Surface, Std.Tui2.Drawing.Canvas,
+  Std.Tui2.Drawing.PaintContext, Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ApplicationInput,
+  Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.Application, Std.Tui2.Views.View,
+  Std.Tui2.Views.CustomView, Std.Tui2.Views.CustomViewHandlers, Std.Tui2.Views.Container,
+  Std.Tui2.Views.Desktop, Std.Tui2.Views.Modal, Std.Tui2.Layouts.Layout,
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.MeasureResult,
   Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.Alignment,
   Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems,
@@ -30,21 +32,29 @@ type
   TuiSurface = Std.Tui2.Surface.Surface.TuiSurface;
   TuiCanvas = Std.Tui2.Drawing.Canvas.TuiCanvas;
   TuiPaintContext = Std.Tui2.Drawing.PaintContext.TuiPaintContext;
+  TuiKeyEvent = Std.Console.KeyEvent;
+  TuiKeyKind = Std.Console.KeyKind;
+  TuiPointerAction = Std.Console.MouseAction;
+  TuiPointerButton = Std.Tui2.Input.PointerEvent.TuiPointerButton;
+  TuiPointerEvent = Std.Tui2.Input.PointerEvent.TuiPointerEvent;
+  TuiApplicationInput = Std.Tui2.Input.ApplicationInput.TuiApplicationInput;
+  TuiViewInput = Std.Tui2.Input.ViewInput.TuiViewInput;
   TuiApplication = Std.Tui2.Runtime.Application.TuiApplication;
   TuiViewKind = Std.Tui2.Views.View.TuiViewKind;
   TuiView = Std.Tui2.Views.View.TuiView;
   TuiCustomView = Std.Tui2.Views.CustomView.TuiCustomView;
-  TuiAttachHandler = Std.Tui2.Views.CustomView.TuiAttachHandler;
-  TuiDetachHandler = Std.Tui2.Views.CustomView.TuiDetachHandler;
-  TuiResizeHandler = Std.Tui2.Views.CustomView.TuiResizeHandler;
-  TuiMeasureHandler = Std.Tui2.Views.CustomView.TuiMeasureHandler;
-  TuiPaintHandler = Std.Tui2.Views.CustomView.TuiPaintHandler;
-  TuiFocusHandler = Std.Tui2.Views.CustomView.TuiFocusHandler;
-  TuiBlurHandler = Std.Tui2.Views.CustomView.TuiBlurHandler;
-  TuiCloseRequestHandler = Std.Tui2.Views.CustomView.TuiCloseRequestHandler;
-  TuiClosedHandler = Std.Tui2.Views.CustomView.TuiClosedHandler;
+  TuiAttachHandler = Std.Tui2.Views.CustomViewHandlers.TuiAttachHandler;
+  TuiDetachHandler = Std.Tui2.Views.CustomViewHandlers.TuiDetachHandler;
+  TuiResizeHandler = Std.Tui2.Views.CustomViewHandlers.TuiResizeHandler;
+  TuiMeasureHandler = Std.Tui2.Views.CustomViewHandlers.TuiMeasureHandler;
+  TuiPaintHandler = Std.Tui2.Views.CustomViewHandlers.TuiPaintHandler;
+  TuiFocusHandler = Std.Tui2.Views.CustomViewHandlers.TuiFocusHandler;
+  TuiBlurHandler = Std.Tui2.Views.CustomViewHandlers.TuiBlurHandler;
+  TuiCloseRequestHandler = Std.Tui2.Views.CustomViewHandlers.TuiCloseRequestHandler;
+  TuiClosedHandler = Std.Tui2.Views.CustomViewHandlers.TuiClosedHandler;
   TuiContainer = Std.Tui2.Views.Container.TuiContainer;
   TuiDesktop = Std.Tui2.Views.Desktop.TuiDesktop;
+  TuiModal = Std.Tui2.Views.Modal.TuiModal;
   TuiLayout = Std.Tui2.Layouts.Layout.TuiLayout;
   TuiMeasureConstraintKind = Std.Tui2.Layouts.MeasureConstraint.TuiMeasureConstraintKind;
   TuiMeasureConstraint = Std.Tui2.Layouts.MeasureConstraint.TuiMeasureConstraint;

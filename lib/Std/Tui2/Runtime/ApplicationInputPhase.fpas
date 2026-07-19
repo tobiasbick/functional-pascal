@@ -1,0 +1,44 @@
+unit Std.Tui2.Runtime.ApplicationInputPhase;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationRegistry;
+
+type
+  TuiApplicationInputRouteCallback = function(ApplicationId: integer; Generation: integer): boolean;
+
+private mutable var TuiApplicationInputPhaseCallbacks: array of option of TuiApplicationInputRouteCallback := [];
+
+procedure TuiApplicationInputPhaseInitialize(ApplicationId: integer; Generation: integer);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationInputPhaseCallbacks := Std.Array.Concat(TuiApplicationInputPhaseCallbacks, [None])
+end;
+
+procedure RegisterApplicationInputRoute(
+  ApplicationId: integer;
+  Generation: integer;
+  Callback: TuiApplicationInputRouteCallback
+);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiApplicationInputPhaseCallbacks[ApplicationId - 1] := Some(Callback)
+end;
+
+function TuiApplicationInputPhasePerform(ApplicationId: integer; Generation: integer): boolean;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  case TuiApplicationInputPhaseCallbacks[ApplicationId - 1] of
+    None:
+    begin
+      return false
+    end;
+    Some(Callback):
+    begin
+      return Callback(ApplicationId, Generation)
+    end
+  end
+end;
+
+procedure TuiApplicationInputPhaseRelease(ApplicationId: integer; Generation: integer);
+begin
+  TuiApplicationInputPhaseCallbacks[ApplicationId - 1] := None
+end;

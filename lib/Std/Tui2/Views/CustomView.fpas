@@ -2,10 +2,10 @@ unit Std.Tui2.Views.CustomView;
 
 uses
   Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect,
-  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Runtime.Application,
-  Std.Tui2.Views.CustomViewClose, Std.Tui2.Views.CustomViewFocus, Std.Tui2.Views.CustomViewIdentity,
-  Std.Tui2.Views.CustomViewLifecycle, Std.Tui2.Views.CustomViewMeasure,
-  Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
+  Std.Tui2.Input.ViewInput, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
+  Std.Tui2.Runtime.Application, Std.Tui2.Views.CustomViewClose, Std.Tui2.Views.CustomViewFocus,
+  Std.Tui2.Views.CustomViewIdentity, Std.Tui2.Views.CustomViewLifecycle,
+  Std.Tui2.Views.CustomViewMeasure, Std.Tui2.Views.CustomViewPaint, Std.Tui2.Views.View;
 
 type
   TuiCustomView = record
@@ -20,6 +20,7 @@ type
       TuiCustomViewMeasureEnsure(View);
       TuiCustomViewPaintEnsure(View);
       TuiCustomViewCloseEnsure(View);
+      TuiViewInputEnsure(View);
       return record View := View; end
     end;
 
@@ -35,6 +36,11 @@ type
     function IsAlive(Self: TuiCustomView): boolean;
     begin
       return Self.View.IsAlive()
+    end;
+
+    function ReadInput(Self: TuiCustomView): TuiViewInput;
+    begin
+      return TuiViewInput.ForView(TuiCustomView.AsView(Self))
     end;
 
     function ReadOnAttach(Self: TuiCustomView): option of procedure(Sender: TuiCustomView);
@@ -470,6 +476,7 @@ type
     end;
 
     property Focused: boolean read ReadFocused;
+    property Input: TuiViewInput read ReadInput;
 
     event OnAttach: procedure(Sender: TuiCustomView) read ReadOnAttach write WriteOnAttach;
     event OnDetach: procedure(Sender: TuiCustomView) read ReadOnDetach write WriteOnDetach;
@@ -481,12 +488,3 @@ type
     event OnCloseRequest: function(Sender: TuiCustomView): boolean read ReadOnCloseRequest write WriteOnCloseRequest;
     event OnClosed: procedure(Sender: TuiCustomView) read ReadOnClosed write WriteOnClosed;
   end;
-  TuiAttachHandler = procedure(Sender: TuiCustomView);
-  TuiDetachHandler = procedure(Sender: TuiCustomView);
-  TuiResizeHandler = procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect);
-  TuiMeasureHandler = function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult;
-  TuiPaintHandler = procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext);
-  TuiFocusHandler = procedure(Sender: TuiCustomView);
-  TuiBlurHandler = procedure(Sender: TuiCustomView);
-  TuiCloseRequestHandler = function(Sender: TuiCustomView): boolean;
-  TuiClosedHandler = procedure(Sender: TuiCustomView);

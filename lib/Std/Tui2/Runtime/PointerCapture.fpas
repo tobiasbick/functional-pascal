@@ -1,0 +1,74 @@
+unit Std.Tui2.Runtime.PointerCapture;
+
+uses Std.Array, Std.Tui2.Runtime.ApplicationRegistry, Std.Tui2.Views.View;
+
+private mutable var TuiPointerCaptureSlots: array of integer := [];
+private mutable var TuiPointerCaptureViewGenerations: array of integer := [];
+
+private procedure TuiPointerCaptureEnsure(ApplicationId: integer);
+begin
+  while Std.Array.Length(TuiPointerCaptureSlots) < ApplicationId do
+  begin
+    TuiPointerCaptureSlots := Std.Array.Concat(TuiPointerCaptureSlots, [0]);
+    TuiPointerCaptureViewGenerations := Std.Array.Concat(TuiPointerCaptureViewGenerations, [0])
+  end
+end;
+
+procedure TuiPointerCaptureSet(View: TuiView);
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 cannot capture the pointer for a stale view')
+  end;
+  TuiPointerCaptureEnsure(View.ApplicationId);
+  TuiApplicationRegistryRequire(View.ApplicationId, TuiApplicationRegistryGeneration(View.ApplicationId));
+  TuiPointerCaptureSlots[View.ApplicationId - 1] := View.Slot;
+  TuiPointerCaptureViewGenerations[View.ApplicationId - 1] := View.Generation
+end;
+
+function TuiPointerCaptureCurrent(ApplicationId: integer; Generation: integer): option of TuiView;
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiPointerCaptureEnsure(ApplicationId);
+  var Slot: integer := TuiPointerCaptureSlots[ApplicationId - 1];
+  if Slot = 0 then
+  begin
+    return None
+  end;
+  return Some(record
+    ApplicationId := ApplicationId;
+    Slot := Slot;
+    Generation := TuiPointerCaptureViewGenerations[ApplicationId - 1];
+    Kind := TuiViewKind.Custom;
+  end)
+end;
+
+function TuiPointerCaptureMatches(View: TuiView): boolean;
+begin
+  if not View.IsAlive() then
+  begin
+    return false
+  end;
+  TuiPointerCaptureEnsure(View.ApplicationId);
+  return (TuiPointerCaptureSlots[View.ApplicationId - 1] = View.Slot) and
+         (TuiPointerCaptureViewGenerations[View.ApplicationId - 1] = View.Generation)
+end;
+
+function TuiPointerCaptureReleaseView(View: TuiView): boolean;
+begin
+  if not TuiPointerCaptureMatches(View) then
+  begin
+    return false
+  end;
+  TuiPointerCaptureSlots[View.ApplicationId - 1] := 0;
+  TuiPointerCaptureViewGenerations[View.ApplicationId - 1] := 0;
+  return true
+end;
+
+procedure TuiPointerCaptureClear(ApplicationId: integer; Generation: integer);
+begin
+  TuiApplicationRegistryRequire(ApplicationId, Generation);
+  TuiPointerCaptureEnsure(ApplicationId);
+  TuiPointerCaptureSlots[ApplicationId - 1] := 0;
+  TuiPointerCaptureViewGenerations[ApplicationId - 1] := 0
+end;

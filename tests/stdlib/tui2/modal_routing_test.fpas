@@ -1,0 +1,67 @@
+program Tui2ModalRoutingTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Outside: TuiCustomView := TuiCustomView.Create(App);
+  var Panel: TuiContainer := TuiContainer.Create(App);
+  var InnerPanel: TuiContainer := TuiContainer.Create(App);
+  var Inside: TuiCustomView := TuiCustomView.Create(App);
+  var OutsideView: TuiView := TuiCustomView.AsView(Outside);
+  var PanelView: TuiView := TuiContainer.AsView(Panel);
+  var InnerPanelView: TuiView := TuiContainer.AsView(InnerPanel);
+  var InsideView: TuiView := TuiCustomView.AsView(Inside);
+  OutsideView.Bounds := TuiRect.Create(0, 0, 6, 4);
+  PanelView.Bounds := TuiRect.Create(10, 1, 10, 7);
+  InnerPanelView.Bounds := TuiRect.Create(0, 0, 10, 7);
+  InsideView.Bounds := TuiRect.Create(1, 1, 6, 3);
+  InnerPanel.Add(InsideView);
+  Panel.Add(InnerPanelView);
+  Desktop.Add(OutsideView);
+  Desktop.Add(PanelView);
+  AssertTrue(Outside.Focus());
+  var OutsideInput: TuiViewInput := Outside.Input;
+  AssertTrue(OutsideInput.CapturePointer());
+  var Modal: TuiModal := TuiModal.Open(Panel);
+  AssertTrue(Modal.IsActive());
+  AssertFalse(Outside.Focused);
+  AssertFalse(OutsideInput.PointerCaptured);
+  AssertTrue(Desktop.FocusNext());
+  AssertTrue(Inside.Focused);
+  AssertFalse(Outside.Focus());
+  case Desktop.HitTest(TuiPoint.Create(1, 1)) of
+    None:
+    begin
+    end;
+    Some(Hit):
+    begin
+      panic('modal routing must reject hits outside the modal root')
+    end
+  end;
+  case Desktop.HitTest(TuiPoint.Create(12, 3)) of
+    None:
+    begin
+      panic('modal child must remain hit-testable')
+    end;
+    Some(Hit):
+    begin
+      AssertEquals(InsideView.Slot, Hit.Slot)
+    end
+  end;
+  var NestedModal: TuiModal := TuiModal.Open(InnerPanel);
+  AssertFalse(Modal.Close());
+  AssertTrue(NestedModal.Close());
+  AssertTrue(Modal.IsActive());
+  AssertTrue(Modal.Close());
+  AssertFalse(Modal.IsActive());
+  AssertTrue(Outside.Focused);
+  AssertFalse(Modal.Close());
+  var DestroyedModal: TuiModal := TuiModal.Open(Panel);
+  AssertTrue(DestroyedModal.IsActive());
+  PanelView.Destroy();
+  AssertFalse(DestroyedModal.IsActive());
+  AssertFalse(DestroyedModal.Close());
+  App.Close()
+end.

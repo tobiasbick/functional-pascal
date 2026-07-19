@@ -1,9 +1,9 @@
 # Std.Tui2
 
 `Std.Tui2` provides terminal UI value types plus a headless live-object surface for applications,
-actions, buttons, views, and layouts. Horizontal, vertical, grid, form, and stacked layouts can be
-measured and arranged without a terminal. Interactive rendering, terminal acquisition, and input are
-not exposed yet.
+actions, buttons, views, input routing, modal roots, and layouts. Horizontal, vertical, grid, form,
+and stacked layouts can be measured, arranged, painted, and driven with injected input without a
+terminal. Interactive terminal acquisition is not exposed yet.
 
 ```pascal
 program Geometry;
@@ -33,9 +33,14 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiSurface` | A headless retained cell surface. |
 | `TuiCanvas` | A transient, clipped drawing capability for a surface. |
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
+| `TuiApplicationInput` | Headless input injection and unhandled application input events. |
+| `TuiKeyEvent` | Alias of the canonical `Std.Console.KeyEvent`. |
+| `TuiPointerEvent` | A normalized pointer action, button, position, and modifiers. |
+| `TuiPointerButton` | `NoButton`, `Left`, `Right`, or `Middle`. |
 | `TuiCommand` | A validated positive command identity. |
 | `TuiView` | A headless application-scoped view handle and action source identity. |
 | `TuiCustomView` | A typed headless view with measure, paint, focus, and close lifecycle events. |
+| `TuiViewInput` | Raw input events and pointer capture for one custom view. |
 | `TuiAttachHandler` | Handler invoked after a custom view is attached. |
 | `TuiDetachHandler` | Handler invoked before an attached custom view is released. |
 | `TuiResizeHandler` | Handler receiving the previous and resolved custom-view bounds. |
@@ -45,6 +50,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiClosedHandler` | Handler invoked before an explicitly closed custom-view handle becomes stale. |
 | `TuiContainer` | A headless owner with ordered children and explicit Z-order changes. |
 | `TuiDesktop` | The root container with hit-testing and focus traversal. |
+| `TuiModal` | A scoped modal-root handle with explicit LIFO closing. |
 | `TuiLayout` | A headless application-scoped layout identity. |
 | `TuiMeasureConstraint` | An unbounded or at-most constraint for one measurement axis. |
 | `TuiMeasureSpec` | Width and height constraints passed into measurement. |
@@ -196,6 +202,58 @@ The lifecycle members are single-handler [record events](../../language/types/re
 Assigning another compatible handler replaces the previous handler; assigning `nil` clears it.
 Copied application handles resolve the same registry state. `Tag` is a read-write live property.
 
+## Headless input routing
+
+`App.Input` returns the application's input capability. `InjectKeyForTest` queues the canonical
+`Std.Console.KeyEvent`; `InjectPointerForTest` queues a `TuiPointerEvent`. Injected input is FIFO,
+and each `Tick` or bounded loop iteration routes at most one queued value after paint and before
+`OnTick`.
+
+```pascal
+var AppInput: TuiApplicationInput := App.Input;
+var Key: TuiKeyEvent := record
+  kind := TuiKeyKind.Enter;
+  ch := '';
+  shift := false;
+  ctrl := false;
+  alt := false;
+  meta := false;
+end;
+AppInput.InjectKeyForTest(Key)
+```
+
+Keys first reach the focused eligible custom view. Pointer input first reaches a captured eligible
+view, otherwise it hit-tests the topmost eligible custom view. A pointer-down focuses its hit target.
+An unconsumed value then reaches `App.Input.OnKey` or `App.Input.OnPointer`. Raw handlers return
+`true` to consume the value and `false` to continue routing.
+
+Application fallback handlers omit a sender because application state can be captured directly:
+
+```pascal
+AppInput.OnKey :=
+  function(Key: TuiKeyEvent): boolean
+  begin
+    return false
+  end;
+```
+
+Custom-view handlers and capture are exposed through `Custom.Input`:
+
+```pascal
+var Input: TuiViewInput := Custom.Input;
+Input.OnPointer :=
+  function(Sender: TuiView; Pointer: TuiPointerEvent): boolean
+  begin
+    return true
+  end;
+Input.CapturePointer()
+```
+
+`CapturePointer` accepts only an attached, visible, enabled custom view inside the active modal
+root. `ReleasePointer` returns whether that view owned capture. Destruction and a modal transition
+that excludes the captured view release capture automatically. Copied input handles address the
+same registry-backed events and capture state.
+
 ## Headless views
 
 `TuiView.Create(App)` creates an unattached custom view in the application's generational registry.
@@ -294,8 +352,8 @@ uses the new blank extent immediately after `ResizeForTest`, before the next pai
 
 The headless renderer walks the retained tree from back to front within each container. A complete
 child subtree stays together in that ordering, and later siblings paint over earlier siblings.
-Terminal presentation, pointer capture, modal routing, raw input dispatch, and runtime enforcement
-of callback mutation and canvas lifetime restrictions are not implemented.
+Terminal presentation and runtime enforcement of callback mutation and canvas lifetime restrictions
+are not implemented.
 
 ## Headless containers
 
@@ -349,6 +407,14 @@ cannot select a cell that the same view could not paint.
 order, wrap at both ends, and skip hidden or effectively disabled subtrees. With no current focus,
 forward traversal starts at the first eligible view and backward traversal at the last. They return
 `false` when no eligible custom view exists. Z-order changes update this retained traversal order.
+
+`TuiModal.Open(Container)` limits focus, hit-testing, and routed input to an attached, visible,
+enabled container inside the current modal subtree. Opening a modal clears focus and pointer capture
+outside the new subtree. `FocusNext` and
+`FocusPrevious` then traverse only modal descendants. `Close()` restores the focus that existed
+before opening when it remains eligible. Modal roots may be nested; only the top modal may close, so
+`Close()` returns `false` for an out-of-order close or an already inactive handle. Destroying a modal
+root deactivates its handle automatically.
 
 ## Headless scroll views
 
@@ -551,8 +617,8 @@ mouse, painting, and layout behavior are not implemented by the current button.
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).
 Geometry and cell values live in focused private units under `lib/Std/Tui2/Geometry/` and
-`lib/Std/Tui2/Cells/`. Live application, action, view, layout, and button concerns are separated under
-`Runtime/`, `Actions/`, `Views/`, `Layouts/`, and `Controls/`. The facade is exported by
+`lib/Std/Tui2/Cells/`. Live application, input, action, view, layout, and button concerns are
+separated under `Runtime/`, `Input/`, `Actions/`, `Views/`, `Layouts/`, and `Controls/`. The facade is exported by
 [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
 
 ## See also

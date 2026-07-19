@@ -1,0 +1,99 @@
+program Tui2InputRoutingTest;
+
+uses Std.Test, Std.Tui2;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Back: TuiCustomView := TuiCustomView.Create(App);
+  var Front: TuiCustomView := TuiCustomView.Create(App);
+  var BackView: TuiView := TuiCustomView.AsView(Back);
+  var FrontView: TuiView := TuiCustomView.AsView(Front);
+  BackView.Bounds := TuiRect.Create(0, 0, 10, 6);
+  FrontView.Bounds := TuiRect.Create(2, 1, 6, 4);
+  Desktop.Add(BackView);
+  Desktop.Add(FrontView);
+  mutable var Sequence: integer := 0;
+  mutable var TickCount: integer := 0;
+  mutable var BackPointerCount: integer := 0;
+  var BackInput: TuiViewInput := Back.Input;
+  mutable var FrontInput: TuiViewInput := Front.Input;
+  var AppInput: TuiApplicationInput := App.Input;
+  BackInput.OnKey := function(Sender: TuiView; Key: TuiKeyEvent): boolean begin
+    AssertTrue(Key.kind = TuiKeyKind.Enter);
+    AssertEquals('', Key.ch);
+    Sequence := Sequence * 10 + 1;
+    return false
+  end;
+  FrontInput.OnPointer := function(Sender: TuiView; Pointer: TuiPointerEvent): boolean begin
+    Sequence := Sequence * 10 + 2;
+    return true
+  end;
+  BackInput.OnPointer := function(Sender: TuiView; Pointer: TuiPointerEvent): boolean begin
+    BackPointerCount := BackPointerCount + 1;
+    return true
+  end;
+  AppInput.OnKey := function(Key: TuiKeyEvent): boolean begin
+    AssertTrue(Key.kind = TuiKeyKind.Enter);
+    Sequence := Sequence * 10 + 3;
+    return true
+  end;
+  AppInput.OnPointer := function(Pointer: TuiPointerEvent): boolean begin
+    AssertTrue(Pointer.Ctrl);
+    AssertFalse(Pointer.Shift);
+    Sequence := Sequence * 10 + 4;
+    return true
+  end;
+  App.OnTick := procedure(Sender: TuiApplication; DeltaMilliseconds: integer) begin
+    TickCount := TickCount + 1;
+    if TickCount = 1 then
+    begin
+      AssertEquals(13, Sequence)
+    end
+    else if TickCount = 2 then
+    begin
+      AssertEquals(132, Sequence)
+    end
+    else if TickCount = 3 then
+    begin
+      AssertEquals(13224, Sequence)
+    end
+    else if TickCount = 4 then
+    begin
+      AssertEquals(132244, Sequence)
+    end
+  end;
+  AssertTrue(Back.Focus());
+  var Key: TuiKeyEvent := record
+    kind := TuiKeyKind.Enter;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end;
+  AssertTrue(AppInput.InjectKeyForTest(Key));
+  AssertTrue(AppInput.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(3, 2))));
+  App.RunIterations(1, 0);
+  AssertEquals(13, Sequence);
+  AssertTrue(Back.Focused);
+  App.RunIterations(1, 0);
+  AssertEquals(132, Sequence);
+  AssertTrue(Front.Focused);
+  AssertTrue(FrontInput.CapturePointer());
+  AssertTrue(FrontInput.PointerCaptured);
+  FrontInput.OnPointer := function(Sender: TuiView; Pointer: TuiPointerEvent): boolean begin
+    Sequence := Sequence * 10 + 2;
+    return false
+  end;
+  AssertTrue(AppInput.InjectPointerForTest(TuiPointerEvent.WithModifiers(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(1, 1), false, true, false, false)));
+  App.RunIterations(1, 0);
+  AssertEquals(13224, Sequence);
+  AssertEquals(0, BackPointerCount);
+  AssertTrue(FrontInput.ReleasePointer());
+  AssertFalse(FrontInput.PointerCaptured);
+  AssertTrue(AppInput.InjectPointerForTest(TuiPointerEvent.WithModifiers(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(18, 7), false, true, false, false)));
+  App.RunIterations(1, 0);
+  AssertEquals(132244, Sequence);
+  App.Close()
+end.

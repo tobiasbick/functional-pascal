@@ -16,8 +16,8 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 | `TuiMeasureSpec` | Bounded or unbounded measurement constraints per axis. |
 | `TuiMeasureResult` | Minimum, preferred, and maximum sizes returned by measurement. |
 | `TuiLayoutFit` | Minimum, available, and per-axis overflow extents for a container. |
-| `TuiKey` | A normalized key and modifiers when a TUI-specific form is needed. |
-| `TuiEvent` | An event routed through the TUI. |
+| `TuiKeyEvent` | Alias of the canonical normalized `Std.Console.KeyEvent`. |
+| `TuiPointerEvent` | A normalized pointer action, button, position, and modifiers. |
 | `TuiChangeOrigin` | `User` or `Programmatic` origin for a typed value change. |
 | `TuiMenuItem` | A menu entry description. |
 | `TuiStatusItem` | A status-line entry description. |
@@ -40,7 +40,7 @@ These records describe values only. They do not own live views or contain copies
 | `TuiListSelectionChangedHandler` | Observe a list selection change. |
 | `TuiRadioSelectionChangedHandler` | Observe a radio selection change. |
 | `TuiKeyHandler` | Handle routed or fallback key input. |
-| `TuiMouseHandler` | Handle routed or fallback mouse input. |
+| `TuiPointerHandler` | Handle routed or fallback pointer input. |
 | `TuiAttachHandler` | Observe attachment to a live parent. |
 | `TuiDetachHandler` | Observe removal from a live parent. |
 | `TuiMeasureHandler` | Calculate custom-view size information. |

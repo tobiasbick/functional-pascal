@@ -1,8 +1,10 @@
 unit Std.Tui2.Views.ViewTreeState;
 
-uses Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View;
+uses
+  Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.ModalState,
+  Std.Tui2.Views.View;
 
-function TuiViewTreeIsInteractive(View: TuiView): boolean;
+private function TuiViewTreeIsAttachedVisibleEnabled(View: TuiView): boolean;
 begin
   if not View.IsAlive() then
   begin
@@ -19,7 +21,12 @@ begin
     end;
     Some(Parent):
     begin
-      return TuiViewTreeIsInteractive(Parent)
+      return TuiViewTreeIsAttachedVisibleEnabled(Parent)
     end
   end
+end;
+
+function TuiViewTreeIsInteractive(View: TuiView): boolean;
+begin
+  return TuiViewTreeIsAttachedVisibleEnabled(View) and TuiModalStateAllows(View)
 end;

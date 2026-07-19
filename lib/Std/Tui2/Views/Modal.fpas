@@ -1,0 +1,73 @@
+unit Std.Tui2.Views.Modal;
+
+uses
+  Std.Tui2.Runtime.ApplicationFocus, Std.Tui2.Runtime.ApplicationRegistry,
+  Std.Tui2.Runtime.PointerCapture, Std.Tui2.Views.Container, Std.Tui2.Views.ModalState,
+  Std.Tui2.Views.View, Std.Tui2.Views.ViewTreeState;
+
+type
+  TuiModal = record
+    ApplicationId: integer;
+    ApplicationGeneration: integer;
+    Token: integer;
+
+    static function Open(Root: TuiContainer): TuiModal;
+    begin
+      var RootView: TuiView := TuiContainer.AsView(Root);
+      if not TuiViewTreeIsInteractive(RootView) then
+      begin
+        panic('Tui2 modal root must be attached, visible, enabled, and inside the active modal root')
+      end;
+      var ApplicationGeneration: integer := TuiApplicationRegistryGeneration(RootView.ApplicationId);
+      var Token: integer := TuiModalStateBegin(RootView, TuiApplicationFocusCurrentSlot(RootView.ApplicationId, ApplicationGeneration), TuiApplicationFocusCurrentViewGeneration(RootView.ApplicationId, ApplicationGeneration));
+      var Modal: TuiModal := record
+        ApplicationId := RootView.ApplicationId;
+        ApplicationGeneration := ApplicationGeneration;
+        Token := Token;
+      end;
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiModalStateRemove(ApplicationId, Token);
+        TuiApplicationFocusRevalidate(ApplicationId, ApplicationGeneration);
+        TuiPointerCaptureClear(ApplicationId, ApplicationGeneration)
+      end;
+      RegisterViewCleanup(RootView, Cleanup);
+      TuiApplicationFocusRevalidate(RootView.ApplicationId, ApplicationGeneration);
+      case TuiPointerCaptureCurrent(RootView.ApplicationId, ApplicationGeneration) of
+        Some(Captured):
+        begin
+          if not TuiModalStateAllows(Captured) then
+          begin
+            TuiPointerCaptureClear(RootView.ApplicationId, ApplicationGeneration)
+          end
+        end;
+        None:
+        begin
+        end
+      end;
+      return Modal
+    end;
+
+    function IsActive(Self: TuiModal): boolean;
+    begin
+      return TuiModalStateIsActive(Self.ApplicationId, Self.Token)
+    end;
+
+    function Close(Self: TuiModal): boolean;
+    begin
+      if not Self.IsActive() then
+      begin
+        return false
+      end;
+      case TuiModalStateEnd(Self.ApplicationId, Self.Token) of
+        None:
+        begin
+          return false
+        end;
+        Some(Previous):
+        begin
+          TuiApplicationFocusRequest(Self.ApplicationId, Self.ApplicationGeneration, Previous.Slot, Previous.Generation);
+          return true
+        end
+      end
+    end;
+  end;

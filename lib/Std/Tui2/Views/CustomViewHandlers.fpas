@@ -1,0 +1,16 @@
+unit Std.Tui2.Views.CustomViewHandlers;
+
+uses
+  Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect,
+  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Views.CustomView;
+
+type
+  TuiAttachHandler = procedure(Sender: TuiCustomView);
+  TuiDetachHandler = procedure(Sender: TuiCustomView);
+  TuiResizeHandler = procedure(Sender: TuiCustomView; OldBounds: TuiRect; NewBounds: TuiRect);
+  TuiMeasureHandler = function(Sender: TuiCustomView; Spec: TuiMeasureSpec): TuiMeasureResult;
+  TuiPaintHandler = procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext);
+  TuiFocusHandler = procedure(Sender: TuiCustomView);
+  TuiBlurHandler = procedure(Sender: TuiCustomView);
+  TuiCloseRequestHandler = function(Sender: TuiCustomView): boolean;
+  TuiClosedHandler = procedure(Sender: TuiCustomView);

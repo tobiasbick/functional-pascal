@@ -15,6 +15,11 @@ posts again. Pending custom-view resize notifications run after layout and befor
 stops at a callback boundary and performs orderly close. `ResizeForTest` updates the application and
 desktop extents, so the next iteration performs the invalidated layout.
 
+Headless input is also implemented. `App.Input` queues keys and pointer values FIFO, and an iteration
+routes at most one value after paint and before `OnTick`. Keys target the focused eligible custom
+view; pointer values target capture first and otherwise the topmost hit. Unconsumed values reach the
+application input fallback.
+
 The initial application loop has this shape:
 
 ```text
@@ -53,6 +58,8 @@ raw input propagation. See [events-and-actions.md](events-and-actions.md).
 
 ## Key representation
 
-Keyboard matching uses `Std.Console.KeyKind` and modifier flags. Non-character keys such as Enter and Escape are matched by their named key kinds; their character field is empty.
+Keyboard matching uses `Std.Console.KeyKind` and modifier flags. Non-character keys such as Enter
+and Escape are matched by their named key kinds. Live terminal mapping stores the null character in
+their string field, so routing code must not match them as `Chr(13)` or `Chr(27)`.
 
 Normal routing and every callback run on the main task. Worker integration uses the typed queue in [runtime-boundary.md](runtime-boundary.md).

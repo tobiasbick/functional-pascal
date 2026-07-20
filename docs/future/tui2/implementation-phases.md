@@ -90,9 +90,15 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** retained input lines built on the custom-view input and focus path,
   with bounded single-line editing, pointer cursor placement, fixed measurement, and retained
   normal/focused/disabled painting.
-- **Next:** add typed value-change events and propagate the existing action registry through the
-  next interactive view-backed control.
-- Implement typed single-handler event properties with `TuiChangeOrigin`.
+- **Implemented headless core:** `TuiChangeOrigin` and the typed single-handler
+  `TuiInputLine.OnChanged` event. Property changes report `Programmatic`, accepted edits report
+  `User`, and unchanged values do not raise an event.
+- **Implemented headless core:** retained check boxes with grapheme-aware text measurement,
+  keyboard and pointer toggling, normal/focused/disabled painting, and typed `OnChanged` events.
+- **Implemented headless core:** retained list boxes with grapheme-aware item measurement,
+  clamped selection, keyboard and pointer navigation, normal/focused/selected/disabled painting,
+  layout invalidation, and typed `OnSelectionChanged` events.
+- **Next:** propagate the existing action registry through the next interactive view-backed control.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.
 
@@ -101,7 +107,7 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 5 — First usable controls
 
-- Add a frame or window, check box, list box, and scroll bar; render the existing retained controls.
+- Add a frame or window and scroll bar; render the existing retained controls.
 - Bind buttons, menus, status items, and shortcuts to reusable actions.
 - Add a minimal interactive application and a fully headless equivalent test.
 - Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.

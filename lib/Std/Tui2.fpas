@@ -6,8 +6,8 @@ uses
   Std.Tui2.Cells.Palette, Std.Tui2.Surface.Surface, Std.Tui2.Drawing.Canvas,
   Std.Tui2.Drawing.PaintContext, Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ApplicationInput,
   Std.Tui2.Input.ViewInput, Std.Tui2.Runtime.Application, Std.Tui2.Views.View,
-  Std.Tui2.Views.CustomView, Std.Tui2.Views.CustomViewHandlers, Std.Tui2.Views.Container,
-  Std.Tui2.Views.Desktop, Std.Tui2.Views.Modal, Std.Tui2.Layouts.Layout,
+  Std.Tui2.Events.ChangeOrigin, Std.Tui2.Views.CustomView, Std.Tui2.Views.CustomViewHandlers,
+  Std.Tui2.Views.Container, Std.Tui2.Views.Desktop, Std.Tui2.Views.Modal, Std.Tui2.Layouts.Layout,
   Std.Tui2.Layouts.MeasureConstraint, Std.Tui2.Layouts.MeasureSpec, Std.Tui2.Layouts.MeasureResult,
   Std.Tui2.Layouts.SizePolicy, Std.Tui2.Layouts.Margins, Std.Tui2.Layouts.Alignment,
   Std.Tui2.Layouts.Spacer, Std.Tui2.Layouts.LayoutItem, Std.Tui2.Layouts.LayoutItems,
@@ -17,7 +17,8 @@ uses
   Std.Tui2.Layouts.FormLayout, Std.Tui2.Layouts.FormItems, Std.Tui2.Layouts.StackedLayout,
   Std.Tui2.Layouts.StackedItems, Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.LayoutArrange,
   Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button,
-  Std.Tui2.Controls.InputLine, Std.Tui2.Controls.Label, Std.Tui2.Controls.ScrollView;
+  Std.Tui2.Controls.CheckBox, Std.Tui2.Controls.InputLine, Std.Tui2.Controls.Label,
+  Std.Tui2.Controls.ListBox, Std.Tui2.Controls.ScrollView;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -42,6 +43,7 @@ type
   TuiApplication = Std.Tui2.Runtime.Application.TuiApplication;
   TuiViewKind = Std.Tui2.Views.View.TuiViewKind;
   TuiView = Std.Tui2.Views.View.TuiView;
+  TuiChangeOrigin = Std.Tui2.Events.ChangeOrigin.TuiChangeOrigin;
   TuiCustomView = Std.Tui2.Views.CustomView.TuiCustomView;
   TuiAttachHandler = Std.Tui2.Views.CustomViewHandlers.TuiAttachHandler;
   TuiDetachHandler = Std.Tui2.Views.CustomViewHandlers.TuiDetachHandler;
@@ -88,6 +90,8 @@ type
   TuiCommand = Std.Tui2.Actions.Command.TuiCommand;
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;
+  TuiCheckBox = Std.Tui2.Controls.CheckBox.TuiCheckBox;
   TuiInputLine = Std.Tui2.Controls.InputLine.TuiInputLine;
   TuiLabel = Std.Tui2.Controls.Label.TuiLabel;
+  TuiListBox = Std.Tui2.Controls.ListBox.TuiListBox;
   TuiScrollView = Std.Tui2.Controls.ScrollView.TuiScrollView;

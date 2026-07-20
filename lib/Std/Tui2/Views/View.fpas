@@ -9,8 +9,10 @@ type
   TuiViewKind = enum
     Empty;
     Button;
+    CheckBox;
     InputLine;
     Label;
+    ListBox;
     Custom;
   end;
   TuiViewCleanupCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);

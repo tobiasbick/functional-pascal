@@ -1,0 +1,7 @@
+unit Std.Tui2.Events.ChangeOrigin;
+
+type
+  TuiChangeOrigin = enum
+    Programmatic;
+    User;
+  end;

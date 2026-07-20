@@ -72,7 +72,13 @@ bracketed label sizing and an owning layout invalidation after text replacement.
 Label coverage verifies retained attachment, fixed grapheme-width measurement, normal and disabled
 painting, layout invalidation after text replacement, repaint clearing, and destruction cleanup.
 Input-line coverage verifies bounded character editing, cursor navigation, pointer placement,
-fixed measurement, normal/focused/disabled painting, and destruction cleanup.
+fixed measurement, normal/focused/disabled painting, destruction cleanup, and `OnChanged` origins
+for programmatic and user changes.
+Check-box coverage verifies Space and pointer toggles, `OnChanged` origins, normal/focused/disabled
+screen output, text replacement, intrinsic measurement, owning-layout invalidation, and cleanup.
+List-box coverage verifies empty and clamped selection, Up/Down/Home and pointer navigation,
+`OnSelectionChanged` origins and unchanged-value suppression, focused and disabled screen output,
+grapheme-aware intrinsic measurement, owning-layout invalidation, and cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

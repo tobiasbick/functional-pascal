@@ -1,0 +1,46 @@
+unit Std.Tui2.Controls.ListBoxPaint;
+
+uses
+  Std.Array, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole, Std.Tui2.Drawing.Canvas,
+  Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Point;
+
+procedure TuiListBoxPaint(
+  Canvas: TuiCanvas;
+  Context: TuiPaintContext;
+  Items: array of string;
+  Selected: integer
+);
+begin
+  mutable var BackgroundRole: TuiStyleRole := TuiStyleRole.Normal;
+  if not Context.Enabled then
+  begin
+    BackgroundRole := TuiStyleRole.Disabled
+  end;
+  Canvas.FillRect(Context.Bounds, TuiCell.Create(' ', BackgroundRole));
+  for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+  begin
+    if Index >= Context.Bounds.Height then
+    begin
+      return
+    end;
+    mutable var Role: TuiStyleRole := BackgroundRole;
+    mutable var Prefix: string := '  ';
+    if Index = Selected then
+    begin
+      Prefix := '> ';
+      if Context.Enabled then
+      begin
+        if Context.Focused then
+        begin
+          Role := TuiStyleRole.Focused
+        end
+        else
+        begin
+          Role := TuiStyleRole.Selected
+        end
+      end
+    end;
+    Canvas.WriteText(TuiPoint.Create(0, Index), Prefix, Role);
+    Canvas.WriteText(TuiPoint.Create(2, Index), Items[Index], Role)
+  end
+end;

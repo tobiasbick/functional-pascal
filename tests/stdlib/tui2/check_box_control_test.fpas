@@ -1,0 +1,70 @@
+program Tui2CheckBoxControlTest;
+
+uses Std.Option, Std.Test, Std.Tui2;
+
+function CellAt(Surface: TuiSurface; X: integer; Y: integer): TuiCell;
+begin
+  return Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(X, Y)))
+end;
+
+function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 3));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var CheckBox: TuiCheckBox := TuiCheckBox.Create(App, 'Save');
+  var View: TuiView := TuiCheckBox.AsView(CheckBox);
+  View.Bounds := TuiRect.Create(1, 1, 8, 1);
+  Desktop.Add(View);
+  AssertTrue(CheckBox.Focus());
+  mutable var Changes: integer := 0;
+  mutable var LastOrigin: TuiChangeOrigin := TuiChangeOrigin.Programmatic;
+  CheckBox.OnChanged := procedure(Sender: TuiCheckBox; Value: boolean; Origin: TuiChangeOrigin) begin
+    AssertTrue(Sender.IsAlive());
+    Changes := Changes + 1;
+    LastOrigin := Origin
+  end;
+  var Input: TuiApplicationInput := App.Input;
+  AssertTrue(Input.InjectKeyForTest(MakeKey(TuiKeyKind.Space)));
+  App.RunIterations(1, 0);
+  AssertTrue(CheckBox.Checked);
+  AssertEquals(1, Changes);
+  AssertTrue(LastOrigin = TuiChangeOrigin.User);
+  AssertTrue(Input.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(2, 1))));
+  App.RunIterations(1, 0);
+  AssertFalse(CheckBox.Checked);
+  AssertEquals(2, Changes);
+  CheckBox.Checked := true;
+  AssertEquals(3, Changes);
+  AssertTrue(LastOrigin = TuiChangeOrigin.Programmatic);
+  CheckBox.Checked := true;
+  AssertEquals(3, Changes);
+  App.RunIterations(1, 0);
+  mutable var Surface: TuiSurface := App.Surface;
+  AssertEquals('[', CellAt(Surface, 1, 1).Glyph);
+  AssertEquals('x', CellAt(Surface, 2, 1).Glyph);
+  AssertEquals('S', CellAt(Surface, 5, 1).Glyph);
+  AssertTrue(CellAt(Surface, 2, 1).Role = TuiStyleRole.Focused);
+  CheckBox.Text := 'Commit';
+  AssertEquals('Commit', CheckBox.Text);
+  App.RunIterations(1, 0);
+  Surface := App.Surface;
+  AssertEquals('C', CellAt(Surface, 5, 1).Glyph);
+  View.Enabled := false;
+  App.RunIterations(1, 0);
+  Surface := App.Surface;
+  AssertTrue(CellAt(Surface, 2, 1).Role = TuiStyleRole.Disabled);
+  CheckBox.Destroy();
+  AssertFalse(CheckBox.IsAlive());
+  App.Close()
+end.

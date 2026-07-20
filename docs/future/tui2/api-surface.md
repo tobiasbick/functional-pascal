@@ -18,7 +18,6 @@ Std.Tui2 distinguishes immutable or copyable values from identities for live app
 | `TuiLayoutFit` | Minimum, available, and per-axis overflow extents for a container. |
 | `TuiKeyEvent` | Alias of the canonical normalized `Std.Console.KeyEvent`. |
 | `TuiPointerEvent` | A normalized pointer action, button, position, and modifiers. |
-| `TuiChangeOrigin` | `User` or `Programmatic` origin for a typed value change. |
 | `TuiMenuItem` | A menu entry description. |
 | `TuiStatusItem` | A status-line entry description. |
 | `TuiSizePolicyKind` | One resizing policy for one axis. |
@@ -37,7 +36,6 @@ These records describe values only. They do not own live views or contain copies
 | --- | --- |
 | `TuiTextChangedHandler` | Observe a text value change. |
 | `TuiCheckedChangedHandler` | Observe a boolean checked-state change. |
-| `TuiListSelectionChangedHandler` | Observe a list selection change. |
 | `TuiRadioSelectionChangedHandler` | Observe a radio selection change. |
 | `TuiKeyHandler` | Handle routed or fallback key input. |
 | `TuiPointerHandler` | Handle routed or fallback pointer input. |
@@ -64,9 +62,7 @@ These records describe values only. They do not own live views or contain copies
 | `TuiStatusLine` | Application status and shortcut line. |
 | `TuiLabel` | Static or associated text. |
 | `TuiInputLine` | Single-line text input. |
-| `TuiListBox` | Selectable item list. |
 | `TuiScrollBar` | Scroll position and range control. |
-| `TuiCheckBox` | Boolean option control. |
 | `TuiRadioGroup` | Mutually exclusive option control. |
 | `TuiMemo` | Multi-line editable text. |
 | `TuiTextViewer` | Scrollable read-only text. |
@@ -212,13 +208,6 @@ Input.Text: string                                { read-write property }
 ### Selection and text controls
 
 ```pascal
-TuiListBox.Create(App: TuiApplication): TuiListBox
-List.Items: array of string                       { read-write property }
-List.Selected: integer                            { read-write property }
-
-TuiCheckBox.Create(App: TuiApplication; Text: string): TuiCheckBox
-CheckBox.Checked: boolean                         { read-write property }
-
 TuiRadioGroup.Create(App: TuiApplication; Items: array of string): TuiRadioGroup
 Group.Selected: integer                           { read-write property }
 

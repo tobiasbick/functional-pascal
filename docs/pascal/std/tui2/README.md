@@ -668,11 +668,66 @@ Delete. A left pointer-down focuses the field and places its character cursor. I
 input lines paint their text at the local origin with the `Normal`, `Focused`, or `Disabled` role.
 `Destroy` releases the backing view and makes the handle stale.
 
+`OnChanged` is an optional single-handler event. It runs synchronously after a real text change;
+accepted user input reports `TuiChangeOrigin.User`, while a changed `Text` assignment reports
+`TuiChangeOrigin.Programmatic`. Reassigning the current text raises no event.
+
+```pascal
+Name.OnChanged :=
+  procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin)
+  begin
+    Preview.Text := Value
+  end;
+```
+
+## Check boxes
+
+`TuiCheckBox.Create(App, Text)` creates a focusable retained boolean option. `Text` and `Checked`
+are writable properties; `Focused` is read-only. Its intrinsic width is the display width of `Text`
+plus four cells for `[x] `.
+
+```pascal
+var SaveCopy: TuiCheckBox := TuiCheckBox.Create(App, 'Save a copy');
+Desktop.Add(TuiCheckBox.AsView(SaveCopy));
+```
+
+Focused check boxes toggle `Checked` for Space or Enter. A left pointer-down inside the retained
+bounds focuses and toggles the check box. It paints `[ ] Text` while unchecked and `[x] Text` while
+checked, using the `Normal`, `Focused`, or `Disabled` role. Replacing `Text` invalidates paint and
+every owning layout. `OnChanged` follows the same `User`/`Programmatic` and unchanged-value rules
+as input lines. `Destroy` releases the backing view and makes the handle stale.
+
+## List boxes
+
+`TuiListBox.Create(App)` creates a focusable retained list of strings. `Items` and `Selected` are
+writable properties; `Focused` is read-only. An empty list has `Selected = -1`. Assigning the first
+non-empty item array selects index `0`. Later item replacements preserve the current index when it
+remains valid and otherwise clamp it to the last item. Assigning `Selected` also clamps to the valid
+range.
+
+```pascal
+var Files: TuiListBox := TuiListBox.Create(App);
+Files.Items := ['README.md', 'LICENSE', 'src'];
+Desktop.Add(TuiListBox.AsView(Files));
+Files.Focus()
+```
+
+Focused list boxes consume Up, Down, and Home. A left pointer-down selects the row under the
+pointer. The selected row is prefixed with `> ` and uses the `Focused` role while the control owns
+focus, or `Selected` otherwise; disabled list boxes use `Disabled` throughout. Other rows use
+`Normal`.
+
+The fixed intrinsic width is two cells plus the greatest item display width. Its intrinsic height
+is the item count, with a one-row minimum for an empty list. Replacing `Items` invalidates paint and
+every owning layout. `OnSelectionChanged` runs synchronously after a real selection change and uses
+the same `User`/`Programmatic` origin rules as the other value controls. `Destroy` releases the
+backing view and makes the handle stale.
+
 ## Implementation (contributors)
 
 `Std.Tui2` is a source-level standard-library facade in [`lib/Std/Tui2.fpas`](../../../../lib/Std/Tui2.fpas).
 Geometry and cell values live in focused private units under `lib/Std/Tui2/Geometry/` and
-`lib/Std/Tui2/Cells/`. Live application, input, action, view, layout, and button concerns are
+`lib/Std/Tui2/Cells/`. Live application, input, action, view, layout, and control concerns are
 separated under `Runtime/`, `Input/`, `Actions/`, `Views/`, `Layouts/`, and `Controls/`. The facade is exported by
 [`lib/stdlib.fpasprj`](../../../../lib/stdlib.fpasprj).
 

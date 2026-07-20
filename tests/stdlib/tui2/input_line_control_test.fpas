@@ -28,12 +28,21 @@ begin
   Desktop.Add(View);
   AssertTrue(Input.Focus());
   AssertTrue(Input.Focused);
+  mutable var Changes: integer := 0;
+  mutable var LastOrigin: TuiChangeOrigin := TuiChangeOrigin.Programmatic;
+  Input.OnChanged := procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin) begin
+    AssertTrue(Sender.IsAlive());
+    Changes := Changes + 1;
+    LastOrigin := Origin
+  end;
   var InputApi: TuiApplicationInput := App.Input;
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'a')));
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'b')));
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'c')));
   App.RunIterations(3, 0);
   AssertEquals('abc', Input.Text);
+  AssertEquals(3, Changes);
+  AssertTrue(LastOrigin = TuiChangeOrigin.User);
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Left, '')));
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Backspace, '')));
   App.RunIterations(2, 0);
@@ -45,6 +54,10 @@ begin
   AssertEquals('aXc', Input.Text);
   Input.Text := 'hello';
   AssertEquals('hello', Input.Text);
+  AssertEquals(6, Changes);
+  AssertTrue(LastOrigin = TuiChangeOrigin.Programmatic);
+  Input.Text := 'hello';
+  AssertEquals(6, Changes);
   AssertTrue(InputApi.InjectKeyForTest(MakeKey(TuiKeyKind.Character, '!')));
   App.RunIterations(1, 0);
   AssertEquals('hello', Input.Text);

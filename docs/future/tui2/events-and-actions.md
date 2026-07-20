@@ -21,25 +21,19 @@ provide a general publish/subscribe bus.
 
 ## Direct control events
 
-Controls expose Pascal-style event properties backed by their live registry entries:
+Controls expose Pascal-style event properties backed by their live registry entries. The implemented
+input-line, check-box, and list-box event contracts are documented in the current
+[`Std.Tui2` reference](../../pascal/std/tui2/README.md); the table below lists the remaining events:
 
 ```pascal
 Button.OnClick := HandleClick;
 
-Input.OnChanged :=
-  procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin)
-  begin
-    Preview.Text := Value
-  end;
 ```
 
-Initial control events are:
+Remaining control events are:
 
 | Control | Event | Signature |
 | --- | --- | --- |
-| `TuiInputLine` | `OnChanged` | `procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin)` |
-| `TuiCheckBox` | `OnChanged` | `procedure(Sender: TuiCheckBox; Value: boolean; Origin: TuiChangeOrigin)` |
-| `TuiListBox` | `OnSelectionChanged` | `procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin)` |
 | `TuiRadioGroup` | `OnSelectionChanged` | `procedure(Sender: TuiRadioGroup; Selected: integer; Origin: TuiChangeOrigin)` |
 
 Programmatic value changes follow one rule:
@@ -243,7 +237,7 @@ values and define its own ordering and lifetime rules.
 
 ## Remaining implementation
 
-1. Add typed value-change events and `TuiChangeOrigin` behavior.
+1. Add the remaining typed value-change event and `TuiChangeOrigin` behavior for radio groups.
 2. Route action activation from menus and direct commands, then propagate it through view-backed
    controls.
 3. Extend the headless post queue with worker-transfer enforcement.
@@ -252,7 +246,6 @@ values and define its own ordering and lifetime rules.
 ## Remaining tests
 
 - action activation from menu and direct command;
-- change origin and no event for assignment of unchanged property values;
 - captured stale handle diagnostic;
 - event closure release on view destruction;
 - callback panic preserves the primary diagnostic and restores terminal modes;
@@ -261,7 +254,7 @@ values and define its own ordering and lifetime rules.
 
 ## Remaining acceptance criteria
 
-- typed-change events use the same registry-backed single-handler model;
+- the remaining typed-change event uses the same registry-backed single-handler model;
 - actions activate consistently from every supported source;
 - posting preserves FIFO order and the task-transfer rules;
 - destruction and panic paths release every remaining closure environment;

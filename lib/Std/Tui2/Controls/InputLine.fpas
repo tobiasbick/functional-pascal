@@ -3,9 +3,18 @@ unit Std.Tui2.Controls.InputLine;
 uses
   Std.Array, Std.Console, Std.Str, Std.Tui2.Controls.InputLinePaint, Std.Tui2.Drawing.Canvas,
   Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size,
-  Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ViewInput, Std.Tui2.Layouts.MeasureResult,
-  Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.CustomView,
-  Std.Tui2.Views.View;
+  Std.Tui2.Events.ChangeOrigin, Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ViewInput,
+  Std.Tui2.Layouts.MeasureResult, Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint,
+  Std.Tui2.Views.CustomView, Std.Tui2.Views.View;
+
+type
+  TuiInputLineCallback = procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Value: string;
+  Origin: TuiChangeOrigin
+);
 
 private mutable var InputLineApplicationIds: array of integer := [];
 private mutable var InputLineGenerations: array of integer := [];
@@ -14,6 +23,7 @@ private mutable var InputLineMaxLengths: array of integer := [];
 private mutable var InputLineTexts: array of string := [];
 private mutable var InputLineCursors: array of integer := [];
 private mutable var InputLineViews: array of TuiCustomView := [];
+private mutable var InputLineOnChanged: array of option of TuiInputLineCallback := [];
 
 private procedure InputLineRequire(ApplicationId: integer; Slot: integer; Generation: integer);
 begin
@@ -47,10 +57,42 @@ begin
     if ((InputLineApplicationIds[Slot - 1] = ApplicationId) and (InputLineGenerations[Slot - 1] = Generation)) and
        InputLineAlive[Slot - 1] then
     begin
+      InputLineOnChanged[Slot - 1] := None;
       InputLineAlive[Slot - 1] := false;
       InputLineGenerations[Slot - 1] := Generation + 1
     end
   end
+end;
+
+private function InputLineCommit(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Value: string;
+  Cursor: integer;
+  Origin: TuiChangeOrigin
+): boolean;
+begin
+  InputLineRequire(ApplicationId, Slot, Generation);
+  var Index: integer := Slot - 1;
+  if InputLineTexts[Index] = Value then
+  begin
+    InputLineCursors[Index] := Cursor;
+    return false
+  end;
+  InputLineTexts[Index] := Value;
+  InputLineCursors[Index] := Cursor;
+  TuiApplicationPaintInvalidate(ApplicationId, 1);
+  case InputLineOnChanged[Index] of
+    None:
+    begin
+    end;
+    Some(Callback):
+    begin
+      Callback(ApplicationId, Slot, Generation, Value, Origin)
+    end
+  end;
+  return true
 end;
 
 type
@@ -79,6 +121,7 @@ type
       InputLineTexts := Std.Array.Concat(InputLineTexts, ['']);
       InputLineCursors := Std.Array.Concat(InputLineCursors, [0]);
       InputLineViews := Std.Array.Concat(InputLineViews, [Custom]);
+      InputLineOnChanged := Std.Array.Concat(InputLineOnChanged, [None]);
       var InputLine: TuiInputLine := record
         ApplicationId := App.Id;
         Slot := Std.Array.Length(InputLineGenerations);
@@ -98,36 +141,32 @@ type
           if ((not Key.ctrl) and ((not Key.alt) and (not Key.meta))) and
              (Std.Str.Length(InputLineTexts[Index]) < InputLineMaxLengths[Index]) then
           begin
-            InputLineTexts[Index] := Std.Str.Insert(InputLineTexts[Index], InputLineCursors[Index], Key.ch);
-            InputLineCursors[Index] := InputLineCursors[Index] + Std.Str.Length(Key.ch);
-            Changed := true
+            Changed := InputLineCommit(InputLine.ApplicationId, InputLine.Slot, InputLine.Generation, Std.Str.Insert(InputLineTexts[Index], InputLineCursors[Index], Key.ch), InputLineCursors[Index] +
+                                                                                                                                                                              Std.Str.Length(Key.ch), TuiChangeOrigin.User)
           end
         end
         else if Key.kind = Std.Console.KeyKind.Space then
         begin
           if Std.Str.Length(InputLineTexts[Index]) < InputLineMaxLengths[Index] then
           begin
-            InputLineTexts[Index] := Std.Str.Insert(InputLineTexts[Index], InputLineCursors[Index], ' ');
-            InputLineCursors[Index] := InputLineCursors[Index] + 1;
-            Changed := true
+            Changed := InputLineCommit(InputLine.ApplicationId, InputLine.Slot, InputLine.Generation, Std.Str.Insert(InputLineTexts[Index], InputLineCursors[Index], ' '), InputLineCursors[Index] +
+                                                                                                                                                                           1, TuiChangeOrigin.User)
           end
         end
         else if Key.kind = Std.Console.KeyKind.Backspace then
         begin
           if InputLineCursors[Index] > 0 then
           begin
-            InputLineTexts[Index] := Std.Str.Delete(InputLineTexts[Index], InputLineCursors[Index] -
-                                                                           1, 1);
-            InputLineCursors[Index] := InputLineCursors[Index] - 1;
-            Changed := true
+            Changed := InputLineCommit(InputLine.ApplicationId, InputLine.Slot, InputLine.Generation, Std.Str.Delete(InputLineTexts[Index], InputLineCursors[Index] -
+                                                                                                                                            1, 1), InputLineCursors[Index] -
+                                                                                                                                                   1, TuiChangeOrigin.User)
           end
         end
         else if Key.kind = Std.Console.KeyKind.Delete then
         begin
           if InputLineCursors[Index] < Std.Str.Length(InputLineTexts[Index]) then
           begin
-            InputLineTexts[Index] := Std.Str.Delete(InputLineTexts[Index], InputLineCursors[Index], 1);
-            Changed := true
+            Changed := InputLineCommit(InputLine.ApplicationId, InputLine.Slot, InputLine.Generation, Std.Str.Delete(InputLineTexts[Index], InputLineCursors[Index], 1), InputLineCursors[Index], TuiChangeOrigin.User)
           end
         end
         else if Key.kind = Std.Console.KeyKind.Left then
@@ -154,10 +193,6 @@ type
         else
         begin
           return false
-        end;
-        if Changed then
-        begin
-          TuiApplicationPaintInvalidate(InputLine.ApplicationId, 1)
         end;
         return Changed
       end;
@@ -227,12 +262,7 @@ type
       begin
         panic('Tui2 input line text exceeds its maximum length')
       end;
-      if InputLineTexts[Index] <> Value then
-      begin
-        InputLineTexts[Index] := Value;
-        InputLineCursors[Index] := Std.Str.Length(Value);
-        TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
-      end
+      InputLineCommit(Self.ApplicationId, Self.Slot, Self.Generation, Value, Std.Str.Length(Value), TuiChangeOrigin.Programmatic)
     end;
 
     function ReadMaxLength(Self: TuiInputLine): integer;
@@ -263,7 +293,58 @@ type
       View.Destroy()
     end;
 
+    function ReadOnChanged(Self: TuiInputLine): option of procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin);
+    begin
+      InputLineRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case InputLineOnChanged[Self.Slot - 1] of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin) begin
+            Callback(Sender.ApplicationId, Sender.Slot, Sender.Generation, Value, Origin)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnChanged(
+  Self: TuiInputLine;
+  Handler: option of procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin)
+);
+    begin
+      InputLineRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case Handler of
+        None:
+        begin
+          InputLineOnChanged[Self.Slot - 1] := None
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiInputLineCallback := procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Text: string;
+  Origin: TuiChangeOrigin
+) begin
+            var Sender: TuiInputLine := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+            end;
+            Value(Sender, Text, Origin)
+          end;
+          InputLineOnChanged[Self.Slot - 1] := Some(Callback)
+        end
+      end
+    end;
+
     property Text: string read ReadText write WriteText;
     property MaxLength: integer read ReadMaxLength;
     property Focused: boolean read ReadFocused;
+
+    event OnChanged: procedure(Sender: TuiInputLine; Value: string; Origin: TuiChangeOrigin) read ReadOnChanged write WriteOnChanged;
   end;

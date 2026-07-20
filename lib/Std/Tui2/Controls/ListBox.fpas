@@ -1,0 +1,360 @@
+unit Std.Tui2.Controls.ListBox;
+
+uses
+  Std.Array, Std.Console, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole,
+  Std.Tui2.Controls.ListBoxPaint, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
+  Std.Tui2.Events.ChangeOrigin, Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size,
+  Std.Tui2.Input.PointerEvent, Std.Tui2.Input.ViewInput, Std.Tui2.Layouts.MeasureResult,
+  Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.CustomView,
+  Std.Tui2.Views.View;
+
+type
+  TuiListBoxCallback = procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Selected: integer;
+  Origin: TuiChangeOrigin
+);
+
+private mutable var ListBoxApplicationIds: array of integer := [];
+private mutable var ListBoxGenerations: array of integer := [];
+private mutable var ListBoxAlive: array of boolean := [];
+private mutable var ListBoxItems: array of array of string := [];
+private mutable var ListBoxSelected: array of integer := [];
+private mutable var ListBoxViews: array of TuiCustomView := [];
+private mutable var ListBoxOnSelectionChanged: array of option of TuiListBoxCallback := [];
+
+private function ListBoxItemsWidth(Items: array of string): integer;
+begin
+  mutable var Width: integer := 2;
+  for Item: string in Items do
+  begin
+    mutable var ItemWidth: integer := 2;
+    for Glyph: string in Std.Console.SplitGraphemes(Item) do
+    begin
+      ItemWidth := ItemWidth + TuiCell.Create(Glyph, TuiStyleRole.Normal).Width()
+    end;
+    if ItemWidth > Width then
+    begin
+      Width := ItemWidth
+    end
+  end;
+  return Width
+end;
+
+private function ListBoxItemsHeight(Items: array of string): integer;
+begin
+  var Count: integer := Std.Array.Length(Items);
+  if Count = 0 then
+  begin
+    return 1
+  end;
+  return Count
+end;
+
+private function ListBoxClampSelection(Items: array of string; Value: integer): integer;
+begin
+  var Count: integer := Std.Array.Length(Items);
+  if Count = 0 then
+  begin
+    return -1
+  end;
+  if Value < 0 then
+  begin
+    return 0
+  end;
+  if Value >= Count then
+  begin
+    return Count - 1
+  end;
+  return Value
+end;
+
+private procedure ListBoxRequire(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot <= 0) or (Slot > Std.Array.Length(ListBoxGenerations)) then
+  begin
+    panic('Tui2 list box handle has an invalid registry slot')
+  end;
+  if not ListBoxAlive[Slot - 1] then
+  begin
+    panic('Tui2 list box handle is stale')
+  end;
+  if ListBoxGenerations[Slot - 1] <> Generation then
+  begin
+    panic('Tui2 list box handle generation does not match the registry')
+  end;
+  if ListBoxApplicationIds[Slot - 1] <> ApplicationId then
+  begin
+    panic('Tui2 list box belongs to a different application')
+  end;
+  var Custom: TuiCustomView := ListBoxViews[Slot - 1];
+  if not Custom.IsAlive() then
+  begin
+    panic('Tui2 list box owns a stale view')
+  end
+end;
+
+private procedure ListBoxRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  if (Slot > 0) and (Slot <= Std.Array.Length(ListBoxGenerations)) then
+  begin
+    if ((ListBoxApplicationIds[Slot - 1] = ApplicationId) and (ListBoxGenerations[Slot - 1] = Generation)) and
+       ListBoxAlive[Slot - 1] then
+    begin
+      ListBoxOnSelectionChanged[Slot - 1] := None;
+      ListBoxAlive[Slot - 1] := false;
+      ListBoxGenerations[Slot - 1] := Generation + 1
+    end
+  end
+end;
+
+private function ListBoxCommitSelection(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Value: integer;
+  Origin: TuiChangeOrigin
+): boolean;
+begin
+  ListBoxRequire(ApplicationId, Slot, Generation);
+  var Index: integer := Slot - 1;
+  var Selected: integer := ListBoxClampSelection(ListBoxItems[Index], Value);
+  if ListBoxSelected[Index] = Selected then
+  begin
+    return false
+  end;
+  ListBoxSelected[Index] := Selected;
+  TuiApplicationPaintInvalidate(ApplicationId, 1);
+  case ListBoxOnSelectionChanged[Index] of
+    None:
+    begin
+    end;
+    Some(Callback):
+    begin
+      Callback(ApplicationId, Slot, Generation, Selected, Origin)
+    end
+  end;
+  return true
+end;
+
+private procedure ListBoxUpdateSizeHint(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  ListBoxRequire(ApplicationId, Slot, Generation);
+  var Index: integer := Slot - 1;
+  var View: TuiView := TuiCustomView.AsView(ListBoxViews[Index]);
+  View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(ListBoxItemsWidth(ListBoxItems[Index]), ListBoxItemsHeight(ListBoxItems[Index])))
+end;
+
+type
+  TuiListBox = record
+    ApplicationId: integer;
+    Slot: integer;
+    Generation: integer;
+
+    static function Create(App: TuiApplication): TuiListBox;
+    begin
+      if not App.IsOpen() then
+      begin
+        panic('Tui2 cannot create a list box for a closed application')
+      end;
+      var Custom: TuiCustomView := TuiCustomView.Create(App);
+      var View: TuiView := TuiCustomView.AsView(Custom);
+      View.SizeHint := TuiMeasureResult.Fixed(TuiSize.Create(2, 1));
+      var Items: array of string := [];
+      ListBoxApplicationIds := Std.Array.Concat(ListBoxApplicationIds, [App.Id]);
+      ListBoxGenerations := Std.Array.Concat(ListBoxGenerations, [1]);
+      ListBoxAlive := Std.Array.Concat(ListBoxAlive, [true]);
+      ListBoxItems := Std.Array.Concat(ListBoxItems, [Items]);
+      ListBoxSelected := Std.Array.Concat(ListBoxSelected, [-1]);
+      ListBoxViews := Std.Array.Concat(ListBoxViews, [Custom]);
+      ListBoxOnSelectionChanged := Std.Array.Concat(ListBoxOnSelectionChanged, [None]);
+      var ListBox: TuiListBox := record
+        ApplicationId := App.Id;
+        Slot := Std.Array.Length(ListBoxGenerations);
+        Generation := 1;
+      end;
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        ListBoxRelease(ApplicationId, ListBox.Slot, ListBox.Generation)
+      end;
+      RegisterViewCleanup(View, Cleanup);
+      var Input: TuiViewInput := Custom.Input;
+      Input.OnKey := function(Sender: TuiView; Key: Std.Console.KeyEvent): boolean begin
+        ListBoxRequire(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation);
+        var Index: integer := ListBox.Slot - 1;
+        if Std.Array.Length(ListBoxItems[Index]) = 0 then
+        begin
+          return false
+        end;
+        if Key.kind = Std.Console.KeyKind.Up then
+        begin
+          ListBoxCommitSelection(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation, ListBoxSelected[Index] -
+                                                                                          1, TuiChangeOrigin.User);
+          return true
+        end;
+        if Key.kind = Std.Console.KeyKind.Down then
+        begin
+          ListBoxCommitSelection(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation, ListBoxSelected[Index] +
+                                                                                          1, TuiChangeOrigin.User);
+          return true
+        end;
+        if Key.kind = Std.Console.KeyKind.Home then
+        begin
+          ListBoxCommitSelection(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation, 0, TuiChangeOrigin.User);
+          return true
+        end;
+        return false
+      end;
+      Input.OnPointer := function(Sender: TuiView; Pointer: TuiPointerEvent): boolean begin
+        if (Pointer.Action <> Std.Console.MouseAction.Down) or
+           (Pointer.Button <> TuiPointerButton.Left) then
+        begin
+          return false
+        end;
+        ListBoxRequire(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation);
+        var Index: integer := ListBox.Slot - 1;
+        var Bounds: TuiRect := TuiCustomView.AsView(ListBoxViews[Index]).Bounds;
+        var Row: integer := Pointer.Position.Y - Bounds.Y;
+        if (Row < 0) or (Row >= Std.Array.Length(ListBoxItems[Index])) then
+        begin
+          return false
+        end;
+        ListBoxCommitSelection(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation, Row, TuiChangeOrigin.User);
+        return true
+      end;
+      Custom.OnPaint := procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) begin
+        ListBoxRequire(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation);
+        var Index: integer := ListBox.Slot - 1;
+        TuiListBoxPaint(Canvas, Context, ListBoxItems[Index], ListBoxSelected[Index])
+      end;
+      return ListBox
+    end;
+
+    function IsAlive(Self: TuiListBox): boolean;
+    begin
+      if (Self.Slot <= 0) or (Self.Slot > Std.Array.Length(ListBoxGenerations)) then
+      begin
+        return false
+      end;
+      var Custom: TuiCustomView := ListBoxViews[Self.Slot - 1];
+      return ((ListBoxAlive[Self.Slot - 1] and (ListBoxGenerations[Self.Slot - 1] = Self.Generation)) and ((ListBoxApplicationIds[Self.Slot -
+                                                                                                                                  1] = Self.ApplicationId) and Custom.IsAlive()))
+    end;
+
+    static function AsView(ListBox: TuiListBox): TuiView;
+    begin
+      ListBoxRequire(ListBox.ApplicationId, ListBox.Slot, ListBox.Generation);
+      var View: TuiView := TuiCustomView.AsView(ListBoxViews[ListBox.Slot - 1]);
+      return record
+        ApplicationId := View.ApplicationId;
+        Slot := View.Slot;
+        Generation := View.Generation;
+        Kind := TuiViewKind.ListBox;
+      end
+    end;
+
+    function ReadItems(Self: TuiListBox): array of string;
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return ListBoxItems[Self.Slot - 1]
+    end;
+
+    procedure WriteItems(Self: TuiListBox; Value: array of string);
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      var Index: integer := Self.Slot - 1;
+      var PreviousSelected: integer := ListBoxSelected[Index];
+      ListBoxItems[Index] := Value;
+      ListBoxUpdateSizeHint(Self.ApplicationId, Self.Slot, Self.Generation);
+      ListBoxCommitSelection(Self.ApplicationId, Self.Slot, Self.Generation, PreviousSelected, TuiChangeOrigin.Programmatic);
+      TuiApplicationPaintInvalidate(Self.ApplicationId, 1)
+    end;
+
+    function ReadSelected(Self: TuiListBox): integer;
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      return ListBoxSelected[Self.Slot - 1]
+    end;
+
+    procedure WriteSelected(Self: TuiListBox; Value: integer);
+    begin
+      ListBoxCommitSelection(Self.ApplicationId, Self.Slot, Self.Generation, Value, TuiChangeOrigin.Programmatic)
+    end;
+
+    function Focus(Self: TuiListBox): boolean;
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      var Custom: TuiCustomView := ListBoxViews[Self.Slot - 1];
+      return Custom.Focus()
+    end;
+
+    function ReadFocused(Self: TuiListBox): boolean;
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      var Custom: TuiCustomView := ListBoxViews[Self.Slot - 1];
+      return Custom.Focused
+    end;
+
+    procedure Destroy(Self: TuiListBox);
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      var View: TuiView := TuiCustomView.AsView(ListBoxViews[Self.Slot - 1]);
+      View.Destroy()
+    end;
+
+    function ReadOnSelectionChanged(Self: TuiListBox): option of procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin);
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case ListBoxOnSelectionChanged[Self.Slot - 1] of
+        None:
+        begin
+          return None
+        end;
+        Some(Callback):
+        begin
+          return Some(procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin) begin
+            Callback(Sender.ApplicationId, Sender.Slot, Sender.Generation, Selected, Origin)
+          end)
+        end
+      end
+    end;
+
+    procedure WriteOnSelectionChanged(
+  Self: TuiListBox;
+  Handler: option of procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin)
+);
+    begin
+      ListBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      case Handler of
+        None:
+        begin
+          ListBoxOnSelectionChanged[Self.Slot - 1] := None
+        end;
+        Some(Value):
+        begin
+          var Callback: TuiListBoxCallback := procedure(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Selected: integer;
+  Origin: TuiChangeOrigin
+) begin
+            var Sender: TuiListBox := record
+              ApplicationId := ApplicationId;
+              Slot := Slot;
+              Generation := Generation;
+            end;
+            Value(Sender, Selected, Origin)
+          end;
+          ListBoxOnSelectionChanged[Self.Slot - 1] := Some(Callback)
+        end
+      end
+    end;
+
+    property Items: array of string read ReadItems write WriteItems;
+    property Selected: integer read ReadSelected write WriteSelected;
+    property Focused: boolean read ReadFocused;
+
+    event OnSelectionChanged: procedure(Sender: TuiListBox; Selected: integer; Origin: TuiChangeOrigin) read ReadOnSelectionChanged write WriteOnSelectionChanged;
+  end;

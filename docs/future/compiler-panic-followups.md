@@ -58,6 +58,20 @@ does not claim End-key support.
 members whose names collide with keywords. Update the key-event API consistently and add parse,
 semantic, and runtime regression coverage.
 
+## Reserved property name `Result`
+
+**Observed while:** adding dialog command completion.
+
+**Source shape:** a record property or parameter named `Result`.
+
+**Failure:** `result` is a Pascal keyword, so the parser rejects the declaration and use before
+semantic analysis.
+
+**Temporary workaround:** the dialog API uses `CompletedCommand` for its read-only command value.
+
+**Later work:** decide whether FPAS should provide a Pascal-compatible escape mechanism for public
+members that collide with keywords, and add parser coverage for the chosen spelling.
+
 ## Entry rule
 
 When development finds a compiler panic or a language limitation that requires a workaround, add an

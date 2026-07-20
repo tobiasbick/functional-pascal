@@ -16,6 +16,7 @@ type
     ScrollBar;
     Frame;
     Window;
+    Dialog;
     Custom;
   end;
   TuiViewCleanupCallback = procedure(ApplicationId: integer; Slot: integer; Generation: integer);

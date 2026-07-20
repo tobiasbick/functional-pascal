@@ -1,10 +1,10 @@
-unit Std.Tui2.Controls.WindowPaint;
+unit Std.Tui2.Controls.TitledFramePaint;
 
 uses
   Std.Console, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole, Std.Tui2.Drawing.Canvas,
   Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Point;
 
-procedure TuiWindowPaint(Canvas: TuiCanvas; Context: TuiPaintContext; Title: string);
+procedure TuiTitleFramePaint(Canvas: TuiCanvas; Context: TuiPaintContext; Title: string);
 begin
   mutable var BorderRole: TuiStyleRole := TuiStyleRole.Frame;
   mutable var TitleRole: TuiStyleRole := TuiStyleRole.Title;

@@ -112,6 +112,9 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   title repainting, disabled painting, and subtree ownership.
 - **Implemented headless core:** vertical scroll bars with clamped range state, semantic position
   events, keyboard/pointer control, and deterministic thumb painting.
+- **Implemented headless core:** titled retained dialogs with explicit modal opening and closing,
+  modal routing isolation, focus restoration, inner layout bounds, subtree ownership, and explicit
+  command completion.
 - **Next:** propagate the existing action registry through the next interactive view-backed control.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.
@@ -128,8 +131,8 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 6 — Full application chrome
 
-Add dialogs, menus, status lines, radio groups, memo/editor controls, text viewers, file selection,
-and advanced controls only after the earlier contracts remain stable.
+Add menus, status lines, radio groups, memo/editor controls, text viewers, file selection, and
+advanced controls only after the earlier contracts remain stable.
 
 Custom layout callbacks and a general application message bus are not prerequisites for this phase
 sequence.

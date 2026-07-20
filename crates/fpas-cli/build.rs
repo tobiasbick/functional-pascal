@@ -1,6 +1,7 @@
-use std::fs;
 use std::io;
 use std::path::Path;
+
+mod stdlib_sync;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -15,22 +16,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "Cargo OUT_DIR must be below the target profile directory",
         )
     })?;
-    copy_tree(&source_root, &profile_dir.join("lib"))?;
-    Ok(())
-}
-
-fn copy_tree(source: &Path, destination: &Path) -> io::Result<()> {
-    for entry in fs::read_dir(source)? {
-        let entry = entry?;
-        let source_path = entry.path();
-        let destination_path = destination.join(entry.file_name());
-        if source_path.is_dir() {
-            fs::create_dir_all(&destination_path)?;
-            copy_tree(&source_path, &destination_path)?;
-        } else {
-            fs::create_dir_all(destination)?;
-            fs::copy(&source_path, &destination_path)?;
-        }
-    }
+    stdlib_sync::replace_tree(&source_root, &profile_dir.join("lib"))?;
     Ok(())
 }

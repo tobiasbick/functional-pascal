@@ -85,6 +85,8 @@ Window coverage verifies titled frame output, title replacement repainting, loca
 inner layout allocation, disabled screen output, and recursive cleanup.
 Scroll-bar coverage verifies range clamping, semantic position changes, keyboard and pointer input,
 focused and disabled screen output, and lifecycle cleanup.
+Dialog coverage verifies modal opening and closing, routing isolation, focus restoration, local
+content layout, title and disabled screen output, command completion, and recursive cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

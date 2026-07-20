@@ -1,10 +1,11 @@
 unit Std.Tui2.Controls.Window;
 
 uses
-  Std.Array, Std.Tui2.Controls.WindowPaint, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
-  Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Layout, Std.Tui2.Runtime.Application,
-  Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.Container, Std.Tui2.Views.ContentContainer,
-  Std.Tui2.Views.CustomView, Std.Tui2.Views.View, Std.Tui2.Views.ViewContent;
+  Std.Array, Std.Tui2.Controls.TitledFramePaint, Std.Tui2.Drawing.Canvas,
+  Std.Tui2.Drawing.PaintContext, Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Layout,
+  Std.Tui2.Runtime.Application, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.Container,
+  Std.Tui2.Views.ContentContainer, Std.Tui2.Views.CustomView, Std.Tui2.Views.View,
+  Std.Tui2.Views.ViewContent;
 
 private mutable var WindowApps: array of integer := [];
 private mutable var WindowGens: array of integer := [];
@@ -80,7 +81,7 @@ type
       var Custom: TuiCustomView := TuiContentContainer.AsCustom(Content);
       Custom.OnPaint := procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) begin
         TuiWindowRequire(Window.ApplicationId, Window.Slot, Window.Generation);
-        TuiWindowPaint(Canvas, Context, WindowTitles[Window.Slot - 1])
+        TuiTitleFramePaint(Canvas, Context, WindowTitles[Window.Slot - 1])
       end;
       return Window
     end;
@@ -112,7 +113,11 @@ type
       var Content: TuiContentContainer := WindowContents[Self.Slot - 1];
       var IsCurrent: boolean := (WindowAlive[Self.Slot - 1] and (WindowGens[Self.Slot - 1] = Self.Generation)) and
                                 (WindowApps[Self.Slot - 1] = Self.ApplicationId);
-      return IsCurrent and Content.IsAlive()
+      if not IsCurrent then
+      begin
+        return false
+      end;
+      return Content.IsAlive()
     end;
 
     function ReadTitle(Self: TuiWindow): string;

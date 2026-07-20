@@ -15,6 +15,8 @@ mod fmt;
 mod input;
 mod projects;
 mod standard_library;
+#[path = "../../stdlib_sync.rs"]
+mod stdlib_sync;
 mod support;
 mod test_project;
 mod test_runner;

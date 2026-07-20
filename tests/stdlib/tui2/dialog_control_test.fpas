@@ -1,0 +1,79 @@
+program Tui2DialogControlTest;
+
+uses Std.Option, Std.Test, Std.Tui2;
+
+function CellAt(Surface: TuiSurface; X: integer; Y: integer): TuiCell;
+begin
+  return Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(X, Y)))
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(18, 8));
+  var Desktop: TuiDesktop := TuiDesktop.Create(App);
+  var Outside: TuiCustomView := TuiCustomView.Create(App);
+  var OutsideView: TuiView := TuiCustomView.AsView(Outside);
+  OutsideView.Bounds := TuiRect.Create(0, 0, 4, 3);
+  Desktop.Add(OutsideView);
+  AssertTrue(Outside.Focus());
+  var Dialog: TuiDialog := TuiDialog.Create(App, 'Confirm');
+  var DialogView: TuiView := TuiDialog.AsView(Dialog);
+  DialogView.Bounds := TuiRect.Create(5, 1, 10, 5);
+  Desktop.Add(DialogView);
+  AssertTrue(DialogView.Kind = TuiViewKind.Dialog);
+  var Content: TuiRect := Dialog.ContentBounds;
+  AssertEquals(1, Content.X);
+  AssertEquals(1, Content.Y);
+  AssertEquals(8, Content.Width);
+  AssertEquals(3, Content.Height);
+  var Label: TuiLabel := TuiLabel.Create(App, 'Continue');
+  var Row: TuiHorizontalLayout := TuiHorizontalLayout.Create(App);
+  AssertTrue(TuiLayoutItems.Add(Row.AsLayout(), TuiLayoutItem.ForView(TuiLabel.AsView(Label), TuiAlignment.Leading(), 0)));
+  Dialog.Layout := Some(Row.AsLayout());
+  Dialog.Add(TuiLabel.AsView(Label));
+  AssertTrue(Dialog.PerformLayout());
+  var LabelView: TuiView := TuiLabel.AsView(Label);
+  AssertEquals(0, LabelView.Bounds.X);
+  AssertEquals(0, LabelView.Bounds.Y);
+  AssertTrue(Dialog.OpenModal());
+  AssertTrue(Dialog.IsModal());
+  AssertFalse(Dialog.OpenModal());
+  AssertFalse(Outside.Focused);
+  case Desktop.HitTest(TuiPoint.Create(1, 1)) of
+    None:
+    begin
+    end;
+    Some(Hit):
+    begin
+      panic('dialog modal must reject hits outside its root')
+    end
+  end;
+  App.RunIterations(1, 0);
+  mutable var Surface: TuiSurface := App.Surface;
+  AssertEquals('┌', CellAt(Surface, 5, 1).Glyph);
+  AssertEquals('C', CellAt(Surface, 7, 1).Glyph);
+  AssertTrue(CellAt(Surface, 7, 1).Role = TuiStyleRole.Title);
+  AssertEquals('C', CellAt(Surface, 6, 2).Glyph);
+  var Command: TuiCommand := TuiCommand.Create(1024);
+  AssertTrue(Dialog.Complete(Command));
+  AssertFalse(Dialog.IsModal());
+  AssertTrue(Outside.Focused);
+  case Dialog.CompletedCommand of
+    None:
+    begin
+      panic('dialog completion must retain its result command')
+    end;
+    Some(Completed):
+    begin
+      AssertEquals(1024, Completed.Value)
+    end
+  end;
+  AssertFalse(Dialog.CloseModal());
+  DialogView.Enabled := false;
+  App.RunIterations(1, 0);
+  Surface := App.Surface;
+  AssertTrue(CellAt(Surface, 5, 1).Role = TuiStyleRole.Disabled);
+  Dialog.Destroy();
+  AssertFalse(Dialog.IsAlive());
+  AssertFalse(Label.IsAlive());
+  App.Close()
+end.

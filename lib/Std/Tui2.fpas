@@ -17,9 +17,9 @@ uses
   Std.Tui2.Layouts.FormLayout, Std.Tui2.Layouts.FormItems, Std.Tui2.Layouts.StackedLayout,
   Std.Tui2.Layouts.StackedItems, Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.LayoutArrange,
   Std.Tui2.Actions.Command, Std.Tui2.Actions.Action, Std.Tui2.Controls.Button,
-  Std.Tui2.Controls.CheckBox, Std.Tui2.Controls.Frame, Std.Tui2.Controls.InputLine,
-  Std.Tui2.Controls.Label, Std.Tui2.Controls.ListBox, Std.Tui2.Controls.ScrollBar,
-  Std.Tui2.Controls.ScrollView, Std.Tui2.Controls.Window;
+  Std.Tui2.Controls.CheckBox, Std.Tui2.Controls.Dialog, Std.Tui2.Controls.Frame,
+  Std.Tui2.Controls.InputLine, Std.Tui2.Controls.Label, Std.Tui2.Controls.ListBox,
+  Std.Tui2.Controls.ScrollBar, Std.Tui2.Controls.ScrollView, Std.Tui2.Controls.Window;
 
 type
   TuiPoint = Std.Tui2.Geometry.Point.TuiPoint;
@@ -92,6 +92,7 @@ type
   TuiAction = Std.Tui2.Actions.Action.TuiAction;
   TuiButton = Std.Tui2.Controls.Button.TuiButton;
   TuiCheckBox = Std.Tui2.Controls.CheckBox.TuiCheckBox;
+  TuiDialog = Std.Tui2.Controls.Dialog.TuiDialog;
   TuiFrame = Std.Tui2.Controls.Frame.TuiFrame;
   TuiWindow = Std.Tui2.Controls.Window.TuiWindow;
   TuiInputLine = Std.Tui2.Controls.InputLine.TuiInputLine;

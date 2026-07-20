@@ -80,6 +80,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
 | `TuiFrame` | A retained container with a one-cell painted border. |
 | `TuiWindow` | A titled retained container with a one-cell painted border. |
+| `TuiDialog` | A titled retained container that can become a modal root. |
 | `TuiScrollBar` | A retained vertical range control with keyboard and pointer input. |
 | `TuiScrollView` | A headless viewport that keeps oversized layout content reachable by offset. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
@@ -767,6 +768,27 @@ The title is painted from local X coordinate `2` along the top border with the `
 disabled window paints both border and title with `Disabled`. Updating `Title` invalidates the
 retained surface and clears the prior title cells during the next paint. Destroying a window destroys
 its owned layout and child subtree.
+
+## Dialogs
+
+`TuiDialog.Create(App, Title)` creates a titled retained frame with the same `AsView`, `AsContainer`,
+`Add`, `Layout`, `ContentBounds`, `NeedsLayout`, and `PerformLayout` contract as `TuiWindow`.
+
+```pascal
+var Dialog: TuiDialog := TuiDialog.Create(App, 'Confirm');
+Desktop.Add(TuiDialog.AsView(Dialog));
+Dialog.Add(TuiLabel.AsView(TuiLabel.Create(App, 'Continue')));
+var Opened: boolean := Dialog.OpenModal();
+```
+
+`OpenModal` requires the dialog to be attached, visible, and enabled. It returns `false` when that
+dialog is already active. While active, it limits focus, hit-testing, and routed input to the dialog
+subtree. `CloseModal` returns `false` when the dialog is inactive or a nested modal root must close
+first; a successful close restores the prior eligible focus. `IsModal` reports whether the dialog's
+modal root is active. Destroying a dialog deactivates its modal root and destroys its owned layout
+and child subtree. `Complete(Command)` closes the active modal dialog and stores its command in the
+read-only `CompletedCommand` property; it returns `false` without changing that value when the dialog
+cannot close. Opening a dialog clears its previous completed command. Execution loops are not exposed.
 
 ## Scroll bars
 

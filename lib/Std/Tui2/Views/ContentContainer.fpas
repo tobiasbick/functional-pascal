@@ -1,0 +1,52 @@
+unit Std.Tui2.Views.ContentContainer;
+
+uses
+  Std.Tui2.Runtime.Application, Std.Tui2.Views.Container, Std.Tui2.Views.CustomView,
+  Std.Tui2.Views.View, Std.Tui2.Views.ViewContent;
+
+type
+  TuiContentContainer = record
+    Container: TuiContainer;
+    Custom: TuiCustomView;
+
+    static function Create(App: TuiApplication; Left: integer; Top: integer; Right: integer; Bottom: integer): TuiContentContainer;
+    begin
+      var Custom: TuiCustomView := TuiCustomView.Create(App);
+      var View: TuiView := TuiCustomView.AsView(Custom);
+      var Container: TuiContainer := TuiContainer.CreateForView(View);
+      TuiViewContentSetInsets(View, Left, Top, Right, Bottom);
+      return record Container := Container; Custom := Custom; end
+    end;
+
+    static function AsView(Content: TuiContentContainer): TuiView;
+    begin
+      if not Content.IsAlive() then
+      begin
+        panic('Tui2 content container handle is stale')
+      end;
+      return TuiCustomView.AsView(Content.Custom)
+    end;
+
+    static function AsContainer(Content: TuiContentContainer): TuiContainer;
+    begin
+      if not Content.IsAlive() then
+      begin
+        panic('Tui2 content container handle is stale')
+      end;
+      return Content.Container
+    end;
+
+    static function AsCustom(Content: TuiContentContainer): TuiCustomView;
+    begin
+      if not Content.IsAlive() then
+      begin
+        panic('Tui2 content container handle is stale')
+      end;
+      return Content.Custom
+    end;
+
+    function IsAlive(Self: TuiContentContainer): boolean;
+    begin
+      return Self.Container.IsAlive() and Self.Custom.IsAlive()
+    end;
+  end;

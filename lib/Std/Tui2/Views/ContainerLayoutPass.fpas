@@ -2,7 +2,7 @@ unit Std.Tui2.Views.ContainerLayoutPass;
 
 uses
   Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Invalidation, Std.Tui2.Layouts.LayoutArrange,
-  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.View;
+  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.View, Std.Tui2.Views.ViewContent;
 
 private mutable var TuiContainerLayoutPassApplicationIds: array of integer := [];
 private mutable var TuiContainerLayoutPassSlots: array of integer := [];
@@ -102,8 +102,8 @@ end;
 
 function TuiContainerLayoutNeedsPass(Container: TuiView): boolean;
 begin
-  var Bounds: TuiRect := Container.Bounds;
-  return TuiContainerLayoutNeedsPassAt(Container, TuiRect.Create(0, 0, Bounds.Width, Bounds.Height))
+  var Content: TuiRect := TuiViewContentBounds(Container);
+  return TuiContainerLayoutNeedsPassAt(Container, TuiRect.Create(0, 0, Content.Width, Content.Height))
 end;
 
 function TuiContainerLayoutPerformPassAt(Container: TuiView; LayoutBounds: TuiRect): boolean;
@@ -136,6 +136,6 @@ end;
 
 function TuiContainerLayoutPerformPass(Container: TuiView): boolean;
 begin
-  var Bounds: TuiRect := Container.Bounds;
-  return TuiContainerLayoutPerformPassAt(Container, TuiRect.Create(0, 0, Bounds.Width, Bounds.Height))
+  var Content: TuiRect := TuiViewContentBounds(Container);
+  return TuiContainerLayoutPerformPassAt(Container, TuiRect.Create(0, 0, Content.Width, Content.Height))
 end;

@@ -78,6 +78,9 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiLayoutArrange` | Recursive headless rectangle allocation. |
 | `TuiAction` | A reusable operation with live properties and one `OnExecute` event. |
 | `TuiButton` | A headless semantic button with an optional action and one `OnClick` event. |
+| `TuiFrame` | A retained container with a one-cell painted border. |
+| `TuiWindow` | A titled retained container with a one-cell painted border. |
+| `TuiScrollBar` | A retained vertical range control with keyboard and pointer input. |
 | `TuiScrollView` | A headless viewport that keeps oversized layout content reachable by offset. |
 | `TuiPoint.Create(X, Y)` | Creates a point. |
 | `TuiSize.Create(Width, Height)` | Creates a non-negative size. |
@@ -145,7 +148,11 @@ var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
 one or two terminal columns. `TuiSurface.Create` owns a zero-based retained cell grid;
 `TryCellAt` returns `None` outside the grid and on a wide-glyph continuation. Overwriting either
 column clears the complete previous wide glyph. `TuiCanvas.Create(Surface, Bounds)` clips drawing
-to `Bounds`; `PutCell`, `FillRect`, and `WriteText` use zero-based surface coordinates.
+to `Bounds`; `PutCell`, `FillRect`, `WriteText`, `DrawHorizontalLine`, `DrawVerticalLine`, and
+`DrawFrame` use zero-based surface coordinates. The line methods draw the Unicode box-drawing
+glyphs `─` and `│`. `DrawFrame` uses `┌`, `┐`, `└`, and `┘` around the supplied outer rectangle;
+empty rectangles paint nothing. Every operation applies the supplied semantic role and obeys the
+canvas clip.
 
 `WriteText` segments extended grapheme clusters before drawing, so combined and joined glyphs use
 the same width and continuation rules as direct `PutCell` calls.
@@ -722,6 +729,64 @@ is the item count, with a one-row minimum for an empty list. Replacing `Items` i
 every owning layout. `OnSelectionChanged` runs synchronously after a real selection change and uses
 the same `User`/`Programmatic` origin rules as the other value controls. `Destroy` releases the
 backing view and makes the handle stale.
+
+## Frames
+
+`TuiFrame.Create(App)` creates a retained container with a one-cell border. `AsView` exposes the
+outer identity for attachment, while `AsContainer` exposes child ownership. The read-write `Layout`
+property and `NeedsLayout` / `PerformLayout` operations follow the normal container contract.
+
+```pascal
+var Frame: TuiFrame := TuiFrame.Create(App);
+var Label: TuiLabel := TuiLabel.Create(App, 'Settings');
+Frame.Layout := Some(TuiHorizontalLayout.Create(App).AsLayout());
+TuiFrame.AsContainer(Frame).Add(TuiLabel.AsView(Label));
+Desktop.Add(TuiFrame.AsView(Frame));
+```
+
+`ContentBounds` is the outer view's local rectangle inset by one cell on every side. Child bounds
+and layout coordinates are relative to that inner origin, and child painting is clipped to the
+inner rectangle. The frame paints Unicode box-drawing borders using the `Frame` role, or `Disabled`
+when it or an ancestor is disabled. Destroying a frame destroys its owned layout and child subtree.
+
+## Windows
+
+`TuiWindow.Create(App, Title)` creates a retained titled frame. `AsView` exposes the outer identity
+for attachment, and `AsContainer` exposes child ownership. `Add`, `Layout`, `ContentBounds`,
+`NeedsLayout`, and `PerformLayout` follow the frame/container contract: the content rectangle is
+inset one cell on every edge, and child painting is clipped to that rectangle.
+
+```pascal
+var Window: TuiWindow := TuiWindow.Create(App, 'Options');
+var Label: TuiLabel := TuiLabel.Create(App, 'Theme');
+Desktop.Add(TuiWindow.AsView(Window));
+Window.Add(TuiLabel.AsView(Label));
+```
+
+The title is painted from local X coordinate `2` along the top border with the `Title` role. A
+disabled window paints both border and title with `Disabled`. Updating `Title` invalidates the
+retained surface and clears the prior title cells during the next paint. Destroying a window destroys
+its owned layout and child subtree.
+
+## Scroll bars
+
+`TuiScrollBar.Create(App)` creates a vertical retained range control. `Maximum` is non-negative,
+`PageSize` is positive, and `Position` is always clamped to `0..Maximum`. The initial values are
+`0`, `1`, and `0`. Its preferred size is one column by five rows.
+
+```pascal
+var ScrollBar: TuiScrollBar := TuiScrollBar.Create(App);
+ScrollBar.Maximum := 99;
+ScrollBar.PageSize := 10;
+Desktop.Add(TuiScrollBar.AsView(ScrollBar));
+```
+
+The control paints `▲` and `▼` at its endpoints, a `░` track, and a `█` thumb sized from
+`Maximum` and `PageSize`. Up, Down, and Home adjust the position. A left pointer-down on an
+endpoint moves one step; a left pointer-down on the track maps directly to a clamped position.
+`OnPositionChanged` runs synchronously only after an actual position change and provides its
+`User` or `Programmatic` origin. Disabled controls paint with `Disabled` and do not receive routed
+input. `Destroy` releases the backing view and makes the handle stale.
 
 ## Implementation (contributors)
 

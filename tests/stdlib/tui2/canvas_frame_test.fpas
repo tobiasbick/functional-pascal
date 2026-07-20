@@ -1,0 +1,40 @@
+program Tui2CanvasFrameTest;
+
+uses Std.Option, Std.Test, Std.Tui2;
+
+function CellAt(Surface: TuiSurface; X: integer; Y: integer): TuiCell;
+begin
+  return Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(X, Y)))
+end;
+
+begin
+  var Surface: TuiSurface := TuiSurface.Create(TuiSize.Create(7, 5));
+  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRect.Create(0, 0, 7, 5));
+  Canvas.DrawHorizontalLine(1, 0, 3, TuiStyleRole.Accent);
+  AssertEquals('─', CellAt(Surface, 1, 0).Glyph);
+  AssertEquals('─', CellAt(Surface, 3, 0).Glyph);
+  AssertTrue(CellAt(Surface, 1, 0).Role = TuiStyleRole.Accent);
+  Canvas.DrawVerticalLine(0, 1, 3, TuiStyleRole.Title);
+  AssertEquals('│', CellAt(Surface, 0, 1).Glyph);
+  AssertEquals('│', CellAt(Surface, 0, 3).Glyph);
+  Canvas.DrawFrame(TuiRect.Create(2, 1, 4, 3), TuiStyleRole.Frame);
+  AssertEquals('┌', CellAt(Surface, 2, 1).Glyph);
+  AssertEquals('─', CellAt(Surface, 3, 1).Glyph);
+  AssertEquals('┐', CellAt(Surface, 5, 1).Glyph);
+  AssertEquals('│', CellAt(Surface, 2, 2).Glyph);
+  AssertEquals('│', CellAt(Surface, 5, 2).Glyph);
+  AssertEquals('└', CellAt(Surface, 2, 3).Glyph);
+  AssertEquals('┘', CellAt(Surface, 5, 3).Glyph);
+  AssertTrue(CellAt(Surface, 2, 1).Role = TuiStyleRole.Frame);
+  Canvas.DrawFrame(TuiRect.Create(4, 4, 0, 1), TuiStyleRole.Warning);
+  AssertEquals(' ', CellAt(Surface, 4, 4).Glyph);
+  Canvas.DrawFrame(TuiRect.Create(6, 4, 1, 1), TuiStyleRole.Warning);
+  AssertEquals('┌', CellAt(Surface, 6, 4).Glyph);
+  var ClippedSurface: TuiSurface := TuiSurface.Create(TuiSize.Create(4, 3));
+  var Clipped: TuiCanvas := TuiCanvas.Create(ClippedSurface, TuiRect.Create(1, 0, 2, 1));
+  Clipped.DrawFrame(TuiRect.Create(0, 0, 4, 3), TuiStyleRole.Frame);
+  AssertEquals(' ', CellAt(ClippedSurface, 0, 0).Glyph);
+  AssertEquals('─', CellAt(ClippedSurface, 1, 0).Glyph);
+  AssertEquals('─', CellAt(ClippedSurface, 2, 0).Glyph);
+  AssertEquals(' ', CellAt(ClippedSurface, 3, 0).Glyph)
+end.

@@ -1,8 +1,8 @@
 unit Std.Tui2.Views.ViewPaintGeometry;
 
 uses
-  Std.Tui2.Geometry.Rect, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState,
-  Std.Tui2.Views.View;
+  Std.Tui2.Geometry.Rect, Std.Tui2.Views.Container, Std.Tui2.Views.DesktopState, Std.Tui2.Views.View,
+  Std.Tui2.Views.ViewContent;
 
 type
   TuiViewPaintGeometry = record
@@ -41,11 +41,14 @@ begin
         end;
         Some(ParentGeometry):
         begin
-          var Bounds: TuiRect := TuiRect.Create(ParentGeometry.Bounds.X + LocalBounds.X, ParentGeometry.Bounds.Y +
-                                                                                         LocalBounds.Y, LocalBounds.Width, LocalBounds.Height);
+          var ParentContent: TuiRect := TuiViewContentBounds(Parent);
+          var ContentBounds: TuiRect := TuiRect.Create(ParentGeometry.Bounds.X + ParentContent.X, ParentGeometry.Bounds.Y +
+                                                                                                  ParentContent.Y, ParentContent.Width, ParentContent.Height);
+          var Bounds: TuiRect := TuiRect.Create(ContentBounds.X + LocalBounds.X, ContentBounds.Y +
+                                                                                 LocalBounds.Y, LocalBounds.Width, LocalBounds.Height);
           return Some(record
             Bounds := Bounds;
-            Clip := ParentGeometry.Clip.Intersect(Bounds);
+            Clip := ParentGeometry.Clip.Intersect(ContentBounds).Intersect(Bounds);
             Enabled := ParentGeometry.Enabled and View.Enabled;
           end)
         end

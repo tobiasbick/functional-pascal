@@ -1,0 +1,81 @@
+unit Std.Tui2.Controls.Frame;
+
+uses
+  Std.Tui2.Controls.FramePaint, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
+  Std.Tui2.Geometry.Rect, Std.Tui2.Layouts.Layout, Std.Tui2.Runtime.Application,
+  Std.Tui2.Views.Container, Std.Tui2.Views.ContentContainer, Std.Tui2.Views.CustomView,
+  Std.Tui2.Views.View, Std.Tui2.Views.ViewContent;
+
+type
+  TuiFrame = record
+    Content: TuiContentContainer;
+
+    static function Create(App: TuiApplication): TuiFrame;
+    begin
+      var Content: TuiContentContainer := TuiContentContainer.Create(App, 1, 1, 1, 1);
+      var Custom: TuiCustomView := TuiContentContainer.AsCustom(Content);
+      Custom.OnPaint := procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) begin
+        TuiFramePaint(Canvas, Context)
+      end;
+      return record Content := Content; end
+    end;
+
+    static function AsView(Frame: TuiFrame): TuiView;
+    begin
+      var View: TuiView := TuiContentContainer.AsView(Frame.Content);
+      return record
+        ApplicationId := View.ApplicationId;
+        Slot := View.Slot;
+        Generation := View.Generation;
+        Kind := TuiViewKind.Frame;
+      end
+    end;
+
+    static function AsContainer(Frame: TuiFrame): TuiContainer;
+    begin
+      if not Frame.IsAlive() then
+      begin
+        panic('Tui2 frame handle is stale')
+      end;
+      return TuiContentContainer.AsContainer(Frame.Content)
+    end;
+
+    function IsAlive(Self: TuiFrame): boolean;
+    begin
+      return Self.Content.IsAlive()
+    end;
+
+    function ReadLayout(Self: TuiFrame): option of TuiLayout;
+    begin
+      return TuiFrame.AsContainer(Self).Layout
+    end;
+
+    procedure WriteLayout(Self: TuiFrame; Value: option of TuiLayout);
+    begin
+      var Container: TuiContainer := TuiFrame.AsContainer(Self);
+      Container.Layout := Value
+    end;
+
+    function ReadContentBounds(Self: TuiFrame): TuiRect;
+    begin
+      return TuiViewContentBounds(TuiContentContainer.AsView(Self.Content))
+    end;
+
+    function NeedsLayout(Self: TuiFrame): boolean;
+    begin
+      return TuiFrame.AsContainer(Self).NeedsLayout()
+    end;
+
+    function PerformLayout(Self: TuiFrame): boolean;
+    begin
+      return TuiFrame.AsContainer(Self).PerformLayout()
+    end;
+
+    procedure Destroy(Self: TuiFrame);
+    begin
+      TuiFrame.AsView(Self).Destroy()
+    end;
+
+    property Layout: option of TuiLayout read ReadLayout write WriteLayout;
+    property ContentBounds: TuiRect read ReadContentBounds;
+  end;

@@ -21,7 +21,9 @@ runtime optimization rather than a separate coordinate model.
 Conversion between zero-based Tui2 coordinates and one-based `Std.Console` coordinates occurs
 exactly once at the terminal boundary. Incoming mouse coordinates follow the inverse conversion.
 
-Frames own an outer rectangle and expose an inner content rectangle. Child layout always receives the content rectangle.
+**Implemented:** frames own an outer rectangle and expose an inner content rectangle. Child layout
+receives local coordinates over that content extent, while paint and hit-testing offset and clip the
+child subtree to the content rectangle.
 
 ## Clipping and hit-testing
 

@@ -246,6 +246,20 @@ type
       return Container
     end;
 
+    static function CreateForView(View: TuiView): TuiContainer;
+    begin
+      if not View.IsAlive() then
+      begin
+        panic('Tui2 cannot create a container for a stale view')
+      end;
+      var Container: TuiContainer := record View := View; end;
+      var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+        TuiContainerDestroyOwnedContent(ApplicationId, Slot, Generation)
+      end;
+      RegisterViewCleanup(Container.View, Cleanup);
+      return Container
+    end;
+
     static function AsView(Container: TuiContainer): TuiView;
     begin
       TuiContainerRequire(Container.View);

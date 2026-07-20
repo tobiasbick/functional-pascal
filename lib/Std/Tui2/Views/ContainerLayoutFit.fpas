@@ -3,11 +3,11 @@ unit Std.Tui2.Views.ContainerLayoutFit;
 uses
   Std.Tui2.Geometry.Rect, Std.Tui2.Geometry.Size, Std.Tui2.Layouts.LayoutFit,
   Std.Tui2.Layouts.LayoutMeasure, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Layouts.MeasureSpec,
-  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.View;
+  Std.Tui2.Views.ContainerLayout, Std.Tui2.Views.View, Std.Tui2.Views.ViewContent;
 
 function TuiContainerMeasureLayoutFit(Container: TuiView): TuiLayoutFit;
 begin
-  var Bounds: TuiRect := Container.Bounds;
+  var Bounds: TuiRect := TuiViewContentBounds(Container);
   var Available: TuiSize := TuiSize.Create(Bounds.Width, Bounds.Height);
   case TuiContainerLayoutRead(Container) of
     None:

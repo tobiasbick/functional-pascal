@@ -56,13 +56,11 @@ These records describe values only. They do not own live views or contain copies
 | `TuiContainer` | Common identity for a view that can own children and a layout. |
 | `TuiCustomView` | Application-defined view implemented through lifecycle hooks. |
 | `TuiDesktop` | Root container for windows and application chrome. |
-| `TuiWindow` | Movable or framed top-level content. |
 | `TuiDialog` | Modal or modeless dialog content. |
 | `TuiMenuBar` | Application menu bar. |
 | `TuiStatusLine` | Application status and shortcut line. |
 | `TuiLabel` | Static or associated text. |
 | `TuiInputLine` | Single-line text input. |
-| `TuiScrollBar` | Scroll position and range control. |
 | `TuiRadioGroup` | Mutually exclusive option control. |
 | `TuiMemo` | Multi-line editable text. |
 | `TuiTextViewer` | Scrollable read-only text. |
@@ -186,9 +184,6 @@ planned.
 
 ```pascal
 TuiDesktop.Add(Desktop: TuiDesktop; View: TuiView)
-
-TuiWindow.Create(App: TuiApplication; Title: string): TuiWindow
-TuiWindow.Add(Window: TuiWindow; View: TuiView)
 
 TuiDialog.Create(App: TuiApplication; Title: string): TuiDialog
 TuiDialog.Add(Dialog: TuiDialog; View: TuiView)

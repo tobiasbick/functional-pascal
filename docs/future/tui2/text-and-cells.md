@@ -35,17 +35,6 @@ Overwriting either column of a wide glyph clears the complete previous glyph bef
 
 `TuiCanvas` accepts local coordinates and clips every operation. It never exposes continuation cells to application paint handlers.
 
-## Initial canvas operations
-
-```pascal
-TuiCanvas.PutCell(Canvas: TuiCanvas; Position: TuiPoint; Cell: TuiCell)
-TuiCanvas.FillRect(Canvas: TuiCanvas; Bounds: TuiRect; Cell: TuiCell)
-TuiCanvas.WriteText(Canvas: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole)
-TuiCanvas.DrawHorizontalLine(Canvas: TuiCanvas; X: integer; Y: integer; Width: integer; Role: TuiStyleRole)
-TuiCanvas.DrawVerticalLine(Canvas: TuiCanvas; X: integer; Y: integer; Height: integer; Role: TuiStyleRole)
-TuiCanvas.DrawFrame(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole)
-```
-
 `WriteText` draws one logical line and stops before a newline. It segments extended grapheme
 clusters before painting, so combined and joined glyphs use the same rules as `PutCell`. Wrapping
 and multi-line placement belong to the calling control. Every operation is clipped and uses the same

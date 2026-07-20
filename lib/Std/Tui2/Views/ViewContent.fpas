@@ -1,0 +1,116 @@
+unit Std.Tui2.Views.ViewContent;
+
+uses Std.Array, Std.Tui2.Geometry.Rect, Std.Tui2.Runtime.ApplicationPaint, Std.Tui2.Views.View;
+
+private mutable var ContentApplicationIds: array of integer := [];
+private mutable var ContentSlots: array of integer := [];
+private mutable var ContentGenerations: array of integer := [];
+private mutable var ContentLefts: array of integer := [];
+private mutable var ContentTops: array of integer := [];
+private mutable var ContentRights: array of integer := [];
+private mutable var ContentBottoms: array of integer := [];
+private mutable var ContentActive: array of boolean := [];
+
+private function TuiViewContentFind(View: TuiView): integer;
+begin
+  for Index: integer := 0 to Std.Array.Length(ContentActive) - 1 do
+  begin
+    if (((ContentActive[Index] and (ContentApplicationIds[Index] = View.ApplicationId)) and (ContentSlots[Index] = View.Slot)) and (ContentGenerations[Index] = View.Generation)) then
+    begin
+      return Index
+    end
+  end;
+  return -1
+end;
+
+private procedure TuiViewContentRelease(ApplicationId: integer; Slot: integer; Generation: integer);
+begin
+  for Index: integer := 0 to Std.Array.Length(ContentActive) - 1 do
+  begin
+    if (((ContentActive[Index] and (ContentApplicationIds[Index] = ApplicationId)) and (ContentSlots[Index] = Slot)) and (ContentGenerations[Index] = Generation)) then
+    begin
+      ContentActive[Index] := false
+    end
+  end
+end;
+
+private function TuiViewContentEnsure(View: TuiView): integer;
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 cannot configure content for a stale view')
+  end;
+  var Existing: integer := TuiViewContentFind(View);
+  if Existing >= 0 then
+  begin
+    return Existing
+  end;
+  ContentApplicationIds := Std.Array.Concat(ContentApplicationIds, [View.ApplicationId]);
+  ContentSlots := Std.Array.Concat(ContentSlots, [View.Slot]);
+  ContentGenerations := Std.Array.Concat(ContentGenerations, [View.Generation]);
+  ContentLefts := Std.Array.Concat(ContentLefts, [0]);
+  ContentTops := Std.Array.Concat(ContentTops, [0]);
+  ContentRights := Std.Array.Concat(ContentRights, [0]);
+  ContentBottoms := Std.Array.Concat(ContentBottoms, [0]);
+  ContentActive := Std.Array.Concat(ContentActive, [true]);
+  var Cleanup: TuiViewCleanupCallback := procedure(ApplicationId: integer; Slot: integer; Generation: integer) begin
+    TuiViewContentRelease(ApplicationId, Slot, Generation)
+  end;
+  RegisterViewCleanup(View, Cleanup);
+  return Std.Array.Length(ContentActive) - 1
+end;
+
+private function TuiViewContentClampInset(Inset: integer; Extent: integer): integer;
+begin
+  if Inset > Extent then
+  begin
+    return Extent
+  end;
+  return Inset
+end;
+
+function TuiViewContentBounds(View: TuiView): TuiRect;
+begin
+  if not View.IsAlive() then
+  begin
+    panic('Tui2 cannot read content bounds for a stale view')
+  end;
+  var Bounds: TuiRect := View.Bounds;
+  var Index: integer := TuiViewContentFind(View);
+  if Index < 0 then
+  begin
+    return TuiRect.Create(0, 0, Bounds.Width, Bounds.Height)
+  end;
+  var Left: integer := TuiViewContentClampInset(ContentLefts[Index], Bounds.Width);
+  var Top: integer := TuiViewContentClampInset(ContentTops[Index], Bounds.Height);
+  var RemainingWidth: integer := Bounds.Width - Left;
+  var RemainingHeight: integer := Bounds.Height - Top;
+  var Right: integer := TuiViewContentClampInset(ContentRights[Index], RemainingWidth);
+  var Bottom: integer := TuiViewContentClampInset(ContentBottoms[Index], RemainingHeight);
+  return TuiRect.Create(Left, Top, RemainingWidth - Right, RemainingHeight - Bottom)
+end;
+
+procedure TuiViewContentSetInsets(
+  View: TuiView;
+  Left: integer;
+  Top: integer;
+  Right: integer;
+  Bottom: integer
+);
+begin
+  if (((Left < 0) or (Top < 0)) or (Right < 0)) or (Bottom < 0) then
+  begin
+    panic('Tui2 view content insets must not be negative')
+  end;
+  var Index: integer := TuiViewContentEnsure(View);
+  if (((ContentLefts[Index] <> Left) or (ContentTops[Index] <> Top)) or (ContentRights[Index] <> Right)) or
+     (ContentBottoms[Index] <> Bottom) then
+  begin
+    ContentLefts[Index] := Left;
+    ContentTops[Index] := Top;
+    ContentRights[Index] := Right;
+    ContentBottoms[Index] := Bottom;
+    InvalidateViewMeasurement(View);
+    TuiApplicationPaintInvalidate(View.ApplicationId, 1)
+  end
+end;

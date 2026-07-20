@@ -1,5 +1,13 @@
 # Std.Tui2 implementation phases
 
+## Cross-cutting compiler and language follow-ups
+
+For every compiler panic or language restriction encountered while implementing Tui2, add a
+source-shape, workaround, and later-resolution entry to
+[compiler-panic-followups.md](../compiler-panic-followups.md) in the same change. This includes
+limitations that can be avoided locally but could be improved in FPAS later. Do not silently change
+the language or leave an undocumented workaround in Tui2 source.
+
 ## Phase 1 — Geometry, text, cells, and canvas
 
 The geometry, color, style, cell-value, palette, and display-width baseline is documented in the
@@ -98,6 +106,12 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** retained list boxes with grapheme-aware item measurement,
   clamped selection, keyboard and pointer navigation, normal/focused/selected/disabled painting,
   layout invalidation, and typed `OnSelectionChanged` events.
+- **Implemented headless core:** retained frames with one-cell content insets, inner layout bounds,
+  child clipping, frame/disabled painting, and subtree ownership.
+- **Implemented headless core:** titled retained windows with the same inner container contract,
+  title repainting, disabled painting, and subtree ownership.
+- **Implemented headless core:** vertical scroll bars with clamped range state, semantic position
+  events, keyboard/pointer control, and deterministic thumb painting.
 - **Next:** propagate the existing action registry through the next interactive view-backed control.
 - Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
   paint callback.
@@ -107,7 +121,7 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 5 — First usable controls
 
-- Add a frame or window and scroll bar; render the existing retained controls.
+- Render the existing retained controls.
 - Bind buttons, menus, status items, and shortcuts to reusable actions.
 - Add a minimal interactive application and a fully headless equivalent test.
 - Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.

@@ -79,6 +79,12 @@ screen output, text replacement, intrinsic measurement, owning-layout invalidati
 List-box coverage verifies empty and clamped selection, Up/Down/Home and pointer navigation,
 `OnSelectionChanged` origins and unchanged-value suppression, focused and disabled screen output,
 grapheme-aware intrinsic measurement, owning-layout invalidation, and cleanup.
+Frame coverage verifies local content insets, inner layout allocation, child clipping at the content
+edge, frame and disabled screen output, and recursive cleanup.
+Window coverage verifies titled frame output, title replacement repainting, local content insets,
+inner layout allocation, disabled screen output, and recursive cleanup.
+Scroll-bar coverage verifies range clamping, semantic position changes, keyboard and pointer input,
+focused and disabled screen output, and lifecycle cleanup.
 Measurement-value coverage verifies bounded and unbounded constraints plus ordered measurement results.
 Size-policy coverage verifies independent axes and every uniform policy constructor.
 Layout-value coverage verifies margin construction, axis totals, and mixed or uniform alignment.

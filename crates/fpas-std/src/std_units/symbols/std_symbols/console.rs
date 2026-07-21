@@ -55,6 +55,10 @@ pub const STD_CONSOLE_ENABLE_FOCUS: &str = std_console!("EnableFocus");
 pub const STD_CONSOLE_DISABLE_FOCUS: &str = std_console!("DisableFocus");
 pub const STD_CONSOLE_ENABLE_PASTE: &str = std_console!("EnablePaste");
 pub const STD_CONSOLE_DISABLE_PASTE: &str = std_console!("DisablePaste");
+pub const STD_CONSOLE_ACQUIRE_INTERACTIVE_TERMINAL: &str =
+    std_console!("AcquireInteractiveTerminal");
+pub const STD_CONSOLE_RELEASE_INTERACTIVE_TERMINAL: &str =
+    std_console!("ReleaseInteractiveTerminal");
 pub const STD_CONSOLE_BLACK: &str = std_console!("Black");
 pub const STD_CONSOLE_BLUE: &str = std_console!("Blue");
 pub const STD_CONSOLE_GREEN: &str = std_console!("Green");
@@ -184,6 +188,8 @@ pub(in crate::std_units) const STD_CONSOLE_SYMBOLS: &[&str] = &[
     STD_CONSOLE_DISABLE_FOCUS,
     STD_CONSOLE_ENABLE_PASTE,
     STD_CONSOLE_DISABLE_PASTE,
+    STD_CONSOLE_ACQUIRE_INTERACTIVE_TERMINAL,
+    STD_CONSOLE_RELEASE_INTERACTIVE_TERMINAL,
     STD_CONSOLE_READ_EVENT_TIMEOUT,
     STD_CONSOLE_POLL_EVENT,
     STD_CONSOLE_BLACK,

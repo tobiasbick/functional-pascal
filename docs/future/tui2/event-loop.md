@@ -15,6 +15,10 @@ posts again. Pending custom-view resize notifications run after layout and befor
 stops at a callback boundary and performs orderly close. `ResizeForTest` updates the application and
 desktop extents, so the next iteration performs the invalidated layout.
 
+Interactive `Run` uses the same phase order after `AcquireInteractiveTerminal`, flushes the painted
+surface through `Std.Console` cells, and replaces injected input with one `ReadEventTimeout(16)`
+value per iteration.
+
 Headless input is also implemented. `App.Input` queues keys and pointer values FIFO, and an iteration
 routes at most one value after paint and before `OnTick`. Keys target the focused eligible custom
 view; pointer values target capture first and otherwise the topmost hit. Unconsumed values reach the

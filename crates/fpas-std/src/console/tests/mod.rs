@@ -15,6 +15,7 @@ mod cells;
 mod colors;
 mod frames;
 mod input;
+mod interactive;
 mod key_events;
 mod regions;
 mod screen;

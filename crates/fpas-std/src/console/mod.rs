@@ -7,6 +7,7 @@
 
 mod cell;
 mod input;
+mod interactive;
 mod key_input;
 mod operations;
 mod render;
@@ -25,6 +26,7 @@ pub use key_input::KeyInput;
 pub use snapshot::ScreenSnapshot;
 pub use validation::validate_packed_crt_color;
 
+use interactive::InteractiveTerminalOwnership;
 use screen::{ConsoleState, DEFAULT_SCREEN_HEIGHT, DEFAULT_SCREEN_WIDTH};
 use std::io::Write;
 
@@ -46,6 +48,8 @@ pub struct Console {
     state: ConsoleState,
     writer: Option<Box<dyn Write + Send>>,
     frame_depth: u32,
+    /// Modes owned by `AcquireInteractiveTerminal` / `ReleaseInteractiveTerminal`.
+    interactive: InteractiveTerminalOwnership,
 }
 
 impl Default for Console {
@@ -62,6 +66,7 @@ impl Console {
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
             writer: None,
             frame_depth: 0,
+            interactive: InteractiveTerminalOwnership::default(),
         }
     }
 
@@ -74,6 +79,7 @@ impl Console {
             state: ConsoleState::new(width, height),
             writer: Some(writer),
             frame_depth: 0,
+            interactive: InteractiveTerminalOwnership::default(),
         }
     }
 
@@ -130,5 +136,11 @@ impl Console {
 
     pub(crate) fn test_cell_colors(&self, x: u16, y: u16) -> (char, String, String) {
         self.state.cell_color_labels(x, y)
+    }
+}
+
+impl Drop for Console {
+    fn drop(&mut self) {
+        self.restore_interactive_console_modes();
     }
 }

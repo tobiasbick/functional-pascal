@@ -98,6 +98,8 @@ Everything below requires `uses Std.Console;`.
 | procedure | `DisableFocus()` | disable focus reporting |
 | procedure | `EnablePaste()` | enable bracketed paste reporting |
 | procedure | `DisablePaste()` | disable bracketed paste reporting |
+| procedure | `AcquireInteractiveTerminal()` | transactional exclusive fullscreen terminal ownership |
+| procedure | `ReleaseInteractiveTerminal()` | restore modes owned by acquire; idempotent |
 | type | `KeyEvent` | record |
 | type | `KeyKind` | enum |
 | type | `Event` | record |
@@ -149,6 +151,7 @@ Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/mat
 |---------|-----------|
 | User-facing registration | [`loaded/console.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/console.rs) |
 | Console backend | [`console/mod.rs`](../../../../crates/fpas-std/src/console/mod.rs) |
+| Interactive terminal acquire/release | [`console/interactive.rs`](../../../../crates/fpas-std/src/console/interactive.rs) |
 | Cell/frame/region operations | [`console/operations/`](../../../../crates/fpas-std/src/console/operations/mod.rs) |
 | Retained screen model | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |
 | Key and event types | [`key_event.rs`](../../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../../crates/fpas-std/src/console_event.rs) |

@@ -103,6 +103,8 @@ pub fn run_intrinsic(
             | Intrinsic::Console(ConsoleIntrinsic::DisableFocus)
             | Intrinsic::Console(ConsoleIntrinsic::EnablePaste)
             | Intrinsic::Console(ConsoleIntrinsic::DisablePaste)
+            | Intrinsic::Console(ConsoleIntrinsic::AcquireInteractiveTerminal)
+            | Intrinsic::Console(ConsoleIntrinsic::ReleaseInteractiveTerminal)
             | Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout)
             | Intrinsic::Console(ConsoleIntrinsic::PollEvent)
             | Intrinsic::Console(ConsoleIntrinsic::TextColorRGB)

@@ -6,7 +6,8 @@ uses
   Std.Tui2.Runtime.ApplicationLayout, Std.Tui2.Runtime.ApplicationLifecycle,
   Std.Tui2.Runtime.ApplicationLoop, Std.Tui2.Runtime.ApplicationPaint,
   Std.Tui2.Runtime.ApplicationPosts, Std.Tui2.Runtime.ApplicationRegistry,
-  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Surface.Surface;
+  Std.Tui2.Runtime.ApplicationResize, Std.Tui2.Runtime.ApplicationTerminal,
+  Std.Tui2.Surface.Surface, Std.Console;
 
 type
   TuiApplicationCallback = procedure(ApplicationId: integer);
@@ -30,6 +31,88 @@ begin
   TuiCleanupCallbacks := Std.Array.Concat(TuiCleanupCallbacks, [Callback])
 end;
 
+private procedure TuiApplicationInitializeSlots(
+  ApplicationId: integer;
+  Size: TuiSize;
+  Interactive: boolean
+);
+begin
+  TuiApplicationLoopInitialize(ApplicationId);
+  TuiApplicationFocusInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
+  TuiApplicationInputPhaseInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
+  TuiApplicationInputInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
+  TuiApplicationPaintInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId), Size);
+  TuiApplicationTerminalInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId), Interactive);
+  TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
+  TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
+  TuiApplicationOnTick := Std.Array.Concat(TuiApplicationOnTick, [None])
+end;
+
+private procedure TuiApplicationRunPhases(
+  ApplicationId: integer;
+  Generation: integer;
+  DeltaMilliseconds: integer;
+  PollTimeoutMilliseconds: integer
+);
+begin
+  TuiApplicationPostsDrain(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationLayoutPerform(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationLifecyclePerform(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationPaintPerform(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationTerminalPresent(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationTerminalPoll(ApplicationId, Generation, PollTimeoutMilliseconds);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  TuiApplicationInputPhasePerform(ApplicationId, Generation);
+  if (not TuiApplicationRegistryIsOpen(ApplicationId, Generation)) or
+     TuiApplicationLoopShouldQuit(ApplicationId) then
+  begin
+    return
+  end;
+  case TuiApplicationOnTick[ApplicationId - 1] of
+    Some(Callback):
+    begin
+      Callback(ApplicationId, DeltaMilliseconds)
+    end;
+    None:
+    begin
+    end
+  end;
+  if TuiApplicationRegistryIsOpen(ApplicationId, Generation) and
+     (not TuiApplicationLoopShouldQuit(ApplicationId)) then
+  begin
+    TuiApplicationPostsDrain(ApplicationId, Generation)
+  end
+end;
+
 type
   TuiApplication = record
     Id: integer;
@@ -38,14 +121,29 @@ type
     static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
       var ApplicationId: integer := TuiApplicationRegistryOpen(Size);
-      TuiApplicationLoopInitialize(ApplicationId);
-      TuiApplicationFocusInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
-      TuiApplicationInputPhaseInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
-      TuiApplicationInputInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId));
-      TuiApplicationPaintInitialize(ApplicationId, TuiApplicationRegistryGeneration(ApplicationId), Size);
-      TuiApplicationOnStart := Std.Array.Concat(TuiApplicationOnStart, [None]);
-      TuiApplicationOnStop := Std.Array.Concat(TuiApplicationOnStop, [None]);
-      TuiApplicationOnTick := Std.Array.Concat(TuiApplicationOnTick, [None]);
+      TuiApplicationInitializeSlots(ApplicationId, Size, false);
+      return record
+        Id := ApplicationId;
+        Generation := TuiApplicationRegistryGeneration(ApplicationId);
+      end
+    end;
+
+    static function Open(): TuiApplication;
+    begin
+      AcquireInteractiveTerminal();
+      mutable var Width: integer := ScreenWidth();
+      mutable var Height: integer := ScreenHeight();
+      if Width < 1 then
+      begin
+        Width := 1
+      end;
+      if Height < 1 then
+      begin
+        Height := 1
+      end;
+      var Size: TuiSize := TuiSize.Create(Width, Height);
+      var ApplicationId: integer := TuiApplicationRegistryOpen(Size);
+      TuiApplicationInitializeSlots(ApplicationId, Size, true);
       return record
         Id := ApplicationId;
         Generation := TuiApplicationRegistryGeneration(ApplicationId);
@@ -249,39 +347,7 @@ type
       begin
         panic('Tui2 tick delta must not be negative')
       end;
-      TuiApplicationPostsDrain(Self.Id, Self.Generation);
-      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
-      begin
-        return
-      end;
-      TuiApplicationLayoutPerform(Self.Id, Self.Generation);
-      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
-      begin
-        return
-      end;
-      TuiApplicationLifecyclePerform(Self.Id, Self.Generation);
-      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
-      begin
-        return
-      end;
-      TuiApplicationPaintPerform(Self.Id, Self.Generation);
-      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
-      begin
-        return
-      end;
-      TuiApplicationInputPhasePerform(Self.Id, Self.Generation);
-      if (not Self.IsOpen()) or TuiApplicationLoopShouldQuit(Self.Id) then
-      begin
-        return
-      end;
-      if Assigned(Self.OnTick) then
-      begin
-        Self.OnTick(Self, DeltaMilliseconds)
-      end;
-      if Self.IsOpen() and (not TuiApplicationLoopShouldQuit(Self.Id)) then
-      begin
-        TuiApplicationPostsDrain(Self.Id, Self.Generation)
-      end
+      TuiApplicationRunPhases(Self.Id, Self.Generation, DeltaMilliseconds, 0)
     end;
 
     procedure RunIterations(Self: TuiApplication; IterationCount: integer; DeltaMilliseconds: integer);
@@ -315,6 +381,34 @@ type
       var QuitRequested: boolean := TuiApplicationLoopShouldQuit(Self.Id);
       TuiApplicationLoopEnd(Self.Id);
       if QuitRequested and Self.IsOpen() then
+      begin
+        Self.Close()
+      end
+    end;
+
+    procedure Run(Self: TuiApplication);
+    begin
+      TuiApplicationRegistryRequire(Self.Id, Self.Generation);
+      if TuiApplicationRegistryIsClosing(Self.Id) then
+      begin
+        panic('Tui2 application cannot run while closing')
+      end;
+      if not TuiApplicationTerminalIsInteractive(Self.Id, Self.Generation) then
+      begin
+        panic('Tui2 Run requires TuiApplication.Open(); use RunIterations for OpenForTest')
+      end;
+      TuiApplicationLoopBegin(Self.Id);
+      if not TuiApplicationLoopIsStarted(Self.Id) then
+      begin
+        Self.Start()
+      end;
+      while Self.IsOpen() and (not TuiApplicationLoopShouldQuit(Self.Id)) do
+      begin
+        TuiApplicationRunPhases(Self.Id, Self.Generation, 16, 16)
+      end;
+      var QuitRequested: boolean := TuiApplicationLoopShouldQuit(Self.Id);
+      TuiApplicationLoopEnd(Self.Id);
+      if Self.IsOpen() then
       begin
         Self.Close()
       end
@@ -363,6 +457,7 @@ type
       TuiApplicationInputPhaseRelease(Self.Id, Self.Generation);
       TuiApplicationPaintRelease(Self.Id, Self.Generation);
       TuiApplicationResizeRelease(Self.Id, Self.Generation);
+      TuiApplicationTerminalRelease(Self.Id, Self.Generation);
       TuiApplicationLoopRelease(Self.Id);
       TuiApplicationOnStart[Self.Id - 1] := None;
       TuiApplicationOnStop[Self.Id - 1] := None;

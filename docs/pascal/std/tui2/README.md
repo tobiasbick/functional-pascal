@@ -1,9 +1,9 @@
 # Std.Tui2
 
-`Std.Tui2` provides terminal UI value types plus a headless live-object surface for applications,
-actions, buttons, views, input routing, modal roots, and layouts. Horizontal, vertical, grid, form,
-and stacked layouts can be measured, arranged, painted, and driven with injected input without a
-terminal. Interactive terminal acquisition is not exposed yet.
+`Std.Tui2` provides terminal UI value types plus a live-object surface for applications, actions,
+buttons, views, input routing, modal roots, and layouts. Horizontal, vertical, grid, form, and
+stacked layouts can be measured, arranged, painted, and driven with injected or live terminal input.
+`TuiApplication.Open` acquires the interactive terminal; `OpenForTest` stays headless.
 
 ```pascal
 program Geometry;
@@ -32,7 +32,11 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiPalette` | An immutable mapping from semantic roles to styles. |
 | `TuiSurface` | A headless retained cell surface. |
 | `TuiCanvas` | A clipped drawing value for a surface. |
-| `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
+| `TuiApplication` | An application-scoped registry and lifecycle boundary. |
+| `TuiApplication.Open()` | Opens an interactive application and acquires the terminal. |
+| `TuiApplication.OpenForTest(Size)` | Opens a headless application without terminal modes. |
+| `App.Run()` | Interactive event loop for applications opened with `Open`. |
+| `App.RunIterations(Count, Delta)` | Bounded loop for deterministic tests. |
 | `TuiApplicationInput` | Headless input injection and unhandled application input events. |
 | `TuiKeyEvent` | Alias of the canonical `Std.Console.KeyEvent`. |
 | `TuiPointerEvent` | A normalized pointer action, button, position, and modifiers. |
@@ -170,13 +174,15 @@ var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiCo
 var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ```
 
-## Headless applications and lifecycle events
+## Applications and lifecycle events
 
-`TuiApplication.OpenForTest(Size)` creates an application-scoped registry without changing terminal
-modes. Its read-only `Size` property retains that extent. `ResizeForTest(Size)` changes it and
-immediately resizes an existing desktop root. `Start`, `Tick`, and `Close` expose deterministic
-lifecycle boundaries for headless code. `Close` is idempotent and invalidates every live handle
-owned by the application.
+`TuiApplication.Open()` acquires exclusive interactive terminal ownership through
+`Std.Console.AcquireInteractiveTerminal`, sizes the application from `ScreenWidth` / `ScreenHeight`,
+and owns mode restoration on `Close`. `TuiApplication.OpenForTest(Size)` creates the same
+application-scoped registry without changing terminal modes. Its read-only `Size` property retains
+that extent. `ResizeForTest(Size)` changes it and immediately resizes an existing desktop root.
+`Start`, `Tick`, and `Close` expose deterministic lifecycle boundaries. `Close` is idempotent and
+invalidates every live handle owned by the application.
 
 ```pascal
 var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
@@ -188,12 +194,20 @@ App.Tick(16);
 App.Close()
 ```
 
+`Run()` is the interactive loop for applications opened with `Open`. It starts once when needed,
+then repeatedly drains posts, completes dirty desktop layout, delivers lifecycle notifications,
+repaints, flushes the retained surface to `Std.Console` cells, waits up to 16 ms for one
+`ReadEventTimeout` value, routes at most one queued input, invokes `OnTick` with a 16 ms delta, and
+drains posts again. `Quit` or leaving the loop closes the application and releases the terminal.
+`Run` rejects applications opened with `OpenForTest`.
+
 `RunIterations(IterationCount, DeltaMilliseconds)` is the bounded headless loop. It starts the
 application once when needed, runs at most the requested non-negative number of iterations, and
 leaves the application open when that budget is exhausted. Each iteration drains posted callbacks,
 performs invalid desktop layout, delivers pending view lifecycle notifications, repaints an invalid
 headless surface, invokes `OnTick`, and drains callbacks again. A negative iteration count or tick
-delta is rejected.
+delta is rejected. Interactive applications may also use `RunIterations`; terminal polling in that
+path is non-blocking.
 
 `Quit()` requests orderly shutdown while `RunIterations` is active. The current callback returns,
 the remaining iteration phases are skipped, `OnStop` runs once, and the application closes. Calling

@@ -109,4 +109,12 @@ pub enum ConsoleIntrinsic {
     GraphemeWidth = 394,
     /// Splits text into extended grapheme clusters.
     SplitGraphemes = 395,
+    /// `Std.Console.AcquireInteractiveTerminal()` — transactional fullscreen terminal ownership.
+    ///
+    /// **Documentation:** `docs/pascal/std/console/events.md`
+    AcquireInteractiveTerminal = 396,
+    /// `Std.Console.ReleaseInteractiveTerminal()` — restore modes owned by acquire.
+    ///
+    /// **Documentation:** `docs/pascal/std/console/events.md`
+    ReleaseInteractiveTerminal = 397,
 }

@@ -260,6 +260,16 @@ impl Worker {
             Intrinsic::Console(ConsoleIntrinsic::DisablePaste) => {
                 self.with_console(|c| c.disable_paste(line))?
             }
+            Intrinsic::Console(ConsoleIntrinsic::AcquireInteractiveTerminal) => {
+                self.with_console_and_key_input(|console, key_input| {
+                    console.acquire_interactive_terminal(key_input, line)
+                })?;
+            }
+            Intrinsic::Console(ConsoleIntrinsic::ReleaseInteractiveTerminal) => {
+                self.with_console_and_key_input(|console, key_input| {
+                    console.release_interactive_terminal(key_input, line)
+                })?;
+            }
             Intrinsic::Console(ConsoleIntrinsic::ReadEventTimeout) => {
                 let ms = self.pop_int(line)?;
                 let event = self.with_key_input(|k| k.read_event_timeout(ms, line))?;

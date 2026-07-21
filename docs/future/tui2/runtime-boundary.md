@@ -48,23 +48,30 @@ Invalid handles, cross-application handles, wrong handle kinds, forbidden callba
 
 Only one live interactive application may own the process terminal. Opening a second one fails.
 
-Opening is transactional:
+Opening is transactional through `Std.Console.AcquireInteractiveTerminal`:
 
 1. acquire terminal ownership;
-2. enter raw mode;
+2. enter raw mode when stdin is a TTY;
 3. enter the alternate screen;
 4. enable mouse, focus, and paste events;
 5. hide the cursor;
 6. create the desktop and run `OnStart`.
 
-If any step fails, completed steps are rolled back in reverse order.
+If any step fails, completed steps are rolled back in reverse order. Without a terminal writer the
+call records ownership only, so headless and CI hosts can still open an interactive application
+handle without changing modes.
 
-Orderly close runs `OnStop`, then restores cursor, paste, focus, mouse, alternate screen, and raw mode in reverse acquisition order. Close is idempotent.
+Orderly close runs `OnStop`, then `ReleaseInteractiveTerminal` restores cursor, paste, focus, mouse,
+alternate screen, and raw mode in reverse acquisition order. Close is idempotent.
 
 ## Runtime safety net
 
-The console host tracks every terminal mode it enabled. VM teardown restores all tracked modes even when FPAS code panics, a callback fails, or application close is skipped.
+The console host tracks every terminal mode the interactive session enabled. Console Drop restores
+owned screen modes even when FPAS code panics, a callback fails, or application close is skipped.
+Raw mode remains restored by `KeyInput` Drop when it was enabled.
 
-Safety cleanup does not invoke user callbacks. Cleanup failures are secondary diagnostics and never replace the original runtime failure.
+Safety cleanup does not invoke user callbacks. Cleanup failures are secondary diagnostics and never
+replace the original runtime failure.
 
-This host cleanup is resource safety, not a TUI implementation: event routing, layout, controls, actions, and painting remain FPAS source.
+This host cleanup is resource safety, not a TUI implementation: event routing, layout, controls,
+actions, and painting remain FPAS source.

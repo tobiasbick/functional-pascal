@@ -73,6 +73,22 @@ end
 - **Result:** none.
 - **Effect:** toggles the corresponding terminal feature when the runtime is attached to an interactive terminal.
 
+### `procedure AcquireInteractiveTerminal()`
+
+- **Parameters:** none.
+- **Effect:** acquires exclusive interactive terminal ownership. When a terminal writer is attached,
+  enables raw mode (on a real TTY), the alternate screen, mouse, focus, and paste reporting, then
+  hides the cursor. Failed steps roll back earlier steps. Without a writer the call only records
+  ownership so a second acquire fails.
+- **Errors:** a second acquire while one session is already open is a runtime error.
+
+### `procedure ReleaseInteractiveTerminal()`
+
+- **Parameters:** none.
+- **Effect:** restores modes owned by the matching acquire, in reverse order. Idempotent when
+  nothing is acquired. Console teardown also restores owned screen modes as a safety net; raw mode
+  remains restored by `KeyInput` teardown when it was enabled.
+
 ## See also
 
 - [Console overview](README.md)

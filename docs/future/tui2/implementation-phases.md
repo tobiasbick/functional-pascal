@@ -26,7 +26,10 @@ Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-c
   application-scoped generational registries with cross-application validation, deterministic
   destruction, application-close cleanup, one desktop root, retained view state, subtree ownership,
   and FIFO post callbacks before and after `OnTick`.
-- Interactive terminal acquisition, mode restoration, and worker-task UI restrictions remain open.
+- **Implemented interactive terminal ownership.** `Std.Console.AcquireInteractiveTerminal` /
+  `ReleaseInteractiveTerminal` provide transactional mode ownership with exclusive acquire,
+  reverse rollback, and console Drop restoration of owned screen modes. `TuiApplication.Open`
+  acquires the session; `Close` releases it. Worker-task UI restrictions remain open.
 
 Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [runtime-boundary.md](runtime-boundary.md), and the registry/failure sections of [testing.md](testing.md).
 
@@ -58,9 +61,13 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** bounded application iterations, automatic start, orderly quit,
   posted callback boundaries, dirty desktop layout completion, retained application size, and
   desktop resize propagation.
+- **Implemented interactive loop:** `TuiApplication.Open` / `Run` acquire the console session,
+  flush painted surfaces through `BeginFrame` / `WriteCells` / `Present`, poll
+  `ReadEventTimeout`, map key and pointer events into the existing input queue (with 1-based to
+  0-based pointer conversion), apply resize events, and release the terminal on close.
 - **Partial foundation.** Headless application lifecycle events, live action state,
   `TuiAction.OnExecute`, button action binding, and action-before-`OnClick` dispatch are implemented.
-- Integrate the existing lifecycle events with the future terminal lifecycle.
+- Integrate remaining lifecycle diagnostics with worker-task UI restrictions.
 - **Implemented headless core:** typed custom views with synchronous attach, structural detach before
   release, coalesced post-layout resize delivery, and callback revalidation.
 - **Implemented headless core:** custom-view measurement integrated with measure specs and size
@@ -122,8 +129,9 @@ Completion contracts: [event-loop.md](event-loop.md),
 ## Phase 5 — First usable controls
 
 The implemented retained controls have deterministic headless keyboard, pointer, layout, lifecycle,
-and screen coverage. Remaining work is an interactive terminal application and its matching
-headless end-to-end test, after terminal acquisition is available.
+and screen coverage. Interactive `Open` / `Run` and terminal flush are implemented. Remaining work
+is a small end-to-end demo application that exercises the live loop with real controls, plus any
+matching headless regression that locks the same scenario.
 
 ## Phase 6 — Full application chrome
 

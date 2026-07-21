@@ -99,8 +99,8 @@ TuiApplication.Post(App: TuiApplication; Handler: procedure()): boolean
 
 The implemented headless application additionally exposes `Size`, `ResizeForTest`,
 `RunIterations`, and `Quit`. `RunIterations` performs posted-callback, desktop-layout, and tick
-phases with a deterministic iteration budget; the terminal-backed `Run` above remains the intended
-interactive entry point.
+phases with a deterministic iteration budget. `TuiApplication.Open` / `Run` are the interactive
+entry points: they acquire the console terminal session, flush painted cells, and poll live events.
 
 ### Common views
 

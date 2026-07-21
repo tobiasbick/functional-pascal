@@ -127,6 +127,22 @@ impl Compiler {
                 );
                 Ok(true)
             }
+            s::STD_CONSOLE_ACQUIRE_INTERACTIVE_TERMINAL => {
+                self.expect_zero_args(s::STD_CONSOLE_ACQUIRE_INTERACTIVE_TERMINAL, args, location)?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Console(ConsoleIntrinsic::AcquireInteractiveTerminal),
+                    location,
+                );
+                Ok(true)
+            }
+            s::STD_CONSOLE_RELEASE_INTERACTIVE_TERMINAL => {
+                self.expect_zero_args(s::STD_CONSOLE_RELEASE_INTERACTIVE_TERMINAL, args, location)?;
+                self.emit_intrinsic_unit(
+                    Intrinsic::Console(ConsoleIntrinsic::ReleaseInteractiveTerminal),
+                    location,
+                );
+                Ok(true)
+            }
             _ => Ok(false),
         }
     }

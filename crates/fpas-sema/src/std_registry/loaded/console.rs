@@ -358,4 +358,6 @@ pub(super) fn register_std_console(checker: &mut Checker) {
     define_proc(checker, s::STD_CONSOLE_DISABLE_FOCUS, vec![]);
     define_proc(checker, s::STD_CONSOLE_ENABLE_PASTE, vec![]);
     define_proc(checker, s::STD_CONSOLE_DISABLE_PASTE, vec![]);
+    define_proc(checker, s::STD_CONSOLE_ACQUIRE_INTERACTIVE_TERMINAL, vec![]);
+    define_proc(checker, s::STD_CONSOLE_RELEASE_INTERACTIVE_TERMINAL, vec![]);
 }

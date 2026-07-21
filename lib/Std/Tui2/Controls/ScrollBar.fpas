@@ -188,15 +188,9 @@ type
       begin
         return false
       end;
-      var Custom: TuiCustomView := ScrollBarViews[Self.Slot - 1];
-      var IsCurrent: boolean := (ScrollBarAlive[Self.Slot - 1] and (ScrollBarGenerations[Self.Slot -
-                                                                                         1] = Self.Generation)) and
-                                (ScrollBarApplicationIds[Self.Slot - 1] = Self.ApplicationId);
-      if not IsCurrent then
-      begin
-        return false
-      end;
-      return Custom.IsAlive()
+      return ((ScrollBarAlive[Self.Slot - 1] and (ScrollBarGenerations[Self.Slot - 1] = Self.Generation)) and (ScrollBarApplicationIds[Self.Slot -
+                                                                                                                                       1] = Self.ApplicationId)) and
+             ScrollBarViews[Self.Slot - 1].IsAlive()
     end;
 
     static function AsView(ScrollBar: TuiScrollBar): TuiView;
@@ -268,8 +262,7 @@ type
     function Focus(Self: TuiScrollBar): boolean;
     begin
       TuiScrollBarRequire(Self.ApplicationId, Self.Slot, Self.Generation);
-      var Custom: TuiCustomView := ScrollBarViews[Self.Slot - 1];
-      return Custom.Focus()
+      return ScrollBarViews[Self.Slot - 1].Focus()
     end;
 
     procedure Destroy(Self: TuiScrollBar);

@@ -15,8 +15,8 @@ Headless and interactive paths share layout, paint, and message rules.
 
 Implementation may not proceed to the value-porting phase until one FPAS vertical slice proves:
 
-- the exact generic host, `Update`, mutable `TuiCmd` output, and `View` signatures compile;
-- a recursive element tree can represent a controlled input, button, and modal dialog;
+- the exact generic host, `Update`, `TuiCmdOutput`, and `View` signatures compile;
+- nested builders preserve a controlled input, button, and modal dialog as a recursive child tree;
 - the initial surface exists before the first injected key or pointer is routed;
 - focus change, text change, activation, and quit messages run in the documented FIFO order;
 - duplicate `TuiControlId` values fail while duplicate `TuiAction` values remain valid;
@@ -27,6 +27,17 @@ Record the tree sizes, terminal sizes, iteration count, timings, and any allocat
 with the implementation. Compare increasing tree sizes to catch accidental superlinear copying. If
 aggregate cloning dominates, shared or copy-on-write VM values become a prerequisite rather than a
 Tui3-local retained-view workaround.
+
+Phase 0 baseline (2026-07-21, Windows development build):
+
+| Tree | Terminal sizes | Iterations | End-to-end time |
+| --- | --- | ---: | ---: |
+| 43 nodes (32 labels, 8 buttons, column, window, desktop) | 40×12 and 120×40 | 100 each | 14.74 s |
+
+The measurement uses `tests/stdlib/tui3/repeated_frames_test.fpas` and includes parsing, compilation,
+VM startup, and both runs. The element walker contains no explicit full-tree clone. The working
+surface stores independent row strings: `Clear` replaces each row once, glyph writes replace only
+their row, and the full cell array is constructed only by the two explicit final snapshots.
 
 ## Determinism
 

@@ -4,8 +4,9 @@ This directory plans the FPAS-native terminal UI with a **functional programming
 and a **Turbo Vision look**. It replaces the retained direction in
 [`docs/future/tui2/`](../tui2/README.md).
 
-Nothing here is user-facing yet. Implemented behavior belongs under `docs/pascal/` only
-after it exists. Until then the temporary unit is `Std.Tui3` under `lib/Std/Tui3/`.
+This directory remains the plan for work beyond the completed Phase 0 feasibility slice. Current
+implemented behavior is documented under [`docs/pascal/std/tui3/`](../../pascal/std/tui3/README.md).
+The temporary implementation remains `Std.Tui3` under `lib/Std/Tui3/` until promotion.
 
 ## Decisions
 
@@ -39,7 +40,8 @@ after it exists. Until then the temporary unit is `Std.Tui3` under `lib/Std/Tui3
 Before value types are ported wholesale, Phase 0 must produce one compiling headless vertical
 slice with the exact FPAS signatures used by the runtime. It must cover:
 
-- a recursive `TuiElement` tree containing a label, controlled input, button, and modal dialog;
+- nested element builders containing a label, controlled input, button, and modal dialog in a
+  data-carrying enum with recursive `Children: array of TuiElement` payloads;
 - a generic `TModel` host routine with concrete `Update` and `View` function parameters;
 - unique control ids, repeatable action ids, focus movement, text editing, and activation;
 - initial render before input, deterministic message queue order, and quit order;

@@ -1,0 +1,219 @@
+unit Std.Tui3.Runtime.Routing;
+
+uses
+  Std.Array, Std.Console, Std.Str, Std.Tui3.Elements.Element, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Runtime.Msg;
+
+private function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
+begin
+  case Node of
+    TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      return [Id]
+    end;
+    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    begin
+      mutable var Controls: array of TuiControlId := [];
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Controls := Std.Array.Concat(Controls, TuiFocusableControls(Children[Index]))
+      end;
+      return Controls
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      mutable var LastDialog: integer := -1;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case Children[Index] of
+          TuiElement.Dialog(Title, DialogChildren):
+          begin
+            LastDialog := Index
+          end;
+          TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+          begin
+          end
+        end
+      end;
+      if LastDialog >= 0 then
+      begin
+        return TuiFocusableControls(Children[LastDialog])
+      end
+      else
+      begin
+        mutable var Controls: array of TuiControlId := [];
+        for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+        begin
+          Controls := Std.Array.Concat(Controls, TuiFocusableControls(Children[Index]))
+        end;
+        return Controls
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text):
+    begin
+      return []
+    end
+  end
+end;
+
+private function TuiRootFocus(Root: TuiElement): option of TuiControlId;
+begin
+  case Root of
+    TuiElement.Desktop(Focused, Children):
+    begin
+      return Focused
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    begin
+      return None
+    end
+  end
+end;
+
+private function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
+begin
+  for Index: integer := 0 to Std.Array.Length(Controls) - 1 do
+  begin
+    if Controls[Index].Value = Id.Value then
+    begin
+      return Index
+    end
+  end;
+  return -1
+end;
+
+private function TuiRouteTarget(Node: TuiElement; Target: TuiControlId; Key: Std.Console.KeyEvent): option of TuiMsg;
+begin
+  case Node of
+    TuiElement.Button(Id, Text, Action):
+    begin
+      if Id.Value <> Target.Value then
+      begin
+        return None
+      end;
+      if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
+      begin
+        return Some(TuiMsg.Action(Id, Action))
+      end;
+      return None
+    end;
+    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      if Id.Value <> Target.Value then
+      begin
+        return None
+      end;
+      if Key.kind = Std.Console.KeyKind.Character then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Insert(Text, Caret, Key.ch), Caret +
+                                                                                              Std.Str.Length(Key.ch)))
+      end;
+      if Key.kind = Std.Console.KeyKind.Space then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Insert(Text, Caret, ' '), Caret + 1))
+      end;
+      if (Key.kind = Std.Console.KeyKind.Backspace) and (Caret > 0) then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Delete(Text, Caret - 1, 1), Caret -
+                                                                                             1))
+      end;
+      if (Key.kind = Std.Console.KeyKind.Delete) and (Caret < Std.Str.Length(Text)) then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Delete(Text, Caret, 1), Caret))
+      end;
+      if (Key.kind = Std.Console.KeyKind.Left) and (Caret > 0) then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Caret - 1))
+      end;
+      if (Key.kind = Std.Console.KeyKind.Right) and (Caret < Std.Str.Length(Text)) then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Caret + 1))
+      end;
+      if Key.kind = Std.Console.KeyKind.Home then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, 0))
+      end;
+      if Key.kind = Std.Console.KeyKind.EndKey then
+      begin
+        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Std.Str.Length(Text)))
+      end;
+      return None
+    end;
+    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    begin
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case TuiRouteTarget(Children[Index], Target, Key) of
+          Some(Msg):
+          begin
+            return Some(Msg)
+          end;
+          None:
+          begin
+          end
+        end
+      end;
+      return None
+    end;
+    TuiElement.Empty, TuiElement.Label(Text):
+    begin
+      return None
+    end
+  end
+end;
+
+/// Routes one key against the previous rendered tree into ordered framework messages.
+
+function TuiRouteKey(Root: TuiElement; Key: Std.Console.KeyEvent): array of TuiMsg;
+begin
+  if Key.kind = Std.Console.KeyKind.Escape then
+  begin
+    return [TuiMsg.QuitRequested]
+  end;
+  var Controls: array of TuiControlId := TuiFocusableControls(Root);
+  if Std.Array.Length(Controls) = 0 then
+  begin
+    return [TuiMsg.Key(Key)]
+  end;
+  var Previous: option of TuiControlId := TuiRootFocus(Root);
+  mutable var CurrentIndex: integer := -1;
+  case Previous of
+    Some(Id):
+    begin
+      CurrentIndex := TuiControlIndex(Controls, Id)
+    end;
+    None:
+    begin
+    end
+  end;
+  if Key.kind = Std.Console.KeyKind.Tab then
+  begin
+    mutable var NextIndex: integer := CurrentIndex + 1;
+    if NextIndex >= Std.Array.Length(Controls) then
+    begin
+      NextIndex := 0
+    end;
+    return [TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))]
+  end;
+  mutable var Routed: array of TuiMsg := [];
+  mutable var Target: TuiControlId := Controls[0];
+  if CurrentIndex >= 0 then
+  begin
+    Target := Controls[CurrentIndex]
+  end
+  else
+  begin
+    Std.Array.Push(Routed, TuiMsg.FocusChanged(Previous, Some(Target)))
+  end;
+  case TuiRouteTarget(Root, Target, Key) of
+    Some(Msg):
+    begin
+      Std.Array.Push(Routed, Msg)
+    end;
+    None:
+    begin
+      Std.Array.Push(Routed, TuiMsg.Key(Key))
+    end
+  end;
+  return Routed
+end;

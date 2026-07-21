@@ -38,7 +38,9 @@ pub(super) fn map_crossterm_key(key: &CrosstermKeyEvent) -> ConsoleKeyEvent {
             ConsoleKeyEvent::new(key_kind_index("Right"), '\0', shift, ctrl, alt, meta)
         }
         KeyCode::Home => ConsoleKeyEvent::new(key_kind_index("Home"), '\0', shift, ctrl, alt, meta),
-        KeyCode::End => ConsoleKeyEvent::new(key_kind_index("End"), '\0', shift, ctrl, alt, meta),
+        KeyCode::End => {
+            ConsoleKeyEvent::new(key_kind_index("EndKey"), '\0', shift, ctrl, alt, meta)
+        }
         KeyCode::PageUp => {
             ConsoleKeyEvent::new(key_kind_index("PageUp"), '\0', shift, ctrl, alt, meta)
         }

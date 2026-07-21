@@ -12,7 +12,7 @@ impl Compiler {
         else_body: Option<&[Stmt]>,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let case_ty = self.ty_of(expr);
+        let case_ty = self.ty_of(expr)?;
         let enum_type_name = match &case_ty {
             Ty::Enum(enum_ty) if enum_ty.has_data() => Some(enum_ty.name.as_str()),
             Ty::Named(name)

@@ -25,7 +25,19 @@ impl Compiler {
             return self.compile_property_read_designator(d, &infos);
         }
 
-        let mut parts = d.parts.iter();
+        self.compile_designator_prefix_read(d, d.parts.len())
+    }
+
+    /// Compile a leading portion of a designator without cloning contained expressions.
+    pub(in crate::compiler) fn compile_designator_prefix_read(
+        &mut self,
+        d: &Designator,
+        part_count: usize,
+    ) -> Result<(), CompileError> {
+        let location = Self::location_of(&d.span);
+        let designator_parts = &d.parts[..part_count.min(d.parts.len())];
+
+        let mut parts = designator_parts.iter();
         let base_name = match parts.next() {
             Some(DesignatorPart::Ident(name, _)) => name.clone(),
             _ => {
@@ -54,10 +66,12 @@ impl Compiler {
                 }
             }
         } else {
-            if let Some((global_name, consumed)) = self.module_global_prefix(d) {
+            if let Some((global_name, consumed)) = self.module_global_prefix(d)
+                && consumed <= designator_parts.len()
+            {
                 let idx = self.add_constant(Value::Str(global_name), location)?;
                 self.emit(Op::GetGlobal(idx), location);
-                for part in d.parts.iter().skip(consumed) {
+                for part in designator_parts.iter().skip(consumed) {
                     match part {
                         DesignatorPart::Ident(field, _) => {
                             let idx = self.add_constant(Value::Str(field.clone()), location)?;
@@ -72,7 +86,14 @@ impl Compiler {
                 return Ok(());
             }
 
-            let raw_name = Self::resolve_designator_name(d);
+            let raw_name = designator_parts
+                .iter()
+                .filter_map(|part| match part {
+                    DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                    DesignatorPart::Index(..) => None,
+                })
+                .collect::<Vec<_>>()
+                .join(".");
             let name = self.qualify_name(&raw_name).to_string();
             if let Some(value) = Self::builtin_const_value(&name) {
                 self.emit_constant(value, location)?;
@@ -111,7 +132,7 @@ impl Compiler {
                 return Ok(());
             }
 
-            let remaining: Vec<_> = d.parts.iter().skip(1).collect();
+            let remaining: Vec<_> = designator_parts.iter().skip(1).collect();
             if remaining.is_empty() {
                 let idx = self.add_constant(Value::Str(name), location)?;
                 self.emit(Op::GetGlobal(idx), location);
@@ -143,7 +164,7 @@ impl Compiler {
     ) -> Result<(), CompileError> {
         let location = Self::location_of(&d.span);
         let receiver_part_count = info.receiver_part_count;
-        let receiver_parts = d.parts.get(..receiver_part_count).ok_or_else(|| {
+        d.parts.get(..receiver_part_count).ok_or_else(|| {
             internal_compiler_error(
                 "Bound-method receiver metadata exceeds the designator path.",
                 "Re-run compilation and report this internal compiler error.",
@@ -151,11 +172,7 @@ impl Compiler {
                 d.span.column,
             )
         })?;
-        let receiver = Designator {
-            parts: receiver_parts.to_vec(),
-            span: d.span,
-        };
-        self.compile_designator_read(&receiver)?;
+        self.compile_designator_prefix_read(d, receiver_part_count)?;
 
         self.emit_bound_method_from_receiver(info, location)
     }

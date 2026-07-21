@@ -31,7 +31,17 @@ impl Compiler {
         d: &Designator,
         infos: &[PropertyReadInfo],
     ) -> Result<(), CompileError> {
+        self.compile_property_read_designator_prefix(d, d.parts.len(), infos)
+    }
+
+    fn compile_property_read_designator_prefix(
+        &mut self,
+        d: &Designator,
+        part_count: usize,
+        infos: &[PropertyReadInfo],
+    ) -> Result<(), CompileError> {
         let location = Self::location_of(&d.span);
+        let parts = &d.parts[..part_count.min(d.parts.len())];
         let mut ordered = infos.to_vec();
         ordered.sort_by_key(|info| info.receiver_part_count);
         let Some(first) = ordered.first() else {
@@ -42,7 +52,7 @@ impl Compiler {
                 d.span.column,
             ));
         };
-        let receiver_parts = d.parts.get(..first.receiver_part_count).ok_or_else(|| {
+        parts.get(..first.receiver_part_count).ok_or_else(|| {
             internal_compiler_error(
                 "Property-read receiver metadata exceeds the designator path.",
                 "Re-run compilation and report this internal compiler error.",
@@ -50,32 +60,25 @@ impl Compiler {
                 d.span.column,
             )
         })?;
-        let receiver = Designator {
-            parts: receiver_parts.to_vec(),
-            span: d.span,
-        };
-        self.compile_designator_read(&receiver)?;
+        self.compile_designator_prefix_read(d, first.receiver_part_count)?;
         self.emit_property_get_from_receiver(first, location)?;
 
         let mut cursor = first.receiver_part_count + 1;
         for info in ordered.iter().skip(1) {
-            let suffix = d
-                .parts
-                .get(cursor..info.receiver_part_count)
-                .ok_or_else(|| {
-                    internal_compiler_error(
-                        "Property-read metadata is not ordered within the designator path.",
-                        "Re-run compilation and report this internal compiler error.",
-                        d.span.line,
-                        d.span.column,
-                    )
-                })?;
+            let suffix = parts.get(cursor..info.receiver_part_count).ok_or_else(|| {
+                internal_compiler_error(
+                    "Property-read metadata is not ordered within the designator path.",
+                    "Re-run compilation and report this internal compiler error.",
+                    d.span.line,
+                    d.span.column,
+                )
+            })?;
             self.compile_property_receiver_suffix(suffix, location)?;
             self.emit_property_get_from_receiver(info, location)?;
             cursor = info.receiver_part_count + 1;
         }
 
-        let suffix = d.parts.get(cursor..).ok_or_else(|| {
+        let suffix = parts.get(cursor..).ok_or_else(|| {
             internal_compiler_error(
                 "Property-read metadata exceeds the designator path.",
                 "Re-run compilation and report this internal compiler error.",
@@ -86,16 +89,17 @@ impl Compiler {
         self.compile_property_receiver_suffix(suffix, location)
     }
 
-    /// Compile a receiver path that may contain property getter reads.
-    pub(in crate::compiler) fn compile_property_receiver(
+    /// Compile a receiver prefix that may contain property getter reads.
+    pub(in crate::compiler) fn compile_property_receiver_prefix(
         &mut self,
-        receiver: &Designator,
+        designator: &Designator,
+        part_count: usize,
         reads: &[PropertyReadInfo],
     ) -> Result<(), CompileError> {
         if reads.is_empty() {
-            self.compile_designator_read(receiver)
+            self.compile_designator_prefix_read(designator, part_count)
         } else {
-            self.compile_property_read_designator(receiver, reads)
+            self.compile_property_read_designator_prefix(designator, part_count, reads)
         }
     }
 

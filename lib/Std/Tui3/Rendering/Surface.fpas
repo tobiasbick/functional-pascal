@@ -1,0 +1,152 @@
+unit Std.Tui3.Rendering.Surface;
+
+uses Std.Array, Std.Console, Std.Str, Std.Tui3.Geometry.Size;
+
+private mutable var Tui3SurfaceSizes: array of TuiSize := [];
+private mutable var Tui3SurfaceRowOffsets: array of integer := [];
+private mutable var Tui3SurfaceRows: array of string := [];
+
+private function Tui3SurfaceRequire(Slot: integer): integer;
+begin
+  if (Slot < 1) or (Slot > Std.Array.Length(Tui3SurfaceSizes)) then
+  begin
+    panic('Tui3 working surface handle is invalid')
+  end;
+  return Slot
+end;
+
+private function Tui3BlankRow(Width: integer): string;
+begin
+  return Std.Str.RepeatStr(' ', Width)
+end;
+
+type
+  /// Explicit immutable copy of the most recently painted headless surface.
+  TuiSurfaceSnapshot = record
+    Width: integer;
+    Height: integer;
+    Cells: array of string;
+
+    /// Returns one glyph at a zero-based position.
+
+    function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): string;
+    begin
+      if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
+      begin
+        panic('Tui3 snapshot position is outside the surface')
+      end;
+      return Self.Cells[(Y * Self.Width) + X]
+    end;
+
+    /// Returns one complete row as text.
+
+    function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
+    begin
+      if (Y < 0) or (Y >= Self.Height) then
+      begin
+        panic('Tui3 snapshot row is outside the surface')
+      end;
+      mutable var Line: string := '';
+      for X: integer := 0 to Self.Width - 1 do
+      begin
+        Line := Line + Self.CellAt(X, Y)
+      end;
+      return Line
+    end;
+  end;
+  /// Host-owned mutable working surface handle.
+  TuiWorkingSurface = record
+    Slot: integer;
+
+    /// Allocates one working grid for a headless application.
+
+    static function Create(Size: TuiSize): TuiWorkingSurface;
+    begin
+      Tui3SurfaceSizes := Std.Array.Concat(Tui3SurfaceSizes, [Size]);
+      Tui3SurfaceRowOffsets := Std.Array.Concat(Tui3SurfaceRowOffsets, [
+                                                                         Std.Array.Length(Tui3SurfaceRows)
+
+                                                                       ]);
+      mutable var Rows: array of string := [];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        Std.Array.Push(Rows, Tui3BlankRow(Size.Width))
+      end;
+      Tui3SurfaceRows := Std.Array.Concat(Tui3SurfaceRows, Rows);
+      return record Slot := Std.Array.Length(Tui3SurfaceSizes); end
+    end;
+
+    /// Returns the current surface size.
+
+    function Size(Self: TuiWorkingSurface): TuiSize;
+    begin
+      var Slot: integer := Tui3SurfaceRequire(Self.Slot);
+      return Tui3SurfaceSizes[Slot - 1]
+    end;
+
+    /// Replaces every row with one fresh blank string.
+
+    procedure Clear(Self: TuiWorkingSurface);
+    begin
+      var Slot: integer := Tui3SurfaceRequire(Self.Slot);
+      var Size: TuiSize := Tui3SurfaceSizes[Slot - 1];
+      var RowOffset: integer := Tui3SurfaceRowOffsets[Slot - 1];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        Tui3SurfaceRows[RowOffset + Y] := Tui3BlankRow(Size.Width)
+      end
+    end;
+
+    /// Paints one glyph by replacing only its destination row.
+
+    procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
+    begin
+      var Slot: integer := Tui3SurfaceRequire(Self.Slot);
+      var Size: TuiSize := Tui3SurfaceSizes[Slot - 1];
+      if (((X < 0) or (X >= Size.Width)) or (Y < 0)) or (Y >= Size.Height) then
+      begin
+        return
+      end;
+      var Width: integer := Std.Console.DisplayWidth(Glyph);
+      if (Width < 1) or (Width > 2) then
+      begin
+        panic('Tui3 surface glyph must occupy one or two cells')
+      end;
+      mutable var CellGlyph: string := Glyph;
+      if (Std.Str.Length(CellGlyph) <> 1) or (Width = 2) then
+      begin
+        CellGlyph := '?'
+      end;
+      var RowIndex: integer := Tui3SurfaceRowOffsets[Slot - 1] + Y;
+      mutable var Row: string := Tui3SurfaceRows[RowIndex];
+      if (Width = 2) and (X + 1 >= Size.Width) then
+      begin
+        CellGlyph := ' '
+      end;
+      Row := Std.Str.SetCharAt(Row, X, CellGlyph);
+      if (Width = 2) and (X + 1 < Size.Width) then
+      begin
+        Row := Std.Str.SetCharAt(Row, X + 1, ' ')
+      end;
+      Tui3SurfaceRows[RowIndex] := Row
+    end;
+
+    /// Copies the current grid for explicit test inspection.
+
+    function Snapshot(Self: TuiWorkingSurface): TuiSurfaceSnapshot;
+    begin
+      var Slot: integer := Tui3SurfaceRequire(Self.Slot);
+      var Size: TuiSize := Tui3SurfaceSizes[Slot - 1];
+      var RowOffset: integer := Tui3SurfaceRowOffsets[Slot - 1];
+      mutable var Cells: array of string := [];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        var Row: string := Tui3SurfaceRows[RowOffset + Y];
+        for X: integer := 0 to Size.Width - 1 do
+        begin
+          Std.Array.Push(Cells, Std.Str.CharAt(Row, X))
+        end
+      end;
+      return record Width := Size.Width; Height := Size.Height; Cells := Cells; end
+    end;
+  end;

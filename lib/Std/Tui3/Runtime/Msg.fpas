@@ -1,0 +1,28 @@
+unit Std.Tui3.Runtime.Msg;
+
+uses Std.Console, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId;
+
+type
+  /// Framework messages delivered to an application's Update function.
+  TuiMsg = enum
+    Key(Key: Std.Console.KeyEvent);
+    Tick(DeltaMilliseconds: integer);
+    FocusChanged(Previous: option of TuiControlId; Current: option of TuiControlId);
+    Action(Source: TuiControlId; Action: TuiAction);
+    TextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer);
+    QuitRequested;
+  end;
+
+/// Creates a source-aware action message.
+
+function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
+begin
+  return TuiMsg.Action(Source, Action)
+end;
+
+/// Creates a source-aware controlled-input change message.
+
+function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
+begin
+  return TuiMsg.TextChanged(Source, Action, Text, Caret)
+end;

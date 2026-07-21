@@ -134,6 +134,22 @@ fn generic_function_valid() {
 }
 
 #[test]
+fn generic_callback_returning_recursive_record_is_valid() {
+    check_ok(
+        "program T; \
+         type Element = record Text: string; Children: array of Element; end; \
+              Model = record Count: integer; end; \
+         function View(State: Model): Element; \
+         begin return record Text := 'root'; Children := []; end end; \
+         function Render<TModel>(State: TModel; ViewFn: function(State: TModel): Element): Element; \
+         begin return ViewFn(State) end; \
+         begin \
+           var Root: Element := Render(record Count := 1; end, View) \
+         end.",
+    );
+}
+
+#[test]
 fn generic_procedure_valid() {
     check_ok(
         "program T; uses Std.Console; \

@@ -42,7 +42,7 @@ fn turbo_vision_key_code_to_kind_and_char(code: u16) -> (usize, char) {
         KB_LEFT => (kind("Left"), '\0'),
         KB_RIGHT => (kind("Right"), '\0'),
         KB_HOME => (kind("Home"), '\0'),
-        KB_END => (kind("End"), '\0'),
+        KB_END => (kind("EndKey"), '\0'),
         KB_PGUP => (kind("PageUp"), '\0'),
         KB_PGDN => (kind("PageDown"), '\0'),
         KB_INS => (kind("Insert"), '\0'),

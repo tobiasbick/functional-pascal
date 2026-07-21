@@ -1,0 +1,56 @@
+unit Std.Tui3;
+
+uses
+  Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size,
+  Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId, Std.Tui3.Rendering.Surface,
+  Std.Tui3.Runtime.Application, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
+
+type
+  /// Fixed terminal extent used by headless Tui3 hosts.
+  TuiSize = Std.Tui3.Geometry.Size.TuiSize;
+  /// Zero-based terminal-cell rectangle.
+  TuiRect = Std.Tui3.Geometry.Rect.TuiRect;
+  /// Positive identity unique among interactive nodes in one rendered tree.
+  TuiControlId = Std.Tui3.Ids.ControlId.TuiControlId;
+  /// Positive application intent; repetitions across controls are allowed.
+  TuiAction = Std.Tui3.Ids.Action.TuiAction;
+  /// Runtime command returned through Update's mutable output parameter.
+  TuiCmd = Std.Tui3.Runtime.Cmd.TuiCmd;
+  /// Observable command output passed to Update.
+  TuiCmdOutput = Std.Tui3.Runtime.Cmd.TuiCmdOutput;
+  /// Framework message delivered to Update.
+  TuiMsg = Std.Tui3.Runtime.Msg.TuiMsg;
+  /// Immutable element-tree node.
+  TuiElement = Std.Tui3.Elements.Element.TuiElement;
+  /// Named element constructors.
+  TuiElementBuilders = Std.Tui3.Elements.Element.TuiElementBuilders;
+  /// Explicit copy of the last painted headless surface.
+  TuiSurfaceSnapshot = Std.Tui3.Rendering.Surface.TuiSurfaceSnapshot;
+  /// Headless application host.
+  TuiApplication = Std.Tui3.Runtime.Application.TuiApplication;
+  /// Console key event used by headless key injection.
+  TuiKeyEvent = Std.Console.KeyEvent;
+  /// Console key kind used by headless key injection.
+  TuiKeyKind = Std.Console.KeyKind;
+
+/// Creates a source-aware action message.
+
+function TuiMsgAction(
+  Source: Std.Tui3.Ids.ControlId.TuiControlId;
+  Action: Std.Tui3.Ids.Action.TuiAction
+): Std.Tui3.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui3.Runtime.Msg.TuiMsgAction(Source, Action)
+end;
+
+/// Creates a source-aware controlled-input change message.
+
+function TuiMsgTextChanged(
+  Source: Std.Tui3.Ids.ControlId.TuiControlId;
+  Action: Std.Tui3.Ids.Action.TuiAction;
+  Text: string;
+  Caret: integer
+): Std.Tui3.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui3.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret)
+end;

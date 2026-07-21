@@ -1,0 +1,68 @@
+unit Std.Tui3.Geometry.Rect;
+
+uses Std.Tui3.Geometry.Size;
+
+type
+  /// Zero-based terminal-cell rectangle.
+  TuiRect = record
+    X: integer;
+    Y: integer;
+    Width: integer;
+    Height: integer;
+
+    /// Creates a rectangle and rejects negative extents.
+
+    static function Create(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
+    begin
+      if (Width < 0) or (Height < 0) then
+      begin
+        panic('Tui3 rectangle extents must not be negative')
+      end;
+      return record X := X; Y := Y; Width := Width; Height := Height; end
+    end;
+
+    /// Returns the first column after the rectangle.
+
+    function Right(Self: TuiRect): integer;
+    begin
+      return Self.X + Self.Width
+    end;
+
+    /// Returns the first row after the rectangle.
+
+    function Bottom(Self: TuiRect): integer;
+    begin
+      return Self.Y + Self.Height
+    end;
+
+    /// Returns whether the rectangle has no drawable cells.
+
+    function IsEmpty(Self: TuiRect): boolean;
+    begin
+      return (Self.Width = 0) or (Self.Height = 0)
+    end;
+
+    /// Returns a rectangle inset by one cell on every side.
+
+    function Inset(Self: TuiRect): TuiRect;
+    begin
+      mutable var InnerWidth: integer := Self.Width - 2;
+      mutable var InnerHeight: integer := Self.Height - 2;
+      if InnerWidth < 0 then
+      begin
+        InnerWidth := 0
+      end;
+      if InnerHeight < 0 then
+      begin
+        InnerHeight := 0
+      end;
+      return TuiRect.Create(Self.X + 1, Self.Y + 1, InnerWidth, InnerHeight)
+    end;
+  end;
+
+/// Creates a full-surface rectangle.
+
+function TuiRectForSize(Size: TuiSize): TuiRect;
+begin
+  return TuiRect.Create(0, 0, Size.Width, Size.Height)
+end;

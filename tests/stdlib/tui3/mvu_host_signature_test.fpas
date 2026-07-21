@@ -1,0 +1,53 @@
+program MvuHostSignatureTest;
+
+{ Phase 0: prove the exact generic RunIterations / Update / View callable pattern. }
+uses Std.Tui3, Std.Test;
+
+type
+  CounterModel = record
+    Value: integer;
+  end;
+
+function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CounterModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key):
+    begin
+      return State
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      return record Value := State.Value + 1; end
+    end;
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      return State
+    end;
+    TuiMsg.Action(Source, Action):
+    begin
+      return State
+    end;
+    TuiMsg.TextChanged(Source, Action, Text, Caret):
+    begin
+      return State
+    end;
+    TuiMsg.QuitRequested:
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return State
+    end
+  end
+end;
+
+function ViewCounter(State: CounterModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('count')
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var FinalModel: CounterModel := App.RunIterations(record Value := 0; end, UpdateCounter, ViewCounter, 3, 16);
+  AssertEquals(3, FinalModel.Value);
+  App.Close()
+end.

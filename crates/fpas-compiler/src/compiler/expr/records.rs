@@ -18,7 +18,7 @@ impl Compiler {
                 let location = Self::location_of(span);
                 // If sema annotated this literal with a named record type that has defaults,
                 // emit all fields (provided + defaults). Otherwise emit the raw fields.
-                let type_name_and_specs = self.take_record_literal_expansion(expr);
+                let type_name_and_specs = self.take_record_literal_expansion(expr)?;
                 if let Some((type_name, field_specs)) = type_name_and_specs {
                     let provided: HashMap<&str, &Expr> = fields
                         .iter()
@@ -81,28 +81,31 @@ impl Compiler {
     /// (cloned so the borrow on `self` is released before compilation continues).
     ///
     /// Returns `None` for anonymous literals or named types without any defaults.
-    fn take_record_literal_expansion(&self, expr: &Expr) -> Option<RecordLiteralExpansion> {
-        let ty = self.ty_of(expr);
+    fn take_record_literal_expansion(
+        &self,
+        expr: &Expr,
+    ) -> Result<Option<RecordLiteralExpansion>, CompileError> {
+        let ty = self.ty_of(expr)?;
         let Ty::Record(record_ty) = ty else {
-            return None;
+            return Ok(None);
         };
         if record_ty.name == "<anonymous>" {
-            return None;
+            return Ok(None);
         }
 
         if let Some(specs) = self.record_defaults.get(&record_ty.name) {
-            return Some((record_ty.name.clone(), specs.clone()));
+            return Ok(Some((record_ty.name.clone(), specs.clone())));
         }
 
         let Expr::RecordLiteral { fields, .. } = expr else {
-            return None;
+            return Ok(None);
         };
-        Some((
+        Ok(Some((
             record_ty.name.clone(),
             fields
                 .iter()
                 .map(|field| (field.name.clone(), None))
                 .collect(),
-        ))
+        )))
     }
 }

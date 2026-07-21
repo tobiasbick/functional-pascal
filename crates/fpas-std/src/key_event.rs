@@ -13,7 +13,7 @@ pub const KEY_KIND_VARIANTS: &[&str] = &[
     "Left",
     "Right",
     "Home",
-    "End",
+    "EndKey",
     "PageUp",
     "PageDown",
     "Insert",
@@ -70,6 +70,7 @@ mod tests {
     fn key_kind_index_known_variants() {
         assert_eq!(key_kind_index("Unknown"), 0);
         assert_eq!(key_kind_index("Space"), 5);
+        assert_eq!(key_kind_index("EndKey"), 11);
         assert_eq!(key_kind_index("F1"), 16);
         let last = KEY_KIND_VARIANTS.len() - 1;
         assert_eq!(key_kind_index("Character"), last);

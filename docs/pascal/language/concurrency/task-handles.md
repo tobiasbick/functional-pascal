@@ -12,7 +12,7 @@ var T: task := go ComputeSomething(Data);
 
 ```pascal
 var T: task := go Compute(100);
-var Result: integer := Wait(T);
+var TaskValue: integer := Wait(T);
 ```
 
 For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** is the unit type in the type system.

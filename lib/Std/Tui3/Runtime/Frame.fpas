@@ -1,0 +1,13 @@
+unit Std.Tui3.Runtime.Frame;
+
+uses
+  Std.Tui3.Elements.Element, Std.Tui3.Elements.Validate, Std.Tui3.Rendering.Paint,
+  Std.Tui3.Rendering.Surface;
+
+/// Executes the common headless frame phases in their required order.
+
+procedure TuiRenderFrame(Surface: TuiWorkingSurface; Root: TuiElement);
+begin
+  TuiElementValidate(Root);
+  TuiPaintView(Surface, Root)
+end;

@@ -1,0 +1,33 @@
+unit Std.Tui3.Geometry.Size;
+
+private function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
+begin
+  if Value < 0 then
+  begin
+    panic(('Tui3 ' + Name) + ' must not be negative')
+  end;
+  return Value
+end;
+
+type
+  /// Non-negative terminal-cell extent.
+  TuiSize = record
+    Width: integer;
+    Height: integer;
+
+    /// Creates a validated extent.
+
+    static function Create(Width: integer; Height: integer): TuiSize;
+    begin
+      TuiSizeRequireNonNegative(Width, 'width');
+      TuiSizeRequireNonNegative(Height, 'height');
+      return record Width := Width; Height := Height; end
+    end;
+
+    /// Returns whether either extent is zero.
+
+    function IsEmpty(Self: TuiSize): boolean;
+    begin
+      return (Self.Width = 0) or (Self.Height = 0)
+    end;
+  end;

@@ -75,7 +75,7 @@ Adapted from Tui2:
 5. Apply alignment inside each allocated slot (`Leading`, `Center`, `Trailing`, `Fill`).
 
 Indivisible leftover cells go to earlier items or tracks in stable order. Hidden or
-`None` children do not participate. When bounds fall below the combined minimum, children
+`Empty` children do not participate. When bounds fall below the combined minimum, children
 keep minimum geometry and may extend beyond the container; paint clips overflow.
 `TuiLayoutFit` reports shortage without mutating minimum geometry (terminal-too-small).
 

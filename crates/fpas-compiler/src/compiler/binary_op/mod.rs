@@ -5,7 +5,7 @@
 mod arithmetic;
 mod comparisons;
 
-use crate::error::CompileError;
+use crate::error::{CompileError, internal_compiler_error};
 use fpas_bytecode::{Op, SourceLocation};
 use fpas_parser::{BinaryOp, Expr};
 use fpas_sema::Ty;
@@ -17,33 +17,40 @@ pub(super) fn is_generic_param(ty: &Ty) -> bool {
 }
 
 impl Compiler {
-    pub(super) fn ty_of(&self, expr: &Expr) -> Ty {
+    /// Return the semantic type of an expression or an internal compile error.
+    pub(super) fn ty_of(&self, expr: &Expr) -> Result<Ty, CompileError> {
         let key = fpas_sema::expr_lookup_key(expr);
         if let Some(ty) = self.expr_types.get(&key) {
-            return ty.clone();
+            return Ok(ty.clone());
         }
         // Fallback for constant sub-expressions that were cloned (e.g. record field
         // defaults copied into RecordDefaultsMap lose their type-map entries because
         // the pointer identity changes on clone).
-        self.infer_const_ty(expr)
+        self.infer_const_ty(expr).ok_or_else(|| {
+            let span = expr.span();
+            internal_compiler_error(
+                "Expression type is missing after semantic analysis.",
+                "This is an internal compiler error. Re-run compilation and report the source program.",
+                span.line,
+                span.column,
+            )
+        })
     }
 
     /// Infer the type of a constant expression without consulting the type map.
     ///
     /// Only handles the subset of expressions that can legitimately appear as record
     /// field default values: literals, paren-wrapped literals, and unary negation of
-    /// numeric literals.  For anything else the method panics identically to the old
-    /// `ty_of` to preserve the invariant that all non-constant expressions must be
-    /// present in the type map after semantic analysis.
-    fn infer_const_ty(&self, expr: &Expr) -> Ty {
+    /// numeric literals.
+    fn infer_const_ty(&self, expr: &Expr) -> Option<Ty> {
         match expr {
-            Expr::Integer(_, _) => Ty::Integer,
-            Expr::Real(_, _) => Ty::Real,
-            Expr::Str(_, _) => Ty::String,
-            Expr::Bool(_, _) => Ty::Boolean,
+            Expr::Integer(_, _) => Some(Ty::Integer),
+            Expr::Real(_, _) => Some(Ty::Real),
+            Expr::Str(_, _) => Some(Ty::String),
+            Expr::Bool(_, _) => Some(Ty::Boolean),
             Expr::UnaryOp { operand, .. } => self.infer_const_ty(operand),
             Expr::Paren(inner, _) => self.infer_const_ty(inner),
-            _ => unreachable!("expression type missing after semantic analysis"),
+            _ => None,
         }
     }
 
@@ -97,8 +104,8 @@ impl Compiler {
         right: &Expr,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let lt = self.ty_of(left);
-        let rt = self.ty_of(right);
+        let lt = self.ty_of(left)?;
+        let rt = self.ty_of(right)?;
         let operand_types = (&lt, &rt);
 
         match op {

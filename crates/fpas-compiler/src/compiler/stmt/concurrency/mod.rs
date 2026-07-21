@@ -9,7 +9,7 @@ use crate::error::{CompileError, compile_error};
 use fpas_bytecode::Op;
 use fpas_diagnostics::codes::COMPILE_INVALID_GO_EXPRESSION;
 use fpas_lexer::Span;
-use fpas_parser::{Designator, Expr};
+use fpas_parser::Expr;
 use fpas_sema::Ty;
 
 impl Compiler {
@@ -37,11 +37,11 @@ impl Compiler {
                             qualified_name,
                             receiver_reads,
                         } => {
-                            let receiver = Designator {
-                                parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-                                span: designator.span,
-                            };
-                            self.compile_property_receiver(&receiver, &receiver_reads)?;
+                            self.compile_property_receiver_prefix(
+                                designator,
+                                designator.parts.len() - 1,
+                                &receiver_reads,
+                            )?;
                             for arg in args {
                                 self.compile_expr(arg)?;
                             }

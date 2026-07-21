@@ -105,7 +105,7 @@ fn source_standard_library_is_copied_beside_the_cli_binary() {
     assert_eq!(stdout, "0.0.1\n");
 }
 
-fn run_repo_tui2_program(rel_path: &str) -> (i32, String, String) {
+fn run_repo_std_program(rel_path: &str) -> (i32, String, String) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
@@ -120,6 +120,46 @@ fn run_repo_tui2_program(rel_path: &str) -> (i32, String, String) {
         ],
         root,
     )
+}
+
+fn run_repo_tui2_program(rel_path: &str) -> (i32, String, String) {
+    run_repo_std_program(rel_path)
+}
+
+#[test]
+fn tui3_rejects_duplicate_control_ids() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui3/duplicate_control_id_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "duplicate Tui3 control ids must fail");
+    assert!(
+        stderr.contains("Tui3 control id must be unique in one tree: 1"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui3_rejects_forged_non_positive_element_control_ids() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui3/invalid_element_control_id_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "non-positive Tui3 element control ids must fail");
+    assert!(
+        stderr.contains("Tui3 interactive elements require a positive control id"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui3_rejects_forged_non_positive_element_action_ids() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui3/invalid_element_action_id_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "non-positive Tui3 element action ids must fail");
+    assert!(
+        stderr.contains("Tui3 interactive elements require a positive action id"),
+        "stderr: {stderr}"
+    );
 }
 
 #[test]

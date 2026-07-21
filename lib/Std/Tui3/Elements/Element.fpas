@@ -1,0 +1,87 @@
+unit Std.Tui3.Elements.Element;
+
+uses Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId;
+
+type
+  /// Immutable description of one node in a Tui3 view tree.
+  TuiElement = enum
+    Empty;
+    Label(Text: string);
+    Button(Id: TuiControlId; Text: string; Action: TuiAction);
+    Input(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction);
+    Row(Children: array of TuiElement);
+    Column(Children: array of TuiElement);
+    Window(Title: string; Children: array of TuiElement);
+    Dialog(Title: string; Children: array of TuiElement);
+    Desktop(Focused: option of TuiControlId; Children: array of TuiElement);
+  end;
+  /// Named constructors for immutable Tui3 elements.
+  TuiElementBuilders = record
+    /// Creates an element that occupies no layout space.
+
+    static function MakeEmpty(): TuiElement;
+    begin
+      return TuiElement.Empty
+    end;
+
+    /// Creates a one-line text label.
+
+    static function MakeLabel(TextValue: string): TuiElement;
+    begin
+      return TuiElement.Label(TextValue)
+    end;
+
+    /// Creates a focusable button that emits the supplied action.
+
+    static function MakeButton(Id: TuiControlId; TextValue: string; Action: TuiAction): TuiElement;
+    begin
+      return TuiElement.Button(Id, TextValue, Action)
+    end;
+
+    /// Creates a controlled one-line input.
+
+    static function MakeInput(
+  Id: TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Input(Id, TextValue, CaretValue, ChangeAction)
+    end;
+
+    /// Creates a horizontal layout node.
+
+    static function MakeRow(Items: array of TuiElement): TuiElement;
+    begin
+      return TuiElement.Row(Items)
+    end;
+
+    /// Creates a vertical layout node.
+
+    static function MakeColumn(Items: array of TuiElement): TuiElement;
+    begin
+      return TuiElement.Column(Items)
+    end;
+
+    /// Creates a bordered window.
+
+    static function MakeWindow(TitleValue: string; Items: array of TuiElement): TuiElement;
+    begin
+      return TuiElement.Window(TitleValue, Items)
+    end;
+
+    /// Creates a modal bordered dialog.
+
+    static function MakeDialog(TitleValue: string; Items: array of TuiElement): TuiElement;
+    begin
+      return TuiElement.Dialog(TitleValue, Items)
+    end;
+
+    /// Creates the root element and declares the model-controlled focus.
+
+    static function MakeDesktop(Focused: option of TuiControlId; Items: array of TuiElement): TuiElement;
+    begin
+      return TuiElement.Desktop(Focused, Items)
+    end;
+  end;

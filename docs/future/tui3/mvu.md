@@ -11,7 +11,8 @@ similar TEAs — not React hooks and not retained widget objects.
 | `TuiMsg` | Framework message. Includes raw fallback input and controlled-value changes. |
 | `Update` | Returns the next `Model` and writes one closed `TuiCmd` output. |
 | `View` | `Model → TuiElement`. Pure description of the next frame. |
-| `TuiCmd` | Data-only runtime control (`None` or `Quit` in v1). |
+| `TuiCmd` | Data-only runtime control (`NoCommand` or `Quit` in v1). |
+| `TuiCmdOutput` | Host-owned capability through which `Update` returns one command. |
 
 ```text
 TuiMsg ──► Update ──► Model
@@ -76,7 +77,7 @@ range is reserved for old Turbo Vision command ids.
 
 | Command | Meaning |
 | --- | --- |
-| `None` | No effect. |
+| `NoCommand` | No effect (`None` is reserved in FPAS enum variants). |
 | `Quit` | Request orderly shutdown. |
 
 There is no closure-based `Post`: embedding a procedure would make the command executable behavior
@@ -94,7 +95,7 @@ TuiApplication.OpenForTest(Size): TuiApplication
 TuiApplication.RunIterations<TModel>(
   App: TuiApplication;
   InitialModel: TModel;
-  Update: function(State: TModel; Msg: TuiMsg; mutable Cmd: TuiCmd): TModel;
+  Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
   View: function(State: TModel): TuiElement;
   IterationCount: integer;
   DeltaMilliseconds: integer
@@ -102,7 +103,7 @@ TuiApplication.RunIterations<TModel>(
 
 TuiApplication.Run<TModel>(
   InitialModel: TModel;
-  Update: function(State: TModel; Msg: TuiMsg; mutable Cmd: TuiCmd): TModel;
+  Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
   View: function(State: TModel): TuiElement
 ): TModel
 ```
@@ -110,11 +111,14 @@ TuiApplication.Run<TModel>(
 `Run` acquires the interactive terminal, loops until quit, restores the terminal, and
 returns the final model. `RunIterations` is the headless deterministic driver.
 
-The runtime sets `Cmd := TuiCmd.None` before calling `Update`. The mutable command output replaces
-the impossible `Model * TuiCmd` tuple sketch without requiring a generic result record. Phase 0 must
-compile a real program using this pattern; if inference or callable compatibility fails, the plan is
-revised before value and control implementation proceeds. The element tree itself is not generic
-over an application message type.
+The runtime resets `TuiCmdOutput` to `NoCommand` before calling `Update`; `Update` calls
+`Cmd.Set(TuiCmd.Quit)` when needed. A plain mutable enum parameter cannot be used as an output in
+FPAS because parameter reassignment is local to the callee. The host-owned output capability
+replaces the impossible `Model * TuiCmd` tuple sketch without requiring a generic result record.
+**Proven compiling:**
+[`tests/stdlib/tui3/mvu_host_signature_test.fpas`](../../../tests/stdlib/tui3/mvu_host_signature_test.fpas)
+exercises `RunIterations<TModel>` with concrete `Update`/`View` callables. The element tree itself is
+not generic over an application message type.
 
 ## Focus and control state
 

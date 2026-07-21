@@ -121,7 +121,7 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   action is disabled.
 - Enforce measurement and paint mutation restrictions at runtime. Limiting canvas use to an active
   paint callback is deferred until FPAS can represent an opaque transient handle; see
-  [compiler-panic-followups.md](../compiler-panic-followups.md).
+  [opaque-records.md](../opaque-records.md).
 
 Completion contracts: [event-loop.md](event-loop.md),
 [events-and-actions.md](events-and-actions.md), and [view-lifecycle.md](view-lifecycle.md).

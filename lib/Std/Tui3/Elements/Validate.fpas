@@ -1,0 +1,115 @@
+unit Std.Tui3.Elements.Validate;
+
+uses
+  Std.Array, Std.Conv, Std.Str, Std.Tui3.Elements.Element, Std.Tui3.Ids.Action,
+  Std.Tui3.Ids.ControlId;
+
+private function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
+begin
+  for Index: integer := 0 to Std.Array.Length(Seen) - 1 do
+  begin
+    if Seen[Index] = Value then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private procedure TuiElementValidateControl(Id: TuiControlId);
+begin
+  if Id.Value <= 0 then
+  begin
+    panic('Tui3 interactive elements require a positive control id')
+  end
+end;
+
+private procedure TuiElementValidateAction(Action: TuiAction);
+begin
+  if Action.Value <= 0 then
+  begin
+    panic('Tui3 interactive elements require a positive action id')
+  end
+end;
+
+private function TuiElementChildren(Node: TuiElement): array of TuiElement;
+begin
+  case Node of
+    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    begin
+      return Children
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      return []
+    end
+  end
+end;
+
+private function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
+begin
+  mutable var Seen: array of integer := [];
+  case Node of
+    TuiElement.Button(Id, Text, Action):
+    begin
+      TuiElementValidateControl(Id);
+      TuiElementValidateAction(Action);
+      Std.Array.Push(Seen, Id.Value)
+    end;
+    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      TuiElementValidateControl(Id);
+      TuiElementValidateAction(ChangeAction);
+      if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
+      begin
+        panic('Tui3 input caret must be within its text')
+      end;
+      Std.Array.Push(Seen, Id.Value)
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    begin
+    end
+  end;
+  var Children: array of TuiElement := TuiElementChildren(Node);
+  for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    var ChildIds: array of integer := TuiElementValidateAndCollect(Children[ChildIndex]);
+    for IdIndex: integer := 0 to Std.Array.Length(ChildIds) - 1 do
+    begin
+      if TuiElementControlSeen(Seen, ChildIds[IdIndex]) then
+      begin
+        panic('Tui3 control id must be unique in one tree: ' + Std.Conv.IntToStr(ChildIds[IdIndex]))
+      end;
+      Std.Array.Push(Seen, ChildIds[IdIndex])
+    end
+  end;
+  case Node of
+    TuiElement.Desktop(Focused, DesktopChildren):
+    begin
+      case Focused of
+        Some(Id):
+        begin
+          if not TuiElementControlSeen(Seen, Id.Value) then
+          begin
+            panic('Tui3 focused control id must exist in the rendered tree: ' +
+                  Std.Conv.IntToStr(Id.Value))
+          end
+        end;
+        None:
+        begin
+        end
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    begin
+    end
+  end;
+  return Seen
+end;
+
+/// Validates one complete Tui3 view tree before layout or routing.
+
+procedure TuiElementValidate(Root: TuiElement);
+begin
+  TuiElementValidateAndCollect(Root)
+end;

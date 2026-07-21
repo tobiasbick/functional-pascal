@@ -93,7 +93,13 @@ impl NameRewriter<'_> {
                     self.rewrite_type_expr(&mut event.type_expr);
                 }
             }
-            TypeBody::Enum(_) => {}
+            TypeBody::Enum(enum_type) => {
+                for member in &mut enum_type.members {
+                    for field in &mut member.fields {
+                        self.rewrite_type_expr(&mut field.type_expr);
+                    }
+                }
+            }
             TypeBody::Alias(type_expr) => self.rewrite_type_expr(type_expr),
         }
     }

@@ -93,8 +93,8 @@ impl Checker {
         };
 
         let through_type = self.designator_denotes_type(&receiver_designator);
-        let receiver_key = crate::designator_lookup_key(&receiver_designator);
-        let receiver_ty = self.check_designator_expr(&receiver_designator);
+        let receiver_key = crate::designator_lookup_key(designator);
+        let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
         let receiver_reads = self
             .property_reads
             .remove(&receiver_key)

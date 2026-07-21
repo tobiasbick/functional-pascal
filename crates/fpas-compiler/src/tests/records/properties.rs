@@ -256,3 +256,66 @@ end.",
     );
     assert_eq!(out.lines, vec!["16"]);
 }
+
+#[test]
+fn computed_property_can_be_used_in_arithmetic() {
+    let out = compile_and_run(
+        "program T;
+uses Std.Console;
+type
+  Selector = record
+    Value: integer;
+    function ReadSelected(Self: Selector): integer;
+    begin
+      return Self.Value
+    end;
+    property Selected: integer read ReadSelected;
+    function Previous(Self: Selector): integer;
+    begin
+      return Self.Selected - 1
+    end;
+  end;
+begin
+  var S: Selector := record Value := 3; end;
+  WriteLn(S.Previous())
+end.",
+    );
+    assert_eq!(out.lines, vec!["2"]);
+}
+
+#[test]
+fn method_call_on_property_can_be_used_in_boolean_expression() {
+    let out = compile_and_run(
+        "program T;
+uses Std.Console;
+type
+  Child = record
+    Alive: boolean;
+    function IsAlive(Self: Child): boolean;
+    begin
+      return Self.Alive
+    end;
+  end;
+  Parent = record
+    Current: boolean;
+    ChildValue: Child;
+    function ReadChild(Self: Parent): Child;
+    begin
+      return Self.ChildValue
+    end;
+    property Custom: Child read ReadChild;
+    function IsAlive(Self: Parent): boolean;
+    begin
+      return Self.Current and Self.Custom.IsAlive()
+    end;
+  end;
+begin
+  var P: Parent := record
+    Current := true;
+    ChildValue := record Alive := true; end;
+  end;
+  WriteLn(P.IsAlive())
+end.",
+    );
+    assert_eq!(out.lines, vec!["true"]);
+}

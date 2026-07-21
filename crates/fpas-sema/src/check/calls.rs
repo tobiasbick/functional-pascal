@@ -1,9 +1,10 @@
 use super::Checker;
-use crate::types::{FunctionTy, GenericParamDef, ParamTy, ProcedureTy, Ty};
+use crate::types::{FunctionTy, GenericParamDef, ParamTy, ProcedureTy, RecordTy, Ty};
 use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 /// Signature metadata shared by function and procedure call checking.
 struct RoutineCallSignature<'a> {
@@ -125,7 +126,14 @@ impl Checker {
         let mut inferred = HashMap::new();
 
         for (param, arg_ty) in params.iter().zip(arg_types.iter()) {
-            self.collect_type_param_bindings(&param.ty, arg_ty, &mut inferred, span);
+            let mut visited_record_pairs = HashSet::new();
+            self.collect_type_param_bindings(
+                &param.ty,
+                arg_ty,
+                &mut inferred,
+                &mut visited_record_pairs,
+                span,
+            );
         }
 
         // Build a Vec<GenericParamDef> + Vec<Ty> for only the params we inferred.
@@ -198,6 +206,7 @@ impl Checker {
         declared: &Ty,
         actual: &Ty,
         inferred: &mut HashMap<String, Ty>,
+        visited_record_pairs: &mut HashSet<(*const RecordTy, *const RecordTy)>,
         span: Span,
     ) {
         let declared_visible = self.resolve_visible_type(declared);
@@ -227,21 +236,63 @@ impl Checker {
                 }
             }
             (Ty::Array(declared_inner), Ty::Array(actual_inner)) => {
-                self.collect_type_param_bindings(declared_inner, actual_inner, inferred, span);
+                self.collect_type_param_bindings(
+                    declared_inner,
+                    actual_inner,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
             }
             (Ty::Dict(declared_key, declared_value), Ty::Dict(actual_key, actual_value)) => {
-                self.collect_type_param_bindings(declared_key, actual_key, inferred, span);
-                self.collect_type_param_bindings(declared_value, actual_value, inferred, span);
+                self.collect_type_param_bindings(
+                    declared_key,
+                    actual_key,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
+                self.collect_type_param_bindings(
+                    declared_value,
+                    actual_value,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
             }
             (Ty::Option(declared_inner), Ty::Option(actual_inner))
             | (Ty::Task(declared_inner), Ty::Task(actual_inner)) => {
-                self.collect_type_param_bindings(declared_inner, actual_inner, inferred, span);
+                self.collect_type_param_bindings(
+                    declared_inner,
+                    actual_inner,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
             }
             (Ty::Result(declared_ok, declared_err), Ty::Result(actual_ok, actual_err)) => {
-                self.collect_type_param_bindings(declared_ok, actual_ok, inferred, span);
-                self.collect_type_param_bindings(declared_err, actual_err, inferred, span);
+                self.collect_type_param_bindings(
+                    declared_ok,
+                    actual_ok,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
+                self.collect_type_param_bindings(
+                    declared_err,
+                    actual_err,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
             }
             (Ty::Record(declared_record), Ty::Record(actual_record)) => {
+                // Recursive fields can resolve back to the same descriptor pair.
+                // Documentation: docs/pascal/language/types/records.md
+                let record_pair = (Arc::as_ptr(declared_record), Arc::as_ptr(actual_record));
+                if !visited_record_pairs.insert(record_pair) {
+                    return;
+                }
                 for (field_name, declared_field_ty) in &declared_record.fields {
                     if let Some((_, actual_field_ty)) = actual_record
                         .fields
@@ -252,6 +303,7 @@ impl Checker {
                             declared_field_ty,
                             actual_field_ty,
                             inferred,
+                            visited_record_pairs,
                             span,
                         );
                     }
@@ -265,6 +317,7 @@ impl Checker {
                         &declared_param.ty,
                         &actual_param.ty,
                         inferred,
+                        visited_record_pairs,
                         span,
                     );
                 }
@@ -272,6 +325,7 @@ impl Checker {
                     &declared_fn.return_type,
                     &actual_fn.return_type,
                     inferred,
+                    visited_record_pairs,
                     span,
                 );
             }
@@ -283,6 +337,7 @@ impl Checker {
                         &declared_param.ty,
                         &actual_param.ty,
                         inferred,
+                        visited_record_pairs,
                         span,
                     );
                 }

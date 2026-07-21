@@ -89,7 +89,7 @@ The language represents the underlying ordinal as an integer index in the **fixe
 | 8 | `Left` |
 | 9 | `Right` |
 | 10 | `Home` |
-| 11 | `End` |
+| 11 | `EndKey` |
 | 12 | `PageUp` |
 | 13 | `PageDown` |
 | 14 | `Insert` |

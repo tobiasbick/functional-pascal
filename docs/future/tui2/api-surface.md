@@ -80,7 +80,7 @@ Each live handle is a small opaque record backed by an internal registry identit
 | `TuiCanvas` | Clipped drawing value for a surface. |
 
 `TuiCanvas` is currently an ordinary value record. Enforcing an `OnPaint`-only lifetime requires an
-opaque-handle language feature; see [compiler-panic-followups.md](../compiler-panic-followups.md).
+opaque-handle language feature; see [opaque-records.md](../opaque-records.md).
 
 ## Core operations
 

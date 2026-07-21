@@ -20,6 +20,7 @@ be documented under `docs/pascal/std/tui3/` only after they exist.
 | `TuiAction` | Positive application-intent identity; repetitions are allowed. |
 | `TuiMsg` | Framework message delivered to `Update`. |
 | `TuiCmd` | Closed runtime-control command returned by `Update`. |
+| `TuiCmdOutput` | Host-owned observable output capability passed to `Update`. |
 | `TuiElement` | Immutable UI node description. |
 | `TuiMenuItem` / `TuiStatusItem` | Chrome descriptions. |
 
@@ -45,7 +46,7 @@ TuiApplication.Inject(App; Msg: TuiMsg)
 TuiApplication.RunIterations<TModel>(
   App: TuiApplication;
   InitialModel: TModel;
-  Update: function(State: TModel; Msg: TuiMsg; mutable Cmd: TuiCmd): TModel;
+  Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
   View: function(State: TModel): TuiElement;
   IterationCount: integer;
   DeltaMilliseconds: integer
@@ -55,20 +56,20 @@ TuiApplication.Close(App)
 
 TuiApplication.Run<TModel>(
   InitialModel: TModel;
-  Update: function(State: TModel; Msg: TuiMsg; mutable Cmd: TuiCmd): TModel;
+  Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
   View: function(State: TModel): TuiElement
 ): TModel
 ```
 
-The runtime initializes `Cmd := TuiCmd.None` before every `Update` call. This shape uses a generic
-routine and a mutable output parameter because FPAS has no tuple/product return syntax and no
-generic record type for `TuiUpdateResult<TModel>`. Phase 0 must compile this exact pattern before the
-API is treated as viable.
+The runtime resets a host-owned `TuiCmdOutput` to `NoCommand` before every `Update` call. `Update`
+uses `Cmd.Set(...)`, and the runtime reads the output before another `View`. A plain `mutable
+TuiCmd` parameter is not an output parameter in FPAS: reassignment changes only the callee's local
+binding. The capability avoids a generic result record while keeping `TuiCmd` itself data-only.
 
 ### Element constructors (illustrative)
 
 ```pascal
-Tui.None: TuiElement
+Tui.Empty: TuiElement
 Tui.Desktop(Focused: option of TuiControlId; Children: array of TuiElement): TuiElement
 Tui.Window(Title: string; Children: array of TuiElement): TuiElement
 Tui.Dialog(Title: string; Children: array of TuiElement): TuiElement
@@ -138,15 +139,18 @@ TuiMsg.SelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integ
 TuiMsg.ScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint)
 TuiMsg.QuitRequested
 
-TuiCmd.None
+TuiCmd.NoCommand
 TuiCmd.Quit
 ```
+
+`None` is a reserved token in FPAS enum variants, so the idle command is `NoCommand` rather than
+`None`. The empty element constructor is `TuiElement.Empty` for the same reason.
 
 The dedicated controlled-value variants avoid optional payload bags and state exactly what the
 runtime proposes as the next model value. Unhandled low-level input remains `Key` or `Pointer`.
 There is no reserved action-id range inherited from Turbo Vision command constants.
 
-`TuiCmd` deliberately starts with `None` and `Quit`. `Batch`, arbitrary closure-based `Post`, and
+`TuiCmd` deliberately starts with `NoCommand` and `Quit`. `Batch`, arbitrary closure-based `Post`, and
 asynchronous effect results are outside v1 until a data-only application-message transport is
 designed and proven in FPAS. Do not smuggle those effects through mutable widget or surface state.
 

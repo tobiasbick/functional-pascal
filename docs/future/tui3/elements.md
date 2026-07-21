@@ -3,10 +3,14 @@
 A `TuiElement` is an immutable description of UI for one frame. Applications build trees
 in `View`; they never retain element identity across frames as live objects.
 
+Phase 0 stores child elements directly as `Children: array of TuiElement`. Builders such as
+`TuiElementBuilders.MakeColumn` preserve the nested application structure.
+
 ## Element as data
 
-Elements are records or data-carrying enums. Constructors return values. Children are
-ordered arrays of elements. There is no public `Destroy`.
+Elements are a closed data-carrying enum. Constructors return values. Children are ordered arrays
+of elements. Interactive variants carry typed ids directly, so their required fields cannot be
+omitted. There is no public `Destroy`.
 
 Conceptual families:
 
@@ -16,7 +20,7 @@ Conceptual families:
 | Layout | `Row`, `Column`, `Grid`, `Form`, `Stack`, `Spacer` | Composition |
 | Controls | `Label`, `Button`, `Input`, `CheckBox`, `List`, `Scroll` | Interaction |
 | Custom | Deferred until the built-in tree and paint boundary pass Phase 0 | Escape hatch |
-| Empty | `None` | Conditional slots |
+| Empty | `Empty` | Conditional slots |
 
 Sketch:
 
@@ -42,7 +46,7 @@ begin
         ])
       ])
     else
-      Tui.None
+      Tui.Empty
   ])
 end;
 ```

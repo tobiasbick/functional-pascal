@@ -25,9 +25,9 @@ repeat while running
   if message queue is still empty then
     continue
   Msg := dequeue exactly one TuiMsg
-  Cmd := TuiCmd.None
+  Cmd.Reset()
   Model := Update(Model, Msg, Cmd)
-  if Cmd = Quit then
+  if Cmd.Read() = Quit then
     running := false
   else
     Tree := View(Model)

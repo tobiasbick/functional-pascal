@@ -21,7 +21,7 @@ begin
   return [X, X * 10]
 end;
 
-var Result: array of integer := FlatMap([1, 2, 3], ExpandPair);
+var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
 { [1, 10, 2, 20, 3, 30] }
 ```
 

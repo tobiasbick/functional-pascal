@@ -2,6 +2,10 @@
 
 Records group related data together.
 
+Records may refer to themselves through an aggregate field such as
+`Children: array of Element`. These recursive record types are valid in ordinary variables,
+function return types, first-class function signatures, and generic routine inference.
+
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_type`, record literals in expressions).
 
 ## Declaring a record

@@ -11,12 +11,13 @@ transport exists. It must not recommend a nonexistent closure callback escape ha
 
 ## Commands
 
-Before every `Update`, the runtime initializes the mutable command output to `None`. After `Update`
-returns the next model, the runtime handles that command before the next `View`. `Quit` stops the
-loop without another paint or flush. This ordering is fixed for both headless and interactive runs.
+Before every `Update`, the runtime resets its `TuiCmdOutput` capability to `NoCommand`. `Update`
+sets the capability, and the runtime reads it after receiving the next model but before the next
+`View`. `Quit` stops the loop without another paint or flush. This ordering is fixed for headless
+and interactive runs.
 
 ```pascal
-TuiCmd.None
+TuiCmd.NoCommand
 TuiCmd.Quit
 ```
 

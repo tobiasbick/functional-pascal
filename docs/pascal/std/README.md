@@ -34,6 +34,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
 | Terminal UI | [tui/](tui/README.md) | Turbo Vision application facade ([upstream](https://github.com/aovestdipaperino/turbo-vision-4-rust)), controls, command dispatch; contributor bridge map in [vm-bridge.md](tui/app/vm-bridge.md) |
 | Terminal UI 2 | [tui2/](tui2/README.md) | Source-level geometry values and half-open rectangle operations |
+| Terminal UI 3 | [tui3/](tui3/README.md) | Experimental MVU element trees, deterministic headless routing and snapshots |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 | Version | [version.md](version.md) | Compiler and library version constants |

@@ -119,7 +119,7 @@ pub(super) fn map_winit_key(
             meta,
         )),
         Key::Named(NamedKey::End) => Some(ConsoleKeyEvent::new(
-            key_kind_index("End"),
+            key_kind_index("EndKey"),
             '\0',
             shift,
             ctrl,

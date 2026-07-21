@@ -36,7 +36,7 @@ impl Compiler {
             ));
         };
 
-        let receiver_parts = event_designator
+        event_designator
             .parts
             .get(..info.receiver_part_count)
             .ok_or_else(|| {
@@ -47,11 +47,11 @@ impl Compiler {
                     event_designator.span.column,
                 )
             })?;
-        let receiver = Designator {
-            parts: receiver_parts.to_vec(),
-            span: event_designator.span,
-        };
-        self.compile_property_receiver(&receiver, &info.receiver_reads)?;
+        self.compile_property_receiver_prefix(
+            event_designator,
+            info.receiver_part_count,
+            &info.receiver_reads,
+        )?;
         let name_idx = self.add_constant(Value::Str(info.getter_name.clone()), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::IsOptionSome, location);
@@ -68,7 +68,7 @@ impl Compiler {
         info: &EventRaiseInfo,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let receiver_parts = designator
+        designator
             .parts
             .get(..info.receiver_part_count)
             .ok_or_else(|| {
@@ -79,11 +79,11 @@ impl Compiler {
                     designator.span.column,
                 )
             })?;
-        let receiver = Designator {
-            parts: receiver_parts.to_vec(),
-            span: designator.span,
-        };
-        self.compile_property_receiver(&receiver, &info.receiver_reads)?;
+        self.compile_property_receiver_prefix(
+            designator,
+            info.receiver_part_count,
+            &info.receiver_reads,
+        )?;
         let name_idx = self.add_constant(Value::Str(info.getter_name.clone()), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::UnwrapSome, location);

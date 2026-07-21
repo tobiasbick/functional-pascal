@@ -72,7 +72,7 @@ impl Compiler {
                 self.compile_expr(operand)?;
                 match op {
                     UnaryOp::Negate => {
-                        let operand_ty = self.ty_of(operand);
+                        let operand_ty = self.ty_of(operand)?;
                         let negate_op = match operand_ty {
                             Ty::GenericParam(..) => Op::NegateDyn,
                             Ty::Real => Op::NegateReal,

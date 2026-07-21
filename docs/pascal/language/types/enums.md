@@ -77,6 +77,10 @@ Each field position uses a plain identifier binding; use a `when` guard on the `
 
 A variant uses either backing values or associated data fields, not both on the same variant.
 
+Variant names must be ordinary identifiers. Reserved words remain reserved after a type
+qualifier, so declarations such as `None` and member expressions such as `KeyKind.End` are
+not valid. Choose an identifier-safe API name such as `NoCommand`, `Empty`, or `EndKey`.
+
 ## See also
 
 - [Pattern matching](../pattern-matching/README.md)

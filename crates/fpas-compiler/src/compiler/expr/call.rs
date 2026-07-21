@@ -75,11 +75,11 @@ impl Compiler {
             return Ok(());
         }
 
-        let receiver = Designator {
-            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-            span: designator.span,
-        };
-        self.compile_property_receiver(&receiver, receiver_reads)?;
+        self.compile_property_receiver_prefix(
+            designator,
+            designator.parts.len() - 1,
+            receiver_reads,
+        )?;
         for arg in args {
             self.compile_expr(arg)?;
         }

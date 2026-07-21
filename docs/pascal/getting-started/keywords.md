@@ -24,6 +24,11 @@ nil
 accepted as ordinary identifiers outside record-member declaration position so existing
 type names such as `Std.Console.Event` keep working.
 
+Reserved words generally cannot be used as declarations or member names, even after a
+qualifier. Public APIs must therefore use an identifier-safe spelling such as `EndKey`
+instead of `End`, `NoCommand` instead of `None`, or `CompletedCommand` instead of
+`Result`. FPAS currently has no escaped-identifier syntax.
+
 ## Example
 
 Keywords and identifiers are case-insensitive:

@@ -1,0 +1,121 @@
+program ElementTreeTest;
+
+uses Std.Array, Std.Tui3, Std.Test;
+
+function ViewTree(Value: integer): TuiElement;
+begin
+  var SharedAction: TuiAction := TuiAction.Create(10);
+  return TuiElementBuilders.MakeDesktop(None, [
+                                                TuiElementBuilders.MakeWindow('Window', [
+
+                                                                                          TuiElementBuilders.MakeColumn([
+
+                                                
+
+                                                                                                                          TuiElementBuilders.MakeLabel('Label'),
+
+                                                
+
+                                                                                                                          TuiElementBuilders.MakeRow([
+
+                                                
+
+                                                                                          
+
+                                                
+
+                                                                                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', SharedAction),
+
+                                                
+
+                                                                                          
+
+                                                
+
+                                                                                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', SharedAction)
+
+                                                
+
+                                                                                          
+
+                                                
+
+                                                                                                                          
+
+                                                
+
+                                                                                          
+
+                                                
+
+                                                                                                                                                     ])
+
+                                                
+
+                                                                                          
+
+                                                
+
+                                                                                                                        ])
+
+                                                
+
+                                                                                        ]),
+                                                TuiElementBuilders.MakeDialog('Dialog', [TuiElementBuilders.MakeLabel('Question')])
+
+                                              ])
+end;
+
+function UpdateTree(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  return State
+end;
+
+begin
+  var Tree: TuiElement := ViewTree(0);
+  case Tree of
+    TuiElement.Desktop(Focused, DesktopChildren):
+    begin
+      AssertEquals(2, Std.Array.Length(DesktopChildren));
+      case DesktopChildren[0] of
+        TuiElement.Window(Title, WindowChildren):
+        begin
+          AssertEquals('Window', Title);
+          AssertEquals(1, Std.Array.Length(WindowChildren));
+          case WindowChildren[0] of
+            TuiElement.Column(ColumnChildren):
+            begin
+              AssertEquals(2, Std.Array.Length(ColumnChildren));
+              case ColumnChildren[1] of
+                TuiElement.Row(RowChildren):
+                begin
+                  AssertEquals(2, Std.Array.Length(RowChildren))
+                end;
+                TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Column(NestedChildren), TuiElement.Window(NestedTitle, NestedChildren), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+                begin
+                  panic('expected row element')
+                end
+              end
+            end;
+            TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(NestedChildren), TuiElement.Window(NestedTitle, NestedChildren), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+            begin
+              panic('expected column element')
+            end
+          end
+        end;
+        TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(NestedChildren), TuiElement.Column(NestedChildren), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+        begin
+          panic('expected window element')
+        end
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    begin
+      panic('expected desktop element')
+    end
+  end;
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 8));
+  AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
+  App.Close()
+end.

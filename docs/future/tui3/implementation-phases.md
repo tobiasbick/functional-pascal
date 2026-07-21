@@ -10,22 +10,36 @@ Do not silently change the language or leave an undocumented workaround.
 
 - Write and keep `docs/future/tui3/` current.
 - Mark `docs/future/tui2/` frozen/superseded.
-- No `docs/pascal/std/tui3/` until behavior exists.
-- Compile the exact generic `RunIterations<TModel>`, `Update`, mutable `TuiCmd` output, and `View`
-  callable pattern from [api-surface.md](api-surface.md).
-- Build one headless vertical slice with a recursive tree containing a label, controlled input,
-  button, and modal dialog.
-- Prove unique control ids, repeatable action ids, focus movement, text changes, activation, initial
-  render, FIFO routing, and quit order.
-- Run repeated frames at representative tree and terminal sizes. Record timings and clone/allocation
-  evidence for tree traversal and surface painting.
+- Document implemented behavior under `docs/pascal/std/tui3/`; keep later work in this plan.
+- **Complete — compile gate + headless confirm-dialog slice.** `Std.Tui3` exports
+  `TuiApplication.RunIterations<TModel>` with
+  `Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel` and
+  `View: function(State: TModel): TuiElement`. Covered by
+  [`tests/stdlib/tui3/mvu_host_signature_test.fpas`](../../../tests/stdlib/tui3/mvu_host_signature_test.fpas)
+  and
+  [`tests/stdlib/tui3/confirm_dialog_slice_test.fpas`](../../../tests/stdlib/tui3/confirm_dialog_slice_test.fpas),
+  plus
+  [`tests/stdlib/tui3/element_tree_test.fpas`](../../../tests/stdlib/tui3/element_tree_test.fpas)
+  (label/input/button/window/dialog, routed focus/TextChanged/Action/Quit, snapshots, unique control
+  ids, and nested child structure). Negative runtime canaries reject forged and duplicate ids.
+  Naming note: FPAS reserves `None` as a token, so v1 uses `TuiCmd.NoCommand` and
+  `TuiElementBuilders.MakeEmpty`.
+  Representation note: `TuiElement` uses recursive `Children: array of TuiElement` storage. The
+  generic-inference stack overflow found by the spike is fixed in `fpas-sema` and covered by a Sema
+  regression plus the MVU host test. `TuiMsg` enum payloads use `TuiControlId` and `TuiAction`
+  directly; imported record types in associated fields are covered by a linker regression. FPAS
+  mutable value parameters are local bindings, so the compiling command output is the reusable
+  host-owned `TuiCmdOutput` capability rather than the original ineffective mutable enum parameter.
+  [`tests/stdlib/tui3/repeated_frames_test.fpas`](../../../tests/stdlib/tui3/repeated_frames_test.fpas)
+  covers 100 frames each at 40×12 and 120×40; [testing.md](testing.md) records the baseline and
+  clone-ownership evidence.
 - If aggregate cloning dominates, implement shared or copy-on-write VM storage as a prerequisite and
   repeat the spike. Do not introduce public retained view handles as a workaround.
 
 Completion: the slice passes [testing.md](testing.md)'s Phase 0 suite and the plan records the final
-compiling signatures. Phase 1 is blocked until this gate passes.
+compiling signatures. This gate is passed; Phase 1 is now unblocked.
 
-## Phase 1 — Values
+## Phase 1 — Values (next)
 
 Port or reimplement under `lib/Std/Tui3/`:
 
@@ -38,7 +52,7 @@ value.
 
 ## Phase 2 — Elements, layout, TV paint
 
-- `TuiElement` constructors for `None`, layout (`Row`/`Column`/…), `Label`, chrome frames
+- `TuiElement` constructors for `Empty`, layout (`Row`/`Column`/…), `Label`, chrome frames
 - Pure `Measure` / `Arrange`
 - Paint window/dialog/label into a headless surface
 - Snapshot tests for TV-looking frames
@@ -52,7 +66,7 @@ Completion: `View`-compatible trees render without input.
 - `Update` / `View` loop with layout + paint each iteration
 - Button and controlled input elements emitting source-aware messages
 - Focus and message queue order
-- `None` / `Quit` command order
+- `NoCommand` / `Quit` command order
 
 Completion: confirm-dialog style demo without Create/Add/Destroy/OnClick and without hidden control
 state. No closure-based posting or general asynchronous effect claim.

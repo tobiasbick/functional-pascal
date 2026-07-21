@@ -8,27 +8,36 @@ use fpas_parser::{Designator, DesignatorPart};
 
 impl Checker {
     pub(crate) fn check_designator_expr(&mut self, designator: &Designator) -> Ty {
-        let only_ident_chain = designator
-            .parts
+        self.check_designator_prefix_expr(designator, designator.parts.len())
+    }
+
+    /// Type-check a leading portion of a designator without cloning its index expressions.
+    pub(crate) fn check_designator_prefix_expr(
+        &mut self,
+        designator: &Designator,
+        part_count: usize,
+    ) -> Ty {
+        let parts = &designator.parts[..part_count.min(designator.parts.len())];
+        let only_ident_chain = parts
             .iter()
             .all(|p| matches!(p, DesignatorPart::Ident(_, _)));
 
         if only_ident_chain {
-            let full_name = Self::resolve_designator_name(designator);
+            let full_name = Self::resolve_designator_parts_name(parts);
             self.ensure_fq_std_unit_loaded(&full_name);
             if let Some(symbol) = self.scopes.lookup(&full_name) {
                 return symbol.ty.clone();
             }
         }
-        self.check_designator_path(designator)
+        self.check_designator_path(designator, parts)
     }
 
-    fn check_designator_path(&mut self, designator: &Designator) -> Ty {
-        if designator.parts.is_empty() {
+    fn check_designator_path(&mut self, designator: &Designator, parts: &[DesignatorPart]) -> Ty {
+        if parts.is_empty() {
             return Ty::Error;
         }
 
-        match &designator.parts[0] {
+        match &parts[0] {
             DesignatorPart::Index(_, span) => {
                 self.error_with_code(
                     SEMA_TYPE_MISMATCH,
@@ -39,12 +48,11 @@ impl Checker {
                 Ty::Error
             }
             DesignatorPart::Ident(first, _) => {
-                let resolved_base = self.resolve_designator_base(designator);
+                let resolved_base = self.resolve_designator_base(parts);
                 let Some((mut ty, base_part_count)) = resolved_base else {
-                    let full_name = Self::resolve_designator_name(designator);
-                    let is_qualified_ident_chain = designator.parts.len() > 1
-                        && designator
-                            .parts
+                    let full_name = Self::resolve_designator_parts_name(parts);
+                    let is_qualified_ident_chain = parts.len() > 1
+                        && parts
                             .iter()
                             .all(|part| matches!(part, DesignatorPart::Ident(_, _)));
 
@@ -81,8 +89,8 @@ impl Checker {
                 };
 
                 let designator_key = crate::designator_lookup_key(designator);
-                let trailing = designator.parts.len().saturating_sub(base_part_count);
-                for (offset, part) in designator.parts[base_part_count..].iter().enumerate() {
+                let trailing = parts.len().saturating_sub(base_part_count);
+                for (offset, part) in parts[base_part_count..].iter().enumerate() {
                     ty = self.resolve_visible_type(&ty);
 
                     ty = match part {
@@ -90,7 +98,7 @@ impl Checker {
                             let is_last = offset + 1 == trailing;
                             let property_key = Some((designator_key, base_part_count + offset));
                             let bound_key = if is_last {
-                                Some((designator_key, designator.parts.len() - 1))
+                                Some((designator_key, parts.len() - 1))
                             } else {
                                 None
                             };
@@ -112,10 +120,23 @@ impl Checker {
         }
     }
 
-    fn resolve_designator_base(&self, designator: &Designator) -> Option<(Ty, usize)> {
+    fn resolve_designator_parts_name(parts: &[DesignatorPart]) -> String {
+        let mut result = String::new();
+        for part in parts {
+            if let DesignatorPart::Ident(name, _) = part {
+                if !result.is_empty() {
+                    result.push('.');
+                }
+                result.push_str(name);
+            }
+        }
+        result
+    }
+
+    fn resolve_designator_base(&self, parts: &[DesignatorPart]) -> Option<(Ty, usize)> {
         let mut qualified = String::new();
         let mut resolved = None;
-        for (index, part) in designator.parts.iter().enumerate() {
+        for (index, part) in parts.iter().enumerate() {
             let DesignatorPart::Ident(name, _) = part else {
                 break;
             };

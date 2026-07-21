@@ -257,3 +257,28 @@ end.",
     );
     assert_eq!(out.lines, vec!["1"]);
 }
+
+#[test]
+fn indexed_record_can_receive_method_call_in_return_expression() {
+    let out = compile_and_run(
+        "program T;
+uses Std.Console;
+type
+  Focusable = record
+    Id: integer;
+    function Focus(Self: Focusable): integer;
+    begin
+      return Self.Id
+    end;
+  end;
+function FocusAt(Items: array of Focusable; Index: integer): integer;
+begin
+  return Items[Index - 1].Focus()
+end;
+begin
+  var Items: array of Focusable := [record Id := 4; end, record Id := 9; end];
+  WriteLn(FocusAt(Items, 2))
+end.",
+    );
+    assert_eq!(out.lines, vec!["9"]);
+}

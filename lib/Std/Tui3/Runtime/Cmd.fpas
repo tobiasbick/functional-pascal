@@ -1,0 +1,59 @@
+unit Std.Tui3.Runtime.Cmd;
+
+uses Std.Array;
+
+type
+  /// Closed v1 runtime command value.
+  TuiCmd = enum
+    NoCommand;
+    Quit;
+  end;
+
+private mutable var Tui3CommandValues: array of TuiCmd := [];
+
+private function TuiCmdOutputRequire(Slot: integer): integer;
+begin
+  if (Slot < 1) or (Slot > Std.Array.Length(Tui3CommandValues)) then
+  begin
+    panic('Tui3 command output handle is invalid')
+  end;
+  return Slot
+end;
+
+type
+  /// Host-owned command output capability passed to Update.
+  TuiCmdOutput = record
+    Slot: integer;
+
+    /// Allocates one reusable command output.
+
+    static function Create(): TuiCmdOutput;
+    begin
+      Tui3CommandValues := Std.Array.Concat(Tui3CommandValues, [TuiCmd.NoCommand]);
+      return record Slot := Std.Array.Length(Tui3CommandValues); end
+    end;
+
+    /// Resets the output before one Update call.
+
+    procedure Reset(Self: TuiCmdOutput);
+    begin
+      var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+      Tui3CommandValues[Slot - 1] := TuiCmd.NoCommand
+    end;
+
+    /// Sets the command returned by the current Update call.
+
+    procedure Set(Self: TuiCmdOutput; Value: TuiCmd);
+    begin
+      var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+      Tui3CommandValues[Slot - 1] := Value
+    end;
+
+    /// Reads the command after Update returns.
+
+    function Read(Self: TuiCmdOutput): TuiCmd;
+    begin
+      var Slot: integer := TuiCmdOutputRequire(Self.Slot);
+      return Tui3CommandValues[Slot - 1]
+    end;
+  end;

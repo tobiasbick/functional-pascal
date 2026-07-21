@@ -89,7 +89,7 @@ Built-in controls provide their own measurement behavior. Applications register 
 
 ## Paint contract
 
-`OnPaint` receives a clipped `TuiCanvas` value and `TuiPaintContext` describing local bounds, clip, focus, enabled state, and palette. Its `OnPaint`-only lifetime is not yet enforceable; see [compiler-panic-followups.md](../compiler-panic-followups.md).
+`OnPaint` receives a clipped `TuiCanvas` value and `TuiPaintContext` describing local bounds, clip, focus, enabled state, and palette. Its `OnPaint`-only lifetime is not yet enforceable; see [opaque-records.md](../opaque-records.md).
 
 - Coordinates are local to the view.
 - Drawing is clipped to the supplied paint region.

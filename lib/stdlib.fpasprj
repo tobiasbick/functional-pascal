@@ -3,7 +3,7 @@ name = "fpas-standard-library"
 kind = "library"
 
 [exports]
-units = ["Std.Version", "Std.Tui2"]
+units = ["Std.Version", "Std.Tui2", "Std.Tui3"]
 
 [sources]
 include = ["Std/**/*.fpas"]

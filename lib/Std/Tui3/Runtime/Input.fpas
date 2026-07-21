@@ -1,0 +1,10 @@
+unit Std.Tui3.Runtime.Input;
+
+uses Std.Console, Std.Tui3.Runtime.Msg;
+
+type
+  /// One externally injected headless event, kept in arrival order.
+  TuiHostInput = enum
+    Message(Msg: TuiMsg);
+    Key(Key: Std.Console.KeyEvent);
+  end;

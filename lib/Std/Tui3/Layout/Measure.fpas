@@ -1,0 +1,88 @@
+unit Std.Tui3.Layout.Measure;
+
+uses Std.Array, Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Size;
+
+private function TuiMeasureMax(Left: integer; Right: integer): integer;
+begin
+  if Left > Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+/// Returns the deterministic preferred size of an element subtree.
+
+function TuiMeasureElement(Node: TuiElement): TuiSize;
+begin
+  case Node of
+    TuiElement.Empty:
+    begin
+      return TuiSize.Create(0, 0)
+    end;
+    TuiElement.Label(Text):
+    begin
+      return TuiSize.Create(Std.Console.DisplayWidth(Text), 1)
+    end;
+    TuiElement.Button(Id, Text, Action):
+    begin
+      return TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1)
+    end;
+    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      return TuiSize.Create(TuiMeasureMax(Std.Console.DisplayWidth(Text) + 3, 10), 1)
+    end;
+    TuiElement.Row(Children):
+    begin
+      mutable var Width: integer := 0;
+      mutable var Height: integer := 0;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
+        if (Index > 0) and (ChildSize.Width > 0) then
+        begin
+          Width := Width + 1
+        end;
+        Width := Width + ChildSize.Width;
+        Height := TuiMeasureMax(Height, ChildSize.Height)
+      end;
+      return TuiSize.Create(Width, Height)
+    end;
+    TuiElement.Column(Children):
+    begin
+      mutable var Width: integer := 0;
+      mutable var Height: integer := 0;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
+        Width := TuiMeasureMax(Width, ChildSize.Width);
+        Height := Height + ChildSize.Height
+      end;
+      return TuiSize.Create(Width, Height)
+    end;
+    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    begin
+      mutable var Width: integer := Std.Console.DisplayWidth(Title) + 6;
+      mutable var Height: integer := 2;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
+        Width := TuiMeasureMax(Width, ChildSize.Width + 2);
+        Height := Height + ChildSize.Height
+      end;
+      return TuiSize.Create(Width, Height)
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      mutable var Width: integer := 0;
+      mutable var Height: integer := 0;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
+        Width := TuiMeasureMax(Width, ChildSize.Width);
+        Height := TuiMeasureMax(Height, ChildSize.Height)
+      end;
+      return TuiSize.Create(Width, Height)
+    end
+  end
+end;

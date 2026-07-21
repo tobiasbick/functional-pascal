@@ -20,7 +20,7 @@ impl Compiler {
         info: &EventWriteInfo,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let receiver_parts = target
+        target
             .parts
             .get(..info.receiver_part_count)
             .ok_or_else(|| {
@@ -31,11 +31,11 @@ impl Compiler {
                     target.span.column,
                 )
             })?;
-        let receiver = Designator {
-            parts: receiver_parts.to_vec(),
-            span: target.span,
-        };
-        self.compile_property_receiver(&receiver, &info.receiver_reads)?;
+        self.compile_property_receiver_prefix(
+            target,
+            info.receiver_part_count,
+            &info.receiver_reads,
+        )?;
         if info.clear {
             self.emit(Op::MakeNone, location);
         } else {

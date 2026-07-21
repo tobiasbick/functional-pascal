@@ -33,7 +33,7 @@ impl Compiler {
             }
             s::STD_TEST_ASSERT_EQUALS => {
                 self.expect_exact_args(s::STD_TEST_ASSERT_EQUALS, 2, args, location)?;
-                let operand_ty = self.ty_of(&args[0]);
+                let operand_ty = self.ty_of(&args[0])?;
                 self.compile_expr(&args[0])?;
                 self.compile_expr(&args[1])?;
                 let intrinsic = match operand_ty {

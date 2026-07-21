@@ -266,12 +266,8 @@ impl Checker {
             DesignatorPart::Ident(name, _) => name.clone(),
             _ => return None,
         };
-        let receiver = Designator {
-            parts: designator.parts[..designator.parts.len() - 1].to_vec(),
-            span: designator.span,
-        };
-        let receiver_key = crate::designator_lookup_key(&receiver);
-        let receiver_ty = self.check_designator_expr(&receiver);
+        let receiver_key = crate::designator_lookup_key(designator);
+        let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
         let receiver_reads = self
             .property_reads
             .remove(&receiver_key)

@@ -1,6 +1,13 @@
 # Std.Tui2
 
-This directory records the remaining plan for the FPAS-native terminal UI library.
+> **Frozen / superseded.** Do not extend this plan or the retained `Std.Tui2` public
+> programming model. The next terminal UI direction is **[Std.Tui3](../tui3/README.md)**
+> (Elm/MVU, Turbo Vision look only). Keep this directory as a historical retained draft and
+> as a salvage reference for geometry, cells, and layout ideas. Implemented `Std.Tui2`
+> behavior remains documented under [`docs/pascal/std/tui2/`](../../pascal/std/tui2/README.md)
+> until Tui3 replaces it.
+
+This directory records the abandoned remaining plan for the retained FPAS-native terminal UI library.
 
 ## Decisions
 
@@ -56,5 +63,6 @@ ordered detach/closed delivery. Stable subtree Z-order, tree-ordered painting, c
 hit-testing, and wrapped focus traversal are implemented as well. Raw key and pointer routing,
 pointer capture, modal roots, and application fallback routing are implemented. Retained controls
 now include buttons, labels, input lines, check boxes, list boxes, frames, windows, scroll views,
-vertical scroll bars, and modal dialogs. The remaining terminal and advanced-control work is
-recorded in [implementation-phases.md](implementation-phases.md).
+vertical scroll bars, and modal dialogs. Interactive `TuiApplication.Open` / `Run` acquire the
+console terminal session, flush painted cells, and poll live events. The remaining Phase 5 demo and
+Phase 6 chrome work is recorded in [implementation-phases.md](implementation-phases.md).

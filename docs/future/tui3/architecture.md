@@ -23,10 +23,12 @@ All public TUI types use the `Tui` prefix:
 | --- | --- |
 | `TuiPoint` / `TuiSize` / `TuiRect` | Cell geometry. |
 | `TuiMsg` | Framework messages delivered to `Update`. |
-| `TuiCmd` | Deferred effects requested by `Update`. |
-| `TuiAction` | Positive integer identity emitted by interactive elements. |
+| `TuiCmd` | Closed runtime-control command returned by `Update`. |
+| `TuiControlId` | Unique positive identity for one interactive node. |
+| `TuiAction` | Repeatable positive application-intent identity. |
 | `TuiElement` | Immutable description of one UI node (and its children). |
 | `TuiApplication` | Headless or interactive MVU host (run loop ownership). |
+| `TuiSurfaceSnapshot` | Explicit immutable copy of the last painted test surface. |
 
 `Std.Console.Rect` remains console-absolute. `TuiRect` is separate so local layout geometry
 cannot be confused with screen operations.
@@ -40,7 +42,7 @@ application Model + Update + View
         ↓
    pure layout (rects)
         ↓
-   TV-skin paint → TuiSurface
+   TV-skin paint → host-owned surface
         ↓
    Std.Console cells (interactive only)
 ```
@@ -48,10 +50,10 @@ application Model + Update + View
 | Layer | Responsibility |
 | --- | --- |
 | Application | Owns `Model`. Implements `Update` and `View`. Maps `TuiAction` ids to intent. |
-| MVU runtime | Runs the loop, turns console/input into `TuiMsg`, applies `TuiCmd`, calls `View`. |
+| MVU runtime | Runs the loop, routes console/input into queued `TuiMsg`, applies `TuiCmd`, calls `View`. |
 | Elements | Pure constructors describing chrome and controls. |
 | Layout | Pure measure/arrange over element trees. |
-| Paint | Draws Turbo Vision-looking frames, text, and controls into a cell surface. |
+| Paint | Draws Turbo Vision-looking frames, text, and controls into a host-owned cell surface. |
 | Terminal | Acquires modes; copies the surface; reads events. No widget logic. |
 
 ## What is not public
@@ -61,13 +63,19 @@ application Model + Update + View
 - Imperative modal open/close on dialog objects.
 - Rust `turbo-vision` types or bridge handles.
 - Ambient “current application” constructors.
+- A public mutable cell-grid value copied through every paint call.
+
+The application host may own opaque mutable runtime resources such as its message queue and working
+surface. This is not a widget registry: application controls remain values in the current element
+tree. `TuiSurfaceSnapshot` performs an explicit copy for inspection rather than making the working
+surface a large pass-by-value record.
 
 ## Type-owned construction
 
 Value and element construction uses static record functions where they fit
 (`[record methods](../../pascal/language/types/record-methods.md)`). Element helpers may
 also be free functions on the facade when that reads more clearly for tree building
-(`Tui.Desktop([...])` style). Tui3 does not require function overloading.
+(`Tui.Desktop(Model.Focus, [...])` style). Tui3 does not require function overloading.
 
 ## Relationship to earlier attempts
 
@@ -76,5 +84,12 @@ also be free functions on the facade when that reads more clearly for tree build
 | `Std.Tui` | Turbo Vision crate bridge — delete on promote. |
 | `Std.Tui2` | Retained FPAS experiment — frozen; salvage values only; delete on promote. |
 | `Std.Tui3` | Current plan and temporary implementation unit. |
+
+## Performance boundary
+
+FPAS currently represents arrays, records, and data-carrying enums as cloneable VM values. The
+Phase 0 vertical slice must establish that ordinary function calls during `View`, layout, and paint
+do not turn one frame into repeated deep copies. Aggregate representation work is allowed when the
+spike proves it necessary; public live view handles are not.
 
 See [mvu.md](mvu.md) and [elements.md](elements.md) for the programming model details.

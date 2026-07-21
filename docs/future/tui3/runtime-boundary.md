@@ -5,38 +5,40 @@
 The main FPAS task owns the Tui3 application host. `Update`, `View`, layout, paint, and
 host operations run on the main task.
 
-Calling them from a spawned task is a programming error with a diagnostic that tells the
-caller to request work through `TuiCmd.Post` or a later typed main-task queue.
+Calling them from a spawned task is a programming error. Tui3 v1 has no worker-side host operation;
+the diagnostic says that worker-result delivery is unsupported until the planned data-only message
+transport exists. It must not recommend a nonexistent closure callback escape hatch.
 
-## Commands and posting
+## Commands
 
-`Update` returns `TuiCmd`. The runtime executes commands after `Update` and before the next
-`View` (or at defined drain points around paint — exact ordering is fixed during
-implementation and must stay deterministic for tests).
+Before every `Update`, the runtime initializes the mutable command output to `None`. After `Update`
+returns the next model, the runtime handles that command before the next `View`. `Quit` stops the
+loop without another paint or flush. This ordering is fixed for both headless and interactive runs.
 
 ```pascal
 TuiCmd.None
 TuiCmd.Quit
-TuiCmd.Batch(Commands)
-TuiCmd.Post(Handler: procedure())
 ```
 
-`Post` enqueues a parameterless main-task callback. FIFO. Closures obey
-[capture transfer rules](../../pascal/language/functions/closures.md). Posting is the only
-Tui3 host operation permitted from a worker. It returns `false` once shutdown began.
-Callbacks not started before shutdown are discarded.
+## Deferred effects and worker results
 
-Posted callbacks may inject messages or request quit only through the host API — they must
-not paint directly.
+Arbitrary procedure-valued `Post`, `Batch`, timers, file dialogs, subscriptions, and asynchronous
+worker results are not part of v1. A later design must answer all of these before implementation:
 
-This queue is a scheduler facility. It does not move widget behavior into Rust.
+- the command and result remain data rather than arbitrary main-task code;
+- the result becomes an application-consumable message without a generic `TuiElement` type;
+- shutdown, FIFO ordering, and rejected posts have deterministic contracts;
+- no path mutates the model, element tree, or working surface outside `Update` and paint.
+
+Until that design passes its own FPAS spike, applications must not represent unsupported effects by
+mutating private TUI globals or capturing model state in callbacks.
 
 ## Error categories
 
 | Category | Contract |
 | --- | --- |
 | Expected user outcome | Represented in `Model` (for example cancelled confirm). |
-| Illegal caller input | Runtime diagnostic (negative sizes, invalid action id). |
+| Illegal caller input | Runtime diagnostic (negative sizes, invalid control/action id). |
 | Broken TUI invariant | Runtime diagnostic and application termination. |
 | Terminal I/O failure | Runtime diagnostic with operating-system context. |
 | Panic inside `Update` / `View` / paint | Stop the loop; preserve the diagnostic as primary. |
@@ -60,6 +62,7 @@ restores terminal modes. The VM keeps a safety net for abrupt termination.
 
 ## Headless hosts
 
-`OpenForTest` creates a host with a surface and size and does not touch terminal modes.
-Multiple headless hosts may exist in tests when they do not acquire the interactive
-terminal.
+`OpenForTest` creates a host with a private working surface and size and does not touch terminal
+modes. Multiple headless hosts may exist in tests when they do not acquire the interactive terminal.
+`SurfaceSnapshot` explicitly copies the last painted cells for assertions; routine layout and paint
+do not pass that snapshot through the frame pipeline.

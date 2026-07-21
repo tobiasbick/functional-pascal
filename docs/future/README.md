@@ -14,7 +14,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Compiler panics and source-level language constraints found during implementation |
 | Std.Tui | [Turbo Vision bridge](tui-bridged-readback.md) | Functionally complete except for three upstream read-back adapters; planned removal when Tui3 promotes to `Std.Tui` |
 | Std.Tui2 | [Retained FPAS TUI (frozen)](tui2/README.md) | Abandoned retained Create/Add/Destroy model; salvage reference only — superseded by Tui3 |
-| Std.Tui3 | [MVU terminal UI](tui3/README.md) | Elm/Model–Update–View programming model, Turbo Vision look only; temporary unit until promote to `Std.Tui` |
+| Std.Tui3 | [MVU terminal UI](tui3/README.md) | Elm/Model–Update–View programming model, gated by an executable API/clone-performance spike before implementation and promotion |
 
 ## Rules
 

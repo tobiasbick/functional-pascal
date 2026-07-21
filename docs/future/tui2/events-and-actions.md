@@ -238,8 +238,7 @@ values and define its own ordering and lifetime rules.
 ## Remaining implementation
 
 1. Add the remaining typed value-change event and `TuiChangeOrigin` behavior for radio groups.
-2. Route action activation from menus and direct commands, then propagate it through view-backed
-   controls.
+2. Route action activation from menus, status items, and direct commands.
 3. Extend the headless post queue with worker-transfer enforcement.
 4. Complete closure release, panic cleanup, and shutdown canaries.
 
@@ -254,7 +253,6 @@ values and define its own ordering and lifetime rules.
 
 ## Remaining acceptance criteria
 
-- the remaining typed-change event uses the same registry-backed single-handler model;
 - actions activate consistently from every supported source;
 - posting preserves FIFO order and the task-transfer rules;
 - destruction and panic paths release every remaining closure environment;

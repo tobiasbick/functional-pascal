@@ -56,5 +56,5 @@ ordered detach/closed delivery. Stable subtree Z-order, tree-ordered painting, c
 hit-testing, and wrapped focus traversal are implemented as well. Raw key and pointer routing,
 pointer capture, modal roots, and application fallback routing are implemented. Retained controls
 now include buttons, labels, input lines, check boxes, list boxes, frames, windows, scroll views,
-vertical scroll bars, and modal dialogs. Remaining Phase 5 work is recorded in
-[implementation-phases.md](implementation-phases.md).
+vertical scroll bars, and modal dialogs. The remaining terminal and advanced-control work is
+recorded in [implementation-phases.md](implementation-phases.md).

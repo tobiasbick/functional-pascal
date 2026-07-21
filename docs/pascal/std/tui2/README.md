@@ -31,7 +31,7 @@ Coordinates are zero-based: `(0, 0)` is the upper-left cell, X grows to the righ
 | `TuiCell` | A glyph with a semantic style role. |
 | `TuiPalette` | An immutable mapping from semantic roles to styles. |
 | `TuiSurface` | A headless retained cell surface. |
-| `TuiCanvas` | A transient, clipped drawing capability for a surface. |
+| `TuiCanvas` | A clipped drawing value for a surface. |
 | `TuiApplication` | An application-scoped headless registry and lifecycle boundary. |
 | `TuiApplicationInput` | Headless input injection and unhandled application input events. |
 | `TuiKeyEvent` | Alias of the canonical `Std.Console.KeyEvent`. |

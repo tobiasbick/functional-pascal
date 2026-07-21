@@ -43,7 +43,7 @@ These records describe values only. They do not own live views or contain copies
 | `TuiDetachHandler` | Observe removal from a live parent. |
 | `TuiMeasureHandler` | Calculate custom-view size information. |
 | `TuiResizeHandler` | Observe resolved bounds changing. |
-| `TuiPaintHandler` | Draw a custom view into a transient canvas. |
+| `TuiPaintHandler` | Draw a custom view into a clipped canvas. |
 | `TuiFocusHandler` | Observe focus acquisition. |
 | `TuiBlurHandler` | Observe focus loss. |
 | `TuiCloseRequestHandler` | Allow or reject closing. |
@@ -73,13 +73,14 @@ These records describe values only. They do not own live views or contain copies
 
 Each live handle is a small opaque record backed by an internal registry identity. Handles do not expose Rust ownership or implementation objects.
 
-### Transient handles
+### Drawing values
 
 | Type | Purpose |
 | --- | --- |
-| `TuiCanvas` | Clipped drawing target valid only during one `OnPaint` callback. |
+| `TuiCanvas` | Clipped drawing value for a surface. |
 
-Transient handles cannot be stored for later use. Operations reject them after their callback returns.
+`TuiCanvas` is currently an ordinary value record. Enforcing an `OnPaint`-only lifetime requires an
+opaque-handle language feature; see [compiler-panic-followups.md](../compiler-panic-followups.md).
 
 ## Core operations
 
@@ -217,7 +218,7 @@ methods that validate handles and update the registry. Imperative operations suc
 
 `TuiCommand` is a distinct public type even if its initial runtime representation is an integer.
 
-The remaining action work binds menus, status items, and shortcuts to the existing `TuiAction`.
+The remaining action work binds menus, status items, and direct commands to the existing `TuiAction`.
 Controls with values expose one typed event per semantic change.
 
 Raw key and mouse handlers return `boolean` to participate in input propagation. Action handlers and typed change notifications do not return `boolean`.

@@ -74,8 +74,9 @@ painting, layout invalidation after text replacement, repaint clearing, and dest
 Input-line coverage verifies bounded character editing, cursor navigation, pointer placement,
 fixed measurement, normal/focused/disabled painting, destruction cleanup, and `OnChanged` origins
 for programmatic and user changes.
-Check-box coverage verifies Space and pointer toggles, `OnChanged` origins, normal/focused/disabled
-screen output, text replacement, intrinsic measurement, owning-layout invalidation, and cleanup.
+Check-box coverage verifies Space and pointer toggles, `OnChanged` origins, action state and
+action-before-change-event ordering, normal/focused/disabled screen output, text replacement,
+intrinsic measurement, owning-layout invalidation, and cleanup.
 List-box coverage verifies empty and clamped selection, Up/Down/Home and pointer navigation,
 `OnSelectionChanged` origins and unchanged-value suppression, focused and disabled screen output,
 grapheme-aware intrinsic measurement, owning-layout invalidation, and cleanup.

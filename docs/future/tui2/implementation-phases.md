@@ -16,23 +16,17 @@ current [`Std.Tui2` reference](../../pascal/std/tui2/README.md) and
 
 - Implemented: console cells accept one renderable grapheme cluster and preserve wide-glyph continuation invariants.
 - Implemented: clipping and the headless cell surface.
-- Implemented: the transient `TuiCanvas` drawing boundary, including grapheme-aware `WriteText`.
+- Implemented: the clipped `TuiCanvas` drawing value, including grapheme-aware `WriteText`.
 
 Completion contracts: [geometry.md](geometry.md), [text-and-cells.md](text-and-cells.md), and the pure-value section of [testing.md](testing.md).
 
 ## Phase 2 — Application registry and runtime safety
 
-- **Partial foundation.** Headless applications, actions, and buttons use application-scoped
-  registry slots, generation checks, cross-application validation, deterministic destruction, and
-  application-close cleanup. Custom views and generic layouts use the same model, including reusable
-  slots. Views also retain bounds, visibility, and enabled state. Headless containers own child
-  subtrees and one root layout, and each headless application may create one desktop root. Headless
-  `Post` callbacks drain FIFO before and after `OnTick`.
-- Implement the desktop root, parent-child ownership, destruction, stale-handle diagnostics, and tags.
-- Extend `OpenForTest` to the generic view registry and add transactional interactive terminal acquisition.
-- Add the VM terminal-mode restoration safety net.
-- Extend `Post` from headless scheduling to the generic typed main-task queue and enforce
-  main-task-only UI mutation.
+- **Implemented headless core.** Applications, actions, views, layouts, and controls use
+  application-scoped generational registries with cross-application validation, deterministic
+  destruction, application-close cleanup, one desktop root, retained view state, subtree ownership,
+  and FIFO post callbacks before and after `OnTick`.
+- Interactive terminal acquisition, mode restoration, and worker-task UI restrictions remain open.
 
 Completion contracts: [handles-and-ownership.md](handles-and-ownership.md), [runtime-boundary.md](runtime-boundary.md), and the registry/failure sections of [testing.md](testing.md).
 
@@ -66,7 +60,7 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
   desktop resize propagation.
 - **Partial foundation.** Headless application lifecycle events, live action state,
   `TuiAction.OnExecute`, button action binding, and action-before-`OnClick` dispatch are implemented.
-- Integrate the existing lifecycle events with the bounded loop and terminal lifecycle.
+- Integrate the existing lifecycle events with the future terminal lifecycle.
 - **Implemented headless core:** typed custom views with synchronous attach, structural detach before
   release, coalesced post-layout resize delivery, and callback revalidation.
 - **Implemented headless core:** custom-view measurement integrated with measure specs and size
@@ -127,10 +121,9 @@ Completion contracts: [event-loop.md](event-loop.md),
 
 ## Phase 5 — First usable controls
 
-- Render the existing retained controls.
-- Bind buttons, menus, status items, and shortcuts to reusable actions.
-- Add a minimal interactive application and a fully headless equivalent test.
-- Require keyboard, mouse where applicable, resize, lifecycle, and screen tests for each control.
+The implemented retained controls have deterministic headless keyboard, pointer, layout, lifecycle,
+and screen coverage. Remaining work is an interactive terminal application and its matching
+headless end-to-end test, after terminal acquisition is available.
 
 ## Phase 6 — Full application chrome
 

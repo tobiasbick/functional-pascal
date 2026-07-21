@@ -78,3 +78,36 @@ When development finds a compiler panic or a language limitation that requires a
 entry here in the same change. Include the source shape, observed failure or restriction, temporary
 workaround, and a concrete later resolution with regression coverage. Do not silently extend the
 language or hide the limitation inside a library implementation.
+
+## Transient `TuiCanvas` capability cannot be made opaque
+
+**Context:** restricting canvas operations to an active `OnPaint` callback.
+
+**Source shape:** a public record type with public fields and public static constructors, such as
+`TuiCanvas.Create(...)`.
+
+**Restriction:** FPAS has no opaque record representation or private record fields. Application
+source can construct or copy a canvas value, so a library-only active-callback token would be
+forgeable and could not enforce the documented transient lifetime.
+
+**Temporary workaround:** `TuiCanvas` remains a value-level drawing API. Tui2 does not claim that
+the runtime rejects a canvas retained or constructed outside `OnPaint`.
+
+**Later work:** add opaque record handles or per-field visibility with a library-only constructor
+path, then attach an application paint-generation token to each canvas and reject stale operations.
+Add compile-time visibility coverage plus a runtime stale-canvas regression test.
+
+## Computed record property inside arithmetic can panic the compiler
+
+**Context:** the first `TuiRadioGroup` implementation used `Self.Selected - 1` and
+`Self.Selected + 1` when moving the selection.
+
+**Failure:** compilation panics in `fpas_compiler::compiler::binary_op::infer_const_ty` with
+`expression type missing after semantic analysis` rather than reporting a diagnostic.
+
+**Temporary workaround:** assign the property to a typed local before arithmetic. The broader
+RadioGroup draft was removed until every related source shape is isolated and covered.
+
+**Later work:** make binary-operator lowering reject absent semantic types with a source-located
+diagnostic, add regressions for computed record properties in binary expressions, and resume the
+RadioGroup implementation from a minimal compiling shape.

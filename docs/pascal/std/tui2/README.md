@@ -690,9 +690,9 @@ Name.OnChanged :=
 
 ## Check boxes
 
-`TuiCheckBox.Create(App, Text)` creates a focusable retained boolean option. `Text` and `Checked`
-are writable properties; `Focused` is read-only. Its intrinsic width is the display width of `Text`
-plus four cells for `[x] `.
+`TuiCheckBox.Create(App, Text)` creates a focusable retained boolean option. `Text`, `Checked`,
+and `Action` are writable properties; `Focused` is read-only. Its intrinsic width is the display
+width of `Text` plus four cells for `[x] `.
 
 ```pascal
 var SaveCopy: TuiCheckBox := TuiCheckBox.Create(App, 'Save a copy');
@@ -700,10 +700,14 @@ Desktop.Add(TuiCheckBox.AsView(SaveCopy));
 ```
 
 Focused check boxes toggle `Checked` for Space or Enter. A left pointer-down inside the retained
-bounds focuses and toggles the check box. It paints `[ ] Text` while unchecked and `[x] Text` while
-checked, using the `Normal`, `Focused`, or `Disabled` role. Replacing `Text` invalidates paint and
-every owning layout. `OnChanged` follows the same `User`/`Programmatic` and unchanged-value rules
-as input lines. `Destroy` releases the backing view and makes the handle stale.
+bounds focuses and toggles the check box. Binding `Action` requires a live action from the same
+application and adopts its current `Checked` value. A user toggle writes the action's `Checked`
+value, executes the action with the check box view as source, then raises `OnChanged`. A disabled
+action prevents that toggle. Assigning `Checked` also updates a bound action without executing it.
+It paints `[ ] Text` while unchecked and `[x] Text` while checked, using the `Normal`, `Focused`,
+or `Disabled` role. Replacing `Text` invalidates paint and every owning layout. `OnChanged` follows
+the same `User`/`Programmatic` and unchanged-value rules as input lines. `Destroy` releases the
+backing view and makes the handle stale.
 
 ## List boxes
 

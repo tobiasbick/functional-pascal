@@ -1,7 +1,7 @@
 unit Std.Tui2.Controls.CheckBox;
 
 uses
-  Std.Array, Std.Console, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole,
+  Std.Array, Std.Console, Std.Tui2.Actions.Action, Std.Tui2.Cells.Cell, Std.Tui2.Cells.StyleRole,
   Std.Tui2.Controls.CheckBoxPaint, Std.Tui2.Drawing.Canvas, Std.Tui2.Drawing.PaintContext,
   Std.Tui2.Events.ChangeOrigin, Std.Tui2.Geometry.Size, Std.Tui2.Input.PointerEvent,
   Std.Tui2.Input.ViewInput, Std.Tui2.Layouts.MeasureResult, Std.Tui2.Runtime.Application,
@@ -22,6 +22,8 @@ private mutable var CheckBoxAlive: array of boolean := [];
 private mutable var CheckBoxTexts: array of string := [];
 private mutable var CheckBoxChecked: array of boolean := [];
 private mutable var CheckBoxViews: array of TuiCustomView := [];
+private mutable var CheckBoxHasAction: array of boolean := [];
+private mutable var CheckBoxActions: array of TuiAction := [];
 private mutable var CheckBoxOnChanged: array of option of TuiCheckBoxCallback := [];
 
 private function CheckBoxTextWidth(Text: string): integer;
@@ -67,18 +69,18 @@ begin
        CheckBoxAlive[Slot - 1] then
     begin
       CheckBoxOnChanged[Slot - 1] := None;
+      CheckBoxHasAction[Slot - 1] := false;
       CheckBoxAlive[Slot - 1] := false;
       CheckBoxGenerations[Slot - 1] := Generation + 1
     end
   end
 end;
 
-private function CheckBoxCommit(
+private function CheckBoxUpdate(
   ApplicationId: integer;
   Slot: integer;
   Generation: integer;
-  Value: boolean;
-  Origin: TuiChangeOrigin
+  Value: boolean
 ): boolean;
 begin
   CheckBoxRequire(ApplicationId, Slot, Generation);
@@ -89,6 +91,18 @@ begin
   end;
   CheckBoxChecked[Index] := Value;
   TuiApplicationPaintInvalidate(ApplicationId, 1);
+  return true
+end;
+
+private procedure CheckBoxNotify(
+  ApplicationId: integer;
+  Slot: integer;
+  Generation: integer;
+  Value: boolean;
+  Origin: TuiChangeOrigin
+);
+begin
+  var Index: integer := Slot - 1;
   case CheckBoxOnChanged[Index] of
     None:
     begin
@@ -97,8 +111,7 @@ begin
     begin
       Callback(ApplicationId, Slot, Generation, Value, Origin)
     end
-  end;
-  return true
+  end
 end;
 
 type
@@ -122,6 +135,9 @@ type
       CheckBoxTexts := Std.Array.Concat(CheckBoxTexts, [Text]);
       CheckBoxChecked := Std.Array.Concat(CheckBoxChecked, [false]);
       CheckBoxViews := Std.Array.Concat(CheckBoxViews, [Custom]);
+      CheckBoxHasAction := Std.Array.Concat(CheckBoxHasAction, [false]);
+      var EmptyAction: TuiAction := record ApplicationId := 0; Slot := 0; Generation := 0; end;
+      CheckBoxActions := Std.Array.Concat(CheckBoxActions, [EmptyAction]);
       CheckBoxOnChanged := Std.Array.Concat(CheckBoxOnChanged, [None]);
       var CheckBox: TuiCheckBox := record
         ApplicationId := App.Id;
@@ -139,8 +155,7 @@ type
           return false
         end;
         CheckBoxRequire(CheckBox.ApplicationId, CheckBox.Slot, CheckBox.Generation);
-        var Index: integer := CheckBox.Slot - 1;
-        return CheckBoxCommit(CheckBox.ApplicationId, CheckBox.Slot, CheckBox.Generation, not CheckBoxChecked[Index], TuiChangeOrigin.User)
+        return CheckBox.Toggle()
       end;
       Input.OnPointer := function(Sender: TuiView; Pointer: TuiPointerEvent): boolean begin
         if (Pointer.Action <> Std.Console.MouseAction.Down) or
@@ -149,8 +164,7 @@ type
           return false
         end;
         CheckBoxRequire(CheckBox.ApplicationId, CheckBox.Slot, CheckBox.Generation);
-        var Index: integer := CheckBox.Slot - 1;
-        return CheckBoxCommit(CheckBox.ApplicationId, CheckBox.Slot, CheckBox.Generation, not CheckBoxChecked[Index], TuiChangeOrigin.User)
+        return CheckBox.Toggle()
       end;
       Custom.OnPaint := procedure(Sender: TuiCustomView; Canvas: TuiCanvas; Context: TuiPaintContext) begin
         CheckBoxRequire(CheckBox.ApplicationId, CheckBox.Slot, CheckBox.Generation);
@@ -210,7 +224,78 @@ type
 
     procedure WriteChecked(Self: TuiCheckBox; Value: boolean);
     begin
-      CheckBoxCommit(Self.ApplicationId, Self.Slot, Self.Generation, Value, TuiChangeOrigin.Programmatic)
+      if CheckBoxHasAction[Self.Slot - 1] then
+      begin
+        var Action: TuiAction := CheckBoxActions[Self.Slot - 1];
+        Action.Checked := Value
+      end;
+      if CheckBoxUpdate(Self.ApplicationId, Self.Slot, Self.Generation, Value) then
+      begin
+        CheckBoxNotify(Self.ApplicationId, Self.Slot, Self.Generation, Value, TuiChangeOrigin.Programmatic)
+      end
+    end;
+
+    function ReadAction(Self: TuiCheckBox): TuiAction;
+    begin
+      CheckBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if not CheckBoxHasAction[Self.Slot - 1] then
+      begin
+        panic('Tui2 check box has no action')
+      end;
+      return CheckBoxActions[Self.Slot - 1]
+    end;
+
+    procedure WriteAction(Self: TuiCheckBox; Value: TuiAction);
+    begin
+      CheckBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      if Value.ApplicationId <> Self.ApplicationId then
+      begin
+        panic('Tui2 check box action belongs to a different application')
+      end;
+      if not Value.IsAlive() then
+      begin
+        panic('Tui2 check box action is stale')
+      end;
+      CheckBoxActions[Self.Slot - 1] := Value;
+      CheckBoxHasAction[Self.Slot - 1] := true;
+      if CheckBoxUpdate(Self.ApplicationId, Self.Slot, Self.Generation, Value.Checked) then
+      begin
+        CheckBoxNotify(Self.ApplicationId, Self.Slot, Self.Generation, Value.Checked, TuiChangeOrigin.Programmatic)
+      end
+    end;
+
+    function Toggle(Self: TuiCheckBox): boolean;
+    begin
+      CheckBoxRequire(Self.ApplicationId, Self.Slot, Self.Generation);
+      mutable var Value: boolean := not CheckBoxChecked[Self.Slot - 1];
+      if CheckBoxHasAction[Self.Slot - 1] then
+      begin
+        var Action: TuiAction := CheckBoxActions[Self.Slot - 1];
+        if not Action.Enabled then
+        begin
+          return false
+        end;
+        CheckBoxUpdate(Self.ApplicationId, Self.Slot, Self.Generation, Value);
+        Action.Checked := Value;
+        var Source: TuiView := TuiCheckBox.AsView(Self);
+        Action.Activate(Source);
+        if not Self.IsAlive() then
+        begin
+          return true
+        end;
+        Value := Action.Checked
+      end;
+      if CheckBoxUpdate(Self.ApplicationId, Self.Slot, Self.Generation, Value) then
+      begin
+        CheckBoxNotify(Self.ApplicationId, Self.Slot, Self.Generation, Value, TuiChangeOrigin.User);
+        return true
+      end;
+      if CheckBoxHasAction[Self.Slot - 1] then
+      begin
+        CheckBoxNotify(Self.ApplicationId, Self.Slot, Self.Generation, Value, TuiChangeOrigin.User);
+        return true
+      end;
+      return false
     end;
 
     function Focus(Self: TuiCheckBox): boolean;
@@ -285,6 +370,7 @@ type
 
     property Text: string read ReadText write WriteText;
     property Checked: boolean read ReadChecked write WriteChecked;
+    property Action: TuiAction read ReadAction write WriteAction;
     property Focused: boolean read ReadFocused;
 
     event OnChanged: procedure(Sender: TuiCheckBox; Value: boolean; Origin: TuiChangeOrigin) read ReadOnChanged write WriteOnChanged;

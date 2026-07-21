@@ -115,9 +115,12 @@ Completion contract: [layout.md](layout.md) and the layout section of [testing.m
 - **Implemented headless core:** titled retained dialogs with explicit modal opening and closing,
   modal routing isolation, focus restoration, inner layout bounds, subtree ownership, and explicit
   command completion.
-- **Next:** propagate the existing action registry through the next interactive view-backed control.
-- Enforce measurement and paint mutation restrictions at runtime and limit canvas use to the active
-  paint callback.
+- **Implemented headless core:** check boxes can bind a same-application action, share its checked
+  state on binding and toggle, execute it before `OnChanged`, and reject user toggles while the
+  action is disabled.
+- Enforce measurement and paint mutation restrictions at runtime. Limiting canvas use to an active
+  paint callback is deferred until FPAS can represent an opaque transient handle; see
+  [compiler-panic-followups.md](../compiler-panic-followups.md).
 
 Completion contracts: [event-loop.md](event-loop.md),
 [events-and-actions.md](events-and-actions.md), and [view-lifecycle.md](view-lifecycle.md).

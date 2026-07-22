@@ -1,0 +1,38 @@
+program Tui3ModalFocusDemoTest;
+
+uses Std.Test, Std.Tui3;
+
+type
+  DemoModel = record
+    Confirming: boolean;
+  end;
+
+function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  return State
+end;
+
+function ViewDemo(State: DemoModel): TuiElement;
+begin
+  var Input: TuiElement := TuiElementBuilders.MakeInput(TuiControlId.Create(1), '', 0, TuiAction.Create(1));
+  var Quit: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Quit', TuiAction.Create(3));
+  mutable var Content: array of TuiElement := [Input, Quit];
+  mutable var Focused: option of TuiControlId := Some(TuiControlId.Create(1));
+  if State.Confirming then
+  begin
+    Content := [
+                 TuiElementBuilders.MakeDialog('Confirm', [TuiElementBuilders.MakeLabel('done'), Quit])
+
+               ];
+    Focused := Some(TuiControlId.Create(3))
+  end;
+  return TuiElementBuilders.MakeDesktop(Focused, [TuiElementBuilders.MakeWindow('Host', Content)])
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  var Model: DemoModel := App.RunIterations(record Confirming := true; end, UpdateDemo, ViewDemo, 0, 0);
+  AssertTrue(Model.Confirming);
+  App.Close()
+end.

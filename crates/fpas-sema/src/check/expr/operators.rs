@@ -144,13 +144,20 @@ impl Checker {
             }
 
             BinaryOp::Eq | BinaryOp::NotEq => {
-                if !left.compatible_with(right) {
+                let supports_equality = (left.is_comparable() || left.is_ordinal())
+                    && (right.is_comparable() || right.is_ordinal())
+                    || matches!(
+                        (left, right),
+                        (Ty::Option(_), Ty::Option(_)) | (Ty::Result(..), Ty::Result(..))
+                    );
+                if !left.compatible_with(right) || !supports_equality {
                     self.error_with_code(
                         SEMA_TYPE_MISMATCH,
-                        "Comparison operands must be the same type",
-                        "Both sides of `=` or `<>` must match.",
+                        "Equality requires compatible scalar, option, or result operands",
+                        "Compare integer, real, boolean, string, enum, option, or result values; compare record fields explicitly.",
                         span,
                     );
+                    return Ty::Error;
                 }
                 Ty::Boolean
             }

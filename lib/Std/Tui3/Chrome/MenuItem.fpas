@@ -27,13 +27,14 @@ type
 
     /// Creates an enabled menu item with a display-only shortcut hint.
 
-    static function WithShortcut(
-  Id: TuiControlId;
-  Text: string;
-  Action: TuiAction;
-  Shortcut: string
-): TuiMenuItem;
+    static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
     begin
-      return record Id := Id; Text := Text; Action := Action; Enabled := true; Shortcut := Shortcut; end
+      return record
+        Id := Id;
+        Text := Text;
+        Action := Action;
+        Enabled := true;
+        Shortcut := Shortcut;
+      end
     end;
   end;

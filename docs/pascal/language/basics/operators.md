@@ -25,6 +25,10 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (expression precede
 | `>=`     | Greater or equal  | `A >= B`   |
 | `in`     | Membership        | `A in B`   |
 
+Equality (`=` and `<>`) accepts compatible scalar values (`integer`, `real`, `boolean`, `string`,
+and simple enums) plus compatible `Option` and `Result` values. Records, arrays, dictionaries, and
+procedures have no whole-value equality; compare their relevant fields or contents explicitly.
+
 `in` returns `boolean`. It tests whether an array contains a value, whether a dictionary contains a key, or whether a string contains a substring (or a single-character string):
 
 ```pascal

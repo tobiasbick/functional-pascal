@@ -1,8 +1,8 @@
 unit Std.Tui3.Runtime.Msg;
 
 uses
-  Std.Console, Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
-  Std.Tui3.Runtime.PointerEvent;
+  Std.Console, Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action,
+  Std.Tui3.Ids.ControlId, Std.Tui3.Runtime.PointerEvent;
 
 type
   /// Framework messages delivered to an application's Update function.

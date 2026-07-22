@@ -94,12 +94,7 @@ type
 
     /// Creates a controlled single-child scroll viewport.
 
-    static function MakeScroll(
-  Id: TuiControlId;
-  Offset: TuiPoint;
-  ChangeAction: TuiAction;
-  Child: TuiElement
-): TuiElement;
+    static function MakeScroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Child: TuiElement): TuiElement;
     begin
       return TuiElement.Scroll(Id, Offset, ChangeAction, [Child])
     end;

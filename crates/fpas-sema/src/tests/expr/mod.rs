@@ -162,6 +162,13 @@ fn equality_type_mismatch() {
     check_errors("program T; var X: boolean := 1 = true; begin end.");
 }
 
+#[test]
+fn equality_record_error() {
+    check_errors(
+        "program T; type Id = record Value: integer; end; var A: Id := record Value := 1; end; var B: Id := record Value := 1; end; var Same: boolean := A = B; begin end.",
+    );
+}
+
 // ── Shift ───────────────────────────────────────────────────────
 
 #[test]

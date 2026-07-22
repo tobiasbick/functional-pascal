@@ -2,7 +2,7 @@
 
 `Std.Tui3` is the experimental source-level Model–Update–View terminal UI facade. Applications
 return a fresh immutable `TuiElement` tree from `View`; they do not create, attach, or destroy live
-widgets. The current implementation is headless and intended for deterministic tests.
+widgets. It supports deterministic headless tests and the interactive Console terminal.
 
 ## Quick reference
 
@@ -30,6 +30,7 @@ widgets. The current implementation is headless and intended for deterministic t
 | `App.InjectPointerForTest(Pointer)` | Queues one pointer event for arranged-frame hit testing. |
 | `App.InjectResizeForTest(Size)` | Queues a resize that updates host size before `Update`. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
+| `TuiApplication.Run(...)` | Opens the Console terminal and runs until `TuiCmd.Quit`. |
 | `App.SurfaceSnapshot()` | Explicitly copies the last painted surface, including cell roles. |
 | `TuiWorkingSurface` | Host-owned mutable cell grid used by paint and headless tests. |
 | `App.Close()` | Closes the host and clears pending work. |
@@ -176,6 +177,18 @@ local reassignment only; they are not caller-visible output parameters. The host
 to `NoCommand` before every `Update`, reads it immediately afterwards, and stops on `Quit` before
 calling `View` or painting again.
 
+## Interactive terminal
+
+`TuiApplication.Run(InitialModel, Update, View)` owns one process terminal for its duration. It
+uses the same initial render and update ordering as the headless driver, presents every completed
+frame through `Std.Console`, and waits up to 16 ms for an event before emitting a `Tick(16)`.
+Keyboard, mouse, and positive resize events are normalized before existing Tui3 routing; paste and
+focus events are intentionally ignored in this version. Mouse coordinates become zero-based.
+
+The host acquires `Std.Console` interactive ownership before the first render and releases it when
+`Update` returns `TuiCmd.Quit`. `Std.Console` owns raw mode, alternate-screen, input-feature, and
+cursor rollback. Use `RunIterations` and `OpenForTest` for non-interactive regression tests.
+
 ## Headless frame and routing order
 
 `RunIterations` renders an initial frame before consuming its iteration budget. Every processed
@@ -214,7 +227,7 @@ columns.
 | Geometry and measurement | `lib/Std/Tui3/Geometry/`, `lib/Std/Tui3/Layout/` |
 | Cell, style, and palette values | `lib/Std/Tui3/Cells/` |
 | Working surface, canvas, and paint | `lib/Std/Tui3/Rendering/` |
-| Message loop and routing | `lib/Std/Tui3/Runtime/` (`Routing/Focus`, `Key`, `Pointer`, `Helpers`) |
+| Message loop, terminal session, event adapter, and renderer | `lib/Std/Tui3/Runtime/` (`Routing/`, `TerminalSession`, `ConsoleEvents`, `TerminalRenderer`) |
 | Chrome values | `lib/Std/Tui3/Chrome/` |
 | FPAS regressions | `tests/stdlib/tui3/` |
 

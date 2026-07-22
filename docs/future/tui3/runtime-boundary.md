@@ -61,6 +61,23 @@ Opening is transactional through `Std.Console.AcquireInteractiveTerminal`:
 If any step fails, completed steps roll back in reverse order. Closing or process teardown
 restores terminal modes. The VM keeps a safety net for abrupt termination.
 
+### Phase 5 boundary audit
+
+Gate 5.A is complete. Tui3 calls only these existing `Std.Console` operations:
+
+- `AcquireInteractiveTerminal` / `ReleaseInteractiveTerminal` for exclusive ownership and
+  reverse-order mode restoration;
+- `ScreenWidth` / `ScreenHeight` to create the first working surface;
+- `ReadEventTimeout` for bounded input waits;
+- `BeginFrame`, `WriteCells`, and `Present` to flush one painted surface.
+
+`Runtime/TerminalSession.fpas` owns the Tui3-side acquire/release pairing;
+`Runtime/ConsoleEvents.fpas` maps supported Console events to host input; and
+`Runtime/TerminalRenderer.fpas` resolves palette colors and emits Console cells. The Console
+cell API has glyph and foreground/background colors but no text-attribute fields, so Bold, Dim,
+Underline, and Inverse do not alter terminal output in this phase. No compiler, VM, or
+`Std.Tui` bridge change is required.
+
 ## Headless hosts
 
 `OpenForTest` creates a host with a private working surface and size and does not touch terminal

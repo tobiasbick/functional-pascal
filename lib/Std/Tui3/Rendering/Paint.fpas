@@ -1,9 +1,10 @@
 unit Std.Tui3.Rendering.Paint;
 
 uses
-  Std.Array, Std.Console, Std.Tui3.Cells.StyleRole, Std.Tui3.Chrome.StatusItem, Std.Tui3.Elements.Element,
-  Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size, Std.Tui3.Ids.ControlId,
-  Std.Tui3.Layout.Frame, Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface;
+  Std.Array, Std.Console, Std.Tui3.Cells.StyleRole, Std.Tui3.Chrome.StatusItem,
+  Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size,
+  Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Frame, Std.Tui3.Rendering.Canvas,
+  Std.Tui3.Rendering.Surface;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -127,11 +128,11 @@ begin
       begin
         if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
         begin
-          Text := Text + ('>' + Items[ItemIndex].Text) + ' '
+          Text := (Text + ('>' + Items[ItemIndex].Text)) + ' '
         end
         else
         begin
-          Text := Text + (' ' + Items[ItemIndex].Text) + ' '
+          Text := (Text + (' ' + Items[ItemIndex].Text)) + ' '
         end
       end;
       TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)

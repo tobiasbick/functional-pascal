@@ -19,22 +19,14 @@ type
 
     /// Creates an enabled status-line command.
 
-    static function MakeCommand(
-  Id: TuiControlId;
-  Text: string;
-  Action: TuiAction
-): TuiStatusItem;
+    static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, true)
     end;
 
     /// Creates a disabled status-line command.
 
-    static function MakeDisabledCommand(
-  Id: TuiControlId;
-  Text: string;
-  Action: TuiAction
-): TuiStatusItem;
+    static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, false)
     end;

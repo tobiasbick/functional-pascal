@@ -112,7 +112,8 @@ begin
         TuiElementValidateAction(Items[Index].Action);
         if TuiElementControlSeen(Seen, Items[Index].Id.Value) then
         begin
-          panic('Tui3 control id must be unique in one tree: ' + Std.Conv.IntToStr(Items[Index].Id.Value))
+          panic('Tui3 control id must be unique in one tree: ' +
+                Std.Conv.IntToStr(Items[Index].Id.Value))
         end;
         Std.Array.Push(Seen, Items[Index].Id.Value)
       end

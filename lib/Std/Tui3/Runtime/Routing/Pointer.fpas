@@ -87,7 +87,8 @@ begin
       begin
         var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
         var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
-        if AllowHits and Items[ItemIndex].Enabled and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+        if (AllowHits and Items[ItemIndex].Enabled) and
+           Entry.Clip.Intersect(ItemBounds).Contains(Point) then
         begin
           Tui3PointerBestHit := TuiPointerHit.Button(Items[ItemIndex].Id, Items[ItemIndex].Action)
         end;
@@ -112,7 +113,7 @@ begin
           begin
             var Width: integer := Std.Console.DisplayWidth(Text);
             var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
-            if AllowHits and Enabled and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+            if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
             begin
               Tui3PointerBestHit := TuiPointerHit.Button(Id, Action)
             end;
@@ -223,10 +224,7 @@ begin
         end;
         return FocusMessages
       end;
-      return Std.Array.Concat(FocusMessages, [
-                                               TuiMsg.SelectionChanged(Id, Action, Proposed)
-
-                                             ])
+      return Std.Array.Concat(FocusMessages, [TuiMsg.SelectionChanged(Id, Action, Proposed)])
     end;
     TuiPointerHit.Scroll(Id):
     begin

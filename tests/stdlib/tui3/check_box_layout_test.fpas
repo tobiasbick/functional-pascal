@@ -1,0 +1,52 @@
+program Tui3CheckBoxLayoutTest;
+
+uses Std.Str, Std.Test, Std.Tui3;
+
+type
+  CheckModel = record
+    Checked: boolean;
+  end;
+
+function ViewCheck(State: CheckModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
+
+                                                                        
+
+                                                                                                              ])
+
+                                                                      ])
+end;
+
+function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  var Unchecked: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', false, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  AssertEquals(8, Unchecked.Preferred.Width);
+  AssertEquals(1, Unchecked.Preferred.Height);
+  AssertEquals(8, Unchecked.Minimum.Width);
+  var CheckedSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', true, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  AssertEquals(8, CheckedSize.Preferred.Width);
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  mutable var Model: CheckModel := record Checked := false; end;
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
+  App.InjectResizeForTest(TuiSize.Create(12, 4));
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
+  AssertEquals(12, App.SurfaceSnapshot().Width);
+  AssertEquals(4, App.SurfaceSnapshot().Height);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Fla'));
+  App.Close()
+end.

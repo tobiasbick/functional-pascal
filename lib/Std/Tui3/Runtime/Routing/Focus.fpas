@@ -1,6 +1,8 @@
 unit Std.Tui3.Runtime.Routing.Focus;
 
-uses Std.Array, Std.Tui3.Elements.Element, Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Frame;
+uses
+  Std.Array, Std.Tui3.Chrome.StatusItem, Std.Tui3.Elements.Element, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Layout.Frame;
 
 private function TuiRouteFrameMatchesNode(
   Frame: TuiArrangedFrame;
@@ -15,14 +17,14 @@ begin
   end;
   mutable var Next: integer := Index + 1;
   case Node of
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
         Next := TuiRouteFrameMatchesNode(Frame, Children[ChildIndex], Next, Index)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -48,9 +50,50 @@ end;
 function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
   case Node of
-    TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction):
     begin
       return [Id]
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    begin
+      mutable var Controls: array of TuiControlId := [Id];
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Controls := Std.Array.Concat(Controls, TuiFocusableControls(Children[Index]))
+      end;
+      return Controls
+    end;
+    TuiElement.MenuBar(Items):
+    begin
+      mutable var Controls: array of TuiControlId := [];
+      for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        if Items[Index].Enabled then
+        begin
+          Controls := Std.Array.Concat(Controls, [Items[Index].Id])
+        end
+      end;
+      return Controls
+    end;
+    TuiElement.StatusLine(Items):
+    begin
+      mutable var Controls: array of TuiControlId := [];
+      for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        case Items[Index] of
+          TuiStatusItem.Hint(Text):
+          begin
+          end;
+          TuiStatusItem.Command(Id, Text, Action, Enabled):
+          begin
+            if Enabled then
+            begin
+              Controls := Std.Array.Concat(Controls, [Id])
+            end
+          end
+        end
+      end;
+      return Controls
     end;
     TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
     begin
@@ -71,7 +114,7 @@ begin
           begin
             LastDialog := Index
           end;
-          TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+          TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
           begin
           end
         end
@@ -106,7 +149,7 @@ begin
     begin
       return Focused
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
     begin
       return None
     end

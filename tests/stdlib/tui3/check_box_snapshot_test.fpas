@@ -1,0 +1,49 @@
+program Tui3CheckBoxSnapshotTest;
+
+uses Std.Str, Std.Test, Std.Tui3;
+
+type
+  CheckModel = record
+    Focus: integer;
+    Checked: boolean;
+  end;
+
+function ViewCheck(State: CheckModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
+
+                                                                                  
+
+                                                                                                                        ])
+
+                                                                                ])
+end;
+
+function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.CheckChanged(Source, Action, Checked):
+    begin
+      return record Focus := State.Focus; Checked := Checked; end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  mutable var Model: CheckModel := record Focus := 1; Checked := false; end;
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[ ] Flag'));
+  Model := record Focus := 1; Checked := true; end;
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
+  App.Close()
+end.

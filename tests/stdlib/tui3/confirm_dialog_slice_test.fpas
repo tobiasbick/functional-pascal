@@ -92,6 +92,18 @@ begin
       AssertEquals(NameChangedActionValue, Action.Value);
       return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit)
     end;
+    TuiMsg.CheckChanged(Source, Action, Checked):
+    begin
+      return State
+    end;
+    TuiMsg.SelectionChanged(Source, Action, Selected):
+    begin
+      return State
+    end;
+    TuiMsg.ScrollChanged(Source, Action, Offset):
+    begin
+      return State
+    end;
     TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);

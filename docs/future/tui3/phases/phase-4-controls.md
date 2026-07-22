@@ -7,7 +7,7 @@ required by [testing.md](../testing.md). Do not combine control tasks.
 
 ## Task 4.1 — CheckBox
 
-**Status:** ready.
+**Status:** complete.
 
 Implement the exact `CheckBox(Id, Text, Checked, ChangeAction)` contract and
 `CheckChanged(Source, Action, Checked)` message from [api-surface.md](../api-surface.md). Add
@@ -21,7 +21,7 @@ before it would exceed 400 LOC.
 
 ## Gate 4.A — Freeze List selection behavior
 
-**Status:** architecture gate.
+**Status:** complete.
 
 **Prerequisite:** Task 4.1.
 
@@ -31,7 +31,7 @@ keep selection and any viewport input in model data.
 
 ## Task 4.2 — List
 
-**Status:** blocked by Gate 4.A.
+**Status:** complete.
 
 Implement `List(Id, Items, Selected, ChangeAction)` and
 `SelectionChanged(Source, Action, Selected)` exactly as frozen. Modify the same owning element,
@@ -41,7 +41,7 @@ index.
 
 ## Gate 4.B — Freeze Scroll clamping and input
 
-**Status:** architecture gate.
+**Status:** complete.
 
 **Prerequisite:** Task 4.2.
 
@@ -51,7 +51,7 @@ scrollbar state.
 
 ## Task 4.3 — Scroll
 
-**Status:** blocked by Gate 4.B.
+**Status:** complete.
 
 Implement `Scroll(Id, Offset, ChangeAction, Child)` and
 `ScrollChanged(Source, Action, Offset)` using the frozen behavior and
@@ -62,7 +62,7 @@ and hit-testing use the arranged frame.
 
 ## Gate 4.C — Freeze MenuBar data and interaction
 
-**Status:** architecture gate.
+**Status:** complete.
 
 **Prerequisite:** Task 4.3.
 
@@ -73,7 +73,7 @@ not inherit Turbo Vision command offsets or live menu handles.
 
 ## Task 4.4 — MenuBar
 
-**Status:** blocked by Gate 4.C.
+**Status:** complete.
 
 Add one focused value file and modify the owning element, layout, paint, routing, message, and
 facade modules. Add `menu_bar_keyboard_test.fpas`, `menu_bar_pointer_test.fpas`,
@@ -81,7 +81,7 @@ facade modules. Add `menu_bar_keyboard_test.fpas`, `menu_bar_pointer_test.fpas`,
 
 ## Gate 4.D — Freeze StatusLine data and interaction
 
-**Status:** architecture gate.
+**Status:** complete.
 
 **Prerequisite:** Task 4.4.
 
@@ -91,7 +91,7 @@ disabled behavior, and focusability.
 
 ## Task 4.5 — StatusLine
 
-**Status:** blocked by Gate 4.D.
+**Status:** complete.
 
 Add one focused value file and modify the owning element, layout, paint, routing, message, and
 facade modules. Add `status_line_keyboard_test.fpas`, `status_line_pointer_test.fpas` when
@@ -100,7 +100,7 @@ status line must not be made focusable.
 
 ## Task 4.6 — Focus helpers and terminal-too-small overlay
 
-**Status:** blocked by Tasks 4.1–4.5.
+**Status:** complete.
 
 Add pure helpers that choose valid model focus from the current tree and expose layout-fit results
 without retaining focus internally. Add `focus_helpers_test.fpas` and
@@ -108,6 +108,10 @@ without retaining focus internally. Add `focus_helpers_test.fpas` and
 
 ## Phase checkpoint
 
+**Status:** complete.
+
 Every public interactive element has keyboard, applicable pointer, layout/resize, and screen
 coverage; the static application chrome sketch runs headlessly. This phase does not imply movable/
 resizable overlapping windows, a full editor, or a Turbo Vision desktop manager.
+
+Phase 5 is unblocked.

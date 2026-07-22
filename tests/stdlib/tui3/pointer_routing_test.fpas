@@ -124,7 +124,7 @@ begin
         PointerHits := State.PointerHits + 1;
       end
     end;
-    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
     begin
       return State
     end

@@ -17,6 +17,15 @@ begin
   return Right
 end;
 
+private function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
+begin
+  if Value > Maximum then
+  begin
+    return Maximum
+  end;
+  return Value
+end;
+
 private function TuiArrangeChildParticipates(Node: TuiElement): boolean;
 begin
   case Node of
@@ -24,7 +33,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -281,7 +290,7 @@ begin
   var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end;
     TuiElement.Row(Children, Spacing):
@@ -299,6 +308,26 @@ begin
       begin
         var Measured: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.AtMost(TuiSize.Create(Content.Width, Content.Height)));
         ArrangeNode(Children[0], TuiAlignmentBounds.Resolve(Measured, Settings.Alignment, Content), Clip, SelfIndex)
+      end
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    begin
+      if Std.Array.Length(Children) = 1 then
+      begin
+        var Content: TuiSize := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
+        mutable var MaximumX: integer := Content.Width - NodeBounds.Width;
+        mutable var MaximumY: integer := Content.Height - NodeBounds.Height;
+        if MaximumX < 0 then
+        begin
+          MaximumX := 0
+        end;
+        if MaximumY < 0 then
+        begin
+          MaximumY := 0
+        end;
+        var EffectiveX: integer := TuiArrangeClamp(Offset.X, MaximumX);
+        var EffectiveY: integer := TuiArrangeClamp(Offset.Y, MaximumY);
+        ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y - EffectiveY, Content.Width, Content.Height), Clip, SelfIndex)
       end
     end;
     TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):

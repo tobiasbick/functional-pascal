@@ -1,8 +1,9 @@
 unit Std.Tui3.Runtime.Routing.Pointer;
 
 uses
-  Std.Array, Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point, Std.Tui3.Ids.Action,
-  Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Frame, Std.Tui3.Runtime.Msg, Std.Tui3.Runtime.PointerEvent,
+  Std.Array, Std.Console, Std.Tui3.Chrome.StatusItem, Std.Tui3.Elements.Element,
+  Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Rect, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Layout.Frame, Std.Tui3.Runtime.Msg, Std.Tui3.Runtime.PointerEvent,
   Std.Tui3.Runtime.Routing.Focus;
 
 type
@@ -11,6 +12,9 @@ type
     Miss;
     Button(Id: TuiControlId; Action: TuiAction);
     Input(Id: TuiControlId);
+    CheckBox(Id: TuiControlId; Action: TuiAction; Checked: boolean);
+    List(Id: TuiControlId; Action: TuiAction; CurrentSelected: integer; Proposed: integer);
+    Scroll(Id: TuiControlId);
   end;
 
 private mutable var Tui3PointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
@@ -25,7 +29,7 @@ begin
       begin
         LastDialog := Index
       end;
-      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
       begin
       end
     end
@@ -56,6 +60,77 @@ begin
       if AllowHits and Entry.Clip.Contains(Point) then
       begin
         Tui3PointerBestHit := TuiPointerHit.Input(Id)
+      end
+    end;
+    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        Tui3PointerBestHit := TuiPointerHit.CheckBox(Id, ChangeAction, Checked)
+      end
+    end;
+    TuiElement.List(Id, Items, Selected, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        var Row: integer := Point.Y - Entry.Bounds.Y;
+        if (Row >= 0) and (Row < Std.Array.Length(Items)) then
+        begin
+          Tui3PointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row)
+        end
+      end
+    end;
+    TuiElement.MenuBar(Items):
+    begin
+      mutable var Cursor: integer := Entry.Bounds.X;
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
+        var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+        if AllowHits and Items[ItemIndex].Enabled and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+        begin
+          Tui3PointerBestHit := TuiPointerHit.Button(Items[ItemIndex].Id, Items[ItemIndex].Action)
+        end;
+        Cursor := Cursor + Width
+      end
+    end;
+    TuiElement.StatusLine(Items):
+    begin
+      mutable var Cursor: integer := Entry.Bounds.X;
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        if ItemIndex > 0 then
+        begin
+          Cursor := Cursor + 1
+        end;
+        case Items[ItemIndex] of
+          TuiStatusItem.Hint(Text):
+          begin
+            Cursor := Cursor + Std.Console.DisplayWidth(Text)
+          end;
+          TuiStatusItem.Command(Id, Text, Action, Enabled):
+          begin
+            var Width: integer := Std.Console.DisplayWidth(Text);
+            var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+            if AllowHits and Enabled and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+            begin
+              Tui3PointerBestHit := TuiPointerHit.Button(Id, Action)
+            end;
+            Cursor := Cursor + Width
+          end
+        end
+      end
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    begin
+      var ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
+      if ScrollAllowsHits then
+      begin
+        Tui3PointerBestHit := TuiPointerHit.Scroll(Id)
+      end;
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiRoutePointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits)
       end
     end;
     TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
@@ -122,6 +197,38 @@ begin
                                                                           ])
     end;
     TuiPointerHit.Input(Id):
+    begin
+      var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+      if Std.Array.Length(FocusMessages) = 0 then
+      begin
+        return [TuiMsg.Pointer(Pointer)]
+      end;
+      return FocusMessages
+    end;
+    TuiPointerHit.CheckBox(Id, Action, Checked):
+    begin
+      return Std.Array.Concat(TuiRoutePointerFocusMessages(Previous, Id), [
+                                                                            TuiMsg.CheckChanged(Id, Action, not Checked)
+
+                                                                          ])
+    end;
+    TuiPointerHit.List(Id, Action, CurrentSelected, Proposed):
+    begin
+      var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
+      if Proposed = CurrentSelected then
+      begin
+        if Std.Array.Length(FocusMessages) = 0 then
+        begin
+          return [TuiMsg.Pointer(Pointer)]
+        end;
+        return FocusMessages
+      end;
+      return Std.Array.Concat(FocusMessages, [
+                                               TuiMsg.SelectionChanged(Id, Action, Proposed)
+
+                                             ])
+    end;
+    TuiPointerHit.Scroll(Id):
     begin
       var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
       if Std.Array.Length(FocusMessages) = 0 then

@@ -36,11 +36,11 @@ extended rather than recreated:
 | --- | --- | --- |
 | Geometry | `Geometry/Point.fpas`, `Geometry/Size.fpas`, `Geometry/Rect.fpas` | Complete unless a later task exposes a regression. |
 | Identity | `Ids/ControlId.fpas`, `Ids/Action.fpas` | Complete unless a later task exposes a regression. |
-| Elements | Recursive `TuiElement` with Empty, Label, Button, Input, Row, Column, Layout, Spacer, Window, Dialog, Desktop | Tasks 4.x extend controls; do not flatten the public `View` tree. |
+| Elements | Recursive `TuiElement` with Empty, Label, Button, Input, CheckBox, List, Scroll, MenuBar, StatusLine, Row, Column, Layout, Spacer, Window, Dialog, Desktop | Phase 4 complete. |
 | Layout | Measure + private arranged-frame arrange in `Layout/`; host-owned `TuiArrangedFrame` | Phase 2 complete. Grid/Form/Stack remain deferred. |
-| Rendering | Cell working surface; paint from arranged geometry only via clipped canvas | Phase 2 complete. |
-| Runtime | Headless host, injection, FIFO queue, key/pointer routing, focus, ticks, resize, commands, snapshots | Phase 3 complete. Interactive terminal is Phase 5. |
-| Tests | Phase 0–3 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
+| Rendering | Cell working surface; paint from arranged geometry only via clipped canvas; terminal-too-small overlay | Phase 4 complete. |
+| Runtime | Headless host, injection, FIFO queue, key/pointer routing, focus helpers, ticks, resize, commands, snapshots | Phase 3–4 complete. Interactive terminal is Phase 5. |
+| Tests | Phase 0–4 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
 
 The recursive `Children: array of TuiElement` representation is intentional. The compiler stack
 overflow exposed by that representation was fixed in `fpas-sema`; do not replace the application
@@ -94,9 +94,9 @@ Execute one task at a time from the phase files. Do not skip an architecture or 
 | --- | --- | --- |
 | 1 — Values and owned rendering storage | [Phase 1](phases/phase-1-values.md) | Phase 1 complete; Phase 2 complete. |
 | 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Phase 2 complete; Phase 3 complete. |
-| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 3 complete; Phase 4 Task 4.1 is ready. |
-| 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Phase 3 complete; Task 4.1 is ready. |
-| 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Blocked by Phase 4. |
+| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 3 complete; Phase 4 complete. |
+| 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Phase 4 complete; Phase 5 Gate 5.A is ready. |
+| 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Phase 4 complete; Gate 5.A is ready. |
 | 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Blocked by Phase 5. |
 | 7 — Promote to `Std.Tui` | [Phase 7](phases/phase-7-promotion.md) | Blocked by promotion decision. |
 

@@ -1,0 +1,13 @@
+program Tui3MenuBarLayoutTest;
+
+uses Std.Test, Std.Tui3;
+
+begin
+  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeMenuBar([
+                                                                                TuiMenuItem.Create(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
+                                                                                TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20))
+
+                                                                              ]), TuiMeasureSpec.Unbounded());
+  AssertEquals(12, Measured.Preferred.Width);
+  AssertEquals(1, Measured.Preferred.Height)
+end.

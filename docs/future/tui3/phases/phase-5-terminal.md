@@ -9,7 +9,7 @@ widget intrinsics, or change the production `Std.Tui` session.
 
 **Status:** architecture gate.
 
-**Prerequisite:** Phase 4.
+**Prerequisite:** Phase 4 (complete).
 
 Audit the implemented `Std.Console.AcquireInteractiveTerminal`, event, frame-flush, and cleanup APIs.
 Record in [runtime-boundary.md](../runtime-boundary.md) the exact existing symbols Tui3 will call and

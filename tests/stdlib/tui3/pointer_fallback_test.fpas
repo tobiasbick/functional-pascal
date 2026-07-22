@@ -56,7 +56,7 @@ begin
           Button := Event.Button;
         end
       end;
-      TuiMsg.Key(Key), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.QuitRequested:
+      TuiMsg.Key(Key), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
       begin
         return State
       end

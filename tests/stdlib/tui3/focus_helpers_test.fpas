@@ -1,0 +1,103 @@
+program Tui3FocusHelpersTest;
+
+uses Std.Test, Std.Tui3;
+
+begin
+  var Tree: TuiElement := TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(2)), [
+                                                                                         TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                                 TuiElementBuilders.MakeColumn([
+
+                                                                                         
+
+                                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
+
+                                                                                         
+
+                                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+
+                                                                                         
+
+                                                                                                                                 
+
+                                                                                         
+
+                                                                                                                                                               ])
+
+                                                                                         
+
+                                                                                                                               ]),
+                                                                                         TuiElementBuilders.MakeDialog('Modal', [
+
+                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(3))
+
+                                                                                         
+
+                                                                                                                                ])
+
+                                                                                       ]);
+  case TuiFocusFirst(Tree) of
+    Some(Id):
+    begin
+      AssertEquals(3, Id.Value)
+    end;
+    None:
+    begin
+      panic('expected modal focus')
+    end
+  end;
+  case TuiFocusResolve(Tree, Some(TuiControlId.Create(1))) of
+    Some(Id):
+    begin
+      AssertEquals(3, Id.Value)
+    end;
+    None:
+    begin
+      panic('expected modal resolve')
+    end
+  end;
+  case TuiFocusResolve(Tree, Some(TuiControlId.Create(3))) of
+    Some(Id):
+    begin
+      AssertEquals(3, Id.Value)
+    end;
+    None:
+    begin
+      panic('expected kept modal focus')
+    end
+  end;
+  var HostOnly: TuiElement := TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(2)), [
+                                                                                             TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                                     TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
+
+                                                                                                                                     TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+
+                                                                                             
+
+                                                                                                                                   ])
+
+                                                                                           ]);
+  case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(2))) of
+    Some(Id):
+    begin
+      AssertEquals(2, Id.Value)
+    end;
+    None:
+    begin
+      panic('expected host focus')
+    end
+  end;
+  case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(9))) of
+    Some(Id):
+    begin
+      AssertEquals(1, Id.Value)
+    end;
+    None:
+    begin
+      panic('expected fallback focus')
+    end
+  end;
+  var Fit: TuiLayoutFit := TuiLayoutFitFor(HostOnly, TuiSize.Create(80, 24));
+  AssertTrue(Fit.Fits())
+end.

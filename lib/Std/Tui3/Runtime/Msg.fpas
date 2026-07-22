@@ -1,7 +1,7 @@
 unit Std.Tui3.Runtime.Msg;
 
 uses
-  Std.Console, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
+  Std.Console, Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
   Std.Tui3.Runtime.PointerEvent;
 
 type
@@ -14,6 +14,9 @@ type
     FocusChanged(Previous: option of TuiControlId; Current: option of TuiControlId);
     Action(Source: TuiControlId; Action: TuiAction);
     TextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer);
+    CheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean);
+    SelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer);
+    ScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint);
     QuitRequested;
   end;
 
@@ -29,4 +32,25 @@ end;
 function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
   return TuiMsg.TextChanged(Source, Action, Text, Caret)
+end;
+
+/// Creates a source-aware controlled check-box change message.
+
+function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
+begin
+  return TuiMsg.CheckChanged(Source, Action, Checked)
+end;
+
+/// Creates a source-aware controlled list selection-change message.
+
+function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
+begin
+  return TuiMsg.SelectionChanged(Source, Action, Selected)
+end;
+
+/// Creates a source-aware controlled scroll-offset change message.
+
+function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
+begin
+  return TuiMsg.ScrollChanged(Source, Action, Offset)
 end;

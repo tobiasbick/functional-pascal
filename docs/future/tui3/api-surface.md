@@ -70,37 +70,39 @@ binding. The capability avoids a generic result record while keeping `TuiCmd` it
 ### Element constructors
 
 ```pascal
-Tui.Empty: TuiElement
-Tui.Desktop(Focused: option of TuiControlId; Children: array of TuiElement): TuiElement
-Tui.Window(Title: string; Children: array of TuiElement): TuiElement
-Tui.Dialog(Title: string; Children: array of TuiElement): TuiElement
-Tui.MenuBar(Items: array of TuiMenuItem): TuiElement
-Tui.StatusLine(Text: string): TuiElement
-Tui.Row(Children: array of TuiElement; Spacing: integer): TuiElement
-Tui.Column(Children: array of TuiElement; Spacing: integer): TuiElement
-Tui.Layout(Settings: TuiLayoutSettings; Child: TuiElement): TuiElement
-Tui.Spacer.Fixed / Expanding
-Tui.Label(Text: string): TuiElement
-Tui.Button(Id: TuiControlId; Text: string; Action: TuiAction): TuiElement
-Tui.Input(
+TuiElementBuilders.MakeEmpty(): TuiElement
+TuiElementBuilders.MakeDesktop(Focused: option of TuiControlId; Children: array of TuiElement): TuiElement
+TuiElementBuilders.MakeWindow(Title: string; Children: array of TuiElement): TuiElement
+TuiElementBuilders.MakeDialog(Title: string; Children: array of TuiElement): TuiElement
+TuiElementBuilders.MakeMenuBar(Items: array of TuiMenuItem): TuiElement
+TuiElementBuilders.MakeStatusLine(Items: array of TuiStatusItem): TuiElement
+TuiElementBuilders.MakeRow(Children: array of TuiElement): TuiElement
+TuiElementBuilders.MakeRowSpaced(Children: array of TuiElement; Spacing: integer): TuiElement
+TuiElementBuilders.MakeColumn(Children: array of TuiElement): TuiElement
+TuiElementBuilders.MakeColumnSpaced(Children: array of TuiElement; Spacing: integer): TuiElement
+TuiElementBuilders.MakeLayout(Settings: TuiLayoutSettings; Child: TuiElement): TuiElement
+TuiElementBuilders.MakeSpacer(TuiSpacer.Fixed / Expanding): TuiElement
+TuiElementBuilders.MakeLabel(Text: string): TuiElement
+TuiElementBuilders.MakeButton(Id: TuiControlId; Text: string; Action: TuiAction): TuiElement
+TuiElementBuilders.MakeInput(
   Id: TuiControlId;
   Text: string;
   Caret: integer;
   ChangeAction: TuiAction
 ): TuiElement
-Tui.CheckBox(
+TuiElementBuilders.MakeCheckBox(
   Id: TuiControlId;
   Text: string;
   Checked: boolean;
   ChangeAction: TuiAction
 ): TuiElement
-Tui.List(
+TuiElementBuilders.MakeList(
   Id: TuiControlId;
   Items: array of string;
   Selected: integer;
   ChangeAction: TuiAction
 ): TuiElement
-Tui.Scroll(
+TuiElementBuilders.MakeScroll(
   Id: TuiControlId;
   Offset: TuiPoint;
   ChangeAction: TuiAction;
@@ -108,12 +110,63 @@ Tui.Scroll(
 ): TuiElement
 ```
 
+#### List selection (Gate 4.A — frozen)
+
+`Selected` is model data. Validation requires:
+
+- empty `Items` → `Selected = -1`;
+- non-empty `Items` → `Selected` in `0 .. Length(Items) - 1`.
+
+Routing proposes only a valid next index. Focused keyboard behavior:
+
+| Key | Proposal |
+| --- | --- |
+| Up | `Selected - 1`, clamped to `0` |
+| Down | `Selected + 1`, clamped to `Length - 1` |
+| Home | `0` |
+| End | `Length - 1` |
+
+Empty lists leave the key as `TuiMsg.Key`. When the proposed index equals the current
+`Selected`, routing does not emit `SelectionChanged`.
+
+Left-button pointer down maps `Y - Bounds.Y` to a row index inside `0 .. Length - 1`. Hits
+outside that range remain `TuiMsg.Pointer`. Focus changes precede `SelectionChanged` when needed.
+
+Viewport rule: List has no scroll offset field. Preferred height is `max(1, Length(Items))`;
+preferred width is `2 + max item display width` (minimum width `2`). Paint always starts at item
+`0` and draws at most `Bounds.Height` rows; clipped rows are not painted. Wrap the list in
+`Scroll` when the model needs a scrolled viewport.
+
 `TuiElementBuilders.MakeRow` and `MakeColumn` preserve their Phase 0 signatures and use zero
 spacing. `MakeRowSpaced` and `MakeColumnSpaced` validate and store non-negative spacing.
-`Tui.Layout` is encoded internally as a recursive enum variant whose children array must contain
+`TuiElement.Layout` is encoded internally as a recursive enum variant whose children array must contain
 exactly one element; its public builder accepts one `Child`. This keeps recursion behind the same
 array indirection already proven by Phase 0. Validation rejects forged zero-child or multi-child
 layout wrappers.
+
+#### Scroll clamping (Gate 4.B — frozen)
+
+`Scroll(Id, Offset, ChangeAction, Child)` is a controlled single-child viewport. Its internal
+children array contains exactly `Child`; validation requires a positive id and action, exactly one
+child, and non-negative `Offset.X` and `Offset.Y`.
+
+Content size is the child preferred size measured with an unbounded spec. The viewport is the
+arranged Scroll bounds. For each axis, `MaxOffset = max(0, Content - Viewport)` and the effective
+offset used to arrange, paint, and hit-test is the model offset clamped to `0 .. MaxOffset`. The
+runtime does not retain a clamped offset or scrollbar state: it only proposes
+`ScrollChanged(Source, Action, Offset)` for the application model to accept.
+
+When Scroll has focus, Left/Right/Up/Down propose a one-cell delta, PageUp/PageDown propose a
+vertical delta of the viewport height, Home proposes `Y = 0`, and End proposes `Y = MaxOffset.Y`.
+Proposals are clamped; when a proposal equals the current model offset, the input remains
+`TuiMsg.Key`. Left pointer down inside the viewport focuses Scroll when necessary; no scrollbar
+widgets are invented. Child hits are considered only inside the Scroll clip and use offset-aware
+child geometry.
+
+`Std.Console.MouseAction` currently exposes `ScrollUp`/`ScrollDown`, not `WheelUp`/`WheelDown`;
+therefore this version does not route wheel events as Scroll changes. If the console contract adds
+the named wheel variants, WheelUp/WheelDown route over the viewport without a left button and
+propose a clamped vertical delta of `-3`/`+3`.
 
 The v1 layout values are the Tui-prefixed value semantics already proven by Tui2:
 
@@ -210,3 +263,54 @@ Phase order follows [implementation-phases.md](implementation-phases.md):
 4. Memo / text viewer only if needed after the core feels right
 
 Salvage painting and measurement ideas from Tui2 controls; do not salvage their handle APIs.
+
+## Chrome data (Gates 4.C / 4.D — frozen)
+
+v1 MenuBar is a **flat action bar** (no open/dropdown menus, no Turbo Vision command offsets).
+StatusLine replaces the earlier `StatusLine(Text: string)` sketch with an item array.
+
+```pascal
+TuiMenuItem = record
+  Id: TuiControlId;
+  Text: string;
+  Action: TuiAction;
+  Enabled: boolean;
+  Shortcut: string;   { display hint only in v1; not auto-bound to keys }
+end;
+
+TuiMenuItem.Create(Id, Text, Action): TuiMenuItem           { Enabled := true; Shortcut := '' }
+TuiMenuItem.Disabled(Id, Text, Action): TuiMenuItem        { Enabled := false }
+TuiMenuItem.WithShortcut(Id, Text, Action, Shortcut): TuiMenuItem
+
+TuiElementBuilders.MakeMenuBar(Items: array of TuiMenuItem): TuiElement
+
+TuiStatusItem = enum
+  Hint(Text: string);                                      { display-only; not focusable }
+  Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
+end;
+
+TuiStatusItemBuilders.MakeHint(Text): TuiStatusItem
+TuiStatusItemBuilders.MakeCommand(Id, Text, Action): TuiStatusItem { Enabled := true }
+TuiStatusItemBuilders.MakeDisabledCommand(Id, Text, Action): TuiStatusItem
+
+TuiElementBuilders.MakeStatusLine(Items: array of TuiStatusItem): TuiElement
+```
+
+### MenuBar interaction
+
+- Preferred height `1`. Preferred width is the sum of item label widths plus separators
+  (` Text ` around each item; disabled items still occupy space).
+- Enabled items are focusable in left-to-right order; disabled items are skipped by Tab and
+  reject activation.
+- Enter/Space on a focused enabled item emits `TuiMsg.Action(Source, Action)`.
+- Left-button pointer down on an enabled item focuses it (if needed) then emits `Action`.
+- Hits on disabled items or empty bar cells remain `TuiMsg.Pointer`.
+- No model-controlled open menu state in v1.
+
+### StatusLine interaction
+
+- Preferred height `1`. Preferred width is the joined item text widths with single-space gaps.
+- `Hint` items are never focusable.
+- Enabled `Command` items are focusable; disabled commands are not.
+- Enter/Space or left-click on an enabled command emits `TuiMsg.Action`.
+- A status line that contains only `Hint` items has no focusable controls.

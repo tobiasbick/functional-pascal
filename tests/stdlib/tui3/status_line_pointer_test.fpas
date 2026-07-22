@@ -1,0 +1,87 @@
+program Tui3StatusLinePointerTest;
+
+uses Std.Array, Std.Str, Std.Test, Std.Tui3;
+
+type
+  StatusModel = record
+    Focus: integer;
+    Actions: array of integer;
+  end;
+
+function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
+begin
+  for Y: integer := 0 to Snapshot.Height - 1 do
+  begin
+    var Index: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
+    if Index >= 0 then
+    begin
+      return TuiPoint.Create(Index, Y)
+    end
+  end;
+  panic('glyph not found in snapshot')
+end;
+
+function ViewStatus(State: StatusModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeStatusLine([
+
+                                                                                                                      TuiStatusItemBuilders.MakeHint('Ready'),
+
+                                                                                                                      TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
+
+                                                                                                                      TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
+
+                                                                                  
+
+                                                                                                                    ])
+
+                                                                                ])
+end;
+
+function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record Focus := Id.Value; Actions := State.Actions; end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end;
+    TuiMsg.Action(Source, Action):
+    begin
+      return record
+        Focus := State.Focus;
+        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+      end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var Model: StatusModel := record Focus := 1; Actions := []; end;
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
+  var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, SaveAt));
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(10, Model.Actions[0]);
+  var QuitAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Quit');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, QuitAt));
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  AssertEquals(1, Std.Array.Length(Model.Actions));
+  App.Close()
+end.

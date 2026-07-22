@@ -1,0 +1,87 @@
+program Tui3CheckBoxKeyboardTest;
+
+uses Std.Array, Std.Test, Std.Tui3;
+
+type
+  CheckModel = record
+    Focus: integer;
+    Checked: boolean;
+    Changes: array of boolean;
+  end;
+
+function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Character;
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function ViewCheck(State: CheckModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
+
+                                                                                  
+
+                                                                                                                        ])
+
+                                                                                ])
+end;
+
+function UpdateCheck(State: CheckModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CheckModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record Focus := Id.Value; Checked := State.Checked; Changes := State.Changes; end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end;
+    TuiMsg.CheckChanged(Source, Action, Checked):
+    begin
+      AssertEquals(1, Source.Value);
+      AssertEquals(9, Action.Value);
+      return record
+        Focus := State.Focus;
+        Checked := Checked;
+        Changes := Std.Array.Concat(State.Changes, [Checked]);
+      end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
+  mutable var Model: CheckModel := record Focus := 1; Checked := false; Changes := []; end;
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, ''));
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
+  AssertTrue(Model.Checked);
+  AssertEquals(1, Std.Array.Length(Model.Changes));
+  AssertTrue(Model.Changes[0]);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
+  Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);
+  AssertFalse(Model.Checked);
+  AssertEquals(2, Std.Array.Length(Model.Changes));
+  AssertFalse(Model.Changes[1]);
+  App.Close()
+end.

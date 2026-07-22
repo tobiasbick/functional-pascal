@@ -18,8 +18,10 @@ widgets. The current implementation is headless and intended for deterministic t
 | `TuiElementBuilders` | Constructors for current elements. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` / `TuiLayoutSettings` | Layout value inputs. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
-| `TuiMsg` | Key, pointer, tick, resize, focus, action, text-change, and quit messages. |
+| `TuiMsg` | Key, pointer, tick, resize, focus, action, text/check/selection/scroll change, and quit messages. |
 | `TuiPointerEvent` / `TuiPointerButton` | Normalized pointer input in zero-based application coordinates. |
+| `TuiMenuItem` / `TuiStatusItem` | Flat menu-bar and status-line chrome descriptions. |
+| `TuiFocusFirst` / `TuiFocusResolve` / `TuiLayoutFitFor` / `TuiPaintTooSmallOverlay` | Pure focus, fit, and optional too-small notice helpers. |
 | `TuiCmd` | `NoCommand` or `Quit`. |
 | `TuiCmdOutput.Set(Command)` | Observable command output passed to `Update`. |
 | `TuiApplication.OpenForTest(Size)` | Opens a fixed-size headless host. |
@@ -101,6 +103,11 @@ TuiElement.Empty
 TuiElement.Label(Text)
 TuiElement.Button(Id, Text, Action)
 TuiElement.Input(Id, Text, Caret, ChangeAction)
+TuiElement.CheckBox(Id, Text, Checked, ChangeAction)
+TuiElement.List(Id, Items, Selected, ChangeAction)
+TuiElement.Scroll(Id, Offset, ChangeAction, Children)
+TuiElement.MenuBar(Items)
+TuiElement.StatusLine(Items)
 TuiElement.Row(Children, Spacing)
 TuiElement.Column(Children, Spacing)
 TuiElement.Layout(Settings, Children)
@@ -111,12 +118,18 @@ TuiElement.Desktop(Focused, Children)
 ```
 
 `MakeRow` / `MakeColumn` use spacing `0`. Prefer `MakeRowSpaced` / `MakeColumnSpaced` when gaps are
-needed. `MakeLayout` wraps exactly one child with `TuiLayoutSettings` (margins, size policy,
-alignment). `Row`, `Column`, `Layout`, `Window`, `Dialog`, and `Desktop` store recursive
-`array of TuiElement` payloads. Interactive variants cannot omit their typed control or action
-identities. Validation before every frame additionally rejects non-positive forged values, duplicate
-control ids, invalid input carets, and focus ids that do not exist in the tree. Repeated action ids
-are valid.
+needed. `MakeLayout` and `MakeScroll` wrap exactly one child. `MenuBar` uses `TuiMenuItem` values
+(flat enabled/disabled actions with optional display shortcuts). `StatusLine` uses `TuiStatusItem`
+hints and commands; hint-only lines are not focusable. Interactive variants cannot omit their typed
+control or action identities. Validation before every frame additionally rejects non-positive forged
+values, duplicate control ids, invalid input carets, invalid list selection, negative scroll offsets,
+and focus ids that do not exist in the tree. Repeated action ids are valid.
+
+Controlled messages include `TextChanged`, `CheckChanged`, `SelectionChanged`, and `ScrollChanged`.
+`TuiFocusFirst` / `TuiFocusResolve` choose a valid model focus from the active modal or full tree.
+`TuiLayoutFitFor` reports terminal-too-small overflow without changing arranged geometry. Applications
+may call `TuiPaintTooSmallOverlay` to replace a working surface with the notice; ordinary frames still
+clip overflow as before.
 
 ## Layout values and arranged frames
 
@@ -201,7 +214,8 @@ columns.
 | Geometry and measurement | `lib/Std/Tui3/Geometry/`, `lib/Std/Tui3/Layout/` |
 | Cell, style, and palette values | `lib/Std/Tui3/Cells/` |
 | Working surface, canvas, and paint | `lib/Std/Tui3/Rendering/` |
-| Message loop and routing | `lib/Std/Tui3/Runtime/` (`Routing/Focus`, `Key`, `Pointer`) |
+| Message loop and routing | `lib/Std/Tui3/Runtime/` (`Routing/Focus`, `Key`, `Pointer`, `Helpers`) |
+| Chrome values | `lib/Std/Tui3/Chrome/` |
 | FPAS regressions | `tests/stdlib/tui3/` |
 
 ## See also

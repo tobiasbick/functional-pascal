@@ -1,9 +1,9 @@
 unit Std.Tui3.Rendering.Paint;
 
 uses
-  Std.Array, Std.Tui3.Cells.StyleRole, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point,
-  Std.Tui3.Geometry.Rect, Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Frame, Std.Tui3.Rendering.Canvas,
-  Std.Tui3.Rendering.Surface;
+  Std.Array, Std.Console, Std.Tui3.Cells.StyleRole, Std.Tui3.Chrome.StatusItem, Std.Tui3.Elements.Element,
+  Std.Tui3.Geometry.Point, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Layout.Frame, Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -86,7 +86,86 @@ begin
         TuiPaintTextInBounds(Clipped, Entry.Bounds, '  ' + Text)
       end
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children):
+    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    begin
+      mutable var Mark: string := ' ';
+      if Checked then
+      begin
+        Mark := 'x'
+      end;
+      if TuiPaintFocused(Focused, Id) then
+      begin
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, (('>[' + Mark) + '] ') + Text)
+      end
+      else
+      begin
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, ((' [' + Mark) + '] ') + Text)
+      end
+    end;
+    TuiElement.List(Id, Items, Selected, ChangeAction):
+    begin
+      mutable var RowLimit: integer := Entry.Bounds.Height;
+      if RowLimit > Std.Array.Length(Items) then
+      begin
+        RowLimit := Std.Array.Length(Items)
+      end;
+      for Row: integer := 0 to RowLimit - 1 do
+      begin
+        mutable var Prefix: string := '  ';
+        if Row = Selected then
+        begin
+          Prefix := '> '
+        end;
+        TuiPaintTextInBounds(Clipped, TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1), Prefix +
+                                                                                                                   Items[Row])
+      end
+    end;
+    TuiElement.MenuBar(Items):
+    begin
+      mutable var Text: string := '';
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
+        begin
+          Text := Text + ('>' + Items[ItemIndex].Text) + ' '
+        end
+        else
+        begin
+          Text := Text + (' ' + Items[ItemIndex].Text) + ' '
+        end
+      end;
+      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
+    end;
+    TuiElement.StatusLine(Items):
+    begin
+      mutable var Text: string := '';
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        if ItemIndex > 0 then
+        begin
+          Text := Text + ' '
+        end;
+        case Items[ItemIndex] of
+          TuiStatusItem.Hint(ItemText):
+          begin
+            Text := Text + ItemText
+          end;
+          TuiStatusItem.Command(Id, ItemText, Action, Enabled):
+          begin
+            if Enabled and TuiPaintFocused(Focused, Id) then
+            begin
+              Text := Text + ('>' + ItemText)
+            end
+            else
+            begin
+              Text := Text + ItemText
+            end
+          end
+        end
+      end;
+      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -123,4 +202,29 @@ begin
   begin
     panic('Tui3 paint did not consume the complete arranged frame')
   end
+end;
+
+/// Overwrites the surface with a terminal-too-small notice when layout overflows.
+
+procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
+begin
+  Surface.Clear();
+  var Size: TuiSize := Surface.Size();
+  if Size.IsEmpty() then
+  begin
+    return
+  end;
+  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Size));
+  var Message: string := 'Terminal too small';
+  mutable var X: integer := 0;
+  if Size.Width > Std.Console.DisplayWidth(Message) then
+  begin
+    X := (Size.Width - Std.Console.DisplayWidth(Message)) div 2
+  end;
+  mutable var Y: integer := 0;
+  if Size.Height > 1 then
+  begin
+    Y := Size.Height div 2
+  end;
+  Canvas.WriteText(TuiPoint.Create(X, Y), Message, TuiStyleRole.Warning)
 end;

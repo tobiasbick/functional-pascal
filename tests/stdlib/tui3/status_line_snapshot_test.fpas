@@ -1,0 +1,44 @@
+program Tui3StatusLineSnapshotTest;
+
+uses Std.Str, Std.Test, Std.Tui3;
+
+type
+  StatusModel = record
+  end;
+
+function ViewStatus(State: StatusModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeStatusLine([
+
+                                                                                                            TuiStatusItemBuilders.MakeHint('Ready'),
+
+                                                                                                            TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
+
+                                                                                                            TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
+
+                                                                        
+
+                                                                                                          ])
+
+                                                                      ])
+end;
+
+function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 3));
+  mutable var Model: StatusModel := record  end;
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Ready >Save Quit'));
+  App.Close()
+end.

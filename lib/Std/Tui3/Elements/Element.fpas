@@ -1,8 +1,8 @@
 unit Std.Tui3.Elements.Element;
 
 uses
-  Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId, Std.Tui3.Layout.LayoutSettings,
-  Std.Tui3.Layout.Spacer;
+  Std.Tui3.Chrome.MenuItem, Std.Tui3.Chrome.StatusItem, Std.Tui3.Geometry.Point, Std.Tui3.Ids.Action,
+  Std.Tui3.Ids.ControlId, Std.Tui3.Layout.LayoutSettings, Std.Tui3.Layout.Spacer;
 
 private function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -20,6 +20,11 @@ type
     Label(Text: string);
     Button(Id: TuiControlId; Text: string; Action: TuiAction);
     Input(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction);
+    CheckBox(Id: TuiControlId; Text: string; Checked: boolean; ChangeAction: TuiAction);
+    List(Id: TuiControlId; Items: array of string; Selected: integer; ChangeAction: TuiAction);
+    Scroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
+    MenuBar(Items: array of TuiMenuItem);
+    StatusLine(Items: array of TuiStatusItem);
     Row(Children: array of TuiElement; Spacing: integer);
     Column(Children: array of TuiElement; Spacing: integer);
     Layout(Settings: TuiLayoutSettings; Children: array of TuiElement);
@@ -61,6 +66,56 @@ type
 ): TuiElement;
     begin
       return TuiElement.Input(Id, TextValue, CaretValue, ChangeAction)
+    end;
+
+    /// Creates a controlled check box that proposes the inverted checked value.
+
+    static function MakeCheckBox(
+  Id: TuiControlId;
+  TextValue: string;
+  Checked: boolean;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.CheckBox(Id, TextValue, Checked, ChangeAction)
+    end;
+
+    /// Creates a controlled list with model-owned selection.
+
+    static function MakeList(
+  Id: TuiControlId;
+  Items: array of string;
+  Selected: integer;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.List(Id, Items, Selected, ChangeAction)
+    end;
+
+    /// Creates a controlled single-child scroll viewport.
+
+    static function MakeScroll(
+  Id: TuiControlId;
+  Offset: TuiPoint;
+  ChangeAction: TuiAction;
+  Child: TuiElement
+): TuiElement;
+    begin
+      return TuiElement.Scroll(Id, Offset, ChangeAction, [Child])
+    end;
+
+    /// Creates a flat menu action bar.
+
+    static function MakeMenuBar(Items: array of TuiMenuItem): TuiElement;
+    begin
+      return TuiElement.MenuBar(Items)
+    end;
+
+    /// Creates a status line of display and command items.
+
+    static function MakeStatusLine(Items: array of TuiStatusItem): TuiElement;
+    begin
+      return TuiElement.StatusLine(Items)
     end;
 
     /// Creates a horizontal layout node with zero spacing.

@@ -1,12 +1,16 @@
 unit Std.Tui3.Runtime.Msg;
 
-uses Std.Console, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId;
+uses
+  Std.Console, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Runtime.PointerEvent;
 
 type
   /// Framework messages delivered to an application's Update function.
   TuiMsg = enum
     Key(Key: Std.Console.KeyEvent);
+    Pointer(Pointer: TuiPointerEvent);
     Tick(DeltaMilliseconds: integer);
+    Resize(Size: TuiSize);
     FocusChanged(Previous: option of TuiControlId; Current: option of TuiControlId);
     Action(Source: TuiControlId; Action: TuiAction);
     TextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer);

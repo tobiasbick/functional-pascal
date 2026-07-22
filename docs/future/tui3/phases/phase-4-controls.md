@@ -7,7 +7,7 @@ required by [testing.md](../testing.md). Do not combine control tasks.
 
 ## Task 4.1 — CheckBox
 
-**Status:** blocked by Phase 3.
+**Status:** ready.
 
 Implement the exact `CheckBox(Id, Text, Checked, ChangeAction)` contract and
 `CheckChanged(Source, Action, Checked)` message from [api-surface.md](../api-surface.md). Add

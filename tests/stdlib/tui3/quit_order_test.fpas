@@ -1,0 +1,55 @@
+program Tui3QuitOrderTest;
+
+uses Std.Str, Std.Test, Std.Tui3;
+
+type
+  QuitModel = record
+    LabelText: string;
+    Quit: boolean;
+    Updates: integer;
+  end;
+
+function ViewQuit(State: QuitModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel(State.LabelText)
+end;
+
+function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel;
+begin
+  AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.QuitRequested:
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return record LabelText := 'SHOULD NOT PAINT'; Quit := true; Updates := State.Updates + 1; end
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      return record LabelText := 'after-tick'; Quit := false; Updates := State.Updates + 1; end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret):
+    begin
+      return record
+        LabelText := State.LabelText;
+        Quit := State.Quit;
+        Updates := State.Updates + 1;
+      end
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  mutable var Model: QuitModel := record LabelText := 'before'; Quit := false; Updates := 0; end;
+  Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
+  App.Inject(TuiMsg.QuitRequested);
+  App.Inject(TuiMsg.Tick(1));
+  Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 5, 0);
+  AssertTrue(Model.Quit);
+  AssertEquals(1, Model.Updates);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
+  AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'SHOULD NOT PAINT'));
+  AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'after-tick'));
+  App.Close()
+end.

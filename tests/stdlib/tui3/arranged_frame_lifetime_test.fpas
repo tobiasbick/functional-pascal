@@ -38,7 +38,7 @@ begin
       begin
         return State + Action.Value
       end;
-      TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
         return State
       end
@@ -94,7 +94,7 @@ begin
       begin
         return State + Action.Value
       end;
-      TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
         return State
       end
@@ -149,7 +149,7 @@ begin
       begin
         return State + Action.Value
       end;
-      TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret):
       begin
         return State
       end

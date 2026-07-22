@@ -46,7 +46,7 @@ function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Edito
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key):
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size):
     begin
       return State
     end;

@@ -18,13 +18,15 @@ widgets. The current implementation is headless and intended for deterministic t
 | `TuiElementBuilders` | Constructors for current elements. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` / `TuiLayoutSettings` | Layout value inputs. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
-| `TuiArrange` / `TuiArrangedFrame` | Private arranged-frame index for one painted tree. |
-| `TuiMsg` | Key, tick, focus, action, text-change, and quit messages. |
+| `TuiMsg` | Key, pointer, tick, resize, focus, action, text-change, and quit messages. |
+| `TuiPointerEvent` / `TuiPointerButton` | Normalized pointer input in zero-based application coordinates. |
 | `TuiCmd` | `NoCommand` or `Quit`. |
 | `TuiCmdOutput.Set(Command)` | Observable command output passed to `Update`. |
 | `TuiApplication.OpenForTest(Size)` | Opens a fixed-size headless host. |
 | `App.Inject(Msg)` | Queues one framework message. |
 | `App.InjectKeyForTest(Key)` | Queues one key for focus/control routing. |
+| `App.InjectPointerForTest(Pointer)` | Queues one pointer event for arranged-frame hit testing. |
+| `App.InjectResizeForTest(Size)` | Queues a resize that updates host size before `Update`. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
 | `App.SurfaceSnapshot()` | Explicitly copies the last painted surface, including cell roles. |
 | `TuiWorkingSurface` | Host-owned mutable cell grid used by paint and headless tests. |
@@ -170,10 +172,16 @@ message then follows:
 dequeue → Update → command check → View → validate → layout → paint
 ```
 
-Injected events are FIFO. Messages produced by one key remain ahead of the next external event.
+Injected events are FIFO. Pending routed messages are drained before another external input is
+read. One message consumes one iteration. Empty routing results do not synthesize a tick. `Cmd` is
+reset to `NoCommand` before every `Update`. A `Quit` command stops before another `View`/paint.
+
 Tab moves through the active focusable subtree. Character/editing keys produce controlled
 `TextChanged` messages; Enter or Space activates a focused button. Escape produces
-`QuitRequested`. When a dialog is present directly under the desktop, routing is limited to the
+`QuitRequested`. Left-button pointer downs hit-test the previous arranged frame (half-open clip):
+focus changes are queued before `Action`, and unhandled pointer input remains `TuiMsg.Pointer`.
+`InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize` reaches `Update`.
+When a dialog is present directly under the desktop, key and pointer targeting is limited to the
 last such dialog subtree.
 
 The current painter paints from the arranged-frame index only: deterministic `Row`/`Column`
@@ -193,7 +201,7 @@ columns.
 | Geometry and measurement | `lib/Std/Tui3/Geometry/`, `lib/Std/Tui3/Layout/` |
 | Cell, style, and palette values | `lib/Std/Tui3/Cells/` |
 | Working surface, canvas, and paint | `lib/Std/Tui3/Rendering/` |
-| Message loop and routing | `lib/Std/Tui3/Runtime/` |
+| Message loop and routing | `lib/Std/Tui3/Runtime/` (`Routing/Focus`, `Key`, `Pointer`) |
 | FPAS regressions | `tests/stdlib/tui3/` |
 
 ## See also

@@ -12,25 +12,13 @@ function UpdateCounter(State: CounterModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Cou
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key):
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
       return State
     end;
     TuiMsg.Tick(Delta):
     begin
       return record Value := State.Value + 1; end
-    end;
-    TuiMsg.FocusChanged(Previous, Current):
-    begin
-      return State
-    end;
-    TuiMsg.Action(Source, Action):
-    begin
-      return State
-    end;
-    TuiMsg.TextChanged(Source, Action, Text, Caret):
-    begin
-      return State
     end;
     TuiMsg.QuitRequested:
     begin

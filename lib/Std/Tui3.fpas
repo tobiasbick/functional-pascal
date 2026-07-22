@@ -7,8 +7,9 @@ uses
   Std.Tui3.Layout.Alignment, Std.Tui3.Layout.LayoutFit, Std.Tui3.Layout.LayoutSettings,
   Std.Tui3.Layout.Margins, Std.Tui3.Layout.Measure, Std.Tui3.Layout.MeasureConstraint,
   Std.Tui3.Layout.MeasureResult, Std.Tui3.Layout.MeasureSpec, Std.Tui3.Layout.SizePolicy,
-  Std.Tui3.Layout.Spacer, Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface,
-  Std.Tui3.Runtime.Application, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
+  Std.Tui3.Layout.Spacer,   Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface,
+  Std.Tui3.Runtime.Application, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg,
+  Std.Tui3.Runtime.PointerEvent;
 
 type
   /// Zero-based terminal-cell coordinate.
@@ -65,6 +66,12 @@ type
   TuiCmdOutput = Std.Tui3.Runtime.Cmd.TuiCmdOutput;
   /// Framework message delivered to Update.
   TuiMsg = Std.Tui3.Runtime.Msg.TuiMsg;
+  /// Pointer button carried by a normalized pointer event.
+  TuiPointerButton = Std.Tui3.Runtime.PointerEvent.TuiPointerButton;
+  /// Normalized pointer action in zero-based application coordinates.
+  TuiPointerEvent = Std.Tui3.Runtime.PointerEvent.TuiPointerEvent;
+  /// Console mouse action used by pointer events.
+  TuiPointerAction = Std.Console.MouseAction;
   /// Immutable element-tree node.
   TuiElement = Std.Tui3.Elements.Element.TuiElement;
   /// Named element constructors.

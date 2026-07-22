@@ -6,7 +6,7 @@ complete. Do not recreate them.
 
 ## Task 3.1 — Add resize and pointer host input
 
-**Status:** ready.
+**Status:** complete.
 
 **Files:** add a focused pointer value file under `lib/Std/Tui3/Runtime/`; modify
 `Runtime/Input.fpas`, `Runtime/Msg.fpas`, `Runtime/Application.fpas`, and `lib/Std/Tui3.fpas`; add
@@ -23,7 +23,7 @@ terminal state.
 
 ## Task 3.2 — Route pointer input through arranged geometry
 
-**Status:** blocked by Task 3.1.
+**Status:** complete.
 
 **Files:** split `Runtime/Routing.fpas` into `Runtime/Routing/Focus.fpas`, `Key.fpas`, `Pointer.fpas`,
 and a small module facade before adding pointer logic; add
@@ -39,7 +39,7 @@ covered. Keyboard tests remain unchanged after the split.
 
 ## Task 3.3 — Complete runtime failure and ordering canaries
 
-**Status:** blocked by Task 3.2.
+**Status:** complete.
 
 **Files:** modify only the owning runtime modules; add
 `tests/stdlib/tui3/quit_order_test.fpas`, `message_fifo_test.fpas`, and targeted Rust tests only if
@@ -55,4 +55,5 @@ closure callback, or asynchronous-result claim is added.
 
 ## Phase checkpoint
 
-The existing confirm-dialog tests plus Tasks 3.1–3.3 cover the complete headless runtime contract.
+**Complete.** The existing confirm-dialog tests plus Tasks 3.1–3.3 cover the complete headless
+runtime contract. Phase 4 is unblocked.

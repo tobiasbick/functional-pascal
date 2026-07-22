@@ -39,8 +39,8 @@ extended rather than recreated:
 | Elements | Recursive `TuiElement` with Empty, Label, Button, Input, Row, Column, Layout, Spacer, Window, Dialog, Desktop | Tasks 4.x extend controls; do not flatten the public `View` tree. |
 | Layout | Measure + private arranged-frame arrange in `Layout/`; host-owned `TuiArrangedFrame` | Phase 2 complete. Grid/Form/Stack remain deferred. |
 | Rendering | Cell working surface; paint from arranged geometry only via clipped canvas | Phase 2 complete. |
-| Runtime | Headless host, injection, FIFO queue, key routing, focus, ticks, commands, snapshots | Phase 3 is hardening and missing input coverage, not a new runtime. |
-| Tests | Eight Phase 0 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
+| Runtime | Headless host, injection, FIFO queue, key/pointer routing, focus, ticks, resize, commands, snapshots | Phase 3 complete. Interactive terminal is Phase 5. |
+| Tests | Phase 0–3 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
 
 The recursive `Children: array of TuiElement` representation is intentional. The compiler stack
 overflow exposed by that representation was fixed in `fpas-sema`; do not replace the application
@@ -93,9 +93,9 @@ Execute one task at a time from the phase files. Do not skip an architecture or 
 | Phase | Task file | Entry status |
 | --- | --- | --- |
 | 1 — Values and owned rendering storage | [Phase 1](phases/phase-1-values.md) | Phase 1 complete; Phase 2 complete. |
-| 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Phase 2 complete; Phase 3 Task 3.1 is ready. |
-| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 2 complete; Task 3.1 is ready. |
-| 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Blocked by Phase 3. |
+| 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Phase 2 complete; Phase 3 complete. |
+| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 3 complete; Phase 4 Task 4.1 is ready. |
+| 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Phase 3 complete; Task 4.1 is ready. |
 | 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Blocked by Phase 4. |
 | 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Blocked by Phase 5. |
 | 7 — Promote to `Std.Tui` | [Phase 7](phases/phase-7-promotion.md) | Blocked by promotion decision. |

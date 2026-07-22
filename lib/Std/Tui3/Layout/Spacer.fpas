@@ -1,0 +1,35 @@
+unit Std.Tui3.Layout.Spacer;
+
+type
+  /// Whether a spacer has a fixed extent or expands.
+  TuiSpacerKind = enum
+    Fixed;
+    Expanding;
+  end;
+  /// Empty layout extent used between siblings.
+  TuiSpacer = record
+    Kind: TuiSpacerKind;
+    MinimumExtent: integer;
+
+    /// Creates a fixed spacer with a non-negative extent.
+
+    static function Fixed(Extent: integer): TuiSpacer;
+    begin
+      if Extent < 0 then
+      begin
+        panic('Tui3 fixed spacer extent must not be negative')
+      end;
+      return record Kind := TuiSpacerKind.Fixed; MinimumExtent := Extent; end
+    end;
+
+    /// Creates an expanding spacer with a non-negative minimum extent.
+
+    static function Expanding(MinimumExtent: integer): TuiSpacer;
+    begin
+      if MinimumExtent < 0 then
+      begin
+        panic('Tui3 expanding spacer minimum extent must not be negative')
+      end;
+      return record Kind := TuiSpacerKind.Expanding; MinimumExtent := MinimumExtent; end
+    end;
+  end;

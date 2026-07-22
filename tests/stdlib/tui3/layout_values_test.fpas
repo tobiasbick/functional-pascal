@@ -1,0 +1,91 @@
+program Tui3LayoutValuesTest;
+
+uses Std.Array, Std.Test, Std.Tui3;
+
+begin
+  var Mixed: TuiSizePolicy := TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed);
+  AssertTrue(Mixed.Horizontal = TuiSizePolicyKind.Expanding);
+  AssertTrue(Mixed.Vertical = TuiSizePolicyKind.Fixed);
+  AssertTrue(TuiSizePolicy.Preferred().Horizontal = TuiSizePolicyKind.Preferred);
+  AssertTrue(TuiAlignment.Fill().Vertical = TuiAlignmentKind.Fill);
+  AssertTrue(TuiAlignment.Center().Horizontal = TuiAlignmentKind.Center);
+  var Margins: TuiMargins := TuiMargins.Create(1, 2, 3, 4);
+  AssertEquals(4, Margins.Horizontal());
+  AssertEquals(6, Margins.Vertical());
+  var Symmetric: TuiMargins := TuiMargins.Symmetric(2, 1);
+  AssertEquals(2, Symmetric.Left);
+  AssertEquals(1, Symmetric.Top);
+  AssertEquals(2, Symmetric.Right);
+  var Settings: TuiLayoutSettings := TuiLayoutSettings.Default();
+  AssertEquals(0, Settings.Margins.Left);
+  AssertTrue(Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Preferred);
+  AssertTrue(Settings.Alignment.Horizontal = TuiAlignmentKind.Fill);
+  AssertEquals(0, Settings.Stretch);
+  var Custom: TuiLayoutSettings := TuiLayoutSettings.Create(Margins, TuiSizePolicy.Expanding(), TuiAlignment.Leading(), 3);
+  AssertEquals(3, Custom.Stretch);
+  AssertTrue(Custom.Alignment.Horizontal = TuiAlignmentKind.Leading);
+  var Unbounded: TuiMeasureConstraint := TuiMeasureConstraint.Unbounded();
+  AssertFalse(Unbounded.IsBounded());
+  var Width: TuiMeasureConstraint := TuiMeasureConstraint.AtMost(80);
+  AssertTrue(Width.IsBounded());
+  AssertEquals(80, Width.Limit);
+  var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(40, 10));
+  AssertEquals(40, Spec.Width.Limit);
+  AssertEquals(10, Spec.Height.Limit);
+  var Measure: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(2, 1), TuiSize.Create(8, 3), TuiSize.Create(20, 9));
+  AssertEquals(8, Measure.Preferred.Width);
+  AssertEquals(9, Measure.Maximum.Height);
+  var Fixed: TuiMeasureResult := TuiMeasureResult.Fixed(TuiSize.Create(5, 4));
+  AssertEquals(5, Fixed.Minimum.Width);
+  AssertEquals(4, Fixed.Maximum.Height);
+  var FixedSpacer: TuiSpacer := TuiSpacer.Fixed(3);
+  AssertTrue(FixedSpacer.Kind = TuiSpacerKind.Fixed);
+  AssertEquals(3, FixedSpacer.MinimumExtent);
+  var ExpandingSpacer: TuiSpacer := TuiSpacer.Expanding(1);
+  AssertTrue(ExpandingSpacer.Kind = TuiSpacerKind.Expanding);
+  AssertEquals(1, ExpandingSpacer.MinimumExtent);
+  var Fit: TuiLayoutFit := TuiLayoutFit.Create(TuiSize.Create(10, 8), TuiSize.Create(7, 8));
+  AssertFalse(Fit.Fits());
+  AssertEquals(3, Fit.Overflow.Width);
+  AssertEquals(0, Fit.Overflow.Height);
+  AssertTrue(TuiLayoutFit.Create(TuiSize.Create(4, 4), TuiSize.Create(5, 5)).Fits());
+  var Spaced: TuiElement := TuiElementBuilders.MakeRowSpaced([
+                                                               TuiElementBuilders.MakeLabel('A'),
+                                                               TuiElementBuilders.MakeLabel('B')
+
+                                                             ], 2);
+  case Spaced of
+    TuiElement.Row(Children, Spacing):
+    begin
+      AssertEquals(2, Spacing);
+      AssertEquals(2, Std.Array.Length(Children))
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
+    begin
+      Fail('expected spaced row')
+    end
+  end;
+  var Wrapped: TuiElement := TuiElementBuilders.MakeLayout(Settings, TuiElementBuilders.MakeLabel('X'));
+  case Wrapped of
+    TuiElement.Layout(WrappedSettings, WrappedChildren):
+    begin
+      AssertEquals(1, Std.Array.Length(WrappedChildren));
+      AssertEquals(0, WrappedSettings.Stretch)
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
+    begin
+      Fail('expected layout wrapper')
+    end
+  end;
+  var SpacerElement: TuiElement := TuiElementBuilders.MakeSpacer(FixedSpacer);
+  case SpacerElement of
+    TuiElement.Spacer(Value):
+    begin
+      AssertEquals(3, Value.MinimumExtent)
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
+    begin
+      Fail('expected spacer element')
+    end
+  end
+end.

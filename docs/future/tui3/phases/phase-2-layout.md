@@ -12,7 +12,7 @@ An implementation agent must use that contract and must not expose `TuiLayout` h
 
 ## Task 2.1 — Add frozen layout values and element variants
 
-**Status:** ready.
+**Status:** complete.
 
 **Files:** add one-concern files under `lib/Std/Tui3/Layout/` for the declarations frozen by the
 gate; modify `Elements/Element.fpas`, `Elements/Validate.fpas`, and `lib/Std/Tui3.fpas`; add
@@ -27,7 +27,7 @@ validation, and no live layout/container API is introduced.
 
 ## Task 2.2 — Upgrade intrinsic measurement
 
-**Status:** blocked by Task 2.1.
+**Status:** complete.
 
 **Files:** modify `Layout/Measure.fpas`; split combination algorithms into thematic files before
 the module exceeds 400 LOC; add `tests/stdlib/tui3/layout_measure_test.fpas`.
@@ -41,7 +41,7 @@ and undersized bounds have exact pure-value assertions.
 
 ## Task 2.3 — Build the private arranged-frame index
 
-**Status:** blocked by Task 2.2.
+**Status:** complete.
 
 **Files:** add `Layout/Frame.fpas` and `Layout/Arrange.fpas`; modify `Runtime/Frame.fpas`; add
 `tests/stdlib/tui3/layout_arrange_test.fpas`.
@@ -57,7 +57,7 @@ element and no second element tree.
 
 ## Task 2.4 — Paint only from arranged geometry
 
-**Status:** blocked by Tasks 1.4 and 2.3.
+**Status:** complete.
 
 **Files:** modify `Rendering/Paint.fpas` and `Runtime/Frame.fpas`; add
 `tests/stdlib/tui3/layout_snapshot_test.fpas`.
@@ -71,7 +71,7 @@ Unicode width, and at least two terminal sizes.
 
 ## Task 2.5 — Preserve the arranged frame for routing
 
-**Status:** blocked by Task 2.4.
+**Status:** complete.
 
 **Files:** modify `Runtime/Application.fpas`, `Runtime/Frame.fpas`, and `Runtime/Routing.fpas`; add
 `tests/stdlib/tui3/arranged_frame_lifetime_test.fpas`.

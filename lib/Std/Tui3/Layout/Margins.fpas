@@ -1,0 +1,59 @@
+unit Std.Tui3.Layout.Margins;
+
+private function TuiMarginsRequireNonNegative(Value: integer; Name: string): integer;
+begin
+  if Value < 0 then
+  begin
+    panic(('Tui3 layout margin ' + Name) + ' must not be negative')
+  end;
+  return Value
+end;
+
+type
+  /// Non-negative outer margins around a laid-out child.
+  TuiMargins = record
+    Left: integer;
+    Top: integer;
+    Right: integer;
+    Bottom: integer;
+
+    /// Creates validated margins.
+
+    static function Create(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiMargins;
+    begin
+      return record
+        Left := TuiMarginsRequireNonNegative(Left, 'left');
+        Top := TuiMarginsRequireNonNegative(Top, 'top');
+        Right := TuiMarginsRequireNonNegative(Right, 'right');
+        Bottom := TuiMarginsRequireNonNegative(Bottom, 'bottom');
+      end
+    end;
+
+    /// Creates equal margins on every side.
+
+    static function Uniform(Value: integer): TuiMargins;
+    begin
+      return TuiMargins.Create(Value, Value, Value, Value)
+    end;
+
+    /// Creates symmetric horizontal and vertical margins.
+
+    static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
+    begin
+      return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical)
+    end;
+
+    /// Returns left plus right.
+
+    function Horizontal(Self: TuiMargins): integer;
+    begin
+      return Self.Left + Self.Right
+    end;
+
+    /// Returns top plus bottom.
+
+    function Vertical(Self: TuiMargins): integer;
+    begin
+      return Self.Top + Self.Bottom
+    end;
+  end;

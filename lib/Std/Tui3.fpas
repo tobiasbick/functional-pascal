@@ -4,8 +4,11 @@ uses
   Std.Console, Std.Tui3.Cells.Cell, Std.Tui3.Cells.Color, Std.Tui3.Cells.Palette,
   Std.Tui3.Cells.Style, Std.Tui3.Cells.StyleRole, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point,
   Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
-  Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface, Std.Tui3.Runtime.Application,
-  Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
+  Std.Tui3.Layout.Alignment, Std.Tui3.Layout.LayoutFit, Std.Tui3.Layout.LayoutSettings,
+  Std.Tui3.Layout.Margins, Std.Tui3.Layout.Measure, Std.Tui3.Layout.MeasureConstraint,
+  Std.Tui3.Layout.MeasureResult, Std.Tui3.Layout.MeasureSpec, Std.Tui3.Layout.SizePolicy,
+  Std.Tui3.Layout.Spacer, Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface,
+  Std.Tui3.Runtime.Application, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
 
 type
   /// Zero-based terminal-cell coordinate.
@@ -26,6 +29,32 @@ type
   TuiCell = Std.Tui3.Cells.Cell.TuiCell;
   /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
   TuiPalette = Std.Tui3.Cells.Palette.TuiPalette;
+  /// Per-axis growth and shrink policy kind.
+  TuiSizePolicyKind = Std.Tui3.Layout.SizePolicy.TuiSizePolicyKind;
+  /// Independent horizontal and vertical size policies.
+  TuiSizePolicy = Std.Tui3.Layout.SizePolicy.TuiSizePolicy;
+  /// Alignment of content inside an allocated layout slot.
+  TuiAlignmentKind = Std.Tui3.Layout.Alignment.TuiAlignmentKind;
+  /// Independent horizontal and vertical alignment.
+  TuiAlignment = Std.Tui3.Layout.Alignment.TuiAlignment;
+  /// Non-negative outer margins around a laid-out child.
+  TuiMargins = Std.Tui3.Layout.Margins.TuiMargins;
+  /// Immutable layout inputs for a single-child layout wrapper.
+  TuiLayoutSettings = Std.Tui3.Layout.LayoutSettings.TuiLayoutSettings;
+  /// Whether a measure axis is unbounded or capped.
+  TuiMeasureConstraintKind = Std.Tui3.Layout.MeasureConstraint.TuiMeasureConstraintKind;
+  /// One-axis measurement constraint.
+  TuiMeasureConstraint = Std.Tui3.Layout.MeasureConstraint.TuiMeasureConstraint;
+  /// Width and height measurement constraints.
+  TuiMeasureSpec = Std.Tui3.Layout.MeasureSpec.TuiMeasureSpec;
+  /// Minimum, preferred, and maximum extents.
+  TuiMeasureResult = Std.Tui3.Layout.MeasureResult.TuiMeasureResult;
+  /// Whether a spacer is fixed or expanding.
+  TuiSpacerKind = Std.Tui3.Layout.Spacer.TuiSpacerKind;
+  /// Empty layout extent used between siblings.
+  TuiSpacer = Std.Tui3.Layout.Spacer.TuiSpacer;
+  /// Fit report for terminal-too-small layout.
+  TuiLayoutFit = Std.Tui3.Layout.LayoutFit.TuiLayoutFit;
   /// Positive identity unique among interactive nodes in one rendered tree.
   TuiControlId = Std.Tui3.Ids.ControlId.TuiControlId;
   /// Positive application intent; repetitions across controls are allowed.
@@ -61,6 +90,16 @@ function TuiMsgAction(
 ): Std.Tui3.Runtime.Msg.TuiMsg;
 begin
   return Std.Tui3.Runtime.Msg.TuiMsgAction(Source, Action)
+end;
+
+/// Measures one element under the given constraints.
+
+function TuiMeasure(
+  Node: Std.Tui3.Elements.Element.TuiElement;
+  Spec: Std.Tui3.Layout.MeasureSpec.TuiMeasureSpec
+): Std.Tui3.Layout.MeasureResult.TuiMeasureResult;
+begin
+  return Std.Tui3.Layout.Measure.TuiMeasure(Node, Spec)
 end;
 
 /// Creates a source-aware controlled-input change message.

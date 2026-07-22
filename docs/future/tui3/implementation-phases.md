@@ -36,9 +36,9 @@ extended rather than recreated:
 | --- | --- | --- |
 | Geometry | `Geometry/Point.fpas`, `Geometry/Size.fpas`, `Geometry/Rect.fpas` | Complete unless a later task exposes a regression. |
 | Identity | `Ids/ControlId.fpas`, `Ids/Action.fpas` | Complete unless a later task exposes a regression. |
-| Elements | Recursive `TuiElement` with Empty, Label, Button, Input, Row, Column, Window, Dialog, Desktop | Tasks 2.1 and 4.x extend the enum and builders. Do not flatten the public `View` tree. |
-| Layout | Intrinsic recursive measurement in `Layout/Measure.fpas` | Tasks 2.2–2.4 add the fixed layout contract and arranged frame data. |
-| Rendering | Cell working surface with wide-glyph repair; clipped canvas paint | Tasks 2.3–2.5 separate arrange from paint. |
+| Elements | Recursive `TuiElement` with Empty, Label, Button, Input, Row, Column, Layout, Spacer, Window, Dialog, Desktop | Tasks 4.x extend controls; do not flatten the public `View` tree. |
+| Layout | Measure + private arranged-frame arrange in `Layout/`; host-owned `TuiArrangedFrame` | Phase 2 complete. Grid/Form/Stack remain deferred. |
+| Rendering | Cell working surface; paint from arranged geometry only via clipped canvas | Phase 2 complete. |
 | Runtime | Headless host, injection, FIFO queue, key routing, focus, ticks, commands, snapshots | Phase 3 is hardening and missing input coverage, not a new runtime. |
 | Tests | Eight Phase 0 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
 
@@ -92,9 +92,9 @@ Execute one task at a time from the phase files. Do not skip an architecture or 
 
 | Phase | Task file | Entry status |
 | --- | --- | --- |
-| 1 — Values and owned rendering storage | [Phase 1](phases/phase-1-values.md) | Phase 1 complete; Phase 2 Task 2.1 is ready. |
-| 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Task 2.1 is ready; contract frozen. |
-| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Blocked by Phase 2. |
+| 1 — Values and owned rendering storage | [Phase 1](phases/phase-1-values.md) | Phase 1 complete; Phase 2 complete. |
+| 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Phase 2 complete; Phase 3 Task 3.1 is ready. |
+| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 2 complete; Task 3.1 is ready. |
 | 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Blocked by Phase 3. |
 | 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Blocked by Phase 4. |
 | 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Blocked by Phase 5. |

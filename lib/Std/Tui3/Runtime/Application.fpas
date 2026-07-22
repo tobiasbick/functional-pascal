@@ -1,7 +1,7 @@
 unit Std.Tui3.Runtime.Application;
 
 uses
-  Std.Array, Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Size,
+  Std.Array, Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Size, Std.Tui3.Layout.Frame,
   Std.Tui3.Rendering.Surface, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Frame, Std.Tui3.Runtime.Input,
   Std.Tui3.Runtime.Msg, Std.Tui3.Runtime.Routing;
 
@@ -9,6 +9,8 @@ private mutable var Tui3AppOpen: array of boolean := [];
 private mutable var Tui3AppInputs: array of array of TuiHostInput := [];
 private mutable var Tui3AppMessages: array of array of TuiMsg := [];
 private mutable var Tui3AppSurfaces: array of TuiWorkingSurface := [];
+private mutable var Tui3AppFrames: array of TuiArrangedFrame := [];
+private mutable var Tui3AppTrees: array of TuiElement := [];
 private mutable var Tui3AppCommands: array of TuiCmdOutput := [];
 
 private function Tui3AppRequireHandle(ApplicationId: integer): integer;
@@ -66,6 +68,8 @@ type
       Tui3AppInputs := Std.Array.Concat(Tui3AppInputs, [[]]);
       Tui3AppMessages := Std.Array.Concat(Tui3AppMessages, [[]]);
       Tui3AppSurfaces := Std.Array.Concat(Tui3AppSurfaces, [TuiWorkingSurface.Create(Size)]);
+      Tui3AppFrames := Std.Array.Concat(Tui3AppFrames, [TuiArrangedFrame.Create()]);
+      Tui3AppTrees := Std.Array.Concat(Tui3AppTrees, [TuiElement.Empty]);
       Tui3AppCommands := Std.Array.Concat(Tui3AppCommands, [TuiCmdOutput.Create()]);
       return record Id := Std.Array.Length(Tui3AppOpen); end
     end;
@@ -139,7 +143,9 @@ type
       end;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
-      TuiRenderFrame(Tui3AppSurfaces[ApplicationId - 1], Tree);
+      var Frame: TuiArrangedFrame := TuiRenderFrame(Tui3AppSurfaces[ApplicationId - 1], Tree);
+      Tui3AppTrees[ApplicationId - 1] := Tree;
+      Tui3AppFrames[ApplicationId - 1] := Frame;
       mutable var Remaining: integer := IterationCount;
       while Remaining > 0 do
       begin
@@ -159,7 +165,8 @@ type
               end;
               TuiHostInput.Key(Key):
               begin
-                Tui3AppPushMessages(ApplicationId, TuiRouteKey(Tree, Key))
+                Tui3AppPushMessages(ApplicationId, TuiRouteKey(Tui3AppTrees[ApplicationId - 1], Tui3AppFrames[ApplicationId -
+                                                                                                              1], Key))
               end
             end
           end
@@ -177,8 +184,11 @@ type
           Self.Close();
           return Model
         end;
-        Tree := View(Model);
-        TuiRenderFrame(Tui3AppSurfaces[ApplicationId - 1], Tree)
+        var NextTree: TuiElement := View(Model);
+        var NextFrame: TuiArrangedFrame := TuiRenderFrame(Tui3AppSurfaces[ApplicationId - 1], NextTree);
+        Tui3AppTrees[ApplicationId - 1] := NextTree;
+        Tui3AppFrames[ApplicationId - 1] := NextFrame;
+        Tree := NextTree
       end;
       return Model
     end;

@@ -35,11 +35,11 @@ end;
 private function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Spacer(Value):
     begin
       return []
     end
@@ -66,7 +66,21 @@ begin
       end;
       Std.Array.Push(Seen, Id.Value)
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing):
+    begin
+      if Spacing < 0 then
+      begin
+        panic('Tui3 row and column spacing must not be negative')
+      end
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      if Std.Array.Length(Children) <> 1 then
+      begin
+        panic('Tui3 layout wrappers require exactly one child')
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
     end
   end;
@@ -100,7 +114,7 @@ begin
         end
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
     begin
     end
   end;

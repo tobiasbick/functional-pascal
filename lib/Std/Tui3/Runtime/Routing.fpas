@@ -2,7 +2,46 @@ unit Std.Tui3.Runtime.Routing;
 
 uses
   Std.Array, Std.Console, Std.Str, Std.Tui3.Elements.Element, Std.Tui3.Ids.ControlId,
-  Std.Tui3.Runtime.Msg;
+  Std.Tui3.Layout.Frame, Std.Tui3.Runtime.Msg;
+
+private function TuiRouteFrameMatchesNode(
+  Frame: TuiArrangedFrame;
+  Node: TuiElement;
+  Index: integer;
+  ParentIndex: integer
+): integer;
+begin
+  if Frame.EntryAt(Index).ParentIndex <> ParentIndex then
+  begin
+    panic('Tui3 routing received a frame for a different element tree')
+  end;
+  mutable var Next: integer := Index + 1;
+  case Node of
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiRouteFrameMatchesNode(Frame, Children[ChildIndex], Next, Index)
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Spacer(Value):
+    begin
+    end
+  end;
+  return Next
+end;
+
+private procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
+begin
+  if Frame.Count() = 0 then
+  begin
+    panic('Tui3 routing requires a successfully painted frame')
+  end;
+  if TuiRouteFrameMatchesNode(Frame, Root, 0, -1) <> Frame.Count() then
+  begin
+    panic('Tui3 routing received a frame for a different element tree')
+  end
+end;
 
 private function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
@@ -11,7 +50,7 @@ begin
     begin
       return [Id]
     end;
-    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
     begin
       mutable var Controls: array of TuiControlId := [];
       for Index: integer := 0 to Std.Array.Length(Children) - 1 do
@@ -30,7 +69,7 @@ begin
           begin
             LastDialog := Index
           end;
-          TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+          TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
           begin
           end
         end
@@ -49,7 +88,7 @@ begin
         return Controls
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value):
     begin
       return []
     end
@@ -63,7 +102,7 @@ begin
     begin
       return Focused
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
     begin
       return None
     end
@@ -139,7 +178,7 @@ begin
       end;
       return None
     end;
-    TuiElement.Row(Children), TuiElement.Column(Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       for Index: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -155,7 +194,7 @@ begin
       end;
       return None
     end;
-    TuiElement.Empty, TuiElement.Label(Text):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value):
     begin
       return None
     end
@@ -164,8 +203,9 @@ end;
 
 /// Routes one key against the previous rendered tree into ordered framework messages.
 
-function TuiRouteKey(Root: TuiElement; Key: Std.Console.KeyEvent): array of TuiMsg;
+function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
+  TuiRouteRequireMatchingFrame(Frame, Root);
   if Key.kind = Std.Console.KeyKind.Escape then
   begin
     return [TuiMsg.QuitRequested]

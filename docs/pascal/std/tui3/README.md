@@ -16,6 +16,9 @@ widgets. The current implementation is headless and intended for deterministic t
 | `TuiAction.Create(Value)` | Positive application intent; values may repeat. |
 | `TuiElement` | Closed data-carrying element enum. |
 | `TuiElementBuilders` | Constructors for current elements. |
+| `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` / `TuiLayoutSettings` | Layout value inputs. |
+| `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
+| `TuiArrange` / `TuiArrangedFrame` | Private arranged-frame index for one painted tree. |
 | `TuiMsg` | Key, tick, focus, action, text-change, and quit messages. |
 | `TuiCmd` | `NoCommand` or `Quit`. |
 | `TuiCmdOutput.Set(Command)` | Observable command output passed to `Update`. |
@@ -96,17 +99,38 @@ TuiElement.Empty
 TuiElement.Label(Text)
 TuiElement.Button(Id, Text, Action)
 TuiElement.Input(Id, Text, Caret, ChangeAction)
-TuiElement.Row(Children)
-TuiElement.Column(Children)
+TuiElement.Row(Children, Spacing)
+TuiElement.Column(Children, Spacing)
+TuiElement.Layout(Settings, Children)
+TuiElement.Spacer(Value)
 TuiElement.Window(Title, Children)
 TuiElement.Dialog(Title, Children)
 TuiElement.Desktop(Focused, Children)
 ```
 
-`Row`, `Column`, `Window`, `Dialog`, and `Desktop` store recursive `array of TuiElement` payloads.
-Interactive variants cannot omit their typed control or action identities. Validation before every
-frame additionally rejects non-positive forged values, duplicate control ids, invalid input carets,
-and focus ids that do not exist in the tree. Repeated action ids are valid.
+`MakeRow` / `MakeColumn` use spacing `0`. Prefer `MakeRowSpaced` / `MakeColumnSpaced` when gaps are
+needed. `MakeLayout` wraps exactly one child with `TuiLayoutSettings` (margins, size policy,
+alignment). `Row`, `Column`, `Layout`, `Window`, `Dialog`, and `Desktop` store recursive
+`array of TuiElement` payloads. Interactive variants cannot omit their typed control or action
+identities. Validation before every frame additionally rejects non-positive forged values, duplicate
+control ids, invalid input carets, and focus ids that do not exist in the tree. Repeated action ids
+are valid.
+
+## Layout values and arranged frames
+
+Public layout values include `TuiSizePolicy`, `TuiAlignment`, `TuiMargins`, `TuiLayoutSettings`,
+`TuiMeasureSpec`, `TuiMeasureResult`, `TuiSpacer`, and `TuiLayoutFit`. `TuiMeasure(Node, Spec)` is a
+pure function. Arrange builds an internal host-owned frame (preorder parent index, bounds, clip)
+without copying elements into the index. Applications cannot create, retain, or inspect that frame.
+Paint reads the matching frame only and does not remeasure. The application host replaces its
+previous tree/frame pair only after validate → arrange → paint has succeeded; routing checks that
+same previous pair before interpreting input.
+
+`Row` and `Column` reserve spacing, assign child minimum extents, grow in stable child order toward
+preferred extents, then distribute remaining cells by `Stretch` (or `Expanding`). A `TuiLayoutSettings`
+wrapper applies its margins and aligns its child within the allocated slot; `Leading`, `Center`,
+`Trailing`, and `Fill` are resolved independently on each axis. When the terminal is smaller than
+the combined minimum, children retain their minimum geometry and the canvas clips the overflow.
 
 ## Update and View
 
@@ -152,13 +176,14 @@ Tab moves through the active focusable subtree. Character/editing keys produce c
 `QuitRequested`. When a dialog is present directly under the desktop, routing is limited to the
 last such dialog subtree.
 
-The current painter implements deterministic `Row`/`Column` preferred-size layout, full-size
-windows, centered dialogs, borders, labels, controlled inputs, and buttons. The working surface is
-host-owned and stores leading cells, wide-glyph continuations, and blanks. Painting goes through a
-private clipped canvas (local coordinates, nested origins/clips) and does not construct a full-grid
-snapshot; `SurfaceSnapshot` is the explicit copying boundary. Its `CellAt` method returns a
-`TuiCell`, so screen assertions retain the painted semantic role as well as the glyph. Overwriting
-either half of a wide glyph clears both columns.
+The current painter paints from the arranged-frame index only: deterministic `Row`/`Column`
+allocation (minimum → preferred → expanding leftover), full-size windows, centered dialogs, borders,
+labels, controlled inputs, and buttons. The working surface is host-owned and stores leading cells,
+wide-glyph continuations, and blanks. Painting goes through a private clipped canvas (local
+coordinates, nested origins/clips) and does not construct a full-grid snapshot; `SurfaceSnapshot` is
+the explicit copying boundary. Its `CellAt` method returns a `TuiCell`, so screen assertions retain
+the painted semantic role as well as the glyph. Overwriting either half of a wide glyph clears both
+columns.
 
 ## Implementation (contributors)
 

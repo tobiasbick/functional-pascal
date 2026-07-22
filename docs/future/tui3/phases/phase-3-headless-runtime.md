@@ -6,7 +6,7 @@ complete. Do not recreate them.
 
 ## Task 3.1 — Add resize and pointer host input
 
-**Status:** blocked by Phase 2.
+**Status:** ready.
 
 **Files:** add a focused pointer value file under `lib/Std/Tui3/Runtime/`; modify
 `Runtime/Input.fpas`, `Runtime/Msg.fpas`, `Runtime/Application.fpas`, and `lib/Std/Tui3.fpas`; add

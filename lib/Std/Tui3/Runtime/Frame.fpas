@@ -1,13 +1,17 @@
 unit Std.Tui3.Runtime.Frame;
 
 uses
-  Std.Tui3.Elements.Element, Std.Tui3.Elements.Validate, Std.Tui3.Rendering.Paint,
+  Std.Tui3.Elements.Element, Std.Tui3.Elements.Validate, Std.Tui3.Geometry.Rect,
+  Std.Tui3.Geometry.Size, Std.Tui3.Layout.Arrange, Std.Tui3.Layout.Frame, Std.Tui3.Rendering.Paint,
   Std.Tui3.Rendering.Surface;
 
-/// Executes the common headless frame phases in their required order.
+/// Validates, arranges, and paints one complete headless frame before returning it.
 
-procedure TuiRenderFrame(Surface: TuiWorkingSurface; Root: TuiElement);
+function TuiRenderFrame(Surface: TuiWorkingSurface; Root: TuiElement): TuiArrangedFrame;
 begin
   TuiElementValidate(Root);
-  TuiPaintView(Surface, Root)
+  var Frame: TuiArrangedFrame := TuiArrangedFrame.Create();
+  TuiArrange(Frame, Root, TuiRectForSize(Surface.Size()));
+  TuiPaintView(Surface, Frame, Root);
+  return Frame
 end;

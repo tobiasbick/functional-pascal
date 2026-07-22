@@ -123,7 +123,7 @@ pub(crate) fn pop_dict(
 
 pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
     match v {
-        Value::Array(a) => Ok(a),
+        Value::Array(a) => Ok(a.into()),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected array argument, got {}", other.type_name()),

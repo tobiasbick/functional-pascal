@@ -5,11 +5,21 @@ are pure functions:
 
 ```text
 Measure(Element, Spec) → TuiMeasureResult
-Arrange(Element, Bounds) → laid-out tree with resolved rectangles
+Arrange(Element, Bounds) → private arranged-frame index
 ```
 
 Applications describe size preferences on elements instead of assigning child rectangles
 manually. Absolute bounds remain available for specialized custom paint elements only.
+
+Arrange does not construct a second recursive `TuiElement` tree. It traverses the public element
+tree in deterministic preorder and builds a private frame-scoped flat index. Each entry contains
+the preorder node index, parent entry index, resolved application rectangle, and effective clip.
+It does not contain a copied element or child array. Paint and routing traverse the original tree
+with the matching index. The application host replaces the tree/index pair together after a
+successful View and arrange pass.
+
+The flat index is an internal frame output, not a public retained node registry: applications do
+not receive node ids, parent links, arranged handles, or mutation operations.
 
 Size-policy and alignment ideas are salvaged from
 [`docs/future/tui2/layout.md`](../tui2/layout.md) and the implemented Tui2 measure/arrange

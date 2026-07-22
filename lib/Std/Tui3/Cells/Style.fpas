@@ -1,0 +1,49 @@
+unit Std.Tui3.Cells.Style;
+
+uses Std.Tui3.Cells.Color;
+
+type
+  /// Concrete foreground/background colors and text attributes.
+  TuiStyle = record
+    Foreground: TuiColor;
+    Background: TuiColor;
+    Bold: boolean;
+    Dim: boolean;
+    Underline: boolean;
+    Inverse: boolean;
+
+    /// Creates a style with colors and no text attributes.
+
+    static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
+    begin
+      return record
+        Foreground := Foreground;
+        Background := Background;
+        Bold := false;
+        Dim := false;
+        Underline := false;
+        Inverse := false;
+      end
+    end;
+
+    /// Creates a style with colors and explicit text attributes.
+
+    static function Create(
+  Foreground: TuiColor;
+  Background: TuiColor;
+  Bold: boolean;
+  Dim: boolean;
+  Underline: boolean;
+  Inverse: boolean
+): TuiStyle;
+    begin
+      return record
+        Foreground := Foreground;
+        Background := Background;
+        Bold := Bold;
+        Dim := Dim;
+        Underline := Underline;
+        Inverse := Inverse;
+      end
+    end;
+  end;

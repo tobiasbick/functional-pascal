@@ -1,5 +1,52 @@
 # Std.Tui3 implementation phases
 
+## How to execute this plan
+
+This file is the execution checklist. The other files in this directory define the contracts.
+An implementation task must not invent a different API or silently broaden its scope. If a task
+conflicts with a linked contract, stop and update the plan before changing code.
+
+Task status starts with one of these values and may name its prerequisite:
+
+- `complete` — implemented and covered by the named regression tests;
+- `ready` — contract and scope are fixed; an implementation agent may execute it;
+- `blocked` — a named prerequisite is missing;
+- `architecture gate` — requires an explicit design decision before implementation;
+- `human gate` — requires an explicit promotion or destructive-change approval.
+
+For every `ready` task:
+
+1. Touch only the listed files and directly required facade/test manifests. Stop if another compiler,
+   VM, or public-unit layer becomes necessary and add that scope to this plan first.
+2. Reuse the named Tui2 implementation for algorithms only. Do not copy retained handles, parent
+   pointers, registries, callbacks, invalidation state, or `Create`/`Add`/`Destroy` APIs.
+3. Add the named tests in the same change and bundle new FPAS tests through
+   [`tests/suite.fpasprj`](../../../tests/suite.fpasprj).
+4. Update implemented behavior under `docs/pascal/std/tui3/`; leave unimplemented behavior here.
+5. Run targeted tests while developing. At a phase checkpoint run `cargo fmt`, `cargo build`,
+   `cargo test --workspace`, `cargo run -q -p fpas-cli -- fmt --check tests/ examples/ apps/`, and
+   `cargo run -q -p fpas-cli -- test tests/`.
+
+## Current implementation baseline
+
+Phase 0 produced more than a signature spike. The following code is the baseline and must be
+extended rather than recreated:
+
+| Area | Current implementation | Remaining owner |
+| --- | --- | --- |
+| Geometry | `Geometry/Point.fpas`, `Geometry/Size.fpas`, `Geometry/Rect.fpas` | Complete unless a later task exposes a regression. |
+| Identity | `Ids/ControlId.fpas`, `Ids/Action.fpas` | Complete unless a later task exposes a regression. |
+| Elements | Recursive `TuiElement` with Empty, Label, Button, Input, Row, Column, Window, Dialog, Desktop | Tasks 2.1 and 4.x extend the enum and builders. Do not flatten the public `View` tree. |
+| Layout | Intrinsic recursive measurement in `Layout/Measure.fpas` | Tasks 2.2–2.4 add the fixed layout contract and arranged frame data. |
+| Rendering | Cell working surface with wide-glyph repair; clipped canvas paint | Tasks 2.3–2.5 separate arrange from paint. |
+| Runtime | Headless host, injection, FIFO queue, key routing, focus, ticks, commands, snapshots | Phase 3 is hardening and missing input coverage, not a new runtime. |
+| Tests | Eight Phase 0 FPAS regressions under `tests/stdlib/tui3/` | Keep them as permanent canaries. |
+
+The recursive `Children: array of TuiElement` representation is intentional. The compiler stack
+overflow exposed by that representation was fixed in `fpas-sema`; do not replace the application
+tree with public node ids or a retained parent registry. Layout may use a private, frame-scoped flat
+index as described in [layout.md](layout.md).
+
 ## Cross-cutting language follow-ups
 
 For every compiler panic or language restriction found while implementing Tui3, add an
@@ -39,87 +86,19 @@ Do not silently change the language or leave an undocumented workaround.
 Completion: the slice passes [testing.md](testing.md)'s Phase 0 suite and the plan records the final
 compiling signatures. This gate is passed; Phase 1 is now unblocked.
 
-## Phase 1 — Values (next)
+## Remaining phases
 
-Port or reimplement under `lib/Std/Tui3/`:
+Execute one task at a time from the phase files. Do not skip an architecture or human gate.
 
-- Geometry (`Point`, `Size`, `Rect`)
-- Cells, styles, palette
-- Host-owned working surface, frame-scoped internal canvas, and immutable surface snapshot
-
-Completion: pure-value tests plus surface/snapshot ownership tests; no public mutable cell-grid
-value.
-
-## Phase 2 — Elements, layout, TV paint
-
-- `TuiElement` constructors for `Empty`, layout (`Row`/`Column`/…), `Label`, chrome frames
-- Pure `Measure` / `Arrange`
-- Paint window/dialog/label into a headless surface
-- Snapshot tests for TV-looking frames
-
-Completion: `View`-compatible trees render without input.
-
-## Phase 3 — MVU runtime (headless)
-
-- `TuiMsg`, `TuiCmd`, `TuiControlId`, `TuiAction`
-- `OpenForTest`, inject, `RunIterations`
-- `Update` / `View` loop with layout + paint each iteration
-- Button and controlled input elements emitting source-aware messages
-- Focus and message queue order
-- `NoCommand` / `Quit` command order
-
-Completion: confirm-dialog style demo without Create/Add/Destroy/OnClick and without hidden control
-state. No closure-based posting or general asynchronous effect claim.
-
-## Phase 4 — Controls and chrome
-
-- CheckBox, List, Scroll
-- MenuBar, StatusLine
-- Modal-as-tree input routing
-- Focus helpers driven by model fields
-- Terminal-too-small overlay
-
-Completion: enough controls for a static small-application chrome sketch, still headless-first.
-Movable/resizable overlapping windows, full editor behavior, and a complete Turbo Vision desktop
-manager are not implied by this phase.
-
-## Phase 5 — Interactive terminal
-
-- `AcquireInteractiveTerminal` integration
-- `Run` entry point
-- Mode restoration and failure rollback
-- Flush surface through `Std.Console`
-
-Completion: one interactive example application.
-
-## Phase 6 — Production-readiness gate
-
-- Repeat the Phase 0 performance measurements on the complete control set.
-- Audit the applications, examples, tests, and workflows that still depend on production `Std.Tui`.
-- Port at least one representative real application flow, not only the confirm-dialog slice.
-- List every lost production capability explicitly. Implement required gaps or obtain an explicit
-  decision that the loss is acceptable.
-- If the representative application requires timers, worker results, file dialogs, or other
-  effects, design and prove a data-only message transport before promotion.
-- Confirm current Tui3 docs and tests cover the API that will be renamed.
-
-Completion: recorded performance evidence, feature-gap audit, representative application, and an
-explicit promote decision. A successful demo alone is not sufficient.
-
-## Phase 7 — Promote to `Std.Tui`
-
-Only after Phase 6 passes:
-
-1. Remove `Std.Tui` (turbo-vision bridge), its VM bridge, docs, and tests.
-2. Remove `Std.Tui2`, its docs, and tests.
-3. Rename `Std.Tui3` → `Std.Tui` (unit, `lib/Std/Tui/`, `docs/pascal/std/tui/`, tests).
-4. Delete `docs/future/tui3/` and the Tui2 freeze notice once obsolete.
-5. Remove [tui-bridged-readback.md](../tui-bridged-readback.md) with the bridge.
-6. Update [`docs/future/README.md`](../README.md) and agent skills that still describe the
-   turbo-vision `Std.Tui` bridge as current.
-
-Until Phase 7, do not document Tui3 behavior under `docs/pascal/std/tui/` (that path still
-means the turbo-vision facade).
+| Phase | Task file | Entry status |
+| --- | --- | --- |
+| 1 — Values and owned rendering storage | [Phase 1](phases/phase-1-values.md) | Phase 1 complete; Phase 2 Task 2.1 is ready. |
+| 2 — Deterministic layout and arranged-frame paint | [Phase 2](phases/phase-2-layout.md) | Task 2.1 is ready; contract frozen. |
+| 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Blocked by Phase 2. |
+| 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Blocked by Phase 3. |
+| 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Blocked by Phase 4. |
+| 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Blocked by Phase 5. |
+| 7 — Promote to `Std.Tui` | [Phase 7](phases/phase-7-promotion.md) | Blocked by promotion decision. |
 
 ## Explicit non-work
 

@@ -8,7 +8,10 @@ widgets. The current implementation is headless and intended for deterministic t
 
 | Symbol | Purpose |
 | --- | --- |
-| `TuiSize.Create(Width, Height)` | Fixed headless terminal extent. |
+| `TuiPoint.Create(X, Y)` | Zero-based terminal-cell coordinate. |
+| `TuiSize.Create(Width, Height)` | Non-negative terminal-cell extent. |
+| `TuiRect.Create(X, Y, Width, Height)` | Half-open rectangle from origin and extents. |
+| `TuiColor` / `TuiStyle` / `TuiCell` / `TuiPalette` | Cell painting values and semantic roles. |
 | `TuiControlId.Create(Value)` | Positive focus and message-source identity. |
 | `TuiAction.Create(Value)` | Positive application intent; values may repeat. |
 | `TuiElement` | Closed data-carrying element enum. |
@@ -20,8 +23,69 @@ widgets. The current implementation is headless and intended for deterministic t
 | `App.Inject(Msg)` | Queues one framework message. |
 | `App.InjectKeyForTest(Key)` | Queues one key for focus/control routing. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
-| `App.SurfaceSnapshot()` | Explicitly copies the last painted surface. |
+| `App.SurfaceSnapshot()` | Explicitly copies the last painted surface, including cell roles. |
+| `TuiWorkingSurface` | Host-owned mutable cell grid used by paint and headless tests. |
 | `App.Close()` | Closes the host and clears pending work. |
+
+## Geometry
+
+`TuiPoint`, `TuiSize`, and `TuiRect` are immutable value records. Coordinates are zero-based.
+Sizes and rectangle extents must be non-negative. Rectangles are half-open
+(`right = x + width`, `bottom = y + height`).
+
+```pascal
+var Bounds: TuiRect := TuiRect.FromEdges(2, 3, 10, 8);
+var Inside: boolean := Bounds.Contains(TuiPoint.Create(9, 7));
+var Content: TuiRect := Bounds.Inset();
+```
+
+| Symbol | Purpose |
+| --- | --- |
+| `TuiPoint.Create(X, Y)` | Creates a point; all integer coordinates are accepted. |
+| `TuiSize.Create(Width, Height)` | Creates a size; rejects negative dimensions. |
+| `TuiSize.IsEmpty()` | True when width or height is zero. |
+| `TuiRect.Create(X, Y, Width, Height)` | Creates a rectangle; rejects negative or overflowing extents. |
+| `TuiRect.FromEdges(Left, Top, Right, Bottom)` | Creates a rectangle from exclusive edges. |
+| `TuiRect.FromPointSize(Position, Size)` | Creates a rectangle from a point and size. |
+| `TuiRect.FromCorners(TopLeft, BottomRight)` | Creates a rectangle from exclusive corners. |
+| `Right()` / `Bottom()` | Exclusive edges. |
+| `IsEmpty()` | True when width or height is zero. |
+| `Contains(Point)` | Half-open containment. |
+| `Intersects(Other)` / `Intersect(Other)` | Overlap test and intersection rectangle. |
+| `Inset()` | Shrinks by one cell on every side (clamped to empty). |
+
+For a rectangle at `(2, 3)` with size `(8, 5)`, points `(2, 3)` through `(9, 7)` are inside;
+`(10, 7)` and `(9, 8)` are outside.
+
+## Cell values
+
+`TuiColor` has distinct constructors for each representation. `FromCrt` accepts `0..15`, while
+`FromAnsi256` and every `FromRgb` channel accept `0..255`.
+
+```pascal
+var Foreground: TuiColor := TuiColor.FromCrt(14);
+var Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
+var Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
+var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
+```
+
+`TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and `Inverse` flags.
+`TuiCell.Create` requires exactly one non-zero-width extended grapheme cluster; `Width()` is one or
+two terminal columns via `Std.Console.GraphemeWidth`. The cell stores a semantic `TuiStyleRole`;
+concrete colors come from palette lookup. Continuation cells remain private surface state and are
+not part of the public cell value.
+
+## `TuiPalette`
+
+`TuiPalette.Default()` provides the standard semantic colors. `ForRole` resolves one style and
+`WithRole` returns a copy with one replacement, leaving the original palette unchanged.
+
+```pascal
+var Palette: TuiPalette := TuiPalette.Default();
+var Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);
+var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiColor.FromCrt(0));
+var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
+```
 
 ## Elements
 
@@ -90,10 +154,11 @@ last such dialog subtree.
 
 The current painter implements deterministic `Row`/`Column` preferred-size layout, full-size
 windows, centered dialogs, borders, labels, controlled inputs, and buttons. The working surface is
-host-owned. Painting replaces individual rows and does not construct a full-grid snapshot;
-`SurfaceSnapshot` is the explicit copying boundary. Multi-column or multi-codepoint grapheme
-clusters currently paint as `?`; full cell/style/grapheme storage remains subsequent Tui3
-value-layer work.
+host-owned and stores leading cells, wide-glyph continuations, and blanks. Painting goes through a
+private clipped canvas (local coordinates, nested origins/clips) and does not construct a full-grid
+snapshot; `SurfaceSnapshot` is the explicit copying boundary. Its `CellAt` method returns a
+`TuiCell`, so screen assertions retain the painted semantic role as well as the glyph. Overwriting
+either half of a wide glyph clears both columns.
 
 ## Implementation (contributors)
 
@@ -101,7 +166,8 @@ value-layer work.
 | --- | --- |
 | Elements and invariants | `lib/Std/Tui3/Elements/` |
 | Geometry and measurement | `lib/Std/Tui3/Geometry/`, `lib/Std/Tui3/Layout/` |
-| Working surface and paint | `lib/Std/Tui3/Rendering/` |
+| Cell, style, and palette values | `lib/Std/Tui3/Cells/` |
+| Working surface, canvas, and paint | `lib/Std/Tui3/Rendering/` |
 | Message loop and routing | `lib/Std/Tui3/Runtime/` |
 | FPAS regressions | `tests/stdlib/tui3/` |
 

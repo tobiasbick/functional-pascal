@@ -241,6 +241,28 @@ end.",
 }
 
 #[test]
+fn global_nested_array_assignment_uses_global_index_set() {
+    let source = "\
+program GlobalNestedArray;
+uses Std.Console;
+mutable var Grid: array of array of integer := [[1, 2], [3, 4]];
+begin
+  Grid[1][0] := 9;
+  WriteLn(Grid[1][0])
+end.";
+
+    let chunk = compile_ok(source);
+    assert!(
+        chunk
+            .code()
+            .iter()
+            .any(|op| matches!(op, fpas_bytecode::Op::GlobalIndexSet(_, 2))),
+        "nested global array assignment should use GlobalIndexSet"
+    );
+    assert_eq!(compile_and_run(source).lines, vec!["9"]);
+}
+
+#[test]
 fn array_of_enum_data_variants() {
     let out = compile_and_run(
         "\

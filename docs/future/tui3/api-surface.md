@@ -1,7 +1,8 @@
 # Std.Tui3 API surface
 
-This inventory is a planning sketch, not a frozen specification. Implemented symbols will
-be documented under `docs/pascal/std/tui3/` only after they exist.
+This is the target contract for the implementation tasks. Symbols remain planned until they are
+implemented and documented under `docs/pascal/std/tui3/`. A task may narrow the contract only by
+updating this file before code; it must not choose a different encoding silently.
 
 ## Type categories
 
@@ -66,7 +67,7 @@ uses `Cmd.Set(...)`, and the runtime reads the output before another `View`. A p
 TuiCmd` parameter is not an output parameter in FPAS: reassignment changes only the callee's local
 binding. The capability avoids a generic result record while keeping `TuiCmd` itself data-only.
 
-### Element constructors (illustrative)
+### Element constructors
 
 ```pascal
 Tui.Empty: TuiElement
@@ -75,11 +76,9 @@ Tui.Window(Title: string; Children: array of TuiElement): TuiElement
 Tui.Dialog(Title: string; Children: array of TuiElement): TuiElement
 Tui.MenuBar(Items: array of TuiMenuItem): TuiElement
 Tui.StatusLine(Text: string): TuiElement
-Tui.Row(Children: array of TuiElement): TuiElement
-Tui.Column(Children: array of TuiElement): TuiElement
-Tui.Grid(...): TuiElement
-Tui.Form(...): TuiElement
-Tui.Stack(Children; CurrentIndex: integer): TuiElement
+Tui.Row(Children: array of TuiElement; Spacing: integer): TuiElement
+Tui.Column(Children: array of TuiElement; Spacing: integer): TuiElement
+Tui.Layout(Settings: TuiLayoutSettings; Child: TuiElement): TuiElement
 Tui.Spacer.Fixed / Expanding
 Tui.Label(Text: string): TuiElement
 Tui.Button(Id: TuiControlId; Text: string; Action: TuiAction): TuiElement
@@ -109,9 +108,45 @@ Tui.Scroll(
 ): TuiElement
 ```
 
-Layout modifiers (margins, spacing, size policy, stretch, alignment) attach as fields on
-elements or as wrapper elements. Exact encoding is chosen for FPAS ergonomics during
-implementation; the requirement is that they remain pure data.
+`TuiElementBuilders.MakeRow` and `MakeColumn` preserve their Phase 0 signatures and use zero
+spacing. `MakeRowSpaced` and `MakeColumnSpaced` validate and store non-negative spacing.
+`Tui.Layout` is encoded internally as a recursive enum variant whose children array must contain
+exactly one element; its public builder accepts one `Child`. This keeps recursion behind the same
+array indirection already proven by Phase 0. Validation rejects forged zero-child or multi-child
+layout wrappers.
+
+The v1 layout values are the Tui-prefixed value semantics already proven by Tui2:
+
+```pascal
+TuiSizePolicyKind = (Fixed, Minimum, Maximum, Preferred, Expanding)
+TuiSizePolicy(Horizontal, Vertical: TuiSizePolicyKind)
+
+TuiAlignmentKind = (Leading, Center, Trailing, Fill)
+TuiAlignment(Horizontal, Vertical: TuiAlignmentKind)
+
+TuiMargins(Left, Top, Right, Bottom: integer)       { all non-negative }
+TuiLayoutSettings(
+  Margins: TuiMargins;
+  SizePolicy: TuiSizePolicy;
+  Alignment: TuiAlignment;
+  Stretch: integer                                  { non-negative }
+)
+
+TuiMeasureConstraintKind = (Unbounded, AtMost)
+TuiMeasureConstraint(Kind; Limit: integer)          { bounded limit non-negative }
+TuiMeasureSpec(Width, Height: TuiMeasureConstraint)
+TuiMeasureResult(Minimum, Preferred, Maximum: TuiSize)
+TuiSpacerKind = (Fixed, Expanding)
+TuiSpacer(Kind; MinimumExtent: integer)              { non-negative }
+TuiLayoutFit(Minimum, Available, Overflow: TuiSize)
+```
+
+Defaults are zero margins, preferred size policy, fill alignment, and stretch zero. The static
+constructors and invariants match the corresponding files under `lib/Std/Tui2/Layouts/`, renamed
+to Tui3. `TuiMeasureResult` requires `Minimum <= Preferred <= Maximum` on both axes.
+
+Grid, Form, Stack, stable list keys, and custom paint are not part of Phases 1–5. Add a separate
+planned task and exact declarations before implementing any of them.
 
 ### Messages and commands
 

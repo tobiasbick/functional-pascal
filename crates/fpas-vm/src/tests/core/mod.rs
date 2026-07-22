@@ -1,5 +1,6 @@
 mod call_value;
 mod concurrent_globals;
+mod global_array_indexing;
 mod globals;
 mod graph_vm;
 mod illformed;

@@ -40,7 +40,7 @@ fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String
             .into_iter()
             .map(|item| json_to_fpas_at_depth(item, depth + 1))
             .collect::<Result<Vec<_>, _>>()
-            .map(|items| json_variant("Array", vec![Value::Array(items)])),
+            .map(|items| json_variant("Array", vec![Value::Array(items.into())])),
         JsonValue::Object(fields) => fields
             .into_iter()
             .map(|(key, value)| {
@@ -304,7 +304,7 @@ mod tests {
     fn fpas_to_json_accepts_container_at_depth_limit() {
         let value = json_variant(
             "Array",
-            vec![Value::Array(vec![json_variant("Null", vec![])])],
+            vec![Value::Array(vec![json_variant("Null", vec![])].into())],
         );
         assert!(fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH - 1).is_ok());
     }
@@ -313,7 +313,7 @@ mod tests {
     fn fpas_to_json_rejects_container_child_beyond_depth_limit() {
         let value = json_variant(
             "Array",
-            vec![Value::Array(vec![json_variant("Null", vec![])])],
+            vec![Value::Array(vec![json_variant("Null", vec![])].into())],
         );
         let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH).unwrap_err();
         assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);

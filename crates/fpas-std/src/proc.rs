@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn run_returns_exit_code_for_successful_process() {
         let (command, args) = successful_process_fixture();
-        let mut stack = vec![Value::Str(command), Value::Array(args)];
+        let mut stack = vec![Value::Str(command), Value::Array(args.into())];
 
         run_proc(&mut stack);
 
@@ -87,7 +87,7 @@ mod tests {
     fn run_returns_error_for_missing_command() {
         let mut stack = vec![
             Value::Str("__fpas_proc_missing_command_8f21d2f4__".into()),
-            Value::Array(Vec::new()),
+            Value::Array(Vec::new().into()),
         ];
 
         run_proc(&mut stack);

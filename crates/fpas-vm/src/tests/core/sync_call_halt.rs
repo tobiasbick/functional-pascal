@@ -10,7 +10,7 @@ fn sync_call_rejects_halt_in_callback() {
         callee,
         1,
         |chunk| {
-            emit_constant(chunk, Value::Array(vec![Value::Integer(1)]));
+            emit_constant(chunk, Value::Array(vec![Value::Integer(1)].into()));
             emit_constant(
                 chunk,
                 Value::Function {

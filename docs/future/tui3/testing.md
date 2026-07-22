@@ -36,8 +36,9 @@ Phase 0 baseline (2026-07-21, Windows development build):
 
 The measurement uses `tests/stdlib/tui3/repeated_frames_test.fpas` and includes parsing, compilation,
 VM startup, and both runs. The element walker contains no explicit full-tree clone. The working
-surface stores independent row strings: `Clear` replaces each row once, glyph writes replace only
-their row, and the full cell array is constructed only by the two explicit final snapshots.
+surface uses direct nested `array of TuiCell` rows with parallel continuation rows. VM arrays use
+copy-on-write storage, and global indexed writes update the owned grid without rebuilding it; the
+full glyph array is constructed only by explicit `Snapshot` calls.
 
 ## Determinism
 

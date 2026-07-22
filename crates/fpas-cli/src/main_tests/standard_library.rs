@@ -163,6 +163,18 @@ fn tui3_rejects_forged_non_positive_element_action_ids() {
 }
 
 #[test]
+fn tui3_rejects_invalid_cell_glyphs() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui3/invalid_cell_glyph_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "empty Tui3 cell glyphs must fail");
+    assert!(
+        stderr.contains("GraphemeWidth requires one non-zero-width extended grapheme cluster"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
 fn tui2_rejects_negative_sizes() {
     let (exit, _stdout, stderr) =
         run_repo_tui2_program("tests/stdlib/tui2/negative_size_runtime_error.fpas");

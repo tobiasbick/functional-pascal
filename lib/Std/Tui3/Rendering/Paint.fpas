@@ -1,8 +1,9 @@
 unit Std.Tui3.Rendering.Paint;
 
 uses
-  Std.Array, Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size,
-  Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Measure, Std.Tui3.Rendering.Surface;
+  Std.Array, Std.Tui3.Cells.StyleRole, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point,
+  Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size, Std.Tui3.Ids.ControlId, Std.Tui3.Layout.Measure,
+  Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface;
 
 private function TuiPaintMin(Left: integer; Right: integer): integer;
 begin
@@ -37,7 +38,7 @@ begin
 end;
 
 private procedure TuiPaintTextClipped(
-  Surface: TuiWorkingSurface;
+  Canvas: TuiCanvas;
   X: integer;
   Y: integer;
   Width: integer;
@@ -48,62 +49,22 @@ begin
   begin
     return
   end;
-  mutable var Offset: integer := 0;
-  for Glyph: string in Std.Console.SplitGraphemes(Text) do
-  begin
-    var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
-    if Offset + GlyphWidth > Width then
-    begin
-      return
-    end;
-    Surface.PutGlyph(X + Offset, Y, Glyph);
-    Offset := Offset + GlyphWidth
-  end
+  Canvas.Child(TuiRect.Create(X, Y, Width, 1))
+    .WriteText(TuiPoint.Create(0, 0), Text, TuiStyleRole.Normal)
 end;
 
-private procedure TuiPaintFrame(Surface: TuiWorkingSurface; Bounds: TuiRect; Title: string);
+private procedure TuiPaintFrame(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
 begin
-  if Bounds.IsEmpty() then
-  begin
-    return
-  end;
-  for Offset: integer := 0 to Bounds.Width - 1 do
-  begin
-    Surface.PutGlyph(Bounds.X + Offset, Bounds.Y, '─');
-    if Bounds.Height > 1 then
-    begin
-      Surface.PutGlyph(Bounds.X + Offset, Bounds.Bottom() - 1, '─')
-    end
-  end;
-  for Offset: integer := 0 to Bounds.Height - 1 do
-  begin
-    Surface.PutGlyph(Bounds.X, Bounds.Y + Offset, '│');
-    if Bounds.Width > 1 then
-    begin
-      Surface.PutGlyph(Bounds.Right() - 1, Bounds.Y + Offset, '│')
-    end
-  end;
-  Surface.PutGlyph(Bounds.X, Bounds.Y, '┌');
-  if Bounds.Width > 1 then
-  begin
-    Surface.PutGlyph(Bounds.Right() - 1, Bounds.Y, '┐')
-  end;
-  if Bounds.Height > 1 then
-  begin
-    Surface.PutGlyph(Bounds.X, Bounds.Bottom() - 1, '└');
-    if Bounds.Width > 1 then
-    begin
-      Surface.PutGlyph(Bounds.Right() - 1, Bounds.Bottom() - 1, '┘')
-    end
-  end;
+  Canvas.Child(Bounds)
+    .DrawFrame(TuiRect.Create(0, 0, Bounds.Width, Bounds.Height), TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
   begin
-    TuiPaintTextClipped(Surface, Bounds.X + 2, Bounds.Y, Bounds.Width - 4, (' ' + Title) + ' ')
+    TuiPaintTextClipped(Canvas, Bounds.X + 2, Bounds.Y, Bounds.Width - 4, (' ' + Title) + ' ')
   end
 end;
 
 private procedure TuiPaintElement(
-  Surface: TuiWorkingSurface;
+  Canvas: TuiCanvas;
   Node: TuiElement;
   Bounds: TuiRect;
   Focused: option of TuiControlId
@@ -115,28 +76,28 @@ begin
     end;
     TuiElement.Label(Text):
     begin
-      TuiPaintTextClipped(Surface, Bounds.X, Bounds.Y, Bounds.Width, Text)
+      TuiPaintTextClipped(Canvas, Bounds.X, Bounds.Y, Bounds.Width, Text)
     end;
     TuiElement.Button(Id, Text, Action):
     begin
       if TuiPaintFocused(Focused, Id) then
       begin
-        TuiPaintTextClipped(Surface, Bounds.X, Bounds.Y, Bounds.Width, ('>[ ' + Text) + ' ]')
+        TuiPaintTextClipped(Canvas, Bounds.X, Bounds.Y, Bounds.Width, ('>[ ' + Text) + ' ]')
       end
       else
       begin
-        TuiPaintTextClipped(Surface, Bounds.X, Bounds.Y, Bounds.Width, (' [ ' + Text) + ' ]')
+        TuiPaintTextClipped(Canvas, Bounds.X, Bounds.Y, Bounds.Width, (' [ ' + Text) + ' ]')
       end
     end;
     TuiElement.Input(Id, Text, Caret, ChangeAction):
     begin
       if TuiPaintFocused(Focused, Id) then
       begin
-        TuiPaintTextClipped(Surface, Bounds.X, Bounds.Y, Bounds.Width, ('> ' + Text) + '_')
+        TuiPaintTextClipped(Canvas, Bounds.X, Bounds.Y, Bounds.Width, ('> ' + Text) + '_')
       end
       else
       begin
-        TuiPaintTextClipped(Surface, Bounds.X, Bounds.Y, Bounds.Width, '  ' + Text)
+        TuiPaintTextClipped(Canvas, Bounds.X, Bounds.Y, Bounds.Width, '  ' + Text)
       end
     end;
     TuiElement.Row(Children):
@@ -147,7 +108,7 @@ begin
         var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
         var ChildWidth: integer := TuiPaintNonNegative(TuiPaintMin(ChildSize.Width, Bounds.Right() -
                                                                                     ChildX));
-        TuiPaintElement(Surface, Children[Index], TuiRect.Create(ChildX, Bounds.Y, ChildWidth, Bounds.Height), Focused);
+        TuiPaintElement(Canvas, Children[Index], TuiRect.Create(ChildX, Bounds.Y, ChildWidth, Bounds.Height), Focused);
         ChildX := (ChildX + ChildSize.Width) + 1
       end
     end;
@@ -159,13 +120,13 @@ begin
         var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
         var ChildHeight: integer := TuiPaintNonNegative(TuiPaintMin(ChildSize.Height, Bounds.Bottom() -
                                                                                       ChildY));
-        TuiPaintElement(Surface, Children[Index], TuiRect.Create(Bounds.X, ChildY, Bounds.Width, ChildHeight), Focused);
+        TuiPaintElement(Canvas, Children[Index], TuiRect.Create(Bounds.X, ChildY, Bounds.Width, ChildHeight), Focused);
         ChildY := ChildY + ChildSize.Height
       end
     end;
     TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
     begin
-      TuiPaintFrame(Surface, Bounds, Title);
+      TuiPaintFrame(Canvas, Bounds, Title);
       var Content: TuiRect := Bounds.Inset();
       mutable var ChildY: integer := Content.Y;
       for Index: integer := 0 to Std.Array.Length(Children) - 1 do
@@ -173,7 +134,7 @@ begin
         var ChildSize: TuiSize := TuiMeasureElement(Children[Index]);
         var ChildHeight: integer := TuiPaintNonNegative(TuiPaintMin(ChildSize.Height, Content.Bottom() -
                                                                                       ChildY));
-        TuiPaintElement(Surface, Children[Index], TuiRect.Create(Content.X, ChildY, Content.Width, ChildHeight), Focused);
+        TuiPaintElement(Canvas, Children[Index], TuiRect.Create(Content.X, ChildY, Content.Width, ChildHeight), Focused);
         ChildY := ChildY + ChildSize.Height
       end
     end;
@@ -187,13 +148,13 @@ begin
             var Preferred: TuiSize := TuiMeasureElement(Children[Index]);
             var Width: integer := TuiPaintMin(Preferred.Width, Bounds.Width);
             var Height: integer := TuiPaintMin(Preferred.Height, Bounds.Height);
-            TuiPaintElement(Surface, Children[Index], TuiRect.Create(Bounds.X +
-                                                                     ((Bounds.Width - Width) div 2), Bounds.Y +
-                                                                                                     ((Bounds.Height - Height) div 2), Width, Height), DesktopFocus)
+            TuiPaintElement(Canvas, Children[Index], TuiRect.Create(Bounds.X +
+                                                                    ((Bounds.Width - Width) div 2), Bounds.Y +
+                                                                                                    ((Bounds.Height - Height) div 2), Width, Height), DesktopFocus)
           end;
           TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.Row(RowChildren), TuiElement.Column(ColumnChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
           begin
-            TuiPaintElement(Surface, Children[Index], Bounds, DesktopFocus)
+            TuiPaintElement(Canvas, Children[Index], Bounds, DesktopFocus)
           end
         end
       end
@@ -206,5 +167,6 @@ end;
 procedure TuiPaintView(Surface: TuiWorkingSurface; Root: TuiElement);
 begin
   Surface.Clear();
-  TuiPaintElement(Surface, Root, TuiRectForSize(Surface.Size()), None)
+  var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Surface.Size()));
+  TuiPaintElement(Canvas, Root, TuiRectForSize(Surface.Size()), None)
 end;

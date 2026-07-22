@@ -27,6 +27,11 @@ pub enum Op {
     GetGlobal(u16),
     /// Define/store global variable by constant-pool index (name).
     SetGlobal(u16),
+    /// Set one element through an all-index path rooted at a global array.
+    ///
+    /// Stack: `[..., index0, ..., indexN, value]` → `[..., ()]`. The VM updates the global
+    /// array under its write lock and applies copy-on-write only to affected shared paths.
+    GlobalIndexSet(u16, u8),
 
     // ── Arithmetic ──────────────────────────────────────────
     AddInt,

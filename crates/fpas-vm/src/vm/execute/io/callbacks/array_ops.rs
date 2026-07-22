@@ -16,7 +16,7 @@ impl Worker {
             let mapped = self.call_function_sync(&func, std::slice::from_ref(elem), line)?;
             result.push(mapped);
         }
-        self.push(Value::Array(result))?;
+        self.push(Value::Array(result.into()))?;
         Ok(())
     }
 
@@ -34,7 +34,7 @@ impl Worker {
                 result.push(elem.clone());
             }
         }
-        self.push(Value::Array(result))?;
+        self.push(Value::Array(result.into()))?;
         Ok(())
     }
 
@@ -141,7 +141,7 @@ impl Worker {
                 other => result.push(other),
             }
         }
-        self.push(Value::Array(result))?;
+        self.push(Value::Array(result.into()))?;
         Ok(())
     }
 
@@ -166,7 +166,7 @@ impl Worker {
     ) -> Result<Vec<Value>, VmError> {
         let value = self.pop(line)?;
         match value {
-            Value::Array(values) => Ok(values),
+            Value::Array(values) => Ok(values.into()),
             other => Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(

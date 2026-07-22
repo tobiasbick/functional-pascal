@@ -1,0 +1,32 @@
+program Tui3CanvasClipTest;
+
+uses Std.Option, Std.Str, Std.Test, Std.Tui3;
+
+begin
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(6, 4));
+  var Root: TuiCanvas := TuiCanvas.Create(Surface, TuiRect.Create(0, 0, 6, 4));
+  var Child: TuiCanvas := Root.Child(TuiRect.Create(1, 1, 3, 2));
+  Child.PutGlyph(0, 0, 'A');
+  Child.PutGlyph(2, 1, 'B');
+  Child.PutGlyph(-1, 0, 'Z');
+  Child.PutGlyph(3, 0, 'Z');
+  Child.PutGlyph(0, -1, 'Z');
+  Child.PutGlyph(0, 2, 'Z');
+  AssertEquals('A', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 1))).Glyph);
+  AssertEquals('B', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(3, 2))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 1))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(4, 1))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 0))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 3))).Glyph);
+  var Nested: TuiCanvas := Child.Child(TuiRect.Create(1, 0, 2, 1));
+  Nested.FillRect(TuiRect.Create(-1, -1, 4, 3), TuiCell.Create('#', TuiStyleRole.Accent));
+  AssertEquals('A', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 1))).Glyph);
+  AssertEquals('#', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 1))).Glyph);
+  AssertEquals('#', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(3, 1))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(4, 1))).Glyph);
+  AssertEquals('B', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(3, 2))).Glyph);
+  Root.WriteText(TuiPoint.Create(0, 3), ('Hi' + Std.Str.Chr(10)) + 'No', TuiStyleRole.Title);
+  AssertEquals('H', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 3))).Glyph);
+  AssertEquals('i', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(1, 3))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 3))).Glyph)
+end.

@@ -47,7 +47,7 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
             let arr = pop_array(pop_value(stack, location)?, location)?;
             if arr.is_empty() {
-                stack.push(Value::Array(arr));
+                stack.push(Value::Array(arr.into()));
                 return Ok(Some(()));
             }
             let mut keys: Vec<String> = Vec::with_capacity(arr.len());
@@ -64,12 +64,12 @@ pub(crate) fn run(
             let mut idx: Vec<usize> = (0..arr.len()).collect();
             idx.sort_by(|&i, &j| keys[i].cmp(&keys[j]));
             let sorted: Vec<Value> = idx.into_iter().map(|i| arr[i].clone()).collect();
-            stack.push(Value::Array(sorted));
+            stack.push(Value::Array(sorted.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Reverse) => {
             let mut arr = pop_array(pop_value(stack, location)?, location)?;
             arr.reverse();
-            stack.push(Value::Array(arr));
+            stack.push(Value::Array(arr.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Contains) => {
             let needle = pop_value(stack, location)?;
@@ -101,20 +101,20 @@ pub(crate) fn run(
                 ));
             }
             let out: Vec<Value> = arr[start as usize..(start + len) as usize].to_vec();
-            stack.push(Value::Array(out));
+            stack.push(Value::Array(out.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Concat) => {
             let b = pop_array(pop_value(stack, location)?, location)?;
             let mut a = pop_array(pop_value(stack, location)?, location)?;
             a.extend(b);
-            stack.push(Value::Array(a));
+            stack.push(Value::Array(a.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Fill) => {
             let count = pop_int(pop_value(stack, location)?, location)?;
             let value = pop_value(stack, location)?;
             let len = checked_collection_len(count, location, "Std.Array.Fill")?;
             let arr: Vec<Value> = vec![value; len];
-            stack.push(Value::Array(arr));
+            stack.push(Value::Array(arr.into()));
         }
         _ => return Ok(None),
     }
@@ -140,11 +140,9 @@ mod tests {
         run_array(ArrayIntrinsic::Fill, &mut stack).unwrap();
         assert_eq!(
             stack,
-            vec![Value::Array(vec![
-                Value::Integer(7),
-                Value::Integer(7),
-                Value::Integer(7),
-            ])]
+            vec![Value::Array(
+                vec![Value::Integer(7), Value::Integer(7), Value::Integer(7),].into()
+            )]
         );
     }
 
@@ -158,7 +156,7 @@ mod tests {
     #[test]
     fn slice_rejects_out_of_range() {
         let mut stack = vec![
-            Value::Array(vec![Value::Integer(1), Value::Integer(2)]),
+            Value::Array(vec![Value::Integer(1), Value::Integer(2)].into()),
             Value::Integer(0),
             Value::Integer(3),
         ];

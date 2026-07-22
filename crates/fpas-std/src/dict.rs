@@ -25,12 +25,12 @@ pub(crate) fn run(
         Intrinsic::Dict(DictIntrinsic::Keys) => {
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let keys: Vec<Value> = pairs.into_iter().map(|(k, _)| k).collect();
-            stack.push(Value::Array(keys));
+            stack.push(Value::Array(keys.into()));
         }
         Intrinsic::Dict(DictIntrinsic::Values) => {
             let pairs = pop_dict(pop_value(stack, location)?, location)?;
             let values: Vec<Value> = pairs.into_iter().map(|(_, v)| v).collect();
-            stack.push(Value::Array(values));
+            stack.push(Value::Array(values.into()));
         }
         Intrinsic::Dict(DictIntrinsic::Remove) => {
             let key = pop_value(stack, location)?;

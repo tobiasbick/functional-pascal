@@ -1,6 +1,65 @@
 mod equal;
 
 use equal::values_equal;
+use std::ops::{Deref, DerefMut};
+use std::sync::Arc;
+
+/// Copy-on-write storage for FPAS array values.
+///
+/// Cloning an array shares its elements until a mutable operation occurs. This preserves FPAS
+/// value semantics while avoiding deep copies for ordinary reads of large arrays.
+#[derive(Debug, Clone)]
+pub struct SharedArray(Arc<Vec<Value>>);
+
+impl From<Vec<Value>> for SharedArray {
+    fn from(values: Vec<Value>) -> Self {
+        Self(Arc::new(values))
+    }
+}
+
+impl FromIterator<Value> for SharedArray {
+    fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
+        Self::from(iter.into_iter().collect::<Vec<_>>())
+    }
+}
+
+impl From<SharedArray> for Vec<Value> {
+    fn from(values: SharedArray) -> Self {
+        Arc::unwrap_or_clone(values.0)
+    }
+}
+
+impl Deref for SharedArray {
+    type Target = Vec<Value>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for SharedArray {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        Arc::make_mut(&mut self.0)
+    }
+}
+
+impl<'a> IntoIterator for &'a SharedArray {
+    type Item = &'a Value;
+    type IntoIter = std::slice::Iter<'a, Value>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl IntoIterator for SharedArray {
+    type Item = Value;
+    type IntoIter = std::vec::IntoIter<Value>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Arc::unwrap_or_clone(self.0).into_iter()
+    }
+}
 
 /// Runtime value in the VM.
 #[derive(Debug, Clone)]
@@ -18,7 +77,7 @@ pub enum Value {
         fields: Vec<Value>,
     },
     /// Ordered collection.
-    Array(Vec<Value>),
+    Array(SharedArray),
     /// Key-value collection (ordered by insertion).
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
@@ -197,8 +256,21 @@ mod tests {
 
     #[test]
     fn partial_eq_compares_nested_arrays() {
-        let left = Value::Array(vec![Value::Array(vec![Value::Integer(1)])]);
-        let right = Value::Array(vec![Value::Array(vec![Value::Integer(1)])]);
+        let left = Value::Array(vec![Value::Array(vec![Value::Integer(1)].into())].into());
+        let right = Value::Array(vec![Value::Array(vec![Value::Integer(1)].into())].into());
         assert_eq!(left, right);
+    }
+
+    #[test]
+    fn shared_arrays_copy_only_when_mutated() {
+        let original = SharedArray::from(vec![Value::Integer(1)]);
+        let mut updated = original.clone();
+        assert!(Arc::ptr_eq(&original.0, &updated.0));
+
+        updated[0] = Value::Integer(2);
+
+        assert!(!Arc::ptr_eq(&original.0, &updated.0));
+        assert_eq!(original[0], Value::Integer(1));
+        assert_eq!(updated[0], Value::Integer(2));
     }
 }

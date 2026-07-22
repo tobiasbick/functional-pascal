@@ -1,15 +1,31 @@
 unit Std.Tui3;
 
 uses
-  Std.Console, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size,
-  Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId, Std.Tui3.Rendering.Surface,
-  Std.Tui3.Runtime.Application, Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
+  Std.Console, Std.Tui3.Cells.Cell, Std.Tui3.Cells.Color, Std.Tui3.Cells.Palette,
+  Std.Tui3.Cells.Style, Std.Tui3.Cells.StyleRole, Std.Tui3.Elements.Element, Std.Tui3.Geometry.Point,
+  Std.Tui3.Geometry.Rect, Std.Tui3.Geometry.Size, Std.Tui3.Ids.Action, Std.Tui3.Ids.ControlId,
+  Std.Tui3.Rendering.Canvas, Std.Tui3.Rendering.Surface, Std.Tui3.Runtime.Application,
+  Std.Tui3.Runtime.Cmd, Std.Tui3.Runtime.Msg;
 
 type
+  /// Zero-based terminal-cell coordinate.
+  TuiPoint = Std.Tui3.Geometry.Point.TuiPoint;
   /// Fixed terminal extent used by headless Tui3 hosts.
   TuiSize = Std.Tui3.Geometry.Size.TuiSize;
-  /// Zero-based terminal-cell rectangle.
+  /// Zero-based half-open terminal-cell rectangle.
   TuiRect = Std.Tui3.Geometry.Rect.TuiRect;
+  /// Color representation kind for terminal painting.
+  TuiColorKind = Std.Tui3.Cells.Color.TuiColorKind;
+  /// Validated CRT, ANSI-256, or RGB color value.
+  TuiColor = Std.Tui3.Cells.Color.TuiColor;
+  /// Semantic style role resolved through `TuiPalette`.
+  TuiStyleRole = Std.Tui3.Cells.StyleRole.TuiStyleRole;
+  /// Concrete foreground/background colors and text attributes.
+  TuiStyle = Std.Tui3.Cells.Style.TuiStyle;
+  /// One validated renderable grapheme with a semantic style role.
+  TuiCell = Std.Tui3.Cells.Cell.TuiCell;
+  /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
+  TuiPalette = Std.Tui3.Cells.Palette.TuiPalette;
   /// Positive identity unique among interactive nodes in one rendered tree.
   TuiControlId = Std.Tui3.Ids.ControlId.TuiControlId;
   /// Positive application intent; repetitions across controls are allowed.
@@ -26,6 +42,10 @@ type
   TuiElementBuilders = Std.Tui3.Elements.Element.TuiElementBuilders;
   /// Explicit copy of the last painted headless surface.
   TuiSurfaceSnapshot = Std.Tui3.Rendering.Surface.TuiSurfaceSnapshot;
+  /// Host-owned mutable working surface handle.
+  TuiWorkingSurface = Std.Tui3.Rendering.Surface.TuiWorkingSurface;
+  /// Private frame-scoped drawing capability over one working surface.
+  TuiCanvas = Std.Tui3.Rendering.Canvas.TuiCanvas;
   /// Headless application host.
   TuiApplication = Std.Tui3.Runtime.Application.TuiApplication;
   /// Console key event used by headless key injection.

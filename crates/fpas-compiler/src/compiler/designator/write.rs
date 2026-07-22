@@ -42,6 +42,21 @@ impl Compiler {
             }
 
             let suffix = &target.parts[consumed..];
+            if suffix
+                .iter()
+                .all(|part| matches!(part, DesignatorPart::Index(_, _)))
+            {
+                for part in suffix {
+                    if let DesignatorPart::Index(expr, _) = part {
+                        self.compile_expr(expr)?;
+                    }
+                }
+                self.compile_expr(value)?;
+                let idx = self.add_constant(Value::Str(global_name), location)?;
+                self.emit(Op::GlobalIndexSet(idx, suffix.len() as u8), location);
+                self.emit(Op::Pop, location);
+                return Ok(());
+            }
             let idx = self.add_constant(Value::Str(global_name.clone()), location)?;
             self.emit(Op::GetGlobal(idx), location);
             for part in &suffix[..suffix.len() - 1] {

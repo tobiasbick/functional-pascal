@@ -102,7 +102,7 @@ fn graph_upload_frame_stages_the_validated_frame() {
         emit_constant(&mut chunk, Value::Integer(1));
         emit_constant(
             &mut chunk,
-            Value::Array(vec![Value::Integer(0x00102030), Value::Integer(0x00040506)]),
+            Value::Array(vec![Value::Integer(0x00102030), Value::Integer(0x00040506)].into()),
         );
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationUploadFrame);
         chunk.emit(Op::Halt, loc());

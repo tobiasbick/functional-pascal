@@ -139,11 +139,14 @@ mod tests {
 
     #[test]
     fn join_combines_segments_with_platform_separator() {
-        let mut stack = vec![Value::Array(vec![
-            Value::Str("a".into()),
-            Value::Str("b".into()),
-            Value::Str("file.txt".into()),
-        ])];
+        let mut stack = vec![Value::Array(
+            vec![
+                Value::Str("a".into()),
+                Value::Str("b".into()),
+                Value::Str("file.txt".into()),
+            ]
+            .into(),
+        )];
         run_path(PathIntrinsic::Join, &mut stack);
         let expected = PathBuf::from("a")
             .join("b")
@@ -155,7 +158,7 @@ mod tests {
 
     #[test]
     fn join_empty_array_returns_empty_string() {
-        let mut stack = vec![Value::Array(vec![])];
+        let mut stack = vec![Value::Array(vec![].into())];
         run_path(PathIntrinsic::Join, &mut stack);
         assert_eq!(stack, vec![Value::Str(String::new())]);
     }

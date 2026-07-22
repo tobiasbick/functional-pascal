@@ -255,11 +255,14 @@ mod tests {
 
         assert_eq!(
             stack,
-            vec![Value::ResultOk(Box::new(Value::Array(vec![
-                Value::Str(normalize_path_string(Path::new(&files[1]))),
-                Value::Str(normalize_path_string(Path::new(&files[0]))),
-                Value::Str(normalize_path_string(Path::new(&files[2]))),
-            ])))]
+            vec![Value::ResultOk(Box::new(Value::Array(
+                vec![
+                    Value::Str(normalize_path_string(Path::new(&files[1]))),
+                    Value::Str(normalize_path_string(Path::new(&files[0]))),
+                    Value::Str(normalize_path_string(Path::new(&files[2]))),
+                ]
+                .into()
+            )))]
         );
 
         for file in &files {
@@ -305,7 +308,10 @@ mod tests {
             unique_temp_path("glob_empty")
         ))];
         run_fs(FsIntrinsic::Glob, &mut stack);
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Array(vec![])))]);
+        assert_eq!(
+            stack,
+            vec![Value::ResultOk(Box::new(Value::Array(vec![].into())))]
+        );
     }
 
     #[test]
@@ -324,9 +330,9 @@ mod tests {
         run_fs(FsIntrinsic::Glob, &mut stack);
         assert_eq!(
             stack,
-            vec![Value::ResultOk(Box::new(Value::Array(vec![Value::Str(
-                normalize_path_string(Path::new(&path))
-            )])))]
+            vec![Value::ResultOk(Box::new(Value::Array(
+                vec![Value::Str(normalize_path_string(Path::new(&path)))].into()
+            )))]
         );
 
         let _ = fs::remove_file(path);

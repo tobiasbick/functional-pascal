@@ -106,7 +106,7 @@ pub(crate) fn run(
                 .split(&delim[..])
                 .map(|p| Value::Str(p.to_string()))
                 .collect();
-            stack.push(Value::Array(parts));
+            stack.push(Value::Array(parts.into()));
         }
         Intrinsic::Str(StrIntrinsic::Join) => {
             let delim = pop_string(pop_value(stack, location)?, location)?;

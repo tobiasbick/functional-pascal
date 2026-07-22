@@ -90,7 +90,8 @@ pass feasibility and promotion gates
 | [event-loop.md](event-loop.md) | Console → message → update → view → layout → paint. |
 | [runtime-boundary.md](runtime-boundary.md) | Main task, commands, errors, terminal cleanup. |
 | [testing.md](testing.md) | Headless contracts and assertion levels. |
-| [implementation-phases.md](implementation-phases.md) | Ordered milestones through promote-to-`Std.Tui`. |
+| [implementation-phases.md](implementation-phases.md) | Execution rules, current baseline, phase index, and gates. |
+| [`phases/`](phases/) | Small file-scoped task cards for Phases 1–7. |
 
 ## Success criterion
 

@@ -1,0 +1,47 @@
+program Tui3CellPaletteValuesTest;
+
+uses Std.Test, Std.Tui3;
+
+begin
+  var Foreground: TuiColor := TuiColor.FromCrt(14);
+  AssertTrue(Foreground.Kind = TuiColorKind.Crt);
+  AssertEquals(14, Foreground.Index);
+  var Background: TuiColor := TuiColor.FromAnsi256(17);
+  AssertTrue(Background.Kind = TuiColorKind.Ansi256);
+  AssertEquals(17, Background.Index);
+  var RgbValue: TuiColor := TuiColor.FromRgb(10, 20, 30);
+  AssertTrue(RgbValue.Kind = TuiColorKind.Rgb);
+  AssertEquals(20, RgbValue.Green);
+  var Plain: TuiStyle := TuiStyle.FromColors(Foreground, Background);
+  AssertFalse(Plain.Bold);
+  AssertFalse(Plain.Underline);
+  var Emphasized: TuiStyle := TuiStyle.Create(Foreground, Background, true, false, true, false);
+  AssertTrue(Emphasized.Bold);
+  AssertTrue(Emphasized.Underline);
+  var StyleCopy: TuiStyle := Emphasized;
+  AssertTrue(StyleCopy.Bold);
+  AssertEquals(14, StyleCopy.Foreground.Index);
+  var Narrow: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
+  AssertEquals('X', Narrow.Glyph);
+  AssertTrue(Narrow.Role = TuiStyleRole.Focused);
+  AssertEquals(1, Narrow.Width());
+  var Combined: TuiCell := TuiCell.Create('é', TuiStyleRole.Normal);
+  AssertEquals(1, Combined.Width());
+  var Wide: TuiCell := TuiCell.Create('中', TuiStyleRole.Accent);
+  AssertEquals('中', Wide.Glyph);
+  AssertEquals(2, Wide.Width());
+  var CellCopy: TuiCell := Wide;
+  AssertEquals('中', CellCopy.Glyph);
+  AssertTrue(CellCopy.Role = TuiStyleRole.Accent);
+  AssertEquals(2, CellCopy.Width());
+  var Palette: TuiPalette := TuiPalette.Default();
+  var NormalStyle: TuiStyle := Palette.ForRole(TuiStyleRole.Normal);
+  AssertEquals(7, NormalStyle.Foreground.Index);
+  var AccentStyle: TuiStyle := Palette.ForRole(TuiStyleRole.Accent);
+  AssertEquals(11, AccentStyle.Foreground.Index);
+  var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), Background);
+  var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
+  AssertEquals(2, Updated.ForRole(TuiStyleRole.Warning).Foreground.Green);
+  AssertEquals(14, Updated.ForRole(TuiStyleRole.Title).Foreground.Index);
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.Warning).Foreground.Index)
+end.

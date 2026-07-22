@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/basics/arrays-intro.md`, `docs/pascal/std/collections/array/README.md` (from the repository root).
 
 mod array_locals;
+mod global_indexing;
 mod indexing;
 mod records;
 
@@ -31,6 +32,10 @@ impl Worker {
             }
             Op::IndexSet => {
                 self.exec_index_set(line)?;
+                Ok(true)
+            }
+            Op::GlobalIndexSet(name_idx, index_count) => {
+                self.exec_global_index_set(name_idx, index_count, line)?;
                 Ok(true)
             }
             Op::Contains => {
@@ -67,7 +72,7 @@ impl Worker {
 
     fn exec_make_array(&mut self, count: u16, line: SourceLocation) -> Result<(), VmError> {
         let elements = self.drain_stack_tail(count as usize, line)?;
-        self.push(Value::Array(elements))?;
+        self.push(Value::Array(elements.into()))?;
         Ok(())
     }
 

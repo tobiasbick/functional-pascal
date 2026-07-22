@@ -12,4 +12,4 @@ pub use intrinsic::{
     TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic, TuiIntrinsic,
 };
 pub use op::Op;
-pub use value::Value;
+pub use value::{SharedArray, Value};

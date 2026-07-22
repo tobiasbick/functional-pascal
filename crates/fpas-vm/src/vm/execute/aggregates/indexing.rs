@@ -133,7 +133,7 @@ fn string_contains_value(
     }
 }
 
-fn array_index_from_key(key: &Value, line: SourceLocation) -> Result<usize, VmError> {
+pub(super) fn array_index_from_key(key: &Value, line: SourceLocation) -> Result<usize, VmError> {
     match key {
         Value::Integer(n) => {
             if *n < 0 {
@@ -156,7 +156,11 @@ fn array_index_from_key(key: &Value, line: SourceLocation) -> Result<usize, VmEr
     }
 }
 
-fn index_operand_error(op_name: &str, collection: &Value, line: SourceLocation) -> VmError {
+pub(super) fn index_operand_error(
+    op_name: &str,
+    collection: &Value,
+    line: SourceLocation,
+) -> VmError {
     runtime_error(
         RUNTIME_VM_OPERAND_TYPE_MISMATCH,
         format!(

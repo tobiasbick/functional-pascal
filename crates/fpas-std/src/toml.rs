@@ -42,7 +42,7 @@ fn toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, String
             .into_iter()
             .map(|item| toml_to_fpas_at_depth(item, depth + 1))
             .collect::<Result<Vec<_>, _>>()
-            .map(|items| toml_variant("Array", vec![Value::Array(items)])),
+            .map(|items| toml_variant("Array", vec![Value::Array(items.into())])),
         TomlValue::Table(fields) => fields
             .into_iter()
             .map(|(key, value)| {
@@ -300,10 +300,9 @@ value = "ok"
     fn fpas_to_toml_accepts_container_at_depth_limit() {
         let value = toml_variant(
             "Array",
-            vec![Value::Array(vec![toml_variant(
-                "String",
-                vec![Value::Str("ok".into())],
-            )])],
+            vec![Value::Array(
+                vec![toml_variant("String", vec![Value::Str("ok".into())])].into(),
+            )],
         );
 
         assert!(fpas_to_toml_at_depth(value, loc(), MAX_TOML_DEPTH - 1).is_ok());
@@ -313,10 +312,9 @@ value = "ok"
     fn fpas_to_toml_rejects_container_child_beyond_depth_limit() {
         let value = toml_variant(
             "Array",
-            vec![Value::Array(vec![toml_variant(
-                "String",
-                vec![Value::Str("too deep".into())],
-            )])],
+            vec![Value::Array(
+                vec![toml_variant("String", vec![Value::Str("too deep".into())])].into(),
+            )],
         );
 
         let error = fpas_to_toml_at_depth(value, loc(), MAX_TOML_DEPTH).unwrap_err();

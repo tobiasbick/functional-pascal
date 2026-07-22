@@ -1,4 +1,8 @@
-# FPAS IDE
+# Legacy FPAS IDE source
+
+> **Retired.** This source targets the removed `Std.Tui` facade. It is not a
+> Tui3 application and must not be built, run, or tested. It remains only as
+> historical reference until the retired TUI stack is deleted.
 
 Turbo Vision desktop application under [`apps/ide/`](../../../apps/ide/). The IDE shell provides menu and status chrome; workspace state tracks the opened project or workspace root.
 

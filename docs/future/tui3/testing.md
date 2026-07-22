@@ -40,6 +40,24 @@ surface uses direct nested `array of TuiCell` rows with parallel continuation ro
 copy-on-write storage, and global indexed writes update the owned grid without rebuilding it; the
 full glyph array is constructed only by explicit `Snapshot` calls.
 
+## Phase 6.3 checkpoint
+
+Checkpoint (2026-07-22, Windows development build; retired IDE excluded):
+
+| Evidence | Result |
+| --- | --- |
+| Repeated-frame canary | 43 nodes (32 labels, 8 buttons, column, window, desktop); 100 frames each at 40×12 and 120×40; 32.20 s end to end. |
+| Complete Tui3 FPAS suite | 45 passed, 0 failed in 37.52 s. |
+| Terminal restoration | `cargo test -p fpas-std console::tests::interactive`: 3 passed. |
+| Rust workspace checkpoint | `cargo test --workspace`: passed in 109.8 s. |
+| Formatting | `cargo fmt --check` and `fpas fmt --check tests/stdlib/tui3 examples/pascal/tui3`: passed. |
+
+The repeated-frame canary traverses and paints new element trees without requesting a surface
+snapshot during the frame loop. It retains the Phase 0 ownership boundary: element traversal has
+no explicit full-tree clone, the working surface is copy-on-write storage, and `Snapshot` remains
+the only public full-grid copy. The current Tui3 documentation covers every public value, element,
+host operation, and interactive-terminal operation exported by `lib/Std/Tui3.fpas`.
+
 ## Determinism
 
 - Same display-width and clipping rules headless and live.

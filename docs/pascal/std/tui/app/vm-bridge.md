@@ -33,7 +33,7 @@ Pascal Application.* / View.* / Desktop.Add
 On every `turbo-vision` tag or revision bump in `Cargo.lock`:
 
 1. `fpas-std/build.rs` regenerates the selected `CM_*` values directly from upstream `core::command`. Update its explicit list only when the Pascal command-constant surface should grow or shrink.
-2. Run `fpas test tests/tui/` and `fpas test apps/ide/tests/`.
+2. Run `fpas test tests/tui/`. The retained `apps/ide/` source is legacy and has no test suite.
 
 After any bridge change, also run [terminal checklist](../terminal-checklist.md).
 

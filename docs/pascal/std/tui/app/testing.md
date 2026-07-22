@@ -32,7 +32,7 @@ begin
 end.
 ```
 
-Regression tests live under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/modals/`, `tests/tui/events/`, and `apps/ide/tests/`.
+Regression tests live under `tests/tui/views/`, `tests/tui/smoke/`, `tests/tui/modals/`, and `tests/tui/events/`. The retained `apps/ide/` source is legacy and has no test suite.
 
 ## Headless test helpers (`Std.Tui.Test.*`)
 

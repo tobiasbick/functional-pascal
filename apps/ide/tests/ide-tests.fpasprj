@@ -1,9 +1,0 @@
-[project]
-name = "ide-tests"
-kind = "test"
-
-[dependencies]
-workspace = ["ide-core"]
-
-[sources]
-include = ["**/*_test.fpas"]

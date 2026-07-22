@@ -97,8 +97,8 @@ Execute one task at a time from the phase files. Do not skip an architecture or 
 | 3 — Headless MVU hardening | [Phase 3](phases/phase-3-headless-runtime.md) | Phase 3 complete; Phase 4 complete. |
 | 4 — Controlled controls and application chrome | [Phase 4](phases/phase-4-controls.md) | Phase 4 complete; Phase 5 Gate 5.A is ready. |
 | 5 — Interactive terminal | [Phase 5](phases/phase-5-terminal.md) | Phase 5 complete. |
-| 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Blocked by Phase 5. |
-| 7 — Promote to `Std.Tui` | [Phase 7](phases/phase-7-promotion.md) | Blocked by promotion decision. |
+| 6 — Production-readiness gate | [Phase 6](phases/phase-6-readiness.md) | Complete; legacy IDE excluded. |
+| 7 — Promote to `Std.Tui` | [Phase 7](phases/phase-7-promotion.md) | Task 7.1 is ready. |
 
 ## Explicit non-work
 

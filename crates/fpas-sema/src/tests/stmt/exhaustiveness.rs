@@ -75,3 +75,27 @@ fn case_data_enum_missing_variant_is_non_exhaustive() {
         "expected non-exhaustive data-enum case, got: {errors:#?}"
     );
 }
+
+#[test]
+fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
+    let errors = check_errors(
+        "program T; \
+         type Tree = enum Leaf; Node(Left: Tree; Right: Tree); end; \
+         begin \
+           var T: Tree := Tree.Leaf; \
+           case T of \
+             Tree.Node(L, R): \
+               case L of \
+                 Tree.Node(A, B): return \
+               end; \
+             Tree.Leaf: return \
+           end \
+         end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_NON_EXHAUSTIVE_CASE),
+        "expected non-exhaustive nested case on recursive binding, got: {errors:#?}"
+    );
+}

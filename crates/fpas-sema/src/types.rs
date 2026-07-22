@@ -287,17 +287,20 @@ impl Ty {
             (Ty::Dict(k1, v1), Ty::Dict(k2, v2)) => {
                 k1.compatible_with(k2) && v1.compatible_with(v2)
             }
-            // Function and procedure structural compatibility: param count and element-wise
-            // type compatibility. This allows generic params inside function-typed parameters
-            // to unify with concrete types at call sites (e.g., `function(X: T): R` vs
-            // `function(X: integer): string` when T=integer, R=string).
+            // Function and procedure structural compatibility: variadic flag, param count,
+            // per-parameter mutability, and element-wise type compatibility. This allows
+            // generic params inside function-typed parameters to unify with concrete types
+            // at call sites (e.g., `function(X: T): R` vs `function(X: integer): string`
+            // when T=integer, R=string).
             (Ty::Function(a), Ty::Function(b)) => {
-                a.params.len() == b.params.len()
-                    && a.return_type.compatible_with(&b.return_type)
+                if a.variadic != b.variadic || a.params.len() != b.params.len() {
+                    return false;
+                }
+                a.return_type.compatible_with(&b.return_type)
                     && a.params
                         .iter()
                         .zip(b.params.iter())
-                        .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
+                        .all(|(pa, pb)| pa.mutable == pb.mutable && pa.ty.compatible_with(&pb.ty))
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
@@ -306,7 +309,7 @@ impl Ty {
                 a.params
                     .iter()
                     .zip(b.params.iter())
-                    .all(|(pa, pb)| pa.ty.compatible_with(&pb.ty))
+                    .all(|(pa, pb)| pa.mutable == pb.mutable && pa.ty.compatible_with(&pb.ty))
             }
             _ => self == other,
         }
@@ -364,7 +367,7 @@ impl Ty {
 mod tests {
     use std::sync::Arc;
 
-    use super::{EnumTy, ParamTy, ProcedureTy, RecordTy, Ty};
+    use super::{EnumTy, FunctionTy, ParamTy, ProcedureTy, RecordTy, Ty};
 
     #[test]
     fn cloning_record_type_shares_immutable_descriptor() {
@@ -424,5 +427,57 @@ mod tests {
 
         assert!(!fixed.compatible_with(&variadic));
         assert!(!variadic.compatible_with(&fixed));
+    }
+
+    #[test]
+    fn function_types_require_matching_variadic_flag() {
+        let fixed = Ty::Function(FunctionTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: false,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            return_type: Box::new(Ty::Integer),
+            variadic: false,
+        });
+        let variadic = Ty::Function(FunctionTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: false,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            return_type: Box::new(Ty::Integer),
+            variadic: true,
+        });
+
+        assert!(!fixed.compatible_with(&variadic));
+        assert!(!variadic.compatible_with(&fixed));
+    }
+
+    #[test]
+    fn callable_types_require_matching_param_mutability() {
+        let by_value = Ty::Procedure(ProcedureTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: false,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            variadic: false,
+        });
+        let by_ref = Ty::Procedure(ProcedureTy {
+            type_params: Vec::new(),
+            params: vec![ParamTy {
+                mutable: true,
+                name: "x".to_string(),
+                ty: Ty::Integer,
+            }],
+            variadic: false,
+        });
+
+        assert!(!by_value.compatible_with(&by_ref));
+        assert!(!by_ref.compatible_with(&by_value));
     }
 }

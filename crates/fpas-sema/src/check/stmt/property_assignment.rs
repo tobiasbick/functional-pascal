@@ -16,12 +16,20 @@ impl Checker {
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     pub(crate) fn check_assign_stmt(&mut self, target: &Designator, value: &Expr, span: Span) {
+        // Event/property probes type-check the peeled receiver. On a miss, discard
+        // diagnostics from the probe so an undefined base is not reported three times
+        // (event attempt + property attempt + normal path).
+        let event_checkpoint = self.errors.len();
         if self.try_check_event_assignment(target, value, span) {
             return;
         }
+        self.errors.truncate(event_checkpoint);
+
+        let property_checkpoint = self.errors.len();
         if self.try_check_property_assignment(target, value, span) {
             return;
         }
+        self.errors.truncate(property_checkpoint);
 
         let target_ty = self.check_designator_expr(target);
         let value_ty = self.check_expr(value);

@@ -8,39 +8,45 @@ impl Checker {
     /// Check that a `case` statement covers all variants of an enum, Result,
     /// or Option type. Arms with guard clauses do not count toward coverage.
     ///
+    /// Resolves `Ty::Named` aliases (recursive enum field bindings) via
+    /// `resolve_enum_ty` before matching, so nested cases on recursive-enum
+    /// bindings are checked for exhaustiveness.
+    ///
     /// **Documentation:** `docs/pascal/language/pattern-matching/exhaustiveness.md`
     pub(super) fn check_exhaustiveness(&mut self, case_ty: &Ty, arms: &[CaseArm], span: Span) {
-        match case_ty {
-            Ty::Enum(enum_ty) => {
-                let covered: Vec<&str> = arms
-                    .iter()
-                    .filter(|arm| arm.guard.is_none())
-                    .flat_map(|arm| &arm.labels)
-                    .filter_map(|label| match label {
-                        CaseLabel::Value { start, .. } => variant_name_from_expr(start),
-                        _ => None,
-                    })
-                    .collect();
-                let missing: Vec<&str> = enum_ty
-                    .variants
-                    .iter()
-                    .filter(|variant| {
-                        !covered
-                            .iter()
-                            .any(|covered_name| covered_name.eq_ignore_ascii_case(&variant.name))
-                    })
-                    .map(|variant| variant.name.as_str())
-                    .collect();
-                if !missing.is_empty() {
-                    let list = missing.join(", ");
-                    self.error_with_code(
-                        SEMA_NON_EXHAUSTIVE_CASE,
-                        format!("Non-exhaustive case: missing variant(s) {list}"),
-                        "Cover all variants or add an else branch.",
-                        span,
-                    );
-                }
+        if let Some(enum_ty) = self.resolve_enum_ty(case_ty) {
+            let covered: Vec<&str> = arms
+                .iter()
+                .filter(|arm| arm.guard.is_none())
+                .flat_map(|arm| &arm.labels)
+                .filter_map(|label| match label {
+                    CaseLabel::Value { start, .. } => variant_name_from_expr(start),
+                    _ => None,
+                })
+                .collect();
+            let missing: Vec<&str> = enum_ty
+                .variants
+                .iter()
+                .filter(|variant| {
+                    !covered
+                        .iter()
+                        .any(|covered_name| covered_name.eq_ignore_ascii_case(&variant.name))
+                })
+                .map(|variant| variant.name.as_str())
+                .collect();
+            if !missing.is_empty() {
+                let list = missing.join(", ");
+                self.error_with_code(
+                    SEMA_NON_EXHAUSTIVE_CASE,
+                    format!("Non-exhaustive case: missing variant(s) {list}"),
+                    "Cover all variants or add an else branch.",
+                    span,
+                );
             }
+            return;
+        }
+
+        match case_ty {
             Ty::Result(_, _) => {
                 let (mut has_ok, mut has_err) = (false, false);
                 for arm in arms.iter().filter(|arm| arm.guard.is_none()) {

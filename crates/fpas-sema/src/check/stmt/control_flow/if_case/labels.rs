@@ -341,7 +341,9 @@ impl Checker {
         if matches!(case_ty, Ty::Result(_, _) | Ty::Option(_)) {
             return None;
         }
-        if matches!(case_ty, Ty::Enum(enum_ty) if enum_ty.has_data()) {
+        // Resolve `Ty::Named` (recursive enum field bindings) the same way as
+        // `is_data_enum` in `check_case_stmt`.
+        if self.resolve_enum_ty(case_ty).is_some_and(EnumTy::has_data) {
             return None;
         }
 

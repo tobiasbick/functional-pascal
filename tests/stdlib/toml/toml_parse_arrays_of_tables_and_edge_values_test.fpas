@@ -16,17 +16,29 @@ begin
             begin
               AssertEquals(0, Std.Array.Length(Items))
             end
+            else
+            begin
+              Fail('Expected empty array')
+            end
           end;
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'special')) of
             TomlValue.Float(Number):
             begin
               AssertTrue(Number <> Number)
             end
+            else
+            begin
+              Fail('Expected float nan')
+            end
           end;
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'point')) of
             TomlValue.Table(Point):
             begin
               AssertEquals(2, Std.Dict.Length(Point))
+            end
+            else
+            begin
+              Fail('Expected point table')
             end
           end;
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'products')) of
@@ -41,7 +53,15 @@ begin
                     begin
                       AssertEquals('Hammer', Name)
                     end
+                    else
+                    begin
+                      Fail('Expected product name string')
+                    end
                   end
+                end
+                else
+                begin
+                  Fail('Expected first product table')
                 end
               end;
               case Products[1] of
@@ -52,9 +72,21 @@ begin
                     begin
                       AssertEquals('Nail', Name)
                     end
+                    else
+                    begin
+                      Fail('Expected product name string')
+                    end
                   end
                 end
+                else
+                begin
+                  Fail('Expected second product table')
+                end
               end
+            end
+            else
+            begin
+              Fail('Expected products array')
             end
           end
         end

@@ -33,6 +33,19 @@ fn assign_undefined_error() {
 }
 
 #[test]
+fn member_assign_undefined_receiver_reports_once() {
+    let errors = check_errors("program T; begin B.OnClick := 1 end.");
+    let unknown = errors
+        .iter()
+        .filter(|error| error.code == fpas_diagnostics::codes::SEMA_UNKNOWN_NAME)
+        .count();
+    assert_eq!(
+        unknown, 1,
+        "expected a single undefined-identifier diagnostic, got: {errors:#?}"
+    );
+}
+
+#[test]
 fn assign_to_array_element_ok() {
     check_ok(
         "program T; \

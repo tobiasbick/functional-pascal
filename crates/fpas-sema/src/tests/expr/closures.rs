@@ -60,3 +60,38 @@ end.",
         "shadowed block local created captures: {closures:#?}"
     );
 }
+
+#[test]
+fn closure_scalar_case_guard_binding_does_not_capture_shadowed_outer() {
+    let (program, parse_errors) = fpas_parser::parse(
+        "program T;
+begin
+  mutable var M: integer := 0;
+  var N: integer := 1;
+  var F: procedure() :=
+    procedure()
+    begin
+      case N of
+        M if M > 0: return
+      end
+    end;
+  go F()
+end.",
+    );
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+
+    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
+    assert!(errors.is_empty(), "{errors:#?}");
+    assert_eq!(closures.len(), 1);
+    let info = closures.values().next().expect("closure info");
+    assert!(
+        info.captures
+            .iter()
+            .all(|capture| !capture.name.eq_ignore_ascii_case("M")),
+        "scalar guard binding spuriously captured outer M: {info:#?}"
+    );
+    assert!(
+        !info.task_bound,
+        "closure should not be task-bound from a shadowed mutable: {info:#?}"
+    );
+}

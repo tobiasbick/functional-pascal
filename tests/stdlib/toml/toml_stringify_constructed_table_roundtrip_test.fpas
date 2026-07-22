@@ -24,19 +24,35 @@ begin
                 begin
                   AssertEquals('demo', Name)
                 end
+                else
+                begin
+                  Fail('Expected project name string')
+                end
               end;
               case Std.Option.Unwrap(Std.Dict.Get(Project, 'released')) of
                 TomlValue.Datetime(Date):
                 begin
                   AssertEquals('2026-07-14', Date)
                 end
+                else
+                begin
+                  Fail('Expected project released datetime')
+                end
               end
+            end
+            else
+            begin
+              Fail('Expected project table')
             end
           end;
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'targets')) of
             TomlValue.Array(Targets):
             begin
               AssertEquals(2, Std.Array.Length(Targets))
+            end
+            else
+            begin
+              Fail('Expected targets array')
             end
           end
         end

@@ -160,5 +160,4 @@ Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/mat
 
 ## See also
 
-- [`Std.Tui`](../tui/README.md) — Turbo Vision widget applications
 - [Standard library index](../README.md)

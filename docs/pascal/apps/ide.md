@@ -4,7 +4,7 @@
 > Tui3 application and must not be built, run, or tested. It remains only as
 > historical reference until the retired TUI stack is deleted.
 
-Turbo Vision desktop application under [`apps/ide/`](../../../apps/ide/). The IDE shell provides menu and status chrome; workspace state tracks the opened project or workspace root.
+Legacy desktop application source under [`apps/ide/`](../../../apps/ide/). The shell provides menu and status chrome; workspace state tracks the opened project or workspace root.
 
 ## Workspace modules
 
@@ -54,4 +54,3 @@ Display-only in the current scope: no file activation, editor, refresh, or arbit
 
 - [Projects](../program-structure/projects.md) — manifest fields used by the loader
 - [Workspaces](../program-structure/workspaces.md)
-- [`Std.Tui` application facade](../std/tui/app/README.md)

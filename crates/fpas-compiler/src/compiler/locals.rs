@@ -187,11 +187,6 @@ impl Compiler {
         self.register_enum_variants(s::STD_CONSOLE_MOUSE_BUTTON, MOUSE_BUTTON_VARIANTS);
     }
 
-    pub(super) fn register_std_tui_enums(&mut self) {
-        // `Std.Tui` callbacks use `Std.Console.KeyEvent` for keyboard input.
-        self.register_enum_variants(s::STD_CONSOLE_KEY_KIND, KEY_KIND_VARIANTS);
-    }
-
     pub(super) fn register_std_json_enum(&mut self) {
         self.register_data_enum_variants(
             s::STD_JSON_VALUE,

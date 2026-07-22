@@ -50,7 +50,6 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_tui2, "tests/stdlib/tui2/"),
     (fpas_suite_concurrency, "tests/concurrency/"),
     (fpas_suite_console, "tests/console/"),
-    (fpas_suite_tui, "tests/tui/"),
     (fpas_suite_graph, "tests/graph/"),
 }
 

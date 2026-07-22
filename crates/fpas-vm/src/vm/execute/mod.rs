@@ -8,9 +8,6 @@ mod numeric;
 mod result_option;
 mod stack_scope;
 
-pub(in crate::vm) use io::HeadlessTvApp;
-pub(in crate::vm) use io::TurboVisionSession;
-
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};

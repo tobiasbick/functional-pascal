@@ -24,7 +24,6 @@ pub mod task;
 pub mod test;
 pub mod time;
 pub mod toml;
-pub mod tui;
 
 pub use args::ArgsIntrinsic;
 pub use array::ArrayIntrinsic;
@@ -47,7 +46,6 @@ pub use task::TaskIntrinsic;
 pub use test::TestIntrinsic;
 pub use time::TimeIntrinsic;
 pub use toml::TomlIntrinsic;
-pub use tui::TuiIntrinsic;
 
 /// VM intrinsic opcode payload (`Op::Intrinsic(u16::from(self))`).
 ///
@@ -74,7 +72,6 @@ pub enum Intrinsic {
     Task(TaskIntrinsic),
     Time(TimeIntrinsic),
     Toml(TomlIntrinsic),
-    Tui(TuiIntrinsic),
     Test(TestIntrinsic),
 }
 
@@ -125,7 +122,6 @@ intrinsic_wire_ops!(
     Task(TaskIntrinsic),
     Time(TimeIntrinsic),
     Toml(TomlIntrinsic),
-    Tui(TuiIntrinsic),
     Test(TestIntrinsic),
 );
 

@@ -37,7 +37,7 @@ If a file also references console-side names such as `Std.Console.KeyKind.*`, `S
 - one native window per process
 - `Application.Configure` + `Application.Run` with `On*` handlers
 - drawing via runtime backbuffer, bulk `UploadFrame`, or immediate-mode helpers inside `OnPaint`
-- shared internal event normalization with `Std.Tui` via `UiHost` / `UiEvent` in Rust
+- shared internal event normalization via `UiHost` / `UiEvent` in Rust
 
 Current runtime constraints:
 

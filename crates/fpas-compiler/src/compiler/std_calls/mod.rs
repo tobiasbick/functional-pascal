@@ -23,7 +23,6 @@ mod task;
 mod test;
 mod time;
 mod toml;
-mod tui;
 
 use crate::error::CompileError;
 use fpas_bytecode::SourceLocation;
@@ -55,9 +54,6 @@ impl Compiler {
             return Ok(true);
         }
         if self.compile_console_call(name, args, location)? {
-            return Ok(true);
-        }
-        if self.compile_tui_call(name, args, location)? {
             return Ok(true);
         }
         if self.compile_graph_call(name, args, location)? {

@@ -23,7 +23,6 @@ pub(crate) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         console: Mutex::new(Console::new()),
         text_input: Mutex::new(TextInput::new()),
         key_input: Mutex::new(KeyInput::new()),
-        tui: Mutex::new(Default::default()),
         graph: Mutex::new(GraphState::default()),
         shutdown: AtomicBool::new(false),
         abort_spawned_bytecode: AtomicBool::new(false),

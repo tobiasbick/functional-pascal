@@ -12,10 +12,6 @@ mod graph;
 mod graph_run;
 mod hosted_common;
 mod test_host;
-mod tui;
-
-pub(in crate::vm) use tui::HeadlessTvApp;
-pub(in crate::vm) use tui::TurboVisionSession;
 
 impl Worker {
     pub(super) fn try_exec_io(&mut self, op: Op, line: SourceLocation) -> Result<bool, VmError> {
@@ -43,9 +39,6 @@ impl Worker {
                     return Ok(true);
                 }
                 if self.try_exec_args_intrinsic(intrinsic, line)? {
-                    return Ok(true);
-                }
-                if self.try_exec_tui_intrinsic(intrinsic, line)? {
                     return Ok(true);
                 }
                 if self.try_exec_graph_intrinsic(intrinsic, line)? {

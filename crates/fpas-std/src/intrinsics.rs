@@ -1,5 +1,5 @@
 //! Dispatches `Op::Intrinsic` to unit modules (`env`, `str`, `conv`, `math`, `random`, `array`, `result_option`, `dict`).
-//! Console, TUI, task wait, and higher-order (callback) intrinsics are handled in `fpas-vm`, not here.
+//! Console, task wait, and higher-order (callback) intrinsics are handled in `fpas-vm`, not here.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root).
 //! **Maintenance:** When adding or rerouting intrinsics, update the README, the relevant unit `.md` file,
@@ -23,7 +23,7 @@ use crate::time;
 use crate::toml;
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
-    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, TuiIntrinsic, Value,
+    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
 };
 
 type StdUnitDispatch =
@@ -152,16 +152,9 @@ pub fn run_intrinsic(
             | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnMouse)
             | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnWheel)
             | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnCloseRequested)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationOpen)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationClose)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationSize)
-            | Intrinsic::Tui(TuiIntrinsic::ApplicationRun)
-            | Intrinsic::Tui(TuiIntrinsic::OpenForTest)
-            | Intrinsic::Tui(TuiIntrinsic::CloseForTest)
-            | Intrinsic::Tui(_)
     ) {
         return Err(std_internal_error(
-            "internal: Std.Args, Std.Console, Std.Graph, and Std.Tui intrinsics are handled in the VM",
+            "internal: Std.Args, Std.Console, and Std.Graph intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));
@@ -252,7 +245,7 @@ mod vm_only_guard_tests {
         )
         .expect_err("expected internal error");
         assert!(
-            err.message.contains("Std.Console, Std.Graph, and Std.Tui"),
+            err.message.contains("Std.Console, and Std.Graph"),
             "message={}",
             err.message
         );
@@ -267,7 +260,7 @@ mod vm_only_guard_tests {
         )
         .expect_err("expected internal error");
         assert!(
-            err.message.contains("Std.Console, Std.Graph, and Std.Tui"),
+            err.message.contains("Std.Console, and Std.Graph"),
             "message={}",
             err.message
         );

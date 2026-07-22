@@ -6,7 +6,7 @@ Until Gate 6.C passes, do not execute any Phase 7 task and do not document Tui3 
 
 ## Task 7.1 — Freeze the exact migration manifest
 
-**Status:** blocked by Gate 6.C.
+**Status:** complete.
 
 Turn Task 6.1's inventory into an exact rename/delete manifest. It must include:
 
@@ -21,6 +21,9 @@ Turn Task 6.1's inventory into an exact rename/delete manifest. It must include:
 
 No deletion occurs in this task.
 
+Completed in [promotion-manifest.md](../promotion-manifest.md). The explicitly retained
+`apps/ide/` legacy source is excluded from migration checks and remains non-buildable.
+
 ## Gate 7.A — Approve destructive migration
 
 **Status:** human gate.
@@ -32,15 +35,19 @@ targets return to Task 7.1.
 
 ## Task 7.2 — Remove the Turbo Vision `Std.Tui` implementation
 
-**Status:** blocked by Gate 7.A.
+**Status:** complete.
 
 Delete exactly the approved production facade and VM bridge files, their dedicated tests/docs, and
 the `turbo-vision` dependency only if the manifest proves no remaining consumer. Remove all related
 intrinsic enum/decoder/completeness entries in the same change. Do not leave compatibility aliases.
 
+The only recovered common code is the hosted callback-record validation now owned by
+`crates/fpas-vm/src/vm/execute/io/hosted_common.rs`, because `Std.Graph` uses it. The legacy
+`apps/ide/` source remains explicitly excluded and non-buildable.
+
 ## Task 7.3 — Remove `Std.Tui2`
 
-**Status:** blocked by Task 7.2.
+**Status:** ready.
 
 Delete exactly the approved Tui2 units, tests, docs, examples, and manifest rows. Verify the
 approved reference queries before continuing.

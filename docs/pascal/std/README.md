@@ -32,7 +32,6 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
-| Terminal UI | [tui/](tui/README.md) | Turbo Vision application facade ([upstream](https://github.com/aovestdipaperino/turbo-vision-4-rust)), controls, command dispatch; contributor bridge map in [vm-bridge.md](tui/app/vm-bridge.md) |
 | Terminal UI 2 | [tui2/](tui2/README.md) | Source-level geometry values and half-open rectangle operations |
 | Terminal UI 3 | [tui3/](tui3/README.md) | Experimental MVU element trees, deterministic headless routing and snapshots |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
@@ -54,36 +53,6 @@ NormVideo();
 
 Fullscreen code can batch explicit cells with `BeginFrame`, `WriteCells`, and `Present`; see
 [Cells and frames](console/cells-frames.md).
-
-### TUI application shell
-
-```pascal
-uses Std.Tui;
-
-procedure OnCommand(App: Application; Cmd: integer);
-begin
-  if Cmd = CM_QUIT then
-    Application.Quit(App)
-end;
-
-begin
-  var App: Application := Application.Open();
-  var Dlg: Dialog := Dialog.NewModal(
-    record x := 10; y := 5; width := 40; height := 10 end,
-    'Hello'
-  );
-  var OkButton: Button := Button.New(
-    record x := 12; y := 7; width := 10; height := 1 end,
-    '~O~k',
-    CM_OK,
-    true
-  );
-  Dialog.Add(Dlg, OkButton);
-  Application.Run(App, OnCommand)
-end.
-```
-
-See [Application](tui/app/README.md) for the full Turbo Vision API, [Dialogs and windows](tui/app/modals.md) for custom vs standard modals, and [Handlers](tui/app/handlers.md) for command callbacks.
 
 ### Error handling helpers
 

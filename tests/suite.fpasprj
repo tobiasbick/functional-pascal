@@ -8,6 +8,5 @@ include = [
   "concurrency/**/*_test.fpas",
   "runner/**/*_test.fpas",
   "console/**/*_test.fpas",
-  "tui/**/*_test.fpas",
   "graph/**/*_test.fpas",
 ]

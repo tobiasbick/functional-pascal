@@ -19,9 +19,6 @@ unicode-width = { workspace = true }
 unicode-segmentation = { workspace = true }
 winit = { workspace = true }
 
-[build-dependencies]
-turbo-vision = { workspace = true }
-
 [lints]
 workspace = true
 

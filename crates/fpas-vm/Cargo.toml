@@ -10,7 +10,6 @@ repository.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }
-turbo-vision = { workspace = true }
 
 [lints]
 workspace = true

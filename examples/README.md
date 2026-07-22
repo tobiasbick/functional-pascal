@@ -31,7 +31,6 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
-| `tests/tui/` | Headless Turbo Vision (`views/`, `events/`, `smoke/`, `modals/` — `OpenForTest`, `TestClickButton`, `Application.Run`, `AssertScreenCell`, …) |
 | `tests/graph/` | Headless graph smoke + pixel golden |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
@@ -144,15 +143,6 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
-| `pascal/tui/turbo_vision_dialog.fpas` | `Std.Tui` — window with controls, menu bar, status line, `Run(App, OnCommand)` |
-| `pascal/tui/turbo_vision_outline.fpas` | `Std.Tui` — outline tree in a window |
-| `pascal/tui/turbo_vision_window.fpas` | `Std.Tui` — window, static text, input line, menu/status chrome |
-| `pascal/tui/exec_dialog.fpas` | `Std.Tui` — modal `ExecView` with `InputLine.Text` / `CheckBox.Checked` read-back |
-| `pascal/tui/modal_button.fpas` | `Std.Tui` — `Dialog.NewModal`, `Button.New`, `ExecView` |
-| `pascal/tui/message_box.fpas` | `Std.Tui` — upstream message box helper and `CM_OK` result |
-| `pascal/tui/file_dialog.fpas` | `Std.Tui` — upstream file dialog helper |
-| `pascal/tui/runtime_setters.fpas` | `Std.Tui` — live `StaticText.SetText` / `CheckBox.SetChecked` from `OnCommand` during `Run` |
-| `pascal/tui/mouse_toggle_smoke.fpas` | `Std.Tui` — interactive mouse read-back smoke for checkbox/radio |
 
 All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table below.
 
@@ -175,7 +165,7 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-`apps/ide/` is a Turbo Vision-backed IDE shell organized by theme under `src/` (`shell/`, `ui/`, `dialog/`, `workspace/`). Units use the `Ide.*` namespace (for example `Ide.Ui.Menu`, `Ide.Workspace.Session`). **File → Open** accepts `.fpas`, `.fpasprj`, and `.fpasworkspace` paths; the IDE keeps an in-memory session (one workspace or project root plus open source files) and reflects it in the status line. It uses [`Std.Tui`](../docs/pascal/std/tui/README.md) over [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust). Run with `cargo run -p fpas-cli -- run apps/ide/ide.fpasprj`.
+`apps/ide/` is retained legacy source only. It targets the removed `Std.Tui` facade and must not be built, run, or tested; see [`apps/ide/README.md`](../apps/ide/README.md).
 
 ## Interactive demos (terminal)
 
@@ -183,19 +173,10 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 
 | Path | Notes |
 |------|--------|
-| `pascal/tui/turbo_vision_dialog.fpas` | Window with list box and controls; Quit exits |
-| `pascal/tui/turbo_vision_outline.fpas` | Outline tree in a window; Close exits |
-| `pascal/tui/turbo_vision_window.fpas` | Window with menu bar, status line, input line; Quit exits |
-| `pascal/tui/exec_dialog.fpas` | Modal dialog; OK/Cancel closes, entered name printed after |
-| `pascal/tui/modal_button.fpas` | Modal; OK/Cancel via mouse or Enter/Esc |
-| `pascal/tui/message_box.fpas` | Message box; OK closes and prints the result |
-| `pascal/tui/file_dialog.fpas` | File dialog; choose a file or cancel |
-| `pascal/tui/runtime_setters.fpas` | Window; Toggle updates label/check box live, Quit exits |
-| `pascal/tui/mouse_toggle_smoke.fpas` | Interactive mouse read-back smoke for checkbox/radio (manual terminal check) |
 | `math/mandelbrot/mandelbrot.fpasprj` | Fullscreen terminal Mandelbrot explorer (`Std.Console`) |
 | `math/julia/julia.fpasprj` | Fullscreen terminal Julia explorer; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |
 | `math/newton/newton.fpasprj` | Fullscreen terminal Newton basins for `z^3-1` |
 
-Automated Turbo Vision coverage is under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.
+Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.

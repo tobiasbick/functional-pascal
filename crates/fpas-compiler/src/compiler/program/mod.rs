@@ -8,7 +8,7 @@ use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
 use fpas_parser::{Decl, Program, TypeBody};
 
-use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TOML, STD_UNIT_TUI};
+use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TOML};
 
 use super::{Compiler, canonical_name};
 
@@ -27,9 +27,6 @@ impl Compiler {
     pub fn compile_program(&mut self, program: &Program) -> Result<(), CompileError> {
         if Self::program_uses_std_unit(program, STD_UNIT_CONSOLE) {
             self.register_std_console_enums();
-        }
-        if Self::program_uses_std_unit(program, STD_UNIT_TUI) {
-            self.register_std_tui_enums();
         }
         if Self::program_uses_std_unit(program, STD_UNIT_JSON) {
             self.register_std_json_enum();

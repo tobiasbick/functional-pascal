@@ -1,6 +1,6 @@
 //! Shared hosted-application event queue and resize coalescing.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md`, `docs/pascal/std/graph/app/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/graph/app/README.md` (from the repository root).
 
 use super::event::{UiEvent, UiResize};
 use std::collections::VecDeque;
@@ -10,7 +10,7 @@ type TraceFn = fn(&str);
 /// Selects which [`UiEvent`] variants a hosted loop accepts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UiHostSurface {
-    /// Terminal (`Std.Tui`): keys, mouse, paste, focus, resize.
+    /// Terminal surface: keys, mouse, paste, focus, resize.
     Terminal,
     /// Native window (`Std.Graph`): keys, mouse, wheel, close, resize.
     Graph,

@@ -33,12 +33,6 @@ macro_rules! std_time {
         concat!("Std.Time.", $suffix)
     };
 }
-macro_rules! std_tui {
-    ($suffix:literal) => {
-        concat!("Std.Tui.", $suffix)
-    };
-}
-
 macro_rules! std_graph {
     ($suffix:literal) => {
         concat!("Std.Graph.", $suffix)
@@ -131,7 +125,6 @@ mod task;
 mod test;
 mod time;
 mod toml;
-mod tui;
 
 pub use args::*;
 pub use array::*;
@@ -154,4 +147,3 @@ pub use task::*;
 pub use test::*;
 pub use time::*;
 pub use toml::*;
-pub use tui::*;

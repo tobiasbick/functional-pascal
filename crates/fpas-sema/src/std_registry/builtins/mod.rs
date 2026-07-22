@@ -4,10 +4,8 @@ mod dict;
 mod math;
 mod result_option;
 mod test;
-mod tui;
 
 pub(super) use test::register_assert_equals_builtin;
-pub(super) use tui::register_tui_builtins;
 
 use crate::check::Checker;
 use crate::types::Ty;
@@ -32,9 +30,6 @@ pub fn check_builtin_std_call(c: &mut Checker, name: &str, args: &[Expr], span: 
         return ty;
     }
     if let Some(ty) = test::check_test_builtin_std_call(c, name, args, span) {
-        return ty;
-    }
-    if let Some(ty) = tui::check_tui_builtin_std_call(c, name, args, span) {
         return ty;
     }
 

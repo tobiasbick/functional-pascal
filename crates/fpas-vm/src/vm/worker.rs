@@ -7,9 +7,6 @@ use super::shared::{SharedState, TaskState};
 use super::{CallFrame, STACK_MAX, TIMESLICE};
 use fpas_bytecode::{SourceLocation, Value};
 use std::sync::Arc;
-use turbo_vision::app::Application as TurboVisionApplication;
-
-use super::execute::{HeadlessTvApp, TurboVisionSession};
 
 /// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
 ///
@@ -31,12 +28,6 @@ pub(crate) struct Worker {
     pub task_suspended: bool,
     /// Allows specific synchronous cleanup callbacks to run during global shutdown.
     pub allow_shutdown_during_sync_call: bool,
-    /// Live turbo-vision application for the main task (not `Send`; main worker only).
-    pub live_turbo_vision_app: Option<TurboVisionApplication>,
-    /// Headless turbo-vision draw session for `OpenForTest` (main worker only).
-    pub(in crate::vm) headless_tv_app: Option<HeadlessTvApp>,
-    /// TUI bridge: Rust-owned view registry (see `docs/pascal/std/tui/app/vm-bridge.md`).
-    pub(in crate::vm) bridge: TurboVisionSession,
 }
 
 impl Worker {
@@ -61,9 +52,6 @@ impl Worker {
             sync_call_depth: 0,
             task_suspended: false,
             allow_shutdown_during_sync_call: false,
-            live_turbo_vision_app: None,
-            headless_tv_app: None,
-            bridge: TurboVisionSession::default(),
         }
     }
 
@@ -82,9 +70,6 @@ impl Worker {
             sync_call_depth: 0,
             task_suspended: false,
             allow_shutdown_during_sync_call: false,
-            live_turbo_vision_app: None,
-            headless_tv_app: None,
-            bridge: TurboVisionSession::default(),
         }
     }
 

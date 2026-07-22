@@ -17,4 +17,3 @@ mod path;
 mod str_ops;
 mod test;
 mod time;
-mod tui;

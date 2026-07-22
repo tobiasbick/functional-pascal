@@ -9,5 +9,3 @@ mod numeric;
 mod stack;
 mod string_index;
 mod sync_call_halt;
-mod tui_spec_links;
-mod tui_turbo_vision_vm;

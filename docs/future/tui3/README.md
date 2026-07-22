@@ -91,6 +91,7 @@ pass feasibility and promotion gates
 | [runtime-boundary.md](runtime-boundary.md) | Main task, commands, errors, terminal cleanup. |
 | [testing.md](testing.md) | Headless contracts and assertion levels. |
 | [production-inventory.md](production-inventory.md) | Phase 6.1 classification of retained and migration-owned TUI paths. |
+| [promotion-manifest.md](promotion-manifest.md) | Exact Phase 7 deletion, modification, and rename targets. |
 | [implementation-phases.md](implementation-phases.md) | Execution rules, current baseline, phase index, and gates. |
 | [`phases/`](phases/) | Small file-scoped task cards for Phases 1–7. |
 

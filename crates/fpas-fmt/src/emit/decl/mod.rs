@@ -128,24 +128,4 @@ end.",
             "formatted:\n{formatted}"
         );
     }
-
-    #[test]
-    fn unit_shell_private_state_round_trip() {
-        let source = include_str!("../../../../../apps/ide/src/shell/shell.fpas");
-        let (unit, errors) = parse_compilation_unit(source);
-        assert!(errors.is_empty(), "{errors:?}");
-        let fpas_parser::CompilationUnit::Unit(unit) = unit else {
-            panic!("expected unit");
-        };
-        let formatted = format_decls(&unit.declarations);
-        let (_, errors) = parse_compilation_unit(&format!(
-            "unit Ide.Shell;\nuses Ide.Dialog, Ide.Menu, Ide.Status, Std.Tui;\n\n{formatted}"
-        ));
-        assert!(
-            errors.is_empty(),
-            "{errors:?}\n--- formatted ---\n{formatted}"
-        );
-        assert!(formatted.contains("private mutable var LastCommand"));
-        assert!(!formatted.contains("mutable var\n  private"));
-    }
 }

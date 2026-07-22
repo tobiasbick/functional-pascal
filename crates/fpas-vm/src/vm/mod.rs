@@ -19,14 +19,11 @@ mod execute;
 mod helpers;
 mod shared;
 mod shutdown;
-mod turbo_vision_bool_cell;
-mod turbo_vision_input_text_cell;
-mod turbo_vision_list_selection_cell;
 mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TaskTimers, TuiState};
+pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TaskTimers};
 pub use shutdown::VmShutdownHandle;
 pub(crate) use worker::Worker;
 
@@ -149,7 +146,6 @@ impl Vm {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
-            tui: Mutex::new(TuiState::default()),
             graph: Mutex::new(GraphState::default()),
             shutdown: AtomicBool::new(false),
             abort_spawned_bytecode: AtomicBool::new(false),

@@ -4,7 +4,7 @@
 //!
 //! ## Lock ordering
 //!
-//! Independent mutexes (`task_queue`, `task_results`, `console`, `text_input`, `key_input`, `tui`, `graph`)
+//! Independent mutexes (`task_queue`, `task_results`, `console`, `text_input`, `key_input`, `graph`)
 //! each protect a single concern. **Do not acquire more than one of these locks at the same time**
 //! from VM or intrinsic code unless the order is documented here and consistently followed.
 //! [`RwLock`] on `globals` is separate; avoid holding `globals` while waiting on `task_available`.
@@ -27,15 +27,10 @@ use std::time::Duration;
 
 mod graph;
 mod timers;
-mod tui;
 
 pub(crate) use timers::TaskTimers;
 
 pub(crate) use graph::GraphState;
-pub(crate) use tui::{
-    TuiState, TurboVisionMenu, TurboVisionMenuItem, TurboVisionOutlineNode, TurboVisionRect,
-    TurboVisionStatusItem,
-};
 
 pub(crate) enum TaskResultPoll {
     Pending,
@@ -88,8 +83,6 @@ pub(crate) struct SharedState {
     pub text_input: Mutex<TextInput>,
     /// CRT-style keyboard buffer.
     pub key_input: Mutex<KeyInput>,
-    /// Minimal shared `Std.Tui` application/session state.
-    pub tui: Mutex<TuiState>,
     /// Minimal shared `Std.Graph` application/session state.
     pub graph: Mutex<GraphState>,
 

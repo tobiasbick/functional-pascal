@@ -66,7 +66,7 @@ Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffere
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
-Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console` or after a headless `Std.Tui` run or modal path has rendered. Requires `uses Std.Console`.
+Fail with **F4023** when row `Y` (one-based) of the virtual CRT back buffer does not equal `Expected`. Use after drawing with `Std.Console`. Requires `uses Std.Console`.
 
 ### `procedure AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)`
 
@@ -112,7 +112,7 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md).
 Run `fpas test` from the **repository root**. Relative filesystem fixtures written by tests use that process working directory.
 
 For compatible tests, the runner compiles bounded groups into one in-memory bytecode image. Each
-test still receives a fresh VM, globals, console, TUI/graph state, timeout, and golden-file
+test still receives a fresh VM, globals, console, graph state, timeout, and golden-file
 evaluation. Tests with module-level declarations, project hooks, or a different unit/import
 environment stay on the single-program path. Bundle failures also fall back to individual
 compilation so diagnostics remain test-local. These images exist only for the current `fpas test`
@@ -133,7 +133,6 @@ Rust unit tests that need temporary files should keep using `std::env::temp_dir(
 | Need | Native API |
 | ---- | ---------- |
 | `ReadLn` input | `Std.Test.PushReadLn` |
-| Headless Turbo Vision | `Application.OpenForTest`, `Test.Click`, `Test.DispatchMenu`, `Test.InjectCommand`, `Test.InjectKeyboard`, `Application.Run` (`docs/pascal/std/tui/app/testing.md`) |
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 | Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
@@ -151,7 +150,7 @@ After a successful test run, `fpas test` may compare optional golden files besid
 | Sidecar | Compares | Typical use |
 |---------|----------|-------------|
 | `<test>.expect.stdout` | Captured `WriteLn` lines | Console output |
-| `<test>.expect.screen` | Compact CRT screen rows | `Std.Console` or headless Turbo Vision paint |
+| `<test>.expect.screen` | Compact CRT screen rows | `Std.Console` paint |
 | `<test>.expect.pixels` | Headless graph frame spot checks (`x y 0xRRGGBB`) | `Std.Graph` after `Present` |
 
 Golden sidecars are documented here because they are runner-side checks, not `Std.Test`
@@ -168,8 +167,6 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`tui/smoke/run_quit_test.fpas`](../../../../tests/tui/smoke/run_quit_test.fpas) | Headless Turbo Vision bridge `Application.Run` |
-| [`tui/smoke/chrome_paint_test.fpas`](../../../../tests/tui/smoke/chrome_paint_test.fpas) | Menu/status chrome + `AssertScreenCell` |
 | [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 

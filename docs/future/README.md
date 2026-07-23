@@ -10,7 +10,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
-| Libraries | [Library export model](libraries.md) | Finer per-symbol exports and re-export rules beyond current unit exports |
+| Libraries | [Compiled-unit architecture](libraries.md), [implementation plan](libraries-implementation-plan.md) | Source-adjacent `.fpascu` unit objects, incremental compilation, linking, and later finer exports |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Compiler panics and source-level language constraints found during implementation |
 | Language | [Opaque records](opaque-records.md) | Representation hiding and unforgeable transient capabilities |
 

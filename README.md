@@ -220,8 +220,10 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 
 ## Contributing
 
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
+
 - Language spec: [`docs/pascal/`](docs/pascal/) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
-- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md), [`AGENTS.md`](AGENTS.md), and project skills under [`.agents/skills/`](.agents/skills/) (`fpas-authoring`, `fpas-projects`, `fpas-change-checklist`)
+- Agents: [`AGENTS.md`](AGENTS.md) and skills under [`.agents/skills/`](.agents/skills/)
 - Examples: [`examples/README.md`](examples/README.md)
 - FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
 - Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant

@@ -189,6 +189,11 @@ The host acquires `Std.Console` interactive ownership before the first render an
 `Update` returns `TuiCmd.Quit`. `Std.Console` owns raw mode, alternate-screen, input-feature, and
 cursor rollback. Use `RunIterations` and `OpenForTest` for non-interactive regression tests.
 
+The first terminal frame transfers the complete logical surface. Later frames compare glyphs,
+semantic style roles, and wide-glyph continuation positions with the last presented surface.
+Adjacent changed positions are transferred as damage runs; an unchanged frame performs no
+`Std.Console` frame write.
+
 ## Headless frame and routing order
 
 `RunIterations` renders an initial frame before consuming its iteration budget. Every processed

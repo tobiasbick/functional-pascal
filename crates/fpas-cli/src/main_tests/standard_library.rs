@@ -105,6 +105,131 @@ fn source_standard_library_is_copied_beside_the_cli_binary() {
     assert_eq!(stdout, "0.0.1\n");
 }
 
+#[test]
+fn tui_terminal_renderer_skips_unchanged_frames_and_flushes_damage() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root");
+    let cwd = create_temp_dir("tui-terminal-damage");
+    let library = cwd.join("library");
+    let source_glob = root
+        .join("lib/Std/**/*.fpas")
+        .to_string_lossy()
+        .replace('\\', "/");
+    write_text(
+        &library.join("stdlib.fpasprj"),
+        &format!(
+            r#"[project]
+name = "tui-terminal-renderer-test"
+kind = "library"
+
+[exports]
+units = ["Std.Tui", "Std.Version", "Std.Tui.Runtime.TerminalRenderer"]
+
+[sources]
+include = ["{source_glob}"]
+"#
+        ),
+    );
+
+    let once = cwd.join("once.fpas");
+    write_text(
+        &once,
+        r#"program FlushOnce;
+
+uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+
+begin
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  TuiFlushSurface(Surface)
+end.
+"#,
+    );
+    let unchanged = cwd.join("unchanged.fpas");
+    write_text(
+        &unchanged,
+        r#"program FlushUnchanged;
+
+uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+
+begin
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  TuiFlushSurface(Surface);
+  TuiFlushSurface(Surface)
+end.
+"#,
+    );
+    let changed = cwd.join("changed.fpas");
+    write_text(
+        &changed,
+        r#"program FlushChanged;
+
+uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+
+begin
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
+  TuiFlushSurface(Surface);
+  Surface.PutGlyph(1, 0, 'X');
+  TuiFlushSurface(Surface)
+end.
+"#,
+    );
+    let wide = cwd.join("wide.fpas");
+    write_text(
+        &wide,
+        r#"program FlushWideTransition;
+
+uses
+  Std.Console, Std.Option, Std.Test, Std.Tui, Std.Tui.Runtime.TerminalRenderer;
+
+begin
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
+  Surface.PutCell(TuiPoint.Create(1, 0), TuiCell.Create('中', TuiStyleRole.Accent));
+  TuiFlushSurface(Surface);
+  Surface.PutGlyph(2, 0, 'X');
+  TuiFlushSurface(Surface);
+  AssertEquals(' ', Std.Option.Unwrap(GetCell(2, 1)).glyph);
+  AssertEquals('X', Std.Option.Unwrap(GetCell(3, 1)).glyph)
+end.
+"#,
+    );
+
+    let run = |program: &Path| {
+        support::run_cli_args_and_capture_output(
+            &[
+                String::from("run"),
+                String::from("--std-lib"),
+                library.to_string_lossy().into_owned(),
+                program.to_string_lossy().into_owned(),
+            ],
+            &cwd,
+        )
+    };
+    let (once_exit, once_stdout, once_stderr) = run(&once);
+    let (unchanged_exit, unchanged_stdout, unchanged_stderr) = run(&unchanged);
+    let (changed_exit, changed_stdout, changed_stderr) = run(&changed);
+    let (wide_exit, _wide_stdout, wide_stderr) = run(&wide);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(once_exit, 0, "stderr: {once_stderr}");
+    assert_eq!(unchanged_exit, 0, "stderr: {unchanged_stderr}");
+    assert_eq!(changed_exit, 0, "stderr: {changed_stderr}");
+    assert_eq!(wide_exit, 0, "stderr: {wide_stderr}");
+    assert_eq!(
+        unchanged_stdout, once_stdout,
+        "an unchanged second frame must not write terminal output"
+    );
+    assert!(
+        changed_stdout.starts_with(&once_stdout),
+        "the changed run must preserve the initial frame output"
+    );
+    assert!(
+        changed_stdout[once_stdout.len()..].contains('X'),
+        "the changed run must write the damaged cell"
+    );
+}
+
 fn run_repo_std_program(rel_path: &str) -> (i32, String, String) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

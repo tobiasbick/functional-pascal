@@ -8,6 +8,17 @@ private mutable var TuiSurfaceSizes: array of TuiSize := [];
 private mutable var TuiSurfaceRowOffsets: array of integer := [];
 private mutable var TuiSurfaceCells: array of array of TuiCell := [];
 private mutable var TuiSurfaceContinuations: array of array of boolean := [];
+private mutable var TuiSurfacePresentedCells: array of array of TuiCell := [];
+private mutable var TuiSurfacePresentedContinuations: array of array of boolean := [];
+private mutable var TuiSurfacePresentedReady: array of boolean := [];
+
+type
+  /// One changed horizontal range prepared for the internal terminal renderer.
+  TuiSurfaceDamage = record
+    Y: integer;
+    FirstX: integer;
+    Cells: array of TuiCell;
+  end;
 
 private function TuiSurfaceBlank(): TuiCell;
 begin
@@ -86,6 +97,33 @@ begin
   end
 end;
 
+private function TuiSurfaceCellChanged(RowIndex: integer; X: integer): boolean;
+begin
+  if TuiSurfaceContinuations[RowIndex][X] <> TuiSurfacePresentedContinuations[RowIndex][X] then
+  begin
+    return true
+  end;
+  if TuiSurfaceContinuations[RowIndex][X] then
+  begin
+    return false
+  end;
+  return (TuiSurfaceCells[RowIndex][X].Glyph <> TuiSurfacePresentedCells[RowIndex][X].Glyph) or
+         (TuiSurfaceCells[RowIndex][X].Role <> TuiSurfacePresentedCells[RowIndex][X].Role)
+end;
+
+private function TuiSurfaceDamageForRange(RowIndex: integer; Y: integer; FirstX: integer; LastX: integer): TuiSurfaceDamage;
+begin
+  mutable var Cells: array of TuiCell := [];
+  for X: integer := FirstX to LastX do
+  begin
+    if not TuiSurfaceContinuations[RowIndex][X] then
+    begin
+      Std.Array.Push(Cells, TuiSurfaceCells[RowIndex][X])
+    end
+  end;
+  return record Y := Y; FirstX := FirstX; Cells := Cells; end
+end;
+
 type
   /// Explicit immutable copy of the most recently painted headless surface.
   TuiSurfaceSnapshot = record
@@ -142,6 +180,9 @@ type
       end;
       TuiSurfaceCells := Std.Array.Concat(TuiSurfaceCells, Rows);
       TuiSurfaceContinuations := Std.Array.Concat(TuiSurfaceContinuations, ContinuationRows);
+      TuiSurfacePresentedCells := Std.Array.Concat(TuiSurfacePresentedCells, Rows);
+      TuiSurfacePresentedContinuations := Std.Array.Concat(TuiSurfacePresentedContinuations, ContinuationRows);
+      TuiSurfacePresentedReady := Std.Array.Concat(TuiSurfacePresentedReady, [false]);
       return record Slot := Std.Array.Length(TuiSurfaceSizes); end
     end;
 
@@ -237,3 +278,43 @@ type
       return record Width := Size.Width; Height := Size.Height; Cells := Cells; end
     end;
   end;
+
+/// Returns changed terminal-cell runs and commits the current surface as the presented baseline.
+
+function TuiSurfaceTakeTerminalDamage(Surface: TuiWorkingSurface): array of TuiSurfaceDamage;
+begin
+  var Slot: integer := TuiSurfaceRequire(Surface.Slot);
+  var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
+  var RowOffset: integer := TuiSurfaceRowOffsets[Slot - 1];
+  var ComparePrevious: boolean := TuiSurfacePresentedReady[Slot - 1];
+  mutable var Damage: array of TuiSurfaceDamage := [];
+  for Y: integer := 0 to Size.Height - 1 do
+  begin
+    var RowIndex: integer := RowOffset + Y;
+    mutable var FirstX: integer := -1;
+    for X: integer := 0 to Size.Width - 1 do
+    begin
+      var Changed: boolean := not ComparePrevious or TuiSurfaceCellChanged(RowIndex, X);
+      if Changed then
+      begin
+        if FirstX < 0 then
+        begin
+          FirstX := X
+        end;
+        TuiSurfacePresentedCells[RowIndex][X] := TuiSurfaceCells[RowIndex][X];
+        TuiSurfacePresentedContinuations[RowIndex][X] := TuiSurfaceContinuations[RowIndex][X]
+      end
+      else if FirstX >= 0 then
+      begin
+        Std.Array.Push(Damage, TuiSurfaceDamageForRange(RowIndex, Y, FirstX, X - 1));
+        FirstX := -1
+      end
+    end;
+    if FirstX >= 0 then
+    begin
+      Std.Array.Push(Damage, TuiSurfaceDamageForRange(RowIndex, Y, FirstX, Size.Width - 1))
+    end
+  end;
+  TuiSurfacePresentedReady[Slot - 1] := true;
+  return Damage
+end;

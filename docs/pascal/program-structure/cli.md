@@ -21,6 +21,21 @@ The `fpas` command-line interface discovers projects, type-checks, runs programs
 
 Program arguments after `--` require `fpas run` and are visible through `Std.Args` when running programs.
 
+## Automatic compiled-unit builds
+
+Project- and workspace-aware `check`, `run`, and `test` commands automatically build and reuse
+source-adjacent `.fpascu` unit sidecars. No separate `fpas build` command is required. Successful
+reuse is silent.
+
+The compiler validates content hashes, compiler and bytecode compatibility, compilation options,
+and direct dependency interface hashes rather than relying on timestamps. Invalid derived files
+are rebuilt from their `.fpas` source. Plain standalone `.fpas` programs and directory checks do
+not create compiled-unit sidecars.
+
+For a source standard-library override, matching sidecars are read and rebuilt beside the sources
+selected by `--std-lib`. A read-only directory must already contain compatible sidecars for every
+unit that the command needs.
+
 ## Running programs
 
 ```sh

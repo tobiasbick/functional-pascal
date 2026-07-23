@@ -88,9 +88,43 @@ Unknown `uses` entries referring to `Std.*`, and private source standard-library
 
 Units are resolved through the project `.fpasprj` file, which lists all source files belonging to the project. Each file declares its namespace via its `unit` declaration. The directory structure has no influence on the unit name — only the `unit` declaration inside the file matters.
 
-Library units from other projects are merged in when the consuming `.fpasprj` lists them under `[dependencies].projects` (path to another manifest) or `[dependencies].workspace` (member `project.name` inside an enclosing `.fpasworkspace`). A library may restrict which units are importable via `[exports].units` in its `.fpasprj`. See [Projects](projects.md).
+Library units from other projects enter the unit graph when the consuming `.fpasprj` lists them under `[dependencies].projects` (path to another manifest) or `[dependencies].workspace` (member `project.name` inside an enclosing `.fpasworkspace`). A library may restrict which units are importable via `[exports].units` in its `.fpasprj`. See [Projects](projects.md).
 
 Only units reachable from the program file's `uses` chain (including transitive dependencies) are compiled into the final program.
+
+## Compiled-unit sidecars
+
+Project units are compiled independently. Compiling `Geometry.fpas` creates the derived
+`Geometry.fpascu` file beside its source. The sidecar contains:
+
+- the unit's public semantic interface;
+- relocatable bytecode and source locations;
+- source, compiler, bytecode-format, and compilation-option identities;
+- direct dependency interface hashes.
+
+`fpas check`, `fpas run`, and `fpas test` automatically rebuild a missing, stale, corrupt, or
+incompatible sidecar. Sources and manifests remain authoritative; `.fpascu` files are replaceable
+build products and are excluded from source discovery and formatting.
+
+A valid unchanged sidecar lets a later build use the unit without parsing or semantically
+analyzing its implementation. A private implementation change rebuilds that unit but does not
+invalidate consumers while its public interface hash stays unchanged. An exported signature,
+layout, constant value, or other public-interface change invalidates consuming units.
+
+The final executable bytecode image links only reachable unit objects in dependency order.
+Existing top-level constant and variable initializers run in that same dependency order before
+the program body. Units do not have separate initialization or finalization syntax.
+
+Sidecars are written atomically in the source directory. A read-only source tree therefore works
+when all required sidecars are valid; if rebuilding is required, the command reports the
+source-adjacent file it could not publish.
+
+### Validation snapshot
+
+On 2026-07-23, the distribution precompiler was run twice against an isolated copy of the bundled
+standard library with a Windows debug build. The cold run compiled 48 units and reused none in
+712 ms; the warm run compiled none and reused all 48 in 150 ms. Timings are machine-dependent;
+the compiled/reused counters are the correctness check for incremental reuse.
 
 ## See also
 

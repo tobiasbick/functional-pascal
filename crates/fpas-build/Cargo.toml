@@ -1,0 +1,21 @@
+[package]
+name = "fpas-build"
+description = "Incremental compiled-unit build engine for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-compiler = { path = "../fpas-compiler" }
+fpas-linker = { path = "../fpas-linker" }
+fpas-parser = { path = "../fpas-parser" }
+fpas-project = { path = "../fpas-project" }
+fpas-unit = { path = "../fpas-unit" }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+fpas-vm = { path = "../fpas-vm" }

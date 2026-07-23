@@ -85,6 +85,11 @@ impl Vm {
         Self::build(chunk, Some(entry_ip), Console::new(), Vec::new())
     }
 
+    /// Create a VM that starts a shared complete program image at instruction zero.
+    pub fn from_shared_chunk(chunk: Arc<Chunk>) -> Self {
+        Self::build(chunk, None, Console::new(), Vec::new())
+    }
+
     /// Create a new VM with process arguments visible through `Std.Args`.
     pub fn with_args(chunk: Chunk, args: Vec<String>) -> Self {
         Self::build(Arc::new(chunk), None, Console::new(), args)

@@ -6,7 +6,9 @@
 )]
 
 use super::*;
-use crate::{ProjectLinkMeta, build_program_with_standard_library};
+use crate::{
+    ProjectLinkMeta, build_unit_graph_for_program_with_standard_library, resolve_program_units,
+};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -38,15 +40,25 @@ include = ["Std/**/*.fpas"]
     );
 
     let library = load_standard_library(&dir).expect("standard library must load");
-    let linked =
-        build_program_with_standard_library(&program, &[], &ProjectLinkMeta::default(), &library);
+    let graph = build_unit_graph_for_program_with_standard_library(
+        &program,
+        &[],
+        &ProjectLinkMeta::default(),
+        &library,
+    );
+    let linked = graph.and_then(|graph| {
+        let source = fs::read_to_string(&program).expect("program source");
+        let (program, diagnostics) = fpas_parser::parse(&source);
+        assert!(diagnostics.is_empty());
+        resolve_program_units(&graph, &program.uses).map(|_| ())
+    });
     remove_dir(&dir);
 
     assert!(linked.is_ok(), "exported source unit must link");
 }
 
 #[test]
-fn loaded_library_links_from_cached_units_without_rereading_sources() {
+fn loaded_library_keeps_source_files_authoritative() {
     let dir = temp_dir("cached-unit");
     write_text(
         &dir.join("stdlib.fpasprj"),
@@ -71,11 +83,18 @@ include = ["Std/**/*.fpas"]
 
     let library = load_standard_library(&dir).expect("standard library must load");
     fs::remove_file(unit_path).expect("cached source file must be removable");
-    let linked =
-        build_program_with_standard_library(&program, &[], &ProjectLinkMeta::default(), &library);
+    let linked = build_unit_graph_for_program_with_standard_library(
+        &program,
+        &[],
+        &ProjectLinkMeta::default(),
+        &library,
+    );
     remove_dir(&dir);
 
-    assert!(linked.is_ok(), "cached standard-library unit must link");
+    assert!(
+        linked.is_err(),
+        "removing an authoritative standard-library source must fail"
+    );
 }
 
 #[test]
@@ -100,8 +119,18 @@ include = ["Std/**/*.fpas"]
     write_text(&program, "program Main;\nuses Std.Internal;\nbegin\nend.\n");
 
     let library = load_standard_library(&dir).expect("standard library must load");
-    let result =
-        build_program_with_standard_library(&program, &[], &ProjectLinkMeta::default(), &library);
+    let result = build_unit_graph_for_program_with_standard_library(
+        &program,
+        &[],
+        &ProjectLinkMeta::default(),
+        &library,
+    )
+    .and_then(|graph| {
+        let source = fs::read_to_string(&program).expect("program source");
+        let (program, diagnostics) = fpas_parser::parse(&source);
+        assert!(diagnostics.is_empty());
+        resolve_program_units(&graph, &program.uses).map(|_| ())
+    });
     remove_dir(&dir);
 
     assert!(result.is_err(), "private source unit must be rejected");

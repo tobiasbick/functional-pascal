@@ -93,6 +93,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4388bee8683e3d04af747c73422af53102d2bd24d9eadb6cbc100baef4b43f8"
 
 [[package]]
+name = "blake3"
+version = "1.8.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0aa83c34e62843d924f905e0f5c866eb1dd6545fc4d719e803d9ba6030371fce"
+dependencies = [
+ "arrayref",
+ "arrayvec",
+ "cc",
+ "cfg-if",
+ "constant_time_eq",
+ "cpufeatures",
+]
+
+[[package]]
 name = "block2"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -203,6 +217,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "constant_time_eq"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
+
+[[package]]
 name = "convert_case"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -248,6 +268,15 @@ checksum = "45390e6114f68f718cc7a830514a96f903cccd70d02a8f6d9f643ac4ba45afaf"
 dependencies = [
  "bitflags 1.3.2",
  "core-foundation",
+ "libc",
+]
+
+[[package]]
+name = "cpufeatures"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b2a41393f66f16b0823bb79094d54ac5fbd34ab292ddafb9a0456ac9f87d201"
+dependencies = [
  "libc",
 ]
 
@@ -469,17 +498,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
+name = "fpas-build"
+version = "0.0.1"
+dependencies = [
+ "fpas-bytecode",
+ "fpas-compiler",
+ "fpas-linker",
+ "fpas-parser",
+ "fpas-project",
+ "fpas-unit",
+ "fpas-vm",
+]
+
+[[package]]
 name = "fpas-bytecode"
 version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "num_enum",
+ "serde",
 ]
 
 [[package]]
 name = "fpas-cli"
 version = "0.0.1"
 dependencies = [
+ "fpas-build",
  "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
@@ -501,9 +545,11 @@ dependencies = [
  "fpas-bytecode",
  "fpas-diagnostics",
  "fpas-lexer",
+ "fpas-linker",
  "fpas-parser",
  "fpas-sema",
  "fpas-std",
+ "fpas-unit",
  "fpas-vm",
 ]
 
@@ -527,6 +573,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fpas-linker"
+version = "0.0.1"
+dependencies = [
+ "fpas-bytecode",
+ "fpas-unit",
+]
+
+[[package]]
 name = "fpas-parser"
 version = "0.0.1"
 dependencies = [
@@ -543,6 +597,7 @@ dependencies = [
  "fpas-parser",
  "fpas-sema",
  "fpas-std",
+ "fpas-unit",
  "glob",
  "serde",
  "toml",
@@ -556,6 +611,7 @@ dependencies = [
  "fpas-lexer",
  "fpas-parser",
  "fpas-std",
+ "fpas-unit",
 ]
 
 [[package]]
@@ -573,6 +629,16 @@ dependencies = [
  "unicode-segmentation",
  "unicode-width",
  "winit",
+]
+
+[[package]]
+name = "fpas-unit"
+version = "0.0.1"
+dependencies = [
+ "blake3",
+ "fpas-bytecode",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

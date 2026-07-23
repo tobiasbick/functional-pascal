@@ -15,8 +15,13 @@
 
 mod compiler;
 mod error;
+mod unit_object;
 
 pub use error::CompileError;
+pub use unit_object::{
+    CompiledUnitObject, compile_program_object, compile_program_object_with_support,
+    compile_unit_object, compile_unit_object_with_support,
+};
 
 use compiler::Compiler;
 use fpas_bytecode::{Chunk, ChunkError};

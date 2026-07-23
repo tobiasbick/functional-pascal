@@ -42,7 +42,8 @@ impl Compiler {
         for arg_slot in 0..u16::from(arity) {
             self.emit(Op::GetLocal(arg_slot), location);
         }
-        let method_idx = self.add_constant(Value::Str(info.qualified_name.clone()), location)?;
+        let method = self.qualify_name(&info.qualified_name).to_string();
+        let method_idx = self.add_constant(Value::Str(method), location)?;
         self.emit(Op::Call(method_idx, total_call_argc), location);
         self.emit(Op::Return, location);
 

@@ -111,12 +111,14 @@ Flags and discovery rules: [CLI](../../program-structure/cli.md).
 
 Run `fpas test` from the **repository root**. Relative filesystem fixtures written by tests use that process working directory.
 
-For compatible tests, the runner compiles bounded groups into one in-memory bytecode image. Each
-test still receives a fresh VM, globals, console, graph state, timeout, and golden-file
-evaluation. Tests with module-level declarations, project hooks, or a different unit/import
-environment stay on the single-program path. Bundle failures also fall back to individual
-compilation so diagnostics remain test-local. These images exist only for the current `fpas test`
-process; no bytecode cache files are written.
+Before workers start, the runner builds shared project and standard-library units through the
+normal `.fpascu` pipeline and precompiles each test entry into its own in-memory executable image.
+This prevents parallel workers from racing to publish the same unit sidecar. Each test receives a
+fresh VM, globals, console, graph state, timeout, and golden-file evaluation. If precompilation
+fails, the test falls back to the normal isolated path so its diagnostic remains test-local.
+
+Executable test images exist only for the current `fpas test` process. Reusable unit objects are
+the source-adjacent `.fpascu` files documented under [Units](../../program-structure/units.md).
 
 ### Scratch files (`.temp-data/`)
 

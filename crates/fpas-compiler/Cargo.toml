@@ -13,8 +13,10 @@ fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-sema = { path = "../fpas-sema" }
 fpas-std = { path = "../fpas-std" }
+fpas-unit = { path = "../fpas-unit" }
 
 [dev-dependencies]
+fpas-linker = { path = "../fpas-linker" }
 fpas-vm = { path = "../fpas-vm" }
 
 [lints]

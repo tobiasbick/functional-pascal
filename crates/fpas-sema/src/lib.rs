@@ -15,6 +15,7 @@
 
 mod check;
 mod error;
+mod interface;
 mod scope;
 mod std_registry;
 mod std_units;
@@ -43,6 +44,11 @@ pub use check::PropertyWriteMap;
 pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
+pub use interface::{
+    AnalysisMetadata, InterfaceConversionError, UnitAnalysis,
+    analyze_program_with_interface_support, analyze_program_with_interfaces, analyze_unit,
+    analyze_unit_with_interface_support, interface_type_to_ty, ty_to_interface_type,
+};
 pub use types::Ty;
 
 use fpas_parser::Program;

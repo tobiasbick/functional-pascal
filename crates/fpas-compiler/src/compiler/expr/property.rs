@@ -20,7 +20,8 @@ impl Compiler {
         info: &PropertyReadInfo,
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        let name_idx = self.add_constant(Value::Str(info.getter_name.clone()), location)?;
+        let getter = self.qualify_name(&info.getter_name).to_string();
+        let name_idx = self.add_constant(Value::Str(getter), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         Ok(())
     }

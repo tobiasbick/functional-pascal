@@ -20,7 +20,10 @@ members = [
 
 `fpas check` with no path loads the sole `.fpasworkspace` in the current directory and checks every member project. `fpas run` with no path runs the sole program member when a workspace is present; otherwise pass a `.fpasprj` explicitly or rely on a single project file in the current directory.
 
-Cross-project dependencies still use `[dependencies].projects` on each consumer `.fpasprj`; the workspace file does not replace per-project dependency lists.
+Cross-project dependencies use `[dependencies].projects` or `[dependencies].workspace` on each
+consumer `.fpasprj`; the workspace file does not make every member an implicit dependency.
+Workspace checks share the normal compiled-unit pipeline, so an unchanged library unit's
+source-adjacent `.fpascu` can be reused by multiple members.
 
 ## See also
 

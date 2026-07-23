@@ -4,104 +4,34 @@
 
 mod compile;
 
-use std::collections::{HashMap, VecDeque};
-use std::fs;
-use std::path::{Path, PathBuf};
 #[cfg(test)]
 use std::sync::Arc;
-
-use fpas_diagnostics::DiagnosticSeverity;
-use fpas_parser::{CompilationUnit, parse_compilation_unit};
 
 use super::parallel::PreparedTest;
 use compile::{ImageBatch, ImageCandidate, compile_image_batches};
 
-const MAX_TESTS_PER_IMAGE: usize = 96;
-
-#[derive(PartialEq, Eq, Hash)]
-struct ImageGroupKey {
-    context: Option<PathBuf>,
-    uses: Vec<String>,
-}
-
-/// Compiles compatible tests in bounded groups and attaches shared bytecode entries.
+/// Compiles test entries before workers start and attaches their executable images.
 ///
-/// Loading or bundle compilation failures deliberately leave tests untouched so
+/// Compilation failures deliberately leave tests untouched so
 /// the normal single-test path can render the original diagnostic in isolation.
 pub(super) fn attach_test_images(prepared: &mut [PreparedTest]) {
-    let mut groups = HashMap::<ImageGroupKey, VecDeque<ImageCandidate>>::new();
-
-    for (prepared_index, test) in prepared.iter().enumerate() {
-        if test
-            .link
-            .as_ref()
-            .is_some_and(|link| link.hooks.setup.is_some() || link.hooks.teardown.is_some())
-        {
-            continue;
-        }
-        let Some(uses) = bundle_candidate_uses(&test.path) else {
-            continue;
-        };
-        let key = ImageGroupKey {
-            context: test
-                .link
-                .as_ref()
-                .and_then(|link| link.bundle_context.clone()),
-            uses,
-        };
-        groups.entry(key).or_default().push_back(ImageCandidate {
-            prepared_index,
-            path: test.path.clone(),
-        });
-    }
-
-    let mut batches = Vec::new();
-    for mut candidates in groups.into_values() {
-        while candidates.len() >= 2 {
-            let batch_len = next_batch_len(candidates.len());
-            let batch = candidates.drain(..batch_len).collect::<Vec<_>>();
-            let link = prepared[batch[0].prepared_index].link.clone();
-            batches.push(ImageBatch::new(batch, link));
-        }
-    }
+    let batches = prepared
+        .iter()
+        .enumerate()
+        .map(|(prepared_index, test)| {
+            ImageBatch::new(
+                vec![ImageCandidate {
+                    prepared_index,
+                    path: test.path.clone(),
+                }],
+                test.link.clone(),
+            )
+        })
+        .collect();
 
     for assignment in compile_image_batches(batches) {
         prepared[assignment.prepared_index].compiled = Some(assignment.compiled);
     }
-}
-
-fn next_batch_len(remaining: usize) -> usize {
-    if remaining <= MAX_TESTS_PER_IMAGE {
-        return remaining;
-    }
-    if remaining % MAX_TESTS_PER_IMAGE == 1 {
-        return MAX_TESTS_PER_IMAGE - 1;
-    }
-    MAX_TESTS_PER_IMAGE
-}
-
-fn bundle_candidate_uses(path: &Path) -> Option<Vec<String>> {
-    let source = fs::read_to_string(path).ok()?;
-    let (unit, diagnostics) = parse_compilation_unit(&source);
-    if diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.as_diagnostic().severity == DiagnosticSeverity::Error)
-    {
-        return None;
-    }
-    let CompilationUnit::Program(program) = unit else {
-        return None;
-    };
-    if !program.declarations.is_empty() {
-        return None;
-    }
-    Some(
-        program
-            .uses
-            .iter()
-            .map(|used| used.parts.join(".").to_ascii_lowercase())
-            .collect(),
-    )
 }
 
 #[cfg(test)]
@@ -112,7 +42,7 @@ mod tests {
     use crate::test_support::{create_temp_dir, write_text};
 
     #[test]
-    fn compatible_tests_share_one_in_memory_image_and_run_independently() {
+    fn compatible_tests_are_precompiled_and_run_independently() {
         let dir = create_temp_dir("fpas-test-image");
         let first = dir.join("first_test.fpas");
         let second = dir.join("second_test.fpas");
@@ -151,7 +81,7 @@ mod tests {
             .compiled
             .as_ref()
             .expect("second test must use image");
-        assert!(Arc::ptr_eq(&first_image.image, &second_image.image));
+        assert!(!Arc::ptr_eq(&first_image.image, &second_image.image));
 
         for test in &prepared {
             let (outcome, output) = run_single_test_capture_prepared(
@@ -225,7 +155,7 @@ mod tests {
     }
 
     #[test]
-    fn tests_with_module_level_declarations_keep_the_individual_path() {
+    fn tests_with_module_level_declarations_are_precompiled() {
         let dir = create_temp_dir("fpas-test-image-declarations");
         let first = dir.join("first_test.fpas");
         let second = dir.join("second_test.fpas");
@@ -257,8 +187,14 @@ mod tests {
         attach_test_images(&mut prepared);
 
         for test in &prepared {
-            assert!(test.compiled.is_none());
-            let (outcome, _) = run_single_test_capture_prepared(&test.path, None, None, None, None);
+            assert!(test.compiled.is_some());
+            let (outcome, _) = run_single_test_capture_prepared(
+                &test.path,
+                None,
+                None,
+                None,
+                test.compiled.as_ref(),
+            );
             assert_eq!(outcome, crate::cli_test::report::TestOutcome::Pass);
         }
     }

@@ -152,10 +152,10 @@ impl Compiler {
         name: &str,
         location: SourceLocation,
     ) -> Result<bool, CompileError> {
-        let canonical_name = super::super::canonical_name(name);
+        let canonical = super::super::canonical_name(name);
         let Some(capture_info) = self
             .nested_routine_captures
-            .get(&canonical_name)
+            .get(&canonical)
             .filter(|info| !info.captures.is_empty())
             .cloned()
         else {
@@ -165,7 +165,11 @@ impl Compiler {
         for capture in &capture_info.captures {
             self.emit_load_capture(capture, location);
         }
-        let name_idx = self.add_constant(Value::Str(canonical_name), location)?;
+        let runtime_name = self.qualify_owned_name(&canonical);
+        let name_idx = self.add_constant(
+            Value::Str(super::super::canonical_name(&runtime_name)),
+            location,
+        )?;
         let capture_count =
             Self::checked_u8_at(capture_info.captures.len(), "routine captures", location)?;
         self.emit(Op::MakeClosure(name_idx, capture_count), location);

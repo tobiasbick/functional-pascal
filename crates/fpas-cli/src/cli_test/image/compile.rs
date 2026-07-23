@@ -40,80 +40,36 @@ pub(super) fn compile_image_batches(batches: Vec<ImageBatch>) -> Vec<ImageAssign
 }
 
 fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
-    if batch.candidates.len() < 2 {
-        return Vec::new();
-    }
-
-    let paths = batch
-        .candidates
-        .iter()
-        .map(|candidate| candidate.path.clone())
-        .collect::<Vec<_>>();
     let default_link_meta = fpas_project::ProjectLinkMeta::default();
     let (source_files, link_meta) = batch.link.as_ref().map_or_else(
         || (&[][..], &default_link_meta),
         |link| (link.source_files.as_slice(), &link.link_meta),
     );
-    let bundle = if let Some(standard_library) = batch
+    let standard_library = batch
         .link
         .as_ref()
-        .and_then(|link| link.standard_library.as_deref())
-    {
-        fpas_project::build_test_bundle_from_paths_with_standard_library(
-            &paths,
-            source_files,
-            link_meta,
-            standard_library,
-        )
-    } else {
-        fpas_project::build_test_bundle_from_paths(&paths, source_files, link_meta)
-    };
-    let Ok(bundle) = bundle else {
-        return retry_smaller_batches(batch);
-    };
-    let Ok(chunk) = fpas_compiler::compile_all(&bundle.program) else {
-        return retry_smaller_batches(batch);
-    };
-    let entry_offsets = bundle
-        .entry_names
-        .iter()
-        .map(|name| {
-            chunk
-                .functions()
-                .get(&name.to_ascii_lowercase())
-                .map(|(offset, _)| *offset)
-        })
-        .collect::<Option<Vec<_>>>();
-    let Some(entry_offsets) = entry_offsets else {
-        return retry_smaller_batches(batch);
-    };
+        .and_then(|link| link.standard_library.as_deref());
 
-    let image = Arc::new(chunk);
-    let source_paths = Arc::new(bundle.source_paths);
     batch
         .candidates
         .drain(..)
-        .zip(entry_offsets)
-        .map(|(candidate, entry_ip)| ImageAssignment {
-            prepared_index: candidate.prepared_index,
-            compiled: CompiledTestProgram {
-                image: Arc::clone(&image),
-                entry_ip,
-                source_paths: Arc::clone(&source_paths),
-            },
+        .filter_map(|candidate| {
+            let built = crate::project_build::build_test_program(
+                &candidate.path,
+                source_files,
+                link_meta,
+                standard_library,
+            )
+            .ok()?;
+            Some(ImageAssignment {
+                prepared_index: candidate.prepared_index,
+                compiled: CompiledTestProgram {
+                    image: Arc::new(built.chunk),
+                    source_paths: Arc::new(built.source_paths),
+                },
+            })
         })
         .collect()
-}
-
-fn retry_smaller_batches(mut batch: ImageBatch) -> Vec<ImageAssignment> {
-    if batch.candidates.len() <= 2 {
-        return Vec::new();
-    }
-    let right = batch.candidates.split_off(batch.candidates.len() / 2);
-    let left = std::mem::take(&mut batch.candidates);
-    let mut assignments = compile_image_batch(ImageBatch::new(left, batch.link.clone()));
-    assignments.extend(compile_image_batch(ImageBatch::new(right, batch.link)));
-    assignments
 }
 
 #[cfg(test)]
@@ -126,14 +82,19 @@ mod tests {
     }
 
     #[test]
-    fn one_candidate_is_left_for_individual_compilation() {
+    fn one_candidate_is_precompiled() {
+        let root = std::env::temp_dir().join(format!("fpas-image-single-{}", std::process::id()));
+        std::fs::create_dir_all(&root).expect("fixture directory");
+        let path = root.join("one_test.fpas");
+        std::fs::write(&path, "program One; begin end.").expect("fixture source");
         let batch = ImageBatch::new(
             vec![ImageCandidate {
                 prepared_index: 0,
-                path: PathBuf::from("one_test.fpas"),
+                path,
             }],
             None,
         );
-        assert!(compile_image_batches(vec![batch]).is_empty());
+        assert_eq!(compile_image_batches(vec![batch]).len(), 1);
+        std::fs::remove_dir_all(root).ok();
     }
 }

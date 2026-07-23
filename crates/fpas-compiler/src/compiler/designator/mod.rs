@@ -26,7 +26,10 @@ impl Compiler {
             joined.push_str(name);
             let canonical = canonical_name(&joined);
             if self.module_globals.contains(&canonical) {
-                resolved = Some((canonical, index + 1));
+                resolved = Some((
+                    canonical_name(&self.qualify_owned_name(&canonical)),
+                    index + 1,
+                ));
             }
         }
         resolved

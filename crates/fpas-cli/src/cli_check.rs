@@ -58,25 +58,18 @@ fn check_source_file(
     stderr: &mut dyn Write,
 ) -> i32 {
     if let Some(standard_library) = standard_library {
-        let linked = match project::build_program_with_standard_library(
+        return match crate::project_build::build_test_program(
             path,
             &[],
             &project::ProjectLinkMeta::default(),
-            standard_library,
+            Some(standard_library),
         ) {
-            Ok(linked) => linked,
+            Ok(_) => 0,
             Err(message) => {
                 let _ = writeln!(stderr, "{message}");
-                return 1;
+                1
             }
         };
-        let path_text = path.to_string_lossy();
-        return check_parsed_program(
-            path_text.as_ref(),
-            &linked.program,
-            Some(&linked.source_paths),
-            stderr,
-        );
     }
     let source = match fs::read_to_string(path) {
         Ok(source) => source,
@@ -109,73 +102,30 @@ fn check_project_file(
 
     match loaded.kind {
         project::ProjectKind::Program => {
-            let Some(main) = loaded.main else {
+            if loaded.main.is_none() {
                 let _ = writeln!(
                     stderr,
                     "Project is missing `project.main`.\n  help: Set `main = \"src/main.fpas\"` in `[project]`."
                 );
                 return 1;
-            };
-            let linked = match standard_library.map_or_else(
-                || {
-                    project::build_program_with_source_map(
-                        &main,
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                    )
-                },
-                |library| {
-                    project::build_program_with_standard_library(
-                        &main,
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                        library,
-                    )
-                },
-            ) {
+            }
+            match crate::project_build::build_program(&loaded, standard_library) {
                 Ok(program) => program,
                 Err(message) => {
                     let _ = writeln!(stderr, "{message}");
                     return 1;
                 }
             };
-            let main_path = main.to_string_lossy();
-            check_parsed_program(
-                main_path.as_ref(),
-                &linked.program,
-                Some(&linked.source_paths),
-                stderr,
-            )
+            0
         }
         project::ProjectKind::Library => {
-            let linked = match standard_library.map_or_else(
-                || {
-                    project::build_library_check_with_source_map(
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                    )
-                },
-                |library| {
-                    project::build_library_check_with_standard_library(
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                        library,
-                    )
-                },
-            ) {
-                Ok(program) => program,
+            match crate::project_build::check_library(&loaded, standard_library) {
+                Ok(()) => 0,
                 Err(message) => {
                     let _ = writeln!(stderr, "{message}");
-                    return 1;
+                    1
                 }
-            };
-            let path_text = path.to_string_lossy();
-            check_parsed_program(
-                path_text.as_ref(),
-                &linked.program,
-                Some(&linked.source_paths),
-                stderr,
-            )
+            }
         }
         project::ProjectKind::Test => check_test_project(&loaded, standard_library, stderr),
     }
@@ -194,31 +144,12 @@ fn check_test_project(
         .collect();
 
     if !unit_files.is_empty() {
-        let linked = match standard_library.map_or_else(
-            || project::build_library_check_with_source_map(&unit_files, &loaded.link_meta),
-            |library| {
-                project::build_library_check_with_standard_library(
-                    &unit_files,
-                    &loaded.link_meta,
-                    library,
-                )
-            },
-        ) {
-            Ok(program) => program,
+        match crate::project_build::check_units(&unit_files, &loaded.link_meta, standard_library) {
+            Ok(()) => {}
             Err(message) => {
                 let _ = writeln!(stderr, "{message}");
                 return 1;
             }
-        };
-        let path_text = "test-project-units";
-        if check_parsed_program(
-            path_text,
-            &linked.program,
-            Some(&linked.source_paths),
-            stderr,
-        ) != 0
-        {
-            return 1;
         }
     }
 
@@ -227,38 +158,17 @@ fn check_test_project(
         .iter()
         .filter(|source| project::is_test_source_file(source))
     {
-        let linked = match standard_library.map_or_else(
-            || {
-                project::build_program_with_source_map(
-                    test_path,
-                    &loaded.source_files,
-                    &loaded.link_meta,
-                )
-            },
-            |library| {
-                project::build_program_with_standard_library(
-                    test_path,
-                    &loaded.source_files,
-                    &loaded.link_meta,
-                    library,
-                )
-            },
+        match crate::project_build::build_test_program(
+            test_path,
+            &unit_files,
+            &loaded.link_meta,
+            standard_library,
         ) {
-            Ok(program) => program,
+            Ok(_) => {}
             Err(message) => {
                 let _ = writeln!(stderr, "{message}");
                 return 1;
             }
-        };
-        let test_path_text = test_path.to_string_lossy();
-        if check_parsed_program(
-            test_path_text.as_ref(),
-            &linked.program,
-            Some(&linked.source_paths),
-            stderr,
-        ) != 0
-        {
-            return 1;
         }
     }
 

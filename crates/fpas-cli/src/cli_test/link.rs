@@ -34,7 +34,6 @@ impl LinkContextCache {
                 .standard_library
                 .as_ref()
                 .map(|standard_library| LinkContext {
-                    bundle_context: None,
                     source_files: Vec::new(),
                     link_meta: project::ProjectLinkMeta::default(),
                     test_manifest: project::TestManifest::default(),
@@ -55,7 +54,6 @@ impl LinkContextCache {
             .collect::<Vec<_>>();
         let hooks = hooks::discover_test_hooks(&source_files)?;
         let context = LinkContext {
-            bundle_context: Some(project_file.clone()),
             source_files,
             link_meta: loaded.link_meta,
             test_manifest: loaded.test_manifest,

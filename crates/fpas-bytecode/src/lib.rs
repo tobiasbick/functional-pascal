@@ -13,3 +13,6 @@ pub use intrinsic::{
 };
 pub use op::Op;
 pub use value::{SharedArray, Value};
+
+/// Persistent instruction-set version recorded in `.fpascu` identities.
+pub const BYTECODE_VERSION: u32 = 1;

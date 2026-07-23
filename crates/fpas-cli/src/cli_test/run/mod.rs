@@ -23,7 +23,6 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 /// Project sources used when linking a test program with local units.
 #[derive(Clone)]
 pub(super) struct LinkContext {
-    pub bundle_context: Option<PathBuf>,
     pub source_files: Vec<PathBuf>,
     pub link_meta: project::ProjectLinkMeta,
     pub test_manifest: project::TestManifest,

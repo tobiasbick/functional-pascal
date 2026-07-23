@@ -28,7 +28,10 @@ impl Worker {
                 let matches = match &val {
                     Value::Enum {
                         type_name, variant, ..
-                    } => *type_name == expected_type && *variant == expected_variant,
+                    } => {
+                        type_name.eq_ignore_ascii_case(&expected_type)
+                            && variant.eq_ignore_ascii_case(&expected_variant)
+                    }
                     _ => false,
                 };
                 self.push(Value::Boolean(matches))?;

@@ -6,7 +6,8 @@ mod callables;
 
 use crate::error::CompileError;
 use fpas_bytecode::{Op, Value};
-use fpas_parser::{Decl, Program, TypeBody};
+use fpas_parser::{Decl, Program, TypeBody, Unit};
+use fpas_unit::interface::{InterfaceType, UnitInterface};
 
 use fpas_std::{STD_UNIT_CONSOLE, STD_UNIT_JSON, STD_UNIT_TOML};
 
@@ -49,6 +50,92 @@ impl Compiler {
         Ok(())
     }
 
+    pub fn compile_program_with_interfaces(
+        &mut self,
+        program: &Program,
+        interfaces: &[UnitInterface],
+    ) -> Result<(), CompileError> {
+        self.build_program_interface_aliases(interfaces);
+        self.register_interface_enums(interfaces);
+        self.compile_program(program)
+    }
+
+    pub fn compile_unit(
+        &mut self,
+        unit: &Unit,
+        interfaces: &[UnitInterface],
+    ) -> Result<(), CompileError> {
+        if Self::uses_std_unit(&unit.uses, STD_UNIT_CONSOLE) {
+            self.register_std_console_enums();
+        }
+        if Self::uses_std_unit(&unit.uses, STD_UNIT_JSON) {
+            self.register_std_json_enum();
+        }
+        if Self::uses_std_unit(&unit.uses, STD_UNIT_TOML) {
+            self.register_std_toml_enum();
+        }
+        let owner = unit.name.parts.join(".");
+        self.set_owner_unit(&owner);
+        self.build_unit_short_aliases(unit, interfaces);
+        self.register_interface_enums(interfaces);
+        self.collect_unit_globals(unit);
+
+        for declaration in &unit.declarations {
+            self.compile_decl(declaration)?;
+        }
+        self.emit(Op::Halt, Self::location_of(&unit.span));
+        Ok(())
+    }
+
+    fn collect_unit_globals(&mut self, unit: &Unit) {
+        for declaration in &unit.declarations {
+            let name = match declaration {
+                Decl::Const(value) => &value.name,
+                Decl::Var(value) | Decl::MutableVar(value) => &value.name,
+                _ => continue,
+            };
+            self.module_globals.insert(canonical_name(name));
+        }
+    }
+
+    fn register_interface_enums(&mut self, interfaces: &[UnitInterface]) {
+        for interface in interfaces {
+            for symbol in &interface.symbols {
+                let InterfaceType::Enum(enum_ty) = &symbol.ty else {
+                    continue;
+                };
+                let mut next_value = 0_i64;
+                let variants: Vec<_> = enum_ty
+                    .variants
+                    .iter()
+                    .map(|variant| {
+                        let backing = variant.backing_value.unwrap_or(next_value);
+                        next_value = backing.saturating_add(1);
+                        super::EnumVariantInfo {
+                            name: variant.name.clone(),
+                            backing,
+                            field_names: variant
+                                .fields
+                                .iter()
+                                .map(|field| field.name.clone())
+                                .collect(),
+                        }
+                    })
+                    .collect();
+                let info = super::EnumInfo {
+                    type_name: enum_ty.name.clone(),
+                    has_data: variants
+                        .iter()
+                        .any(|variant| !variant.field_names.is_empty()),
+                    variants,
+                };
+                self.enums
+                    .insert(canonical_name(&enum_ty.name), info.clone());
+                self.enums.insert(canonical_name(&symbol.name), info);
+            }
+        }
+    }
+
     /// Whether the current declaration is at program/unit scope (not inside a callable body).
     fn is_module_level(&self) -> bool {
         self.scope_depth == 0 && self.enclosing_locals.is_empty()
@@ -60,8 +147,10 @@ impl Compiler {
                 let location = Self::location_of(&const_def.span);
                 self.compile_expr(&const_def.value)?;
                 if self.is_module_level() {
-                    let idx =
-                        self.add_constant(Value::Str(canonical_name(&const_def.name)), location)?;
+                    let idx = self.add_constant(
+                        Value::Str(canonical_name(&self.qualify_owned_name(&const_def.name))),
+                        location,
+                    )?;
                     self.emit(Op::SetGlobal(idx), location);
                     self.emit(Op::Pop, location);
                 } else {
@@ -73,8 +162,10 @@ impl Compiler {
                 let location = Self::location_of(&var_def.span);
                 self.compile_expr(&var_def.value)?;
                 if self.is_module_level() {
-                    let idx =
-                        self.add_constant(Value::Str(canonical_name(&var_def.name)), location)?;
+                    let idx = self.add_constant(
+                        Value::Str(canonical_name(&self.qualify_owned_name(&var_def.name))),
+                        location,
+                    )?;
                     self.emit(Op::SetGlobal(idx), location);
                     self.emit(Op::Pop, location);
                 } else {
@@ -110,14 +201,20 @@ impl Compiler {
                 });
                 next_value = backing + 1;
             }
+            let runtime_type_name = self.qualify_owned_name(&type_def.name);
             self.enums.insert(
                 canonical_name(&type_def.name),
                 super::EnumInfo {
-                    type_name: type_def.name.clone(),
+                    type_name: runtime_type_name.clone(),
                     variants,
                     has_data,
                 },
             );
+            if !runtime_type_name.eq_ignore_ascii_case(&type_def.name)
+                && let Some(info) = self.enums.get(&canonical_name(&type_def.name)).cloned()
+            {
+                self.enums.insert(canonical_name(&runtime_type_name), info);
+            }
         }
 
         if let TypeBody::Alias(fpas_parser::TypeExpr::Named { id, .. }) = &type_def.body {
@@ -128,8 +225,9 @@ impl Compiler {
         }
 
         if let TypeBody::Record(record) = &type_def.body {
+            let runtime_type_name = self.qualify_owned_name(&type_def.name);
             for method in &record.methods {
-                self.compile_record_method(&type_def.name, method)?;
+                self.compile_record_method(&runtime_type_name, method)?;
             }
         }
 

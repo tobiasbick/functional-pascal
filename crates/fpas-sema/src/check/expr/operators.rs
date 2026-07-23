@@ -71,7 +71,9 @@ impl Checker {
         span: Span,
     ) -> Ty {
         let left_ty = self.check_expr(left);
+        let left_ty = self.resolve_visible_type(&left_ty);
         let right_ty = self.check_expr(right);
+        let right_ty = self.resolve_visible_type(&right_ty);
         self.check_binary_op(op, &left_ty, &right_ty, span)
     }
 

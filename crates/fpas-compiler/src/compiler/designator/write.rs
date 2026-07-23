@@ -31,7 +31,6 @@ impl Compiler {
         };
 
         let remaining: Vec<_> = parts.collect();
-
         if let Some((global_name, consumed)) = self.module_global_prefix(target) {
             if consumed == target.parts.len() {
                 self.compile_expr(value)?;
@@ -108,7 +107,10 @@ impl Compiler {
                         || self.module_globals.contains(&canonical_name(&qualified)))));
 
         if is_simple_target {
-            if let Some(local_ref) = self.resolve_local(&qualified) {
+            if let Some(local_ref) = self
+                .resolve_local(&base_name)
+                .or_else(|| self.resolve_local(&qualified))
+            {
                 match local_ref {
                     LocalRef::Local(slot) => {
                         self.emit_local_write(slot, value, location)?;

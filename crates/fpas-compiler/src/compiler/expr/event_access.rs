@@ -52,7 +52,8 @@ impl Compiler {
             info.receiver_part_count,
             &info.receiver_reads,
         )?;
-        let name_idx = self.add_constant(Value::Str(info.getter_name.clone()), location)?;
+        let getter = self.qualify_name(&info.getter_name).to_string();
+        let name_idx = self.add_constant(Value::Str(getter), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::IsOptionSome, location);
         Ok(())
@@ -84,7 +85,8 @@ impl Compiler {
             info.receiver_part_count,
             &info.receiver_reads,
         )?;
-        let name_idx = self.add_constant(Value::Str(info.getter_name.clone()), location)?;
+        let getter = self.qualify_name(&info.getter_name).to_string();
+        let name_idx = self.add_constant(Value::Str(getter), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::UnwrapSome, location);
 

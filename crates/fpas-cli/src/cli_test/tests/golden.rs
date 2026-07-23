@@ -104,7 +104,7 @@ fn test_cli_compares_golden_stdout_sidecar() {
         &mut stderr,
     );
 
-    assert_eq!(exit, 0);
+    assert_eq!(exit, 0, "stderr={}", String::from_utf8_lossy(&stderr));
     let text = String::from_utf8(stderr).expect("utf-8");
     assert!(text.contains("PASS  echo_test.fpas"));
 }

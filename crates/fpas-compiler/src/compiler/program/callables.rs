@@ -4,7 +4,7 @@
 
 use crate::error::CompileError;
 use fpas_bytecode::Op;
-use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, RecordMethod};
+use fpas_parser::{Decl, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod};
 use fpas_sema::CaptureBinding;
 
 use super::super::canonical_name;
@@ -66,8 +66,9 @@ impl Compiler {
         let arity = Self::checked_u8(params.len(), "parameters", span)?;
 
         let code_start = self.chunk.len();
+        let runtime_name = self.qualify_owned_name(name);
         self.chunk
-            .insert_function(canonical_name(name), code_start, arity);
+            .insert_function(canonical_name(&runtime_name), code_start, arity);
 
         let captures = self
             .nested_routine_captures
@@ -127,6 +128,17 @@ impl Compiler {
         }
 
         let FuncBody::Block { nested, stmts } = body;
+        let mut restored_aliases = Vec::new();
+        for declaration in nested {
+            let name = match declaration {
+                Decl::Function(function) => &function.name,
+                Decl::Procedure(procedure) => &procedure.name,
+                _ => continue,
+            };
+            let key = canonical_name(name);
+            let runtime_name = canonical_name(&self.qualify_owned_name(name));
+            restored_aliases.push((key.clone(), self.short_aliases.insert(key, runtime_name)));
+        }
         for decl in nested {
             self.compile_decl(decl)?;
         }
@@ -143,6 +155,13 @@ impl Compiler {
         self.locals = self.enclosing_locals.pop().expect("enclosing locals frame");
         self.next_slot = saved_next_slot;
         self.scope_depth = saved_scope_depth;
+        for (name, previous) in restored_aliases.into_iter().rev() {
+            if let Some(previous) = previous {
+                self.short_aliases.insert(name, previous);
+            } else {
+                self.short_aliases.remove(&name);
+            }
+        }
 
         Ok((code_start, body_end))
     }

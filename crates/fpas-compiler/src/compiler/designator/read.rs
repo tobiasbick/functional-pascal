@@ -115,8 +115,11 @@ impl Compiler {
 
             // If the name resolves to a known function, emit a function reference value.
             let canonical_function_name = canonical_name(&name);
-            if let Some((_code_start, _arity)) =
-                self.chunk.functions().get(&canonical_function_name)
+            if self
+                .chunk
+                .functions()
+                .contains_key(&canonical_function_name)
+                || self.external_callables.contains(&canonical_function_name)
             {
                 if self.emit_captured_routine_closure(&canonical_function_name, location)? {
                     return Ok(());

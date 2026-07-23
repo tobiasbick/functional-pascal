@@ -79,6 +79,48 @@ pub(super) fn parse_compilation_unit_file(
     Ok((unit, warnings))
 }
 
+pub(super) enum SourceHeader {
+    Program(String),
+    Unit(QualifiedId),
+}
+
+pub(super) fn read_source_header(
+    path: &Path,
+    source_id: u32,
+) -> Result<(SourceHeader, Vec<String>), String> {
+    if let Ok(source) = fs::read(path)
+        && let Ok(sidecar) = fs::read(fpas_unit::sidecar_path(path))
+        && let Ok(compiled) = fpas_unit::decode(&sidecar)
+        && compiled.identity.source_hash == fpas_unit::Digest::of(&source)
+    {
+        return Ok((
+            SourceHeader::Unit(QualifiedId {
+                parts: compiled
+                    .identity
+                    .unit_name
+                    .split('.')
+                    .map(str::to_string)
+                    .collect(),
+                span: fpas_lexer::Span {
+                    offset: 0,
+                    length: 0,
+                    line: 1,
+                    column: 1,
+                    source_id,
+                },
+            }),
+            Vec::new(),
+        ));
+    }
+
+    let (unit, warnings) = parse_compilation_unit_file(path, source_id)?;
+    let header = match unit {
+        CompilationUnit::Program(program) => SourceHeader::Program(program.name),
+        CompilationUnit::Unit(unit) => SourceHeader::Unit(unit.name),
+    };
+    Ok((header, warnings))
+}
+
 pub(super) fn qualified_id_to_string(id: &QualifiedId) -> String {
     id.parts.join(".")
 }

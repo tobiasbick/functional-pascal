@@ -25,6 +25,12 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let mut end_patches = Vec::new();
+        let runtime_enum_type_name = self
+            .enums
+            .get(&canonical_name(enum_type_name))
+            .map(|info| info.type_name.as_str())
+            .unwrap_or(enum_type_name)
+            .to_string();
 
         for arm in arms {
             for label in &arm.labels {
@@ -35,7 +41,7 @@ impl Compiler {
 
                 self.emit_variant_check(
                     label,
-                    enum_type_name,
+                    &runtime_enum_type_name,
                     pattern.root_variant_name.as_deref(),
                     case_slot,
                     location,

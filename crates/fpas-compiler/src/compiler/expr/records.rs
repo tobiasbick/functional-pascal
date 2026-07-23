@@ -41,6 +41,7 @@ impl Compiler {
                         }
                     }
                     let field_count = field_specs.len() as u16;
+                    let type_name = self.qualify_name(&type_name).to_string();
                     let type_idx = self.add_constant(Value::Str(type_name), location)?;
                     self.emit(Op::MakeRecord(type_idx, field_count), location);
                 } else {

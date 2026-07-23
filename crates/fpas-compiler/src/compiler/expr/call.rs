@@ -12,6 +12,17 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
+        let original_name = name;
+        if let Some(local_ref) = self.resolve_local(name) {
+            for arg in args {
+                self.compile_expr(arg)?;
+            }
+            self.emit_local_ref_read(local_ref, location);
+            let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;
+            self.emit(Op::CallValue(arity), location);
+            return Ok(());
+        }
+
         let qualified_storage = self
             .short_aliases
             .get(&super::super::canonical_name(name))
@@ -39,20 +50,10 @@ impl Compiler {
             return Ok(());
         }
 
-        if let Some(local_ref) = self.resolve_local(name) {
-            for arg in args {
-                self.compile_expr(arg)?;
-            }
-            self.emit_local_ref_read(local_ref, location);
-            let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;
-            self.emit(Op::CallValue(arity), location);
-            return Ok(());
-        }
-
         for arg in args {
             self.compile_expr(arg)?;
         }
-        if self.emit_captured_routine_closure(name, location)? {
+        if self.emit_captured_routine_closure(original_name, location)? {
             let arity = Self::checked_u8_at(args.len(), "call arguments", location)?;
             self.emit(Op::CallValue(arity), location);
             return Ok(());
@@ -71,7 +72,8 @@ impl Compiler {
         args: &[Expr],
         location: SourceLocation,
     ) -> Result<(), CompileError> {
-        if self.compile_std_library_call(qualified_method, args, location)? {
+        let qualified_method = self.qualify_name(qualified_method).to_string();
+        if self.compile_std_library_call(&qualified_method, args, location)? {
             return Ok(());
         }
 
@@ -84,7 +86,7 @@ impl Compiler {
             self.compile_expr(arg)?;
         }
         let total_args = Self::checked_u8_at(args.len() + 1, "method call arguments", location)?;
-        let name_idx = self.add_constant(Value::Str(qualified_method.into()), location)?;
+        let name_idx = self.add_constant(Value::Str(qualified_method), location)?;
         self.emit(Op::Call(name_idx, total_args), location);
         Ok(())
     }

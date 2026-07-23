@@ -8,8 +8,8 @@ uses
   Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins, Std.Tui.Layout.Measure,
   Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
   Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer, Std.Tui.Rendering.Canvas,
-  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd,
-  Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+  Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application,
+  Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
 
 type
   /// Zero-based terminal-cell coordinate.

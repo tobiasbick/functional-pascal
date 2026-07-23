@@ -16,6 +16,7 @@ fpas-fmt = { path = "../fpas-fmt" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-build = { path = "../fpas-build" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-vm = { path = "../fpas-vm" }
 fpas-std = { path = "../fpas-std" }

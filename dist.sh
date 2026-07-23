@@ -3,6 +3,7 @@ set -eu
 
 # Build release binary and bundled standard-library sources in bin/ (Linux/FreeBSD).
 cargo build --release -p fpas-cli
+cargo run --release -p fpas-build --example precompile_stdlib -- target/release/lib
 mkdir -p bin
 cp target/release/fpas bin/fpas
 mkdir -p bin/lib

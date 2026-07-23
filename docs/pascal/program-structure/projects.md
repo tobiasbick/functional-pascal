@@ -35,11 +35,14 @@ projects = ["../my-lib/my-lib.fpasprj"]
 - **`library`** — reusable code as `unit` files. Other projects consume libraries via `[dependencies].projects`. Run library code through a `program` project that depends on it (`fpas check` type-checks a library manifest directly).
 - **`test`** — a test bundle for `fpas test`. Lists `unit` helpers and `*_test.fpas` program entry files in `[sources]`. Optional `[test.overrides."<file>_test.fpas"]` tables set per-test `script` and `headless_graph` for the runner. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
 
-Library dependencies are **source-level**: the loader merges `.fpas` from dependency manifests and links them with the consumer.
+Library dependencies remain manifest- and source-based: projects identify libraries by
+`.fpasprj` path or workspace member name. Their units are compiled independently into
+source-adjacent `.fpascu` sidecars and linked through their public interfaces; dependency
+declarations are not merged into the consumer's program AST.
 
 ### `[dependencies]` section
 
-Declares other `.fpasprj` files whose library sources are merged into this project before linking.
+Declares other `.fpasprj` files whose units are available to this project's unit graph.
 
 | Field | Required | Description |
 |---|---|---|
@@ -59,6 +62,10 @@ Rules:
 - Cyclic `dependencies.projects` chains are rejected.
 - Unit names must remain unique across the consumer and all transitive library sources (case-insensitive), same as within a single project.
 - Library sources are linked only when reachable through `uses` from the program entry point (see [Units](units.md)).
+- Missing, stale, corrupt, or compiler/bytecode-incompatible `.fpascu` files are rebuilt
+  automatically beside their `.fpas` sources.
+- `.fpascu` is a derived build artifact, not a dependency syntax and not a source-less package
+  format. The `.fpasprj` manifest and `.fpas` sources remain required and authoritative.
 
 ### Exports section (library projects only)
 

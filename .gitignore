@@ -1,5 +1,6 @@
 # Rust / Cargo
 target/
+*.fpascu
 # Alternate CARGO_TARGET_DIR worktrees (e.g. CI/agent local runs)
 /target-*/
 debug/

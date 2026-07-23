@@ -102,23 +102,23 @@ fn run_source_file(
     };
 
     if let Some(standard_library) = standard_library {
-        let linked = match project::build_program_with_standard_library(
+        let built = match crate::project_build::build_test_program(
             path,
             &[],
             &project::ProjectLinkMeta::default(),
-            standard_library,
+            Some(standard_library),
         ) {
-            Ok(linked) => linked,
+            Ok(built) => built,
             Err(message) => {
                 let _ = writeln!(stderr, "{message}");
                 return 1;
             }
         };
         let path_text = path.to_string_lossy();
-        return run_compiled_program(
+        return run_chunk(
             path_text.as_ref(),
-            &linked.program,
-            Some(&linked.source_paths),
+            built.chunk,
+            Some(&built.source_paths),
             program_args,
             stdout,
             stderr,
@@ -149,30 +149,15 @@ fn run_project_file(
 
     match loaded.kind {
         project::ProjectKind::Program => {
-            let Some(main) = loaded.main else {
+            let Some(main) = loaded.main.as_ref() else {
                 let _ = writeln!(
                     stderr,
                     "Project is missing `project.main`.\n  help: Set `main = \"src/main.fpas\"` in `[project]`."
                 );
                 return 1;
             };
-            let linked_program = match standard_library.map_or_else(
-                || {
-                    project::build_program_with_source_map(
-                        &main,
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                    )
-                },
-                |library| {
-                    project::build_program_with_standard_library(
-                        &main,
-                        &loaded.source_files,
-                        &loaded.link_meta,
-                        library,
-                    )
-                },
-            ) {
+            let built_program = match crate::project_build::build_program(&loaded, standard_library)
+            {
                 Ok(program) => program,
                 Err(message) => {
                     let _ = writeln!(stderr, "{message}");
@@ -181,10 +166,10 @@ fn run_project_file(
             };
 
             let main_path = main.to_string_lossy();
-            run_compiled_program(
+            run_chunk(
                 main_path.as_ref(),
-                &linked_program.program,
-                Some(&linked_program.source_paths),
+                built_program.chunk,
+                Some(&built_program.source_paths),
                 program_args,
                 stdout,
                 stderr,
@@ -259,6 +244,17 @@ fn run_compiled_program(
         }
     };
 
+    run_chunk(path, chunk, source_paths, program_args, stdout, stderr)
+}
+
+fn run_chunk(
+    path: &str,
+    chunk: fpas_bytecode::Chunk,
+    source_paths: Option<&[PathBuf]>,
+    program_args: Vec<String>,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
     let mut vm = fpas_vm::Vm::with_writer_and_args(chunk, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
         emit_diagnostic(path, source_paths, &diagnostic, stderr);

@@ -62,7 +62,9 @@ fn main() {
 mod main_tests;
 
 #[cfg(test)]
+#[cfg(test)]
 mod project;
+mod project_build;
 
 #[cfg(test)]
 mod test_support;

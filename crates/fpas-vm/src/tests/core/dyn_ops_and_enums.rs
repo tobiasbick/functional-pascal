@@ -73,3 +73,27 @@ fn is_variant_requires_matching_type_and_variant() {
 
     assert_eq!(run_ok_output(chunk), vec!["true", "false"]);
 }
+
+#[test]
+fn is_variant_matches_case_insensitive_language_identities() {
+    let mut chunk = Chunk::new();
+    let stored_type = chunk
+        .add_constant(Value::Str("Demo.Shape".into()))
+        .expect("constant");
+    let stored_variant = chunk
+        .add_constant(Value::Str("Point".into()))
+        .expect("constant");
+    let checked_type = chunk
+        .add_constant(Value::Str("demo.shape".into()))
+        .expect("constant");
+    let checked_variant = chunk
+        .add_constant(Value::Str("point".into()))
+        .expect("constant");
+
+    chunk.emit(Op::MakeEnum(stored_type, stored_variant, 0), loc());
+    chunk.emit(Op::IsVariant(checked_type, checked_variant), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["true"]);
+}

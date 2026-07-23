@@ -72,6 +72,8 @@ pub struct Compiler {
     enclosing_locals: Vec<Vec<Local>>,
     /// Short (unqualified) name → fully-qualified `Std.*` name.
     short_aliases: HashMap<String, String>,
+    /// Canonical names of imported callables that may be used as first-class values.
+    external_callables: HashSet<String>,
     expr_types: ExprTypeMap,
     /// Maps call-expression/designator identity to qualified method name.
     method_calls: MethodCallMap,
@@ -100,6 +102,8 @@ pub struct Compiler {
     event_raises: EventRaiseMap,
     /// Canonical names of module-level globals (`const` / `var` / `mutable var`).
     module_globals: HashSet<String>,
+    /// Canonical unit prefix while compiling an independently analyzed unit.
+    owner_unit: Option<String>,
 }
 
 struct LoopCtx {
@@ -138,6 +142,7 @@ impl Compiler {
             enums: HashMap::new(),
             enclosing_locals: Vec::new(),
             short_aliases: HashMap::new(),
+            external_callables: HashSet::new(),
             expr_types,
             method_calls,
             record_defaults,
@@ -151,6 +156,22 @@ impl Compiler {
             event_assigned,
             event_raises,
             module_globals: HashSet::new(),
+            owner_unit: None,
+        }
+    }
+
+    fn set_owner_unit(&mut self, owner: &str) {
+        self.owner_unit = Some(owner.to_ascii_lowercase());
+    }
+
+    fn qualify_owned_name(&self, name: &str) -> String {
+        let Some(owner) = &self.owner_unit else {
+            return name.to_string();
+        };
+        if name.to_ascii_lowercase().starts_with(&format!("{owner}.")) {
+            name.to_string()
+        } else {
+            format!("{owner}.{name}")
         }
     }
 

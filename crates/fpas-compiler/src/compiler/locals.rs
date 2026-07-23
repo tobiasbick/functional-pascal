@@ -134,7 +134,11 @@ impl Compiler {
     }
 
     pub(super) fn program_uses_std_unit(program: &Program, unit: &str) -> bool {
-        program.uses.iter().any(|u| {
+        Self::uses_std_unit(&program.uses, unit)
+    }
+
+    pub(super) fn uses_std_unit(uses: &[fpas_parser::QualifiedId], unit: &str) -> bool {
+        uses.iter().any(|u| {
             u.parts.len() == 2
                 && is_std_root_segment(&u.parts[0])
                 && canonical_std_unit_from_segments(&u.parts[0], &u.parts[1]) == Some(unit)

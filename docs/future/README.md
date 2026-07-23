@@ -10,9 +10,10 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
-| Libraries | [Compiled-unit architecture](libraries.md), [implementation plan](libraries-implementation-plan.md) | Source-adjacent `.fpascu` unit objects, incremental compilation, linking, and later finer exports |
+| Libraries | [Compiled-unit architecture](libraries.md) | Implemented `.fpascu` decisions and remaining library extensions |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Compiler panics and source-level language constraints found during implementation |
 | Language | [Opaque records](opaque-records.md) | Representation hiding and unforgeable transient capabilities |
+| IDE | [Single-document IDE replacement](ide/README.md) | Fixed full-screen editor, file lifecycle, and compiler integration over `Std.Tui` |
 
 ## Rules
 

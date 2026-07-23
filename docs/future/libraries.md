@@ -1,242 +1,218 @@
-# Future: Libraries
+# Libraries: Compiled-Unit Architecture
 
-## Fixed decisions for the implementation plan
+Status: implemented architecture record with remaining follow-up work.
 
-These decisions define the scope of the separately compiled unit work:
+The normative description of current behavior is:
 
-- **Automatic builds:** `fpas check`, `fpas run`, and `fpas test` automatically build missing, stale, or incompatible compiled units. An explicit `fpas build` may later provide eager compilation, but is not required for normal path or workspace dependencies.
-- **Source-adjacent unit objects:** compiling `Example.fpas` writes `Example.fpascu` beside it. `.fpascu` means Functional Pascal compiled unit. These derived files are excluded from source discovery and should be ignored by version control.
-- **No new unit lifecycle syntax:** the work does not add explicit unit initialization or finalization blocks. Existing top-level constant and variable initializers remain part of the compiled unit startup code and retain dependency-correct execution order.
-- **No initial container or global cache:** the first implementation uses one `.fpascu` sidecar per unit. A `.fpaslib` container and a shared machine-wide cache remain possible later optimizations.
-- **Sources remain authoritative:** `.fpasprj` paths, workspace names, `.fpas` sources, and current visibility rules remain the dependency model. A stale or invalid `.fpascu` is rebuilt from its source rather than treated as an independent package.
+- [`units.md`](../pascal/program-structure/units.md) for unit imports and
+  source-adjacent `.fpascu` files;
+- [`projects.md`](../pascal/program-structure/projects.md) for library projects,
+  dependencies, and `[exports].units`;
+- [`workspaces.md`](../pascal/program-structure/workspaces.md) for workspace
+  dependency resolution;
+- [`cli.md`](../pascal/program-structure/cli.md) for automatic builds;
+- [`Std.Test`](../pascal/std/testing/test.md) for compiled-unit reuse during test
+  execution.
 
-## Implemented
+This page preserves the decisions and architectural intent behind that behavior.
+It is not a second user-facing specification.
 
-Source-level library projects:
+## Fixed decisions
 
-- `kind = "library"` in `.fpasprj` (units only, no `main`).
-- Consumption via `[dependencies].projects` and `[dependencies].workspace`.
-- Transitive dependencies, cycle detection, `fpas check` on libraries and workspaces.
-- **`[exports].units`** — optional project-level public unit list for dependents (internal units stay library-private).
+These decisions are implemented and remain the baseline for later library work:
 
-Spec: [`docs/pascal/program-structure/projects.md`](../pascal/program-structure/projects.md). Examples: [`examples/pascal/library-deps/`](../../examples/pascal/library-deps/), [`examples/pascal/monorepo/`](../../examples/pascal/monorepo/).
+- **Every unit is compiled independently.** FPAS no longer compiles libraries by
+  cloning their declarations into one consumer `Program` AST.
+- **Source-adjacent unit objects use `.fpascu`.** Compiling `Example.fpas`
+  produces `Example.fpascu` beside the source. The suffix means Functional
+  Pascal compiled unit.
+- **Normal commands build automatically.** `fpas check`, `fpas run`, and
+  `fpas test` rebuild missing, stale, incompatible, or corrupt unit objects as
+  needed. A separate `fpas build` command is not required.
+- **Sources and manifests are authoritative.** `.fpascu` files are derived,
+  replaceable build outputs. They do not introduce another dependency syntax.
+- **Compatibility is explicit.** A unit object records compiled-unit format,
+  compiler, bytecode, option, source, interface, and dependency identities. A
+  mismatch invalidates the object instead of attempting best-effort loading.
+- **Interfaces are the incremental boundary.** An implementation-only change
+  rebuilds its unit and relinks consumers, but does not semantically rebuild
+  consumers while the exported interface hash remains unchanged.
+- **Linking is reachability-based.** The final bytecode image includes only unit
+  objects reachable from the program's `uses` graph.
+- **Existing visibility rules remain.** Unit `private` declarations and project
+  `[exports].units` continue to define the public boundaries.
+- **No new unit lifecycle syntax exists.** Existing top-level constant and
+  variable initializers form unit startup code and execute in deterministic
+  dependency order.
+- **The initial artifact is one sidecar per unit.** There is no `.fpaslib`
+  container, project-local artifact directory, global cache, registry, lockfile,
+  or semver dependency resolver.
+- **There is no compatibility promise for obsolete `.fpascu` formats.** The
+  source is rebuilt with the current compiler.
 
-## Agreed direction: separately compiled units
+## Project dependency model
 
-Libraries should eventually follow a Turbo Pascal-style compilation model:
+Libraries remain normal FPAS projects:
 
-1. Compile every unit separately.
-2. Store its public semantic interface and compiled implementation.
-3. Recompile a unit only when its source or a consumed dependency interface changes.
-4. Link the artifacts of units reachable from the program's `uses` graph into the final executable bytecode image.
+- `kind = "library"` declares a library project containing units and no `main`;
+- `[dependencies].projects` references relative or absolute `.fpasprj` files;
+- `[dependencies].workspace` references a member by `project.name` in the
+  enclosing `.fpasworkspace`;
+- `[exports].units` optionally lists units visible to dependent projects;
+- unlisted units remain usable inside their owning library but are inaccessible
+  across the project boundary.
 
-The current source-level dependency model remains the source of truth. Project dependencies continue to use paths to `.fpasprj` files or workspace member names. Compiled artifacts are derived build outputs, not a replacement dependency syntax.
+Project resolution, unit compilation, and program linking are deliberately
+separate concerns:
 
-The final implementation plan should preserve the existing distinction between:
+1. `fpas-project` loads projects and constructs the reachable unit graph.
+2. `fpas-build` validates or builds independent unit objects.
+3. `fpas-linker` combines the program object and reachable unit objects into the
+   VM's final `Chunk`.
 
-- **Project dependency resolution** — finds library projects, validates dependency cycles and enforces `[exports].units`.
-- **Unit compilation** — produces one independently reusable compiled object per unit.
-- **Program linking** — selects reachable unit objects and combines them with the program into one executable bytecode image.
+## `.fpascu` contents
 
-## Goals
+Each compiled unit contains a versioned envelope with three logical areas.
 
-- Avoid parsing, import rewriting, semantic analysis and bytecode generation for unchanged library units on every consumer build.
-- Make unit interfaces the incremental compilation boundary.
-- Include only units reachable through `uses` in the final program.
-- Keep diagnostics attributable to the original source file and source location.
-- Preserve private unit members and project-level `[exports].units`.
-- Support source-defined standard-library units with the same compiled-unit model.
-- Detect stale or incompatible artifacts deterministically and rebuild them from source.
-- Keep the artifact and linker design usable for normal libraries rather than creating a `Std.Tui`-specific mechanism.
+### Identity and validation metadata
 
-## Non-goals
+- canonical and display unit identity;
+- source-content hash;
+- semantic-interface hash;
+- compiler identity;
+- bytecode version;
+- compiled-unit format version;
+- semantic/code-generation option hash;
+- ordered direct dependencies and their expected interface hashes.
 
-- Package registries or remote package discovery.
-- Lockfiles or semver dependency resolution.
-- Installing libraries into a global package store.
-- Explicit unit initialization or finalization syntax.
-- Maintaining compatibility with an obsolete compiled-unit format.
-- Shipping source-less third-party libraries as an initial requirement.
-- A project-level `.fpaslib` container or shared machine-wide artifact cache in the first implementation.
-- Per-symbol dead-code elimination inside an included unit. The first implementation may link the complete implementation of every reachable unit.
+Consequently, a bytecode-format change makes an existing `.fpascu`
+incompatible. The same applies to a compiler identity change. A source, option,
+unit-name, or dependency-interface change makes it stale. Missing, stale,
+incompatible, and corrupt objects are rebuilt from source.
 
-## Proposed artifact model
-
-The compiler should produce one **compiled unit object** beside each unit source:
-
-```text
-src/
-  Geometry.fpas
-  Geometry.fpascu
-```
-
-The `.fpascu` serialization representation remains an implementation decision. A later project-level artifact such as `.fpaslib` may be a container or index over these unit objects, but it must not collapse the library into one indivisible bytecode chunk.
-
-The logical content of a compiled unit object should include:
-
-### Identity and validation
-
-- Canonical unit name.
-- Source content hash.
-- Compiler version.
-- Bytecode and compiled-unit format version.
-- Target/runtime compatibility information when required.
-- Ordered direct unit dependencies with the semantic interface hash expected from each dependency.
-- Compilation options that affect semantics or emitted bytecode.
+Validation uses recorded identities and hashes, not file modification times.
+The decoder bounds strings, dependency counts, and payload sizes and rejects
+bad magic, unsupported versions, truncation, inconsistent hashes, invalid tags,
+and trailing data.
 
 ### Semantic interface
 
-- Exported types and their complete layouts.
-- Exported constants and their values.
-- Exported variables, routines, methods, properties and events.
-- Routine signatures, calling conventions and generic information required by consumers.
-- Visibility information needed to enforce unit `private` and project `[exports].units`.
-- A stable semantic interface hash.
+The serialized interface contains the public information required to analyze a
+consumer without loading the dependency implementation AST:
 
-Private implementation details should not contribute to the interface hash unless they alter an exported type, value or signature. This allows an implementation-only change to avoid recompiling consumer units.
+- constants and compile-time values;
+- variables and mutability;
+- functions, procedures, parameters, generics, and constraints;
+- records, fields, methods, properties, events, and relevant defaults;
+- enums, variants, and associated data;
+- aliases and composed types;
+- canonical symbol ownership and visibility information.
 
-### Compiled implementation
+Private bodies and source spans do not affect the interface hash unless they
+change exported observable information.
 
-- Relocatable bytecode for the unit's routines and top-level declaration initializers.
-- Constant pool entries owned by the unit.
-- Exported symbol definitions.
-- Imported symbol references.
-- Relocation records for constants, globals, routines, types and bytecode addresses.
-- Function entry metadata.
-- Startup-code metadata for existing top-level declaration initializers.
-- Source maps and any diagnostic metadata required at runtime.
+### Relocatable implementation
 
-The current executable `Chunk` is a fully bound program image and is not itself a compiled unit object. The linker must translate multiple compiled unit objects into the final `Chunk`, remapping constant indices, globals, functions and instruction addresses as needed.
+The implementation payload contains:
 
-## Compilation model
+- relocatable bytecode and local constant data;
+- function, global, import, and export definitions;
+- relocations for addresses and pool indices;
+- startup code for top-level declaration initializers;
+- original source locations needed by diagnostics.
 
-Unit compilation should have explicit interface and implementation phases.
+The executable `Chunk` is still the final fully bound program image. A
+`.fpascu` is a relocatable input to that image, not an executable chunk by
+itself.
 
-### Interface phase
+## Build and invalidation model
 
-1. Parse the unit.
-2. Resolve and load interfaces of units listed in `uses`.
-3. Validate the unit's public declarations.
-4. Produce the semantic interface and its stable hash.
+Units are processed in stable dependency order. For each unit, the build
+pipeline:
 
-An implementation plan must define how mutually dependent interfaces are handled. If cyclic unit dependencies remain forbidden, the compiler should report the dependency cycle with the participating unit names and `uses` edges.
+1. derives the adjacent path with the `.fpascu` extension;
+2. compares the recorded identity with the source, compiler, options, and
+   already resolved dependency interfaces;
+3. decodes and reuses the semantic interface and object when everything
+   matches;
+4. otherwise parses and independently analyzes the source;
+5. emits a new interface and relocatable object;
+6. validates and publishes the completed sidecar;
+7. links the reachable objects with the program object.
 
-### Implementation phase
+An exported interface change invalidates direct consumers and propagates
+through their rebuilt interface identities. A private implementation change
+does not cause semantic consumer recompilation when the public interface hash
+is unchanged, but the final program is relinked with the changed object.
 
-1. Analyze private declarations and routine bodies against the completed dependency interfaces.
-2. Emit relocatable unit bytecode.
-3. Record imports, exports, relocations, top-level declaration initializers and source mapping.
-4. Atomically store or update the source-adjacent `.fpascu` object.
+Build events and counters record parsing, interface analysis, implementation
+analysis, compilation, sidecar reuse, and relinking. Regression tests use those
+events rather than timing to prove reuse.
 
-The build graph should process units in dependency order and may compile independent graph branches in parallel.
+## Sidecar lifecycle
 
-## Linking model
+`.fpascu` files:
 
-The linker should:
+- live beside their matching `.fpas` source;
+- are ignored by Git and excluded from source discovery, formatting, and test
+  discovery;
+- are written through a same-directory temporary file and validated before
+  publication;
+- use a sidecar lock so concurrent commands do not observe partial objects;
+- retain the source path for diagnostics without putting absolute
+  machine-specific paths into deterministic identity content.
 
-1. Start from the program's `uses` list.
-2. Resolve the transitive reachable-unit graph.
-3. Reject missing, stale or incompatible unit objects before producing a partial image.
-4. Enforce library `[exports].units` at project boundaries.
-5. Assign final global, constant and function locations.
-6. Resolve every imported symbol against exactly one exported definition.
-7. Merge unit bytecode and source maps into the final `Chunk`.
-8. Emit existing top-level declaration initializer code in deterministic dependency order.
-9. Emit the program body after required declaration initializers.
+A read-only source directory can use a compatible existing sidecar. If a
+rebuild is required and the adjacent sidecar cannot be written, the build
+reports the source and artifact paths instead of redirecting the object to an
+implicit cache.
 
-## Incremental invalidation
-
-A unit must be rebuilt when any of these inputs changes:
-
-- Its source content.
-- A semantic compilation option.
-- The compiler, bytecode format or compiled-unit format becomes incompatible.
-- The semantic interface hash of a directly consumed unit changes.
-- Project visibility metadata changes in a way that affects its imports or exports.
-
-An implementation-only dependency change with an unchanged semantic interface should require relinking, but should not force semantic recompilation of consumers.
-
-Artifact validation must use recorded hashes and versions. File timestamps alone are not sufficient.
-
-The implementation plan must define:
-
-- Exact `.fpascu` sidecar naming for unusual file names and case-insensitive filesystems.
-- Atomic artifact writes.
-- Coordination of concurrent attempts to rebuild the same sidecar.
-- Cleanup of stale or orphaned `.fpascu` files.
-- Behavior after an interrupted build.
-- Diagnostics when a source directory is read-only.
-- Version-control ignore rules and a future `fpas clean` workflow.
+Plain single-file programs without imported project or standard-library units
+do not produce a compiled-unit sidecar for the program itself.
 
 ## Standard library and `Std.Tui`
 
-Source-defined standard-library units should use the same interface, object and linker formats as project libraries. The compiler distribution may include precompiled objects matching its bundled standard-library sources.
+Source-defined `Std.*` units use the same graph, interface, object, sidecar, and
+linker pipeline as project libraries. Distribution scripts precompile sidecars
+for the bundled standard-library sources.
 
-`Std.Tui` is an important acceptance workload because its public facade reaches a large graph of focused internal units. With compiled units:
+`--std-lib <directory>` remains a complete source override. Sidecars are reused
+only when their recorded source and compatibility identities match the selected
+directory.
 
-- Unchanged internal TUI units should not be reparsed or semantically reanalyzed for each consumer.
-- Changing one internal implementation should rebuild that unit, relink reachable objects and rebuild dependent units only when its semantic interface changes.
-- A program importing `Std.Tui` should receive the same observable behavior and diagnostics as a source-only build.
+`Std.Tui` is the large acceptance workload: its focused internal units compile
+independently, unchanged internal objects are reused, and consumers receive the
+same behavior and source diagnostics as a clean source build.
 
-`--std-lib <directory>` remains a complete source override. Precompiled bundled objects must not be reused when their recorded source, interface or compiler compatibility data does not match the selected standard-library directory. The compiler should automatically rebuild matching `.fpascu` sidecars beside the selected sources. If that directory is read-only and no valid sidecar exists, the diagnostic must name the source and expected sidecar and explain that the directory must contain compatible precompiled objects or be writable.
+## Verification snapshot
 
-## CLI and build lifecycle
+The implementation is covered by positive, negative, edge, corruption,
+invalidation, linker, CLI/project, standard-library, and end-to-end FPAS tests.
+The recorded isolated Windows debug measurement for the standard library was:
 
-The implementation plan must provide:
+- cold build: 48 compiled, 0 reused, approximately 712 ms;
+- warm build: 0 compiled, 48 reused, approximately 150 ms.
 
-- Automatic sidecar validation and rebuilding for `fpas check`, `fpas run`, and `fpas test`.
-- No required library manifest schema change for locating sidecars.
-- How `fpas check` validates a `kind = "library"` project without producing a runnable program.
-- How `fpas test` shares compiled unit objects across test programs and workers.
-- Safe behavior for valid sidecars in a read-only source tree.
-- A later decision on whether `fpas build` and `fpas clean` should be added as convenience commands.
+These measurements are contextual performance evidence. Deterministic build
+counters are the correctness proof for reuse.
 
-These decisions must not introduce install steps merely to consume a path or workspace library during normal development.
+## Remaining library work
 
-## Diagnostics and reproducibility
+The compiled-unit architecture is complete. Potential later work is deliberately
+separate:
 
-Failures involving compiled units should name:
+- finer per-symbol project export and re-export tables beyond unit-level
+  `[exports].units` and declaration-level `private`;
+- an explicit `fpas build` convenience command for eager compilation;
+- an explicit `fpas clean` workflow for derived sidecars and stale lock files;
+- an optional project-level `.fpaslib` container or index without collapsing
+  independently reusable unit objects;
+- an optional shared artifact cache with explicit, predictable placement;
+- source-less library distribution, if a stable compatibility policy is ever
+  desired;
+- package management, registries, lockfiles, and version solving as independent
+  product decisions;
+- finer per-symbol dead-code elimination inside a reachable unit.
 
-- The consuming unit or program.
-- The dependency unit and project.
-- The artifact path when relevant.
-- The expected and actual interface or format version.
-- A concrete rebuild or cleanup action.
-
-Given identical sources, compiler version and semantic options, unit interfaces and emitted unit objects should be deterministic. Source-only and artifact-backed builds must produce equivalent executable behavior.
-
-## Implementation-plan inputs
-
-A future implementation plan should break the work into independently verifiable stages covering at least:
-
-1. Stable semantic interface representation and hashing.
-2. Unit dependency graph and incremental invalidation.
-3. Relocatable bytecode object representation.
-4. Serialization and compatibility validation.
-5. Unit compiler interface/implementation phases.
-6. Linker construction of a final `Chunk`.
-7. Source-adjacent sidecar lifecycle and concurrent writes.
-8. CLI integration for projects, workspaces, tests and `--std-lib`.
-9. Bundled standard-library artifacts.
-10. Migration of `Std.Tui` as the primary large acceptance workload.
-11. Documentation, diagnostics and positive, negative and edge-case regression coverage.
-
-Each stage should retain a source-only comparison path until artifact-backed output has equivalence coverage. The completed implementation should remove obsolete source-merging paths rather than keeping permanent compatibility layers.
-
-## Acceptance criteria for the eventual feature
-
-- Two programs consuming the same unchanged library reuse its compiled unit objects.
-- Editing a private routine body does not semantically recompile consumers when the unit interface hash is unchanged.
-- Editing an exported signature invalidates direct and transitive consumers.
-- Only units reachable through `uses` are linked.
-- Private units and private symbols remain inaccessible across their existing boundaries.
-- Dependency cycles, unresolved imports, duplicate exports and incompatible artifacts produce actionable diagnostics.
-- Existing top-level declaration initializer order is deterministic and dependency-correct.
-- Source locations in compile-time and runtime diagnostics still identify the original `.fpas` file.
-- Artifact-backed and clean source-only builds pass equivalent behavior tests.
-- `Std.Tui` consumers reuse unchanged internal compiled units.
-- `fpas test` safely reuses unit objects across compatible test builds.
-
-## Further library work
-
-- Finer-grained export control (per-symbol export tables on the project, re-export lists, etc.) beyond unit-level `[exports]` and per-unit `private`.
+None of these extensions should weaken source authority, deterministic
+validation, unit/project visibility, or the separate compilation boundary.

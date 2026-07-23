@@ -20,7 +20,6 @@ use super::load::{apply_test_script, load_program};
 #[derive(Clone)]
 pub(in crate::cli_test) struct CompiledTestProgram {
     pub image: Arc<fpas_bytecode::Chunk>,
-    pub entry_ip: usize,
     pub source_paths: Arc<Vec<PathBuf>>,
 }
 
@@ -75,11 +74,38 @@ pub(super) fn run_test_program(
     let path_text = path.to_string_lossy();
     let (mut vm, source_paths) = if let Some(compiled) = compiled {
         (
-            fpas_vm::Vm::from_image(Arc::clone(&compiled.image), compiled.entry_ip),
+            fpas_vm::Vm::from_shared_chunk(Arc::clone(&compiled.image)),
             Some(Arc::clone(&compiled.source_paths)),
         )
+    } else if let Some(link) = link {
+        if let Err(message) = super::load::reject_unit_test_entry(path, link) {
+            if output.emit_fail_banner() {
+                let _ = writeln!(stderr, "  FAIL  {display}");
+            }
+            let _ = writeln!(stderr, "        {message}");
+            return TestOutcome::CompileError;
+        }
+        let built = match crate::project_build::build_test_program(
+            path,
+            &link.source_files,
+            &link.link_meta,
+            link.standard_library.as_deref(),
+        ) {
+            Ok(built) => built,
+            Err(message) => {
+                if output.emit_fail_banner() {
+                    let _ = writeln!(stderr, "  FAIL  {display}");
+                }
+                let _ = writeln!(stderr, "        {message}");
+                return TestOutcome::CompileError;
+            }
+        };
+        (
+            fpas_vm::Vm::new(built.chunk),
+            Some(Arc::new(built.source_paths)),
+        )
     } else {
-        let (program, source_paths) = match load_program(path, link) {
+        let (program, source_paths) = match load_program(path) {
             Ok(value) => value,
             Err(message) => {
                 if output.emit_fail_banner() {

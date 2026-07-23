@@ -181,6 +181,15 @@ impl ScopeStack {
             .map(|entry| &entry.symbol)
     }
 
+    /// Look up a symbol only in the program root scope.
+    pub fn lookup_root(&self, name: &str) -> Option<&Symbol> {
+        let canonical_name = canonical_symbol_name(name);
+        self.scopes[0]
+            .symbols
+            .get(&canonical_name)
+            .map(|entry| &entry.symbol)
+    }
+
     /// Mutable lookup for updating a symbol after initial definition.
     pub fn lookup_mut(&mut self, name: &str) -> Option<&mut Symbol> {
         let canonical_name = canonical_symbol_name(name);

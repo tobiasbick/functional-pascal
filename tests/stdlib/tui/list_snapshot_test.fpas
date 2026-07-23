@@ -1,0 +1,47 @@
+program TuiListSnapshotTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+type
+  ListModel = record
+    Selected: integer;
+  end;
+
+function ViewList(State: ListModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
+
+                                                                        
+
+                                                                                                              ])
+
+                                                                      ])
+end;
+
+function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.SelectionChanged(Source, Action, Selected):
+    begin
+      return record Selected := Selected; end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  mutable var Model: ListModel := record Selected := 1; end;
+  Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '  Alpha'));
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), '> Beta'));
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(3), '  Gamma'));
+  App.Close()
+end.

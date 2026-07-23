@@ -1,0 +1,45 @@
+unit Std.Tui.Layout.LayoutSettings;
+
+uses Std.Tui.Layout.Alignment, Std.Tui.Layout.Margins, Std.Tui.Layout.SizePolicy;
+
+private function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
+begin
+  if Value < 0 then
+  begin
+    panic('Tui layout stretch must not be negative')
+  end;
+  return Value
+end;
+
+type
+  /// Immutable layout inputs attached to a single-child layout wrapper.
+  TuiLayoutSettings = record
+    Margins: TuiMargins;
+    SizePolicy: TuiSizePolicy;
+    Alignment: TuiAlignment;
+    Stretch: integer;
+
+    /// Creates validated layout settings.
+
+    static function Create(
+  Margins: TuiMargins;
+  SizePolicy: TuiSizePolicy;
+  Alignment: TuiAlignment;
+  Stretch: integer
+): TuiLayoutSettings;
+    begin
+      return record
+        Margins := Margins;
+        SizePolicy := SizePolicy;
+        Alignment := Alignment;
+        Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch);
+      end
+    end;
+
+    /// Zero margins, preferred policy, fill alignment, and stretch zero.
+
+    static function Default(): TuiLayoutSettings;
+    begin
+      return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0)
+    end;
+  end;

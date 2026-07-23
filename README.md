@@ -221,7 +221,7 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 ## Contributing
 
 - Language spec: [`docs/pascal/`](docs/pascal/) ([hub](docs/pascal/README.md)) — source of truth for implemented behavior
-- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md), [`AGENTS.md`](AGENTS.md), and project skills under [`.agents/skills/`](.agents/skills/) (`fpas-authoring`, `fpas-projects`, `fpas-change-checklist`, `turbo-vision-4-rust`)
+- AI agents: [`AI_CONTRIBUTING.md`](AI_CONTRIBUTING.md), [`AGENTS.md`](AGENTS.md), and project skills under [`.agents/skills/`](.agents/skills/) (`fpas-authoring`, `fpas-projects`, `fpas-change-checklist`)
 - Examples: [`examples/README.md`](examples/README.md)
 - FPAS tests: [`tests/`](tests/) and [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md)
 - Verify locally: `cargo fmt`, `cargo build`, `cargo test --workspace`, and `fpas fmt --check` on touched `.fpas` paths when relevant
@@ -240,14 +240,6 @@ Planned work (not current behavior): [`docs/future/`](docs/future/).
 | `fpas-vm` | Virtual machine / bytecode interpreter |
 | `fpas-std` | Standard library intrinsics |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
-
-## Third-party dependencies
-
-| Component | Role | Upstream |
-|-----------|------|----------|
-| [`turbo-vision`](https://crates.io/crates/turbo-vision) | Terminal UI backend for `Std.Tui` (dialogs, menus, widgets, event loop) | [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust) |
-
-The workspace pins `turbo-vision` 2.0 (git tag `v2.0.0`) in the root [`Cargo.toml`](Cargo.toml). `Std.Tui` exposes an FPAS-native facade over that crate; see [`docs/pascal/std/tui/`](docs/pascal/std/tui/README.md) and the contributor [VM bridge map](docs/pascal/std/tui/app/vm-bridge.md).
 
 ## Status
 

@@ -1,0 +1,187 @@
+program TuiArrangedFrameLifetimeTest;
+
+uses Std.Test, Std.Tui;
+
+function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Character;
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  mutable var Model: integer := 0;
+  mutable var Focus: integer := 1;
+  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+    case Msg of
+      TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          Some(Id):
+          begin
+            Focus := Id.Value;
+            return State
+          end;
+          None:
+          begin
+            return State
+          end
+        end
+      end;
+      TuiMsg.Action(Source, Action):
+      begin
+        return State + Action.Value
+      end;
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State
+      end
+    end
+  end, function(State: integer): TuiElement begin
+    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
+                                                                              TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                      TuiElementBuilders.MakeRow([
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+
+                                                                              
+
+                                                                                                                      
+
+                                                                              
+
+                                                                                                                                                 ])
+
+                                                                              
+
+                                                                                                                    ])
+
+                                                                            ])
+  end, 0, 0);
+  AssertEquals(0, Model);
+  AssertEquals(1, Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab, ''));
+  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+    case Msg of
+      TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          Some(Id):
+          begin
+            Focus := Id.Value;
+            return State
+          end;
+          None:
+          begin
+            return State
+          end
+        end
+      end;
+      TuiMsg.Action(Source, Action):
+      begin
+        return State + Action.Value
+      end;
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State
+      end
+    end
+  end, function(State: integer): TuiElement begin
+    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
+                                                                              TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                      TuiElementBuilders.MakeRow([
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+
+                                                                              
+
+                                                                                                                      
+
+                                                                              
+
+                                                                                                                                                 ])
+
+                                                                              
+
+                                                                                                                    ])
+
+                                                                            ])
+  end, 1, 0);
+  AssertEquals(2, Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
+  Model := App.RunIterations(Model, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
+    case Msg of
+      TuiMsg.FocusChanged(Previous, Current):
+      begin
+        case Current of
+          Some(Id):
+          begin
+            Focus := Id.Value;
+            return State
+          end;
+          None:
+          begin
+            return State
+          end
+        end
+      end;
+      TuiMsg.Action(Source, Action):
+      begin
+        return State + Action.Value
+      end;
+      TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.QuitRequested, TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+      begin
+        return State
+      end
+    end
+  end, function(State: integer): TuiElement begin
+    return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
+                                                                              TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                      TuiElementBuilders.MakeRow([
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
+
+                                                                              
+
+                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+
+                                                                              
+
+                                                                                                                      
+
+                                                                              
+
+                                                                                                                                                 ])
+
+                                                                              
+
+                                                                                                                    ])
+
+                                                                            ])
+  end, 1, 0);
+  AssertEquals(2, Model);
+  App.Close()
+end.

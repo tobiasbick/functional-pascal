@@ -1,0 +1,174 @@
+unit Std.Tui.Geometry.Rect;
+
+uses Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+
+const
+  TuiRectIntegerMax: integer := 9223372036854775807;
+
+private function TuiRectRequireNonNegative(Value: integer; Name: string): integer;
+begin
+  if Value < 0 then
+  begin
+    panic(('Tui ' + Name) + ' must not be negative')
+  end;
+  return Value
+end;
+
+private function TuiRectCheckedEdge(Origin: integer; Extent: integer; Name: string): integer;
+begin
+  if Origin > TuiRectIntegerMax - Extent then
+  begin
+    panic(('Tui ' + Name) + ' edge overflows integer coordinates')
+  end;
+  return Origin + Extent
+end;
+
+private function TuiRectExtentFromEdges(Origin: integer; Edge: integer; Name: string): integer;
+begin
+  if Edge < Origin then
+  begin
+    panic(('Tui ' + Name) + ' edge precedes its origin')
+  end;
+  if (Origin < 0) and (Edge > TuiRectIntegerMax + Origin) then
+  begin
+    panic(('Tui ' + Name) + ' extent overflows integer coordinates')
+  end;
+  return Edge - Origin
+end;
+
+private function TuiRectMin(Left: integer; Right: integer): integer;
+begin
+  if Left < Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+private function TuiRectMax(Left: integer; Right: integer): integer;
+begin
+  if Left > Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+type
+  /// Zero-based half-open terminal-cell rectangle (`right = x + width`).
+  TuiRect = record
+    X: integer;
+    Y: integer;
+    Width: integer;
+    Height: integer;
+
+    /// Creates a rectangle and rejects negative or overflowing extents.
+
+    static function Create(X: integer; Y: integer; Width: integer; Height: integer): TuiRect;
+    begin
+      TuiRectRequireNonNegative(Width, 'width');
+      TuiRectRequireNonNegative(Height, 'height');
+      TuiRectCheckedEdge(X, Width, 'right');
+      TuiRectCheckedEdge(Y, Height, 'bottom');
+      return record X := X; Y := Y; Width := Width; Height := Height; end
+    end;
+
+    /// Creates a rectangle from exclusive edges.
+
+    static function FromEdges(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiRect;
+    begin
+      var Width: integer := TuiRectExtentFromEdges(Left, Right, 'right');
+      var Height: integer := TuiRectExtentFromEdges(Top, Bottom, 'bottom');
+      return TuiRect.Create(Left, Top, Width, Height)
+    end;
+
+    /// Creates a rectangle from a point and size.
+
+    static function FromPointSize(Position: TuiPoint; Size: TuiSize): TuiRect;
+    begin
+      return TuiRect.Create(Position.X, Position.Y, Size.Width, Size.Height)
+    end;
+
+    /// Creates a rectangle from exclusive corners.
+
+    static function FromCorners(TopLeft: TuiPoint; BottomRight: TuiPoint): TuiRect;
+    begin
+      return TuiRect.FromEdges(TopLeft.X, TopLeft.Y, BottomRight.X, BottomRight.Y)
+    end;
+
+    /// Returns the first column after the rectangle.
+
+    function Right(Self: TuiRect): integer;
+    begin
+      return TuiRectCheckedEdge(Self.X, Self.Width, 'right')
+    end;
+
+    /// Returns the first row after the rectangle.
+
+    function Bottom(Self: TuiRect): integer;
+    begin
+      return TuiRectCheckedEdge(Self.Y, Self.Height, 'bottom')
+    end;
+
+    /// Returns whether the rectangle has no drawable cells.
+
+    function IsEmpty(Self: TuiRect): boolean;
+    begin
+      return (Self.Width = 0) or (Self.Height = 0)
+    end;
+
+    /// Returns whether the half-open rectangle contains the point.
+
+    function Contains(Self: TuiRect; Point: TuiPoint): boolean;
+    begin
+      return (((Point.X >= Self.X) and (Point.X < Self.Right())) and (Point.Y >= Self.Y)) and
+             (Point.Y < Self.Bottom())
+    end;
+
+    /// Returns whether two rectangles share any cell.
+
+    function Intersects(Self: TuiRect; Other: TuiRect): boolean;
+    begin
+      return (((Self.X < Other.Right()) and (Other.X < Self.Right())) and (Self.Y < Other.Bottom())) and
+             (Other.Y < Self.Bottom())
+    end;
+
+    /// Returns the overlapping rectangle, or an empty rectangle at the clamped origin.
+
+    function Intersect(Self: TuiRect; Other: TuiRect): TuiRect;
+    begin
+      var X: integer := TuiRectMax(Self.X, Other.X);
+      var Y: integer := TuiRectMax(Self.Y, Other.Y);
+      var Right: integer := TuiRectMin(Self.Right(), Other.Right());
+      var Bottom: integer := TuiRectMin(Self.Bottom(), Other.Bottom());
+      if (Right <= X) or (Bottom <= Y) then
+      begin
+        return TuiRect.Create(X, Y, 0, 0)
+      end;
+      return TuiRect.Create(X, Y, Right - X, Bottom - Y)
+    end;
+
+    /// Returns a rectangle inset by one cell on every side.
+
+    function Inset(Self: TuiRect): TuiRect;
+    begin
+      mutable var InnerWidth: integer := Self.Width - 2;
+      mutable var InnerHeight: integer := Self.Height - 2;
+      if InnerWidth < 0 then
+      begin
+        InnerWidth := 0
+      end;
+      if InnerHeight < 0 then
+      begin
+        InnerHeight := 0
+      end;
+      return TuiRect.Create(Self.X + 1, Self.Y + 1, InnerWidth, InnerHeight)
+    end;
+  end;
+
+/// Creates a full-surface rectangle at the origin.
+
+function TuiRectForSize(Size: TuiSize): TuiRect;
+begin
+  return TuiRect.Create(0, 0, Size.Width, Size.Height)
+end;

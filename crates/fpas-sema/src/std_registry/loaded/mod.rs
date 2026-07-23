@@ -26,7 +26,7 @@ use fpas_std::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
     STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE,
     STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK,
-    STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNITS_KNOWN,
+    STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_KNOWN,
 };
 
 const SOURCE_STD_UNIT_VERSION: &str = "Std.Version";
@@ -62,6 +62,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_DICT => dict::register_std_dict(checker),
         STD_UNIT_JSON => json::register_std_json(checker),
         STD_UNIT_TOML => toml::register_std_toml(checker),
+        STD_UNIT_TUI => {}
         STD_UNIT_TEST => test::register_std_test(checker),
         STD_UNIT_GRAPH => {
             ensure_console_key_api(checker);

@@ -1,0 +1,239 @@
+unit Std.Tui.Rendering.Surface;
+
+uses
+  Std.Array, Std.Option, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+
+private mutable var TuiSurfaceSizes: array of TuiSize := [];
+private mutable var TuiSurfaceRowOffsets: array of integer := [];
+private mutable var TuiSurfaceCells: array of array of TuiCell := [];
+private mutable var TuiSurfaceContinuations: array of array of boolean := [];
+
+private function TuiSurfaceBlank(): TuiCell;
+begin
+  return TuiCell.Create(' ', TuiStyleRole.Normal)
+end;
+
+private function TuiSurfaceBlankRow(Width: integer): array of TuiCell;
+begin
+  mutable var Cells: array of TuiCell := [];
+  for X: integer := 0 to Width - 1 do
+  begin
+    Std.Array.Push(Cells, TuiSurfaceBlank())
+  end;
+  return Cells
+end;
+
+private function TuiSurfaceBlankContinuationRow(Width: integer): array of boolean;
+begin
+  mutable var Continuations: array of boolean := [];
+  for X: integer := 0 to Width - 1 do
+  begin
+    Std.Array.Push(Continuations, false)
+  end;
+  return Continuations
+end;
+
+private function TuiSurfaceRequire(Slot: integer): integer;
+begin
+  if (Slot < 1) or (Slot > Std.Array.Length(TuiSurfaceSizes)) then
+  begin
+    panic('Tui working surface handle is invalid')
+  end;
+  return Slot
+end;
+
+private procedure TuiSurfaceClearGlyphAt(RowIndex: integer; X: integer);
+begin
+  var Blank: TuiCell := TuiSurfaceBlank();
+  if TuiSurfaceContinuations[RowIndex][X] then
+  begin
+    TuiSurfaceCells[RowIndex][X - 1] := Blank;
+    TuiSurfaceContinuations[RowIndex][X] := false
+  end
+  else if TuiSurfaceCells[RowIndex][X].Width() = 2 then
+  begin
+    TuiSurfaceCells[RowIndex][X + 1] := Blank;
+    TuiSurfaceContinuations[RowIndex][X + 1] := false
+  end;
+  TuiSurfaceCells[RowIndex][X] := Blank
+end;
+
+private procedure TuiSurfacePutCellAt(
+  RowOffset: integer;
+  Size: TuiSize;
+  X: integer;
+  Y: integer;
+  Cell: TuiCell
+);
+begin
+  var RowIndex: integer := RowOffset + Y;
+  var CellWidth: integer := Cell.Width();
+  TuiSurfaceClearGlyphAt(RowIndex, X);
+  if CellWidth = 2 then
+  begin
+    if X + 1 >= Size.Width then
+    begin
+      return
+    end;
+    TuiSurfaceClearGlyphAt(RowIndex, X + 1)
+  end;
+  TuiSurfaceCells[RowIndex][X] := Cell;
+  if CellWidth = 2 then
+  begin
+    TuiSurfaceCells[RowIndex][X + 1] := TuiSurfaceBlank();
+    TuiSurfaceContinuations[RowIndex][X + 1] := true
+  end
+end;
+
+type
+  /// Explicit immutable copy of the most recently painted headless surface.
+  TuiSurfaceSnapshot = record
+    Width: integer;
+    Height: integer;
+    Cells: array of TuiCell;
+
+    /// Returns one leading cell at a zero-based position.
+
+    function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
+    begin
+      if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
+      begin
+        panic('Tui snapshot position is outside the surface')
+      end;
+      return Self.Cells[(Y * Self.Width) + X]
+    end;
+
+    /// Returns one complete row as text.
+
+    function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
+    begin
+      if (Y < 0) or (Y >= Self.Height) then
+      begin
+        panic('Tui snapshot row is outside the surface')
+      end;
+      mutable var Line: string := '';
+      for X: integer := 0 to Self.Width - 1 do
+      begin
+        Line := Line + Self.CellAt(X, Y).Glyph
+      end;
+      return Line
+    end;
+  end;
+  /// Host-owned mutable working surface handle.
+  TuiWorkingSurface = record
+    Slot: integer;
+
+    /// Allocates one working grid for a headless application.
+
+    static function Create(Size: TuiSize): TuiWorkingSurface;
+    begin
+      TuiSurfaceSizes := Std.Array.Concat(TuiSurfaceSizes, [Size]);
+      TuiSurfaceRowOffsets := Std.Array.Concat(TuiSurfaceRowOffsets, [
+                                                                       Std.Array.Length(TuiSurfaceCells)
+
+                                                                     ]);
+      mutable var Rows: array of array of TuiCell := [];
+      mutable var ContinuationRows: array of array of boolean := [];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        Std.Array.Push(Rows, TuiSurfaceBlankRow(Size.Width));
+        Std.Array.Push(ContinuationRows, TuiSurfaceBlankContinuationRow(Size.Width))
+      end;
+      TuiSurfaceCells := Std.Array.Concat(TuiSurfaceCells, Rows);
+      TuiSurfaceContinuations := Std.Array.Concat(TuiSurfaceContinuations, ContinuationRows);
+      return record Slot := Std.Array.Length(TuiSurfaceSizes); end
+    end;
+
+    /// Returns the current surface size.
+
+    function Size(Self: TuiWorkingSurface): TuiSize;
+    begin
+      var Slot: integer := TuiSurfaceRequire(Self.Slot);
+      return TuiSurfaceSizes[Slot - 1]
+    end;
+
+    /// Returns whether the zero-based position lies inside the surface.
+
+    function Contains(Self: TuiWorkingSurface; Position: TuiPoint): boolean;
+    begin
+      var Size: TuiSize := Self.Size();
+      return (((Position.X >= 0) and (Position.X < Size.Width)) and (Position.Y >= 0)) and
+             (Position.Y < Size.Height)
+    end;
+
+    /// Returns the leading cell at a position, or `None` outside the grid or on a continuation.
+
+    function TryCellAt(Self: TuiWorkingSurface; Position: TuiPoint): option of TuiCell;
+    begin
+      if not Self.Contains(Position) then
+      begin
+        return None
+      end;
+      var Slot: integer := TuiSurfaceRequire(Self.Slot);
+      var RowIndex: integer := TuiSurfaceRowOffsets[Slot - 1] + Position.Y;
+      if TuiSurfaceContinuations[RowIndex][Position.X] then
+      begin
+        return None
+      end;
+      return Some(TuiSurfaceCells[RowIndex][Position.X])
+    end;
+
+    /// Replaces every row with fresh blank leading cells.
+
+    procedure Clear(Self: TuiWorkingSurface);
+    begin
+      var Slot: integer := TuiSurfaceRequire(Self.Slot);
+      var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
+      var RowOffset: integer := TuiSurfaceRowOffsets[Slot - 1];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        TuiSurfaceCells[RowOffset + Y] := TuiSurfaceBlankRow(Size.Width);
+        TuiSurfaceContinuations[RowOffset + Y] := TuiSurfaceBlankContinuationRow(Size.Width)
+      end
+    end;
+
+    /// Paints one validated cell; out-of-bounds writes are ignored.
+
+    procedure PutCell(Self: TuiWorkingSurface; Position: TuiPoint; Cell: TuiCell);
+    begin
+      if not Self.Contains(Position) then
+      begin
+        return
+      end;
+      var Slot: integer := TuiSurfaceRequire(Self.Slot);
+      TuiSurfacePutCellAt(TuiSurfaceRowOffsets[Slot - 1], Self.Size(), Position.X, Position.Y, Cell)
+    end;
+
+    /// Paints one glyph with the normal style role; out-of-bounds writes are ignored.
+
+    procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
+    begin
+      Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
+    end;
+
+    /// Copies the current leading glyphs for explicit test inspection.
+
+    function Snapshot(Self: TuiWorkingSurface): TuiSurfaceSnapshot;
+    begin
+      var Slot: integer := TuiSurfaceRequire(Self.Slot);
+      var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
+      var RowOffset: integer := TuiSurfaceRowOffsets[Slot - 1];
+      mutable var Cells: array of TuiCell := [];
+      for Y: integer := 0 to Size.Height - 1 do
+      begin
+        for X: integer := 0 to Size.Width - 1 do
+        begin
+          if TuiSurfaceContinuations[RowOffset + Y][X] then
+          begin
+            Std.Array.Push(Cells, TuiSurfaceBlank())
+          end
+          else
+          begin
+            Std.Array.Push(Cells, TuiSurfaceCells[RowOffset + Y][X])
+          end
+        end
+      end;
+      return record Width := Size.Width; Height := Size.Height; Cells := Cells; end
+    end;
+  end;

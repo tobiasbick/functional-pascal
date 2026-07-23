@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/console/cells-frames.md`
 
-#![allow(dead_code)] // Layout helpers remain reserved for Turbo Vision text layout.
+#![allow(dead_code)] // Layout helpers remain available for terminal text layout.
 
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};

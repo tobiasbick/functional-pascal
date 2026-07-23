@@ -1,0 +1,84 @@
+program TuiStatusLineKeyboardTest;
+
+uses Std.Array, Std.Test, Std.Tui;
+
+type
+  StatusModel = record
+    Focus: integer;
+    Actions: array of integer;
+  end;
+
+function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function ViewStatus(State: StatusModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeStatusLine([
+
+                                                                                                                      TuiStatusItemBuilders.MakeHint('Ready'),
+
+                                                                                                                      TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
+
+                                                                                                                      TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
+
+                                                                                  
+
+                                                                                                                    ])
+
+                                                                                ])
+end;
+
+function UpdateStatus(State: StatusModel; Msg: TuiMsg; Cmd: TuiCmdOutput): StatusModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record Focus := Id.Value; Actions := State.Actions; end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end;
+    TuiMsg.Action(Source, Action):
+    begin
+      return record
+        Focus := State.Focus;
+        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+      end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var Model: StatusModel := record Focus := 3; Actions := []; end;
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(30, Model.Actions[0]);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Tab));
+  Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 1, 0);
+  AssertEquals(3, Model.Focus);
+  App.Close()
+end.

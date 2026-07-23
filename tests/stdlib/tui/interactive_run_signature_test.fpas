@@ -1,0 +1,42 @@
+program TuiInteractiveRunSignatureTest;
+
+uses Std.Test, Std.Tui;
+
+type
+  DemoModel = record
+    Ticks: integer;
+  end;
+
+function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+    begin
+      return State
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      return record Ticks := State.Ticks + 1; end
+    end;
+    TuiMsg.QuitRequested:
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return State
+    end
+  end
+end;
+
+function ViewDemo(State: DemoModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('interactive')
+end;
+
+function RunSignatureOnly(): DemoModel;
+begin
+  return TuiApplication.Run(record Ticks := 0; end, UpdateDemo, ViewDemo)
+end;
+
+begin
+  AssertTrue(true)
+end.

@@ -1,7 +1,0 @@
-program Tui2NegativeSizeRuntimeError;
-
-uses Std.Tui2;
-
-begin
-  TuiSize.Create(-1, 0)
-end.

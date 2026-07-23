@@ -1,0 +1,54 @@
+program TuiScrollLayoutTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+type
+  ScrollModel = record
+    Offset: TuiPoint;
+  end;
+
+function ScrollChild(): TuiElement;
+begin
+  return TuiElementBuilders.MakeColumn([
+                                         TuiElementBuilders.MakeLabel('One'),
+                                         TuiElementBuilders.MakeLabel('Two'),
+                                         TuiElementBuilders.MakeLabel('Three'),
+                                         TuiElementBuilders.MakeLabel('Four'),
+                                         TuiElementBuilders.MakeLabel('Five')
+
+                                       ])
+end;
+
+function ViewScroll(State: ScrollModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), ScrollChild())
+
+                                                                      ])
+end;
+
+function UpdateScroll(State: ScrollModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ScrollModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild()), TuiMeasureSpec.AtMost(TuiSize.Create(1, 1)));
+  AssertEquals(5, Measured.Preferred.Width);
+  AssertEquals(5, Measured.Preferred.Height);
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 5));
+  mutable var Model: ScrollModel := record Offset := TuiPoint.Create(0, 4); end;
+  Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'One'));
+  App.InjectResizeForTest(TuiSize.Create(12, 2));
+  Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);
+  AssertEquals(12, App.SurfaceSnapshot().Width);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Four'));
+  App.Close()
+end.

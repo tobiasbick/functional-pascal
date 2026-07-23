@@ -1,0 +1,16 @@
+unit Std.Tui.Runtime.Frame;
+
+uses
+  Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
+  Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
+
+/// Validates, arranges, and paints one complete headless frame before returning it.
+
+function TuiRenderFrame(Surface: TuiWorkingSurface; Root: TuiElement): TuiArrangedFrame;
+begin
+  TuiElementValidate(Root);
+  var Frame: TuiArrangedFrame := TuiArrangedFrame.Create();
+  TuiArrange(Frame, Root, TuiRectForSize(Surface.Size()));
+  TuiPaintView(Surface, Frame, Root);
+  return Frame
+end;

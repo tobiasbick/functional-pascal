@@ -19,34 +19,16 @@ Useful contributions include:
 When validating examples, use the curated allowlists in [`crates/fpas-cli/src/main_tests/examples.rs`](crates/fpas-cli/src/main_tests/examples.rs) (see also [`examples/README.md`](examples/README.md)):
 
 - `cargo test -p fpas-cli example_` — console programs that exit on their own
-- `cargo test -p fpas-cli non_interactive_check_examples_succeed` — `fpas check` only (for example `apps/ide/ide.fpasprj`)
+- `cargo test -p fpas-cli example_check_` — `fpas check` only for the curated project examples
 
 Or run `scripts/run-non-interactive-examples.*` for the run allowlist. Never batch-run every file under `examples/` — interactive TUI and graph demos block until the user quits.
 
-**FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, `tests/tui/` (subdirs `views/`, `events/`, `smoke/`, `modals/`), `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
+**FPAS tests** (`*_test.fpas`, `uses Std.Test`) belong under [`tests/`](tests/), not `examples/`. Layout: `tests/stdlib/`, `tests/concurrency/`, `tests/runner/`, `tests/console/`, and `tests/graph/` (see [`examples/README.md`](examples/README.md) § Stdlib regression suite). Run and verify with:
 
 - `fpas test tests/` or `fpas test tests/suite.fpasprj`
 - `cargo test -p fpas-cli fpas_suite_`
 
 Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
-
-## Good entry points
-
-Well-scoped tasks with clear handoff docs are easier to land than open-ended refactors. One of the best right now:
-
-### Close TUI Stream A — remove three `bridged_*` adapters
-
-**What:** Finish the last step of the Turbo Vision rewrite once upstream read-back exists for `CheckBox`, `RadioButton`, and `OutlineViewer` in [turbo-vision-4-rust](https://github.com/aovestdipaperino/turbo-vision-4-rust).
-
-**Why it is a good fit:** The migration is already done (API, docs, IDE, tests). Only three small VM shim files remain because the current `turbo-vision` pin (`v2.0.0`) lacks live state read-back for those widget types. Success is verifiable: delete adapters, bump the dependency, re-run listed regressions, `rg bridged_ crates/` → zero, then archive the plan.
-
-**Start here:**
-
-- [docs/future/tui-bridged-readback.md](docs/future/tui-bridged-readback.md) — blocker, done-when checklist, upstream issue text
-- [AGENTS.md § Upstream watch — turbo-vision-4-rust read-back](AGENTS.md#upstream-watch--turbo-vision-4-rust-read-back-stream-a) — periodic check and closure steps
-- [`.agents/skills/turbo-vision-4-rust/SKILL.md`](.agents/skills/turbo-vision-4-rust/SKILL.md) — upstream API and dependency conventions
-
-**Optional upstream contribution:** Implement read-back in turbo-vision-4-rust first, then return to FPAS for the adapter deletion — same closure path, split across two repos.
 
 ## Agent skills
 
@@ -57,7 +39,6 @@ Project skills under [`.agents/skills/`](.agents/skills/) complement `AGENTS.md`
 | [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
 | [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | `.fpasprj`, `.fpasworkspace`, CLI, test bundles |
 | [`fpas-change-checklist`](.agents/skills/fpas-change-checklist/SKILL.md) | Docs, tests, verify before finishing a behavior change |
-| [`turbo-vision-4-rust`](.agents/skills/turbo-vision-4-rust/SKILL.md) | `Std.Tui` bridge and upstream read-back closure |
 
 ## Contribution Standard
 

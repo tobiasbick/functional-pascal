@@ -1,0 +1,7 @@
+program TuiInvalidCellGlyphRuntimeError;
+
+uses Std.Tui;
+
+begin
+  TuiCell.Create('', TuiStyleRole.Normal)
+end.

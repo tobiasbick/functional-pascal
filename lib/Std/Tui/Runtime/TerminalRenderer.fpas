@@ -1,0 +1,66 @@
+unit Std.Tui.Runtime.TerminalRenderer;
+
+uses
+  Std.Array, Std.Console, Std.Option, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette,
+  Std.Tui.Cells.Style, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
+
+private function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
+begin
+  case Color.Kind of
+    TuiColorKind.Crt:
+    begin
+      return CrtColor(Color.Index)
+    end;
+    TuiColorKind.Ansi256:
+    begin
+      return Ansi256Color(Color.Index)
+    end;
+    TuiColorKind.Rgb:
+    begin
+      return RgbColor(Color.Red, Color.Green, Color.Blue)
+    end
+  end
+end;
+
+private function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
+begin
+  var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  return record
+    glyph := Cell.Glyph;
+    foreground := TuiColorToConsole(Style.Foreground);
+    background := TuiColorToConsole(Style.Background);
+  end
+end;
+
+/// Flushes the current working surface through the Console frame API.
+///
+/// The Console cell format carries glyph and colors. Tui style attributes are intentionally
+/// resolved here as color-only output because the existing Console frame API has no attributes.
+
+procedure TuiFlushSurface(Surface: TuiWorkingSurface);
+begin
+  var Size: TuiSize := Surface.Size();
+  var Palette: TuiPalette := TuiPalette.Default();
+  BeginFrame();
+  for Y: integer := 0 to Size.Height - 1 do
+  begin
+    mutable var Row: array of Std.Console.Cell := [];
+    for X: integer := 0 to Size.Width - 1 do
+    begin
+      case Surface.TryCellAt(TuiPoint.Create(X, Y)) of
+        Some(Cell):
+        begin
+          Std.Array.Push(Row, TuiCellToConsole(Cell, Palette))
+        end;
+        None:
+        begin
+        end
+      end
+    end;
+    if Std.Array.Length(Row) > 0 then
+    begin
+      WriteCells(1, Y + 1, Row)
+    end
+  end;
+  Present()
+end;

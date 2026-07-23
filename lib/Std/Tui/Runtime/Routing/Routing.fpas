@@ -1,0 +1,19 @@
+unit Std.Tui.Runtime.Routing;
+
+uses
+  Std.Console, Std.Tui.Elements.Element, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg,
+  Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing.Key, Std.Tui.Runtime.Routing.Pointer;
+
+/// Routes one key against the previous rendered tree into ordered framework messages.
+
+function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
+begin
+  return Std.Tui.Runtime.Routing.Key.TuiRouteKey(Root, Frame, Key)
+end;
+
+/// Routes one pointer event against arranged geometry into ordered framework messages.
+
+function TuiRoutePointer(Root: TuiElement; Frame: TuiArrangedFrame; Pointer: TuiPointerEvent): array of TuiMsg;
+begin
+  return Std.Tui.Runtime.Routing.Pointer.TuiRoutePointer(Root, Frame, Pointer)
+end;

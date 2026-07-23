@@ -49,6 +49,10 @@ pub fn canonical_unit_from_uses_clause(q: &QualifiedId) -> Result<String, String
         ));
     }
 
+    if root_is_std && q.parts.len() > 2 && q.parts[1].eq_ignore_ascii_case("Tui") {
+        return Ok(display);
+    }
+
     if root_is_std && q.parts.len() != 2 {
         return Err(format!(
             "Invalid `uses` entry `{display}`: the reserved namespace `Std` must be followed by exactly one segment (for example `Std.Console`). User code cannot add extra segments after `Std` in a `uses` clause."

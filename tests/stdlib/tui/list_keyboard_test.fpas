@@ -1,0 +1,74 @@
+program TuiListKeyboardTest;
+
+uses Std.Array, Std.Test, Std.Tui;
+
+type
+  ListModel = record
+    Focus: integer;
+    Selected: integer;
+    Changes: array of integer;
+  end;
+
+function MakeKey(Kind: TuiKeyKind): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function ViewList(State: ListModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
+
+                                                                                  
+
+                                                                                                                        ])
+
+                                                                                ])
+end;
+
+function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.SelectionChanged(Source, Action, Selected):
+    begin
+      AssertEquals(1, Source.Value);
+      AssertEquals(5, Action.Value);
+      return record
+        Focus := State.Focus;
+        Selected := Selected;
+        Changes := Std.Array.Concat(State.Changes, [Selected]);
+      end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  mutable var Model: ListModel := record Focus := 1; Selected := 0; Changes := []; end;
+  Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
+  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  AssertEquals(1, Model.Selected);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.EndKey));
+  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  AssertEquals(2, Model.Selected);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Home));
+  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  AssertEquals(0, Model.Selected);
+  AssertEquals(3, Std.Array.Length(Model.Changes));
+  App.Close()
+end.

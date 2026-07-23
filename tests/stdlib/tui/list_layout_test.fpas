@@ -1,0 +1,55 @@
+program TuiListLayoutTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+type
+  ListModel = record
+    Selected: integer;
+  end;
+
+function ViewList(State: ListModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
+
+                                                                        
+
+                                                                                                              ])
+
+                                                                      ])
+end;
+
+function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [
+                                                                                                     'Alpha',
+                                                                                                     'Beta',
+                                                                                                     'Gamma'
+
+                                                                                                   ], 0, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  AssertEquals(7, Measured.Preferred.Width);
+  AssertEquals(3, Measured.Preferred.Height);
+  var Empty: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeList(TuiControlId.Create(1), [], -1, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
+  AssertEquals(2, Empty.Preferred.Width);
+  AssertEquals(1, Empty.Preferred.Height);
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  mutable var Model: ListModel := record Selected := 0; end;
+  Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
+  App.InjectResizeForTest(TuiSize.Create(16, 5));
+  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  AssertEquals(16, App.SurfaceSnapshot().Width);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Alpha'));
+  App.Close()
+end.

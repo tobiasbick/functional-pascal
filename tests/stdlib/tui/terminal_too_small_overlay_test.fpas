@@ -1,0 +1,18 @@
+program TuiTerminalTooSmallOverlayTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+begin
+  var Wide: TuiElement := TuiElementBuilders.MakeWindow('WideTitleWindow', [
+                                                                             TuiElementBuilders.MakeLabel('abcdefghijklmnopqrstuvwxyz'),
+                                                                             TuiElementBuilders.MakeLabel('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+                                                                             TuiElementBuilders.MakeLabel('01234567890123456789012345')
+
+                                                                           ]);
+  AssertTrue(TuiLayoutFitFor(Wide, TuiSize.Create(40, 12)).Fits());
+  AssertFalse(TuiLayoutFitFor(Wide, TuiSize.Create(8, 3)).Fits());
+  var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(24, 5));
+  TuiPaintTooSmallOverlay(Surface);
+  var Snapshot: TuiSurfaceSnapshot := Surface.Snapshot();
+  AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Terminal too small'))
+end.

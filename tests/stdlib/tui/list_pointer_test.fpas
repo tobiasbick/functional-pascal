@@ -1,0 +1,81 @@
+program TuiListPointerTest;
+
+uses Std.Array, Std.Str, Std.Test, Std.Tui;
+
+type
+  ListModel = record
+    Focus: integer;
+    Selected: integer;
+  end;
+
+function MakePointer(X: integer; Y: integer): TuiPointerEvent;
+begin
+  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+end;
+
+function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
+begin
+  for Y: integer := 0 to Snapshot.Height - 1 do
+  begin
+    var Line: string := Snapshot.LineAt(Y);
+    var Index: integer := Std.Str.IndexOf(Line, Glyph);
+    if Index >= 0 then
+    begin
+      return TuiPoint.Create(Index, Y)
+    end
+  end;
+  panic('glyph not found in snapshot')
+end;
+
+function ViewList(State: ListModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeWindow('Host', [
+
+                                                                                                                          TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
+
+                                                                                  
+
+                                                                                                                        ])
+
+                                                                                ])
+end;
+
+function UpdateList(State: ListModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ListModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record Focus := Id.Value; Selected := State.Selected; end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end;
+    TuiMsg.SelectionChanged(Source, Action, Selected):
+    begin
+      return record Focus := State.Focus; Selected := Selected; end
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
+  mutable var Model: ListModel := record Focus := 1; Selected := 0; end;
+  Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
+  var BetaAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Beta');
+  App.InjectPointerForTest(MakePointer(BetaAt.X, BetaAt.Y));
+  Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);
+  AssertEquals(1, Model.Selected);
+  App.Close()
+end.

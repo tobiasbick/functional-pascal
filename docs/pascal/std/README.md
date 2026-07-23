@@ -32,8 +32,7 @@ Each unit page is a **self-contained handbook**: importing and short vs qualifie
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
-| Terminal UI 2 | [tui2/](tui2/README.md) | Source-level geometry values and half-open rectangle operations |
-| Terminal UI 3 | [tui3/](tui3/README.md) | Experimental MVU element trees, deterministic headless routing and snapshots |
+| Terminal UI | [tui/](tui/README.md) | MVU element trees, deterministic headless routing and snapshots |
 | Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 | Version | [version.md](version.md) | Compiler and library version constants |

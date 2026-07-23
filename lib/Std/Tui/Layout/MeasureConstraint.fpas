@@ -1,0 +1,48 @@
+unit Std.Tui.Layout.MeasureConstraint;
+
+type
+  /// Whether a measure axis is unbounded or capped.
+  TuiMeasureConstraintKind = enum
+    Unbounded;
+    AtMost;
+  end;
+
+private function TuiMeasureConstraintRequireNonNegative(Value: integer): integer;
+begin
+  if Value < 0 then
+  begin
+    panic('Tui measure constraint limit must not be negative')
+  end;
+  return Value
+end;
+
+type
+  /// One-axis measurement constraint.
+  TuiMeasureConstraint = record
+    Kind: TuiMeasureConstraintKind;
+    Limit: integer;
+
+    /// Creates an unbounded axis constraint.
+
+    static function Unbounded(): TuiMeasureConstraint;
+    begin
+      return record Kind := TuiMeasureConstraintKind.Unbounded; Limit := 0; end
+    end;
+
+    /// Creates a non-negative upper bound.
+
+    static function AtMost(Limit: integer): TuiMeasureConstraint;
+    begin
+      return record
+        Kind := TuiMeasureConstraintKind.AtMost;
+        Limit := TuiMeasureConstraintRequireNonNegative(Limit);
+      end
+    end;
+
+    /// Returns whether the constraint has an upper bound.
+
+    function IsBounded(Self: TuiMeasureConstraint): boolean;
+    begin
+      return Self.Kind = TuiMeasureConstraintKind.AtMost
+    end;
+  end;

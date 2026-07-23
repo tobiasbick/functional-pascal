@@ -1,8 +1,0 @@
-unit Std.Tui2.Cells.Glyph;
-
-uses Std.Console;
-
-function TuiGlyphWidth(Glyph: string): integer;
-begin
-  return Std.Console.GraphemeWidth(Glyph)
-end;

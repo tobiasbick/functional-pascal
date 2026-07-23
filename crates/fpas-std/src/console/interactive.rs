@@ -1,4 +1,4 @@
-//! Transactional interactive terminal session ownership for fullscreen Console / Tui2 use.
+//! Transactional interactive terminal session ownership for fullscreen Console use.
 //!
 //! **Documentation:** `docs/pascal/std/console/events.md`.
 

@@ -1,0 +1,366 @@
+unit Std.Tui.Layout.Arrange;
+
+uses
+  Std.Array, Std.Tui.Elements.Element, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
+  Std.Tui.Layout.AlignmentBounds, Std.Tui.Layout.Frame, Std.Tui.Layout.LayoutSettings,
+  Std.Tui.Layout.Margins, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
+  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer;
+
+private mutable var TuiArrangeBuilding: array of TuiArrangedEntry := [];
+
+private function TuiArrangeMin(Left: integer; Right: integer): integer;
+begin
+  if Left < Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
+private function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
+begin
+  if Value > Maximum then
+  begin
+    return Maximum
+  end;
+  return Value
+end;
+
+private function TuiArrangeChildParticipates(Node: TuiElement): boolean;
+begin
+  case Node of
+    TuiElement.Empty:
+    begin
+      return false
+    end;
+    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    begin
+      return true
+    end
+  end
+end;
+
+private function TuiArrangeMainPreferred(Measured: TuiMeasureResult; Horizontal: boolean): integer;
+begin
+  if Horizontal then
+  begin
+    return Measured.Preferred.Width
+  end;
+  return Measured.Preferred.Height
+end;
+
+private function TuiArrangeMainMinimum(Measured: TuiMeasureResult; Horizontal: boolean): integer;
+begin
+  if Horizontal then
+  begin
+    return Measured.Minimum.Width
+  end;
+  return Measured.Minimum.Height
+end;
+
+private function TuiArrangeGrowthWeight(Node: TuiElement; Horizontal: boolean): integer;
+begin
+  case Node of
+    TuiElement.Spacer(Value):
+    begin
+      if Value.Kind = TuiSpacerKind.Expanding then
+      begin
+        return 1
+      end;
+      return 0
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      if Settings.Stretch > 0 then
+      begin
+        return Settings.Stretch
+      end;
+      if Horizontal then
+      begin
+        if Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding then
+        begin
+          return 1
+        end;
+        return 0
+      end;
+      if Settings.SizePolicy.Vertical = TuiSizePolicyKind.Expanding then
+      begin
+        return 1
+      end;
+      return 0
+    end
+    else
+    begin
+      return 0
+    end
+  end
+end;
+
+private function TuiArrangeContentRect(Outer: TuiRect; Margins: TuiMargins): TuiRect;
+begin
+  mutable var Width: integer := Outer.Width - Margins.Horizontal();
+  mutable var Height: integer := Outer.Height - Margins.Vertical();
+  if Width < 0 then
+  begin
+    Width := 0
+  end;
+  if Height < 0 then
+  begin
+    Height := 0
+  end;
+  return TuiRect.Create(Outer.X + Margins.Left, Outer.Y + Margins.Top, Width, Height)
+end;
+
+private function TuiArrangePushEntry(ParentIndex: integer; NodeBounds: TuiRect; Clip: TuiRect): integer;
+begin
+  var Index: integer := Std.Array.Length(TuiArrangeBuilding);
+  TuiArrangeBuilding := Std.Array.Concat(TuiArrangeBuilding, [
+                                                               record ParentIndex := ParentIndex; Bounds := NodeBounds; Clip := Clip; end
+
+                                                             ]);
+  return Index
+end;
+
+/// Builds a preorder arranged-frame index for one element tree.
+
+procedure TuiArrange(Frame: TuiArrangedFrame; Root: TuiElement; Bounds: TuiRect);
+procedure ArrangeNode(
+  Node: TuiElement;
+  NodeBounds: TuiRect;
+  ParentClip: TuiRect;
+  ParentIndex: integer
+);
+procedure ArrangeRowColumn(
+  Horizontal: boolean;
+  Children: array of TuiElement;
+  Spacing: integer;
+  Area: TuiRect;
+  Clip: TuiRect;
+  Parent: integer
+);
+begin
+  mutable var AvailableMain: integer := Area.Width;
+  mutable var AvailableCross: integer := Area.Height;
+  if not Horizontal then
+  begin
+    AvailableMain := Area.Height;
+    AvailableCross := Area.Width
+  end;
+  var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(Area.Width, Area.Height));
+  mutable var Assigned: array of integer := [];
+  mutable var Preferred: array of integer := [];
+  mutable var ParticipatingIndices: array of integer := [];
+  mutable var MinimumTotal: integer := 0;
+  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    Assigned := Std.Array.Concat(Assigned, [0]);
+    Preferred := Std.Array.Concat(Preferred, [0]);
+    if TuiArrangeChildParticipates(Children[Index]) then
+    begin
+      ParticipatingIndices := Std.Array.Concat(ParticipatingIndices, [Index]);
+      var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+      Assigned[Index] := TuiArrangeMainMinimum(Measured, Horizontal);
+      Preferred[Index] := TuiArrangeMainPreferred(Measured, Horizontal);
+      MinimumTotal := MinimumTotal + Assigned[Index]
+    end
+  end;
+  var ParticipatingCount: integer := Std.Array.Length(ParticipatingIndices);
+  mutable var SpacingTotal: integer := 0;
+  if ParticipatingCount > 1 then
+  begin
+    SpacingTotal := Spacing * (ParticipatingCount - 1)
+  end;
+  mutable var AvailableForItems: integer := AvailableMain - SpacingTotal;
+  if AvailableForItems < 0 then
+  begin
+    AvailableForItems := 0
+  end;
+  if AvailableForItems >= MinimumTotal then
+  begin
+    mutable var Remaining: integer := AvailableForItems - MinimumTotal;
+    mutable var Progress: boolean := true;
+    while (Remaining > 0) and Progress do
+    begin
+      Progress := false;
+      for P: integer := 0 to ParticipatingCount - 1 do
+      begin
+        var ChildIndex: integer := ParticipatingIndices[P];
+        if (Remaining > 0) and (Assigned[ChildIndex] < Preferred[ChildIndex]) then
+        begin
+          Assigned[ChildIndex] := Assigned[ChildIndex] + 1;
+          Remaining := Remaining - 1;
+          Progress := true
+        end
+      end
+    end;
+    Progress := true;
+    while (Remaining > 0) and Progress do
+    begin
+      Progress := false;
+      for P: integer := 0 to ParticipatingCount - 1 do
+      begin
+        var ChildIndex: integer := ParticipatingIndices[P];
+        var Weight: integer := TuiArrangeGrowthWeight(Children[ChildIndex], Horizontal);
+        if Weight > 0 then
+        begin
+          for Share: integer := 1 to Weight do
+          begin
+            if (Remaining > 0) and (Assigned[ChildIndex] < AvailableMain) then
+            begin
+              Assigned[ChildIndex] := Assigned[ChildIndex] + 1;
+              Remaining := Remaining - 1;
+              Progress := true
+            end
+          end
+        end
+      end
+    end
+  end;
+  mutable var MainCursor: integer := Area.X;
+  mutable var CrossOrigin: integer := Area.Y;
+  if not Horizontal then
+  begin
+    MainCursor := Area.Y;
+    CrossOrigin := Area.X
+  end;
+  mutable var ParticipatingSeen: integer := 0;
+  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    if not TuiArrangeChildParticipates(Children[Index]) then
+    begin
+      mutable var EmptyBounds: TuiRect := TuiRect.Create(MainCursor, CrossOrigin, 0, 0);
+      if not Horizontal then
+      begin
+        EmptyBounds := TuiRect.Create(CrossOrigin, MainCursor, 0, 0)
+      end;
+      ArrangeNode(Children[Index], EmptyBounds, Clip, Parent)
+    end
+    else
+    begin
+      if ParticipatingSeen > 0 then
+      begin
+        MainCursor := MainCursor + Spacing
+      end;
+      ParticipatingSeen := ParticipatingSeen + 1;
+      var MainSize: integer := Assigned[Index];
+      mutable var ChildBounds: TuiRect := TuiRect.Create(MainCursor, CrossOrigin, MainSize, AvailableCross);
+      if not Horizontal then
+      begin
+        ChildBounds := TuiRect.Create(CrossOrigin, MainCursor, AvailableCross, MainSize)
+      end;
+      ArrangeNode(Children[Index], ChildBounds, Clip, Parent);
+      MainCursor := MainCursor + MainSize
+    end
+  end
+end;
+procedure ArrangeStackVertical(
+  Children: array of TuiElement;
+  Area: TuiRect;
+  Clip: TuiRect;
+  Parent: integer
+);
+begin
+  var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(Area.Width, Area.Height));
+  mutable var Assigned: array of integer := [];
+  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    Assigned := Std.Array.Concat(Assigned, [0]);
+    if TuiArrangeChildParticipates(Children[Index]) then
+    begin
+      var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+      Assigned[Index] := Measured.Preferred.Height
+    end
+  end;
+  mutable var MainCursor: integer := Area.Y;
+  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    if not TuiArrangeChildParticipates(Children[Index]) then
+    begin
+      ArrangeNode(Children[Index], TuiRect.Create(Area.X, MainCursor, 0, 0), Clip, Parent)
+    end
+    else
+    begin
+      var ChildBounds: TuiRect := TuiRect.Create(Area.X, MainCursor, Area.Width, Assigned[Index]);
+      ArrangeNode(Children[Index], ChildBounds, Clip, Parent);
+      MainCursor := MainCursor + Assigned[Index]
+    end
+  end
+end;
+begin
+  var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
+  var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
+  case Node of
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    begin
+    end;
+    TuiElement.Row(Children, Spacing):
+    begin
+      ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex)
+    end;
+    TuiElement.Column(Children, Spacing):
+    begin
+      ArrangeRowColumn(false, Children, Spacing, NodeBounds, Clip, SelfIndex)
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      var Content: TuiRect := TuiArrangeContentRect(NodeBounds, Settings.Margins);
+      if Std.Array.Length(Children) = 1 then
+      begin
+        var Measured: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.AtMost(TuiSize.Create(Content.Width, Content.Height)));
+        ArrangeNode(Children[0], TuiAlignmentBounds.Resolve(Measured, Settings.Alignment, Content), Clip, SelfIndex)
+      end
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    begin
+      if Std.Array.Length(Children) = 1 then
+      begin
+        var Content: TuiSize := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded()).Preferred;
+        mutable var MaximumX: integer := Content.Width - NodeBounds.Width;
+        mutable var MaximumY: integer := Content.Height - NodeBounds.Height;
+        if MaximumX < 0 then
+        begin
+          MaximumX := 0
+        end;
+        if MaximumY < 0 then
+        begin
+          MaximumY := 0
+        end;
+        var EffectiveX: integer := TuiArrangeClamp(Offset.X, MaximumX);
+        var EffectiveY: integer := TuiArrangeClamp(Offset.Y, MaximumY);
+        ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y - EffectiveY, Content.Width, Content.Height), Clip, SelfIndex)
+      end
+    end;
+    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    begin
+      ArrangeStackVertical(Children, NodeBounds.Inset(), Clip, SelfIndex)
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(NodeBounds.Width, NodeBounds.Height));
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case Children[Index] of
+          TuiElement.Dialog(Title, DialogChildren):
+          begin
+            var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+            var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
+            var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
+            var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
+            var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
+            ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex)
+          end
+          else
+          begin
+            ArrangeNode(Children[Index], NodeBounds, Clip, SelfIndex)
+          end
+        end
+      end
+    end
+  end
+end;
+begin
+  TuiArrangeBuilding := [];
+  ArrangeNode(Root, Bounds, Bounds, -1);
+  Frame.ReplaceEntries(TuiArrangeBuilding);
+  TuiArrangeBuilding := []
+end;

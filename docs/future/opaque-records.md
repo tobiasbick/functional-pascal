@@ -15,5 +15,5 @@ declaring unit. A future transient canvas could then contain a private applicati
 and reject operations after its paint callback ends.
 
 This needs compile-time tests for representation and constructor visibility, plus a runtime test
-that rejects a stale capability. It is a language-design item, not a blocker for the current TUI3
+that rejects a stale capability. It is a language-design item, not a blocker for the current TUI
 MVU implementation until custom painting is introduced.

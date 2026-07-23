@@ -11,7 +11,7 @@ pub use units::{
     STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH,
     STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,
     STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML,
-    STD_UNIT_VERSION, STD_UNITS_KNOWN,
+    STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_KNOWN,
 };
 
 use symbols::{
@@ -36,6 +36,7 @@ pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
         ("time", STD_UNIT_TIME),
         ("version", STD_UNIT_VERSION),
         ("console", STD_UNIT_CONSOLE),
+        ("tui", STD_UNIT_TUI),
         ("graph", STD_UNIT_GRAPH),
         ("str", STD_UNIT_STR),
         ("conv", STD_UNIT_CONV),
@@ -89,6 +90,7 @@ pub fn std_unit_symbols(unit: &str) -> &'static [&'static str] {
         STD_UNIT_DICT => STD_DICT_SYMBOLS,
         STD_UNIT_JSON => STD_JSON_SYMBOLS,
         STD_UNIT_TOML => STD_TOML_SYMBOLS,
+        STD_UNIT_TUI => &[],
         STD_UNIT_TEST => STD_TEST_SYMBOLS,
         _ => &[],
     }

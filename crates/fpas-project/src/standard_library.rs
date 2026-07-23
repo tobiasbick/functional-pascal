@@ -110,9 +110,10 @@ fn load_parsed_units(
             unreachable!("standard-library source validation accepts units only");
         };
         let name = crate::common::qualified_id_to_string(&unit.name);
-        if STD_UNITS_KNOWN
-            .iter()
-            .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))
+        if name != "Std.Tui"
+            && STD_UNITS_KNOWN
+                .iter()
+                .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))
         {
             return Err(format!(
                 "Source standard-library unit `{name}` in `{}` collides with intrinsic unit `{name}`.\n  help: Choose a distinct `Std.*` unit name; source units cannot replace individual intrinsic units.",

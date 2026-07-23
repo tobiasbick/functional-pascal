@@ -1,0 +1,12 @@
+unit Std.Tui.Runtime.Input;
+
+uses Std.Console, Std.Tui.Geometry.Size, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+
+type
+  /// One externally injected headless event, kept in arrival order.
+  TuiHostInput = enum
+    Message(Msg: TuiMsg);
+    Key(Key: Std.Console.KeyEvent);
+    Pointer(Pointer: TuiPointerEvent);
+    Resize(Size: TuiSize);
+  end;

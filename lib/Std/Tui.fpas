@@ -1,0 +1,195 @@
+unit Std.Tui;
+
+uses
+  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette, Std.Tui.Cells.Style,
+  Std.Tui.Cells.StyleRole, Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
+  Std.Tui.Geometry.Size, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action,
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment, Std.Tui.Layout.LayoutFit,
+  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins, Std.Tui.Layout.Measure,
+  Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
+  Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer, Std.Tui.Rendering.Canvas,
+  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd,
+  Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+
+type
+  /// Zero-based terminal-cell coordinate.
+  TuiPoint = Std.Tui.Geometry.Point.TuiPoint;
+  /// Fixed terminal extent used by headless Tui hosts.
+  TuiSize = Std.Tui.Geometry.Size.TuiSize;
+  /// Zero-based half-open terminal-cell rectangle.
+  TuiRect = Std.Tui.Geometry.Rect.TuiRect;
+  /// Color representation kind for terminal painting.
+  TuiColorKind = Std.Tui.Cells.Color.TuiColorKind;
+  /// Validated CRT, ANSI-256, or RGB color value.
+  TuiColor = Std.Tui.Cells.Color.TuiColor;
+  /// Semantic style role resolved through `TuiPalette`.
+  TuiStyleRole = Std.Tui.Cells.StyleRole.TuiStyleRole;
+  /// Concrete foreground/background colors and text attributes.
+  TuiStyle = Std.Tui.Cells.Style.TuiStyle;
+  /// One validated renderable grapheme with a semantic style role.
+  TuiCell = Std.Tui.Cells.Cell.TuiCell;
+  /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
+  TuiPalette = Std.Tui.Cells.Palette.TuiPalette;
+  /// Per-axis growth and shrink policy kind.
+  TuiSizePolicyKind = Std.Tui.Layout.SizePolicy.TuiSizePolicyKind;
+  /// Independent horizontal and vertical size policies.
+  TuiSizePolicy = Std.Tui.Layout.SizePolicy.TuiSizePolicy;
+  /// Alignment of content inside an allocated layout slot.
+  TuiAlignmentKind = Std.Tui.Layout.Alignment.TuiAlignmentKind;
+  /// Independent horizontal and vertical alignment.
+  TuiAlignment = Std.Tui.Layout.Alignment.TuiAlignment;
+  /// Non-negative outer margins around a laid-out child.
+  TuiMargins = Std.Tui.Layout.Margins.TuiMargins;
+  /// Immutable layout inputs for a single-child layout wrapper.
+  TuiLayoutSettings = Std.Tui.Layout.LayoutSettings.TuiLayoutSettings;
+  /// Whether a measure axis is unbounded or capped.
+  TuiMeasureConstraintKind = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraintKind;
+  /// One-axis measurement constraint.
+  TuiMeasureConstraint = Std.Tui.Layout.MeasureConstraint.TuiMeasureConstraint;
+  /// Width and height measurement constraints.
+  TuiMeasureSpec = Std.Tui.Layout.MeasureSpec.TuiMeasureSpec;
+  /// Minimum, preferred, and maximum extents.
+  TuiMeasureResult = Std.Tui.Layout.MeasureResult.TuiMeasureResult;
+  /// Whether a spacer is fixed or expanding.
+  TuiSpacerKind = Std.Tui.Layout.Spacer.TuiSpacerKind;
+  /// Empty layout extent used between siblings.
+  TuiSpacer = Std.Tui.Layout.Spacer.TuiSpacer;
+  /// Fit report for terminal-too-small layout.
+  TuiLayoutFit = Std.Tui.Layout.LayoutFit.TuiLayoutFit;
+  /// Positive identity unique among interactive nodes in one rendered tree.
+  TuiControlId = Std.Tui.Ids.ControlId.TuiControlId;
+  /// Positive application intent; repetitions across controls are allowed.
+  TuiAction = Std.Tui.Ids.Action.TuiAction;
+  /// Immutable description of one flat menu-bar action.
+  TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
+  /// Immutable display or action item in a status line.
+  TuiStatusItem = Std.Tui.Chrome.StatusItem.TuiStatusItem;
+  /// Constructors for immutable status-line items.
+  TuiStatusItemBuilders = Std.Tui.Chrome.StatusItem.TuiStatusItemBuilders;
+  /// Runtime command returned through Update's mutable output parameter.
+  TuiCmd = Std.Tui.Runtime.Cmd.TuiCmd;
+  /// Observable command output passed to Update.
+  TuiCmdOutput = Std.Tui.Runtime.Cmd.TuiCmdOutput;
+  /// Framework message delivered to Update.
+  TuiMsg = Std.Tui.Runtime.Msg.TuiMsg;
+  /// Pointer button carried by a normalized pointer event.
+  TuiPointerButton = Std.Tui.Runtime.PointerEvent.TuiPointerButton;
+  /// Normalized pointer action in zero-based application coordinates.
+  TuiPointerEvent = Std.Tui.Runtime.PointerEvent.TuiPointerEvent;
+  /// Console mouse action used by pointer events.
+  TuiPointerAction = Std.Console.MouseAction;
+  /// Immutable element-tree node.
+  TuiElement = Std.Tui.Elements.Element.TuiElement;
+  /// Named element constructors.
+  TuiElementBuilders = Std.Tui.Elements.Element.TuiElementBuilders;
+  /// Explicit copy of the last painted headless surface.
+  TuiSurfaceSnapshot = Std.Tui.Rendering.Surface.TuiSurfaceSnapshot;
+  /// Host-owned mutable working surface handle.
+  TuiWorkingSurface = Std.Tui.Rendering.Surface.TuiWorkingSurface;
+  /// Private frame-scoped drawing capability over one working surface.
+  TuiCanvas = Std.Tui.Rendering.Canvas.TuiCanvas;
+  /// Headless application host.
+  TuiApplication = Std.Tui.Runtime.Application.TuiApplication;
+  /// Console key event used by headless key injection.
+  TuiKeyEvent = Std.Console.KeyEvent;
+  /// Console key kind used by headless key injection.
+  TuiKeyKind = Std.Console.KeyKind;
+
+/// Creates a source-aware action message.
+
+function TuiMsgAction(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgAction(Source, Action)
+end;
+
+/// Measures one element under the given constraints.
+
+function TuiMeasure(
+  Node: Std.Tui.Elements.Element.TuiElement;
+  Spec: Std.Tui.Layout.MeasureSpec.TuiMeasureSpec
+): Std.Tui.Layout.MeasureResult.TuiMeasureResult;
+begin
+  return Std.Tui.Layout.Measure.TuiMeasure(Node, Spec)
+end;
+
+/// Creates a source-aware controlled-input change message.
+
+function TuiMsgTextChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Text: string;
+  Caret: integer
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret)
+end;
+
+/// Creates a source-aware controlled check-box change message.
+
+function TuiMsgCheckChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Checked: boolean
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgCheckChanged(Source, Action, Checked)
+end;
+
+/// Creates a source-aware controlled list selection-change message.
+
+function TuiMsgSelectionChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Selected: integer
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgSelectionChanged(Source, Action, Selected)
+end;
+
+/// Creates a source-aware controlled scroll-offset change message.
+
+function TuiMsgScrollChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Offset: Std.Tui.Geometry.Point.TuiPoint
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgScrollChanged(Source, Action, Offset)
+end;
+
+/// Returns the first focusable control in the active modal or full tree.
+
+function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
+begin
+  return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root)
+end;
+
+/// Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
+
+function TuiFocusResolve(
+  Root: Std.Tui.Elements.Element.TuiElement;
+  Preferred: option of Std.Tui.Ids.ControlId.TuiControlId
+): option of Std.Tui.Ids.ControlId.TuiControlId;
+begin
+  return Std.Tui.Runtime.Helpers.TuiFocusResolve(Root, Preferred)
+end;
+
+/// Reports whether a root's unconstrained minimum fits an available terminal size.
+
+function TuiLayoutFitFor(
+  Root: Std.Tui.Elements.Element.TuiElement;
+  Available: Std.Tui.Geometry.Size.TuiSize
+): Std.Tui.Layout.LayoutFit.TuiLayoutFit;
+begin
+  return Std.Tui.Runtime.Helpers.TuiLayoutFitFor(Root, Available)
+end;
+
+/// Clears a working surface and paints the terminal-too-small notice.
+
+procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
+begin
+  Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface)
+end;

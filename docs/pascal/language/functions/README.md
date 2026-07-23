@@ -17,6 +17,12 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 | [Early return](early-return.md) | `return` exits immediately |
 | [Postfix chaining](postfix-chaining.md) | `.Field`, `[Index]`, and `.Method(args)` on expression results |
 
+## Runtime recursion limit
+
+The VM bounds both intermediate value storage and active function call frames. Excessive
+recursion therefore stops with a `Call stack overflow` runtime diagnostic instead of exhausting
+host memory. Reduce the recursion depth or rewrite the processing as a loop when this occurs.
+
 ## See also
 
 - [Types — generics](../types/generics.md)

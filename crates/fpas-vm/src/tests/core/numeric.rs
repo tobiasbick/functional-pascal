@@ -80,11 +80,13 @@ fn add_int_wraps_on_overflow() {
     emit_constant(&mut chunk, Value::Integer(i64::MAX));
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::AddInt, loc());
+    chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
-    // wrapping_add: i64::MAX + 1 == i64::MIN
-    let output = crate::tests::helpers::run_ok_output(chunk);
-    let _ = output; // result is on the stack but not printed; the test just confirms no panic/error
+    assert_eq!(
+        crate::tests::helpers::run_ok_output(chunk),
+        vec![i64::MIN.to_string()]
+    );
 }
 
 #[test]
@@ -93,10 +95,13 @@ fn sub_int_wraps_on_underflow() {
     emit_constant(&mut chunk, Value::Integer(i64::MIN));
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::SubInt, loc());
+    chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
-    let output = crate::tests::helpers::run_ok_output(chunk);
-    let _ = output;
+    assert_eq!(
+        crate::tests::helpers::run_ok_output(chunk),
+        vec![i64::MAX.to_string()]
+    );
 }
 
 #[test]
@@ -105,8 +110,8 @@ fn mul_int_wraps_on_overflow() {
     emit_constant(&mut chunk, Value::Integer(i64::MAX));
     emit_constant(&mut chunk, Value::Integer(2));
     chunk.emit(Op::MulInt, loc());
+    chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
-    let output = crate::tests::helpers::run_ok_output(chunk);
-    let _ = output;
+    assert_eq!(crate::tests::helpers::run_ok_output(chunk), vec!["-2"]);
 }

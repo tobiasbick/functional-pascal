@@ -80,7 +80,8 @@ impl Console {
         Ok(())
     }
 
-    pub fn delay(&mut self, ms: i64, location: SourceLocation) -> Result<(), StdError> {
+    /// Sleep for the non-negative duration requested by `Std.Console.Delay`.
+    pub fn delay(ms: i64, location: SourceLocation) -> Result<(), StdError> {
         if ms < 0 {
             return Err(std_runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,

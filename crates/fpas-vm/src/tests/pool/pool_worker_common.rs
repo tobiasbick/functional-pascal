@@ -22,6 +22,7 @@ pub(crate) fn wait_for_task_result(shared: &SharedState, id: u64, timeout: Durat
             TaskResultPoll::Available(v) => return v,
             TaskResultPoll::Pending => {}
             TaskResultPoll::Consumed => panic!("task {id} result consumed before read"),
+            TaskResultPoll::Unknown => panic!("task {id} was not registered"),
         }
         assert!(
             start.elapsed() < timeout,

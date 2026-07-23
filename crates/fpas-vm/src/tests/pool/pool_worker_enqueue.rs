@@ -27,6 +27,7 @@ fn enqueue_task_unblocks_pool_loop_waiting_on_condvar() {
 
     thread::sleep(Duration::from_millis(40));
 
+    shared.register_task_result(1);
     shared.enqueue_task(TaskState {
         id: 1,
         ip: 0,
@@ -51,6 +52,7 @@ fn pool_loop_drains_multiple_prequeued_tasks_before_blocking_again() {
     let chunk = chunk_task_returns_integer(2);
     let shared = Arc::new(minimal_shared_state(chunk));
 
+    shared.register_task_result(1);
     shared.enqueue_task(TaskState {
         id: 1,
         ip: 0,
@@ -58,6 +60,7 @@ fn pool_loop_drains_multiple_prequeued_tasks_before_blocking_again() {
         call_stack: Vec::new(),
         retain_result: true,
     });
+    shared.register_task_result(2);
     shared.enqueue_task(TaskState {
         id: 2,
         ip: 0,

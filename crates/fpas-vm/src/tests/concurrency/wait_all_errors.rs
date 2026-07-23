@@ -3,7 +3,9 @@
 //! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/concurrency/task.md`, `docs/pascal/language/concurrency/README.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
-use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN};
+use fpas_diagnostics::codes::{
+    RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
+};
 
 use crate::tests::helpers::{emit_constant, loc, run_err};
 
@@ -72,4 +74,20 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
 
     let err = run_err(chunk);
     assert_eq!(err.code, RUNTIME_VM_SHUTDOWN);
+}
+
+#[test]
+fn wait_all_rejects_unknown_task_handle() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Task(999));
+    chunk.emit(Op::MakeArray(1), loc());
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::WaitAll))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, RUNTIME_INVALID_TASK);
+    assert!(err.message.contains("Task 999"));
 }

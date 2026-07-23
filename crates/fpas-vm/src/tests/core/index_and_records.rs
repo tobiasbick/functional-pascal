@@ -108,3 +108,18 @@ fn update_record_with_unknown_field_reports_runtime_error() {
     let err = run_err(chunk);
     assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
 }
+
+#[test]
+fn contains_finds_array_element() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(2));
+    emit_constant(
+        &mut chunk,
+        Value::Array(vec![Value::Integer(1), Value::Integer(2)].into()),
+    );
+    chunk.emit(Op::Contains, loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["true"]);
+}

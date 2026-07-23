@@ -97,3 +97,22 @@ fn is_variant_matches_case_insensitive_language_identities() {
 
     assert_eq!(run_ok_output(chunk), vec!["true"]);
 }
+
+#[test]
+fn enum_field_returns_associated_value() {
+    let mut chunk = Chunk::new();
+    let type_name = chunk
+        .add_constant(Value::Str("Result".into()))
+        .expect("constant");
+    let variant_name = chunk
+        .add_constant(Value::Str("Value".into()))
+        .expect("constant");
+
+    emit_constant(&mut chunk, Value::Integer(42));
+    chunk.emit(Op::MakeEnum(type_name, variant_name, 1), loc());
+    chunk.emit(Op::EnumField(0), loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(run_ok_output(chunk), vec!["42"]);
+}

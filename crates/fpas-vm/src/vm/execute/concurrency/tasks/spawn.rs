@@ -76,6 +76,11 @@ impl Worker {
 
         let task_id = self.shared.alloc_task_id();
 
+        if retain_result {
+            self.shared.register_task_result(task_id);
+            self.push(Value::Task(task_id))?;
+        }
+
         self.shared.enqueue_task(TaskState {
             id: task_id,
             ip: code_start,
@@ -83,10 +88,6 @@ impl Worker {
             call_stack: Vec::new(),
             retain_result,
         });
-
-        if retain_result {
-            self.push(Value::Task(task_id))?;
-        }
         Ok(())
     }
 }

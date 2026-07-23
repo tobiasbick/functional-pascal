@@ -29,13 +29,14 @@ impl Worker {
                     line,
                 ));
             }
+            TaskResultPoll::Unknown if self.shared.is_shutdown() => {
+                return Err(waited_task_failed(line));
+            }
+            TaskResultPoll::Unknown => {
+                return Err(unknown_task_error(task_id, line));
+            }
             TaskResultPoll::Pending if self.shared.is_shutdown() => {
-                return Err(runtime_error(
-                    RUNTIME_VM_SHUTDOWN,
-                    "Execution aborted: the waited task failed",
-                    "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                    line,
-                ));
+                return Err(waited_task_failed(line));
             }
             TaskResultPoll::Pending => {
                 self.push(Value::Task(task_id))?;
@@ -64,13 +65,14 @@ impl Worker {
                                 line,
                             ));
                         }
+                        TaskResultPoll::Unknown if self.shared.is_shutdown() => {
+                            return Err(waited_task_failed(line));
+                        }
+                        TaskResultPoll::Unknown => {
+                            return Err(unknown_task_error(task_id, line));
+                        }
                         TaskResultPoll::Pending if self.shared.is_shutdown() => {
-                            return Err(runtime_error(
-                                RUNTIME_VM_SHUTDOWN,
-                                "Execution aborted: the waited task failed",
-                                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                                line,
-                            ));
+                            return Err(waited_task_failed(line));
                         }
                         TaskResultPoll::Pending if self.sync_call_depth > 0 => {
                             self.shared.wait_until_task_result_ready_strict(task_id);
@@ -117,17 +119,19 @@ impl Worker {
         task_ids.sort_unstable();
         task_ids.dedup();
 
+        if let Some(task_id) = self.shared.first_unknown_task(&task_ids) {
+            if self.shared.is_shutdown() {
+                return Err(waited_task_failed(line));
+            }
+            return Err(unknown_task_error(task_id, line));
+        }
+
         let all_done = self.shared.all_tasks_recorded(&task_ids);
 
         if all_done {
             // `WaitAll` observes completion but does not consume task results.
         } else if self.shared.is_shutdown() {
-            return Err(runtime_error(
-                RUNTIME_VM_SHUTDOWN,
-                "Execution aborted: a waited task failed",
-                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                line,
-            ));
+            return Err(waited_task_failed(line));
         } else {
             self.push(Value::Array(tasks))?;
             self.ip -= 1;
@@ -144,12 +148,7 @@ impl Worker {
                     return Ok(());
                 }
                 if self.shared.is_shutdown() {
-                    return Err(runtime_error(
-                        RUNTIME_VM_SHUTDOWN,
-                        "Execution aborted: a waited task failed",
-                        "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                        line,
-                    ));
+                    return Err(waited_task_failed(line));
                 }
                 if self.sync_call_depth > 0 {
                     self.shared.wait_until_all_tasks_recorded_strict(&task_ids);
@@ -259,4 +258,22 @@ impl Worker {
             }
         }
     }
+}
+
+fn unknown_task_error(task_id: u64, line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_INVALID_TASK,
+        format!("Task {task_id} was not created by this VM or does not retain a result"),
+        "Pass a task handle returned by a `go` expression to `Wait` or `WaitAll`.",
+        line,
+    )
+}
+
+fn waited_task_failed(line: SourceLocation) -> VmError {
+    runtime_error(
+        RUNTIME_VM_SHUTDOWN,
+        "Execution aborted: a waited task failed",
+        "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
+        line,
+    )
 }

@@ -22,3 +22,23 @@ fn stack_overflow_is_reported_as_error_not_panic() {
         err.message
     );
 }
+
+#[test]
+fn zero_argument_recursion_reports_call_stack_overflow() {
+    let mut chunk = Chunk::new();
+    let name_idx = chunk
+        .add_constant(Value::Str("recurse".into()))
+        .expect("function name constant");
+    chunk.emit(Op::Call(name_idx, 0), loc());
+    chunk.emit(Op::Halt, loc());
+
+    let body_start = chunk.len();
+    chunk.insert_function("recurse", body_start, 0);
+    chunk.emit(Op::Call(name_idx, 0), loc());
+    chunk.emit(Op::Unit, loc());
+    chunk.emit(Op::Return, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, RUNTIME_INTRINSIC_STACK_STATE_ERROR);
+    assert_eq!(err.message, "Call stack overflow");
+}

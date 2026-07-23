@@ -59,10 +59,13 @@ impl Worker {
 
         let base_slot = self.stack.len() - args.len();
         let saved_depth = self.call_stack.len();
-        self.call_stack.push(CallFrame {
-            return_ip: self.ip,
-            base_slot,
-        });
+        self.push_call_frame(
+            CallFrame {
+                return_ip: self.ip,
+                base_slot,
+            },
+            line,
+        )?;
         for capture in captures.clone() {
             self.push(capture)?;
         }

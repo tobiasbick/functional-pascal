@@ -4,7 +4,8 @@
 
 - **Parameters:** `Milliseconds: integer`.
 - **Result:** none.
-- **Effect:** pauses execution for the requested time.
+- **Effect:** blocks the current VM worker for the requested time. Other tasks may continue and
+  access the shared console while this worker sleeps.
 - **Errors:** runtime error if the value is negative.
 
 ### `procedure CursorOn()`

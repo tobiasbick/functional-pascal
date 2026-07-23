@@ -2,8 +2,8 @@
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/concurrency/task.md`, `docs/pascal/language/concurrency/README.md`
 
-use fpas_bytecode::{Intrinsic, Op, TaskIntrinsic, Value};
-use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
+use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
+use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_VM_SHUTDOWN};
 
 use crate::tests::helpers::{
     build_zero_arg_function_chunk, emit_constant, loc, run_err, run_ok_output,
@@ -107,4 +107,51 @@ fn wait_on_child_that_panics_surfaces_shutdown_to_waiter() {
 
     let err = run_err(chunk);
     assert_eq!(err.code, RUNTIME_VM_SHUTDOWN);
+}
+
+#[test]
+fn wait_rejects_task_handle_not_created_by_vm() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Task(0));
+    chunk.emit(
+        Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+        loc(),
+    );
+    chunk.emit(Op::Halt, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, RUNTIME_INVALID_TASK);
+    assert!(err.message.contains("not created by this VM"));
+}
+
+#[test]
+fn wait_rejects_forged_handle_for_detached_task() {
+    let callee = "Detached";
+    let chunk = build_zero_arg_function_chunk(
+        callee,
+        |chunk| {
+            emit_constant(
+                chunk,
+                Value::Function {
+                    name: callee.into(),
+                    captures: vec![],
+                    task_bound: false,
+                },
+            );
+            chunk.emit(Op::SpawnDetachedTask(0), loc());
+            emit_constant(chunk, Value::Task(1));
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
+        },
+        |chunk| {
+            chunk.emit(Op::Unit, loc());
+            chunk.emit(Op::Return, loc());
+        },
+    );
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, RUNTIME_INVALID_TASK);
+    assert!(err.message.contains("does not retain a result"));
 }

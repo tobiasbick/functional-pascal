@@ -109,6 +109,26 @@ impl Worker {
         Ok(())
     }
 
+    /// Push a call frame while enforcing the VM recursion limit.
+    ///
+    /// **Documentation:** `docs/pascal/language/functions/README.md`.
+    pub(crate) fn push_call_frame(
+        &mut self,
+        frame: CallFrame,
+        location: SourceLocation,
+    ) -> Result<(), VmError> {
+        if self.call_stack.len() >= STACK_MAX {
+            return Err(super::runtime_error(
+                STACK_OVERFLOW_CODE,
+                "Call stack overflow",
+                "Reduce recursion depth or replace recursive processing with an iterative approach.",
+                location,
+            ));
+        }
+        self.call_stack.push(frame);
+        Ok(())
+    }
+
     /// Pop a value from this worker's stack.
     pub(crate) fn pop(&mut self, location: SourceLocation) -> Result<Value, VmError> {
         self.stack.pop().ok_or_else(|| {

@@ -51,12 +51,23 @@ fn ready_queue_is_fifo_under_single_threaded_push_pop() {
 // --- Positive / negative / edge: task results ---
 
 #[test]
-fn poll_task_result_pending_for_unknown_id() {
+fn poll_task_result_reports_unknown_id() {
     let shared = minimal_shared_state(minimal_halt_chunk());
     assert!(matches!(
         shared.poll_task_result(999),
+        TaskResultPoll::Unknown
+    ));
+}
+
+#[test]
+fn registered_task_result_is_pending_until_stored() {
+    let shared = minimal_shared_state(minimal_halt_chunk());
+    shared.register_task_result(5);
+    assert!(matches!(
+        shared.poll_task_result(5),
         TaskResultPoll::Pending
     ));
+    assert!(!shared.all_tasks_recorded(&[5]));
 }
 
 #[test]
@@ -86,6 +97,7 @@ fn store_poll_available_then_consumed() {
 #[test]
 fn poll_never_available_without_store() {
     let shared = minimal_shared_state(minimal_halt_chunk());
+    shared.register_task_result(1);
     for _ in 0..3 {
         assert!(matches!(
             shared.poll_task_result(1),

@@ -195,7 +195,7 @@ impl Worker {
             }
             Intrinsic::Console(ConsoleIntrinsic::Delay) => {
                 let ms = self.pop_int(line)?;
-                self.with_console(|c| c.delay(ms, line))?;
+                Console::delay(ms, line)?;
             }
             Intrinsic::Console(ConsoleIntrinsic::CursorOn) => {
                 self.with_console(|c| c.cursor_on(line))?

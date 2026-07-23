@@ -134,10 +134,13 @@ impl Worker {
         }
 
         let base = self.stack.len() - argc as usize;
-        self.call_stack.push(CallFrame {
-            return_ip: self.ip,
-            base_slot: base,
-        });
+        self.push_call_frame(
+            CallFrame {
+                return_ip: self.ip,
+                base_slot: base,
+            },
+            line,
+        )?;
         self.ip = code_start;
         Ok(())
     }

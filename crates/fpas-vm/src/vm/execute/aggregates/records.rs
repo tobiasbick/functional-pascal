@@ -12,19 +12,25 @@ impl Worker {
     ) -> Result<(), VmError> {
         let type_name = self.const_str(type_idx, line)?;
         let items = self.drain_stack_tail(field_count as usize * 2, line)?;
-        let fields = items
-            .chunks(2)
-            .map(|pair| {
-                let Value::Str(name) = &pair[0] else {
-                    return Err(internal_error(
-                        "MakeRecord expected string field names",
-                        "This indicates invalid bytecode or a compiler record-lowering bug. Please report it.",
-                        line,
-                    ));
-                };
-                Ok((name.clone(), pair[1].clone()))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        let mut items = items.into_iter();
+        let mut fields = Vec::with_capacity(field_count as usize);
+        for _ in 0..field_count {
+            let Some(Value::Str(name)) = items.next() else {
+                return Err(internal_error(
+                    "MakeRecord expected string field names",
+                    "This indicates invalid bytecode or a compiler record-lowering bug. Please report it.",
+                    line,
+                ));
+            };
+            let Some(value) = items.next() else {
+                return Err(internal_error(
+                    "MakeRecord expected a value after its field name",
+                    "This indicates invalid bytecode or a compiler record-lowering bug. Please report it.",
+                    line,
+                ));
+            };
+            fields.push((name, value));
+        }
         self.push(Value::Record { type_name, fields })?;
         Ok(())
     }
@@ -120,16 +126,24 @@ impl Worker {
             ));
         };
 
-        for pair in override_items.chunks(2) {
-            let Value::Str(name) = &pair[0] else {
+        let mut override_items = override_items.into_iter();
+        for _ in 0..n_overrides {
+            let Some(Value::Str(name)) = override_items.next() else {
                 return Err(internal_error(
                     "UpdateRecord expected string field names",
                     "This indicates invalid bytecode or a compiler record-update lowering bug. Please report it.",
                     line,
                 ));
             };
-            if let Some(entry) = fields.iter_mut().find(|(n, _)| n == name) {
-                entry.1 = pair[1].clone();
+            let Some(value) = override_items.next() else {
+                return Err(internal_error(
+                    "UpdateRecord expected a value after its field name",
+                    "This indicates invalid bytecode or a compiler record-update lowering bug. Please report it.",
+                    line,
+                ));
+            };
+            if let Some(entry) = fields.iter_mut().find(|(field, _)| field == &name) {
+                entry.1 = value;
             } else {
                 return Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,

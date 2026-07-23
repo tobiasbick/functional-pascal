@@ -26,22 +26,13 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 use std::time::Duration;
 
 mod graph;
+mod results;
 mod timers;
 
+pub(crate) use results::{TaskResultPoll, TaskResultState};
 pub(crate) use timers::TaskTimers;
 
 pub(crate) use graph::GraphState;
-
-pub(crate) enum TaskResultPoll {
-    Pending,
-    Available(Value),
-    Consumed,
-}
-
-pub(crate) enum TaskResultState {
-    Unit,
-    Value(Box<Value>),
-}
 
 /// Shared state for the parallel VM.
 ///
@@ -160,57 +151,6 @@ impl SharedState {
             .pop_front()
     }
 
-    /// Store a completed task's return value and notify waiters.
-    pub(crate) fn store_task_result(&self, id: u64, value: Value) {
-        let state = match value {
-            Value::Unit => TaskResultState::Unit,
-            value => TaskResultState::Value(Box::new(value)),
-        };
-        let mut results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        results.insert(id, state);
-        self.completed_task_count.fetch_add(1, Ordering::Release);
-        drop(results);
-        self.task_results_available.notify_all();
-    }
-
-    /// Returns `true` when every task id in `task_ids` has a recorded result.
-    pub(crate) fn all_tasks_recorded(&self, task_ids: &[u64]) -> bool {
-        let results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        let completions = self
-            .task_completions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner());
-        task_ids
-            .iter()
-            .all(|id| results.contains_key(id) || completions.contains(id))
-    }
-
-    /// Consume a completed task result if it is still available.
-    pub(crate) fn poll_task_result(&self, id: u64) -> TaskResultPoll {
-        let mut task_results = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        let Some(state) = task_results.remove(&id) else {
-            if self
-                .task_completions
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .contains(&id)
-            {
-                return TaskResultPoll::Consumed;
-            }
-            return TaskResultPoll::Pending;
-        };
-
-        let result = match state {
-            TaskResultState::Unit => Value::Unit,
-            TaskResultState::Value(value) => *value,
-        };
-        self.task_completions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(id);
-        TaskResultPoll::Available(result)
-    }
-
     /// Signal all workers to shut down.
     pub(crate) fn request_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
@@ -262,137 +202,8 @@ impl SharedState {
         }
     }
 
-    /// Block until `task_id` has a completion record in [`Self::task_results`] or shutdown.
-    ///
-    /// Must be paired with [`Self::store_task_result`], which notifies [`Self::task_results_available`].
-    pub(crate) fn wait_until_task_result_ready(&self, task_id: u64) {
-        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        loop {
-            match guard.get(&task_id) {
-                Some(_) => return,
-                None if self
-                    .task_completions
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .contains(&task_id) =>
-                {
-                    return;
-                }
-                None => {}
-            }
-            if self.is_shutdown() || self.has_ready_task() {
-                return;
-            }
-            guard = self
-                .task_results_available
-                .wait(guard)
-                .unwrap_or_else(|e| e.into_inner());
-        }
-    }
-
-    /// Like [`Self::wait_until_task_result_ready`], but does not wake early when other
-    /// tasks are merely queued. Used when the waiter cannot yield (sync callbacks).
-    pub(crate) fn wait_until_task_result_ready_strict(&self, task_id: u64) {
-        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        loop {
-            match guard.get(&task_id) {
-                Some(_) => return,
-                None if self
-                    .task_completions
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner())
-                    .contains(&task_id) =>
-                {
-                    return;
-                }
-                None => {}
-            }
-            if self.is_shutdown() {
-                return;
-            }
-            guard = self
-                .task_results_available
-                .wait(guard)
-                .unwrap_or_else(|e| e.into_inner());
-        }
-    }
-
-    /// Block until every `task_id` has an entry in [`Self::task_results`] (or shutdown).
-    pub(crate) fn wait_until_all_tasks_recorded(&self, task_ids: &[u64]) {
-        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        loop {
-            let completions = self
-                .task_completions
-                .lock()
-                .unwrap_or_else(|e| e.into_inner());
-            let missing = task_ids
-                .iter()
-                .filter(|id| !guard.contains_key(id) && !completions.contains(id))
-                .count();
-            drop(completions);
-            if missing == 0 || self.is_shutdown() {
-                return;
-            }
-            if self.has_ready_task() {
-                return;
-            }
-
-            let target = self
-                .completed_task_count
-                .load(Ordering::Acquire)
-                .saturating_add(missing as u64);
-            while self.completed_task_count.load(Ordering::Acquire) < target && !self.is_shutdown()
-            {
-                guard = self
-                    .task_results_available
-                    .wait(guard)
-                    .unwrap_or_else(|e| e.into_inner());
-            }
-        }
-    }
-
-    /// Like [`Self::wait_until_all_tasks_recorded`], but does not wake early for a non-empty
-    /// ready queue. Used when the waiter cannot yield (sync callbacks).
-    pub(crate) fn wait_until_all_tasks_recorded_strict(&self, task_ids: &[u64]) {
-        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
-        loop {
-            let completions = self
-                .task_completions
-                .lock()
-                .unwrap_or_else(|e| e.into_inner());
-            let missing = task_ids
-                .iter()
-                .filter(|id| !guard.contains_key(id) && !completions.contains(id))
-                .count();
-            drop(completions);
-            if missing == 0 || self.is_shutdown() {
-                return;
-            }
-
-            let target = self
-                .completed_task_count
-                .load(Ordering::Acquire)
-                .saturating_add(missing as u64);
-            while self.completed_task_count.load(Ordering::Acquire) < target && !self.is_shutdown()
-            {
-                guard = self
-                    .task_results_available
-                    .wait(guard)
-                    .unwrap_or_else(|e| e.into_inner());
-            }
-        }
-    }
-
     /// Check whether shutdown has been requested.
     pub(crate) fn is_shutdown(&self) -> bool {
         self.shutdown.load(Ordering::Acquire)
-    }
-
-    fn has_ready_task(&self) -> bool {
-        !self
-            .task_queue
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .is_empty()
     }
 }

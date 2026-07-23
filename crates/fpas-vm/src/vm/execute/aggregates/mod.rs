@@ -78,10 +78,25 @@ impl Worker {
 
     fn exec_make_dict(&mut self, pair_count: u16, line: SourceLocation) -> Result<(), VmError> {
         let items = self.drain_stack_tail(pair_count as usize * 2, line)?;
-        let pairs = items
-            .chunks(2)
-            .map(|chunk| (chunk[0].clone(), chunk[1].clone()))
-            .collect();
+        let mut items = items.into_iter();
+        let mut pairs = Vec::with_capacity(pair_count as usize);
+        for _ in 0..pair_count {
+            let Some(key) = items.next() else {
+                return Err(crate::vm::internal_error(
+                    "MakeDict expected a key-value pair",
+                    "This indicates invalid bytecode or a compiler dictionary-lowering bug. Please report it.",
+                    line,
+                ));
+            };
+            let Some(value) = items.next() else {
+                return Err(crate::vm::internal_error(
+                    "MakeDict expected a value after its key",
+                    "This indicates invalid bytecode or a compiler dictionary-lowering bug. Please report it.",
+                    line,
+                ));
+            };
+            pairs.push((key, value));
+        }
         self.push(Value::Dict(pairs))?;
         Ok(())
     }

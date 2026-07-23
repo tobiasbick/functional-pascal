@@ -154,6 +154,7 @@ impl Compiler {
         self.enums.insert(
             canonical_name(type_name),
             EnumInfo {
+                type_name: type_name.to_string(),
                 variants,
                 has_data: false,
             },
@@ -173,6 +174,7 @@ impl Compiler {
         self.enums.insert(
             canonical_name(type_name),
             EnumInfo {
+                type_name: type_name.to_string(),
                 variants,
                 has_data: true,
             },

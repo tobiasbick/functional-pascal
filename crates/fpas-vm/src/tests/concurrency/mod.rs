@@ -4,6 +4,7 @@ mod spawn_path_detached;
 mod spawn_path_errors;
 mod spawn_path_retained_basic;
 mod spawn_path_retained_capture_name;
+mod task_bound_and_sync_wait;
 mod tasks_spawn_wait_errors;
 mod tasks_wait_all;
 mod wait_all_barrier_scheduling;

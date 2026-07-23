@@ -38,6 +38,7 @@ Requires `uses Std.Path;`.
 - Separator normalization follows the host platform. On Windows, `\` is the primary separator; `/` is also accepted in many paths. On Unix, `/` is used.
 - `Normalize` does not access the filesystem. It only rewrites the path string.
 - `Join` with an empty array returns `''`.
+- If a later `Join` segment is an absolute path (host rules), it replaces the path built so far — the same behavior as Rust `PathBuf::push`. Prefer relative segments when concatenating under a root.
 - `BaseName`, `DirName`, and `Extension` follow the same parsing rules as Rust's `std::path::Path` on the host platform.
 
 ---
@@ -45,6 +46,13 @@ Requires `uses Std.Path;`.
 ## `function Join(Segments: array of string): string`
 
 Joins path segments in order using the platform separator.
+
+An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
+
+```pascal
+{ Unix example: result is '/etc/hosts', not 'home/etc/hosts' }
+WriteLn(Join(['home', '/etc/hosts']))
+```
 
 ```pascal
 var Parts: array of string := ['src', 'main', 'app.txt'];

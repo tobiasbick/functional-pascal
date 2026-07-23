@@ -76,6 +76,9 @@ impl KeyInput {
     pub(crate) fn queue_live_event(&mut self, ev: Event) -> bool {
         match ev {
             Event::Key(key) if key.kind != KeyEventKind::Release => {
+                // Mirror into both API queues so `KeyPressed` and `EventPending` agree,
+                // then remove the sibling when either consumer takes the key (see
+                // [`Self::take_live_key`] / [`Self::take_live_console_event`]).
                 self.live_queue.push_back(key);
                 self.live_console_queue
                     .push_back(LiveConsoleEvent::Key(key));
@@ -107,6 +110,38 @@ impl KeyInput {
                 true
             }
             Event::Key(_) => false,
+        }
+    }
+
+    /// Pop one live key for `ReadKey` / `ReadKeyEvent`, and drop its mirrored `ReadEvent` entry.
+    pub(super) fn take_live_key(&mut self) -> Option<CrosstermKeyEvent> {
+        let key = self.live_queue.pop_front()?;
+        self.discard_mirrored_live_console_key(&key);
+        Some(key)
+    }
+
+    /// Pop one live unified event; when it is a key, drop its mirrored `ReadKey` entry.
+    pub(super) fn take_live_console_event(&mut self) -> Option<LiveConsoleEvent> {
+        let event = self.live_console_queue.pop_front()?;
+        if let LiveConsoleEvent::Key(key) = &event {
+            self.discard_mirrored_live_key(key);
+        }
+        Some(event)
+    }
+
+    fn discard_mirrored_live_console_key(&mut self, key: &CrosstermKeyEvent) {
+        if let Some(pos) = self
+            .live_console_queue
+            .iter()
+            .position(|ev| matches!(ev, LiveConsoleEvent::Key(queued) if queued == key))
+        {
+            self.live_console_queue.remove(pos);
+        }
+    }
+
+    fn discard_mirrored_live_key(&mut self, key: &CrosstermKeyEvent) {
+        if let Some(pos) = self.live_queue.iter().position(|queued| queued == key) {
+            self.live_queue.remove(pos);
         }
     }
 

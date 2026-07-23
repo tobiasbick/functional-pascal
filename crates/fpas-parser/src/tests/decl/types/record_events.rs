@@ -36,3 +36,46 @@ fn nil_literal_parses() {
         "{errors:#?}"
     );
 }
+
+#[test]
+fn event_without_accessors_is_rejected() {
+    let (program, errors) = parse_with_errors(
+        "program T; type Button = record \
+         event OnClick: procedure(); \
+         end; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter_map(ParseDiagnostic::as_parser_error)
+            .any(|e| e.message.contains("requires both `read` and `write`")),
+        "{errors:#?}"
+    );
+    match &program.declarations[0] {
+        Decl::TypeDef(td) => match &td.body {
+            TypeBody::Record(r) => {
+                assert!(r.events[0].read.is_empty());
+                assert!(r.events[0].write.is_empty());
+            }
+            _ => panic!("expected Record"),
+        },
+        _ => panic!("expected TypeDef"),
+    }
+}
+
+#[test]
+fn event_with_only_read_is_rejected() {
+    let (_, errors) = parse_with_errors(
+        "program T; type Button = record \
+         function ReadOnClick(Self: Button): Option of procedure(); begin return None end; \
+         event OnClick: procedure() read ReadOnClick; \
+         end; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter_map(ParseDiagnostic::as_parser_error)
+            .any(|e| e.message.contains("requires both `read` and `write`")),
+        "{errors:#?}"
+    );
+}

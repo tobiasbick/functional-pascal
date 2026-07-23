@@ -42,6 +42,15 @@ fn char_code_out_of_range() {
 }
 
 #[test]
+fn invalid_char_code_stops_string_concatenation() {
+    // After a bad `#` code, later quoted parts are separate tokens — not forged into one string.
+    let (toks, errs) = lex_with_errors("'A'#256'B'");
+    assert_eq!(errs.len(), 1);
+    assert!(errs[0].message.contains("out of range"));
+    assert_eq!(toks, vec![Token::Str("A".into()), Token::Str("B".into())]);
+}
+
+#[test]
 fn char_code_very_large() {
     let (_, errs) = lex_with_errors("#999999");
     assert_eq!(errs.len(), 1);

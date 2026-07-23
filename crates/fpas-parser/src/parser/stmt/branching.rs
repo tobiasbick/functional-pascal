@@ -32,24 +32,30 @@ impl Parser {
         let mut arms = Vec::new();
         while !self.is_case_arm_end() {
             arms.push(self.parse_case_arm());
-            if !self.eat(&Token::Semicolon) {
-                if !self.is_case_arm_end() {
-                    let span = self.current_span();
-                    self.error_with_code(
-                        PARSE_EXPECTED_TOKEN,
-                        &format!(
-                            "Expected `;` between case arms, found `{}`",
-                            super::super::token_display(self.current_token()),
-                        ),
-                        "Insert `;` after the case arm body.",
-                        span,
-                    );
+            if self.eat(&Token::Semicolon) {
+                if self.is_case_arm_end() {
+                    break;
                 }
-                break;
+                continue;
             }
             if self.is_case_arm_end() {
                 break;
             }
+            let span = self.current_span();
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                &format!(
+                    "Expected `;` between case arms, found `{}`",
+                    super::super::token_display(self.current_token()),
+                ),
+                "Insert `;` after the case arm body.",
+                span,
+            );
+            // Keep parsing further arms when the next token can start a label.
+            if self.can_start_expression() {
+                continue;
+            }
+            break;
         }
 
         let else_body = if self.eat(&Token::Else) {

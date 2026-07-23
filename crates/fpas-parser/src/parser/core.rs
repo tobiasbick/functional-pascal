@@ -10,33 +10,18 @@ use fpas_lexer::{Span, SpannedToken, Token};
 impl Parser {
     /// Builds a parser from a pre-lexed token stream.
     ///
-    /// When `tokens` is empty, a synthetic [`Token::Eof`] entry is inserted so indexing never
-    /// underflows. Callers should still supply a stream ending in `Eof` (as [`fpas_lexer::lex`]
-    /// does) for correct parse boundaries.
+    /// Always ends the stream with [`Token::Eof`]. Empty input gets a synthetic `Eof`; a truncated
+    /// non-empty stream without a trailing `Eof` gets one appended so recovery loops cannot hang.
     pub fn new(tokens: Vec<SpannedToken>) -> Self {
-        let tokens = if tokens.is_empty() {
-            vec![SpannedToken {
-                token: Token::Eof,
-                span: Span {
-                    offset: 0,
-                    length: 0,
-                    line: 1,
-                    column: 1,
-                    source_id: 0,
-                },
-            }]
-        } else {
-            tokens
-        };
         Self {
-            tokens,
+            tokens: ensure_trailing_eof(tokens),
             pos: 0,
             errors: Vec::new(),
         }
     }
 
     pub(crate) fn at_end(&self) -> bool {
-        self.current_token() == &Token::Eof
+        matches!(self.current_token(), Token::Eof)
     }
 
     pub(crate) fn current(&self) -> &SpannedToken {
@@ -57,8 +42,10 @@ impl Parser {
     }
 
     pub(crate) fn advance(&mut self) -> &SpannedToken {
-        let tok = &self.tokens[self.pos.min(self.tokens.len() - 1)];
-        if !self.at_end() {
+        let idx = self.pos.min(self.tokens.len() - 1);
+        let tok = &self.tokens[idx];
+        // Never walk past the final token (always `Eof` after [`ensure_trailing_eof`]).
+        if self.pos + 1 < self.tokens.len() {
             self.pos += 1;
         }
         tok
@@ -243,4 +230,37 @@ impl Parser {
     pub(crate) fn expect_semi(&mut self) {
         self.expect(&Token::Semicolon);
     }
+}
+
+fn ensure_trailing_eof(mut tokens: Vec<SpannedToken>) -> Vec<SpannedToken> {
+    if tokens.is_empty() {
+        tokens.push(SpannedToken {
+            token: Token::Eof,
+            span: Span {
+                offset: 0,
+                length: 0,
+                line: 1,
+                column: 1,
+                source_id: 0,
+            },
+        });
+        return tokens;
+    }
+    if !matches!(tokens.last().map(|t| &t.token), Some(Token::Eof)) {
+        let last_span = tokens[tokens.len() - 1].span;
+        let span = Span {
+            offset: last_span.offset.saturating_add(last_span.length),
+            length: 0,
+            line: last_span.line,
+            column: last_span
+                .column
+                .saturating_add(u32::try_from(last_span.length.max(1)).unwrap_or(u32::MAX)),
+            source_id: last_span.source_id,
+        };
+        tokens.push(SpannedToken {
+            token: Token::Eof,
+            span,
+        });
+    }
+    tokens
 }

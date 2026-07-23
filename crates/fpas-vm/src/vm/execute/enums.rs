@@ -21,11 +21,14 @@ impl Worker {
                 })?;
                 Ok(true)
             }
-            Op::IsVariant(name_idx) => {
-                let expected = self.const_str(name_idx, line)?;
+            Op::IsVariant(type_idx, variant_idx) => {
+                let expected_type = self.const_str(type_idx, line)?;
+                let expected_variant = self.const_str(variant_idx, line)?;
                 let val = self.pop(line)?;
                 let matches = match &val {
-                    Value::Enum { variant, .. } => *variant == expected,
+                    Value::Enum {
+                        type_name, variant, ..
+                    } => *type_name == expected_type && *variant == expected_variant,
                     _ => false,
                 };
                 self.push(Value::Boolean(matches))?;

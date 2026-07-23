@@ -1,7 +1,7 @@
 //! Stable diagnostic code catalog.
 //!
 //! Numeric ranges (see also [`DiagnosticCode::stage`]):
-//! - **Lex:** `F0001`–`F0010`
+//! - **Lex:** `F0001`–`F0012`
 //! - **Parse:** `F1001`–`F1999`
 //! - **Sema:** `F2001`–`F2999`
 //! - **Compile:** `F3001`–`F3999`
@@ -47,6 +47,10 @@ define_codes!(LEX_ALLOCATED_CODES => {
 
     /// Lexer: `{$...}` is invalid source syntax.
     LEX_COMPILER_DIRECTIVE_NOT_SUPPORTED = 10;
+    /// Lexer: `__` or other invalid `_` placement inside a numeric literal.
+    LEX_INVALID_DIGIT_SEPARATOR = 11;
+    /// Lexer: non-ASCII letter/digit in an identifier (ASCII letters, digits, `_` only).
+    LEX_NON_ASCII_IN_IDENTIFIER = 12;
 });
 
 define_codes!(PARSE_ALLOCATED_CODES => {

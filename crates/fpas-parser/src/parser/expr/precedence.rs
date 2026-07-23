@@ -47,8 +47,10 @@ impl Parser {
             "Use at most one comparison operator per expression (for example `(A = B) and (C = D)`).",
             span,
         );
-        self.advance();
-        let _ = self.parse_additive();
+        while self.is_comparison_token() {
+            self.advance();
+            let _ = self.parse_additive();
+        }
     }
 
     pub(super) fn parse_additive(&mut self) -> Expr {

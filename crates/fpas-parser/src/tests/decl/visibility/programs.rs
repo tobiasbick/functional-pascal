@@ -33,7 +33,7 @@ end.
     );
 
     assert_eq!(program.declarations.len(), 1);
-    assert_eq!(program.declarations[0].visibility(), Visibility::Public);
+    assert_eq!(program.declarations[0].visibility(), Visibility::Private);
     let parser_error = errors.iter().find_map(|diagnostic| match diagnostic {
         ParseDiagnostic::Parser(error) => Some(error),
         ParseDiagnostic::Lexer(_) => None,

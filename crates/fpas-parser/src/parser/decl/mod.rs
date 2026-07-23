@@ -57,37 +57,36 @@ impl Parser {
     }
 
     /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit` files.
+    ///
+    /// In a `program`, an invalid modifier still records the written visibility in the AST so the
+    /// source intent is preserved; a diagnostic is always emitted.
     fn parse_visibility(&mut self, allow_visibility: bool) -> Visibility {
         match self.current_token() {
             Token::Public => {
                 let span = self.current_span();
                 self.advance();
-                if allow_visibility {
-                    Visibility::Public
-                } else {
+                if !allow_visibility {
                     self.error_with_code(
                         PARSE_INVALID_VISIBILITY,
                         "`public` is not valid in a `program` file",
                         "Remove `public`. Program-level declarations are not imported, so visibility modifiers are not allowed here.",
                         span,
                     );
-                    Visibility::Public
                 }
+                Visibility::Public
             }
             Token::Private => {
                 let span = self.current_span();
                 self.advance();
-                if allow_visibility {
-                    Visibility::Private
-                } else {
+                if !allow_visibility {
                     self.error_with_code(
                         PARSE_INVALID_VISIBILITY,
                         "`private` is not valid in a `program` file",
                         "Remove `private`. Program-level declarations are not imported, so visibility modifiers are not allowed here.",
                         span,
                     );
-                    Visibility::Public
                 }
+                Visibility::Private
             }
             _ => Visibility::default(),
         }

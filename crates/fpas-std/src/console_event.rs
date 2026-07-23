@@ -28,15 +28,16 @@ pub const MOUSE_ACTION_VARIANTS: &[&str] = &[
 pub const MOUSE_BUTTON_VARIANTS: &[&str] = &["None", "Left", "Right", "Middle"];
 
 pub fn event_kind_index(name: &str) -> usize {
-    crate::variant_index(EVENT_KIND_VARIANTS, name)
+    // EventKind has no Unknown variant; fall back to FocusLost (last) rather than Key (first).
+    crate::variant_index(EVENT_KIND_VARIANTS, name).unwrap_or(EVENT_KIND_VARIANTS.len() - 1)
 }
 
 pub fn mouse_action_index(name: &str) -> usize {
-    crate::variant_index(MOUSE_ACTION_VARIANTS, name)
+    crate::variant_index(MOUSE_ACTION_VARIANTS, name).unwrap_or(0)
 }
 
 pub fn mouse_button_index(name: &str) -> usize {
-    crate::variant_index(MOUSE_BUTTON_VARIANTS, name)
+    crate::variant_index(MOUSE_BUTTON_VARIANTS, name).unwrap_or(0)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -178,5 +179,30 @@ impl ConsoleEvent {
             alt: false,
             meta: false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn event_kind_index_known_variants() {
+        assert_eq!(event_kind_index("Key"), 0);
+        assert_eq!(event_kind_index("FocusLost"), EVENT_KIND_VARIANTS.len() - 1);
+    }
+
+    #[test]
+    fn event_kind_index_unknown_name_is_focus_lost_not_key() {
+        assert_eq!(
+            event_kind_index("NotAVariant"),
+            EVENT_KIND_VARIANTS.len() - 1
+        );
+        assert_ne!(event_kind_index("NotAVariant"), event_kind_index("Key"));
+    }
+
+    #[test]
+    fn mouse_action_unknown_name_is_unknown_discriminant() {
+        assert_eq!(mouse_action_index("NotAVariant"), 0);
     }
 }

@@ -2,7 +2,9 @@
 
 - Use **`Read` / `ReadLn`** for typed input and pipes (line discipline).
 - Use **`ReadKey` / `ReadKeyEvent`** for games or immediate key handling.
-- Do not assume that mixing the two in one tight loop will interleave predictably without designing your loop; they are different subsystems.
+- Use **`ReadEvent` / `PollEvent` / `ReadEventTimeout`** for TUI-style unified terminal events.
+- Do not mix live `ReadKey*` and `ReadEvent*` in one loop: a live key is delivered to only one consumer.
+- Do not assume that mixing `ReadKey` and `ReadKeyEvent` in one tight loop will interleave predictably without designing your loop; they are different subsystems.
 
 ## Example
 

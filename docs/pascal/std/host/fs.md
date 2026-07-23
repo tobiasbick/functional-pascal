@@ -18,6 +18,11 @@ end.
 
 Text reads and writes use UTF-8.
 
+**Resource limits:**
+
+- `ReadText` rejects files larger than 64 MiB (`67_108_864` bytes) and returns `Error(message)`.
+- `Glob` rejects patterns that match more than `1_000_000` files and returns `Error(message)`.
+
 
 ## Importing and names
 
@@ -52,6 +57,8 @@ Filesystem calls block the thread that executes them. When a call runs inside `g
 ## `function ReadText(Path: string): Result of string, string`
 
 Reads the entire file at `Path` as UTF-8 text.
+
+Files larger than 64 MiB return `Error(message)` instead of loading into memory.
 
 ```pascal
 var Content: Result of string, string := ReadText('notes.txt');
@@ -139,6 +146,7 @@ Behavior:
 - A plain file path without glob metacharacters returns `Ok([Path])` when that file exists, otherwise `Ok([])`.
 - A valid pattern with no file matches returns `Ok([])` rather than an error.
 - Invalid pattern syntax or filesystem failures return `Error(message)`.
+- Patterns that match more than `1_000_000` files return `Error(message)`.
 - Returned paths use `/` separators for deterministic cross-platform ordering.
 
 Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate. On Windows, drive-relative patterns and separator normalization follow the same rules as the project loader and `fpas fmt` glob expansion.

@@ -1,8 +1,8 @@
 use super::Lexer;
 use crate::Token;
 use fpas_diagnostics::codes::{
-    LEX_INTEGER_LITERAL_OVERFLOW, LEX_INVALID_HEXADECIMAL_LITERAL, LEX_INVALID_NUMERIC_EXPONENT,
-    LEX_REAL_LITERAL_OVERFLOW,
+    LEX_INTEGER_LITERAL_OVERFLOW, LEX_INVALID_DIGIT_SEPARATOR, LEX_INVALID_HEXADECIMAL_LITERAL,
+    LEX_INVALID_NUMERIC_EXPONENT, LEX_REAL_LITERAL_OVERFLOW,
 };
 
 impl Lexer<'_> {
@@ -22,7 +22,21 @@ impl Lexer<'_> {
 
             let text = format!("{int_part}.{frac_part}{exp_part}");
             match text.parse::<f64>() {
-                Ok(value) if value.is_finite() => self.push_tok(Token::Real(value), so, sl, sc),
+                Ok(value) if value.is_finite() => {
+                    // Underflow to zero is finite; reject when the mantissa is non-zero.
+                    if value == 0.0 && !mantissa_is_zero(&int_part, &frac_part) {
+                        self.push_err(
+                            LEX_REAL_LITERAL_OVERFLOW,
+                            "Real literal is out of range",
+                            "Use a smaller absolute exponent so the value stays within 64-bit floating-point range.",
+                            so,
+                            sl,
+                            sc,
+                        );
+                        return;
+                    }
+                    self.push_tok(Token::Real(value), so, sl, sc);
+                }
                 Ok(_) | Err(_) => self.push_err(
                     LEX_REAL_LITERAL_OVERFLOW,
                     "Real literal is out of range",
@@ -80,7 +94,8 @@ impl Lexer<'_> {
     /// Collects a run of digits (and `_` separators) where each digit satisfies `pred`.
     ///
     /// Leading and trailing underscores are not consumed; an underscore is only
-    /// skipped when the next byte also satisfies `pred`.
+    /// skipped when the next byte also satisfies `pred`. A run of `__` is consumed
+    /// with a diagnostic, then digit collection may continue for recovery.
     fn consume_digits_with(&mut self, pred: impl Fn(u8) -> bool) -> String {
         let mut digits = String::new();
         if !self.at_end() && pred(self.current()) {
@@ -92,6 +107,20 @@ impl Lexer<'_> {
             } else if self.current() == b'_' && self.peek_at(1).is_some_and(&pred) {
                 self.advance();
                 digits.push(self.advance() as char);
+            } else if self.current() == b'_' && self.peek_at(1) == Some(b'_') {
+                let (so, sl, sc) = self.span_here();
+                while !self.at_end() && self.current() == b'_' {
+                    self.advance();
+                }
+                self.push_err(
+                    LEX_INVALID_DIGIT_SEPARATOR,
+                    "Invalid digit separator in numeric literal",
+                    "Use a single `_` between digits, for example `1_000` or `$FF_FF`.",
+                    so,
+                    sl,
+                    sc,
+                );
+                // Recover: keep reading digits after the bad separator run.
             } else {
                 break;
             }
@@ -136,4 +165,9 @@ impl Lexer<'_> {
         exp.push_str(&digits);
         Ok(exp)
     }
+}
+
+/// True when the decimal mantissa has no non-zero digit (exponent ignored).
+fn mantissa_is_zero(int_part: &str, frac_part: &str) -> bool {
+    int_part.bytes().all(|b| b == b'0') && frac_part.bytes().all(|b| b == b'0')
 }

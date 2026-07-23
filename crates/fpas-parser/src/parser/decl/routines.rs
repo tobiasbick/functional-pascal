@@ -110,6 +110,16 @@ impl Parser {
         }
         params.push(self.parse_formal_param());
         while self.eat(&Token::Semicolon) {
+            if self.check(&Token::RParen) {
+                let span = self.current_span();
+                self.error_with_code(
+                    fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN,
+                    "Unexpected `;` before `)` in a parameter list",
+                    "Remove the trailing semicolon, or add another parameter before `)`.",
+                    span,
+                );
+                break;
+            }
             params.push(self.parse_formal_param());
         }
         params

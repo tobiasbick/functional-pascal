@@ -35,6 +35,7 @@ impl Compiler {
 
                 self.emit_variant_check(
                     label,
+                    enum_type_name,
                     pattern.root_variant_name.as_deref(),
                     case_slot,
                     location,
@@ -99,6 +100,7 @@ impl Compiler {
     fn emit_variant_check(
         &mut self,
         label: &CaseLabel,
+        enum_type_name: &str,
         root_variant_name: Option<&str>,
         case_slot: u16,
         location: SourceLocation,
@@ -106,8 +108,9 @@ impl Compiler {
     ) -> Result<(), CompileError> {
         self.emit(Op::GetLocal(case_slot), location);
         if let Some(variant_name) = root_variant_name {
+            let type_idx = self.add_constant(Value::Str(enum_type_name.into()), location)?;
             let variant_idx = self.add_constant(Value::Str(variant_name.into()), location)?;
-            self.emit(Op::IsVariant(variant_idx), location);
+            self.emit(Op::IsVariant(type_idx, variant_idx), location);
             fail_patches.push(self.emit(Op::JumpIfFalse(0), location));
             return Ok(());
         }

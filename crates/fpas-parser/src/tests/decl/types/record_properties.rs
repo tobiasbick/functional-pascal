@@ -81,3 +81,46 @@ fn property_rejects_unknown_accessor_keyword() {
         "{errors:#?}"
     );
 }
+
+#[test]
+fn property_without_accessors_is_rejected() {
+    let (_, errors) = parse_with_errors(
+        "program T; type Box = record \
+         property Width: integer; \
+         end; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter_map(ParseDiagnostic::as_parser_error)
+            .any(|e| e.message.contains("at least one of `read` or `write`")),
+        "{errors:#?}"
+    );
+}
+
+#[test]
+fn property_keeps_first_read_on_duplicate() {
+    let (program, errors) = parse_with_errors(
+        "program T; type Box = record \
+         function GetA(Self: Box): integer; begin return 0 end; \
+         function GetB(Self: Box): integer; begin return 1 end; \
+         property Width: integer read GetA read GetB; \
+         end; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter_map(ParseDiagnostic::as_parser_error)
+            .any(|e| e.message.contains("Duplicate `read`")),
+        "{errors:#?}"
+    );
+    match &program.declarations[0] {
+        Decl::TypeDef(td) => match &td.body {
+            TypeBody::Record(r) => {
+                assert_eq!(r.properties[0].read.as_deref(), Some("GetA"));
+            }
+            _ => panic!("expected Record"),
+        },
+        _ => panic!("expected TypeDef"),
+    }
+}

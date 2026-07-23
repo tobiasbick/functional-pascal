@@ -73,6 +73,23 @@ fn line_comment_empty() {
 }
 
 #[test]
+fn bare_line_comment_at_eof_does_not_panic() {
+    assert_eq!(toks("//"), Vec::<Token>::new());
+    assert_eq!(toks("42 //"), vec![Token::Integer(42)]);
+}
+
+#[test]
+fn bare_doc_comment_at_eof_does_not_panic() {
+    assert_eq!(toks("///"), Vec::<Token>::new());
+}
+
+#[test]
+fn utf8_bom_is_skipped_as_trivia() {
+    assert_eq!(toks("\u{FEFF}42"), vec![Token::Integer(42)]);
+    assert_eq!(toks("\u{FEFF}//\n42"), vec![Token::Integer(42)]);
+}
+
+#[test]
 fn line_comment_crlf() {
     assert_eq!(toks("// comment\r\n42"), vec![Token::Integer(42)]);
 }

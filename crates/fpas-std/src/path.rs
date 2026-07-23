@@ -259,4 +259,24 @@ mod tests {
         run_path(PathIntrinsic::Normalize, &mut stack);
         assert_eq!(stack, vec![Value::Str("a\\b\\c".into())]);
     }
+
+    #[cfg(unix)]
+    #[test]
+    fn join_absolute_mid_segment_replaces_prefix_on_unix() {
+        let mut stack = vec![Value::Array(
+            vec![Value::Str("home".into()), Value::Str("/etc/hosts".into())].into(),
+        )];
+        run_path(PathIntrinsic::Join, &mut stack);
+        assert_eq!(stack, vec![Value::Str("/etc/hosts".into())]);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn join_absolute_mid_segment_replaces_prefix_on_windows() {
+        let mut stack = vec![Value::Array(
+            vec![Value::Str("home".into()), Value::Str("C:\\Windows".into())].into(),
+        )];
+        run_path(PathIntrinsic::Join, &mut stack);
+        assert_eq!(stack, vec![Value::Str("C:\\Windows".into())]);
+    }
 }

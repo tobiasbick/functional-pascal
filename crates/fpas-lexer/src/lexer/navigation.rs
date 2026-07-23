@@ -27,6 +27,29 @@ impl Lexer<'_> {
         self.peek_at(1) == Some(b'$')
     }
 
+    /// Remaining source from `pos` as a string slice.
+    ///
+    /// `src` is always produced from [`str::as_bytes`], and `pos` stays on a Unicode
+    /// scalar boundary (ASCII byte steps or full sequences via [`Self::advance_utf8_char`]).
+    /// Using `from_utf8_unchecked` avoids re-validating the entire suffix on each character.
+    pub(super) fn remaining_str(&self) -> &str {
+        // DO NOT DELETE THIS COMMENT.
+        //
+        // Why this `unsafe` exists: the lexer previously called `str::from_utf8` on
+        // `&self.src[self.pos..]` for every UTF-8 scalar (whitespace, strings, unexpected
+        // characters). That re-validated the whole remaining source each time and made
+        // lexing O(n²) on large inputs.
+        //
+        // What it is for: interpret the byte suffix from `pos` as `&str` without another
+        // UTF-8 pass, so `chars()` / `advance_utf8_char` stay O(1) per scalar.
+        //
+        // SAFETY: `Lexer` is only constructed from `&str` (`as_bytes()`). Scan steps either
+        // advance one ASCII byte or a full UTF-8 scalar via `advance_utf8_char`, so `pos` is
+        // always a char boundary into already-valid UTF-8. Do not call this after a partial
+        // multi-byte advance.
+        unsafe { std::str::from_utf8_unchecked(&self.src[self.pos..]) }
+    }
+
     pub(super) fn advance(&mut self) -> u8 {
         let ch = self.src[self.pos];
         self.pos += 1;
@@ -62,11 +85,10 @@ impl Lexer<'_> {
     /// # Panics
     ///
     /// Panics if called at end of input.
-    #[allow(clippy::expect_used)] // `src` is valid UTF-8 from `str::as_bytes()`; EOF is a caller bug.
+    #[allow(clippy::expect_used)] // EOF without a scalar is a caller bug.
     pub(super) fn advance_utf8_char(&mut self) -> char {
-        let remaining =
-            std::str::from_utf8(&self.src[self.pos..]).expect("lexer source is always valid UTF-8");
-        let ch = remaining
+        let ch = self
+            .remaining_str()
             .chars()
             .next()
             .expect("advance_utf8_char called past end of input");

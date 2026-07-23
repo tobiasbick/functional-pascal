@@ -44,6 +44,10 @@ exponent        = ( 'e' | 'E' ) [ '+' | '-' ] decimal_digits ;
 
 (* Digits required on BOTH sides of '.': 0.5 is valid, .5 is not.  *)
 (* Negative numbers are unary minus applied to a literal: -42.      *)
+(* Exactly one '_' between digits: 1_000 is valid, 1__2 is not.    *)
+(* Non-zero reals that underflow to 0.0 are rejected as out of range. *)
+(* A leading UTF-8 BOM (U+FEFF) is skipped as trivia, like whitespace. *)
+(* Identifiers are ASCII only (see `letter` / `identifier` above).  *)
 
 (* ---- String Literals ------------------------------------------- *)
 
@@ -241,7 +245,7 @@ record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
 (* accessor is required. See docs/pascal/language/types/             *)
 (* record-properties.md.                                             *)
 record_property     = 'property' identifier ':' type_expr
-                      { property_accessor } ';' ;
+                      property_accessor { property_accessor } ';' ;
 property_accessor   = 'read' identifier
                     | 'write' identifier ;
 

@@ -290,6 +290,33 @@ impl SharedState {
         }
     }
 
+    /// Like [`Self::wait_until_task_result_ready`], but does not wake early when other
+    /// tasks are merely queued. Used when the waiter cannot yield (sync callbacks).
+    pub(crate) fn wait_until_task_result_ready_strict(&self, task_id: u64) {
+        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        loop {
+            match guard.get(&task_id) {
+                Some(_) => return,
+                None if self
+                    .task_completions
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .contains(&task_id) =>
+                {
+                    return;
+                }
+                None => {}
+            }
+            if self.is_shutdown() {
+                return;
+            }
+            guard = self
+                .task_results_available
+                .wait(guard)
+                .unwrap_or_else(|e| e.into_inner());
+        }
+    }
+
     /// Block until every `task_id` has an entry in [`Self::task_results`] (or shutdown).
     pub(crate) fn wait_until_all_tasks_recorded(&self, task_ids: &[u64]) {
         let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
@@ -307,6 +334,38 @@ impl SharedState {
                 return;
             }
             if self.has_ready_task() {
+                return;
+            }
+
+            let target = self
+                .completed_task_count
+                .load(Ordering::Acquire)
+                .saturating_add(missing as u64);
+            while self.completed_task_count.load(Ordering::Acquire) < target && !self.is_shutdown()
+            {
+                guard = self
+                    .task_results_available
+                    .wait(guard)
+                    .unwrap_or_else(|e| e.into_inner());
+            }
+        }
+    }
+
+    /// Like [`Self::wait_until_all_tasks_recorded`], but does not wake early for a non-empty
+    /// ready queue. Used when the waiter cannot yield (sync callbacks).
+    pub(crate) fn wait_until_all_tasks_recorded_strict(&self, task_ids: &[u64]) {
+        let mut guard = self.task_results.lock().unwrap_or_else(|e| e.into_inner());
+        loop {
+            let completions = self
+                .task_completions
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            let missing = task_ids
+                .iter()
+                .filter(|id| !guard.contains_key(id) && !completions.contains(id))
+                .count();
+            drop(completions);
+            if missing == 0 || self.is_shutdown() {
                 return;
             }
 

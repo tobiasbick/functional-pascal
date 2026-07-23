@@ -53,7 +53,19 @@ impl super::NativeGraphApp {
             }
         };
 
-        for (slot, pixel) in buffer.iter_mut().zip(frame.pixels().iter().copied()) {
+        let pixels = frame.pixels();
+        if buffer.len() != pixels.len() {
+            self.last_error = Some(format!(
+                "Std.Graph softbuffer length {} does not match frame length {} for {}x{}.",
+                buffer.len(),
+                pixels.len(),
+                frame.width(),
+                frame.height()
+            ));
+            return;
+        }
+
+        for (slot, pixel) in buffer.iter_mut().zip(pixels.iter().copied()) {
             *slot = pixel;
         }
         if let Err(error) = buffer.present() {

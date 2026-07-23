@@ -20,6 +20,9 @@ pub struct CaptureBinding {
     pub name: String,
     /// `true` when the capture is mutable (cell-backed at runtime).
     pub mutable: bool,
+    /// `true` when the captured binding already holds a task-bound value
+    /// (for example a nested closure that captured a mutable cell).
+    pub task_bound: bool,
 }
 
 /// Collect lexical captures referenced by `body`.
@@ -90,6 +93,7 @@ impl CaptureCollector<'_> {
         self.captures.push(CaptureBinding {
             name: name.to_string(),
             mutable: symbol.mutable,
+            task_bound: symbol.task_bound,
         });
     }
 

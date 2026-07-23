@@ -124,21 +124,23 @@ end.",
 
 #[test]
 fn property_missing_accessor_rejected() {
-    let errors = check_errors(
-        "\
+    let src = "\
 program T;
 type
   Box = record
     property Width: integer;
   end;
 begin
-end.",
-    );
+end.";
+    let (_program, parse_errors) = fpas_parser::parse(src);
     assert!(
-        errors
-            .iter()
-            .any(|e| e.message.contains("at least one of `read` or `write`")),
-        "{errors:#?}"
+        parse_errors.iter().any(|diagnostic| {
+            diagnostic
+                .as_diagnostic()
+                .message
+                .contains("at least one of `read` or `write`")
+        }),
+        "{parse_errors:#?}"
     );
 }
 

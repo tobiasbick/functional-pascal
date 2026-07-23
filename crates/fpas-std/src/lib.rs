@@ -77,9 +77,7 @@ pub use std_units::{
 pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, test_was_skipped};
 pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 
-/// Returns the index of `name` in `variants`, or 0 if not found.
-///
-/// Used by all console enum variant name → index conversions.
-pub(crate) fn variant_index(variants: &[&str], name: &str) -> usize {
-    variants.iter().position(|&v| v == name).unwrap_or(0)
+/// Returns the index of `name` in `variants`, or `None` if not found.
+pub(crate) fn variant_index(variants: &[&str], name: &str) -> Option<usize> {
+    variants.iter().position(|&v| v == name)
 }

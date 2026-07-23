@@ -6,10 +6,11 @@
 
 use crate::error::StdError;
 use crate::intrinsic_args::{pop_string, pop_value};
+use crate::limits::{MAX_GLOB_MATCHES, MAX_READ_TEXT_BYTES};
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 use glob::glob;
-use std::fs;
-use std::io;
+use std::fs::{self, File};
+use std::io::{self, Read};
 use std::path::Path;
 
 /// Execute a `Std.Fs` intrinsic and return `None` when another unit should handle it.
@@ -21,7 +22,7 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Fs(FsIntrinsic::ReadText) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_string(fs::read_to_string(path)));
+            stack.push(result_string(read_text_limited(&path)));
         }
         Intrinsic::Fs(FsIntrinsic::WriteText) => {
             let text = pop_string(pop_value(stack, location)?, location)?;
@@ -53,11 +54,34 @@ pub(crate) fn run(
     Ok(Some(()))
 }
 
-fn result_string(result: io::Result<String>) -> Value {
+fn result_string(result: Result<String, String>) -> Value {
     match result {
         Ok(value) => Value::ResultOk(Box::new(Value::Str(value))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string()))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error))),
     }
+}
+
+fn read_text_limited(path: &str) -> Result<String, String> {
+    let file = File::open(path).map_err(|error| error.to_string())?;
+    if let Ok(metadata) = file.metadata()
+        && metadata.len() > MAX_READ_TEXT_BYTES
+    {
+        return Err(format!(
+            "File `{path}` is larger than the maximum ReadText size of {MAX_READ_TEXT_BYTES} bytes.\n  help: Read smaller files, or split the input outside FPAS."
+        ));
+    }
+
+    let mut limited = file.take(MAX_READ_TEXT_BYTES.saturating_add(1));
+    let mut text = String::new();
+    limited
+        .read_to_string(&mut text)
+        .map_err(|error| error.to_string())?;
+    if text.len() as u64 > MAX_READ_TEXT_BYTES {
+        return Err(format!(
+            "File `{path}` exceeds the maximum ReadText size of {MAX_READ_TEXT_BYTES} bytes.\n  help: Read smaller files, or split the input outside FPAS."
+        ));
+    }
+    Ok(text)
 }
 
 fn result_bool(result: io::Result<()>) -> Value {
@@ -105,6 +129,11 @@ fn glob_paths(pattern: &str) -> Result<Vec<String>, String> {
             format!("Error while evaluating glob pattern `{pattern}`.\n  details: {error}")
         })?;
         if entry.is_file() {
+            if matches.len() >= MAX_GLOB_MATCHES {
+                return Err(format!(
+                    "Glob pattern `{pattern}` matched more than {MAX_GLOB_MATCHES} files.\n  help: Narrow the pattern so fewer files match."
+                ));
+            }
             matches.push(normalize_path_string(&entry));
         }
     }

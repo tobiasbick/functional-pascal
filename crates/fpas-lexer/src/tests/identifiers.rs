@@ -58,3 +58,17 @@ fn long_identifier() {
     let name = "VeryLongIdentifierNameForTestingPurposes";
     assert_eq!(toks(name), vec![Token::Ident(name.into())]);
 }
+
+#[test]
+fn non_ascii_letter_in_identifier_is_rejected() {
+    use super::lex_with_errors;
+    use fpas_diagnostics::codes::LEX_NON_ASCII_IN_IDENTIFIER;
+
+    let (toks, errs) = lex_with_errors("caf\u{e9}");
+    assert!(
+        toks.is_empty(),
+        "partial ASCII prefix must not become an Ident"
+    );
+    assert_eq!(errs.len(), 1);
+    assert_eq!(errs[0].code, LEX_NON_ASCII_IN_IDENTIFIER);
+}

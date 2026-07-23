@@ -143,6 +143,71 @@ fn key_input_live_key_event_is_visible_to_unified_event_api() {
 }
 
 #[test]
+fn key_input_read_event_of_live_key_clears_key_pressed() {
+    let mut k = test_key_input();
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
+        KeyCode::Char('a'),
+        KeyModifiers::NONE,
+    ))));
+    assert!(k.key_pressed(test_location()).unwrap());
+    assert!(k.event_pending(test_location()).unwrap());
+
+    let event = k.read_event(test_location()).unwrap();
+    assert_eq!(event.kind, event_kind_index("Key"));
+    assert_eq!(event.key.ch, 'a');
+
+    assert!(!k.key_pressed(test_location()).unwrap());
+    assert!(!k.event_pending(test_location()).unwrap());
+}
+
+#[test]
+fn key_input_read_key_event_of_live_key_clears_event_pending() {
+    let mut k = test_key_input();
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
+        KeyCode::Char('b'),
+        KeyModifiers::CONTROL,
+    ))));
+    assert!(k.key_pressed(test_location()).unwrap());
+    assert!(k.event_pending(test_location()).unwrap());
+
+    let ev = k.read_key_event(test_location()).unwrap();
+    assert_eq!(ev.ch, 'b');
+    assert!(ev.ctrl);
+
+    assert!(!k.key_pressed(test_location()).unwrap());
+    assert!(!k.event_pending(test_location()).unwrap());
+}
+
+#[test]
+fn key_input_read_key_leaves_intervening_mouse_for_read_event() {
+    let mut k = test_key_input();
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
+        KeyCode::Char('x'),
+        KeyModifiers::NONE,
+    ))));
+    assert!(k.push_live_event(Event::Mouse(MouseEvent {
+        kind: MouseEventKind::Down(MouseButton::Left),
+        column: 0,
+        row: 0,
+        modifiers: KeyModifiers::NONE,
+    })));
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
+        KeyCode::Char('y'),
+        KeyModifiers::NONE,
+    ))));
+
+    assert_eq!(k.read_key(test_location()).unwrap(), 'x');
+    assert!(k.event_pending(test_location()).unwrap());
+    let mouse = k.read_event(test_location()).unwrap();
+    assert_eq!(mouse.kind, event_kind_index("Mouse"));
+    let second_key = k.read_event(test_location()).unwrap();
+    assert_eq!(second_key.kind, event_kind_index("Key"));
+    assert_eq!(second_key.key.ch, 'y');
+    assert!(!k.key_pressed(test_location()).unwrap());
+    assert!(!k.event_pending(test_location()).unwrap());
+}
+
+#[test]
 fn key_input_event_pending_is_false_when_all_queues_are_empty() {
     let mut k = test_key_input();
     assert!(!k.event_pending(test_location()).unwrap());

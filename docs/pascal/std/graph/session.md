@@ -45,6 +45,7 @@ Current runtime constraints:
 - `DrawText` uses a built-in deterministic bitmap font
 - the runtime currently targets `winit` + `softbuffer`
 - transient native `0x0` resize callbacks are ignored; `Size` keeps the last positive drawable extent
+- `Application.Open` rejects surfaces larger than `64 * 1024 * 1024` pixels (`Width * Height`)
 
 ---
 

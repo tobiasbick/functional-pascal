@@ -54,7 +54,8 @@ impl Compiler {
                     if !variant.field_names.is_empty() {
                         return Ok(false);
                     }
-                    let type_idx = self.add_constant(Value::Str(tn.into()), location)?;
+                    let type_idx =
+                        self.add_constant(Value::Str(info.type_name.clone()), location)?;
                     let variant_idx = self.add_constant(Value::Str((*member).into()), location)?;
                     self.emit(Op::MakeEnum(type_idx, variant_idx, 0), location);
                 } else {
@@ -95,7 +96,7 @@ impl Compiler {
                         .iter()
                         .find(|v| v.name.eq_ignore_ascii_case(variant_part))
                 {
-                    return Some((tn.clone(), v.clone()));
+                    return Some((info.type_name.clone(), v.clone()));
                 }
             }
         }

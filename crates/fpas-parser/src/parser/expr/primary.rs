@@ -168,7 +168,7 @@ impl Parser {
 
     /// Parse `Field := Value;` initializers until `end`, then consume `end`.
     ///
-    /// Shared by record literals, `new` expressions, and record update expressions.
+    /// Shared by record literals and record update expressions.
     fn parse_field_init_list(&mut self) -> Vec<FieldInit> {
         let mut fields = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {

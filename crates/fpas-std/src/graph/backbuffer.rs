@@ -95,9 +95,13 @@ fn pixel_count(width: i64, height: i64, location: SourceLocation) -> Result<usiz
         usize::try_from(width).map_err(|_| allocation_error(width, height, location))?;
     let height_usize =
         usize::try_from(height).map_err(|_| allocation_error(width, height, location))?;
-    width_usize
+    let len = width_usize
         .checked_mul(height_usize)
-        .ok_or_else(|| allocation_error(width, height, location))
+        .ok_or_else(|| allocation_error(width, height, location))?;
+    if len > crate::limits::MAX_GRAPH_PIXELS {
+        return Err(allocation_error(width, height, location));
+    }
+    Ok(len)
 }
 
 fn allocation_error(width: i64, height: i64, location: SourceLocation) -> StdError {

@@ -30,8 +30,9 @@ impl Parser {
                     .expect_ident_after_dot()
                     .unwrap_or_else(|| self.error_ident(self.current_span()));
                 parts.push(DesignatorPart::Ident(name, name_span));
-            } else if self.eat(&Token::LBracket) {
+            } else if self.check(&Token::LBracket) {
                 let idx_start = self.current_span();
+                self.advance();
                 let index = self.parse_expression();
                 self.expect(&Token::RBracket);
                 parts.push(DesignatorPart::Index(index, self.span_from(idx_start)));

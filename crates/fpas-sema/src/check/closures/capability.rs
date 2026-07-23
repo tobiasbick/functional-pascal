@@ -6,10 +6,12 @@ use super::CaptureBinding;
 
 /// Returns whether a closure is task-bound (may not cross task boundaries freely).
 ///
-/// Mutable (cell) captures make a closure task-bound.
+/// A closure is task-bound when it captures a mutable cell directly, or when it
+/// captures another task-bound value (for example a nested closure that already
+/// captured a mutable cell).
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
 #[must_use]
 pub fn task_bound_from_captures(captures: &[CaptureBinding]) -> bool {
-    captures.iter().any(|c| c.mutable)
+    captures.iter().any(|c| c.mutable || c.task_bound)
 }

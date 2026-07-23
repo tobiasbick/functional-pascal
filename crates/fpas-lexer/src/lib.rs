@@ -5,6 +5,8 @@
         reason = "lexer tests assert exact Pascal source literals such as 3.14"
     )
 )]
+// Known-valid UTF-8 remainder slices use `from_utf8_unchecked` in the scan loop.
+#![allow(unsafe_code)]
 
 mod comments;
 mod error;

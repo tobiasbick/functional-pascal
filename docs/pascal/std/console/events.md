@@ -9,7 +9,9 @@
 - **Returns:** one `Event`.
 - **Events:** `Key`, `Mouse`, `Resize`, `Paste`, `FocusGained`, `FocusLost`.
 
-`ReadEvent()` is intended as the low-level terminal event API for TUI-style code. It uses a queue that is separate from the classic `ReadKey()` / `ReadKeyEvent()` APIs.
+`ReadEvent()` is intended as the low-level terminal event API for TUI-style code. Test injection uses a queue that is separate from the classic `ReadKey()` / `ReadKeyEvent()` APIs.
+
+Live terminal keys are mirrored so both `KeyPressed` / `EventPending` can observe them, but **consuming a live key from either API removes it from both**. Prefer one live input style per loop (`ReadEvent*` **or** `ReadKey*`), not both.
 
 ```pascal
 var E: Event := ReadEvent();

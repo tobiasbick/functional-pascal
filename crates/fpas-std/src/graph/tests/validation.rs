@@ -83,3 +83,19 @@ fn graph_session_upload_frame_rejects_surface_size_mismatch() {
         );
     });
 }
+
+#[test]
+fn graph_session_open_rejects_oversized_surface() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        let error = session
+            .open(100_000, 100_000, "too big", test_location())
+            .expect_err("oversized surface should fail");
+
+        assert!(
+            error.message.contains("exceeds the maximum"),
+            "message={}",
+            error.message
+        );
+    });
+}

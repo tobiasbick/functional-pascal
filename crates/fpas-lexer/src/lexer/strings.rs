@@ -15,7 +15,13 @@ impl Lexer<'_> {
             }
             match self.current() {
                 b'\'' => self.scan_quoted_part(&mut value),
-                b'#' => self.scan_char_code_part(&mut value),
+                b'#' => {
+                    // Stop concatenating after an invalid `#` so later quoted
+                    // parts become separate tokens instead of a forged string.
+                    if !self.scan_char_code_part(&mut value) {
+                        break;
+                    }
+                }
                 _ => break,
             }
         }
@@ -53,7 +59,9 @@ impl Lexer<'_> {
         }
     }
 
-    fn scan_char_code_part(&mut self, buf: &mut String) {
+    /// Appends one `#ddd` character. Returns `false` when the code is invalid
+    /// (caller should stop the surrounding string concatenation).
+    fn scan_char_code_part(&mut self, buf: &mut String) -> bool {
         let (so, sl, sc) = self.span_here();
         self.advance();
 
@@ -66,7 +74,7 @@ impl Lexer<'_> {
                 sl,
                 sc,
             );
-            return;
+            return false;
         }
 
         let digits = self.consume_decimal_digits();
@@ -81,7 +89,7 @@ impl Lexer<'_> {
                     sl,
                     sc,
                 );
-                return;
+                return false;
             }
         };
 
@@ -94,8 +102,9 @@ impl Lexer<'_> {
                 sl,
                 sc,
             );
-            return;
+            return false;
         }
         buf.push(code as u8 as char);
+        true
     }
 }

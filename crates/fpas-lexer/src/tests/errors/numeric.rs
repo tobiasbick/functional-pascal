@@ -54,3 +54,42 @@ fn real_literal_overflow_reports_error_and_no_token() {
     assert_eq!(errs.len(), 1);
     assert_eq!(errs[0].code, LEX_REAL_LITERAL_OVERFLOW);
 }
+
+#[test]
+fn real_literal_underflow_reports_error_and_no_token() {
+    use fpas_diagnostics::codes::LEX_REAL_LITERAL_OVERFLOW;
+
+    let (toks, errs) = lex_with_errors("1.0e-9999");
+    assert!(
+        toks.is_empty(),
+        "underflowed non-zero reals must not produce a token"
+    );
+    assert_eq!(errs.len(), 1);
+    assert_eq!(errs[0].code, LEX_REAL_LITERAL_OVERFLOW);
+}
+
+#[test]
+fn zero_mantissa_with_huge_negative_exponent_is_zero() {
+    assert_eq!(super::super::toks("0.0e-9999"), vec![Token::Real(0.0)]);
+}
+
+#[test]
+fn double_underscore_in_decimal_is_rejected() {
+    use fpas_diagnostics::codes::LEX_INVALID_DIGIT_SEPARATOR;
+
+    let (toks, errs) = lex_with_errors("1__2");
+    assert_eq!(errs.len(), 1);
+    assert_eq!(errs[0].code, LEX_INVALID_DIGIT_SEPARATOR);
+    // Recovery keeps digits after the bad separator run.
+    assert_eq!(toks, vec![Token::Integer(12)]);
+}
+
+#[test]
+fn double_underscore_in_hex_is_rejected() {
+    use fpas_diagnostics::codes::LEX_INVALID_DIGIT_SEPARATOR;
+
+    let (toks, errs) = lex_with_errors("$A__B");
+    assert_eq!(errs.len(), 1);
+    assert_eq!(errs[0].code, LEX_INVALID_DIGIT_SEPARATOR);
+    assert_eq!(toks, vec![Token::Integer(0xAB)]);
+}

@@ -43,6 +43,7 @@ impl Parser {
                 "for I: integer := 0 to 10 do ...",
                 span,
             );
+            // Recovery default so the rest of the loop still parses.
             ForDirection::To
         };
 

@@ -1,0 +1,9 @@
+program PathJoinBasenameNormalizeTest;
+
+uses Std.Path, Std.Test;
+
+begin
+  AssertEquals('app.txt', BaseName(Join(['src', 'main', 'app.txt'])));
+  AssertEquals('gz', Extension('archive.tar.gz'));
+  AssertEquals('c', BaseName(Normalize('a/b/../c')))
+end.

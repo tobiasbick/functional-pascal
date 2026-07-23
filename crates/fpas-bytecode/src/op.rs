@@ -232,10 +232,11 @@ pub enum Op {
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
     MakeEnum(u16, u16, u8),
-    /// Pop enum value; push `true` if variant name matches the constant at index.
+    /// Pop enum value; push `true` if type and variant name match the constants.
+    /// `(type_name_const_idx, variant_name_const_idx)`
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
-    IsVariant(u16),
+    IsVariant(u16, u16),
     /// Pop enum value; push field at given positional index. Panics on wrong variant.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`

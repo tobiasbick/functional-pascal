@@ -31,7 +31,15 @@ impl Worker {
                 }
                 let start = self.stack.len() - count;
                 let captures: Vec<Value> = self.stack.drain(start..).collect();
-                let task_bound = captures.iter().any(|c| matches!(c, Value::Cell(_)));
+                // Direct cell captures and nested task-bound function values both
+                // make this closure task-bound (mutable state must not cross `go`).
+                let task_bound = captures.iter().any(|c| match c {
+                    Value::Cell(_) => true,
+                    Value::Function {
+                        task_bound: true, ..
+                    } => true,
+                    _ => false,
+                });
                 self.push(Value::Function {
                     name,
                     captures,

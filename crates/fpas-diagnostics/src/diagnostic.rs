@@ -38,7 +38,7 @@ impl DiagnosticCode {
     #[must_use]
     pub const fn stage(self) -> DiagnosticStage {
         match self.value() {
-            1..=10 => DiagnosticStage::Lex,
+            1..=12 => DiagnosticStage::Lex,
             1001..=1999 => DiagnosticStage::Parse,
             2001..=2999 => DiagnosticStage::Sema,
             3001..=3999 => DiagnosticStage::Compile,

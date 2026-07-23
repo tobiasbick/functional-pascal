@@ -7,7 +7,7 @@ impl Parser {
     pub(in super::super) fn parse_type_block(&mut self, visibility: Visibility) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
-        while let Token::Ident(_) = self.current_token() {
+        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             defs.push(Decl::TypeDef(self.parse_type_def(visibility)));
         }
         defs
@@ -94,6 +94,7 @@ impl Parser {
     /// Parse `property Name: Type [read Getter] [write Setter];`.
     ///
     /// `read` / `write` are contextual identifiers, not reserved keywords.
+    /// At least one accessor is required (see `docs/pascal/language/types/record-properties.md`).
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
     fn parse_record_property(&mut self) -> RecordProperty {
@@ -112,6 +113,9 @@ impl Parser {
                 break;
             };
             if accessor_kw.eq_ignore_ascii_case("read") {
+                let (getter, _) = self
+                    .expect_ident()
+                    .unwrap_or_else(|| self.error_ident(kw_span));
                 if read.is_some() {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
@@ -119,12 +123,13 @@ impl Parser {
                         "Write `property Name: Type read Getter write Setter;`.",
                         kw_span,
                     );
+                } else {
+                    read = Some(getter);
                 }
-                let (getter, _) = self
+            } else if accessor_kw.eq_ignore_ascii_case("write") {
+                let (setter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
-                read = Some(getter);
-            } else if accessor_kw.eq_ignore_ascii_case("write") {
                 if write.is_some() {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
@@ -132,11 +137,9 @@ impl Parser {
                         "Write `property Name: Type read Getter write Setter;`.",
                         kw_span,
                     );
+                } else {
+                    write = Some(setter);
                 }
-                let (setter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                write = Some(setter);
             } else {
                 self.error_with_code(
                     PARSE_EXPECTED_TOKEN,
@@ -146,6 +149,15 @@ impl Parser {
                 );
                 break;
             }
+        }
+
+        if read.is_none() && write.is_none() {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Property must declare at least one of `read` or `write`",
+                "Write `property Name: Type read Getter;` or add a `write` clause.",
+                self.current_span(),
+            );
         }
 
         self.expect_semi();
@@ -159,6 +171,8 @@ impl Parser {
     }
 
     /// Parse `event Name: HandlerType read Getter write Setter;`.
+    ///
+    /// Both accessors are required (see `docs/pascal/language/types/record-events.md`).
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
     fn parse_record_event(&mut self) -> RecordEvent {
@@ -177,6 +191,9 @@ impl Parser {
                 break;
             };
             if accessor_kw.eq_ignore_ascii_case("read") {
+                let (getter, _) = self
+                    .expect_ident()
+                    .unwrap_or_else(|| self.error_ident(kw_span));
                 if read.is_some() {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
@@ -184,12 +201,13 @@ impl Parser {
                         "Write `event Name: HandlerType read Getter write Setter;`.",
                         kw_span,
                     );
+                } else {
+                    read = Some(getter);
                 }
-                let (getter, _) = self
+            } else if accessor_kw.eq_ignore_ascii_case("write") {
+                let (setter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
-                read = Some(getter);
-            } else if accessor_kw.eq_ignore_ascii_case("write") {
                 if write.is_some() {
                     self.error_with_code(
                         PARSE_EXPECTED_TOKEN,
@@ -197,11 +215,9 @@ impl Parser {
                         "Write `event Name: HandlerType read Getter write Setter;`.",
                         kw_span,
                     );
+                } else {
+                    write = Some(setter);
                 }
-                let (setter, _) = self
-                    .expect_ident()
-                    .unwrap_or_else(|| self.error_ident(kw_span));
-                write = Some(setter);
             } else {
                 self.error_with_code(
                     PARSE_EXPECTED_TOKEN,
@@ -213,12 +229,23 @@ impl Parser {
             }
         }
 
+        if read.is_none() || write.is_none() {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Event requires both `read` and `write` accessors",
+                "Write `event Name: HandlerType read Getter write Setter;`.",
+                self.current_span(),
+            );
+        }
+        let read = read.unwrap_or_default();
+        let write = write.unwrap_or_default();
+
         self.expect_semi();
         RecordEvent {
             name,
             type_expr,
-            read: read.unwrap_or_default(),
-            write: write.unwrap_or_default(),
+            read,
+            write,
             span: self.span_from(start),
         }
     }

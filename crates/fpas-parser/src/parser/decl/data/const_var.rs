@@ -6,7 +6,7 @@ impl Parser {
     pub(in super::super) fn parse_const_block(&mut self, visibility: Visibility) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
-        while let Token::Ident(_) = self.current_token() {
+        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             defs.push(Decl::Const(self.parse_const_def(visibility)));
         }
         defs
@@ -35,7 +35,7 @@ impl Parser {
         }
         self.advance();
         let mut defs = Vec::new();
-        while let Token::Ident(_) = self.current_token() {
+        while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             let var_def = self.parse_var_def(visibility);
             if mutable {
                 defs.push(Decl::MutableVar(var_def));

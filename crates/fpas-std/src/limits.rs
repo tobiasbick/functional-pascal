@@ -9,6 +9,15 @@ use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
 /// Maximum number of elements allowed in one `Std.Array.Fill` or `Std.Str.RepeatStr` result.
 pub(crate) const MAX_COLLECTION_LEN: i64 = 1_000_000;
 
+/// Maximum UTF-8 byte length accepted by `Std.Fs.ReadText`.
+pub(crate) const MAX_READ_TEXT_BYTES: u64 = 64 * 1024 * 1024;
+
+/// Maximum number of matching files returned by one `Std.Fs.Glob` call.
+pub(crate) const MAX_GLOB_MATCHES: usize = 1_000_000;
+
+/// Maximum `Width * Height` pixels for one `Std.Graph` surface / backbuffer.
+pub(crate) const MAX_GRAPH_PIXELS: usize = 64 * 1024 * 1024;
+
 /// Maximum nesting depth accepted by `Std.Json.Parse` and `Std.Json.Stringify`.
 pub(crate) const MAX_JSON_DEPTH: usize = 256;
 
@@ -61,5 +70,12 @@ mod tests {
     fn checked_collection_len_rejects_negative_and_overflow() {
         assert!(checked_collection_len(-1, loc(), "Test").is_err());
         assert!(checked_collection_len(MAX_COLLECTION_LEN + 1, loc(), "Test").is_err());
+    }
+
+    #[test]
+    fn resource_limit_constants_are_positive() {
+        assert!(MAX_READ_TEXT_BYTES > 0);
+        assert!(MAX_GLOB_MATCHES > 0);
+        assert!(MAX_GRAPH_PIXELS > 0);
     }
 }

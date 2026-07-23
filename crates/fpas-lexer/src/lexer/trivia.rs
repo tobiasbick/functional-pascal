@@ -21,22 +21,16 @@ impl Lexer<'_> {
 
     pub(super) fn skip_whitespace(&mut self) {
         while !self.at_end() {
-            let Some(ch) = self.peek_char() else {
+            let Some(ch) = self.remaining_str().chars().next() else {
                 break;
             };
-            if !ch.is_whitespace() {
+            // Skip Unicode whitespace and a UTF-8 BOM (`U+FEFF`), which is not
+            // classified as whitespace by `char::is_whitespace`.
+            if ch != '\u{FEFF}' && !ch.is_whitespace() {
                 break;
             }
             self.advance_utf8_char();
         }
-    }
-
-    /// Decodes the Unicode scalar at `pos` without advancing.
-    fn peek_char(&self) -> Option<char> {
-        std::str::from_utf8(&self.src[self.pos..])
-            .ok()?
-            .chars()
-            .next()
     }
 
     fn record_comment(
@@ -113,7 +107,8 @@ impl Lexer<'_> {
         let (so, sl, sc) = self.span_here();
         self.advance();
         self.advance();
-        let style = if self.current() == b'/' {
+        // `///` is a doc line; bare `//` at EOF must not call `current()`.
+        let style = if !self.at_end() && self.current() == b'/' {
             CommentStyle::DocLine
         } else {
             CommentStyle::Line

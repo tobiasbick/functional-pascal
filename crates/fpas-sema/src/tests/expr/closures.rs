@@ -95,3 +95,45 @@ end.",
         "closure should not be task-bound from a shadowed mutable: {info:#?}"
     );
 }
+
+#[test]
+fn nested_closure_capturing_task_bound_callable_is_task_bound() {
+    let (program, parse_errors) = fpas_parser::parse(
+        "program T;
+begin
+  mutable var Count: integer := 0;
+  var Inc: procedure() :=
+    procedure()
+    begin
+      Count := Count + 1
+    end;
+  var Outer: procedure() :=
+    procedure()
+    begin
+      Inc()
+    end;
+  go Outer()
+end.",
+    );
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+
+    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
+    assert!(
+        errors
+            .iter()
+            .any(|error| { error.code == fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE }),
+        "expected task-bound spawn error, got: {errors:#?}"
+    );
+    let outer = closures
+        .values()
+        .find(|info| {
+            info.captures
+                .iter()
+                .any(|capture| capture.name.eq_ignore_ascii_case("Inc"))
+        })
+        .expect("outer closure should capture Inc");
+    assert!(
+        outer.task_bound,
+        "outer closure must be task-bound via nested capture: {outer:#?}"
+    );
+}

@@ -52,7 +52,7 @@ impl KeyInput {
         if let Some(c) = self.test_queue.pop_front() {
             return Ok(c);
         }
-        if let Some(key) = self.live_queue.pop_front() {
+        if let Some(key) = self.take_live_key() {
             return Ok(map_key_for_read(key.code, &mut self.pending));
         }
 
@@ -69,7 +69,7 @@ impl KeyInput {
         if let Some(ev) = self.event_queue.pop_front() {
             return Ok(ev);
         }
-        if let Some(key) = self.live_queue.pop_front() {
+        if let Some(key) = self.take_live_key() {
             return Ok(map_crossterm_key(&key));
         }
 
@@ -118,7 +118,7 @@ impl KeyInput {
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(event);
         }
-        if let Some(event) = self.live_console_queue.pop_front() {
+        if let Some(event) = self.take_live_console_event() {
             return Ok(map_console_event(event));
         }
 
@@ -133,7 +133,7 @@ impl KeyInput {
                 )
             })?;
             if self.queue_live_event(ev)
-                && let Some(next) = self.live_console_queue.pop_front()
+                && let Some(next) = self.take_live_console_event()
             {
                 return Ok(map_console_event(next));
             }
@@ -152,7 +152,7 @@ impl KeyInput {
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(Some(event));
         }
-        if let Some(event) = self.live_console_queue.pop_front() {
+        if let Some(event) = self.take_live_console_event() {
             return Ok(Some(map_console_event(event)));
         }
         if self.test_mode {
@@ -186,7 +186,7 @@ impl KeyInput {
             )
         })?;
         if self.queue_live_event(ev)
-            && let Some(next) = self.live_console_queue.pop_front()
+            && let Some(next) = self.take_live_console_event()
         {
             return Ok(Some(map_console_event(next)));
         }
@@ -205,7 +205,7 @@ impl KeyInput {
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(Some(event));
         }
-        if let Some(event) = self.live_console_queue.pop_front() {
+        if let Some(event) = self.take_live_console_event() {
             return Ok(Some(map_console_event(event)));
         }
         if self.test_mode {
@@ -234,7 +234,7 @@ impl KeyInput {
             )
         })?;
         if self.queue_live_event(ev)
-            && let Some(next) = self.live_console_queue.pop_front()
+            && let Some(next) = self.take_live_console_event()
         {
             return Ok(Some(map_console_event(next)));
         }

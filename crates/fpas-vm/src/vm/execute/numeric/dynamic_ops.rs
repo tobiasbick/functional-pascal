@@ -123,27 +123,31 @@ impl Worker {
                 Ok(true)
             }
             Op::EqDyn => {
-                self.binary_comparable_dyn(line, |ord| ord.is_eq())?;
+                let right = self.pop(line)?;
+                let left = self.pop(line)?;
+                self.push(Value::Boolean(left == right))?;
                 Ok(true)
             }
             Op::NeqDyn => {
-                self.binary_comparable_dyn(line, |ord| !ord.is_eq())?;
+                let right = self.pop(line)?;
+                let left = self.pop(line)?;
+                self.push(Value::Boolean(left != right))?;
                 Ok(true)
             }
             Op::LtDyn => {
-                self.binary_comparable_dyn(line, |ord| ord.is_lt())?;
+                self.binary_ordered_dyn(line, |ord| ord.is_lt())?;
                 Ok(true)
             }
             Op::GtDyn => {
-                self.binary_comparable_dyn(line, |ord| ord.is_gt())?;
+                self.binary_ordered_dyn(line, |ord| ord.is_gt())?;
                 Ok(true)
             }
             Op::LeDyn => {
-                self.binary_comparable_dyn(line, |ord| ord.is_le())?;
+                self.binary_ordered_dyn(line, |ord| ord.is_le())?;
                 Ok(true)
             }
             Op::GeDyn => {
-                self.binary_comparable_dyn(line, |ord| ord.is_ge())?;
+                self.binary_ordered_dyn(line, |ord| ord.is_ge())?;
                 Ok(true)
             }
             _ => Ok(false),
@@ -168,18 +172,18 @@ impl Worker {
         }
     }
 
-    fn binary_comparable_dyn(
+    fn binary_ordered_dyn(
         &mut self,
         line: SourceLocation,
         f: impl FnOnce(std::cmp::Ordering) -> bool,
     ) -> Result<(), VmError> {
         let right = self.pop(line)?;
         let left = self.pop(line)?;
-        let ord = dyn_compare(&left, &right).ok_or_else(|| {
+        let ord = dyn_ordered_compare(&left, &right).ok_or_else(|| {
             runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                "Dynamic comparison requires comparable operands of compatible types",
-                "Ensure both operands are comparable types (integer, real, boolean, string, Option, or Result).",
+                "Dynamic ordered comparison requires scalar comparable operands",
+                "Ensure both operands are integer, real, boolean, or string.",
                 line,
             )
         })?;
@@ -187,17 +191,12 @@ impl Worker {
     }
 }
 
-/// Compare two runtime values, returning `None` for incompatible or
-/// unordered pairs (e.g. NaN).
-fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
-    if option_pair(left, right) || result_pair(left, right) {
-        return Some(if left == right {
-            std::cmp::Ordering::Equal
-        } else {
-            std::cmp::Ordering::Less
-        });
-    }
-
+/// Ordered comparison for scalar dynamic ops (`LtDyn` / `GtDyn` / …).
+///
+/// Returns `None` for incompatible or unordered pairs (e.g. NaN, aggregates,
+/// Option/Result). Equality for those types uses `Value` structural equality
+/// via `EqDyn` / `NeqDyn` instead.
+fn dyn_ordered_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
     match (left, right) {
         (Value::Integer(a), Value::Integer(b)) => Some(a.cmp(b)),
         (Value::Real(a), Value::Real(b)) => a.partial_cmp(b),
@@ -207,14 +206,4 @@ fn dyn_compare(left: &Value, right: &Value) -> Option<std::cmp::Ordering> {
         (Value::Str(a), Value::Str(b)) => Some(a.cmp(b)),
         _ => None,
     }
-}
-
-fn option_pair(left: &Value, right: &Value) -> bool {
-    matches!(left, Value::OptionSome(_) | Value::OptionNone)
-        && matches!(right, Value::OptionSome(_) | Value::OptionNone)
-}
-
-fn result_pair(left: &Value, right: &Value) -> bool {
-    matches!(left, Value::ResultOk(_) | Value::ResultError(_))
-        && matches!(right, Value::ResultOk(_) | Value::ResultError(_))
 }

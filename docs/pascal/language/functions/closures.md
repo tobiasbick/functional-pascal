@@ -93,7 +93,8 @@ explicitly declared callable binding that is initialized before invocation.
 
 An immutable capture environment may cross a task boundary. A closure that contains a
 mutable capture is **task-bound** and cannot be used as the callable of `go`, sent to
-another task, or returned through a task result.
+another task, or returned through a task result. Capturing another task-bound callable
+also makes the outer closure task-bound (the mutable cells are still reachable).
 
 ```pascal
 { Accepted: immutable capture }
@@ -113,6 +114,14 @@ var Inc: procedure() :=
     Count := Count + 1
   end;
 go Inc();  { compile-time error }
+
+{ Rejected: nested task-bound capture }
+var Outer: procedure() :=
+  procedure()
+  begin
+    Inc()
+  end;
+go Outer();  { compile-time error — Outer captures task-bound Inc }
 ```
 
 ## Panic and cleanup

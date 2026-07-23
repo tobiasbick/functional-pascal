@@ -17,7 +17,7 @@ pub use capture::{CaptureBinding, collect_captures};
 pub struct ClosureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,
-    /// `true` when any capture is mutable (cell-backed); restricts task spawning.
+    /// `true` when any capture is mutable or already task-bound; restricts task spawning.
     pub task_bound: bool,
     /// Compiler-facing synthetic routine name for this closure body.
     pub synthetic_name: String,
@@ -33,7 +33,7 @@ pub type ClosureInfoMap = HashMap<usize, ClosureInfo>;
 pub struct NestedRoutineCaptureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,
-    /// `true` when any capture is mutable.
+    /// `true` when any capture is mutable or already task-bound.
     pub task_bound: bool,
 }
 

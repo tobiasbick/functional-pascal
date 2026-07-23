@@ -9,6 +9,13 @@ repository.workspace = true
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 
-[lints]
-workspace = true
+# Not `lints.workspace = true`: this crate intentionally allows `unsafe_code` for
+# known-valid UTF-8 remainder slices (`from_utf8_unchecked`) in the scan loop.
+[lints.rust]
+unsafe_code = "allow"
 
+[lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"

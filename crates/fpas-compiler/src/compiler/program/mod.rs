@@ -112,7 +112,11 @@ impl Compiler {
             }
             self.enums.insert(
                 canonical_name(&type_def.name),
-                super::EnumInfo { variants, has_data },
+                super::EnumInfo {
+                    type_name: type_def.name.clone(),
+                    variants,
+                    has_data,
+                },
             );
         }
 

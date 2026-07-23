@@ -49,7 +49,30 @@ pub(crate) fn validate_surface_size(
         ));
     }
 
+    let width_usize =
+        usize::try_from(width).map_err(|_| surface_too_large(width, height, location))?;
+    let height_usize =
+        usize::try_from(height).map_err(|_| surface_too_large(width, height, location))?;
+    let Some(pixel_count) = width_usize.checked_mul(height_usize) else {
+        return Err(surface_too_large(width, height, location));
+    };
+    if pixel_count > crate::limits::MAX_GRAPH_PIXELS {
+        return Err(surface_too_large(width, height, location));
+    }
+
     Ok((width, height))
+}
+
+fn surface_too_large(width: i64, height: i64, location: SourceLocation) -> StdError {
+    std_runtime_error(
+        RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+        format!(
+            "Std.Graph.Application.Open(Width, Height, Title) surface Width={width} Height={height} exceeds the maximum of {} pixels.",
+            crate::limits::MAX_GRAPH_PIXELS
+        ),
+        "Open a smaller window, or reduce Width/Height so Width * Height stays within the runtime limit.",
+        location,
+    )
 }
 
 /// Validates one full-frame upload against the current session size.

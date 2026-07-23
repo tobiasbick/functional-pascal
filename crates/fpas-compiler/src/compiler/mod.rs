@@ -52,6 +52,8 @@ struct EnumVariantInfo {
 /// Info about a registered enum type.
 #[derive(Debug, Clone)]
 struct EnumInfo {
+    /// Declaration name stored on `MakeEnum` values (not a linked/qualified spelling).
+    type_name: String,
     variants: Vec<EnumVariantInfo>,
     /// True when at least one variant carries associated data.
     has_data: bool,

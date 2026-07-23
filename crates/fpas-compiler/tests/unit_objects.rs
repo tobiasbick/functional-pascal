@@ -201,6 +201,38 @@ fn nested_unit_routines_resolve_to_their_qualified_object_entries() {
 }
 
 #[test]
+fn concurrent_private_record_method_chains_resolve_to_qualified_unit_entries() {
+    let unit = parse_unit(
+        "unit Demo.RecordMethods;
+         uses Std.Task;
+         private type Counter = record
+           Value: integer;
+           function Increment(Self: Counter): Counter;
+           begin return record Value := Self.Value + 1; end end;
+           function Add(Self: Counter; Other: Counter): Counter;
+           begin return record Value := Self.Value + Other.Value; end end;
+         end;
+         private function Compute(): integer;
+         begin
+           var Left: Counter := record Value := 40; end;
+           var Right: Counter := record Value := 1; end;
+           return Left.Increment().Add(Right).Value
+         end;
+         function Run(): integer;
+         begin
+           var Work: task := go Compute();
+           return Wait(Work)
+         end;",
+    );
+    let unit = compile_unit_object(&unit, &[]).expect("unit compilation");
+
+    assert_eq!(
+        run_zero_arity(vec![unit.object], "demo.recordmethods.run"),
+        ["42"]
+    );
+}
+
+#[test]
 fn local_variables_shadow_imported_enum_variant_aliases_during_assignment() {
     let dependency = parse_unit(
         "unit Demo.Policy;

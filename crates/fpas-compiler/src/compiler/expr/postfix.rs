@@ -74,6 +74,7 @@ impl Compiler {
 
         match target {
             fpas_sema::MethodCallTarget::Instance { qualified_name, .. } => {
+                let qualified_name = self.qualify_name(&qualified_name).to_string();
                 // Receiver is already on the stack from the preceding chain.
                 if self.compile_std_library_call(&qualified_name, args, location)? {
                     return Ok(());

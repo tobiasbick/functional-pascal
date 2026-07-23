@@ -16,7 +16,7 @@ pub struct BuildOptions {
 impl Default for BuildOptions {
     fn default() -> Self {
         Self {
-            compiler_version: concat!(env!("CARGO_PKG_VERSION"), "-fpascu-v8").to_string(),
+            compiler_version: concat!(env!("CARGO_PKG_VERSION"), "-fpascu-v9").to_string(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             options_hash: Digest::of(b"fpas-default-compilation-options-v1"),
         }

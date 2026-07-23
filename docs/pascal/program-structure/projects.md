@@ -159,7 +159,7 @@ end;
 
 ## Example: program with a library dependency
 
-The `suite/`, `libs/acme-utils/`, and `apps/portal/` paths below are **illustrative** — they document the project-file shape only and are **not** present in this repository. Runnable samples live under [`examples/pascal/library-deps/`](../../../examples/pascal/library-deps/) (path-based `[dependencies].projects`) and [`examples/pascal/monorepo/`](../../../examples/pascal/monorepo/) (workspace + library). [`apps/ide/`](../../../apps/ide/) is retained legacy source and is not runnable.
+The `suite/`, `libs/acme-utils/`, and `apps/portal/` paths below are **illustrative** — they document the project-file shape only and are **not** present in this repository. Runnable samples live under [`examples/pascal/library-deps/`](../../../examples/pascal/library-deps/) (path-based `[dependencies].projects`) and [`examples/pascal/monorepo/`](../../../examples/pascal/monorepo/) (workspace + library).
 
 Monorepo layout:
 

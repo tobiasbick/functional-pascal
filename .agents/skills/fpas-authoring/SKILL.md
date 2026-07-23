@@ -20,8 +20,6 @@ Before non-trivial edits:
 3. [`.agents/skills/fpas-projects/SKILL.md`](../fpas-projects/SKILL.md) — when the file needs a `.fpasprj` or workspace entry
 4. [`.agents/skills/fpas-change-checklist/SKILL.md`](../fpas-change-checklist/SKILL.md) — after behavior changes (docs, tests, verify)
 
-For `Std.Tui` sources: [`.agents/skills/turbo-vision-4-rust/SKILL.md`](../turbo-vision-4-rust/SKILL.md).
-
 Workflow calibration: [references/examples.md](references/examples.md).
 
 ## Where files go
@@ -33,7 +31,7 @@ Workflow calibration: [references/examples.md](references/examples.md).
 | App source | `apps/<name>/src/` | `program` or `unit` per project |
 | Shared library code | library `.fpasprj` `src/` | `unit` only |
 
-TUI tests group under `tests/tui/` (`views/`, `events/`, `smoke/`, `modals/`). Bundle all regression tests via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj).
+`Std.Tui` tests group under `tests/stdlib/tui/`. Bundle all regression tests via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj).
 
 ## Decision workflow
 
@@ -137,7 +135,7 @@ Copy patterns from real files instead of inventing syntax:
 |---------|-----------|
 | Hello world | [`docs/pascal/getting-started/hello-world.md`](../../../docs/pascal/getting-started/hello-world.md) |
 | Stdlib assertion test | `tests/stdlib/math/abs_negative_integer_test.fpas` |
-| Headless TUI test | `tests/tui/smoke/run_quit_test.fpas` |
+| Headless TUI test | `tests/stdlib/tui/mvu_host_signature_test.fpas` |
 | Unit + `uses` | [`docs/pascal/program-structure/units.md`](../../../docs/pascal/program-structure/units.md) |
 | Library + program | `examples/pascal/monorepo/` |
 

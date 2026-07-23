@@ -1,4 +1,0 @@
-interface:
-  display_name: "Turbo Vision 4 Rust"
-  short_description: "Maintain Std.Tui over turbo-vision; close bridged read-back adapters."
-  default_prompt: "Use this skill when extending, debugging, or upstream-closing Functional Pascal Std.Tui over turbo-vision."

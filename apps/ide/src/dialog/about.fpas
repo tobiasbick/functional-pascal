@@ -1,4 +1,4 @@
-/// Turbo Vision-style About dialog for the FPAS IDE.
+/// About dialog for the FPAS IDE.
 
 unit Ide.Dialog.About;
 
@@ -8,9 +8,7 @@ function AboutMessage(): string;
 begin
   return 'FPAS IDE
 
-Functional Pascal IDE
-
-Built with Turbo Vision'
+Functional Pascal IDE'
 end;
 
 /// Show the modal About dialog and block until the user dismisses it.

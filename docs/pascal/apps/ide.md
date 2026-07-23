@@ -1,6 +1,5 @@
-# Legacy IDE source
+# IDE source status
 
-`apps/ide/` targets the retired pre-MVU UI API. It is historical reference only
-and must not be built, run, or tested with the current `Std.Tui` implementation.
+`apps/ide/` is not a supported application and must not be built, run, or tested.
 
 See [`apps/ide/README.md`](../../../apps/ide/README.md).

@@ -31,14 +31,14 @@ Ask: **Would a user reading the current spec get the wrong idea?**
 If yes, update docs **in the same change**:
 
 - **Language** — page under `docs/pascal/language/<topic>/`
-- **Std API** — unit page or split hub (`text/str/`, `tui/app/`, `collections/array/`, `graph/app/`, `console/`, …)
+- **Std API** — unit page or split hub (`text/str/`, `tui/`, `collections/array/`, `graph/app/`, `console/`, …)
 - **Unit page shape** — quick reference, per-symbol sections, `## Implementation (contributors)` (table), `## See also` (area index + std index)
 - **Rust sources** — add or update `///` links to the matching `docs/pascal/…` path (grep for old paths after moves)
 - **Examples** — update or add under `examples/` when the feature is teachable (not `*_test.fpas` in examples)
 
 If behavior is unchanged, explicitly note **docs: unchanged** in the final summary.
 
-Do not put planned or hypothetical behavior in `docs/pascal/`. Use `docs/future/` for product roadmap. Contributor bridge architecture lives in [vm-bridge.md](../../../docs/pascal/std/tui/app/vm-bridge.md); user-facing unit pages should describe only implemented symbols.
+Do not put planned or hypothetical behavior in `docs/pascal/`. Use `docs/future/` for product roadmap. User-facing unit pages should describe only implemented symbols.
 
 ## Step 3 — Test check
 
@@ -48,7 +48,7 @@ Ask: **What would break if this regressed?**
 |--------|--------|
 | Parser / sema / compile error | Rust tests in the owning crate (`fpas-parser`, `fpas-sema`, `fpas-compiler`) |
 | Runtime / VM / std intrinsic | Crate tests + often `tests/<theme>/*_test.fpas` |
-| End-to-end std behavior | `tests/stdlib/`, `tests/console/`, `tests/tui/`, `tests/graph/`, etc. |
+| End-to-end std behavior | `tests/stdlib/`, `tests/console/`, `tests/graph/`, etc. |
 | CLI / runner | `fpas-cli` tests; runner tests under `tests/runner/` |
 
 Rules:

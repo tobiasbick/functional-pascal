@@ -1,6 +1,6 @@
 //! Tests for the project rule that TUI Rust sources link to the Pascal spec.
 //!
-//! **Documentation:** `docs/pascal/std/tui/app/README.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/tui/README.md` (from the repository root).
 
 use std::fs;
 use std::path::{Path, PathBuf};

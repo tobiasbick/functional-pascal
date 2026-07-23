@@ -196,7 +196,7 @@ The full language specification lives in [`docs/pascal/`](docs/pascal/). Start w
 | Getting started | [getting-started/](docs/pascal/getting-started/README.md) |
 | Language | [language/](docs/pascal/language/README.md) |
 | Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
-| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/app/`, `graph/app/`, …) |
+| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/`, `graph/app/`, …) |
 | Tools | [tools/](docs/pascal/tools/README.md) |
 | Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
 

@@ -1,4 +1,4 @@
-/// TUI shell for the FPAS IDE. See docs/pascal/std/tui/app/README.md.
+/// TUI shell for the FPAS IDE.
 
 unit Ide.Shell;
 
@@ -42,7 +42,7 @@ begin
   end
 end;
 
-/// Build the minimal Turbo Vision IDE chrome on an existing session.
+/// Build the minimal IDE chrome on an existing session.
 
 function AttachChrome(App: Application): MenuBar;
 begin
@@ -53,7 +53,7 @@ begin
   return MenuBarHandle
 end;
 
-/// Open the terminal session, run the Turbo Vision loop, and restore the terminal on exit.
+/// Open the terminal session, run the application loop, and restore the terminal on exit.
 
 procedure Run();
 begin

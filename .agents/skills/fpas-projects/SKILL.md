@@ -124,7 +124,7 @@ fpas check my-app.fpasprj          # type-check project
 fpas run my-app.fpasprj            # run program project
 fpas test tests/                   # full regression tree
 fpas test tests/suite.fpasprj      # bundled manifest
-fpas test tests/tui/smoke/run_quit_test.fpas
+fpas test tests/stdlib/tui/mvu_host_signature_test.fpas
 fpas check                         # sole workspace or project in cwd
 ```
 

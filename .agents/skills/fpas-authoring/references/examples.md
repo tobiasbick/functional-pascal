@@ -86,6 +86,5 @@ add a test that Application.Run quits on CM_QUIT
 
 Expected behavior:
 
-- Add under `tests/tui/smoke/` (or `events/` if input-focused).
-- Follow `tests/tui/smoke/run_quit_test.fpas`: `Application.OpenForTest`, `Test.InjectCommand`, `Application.Run`, `Application.CloseForTest`.
-- Load `turbo-vision-4-rust` skill for bridge context; do not use removed APIs (`QuerySceneGraph`, `ExecDialog`, `Create*`).
+- Add under `tests/stdlib/tui/`.
+- Follow `tests/stdlib/tui/mvu_host_signature_test.fpas` for deterministic host setup and message processing.

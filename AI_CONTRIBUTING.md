@@ -64,7 +64,7 @@ Core expectations:
 The current documentation in `docs/pascal/` is the source of truth for **implemented** behavior.
 
 - Navigation hub: [`docs/pascal/README.md`](docs/pascal/README.md)
-- Standard library reference: [`docs/pascal/std/README.md`](docs/pascal/std/README.md) — area hubs (`host/`, `text/`, `collections/`, …) and split unit pages (`text/str/`, `tui/app/`, `collections/array/`, `graph/app/`, `console/`, …)
+- Standard library reference: [`docs/pascal/std/README.md`](docs/pascal/std/README.md) — area hubs (`host/`, `text/`, `collections/`, …) and unit pages (`text/str/`, `tui/`, `collections/array/`, `graph/app/`, `console/`, …)
 - Plans and history only: [`docs/future/`](docs/future/) — do not describe unimplemented behavior in `docs/pascal/`
 
 Contributions should implement and document the current specification only.
@@ -74,7 +74,7 @@ Contributions should implement and document the current specification only.
 When editing user-facing docs under `docs/pascal/std/`:
 
 - Unit and session pages: quick reference, then per-symbol detail; end with `## Implementation (contributors)` (table) and `## See also` (area index + [std index](docs/pascal/std/README.md))
-- Large units live in themed subdirectories with a hub `README.md` (same pattern as `console/`, `text/str/`, `tui/app/`)
+- Large units live in themed subdirectories with a hub `README.md` (same pattern as `console/`, `text/str/`, `tui/`)
 - When moving or renaming std doc paths, update links in `docs/pascal/`, Rust `///` comments, examples, and tests (search the repo for the old path)
 - Rust `///` doc links should point at the matching file under `docs/pascal/std/…`
 

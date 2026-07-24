@@ -136,9 +136,9 @@ pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>
 pub(crate) fn value_as_string_for_join(
     v: &Value,
     location: SourceLocation,
-) -> Result<String, StdError> {
+) -> Result<&str, StdError> {
     match v {
-        Value::Str(s) => Ok(s.clone()),
+        Value::Str(s) => Ok(s),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(

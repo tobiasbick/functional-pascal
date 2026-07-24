@@ -1,0 +1,88 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 500 }
+{ Guard: target/release/fpas run this-file.fpas -- 500 MAX_MILLIS }
+
+program TuiHeadlessRenderBenchmark;
+
+uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Time, Std.Tui;
+
+const
+  WarmupIterations: integer := 100;
+  DeltaMillis: integer := 16;
+
+function UpdateBenchmark(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Tick(Delta):
+    begin
+      return State + 1
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+function ViewBenchmark(State: integer): TuiElement;
+begin
+  mutable var Children: array of TuiElement := [
+                                                 TuiElementBuilders.MakeLabel('frame ' + IntToStr(State))
+
+                                               ];
+  for Index: integer := 2 to 32 do
+  begin
+    Std.Array.Push(Children, TuiElementBuilders.MakeLabel('row'))
+  end;
+  var SharedAction: TuiAction := TuiAction.Create(100);
+  for Index: integer := 1 to 8 do
+  begin
+    Std.Array.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
+  end;
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
+
+                                                                      ])
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: headless_render_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(120, 40));
+  mutable var Model: integer := App.RunIterations(0, UpdateBenchmark, ViewBenchmark, WarmupIterations, DeltaMillis);
+  var Started: integer := MonotonicMillis();
+  Model := App.RunIterations(Model, UpdateBenchmark, ViewBenchmark, Iterations, DeltaMillis);
+  var Elapsed: integer := ElapsedMillis(Started);
+  App.Close();
+  mutable var FramesPerSecond: integer := Iterations * 1000;
+  if Elapsed > 0 then
+  begin
+    FramesPerSecond := (Iterations * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+  WriteLn('final state: ' + IntToStr(Model));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('TUI benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

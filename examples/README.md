@@ -68,6 +68,25 @@ fpas run examples/pascal/std/graph_basics.fpas
 fpas run examples/pascal/std/task_basics.fpas
 ```
 
+### Performance benchmarks
+
+Build the release CLI before measuring so compiler debug checks do not dominate the result:
+
+```sh
+cargo build --release -p fpas-cli
+target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500
+```
+
+On Windows, invoke `target/release/fpas.exe`. The benchmark warms up 100 frames, then measures the headless `Std.Tui` update, view, layout, and render loop. Compilation and console output are outside the measured interval.
+
+Record the elapsed time from a known-good checkout, then pass a locally chosen upper limit to turn a slowdown into a failing run:
+
+```sh
+target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500 16000
+```
+
+The second argument is `MAX_MILLIS`; replace the illustrated `16000` with a limit derived from your own baseline. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
+
 ### Projects (`.fpasprj`)
 
 Use when the main program imports **non-library units** (for example `App.*` or `Mandelbrot.*`). The project file links all sources:
@@ -124,6 +143,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
+| `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

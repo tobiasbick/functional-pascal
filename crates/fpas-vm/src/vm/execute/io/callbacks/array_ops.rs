@@ -27,7 +27,7 @@ impl Worker {
         let func = self.pop(line)?;
         let array = self.pop_array_value(line, "Std.Array.Filter")?;
 
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(array.len());
         for elem in &array {
             let keep = self.call_function_sync(&func, std::slice::from_ref(elem), line)?;
             if self.is_truthy(&keep) {

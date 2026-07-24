@@ -117,7 +117,7 @@ pub(crate) fn run(
                 if i > 0 {
                     out.push_str(&delim);
                 }
-                out.push_str(&part);
+                out.push_str(part);
             }
             stack.push(Value::Str(out));
         }
@@ -199,16 +199,19 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::CharAt) => {
             let idx = pop_int(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
-            let chars: Vec<char> = s.chars().collect();
-            if idx < 0 || idx >= chars.len() as i64 {
+            let character = usize::try_from(idx)
+                .ok()
+                .and_then(|index| s.chars().nth(index));
+            let Some(character) = character else {
+                let length = s.chars().count();
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-                    format!("CharAt index {idx} out of range (length {})", chars.len()),
+                    format!("CharAt index {idx} out of range (length {length})"),
                     "Ensure the index is within 0..Length(S)-1.",
                     location,
                 ));
-            }
-            stack.push(Value::Str(chars[idx as usize].to_string()));
+            };
+            stack.push(Value::Str(character.to_string()));
         }
         Intrinsic::Str(StrIntrinsic::SetCharAt) => {
             let c = pop_single_char(pop_value(stack, location)?, location)?;

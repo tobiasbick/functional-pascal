@@ -83,6 +83,8 @@ pub struct Chunk {
     locations: Vec<SourceLocation>,
     /// Function table: name → (code_start, arity).
     functions: HashMap<String, (usize, u8)>,
+    /// Whether emitted code contains a task-spawn instruction.
+    has_spawn_tasks: bool,
 }
 
 impl Chunk {
@@ -92,6 +94,7 @@ impl Chunk {
             constants: Vec::new(),
             locations: Vec::new(),
             functions: HashMap::new(),
+            has_spawn_tasks: false,
         }
     }
 
@@ -144,6 +147,7 @@ impl Chunk {
     /// Emit an instruction, recording the source location.
     pub fn emit(&mut self, op: Op, location: SourceLocation) -> usize {
         let idx = self.code.len();
+        self.has_spawn_tasks |= is_spawn_task_op(op);
         self.code.push(op);
         self.locations.push(location);
         debug_assert_eq!(self.code.len(), self.locations.len());
@@ -211,15 +215,13 @@ impl Chunk {
 
     /// Returns `true` if this chunk may enqueue parallel tasks (`go` / detached spawn).
     ///
-    /// The scan is purely static over [`Op::SpawnTask`] / [`Op::SpawnDetachedTask`] in `code`;
-    /// [`Op::Yield`] and other opcodes do not affect the result.
+    /// This is tracked while instructions are emitted. [`Op::Yield`] and other opcodes do not
+    /// affect the result.
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 1), `docs/pascal/language/concurrency/README.md`
     #[must_use]
     pub fn uses_spawn_tasks(&self) -> bool {
-        self.code
-            .iter()
-            .any(|op| matches!(op, Op::SpawnTask(_) | Op::SpawnDetachedTask(_)))
+        self.has_spawn_tasks
     }
 
     /// Pre-seed the constant pool in unit tests.
@@ -231,8 +233,13 @@ impl Chunk {
     /// Push an instruction without a location entry (corrupts invariants).
     #[cfg(test)]
     pub(crate) fn push_code_without_location_for_test(&mut self, op: Op) {
+        self.has_spawn_tasks |= is_spawn_task_op(op);
         self.code.push(op);
     }
+}
+
+fn is_spawn_task_op(op: Op) -> bool {
+    matches!(op, Op::SpawnTask(_) | Op::SpawnDetachedTask(_))
 }
 
 impl Default for Chunk {
@@ -346,6 +353,20 @@ mod tests {
     }
 
     #[test]
+    fn patch_jump_rejects_missing_instruction_offset() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(
+            chunk.patch_jump(1, 0),
+            Err(ChunkError::InvalidInstructionOffset {
+                offset: 1,
+                code_len: 1,
+            })
+        );
+    }
+
+    #[test]
     fn emit_keeps_code_and_locations_aligned() {
         let mut chunk = Chunk::new();
         let first = loc();
@@ -357,6 +378,23 @@ mod tests {
         assert_eq!(chunk.location_at(0), Some(first));
         assert_eq!(chunk.location_at(1), Some(second));
         assert!(chunk.validate_invariants().is_ok());
+    }
+
+    #[test]
+    fn location_at_returns_none_past_emitted_code() {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Halt, loc());
+
+        assert_eq!(chunk.location_at(1), None);
+    }
+
+    #[test]
+    fn insert_function_replaces_existing_entry_for_the_same_name() {
+        let mut chunk = Chunk::new();
+        chunk.insert_function("demo.run", 2, 1);
+        chunk.insert_function("demo.run", 8, 3);
+
+        assert_eq!(chunk.functions().get("demo.run"), Some(&(8, 3)));
     }
 
     #[test]

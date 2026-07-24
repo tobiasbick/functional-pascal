@@ -46,6 +46,7 @@ pub struct BuiltUnits {
     pub interfaces: HashMap<String, UnitInterface>,
     /// Structured activity stream.
     pub events: Vec<BuildEvent>,
+    supporting_interfaces: Vec<UnitInterface>,
 }
 
 impl BuiltUnits {
@@ -53,6 +54,10 @@ impl BuiltUnits {
     #[must_use]
     pub fn counters(&self) -> BuildCounters {
         BuildCounters::from_events(&self.events)
+    }
+
+    fn supporting_interfaces(&self) -> &[UnitInterface] {
+        &self.supporting_interfaces
     }
 }
 
@@ -78,7 +83,7 @@ pub fn build_library_units(
     selection: &ResolvedUnitGraph,
     options: &BuildOptions,
 ) -> Result<BuiltUnits, BuildError> {
-    let mut interfaces = HashMap::<String, UnitInterface>::new();
+    let mut interfaces = InterfaceRegistry::default();
     let mut objects = Vec::with_capacity(selection.len());
     let mut events = Vec::new();
 
@@ -88,8 +93,8 @@ pub fn build_library_units(
                 "internal build graph error: selected unit `{unit_name}` is missing"
             ))
         })?;
-        let dependencies = direct_dependency_identities(node.direct_uses(), &interfaces)?;
-        let direct_interfaces = direct_interfaces(node.direct_uses(), &interfaces);
+        let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
+        let direct_interfaces = interfaces.direct_interfaces(node.direct_uses());
         let source = fs::read(node.path()).map_err(|error| {
             BuildError::new(format!(
                 "cannot read unit source `{}`: {error}",
@@ -108,67 +113,66 @@ pub fn build_library_units(
         let reusable = match load_sidecar(node.path(), &expected)
             .map_err(|error| BuildError::new(error.to_string()))?
         {
-            SidecarLoad::Reusable(compiled) => decode_payloads(&compiled).ok(),
+            SidecarLoad::Reusable(compiled) => decode_payloads(&compiled)
+                .ok()
+                .map(|payloads| (payloads, compiled.identity.interface_hash)),
             SidecarLoad::Missing
             | SidecarLoad::Stale(_)
             | SidecarLoad::Incompatible(_)
             | SidecarLoad::Corrupt(_) => None,
         };
-        let (interface, mut object) = if let Some(payloads) = reusable {
-            events.push(event(unit_name, BuildEventKind::SidecarReused));
-            payloads
-        } else {
-            events.push(event(unit_name, BuildEventKind::Parsed));
-            let supporting_interfaces: Vec<_> = interfaces.values().cloned().collect();
-            let compiled = fpas_compiler::compile_unit_object_with_support(
-                node.parsed_unit().map_err(BuildError::new)?,
-                &direct_interfaces,
-                &supporting_interfaces,
-            )
-            .map_err(|diagnostics| {
-                BuildError::new(format_diagnostics(node.path(), &diagnostics))
-            })?;
-            events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
-            events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
-            events.push(event(unit_name, BuildEventKind::Compiled));
-            let interface_bytes = encode_interface(&compiled.interface)
-                .map_err(|error| BuildError::new(error.to_string()))?;
-            let object_bytes = encode_object(&compiled.object)
-                .map_err(|error| BuildError::new(error.to_string()))?;
-            let sidecar = CompiledUnit {
-                identity: UnitIdentity {
-                    unit_name: unit_name.clone(),
-                    source_hash: expected.source_hash,
-                    interface_hash: Digest::of(&interface_bytes),
-                    object_hash: Digest::of(&object_bytes),
-                    compiler_version: options.compiler_version.clone(),
-                    bytecode_version: options.bytecode_version,
-                    options_hash: options.options_hash,
-                    dependencies,
-                },
-                interface: interface_bytes,
-                object: object_bytes,
+        let (interface, mut object, interface_hash) =
+            if let Some((payloads, interface_hash)) = reusable {
+                events.push(event(unit_name, BuildEventKind::SidecarReused));
+                (payloads.0, payloads.1, interface_hash)
+            } else {
+                events.push(event(unit_name, BuildEventKind::Parsed));
+                let compiled = fpas_compiler::compile_unit_object_with_support(
+                    node.parsed_unit().map_err(BuildError::new)?,
+                    &direct_interfaces,
+                    interfaces.all(),
+                )
+                .map_err(|diagnostics| {
+                    BuildError::new(format_diagnostics(Some(node.path()), &diagnostics))
+                })?;
+                events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
+                events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
+                events.push(event(unit_name, BuildEventKind::Compiled));
+                let interface_bytes = encode_interface(&compiled.interface)
+                    .map_err(|error| BuildError::new(error.to_string()))?;
+                let interface_hash = Digest::of(&interface_bytes);
+                let object_bytes = encode_object(&compiled.object)
+                    .map_err(|error| BuildError::new(error.to_string()))?;
+                let sidecar = CompiledUnit {
+                    identity: UnitIdentity {
+                        unit_name: unit_name.clone(),
+                        source_hash: expected.source_hash,
+                        interface_hash,
+                        object_hash: Digest::of(&object_bytes),
+                        compiler_version: options.compiler_version.clone(),
+                        bytecode_version: options.bytecode_version,
+                        options_hash: options.options_hash,
+                        dependencies,
+                    },
+                    interface: interface_bytes,
+                    object: object_bytes,
+                };
+                write_sidecar(node.path(), &sidecar).map_err(|error| {
+                    BuildError::new(format!(
+                        "cannot publish compiled unit beside `{}`: {error}",
+                        node.path().display()
+                    ))
+                })?;
+                (compiled.interface, compiled.object, interface_hash)
             };
-            write_sidecar(node.path(), &sidecar).map_err(|error| {
-                BuildError::new(format!(
-                    "cannot publish compiled unit beside `{}`: {error}",
-                    node.path().display()
-                ))
-            })?;
-            (compiled.interface, compiled.object)
-        };
         for location in &mut object.locations {
             location.source_id = node.source_id();
         }
-        interfaces.insert(unit_name.clone(), interface);
+        interfaces.insert(unit_name.clone(), interface, interface_hash);
         objects.push(object);
     }
 
-    Ok(BuiltUnits {
-        objects,
-        interfaces,
-        events,
-    })
+    Ok(interfaces.finish(objects, events))
 }
 
 /// Build reachable units, compile the root program from interfaces, and link one [`Chunk`].
@@ -179,14 +183,13 @@ pub fn build_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let mut units = build_library_units(graph, selection, options)?;
-    let root_interfaces = direct_interfaces(&program.uses, &units.interfaces);
-    let supporting_interfaces: Vec<_> = units.interfaces.values().cloned().collect();
+    let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
     let program_object = fpas_compiler::compile_program_object_with_support(
         program,
         &root_interfaces,
-        &supporting_interfaces,
+        units.supporting_interfaces(),
     )
-    .map_err(|diagnostics| BuildError::new(format_diagnostics_text(&diagnostics)))?;
+    .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
     let chunk = fpas_linker::link_objects(&units.objects, &program_object)
         .map_err(|error| BuildError::new(error.to_string()))?;
     units
@@ -204,27 +207,7 @@ fn decode_payloads(compiled: &CompiledUnit) -> Result<(UnitInterface, Relocatabl
     Ok((interface, object))
 }
 
-fn direct_dependency_identities(
-    uses: &[QualifiedId],
-    interfaces: &HashMap<String, UnitInterface>,
-) -> Result<Vec<DependencyIdentity>, BuildError> {
-    let mut dependencies = Vec::new();
-    for used in uses {
-        let name = used.parts.join(".").to_ascii_lowercase();
-        let Some(interface) = interfaces.get(&name) else {
-            continue;
-        };
-        dependencies.push(DependencyIdentity {
-            unit_name: name,
-            interface_hash: interface
-                .digest()
-                .map_err(|error| BuildError::new(error.to_string()))?,
-        });
-    }
-    Ok(dependencies)
-}
-
-fn direct_interfaces(
+fn direct_interfaces_from_map(
     uses: &[QualifiedId],
     interfaces: &HashMap<String, UnitInterface>,
 ) -> Vec<UnitInterface> {
@@ -237,6 +220,71 @@ fn direct_interfaces(
         .collect()
 }
 
+#[derive(Default)]
+struct InterfaceRegistry {
+    names: Vec<String>,
+    interfaces: Vec<UnitInterface>,
+    positions: HashMap<String, usize>,
+    hashes: HashMap<String, Digest>,
+}
+
+impl InterfaceRegistry {
+    fn all(&self) -> &[UnitInterface] {
+        &self.interfaces
+    }
+
+    fn direct_dependency_identities(&self, uses: &[QualifiedId]) -> Vec<DependencyIdentity> {
+        let mut dependencies = Vec::new();
+        for used in uses {
+            let name = canonical_unit_name(used);
+            let Some(interface_hash) = self.hashes.get(&name) else {
+                continue;
+            };
+            dependencies.push(DependencyIdentity {
+                unit_name: name,
+                interface_hash: *interface_hash,
+            });
+        }
+        dependencies
+    }
+
+    fn direct_interfaces(&self, uses: &[QualifiedId]) -> Vec<UnitInterface> {
+        uses.iter()
+            .filter_map(|used| {
+                self.positions
+                    .get(&canonical_unit_name(used))
+                    .map(|position| self.interfaces[*position].clone())
+            })
+            .collect()
+    }
+
+    fn insert(&mut self, name: String, interface: UnitInterface, hash: Digest) {
+        let position = self.interfaces.len();
+        self.names.push(name.clone());
+        self.interfaces.push(interface);
+        self.positions.insert(name.clone(), position);
+        self.hashes.insert(name, hash);
+    }
+
+    fn finish(self, objects: Vec<RelocatableObject>, events: Vec<BuildEvent>) -> BuiltUnits {
+        let interfaces = self
+            .names
+            .into_iter()
+            .zip(self.interfaces.iter().cloned())
+            .collect();
+        BuiltUnits {
+            objects,
+            interfaces,
+            events,
+            supporting_interfaces: self.interfaces,
+        }
+    }
+}
+
+fn canonical_unit_name(used: &QualifiedId) -> String {
+    used.parts.join(".").to_ascii_lowercase()
+}
+
 fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {
     BuildEvent {
         owner: owner.to_string(),
@@ -245,44 +293,38 @@ fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {
 }
 
 fn format_diagnostics(
-    path: &std::path::Path,
+    path: Option<&std::path::Path>,
     diagnostics: &[fpas_compiler::CompileError],
 ) -> String {
     diagnostics
         .iter()
-        .map(|diagnostic| {
-            let mut text = format!(
-                "{}:{}:{}: error[{}]: {}",
-                path.display(),
-                diagnostic.span.line,
-                diagnostic.span.column,
-                diagnostic.code,
-                diagnostic.message
-            );
-            if let Some(help) = &diagnostic.help {
-                text.push_str("\n  help: ");
-                text.push_str(help);
-            }
-            text
-        })
+        .map(|diagnostic| format_diagnostic(path, diagnostic))
         .collect::<Vec<_>>()
         .join("\n")
 }
 
-fn format_diagnostics_text(diagnostics: &[fpas_compiler::CompileError]) -> String {
-    diagnostics
-        .iter()
-        .map(|diagnostic| {
-            let mut text = format!(
-                "{}:{}: error[{}]: {}",
-                diagnostic.span.line, diagnostic.span.column, diagnostic.code, diagnostic.message
-            );
-            if let Some(help) = &diagnostic.help {
-                text.push_str("\n  help: ");
-                text.push_str(help);
-            }
-            text
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
+fn format_diagnostic(
+    path: Option<&std::path::Path>,
+    diagnostic: &fpas_compiler::CompileError,
+) -> String {
+    let location = path.map_or_else(
+        || format!("{}:{}", diagnostic.span.line, diagnostic.span.column),
+        |path| {
+            format!(
+                "{}:{}:{}",
+                path.display(),
+                diagnostic.span.line,
+                diagnostic.span.column
+            )
+        },
+    );
+    let mut text = format!(
+        "{location}: error[{}]: {}",
+        diagnostic.code, diagnostic.message
+    );
+    if let Some(help) = &diagnostic.help {
+        text.push_str("\n  help: ");
+        text.push_str(help);
+    }
+    text
 }

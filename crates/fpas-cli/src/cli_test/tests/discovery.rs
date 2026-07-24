@@ -196,3 +196,47 @@ fn test_cli_fail_fast_records_not_run_tests() {
     assert!(text.contains("1 not run"));
     assert!(!text.contains("PASS  ccc_later_test.fpas"));
 }
+
+#[test]
+fn parallel_fail_fast_stops_after_a_link_context_error() {
+    let cwd = create_temp_dir("fpas-test-parallel-link-fail-fast");
+    let broken_dir = cwd.join("aaa_broken");
+    write_text(
+        &broken_dir.join("broken.fpasprj"),
+        "[project]\nname = \"broken\"\nkind = \"test\"\n",
+    );
+    write_text(
+        &broken_dir.join("broken_test.fpas"),
+        "program Broken; uses Std.Test; begin AssertTrue(true) end.",
+    );
+    write_text(
+        &cwd.join("zzz_later_test.fpas"),
+        "program Later; uses Std.Test; begin AssertTrue(true) end.",
+    );
+
+    let mut stdout = Vec::new();
+    let mut stderr = Vec::new();
+    let exit = test_cli(
+        TestCliConfig {
+            input: crate::CliInput::SourceFile(cwd.clone()),
+            cwd,
+            fail_fast: true,
+            list_only: false,
+            script_path: None,
+            filter: None,
+            report: None,
+            timeout: None,
+            jobs: 2,
+            strict: false,
+            standard_library: None,
+        },
+        &mut stdout,
+        &mut stderr,
+    );
+
+    assert_eq!(exit, 2);
+    let text = String::from_utf8(stderr).expect("utf-8");
+    assert!(text.contains("FAIL  broken_test.fpas"));
+    assert!(text.contains("not run, --fail-fast"));
+    assert!(!text.contains("PASS  zzz_later_test.fpas"));
+}

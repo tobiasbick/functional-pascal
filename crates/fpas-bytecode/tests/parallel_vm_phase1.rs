@@ -1,4 +1,4 @@
-//! Spawn opcodes and `Chunk::uses_spawn_tasks` scan (`docs/pascal/language/concurrency/README.md`): spawn opcodes and static `Chunk::uses_spawn_tasks` scan.
+//! Spawn opcodes and `Chunk::uses_spawn_tasks` tracking (`docs/pascal/language/concurrency/README.md`).
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 1), `docs/pascal/language/concurrency/README.md`
 
@@ -8,7 +8,7 @@ fn loc() -> SourceLocation {
     SourceLocation::new(1, 1)
 }
 
-// --- Positive: scan returns true when a spawn opcode is present ---
+// --- Positive: tracking returns true when a spawn opcode is present ---
 
 #[test]
 fn detects_spawn_task_with_zero_arity() {
@@ -68,7 +68,7 @@ fn spawn_detection_is_independent_of_functions_table() {
     chunk.insert_function("unused".to_string(), 999, 0);
     assert!(
         !chunk.uses_spawn_tasks(),
-        "scan must inspect `code` only, not `functions` keys"
+        "only emitted spawn opcodes may enable the worker pool"
     );
 }
 
@@ -88,7 +88,7 @@ fn yield_only_does_not_use_spawn_tasks() {
     }
     assert!(
         !chunk.uses_spawn_tasks(),
-        "Phase 1 scan is spawn-only; `Yield` must not imply a worker pool"
+        "Phase 1 tracking is spawn-only; `Yield` must not imply a worker pool"
     );
 }
 
@@ -131,7 +131,7 @@ fn spawn_task_arity_differences_all_detected() {
 }
 
 #[test]
-fn constant_pool_and_locations_do_not_affect_scan() {
+fn constant_pool_and_locations_do_not_affect_spawn_tracking() {
     let mut chunk = Chunk::new();
     assert!(chunk.add_constant(Value::Integer(1)).is_ok());
     chunk.emit(Op::Constant(0), loc());

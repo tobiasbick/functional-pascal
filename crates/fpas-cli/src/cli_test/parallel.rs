@@ -74,9 +74,10 @@ pub(super) fn run_tests_parallel(
         let batch_end = (batch_start + worker_count).min(prepared.len());
         let mut handles = Vec::with_capacity(batch_end - batch_start);
         for test in prepared[batch_start..batch_end].iter().cloned() {
+            let worker_identity = (test.index, test.display.clone());
             let script_path = script_path.clone();
             let stop = Arc::clone(&stop);
-            handles.push(thread::spawn(move || {
+            let handle = thread::spawn(move || {
                 if fail_fast && stop.load(Ordering::Relaxed) {
                     return not_run_result(test);
                 }
@@ -85,13 +86,18 @@ pub(super) fn run_tests_parallel(
                     stop.store(true, Ordering::Relaxed);
                 }
                 result
-            }));
+            });
+            handles.push((worker_identity, handle));
         }
 
-        for handle in handles {
-            if let Ok(result) = handle.join() {
-                results.push(result);
-            }
+        for ((index, display), handle) in handles {
+            results.push(collect_worker_result(
+                handle,
+                index,
+                display,
+                fail_fast,
+                stop.as_ref(),
+            ));
         }
 
         batch_start = batch_end;
@@ -124,11 +130,40 @@ fn run_tests_sequential(
 }
 
 fn not_run_result(test: PreparedTest) -> IndexedTestResult {
+    not_run_result_for(test.index, test.display)
+}
+
+pub(super) fn not_run_result_for(index: usize, display: String) -> IndexedTestResult {
     IndexedTestResult {
-        index: test.index,
-        display: test.display.clone(),
+        index,
         outcome: TestOutcome::NotRun,
-        output: format!("  ---  {} (not run, --fail-fast)\n", test.display),
+        output: format!("  ---  {display} (not run, --fail-fast)\n"),
+        display,
+    }
+}
+
+fn collect_worker_result(
+    handle: thread::JoinHandle<IndexedTestResult>,
+    index: usize,
+    display: String,
+    fail_fast: bool,
+    stop: &AtomicBool,
+) -> IndexedTestResult {
+    match handle.join() {
+        Ok(result) => result,
+        Err(_) => {
+            if fail_fast {
+                stop.store(true, Ordering::Relaxed);
+            }
+            IndexedTestResult {
+                index,
+                output: format!(
+                    "  FAIL  {display}\n        test worker panicked unexpectedly.\n  help: Re-run under a debugger or report a compiler/runtime bug.\n"
+                ),
+                display,
+                outcome: TestOutcome::RuntimeError,
+            }
+        }
     }
 }
 
@@ -166,6 +201,19 @@ mod tests {
     #[test]
     fn effective_job_count_never_returns_zero() {
         assert_eq!(effective_job_count(1, 0), 1);
+    }
+
+    #[test]
+    fn panicked_worker_is_reported_as_runtime_error() {
+        let stop = AtomicBool::new(false);
+        let handle = thread::spawn(|| -> IndexedTestResult { panic!("worker panic") });
+
+        let result = collect_worker_result(handle, 4, "panic_test.fpas".to_string(), true, &stop);
+
+        assert_eq!(result.index, 4);
+        assert_eq!(result.outcome, TestOutcome::RuntimeError);
+        assert!(result.output.contains("worker panicked unexpectedly"));
+        assert!(stop.load(Ordering::Relaxed));
     }
 
     #[test]

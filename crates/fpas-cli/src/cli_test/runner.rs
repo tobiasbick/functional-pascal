@@ -104,12 +104,12 @@ pub(super) fn run_tests_parallel(
     let mut preload_results = Vec::new();
     let mut links = LinkContextCache::new(standard_library);
 
-    for (index, path) in paths.into_iter().enumerate() {
-        let display = test_display_path(&path).into_owned();
-        match links.context_for_test(&path) {
+    for (index, path) in paths.iter().enumerate() {
+        let display = test_display_path(path).into_owned();
+        match links.context_for_test(path) {
             Ok(link) => prepared.push(parallel::PreparedTest {
                 index,
-                path,
+                path: path.clone(),
                 display,
                 link,
                 compiled: None,
@@ -124,6 +124,18 @@ pub(super) fn run_tests_parallel(
                 });
             }
         }
+    }
+
+    if config.fail_fast
+        && let Some(first_error) = preload_results.iter().map(|result| result.index).min()
+    {
+        prepared.retain(|test| test.index < first_error);
+        preload_results.retain(|result| result.index == first_error);
+        preload_results.extend(paths.iter().enumerate().skip(first_error + 1).map(
+            |(index, path)| {
+                parallel::not_run_result_for(index, test_display_path(path).into_owned())
+            },
+        ));
     }
 
     attach_test_images(&mut prepared);

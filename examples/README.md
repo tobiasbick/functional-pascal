@@ -27,11 +27,12 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 
 | Directory | Contents |
 |-----------|----------|
-| `tests/stdlib/` | `Std.*` runtime checks (~330 programs) |
+| `tests/stdlib/` | `Std.*` runtime checks, including headless `Std.Tui` coverage |
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
 | `tests/graph/` | Headless graph smoke + pixel golden |
+| `tests/ide/` | Headless terminal-IDE regression coverage |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
 Run via:

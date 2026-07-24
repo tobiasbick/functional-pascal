@@ -32,10 +32,12 @@ Workflow calibration: [references/examples.md](references/examples.md).
 
 Rules:
 
-- Dependencies are **source-level only** — no `.fpaslib` artifacts.
+- Dependencies name source projects; imported units are built independently into derived, source-adjacent `.fpascu` sidecars.
 - Every `dependencies.projects` entry must be `kind = "library"`.
 - `workspace` dependency names match `project.name` in an enclosing `.fpasworkspace`.
 - Library `[exports].units` limits which units dependents may `uses` (omit section = all units exportable).
+- `fpas` validates, reuses, or rebuilds compatible sidecars automatically. Do not hand-edit or commit them.
+- There is no `.fpaslib` container, package registry, lockfile, or global artifact cache.
 
 ## Minimal manifests
 
@@ -78,7 +80,8 @@ kind = "test"
 [sources]
 include = [
   "stdlib/**/*_test.fpas",
-  "tui/**/*_test.fpas",
+  "concurrency/**/*_test.fpas",
+  "runner/**/*_test.fpas",
 ]
 ```
 

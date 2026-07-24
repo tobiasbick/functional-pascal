@@ -4,15 +4,20 @@ Open planning items for Functional Pascal. This directory is for ideas, rewrites
 
 Current implemented behavior belongs under `docs/pascal/`, not here.
 
-## Planned Work
+## Open planning items
 
 | Area | Plan | Scope |
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
-| Libraries | [Compiled-unit architecture](libraries.md) | Implemented `.fpascu` decisions and remaining library extensions |
-| Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Compiler panics and source-level language constraints found during implementation |
 | Language | [Opaque records](opaque-records.md) | Representation hiding and unforgeable transient capabilities |
+
+## Architecture records and development intake
+
+| Area | Document | Scope |
+|------|----------|-------|
+| Libraries | [Compiled-unit architecture](libraries.md) | Implemented `.fpascu` architecture and separately scoped extensions |
+| Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 
 ## Rules
 

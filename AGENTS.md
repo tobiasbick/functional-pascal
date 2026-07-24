@@ -100,10 +100,10 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 
 ## Projects and libraries
 
-- **Source-level reuse only.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Spec: [`docs/pascal/program-structure/projects.md`](docs/pascal/program-structure/projects.md).
-- **Do not implement precompiled library artifacts** (no `.fpaslib`, no separate link step, no artifact cache) unless the user explicitly changes this policy.
-- **Do not add package managers, registries, or semver dependency pins** as part of library work; path/workspace references are the current model.
-- Loading and linking live in `fpas-project`; CLI discovery/check/run in `fpas-cli`.
+- **Compiled units are source-adjacent.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Imported units compile independently into derived `.fpascu` sidecars. Spec: [`docs/pascal/program-structure/projects.md`](docs/pascal/program-structure/projects.md).
+- **Keep sources and manifests authoritative.** `fpas-build` validates, reuses, or rebuilds compatible sidecars automatically; `fpas-linker` produces the final executable chunk. Do not hand-edit or commit `.fpascu` files.
+- **Do not add package managers, registries, semver dependency pins, `.fpaslib` containers, or a global artifact cache** as part of library work; path/workspace references and source-adjacent sidecars are the current model.
+- Loading and graph resolution live in `fpas-project`; unit builds in `fpas-build`; final linking in `fpas-linker`; CLI discovery/check/run in `fpas-cli`.
 - Library projects may list public units in `[exports].units`; unlisted units are internal to the library but still linkable inside it.
 - Possible later work: finer per-symbol export tables — see [`docs/future/libraries.md`](docs/future/libraries.md).
 

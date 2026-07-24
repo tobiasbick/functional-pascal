@@ -173,11 +173,11 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, `concurrency/`, `runner/`, `console/`, `tui/` with `views/`, `events/`, `smoke/`, `modals/`, `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, `graph/`, and `ide/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Multi-file projects and libraries
 
-Larger programs use a `.fpasprj` project file. Reusable code is **source-level only**: `kind = "library"` projects whose units are merged at load time (no precompiled library artifacts). Reference them from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
+Larger programs use a `.fpasprj` project file. Each imported unit is built independently into a source-adjacent `.fpascu` sidecar and linked into the final program automatically. Sources and manifests remain authoritative; sidecars are derived, Git-ignored build outputs. Reference library projects from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
 fpas run my-app.fpasprj
@@ -235,12 +235,16 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-cli` | Command-line interface (`fpas` binary) |
 | `fpas-lexer` | Tokenizer / lexical analysis |
 | `fpas-parser` | Parser producing the AST |
-| `fpas-project` | Project loading and unit linking for `.fpasprj` builds |
+| `fpas-project` | Project/workspace loading and unit-graph resolution |
+| `fpas-build` | Incremental compiled-unit build engine |
 | `fpas-sema` | Semantic analysis and type checking |
 | `fpas-compiler` | AST-to-bytecode compilation |
 | `fpas-bytecode` | Bytecode definitions and chunk format |
+| `fpas-unit` | Compiled-unit identities, format, and sidecar lifecycle |
+| `fpas-linker` | Deterministic linker from unit objects to executable chunks |
 | `fpas-vm` | Virtual machine / bytecode interpreter |
 | `fpas-std` | Standard library intrinsics |
+| `fpas-fmt` | Canonical FPAS source formatter |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 
 ## Status

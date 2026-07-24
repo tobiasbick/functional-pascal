@@ -20,6 +20,7 @@ type
     Label(Text: string);
     Button(Id: TuiControlId; Text: string; Action: TuiAction);
     Input(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction);
+    TextArea(Id: TuiControlId; Text: string; Caret: integer; Offset: TuiPoint; ChangeAction: TuiAction);
     CheckBox(Id: TuiControlId; Text: string; Checked: boolean; ChangeAction: TuiAction);
     List(Id: TuiControlId; Items: array of string; Selected: integer; ChangeAction: TuiAction);
     Scroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
@@ -66,6 +67,19 @@ type
 ): TuiElement;
     begin
       return TuiElement.Input(Id, TextValue, CaretValue, ChangeAction)
+    end;
+
+    /// Creates a controlled multiline text area with model-owned caret and offset.
+
+    static function MakeTextArea(
+  Id: TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  OffsetValue: TuiPoint;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.TextArea(Id, TextValue, CaretValue, OffsetValue, ChangeAction)
     end;
 
     /// Creates a controlled check box that proposes the inverted checked value.

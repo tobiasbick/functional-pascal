@@ -14,6 +14,7 @@ type
     FocusChanged(Previous: option of TuiControlId; Current: option of TuiControlId);
     Action(Source: TuiControlId; Action: TuiAction);
     TextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer);
+    TextAreaChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer; Offset: TuiPoint);
     CheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean);
     SelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer);
     ScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint);
@@ -32,6 +33,19 @@ end;
 function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
   return TuiMsg.TextChanged(Source, Action, Text, Caret)
+end;
+
+/// Creates a source-aware controlled multiline text-area change message.
+
+function TuiMsgTextAreaChanged(
+  Source: TuiControlId;
+  Action: TuiAction;
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint
+): TuiMsg;
+begin
+  return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
 end;
 
 /// Creates a source-aware controlled check-box change message.

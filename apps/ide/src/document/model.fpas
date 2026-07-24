@@ -1,0 +1,95 @@
+/// Immutable single-document state for the IDE.
+
+unit Ide.Document.Model;
+
+uses Std.Tui;
+
+type
+  /// Model-owned text, persistence baseline, caret, and viewport state.
+  IdeDocument = record
+    Path: option of string;
+    Text: string;
+    SavedText: string;
+    Caret: integer;
+    Offset: TuiPoint;
+  end;
+
+/// Creates a clean empty document, optionally associated with a path.
+
+function NewIdeDocument(Path: option of string): IdeDocument;
+begin
+  return record
+    Path := Path;
+    Text := '';
+    SavedText := '';
+    Caret := 0;
+    Offset := TuiPoint.Create(0, 0);
+  end
+end;
+
+/// Creates a clean document from successfully loaded text.
+
+function LoadedIdeDocument(Path: string; Text: string): IdeDocument;
+begin
+  return record
+    Path := Some(Path);
+    Text := Text;
+    SavedText := Text;
+    Caret := 0;
+    Offset := TuiPoint.Create(0, 0);
+  end
+end;
+
+/// Applies a complete controlled text-area proposal.
+
+function IdeDocumentWithTextArea(
+  Document: IdeDocument;
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint
+): IdeDocument;
+begin
+  return record
+    Path := Document.Path;
+    Text := Text;
+    SavedText := Document.SavedText;
+    Caret := Caret;
+    Offset := Offset;
+  end
+end;
+
+/// Reports whether the current text differs from the saved baseline.
+
+function IsIdeDocumentDirty(Document: IdeDocument): boolean;
+begin
+  return Document.Text <> Document.SavedText
+end;
+
+/// Applies a successful save while preserving editing position.
+
+function SavedIdeDocument(Document: IdeDocument; Path: string): IdeDocument;
+begin
+  return record
+    Path := Some(Path);
+    Text := Document.Text;
+    SavedText := Document.Text;
+    Caret := Document.Caret;
+    Offset := Document.Offset;
+  end
+end;
+
+/// Returns the associated path or the visible untitled marker.
+
+function IdeDocumentPathText(Document: IdeDocument): string;
+begin
+  case Document.Path of
+    Some(Path):
+    begin
+      return Path
+    end;
+    None:
+    begin
+      return '(untitled)'
+    end
+  end
+end;

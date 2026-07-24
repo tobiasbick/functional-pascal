@@ -1,0 +1,42 @@
+unit Std.Tui.Rendering.TextArea;
+
+uses
+  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
+  Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
+
+/// Paints clipped text-area lines and a focused visible caret.
+
+procedure TuiPaintTextArea(
+  Canvas: TuiCanvas;
+  Bounds: TuiRect;
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint;
+  Focused: boolean
+);
+begin
+  if Bounds.IsEmpty() then
+  begin
+    return
+  end;
+  var Area: TuiCanvas := Canvas.Child(Bounds);
+  var LineCount: integer := TuiTextAreaLineCount(Text);
+  for Row: integer := 0 to Bounds.Height - 1 do
+  begin
+    var Line: integer := Offset.Y + Row;
+    if Line < LineCount then
+    begin
+      Area.WriteText(TuiPoint.Create(- Offset.X, Row), TuiTextAreaLineText(Text, Line), TuiStyleRole.Normal)
+    end
+  end;
+  if Focused then
+  begin
+    var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+    var CaretX: integer := Position.DisplayColumn - Offset.X;
+    var CaretY: integer := Position.Line - Offset.Y;
+    if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and (CaretY < Bounds.Height) then
+    begin
+      Area.PutCell(TuiPoint.Create(CaretX, CaretY), TuiCell.Create('▏', TuiStyleRole.Focused))
+    end
+  end
+end;

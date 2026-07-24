@@ -1,0 +1,77 @@
+program IdeInteractionTest;
+
+uses Ide.App.Model, Ide.App.Update, Ide.App.View, Std.Str, Std.Test, Std.Tui;
+
+function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
+begin
+  for Y: integer := 0 to Snapshot.Height - 1 do
+  begin
+    var X: integer := Std.Str.IndexOf(Snapshot.LineAt(Y), Glyph);
+    if X >= 0 then
+    begin
+      return TuiPoint.Create(X, Y)
+    end
+  end;
+  panic('glyph not found in IDE snapshot: ' + Glyph)
+end;
+
+function EscapeKey(): TuiKeyEvent;
+begin
+  return record
+    kind := TuiKeyKind.Escape;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+procedure AssertNoDialog(State: IdeModel);
+begin
+  case State.Dialog of
+    IdeDialog.NoDialog:
+    begin
+    end;
+    IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      Fail('Expected the IDE dialog to be closed.')
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  mutable var Model: IdeModel := App.RunIterations(InitialIdeModel(None), UpdateIde, ViewIde, 0, 0);
+  var OpenAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Open');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
+  case Model.Dialog of
+    IdeDialog.OpenPath(PathText, Caret):
+    begin
+    end;
+    IdeDialog.NoDialog, IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      Fail('Pointer activation did not open the Open dialog.')
+    end
+  end;
+  App.InjectKeyForTest(EscapeKey());
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertNoDialog(Model);
+  var OpenAgainAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Open');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenAgainAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
+  var CancelAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Cancel');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, CancelAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
+  AssertNoDialog(Model);
+  App.InjectResizeForTest(TuiSize.Create(40, 12));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  var Resized: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals(40, Resized.Width);
+  AssertEquals(12, Resized.Height);
+  AssertTrue(Std.Str.Contains(Resized.LineAt(0), 'Open'));
+  AssertTrue(Std.Str.Contains(Resized.LineAt(8), 'Messages'));
+  AssertTrue(Std.Str.Contains(Resized.LineAt(11), 'clean | Ln 1, Col 1'));
+  App.Close()
+end.

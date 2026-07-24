@@ -1,0 +1,38 @@
+program IdeProcessRunnerTest;
+
+uses Ide.Process.Runner, Ide.Test.Files, Std.Array, Std.Proc, Std.Str, Std.Test;
+
+begin
+  var CheckArgs: array of string := IdeProcessArguments(IdeProcessKind.CheckProcess, 'sample.fpas');
+  AssertEquals(2, Std.Array.Length(CheckArgs));
+  AssertEquals('check', CheckArgs[0]);
+  AssertEquals('sample.fpas', CheckArgs[1]);
+  var RunArgs: array of string := IdeProcessArguments(IdeProcessKind.RunProcess, 'demo.fpas');
+  AssertEquals(2, Std.Array.Length(RunArgs));
+  AssertEquals('run', RunArgs[0]);
+  AssertEquals('demo.fpas', RunArgs[1]);
+  var Output: ProcessOutput := record
+    ExitCode := 7;
+    Stdout := (('first' + Std.Str.Chr(13)) + (Std.Str.Chr(10) + 'second')) + Std.Str.Chr(10);
+    Stderr := '';
+  end;
+  mutable var Expected: string := 'Run exit code: 7';
+  Expected := (Expected + Std.Str.Chr(10)) + 'stdout:';
+  Expected := (Expected + Std.Str.Chr(10)) + 'first';
+  Expected := (Expected + Std.Str.Chr(10)) + 'second';
+  Expected := (Expected + Std.Str.Chr(10)) + 'stderr:';
+  Expected := (Expected + Std.Str.Chr(10)) + '(empty)';
+  AssertEquals(Expected, FormatIdeProcessOutput(IdeProcessKind.RunProcess, Output));
+  EnsureIdeTestScratch();
+  case RunIdeProcessWithExecutable(IdeProcessKind.CheckProcess, 'sample.fpas', IdeTestScratch +
+                                                                               '/missing-ide-compiler.exe') of
+    Ok(Report):
+    begin
+      Fail('Expected process-start failure, got exit code ' + Report.MessageText)
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Process start failed: '))
+    end
+  end
+end.

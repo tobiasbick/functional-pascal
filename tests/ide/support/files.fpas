@@ -1,0 +1,69 @@
+/// Filesystem setup and assertions shared by IDE lifecycle tests.
+
+unit Ide.Test.Files;
+
+uses Std.Fs, Std.Test;
+
+const
+  IdeTestScratch: string := '.temp-data/ide';
+
+private procedure EnsureDirectory(Path: string);
+begin
+  if Std.Fs.Exists(Path) then
+  begin
+    if not Std.Fs.IsDir(Path) then
+    begin
+      Fail('Expected directory: ' + Path)
+    end;
+    return
+  end;
+  case Std.Fs.CreateDir(Path) of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
+
+/// Creates the repository-local IDE scratch directory.
+
+procedure EnsureIdeTestScratch();
+begin
+  EnsureDirectory('.temp-data');
+  EnsureDirectory(IdeTestScratch)
+end;
+
+/// Writes one required test fixture or fails the current test.
+
+procedure WriteIdeTestFile(Path: string; Text: string);
+begin
+  case Std.Fs.WriteText(Path, Text) of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
+
+/// Reads one required test fixture or fails the current test.
+
+function ReadIdeTestFile(Path: string): string;
+begin
+  case Std.Fs.ReadText(Path) of
+    Ok(Text):
+    begin
+      return Text
+    end;
+    Error(Message):
+    begin
+      Fail(Message);
+      return ''
+    end
+  end
+end;

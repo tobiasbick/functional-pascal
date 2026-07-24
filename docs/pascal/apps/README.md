@@ -4,4 +4,4 @@ Runnable programs under [`apps/`](../../../apps/).
 
 | App | Doc |
 | --- | --- |
-| FPAS IDE source | [ide.md](ide.md) |
+| FPAS IDE | [ide.md](ide.md) |

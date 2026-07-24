@@ -13,7 +13,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Libraries | [Compiled-unit architecture](libraries.md) | Implemented `.fpascu` decisions and remaining library extensions |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Compiler panics and source-level language constraints found during implementation |
 | Language | [Opaque records](opaque-records.md) | Representation hiding and unforgeable transient capabilities |
-| IDE | [Single-document IDE replacement](ide/README.md) | Fixed full-screen editor, file lifecycle, and compiler integration over `Std.Tui` |
 
 ## Rules
 

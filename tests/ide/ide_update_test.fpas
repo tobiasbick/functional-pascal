@@ -1,0 +1,40 @@
+program IdeUpdateTest;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Document.Model, Ide.Test.Files, Std.Str,
+  Std.Option, Std.Test, Std.Tui;
+
+const
+  SavePath: string := IdeTestScratch + '/update_save.fpas';
+  MissingPath: string := IdeTestScratch + '/update_missing.fpas';
+
+begin
+  EnsureIdeTestScratch();
+  WriteIdeTestFile(SavePath, 'old');
+  var Initial: IdeModel := InitializeIdeFromArguments([SavePath]);
+  AssertEquals('old', Initial.Document.Text);
+  var Missing: IdeModel := InitializeIdeFromArguments([MissingPath]);
+  AssertTrue(Std.Option.IsNone(Missing.Document.Path));
+  AssertEquals('', Missing.Document.Text);
+  AssertTrue(Std.Str.Contains(Missing.MessageText, 'Open failed: ' + MissingPath));
+  var Invalid: IdeModel := InitializeIdeFromArguments(['sample.txt']);
+  AssertTrue(Std.Option.IsNone(Invalid.Document.Path));
+  AssertEquals('Startup path must end with .fpas.', Invalid.MessageText);
+  var Extra: IdeModel := InitializeIdeFromArguments(['one.fpas', 'two.fpas']);
+  AssertTrue(Std.Option.IsNone(Extra.Document.Path));
+  AssertEquals('Expected at most one .fpas path argument.', Extra.MessageText);
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  var Edited: IdeModel := UpdateIde(Initial, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'new', 3, TuiPoint.Create(0, 0)), Cmd);
+  AssertTrue(IsIdeDocumentDirty(Edited.Document));
+  Cmd.Reset();
+  var Saved: IdeModel := UpdateIde(Edited, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
+  AssertEquals('new', ReadIdeTestFile(SavePath));
+  AssertEquals('new', Saved.Document.SavedText);
+  AssertFalse(IsIdeDocumentDirty(Saved.Document));
+  AssertTrue(Std.Str.Contains(Saved.MessageText, 'Saved '));
+  AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
+  Cmd.Reset();
+  var Ignored: IdeModel := UpdateIde(Saved, TuiMsgAction(OpenControlId(), SaveAction()), Cmd);
+  AssertEquals(Saved.MessageText, Ignored.MessageText);
+  AssertEquals(Saved.Document.Text, Ignored.Document.Text)
+end.

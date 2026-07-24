@@ -1,0 +1,170 @@
+unit Std.Tui.Text.TextArea;
+
+uses Std.Array, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+
+type
+  /// Logical and terminal-cell location of one controlled text-area caret.
+  TuiTextAreaPosition = record
+    Line: integer;
+    LineStart: integer;
+    LineEnd: integer;
+    DisplayColumn: integer;
+  end;
+
+/// Returns the number of logical LF-separated lines, including a trailing empty line.
+
+function TuiTextAreaLineCount(Text: string): integer;
+begin
+  return Std.Array.Length(Std.Str.Split(Text, Std.Str.Chr(10)))
+end;
+
+/// Returns one zero-based logical line without its LF separator.
+
+function TuiTextAreaLineText(Text: string; Line: integer): string;
+begin
+  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  if (Line < 0) or (Line >= Std.Array.Length(Lines)) then
+  begin
+    panic('Tui text area line must be within its text')
+  end;
+  return Lines[Line]
+end;
+
+private function TuiTextAreaLineStartAt(Text: string; Line: integer): integer;
+begin
+  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  mutable var Target: integer := Line;
+  if Target < 0 then
+  begin
+    Target := 0
+  end;
+  if Target >= Std.Array.Length(Lines) then
+  begin
+    Target := Std.Array.Length(Lines) - 1
+  end;
+  mutable var Start: integer := 0;
+  for Index: integer := 0 to Target - 1 do
+  begin
+    Start := (Start + Std.Str.Length(Lines[Index])) + 1
+  end;
+  return Start
+end;
+
+/// Locates a validated character-index caret in logical-line and terminal-column coordinates.
+
+function TuiTextAreaLocate(Text: string; Caret: integer): TuiTextAreaPosition;
+begin
+  if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
+  begin
+    panic('Tui text area caret must be within its text')
+  end;
+  mutable var LineStart: integer := Caret;
+  while LineStart > 0 do
+  begin
+    if Std.Str.CharAt(Text, LineStart - 1) = Std.Str.Chr(10) then
+    begin
+      break
+    end;
+    LineStart := LineStart - 1
+  end;
+  mutable var LineEnd: integer := Caret;
+  while LineEnd < Std.Str.Length(Text) do
+  begin
+    if Std.Str.CharAt(Text, LineEnd) = Std.Str.Chr(10) then
+    begin
+      break
+    end;
+    LineEnd := LineEnd + 1
+  end;
+  mutable var Line: integer := 0;
+  for Index: integer := 0 to LineStart - 1 do
+  begin
+    if Std.Str.CharAt(Text, Index) = Std.Str.Chr(10) then
+    begin
+      Line := Line + 1
+    end
+  end;
+  var Prefix: string := Std.Str.Substring(Text, LineStart, Caret - LineStart);
+  return record
+    Line := Line;
+    LineStart := LineStart;
+    LineEnd := LineEnd;
+    DisplayColumn := Std.Console.DisplayWidth(Prefix);
+  end
+end;
+
+/// Returns a caret on `Line` nearest to the requested terminal display column.
+
+function TuiTextAreaCaretAtDisplayColumn(Text: string; Line: integer; DisplayColumn: integer): integer;
+begin
+  mutable var TargetColumn: integer := DisplayColumn;
+  if TargetColumn < 0 then
+  begin
+    TargetColumn := 0
+  end;
+  var Start: integer := TuiTextAreaLineStartAt(Text, Line);
+  var LineText: string := TuiTextAreaLineText(Text, Line);
+  for Column: integer := 0 to Std.Str.Length(LineText) - 1 do
+  begin
+    var Prefix: string := Std.Str.Substring(LineText, 0, Column + 1);
+    if Std.Console.DisplayWidth(Prefix) > TargetColumn then
+    begin
+      return Start + Column
+    end
+  end;
+  return Start + Std.Str.Length(LineText)
+end;
+
+/// Returns minimum content size for all logical lines before viewport constraints.
+
+function TuiTextAreaContentSize(Text: string): TuiSize;
+begin
+  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  mutable var Width: integer := 1;
+  for Index: integer := 0 to Std.Array.Length(Lines) - 1 do
+  begin
+    var LineWidth: integer := Std.Console.DisplayWidth(Lines[Index]);
+    if LineWidth > Width then
+    begin
+      Width := LineWidth
+    end
+  end;
+  return TuiSize.Create(Width, Std.Array.Length(Lines))
+end;
+
+/// Adjusts a non-negative model offset only as much as needed to reveal the caret.
+
+function TuiTextAreaEnsureCaretVisible(
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint;
+  Viewport: TuiSize
+): TuiPoint;
+begin
+  mutable var Next: TuiPoint := Offset;
+  if Viewport.Width > 0 then
+  begin
+    var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+    if Position.DisplayColumn < Next.X then
+    begin
+      Next.X := Position.DisplayColumn
+    end
+    else if Position.DisplayColumn >= Next.X + Viewport.Width then
+    begin
+      Next.X := (Position.DisplayColumn - Viewport.Width) + 1
+    end
+  end;
+  if Viewport.Height > 0 then
+  begin
+    var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);
+    if Position.Line < Next.Y then
+    begin
+      Next.Y := Position.Line
+    end
+    else if Position.Line >= Next.Y + Viewport.Height then
+    begin
+      Next.Y := (Position.Line - Viewport.Height) + 1
+    end
+  end;
+  return Next
+end;

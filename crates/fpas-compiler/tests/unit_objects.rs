@@ -68,9 +68,11 @@ fn independently_compiled_units_link_and_run_without_dependency_asts() {
          function Run(): integer;
          begin return AddOne(41) end;",
     );
-    let consumer_compiled =
-        compile_unit_object(&consumer, &[dependency_compiled.interface.clone()])
-            .expect("consumer compilation");
+    let consumer_compiled = compile_unit_object(
+        &consumer,
+        std::slice::from_ref(&dependency_compiled.interface),
+    )
+    .expect("consumer compilation");
 
     let code = vec![Op::Call(0, 0), Op::PrintLn, Op::Halt];
     let program = RelocatableObject {
@@ -119,8 +121,11 @@ fn independently_compiled_program_uses_unit_interface_and_object() {
          begin Std.Console.WriteLn(AddOne(41)) end.",
     );
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-    let program_object = compile_program_object(&program, &[dependency_compiled.interface.clone()])
-        .expect("program compilation");
+    let program_object = compile_program_object(
+        &program,
+        std::slice::from_ref(&dependency_compiled.interface),
+    )
+    .expect("program compilation");
     let chunk = link_objects(&[dependency_compiled.object], &program_object).expect("linking");
     let mut vm = fpas_vm::Vm::new(chunk);
     vm.run().expect("linked VM execution");
@@ -149,8 +154,11 @@ fn imported_record_defaults_are_compiled_from_the_unit_interface() {
     );
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
 
-    let program_object = compile_program_object(&program, &[dependency_compiled.interface.clone()])
-        .expect("program compilation");
+    let program_object = compile_program_object(
+        &program,
+        std::slice::from_ref(&dependency_compiled.interface),
+    )
+    .expect("program compilation");
     let chunk = link_objects(&[dependency_compiled.object], &program_object).expect("linking");
     let mut vm = fpas_vm::Vm::new(chunk);
     vm.run().expect("linked VM execution");
@@ -174,7 +182,7 @@ fn imported_function_can_be_passed_as_a_callable_value() {
          function Run(): integer;
          begin return Apply(AddOne, 41) end;",
     );
-    let consumer = compile_unit_object(&consumer, &[dependency.interface.clone()])
+    let consumer = compile_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
         .expect("consumer compilation");
 
     assert_eq!(
@@ -252,7 +260,7 @@ fn local_variables_shadow_imported_enum_variant_aliases_during_assignment() {
            return Preferred[0]
          end;",
     );
-    let consumer = compile_unit_object(&consumer, &[dependency.interface.clone()])
+    let consumer = compile_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
         .expect("consumer compilation");
 
     assert_eq!(

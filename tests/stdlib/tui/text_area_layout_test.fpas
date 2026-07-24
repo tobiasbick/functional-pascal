@@ -1,0 +1,44 @@
+program TuiTextAreaLayoutTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+function Paint(Tree: TuiElement; Size: TuiSize): TuiSurfaceSnapshot;
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(Size);
+  App.RunIterations(Tree, function(State: TuiElement; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiElement begin
+    return State
+  end, function(State: TuiElement): TuiElement begin
+    return State
+  end, 0, 0);
+  var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  App.Close();
+  return Snapshot
+end;
+
+begin
+  var TextArea: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), ('abc' + Std.Str.Chr(10)) +
+                                                                                      '12345', 0, TuiPoint.Create(0, 0), TuiAction.Create(9));
+  var Measured: TuiMeasureResult := TuiMeasure(TextArea, TuiMeasureSpec.Unbounded());
+  AssertEquals(1, Measured.Minimum.Width);
+  AssertEquals(1, Measured.Minimum.Height);
+  AssertEquals(5, Measured.Preferred.Width);
+  AssertEquals(2, Measured.Preferred.Height);
+  AssertTrue(Measured.Maximum.Width > Measured.Preferred.Width);
+  AssertTrue(Measured.Maximum.Height > Measured.Preferred.Height);
+  var Constrained: TuiMeasureResult := TuiMeasure(TextArea, TuiMeasureSpec.AtMost(TuiSize.Create(3, 1)));
+  AssertEquals(3, Constrained.Preferred.Width);
+  AssertEquals(1, Constrained.Preferred.Height);
+  var Filled: TuiSurfaceSnapshot := Paint(TuiElementBuilders.MakeDesktop(None, [
+                                                                                 TuiElementBuilders.MakeColumn([
+
+                                                                                                                 TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), 'x', 0, TuiPoint.Create(0, 0), TuiAction.Create(9)),
+
+                                                                                                                 TuiElementBuilders.MakeLabel('tail')
+
+                                                                                 
+
+                                                                                                               ])
+
+                                                                               ]), TuiSize.Create(8, 4));
+  AssertEquals('t', Filled.CellAt(0, 3).Glyph)
+end.

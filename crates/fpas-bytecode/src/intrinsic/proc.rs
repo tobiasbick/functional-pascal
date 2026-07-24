@@ -14,4 +14,12 @@ pub enum ProcIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`
     Run = 330,
+    /// `Std.Proc.CurrentExecutable()` - return the current executable path.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/proc.md`
+    CurrentExecutable = 344,
+    /// `Std.Proc.RunCapture(Command, Args)` - run a host process and capture its output.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/proc.md`
+    RunCapture = 345,
 }

@@ -4,20 +4,13 @@ kind = "library"
 
 [exports]
 units = [
-  "Ide.Shell",
-  "Ide.Ui.Menu",
-  "Ide.Ui.Status",
-  "Ide.Ui.Theme",
-  "Ide.Dialog",
-  "Ide.Dialog.Open",
-  "Ide.Dialog.About",
-  "Ide.Workspace.Classify",
-  "Ide.Workspace.Model",
-  "Ide.Workspace.Load",
-  "Ide.Workspace.Sources",
-  "Ide.Workspace.TreeBuild",
-  "Ide.Workspace.TreeWindow",
-  "Ide.Workspace.Session",
+  "Ide.App.Model",
+  "Ide.App.Actions",
+  "Ide.App.Update",
+  "Ide.App.View",
+  "Ide.Document.Model",
+  "Ide.Document.Io",
+  "Ide.Process.Runner",
 ]
 
 [sources]

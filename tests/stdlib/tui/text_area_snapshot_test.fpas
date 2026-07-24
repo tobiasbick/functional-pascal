@@ -1,0 +1,43 @@
+program TuiTextAreaSnapshotTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+type
+  SnapshotModel = record
+    Focused: boolean;
+  end;
+
+function ViewTextArea(State: SnapshotModel): TuiElement;
+begin
+  mutable var Focus: option of TuiControlId := None;
+  if State.Focused then
+  begin
+    Focus := Some(TuiControlId.Create(1))
+  end;
+  var Text: string := (('012345' + Std.Str.Chr(10)) + 'alpha') + (Std.Str.Chr(10) + 'omega');
+  return TuiElementBuilders.MakeDesktop(Focus, [
+                                                 TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, 9, TuiPoint.Create(1, 1), TuiAction.Create(9))
+
+                                               ])
+end;
+
+function UpdateTextArea(State: SnapshotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): SnapshotModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  return State
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
+  App.RunIterations(record Focused := true; end, UpdateTextArea, ViewTextArea, 0, 0);
+  var Focused: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals('l▏ha', Focused.LineAt(0));
+  AssertEquals('mega', Focused.LineAt(1));
+  AssertTrue(Focused.CellAt(1, 0).Role = TuiStyleRole.Focused);
+  App.RunIterations(record Focused := false; end, UpdateTextArea, ViewTextArea, 0, 0);
+  var Unfocused: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals('lpha', Unfocused.LineAt(0));
+  AssertEquals('mega', Unfocused.LineAt(1));
+  AssertTrue(Unfocused.CellAt(1, 0).Role = TuiStyleRole.Normal);
+  App.Close()
+end.

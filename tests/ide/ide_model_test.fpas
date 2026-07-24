@@ -1,0 +1,29 @@
+program IdeModelTest;
+
+uses Ide.App.Model, Ide.Document.Model, Std.Option, Std.Test;
+
+begin
+  var Empty: IdeModel := InitialIdeModel(None);
+  AssertTrue(Std.Option.IsNone(Empty.Document.Path));
+  AssertEquals('', Empty.Document.Text);
+  AssertEquals('', Empty.Document.SavedText);
+  AssertEquals(0, Empty.Document.Caret);
+  AssertEquals(0, Empty.Document.Offset.X);
+  AssertEquals(0, Empty.Document.Offset.Y);
+  AssertFalse(IsIdeDocumentDirty(Empty.Document));
+  AssertEquals('Ready', Empty.MessageText);
+  AssertTrue(Std.Option.IsNone(Empty.LastExitCode));
+  var Loaded: IdeModel := InitialIdeModel(Some('sample.fpas'));
+  case Loaded.Document.Path of
+    Some(Path):
+    begin
+      AssertEquals('sample.fpas', Path)
+    end;
+    None:
+    begin
+      AssertTrue(false)
+    end
+  end;
+  AssertEquals('', Loaded.Document.Text);
+  AssertFalse(IsIdeDocumentDirty(Loaded.Document))
+end.

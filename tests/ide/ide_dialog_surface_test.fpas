@@ -1,0 +1,46 @@
+program IdeDialogSurfaceTest;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Document.Model, Std.Str,
+  Std.Test, Std.Tui;
+
+function SurfaceContains(Surface: TuiSurfaceSnapshot; Text: string): boolean;
+begin
+  for Row: integer := 0 to Surface.Height - 1 do
+  begin
+    if Std.Str.Contains(Surface.LineAt(Row), Text) then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+function Render(State: IdeModel): TuiSurfaceSnapshot;
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(60, 18));
+  var _: IdeModel := App.RunIterations(State, UpdateIde, ViewIde, 0, 0);
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  App.Close();
+  return Surface
+end;
+
+begin
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  var Open: IdeModel := UpdateIde(InitialIdeModel(None), TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  var OpenSurface: TuiSurfaceSnapshot := Render(Open);
+  AssertTrue(SurfaceContains(OpenSurface, ' Open '));
+  AssertTrue(SurfaceContains(OpenSurface, 'Path'));
+  AssertTrue(SurfaceContains(OpenSurface, 'Cancel'));
+  var Dirty: IdeModel := UpdateIde(InitialIdeModel(None), TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'changed', 7, TuiPoint.Create(0, 0)), Cmd);
+  var SaveAs: IdeModel := UpdateIde(Dirty, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
+  var SaveSurface: TuiSurfaceSnapshot := Render(SaveAs);
+  AssertTrue(SurfaceContains(SaveSurface, ' Save As '));
+  AssertTrue(SurfaceContains(SaveSurface, 'Path'));
+  var Confirm: IdeModel := UpdateIde(Dirty, TuiMsgAction(ExitControlId(), ExitAction()), Cmd);
+  var ConfirmSurface: TuiSurfaceSnapshot := Render(Confirm);
+  AssertTrue(SurfaceContains(ConfirmSurface, ' Unsaved changes '));
+  AssertTrue(SurfaceContains(ConfirmSurface, 'Save changes?'));
+  AssertTrue(SurfaceContains(ConfirmSurface, 'Discard'));
+  AssertTrue(SurfaceContains(ConfirmSurface, 'Cancel'))
+end.

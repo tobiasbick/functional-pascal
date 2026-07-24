@@ -127,6 +127,19 @@ begin
   return Std.Tui.Runtime.Msg.TuiMsgTextChanged(Source, Action, Text, Caret)
 end;
 
+/// Creates a source-aware controlled multiline text-area change message.
+
+function TuiMsgTextAreaChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Text: string;
+  Caret: integer;
+  Offset: Std.Tui.Geometry.Point.TuiPoint
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgTextAreaChanged(Source, Action, Text, Caret, Offset)
+end;
+
 /// Creates a source-aware controlled check-box change message.
 
 function TuiMsgCheckChanged(

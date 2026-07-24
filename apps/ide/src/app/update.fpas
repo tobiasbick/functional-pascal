@@ -1,0 +1,140 @@
+/// Tui message dispatch for the IDE application model.
+
+unit Ide.App.Update;
+
+uses
+  Ide.App.Actions, Ide.App.DocumentFlow, Ide.App.Model, Ide.Document.Model, Std.Console, Std.Str,
+  Std.Tui;
+
+private function IdeState(
+  State: IdeModel;
+  Document: IdeDocument;
+  MessageText: string;
+  Focused: option of TuiControlId
+): IdeModel;
+begin
+  return record
+    Document := Document;
+    Dialog := State.Dialog;
+    MessageText := MessageText;
+    LastExitCode := State.LastExitCode;
+    Focused := Focused;
+  end
+end;
+
+private function UpdateAction(State: IdeModel; Source: TuiControlId; Action: TuiAction; Cmd: TuiCmdOutput): IdeModel;
+begin
+  case State.Dialog of
+    IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      return UpdateIdeDialogAction(State, Source, Action, Cmd)
+    end;
+    IdeDialog.NoDialog:
+    begin
+    end
+  end;
+  if IsIdeCommand(Source, Action, OpenControlId(), OpenAction()) then
+  begin
+    return RequestIdeOpen(State)
+  end;
+  if IsIdeCommand(Source, Action, SaveControlId(), SaveAction()) then
+  begin
+    return RequestIdeSave(State, IdePendingCommand.NoPendingCommand, Cmd)
+  end;
+  if IsIdeCommand(Source, Action, CheckControlId(), CheckAction()) then
+  begin
+    return RequestIdeSave(State, IdePendingCommand.CheckDocument, Cmd)
+  end;
+  if IsIdeCommand(Source, Action, RunControlId(), RunAction()) then
+  begin
+    return RequestIdeSave(State, IdePendingCommand.RunDocument, Cmd)
+  end;
+  if IsIdeCommand(Source, Action, ExitControlId(), ExitAction()) then
+  begin
+    return RequestIdeExit(State, Cmd)
+  end;
+  return State
+end;
+
+private function UpdateShortcut(State: IdeModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): IdeModel;
+begin
+  if (((Key.kind = Std.Console.KeyKind.F2) and not Key.ctrl) and not Key.alt) and not Key.meta then
+  begin
+    return UpdateAction(State, SaveControlId(), SaveAction(), Cmd)
+  end;
+  if (((Key.kind = Std.Console.KeyKind.F9) and not Key.ctrl) and not Key.alt) and not Key.meta then
+  begin
+    return UpdateAction(State, CheckControlId(), CheckAction(), Cmd)
+  end;
+  if ((Key.kind = Std.Console.KeyKind.F9) and Key.ctrl) and (not Key.alt and not Key.meta) then
+  begin
+    return UpdateAction(State, RunControlId(), RunAction(), Cmd)
+  end;
+  if (((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and not Key.ctrl) and
+     (not Key.meta and (Std.Str.ToLower(Key.ch) = 'x')) then
+  begin
+    return UpdateAction(State, ExitControlId(), ExitAction(), Cmd)
+  end;
+  return State
+end;
+
+/// Builds the initial model and loads a valid optional startup path.
+
+function InitializeIdeFromArguments(Arguments: array of string): IdeModel;
+begin
+  return InitializeIdeDocumentFlow(Arguments)
+end;
+
+/// Applies one framework message and performs requested document I/O synchronously.
+
+function UpdateIde(State: IdeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): IdeModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      return IdeState(State, State.Document, State.MessageText, Current)
+    end;
+    TuiMsg.Action(Source, Action):
+    begin
+      return UpdateAction(State, Source, Action, Cmd)
+    end;
+    TuiMsg.TextChanged(Source, Action, Text, Caret):
+    begin
+      if IsIdeCommand(Source, Action, DialogPathControlId(), DialogPathChangedAction()) then
+      begin
+        return UpdateIdePathInput(State, Text, Caret)
+      end;
+      return State
+    end;
+    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    begin
+      if IsIdeCommand(Source, Action, EditorControlId(), EditorChangedAction()) then
+      begin
+        return IdeState(State, IdeDocumentWithTextArea(State.Document, Text, Caret, Offset), State.MessageText, State.Focused)
+      end;
+      return State
+    end;
+    TuiMsg.QuitRequested:
+    begin
+      case State.Dialog of
+        IdeDialog.NoDialog:
+        begin
+          return RequestIdeExit(State, Cmd)
+        end;
+        IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+        begin
+          return CancelIdeDialog(State)
+        end
+      end
+    end;
+    TuiMsg.Key(Key):
+    begin
+      return UpdateShortcut(State, Key, Cmd)
+    end;
+    TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, ScrollOffset):
+    begin
+      return State
+    end
+  end
+end;

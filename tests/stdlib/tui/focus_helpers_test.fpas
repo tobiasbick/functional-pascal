@@ -14,7 +14,7 @@ begin
 
                                                                                          
 
-                                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
+                                                                                                                                                                 TuiElementBuilders.MakeTextArea(TuiControlId.Create(2), 'Two', 0, TuiPoint.Create(0, 0), TuiAction.Create(2))
 
                                                                                          
 

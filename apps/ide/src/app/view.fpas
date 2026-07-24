@@ -1,0 +1,219 @@
+/// Fixed single-document IDE surface and modal document dialogs.
+
+unit Ide.App.View;
+
+uses Ide.App.Actions, Ide.App.Model, Ide.Document.Model, Std.Conv, Std.Str, Std.Tui;
+
+private function FixedRowSettings(): TuiLayoutSettings;
+begin
+  return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), TuiAlignment.Fill(), 0)
+end;
+
+private function EditorSettings(): TuiLayoutSettings;
+begin
+  return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), 1)
+end;
+
+private function ViewCommandBar(): TuiElement;
+begin
+  return TuiElementBuilders.MakeMenuBar([
+                                          TuiMenuItem.Create(OpenControlId(), 'Open', OpenAction()),
+                                          TuiMenuItem.WithShortcut(SaveControlId(), 'Save', SaveAction(), 'F2'),
+                                          TuiMenuItem.WithShortcut(CheckControlId(), 'Check', CheckAction(), 'F9'),
+                                          TuiMenuItem.WithShortcut(RunControlId(), 'Run', RunAction(), 'Ctrl+F9'),
+                                          TuiMenuItem.WithShortcut(ExitControlId(), 'Exit', ExitAction(), 'Alt+X')
+
+                                        ])
+end;
+
+private function ViewEditor(State: IdeModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLayout(EditorSettings(), TuiElementBuilders.MakeWindow('Editor', [
+                                                                                                   TuiElementBuilders.MakeTextArea(EditorControlId(), State.Document.Text, State.Document.Caret, State.Document.Offset, EditorChangedAction())
+
+                                                                                                 ]))
+end;
+
+private function ViewMessages(State: IdeModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeWindow('Messages', [
+                                                                                                       TuiElementBuilders.MakeLabel(State.MessageText)
+
+                                                                                                     ]))
+end;
+
+private function CaretLine(Document: IdeDocument): integer;
+begin
+  mutable var Line: integer := 1;
+  for Index: integer := 0 to Document.Caret - 1 do
+  begin
+    if Std.Str.CharAt(Document.Text, Index) = Std.Str.Chr(10) then
+    begin
+      Line := Line + 1
+    end
+  end;
+  return Line
+end;
+
+private function CaretColumn(Document: IdeDocument): integer;
+begin
+  mutable var Column: integer := 1;
+  for Index: integer := 0 to Document.Caret - 1 do
+  begin
+    if Std.Str.CharAt(Document.Text, Index) = Std.Str.Chr(10) then
+    begin
+      Column := 1
+    end
+    else
+    begin
+      Column := Column + 1
+    end
+  end;
+  return Column
+end;
+
+private function StatusText(State: IdeModel): string;
+begin
+  mutable var StateText: string := 'clean';
+  if IsIdeDocumentDirty(State.Document) then
+  begin
+    StateText := 'modified'
+  end;
+  return (((((StateText + ' | Ln ') + IntToStr(CaretLine(State.Document))) + ', Col ') + IntToStr(CaretColumn(State.Document))) + ' | F2 Save | F9 Check | Ctrl+F9 Run')
+end;
+
+private function ViewStatus(State: IdeModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint(StatusText(State))])
+end;
+
+private function ViewPathDialog(Title: string; AcceptText: string; PathText: string; Caret: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeDialog(Title, [
+                                                TuiElementBuilders.MakeColumn([
+
+                                                                                TuiElementBuilders.MakeLabel('Path'),
+
+                                                                                TuiElementBuilders.MakeInput(DialogPathControlId(), PathText, Caret, DialogPathChangedAction()),
+
+                                                                                TuiElementBuilders.MakeRow([
+
+                                                
+
+                                                                                                             TuiElementBuilders.MakeButton(DialogAcceptControlId(), AcceptText, DialogAcceptAction()),
+
+                                                
+
+                                                                                                             TuiElementBuilders.MakeButton(DialogCancelControlId(), 'Cancel', DialogCancelAction())
+
+                                                
+
+                                                                                
+
+                                                
+
+                                                                                                           ])
+
+                                                
+
+                                                                              ])
+
+                                              ])
+end;
+
+private function ViewDirtyDialog(): TuiElement;
+begin
+  return TuiElementBuilders.MakeDialog('Unsaved changes', [
+                                                            TuiElementBuilders.MakeColumn([
+
+                                                                                            TuiElementBuilders.MakeLabel('Save changes?'),
+
+                                                                                            TuiElementBuilders.MakeRow([
+
+                                                            
+
+                                                                                                                         TuiElementBuilders.MakeButton(DirtySaveControlId(), 'Save', DirtySaveAction()),
+
+                                                            
+
+                                                                                                                         TuiElementBuilders.MakeButton(DirtyDiscardControlId(), 'Discard', DirtyDiscardAction()),
+
+                                                            
+
+                                                                                                                         TuiElementBuilders.MakeButton(DirtyCancelControlId(), 'Cancel', DirtyCancelAction())
+
+                                                            
+
+                                                                                            
+
+                                                            
+
+                                                                                                                       ])
+
+                                                            
+
+                                                                                          ])
+
+                                                          ])
+end;
+
+private function ViewDialog(State: IdeModel): TuiElement;
+begin
+  case State.Dialog of
+    IdeDialog.NoDialog:
+    begin
+      return TuiElementBuilders.MakeEmpty()
+    end;
+    IdeDialog.OpenPath(PathText, Caret):
+    begin
+      return ViewPathDialog('Open', 'Open', PathText, Caret)
+    end;
+    IdeDialog.SavePath(PathText, Caret, Pending):
+    begin
+      return ViewPathDialog('Save As', 'Save', PathText, Caret)
+    end;
+    IdeDialog.ConfirmDirty(Pending):
+    begin
+      return ViewDirtyDialog()
+    end
+  end
+end;
+
+private function ViewFocus(State: IdeModel): option of TuiControlId;
+begin
+  case State.Focused of
+    Some(Id):
+    begin
+      return Some(Id)
+    end;
+    None:
+    begin
+      return Some(EditorControlId())
+    end
+  end
+end;
+
+/// Builds the complete fixed surface and its optional active dialog.
+
+function ViewIde(State: IdeModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(ViewFocus(State), [
+                                                            TuiElementBuilders.MakeColumn([
+
+                                                                                            ViewCommandBar(),
+
+                                                                                            TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeLabel(IdeDocumentPathText(State.Document))),
+
+                                                                                            ViewEditor(State),
+
+                                                                                            ViewMessages(State),
+
+                                                                                            ViewStatus(State)
+
+                                                            
+
+                                                                                          ]),
+                                                            ViewDialog(State)
+
+                                                          ])
+end;

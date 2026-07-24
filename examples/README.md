@@ -165,7 +165,8 @@ Helper units under those folders are built only through the project; see the one
 
 Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
 
-`apps/ide/` is not a supported application and must not be built, run, or tested; see [`apps/ide/README.md`](../apps/ide/README.md).
+The current single-document terminal IDE lives under [`apps/ide/`](../apps/ide/)
+and has its run and test commands in [`apps/ide/README.md`](../apps/ide/README.md).
 
 ## Interactive demos (terminal)
 

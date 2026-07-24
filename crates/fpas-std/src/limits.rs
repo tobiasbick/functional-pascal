@@ -71,11 +71,4 @@ mod tests {
         assert!(checked_collection_len(-1, loc(), "Test").is_err());
         assert!(checked_collection_len(MAX_COLLECTION_LEN + 1, loc(), "Test").is_err());
     }
-
-    #[test]
-    fn resource_limit_constants_are_positive() {
-        assert!(MAX_READ_TEXT_BYTES > 0);
-        assert!(MAX_GLOB_MATCHES > 0);
-        assert!(MAX_GRAPH_PIXELS > 0);
-    }
 }

@@ -12,6 +12,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Path(PathIntrinsic::Extension),
     Intrinsic::Path(PathIntrinsic::Normalize),
     Intrinsic::Proc(ProcIntrinsic::Run),
+    Intrinsic::Proc(ProcIntrinsic::CurrentExecutable),
+    Intrinsic::Proc(ProcIntrinsic::RunCapture),
     Intrinsic::Fs(FsIntrinsic::ReadText),
     Intrinsic::Fs(FsIntrinsic::WriteText),
     Intrinsic::Fs(FsIntrinsic::Exists),

@@ -1,9 +1,18 @@
-/// FPAS IDE entry point — bootstrap only; TUI logic lives in Ide.Shell.
-
 program Ide;
 
-uses Ide.Shell;
+uses Ide.App.Model, Ide.App.Update, Ide.App.View, Std.Args, Std.Array, Std.Tui;
+
+function ProgramArguments(): array of string;
+begin
+  mutable var Arguments: array of string := [];
+  for Index: integer := 0 to ParamCount() - 1 do
+  begin
+    Std.Array.Push(Arguments, ParamStr(Index))
+  end;
+  return Arguments
+end;
 
 begin
-  Run()
+  var Initial: IdeModel := InitializeIdeFromArguments(ProgramArguments());
+  var _: IdeModel := TuiApplication.Run(Initial, UpdateIde, ViewIde)
 end.

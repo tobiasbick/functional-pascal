@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Layout.LayoutSettings,
   Std.Tui.Layout.MeasureAxis, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
-  Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer;
+  Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer, Std.Tui.Text.TextArea;
 
 const
   TuiMeasureExpandingMaximum: integer := 9223372036854775807;
@@ -23,6 +23,12 @@ private function TuiMeasureLeafInput(Text: string): TuiMeasureResult;
 begin
   var Preferred: integer := TuiMeasureAxis.Max(Std.Console.DisplayWidth(Text) + 3, 10);
   return TuiMeasureResult.Create(TuiSize.Create(10, 1), TuiSize.Create(Preferred, 1), TuiSize.Create(Preferred, 1))
+end;
+
+private function TuiMeasureLeafTextArea(Text: string): TuiMeasureResult;
+begin
+  var Content: TuiSize := TuiTextAreaContentSize(Text);
+  return TuiMeasureResult.Create(TuiSize.Create(1, 1), Content, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum))
 end;
 
 private function TuiMeasureLeafCheckBox(Text: string): TuiMeasureResult;
@@ -134,7 +140,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -161,6 +167,10 @@ begin
     TuiElement.Input(Id, Text, Caret, ChangeAction):
     begin
       return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Text), TuiSizePolicy.Preferred(), Spec)
+    end;
+    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    begin
+      return TuiMeasureApplyPolicy(TuiMeasureLeafTextArea(Text), TuiSizePolicy.Expanding(), Spec)
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin

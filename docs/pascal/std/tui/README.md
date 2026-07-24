@@ -15,6 +15,7 @@ implementation details.
 | [Geometry](geometry.md) | `TuiPoint`, `TuiSize`, and `TuiRect`. |
 | [Cells](cells.md) | Colors, styles, cells, and semantic palettes. |
 | [Elements](elements.md) | Tree variants, identities, validation, and focus. |
+| [Text area](text-area.md) | Controlled multiline editing, caret movement, scrolling, and painting. |
 | [Layout](layout.md) | Measurement, arrangement, frames, and clipping. |
 | [Application](application.md) | Update/View, headless execution, routing, and the terminal host. |
 
@@ -29,6 +30,7 @@ implementation details.
 | `TuiControlId.Create(Value)` | Positive focus and message-source identity. |
 | `TuiAction.Create(Value)` | Positive application intent; values may repeat. |
 | `TuiElement` / `TuiElementBuilders` | Closed element tree and constructors. |
+| `TuiElementBuilders.MakeTextArea(...)` | Controlled multiline editor with model-owned text, caret, and offset. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` | Layout value inputs. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
 | `TuiMsg` / `TuiPointerEvent` | Normalized application input. |
@@ -47,6 +49,7 @@ implementation details.
 | Geometry and measurement | [`Geometry/`](../../../../lib/Std/Tui/Geometry/), [`Layout/`](../../../../lib/Std/Tui/Layout/) |
 | Cell, style, and palette values | [`Cells/`](../../../../lib/Std/Tui/Cells/) |
 | Working surface, canvas, and paint | [`Rendering/`](../../../../lib/Std/Tui/Rendering/) |
+| Text-area text geometry | [`Text/TextArea.fpas`](../../../../lib/Std/Tui/Text/TextArea.fpas) |
 | Application host and routing | [`Runtime/`](../../../../lib/Std/Tui/Runtime/) |
 | Chrome values | [`Chrome/`](../../../../lib/Std/Tui/Chrome/) |
 | FPAS regressions | [`tests/stdlib/tui/`](../../../../tests/stdlib/tui/) |

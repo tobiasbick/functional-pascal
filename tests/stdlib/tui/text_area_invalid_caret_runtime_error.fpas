@@ -1,0 +1,18 @@
+program TuiTextAreaInvalidCaretRuntimeError;
+
+uses Std.Tui;
+
+function Update(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  return State
+end;
+
+function View(State: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), 'x', 2, TuiPoint.Create(0, 0), TuiAction.Create(9))
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 3));
+  App.RunIterations(0, Update, View, 0, 0)
+end.

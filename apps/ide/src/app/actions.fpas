@@ -1,0 +1,185 @@
+/// Stable control and action identities for the IDE surface.
+
+unit Ide.App.Actions;
+
+uses Std.Tui;
+
+/// Reports whether a source/action pair matches one expected IDE command.
+
+function IsIdeCommand(
+  Source: TuiControlId;
+  Action: TuiAction;
+  ExpectedSource: TuiControlId;
+  ExpectedAction: TuiAction
+): boolean;
+begin
+  return (Source.Value = ExpectedSource.Value) and (Action.Value = ExpectedAction.Value)
+end;
+
+/// Returns the Open command control identity.
+
+function OpenControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(1)
+end;
+
+/// Returns the Save command control identity.
+
+function SaveControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(2)
+end;
+
+/// Returns the Check command control identity.
+
+function CheckControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(3)
+end;
+
+/// Returns the Run command control identity.
+
+function RunControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(4)
+end;
+
+/// Returns the Exit command control identity.
+
+function ExitControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(5)
+end;
+
+/// Returns the editor control identity.
+
+function EditorControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(6)
+end;
+
+/// Returns the Open application action.
+
+function OpenAction(): TuiAction;
+begin
+  return TuiAction.Create(1)
+end;
+
+/// Returns the Save application action.
+
+function SaveAction(): TuiAction;
+begin
+  return TuiAction.Create(2)
+end;
+
+/// Returns the Check application action.
+
+function CheckAction(): TuiAction;
+begin
+  return TuiAction.Create(3)
+end;
+
+/// Returns the Run application action.
+
+function RunAction(): TuiAction;
+begin
+  return TuiAction.Create(4)
+end;
+
+/// Returns the Exit application action.
+
+function ExitAction(): TuiAction;
+begin
+  return TuiAction.Create(5)
+end;
+
+/// Returns the controlled editor-change action.
+
+function EditorChangedAction(): TuiAction;
+begin
+  return TuiAction.Create(6)
+end;
+
+/// Returns the path-dialog input identity.
+
+function DialogPathControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(7)
+end;
+
+/// Returns the path-dialog primary button identity.
+
+function DialogAcceptControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(8)
+end;
+
+/// Returns the path-dialog cancel button identity.
+
+function DialogCancelControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(9)
+end;
+
+/// Returns the dirty-dialog Save button identity.
+
+function DirtySaveControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(10)
+end;
+
+/// Returns the dirty-dialog Discard button identity.
+
+function DirtyDiscardControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(11)
+end;
+
+/// Returns the dirty-dialog Cancel button identity.
+
+function DirtyCancelControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(12)
+end;
+
+/// Returns the controlled path-input change action.
+
+function DialogPathChangedAction(): TuiAction;
+begin
+  return TuiAction.Create(7)
+end;
+
+/// Returns the path-dialog primary action.
+
+function DialogAcceptAction(): TuiAction;
+begin
+  return TuiAction.Create(8)
+end;
+
+/// Returns the path-dialog cancel action.
+
+function DialogCancelAction(): TuiAction;
+begin
+  return TuiAction.Create(9)
+end;
+
+/// Returns the dirty-dialog Save action.
+
+function DirtySaveAction(): TuiAction;
+begin
+  return TuiAction.Create(10)
+end;
+
+/// Returns the dirty-dialog Discard action.
+
+function DirtyDiscardAction(): TuiAction;
+begin
+  return TuiAction.Create(11)
+end;
+
+/// Returns the dirty-dialog Cancel action.
+
+function DirtyCancelAction(): TuiAction;
+begin
+  return TuiAction.Create(12)
+end;

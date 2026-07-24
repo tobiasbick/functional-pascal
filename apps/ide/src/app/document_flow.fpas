@@ -1,0 +1,303 @@
+/// Startup, file operations, and modal document-flow transitions for the IDE.
+
+unit Ide.App.DocumentFlow;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.Document.Io, Ide.Document.Model, Ide.Process.Runner, Std.Array,
+  Std.Str, Std.Tui;
+
+private function IdeState(
+  State: IdeModel;
+  Document: IdeDocument;
+  Dialog: IdeDialog;
+  MessageText: string;
+  Focused: option of TuiControlId
+): IdeModel;
+begin
+  return record
+    Document := Document;
+    Dialog := Dialog;
+    MessageText := MessageText;
+    LastExitCode := State.LastExitCode;
+    Focused := Focused;
+  end
+end;
+
+private function IdeStateWithMessage(State: IdeModel; MessageText: string): IdeModel;
+begin
+  return IdeState(State, State.Document, State.Dialog, MessageText, State.Focused)
+end;
+
+private function CloseDialog(State: IdeModel; MessageText: string): IdeModel;
+begin
+  return IdeState(State, State.Document, IdeDialog.NoDialog, MessageText, Some(EditorControlId()))
+end;
+
+private function ShowOpenDialog(State: IdeModel): IdeModel;
+begin
+  return IdeState(State, State.Document, IdeDialog.OpenPath('', 0), State.MessageText, Some(DialogPathControlId()))
+end;
+
+private function ShowSaveDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
+begin
+  return IdeState(State, State.Document, IdeDialog.SavePath('', 0, Pending), State.MessageText, Some(DialogPathControlId()))
+end;
+
+private function ShowDirtyDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
+begin
+  return IdeState(State, State.Document, IdeDialog.ConfirmDirty(Pending), State.MessageText, Some(DirtySaveControlId()))
+end;
+
+private function ResumePending(
+  State: IdeModel;
+  Pending: IdePendingCommand;
+  MessageText: string;
+  Cmd: TuiCmdOutput
+): IdeModel;
+function RunSavedDocument(Kind: IdeProcessKind): IdeModel;
+begin
+  case State.Document.Path of
+    Some(Path):
+    begin
+      case RunIdeProcess(Kind, Path) of
+        Ok(Report):
+        begin
+          return record
+            Document := State.Document;
+            Dialog := IdeDialog.NoDialog;
+            MessageText := Report.MessageText;
+            LastExitCode := Some(Report.ExitCode);
+            Focused := Some(EditorControlId());
+          end
+        end;
+        Error(Message):
+        begin
+          return record
+            Document := State.Document;
+            Dialog := IdeDialog.NoDialog;
+            MessageText := Message;
+            LastExitCode := None;
+            Focused := Some(EditorControlId());
+          end
+        end
+      end
+    end;
+    None:
+    begin
+      return IdeStateWithMessage(State, 'Cannot execute an untitled document.')
+    end
+  end
+end;
+begin
+  case Pending of
+    IdePendingCommand.NoPendingCommand:
+    begin
+      return CloseDialog(State, MessageText)
+    end;
+    IdePendingCommand.OpenDocument:
+    begin
+      return ShowOpenDialog(IdeStateWithMessage(State, MessageText))
+    end;
+    IdePendingCommand.CheckDocument:
+    begin
+      return RunSavedDocument(IdeProcessKind.CheckProcess)
+    end;
+    IdePendingCommand.RunDocument:
+    begin
+      return RunSavedDocument(IdeProcessKind.RunProcess)
+    end;
+    IdePendingCommand.ExitApplication:
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return CloseDialog(State, MessageText)
+    end
+  end
+end;
+
+private function OpenPath(State: IdeModel; Path: string): IdeModel;
+begin
+  case ReadIdeDocument(Path) of
+    Ok(Document):
+    begin
+      return IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, Some(EditorControlId()))
+    end;
+    Error(Message):
+    begin
+      return IdeStateWithMessage(State, Message)
+    end
+  end
+end;
+
+private function SavePath(State: IdeModel; Path: string; Pending: IdePendingCommand; Cmd: TuiCmdOutput): IdeModel;
+begin
+  case WriteIdeDocument(State.Document, Path) of
+    Ok(Document):
+    begin
+      return ResumePending(IdeState(State, Document, State.Dialog, State.MessageText, State.Focused), Pending, 'Saved ' +
+                                                                                                               Path, Cmd)
+    end;
+    Error(Message):
+    begin
+      return IdeStateWithMessage(State, Message)
+    end
+  end
+end;
+
+/// Opens a path dialog or protects a dirty document first.
+
+function RequestIdeOpen(State: IdeModel): IdeModel;
+begin
+  if IsIdeDocumentDirty(State.Document) then
+  begin
+    return ShowDirtyDialog(State, IdePendingCommand.OpenDocument)
+  end;
+  return ShowOpenDialog(State)
+end;
+
+/// Saves to the known path or opens a Save As path dialog.
+
+function RequestIdeSave(State: IdeModel; Pending: IdePendingCommand; Cmd: TuiCmdOutput): IdeModel;
+begin
+  case State.Document.Path of
+    Some(Path):
+    begin
+      return SavePath(State, Path, Pending, Cmd)
+    end;
+    None:
+    begin
+      return ShowSaveDialog(State, Pending)
+    end
+  end
+end;
+
+/// Quits a clean document or opens dirty protection.
+
+function RequestIdeExit(State: IdeModel; Cmd: TuiCmdOutput): IdeModel;
+begin
+  if IsIdeDocumentDirty(State.Document) then
+  begin
+    return ShowDirtyDialog(State, IdePendingCommand.ExitApplication)
+  end;
+  Cmd.Set(TuiCmd.Quit);
+  return State
+end;
+
+/// Applies controlled path input to the active path dialog.
+
+function UpdateIdePathInput(State: IdeModel; Text: string; Caret: integer): IdeModel;
+begin
+  case State.Dialog of
+    IdeDialog.OpenPath(PathText, PreviousCaret):
+    begin
+      return IdeState(State, State.Document, IdeDialog.OpenPath(Text, Caret), State.MessageText, State.Focused)
+    end;
+    IdeDialog.SavePath(PathText, PreviousCaret, Pending):
+    begin
+      return IdeState(State, State.Document, IdeDialog.SavePath(Text, Caret, Pending), State.MessageText, State.Focused)
+    end;
+    IdeDialog.NoDialog, IdeDialog.ConfirmDirty(Pending):
+    begin
+      return State
+    end
+  end
+end;
+
+/// Cancels the active dialog and restores editor focus.
+
+function CancelIdeDialog(State: IdeModel): IdeModel;
+begin
+  return CloseDialog(State, 'Canceled.')
+end;
+
+private function AcceptPathDialog(State: IdeModel; Cmd: TuiCmdOutput): IdeModel;
+begin
+  case State.Dialog of
+    IdeDialog.OpenPath(PathText, Caret):
+    begin
+      return OpenPath(State, PathText)
+    end;
+    IdeDialog.SavePath(PathText, Caret, Pending):
+    begin
+      return SavePath(State, PathText, Pending, Cmd)
+    end;
+    IdeDialog.NoDialog, IdeDialog.ConfirmDirty(Pending):
+    begin
+      return State
+    end
+  end
+end;
+
+private function UpdateDirtyAction(
+  State: IdeModel;
+  Source: TuiControlId;
+  Action: TuiAction;
+  Pending: IdePendingCommand;
+  Cmd: TuiCmdOutput
+): IdeModel;
+begin
+  if IsIdeCommand(Source, Action, DirtySaveControlId(), DirtySaveAction()) then
+  begin
+    return RequestIdeSave(State, Pending, Cmd)
+  end;
+  if IsIdeCommand(Source, Action, DirtyDiscardControlId(), DirtyDiscardAction()) then
+  begin
+    return ResumePending(State, Pending, 'Changes discarded.', Cmd)
+  end;
+  if IsIdeCommand(Source, Action, DirtyCancelControlId(), DirtyCancelAction()) then
+  begin
+    return CloseDialog(State, 'Canceled.')
+  end;
+  return State
+end;
+
+/// Handles actions while a document dialog owns routing.
+
+function UpdateIdeDialogAction(
+  State: IdeModel;
+  Source: TuiControlId;
+  Action: TuiAction;
+  Cmd: TuiCmdOutput
+): IdeModel;
+begin
+  case State.Dialog of
+    IdeDialog.ConfirmDirty(Pending):
+    begin
+      return UpdateDirtyAction(State, Source, Action, Pending, Cmd)
+    end;
+    IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending):
+    begin
+      if IsIdeCommand(Source, Action, DialogAcceptControlId(), DialogAcceptAction()) then
+      begin
+        return AcceptPathDialog(State, Cmd)
+      end;
+      if IsIdeCommand(Source, Action, DialogCancelControlId(), DialogCancelAction()) then
+      begin
+        return CancelIdeDialog(State)
+      end;
+      return State
+    end;
+    IdeDialog.NoDialog:
+    begin
+      return State
+    end
+  end
+end;
+
+/// Builds the initial model and loads a valid optional startup path.
+
+function InitializeIdeDocumentFlow(Arguments: array of string): IdeModel;
+begin
+  if Std.Array.Length(Arguments) = 0 then
+  begin
+    return InitialIdeModel(None)
+  end;
+  if Std.Array.Length(Arguments) > 1 then
+  begin
+    return IdeStateWithMessage(InitialIdeModel(None), 'Expected at most one .fpas path argument.')
+  end;
+  if not Std.Str.EndsWith(Std.Str.ToLower(Arguments[0]), '.fpas') then
+  begin
+    return IdeStateWithMessage(InitialIdeModel(None), 'Startup path must end with .fpas.')
+  end;
+  return OpenPath(InitialIdeModel(None), Arguments[0])
+end;

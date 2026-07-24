@@ -16,6 +16,11 @@ child order toward preferred extents, then distribute remaining cells through
 aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
 `Fill`.
 
+`TextArea` measures to a minimum of one cell, prefers its widest logical line
+and logical-line count, and permits expansion in both axes. A direct `TextArea`
+participates in stable remaining-space distribution, so its arranged bounds
+become its editing viewport.
+
 When a terminal is smaller than the combined minimum, children retain their
 minimum geometry and the canvas clips overflow. `TuiLayoutFitFor` reports that
 condition without changing arranged geometry. `TuiPaintTooSmallOverlay` can
@@ -26,4 +31,5 @@ replace a working surface with a notice.
 - [`Std.Tui`](README.md)
 - [Geometry](geometry.md)
 - [Elements](elements.md)
+- [Text area](text-area.md)
 - [Application](application.md)

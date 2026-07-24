@@ -47,11 +47,11 @@ impl Console {
 
         // Shared-buffer and piped CI writers are not interactive TTYs; skip raw mode there so
         // acquire remains usable in tests while still owning screen/mouse/focus/paste/cursor.
-        if std::io::stdin().is_terminal() {
-            if let Err(error) = key_input.enable_raw_mode_explicit(location) {
-                self.interactive.acquired = false;
-                return Err(error);
-            }
+        if std::io::stdin().is_terminal()
+            && let Err(error) = key_input.enable_raw_mode_explicit(location)
+        {
+            self.interactive.acquired = false;
+            return Err(error);
         }
 
         if let Err(error) = self.enter_alt_screen(location) {

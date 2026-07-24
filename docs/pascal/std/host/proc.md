@@ -4,23 +4,35 @@ Blocking host process execution for FPAS programs. This page is the full API for
 
 ```pascal
 program Example;
-uses Std.Console, Std.Proc, Std.Result;
+uses Std.Console, Std.Proc;
 
 begin
-  var Status: Result of integer, string := Std.Proc.Run('fpas', ['--version']);
-  if Std.Result.IsOk(Status) then
-    WriteLn('exit code: ', Std.Result.Unwrap(Status))
+  case Std.Proc.RunCapture('fpas', ['--version']) of
+    Ok(Output):
+    begin
+      WriteLn(Output.Stdout);
+      WriteLn('exit code: ', Output.ExitCode)
+    end;
+    Error(Message): WriteLn(Message)
+  end
 end.
 ```
 
-`Std.Proc` starts a host process, waits for it to finish, and returns the process exit status. The initial API is intentionally small: it does not expose process handles, stdin/stdout/stderr pipes, environment overrides, or working-directory controls.
+`Std.Proc` starts a host process and waits for it to finish. A call can either
+inherit the parent's output streams or capture stdout and stderr. The unit does
+not expose process handles, stdin, environment overrides, or working-directory
+controls.
 
-**Trust boundary:** `Run` executes arbitrary host commands with the same privileges as the FPAS process. The runtime does not sandbox or validate commands beyond starting the requested executable with the supplied arguments.
+**Trust boundary:** `Run` and `RunCapture` execute arbitrary host commands with
+the same privileges as the FPAS process. The runtime does not sandbox or
+validate commands beyond starting the requested executable with the supplied
+arguments.
 
 
 ## Importing and names
 
-After `uses Std.Proc;` use **`Run`** or the fully qualified form **`Std.Proc.Run`**.
+After `uses Std.Proc;`, public names can be used unqualified or with the
+`Std.Proc.` prefix.
 
 ---
 
@@ -30,15 +42,42 @@ Requires `uses Std.Proc;`.
 
 | Kind | Name | Notes |
 |------|------|-------|
+| record | `ProcessOutput` | captured `ExitCode`, `Stdout`, and `Stderr` |
+| function | `CurrentExecutable(): Result of string, string` | returns the absolute path of the running FPAS host executable |
 | function | `Run(Command: string; Args: array of string): Result of integer, string` | starts a process, waits for completion, and returns the exit code |
+| function | `RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string` | starts a process and captures its exit code and output |
 
 Fallible operations return `Error(message)` with a host error string instead of raising a runtime panic.
 
 ---
 
+## `ProcessOutput`
+
+| Field | Type | Meaning |
+|------|------|---------|
+| `ExitCode` | `integer` | host process exit code, including non-zero codes |
+| `Stdout` | `string` | complete captured standard output |
+| `Stderr` | `string` | complete captured standard error |
+
+Captured byte streams are decoded as UTF-8. Invalid byte sequences are replaced
+with the Unicode replacement character so process completion remains observable.
+
+---
+
+## `function CurrentExecutable(): Result of string, string`
+
+Returns the absolute path of the executable hosting the running FPAS program.
+This allows a tool launched by `fpas` to invoke that same compiler binary.
+
+Returns `Error(message)` if the host cannot determine its executable path.
+
+---
+
 ## Blocking and concurrency
 
-`Run` blocks the thread that executes it until the child process exits. When a call runs inside `go`, it blocks that worker thread only. Combine `go Run(...)` with `Std.Task.Wait` for task-based process workflows.
+`Run` and `RunCapture` block the thread that executes them until the child
+process exits. When a call runs inside `go`, it blocks that worker thread only.
+Combine a process call in `go` with `Std.Task.Wait` for task-based workflows.
 
 ---
 
@@ -53,6 +92,29 @@ if Std.Result.IsError(Status) then
 ```
 
 If the process cannot be started, returns `Error(message)`. If the host reports that the process ended without an exit code, returns `Error('process terminated without an exit code')`.
+
+---
+
+## `function RunCapture(Command: string; Args: array of string): Result of ProcessOutput, string`
+
+Starts `Command` with `Args`, waits for it to finish, and returns
+`Ok(ProcessOutput)` without writing the child's stdout or stderr to the parent
+terminal.
+
+```pascal
+case RunCapture('fpas', ['check', 'main.fpas']) of
+  Ok(Output):
+  begin
+    WriteLn(Output.Stdout);
+    WriteLn(Output.Stderr)
+  end;
+  Error(Message): WriteLn(Message)
+end
+```
+
+A non-zero exit code is a completed process and therefore remains `Ok`; inspect
+`Output.ExitCode` to distinguish command success from command failure. A spawn
+failure or a process termination without an exit code returns `Error(message)`.
 
 ---
 

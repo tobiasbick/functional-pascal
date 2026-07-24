@@ -92,6 +92,10 @@ begin
       AssertEquals(NameChangedActionValue, Action.Value);
       return EditorState(State, Text, Caret, State.Focused, State.ConfirmOpen, State.Saved, State.Quit)
     end;
+    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
+    begin
+      return State
+    end;
     TuiMsg.CheckChanged(Source, Action, Checked):
     begin
       return State

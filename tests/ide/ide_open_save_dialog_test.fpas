@@ -1,0 +1,100 @@
+program IdeOpenSaveDialogTest;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Document.Model, Ide.Test.Files, Std.Option,
+  Std.Str, Std.Test, Std.Tui;
+
+const
+  OpenPath: string := IdeTestScratch + '/dialog_open.fpas';
+  SavePath: string := IdeTestScratch + '/dialog_save.fpas';
+  MissingPath: string := IdeTestScratch + '/dialog_missing.fpas';
+
+function EnterPath(State: IdeModel; Path: string; Cmd: TuiCmdOutput): IdeModel;
+begin
+  return UpdateIde(State, TuiMsgTextChanged(DialogPathControlId(), DialogPathChangedAction(), Path, Std.Str.Length(Path)), Cmd)
+end;
+
+function AcceptPath(State: IdeModel; Cmd: TuiCmdOutput): IdeModel;
+begin
+  return UpdateIde(State, TuiMsgAction(DialogAcceptControlId(), DialogAcceptAction()), Cmd)
+end;
+
+begin
+  EnsureIdeTestScratch();
+  WriteIdeTestFile(OpenPath, 'program Opened;');
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  var Initial: IdeModel := InitialIdeModel(None);
+  var Opening: IdeModel := UpdateIde(Initial, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  case Opening.Dialog of
+    IdeDialog.OpenPath(PathText, Caret):
+    begin
+      AssertEquals('', PathText);
+      AssertEquals(0, Caret)
+    end;
+    IdeDialog.NoDialog, IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      Fail('Open did not show the path dialog')
+    end
+  end;
+  var Opened: IdeModel := AcceptPath(EnterPath(Opening, OpenPath, Cmd), Cmd);
+  AssertEquals('program Opened;', Opened.Document.Text);
+  AssertEquals(Opened.Document.Text, Opened.Document.SavedText);
+  AssertFalse(IsIdeDocumentDirty(Opened.Document));
+  var Reopening: IdeModel := UpdateIde(Opened, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  var FailedOpen: IdeModel := AcceptPath(EnterPath(Reopening, MissingPath, Cmd), Cmd);
+  AssertEquals(Opened.Document.Text, FailedOpen.Document.Text);
+  AssertEquals(Opened.Document.SavedText, FailedOpen.Document.SavedText);
+  AssertEquals(Opened.Document.Caret, FailedOpen.Document.Caret);
+  AssertEquals(Opened.Document.Offset.X, FailedOpen.Document.Offset.X);
+  AssertEquals(Opened.Document.Offset.Y, FailedOpen.Document.Offset.Y);
+  AssertEquals(IdeDocumentPathText(Opened.Document), IdeDocumentPathText(FailedOpen.Document));
+  AssertTrue(Std.Str.Contains(FailedOpen.MessageText, 'Open failed: ' + MissingPath));
+  case FailedOpen.Dialog of
+    IdeDialog.OpenPath(PathText, Caret):
+    begin
+      AssertEquals(MissingPath, PathText)
+    end;
+    IdeDialog.NoDialog, IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      Fail('failed Open closed the path dialog')
+    end
+  end;
+  var Untitled: IdeModel := InitialIdeModel(None);
+  var Edited: IdeModel := UpdateIde(Untitled, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'program Saved;', 14, TuiPoint.Create(0, 0)), Cmd);
+  var SaveAs: IdeModel := UpdateIde(Edited, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
+  case SaveAs.Dialog of
+    IdeDialog.SavePath(PathText, Caret, Pending):
+    begin
+      AssertEquals('', PathText);
+      AssertTrue(Pending = IdePendingCommand.NoPendingCommand)
+    end;
+    IdeDialog.NoDialog, IdeDialog.OpenPath(PathText, Caret), IdeDialog.ConfirmDirty(Pending):
+    begin
+      Fail('untitled Save did not show Save As')
+    end
+  end;
+  var Saved: IdeModel := AcceptPath(EnterPath(SaveAs, SavePath, Cmd), Cmd);
+  AssertEquals('program Saved;', ReadIdeTestFile(SavePath));
+  AssertEquals(Saved.Document.Text, Saved.Document.SavedText);
+  AssertFalse(IsIdeDocumentDirty(Saved.Document));
+  case Saved.Document.Path of
+    Some(Path):
+    begin
+      AssertEquals(SavePath, Path)
+    end;
+    None:
+    begin
+      Fail('Save As did not assign the path')
+    end
+  end;
+  var FailedSave: IdeModel := UpdateIde(Edited, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'still dirty', 11, TuiPoint.Create(1, 0)), Cmd);
+  var FailedSaveDialog: IdeModel := UpdateIde(FailedSave, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
+  var FailedWrite: IdeModel := AcceptPath(EnterPath(FailedSaveDialog, IdeTestScratch, Cmd), Cmd);
+  AssertEquals(FailedSave.Document.Text, FailedWrite.Document.Text);
+  AssertEquals(FailedSave.Document.SavedText, FailedWrite.Document.SavedText);
+  AssertEquals(FailedSave.Document.Caret, FailedWrite.Document.Caret);
+  AssertEquals(FailedSave.Document.Offset.X, FailedWrite.Document.Offset.X);
+  AssertEquals(FailedSave.Document.Offset.Y, FailedWrite.Document.Offset.Y);
+  AssertEquals(IdeDocumentPathText(FailedSave.Document), IdeDocumentPathText(FailedWrite.Document));
+  AssertTrue(Std.Str.Contains(FailedWrite.MessageText, 'Save failed: ' + IdeTestScratch))
+end.

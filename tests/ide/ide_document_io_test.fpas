@@ -1,0 +1,69 @@
+program IdeDocumentIoTest;
+
+uses Ide.Document.Io, Ide.Document.Model, Ide.Test.Files, Std.Str, Std.Test, Std.Tui;
+
+const
+  InputPath: string := IdeTestScratch + '/document_io_input.fpas';
+  OutputPath: string := IdeTestScratch + '/document_io_output.fpas';
+  MissingPath: string := IdeTestScratch + '/document_io_missing.fpas';
+
+begin
+  EnsureIdeTestScratch();
+  WriteIdeTestFile(InputPath, 'program Loaded;');
+  mutable var Loaded: IdeDocument := NewIdeDocument(None);
+  case ReadIdeDocument(InputPath) of
+    Ok(Document):
+    begin
+      Loaded := Document
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  AssertEquals('program Loaded;', Loaded.Text);
+  AssertEquals(Loaded.Text, Loaded.SavedText);
+  AssertEquals(0, Loaded.Caret);
+  AssertFalse(IsIdeDocumentDirty(Loaded));
+  var Edited: IdeDocument := IdeDocumentWithTextArea(Loaded, 'program Saved;', 8, TuiPoint.Create(2, 1));
+  mutable var Saved: IdeDocument := Edited;
+  case WriteIdeDocument(Edited, OutputPath) of
+    Ok(Document):
+    begin
+      Saved := Document
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  AssertEquals('program Saved;', ReadIdeTestFile(OutputPath));
+  AssertEquals(Edited.Text, Saved.SavedText);
+  AssertEquals(8, Saved.Caret);
+  AssertEquals(2, Saved.Offset.X);
+  AssertEquals(1, Saved.Offset.Y);
+  AssertFalse(IsIdeDocumentDirty(Saved));
+  case ReadIdeDocument(MissingPath) of
+    Ok(Document):
+    begin
+      Fail('missing read unexpectedly succeeded')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Open failed: ' + MissingPath))
+    end
+  end;
+  AssertEquals('program Saved;', Saved.Text);
+  case WriteIdeDocument(Edited, IdeTestScratch) of
+    Ok(Document):
+    begin
+      Fail('directory write unexpectedly succeeded')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Save failed: ' + IdeTestScratch))
+    end
+  end;
+  AssertEquals('program Saved;', Edited.Text);
+  AssertEquals('program Loaded;', Edited.SavedText)
+end.

@@ -1,0 +1,37 @@
+/// Filesystem ownership boundary for IDE document operations.
+
+unit Ide.Document.Io;
+
+uses Ide.Document.Model, Std.Fs;
+
+/// Reads one UTF-8 file into a clean document.
+
+function ReadIdeDocument(Path: string): result of IdeDocument, string;
+begin
+  case Std.Fs.ReadText(Path) of
+    Ok(Text):
+    begin
+      return Ok(LoadedIdeDocument(Path, Text))
+    end;
+    Error(Message):
+    begin
+      return Error((('Open failed: ' + Path) + ': ') + Message)
+    end
+  end
+end;
+
+/// Writes the current UTF-8 text and returns the new clean document.
+
+function WriteIdeDocument(Document: IdeDocument; Path: string): result of IdeDocument, string;
+begin
+  case Std.Fs.WriteText(Path, Document.Text) of
+    Ok(_):
+    begin
+      return Ok(SavedIdeDocument(Document, Path))
+    end;
+    Error(Message):
+    begin
+      return Error((('Save failed: ' + Path) + ': ') + Message)
+    end
+  end
+end;

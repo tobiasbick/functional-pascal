@@ -1,0 +1,42 @@
+program IdeSurfaceTest;
+
+uses Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Document.Model, Std.Str, Std.Test, Std.Tui;
+
+procedure AssertSurface(Size: TuiSize; State: IdeModel; ExpectedPath: string);
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(Size);
+  var Final: IdeModel := App.RunIterations(State, UpdateIde, ViewIde, 0, 0);
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Open'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Save'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Check'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Run'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Exit'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(1), ExpectedPath));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(2), 'Editor'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 4), 'Messages'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 3), State.MessageText));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 1), 'clean | Ln 1, Col 1'));
+  AssertEquals(State.Document.Text, Final.Document.Text);
+  App.Close()
+end;
+
+begin
+  AssertSurface(TuiSize.Create(80, 25), InitialIdeModel(None), '(untitled)');
+  AssertSurface(TuiSize.Create(40, 12), InitialIdeModel(Some('small.fpas')), 'small.fpas');
+  var LongMessage: IdeModel := record
+    Document := NewIdeDocument(Some('long.fpas'));
+    Dialog := IdeDialog.NoDialog;
+    MessageText := ('first diagnostic line' + Std.Str.Chr(10)) + 'second clipped line';
+    LastExitCode := Some(1);
+    Focused := None;
+  end;
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var _: IdeModel := App.RunIterations(LongMessage, UpdateIde, ViewIde, 0, 0);
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertTrue(Std.Str.Contains(Surface.LineAt(21), 'Messages'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(22), 'first diagnostic line'));
+  AssertFalse(Std.Str.Contains(Surface.LineAt(23), 'second clipped line'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(24), 'clean | Ln 1, Col 1'));
+  App.Close()
+end.

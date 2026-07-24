@@ -3,7 +3,8 @@ unit Std.Tui.Rendering.Paint;
 uses
   Std.Array, Std.Console, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Surface;
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Surface,
+  Std.Tui.Rendering.TextArea;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -85,6 +86,10 @@ begin
       begin
         TuiPaintTextInBounds(Clipped, Entry.Bounds, '  ' + Text)
       end
+    end;
+    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    begin
+      TuiPaintTextArea(Clipped, Entry.Bounds, Text, Caret, Offset, TuiPaintFocused(Focused, Id))
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin

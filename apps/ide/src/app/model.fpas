@@ -1,0 +1,43 @@
+/// Root model and startup-state construction for the IDE.
+
+unit Ide.App.Model;
+
+uses Ide.Document.Model, Std.Tui;
+
+type
+  /// Command resumed after a dirty-document decision.
+  IdePendingCommand = enum
+    NoPendingCommand;
+    OpenDocument;
+    CheckDocument;
+    RunDocument;
+    ExitApplication;
+  end;
+  /// Modal state owned by the root model.
+  IdeDialog = enum
+    NoDialog;
+    OpenPath(PathText: string; Caret: integer);
+    SavePath(PathText: string; Caret: integer; Pending: IdePendingCommand);
+    ConfirmDirty(Pending: IdePendingCommand);
+  end;
+  /// Complete immutable application state.
+  IdeModel = record
+    Document: IdeDocument;
+    Dialog: IdeDialog;
+    MessageText: string;
+    LastExitCode: option of integer;
+    Focused: option of TuiControlId;
+  end;
+
+/// Creates the clean initial model for an optional source path.
+
+function InitialIdeModel(Path: option of string): IdeModel;
+begin
+  return record
+    Document := NewIdeDocument(Path);
+    Dialog := IdeDialog.NoDialog;
+    MessageText := 'Ready';
+    LastExitCode := None;
+    Focused := None;
+  end
+end;

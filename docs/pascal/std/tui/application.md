@@ -67,11 +67,12 @@ Injected events are FIFO. Pending routed messages are drained before another
 external input is read. Empty routing results do not synthesize a tick. A
 `Quit` command stops before another `View` or paint.
 
-Tab moves through the active focusable subtree. Character and editing keys
-produce controlled `TextChanged` messages; Enter or Space activates a focused
-button. Escape produces `QuitRequested`. Left-button pointer downs hit-test the
-previous arranged frame: focus changes are queued before `Action`, and
-unhandled pointer input remains `TuiMsg.Pointer`.
+Tab moves through the active focusable subtree except when a `TextArea` is
+focused, where it inserts two spaces. Character and editing keys produce
+controlled `TextChanged` or `TextAreaChanged` messages; Enter or Space activates
+a focused button. Escape produces `QuitRequested`. Left-button pointer downs
+hit-test the previous arranged frame: focus changes are queued before an action
+or controlled change, and unhandled pointer input remains `TuiMsg.Pointer`.
 
 `InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
 reaches `Update`. When a dialog is present directly under the desktop, key and
@@ -85,5 +86,6 @@ glyph clears both columns.
 
 - [`Std.Tui`](README.md)
 - [Elements](elements.md)
+- [Text area](text-area.md)
 - [Layout](layout.md)
 - [Testing](../testing/README.md)

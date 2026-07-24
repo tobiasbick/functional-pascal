@@ -294,3 +294,27 @@ fn tui_rejects_invalid_cell_glyphs() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn tui_rejects_text_area_caret_outside_text() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui/text_area_invalid_caret_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "out-of-range Tui text-area caret must fail");
+    assert!(
+        stderr.contains("Tui text area caret must be within its text"),
+        "stderr: {stderr}"
+    );
+}
+
+#[test]
+fn tui_rejects_negative_text_area_offset() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui/text_area_invalid_offset_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "negative Tui text-area offset must fail");
+    assert!(
+        stderr.contains("Tui text area offset must not be negative"),
+        "stderr: {stderr}"
+    );
+}

@@ -70,6 +70,7 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 |---------|---------|
 | `cargo bench-fpas run` | Run the full suite (`vm` + `tui`) |
 | `cargo bench-fpas run --group vm` | VM microbenches only |
+| `cargo bench-fpas run --group concurrency` | Task scheduling benchmark only |
 | `cargo bench-fpas run --group tui` | Headless TUI bench only |
 | `cargo bench-fpas save <label>` | Run and save JSON under `.temp-data/bench/` |
 | `cargo bench-fpas compare <label>` | Re-run and print Δ vs a saved label |
@@ -86,7 +87,7 @@ cargo bench-fpas compare before --fail-on-regression --threshold-pct 10
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `vm` or `tui` (filter with `--group`)
+- `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` file relative to the repo root
 - `args` — arguments after `--` (usually iteration count)
 

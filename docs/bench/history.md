@@ -14,6 +14,25 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-07-25 — baseline for function calls, callbacks, records, Unicode, and tasks
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 7116 | throughput: 7026419 iters/s |
+| array_push | 197 | throughput: 10152284 pushes/s |
+| array_length | 64 | throughput: 7812500 lengths/s |
+| string_concat | 2284 | throughput: 2189141 concats/s |
+| string_length | 57 | throughput: 8771929 lengths/s |
+| function_call | 1098 | throughput: 5464480 calls/s |
+| array_callbacks | 927 | throughput: 10355987 callbacks/s |
+| record_update | 1232 | throughput: 811688 updates/s |
+| unicode_char_at | 987 | throughput: 3039513 chars/s |
+| task_spawn_wait | 574 | throughput: 174216 tasks/s |
+| tui_headless | 10228 | throughput: 48 frames/s |
+
 ## 2026-07-25 — after fused counting for (IncLocal/JumpIfLocal*) + for-in IncLocal/SetLocalPop
 
 - Group: `all`

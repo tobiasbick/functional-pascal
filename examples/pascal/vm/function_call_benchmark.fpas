@@ -1,0 +1,74 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 3000000 }
+{ Guard: target/release/fpas run this-file.fpas -- 3000000 MAX_MILLIS }
+
+program VmFunctionCallBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
+
+const
+  WarmupIterations: integer := 10000;
+
+function Increment(Value: integer): integer;
+begin
+  return Value + 1
+end;
+
+function MakeAdder(Amount: integer): function(Value: integer): integer;
+begin
+  return function(Value: integer): integer begin
+    return Value + Amount
+  end
+end;
+
+function RunCalls(Iterations: integer): integer;
+begin
+  var AddCaptured: function(Value: integer): integer := MakeAdder(1);
+  mutable var Value: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    Value := Increment(Value);
+    Value := AddCaptured(Value)
+  end;
+  return Value
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: function_call_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  mutable var Value: integer := RunCalls(WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Value := RunCalls(Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  var Calls: integer := Iterations * 2;
+  mutable var OpsPerSecond: integer := Calls;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (Calls * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', calls: ') + IntToStr(Calls));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' calls/s');
+  WriteLn('final value: ' + IntToStr(Value));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('function-call benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

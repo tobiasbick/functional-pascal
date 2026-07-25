@@ -1,0 +1,76 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 3000000 }
+{ Guard: target/release/fpas run this-file.fpas -- 3000000 MAX_MILLIS }
+
+program VmUnicodeCharAtBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+
+const
+  WarmupIterations: integer := 10000;
+  PatternRepetitions: integer := 64;
+  PatternLength: integer := 4;
+  TextLength: integer := PatternRepetitions * PatternLength;
+
+function MakeText(): string;
+begin
+  mutable var Text: string := '';
+  for Index: integer := 1 to PatternRepetitions do
+  begin
+    Text := Text + 'aé日😀'
+  end;
+  return Text
+end;
+
+function RunCharAt(Text: string; Iterations: integer): integer;
+begin
+  mutable var Matches: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    if Std.Str.CharAt(Text, Index mod TextLength) = '😀' then
+    begin
+      Matches := Matches + 1
+    end
+  end;
+  return Matches
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: unicode_char_at_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  var Text: string := MakeText();
+  mutable var Matches: integer := RunCharAt(Text, WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Matches := RunCharAt(Text, Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  mutable var OpsPerSecond: integer := Iterations;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (Iterations * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', text length: ') + IntToStr(TextLength));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' chars/s');
+  WriteLn('matches: ' + IntToStr(Matches));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('unicode-char-at benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

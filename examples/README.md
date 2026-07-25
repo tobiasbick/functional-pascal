@@ -95,6 +95,11 @@ target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
 target/release/fpas run examples/pascal/vm/array_length_benchmark.fpas -- 500000
 target/release/fpas run examples/pascal/vm/string_concat_benchmark.fpas -- 5000000
 target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 500000
+target/release/fpas run examples/pascal/vm/function_call_benchmark.fpas -- 3000000
+target/release/fpas run examples/pascal/vm/array_callbacks_benchmark.fpas -- 50000
+target/release/fpas run examples/pascal/vm/record_update_benchmark.fpas -- 1000000
+target/release/fpas run examples/pascal/vm/unicode_char_at_benchmark.fpas -- 3000000
+target/release/fpas run examples/pascal/concurrency/task_spawn_wait_benchmark.fpas -- 100000
 ```
 
 On Windows, invoke `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` turns a slowdown into a panic. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
@@ -155,12 +160,17 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
+| `pascal/concurrency/task_spawn_wait_benchmark.fpas` | Spawn plus `WaitAll` task-scheduling throughput |
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
 | `pascal/vm/string_length_benchmark.fpas` | Repeated `Std.Str.Length` on a long live string |
+| `pascal/vm/function_call_benchmark.fpas` | Direct and captured function-call throughput |
+| `pascal/vm/array_callbacks_benchmark.fpas` | `Map`, `Filter`, and `Reduce` callback throughput |
+| `pascal/vm/record_update_benchmark.fpas` | Record construction, field access, and `with` update throughput |
+| `pascal/vm/unicode_char_at_benchmark.fpas` | `Std.Str.CharAt` throughput over multi-byte Unicode text |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

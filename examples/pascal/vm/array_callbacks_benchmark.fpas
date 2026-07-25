@@ -1,0 +1,90 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 50000 }
+{ Guard: target/release/fpas run this-file.fpas -- 50000 MAX_MILLIS }
+
+program VmArrayCallbacksBenchmark;
+
+uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Time;
+
+const
+  WarmupIterations: integer := 20;
+  ArraySize: integer := 64;
+  CallbacksPerElement: integer := 3;
+
+function Double(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+function IsEven(Value: integer): boolean;
+begin
+  return Value mod 2 = 0
+end;
+
+function Sum(Acc: integer; Value: integer): integer;
+begin
+  return Acc + Value
+end;
+
+function MakeValues(): array of integer;
+begin
+  mutable var Values: array of integer := [];
+  for Index: integer := 1 to ArraySize do
+  begin
+    Std.Array.Push(Values, Index)
+  end;
+  return Values
+end;
+
+function RunCallbacks(Values: array of integer; Iterations: integer): integer;
+begin
+  mutable var Total: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    var Mapped: array of integer := Std.Array.Map(Values, Double);
+    var Filtered: array of integer := Std.Array.Filter(Mapped, IsEven);
+    Total := Total + Std.Array.Reduce(Filtered, 0, Sum)
+  end;
+  return Total
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: array_callbacks_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  var Values: array of integer := MakeValues();
+  mutable var Total: integer := RunCallbacks(Values, WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Total := RunCallbacks(Values, Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  var Callbacks: integer := (Iterations * ArraySize) * CallbacksPerElement;
+  mutable var OpsPerSecond: integer := Callbacks;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (Callbacks * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', callbacks: ') + IntToStr(Callbacks));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s');
+  WriteLn('checksum: ' + IntToStr(Total));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('array-callbacks benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

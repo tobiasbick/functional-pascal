@@ -1,7 +1,7 @@
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, canonical_name, internal_error, runtime_error};
 use fpas_bytecode::{Op, SourceLocation, Value};
-use fpas_diagnostics::codes::RUNTIME_UNDEFINED_GLOBAL;
+use fpas_diagnostics::codes::{RUNTIME_UNDEFINED_GLOBAL, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
 impl Worker {
     pub(super) fn try_exec_stack_scope(
@@ -39,6 +39,42 @@ impl Worker {
                 let val = self.peek(line)?.clone();
                 self.stack[idx] = val;
                 Ok(true)
+            }
+            Op::SetLocalPop(slot) => {
+                let idx = self.local_abs_index(0, slot, line)?;
+                let val = self.pop(line)?;
+                self.stack[idx] = val;
+                Ok(true)
+            }
+            Op::IncLocal(slot) => {
+                let idx = self.local_abs_index(0, slot, line)?;
+                match &mut self.stack[idx] {
+                    Value::Integer(n) => {
+                        *n = n.wrapping_add(1);
+                        Ok(true)
+                    }
+                    other => Err(runtime_error(
+                        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                        format!("IncLocal expects integer local, got {}", other.type_name()),
+                        "Use IncLocal only on integer loop counters.",
+                        line,
+                    )),
+                }
+            }
+            Op::DecLocal(slot) => {
+                let idx = self.local_abs_index(0, slot, line)?;
+                match &mut self.stack[idx] {
+                    Value::Integer(n) => {
+                        *n = n.wrapping_sub(1);
+                        Ok(true)
+                    }
+                    other => Err(runtime_error(
+                        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                        format!("DecLocal expects integer local, got {}", other.type_name()),
+                        "Use DecLocal only on integer loop counters.",
+                        line,
+                    )),
+                }
             }
             Op::GetGlobal(idx) => {
                 let val = {

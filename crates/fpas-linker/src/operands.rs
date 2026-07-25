@@ -17,7 +17,11 @@ pub(super) fn relocate_instruction(
         RelocationKind::CodeAddress { target } => {
             let mapped = code_base.checked_add(target).ok_or(())?;
             match op {
-                Op::Jump(value) | Op::JumpIfFalse(value) | Op::JumpIfTrue(value) => {
+                Op::Jump(value)
+                | Op::JumpIfFalse(value)
+                | Op::JumpIfTrue(value)
+                | Op::JumpIfLocalGt(_, _, value)
+                | Op::JumpIfLocalLt(_, _, value) => {
                     *value = mapped;
                     Ok(())
                 }

@@ -20,6 +20,19 @@ begin
 end;
 ```
 
+## Implementation (contributors)
+
+Counting `for` lowers to fused local opcodes (`IncLocal` / `DecLocal`, `JumpIfLocalGt` /
+`JumpIfLocalLt`) so hot loops avoid stack traffic for the counter and bound test. `for-in`
+uses `IncLocal` / `SetLocalPop` for the index and element store; the bound test stays as
+`LtInt` + `JumpIfFalse`.
+
+| Concern | Location |
+|---------|----------|
+| Lowering | [`for_loops.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/loops/for_loops.rs) |
+| Opcodes | [`op.rs`](../../../../crates/fpas-bytecode/src/op.rs) |
+| VM | [`stack_scope.rs`](../../../../crates/fpas-vm/src/vm/execute/stack_scope.rs), [`control_calls.rs`](../../../../crates/fpas-vm/src/vm/execute/control_calls.rs) |
+
 ## See also
 
 - [For-in](for-in.md)

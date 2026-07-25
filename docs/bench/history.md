@@ -3,6 +3,8 @@
 Committed snapshots from `cargo bench-fpas record`. Absolute times are machine-specific; use them
 to track relative progress on the same machine and to see which changes moved which benches.
 
+Do **not** record hostnames, usernames, paths, or other machine-identifying metadata.
+
 Update after a meaningful performance change:
 
 ```sh
@@ -12,9 +14,22 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-07-25 — after fused counting for (IncLocal/JumpIfLocal*) + for-in IncLocal/SetLocalPop
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6016 | throughput: 8311170 iters/s |
+| array_push | 181 | throughput: 11049723 pushes/s |
+| array_length | 64 | throughput: 7812500 lengths/s |
+| string_concat | 2336 | throughput: 2140410 concats/s |
+| string_length | 56 | throughput: 8928571 lengths/s |
+| tui_headless | 9368 | throughput: 53 frames/s |
+
 ## 2026-07-25 — after SharedStr char_len cache
 
-- Host: local (seeded from full suite run)
 - Group: `all`
 - Suite: [`suite.toml`](suite.toml)
 - Notes: includes prior wins (VM flat dispatch, array Length COW, `SharedStr` Arc sharing, ASCII/`char_len` Length)

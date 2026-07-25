@@ -51,7 +51,11 @@ pub fn collect_relocations(code: &[Op]) -> Vec<Relocation> {
                 push_constant(&mut relocations, instruction, 0, type_index);
                 push_constant(&mut relocations, instruction, 1, variant_index);
             }
-            Op::Jump(target) | Op::JumpIfFalse(target) | Op::JumpIfTrue(target) => {
+            Op::Jump(target)
+            | Op::JumpIfFalse(target)
+            | Op::JumpIfTrue(target)
+            | Op::JumpIfLocalGt(_, _, target)
+            | Op::JumpIfLocalLt(_, _, target) => {
                 relocations.push(Relocation {
                     instruction,
                     kind: RelocationKind::CodeAddress { target },

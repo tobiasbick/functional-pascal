@@ -11,6 +11,12 @@ impl crate::vm::Worker {
         let right = self.pop(location)?;
         let left = self.pop(location)?;
 
+        // Hot path: typed integer ops almost always see Integer×Integer.
+        if let (Value::Integer(left), Value::Integer(right)) = (&left, &right) {
+            let result = f(*left, *right)?;
+            return self.push(result);
+        }
+
         let to_i64 = |value: &Value| -> Option<i64> {
             match value {
                 Value::Integer(number) => Some(*number),

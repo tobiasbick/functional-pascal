@@ -14,6 +14,8 @@ Committed progress over time lives in [`history.md`](history.md). Agent workflow
 
 Do not treat absolute times as portable across machines. Compare before/after on one machine.
 
+Never record hostnames, usernames, paths, or other machine-identifying metadata in [`history.md`](history.md).
+
 ## Track progress (committed history)
 
 After a meaningful performance change, rebuild release `fpas-cli`, then **record** a snapshot into [`history.md`](history.md) (this file is meant to be committed):

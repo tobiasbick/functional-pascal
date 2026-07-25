@@ -74,6 +74,9 @@ impl Worker {
             | Op::Dup
             | Op::GetLocal(_)
             | Op::SetLocal(_)
+            | Op::SetLocalPop(_)
+            | Op::IncLocal(_)
+            | Op::DecLocal(_)
             | Op::GetGlobal(_)
             | Op::SetGlobal(_)
             | Op::GetEnclosing(_, _)
@@ -137,6 +140,8 @@ impl Worker {
             Op::Jump(_)
             | Op::JumpIfFalse(_)
             | Op::JumpIfTrue(_)
+            | Op::JumpIfLocalGt(_, _, _)
+            | Op::JumpIfLocalLt(_, _, _)
             | Op::Call(_, _)
             | Op::CallValue(_) => self.try_exec_control_calls(op, line)?,
 

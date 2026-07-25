@@ -109,6 +109,8 @@ const HISTORY_HEADER: &str = "\
 Committed snapshots from `cargo bench-fpas record`. Absolute times are machine-specific; use them
 to track relative progress on the same machine and to see which changes moved which benches.
 
+Do **not** record hostnames, usernames, paths, or other machine-identifying metadata.
+
 Update after a meaningful performance change:
 
 ```sh
@@ -155,11 +157,9 @@ pub fn record_history(
 
 fn format_history_entry(title: &str, group: Option<&str>, runs: &[BenchRun]) -> String {
     let date = today_iso_date();
-    let host = hostname_label();
     let group_label = group.unwrap_or("all");
     let mut out = String::new();
     out.push_str(&format!("## {date} — {title}\n\n"));
-    out.push_str(&format!("- Host: `{host}`\n"));
     out.push_str(&format!("- Group: `{group_label}`\n"));
     out.push_str("- Suite: [`suite.toml`](suite.toml)\n\n");
     out.push_str("| bench | elapsed_ms | throughput |\n");
@@ -230,12 +230,6 @@ fn civil_from_days(days_since_epoch: i64) -> (i32, u32, u32) {
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let year = if m <= 2 { y + 1 } else { y };
     (year as i32, m as u32, d as u32)
-}
-
-fn hostname_label() -> String {
-    std::env::var("COMPUTERNAME")
-        .or_else(|_| std::env::var("HOSTNAME"))
-        .unwrap_or_else(|_| "unknown".to_owned())
 }
 
 /// Comparison row for console output.

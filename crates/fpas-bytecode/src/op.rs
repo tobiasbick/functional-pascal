@@ -21,6 +21,12 @@ pub enum Op {
     GetLocal(u16),
     /// Store top-of-stack into local variable slot (does not pop).
     SetLocal(u16),
+    /// Store top-of-stack into local variable slot and pop it.
+    SetLocalPop(u16),
+    /// Increment an integer local by 1 in place (for-loop step).
+    IncLocal(u16),
+    /// Decrement an integer local by 1 in place (for-loop downto step).
+    DecLocal(u16),
 
     // ── Globals ─────────────────────────────────────────────
     /// Load global variable by constant-pool index (name).
@@ -116,6 +122,10 @@ pub enum Op {
     JumpIfFalse(u32),
     /// Pop top; jump if true.
     JumpIfTrue(u32),
+    /// Jump if integer local `a` is greater than integer local `b` (for `to` exit).
+    JumpIfLocalGt(u16, u16, u32),
+    /// Jump if integer local `a` is less than integer local `b` (for `downto` exit).
+    JumpIfLocalLt(u16, u16, u32),
 
     // ── Functions ───────────────────────────────────────────
     /// Call function/procedure at constant-pool index (name), with arg_count args on stack.

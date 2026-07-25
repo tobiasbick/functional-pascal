@@ -63,6 +63,12 @@ impl Worker {
                 }
                 Ok(true)
             }
+            Op::JumpIfLocalGt(a, b, addr) => {
+                self.jump_if_local_cmp(a, b, addr, line, |left, right| left > right)
+            }
+            Op::JumpIfLocalLt(a, b, addr) => {
+                self.jump_if_local_cmp(a, b, addr, line, |left, right| left < right)
+            }
             Op::Call(name_idx, argc) => {
                 let name = self.const_str(name_idx, line)?;
                 self.call_named_function(&name, argc, line)?;
@@ -96,6 +102,69 @@ impl Worker {
             }
             _ => Ok(false),
         }
+    }
+
+    fn jump_if_local_cmp(
+        &mut self,
+        slot_a: u16,
+        slot_b: u16,
+        addr: u32,
+        line: SourceLocation,
+        pred: impl FnOnce(i64, i64) -> bool,
+    ) -> Result<bool, VmError> {
+        let idx_a = self.local_abs_index(0, slot_a, line)?;
+        let idx_b = self.local_abs_index(0, slot_b, line)?;
+        let left = match self.stack.get(idx_a) {
+            Some(Value::Integer(n)) => *n,
+            Some(other) => {
+                return Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!("local compare expects integer, got {}", other.type_name()),
+                    "Use JumpIfLocal* only on integer locals.",
+                    line,
+                ));
+            }
+            None => {
+                return Err(internal_error(
+                    "local compare index out of range",
+                    "This indicates invalid bytecode or a VM bug. Please report it.",
+                    line,
+                ));
+            }
+        };
+        let right = match self.stack.get(idx_b) {
+            Some(Value::Integer(n)) => *n,
+            Some(other) => {
+                return Err(runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    format!("local compare expects integer, got {}", other.type_name()),
+                    "Use JumpIfLocal* only on integer locals.",
+                    line,
+                ));
+            }
+            None => {
+                return Err(internal_error(
+                    "local compare index out of range",
+                    "This indicates invalid bytecode or a VM bug. Please report it.",
+                    line,
+                ));
+            }
+        };
+        if pred(left, right) {
+            let target = addr as usize;
+            if target >= self.shared.chunk.code().len() {
+                return Err(internal_error(
+                    format!(
+                        "JumpIfLocal* target {target} is out of bounds (code len {})",
+                        self.shared.chunk.code().len()
+                    ),
+                    "This indicates malformed bytecode or a compiler control-flow bug. Please report it.",
+                    line,
+                ));
+            }
+            self.ip = target;
+        }
+        Ok(true)
     }
 
     fn call_named_function(

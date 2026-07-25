@@ -191,6 +191,10 @@ impl Chunk {
                 *addr = target;
                 Ok(())
             }
+            Some(Op::JumpIfLocalGt(_, _, addr) | Op::JumpIfLocalLt(_, _, addr)) => {
+                *addr = target;
+                Ok(())
+            }
             Some(op) => Err(ChunkError::NonJumpInstruction {
                 offset,
                 opcode: *op,

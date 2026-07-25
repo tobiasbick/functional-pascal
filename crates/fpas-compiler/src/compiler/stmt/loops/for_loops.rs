@@ -23,27 +23,21 @@ impl Compiler {
         let loop_start = self.chunk.len();
         self.push_loop_context();
 
-        self.emit(Op::GetLocal(var_slot), location);
-        self.emit(Op::GetLocal(end_slot), location);
-        match direction {
-            ForDirection::To => self.emit(Op::LeInt, location),
-            ForDirection::Downto => self.emit(Op::GeInt, location),
+        // Exit when the counting variable is past the end bound (one fused local compare+jump).
+        let exit_jump = match direction {
+            ForDirection::To => self.emit(Op::JumpIfLocalGt(var_slot, end_slot, 0), location),
+            ForDirection::Downto => self.emit(Op::JumpIfLocalLt(var_slot, end_slot, 0), location),
         };
-        let exit_jump = self.emit(Op::JumpIfFalse(0), location);
 
         self.compile_stmt(body)?;
 
         let increment_start = self.chunk.len() as u32;
         self.patch_continues(increment_start, location)?;
 
-        self.emit(Op::GetLocal(var_slot), location);
-        self.emit_constant(Value::Integer(1), location)?;
         match direction {
-            ForDirection::To => self.emit(Op::AddInt, location),
-            ForDirection::Downto => self.emit(Op::SubInt, location),
+            ForDirection::To => self.emit(Op::IncLocal(var_slot), location),
+            ForDirection::Downto => self.emit(Op::DecLocal(var_slot), location),
         };
-        self.emit(Op::SetLocal(var_slot), location);
-        self.emit(Op::Pop, location);
 
         self.emit(Op::Jump(loop_start as u32), location);
 
@@ -98,19 +92,14 @@ impl Compiler {
         self.emit(Op::GetLocal(arr_slot), location);
         self.emit(Op::GetLocal(idx_slot), location);
         self.emit(Op::IndexGet, location);
-        self.emit(Op::SetLocal(var_slot), location);
-        self.emit(Op::Pop, location);
+        self.emit(Op::SetLocalPop(var_slot), location);
 
         self.compile_stmt(body)?;
 
         let increment_start = self.chunk.len() as u32;
         self.patch_continues(increment_start, location)?;
 
-        self.emit(Op::GetLocal(idx_slot), location);
-        self.emit_constant(Value::Integer(1), location)?;
-        self.emit(Op::AddInt, location);
-        self.emit(Op::SetLocal(idx_slot), location);
-        self.emit(Op::Pop, location);
+        self.emit(Op::IncLocal(idx_slot), location);
 
         self.emit(Op::Jump(loop_start as u32), location);
 

@@ -2,7 +2,7 @@
 name: fpas-bench
 description: >
   Runs and records Functional Pascal performance benchmarks with cargo bench-fpas, including
-  before/after compare and committed history.md entries with a short note of what changed.
+  before/after compare, committed history.md notes, and adding new suite benches when useful.
   Use when optimizing VM/runtime/stdlib performance, proposing or measuring speedups, running
   benches, or when the user mentions bench, benchmark, history.md, throughput, or regression.
 ---
@@ -52,6 +52,19 @@ Writes `.temp-data/bench/before.json` (not committed).
 
 - Prefer a short proposal when the user asked to propose first; implement after “go”.
 - Touch only what the speedup needs. Match AGENTS.md / change-checklist for docs/tests.
+- **New benchmarks are allowed** when they isolate a hot path the suite does not cover yet (see below).
+
+### New benchmarks
+
+Add a new `*_benchmark.fpas` when it is an advantage — e.g. the existing suite cannot show the win, or a distinct bottleneck needs its own before/after.
+
+When adding one:
+
+1. Put it under `examples/pascal/` by theme (`vm/`, `tui/`, …), same style as existing benches (`MonotonicMillis`, optional `MAX_MILLIS`).
+2. Register it in [`docs/bench/suite.toml`](../../../docs/bench/suite.toml) (`id`, `group`, `path`, `args`) when it should run in the harness.
+3. Mention it in [`docs/bench/README.md`](../../../docs/bench/README.md) / examples README only if useful; keep suite.toml authoritative.
+4. Baseline with `save` **after** the new bench exists (or record a first history row that introduces it) so later compares are meaningful.
+5. Do not add benches that hang, sleep long, or need interactive input to the default suite.
 
 ### 3 — Rebuild
 
@@ -89,7 +102,7 @@ cargo bench-fpas record "after SharedStr char_len cache"
 cargo bench-fpas record "after flat VM Op dispatch" --group vm
 ```
 
-- Prepends a dated section to `docs/bench/history.md`
+- Prepends a dated section to `docs/bench/history.md` (date, group, note, timings only — **no host/user/path**)
 - Commit `docs/bench/history.md` with the perf change (when the user asks to commit)
 - Do not record noisy flailing runs; record the settled after-state
 
@@ -116,5 +129,9 @@ Include:
 2. Always **record** a settled win with a **short note of what changed** so history stays auditable.
 3. Watch for **collateral regressions** on other benches in the same compare/record table.
 4. Absolute times are machine-specific; compare on the same machine and power settings.
-5. Excluded from default suite: `task_memory_benchmark.fpas` (memory/sleep focus).
-6. Link detail to `docs/bench/`; do not duplicate suite arg tables in this skill.
+5. **Never** write hostnames, usernames, home paths, or other machine-identifying metadata into `history.md`, skills, docs, commits, or reports.
+6. **Create new benchmarks** when they better expose the hotspot; register useful ones in `suite.toml`.
+7. Excluded from default suite: `task_memory_benchmark.fpas` (memory/sleep focus).
+8. Link detail to `docs/bench/`; do not duplicate suite arg tables in this skill.
+9. This is a **hobby project**: Rust/runtime/tooling may be rebuilt freely when it helps. **FPAS language** semantics/syntax change **only after explicit user agreement**.
+

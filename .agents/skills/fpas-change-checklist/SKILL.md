@@ -12,6 +12,10 @@ description: >
 
 Apply on every task that touches behavior, public API, or user-visible diagnostics — not only when the user mentions docs or tests.
 
+**Language gate:** Changes to FPAS language syntax/semantics (or normative `docs/pascal/language/…`) need **explicit user agreement** before implementation. Runtime/tooling refactors that preserve language behavior do not.
+
+Never commit hostnames, usernames, home paths, or other machine-identifying metadata.
+
 ## Step 1 — Classify the change
 
 | Kind | Typical touch points |

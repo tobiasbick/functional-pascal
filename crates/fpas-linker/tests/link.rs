@@ -62,6 +62,57 @@ fn linker_rebases_jumps_functions_and_constant_indices() {
 }
 
 #[test]
+fn linker_rebases_every_constant_operand_shape() {
+    let prefix = object(
+        "prefix",
+        vec![Op::Unit, Op::Halt],
+        vec![ObjectConstant::String("prefix".to_string())],
+    );
+    let unit = object(
+        "unit",
+        vec![
+            Op::GetGlobal(0),
+            Op::SetGlobal(0),
+            Op::GlobalIndexSet(0, 2),
+            Op::Call(0, 1),
+            Op::MakeClosure(0, 0),
+            Op::MakeRecord(0, 1),
+            Op::FieldGet(0),
+            Op::FieldSet(0),
+            Op::MakeEnum(0, 1, 0),
+            Op::IsVariant(0, 1),
+            Op::Halt,
+        ],
+        vec![
+            ObjectConstant::String("demo.name".to_string()),
+            ObjectConstant::String("Demo.Variant".to_string()),
+        ],
+    );
+    let program = object("program", vec![Op::Halt], Vec::new());
+
+    let linked = link_objects(&[prefix, unit], &program).expect("linking");
+
+    assert_eq!(
+        linked.code(),
+        &[
+            Op::Unit,
+            Op::GetGlobal(1),
+            Op::SetGlobal(1),
+            Op::GlobalIndexSet(1, 2),
+            Op::Call(1, 1),
+            Op::MakeClosure(1, 0),
+            Op::MakeRecord(1, 1),
+            Op::FieldGet(1),
+            Op::FieldSet(1),
+            Op::MakeEnum(1, 2, 0),
+            Op::IsVariant(1, 2),
+            Op::Halt,
+        ]
+    );
+    assert_eq!(linked.constants().len(), 3);
+}
+
+#[test]
 fn startup_sections_are_concatenated_dependency_first_with_one_halt() {
     let first = object("first", vec![Op::Unit, Op::Halt], Vec::new());
     let second = object("second", vec![Op::Pop, Op::Halt], Vec::new());
@@ -118,5 +169,82 @@ fn duplicate_definitions_are_rejected_case_insensitively() {
     assert!(matches!(
         link_objects(&[first, second], &program),
         Err(LinkError::DuplicateDefinition(_))
+    ));
+}
+
+#[test]
+fn missing_program_code_is_rejected_before_linking_units() {
+    let program = object("program", Vec::new(), Vec::new());
+
+    assert!(matches!(
+        link_objects(&[], &program),
+        Err(LinkError::MissingProgram)
+    ));
+}
+
+#[test]
+fn internal_halt_in_a_startup_section_is_rejected() {
+    let unit = object("unit", vec![Op::Halt, Op::Unit, Op::Halt], Vec::new());
+    let program = object("program", vec![Op::Halt], Vec::new());
+
+    assert!(matches!(
+        link_objects(&[unit], &program),
+        Err(LinkError::InvalidObject { detail, .. }) if detail.contains("internal Halt")
+    ));
+}
+
+#[test]
+fn invalid_object_structure_is_reported_with_its_owner() {
+    let mut unit = object("broken.unit", vec![Op::Halt], Vec::new());
+    unit.locations.clear();
+    let program = object("program", vec![Op::Halt], Vec::new());
+
+    assert!(matches!(
+        link_objects(&[unit], &program),
+        Err(LinkError::InvalidObject { owner, detail })
+            if owner == "broken.unit" && detail.contains("LocationCount")
+    ));
+}
+
+#[test]
+fn public_matching_import_is_linked() {
+    let mut unit = object("unit", vec![Op::Halt], Vec::new());
+    unit.definitions.push(ObjectDefinition {
+        name: "unit.run".to_string(),
+        kind: DefinitionKind::Callable,
+        public: true,
+    });
+    let mut program = object("program", vec![Op::Halt], Vec::new());
+    program.imports.push(ObjectImport {
+        name: "UNIT.RUN".to_string(),
+        kind: DefinitionKind::Callable,
+    });
+
+    assert!(link_objects(&[unit], &program).is_ok());
+}
+
+#[test]
+fn duplicate_callable_names_are_rejected_case_insensitively() {
+    let mut first = object("first", vec![Op::Unit, Op::Halt], Vec::new());
+    first.functions.insert(
+        "Demo.Run".to_string(),
+        ObjectFunction {
+            code_start: 0,
+            arity: 0,
+        },
+    );
+    let mut second = object("second", vec![Op::Unit, Op::Halt], Vec::new());
+    second.functions.insert(
+        "demo.run".to_string(),
+        ObjectFunction {
+            code_start: 0,
+            arity: 0,
+        },
+    );
+    let program = object("program", vec![Op::Halt], Vec::new());
+
+    assert!(matches!(
+        link_objects(&[first, second], &program),
+        Err(LinkError::DuplicateFunction(name)) if name == "demo.run"
     ));
 }

@@ -188,6 +188,28 @@ mod tests {
     }
 
     #[test]
+    fn diagnostic_code_stage_respects_every_range_boundary() {
+        for (code, stage) in [
+            (12, DiagnosticStage::Lex),
+            (13, DiagnosticStage::Internal),
+            (1001, DiagnosticStage::Parse),
+            (1999, DiagnosticStage::Parse),
+            (2000, DiagnosticStage::Internal),
+            (2001, DiagnosticStage::Sema),
+            (2999, DiagnosticStage::Sema),
+            (3000, DiagnosticStage::Internal),
+            (3001, DiagnosticStage::Compile),
+            (3999, DiagnosticStage::Compile),
+            (4000, DiagnosticStage::Internal),
+            (4001, DiagnosticStage::Runtime),
+            (4999, DiagnosticStage::Runtime),
+            (5000, DiagnosticStage::Internal),
+        ] {
+            assert_eq!(DiagnosticCode::new(code).stage(), stage);
+        }
+    }
+
+    #[test]
     fn diagnostic_stage_is_derived_from_code() {
         let diagnostic = Diagnostic::error(
             DiagnosticCode::new(3003),

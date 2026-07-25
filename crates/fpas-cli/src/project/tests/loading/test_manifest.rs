@@ -62,3 +62,50 @@ script = "demo.script.toml"
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
     assert!(error.contains("must not define `[test]`"));
 }
+
+#[test]
+fn test_project_rejects_empty_override_table() {
+    let dir = create_temp_dir("test-manifest-empty-override");
+    let project_file = dir.join("tests.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "tests"
+kind = "test"
+
+[sources]
+include = ["*.fpas"]
+
+[test.overrides."alpha_test.fpas"]
+"#,
+    );
+    write_text(&dir.join("alpha_test.fpas"), "program A;\nbegin\nend.\n");
+
+    let error = load_project_error(&project_file, "empty test override must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(error.contains("must set `script` and/or `headless_graph`"));
+}
+
+#[test]
+fn test_project_rejects_override_for_unknown_source_file() {
+    let dir = create_temp_dir("test-manifest-unknown-override");
+    let project_file = dir.join("tests.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "tests"
+kind = "test"
+
+[sources]
+include = ["*.fpas"]
+
+[test.overrides."missing_test.fpas"]
+headless_graph = true
+"#,
+    );
+    write_text(&dir.join("alpha_test.fpas"), "program A;\nbegin\nend.\n");
+
+    let error = load_project_error(&project_file, "unknown test override must fail");
+    fs::remove_dir_all(&dir).expect("temp directory must be removed");
+    assert!(error.contains("does not match any project source file"));
+}

@@ -64,3 +64,29 @@ pub(crate) fn validate_project_test_sources(
 
     Ok(validated)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::is_test_source_file;
+    use std::path::Path;
+
+    #[test]
+    fn recognizes_test_file_names_case_insensitively() {
+        assert!(is_test_source_file(Path::new("feature_TEST.FPAS")));
+    }
+
+    #[test]
+    fn rejects_the_suffix_without_a_test_name() {
+        assert!(!is_test_source_file(Path::new("_test.fpas")));
+    }
+
+    #[test]
+    fn rejects_non_test_pascal_file_names() {
+        assert!(!is_test_source_file(Path::new("feature.fpas")));
+    }
+
+    #[test]
+    fn rejects_test_suffixes_with_a_different_extension() {
+        assert!(!is_test_source_file(Path::new("feature_test.pas")));
+    }
+}

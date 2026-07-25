@@ -262,6 +262,85 @@ mod tests {
     }
 
     #[test]
+    fn partial_eq_compares_enum_fields_structurally() {
+        let left = Value::Enum {
+            type_name: "Result".to_string(),
+            variant: "Ok".to_string(),
+            fields: vec![Value::Array(vec![Value::Integer(1)].into())],
+        };
+        let right = Value::Enum {
+            type_name: "Result".to_string(),
+            variant: "Ok".to_string(),
+            fields: vec![Value::Array(vec![Value::Integer(1)].into())],
+        };
+
+        assert_eq!(left, right);
+    }
+
+    #[test]
+    fn partial_eq_preserves_dict_and_record_field_order() {
+        let dict = Value::Dict(vec![
+            (Value::Str("name".to_string()), Value::Integer(1)),
+            (Value::Str("age".to_string()), Value::Integer(2)),
+        ]);
+        let reordered_dict = Value::Dict(vec![
+            (Value::Str("age".to_string()), Value::Integer(2)),
+            (Value::Str("name".to_string()), Value::Integer(1)),
+        ]);
+        let record = Value::Record {
+            type_name: "Demo.Point".to_string(),
+            fields: vec![
+                ("x".to_string(), Value::Integer(1)),
+                ("y".to_string(), Value::Integer(2)),
+            ],
+        };
+        let reordered_record = Value::Record {
+            type_name: "Demo.Point".to_string(),
+            fields: vec![
+                ("y".to_string(), Value::Integer(2)),
+                ("x".to_string(), Value::Integer(1)),
+            ],
+        };
+
+        assert_ne!(dict, reordered_dict);
+        assert_ne!(record, reordered_record);
+    }
+
+    #[test]
+    fn partial_eq_compares_function_captures_and_task_binding() {
+        let left = Value::Function {
+            name: "demo.run".to_string(),
+            captures: vec![Value::Integer(1)],
+            task_bound: false,
+        };
+        let right = Value::Function {
+            name: "demo.run".to_string(),
+            captures: vec![Value::Integer(1)],
+            task_bound: false,
+        };
+        let task_bound = Value::Function {
+            name: "demo.run".to_string(),
+            captures: vec![Value::Integer(1)],
+            task_bound: true,
+        };
+
+        assert_eq!(left, right);
+        assert_ne!(right, task_bound);
+    }
+
+    #[test]
+    fn partial_eq_compares_cells_by_shared_allocation() {
+        let cell = std::sync::Arc::new(std::sync::Mutex::new(Value::Integer(1)));
+        let same_cell = Value::Cell(cell.clone());
+        let different_cell = Value::Cell(std::sync::Arc::new(std::sync::Mutex::new(
+            Value::Integer(1),
+        )));
+
+        assert_eq!(Value::Cell(cell), same_cell);
+        assert_ne!(same_cell, different_cell);
+    }
+
+    #[test]
     fn shared_arrays_copy_only_when_mutated() {
         let original = SharedArray::from(vec![Value::Integer(1)]);
         let mut updated = original.clone();

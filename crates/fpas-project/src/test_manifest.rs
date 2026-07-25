@@ -136,7 +136,12 @@ pub(super) fn parse_test_section(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{
+        TestFileOverride, TestFileOverrideRaw, TestManifest, TestSectionRaw, parse_test_section,
+    };
+    use crate::ProjectKind;
+    use std::collections::HashMap;
+    use std::path::{Path, PathBuf};
 
     #[test]
     fn override_for_matches_basename_case_insensitively() {
@@ -155,6 +160,69 @@ mod tests {
                 .override_for(Path::new("dir/ALPHA_test.fpas"))
                 .and_then(|value| value.headless_graph),
             Some(true)
+        );
+    }
+
+    #[test]
+    fn empty_test_section_has_no_overrides() {
+        let result = parse_test_section(
+            ProjectKind::Test,
+            Some(TestSectionRaw {
+                overrides: HashMap::new(),
+            }),
+            &[],
+            Path::new("."),
+            Path::new("tests.fpasprj"),
+        );
+
+        assert_eq!(result, Ok(TestManifest::default()));
+    }
+
+    #[test]
+    fn test_overrides_are_rejected_for_non_test_projects() {
+        let result = parse_test_section(
+            ProjectKind::Program,
+            Some(TestSectionRaw {
+                overrides: HashMap::new(),
+            }),
+            &[],
+            Path::new("."),
+            Path::new("demo.fpasprj"),
+        );
+
+        assert!(matches!(result, Err(error) if error.contains("must not define `[test]`")));
+    }
+
+    #[test]
+    fn duplicate_override_names_differing_only_by_case_are_rejected() {
+        let source = PathBuf::from("alpha_test.fpas");
+        let result = parse_test_section(
+            ProjectKind::Test,
+            Some(TestSectionRaw {
+                overrides: HashMap::from([
+                    (
+                        "alpha_test.fpas".to_string(),
+                        TestFileOverrideRaw {
+                            script: None,
+                            headless_graph: Some(true),
+                        },
+                    ),
+                    (
+                        "ALPHA_TEST.FPAS".to_string(),
+                        TestFileOverrideRaw {
+                            script: None,
+                            headless_graph: Some(false),
+                        },
+                    ),
+                ]),
+            }),
+            &[source],
+            Path::new("."),
+            Path::new("tests.fpasprj"),
+        );
+
+        assert!(
+            matches!(result, Err(error) if error.contains("Duplicate `[test.overrides]` entry"))
         );
     }
 }

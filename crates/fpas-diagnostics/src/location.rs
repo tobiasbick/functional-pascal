@@ -123,4 +123,10 @@ mod tests {
     fn source_location_rejects_zero_line() {
         let _ = SourceLocation::new(0, 1);
     }
+
+    #[test]
+    #[should_panic(expected = "source column must be 1-based")]
+    fn source_location_rejects_zero_column() {
+        let _ = SourceLocation::new(1, 0);
+    }
 }

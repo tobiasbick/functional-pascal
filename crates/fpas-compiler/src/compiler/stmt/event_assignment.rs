@@ -43,7 +43,7 @@ impl Compiler {
             self.emit(Op::MakeSome, location);
         }
         let setter = self.qualify_name(&info.setter_name).to_string();
-        let name_idx = self.add_constant(Value::Str(setter), location)?;
+        let name_idx = self.add_constant(Value::Str(setter.into()), location)?;
         self.emit(Op::Call(name_idx, 2), location);
         self.emit(Op::Pop, location);
         Ok(())

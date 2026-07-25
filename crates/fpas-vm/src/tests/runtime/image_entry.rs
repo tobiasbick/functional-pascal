@@ -7,18 +7,18 @@ use fpas_bytecode::{Chunk, Op, Value};
 #[test]
 fn image_entry_runs_initialization_and_keeps_vm_output_isolated() {
     let mut chunk = Chunk::new();
-    emit_constant(&mut chunk, Value::Str("init".to_string()));
+    emit_constant(&mut chunk, Value::Str(("init".to_string()).into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 
     let first_entry = chunk.len();
-    emit_constant(&mut chunk, Value::Str("first".to_string()));
+    emit_constant(&mut chunk, Value::Str(("first".to_string()).into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Unit, loc());
     chunk.emit(Op::Return, loc());
 
     let second_entry = chunk.len();
-    emit_constant(&mut chunk, Value::Str("second".to_string()));
+    emit_constant(&mut chunk, Value::Str(("second".to_string()).into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Unit, loc());
     chunk.emit(Op::Return, loc());

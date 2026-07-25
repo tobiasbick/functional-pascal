@@ -79,7 +79,7 @@ impl Worker {
         Value::Record {
             type_name: CELL_TYPE.into(),
             fields: vec![
-                ("glyph".into(), Value::Str(cell.glyph)),
+                ("glyph".into(), Value::Str(cell.glyph.into())),
                 (
                     "foreground".into(),
                     Self::console_color_record(cell.foreground),
@@ -138,7 +138,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<String, VmError> {
         match self.pop(line)? {
-            Value::Str(text) => Ok(text),
+            Value::Str(text) => Ok(text.into()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected string, got {}", other.type_name()),
@@ -181,7 +181,7 @@ impl Worker {
 fn console_cell_from_value(value: &Value, line: SourceLocation) -> Result<ConsoleCell, VmError> {
     let fields = record_fields(value, CELL_TYPE, line)?;
     let glyph = match field(fields, "glyph", CELL_TYPE, line)? {
-        Value::Str(glyph) => glyph.clone(),
+        Value::Str(glyph) => glyph.to_string(),
         other => {
             return Err(field_type_error(CELL_TYPE, "glyph", "string", other, line));
         }

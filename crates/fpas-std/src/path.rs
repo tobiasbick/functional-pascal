@@ -23,23 +23,23 @@ pub(crate) fn run(
                 let segment = value_as_string_for_join(&value, location)?;
                 buf.push(segment);
             }
-            stack.push(Value::Str(buf.to_string_lossy().into_owned()));
+            stack.push(Value::Str(buf.to_string_lossy().into_owned().into()));
         }
         Intrinsic::Path(PathIntrinsic::BaseName) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(base_name(&path)));
+            stack.push(Value::Str(base_name(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::DirName) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(dir_name(&path)));
+            stack.push(Value::Str(dir_name(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Extension) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(extension(&path)));
+            stack.push(Value::Str(extension(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Normalize) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(normalize_path(&path)));
+            stack.push(Value::Str(normalize_path(&path).into()));
         }
         _ => return Ok(None),
     }
@@ -153,14 +153,14 @@ mod tests {
             .join("file.txt")
             .to_string_lossy()
             .into_owned();
-        assert_eq!(stack, vec![Value::Str(expected)]);
+        assert_eq!(stack, vec![Value::Str(expected.into())]);
     }
 
     #[test]
     fn join_empty_array_returns_empty_string() {
         let mut stack = vec![Value::Array(vec![].into())];
         run_path(PathIntrinsic::Join, &mut stack);
-        assert_eq!(stack, vec![Value::Str(String::new())]);
+        assert_eq!(stack, vec![Value::Str(String::new().into())]);
     }
 
     #[test]
@@ -176,7 +176,7 @@ mod tests {
         {
             let mut stack = vec![Value::Str("dir/nested/".into())];
             run_path(PathIntrinsic::BaseName, &mut stack);
-            assert_eq!(stack, vec![Value::Str(String::new())]);
+            assert_eq!(stack, vec![Value::Str((String::new()).into())]);
         }
     }
 
@@ -201,7 +201,7 @@ mod tests {
     fn dir_name_returns_empty_for_rootless_file_name() {
         let mut stack = vec![Value::Str("file.txt".into())];
         run_path(PathIntrinsic::DirName, &mut stack);
-        assert_eq!(stack, vec![Value::Str(String::new())]);
+        assert_eq!(stack, vec![Value::Str(String::new().into())]);
     }
 
     #[test]
@@ -215,7 +215,7 @@ mod tests {
     fn extension_returns_empty_when_missing() {
         let mut stack = vec![Value::Str("README".into())];
         run_path(PathIntrinsic::Extension, &mut stack);
-        assert_eq!(stack, vec![Value::Str(String::new())]);
+        assert_eq!(stack, vec![Value::Str(String::new().into())]);
     }
 
     #[test]
@@ -223,7 +223,7 @@ mod tests {
         let mut stack = vec![Value::Str("a/./b".into())];
         run_path(PathIntrinsic::Normalize, &mut stack);
         let expected = PathBuf::from("a").join("b").to_string_lossy().into_owned();
-        assert_eq!(stack, vec![Value::Str(expected)]);
+        assert_eq!(stack, vec![Value::Str(expected.into())]);
     }
 
     #[test]
@@ -231,7 +231,7 @@ mod tests {
         let mut stack = vec![Value::Str("a/b/../c".into())];
         run_path(PathIntrinsic::Normalize, &mut stack);
         let expected = PathBuf::from("a").join("c").to_string_lossy().into_owned();
-        assert_eq!(stack, vec![Value::Str(expected)]);
+        assert_eq!(stack, vec![Value::Str(expected.into())]);
     }
 
     #[test]
@@ -249,7 +249,7 @@ mod tests {
             .join("..")
             .to_string_lossy()
             .into_owned();
-        assert_eq!(stack, vec![Value::Str(expected)]);
+        assert_eq!(stack, vec![Value::Str(expected.into())]);
     }
 
     #[cfg(windows)]

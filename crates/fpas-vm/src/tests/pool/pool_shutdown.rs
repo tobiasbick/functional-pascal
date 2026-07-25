@@ -10,7 +10,7 @@ use crate::tests::helpers::{emit_constant, loc};
 #[test]
 fn pool_tasks_stop_without_side_effects_after_abort_flag() {
     let mut chunk = Chunk::new();
-    emit_constant(&mut chunk, Value::Str("late".to_string()));
+    emit_constant(&mut chunk, Value::Str(("late".to_string()).into()));
     chunk.emit(Op::PrintLn, loc());
     chunk.emit(Op::Halt, loc());
 

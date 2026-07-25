@@ -18,7 +18,7 @@ fn nested_array() -> Value {
 fn global_index_set_updates_a_nested_array() {
     let mut chunk = Chunk::new();
     let name_idx = chunk
-        .add_constant(Value::Str("Grid".to_owned()))
+        .add_constant(Value::Str(("Grid".to_owned()).into()))
         .expect("constant should fit in test chunk");
 
     emit_constant(&mut chunk, nested_array());
@@ -44,7 +44,7 @@ fn global_index_set_updates_a_nested_array() {
 fn global_index_set_preserves_value_copy_semantics() {
     let mut chunk = Chunk::new();
     let name_idx = chunk
-        .add_constant(Value::Str("Numbers".to_owned()))
+        .add_constant(Value::Str(("Numbers".to_owned()).into()))
         .expect("constant should fit in test chunk");
 
     emit_constant(

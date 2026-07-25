@@ -81,15 +81,15 @@ impl Worker {
         match intrinsic {
             Intrinsic::Console(ConsoleIntrinsic::ReadLn) => {
                 let text = self.with_text_input(|t| t.read_line(line))?;
-                self.push(Value::Str(text))?;
+                self.push(Value::Str(text.into()))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::Read) => {
                 let ch = self.with_text_input(|t| t.read_char(line))?;
-                self.push(Value::Str(ch.to_string()))?;
+                self.push(Value::Str(ch.to_string().into()))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::ReadKey) => {
                 let ch = self.with_key_input(|k| k.read_key(line))?;
-                self.push(Value::Str(ch.to_string()))?;
+                self.push(Value::Str(ch.to_string().into()))?;
             }
             Intrinsic::Console(ConsoleIntrinsic::KeyPressed) => {
                 let pressed = self.with_key_input(|k| k.key_pressed(line))?;
@@ -354,7 +354,7 @@ impl Worker {
                 let text = self.pop_console_text(line)?;
                 let values = Console::split_graphemes(&text)
                     .into_iter()
-                    .map(Value::Str)
+                    .map(|grapheme| Value::Str(grapheme.into()))
                     .collect();
                 self.push(Value::Array(values))?;
             }

@@ -51,14 +51,16 @@ fn run_process(command: &str, args: &[String]) -> Value {
                 "process terminated without an exit code".into(),
             ))),
         },
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string()))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
     }
 }
 
 fn current_executable() -> Value {
     match env::current_exe() {
-        Ok(path) => Value::ResultOk(Box::new(Value::Str(path.to_string_lossy().into_owned()))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string()))),
+        Ok(path) => Value::ResultOk(Box::new(Value::Str(
+            path.to_string_lossy().into_owned().into(),
+        ))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
     }
 }
 
@@ -71,11 +73,11 @@ fn run_process_capture(command: &str, args: &[String]) -> Value {
                     ("ExitCode".into(), Value::Integer(i64::from(code))),
                     (
                         "Stdout".into(),
-                        Value::Str(String::from_utf8_lossy(&output.stdout).into_owned()),
+                        Value::Str(String::from_utf8_lossy(&output.stdout).into_owned().into()),
                     ),
                     (
                         "Stderr".into(),
-                        Value::Str(String::from_utf8_lossy(&output.stderr).into_owned()),
+                        Value::Str(String::from_utf8_lossy(&output.stderr).into_owned().into()),
                     ),
                 ],
             })),
@@ -83,7 +85,7 @@ fn run_process_capture(command: &str, args: &[String]) -> Value {
                 "process terminated without an exit code".into(),
             ))),
         },
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string()))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
     }
 }
 
@@ -111,7 +113,7 @@ mod tests {
     #[test]
     fn run_returns_exit_code_for_successful_process() {
         let (command, args) = successful_process_fixture();
-        let mut stack = vec![Value::Str(command), Value::Array(args.into())];
+        let mut stack = vec![Value::Str(command.into()), Value::Array(args.into())];
 
         run_proc(&mut stack);
 
@@ -155,13 +157,13 @@ mod tests {
             panic!("current executable must be a string");
         };
 
-        assert!(std::path::Path::new(&path).is_file(), "{path}");
+        assert!(std::path::Path::new(path.as_ref()).is_file(), "{path}");
     }
 
     #[test]
     fn run_capture_returns_stdout_and_stderr_for_successful_process() {
         let (command, args) = capture_process_fixture(0);
-        let mut stack = vec![Value::Str(command), Value::Array(args.into())];
+        let mut stack = vec![Value::Str(command.into()), Value::Array(args.into())];
 
         run_capture(&mut stack);
 
@@ -171,7 +173,7 @@ mod tests {
     #[test]
     fn run_capture_preserves_non_zero_exit_code_and_output() {
         let (command, args) = capture_process_fixture(7);
-        let mut stack = vec![Value::Str(command), Value::Array(args.into())];
+        let mut stack = vec![Value::Str(command.into()), Value::Array(args.into())];
 
         run_capture(&mut stack);
 
@@ -213,9 +215,12 @@ mod tests {
             "cmd".into(),
             vec![
                 Value::Str("/C".into()),
-                Value::Str(format!(
-                    "<nul set /p =captured stdout&1>&2 <nul set /p =captured stderr&exit /b {exit_code}"
-                )),
+                Value::Str(
+                    format!(
+                        "<nul set /p =captured stdout&1>&2 <nul set /p =captured stderr&exit /b {exit_code}"
+                    )
+                    .into(),
+                ),
             ],
         )
     }
@@ -226,9 +231,12 @@ mod tests {
             "sh".into(),
             vec![
                 Value::Str("-c".into()),
-                Value::Str(format!(
-                    "printf 'captured stdout'; printf 'captured stderr' >&2; exit {exit_code}"
-                )),
+                Value::Str(
+                    (format!(
+                        "printf 'captured stdout'; printf 'captured stderr' >&2; exit {exit_code}"
+                    ))
+                    .into(),
+                ),
             ],
         )
     }

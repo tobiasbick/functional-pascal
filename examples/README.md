@@ -86,6 +86,7 @@ target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 500000
 target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
 target/release/fpas run examples/pascal/vm/array_length_benchmark.fpas -- 500000
 target/release/fpas run examples/pascal/vm/string_concat_benchmark.fpas -- 5000000
+target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 500000
 ```
 
 Record the elapsed time from a known-good checkout, then pass a locally chosen upper limit to turn a slowdown into a failing run:
@@ -158,6 +159,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
+| `pascal/vm/string_length_benchmark.fpas` | Repeated `Std.Str.Length` on a long live string |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

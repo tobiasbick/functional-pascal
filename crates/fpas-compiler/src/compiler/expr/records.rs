@@ -25,7 +25,7 @@ impl Compiler {
                         .map(|field| (field.name.as_str(), &field.value))
                         .collect();
                     for (field_name, default) in &field_specs {
-                        self.emit_constant(Value::Str(field_name.clone()), location)?;
+                        self.emit_constant(Value::Str(field_name.clone().into()), location)?;
                         if let Some(value) = provided.get(field_name.as_str()).copied() {
                             self.compile_expr(value)?;
                         } else {
@@ -42,11 +42,11 @@ impl Compiler {
                     }
                     let field_count = field_specs.len() as u16;
                     let type_name = self.qualify_name(&type_name).to_string();
-                    let type_idx = self.add_constant(Value::Str(type_name), location)?;
+                    let type_idx = self.add_constant(Value::Str(type_name.into()), location)?;
                     self.emit(Op::MakeRecord(type_idx, field_count), location);
                 } else {
                     for field in fields {
-                        self.emit_constant(Value::Str(field.name.clone()), location)?;
+                        self.emit_constant(Value::Str(field.name.clone().into()), location)?;
                         self.compile_expr(&field.value)?;
                     }
                     let type_idx = self.add_constant(Value::Str("<record>".into()), location)?;
@@ -58,7 +58,7 @@ impl Compiler {
                 // Emit base, then (name, value) override pairs, then UpdateRecord.
                 self.compile_expr(base)?;
                 for field in fields {
-                    self.emit_constant(Value::Str(field.name.clone()), location)?;
+                    self.emit_constant(Value::Str(field.name.clone().into()), location)?;
                     self.compile_expr(&field.value)?;
                 }
                 self.emit(Op::UpdateRecord(fields.len() as u16), location);

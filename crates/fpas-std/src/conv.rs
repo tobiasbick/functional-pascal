@@ -18,7 +18,7 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Conv(ConvIntrinsic::IntToStr) => {
             let n = pop_int(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(format!("{n}")));
+            stack.push(Value::Str(format!("{n}").into()));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToInt) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -34,7 +34,7 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::RealToStr) => {
             let r = pop_real(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(format!("{r}")));
+            stack.push(Value::Str(format!("{r}").into()));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToReal) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -54,11 +54,14 @@ pub(crate) fn run(
         }
         Intrinsic::Conv(ConvIntrinsic::BoolToStr) => {
             let b = pop_bool(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(if b {
-                "true".to_string()
-            } else {
-                "false".to_string()
-            }));
+            stack.push(Value::Str(
+                if b {
+                    "true".to_string()
+                } else {
+                    "false".to_string()
+                }
+                .into(),
+            ));
         }
         Intrinsic::Conv(ConvIntrinsic::StrToBool) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -91,7 +94,7 @@ pub(crate) fn run(
             } else {
                 format!("{:0width$X}", n, width = width)
             };
-            stack.push(Value::Str(formatted));
+            stack.push(Value::Str(formatted.into()));
         }
         Intrinsic::Conv(ConvIntrinsic::HexToInt) => {
             let s = pop_string(pop_value(stack, location)?, location)?;

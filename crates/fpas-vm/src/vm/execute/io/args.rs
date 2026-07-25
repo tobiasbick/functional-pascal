@@ -35,7 +35,7 @@ impl Worker {
                         line,
                     ));
                 };
-                self.push(Value::Str(value))?;
+                self.push(Value::Str(value.into()))?;
                 Ok(true)
             }
             _ => Ok(false),

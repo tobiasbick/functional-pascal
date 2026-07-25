@@ -94,7 +94,7 @@ fn validation_rejects_out_of_range_constant_operands() {
 fn object_from_chunk_preserves_constants_locations_and_functions() {
     let mut chunk = Chunk::new();
     let name = chunk
-        .add_constant(Value::Str("demo.unit.run".to_string()))
+        .add_constant(Value::Str(("demo.unit.run".to_string()).into()))
         .expect("constant");
     chunk.emit(Op::Constant(name), SourceLocation::new_with_source(4, 2, 7));
     chunk.emit(Op::Halt, SourceLocation::new_with_source(5, 1, 7));
@@ -176,7 +176,7 @@ fn object_from_chunk_preserves_every_persistent_constant_kind() {
         Value::Integer(-7),
         Value::Real(1.5),
         Value::Boolean(true),
-        Value::Str("name".to_string()),
+        Value::Str(("name".to_string()).into()),
         Value::Unit,
         Value::Function {
             name: "demo.run".to_string(),

@@ -29,7 +29,7 @@ impl Worker {
                     line,
                 ));
             };
-            fields.push((name, value));
+            fields.push((name.into(), value));
         }
         self.push(Value::Record { type_name, fields })?;
         Ok(())
@@ -142,7 +142,10 @@ impl Worker {
                     line,
                 ));
             };
-            if let Some(entry) = fields.iter_mut().find(|(field, _)| field == &name) {
+            if let Some(entry) = fields
+                .iter_mut()
+                .find(|(field, _)| field.as_str() == name.as_ref())
+            {
                 entry.1 = value;
             } else {
                 return Err(runtime_error(

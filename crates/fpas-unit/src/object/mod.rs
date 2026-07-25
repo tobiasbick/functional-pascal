@@ -284,7 +284,7 @@ impl ObjectConstant {
             Value::Integer(value) => Ok(Self::Integer(*value)),
             Value::Real(value) => Ok(Self::Real(value.to_bits())),
             Value::Boolean(value) => Ok(Self::Boolean(*value)),
-            Value::Str(value) => Ok(Self::String(value.clone())),
+            Value::Str(value) => Ok(Self::String(value.to_string())),
             Value::Unit => Ok(Self::Unit),
             Value::Function {
                 name,
@@ -307,7 +307,7 @@ impl ObjectConstant {
             Self::Integer(value) => Value::Integer(*value),
             Self::Real(bits) => Value::Real(f64::from_bits(*bits)),
             Self::Boolean(value) => Value::Boolean(*value),
-            Self::String(value) => Value::Str(value.clone()),
+            Self::String(value) => Value::Str(value.clone().into()),
             Self::Unit => Value::Unit,
             Self::Function { name, task_bound } => Value::Function {
                 name: name.clone(),

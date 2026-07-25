@@ -9,7 +9,7 @@ fn spawned_task_global_is_visible_to_main_after_wait() {
         writer,
         |main| {
             let idx = main
-                .add_constant(Value::Str("Shared".to_string()))
+                .add_constant(Value::Str(("Shared".to_string()).into()))
                 .expect("constant");
             emit_constant(main, Value::Integer(99));
             main.emit(Op::SetGlobal(idx), loc());
@@ -37,7 +37,7 @@ fn spawned_task_global_is_visible_to_main_after_wait() {
         },
         |body| {
             let idx = body
-                .add_constant(Value::Str("Shared".to_string()))
+                .add_constant(Value::Str(("Shared".to_string()).into()))
                 .expect("constant");
             emit_constant(body, Value::Integer(42));
             body.emit(Op::SetGlobal(idx), loc());

@@ -61,13 +61,70 @@ impl IntoIterator for SharedArray {
     }
 }
 
+/// Shared immutable storage for FPAS string values.
+///
+/// Cloning a string shares its UTF-8 buffer, avoiding a deep copy until an owning consumer needs
+/// to mutate the string.
+#[derive(Debug, Clone, Eq, PartialOrd, Ord, Hash)]
+pub struct SharedStr(Arc<String>);
+
+impl PartialEq for SharedStr {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl From<String> for SharedStr {
+    fn from(value: String) -> Self {
+        Self(Arc::new(value))
+    }
+}
+
+impl From<&str> for SharedStr {
+    fn from(value: &str) -> Self {
+        Self::from(value.to_owned())
+    }
+}
+
+impl From<SharedStr> for String {
+    fn from(value: SharedStr) -> Self {
+        Arc::unwrap_or_clone(value.0)
+    }
+}
+
+impl FromIterator<char> for SharedStr {
+    fn from_iter<T: IntoIterator<Item = char>>(iter: T) -> Self {
+        Self::from(iter.into_iter().collect::<String>())
+    }
+}
+
+impl Deref for SharedStr {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_str()
+    }
+}
+
+impl AsRef<str> for SharedStr {
+    fn as_ref(&self) -> &str {
+        self
+    }
+}
+
+impl std::fmt::Display for SharedStr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self)
+    }
+}
+
 /// Runtime value in the VM.
 #[derive(Debug, Clone)]
 pub enum Value {
     Integer(i64),
     Real(f64),
     Boolean(bool),
-    Str(String),
+    Str(SharedStr),
     /// Enum variant with optional associated data.
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
@@ -280,12 +337,12 @@ mod tests {
     #[test]
     fn partial_eq_preserves_dict_and_record_field_order() {
         let dict = Value::Dict(vec![
-            (Value::Str("name".to_string()), Value::Integer(1)),
-            (Value::Str("age".to_string()), Value::Integer(2)),
+            (Value::Str("name".into()), Value::Integer(1)),
+            (Value::Str("age".into()), Value::Integer(2)),
         ]);
         let reordered_dict = Value::Dict(vec![
-            (Value::Str("age".to_string()), Value::Integer(2)),
-            (Value::Str("name".to_string()), Value::Integer(1)),
+            (Value::Str("age".into()), Value::Integer(2)),
+            (Value::Str("name".into()), Value::Integer(1)),
         ]);
         let record = Value::Record {
             type_name: "Demo.Point".to_string(),
@@ -351,5 +408,14 @@ mod tests {
         assert!(!Arc::ptr_eq(&original.0, &updated.0));
         assert_eq!(original[0], Value::Integer(1));
         assert_eq!(updated[0], Value::Integer(2));
+    }
+
+    #[test]
+    fn shared_strings_clone_without_copying_utf8() {
+        let original = SharedStr::from("hello");
+        let cloned = original.clone();
+
+        assert!(Arc::ptr_eq(&original.0, &cloned.0));
+        assert_eq!(String::from(cloned), "hello");
     }
 }

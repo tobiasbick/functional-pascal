@@ -53,7 +53,7 @@ mod tests {
         let mut console = Console::new();
         console
             .write_ln(
-                &fpas_bytecode::Value::Str("Hello".to_string()),
+                &fpas_bytecode::Value::Str("Hello".into()),
                 fpas_bytecode::SourceLocation::new(1, 1),
             )
             .expect("write_ln");

@@ -62,7 +62,7 @@ fn ok(value: Value) -> Value {
 }
 
 fn err(message: String) -> Value {
-    Value::ResultError(Box::new(Value::Str(message)))
+    Value::ResultError(Box::new(Value::Str(message.into())))
 }
 
 #[cfg(test)]
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn try_int_returns_ok_for_pascal_integer_text() {
-        let mut stack = vec![Value::Str(" +1_024 ".to_string())];
+        let mut stack = vec![Value::Str(" +1_024 ".into())];
 
         run(Intrinsic::Parse(ParseIntrinsic::TryInt), &mut stack, loc()).unwrap();
 
@@ -84,7 +84,7 @@ mod tests {
 
     #[test]
     fn try_real_returns_error_for_non_pascal_real_text() {
-        let mut stack = vec![Value::Str("1e3".to_string())];
+        let mut stack = vec![Value::Str("1e3".into())];
 
         run(Intrinsic::Parse(ParseIntrinsic::TryReal), &mut stack, loc()).unwrap();
 
@@ -93,7 +93,7 @@ mod tests {
 
     #[test]
     fn try_bool_accepts_case_insensitive_true() {
-        let mut stack = vec![Value::Str(" TRUE ".to_string())];
+        let mut stack = vec![Value::Str(" TRUE ".into())];
 
         run(Intrinsic::Parse(ParseIntrinsic::TryBool), &mut stack, loc()).unwrap();
 

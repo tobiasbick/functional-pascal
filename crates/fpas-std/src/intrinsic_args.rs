@@ -1,7 +1,7 @@
 //! Shared stack pop helpers for intrinsic implementations.
 
 use crate::error::{StdError, std_runtime_error};
-use fpas_bytecode::{SourceLocation, Value};
+use fpas_bytecode::{SharedStr, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
@@ -21,6 +21,14 @@ pub(crate) fn pop_value(
 }
 
 pub(crate) fn pop_string(v: Value, location: SourceLocation) -> Result<String, StdError> {
+    Ok(expect_str(v, location)?.into())
+}
+
+/// Takes ownership of a [`Value::Str`] without copying its UTF-8 buffer.
+///
+/// Prefer this for read-only string intrinsics such as `Std.Str.Length`. Use [`pop_string`] when
+/// the callee needs an owned, mutable [`String`].
+pub(crate) fn expect_str(v: Value, location: SourceLocation) -> Result<SharedStr, StdError> {
     match v {
         Value::Str(s) => Ok(s),
         other => Err(std_runtime_error(

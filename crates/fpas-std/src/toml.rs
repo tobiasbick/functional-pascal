@@ -30,13 +30,13 @@ fn toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, String
     }
 
     match value {
-        TomlValue::String(value) => Ok(toml_variant("String", vec![Value::Str(value)])),
+        TomlValue::String(value) => Ok(toml_variant("String", vec![Value::Str(value.into())])),
         TomlValue::Integer(value) => Ok(toml_variant("Integer", vec![Value::Integer(value)])),
         TomlValue::Float(value) => Ok(toml_variant("Float", vec![Value::Real(value)])),
         TomlValue::Boolean(value) => Ok(toml_variant("Boolean", vec![Value::Boolean(value)])),
         TomlValue::Datetime(value) => Ok(toml_variant(
             "Datetime",
-            vec![Value::Str(value.to_string())],
+            vec![Value::Str(value.to_string().into())],
         )),
         TomlValue::Array(items) => items
             .into_iter()
@@ -46,7 +46,7 @@ fn toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, String
         TomlValue::Table(fields) => fields
             .into_iter()
             .map(|(key, value)| {
-                toml_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key), value))
+                toml_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
             .map(|fields| toml_variant("Table", vec![Value::Dict(fields)])),
@@ -116,7 +116,7 @@ fn fpas_to_toml_at_depth(
 
     match variant.as_str() {
         "String" => match expect_one_field("String", fields, location)? {
-            Value::Str(value) => Ok(TomlValue::String(value)),
+            Value::Str(value) => Ok(TomlValue::String(value.into())),
             other => variant_field_error("String", "string", &other, location),
         },
         "Integer" => match expect_one_field("Integer", fields, location)? {
@@ -166,7 +166,10 @@ fn fpas_to_toml_at_depth(
                             location,
                         ));
                     };
-                    table.insert(key, fpas_to_toml_at_depth(value, location, depth + 1)?);
+                    table.insert(
+                        key.into(),
+                        fpas_to_toml_at_depth(value, location, depth + 1)?,
+                    );
                 }
                 Ok(TomlValue::Table(table))
             }
@@ -216,9 +219,13 @@ pub(crate) fn run(
             match toml::from_str::<TomlValue>(&text).map_err(|error| error.to_string()) {
                 Ok(value) => match toml_to_fpas(value) {
                     Ok(value) => stack.push(Value::ResultOk(Box::new(value))),
-                    Err(message) => stack.push(Value::ResultError(Box::new(Value::Str(message)))),
+                    Err(message) => {
+                        stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                    }
                 },
-                Err(message) => stack.push(Value::ResultError(Box::new(Value::Str(message)))),
+                Err(message) => {
+                    stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                }
             }
         }
         Intrinsic::Toml(TomlIntrinsic::Stringify) => {
@@ -232,7 +239,7 @@ pub(crate) fn run(
                     location,
                 )
             })?;
-            stack.push(Value::Str(text));
+            stack.push(Value::Str(text.into()));
         }
         _ => return Ok(None),
     }

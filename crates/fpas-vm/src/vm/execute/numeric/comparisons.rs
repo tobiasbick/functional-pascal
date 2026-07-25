@@ -35,7 +35,10 @@ impl Worker {
                         ));
                     }
                 };
-                self.push(Value::Str(sa + &sb))?;
+                let mut result = String::with_capacity(sa.len() + sb.len());
+                result.push_str(&sa);
+                result.push_str(&sb);
+                self.push(Value::Str(result.into()))?;
                 Ok(true)
             }
             Op::EqInt => {

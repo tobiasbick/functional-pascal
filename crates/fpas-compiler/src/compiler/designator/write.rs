@@ -34,7 +34,7 @@ impl Compiler {
         if let Some((global_name, consumed)) = self.module_global_prefix(target) {
             if consumed == target.parts.len() {
                 self.compile_expr(value)?;
-                let idx = self.add_constant(Value::Str(global_name), location)?;
+                let idx = self.add_constant(Value::Str(global_name.into()), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
                 return Ok(());
@@ -51,17 +51,17 @@ impl Compiler {
                     }
                 }
                 self.compile_expr(value)?;
-                let idx = self.add_constant(Value::Str(global_name), location)?;
+                let idx = self.add_constant(Value::Str(global_name.into()), location)?;
                 self.emit(Op::GlobalIndexSet(idx, suffix.len() as u8), location);
                 self.emit(Op::Pop, location);
                 return Ok(());
             }
-            let idx = self.add_constant(Value::Str(global_name.clone()), location)?;
+            let idx = self.add_constant(Value::Str(global_name.clone().into()), location)?;
             self.emit(Op::GetGlobal(idx), location);
             for part in &suffix[..suffix.len() - 1] {
                 match part {
                     DesignatorPart::Ident(field, _) => {
-                        let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                        let idx = self.add_constant(Value::Str(field.clone().into()), location)?;
                         self.emit(Op::FieldGet(idx), location);
                     }
                     DesignatorPart::Index(expr, _) => {
@@ -74,7 +74,7 @@ impl Compiler {
             match suffix.last() {
                 Some(DesignatorPart::Ident(field, _)) => {
                     self.compile_expr(value)?;
-                    let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                    let idx = self.add_constant(Value::Str(field.clone().into()), location)?;
                     self.emit(Op::FieldSet(idx), location);
                 }
                 Some(DesignatorPart::Index(expr, _)) => {
@@ -85,7 +85,7 @@ impl Compiler {
                 None => return Ok(()),
             }
 
-            let idx = self.add_constant(Value::Str(global_name), location)?;
+            let idx = self.add_constant(Value::Str(global_name.into()), location)?;
             self.emit(Op::SetGlobal(idx), location);
             self.emit(Op::Pop, location);
             return Ok(());
@@ -123,7 +123,7 @@ impl Compiler {
                 self.emit(Op::Pop, location);
             } else {
                 self.compile_expr(value)?;
-                let idx = self.add_constant(Value::Str(qualified), location)?;
+                let idx = self.add_constant(Value::Str(qualified.into()), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }
@@ -144,7 +144,7 @@ impl Compiler {
                 self.emit(Op::Pop, location);
             } else {
                 self.compile_expr(value)?;
-                let idx = self.add_constant(Value::Str(base_name), location)?;
+                let idx = self.add_constant(Value::Str(base_name.into()), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }
@@ -152,14 +152,14 @@ impl Compiler {
             if let Some(local_ref) = self.resolve_local(&base_name) {
                 self.emit_local_ref_update_start(local_ref, location);
             } else {
-                let idx = self.add_constant(Value::Str(base_name.clone()), location)?;
+                let idx = self.add_constant(Value::Str(base_name.clone().into()), location)?;
                 self.emit(Op::GetGlobal(idx), location);
             }
 
             for part in &remaining[..remaining.len() - 1] {
                 match part {
                     DesignatorPart::Ident(field, _) => {
-                        let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                        let idx = self.add_constant(Value::Str(field.clone().into()), location)?;
                         self.emit(Op::FieldGet(idx), location);
                     }
                     DesignatorPart::Index(expr, _) => {
@@ -176,7 +176,7 @@ impl Compiler {
             match last_part {
                 DesignatorPart::Ident(field, _) => {
                     self.compile_expr(value)?;
-                    let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                    let idx = self.add_constant(Value::Str(field.clone().into()), location)?;
                     self.emit(Op::FieldSet(idx), location);
                 }
                 DesignatorPart::Index(expr, _) => {
@@ -190,7 +190,7 @@ impl Compiler {
                 self.emit_local_ref_update_finish(local_ref, location);
                 self.emit(Op::Pop, location);
             } else {
-                let idx = self.add_constant(Value::Str(base_name), location)?;
+                let idx = self.add_constant(Value::Str(base_name.into()), location)?;
                 self.emit(Op::SetGlobal(idx), location);
                 self.emit(Op::Pop, location);
             }

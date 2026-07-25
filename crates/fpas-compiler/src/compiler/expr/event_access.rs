@@ -53,7 +53,7 @@ impl Compiler {
             &info.receiver_reads,
         )?;
         let getter = self.qualify_name(&info.getter_name).to_string();
-        let name_idx = self.add_constant(Value::Str(getter), location)?;
+        let name_idx = self.add_constant(Value::Str(getter.into()), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::IsOptionSome, location);
         Ok(())
@@ -86,7 +86,7 @@ impl Compiler {
             &info.receiver_reads,
         )?;
         let getter = self.qualify_name(&info.getter_name).to_string();
-        let name_idx = self.add_constant(Value::Str(getter), location)?;
+        let name_idx = self.add_constant(Value::Str(getter.into()), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         self.emit(Op::UnwrapSome, location);
 

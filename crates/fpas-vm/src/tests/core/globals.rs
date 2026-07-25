@@ -7,7 +7,7 @@ use crate::tests::helpers::{emit_constant, loc, run_err, run_ok_output};
 fn set_global_then_get_global_round_trips_value() {
     let mut chunk = Chunk::new();
     let name_idx = chunk
-        .add_constant(Value::Str("Answer".to_string()))
+        .add_constant(Value::Str(("Answer".to_string()).into()))
         .expect("constant should fit in test chunk");
 
     emit_constant(&mut chunk, Value::Integer(42));
@@ -24,10 +24,10 @@ fn set_global_then_get_global_round_trips_value() {
 fn set_global_then_get_global_is_case_insensitive() {
     let mut chunk = Chunk::new();
     let set_name_idx = chunk
-        .add_constant(Value::Str("Answer".to_string()))
+        .add_constant(Value::Str(("Answer".to_string()).into()))
         .expect("constant should fit in test chunk");
     let get_name_idx = chunk
-        .add_constant(Value::Str("answer".to_string()))
+        .add_constant(Value::Str(("answer".to_string()).into()))
         .expect("constant should fit in test chunk");
 
     emit_constant(&mut chunk, Value::Integer(42));
@@ -44,7 +44,7 @@ fn set_global_then_get_global_is_case_insensitive() {
 fn get_global_on_missing_name_reports_runtime_error() {
     let mut chunk = Chunk::new();
     let name_idx = chunk
-        .add_constant(Value::Str("Missing".to_string()))
+        .add_constant(Value::Str(("Missing".to_string()).into()))
         .expect("constant should fit in test chunk");
     chunk.emit(Op::GetGlobal(name_idx), loc());
     chunk.emit(Op::Halt, loc());

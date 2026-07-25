@@ -55,7 +55,7 @@ impl Compiler {
         for capture in &closure_info.captures {
             self.emit_load_capture(capture, location);
         }
-        let name_idx = self.add_constant(Value::Str(closure_name), location)?;
+        let name_idx = self.add_constant(Value::Str(closure_name.into()), location)?;
         let capture_count =
             Self::checked_u8_at(closure_info.captures.len(), "closure captures", location)?;
         self.emit(Op::MakeClosure(name_idx, capture_count), location);

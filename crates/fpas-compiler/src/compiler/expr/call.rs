@@ -37,8 +37,8 @@ impl Compiler {
             for arg in args {
                 self.compile_expr(arg)?;
             }
-            let type_idx = self.add_constant(Value::Str(type_name), location)?;
-            let variant_idx = self.add_constant(Value::Str(variant_info.name), location)?;
+            let type_idx = self.add_constant(Value::Str(type_name.into()), location)?;
+            let variant_idx = self.add_constant(Value::Str(variant_info.name.into()), location)?;
             self.emit(
                 Op::MakeEnum(
                     type_idx,
@@ -86,7 +86,7 @@ impl Compiler {
             self.compile_expr(arg)?;
         }
         let total_args = Self::checked_u8_at(args.len() + 1, "method call arguments", location)?;
-        let name_idx = self.add_constant(Value::Str(qualified_method), location)?;
+        let name_idx = self.add_constant(Value::Str(qualified_method.into()), location)?;
         self.emit(Op::Call(name_idx, total_args), location);
         Ok(())
     }

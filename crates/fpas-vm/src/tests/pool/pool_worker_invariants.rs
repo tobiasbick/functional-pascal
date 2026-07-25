@@ -39,7 +39,7 @@ fn save_task_and_load_task_round_trip_preserves_execution_state() {
     w.ip = 12;
     w.current_task_id = 7;
     w.current_task_retain_result = true;
-    w.stack.push(Value::Str("x".to_string()));
+    w.stack.push(Value::Str(("x".to_string()).into()));
     w.call_stack.push(CallFrame {
         return_ip: 3,
         base_slot: 1,

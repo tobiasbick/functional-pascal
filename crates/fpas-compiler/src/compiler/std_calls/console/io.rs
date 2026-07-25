@@ -16,7 +16,7 @@ impl Compiler {
         match name {
             s::STD_CONSOLE_WRITE_LN => {
                 if args.is_empty() {
-                    self.emit_constant(Value::Str(String::new()), location)?;
+                    self.emit_constant(Value::Str(String::new().into()), location)?;
                     self.emit(Op::PrintLn, location);
                 } else {
                     for (index, arg) in args.iter().enumerate() {

@@ -50,7 +50,7 @@ impl Worker {
                 ("mouse_y".into(), Value::Integer(mouse_y)),
                 ("width".into(), Value::Integer(width)),
                 ("height".into(), Value::Integer(height)),
-                ("text".into(), Value::Str(text)),
+                ("text".into(), Value::Str(text.into())),
                 ("shift".into(), Value::Boolean(shift)),
                 ("ctrl".into(), Value::Boolean(ctrl)),
                 ("alt".into(), Value::Boolean(alt)),
@@ -174,9 +174,9 @@ impl Worker {
 
 fn key_event_char_value(ch: char) -> Value {
     if ch == '\0' {
-        Value::Str(String::new())
+        Value::Str(String::new().into())
     } else {
-        Value::Str(ch.to_string())
+        Value::Str(ch.to_string().into())
     }
 }
 

@@ -15,7 +15,7 @@ impl Compiler {
                 self.emit_constant(Value::Real(*n), Self::location_of(span))?;
             }
             Expr::Str(s, span) => {
-                self.emit_constant(Value::Str(s.clone()), Self::location_of(span))?;
+                self.emit_constant(Value::Str(s.clone().into()), Self::location_of(span))?;
             }
             Expr::Bool(b, span) => {
                 self.emit_constant(Value::Boolean(*b), Self::location_of(span))?;

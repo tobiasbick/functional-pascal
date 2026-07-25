@@ -21,7 +21,7 @@ impl Compiler {
         location: SourceLocation,
     ) -> Result<(), CompileError> {
         let getter = self.qualify_name(&info.getter_name).to_string();
-        let name_idx = self.add_constant(Value::Str(getter), location)?;
+        let name_idx = self.add_constant(Value::Str(getter.into()), location)?;
         self.emit(Op::Call(name_idx, 1), location);
         Ok(())
     }
@@ -112,7 +112,7 @@ impl Compiler {
         for part in parts {
             match part {
                 DesignatorPart::Ident(field, _) => {
-                    let idx = self.add_constant(Value::Str(field.clone()), location)?;
+                    let idx = self.add_constant(Value::Str(field.clone().into()), location)?;
                     self.emit(Op::FieldGet(idx), location);
                 }
                 DesignatorPart::Index(expr, _) => {

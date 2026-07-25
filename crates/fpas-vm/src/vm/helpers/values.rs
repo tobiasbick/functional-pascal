@@ -31,7 +31,7 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<&str, VmError> {
         match self.const_value(idx, location)? {
-            Value::Str(value) => Ok(value.as_str()),
+            Value::Str(value) => Ok(value),
             _ => Err(internal_error(
                 "Expected string constant",
                 "This indicates a compiler constant-pool bug. Please report it.",

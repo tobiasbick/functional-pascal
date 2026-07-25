@@ -94,7 +94,7 @@ impl Worker {
 
     fn pop_string(&mut self, line: SourceLocation) -> Result<String, VmError> {
         match self.pop(line)? {
-            Value::Str(text) => Ok(text),
+            Value::Str(text) => Ok(text.into()),
             other => Err(runtime_error(
                 RUNTIME_CONSOLE_STATE_ERROR,
                 format!(

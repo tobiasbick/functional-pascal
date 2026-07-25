@@ -148,7 +148,9 @@ impl Compiler {
                 self.compile_expr(&const_def.value)?;
                 if self.is_module_level() {
                     let idx = self.add_constant(
-                        Value::Str(canonical_name(&self.qualify_owned_name(&const_def.name))),
+                        Value::Str(
+                            canonical_name(&self.qualify_owned_name(&const_def.name)).into(),
+                        ),
                         location,
                     )?;
                     self.emit(Op::SetGlobal(idx), location);
@@ -163,7 +165,7 @@ impl Compiler {
                 self.compile_expr(&var_def.value)?;
                 if self.is_module_level() {
                     let idx = self.add_constant(
-                        Value::Str(canonical_name(&self.qualify_owned_name(&var_def.name))),
+                        Value::Str(canonical_name(&self.qualify_owned_name(&var_def.name)).into()),
                         location,
                     )?;
                     self.emit(Op::SetGlobal(idx), location);

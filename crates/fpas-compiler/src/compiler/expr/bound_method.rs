@@ -43,7 +43,7 @@ impl Compiler {
             self.emit(Op::GetLocal(arg_slot), location);
         }
         let method = self.qualify_name(&info.qualified_name).to_string();
-        let method_idx = self.add_constant(Value::Str(method), location)?;
+        let method_idx = self.add_constant(Value::Str(method.into()), location)?;
         self.emit(Op::Call(method_idx, total_call_argc), location);
         self.emit(Op::Return, location);
 
@@ -51,7 +51,7 @@ impl Compiler {
         self.patch_jump(jump_over, after, location)?;
 
         // Receiver is already on the stack as the sole capture.
-        let name_idx = self.add_constant(Value::Str(thunk_name), location)?;
+        let name_idx = self.add_constant(Value::Str(thunk_name.into()), location)?;
         self.emit(Op::MakeClosure(name_idx, 1), location);
         Ok(())
     }

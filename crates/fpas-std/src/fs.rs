@@ -56,8 +56,8 @@ pub(crate) fn run(
 
 fn result_string(result: Result<String, String>) -> Value {
     match result {
-        Ok(value) => Value::ResultOk(Box::new(Value::Str(value))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error))),
+        Ok(value) => Value::ResultOk(Box::new(Value::Str(value.into()))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error.into()))),
     }
 }
 
@@ -87,16 +87,19 @@ fn read_text_limited(path: &str) -> Result<String, String> {
 fn result_bool(result: io::Result<()>) -> Value {
     match result {
         Ok(()) => Value::ResultOk(Box::new(Value::Boolean(true))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string()))),
+        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
     }
 }
 
 fn result_string_array(result: Result<Vec<String>, String>) -> Value {
     match result {
         Ok(paths) => Value::ResultOk(Box::new(Value::Array(
-            paths.into_iter().map(Value::Str).collect(),
+            paths
+                .into_iter()
+                .map(|path| Value::Str(path.into()))
+                .collect(),
         ))),
-        Err(message) => Value::ResultError(Box::new(Value::Str(message))),
+        Err(message) => Value::ResultError(Box::new(Value::Str(message.into()))),
     }
 }
 
@@ -179,7 +182,7 @@ mod tests {
     fn read_text_returns_file_contents() {
         let path = unique_temp_path("read.txt");
         fs::write(&path, "hello fs").expect("write fixture");
-        let mut stack = vec![Value::Str(path.clone())];
+        let mut stack = vec![Value::Str(path.clone().into())];
         run_fs(FsIntrinsic::ReadText, &mut stack);
         assert_eq!(
             stack,
@@ -198,7 +201,10 @@ mod tests {
     #[test]
     fn write_text_creates_utf8_file() {
         let path = unique_temp_path("output.txt");
-        let mut stack = vec![Value::Str(path.clone()), Value::Str("written".into())];
+        let mut stack = vec![
+            Value::Str(path.clone().into()),
+            Value::Str("written".into()),
+        ];
         run_fs(FsIntrinsic::WriteText, &mut stack);
         assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
         assert_eq!(fs::read_to_string(&path).expect("read"), "written");
@@ -215,11 +221,11 @@ mod tests {
             .to_string_lossy()
             .into_owned();
 
-        let mut stack = vec![Value::Str(file_path.clone())];
+        let mut stack = vec![Value::Str(file_path.clone().into())];
         run_fs(FsIntrinsic::Exists, &mut stack);
         assert_eq!(stack, vec![Value::Boolean(true)]);
 
-        stack = vec![Value::Str(dir_path)];
+        stack = vec![Value::Str(dir_path.into())];
         run_fs(FsIntrinsic::Exists, &mut stack);
         assert_eq!(stack, vec![Value::Boolean(true)]);
 
@@ -240,15 +246,15 @@ mod tests {
             .to_string_lossy()
             .into_owned();
 
-        let mut stack = vec![Value::Str(file_path.clone())];
+        let mut stack = vec![Value::Str(file_path.clone().into())];
         run_fs(FsIntrinsic::IsFile, &mut stack);
         assert_eq!(stack, vec![Value::Boolean(true)]);
 
-        stack = vec![Value::Str(file_path.clone())];
+        stack = vec![Value::Str(file_path.clone().into())];
         run_fs(FsIntrinsic::IsDir, &mut stack);
         assert_eq!(stack, vec![Value::Boolean(false)]);
 
-        stack = vec![Value::Str(dir_path)];
+        stack = vec![Value::Str(dir_path.into())];
         run_fs(FsIntrinsic::IsDir, &mut stack);
         assert_eq!(stack, vec![Value::Boolean(true)]);
 
@@ -258,7 +264,7 @@ mod tests {
     #[test]
     fn create_dir_makes_directory() {
         let nested = unique_temp_path("nested");
-        let mut stack = vec![Value::Str(nested.clone())];
+        let mut stack = vec![Value::Str(nested.clone().into())];
         run_fs(FsIntrinsic::CreateDir, &mut stack);
         assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
         assert!(Path::new(&nested).is_dir());
@@ -279,16 +285,16 @@ mod tests {
         }
 
         let pattern = format!("{dir}/?.fpas");
-        let mut stack = vec![Value::Str(pattern)];
+        let mut stack = vec![Value::Str(pattern.into())];
         run_fs(FsIntrinsic::Glob, &mut stack);
 
         assert_eq!(
             stack,
             vec![Value::ResultOk(Box::new(Value::Array(
                 vec![
-                    Value::Str(normalize_path_string(Path::new(&files[1]))),
-                    Value::Str(normalize_path_string(Path::new(&files[0]))),
-                    Value::Str(normalize_path_string(Path::new(&files[2]))),
+                    Value::Str(normalize_path_string(Path::new(&files[1])).into()),
+                    Value::Str(normalize_path_string(Path::new(&files[0])).into()),
+                    Value::Str(normalize_path_string(Path::new(&files[2])).into()),
                 ]
                 .into()
             )))]
@@ -314,7 +320,7 @@ mod tests {
             "{}/src/**/*.fpas",
             root.to_string_lossy().replace('\\', "/")
         );
-        let mut stack = vec![Value::Str(pattern)];
+        let mut stack = vec![Value::Str(pattern.into())];
         run_fs(FsIntrinsic::Glob, &mut stack);
 
         let Value::ResultOk(value) = &stack[0] else {
@@ -324,18 +330,27 @@ mod tests {
             panic!("expected array result, got {:?}", value);
         };
         assert_eq!(paths.len(), 2);
-        assert_eq!(paths[0], Value::Str(normalize_path_string(main.as_path())));
-        assert_eq!(paths[1], Value::Str(normalize_path_string(menu.as_path())));
+        assert_eq!(
+            paths[0],
+            Value::Str(normalize_path_string(main.as_path()).into())
+        );
+        assert_eq!(
+            paths[1],
+            Value::Str(normalize_path_string(menu.as_path()).into())
+        );
 
         let _ = fs::remove_dir_all(root);
     }
 
     #[test]
     fn glob_returns_empty_array_when_nothing_matches() {
-        let mut stack = vec![Value::Str(format!(
-            "{}/__FPAS_FS_GLOB_NO_MATCH__/*.fpas",
-            unique_temp_path("glob_empty")
-        ))];
+        let mut stack = vec![Value::Str(
+            format!(
+                "{}/__FPAS_FS_GLOB_NO_MATCH__/*.fpas",
+                unique_temp_path("glob_empty")
+            )
+            .into(),
+        )];
         run_fs(FsIntrinsic::Glob, &mut stack);
         assert_eq!(
             stack,
@@ -355,12 +370,12 @@ mod tests {
         let path = unique_temp_path("single.fpas");
         fs::write(&path, "").expect("write fixture");
 
-        let mut stack = vec![Value::Str(path.clone())];
+        let mut stack = vec![Value::Str(path.clone().into())];
         run_fs(FsIntrinsic::Glob, &mut stack);
         assert_eq!(
             stack,
             vec![Value::ResultOk(Box::new(Value::Array(
-                vec![Value::Str(normalize_path_string(Path::new(&path)))].into()
+                vec![Value::Str(normalize_path_string(Path::new(&path)).into())].into()
             )))]
         );
 

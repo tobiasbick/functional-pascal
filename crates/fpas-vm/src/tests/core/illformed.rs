@@ -8,7 +8,7 @@ use crate::tests::helpers::{emit_constant, loc, run_err};
 fn malformed_call_reports_error_instead_of_panicking() {
     let mut chunk = Chunk::new();
     let name_idx = chunk
-        .add_constant(Value::Str("NeedArg".to_string()))
+        .add_constant(Value::Str(("NeedArg".to_string()).into()))
         .expect("constant should fit in test chunk");
     chunk.insert_function("NeedArg".to_string(), 1, 1);
     chunk.emit(Op::Call(name_idx, 1), loc());
@@ -49,15 +49,15 @@ fn malformed_get_enclosing_reports_error_instead_of_silently_falling_back() {
 fn malformed_field_set_missing_field_reports_error() {
     let mut chunk = Chunk::new();
     let type_idx = chunk
-        .add_constant(Value::Str("Point".to_string()))
+        .add_constant(Value::Str(("Point".to_string()).into()))
         .expect("constant should fit in test chunk");
-    emit_constant(&mut chunk, Value::Str("x".to_string()));
+    emit_constant(&mut chunk, Value::Str(("x".to_string()).into()));
     emit_constant(&mut chunk, Value::Integer(1));
     chunk.emit(Op::MakeRecord(type_idx, 1), loc());
     emit_constant(&mut chunk, Value::Integer(2));
 
     let missing_field_idx = chunk
-        .add_constant(Value::Str("y".to_string()))
+        .add_constant(Value::Str(("y".to_string()).into()))
         .expect("constant should fit in test chunk");
     chunk.emit(Op::FieldSet(missing_field_idx), loc());
     chunk.emit(Op::Halt, loc());

@@ -22,7 +22,7 @@ fn graph_open_pushes_application_record_and_opens_session() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(640));
         emit_constant(&mut chunk, Value::Integer(480));
-        emit_constant(&mut chunk, Value::Str("Graph smoke".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph smoke".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
         chunk.emit(Op::Halt, loc());
 
@@ -49,7 +49,7 @@ fn graph_size_pushes_std_graph_size_record() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(320));
         emit_constant(&mut chunk, Value::Integer(200));
-        emit_constant(&mut chunk, Value::Str("Graph size".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph size".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
         chunk.emit(Op::Dup, loc());
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationSize);
@@ -72,7 +72,7 @@ fn graph_close_resets_the_active_session() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(128));
         emit_constant(&mut chunk, Value::Integer(96));
-        emit_constant(&mut chunk, Value::Str("Graph close".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph close".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
         chunk.emit(Op::Dup, loc());
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationClose);
@@ -136,7 +136,7 @@ fn graph_intrinsics_fail_on_non_main_tasks() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(2));
         emit_constant(&mut chunk, Value::Integer(2));
-        emit_constant(&mut chunk, Value::Str("Graph go".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph go".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
         chunk.emit(Op::Halt, loc());
 

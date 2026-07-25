@@ -7,7 +7,7 @@ fn graph_clear_put_pixel_and_present_render_runtime_backbuffer() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(2));
         emit_constant(&mut chunk, Value::Integer(1));
-        emit_constant(&mut chunk, Value::Str("Graph draw".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph draw".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
@@ -46,7 +46,7 @@ fn graph_draw_line_renders_expected_pixels() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(3));
         emit_constant(&mut chunk, Value::Integer(3));
-        emit_constant(&mut chunk, Value::Str("Graph line".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph line".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
@@ -82,7 +82,7 @@ fn graph_draw_rect_renders_expected_pixels() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(5));
         emit_constant(&mut chunk, Value::Integer(4));
-        emit_constant(&mut chunk, Value::Str("Graph rect".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph rect".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
@@ -121,7 +121,7 @@ fn graph_fill_rect_renders_expected_pixels() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(4));
         emit_constant(&mut chunk, Value::Integer(3));
-        emit_constant(&mut chunk, Value::Str("Graph fill".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph fill".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
@@ -159,7 +159,7 @@ fn graph_draw_circle_renders_expected_pixels() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(5));
         emit_constant(&mut chunk, Value::Integer(5));
-        emit_constant(&mut chunk, Value::Str("Graph circle".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph circle".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
@@ -197,13 +197,13 @@ fn graph_draw_text_renders_expected_pixels() {
         let mut chunk = Chunk::new();
         emit_constant(&mut chunk, Value::Integer(5));
         emit_constant(&mut chunk, Value::Integer(7));
-        emit_constant(&mut chunk, Value::Str("Graph text".to_string()));
+        emit_constant(&mut chunk, Value::Str(("Graph text".to_string()).into()));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationOpen);
 
         chunk.emit(Op::Dup, loc());
         emit_constant(&mut chunk, Value::Integer(0));
         emit_constant(&mut chunk, Value::Integer(0));
-        emit_constant(&mut chunk, Value::Str("A".to_string()));
+        emit_constant(&mut chunk, Value::Str(("A".to_string()).into()));
         emit_constant(&mut chunk, Value::Integer(0x00000005));
         emit_graph_intrinsic(&mut chunk, GraphIntrinsic::ApplicationDrawText);
 

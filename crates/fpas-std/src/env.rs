@@ -17,7 +17,7 @@ pub(crate) fn run(
             let name = pop_string(pop_value(stack, location)?, location)?;
             match std::env::var_os(name) {
                 Some(value) => stack.push(Value::OptionSome(Box::new(Value::Str(
-                    value.to_string_lossy().into_owned(),
+                    value.to_string_lossy().into_owned().into(),
                 )))),
                 None => stack.push(Value::OptionNone),
             }

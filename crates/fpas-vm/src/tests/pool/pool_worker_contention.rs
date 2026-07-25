@@ -15,7 +15,7 @@ use crate::tests::helpers::{emit_constant, loc, minimal_shared_state};
 #[test]
 fn two_pool_loops_share_one_task_only_one_executes_body() {
     let mut chunk = Chunk::new();
-    emit_constant(&mut chunk, Value::Str("once".to_string()));
+    emit_constant(&mut chunk, Value::Str(("once".to_string()).into()));
     chunk.emit(Op::PrintLn, loc());
     emit_constant(&mut chunk, Value::Unit);
     chunk.emit(Op::Return, loc());

@@ -167,7 +167,7 @@ impl Compiler {
         }
         let runtime_name = self.qualify_owned_name(&canonical);
         let name_idx = self.add_constant(
-            Value::Str(super::super::canonical_name(&runtime_name)),
+            Value::Str(super::super::canonical_name(&runtime_name).into()),
             location,
         )?;
         let capture_count =

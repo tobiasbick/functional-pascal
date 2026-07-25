@@ -251,7 +251,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<String, VmError> {
         match self.pop(line)? {
-            Value::Str(title) => Ok(title),
+            Value::Str(title) => Ok(title.into()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected string, got {}", other.type_name()),
@@ -263,7 +263,7 @@ impl Worker {
 
     fn pop_graph_text(&mut self, line: SourceLocation) -> Result<String, VmError> {
         match self.pop(line)? {
-            Value::Str(text) => Ok(text),
+            Value::Str(text) => Ok(text.into()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected string, got {}", other.type_name()),

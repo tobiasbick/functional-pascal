@@ -55,7 +55,7 @@ impl Compiler {
                         return Ok(false);
                     }
                     let type_idx =
-                        self.add_constant(Value::Str(info.type_name.clone()), location)?;
+                        self.add_constant(Value::Str(info.type_name.clone().into()), location)?;
                     let variant_idx = self.add_constant(Value::Str((*member).into()), location)?;
                     self.emit(Op::MakeEnum(type_idx, variant_idx, 0), location);
                 } else {

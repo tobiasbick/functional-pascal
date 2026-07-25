@@ -50,7 +50,7 @@ impl Worker {
                     ));
                 }
                 match s.chars().nth(idx) {
-                    Some(ch) => self.push(Value::Str(ch.to_string()))?,
+                    Some(ch) => self.push(Value::Str(ch.to_string().into()))?,
                     None => {
                         return Err(runtime_error(
                             RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
@@ -121,7 +121,7 @@ fn string_contains_value(
             let mut chars = value.chars();
             match (chars.next(), chars.next()) {
                 (Some(c), None) => Ok(text.chars().any(|candidate| candidate == c)),
-                _ => Ok(text.contains(value)),
+                _ => Ok(text.contains(value.as_ref())),
             }
         }
         _ => Err(runtime_error(

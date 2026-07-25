@@ -38,7 +38,7 @@ impl Compiler {
                         })?;
                         self.emit_property_get_from_receiver(info, location)?;
                     } else {
-                        let idx = self.add_constant(Value::Str(name.clone()), location)?;
+                        let idx = self.add_constant(Value::Str(name.clone().into()), location)?;
                         self.emit(Op::FieldGet(idx), location);
                     }
                 }
@@ -84,7 +84,7 @@ impl Compiler {
                 }
                 let total_args =
                     Self::checked_u8_at(args.len() + 1, "method call arguments", location)?;
-                let name_idx = self.add_constant(Value::Str(qualified_name), location)?;
+                let name_idx = self.add_constant(Value::Str(qualified_name.into()), location)?;
                 self.emit(Op::Call(name_idx, total_args), location);
             }
             fpas_sema::MethodCallTarget::Static(_) => {

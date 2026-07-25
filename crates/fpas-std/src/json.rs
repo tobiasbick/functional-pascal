@@ -35,7 +35,7 @@ fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String
             };
             Ok(json_variant("Number", vec![Value::Real(value)]))
         }
-        JsonValue::String(value) => Ok(json_variant("String", vec![Value::Str(value)])),
+        JsonValue::String(value) => Ok(json_variant("String", vec![Value::Str(value.into())])),
         JsonValue::Array(items) => items
             .into_iter()
             .map(|item| json_to_fpas_at_depth(item, depth + 1))
@@ -44,7 +44,7 @@ fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String
         JsonValue::Object(fields) => fields
             .into_iter()
             .map(|(key, value)| {
-                json_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key), value))
+                json_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
             .map(|fields| json_variant("Object", vec![Value::Dict(fields)])),
@@ -159,7 +159,7 @@ fn fpas_to_json_at_depth(
             )),
         },
         "String" => match expect_one_field("String", fields, location)? {
-            Value::Str(value) => Ok(JsonValue::String(value)),
+            Value::Str(value) => Ok(JsonValue::String(value.into())),
             other => Err(std_runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!(
@@ -204,7 +204,10 @@ fn fpas_to_json_at_depth(
                             ));
                         }
                     };
-                    object.insert(key, fpas_to_json_at_depth(value, location, depth + 1)?);
+                    object.insert(
+                        key.into(),
+                        fpas_to_json_at_depth(value, location, depth + 1)?,
+                    );
                 }
                 Ok(JsonValue::Object(object))
             }
@@ -242,15 +245,19 @@ pub(crate) fn run(
             match serde_json::from_str::<JsonValue>(&text).map_err(|err| err.to_string()) {
                 Ok(value) => match json_to_fpas(value) {
                     Ok(value) => stack.push(Value::ResultOk(Box::new(value))),
-                    Err(message) => stack.push(Value::ResultError(Box::new(Value::Str(message)))),
+                    Err(message) => {
+                        stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                    }
                 },
-                Err(message) => stack.push(Value::ResultError(Box::new(Value::Str(message)))),
+                Err(message) => {
+                    stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                }
             }
         }
         Intrinsic::Json(JsonIntrinsic::Stringify) => {
             let value = pop_value(stack, location)?;
             let json = fpas_to_json(value, location)?;
-            stack.push(Value::Str(json.to_string()));
+            stack.push(Value::Str(json.to_string().into()));
         }
         _ => return Ok(None),
     }
@@ -295,7 +302,7 @@ mod tests {
 
     #[test]
     fn parse_rejects_json_above_max_depth() {
-        let mut stack = vec![Value::Str(nested_array_json(MAX_JSON_DEPTH))];
+        let mut stack = vec![Value::Str(nested_array_json(MAX_JSON_DEPTH).into())];
         run(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }

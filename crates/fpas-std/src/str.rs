@@ -6,7 +6,7 @@
 
 use crate::error::{StdError, std_internal_error, std_runtime_error};
 use crate::intrinsic_args::{
-    pad_fill_char, pop_array, pop_int, pop_single_char, pop_string, pop_value,
+    expect_str, pad_fill_char, pop_array, pop_int, pop_single_char, pop_string, pop_value,
     value_as_string_for_join,
 };
 use crate::limits::checked_collection_len;
@@ -27,20 +27,26 @@ pub(crate) fn run(
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Str(StrIntrinsic::Length) => {
-            let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(s.chars().count() as i64));
+            let s = expect_str(pop_value(stack, location)?, location)?;
+            // ASCII scalars are one byte each, so byte length equals character count.
+            let len = if s.is_ascii() {
+                s.len()
+            } else {
+                s.chars().count()
+            };
+            stack.push(Value::Integer(len as i64));
         }
         Intrinsic::Str(StrIntrinsic::ToUpper) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.to_uppercase()));
+            stack.push(Value::Str(s.to_uppercase().into()));
         }
         Intrinsic::Str(StrIntrinsic::ToLower) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.to_lowercase()));
+            stack.push(Value::Str(s.to_lowercase().into()));
         }
         Intrinsic::Str(StrIntrinsic::Trim) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.trim().to_string()));
+            stack.push(Value::Str(s.trim().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::Contains) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
@@ -74,7 +80,7 @@ pub(crate) fn run(
             let out: String = chars[start as usize..(start + len) as usize]
                 .iter()
                 .collect();
-            stack.push(Value::Str(out));
+            stack.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::IndexOf) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
@@ -89,7 +95,7 @@ pub(crate) fn run(
             let new_s = pop_string(pop_value(stack, location)?, location)?;
             let old = pop_string(pop_value(stack, location)?, location)?;
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.replace(&old, &new_s)));
+            stack.push(Value::Str(s.replace(&old, &new_s).into()));
         }
         Intrinsic::Str(StrIntrinsic::Split) => {
             let delim = pop_string(pop_value(stack, location)?, location)?;
@@ -104,7 +110,7 @@ pub(crate) fn run(
             }
             let parts: Vec<Value> = s
                 .split(&delim[..])
-                .map(|p| Value::Str(p.to_string()))
+                .map(|p| Value::Str(p.to_string().into()))
                 .collect();
             stack.push(Value::Array(parts.into()));
         }
@@ -119,7 +125,7 @@ pub(crate) fn run(
                 }
                 out.push_str(part);
             }
-            stack.push(Value::Str(out));
+            stack.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::IsNumeric) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
@@ -134,7 +140,7 @@ pub(crate) fn run(
                 let len = checked_collection_len(n, location, "Std.Str.RepeatStr")?;
                 s.repeat(len)
             };
-            stack.push(Value::Str(out));
+            stack.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::PadLeft) => {
             let pad_fill = pop_string(pop_value(stack, location)?, location)?;
@@ -144,10 +150,10 @@ pub(crate) fn run(
             let width = checked_pad_width(width, "PadLeft", location)?;
             let char_count = s.chars().count();
             if char_count >= width {
-                stack.push(Value::Str(s));
+                stack.push(Value::Str(s.into()));
             } else {
                 let padding: String = std::iter::repeat_n(pad_char, width - char_count).collect();
-                stack.push(Value::Str(format!("{padding}{s}")));
+                stack.push(Value::Str(format!("{padding}{s}").into()));
             }
         }
         Intrinsic::Str(StrIntrinsic::PadRight) => {
@@ -158,10 +164,10 @@ pub(crate) fn run(
             let width = checked_pad_width(width, "PadRight", location)?;
             let char_count = s.chars().count();
             if char_count >= width {
-                stack.push(Value::Str(s));
+                stack.push(Value::Str(s.into()));
             } else {
                 let padding: String = std::iter::repeat_n(pad_char, width - char_count).collect();
-                stack.push(Value::Str(format!("{s}{padding}")));
+                stack.push(Value::Str(format!("{s}{padding}").into()));
             }
         }
         Intrinsic::Str(StrIntrinsic::PadCenter) => {
@@ -172,14 +178,14 @@ pub(crate) fn run(
             let width = checked_pad_width(width, "PadCenter", location)?;
             let char_count = s.chars().count();
             if char_count >= width {
-                stack.push(Value::Str(s));
+                stack.push(Value::Str(s.into()));
             } else {
                 let total_pad = width - char_count;
                 let left_pad = total_pad / 2;
                 let right_pad = total_pad - left_pad;
                 let lp: String = std::iter::repeat_n(pad_char, left_pad).collect();
                 let rp: String = std::iter::repeat_n(pad_char, right_pad).collect();
-                stack.push(Value::Str(format!("{lp}{s}{rp}")));
+                stack.push(Value::Str(format!("{lp}{s}{rp}").into()));
             }
         }
         Intrinsic::Str(StrIntrinsic::FromChar) => {
@@ -194,7 +200,7 @@ pub(crate) fn run(
                 ));
             }
             let s: String = std::iter::repeat_n(c, n as usize).collect();
-            stack.push(Value::Str(s));
+            stack.push(Value::Str(s.into()));
         }
         Intrinsic::Str(StrIntrinsic::CharAt) => {
             let idx = pop_int(pop_value(stack, location)?, location)?;
@@ -211,7 +217,7 @@ pub(crate) fn run(
                     location,
                 ));
             };
-            stack.push(Value::Str(character.to_string()));
+            stack.push(Value::Str(character.to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::SetCharAt) => {
             let c = pop_single_char(pop_value(stack, location)?, location)?;
@@ -230,7 +236,7 @@ pub(crate) fn run(
                 ));
             }
             chars[idx as usize] = c;
-            stack.push(Value::Str(chars.into_iter().collect()));
+            stack.push(Value::Str(chars.into_iter().collect::<String>().into()));
         }
         Intrinsic::Str(StrIntrinsic::Ord) => {
             let c = pop_single_char(pop_value(stack, location)?, location)?;
@@ -249,7 +255,7 @@ pub(crate) fn run(
                         location,
                     )
                 })?;
-            stack.push(Value::Str(c.to_string()));
+            stack.push(Value::Str(c.to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::Insert) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
@@ -267,7 +273,7 @@ pub(crate) fn run(
             let byte_offset: usize = chars[..idx as usize].iter().map(|c| c.len_utf8()).sum();
             let mut result = s;
             result.insert_str(byte_offset, &sub);
-            stack.push(Value::Str(result));
+            stack.push(Value::Str(result.into()));
         }
         Intrinsic::Str(StrIntrinsic::Delete) => {
             let len = pop_int(pop_value(stack, location)?, location)?;
@@ -286,19 +292,19 @@ pub(crate) fn run(
             let mut result: String = chars[..idx as usize].iter().collect();
             let tail: String = chars[(idx + len) as usize..].iter().collect();
             result.push_str(&tail);
-            stack.push(Value::Str(result));
+            stack.push(Value::Str(result.into()));
         }
         Intrinsic::Str(StrIntrinsic::Reverse) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.chars().rev().collect()));
+            stack.push(Value::Str(s.chars().rev().collect::<String>().into()));
         }
         Intrinsic::Str(StrIntrinsic::TrimLeft) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.trim_start().to_string()));
+            stack.push(Value::Str(s.trim_start().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::TrimRight) => {
             let s = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(s.trim_end().to_string()));
+            stack.push(Value::Str(s.trim_end().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::LastIndexOf) => {
             let sub = pop_string(pop_value(stack, location)?, location)?;
@@ -325,7 +331,7 @@ pub(crate) fn run(
             args.reverse();
             let template = pop_string(pop_value(stack, location)?, location)?;
             let result = format::apply_format(&template, &args, location)?;
-            stack.push(Value::Str(result));
+            stack.push(Value::Str(result.into()));
         }
         _ => return Ok(None),
     }
@@ -361,6 +367,17 @@ mod tests {
 
     fn run_str(intrinsic: StrIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
         run(Intrinsic::Str(intrinsic), stack, loc()).map(|_| ())
+    }
+
+    #[test]
+    fn length_counts_ascii_bytes_and_unicode_scalars() {
+        let mut ascii = vec![Value::Str("hello".into())];
+        run_str(StrIntrinsic::Length, &mut ascii).unwrap();
+        assert_eq!(ascii, vec![Value::Integer(5)]);
+
+        let mut unicode = vec![Value::Str("café".into())];
+        run_str(StrIntrinsic::Length, &mut unicode).unwrap();
+        assert_eq!(unicode, vec![Value::Integer(4)]);
     }
 
     #[test]

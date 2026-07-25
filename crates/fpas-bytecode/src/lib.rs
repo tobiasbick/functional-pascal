@@ -12,7 +12,7 @@ pub use intrinsic::{
     TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use op::Op;
-pub use value::{SharedArray, Value};
+pub use value::{SharedArray, SharedStr, Value};
 
 /// Persistent instruction-set version recorded in `.fpascu` identities.
 pub const BYTECODE_VERSION: u32 = 1;

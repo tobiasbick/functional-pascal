@@ -46,7 +46,7 @@ fn pool_loop_task_with_ip_out_of_range_returns_error_and_shuts_down() {
 #[test]
 fn pool_loop_runtime_panic_opcode_requests_shutdown() {
     let mut chunk = Chunk::new();
-    emit_constant(&mut chunk, Value::Str("boom".to_string()));
+    emit_constant(&mut chunk, Value::Str(("boom".to_string()).into()));
     chunk.emit(Op::Panic, loc());
 
     let shared = Arc::new(minimal_shared_state(chunk));

@@ -87,7 +87,7 @@ fn console_lock_serializes_concurrent_writes() {
         handles.push(thread::spawn(move || {
             for _ in 0..20 {
                 let mut c = s.console.lock().unwrap_or_else(|e| e.into_inner());
-                c.write_ln(&Value::Str(format!("line-{k}")), loc())
+                c.write_ln(&Value::Str((format!("line-{k}")).into()), loc())
                     .expect("write_ln");
             }
         }));

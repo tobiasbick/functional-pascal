@@ -1,10 +1,11 @@
 unit Std.Tui.Layout.Measure;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Elements.Element, Std.Tui.Geometry.Size, Std.Tui.Layout.LayoutSettings,
-  Std.Tui.Layout.MeasureAxis, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
-  Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer, Std.Tui.Text.TextArea;
+  Std.Array, Std.Console, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
+  Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Geometry.Size,
+  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.MeasureAxis, Std.Tui.Layout.MeasureResult,
+  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
+  Std.Tui.Text.TextArea;
 
 const
   TuiMeasureExpandingMaximum: integer := 9223372036854775807;
@@ -12,6 +13,24 @@ const
 private function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
 begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text), 1))
+end;
+
+private function TuiMeasureLeafMenu(Nodes: array of TuiMenuNode): TuiMeasureResult;
+begin
+  mutable var Width: integer := 0;
+  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  begin
+    case TuiMenuNodeParent(Nodes[Index]) of
+      Some(Parent):
+      begin
+      end;
+      None:
+      begin
+        Width := (Width + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2
+      end
+    end
+  end;
+  return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
 private function TuiMeasureLeafButton(Text: string): TuiMeasureResult;
@@ -140,7 +159,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -193,6 +212,10 @@ begin
     TuiElement.MenuBar(Items):
     begin
       return TuiMeasureApplyPolicy(TuiMeasureLeafMenuBar(Items), TuiSizePolicy.Preferred(), Spec)
+    end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+      return TuiMeasureApplyPolicy(TuiMeasureLeafMenu(Nodes), TuiSizePolicy.Preferred(), Spec)
     end;
     TuiElement.StatusLine(Items):
     begin

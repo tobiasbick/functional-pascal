@@ -2,7 +2,9 @@
 
 unit Ide.App.Model;
 
-uses Ide.Diagnostic.Model, Ide.Document.Model, Ide.Project.Model, Ide.Workspace.Model, Std.Tui;
+uses
+  Ide.Diagnostic.Model, Ide.Document.Model, Ide.Project.Model, Ide.Theme.Model, Ide.Workspace.Model,
+  Std.Tui;
 
 type
   /// Command resumed after a dirty-document decision.
@@ -32,6 +34,8 @@ type
     SelectedDiagnostic: option of integer;
     LastExitCode: option of integer;
     Focused: option of TuiControlId;
+    Menu: TuiMenuState;
+    Theme: IdeTheme;
   end;
 
 /// Creates the clean initial model for an optional source path.
@@ -49,5 +53,7 @@ begin
     SelectedDiagnostic := None;
     LastExitCode := None;
     Focused := None;
+    Menu := TuiMenuState.Closed();
+    Theme := IdeTheme.ClassicBlue;
   end
 end;

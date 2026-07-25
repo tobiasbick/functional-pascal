@@ -12,6 +12,7 @@ TuiElement.CheckBox(Id, Text, Checked, ChangeAction)
 TuiElement.List(Id, Items, Selected, ChangeAction)
 TuiElement.Scroll(Id, Offset, ChangeAction, Children)
 TuiElement.MenuBar(Items)
+TuiElement.Menu(Id, Nodes, State, ChangeAction)
 TuiElement.StatusLine(Items)
 TuiElement.Row(Children, Spacing)
 TuiElement.Column(Children, Spacing)
@@ -24,7 +25,9 @@ TuiElement.Desktop(Focused, Children)
 
 `MakeRow` and `MakeColumn` use spacing `0`; use `MakeRowSpaced` and
 `MakeColumnSpaced` for gaps. `MakeLayout` and `MakeScroll` wrap exactly one
-child. `MenuBar` uses `TuiMenuItem`; `StatusLine` uses `TuiStatusItem`.
+child. `MenuBar` is the simple flat action bar and uses `TuiMenuItem`.
+`Menu` is the controlled hierarchical menu described in
+[Menus](menus.md); `StatusLine` uses `TuiStatusItem`.
 Hint-only status lines are not focusable.
 
 `Scroll` has a one-cell minimum on each axis while retaining its child's
@@ -42,7 +45,7 @@ negative text-area or scroll offsets, and focus identities absent from the
 tree.
 
 Controlled messages are `TextChanged`, `TextAreaChanged`, `CheckChanged`,
-`SelectionChanged`, and `ScrollChanged`. `TuiFocusFirst` and `TuiFocusResolve`
+`SelectionChanged`, `ScrollChanged`, and `MenuChanged`. `TuiFocusFirst` and `TuiFocusResolve`
 choose a valid focus from the active modal or full tree.
 
 ## See also

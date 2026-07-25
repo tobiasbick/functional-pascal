@@ -1,0 +1,136 @@
+unit Std.Tui.Elements.MenuValidate;
+
+uses Std.Array, Std.Option, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
+
+private function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
+begin
+  case Left of
+    Some(LeftId):
+    begin
+      case Right of
+        Some(RightId):
+        begin
+          return LeftId.Value = RightId.Value
+        end;
+        None:
+        begin
+          return false
+        end
+      end
+    end;
+    None:
+    begin
+      case Right of
+        Some(RightId):
+        begin
+          return false
+        end;
+        None:
+        begin
+          return true
+        end
+      end
+    end
+  end
+end;
+
+/// Validates identities, parents, cycles, mnemonics, shortcuts, and controlled state.
+
+procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
+begin
+  for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
+  begin
+    var Id: TuiMenuNodeId := TuiMenuNodeIdOf(Nodes[Index]);
+    for Previous: integer := 0 to Index - 1 do
+    begin
+      if TuiMenuNodeIdOf(Nodes[Previous]).Value = Id.Value then
+      begin
+        panic('Tui menu node id must be unique')
+      end
+    end;
+    var Mnemonic: string := TuiMenuNodeMnemonic(Nodes[Index]);
+    if Std.Str.Length(Mnemonic) > 1 then
+    begin
+      panic('Tui menu mnemonic must be empty or one character')
+    end;
+    case TuiMenuNodeParent(Nodes[Index]) of
+      Some(Parent):
+      begin
+        var ParentIndex: integer := TuiMenuFind(Nodes, Parent);
+        if ParentIndex < 0 then
+        begin
+          panic('Tui menu parent id must exist')
+        end;
+        if not TuiMenuNodeIsSubmenu(Nodes[ParentIndex]) then
+        begin
+          panic('Tui menu parent must be a submenu')
+        end
+      end;
+      None:
+      begin
+        if not TuiMenuNodeIsSubmenu(Nodes[Index]) then
+        begin
+          panic('Tui root menu nodes must be submenus')
+        end
+      end
+    end;
+    mutable var Current: TuiMenuNodeId := Id;
+    mutable var Remaining: integer := Std.Array.Length(Nodes);
+    while Remaining > 0 do
+    begin
+      Remaining := Remaining - 1;
+      var CurrentIndex: integer := TuiMenuFind(Nodes, Current);
+      case TuiMenuNodeParent(Nodes[CurrentIndex]) of
+        Some(Parent):
+        begin
+          if Parent.Value = Id.Value then
+          begin
+            panic('Tui menu parent links must not contain a cycle')
+          end;
+          Current := Parent
+        end;
+        None:
+        begin
+          Remaining := 0
+        end
+      end
+    end;
+    for Other: integer := 0 to Index - 1 do
+    begin
+      if (TuiMenuSameOptionalId(TuiMenuNodeParent(Nodes[Other]), TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
+         (Std.Str.ToLower(Mnemonic) = Std.Str.ToLower(TuiMenuNodeMnemonic(Nodes[Other]))) then
+      begin
+        panic('Tui sibling menu mnemonics must be unique')
+      end
+    end
+  end;
+  if State.Open then
+  begin
+    case State.Active of
+      Some(Active):
+      begin
+        var ActiveIndex: integer := TuiMenuFind(Nodes, Active);
+        if (ActiveIndex < 0) or not TuiMenuNodeSelectable(Nodes[ActiveIndex]) then
+        begin
+          panic('Tui open menu active id must select an enabled node')
+        end
+      end;
+      None:
+      begin
+        panic('Tui open menu requires an active node')
+      end
+    end
+  end
+  else
+  begin
+    case State.Active of
+      Some(Active):
+      begin
+        panic('Tui closed menu must not have an active node')
+      end;
+      None:
+      begin
+      end
+    end
+  end
+end;

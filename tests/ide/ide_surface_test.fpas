@@ -1,19 +1,18 @@
 program IdeSurfaceTest;
 
 uses
-  Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Diagnostic.Model, Ide.Document.Model, Std.Str,
-  Std.Test, Std.Tui;
+  Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Diagnostic.Model, Ide.Document.Model,
+  Ide.Theme.Model, Std.Str, Std.Test, Std.Tui;
 
 procedure AssertSurface(Size: TuiSize; State: IdeModel; ExpectedPath: string);
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(Size);
   var Final: IdeModel := App.RunIterations(State, UpdateIde, ViewIde, 0, 0);
   var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Open'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Save'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Check'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'File'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Edit'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Run'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Exit'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Options'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(1), ExpectedPath));
   AssertTrue(Std.Str.Contains(Surface.LineAt(2), 'Editor'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 6), 'Messages'));
@@ -44,6 +43,8 @@ begin
     SelectedDiagnostic := Some(0);
     LastExitCode := Some(1);
     Focused := None;
+    Menu := TuiMenuState.Closed();
+    Theme := IdeTheme.ClassicBlue;
   end;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   var _: IdeModel := App.RunIterations(LongMessage, UpdateIde, ViewIde, 0, 0);

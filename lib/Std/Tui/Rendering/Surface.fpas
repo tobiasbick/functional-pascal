@@ -310,3 +310,11 @@ begin
   TuiSurfacePresentedReady[Slot - 1] := true;
   return Damage
 end;
+
+/// Marks every terminal cell as damaged without changing the surface contents.
+
+procedure TuiSurfaceInvalidateTerminal(Surface: TuiWorkingSurface);
+begin
+  var Slot: integer := TuiSurfaceRequire(Surface.Slot);
+  TuiSurfacePresentedReady[Slot - 1] := false
+end;

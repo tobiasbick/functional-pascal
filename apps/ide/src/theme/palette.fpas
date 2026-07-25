@@ -1,0 +1,75 @@
+/// Concrete Tui palettes for the bundled IDE themes.
+
+unit Ide.Theme.Palette;
+
+uses Ide.Theme.Model, Std.Tui;
+
+private function IdeStyle(Foreground: integer; Background: integer): TuiStyle;
+begin
+  return TuiStyle.FromColors(TuiColor.FromCrt(Foreground), TuiColor.FromCrt(Background))
+end;
+
+private function ClassicBluePalette(): TuiPalette;
+begin
+  return TuiPalette.Default()
+           .WithRole(TuiStyleRole.Normal, IdeStyle(15, 1))
+           .WithRole(TuiStyleRole.Disabled, IdeStyle(8, 1))
+           .WithRole(TuiStyleRole.Focused, IdeStyle(0, 11))
+           .WithRole(TuiStyleRole.Selected, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.Shortcut, IdeStyle(14, 1))
+           .WithRole(TuiStyleRole.Frame, IdeStyle(11, 1))
+           .WithRole(TuiStyleRole.Title, IdeStyle(15, 1))
+           .WithRole(TuiStyleRole.Failure, IdeStyle(12, 1))
+           .WithRole(TuiStyleRole.Warning, IdeStyle(14, 1))
+           .WithRole(TuiStyleRole.Accent, IdeStyle(11, 1))
+end;
+
+private function DarkPalette(): TuiPalette;
+begin
+  return TuiPalette.Default()
+           .WithRole(TuiStyleRole.Normal, IdeStyle(7, 0))
+           .WithRole(TuiStyleRole.Disabled, IdeStyle(8, 0))
+           .WithRole(TuiStyleRole.Focused, IdeStyle(0, 11))
+           .WithRole(TuiStyleRole.Selected, IdeStyle(15, 8))
+           .WithRole(TuiStyleRole.Shortcut, IdeStyle(11, 0))
+           .WithRole(TuiStyleRole.Frame, IdeStyle(8, 0))
+           .WithRole(TuiStyleRole.Title, IdeStyle(7, 0))
+           .WithRole(TuiStyleRole.Failure, IdeStyle(12, 0))
+           .WithRole(TuiStyleRole.Warning, IdeStyle(14, 0))
+           .WithRole(TuiStyleRole.Accent, IdeStyle(11, 0))
+end;
+
+private function MonochromePalette(): TuiPalette;
+begin
+  return TuiPalette.Default()
+           .WithRole(TuiStyleRole.Normal, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Disabled, IdeStyle(8, 0))
+           .WithRole(TuiStyleRole.Focused, IdeStyle(0, 15))
+           .WithRole(TuiStyleRole.Selected, IdeStyle(0, 15))
+           .WithRole(TuiStyleRole.Shortcut, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Frame, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Title, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Failure, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Warning, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.Accent, IdeStyle(15, 0))
+end;
+
+/// Returns the complete Tui palette for a bundled IDE theme.
+
+function IdeThemePalette(Theme: IdeTheme): TuiPalette;
+begin
+  case Theme of
+    IdeTheme.ClassicBlue:
+    begin
+      return ClassicBluePalette()
+    end;
+    IdeTheme.Dark:
+    begin
+      return DarkPalette()
+    end;
+    IdeTheme.Monochrome:
+    begin
+      return MonochromePalette()
+    end
+  end
+end;

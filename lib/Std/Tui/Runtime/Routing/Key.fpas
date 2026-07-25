@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu, Std.Tui.Runtime.Routing.TextArea;
 
 private function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
@@ -30,7 +30,7 @@ begin
         Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -181,6 +181,10 @@ begin
       end;
       return None
     end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+      return None
+    end;
     TuiElement.StatusLine(Items):
     begin
       for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -313,6 +317,15 @@ end;
 function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
+  case TuiRouteMenuKey(Root, Key) of
+    Some(Messages):
+    begin
+      return Messages
+    end;
+    None:
+    begin
+    end
+  end;
   if Key.kind = Std.Console.KeyKind.Escape then
   begin
     return [TuiMsg.QuitRequested]

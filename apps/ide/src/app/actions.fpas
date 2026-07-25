@@ -4,6 +4,13 @@ unit Ide.App.Actions;
 
 uses Std.Tui;
 
+/// Returns the hierarchical menu control identity.
+
+function MenuControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(14)
+end;
+
 /// Reports whether a source/action pair matches one expected IDE command.
 
 function IsIdeCommand(
@@ -13,7 +20,8 @@ function IsIdeCommand(
   ExpectedAction: TuiAction
 ): boolean;
 begin
-  return (Source.Value = ExpectedSource.Value) and (Action.Value = ExpectedAction.Value)
+  return ((Source.Value = ExpectedSource.Value) or (Source.Value = MenuControlId().Value)) and
+         (Action.Value = ExpectedAction.Value)
 end;
 
 /// Returns the Open command control identity.
@@ -112,6 +120,34 @@ end;
 function MessageScrollChangedAction(): TuiAction;
 begin
   return TuiAction.Create(13)
+end;
+
+/// Returns the controlled menu-state action.
+
+function MenuChangedAction(): TuiAction;
+begin
+  return TuiAction.Create(14)
+end;
+
+/// Returns the Classic Blue theme action.
+
+function ClassicBlueThemeAction(): TuiAction;
+begin
+  return TuiAction.Create(15)
+end;
+
+/// Returns the Dark theme action.
+
+function DarkThemeAction(): TuiAction;
+begin
+  return TuiAction.Create(16)
+end;
+
+/// Returns the Monochrome theme action.
+
+function MonochromeThemeAction(): TuiAction;
+begin
+  return TuiAction.Create(17)
 end;
 
 /// Returns the path-dialog input identity.

@@ -47,14 +47,13 @@ end;
 /// The Console cell format carries glyph and colors. Tui style attributes are intentionally
 /// resolved here as color-only output because the existing Console frame API has no attributes.
 
-procedure TuiFlushSurface(Surface: TuiWorkingSurface);
+procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
   if Std.Array.Length(Damage) = 0 then
   begin
     return
   end;
-  var Palette: TuiPalette := TuiPalette.Default();
   BeginFrame();
   for Item: TuiSurfaceDamage in Damage do
   begin

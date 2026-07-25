@@ -1,0 +1,24 @@
+program IdeThemeTest;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Theme.Model, Std.Test, Std.Tui;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  mutable var Model: IdeModel := InitialIdeModel(None);
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 0, 0);
+  App.Inject(TuiMsg.Action(MenuControlId(), DarkThemeAction()));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertTrue(Model.Theme = IdeTheme.Dark);
+  AssertEquals(0, App.Palette().Normal.Background.Index);
+  AssertEquals(7, App.Palette().Normal.Foreground.Index);
+  App.Inject(TuiMsg.Action(MenuControlId(), MonochromeThemeAction()));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertTrue(Model.Theme = IdeTheme.Monochrome);
+  AssertEquals(15, App.Palette().Normal.Foreground.Index);
+  App.Inject(TuiMsg.Action(MenuControlId(), ClassicBlueThemeAction()));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertTrue(Model.Theme = IdeTheme.ClassicBlue);
+  AssertEquals(1, App.Palette().Normal.Background.Index);
+  App.Close()
+end.

@@ -142,7 +142,7 @@ uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface)
+  TuiFlushSurface(Surface, TuiPalette.Default())
 end.
 "#,
     );
@@ -155,8 +155,8 @@ uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface);
-  TuiFlushSurface(Surface)
+  TuiFlushSurface(Surface, TuiPalette.Default());
+  TuiFlushSurface(Surface, TuiPalette.Default())
 end.
 "#,
     );
@@ -169,9 +169,9 @@ uses Std.Tui, Std.Tui.Runtime.TerminalRenderer;
 
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 2));
-  TuiFlushSurface(Surface);
+  TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(1, 0, 'X');
-  TuiFlushSurface(Surface)
+  TuiFlushSurface(Surface, TuiPalette.Default())
 end.
 "#,
     );
@@ -186,9 +186,9 @@ uses
 begin
   var Surface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(4, 1));
   Surface.PutCell(TuiPoint.Create(1, 0), TuiCell.Create('中', TuiStyleRole.Accent));
-  TuiFlushSurface(Surface);
+  TuiFlushSurface(Surface, TuiPalette.Default());
   Surface.PutGlyph(2, 0, 'X');
-  TuiFlushSurface(Surface);
+  TuiFlushSurface(Surface, TuiPalette.Default());
   AssertEquals(' ', Std.Option.Unwrap(GetCell(2, 1)).glyph);
   AssertEquals('X', Std.Option.Unwrap(GetCell(3, 1)).glyph)
 end.

@@ -4,7 +4,8 @@ uses
   Std.Array, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
   Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent,
-  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.MenuPointer,
+  Std.Tui.Runtime.Routing.TextArea;
 
 type
   /// Private hit result for pointer routing against arranged geometry.
@@ -30,7 +31,7 @@ begin
       begin
         LastDialog := Index
       end;
-      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
       begin
       end
     end
@@ -102,6 +103,9 @@ begin
         end;
         Cursor := Cursor + Width
       end
+    end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
     end;
     TuiElement.StatusLine(Items):
     begin
@@ -186,6 +190,15 @@ begin
   if (Pointer.Action <> Std.Console.MouseAction.Down) or (Pointer.Button <> TuiPointerButton.Left) then
   begin
     return [TuiMsg.Pointer(Pointer)]
+  end;
+  case TuiRouteMenuPointer(Root, Frame, Pointer.Position) of
+    Some(Messages):
+    begin
+      return Messages
+    end;
+    None:
+    begin
+    end
   end;
   TuiPointerBestHit := TuiPointerHit.Miss;
   if TuiRoutePointerHitWalk(Frame, Root, 0, Pointer.Position, true) <> Frame.Count() then

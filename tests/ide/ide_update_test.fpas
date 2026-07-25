@@ -2,7 +2,7 @@ program IdeUpdateTest;
 
 uses
   Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Diagnostic.Model, Ide.Document.Model,
-  Ide.Test.Files, Std.Str, Std.Option, Std.Test, Std.Tui;
+  Ide.Test.Files, Ide.Theme.Model, Std.Str, Std.Option, Std.Test, Std.Tui;
 
 const
   SavePath: string := IdeTestScratch + '/update_save.fpas';
@@ -83,6 +83,8 @@ begin
     SelectedDiagnostic := Some(0);
     LastExitCode := Some(1);
     Focused := Some(MessageScrollControlId());
+    Menu := TuiMenuState.Closed();
+    Theme := IdeTheme.ClassicBlue;
   end;
   var LaterDiagnostic: IdeModel := UpdateIde(Navigation, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 5)), Cmd);
   case LaterDiagnostic.SelectedDiagnostic of

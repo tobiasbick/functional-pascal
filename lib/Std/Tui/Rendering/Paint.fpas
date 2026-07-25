@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Surface,
-  Std.Tui.Rendering.TextArea;
+  Std.Tui.Rendering.Menu, Std.Tui.Rendering.TextArea;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -141,6 +141,10 @@ begin
       end;
       TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
     end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+      TuiPaintMenuBar(Clipped, Entry.Bounds, Nodes, State, TuiPaintFocused(Focused, Id))
+    end;
     TuiElement.StatusLine(Items):
     begin
       mutable var Text: string := '';
@@ -196,6 +200,58 @@ begin
   return Next
 end;
 
+private function TuiPaintMenuOverlays(
+  Canvas: TuiCanvas;
+  Frame: TuiArrangedFrame;
+  Node: TuiElement;
+  Index: integer;
+  AllowMenu: boolean
+): integer;
+begin
+  mutable var Next: integer := Index + 1;
+  case Node of
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+      if AllowMenu and State.Open then
+      begin
+        TuiPaintMenuPopups(Canvas, Frame.EntryAt(Index).Bounds, Nodes, State)
+      end
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      mutable var ModalIndex: integer := -1;
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case Children[ChildIndex] of
+          TuiElement.Dialog(Title, DialogChildren):
+          begin
+            ModalIndex := ChildIndex
+          end
+          else
+          begin
+          end
+        end
+      end;
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu and
+                                                                                ((ModalIndex < 0) or (ModalIndex = ChildIndex)))
+      end
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu)
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    begin
+    end
+  end;
+  return Next
+end;
+
 /// Paints one complete frame using arranged geometry only (no measurement).
 
 procedure TuiPaintView(Surface: TuiWorkingSurface; Frame: TuiArrangedFrame; Root: TuiElement);
@@ -206,6 +262,10 @@ begin
   if NextIndex <> Frame.Count() then
   begin
     panic('Tui paint did not consume the complete arranged frame')
+  end;
+  if TuiPaintMenuOverlays(Canvas, Frame, Root, 0, true) <> Frame.Count() then
+  begin
+    panic('Tui menu overlay paint did not consume the complete arranged frame')
   end
 end;
 

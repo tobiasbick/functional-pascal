@@ -37,16 +37,31 @@ begin
   end
 end;
 
-private function ViewCommandBar(): TuiElement;
+private function ViewCommandBar(State: IdeModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeMenuBar([
-                                          TuiMenuItem.Create(OpenControlId(), 'Open', OpenAction()),
-                                          TuiMenuItem.WithShortcut(SaveControlId(), 'Save', SaveAction(), 'F2'),
-                                          TuiMenuItem.WithShortcut(CheckControlId(), 'Check', CheckAction(), 'F9'),
-                                          TuiMenuItem.WithShortcut(RunControlId(), 'Run', RunAction(), 'Ctrl+F9'),
-                                          TuiMenuItem.WithShortcut(ExitControlId(), 'Exit', ExitAction(), 'Alt+X')
+  var FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
+  var EditId: TuiMenuNodeId := TuiMenuNodeId.Create(2);
+  var RunId: TuiMenuNodeId := TuiMenuNodeId.Create(3);
+  var OptionsId: TuiMenuNodeId := TuiMenuNodeId.Create(4);
+  var ThemeId: TuiMenuNodeId := TuiMenuNodeId.Create(5);
+  return TuiElementBuilders.MakeMenu(MenuControlId(), [
+                                                        TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
+                                                        TuiMenuNodeBuilders.Submenu(EditId, None, 'Edit', 'E'),
+                                                        TuiMenuNodeBuilders.Submenu(RunId, None, 'Run', 'R'),
+                                                        TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
+                                                        TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(10), Some(FileId), 'Open...', 'O', OpenAction(), TuiKeyGesture.Create(TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
+                                                        TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(11), Some(FileId), 'Save', 'S', SaveAction(), TuiKeyGesture.Create(TuiKeyKind.F2, '', false, false, false, false, 'F2')),
+                                                        TuiMenuNodeBuilders.Separator(TuiMenuNodeId.Create(12), FileId),
+                                                        TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(13), Some(FileId), 'Exit', 'X', ExitAction(), TuiKeyGesture.Create(TuiKeyKind.Character, 'x', false, false, true, false, 'Alt+X')),
+                                                        TuiMenuNodeBuilders.DisabledCommand(TuiMenuNodeId.Create(20), Some(EditId), 'Undo', 'U', TuiAction.Create(20)),
+                                                        TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(30), Some(RunId), 'Check', 'C', CheckAction(), TuiKeyGesture.Create(TuiKeyKind.F9, '', false, false, false, false, 'F9')),
+                                                        TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(31), Some(RunId), 'Run', 'R', RunAction(), TuiKeyGesture.Create(TuiKeyKind.F9, '', false, true, false, false, 'Ctrl+F9')),
+                                                        TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
+                                                        TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(50), Some(ThemeId), 'Classic Blue', 'C', ClassicBlueThemeAction()),
+                                                        TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(51), Some(ThemeId), 'Dark', 'D', DarkThemeAction()),
+                                                        TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(52), Some(ThemeId), 'Monochrome', 'M', MonochromeThemeAction())
 
-                                        ])
+                                                      ], State.Menu, MenuChangedAction())
 end;
 
 private function ViewEditor(State: IdeModel): TuiElement;
@@ -250,7 +265,7 @@ begin
   return TuiElementBuilders.MakeDesktop(ViewFocus(State), [
                                                             TuiElementBuilders.MakeColumn([
 
-                                                                                            ViewCommandBar(),
+                                                                                            ViewCommandBar(State),
 
                                                                                             TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeLabel(OpenPathText(State))),
 

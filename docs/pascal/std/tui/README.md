@@ -15,6 +15,7 @@ implementation details.
 | [Geometry](geometry.md) | `TuiPoint`, `TuiSize`, and `TuiRect`. |
 | [Cells](cells.md) | Colors, styles, cells, and semantic palettes. |
 | [Elements](elements.md) | Tree variants, identities, validation, and focus. |
+| [Menus](menus.md) | Flat parent-linked menus, popups, mnemonics, and shortcuts. |
 | [Text area](text-area.md) | Controlled multiline editing, caret movement, scrolling, and painting. |
 | [Layout](layout.md) | Measurement, arrangement, frames, and clipping. |
 | [Application](application.md) | Update/View, headless execution, routing, and the terminal host. |
@@ -35,11 +36,13 @@ implementation details.
 | `TuiLayoutSettings.WithFixedHeight(Height)` | Copy of layout settings with one fixed total height. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
 | `TuiMsg` / `TuiPointerEvent` | Normalized application input. |
-| `TuiMenuItem` / `TuiStatusItem` | Menu-bar and status-line descriptions. |
+| `TuiMenuNode` / `TuiMenuState` / `TuiKeyGesture` | Hierarchical controlled menus. |
+| `TuiMenuItem` / `TuiStatusItem` | Flat action-bar and status-line descriptions. |
 | `TuiCmd` / `TuiCmdOutput` | Commands emitted by `Update`. |
 | `TuiApplication.OpenForTest(Size)` | Opens a fixed-size headless host. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
 | `TuiApplication.Run(...)` | Runs the interactive Console terminal host. |
+| `TuiApplication.RunWithPalette(...)` | Runs with a caller-defined initial palette. |
 | `App.SurfaceSnapshot()` | Copies the last painted surface for assertions. |
 
 ## Implementation (contributors)

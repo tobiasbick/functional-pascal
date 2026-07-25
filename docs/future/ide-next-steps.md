@@ -2,7 +2,8 @@
 
 > Status snapshot: 2026-07-25. Scrollable message output, diagnostic source
 > navigation, direct `.fpasprj` ingestion, and internal `.fpasworkspace`
-> ingestion are implemented. Project/workspace trees are deliberately deferred.
+> ingestion are implemented. The IDE also has hierarchical menus and three
+> runtime-switchable themes. Project/workspace trees are deliberately deferred.
 
 ## Purpose
 
@@ -30,7 +31,9 @@ The IDE is a fixed, single-document `Std.Tui` application:
 - it retains validated workspace metadata, original manifest text, member
   order, and every direct member project without displaying workspace UI;
 - it edits the source with a controlled multiline `TextArea`;
-- it supports Open, Save, Check, Run, and Exit;
+- it supports Open, Save, Check, Run, and Exit through File/Edit/Run/Options
+  popup menus with mnemonics and structural shortcuts;
+- it switches between Classic Blue, Dark, and Monochrome without restarting;
 - it protects dirty documents with Save, Discard, and Cancel;
 - it provides F2, F9, Ctrl+F9, and Alt+X shortcuts;
 - Check and Run save first and invoke the current `fpas` executable
@@ -76,6 +79,9 @@ apps/ide/
       │   ├── manifest.fpas     — typed workspace TOML validation
       │   ├── model.fpas        — retained workspace and member projects
       │   └── session.fpas      — atomic workspace and initial-document loading
+      ├── theme/
+      │   ├── model.fpas        — bundled theme identities
+      │   └── palette.fpas      — complete Tui palettes
       └── process/
           └── runner.fpas       — Check/Run invocation and output formatting
 ```

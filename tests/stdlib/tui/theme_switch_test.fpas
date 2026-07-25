@@ -1,0 +1,27 @@
+program TuiThemeSwitchTest;
+
+uses Std.Test, Std.Tui;
+
+function ViewTheme(State: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(None, [TuiElementBuilders.MakeLabel('theme')])
+end;
+
+function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  Cmd.SetPalette(TuiPalette.Default()
+                   .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
+  return State
+end;
+
+begin
+  var Initial: TuiPalette := TuiPalette.Default()
+                               .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
+  var App: TuiApplication := TuiApplication.OpenForTestWithPalette(TuiSize.Create(10, 2), Initial);
+  AssertEquals(10, App.Palette().Normal.Foreground.Red);
+  App.Inject(TuiMsg.Tick(0));
+  var _: integer := App.RunIterations(0, UpdateTheme, ViewTheme, 1, 0);
+  AssertEquals(1, App.Palette().Normal.Foreground.Red);
+  AssertEquals(6, App.Palette().Normal.Background.Blue);
+  App.Close()
+end.

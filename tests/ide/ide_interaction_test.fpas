@@ -55,6 +55,9 @@ end;
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   mutable var Model: IdeModel := App.RunIterations(InitialIdeModel(None), UpdateIde, ViewIde, 0, 0);
+  var FileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, FileAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
   var OpenAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Open');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
@@ -68,8 +71,11 @@ begin
     end
   end;
   App.InjectKeyForTest(EscapeKey());
-  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
   AssertNoDialog(Model);
+  var FileAgainAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, FileAgainAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
   var OpenAgainAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Open');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenAgainAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
@@ -82,7 +88,7 @@ begin
   var Resized: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals(40, Resized.Width);
   AssertEquals(12, Resized.Height);
-  AssertTrue(Std.Str.Contains(Resized.LineAt(0), 'Open'));
+  AssertTrue(Std.Str.Contains(Resized.LineAt(0), 'File'));
   AssertTrue(Std.Str.Contains(Resized.LineAt(6), 'Messages'));
   AssertTrue(Std.Str.Contains(Resized.LineAt(11), 'clean | Ln 1, Col 1'));
   App.Close();
@@ -101,6 +107,8 @@ begin
     SelectedDiagnostic := None;
     LastExitCode := Some(0);
     Focused := None;
+    Menu := TuiMenuState.Closed();
+    Theme := Initial.Theme;
   end;
   App := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 0, 0);

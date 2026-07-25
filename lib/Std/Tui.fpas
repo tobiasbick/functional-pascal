@@ -3,13 +3,14 @@ unit Std.Tui;
 uses
   Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette, Std.Tui.Cells.Style,
   Std.Tui.Cells.StyleRole, Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Geometry.Size, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment, Std.Tui.Layout.LayoutFit,
-  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins, Std.Tui.Layout.Measure,
-  Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec,
-  Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer, Std.Tui.Rendering.Canvas,
-  Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application,
-  Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+  Std.Tui.Geometry.Size, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
+  Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment,
+  Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins,
+  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult,
+  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
+  Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface,
+  Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg,
+  Std.Tui.Runtime.PointerEvent;
 
 type
   /// Zero-based terminal-cell coordinate.
@@ -62,6 +63,16 @@ type
   TuiAction = Std.Tui.Ids.Action.TuiAction;
   /// Immutable description of one flat menu-bar action.
   TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
+  /// Structural keyboard gesture used by menu commands.
+  TuiKeyGesture = Std.Tui.Chrome.KeyGesture.TuiKeyGesture;
+  /// Positive identity of one node in a flat menu definition.
+  TuiMenuNodeId = Std.Tui.Chrome.MenuNode.TuiMenuNodeId;
+  /// One flat parent-linked menu node.
+  TuiMenuNode = Std.Tui.Chrome.MenuNode.TuiMenuNode;
+  /// Model-owned open and active menu state.
+  TuiMenuState = Std.Tui.Chrome.MenuNode.TuiMenuState;
+  /// Named constructors for flat menu nodes.
+  TuiMenuNodeBuilders = Std.Tui.Chrome.MenuNode.TuiMenuNodeBuilders;
   /// Immutable display or action item in a status line.
   TuiStatusItem = Std.Tui.Chrome.StatusItem.TuiStatusItem;
   /// Constructors for immutable status-line items.

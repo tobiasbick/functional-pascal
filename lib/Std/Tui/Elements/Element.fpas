@@ -1,8 +1,9 @@
 unit Std.Tui.Elements.Element;
 
 uses
-  Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.StatusItem, Std.Tui.Geometry.Point, Std.Tui.Ids.Action,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Spacer;
+  Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
+  Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings,
+  Std.Tui.Layout.Spacer;
 
 private function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -25,6 +26,7 @@ type
     List(Id: TuiControlId; Items: array of string; Selected: integer; ChangeAction: TuiAction);
     Scroll(Id: TuiControlId; Offset: TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
     MenuBar(Items: array of TuiMenuItem);
+    Menu(Id: TuiControlId; Nodes: array of TuiMenuNode; State: TuiMenuState; ChangeAction: TuiAction);
     StatusLine(Items: array of TuiStatusItem);
     Row(Children: array of TuiElement; Spacing: integer);
     Column(Children: array of TuiElement; Spacing: integer);
@@ -118,6 +120,18 @@ type
     static function MakeMenuBar(Items: array of TuiMenuItem): TuiElement;
     begin
       return TuiElement.MenuBar(Items)
+    end;
+
+    /// Creates a controlled hierarchical menu from flat parent-linked nodes.
+
+    static function MakeMenu(
+  Id: TuiControlId;
+  Nodes: array of TuiMenuNode;
+  State: TuiMenuState;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Menu(Id, Nodes, State, ChangeAction)
     end;
 
     /// Creates a status line of display and command items.

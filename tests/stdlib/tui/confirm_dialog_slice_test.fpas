@@ -108,7 +108,7 @@ begin
     begin
       return State
     end;
-    TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)

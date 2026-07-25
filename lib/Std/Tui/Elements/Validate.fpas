@@ -2,7 +2,7 @@ unit Std.Tui.Elements.Validate;
 
 uses
   Std.Array, Std.Conv, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
-  Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+  Std.Tui.Elements.MenuValidate, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
 private function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
@@ -39,7 +39,7 @@ begin
     begin
       return Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
       return []
     end
@@ -132,6 +132,13 @@ begin
         Std.Array.Push(Seen, Items[Index].Id.Value)
       end
     end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+      TuiElementValidateControl(Id);
+      TuiElementValidateAction(ChangeAction);
+      TuiMenuValidate(Nodes, State);
+      Std.Array.Push(Seen, Id.Value)
+    end;
     TuiElement.StatusLine(Items):
     begin
       for Index: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -201,7 +208,7 @@ begin
         end
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
     begin
     end
   end;

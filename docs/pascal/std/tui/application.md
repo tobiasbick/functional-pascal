@@ -28,9 +28,15 @@ end
 `NoCommand` before every `Update`, reads it immediately afterwards, and stops
 on `Quit` before calling `View` or painting again.
 
+`Cmd.SetPalette(Palette)` replaces the active color palette before the next
+paint. `TuiCmd` remains a closed scalar command enum; the host-owned
+`TuiCmdOutput` carries the palette payload separately.
+
 ## Headless execution
 
 `TuiApplication.OpenForTest(Size)` opens a fixed-size host.
+`OpenForTestWithPalette(Size, Palette)` supplies a custom initial palette, and
+`App.Palette()` returns the current value for assertions.
 `RunIterations` renders an initial frame before consuming its iteration budget;
 one processed message consumes one iteration. `SurfaceSnapshot` is the explicit
 copying boundary for assertions, including semantic cell roles.
@@ -52,6 +58,9 @@ layout and painting, so keyboard input following a resize burst is not delayed
 by obsolete intermediate frames.
 `Std.Console` owns raw mode, alternate-screen, input features, and cursor
 rollback for the interactive session.
+
+`TuiApplication.RunWithPalette(InitialModel, Update, View, Palette)` has the
+same lifecycle with a caller-defined initial palette.
 
 The first terminal frame transfers the complete logical surface. Later frames
 compare glyphs, semantic style roles, and wide-glyph continuation positions
@@ -76,6 +85,9 @@ controlled `TextChanged` or `TextAreaChanged` messages; Enter or Space activates
 a focused button. Escape produces `QuitRequested`. Left-button pointer downs
 hit-test the previous arranged frame: focus changes are queued before an action
 or controlled change, and unhandled pointer input remains `TuiMsg.Pointer`.
+An open hierarchical menu handles Escape before the application-level quit
+request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
+described in [Menus](menus.md).
 
 `InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
 reaches `Update`. When a dialog is present directly under the desktop, key and

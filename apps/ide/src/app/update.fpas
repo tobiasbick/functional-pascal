@@ -4,7 +4,7 @@ unit Ide.App.Update;
 
 uses
   Ide.App.Actions, Ide.App.DocumentFlow, Ide.App.Model, Ide.Diagnostic.Model, Ide.Document.Model,
-  Std.Array, Std.Console, Std.Str, Std.Tui;
+  Ide.Theme.Model, Ide.Theme.Palette, Std.Array, Std.Console, Std.Str, Std.Tui;
 
 private function IdeState(
   State: IdeModel;
@@ -27,7 +27,24 @@ begin
     SelectedDiagnostic := SelectedDiagnostic;
     LastExitCode := State.LastExitCode;
     Focused := Focused;
+    Menu := State.Menu;
+    Theme := State.Theme;
   end
+end;
+
+private function IdeStateWithMenu(State: IdeModel; Menu: TuiMenuState): IdeModel;
+begin
+  mutable var Next: IdeModel := State;
+  Next.Menu := Menu;
+  return Next
+end;
+
+private function IdeStateWithTheme(State: IdeModel; Theme: IdeTheme; Cmd: TuiCmdOutput): IdeModel;
+begin
+  mutable var Next: IdeModel := State;
+  Next.Theme := Theme;
+  Cmd.SetPalette(IdeThemePalette(Theme));
+  return Next
 end;
 
 private function MessageIsFocused(State: IdeModel): boolean;
@@ -112,6 +129,18 @@ begin
   begin
     return RequestIdeExit(State, Cmd)
   end;
+  if Action.Value = ClassicBlueThemeAction().Value then
+  begin
+    return IdeStateWithTheme(State, IdeTheme.ClassicBlue, Cmd)
+  end;
+  if Action.Value = DarkThemeAction().Value then
+  begin
+    return IdeStateWithTheme(State, IdeTheme.Dark, Cmd)
+  end;
+  if Action.Value = MonochromeThemeAction().Value then
+  begin
+    return IdeStateWithTheme(State, IdeTheme.Monochrome, Cmd)
+  end;
   return State
 end;
 
@@ -171,6 +200,14 @@ begin
     TuiMsg.Action(Source, Action):
     begin
       return UpdateAction(State, Source, Action, Cmd)
+    end;
+    TuiMsg.MenuChanged(Source, Action, Menu):
+    begin
+      if IsIdeCommand(Source, Action, MenuControlId(), MenuChangedAction()) then
+      begin
+        return IdeStateWithMenu(State, Menu)
+      end;
+      return State
     end;
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin

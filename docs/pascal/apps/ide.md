@@ -4,7 +4,7 @@ The FPAS IDE is a supported single-document terminal application built on
 `Std.Tui`. It can also retain one directly opened FPAS project or one workspace
 with its direct member projects. Its fixed screen contains:
 
-- a flat Open/Save/Check/Run/Exit command bar;
+- a File/Edit/Run/Options menu bar with popups and submenus;
 - an optional source path;
 - a controlled multiline editor;
 - a message area;
@@ -32,11 +32,18 @@ document.
 | F9 | Check |
 | Ctrl+F9 | Run |
 | Alt+X | Exit |
+| F10 | Open and focus the menu |
+| Alt+F / Alt+E / Alt+R / Alt+O | Open a top-level menu |
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
 | Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus and activate commands or dialog buttons |
+
+Options > Theme switches immediately between the bundled Classic Blue, Dark,
+and Monochrome palettes. The selected theme is retained for the current run
+but is not persisted. Open menus support arrows, Enter, Space, Escape,
+mnemonics, and pointer activation.
 
 The editor handles character insertion, Enter, Backspace, Delete, arrows, Home,
 End, Page Up, Page Down, and two-space Tab insertion. Caret movement updates the

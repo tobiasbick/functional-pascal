@@ -18,7 +18,7 @@ function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel
 begin
   AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return record LabelText := 'SHOULD NOT PAINT'; Quit := true; Updates := State.Updates + 1; end

@@ -32,6 +32,23 @@ var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiCo
 var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ```
 
+A palette is ordinary public FPAS data. Applications may start from
+`TuiPalette.Default()`, replace only the roles they need with `WithRole`, or
+construct all role styles explicitly with `TuiPalette.Create`. This is the
+theme extension boundary; no theme registry or fixed set of color names is
+required.
+
+Use `OpenForTestWithPalette` or `RunWithPalette` to select the initial palette.
+An Update function can switch it immediately:
+
+```pascal
+Cmd.SetPalette(MyPalette);
+```
+
+The next interactive frame is fully recolored even when its glyphs and
+semantic roles did not change. `App.Palette()` exposes the active palette for
+headless assertions.
+
 ## See also
 
 - [`Std.Tui`](README.md)

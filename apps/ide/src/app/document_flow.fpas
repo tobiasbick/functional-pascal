@@ -29,6 +29,8 @@ begin
     SelectedDiagnostic := SelectedDiagnostic;
     LastExitCode := State.LastExitCode;
     Focused := Focused;
+    Menu := State.Menu;
+    Theme := State.Theme;
   end
 end;
 
@@ -107,6 +109,8 @@ begin
             SelectedDiagnostic := SelectedDiagnostic;
             LastExitCode := Some(Report.ExitCode);
             Focused := Some(EditorControlId());
+            Menu := State.Menu;
+            Theme := State.Theme;
           end
         end;
         Error(Message):
@@ -122,6 +126,8 @@ begin
             SelectedDiagnostic := None;
             LastExitCode := None;
             Focused := Some(EditorControlId());
+            Menu := State.Menu;
+            Theme := State.Theme;
           end
         end
       end

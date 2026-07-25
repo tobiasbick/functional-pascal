@@ -1,0 +1,54 @@
+unit Std.Tui.Chrome.KeyGesture;
+
+uses Std.Console, Std.Str;
+
+type
+  /// Structural keyboard gesture used by menu commands.
+  TuiKeyGesture = record
+    Kind: Std.Console.KeyKind;
+    Character: string;
+    Shift: boolean;
+    Ctrl: boolean;
+    Alt: boolean;
+    Meta: boolean;
+    Display: string;
+
+    /// Creates a keyboard gesture and its menu display label.
+
+    static function Create(
+  Kind: Std.Console.KeyKind;
+  Character: string;
+  Shift: boolean;
+  Ctrl: boolean;
+  Alt: boolean;
+  Meta: boolean;
+  Display: string
+): TuiKeyGesture;
+    begin
+      return record
+        Kind := Kind;
+        Character := Character;
+        Shift := Shift;
+        Ctrl := Ctrl;
+        Alt := Alt;
+        Meta := Meta;
+        Display := Display;
+      end
+    end;
+
+    /// Reports whether a console key event matches this gesture.
+
+    function Matches(Self: TuiKeyGesture; Key: Std.Console.KeyEvent): boolean;
+    begin
+      if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
+         (Self.Meta <> Key.meta) then
+      begin
+        return false
+      end;
+      if Self.Kind = Std.Console.KeyKind.Character then
+      begin
+        return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch)
+      end;
+      return true
+    end;
+  end;

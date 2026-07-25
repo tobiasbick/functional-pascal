@@ -1,6 +1,6 @@
 program Ide;
 
-uses Ide.App.Model, Ide.App.Update, Ide.App.View, Std.Args, Std.Array, Std.Tui;
+uses Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Theme.Palette, Std.Args, Std.Array, Std.Tui;
 
 function ProgramArguments(): array of string;
 begin
@@ -14,5 +14,5 @@ end;
 
 begin
   var Initial: IdeModel := InitializeIdeFromArguments(ProgramArguments());
-  var _: IdeModel := TuiApplication.Run(Initial, UpdateIde, ViewIde)
+  var _: IdeModel := TuiApplication.RunWithPalette(Initial, UpdateIde, ViewIde, IdeThemePalette(Initial.Theme))
 end.

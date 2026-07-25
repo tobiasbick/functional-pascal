@@ -17,6 +17,8 @@ units = [
   "Ide.Workspace.Model",
   "Ide.Workspace.Loader",
   "Ide.Process.Runner",
+  "Ide.Theme.Model",
+  "Ide.Theme.Palette",
 ]
 
 [sources]

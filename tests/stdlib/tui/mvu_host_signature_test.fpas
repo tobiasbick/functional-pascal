@@ -20,7 +20,7 @@ begin
     begin
       return record Value := State.Value + 1; end
     end;
-    TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return State

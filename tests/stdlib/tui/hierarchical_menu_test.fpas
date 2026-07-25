@@ -1,0 +1,120 @@
+program TuiHierarchicalMenuTest;
+
+uses Std.Array, Std.Str, Std.Test, Std.Tui;
+
+type
+  MenuModel = record
+    Focus: integer;
+    Menu: TuiMenuState;
+    Actions: array of integer;
+  end;
+
+function MakeKey(Kind: TuiKeyKind; Character: string; Ctrl: boolean; Alt: boolean): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := Character;
+    shift := false;
+    ctrl := Ctrl;
+    alt := Alt;
+    meta := false;
+  end
+end;
+
+function MenuNodes(): array of TuiMenuNode;
+begin
+  var FileId: TuiMenuNodeId := TuiMenuNodeId.Create(1);
+  var OptionsId: TuiMenuNodeId := TuiMenuNodeId.Create(2);
+  var ThemeId: TuiMenuNodeId := TuiMenuNodeId.Create(5);
+  return [
+           TuiMenuNodeBuilders.Submenu(FileId, None, 'File', 'F'),
+           TuiMenuNodeBuilders.Submenu(OptionsId, None, 'Options', 'O'),
+           TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(3), Some(FileId), 'Open', 'O', TuiAction.Create(10), TuiKeyGesture.Create(TuiKeyKind.Character, 'o', false, true, false, false, 'Ctrl+O')),
+           TuiMenuNodeBuilders.Separator(TuiMenuNodeId.Create(4), FileId),
+           TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
+           TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', TuiAction.Create(20))
+
+         ]
+end;
+
+function ViewMenu(State: MenuModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeMenu(TuiControlId.Create(100), MenuNodes(), State.Menu, TuiAction.Create(101))
+
+                                                                                ])
+end;
+
+function UpdateMenu(State: MenuModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MenuModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record Focus := Id.Value; Menu := State.Menu; Actions := State.Actions; end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end;
+    TuiMsg.MenuChanged(Source, Action, Menu):
+    begin
+      return record Focus := State.Focus; Menu := Menu; Actions := State.Actions; end
+    end;
+    TuiMsg.Action(Source, Action):
+    begin
+      return record
+        Focus := State.Focus;
+        Menu := State.Menu;
+        Actions := Std.Array.Concat(State.Actions, [Action.Value]);
+      end
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
+  mutable var Model: MenuModel := record
+    Focus := 100;
+    Menu := TuiMenuState.Closed();
+    Actions := [];
+  end;
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.F10, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  AssertTrue(Model.Menu.Open);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), 'Open'));
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
+  AssertEquals(1, Std.Array.Length(Model.Actions));
+  AssertEquals(10, Model.Actions[0]);
+  AssertFalse(Model.Menu.Open);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', true, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
+  AssertEquals(2, Std.Array.Length(Model.Actions));
+  AssertEquals(10, Model.Actions[1]);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'o', false, true));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Right, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
+  Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 2, 0);
+  AssertEquals(3, Std.Array.Length(Model.Actions));
+  AssertEquals(20, Model.Actions[2]);
+  App.Close()
+end.

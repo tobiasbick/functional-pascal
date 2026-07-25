@@ -5,6 +5,10 @@ edits one UTF-8 `.fpas` source, can retain one `.fpasprj` project session or
 one `.fpasworkspace` with all of its direct member projects, and provides Open,
 Save, Check, Run, and Exit.
 
+The menu bar contains File, Edit, Run, and Options. Options > Theme switches
+immediately between Classic Blue, Dark, and Monochrome. The selected theme is
+kept in the application model for the current run; it is not persisted.
+
 ## Run
 
 Run it from the repository root:
@@ -30,11 +34,16 @@ Only one optional path is accepted.
 | F9 | Check |
 | Ctrl+F9 | Run |
 | Alt+X | Exit |
+| F10 | Open and focus the menu |
+| Alt+F / Alt+E / Alt+R / Alt+O | Open a top-level menu |
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
 | Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus and activate commands or dialog buttons |
+
+When a menu is open, use arrows, Enter, Space, Escape, or the highlighted
+mnemonic. Pointer presses open popups and submenus or activate their commands.
 
 The editor supports character insertion, Enter, Backspace, Delete, arrows,
 Home, End, Page Up, Page Down, and two-space Tab insertion. Its status line

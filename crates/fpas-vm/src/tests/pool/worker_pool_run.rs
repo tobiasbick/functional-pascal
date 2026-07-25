@@ -36,11 +36,7 @@ fn vm_run_with_spawn_chunk_returns_after_pool_workers_join() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: function_name.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(function_name.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::Halt, loc());

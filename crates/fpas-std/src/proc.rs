@@ -67,9 +67,9 @@ fn current_executable() -> Value {
 fn run_process_capture(command: &str, args: &[String]) -> Value {
     match Command::new(command).args(args).output() {
         Ok(output) => match output.status.code() {
-            Some(code) => Value::ResultOk(Box::new(Value::Record {
-                type_name: s::STD_PROC_PROCESS_OUTPUT.into(),
-                fields: vec![
+            Some(code) => Value::ResultOk(Box::new(Value::record(
+                s::STD_PROC_PROCESS_OUTPUT.into(),
+                vec![
                     ("ExitCode".into(), Value::Integer(i64::from(code))),
                     (
                         "Stdout".into(),
@@ -80,7 +80,7 @@ fn run_process_capture(command: &str, args: &[String]) -> Value {
                         Value::Str(String::from_utf8_lossy(&output.stderr).into_owned().into()),
                     ),
                 ],
-            })),
+            ))),
             None => Value::ResultError(Box::new(Value::Str(
                 "process terminated without an exit code".into(),
             ))),
@@ -198,14 +198,14 @@ mod tests {
         };
         assert_eq!(
             **output,
-            Value::Record {
-                type_name: s::STD_PROC_PROCESS_OUTPUT.into(),
-                fields: vec![
+            Value::record(
+                s::STD_PROC_PROCESS_OUTPUT.into(),
+                vec![
                     ("ExitCode".into(), Value::Integer(exit_code)),
                     ("Stdout".into(), Value::Str(stdout.into())),
                     ("Stderr".into(), Value::Str(stderr.into())),
                 ],
-            }
+            )
         );
     }
 

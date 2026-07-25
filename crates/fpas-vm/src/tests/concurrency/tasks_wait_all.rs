@@ -31,11 +31,7 @@ fn wait_all_keeps_task_result_available_for_wait() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: function_name.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(function_name.to_string(), vec![], false),
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());

@@ -17,11 +17,7 @@ fn sleep_wait_all_chunk(task_count: u16, milliseconds: i64) -> fpas_bytecode::Ch
             for _ in 0..task_count {
                 emit_constant(
                     chunk,
-                    Value::Function {
-                        name: callee.to_string(),
-                        captures: Vec::new(),
-                        task_bound: false,
-                    },
+                    Value::function(callee.to_string(), Vec::new(), false),
                 );
                 chunk.emit(Op::SpawnTask(0), loc());
             }
@@ -94,11 +90,7 @@ fn sleeping_child_wakes_parent_waiting_on_the_only_pool_worker() {
 
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: parent.to_string(),
-            captures: Vec::new(),
-            task_bound: false,
-        },
+        Value::function(parent.to_string(), Vec::new(), false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(
@@ -111,11 +103,7 @@ fn sleeping_child_wakes_parent_waiting_on_the_only_pool_worker() {
     chunk.insert_function(parent.to_ascii_lowercase(), parent_start, 0);
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: child.to_string(),
-            captures: Vec::new(),
-            task_bound: false,
-        },
+        Value::function(child.to_string(), Vec::new(), false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(

@@ -18,14 +18,7 @@ fn make_closure_propagates_task_bound_from_nested_function_capture() {
         outer,
         |chunk| {
             // Capture a task-bound function value; MakeClosure must mark Outer task-bound.
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: "Inner".to_string(),
-                    captures: vec![],
-                    task_bound: true,
-                },
-            );
+            emit_constant(chunk, Value::function("Inner".to_string(), vec![], true));
             let name_idx = chunk
                 .add_constant(Value::Str(outer.into()))
                 .expect("constant fits");
@@ -52,11 +45,7 @@ fn spawn_rejects_function_value_marked_task_bound() {
     let mut chunk = fpas_bytecode::Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: "Bound".to_string(),
-            captures: vec![],
-            task_bound: true,
-        },
+        Value::function("Bound".to_string(), vec![], true),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::Halt, loc());
@@ -81,11 +70,7 @@ fn map_spawn_wait_chunk(
             emit_constant(chunk, Value::Array(vec![Value::Integer(input)].into()));
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: spawn_and_wait.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(spawn_and_wait.to_string(), vec![], false),
             );
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Array(ArrayIntrinsic::Map))),
@@ -107,11 +92,7 @@ fn map_spawn_wait_chunk(
             chunk.emit(Op::GetLocal(0), loc());
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: double_later.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(double_later.to_string(), vec![], false),
             );
             chunk.emit(Op::SpawnTask(1), loc());
             chunk.emit(

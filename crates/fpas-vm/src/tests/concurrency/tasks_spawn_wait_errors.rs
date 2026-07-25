@@ -18,11 +18,7 @@ fn spawn_task_with_wrong_arity_reports_runtime_error() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: function_name.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(function_name.to_string(), vec![], false),
             );
             chunk.emit(Op::SpawnTask(0), loc());
         },
@@ -44,11 +40,7 @@ fn waiting_twice_on_same_task_reports_runtime_error() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: function_name.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(function_name.to_string(), vec![], false),
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());

@@ -14,11 +14,7 @@ impl Worker {
                 let type_name = self.const_str(type_idx, line)?;
                 let variant = self.const_str(variant_idx, line)?;
                 let fields = self.drain_stack_tail(field_count as usize, line)?;
-                self.push(Value::Enum {
-                    type_name,
-                    variant,
-                    fields,
-                })?;
+                self.push(Value::enum_value(type_name, variant, fields))?;
                 Ok(true)
             }
             Op::IsVariant(type_idx, variant_idx) => {
@@ -26,11 +22,9 @@ impl Worker {
                 let expected_variant = self.const_str(variant_idx, line)?;
                 let val = self.pop(line)?;
                 let matches = match &val {
-                    Value::Enum {
-                        type_name, variant, ..
-                    } => {
-                        type_name.eq_ignore_ascii_case(&expected_type)
-                            && variant.eq_ignore_ascii_case(&expected_variant)
+                    Value::Enum(value) => {
+                        value.type_name.eq_ignore_ascii_case(&expected_type)
+                            && value.variant.eq_ignore_ascii_case(&expected_variant)
                     }
                     _ => false,
                 };
@@ -40,22 +34,21 @@ impl Worker {
             Op::EnumField(index) => {
                 let val = self.pop(line)?;
                 match val {
-                    Value::Enum {
-                        fields, variant, ..
-                    } => {
+                    Value::Enum(value) => {
                         let idx = index as usize;
-                        if idx >= fields.len() {
+                        if idx >= value.fields.len() {
                             return Err(runtime_error(
                                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                                 format!(
-                                    "Enum variant `{variant}` has {} field(s), tried to access index {idx}",
-                                    fields.len()
+                                    "Enum variant `{}` has {} field(s), tried to access index {idx}",
+                                    value.variant,
+                                    value.fields.len()
                                 ),
                                 "Check the number of fields in the variant definition.",
                                 line,
                             ));
                         }
-                        self.push(fields[idx].clone())?;
+                        self.push(value.fields[idx].clone())?;
                         Ok(true)
                     }
                     other => Err(runtime_error(

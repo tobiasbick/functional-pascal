@@ -7,9 +7,9 @@ use fpas_std::ConsoleKeyEvent;
 
 impl Worker {
     pub(in crate::vm::execute::io) fn key_event_record(event: ConsoleKeyEvent) -> Value {
-        Value::Record {
-            type_name: "Std.Console.KeyEvent".into(),
-            fields: vec![
+        Value::record(
+            "Std.Console.KeyEvent".into(),
+            vec![
                 ("kind".into(), Value::Integer(event.kind as i64)),
                 ("ch".into(), key_event_char_value(event.ch)),
                 ("shift".into(), Value::Boolean(event.shift)),
@@ -17,7 +17,7 @@ impl Worker {
                 ("alt".into(), Value::Boolean(event.alt)),
                 ("meta".into(), Value::Boolean(event.meta)),
             ],
-        }
+        )
     }
 
     #[expect(
@@ -39,9 +39,9 @@ impl Worker {
         alt: bool,
         meta: bool,
     ) -> Value {
-        Value::Record {
-            type_name: "Std.Console.Event".into(),
-            fields: vec![
+        Value::record(
+            "Std.Console.Event".into(),
+            vec![
                 ("kind".into(), Value::Integer(kind as i64)),
                 ("key".into(), Self::key_event_record(key)),
                 ("mouse_action".into(), Value::Integer(mouse_action as i64)),
@@ -56,7 +56,7 @@ impl Worker {
                 ("alt".into(), Value::Boolean(alt)),
                 ("meta".into(), Value::Boolean(meta)),
             ],
-        }
+        )
     }
 
     /// Builds one `Std.Console.Event` record from the runtime console event model.
@@ -100,8 +100,8 @@ impl Worker {
     ) -> Result<ConsoleKeyEvent, VmError> {
         const KEY: &str = "Std.Console.KeyEvent";
         match self.pop(line)? {
-            Value::Record { type_name, fields } if type_name == KEY || type_name == "<record>" => {
-                Self::console_key_event_from_fields(&fields, line)
+            Value::Record(record) if record.type_name == KEY || record.type_name == "<record>" => {
+                Self::console_key_event_from_fields(&record.fields, line)
             }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,

@@ -22,16 +22,16 @@ impl Worker {
                 (2, 0, i64::from(red), i64::from(green), i64::from(blue))
             }
         };
-        Value::Record {
-            type_name: COLOR_TYPE.into(),
-            fields: vec![
+        Value::record(
+            COLOR_TYPE.into(),
+            vec![
                 ("kind".into(), Value::Integer(kind)),
                 ("index".into(), Value::Integer(index)),
                 ("red".into(), Value::Integer(red)),
                 ("green".into(), Value::Integer(green)),
                 ("blue".into(), Value::Integer(blue)),
             ],
-        }
+        )
     }
 
     /// Validates and constructs a classic CRT palette color.
@@ -76,9 +76,9 @@ impl Worker {
 
     /// Builds one FPAS `Std.Console.Cell` record.
     pub(in crate::vm::execute::io) fn console_cell_record(cell: ConsoleCell) -> Value {
-        Value::Record {
-            type_name: CELL_TYPE.into(),
-            fields: vec![
+        Value::record(
+            CELL_TYPE.into(),
+            vec![
                 ("glyph".into(), Value::Str(cell.glyph.into())),
                 (
                     "foreground".into(),
@@ -89,7 +89,7 @@ impl Worker {
                     Self::console_color_record(cell.background),
                 ),
             ],
-        }
+        )
     }
 
     /// Pops and validates one FPAS `Std.Console.Cell` record.
@@ -150,10 +150,10 @@ impl Worker {
 
     /// Builds an opaque FPAS `Std.Console.SavedRegion` handle record.
     pub(in crate::vm::execute::io) fn saved_region_record(id: SavedRegionId) -> Value {
-        Value::Record {
-            type_name: SAVED_REGION_TYPE.into(),
-            fields: vec![(HANDLE_FIELD.into(), Value::Integer(id.0 as i64))],
-        }
+        Value::record(
+            SAVED_REGION_TYPE.into(),
+            vec![(HANDLE_FIELD.into(), Value::Integer(id.0 as i64))],
+        )
     }
 
     /// Pops and validates an opaque FPAS `Std.Console.SavedRegion` handle.
@@ -234,8 +234,8 @@ fn record_fields<'a>(
     line: SourceLocation,
 ) -> Result<&'a [(String, Value)], VmError> {
     match value {
-        Value::Record { type_name, fields } if type_name == expected || type_name == "<record>" => {
-            Ok(fields)
+        Value::Record(record) if record.type_name == expected || record.type_name == "<record>" => {
+            Ok(&record.fields)
         }
         other => Err(runtime_error(
             TYPE_MISMATCH_CODE,

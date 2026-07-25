@@ -178,11 +178,7 @@ fn object_from_chunk_preserves_every_persistent_constant_kind() {
         Value::Boolean(true),
         Value::Str(("name".to_string()).into()),
         Value::Unit,
-        Value::Function {
-            name: "demo.run".to_string(),
-            captures: Vec::new(),
-            task_bound: true,
-        },
+        Value::function("demo.run".to_string(), Vec::new(), true),
     ] {
         chunk.add_constant(value).expect("constant");
     }
@@ -211,11 +207,11 @@ fn object_from_chunk_preserves_every_persistent_constant_kind() {
 fn object_from_chunk_rejects_captured_function_constants() {
     let mut chunk = Chunk::new();
     chunk
-        .add_constant(Value::Function {
-            name: "demo.closure".to_string(),
-            captures: vec![Value::Integer(1)],
-            task_bound: false,
-        })
+        .add_constant(Value::function(
+            "demo.closure".to_string(),
+            vec![Value::Integer(1)],
+            false,
+        ))
         .expect("constant");
     chunk.emit(Op::Halt, SourceLocation::new(1, 1));
 

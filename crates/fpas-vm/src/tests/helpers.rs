@@ -34,20 +34,17 @@ pub(crate) fn loc() -> SourceLocation {
 }
 
 pub(super) fn graph_application_value() -> Value {
-    Value::Record {
-        type_name: "Std.Graph.Application".into(),
-        fields: vec![],
-    }
+    Value::record("Std.Graph.Application".into(), vec![])
 }
 
 pub(super) fn graph_size_value(width: i64, height: i64) -> Value {
-    Value::Record {
-        type_name: "Std.Graph.Size".into(),
-        fields: vec![
+    Value::record(
+        "Std.Graph.Size".into(),
+        vec![
             ("width".into(), Value::Integer(width)),
             ("height".into(), Value::Integer(height)),
         ],
-    }
+    )
 }
 
 pub(super) fn emit_constant(chunk: &mut Chunk, value: Value) {

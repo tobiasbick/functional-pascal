@@ -126,11 +126,7 @@ impl Compiler {
                     return Ok(());
                 }
                 self.emit_constant(
-                    Value::Function {
-                        name: canonical_function_name,
-                        captures: vec![],
-                        task_bound: false,
-                    },
+                    Value::function(canonical_function_name, vec![], false),
                     location,
                 )?;
                 return Ok(());

@@ -14,6 +14,25 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-07-25 — after compact shared Value storage
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 9830 | throughput: 5086469 iters/s |
+| array_push | 189 | throughput: 10582010 pushes/s |
+| array_length | 77 | throughput: 6493506 lengths/s |
+| string_concat | 3399 | throughput: 1471020 concats/s |
+| string_length | 79 | throughput: 6329113 lengths/s |
+| function_call | 1128 | throughput: 5319148 calls/s |
+| array_callbacks | 1032 | throughput: 9302325 callbacks/s |
+| record_update | 698 | throughput: 1432664 updates/s |
+| unicode_char_at | 1481 | throughput: 2025658 chars/s |
+| task_spawn_wait | 983 | throughput: 101729 tasks/s |
+| tui_headless | 7826 | throughput: 63 frames/s |
+
 ## 2026-07-25 — after borrowing direct call names
 
 - Group: `all`

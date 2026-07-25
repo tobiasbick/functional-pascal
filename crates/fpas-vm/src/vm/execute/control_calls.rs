@@ -79,12 +79,8 @@ impl Worker {
             }
             Op::CallValue(argc) => {
                 let func = self.pop(line)?;
-                let (name, captures) = match func {
-                    Value::Function {
-                        name,
-                        captures,
-                        task_bound: _,
-                    } => (name, captures),
+                let function = match func {
+                    Value::Function(function) => function,
                     other => {
                         return Err(runtime_error(
                             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -94,12 +90,12 @@ impl Worker {
                         ));
                     }
                 };
-                self.call_named_function(&name, argc, line)?;
+                self.call_named_function(&function.name, argc, line)?;
                 // After `call_named_function`, `base_slot` points at the first argument. Pushing
                 // captures on top matches the compiler layout: parameters then closure cells as
                 // successive locals for the callee.
-                for cap in captures {
-                    self.push(cap)?;
+                for capture in &function.captures {
+                    self.push(capture.clone())?;
                 }
                 Ok(true)
             }

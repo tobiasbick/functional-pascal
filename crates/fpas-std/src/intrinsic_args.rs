@@ -119,7 +119,7 @@ pub(crate) fn pop_dict(
     location: SourceLocation,
 ) -> Result<Vec<(Value, Value)>, StdError> {
     match v {
-        Value::Dict(pairs) => Ok(pairs),
+        Value::Dict(pairs) => Ok(pairs.into()),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("expected dict, got {}", other.type_name()),

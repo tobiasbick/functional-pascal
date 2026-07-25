@@ -19,14 +19,7 @@ fn wait_succeeds_when_child_runs_long_enough_to_need_timeslice() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -51,14 +44,7 @@ fn wait_then_second_spawn_and_wait_is_independent() {
         f,
         |chunk| {
             for _ in 0..2 {
-                emit_constant(
-                    chunk,
-                    Value::Function {
-                        name: f.to_string(),
-                        captures: vec![],
-                        task_bound: false,
-                    },
-                );
+                emit_constant(chunk, Value::function(f.to_string(), vec![], false));
                 chunk.emit(Op::SpawnTask(0), loc());
                 chunk.emit(
                     Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -85,14 +71,7 @@ fn wait_on_child_that_panics_surfaces_shutdown_to_waiter() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -130,14 +109,7 @@ fn wait_rejects_forged_handle_for_detached_task() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.into(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.into(), vec![], false));
             chunk.emit(Op::SpawnDetachedTask(0), loc());
             emit_constant(chunk, Value::Task(1));
             chunk.emit(

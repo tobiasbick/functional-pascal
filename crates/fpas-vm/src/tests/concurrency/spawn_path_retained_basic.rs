@@ -14,14 +14,7 @@ fn retained_spawn_wait_prints_child_return_value() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -47,14 +40,7 @@ fn spawn_passes_two_arguments_and_child_returns_sum() {
         |chunk| {
             emit_constant(chunk, Value::Integer(30));
             emit_constant(chunk, Value::Integer(12));
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(2), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),

@@ -13,11 +13,7 @@ use toml::map::Map;
 use toml::value::Datetime;
 
 fn toml_variant(variant: &str, fields: Vec<Value>) -> Value {
-    Value::Enum {
-        type_name: s::STD_TOML_VALUE.into(),
-        variant: variant.into(),
-        fields,
-    }
+    Value::enum_value(s::STD_TOML_VALUE.into(), variant.into(), fields)
 }
 
 fn toml_depth_exceeded_message() -> String {
@@ -49,7 +45,7 @@ fn toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, String
                 toml_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
-            .map(|fields| toml_variant("Table", vec![Value::Dict(fields)])),
+            .map(|fields| toml_variant("Table", vec![Value::dict(fields)])),
     }
 }
 
@@ -96,14 +92,10 @@ fn fpas_to_toml_at_depth(
         ));
     }
 
-    let Value::Enum {
-        type_name,
-        variant,
-        fields,
-    } = value
-    else {
+    let Value::Enum(value) = value else {
         return Err(expected_toml_value_error(&value, location));
     };
+    let (type_name, variant, fields) = value.into_parts();
 
     if !type_name.eq_ignore_ascii_case(s::STD_TOML_VALUE) {
         return Err(std_runtime_error(
@@ -274,10 +266,10 @@ value = "ok"
         let Value::ResultOk(value) = &stack[0] else {
             panic!("expected a parsed TOML value");
         };
-        let Value::Enum { variant, .. } = value.as_ref() else {
+        let Value::Enum(value) = value.as_ref() else {
             panic!("expected a TomlValue enum");
         };
-        assert_eq!(variant, "Table");
+        assert_eq!(value.variant, "Table");
     }
 
     #[test]

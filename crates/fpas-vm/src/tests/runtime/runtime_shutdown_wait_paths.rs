@@ -17,14 +17,7 @@ fn wait_twice_on_same_task_second_wait_is_invalid_task() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(
@@ -74,11 +67,7 @@ fn wait_all_empty_succeeds_and_sets_shutdown_with_spawn_pool() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: callee.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(callee.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(

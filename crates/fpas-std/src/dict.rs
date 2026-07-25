@@ -36,7 +36,7 @@ pub(crate) fn run(
             let key = pop_value(stack, location)?;
             let mut pairs = pop_dict(pop_value(stack, location)?, location)?;
             pairs.retain(|(k, _)| k != &key);
-            stack.push(Value::Dict(pairs));
+            stack.push(Value::dict(pairs));
         }
         Intrinsic::Dict(DictIntrinsic::Get) => {
             let key = pop_value(stack, location)?;
@@ -57,7 +57,7 @@ pub(crate) fn run(
                     base.push((k, v));
                 }
             }
-            stack.push(Value::Dict(base));
+            stack.push(Value::dict(base));
         }
         _ => return Ok(None),
     }
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn get_returns_some_for_existing_key() {
         let mut stack = vec![
-            Value::Dict(vec![
+            Value::dict(vec![
                 (Value::Str("a".into()), Value::Integer(1)),
                 (Value::Str("b".into()), Value::Integer(2)),
             ]),
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn contains_key_reports_presence() {
         let mut stack = vec![
-            Value::Dict(vec![(Value::Str("a".into()), Value::Integer(1))]),
+            Value::dict(vec![(Value::Str("a".into()), Value::Integer(1))]),
             Value::Str("missing".into()),
         ];
         run_dict(DictIntrinsic::ContainsKey, &mut stack).unwrap();
@@ -102,11 +102,11 @@ mod tests {
     #[test]
     fn merge_overwrites_and_appends_keys() {
         let mut stack = vec![
-            Value::Dict(vec![
+            Value::dict(vec![
                 (Value::Str("a".into()), Value::Integer(1)),
                 (Value::Str("b".into()), Value::Integer(2)),
             ]),
-            Value::Dict(vec![
+            Value::dict(vec![
                 (Value::Str("b".into()), Value::Integer(20)),
                 (Value::Str("c".into()), Value::Integer(30)),
             ]),
@@ -114,7 +114,7 @@ mod tests {
         run_dict(DictIntrinsic::Merge, &mut stack).unwrap();
         assert_eq!(
             stack,
-            vec![Value::Dict(vec![
+            vec![Value::dict(vec![
                 (Value::Str("a".into()), Value::Integer(1)),
                 (Value::Str("b".into()), Value::Integer(20)),
                 (Value::Str("c".into()), Value::Integer(30)),

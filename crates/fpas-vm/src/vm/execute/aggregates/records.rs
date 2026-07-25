@@ -31,7 +31,7 @@ impl Worker {
             };
             fields.push((name.into(), value));
         }
-        self.push(Value::Record { type_name, fields })?;
+        self.push(Value::record(type_name, fields))?;
         Ok(())
     }
 
@@ -42,8 +42,9 @@ impl Worker {
     ) -> Result<(), VmError> {
         let field_name = self.const_str(name_idx, line)?;
         let record = self.pop(line)?;
-        if let Value::Record { fields, .. } = record {
-            let value = fields
+        if let Value::Record(record) = record {
+            let value = record
+                .fields
                 .iter()
                 .find(|(name, _)| name == &field_name)
                 .map(|(_, value)| value.clone())
@@ -75,16 +76,16 @@ impl Worker {
         let field_name = self.const_str(name_idx, line)?;
         let value = self.pop(line)?;
         let record = self.pop(line)?;
-        if let Value::Record {
-            type_name,
-            mut fields,
-        } = record
-        {
-            let Some(entry) = fields.iter_mut().find(|(name, _)| name == &field_name) else {
+        if let Value::Record(mut record) = record {
+            let Some(entry) = record
+                .fields
+                .iter_mut()
+                .find(|(name, _)| name == &field_name)
+            else {
                 return Err(missing_field_error(&field_name, line));
             };
             entry.1 = value;
-            self.push(Value::Record { type_name, fields })?;
+            self.push(Value::Record(record))?;
             return Ok(());
         }
 
@@ -113,11 +114,7 @@ impl Worker {
         let override_items = self.drain_stack_tail(n_overrides as usize * 2, line)?;
         let base = self.pop(line)?;
 
-        let Value::Record {
-            type_name,
-            mut fields,
-        } = base
-        else {
+        let Value::Record(mut record) = base else {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 "`with` update requires a record value",
@@ -142,7 +139,8 @@ impl Worker {
                     line,
                 ));
             };
-            if let Some(entry) = fields
+            if let Some(entry) = record
+                .fields
                 .iter_mut()
                 .find(|(field, _)| field.as_str() == name.as_ref())
             {
@@ -157,7 +155,7 @@ impl Worker {
             }
         }
 
-        self.push(Value::Record { type_name, fields })?;
+        self.push(Value::Record(record))?;
         Ok(())
     }
 }

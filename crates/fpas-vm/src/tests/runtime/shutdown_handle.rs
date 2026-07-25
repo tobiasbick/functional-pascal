@@ -16,14 +16,7 @@ fn cooperative_shutdown_aborts_wait_on_spawned_task() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |main| {
-            emit_constant(
-                main,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(main, Value::function(callee.to_string(), vec![], false));
             main.emit(Op::SpawnTask(0), loc());
             main.emit(
                 Op::Intrinsic(u16::from(fpas_bytecode::Intrinsic::Task(

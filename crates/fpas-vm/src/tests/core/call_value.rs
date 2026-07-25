@@ -13,11 +13,7 @@ fn call_value_executes_function_value_and_returns_result() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: function_name.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
+                Value::function(function_name.to_string(), vec![], false),
             );
             chunk.emit(Op::CallValue(0), loc());
             chunk.emit(Op::PrintLn, loc());
@@ -36,11 +32,7 @@ fn call_value_resolves_function_name_case_insensitively() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: "ReturnNine".to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function("ReturnNine".to_string(), vec![], false),
     );
     chunk.emit(Op::CallValue(0), loc());
     chunk.emit(Op::PrintLn, loc());

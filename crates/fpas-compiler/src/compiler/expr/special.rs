@@ -49,14 +49,7 @@ impl Compiler {
         let after = self.chunk.len() as u32;
         self.patch_jump(jump_over, after, location)?;
 
-        self.emit_constant(
-            Value::Function {
-                name: wrapper_name,
-                captures: vec![],
-                task_bound: false,
-            },
-            location,
-        )?;
+        self.emit_constant(Value::function(wrapper_name, vec![], false), location)?;
         Ok(())
     }
 }

@@ -17,21 +17,18 @@ const GRAPH_SIZE_TYPE: &str = "Std.Graph.Size";
 impl Worker {
     /// Constructs an empty `Std.Graph.Application` record.
     pub(in crate::vm::execute::io) fn graph_application_record() -> Value {
-        Value::Record {
-            type_name: GRAPH_APPLICATION_TYPE.into(),
-            fields: vec![],
-        }
+        Value::record(GRAPH_APPLICATION_TYPE.into(), vec![])
     }
 
     /// Constructs a `Std.Graph.Size` record with `width` and `height` fields.
     pub(in crate::vm::execute::io) fn graph_size_record(width: i64, height: i64) -> Value {
-        Value::Record {
-            type_name: GRAPH_SIZE_TYPE.into(),
-            fields: vec![
+        Value::record(
+            GRAPH_SIZE_TYPE.into(),
+            vec![
                 ("width".into(), Value::Integer(width)),
                 ("height".into(), Value::Integer(height)),
             ],
-        }
+        )
     }
 
     /// Converts a normalized `GraphEvent` into a `Std.Graph.Event` record.
@@ -109,7 +106,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         match self.pop(line)? {
-            Value::Record { type_name, .. } if type_name == GRAPH_APPLICATION_TYPE => Ok(()),
+            Value::Record(record) if record.type_name == GRAPH_APPLICATION_TYPE => Ok(()),
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!(
@@ -170,10 +167,7 @@ impl Worker {
                 entry.1 = value.clone();
             }
         }
-        Value::Record {
-            type_name: GRAPH_EVENT_TYPE.into(),
-            fields,
-        }
+        Value::record(GRAPH_EVENT_TYPE.into(), fields)
     }
 
     fn graph_unknown_key_event() -> Value {

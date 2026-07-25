@@ -16,14 +16,7 @@ fn wait_all_three_tasks_busy_children_then_barrier() {
         callee,
         |chunk| {
             for _ in 0..3 {
-                emit_constant(
-                    chunk,
-                    Value::Function {
-                        name: callee.to_string(),
-                        captures: vec![],
-                        task_bound: false,
-                    },
-                );
+                emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
                 chunk.emit(Op::SpawnTask(0), loc());
             }
             chunk.emit(Op::MakeArray(3), loc());
@@ -50,24 +43,10 @@ fn main_yields_between_spawns_wait_all_still_completes() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Yield, loc());
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::Dup, loc());

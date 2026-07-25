@@ -33,24 +33,10 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
     let bad = "BadTask";
     let mut chunk = Chunk::new();
 
-    emit_constant(
-        &mut chunk,
-        Value::Function {
-            name: ok.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
-    );
+    emit_constant(&mut chunk, Value::function(ok.to_string(), vec![], false));
     chunk.emit(Op::SpawnTask(0), loc());
 
-    emit_constant(
-        &mut chunk,
-        Value::Function {
-            name: bad.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
-    );
+    emit_constant(&mut chunk, Value::function(bad.to_string(), vec![], false));
     chunk.emit(Op::SpawnTask(0), loc());
 
     chunk.emit(Op::Dup, loc());

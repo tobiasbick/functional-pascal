@@ -11,11 +11,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 use serde_json::{Map, Number, Value as JsonValue};
 
 fn json_variant(variant: &str, fields: Vec<Value>) -> Value {
-    Value::Enum {
-        type_name: s::STD_JSON_VALUE.into(),
-        variant: variant.into(),
-        fields,
-    }
+    Value::enum_value(s::STD_JSON_VALUE.into(), variant.into(), fields)
 }
 
 fn json_depth_exceeded_message() -> String {
@@ -47,7 +43,7 @@ fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String
                 json_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
-            .map(|fields| json_variant("Object", vec![Value::Dict(fields)])),
+            .map(|fields| json_variant("Object", vec![Value::dict(fields)])),
     }
 }
 
@@ -94,14 +90,10 @@ fn fpas_to_json_at_depth(
         ));
     }
 
-    let Value::Enum {
-        type_name,
-        variant,
-        fields,
-    } = value
-    else {
+    let Value::Enum(value) = value else {
         return Err(expected_json_value_error(&value, location));
     };
+    let (type_name, variant, fields) = value.into_parts();
 
     if !type_name.eq_ignore_ascii_case(s::STD_JSON_VALUE) {
         return Err(std_runtime_error(

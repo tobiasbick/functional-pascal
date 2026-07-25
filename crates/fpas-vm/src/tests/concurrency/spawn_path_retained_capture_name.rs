@@ -14,11 +14,7 @@ fn spawn_loads_closure_captures_onto_child_stack() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![Value::Integer(99)],
-                    task_bound: false,
-                },
+                Value::function(callee.to_string(), vec![Value::Integer(99)], false),
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
@@ -43,11 +39,7 @@ fn spawn_resolves_function_via_canonical_name_key() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: "MixedCaseFn".to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function("MixedCaseFn".to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(

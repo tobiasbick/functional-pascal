@@ -97,7 +97,7 @@ impl Worker {
             };
             pairs.push((key, value));
         }
-        self.push(Value::Dict(pairs))?;
+        self.push(Value::dict(pairs))?;
         Ok(())
     }
 }

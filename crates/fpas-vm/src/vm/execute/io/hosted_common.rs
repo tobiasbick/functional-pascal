@@ -11,11 +11,7 @@ use fpas_diagnostics::codes::{
 
 /// Builds an exit-reason enum value for hosted application run loops.
 pub(in crate::vm::execute::io) fn hosted_exit_reason(type_name: &str, variant: &str) -> Value {
-    Value::Enum {
-        type_name: type_name.into(),
-        variant: variant.into(),
-        fields: vec![],
-    }
+    Value::enum_value(type_name.into(), variant.into(), vec![])
 }
 
 impl Worker {
@@ -29,15 +25,16 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         match func {
-            Value::Function { name, .. } => {
-                let (_, found_arity) = self.lookup_function_entry(name).ok_or_else(|| {
-                    runtime_error(
-                        RUNTIME_UNDEFINED_FUNCTION,
-                        format!("Undefined function `{name}` for {label}"),
-                        "Declare the handler before registering it.",
-                        line,
-                    )
-                })?;
+            Value::Function(function) => {
+                let (_, found_arity) =
+                    self.lookup_function_entry(&function.name).ok_or_else(|| {
+                        runtime_error(
+                            RUNTIME_UNDEFINED_FUNCTION,
+                            format!("Undefined function `{}` for {label}", function.name),
+                            "Declare the handler before registering it.",
+                            line,
+                        )
+                    })?;
                 if found_arity != arity {
                     return Err(runtime_error(
                         RUNTIME_WRONG_CALL_ARITY,

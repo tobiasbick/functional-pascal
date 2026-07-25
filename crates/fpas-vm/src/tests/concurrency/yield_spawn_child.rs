@@ -14,14 +14,7 @@ fn retained_spawn_child_yield_then_return_still_waits_correctly() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -45,11 +38,7 @@ fn main_emits_many_yields_before_wait_child_still_completes() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: callee.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(callee.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     for _ in 0..64 {
@@ -76,14 +65,7 @@ fn detached_spawn_child_yields_before_return() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnDetachedTask(0), loc());
             emit_constant(chunk, Value::Integer(55));
             chunk.emit(Op::PrintLn, loc());

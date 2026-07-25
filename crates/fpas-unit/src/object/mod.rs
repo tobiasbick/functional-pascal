@@ -286,13 +286,9 @@ impl ObjectConstant {
             Value::Boolean(value) => Ok(Self::Boolean(*value)),
             Value::Str(value) => Ok(Self::String(value.to_string())),
             Value::Unit => Ok(Self::Unit),
-            Value::Function {
-                name,
-                captures,
-                task_bound,
-            } if captures.is_empty() => Ok(Self::Function {
-                name: name.clone(),
-                task_bound: *task_bound,
+            Value::Function(function) if function.captures.is_empty() => Ok(Self::Function {
+                name: function.name.clone(),
+                task_bound: function.task_bound,
             }),
             other => Err(ObjectError::UnsupportedConstant(
                 other.type_name().to_string(),
@@ -309,11 +305,9 @@ impl ObjectConstant {
             Self::Boolean(value) => Value::Boolean(*value),
             Self::String(value) => Value::Str(value.clone().into()),
             Self::Unit => Value::Unit,
-            Self::Function { name, task_bound } => Value::Function {
-                name: name.clone(),
-                captures: Vec::new(),
-                task_bound: *task_bound,
-            },
+            Self::Function { name, task_bound } => {
+                Value::function(name.clone(), Vec::new(), *task_bound)
+            }
         }
     }
 }

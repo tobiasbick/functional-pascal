@@ -28,11 +28,7 @@ fn spawn_task_rejects_missing_chunk_entry_for_function_name() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: "NotRegistered".to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function("NotRegistered".to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::Halt, loc());
@@ -48,14 +44,7 @@ fn spawn_detached_task_wrong_arity_reports_runtime_error() {
         callee,
         2,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnDetachedTask(0), loc());
         },
         |chunk| {
@@ -78,14 +67,7 @@ fn spawn_task_with_missing_arguments_reports_internal_vm_error() {
         callee,
         1,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(1), loc());
         },
         |chunk| {

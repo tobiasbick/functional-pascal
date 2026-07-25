@@ -19,8 +19,8 @@ impl Worker {
         use fpas_bytecode::Value;
 
         match self.pop(line)? {
-            Value::Record { type_name, fields } if type_name == GRAPH_APPLICATION_HANDLERS_TYPE => {
-                Ok(fields)
+            Value::Record(record) if record.type_name == GRAPH_APPLICATION_HANDLERS_TYPE => {
+                Ok(record.into_parts().1)
             }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,

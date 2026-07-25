@@ -29,23 +29,9 @@ fn wait_all_two_tasks_barrier_then_wait_each_prints() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());
             chunk.emit(Op::Dup, loc());
@@ -82,11 +68,7 @@ fn wait_all_deduplicates_repeated_handles() {
         |chunk| {
             emit_constant(
                 chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: Vec::new(),
-                    task_bound: false,
-                },
+                Value::function(callee.to_string(), Vec::new(), false),
             );
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(Op::Dup, loc());

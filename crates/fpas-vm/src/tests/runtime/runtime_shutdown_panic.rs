@@ -17,14 +17,7 @@ fn detached_child_panic_propagates_from_pool_when_main_halts_first() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnDetachedTask(0), loc());
             chunk.emit(Op::Halt, loc());
         },
@@ -63,11 +56,7 @@ fn spawn_chunk_main_panic_still_sets_shutdown_with_worker_pool() {
     let mut chunk = Chunk::new();
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: callee.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(callee.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnDetachedTask(0), loc());
     emit_constant(&mut chunk, Value::Str("main".into()));

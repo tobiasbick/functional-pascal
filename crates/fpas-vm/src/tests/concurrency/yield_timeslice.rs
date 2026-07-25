@@ -23,20 +23,12 @@ fn two_wasteful_spawned_tasks_interleave_and_wait_all_completes() {
 
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: slow_a.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(slow_a.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     emit_constant(
         &mut chunk,
-        Value::Function {
-            name: slow_b.to_string(),
-            captures: vec![],
-            task_bound: false,
-        },
+        Value::function(slow_b.to_string(), vec![], false),
     );
     chunk.emit(Op::SpawnTask(0), loc());
     chunk.emit(Op::MakeArray(2), loc());

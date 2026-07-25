@@ -16,14 +16,7 @@ fn successful_spawn_program_sets_shutdown_before_returning() {
     let chunk = build_zero_arg_function_chunk(
         callee,
         |chunk| {
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(Op::SpawnTask(0), loc());
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
@@ -62,14 +55,7 @@ fn repeated_runs_with_spawn_chunk_each_complete_and_set_shutdown() {
         let chunk = build_zero_arg_function_chunk(
             callee,
             |chunk| {
-                emit_constant(
-                    chunk,
-                    Value::Function {
-                        name: callee.to_string(),
-                        captures: vec![],
-                        task_bound: false,
-                    },
-                );
+                emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
                 chunk.emit(Op::SpawnDetachedTask(0), loc());
                 chunk.emit(Op::Halt, loc());
             },

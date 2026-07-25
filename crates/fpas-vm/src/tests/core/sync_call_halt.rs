@@ -11,14 +11,7 @@ fn sync_call_rejects_halt_in_callback() {
         1,
         |chunk| {
             emit_constant(chunk, Value::Array(vec![Value::Integer(1)].into()));
-            emit_constant(
-                chunk,
-                Value::Function {
-                    name: callee.to_string(),
-                    captures: vec![],
-                    task_bound: false,
-                },
-            );
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
             chunk.emit(
                 Op::Intrinsic(u16::from(Intrinsic::Array(
                     fpas_bytecode::ArrayIntrinsic::Map,

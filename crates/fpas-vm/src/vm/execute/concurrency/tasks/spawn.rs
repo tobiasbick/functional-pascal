@@ -16,12 +16,8 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<(), VmError> {
         let func = self.pop(line)?;
-        let (name, captures, task_bound) = match func {
-            Value::Function {
-                name,
-                captures,
-                task_bound,
-            } => (name, captures, task_bound),
+        let function = match func {
+            Value::Function(function) => function,
             other => {
                 return Err(runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -35,28 +31,35 @@ impl Worker {
             }
         };
 
-        if task_bound {
+        if function.task_bound {
             return Err(runtime_error(
                 RUNTIME_INVALID_TASK,
-                format!("Cannot spawn task-bound closure `{name}` across a task boundary"),
+                format!(
+                    "Cannot spawn task-bound closure `{}` across a task boundary",
+                    function.name
+                ),
                 "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
                 line,
             ));
         }
 
-        let (code_start, expected_arity) = self.lookup_function_entry(&name).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_INVALID_TASK,
-                format!("Function `{name}` not found for task spawn"),
-                "Ensure the function is defined before spawning it as a task.",
-                line,
-            )
-        })?;
+        let (code_start, expected_arity) =
+            self.lookup_function_entry(&function.name).ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_INVALID_TASK,
+                    format!("Function `{}` not found for task spawn", function.name),
+                    "Ensure the function is defined before spawning it as a task.",
+                    line,
+                )
+            })?;
 
         if argc != expected_arity {
             return Err(runtime_error(
                 RUNTIME_WRONG_CALL_ARITY,
-                format!("Function `{name}` expects {expected_arity} arguments, got {argc}"),
+                format!(
+                    "Function `{}` expects {expected_arity} arguments, got {argc}",
+                    function.name
+                ),
                 "Spawn the task with the declared number of arguments.",
                 line,
             ));
@@ -65,14 +68,17 @@ impl Worker {
         let arg_count = argc as usize;
         let args = self.drain_stack_tail(arg_count, line).map_err(|_| {
             internal_error(
-                format!("Task spawn for `{name}` expected {arg_count} argument(s) on the stack"),
+                format!(
+                    "Task spawn for `{}` expected {arg_count} argument(s) on the stack",
+                    function.name
+                ),
                 "This indicates invalid bytecode or a VM stack-layout bug. Please report it.",
                 line,
             )
         })?;
-        let mut task_stack = Vec::with_capacity(arg_count + captures.len());
+        let mut task_stack = Vec::with_capacity(arg_count + function.captures.len());
         task_stack.extend(args);
-        task_stack.extend(captures);
+        task_stack.extend(function.captures.iter().cloned());
 
         let task_id = self.shared.alloc_task_id();
 

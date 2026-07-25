@@ -18,12 +18,7 @@ impl Worker {
         args: &[Value],
         line: SourceLocation,
     ) -> Result<Value, VmError> {
-        let Value::Function {
-            name,
-            captures,
-            task_bound: _,
-        } = func
-        else {
+        let Value::Function(function) = func else {
             return Err(runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
                 format!("Expected function value, got `{}`", func.type_name()),
@@ -32,20 +27,22 @@ impl Worker {
             ));
         };
 
-        let (code_start, expected_arity) = self.lookup_function_entry(name).ok_or_else(|| {
-            runtime_error(
-                RUNTIME_UNDEFINED_FUNCTION,
-                format!("Undefined function `{name}`"),
-                "Declare the function before calling it.",
-                line,
-            )
-        })?;
+        let (code_start, expected_arity) =
+            self.lookup_function_entry(&function.name).ok_or_else(|| {
+                runtime_error(
+                    RUNTIME_UNDEFINED_FUNCTION,
+                    format!("Undefined function `{}`", function.name),
+                    "Declare the function before calling it.",
+                    line,
+                )
+            })?;
 
         if args.len() != expected_arity as usize {
             return Err(runtime_error(
                 RUNTIME_WRONG_CALL_ARITY,
                 format!(
-                    "Function `{name}` expects {expected_arity} arguments, got {}",
+                    "Function `{}` expects {expected_arity} arguments, got {}",
+                    function.name,
                     args.len()
                 ),
                 "Check the function signature and the number of arguments.",
@@ -66,8 +63,8 @@ impl Worker {
             },
             line,
         )?;
-        for capture in captures.clone() {
-            self.push(capture)?;
+        for capture in &function.captures {
+            self.push(capture.clone())?;
         }
         let saved_ip = self.ip;
         self.ip = code_start;

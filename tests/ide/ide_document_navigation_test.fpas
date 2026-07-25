@@ -1,0 +1,24 @@
+program IdeDocumentNavigationTest;
+
+uses Ide.Document.Model, Std.Str, Std.Test;
+
+begin
+  var NewLine: string := Std.Str.Chr(10);
+  var Text: string := ((('abc' + NewLine) + 'wide text') + NewLine) + 'z';
+  var Document: IdeDocument := LoadedIdeDocument('source.fpas', Text);
+  var Middle: IdeDocument := IdeDocumentAtSourcePosition(Document, 2, 6);
+  AssertEquals(9, Middle.Caret);
+  AssertEquals(5, Middle.Offset.X);
+  AssertEquals(1, Middle.Offset.Y);
+  AssertEquals(Text, Middle.Text);
+  AssertEquals(Text, Middle.SavedText);
+  AssertFalse(IsIdeDocumentDirty(Middle));
+  var Beyond: IdeDocument := IdeDocumentAtSourcePosition(Document, 99, 99);
+  AssertEquals(Std.Str.Length(Text), Beyond.Caret);
+  AssertEquals(1, Beyond.Offset.X);
+  AssertEquals(2, Beyond.Offset.Y);
+  var Before: IdeDocument := IdeDocumentAtSourcePosition(Document, 0, 0);
+  AssertEquals(0, Before.Caret);
+  AssertEquals(0, Before.Offset.X);
+  AssertEquals(0, Before.Offset.Y)
+end.

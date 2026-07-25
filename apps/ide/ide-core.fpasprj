@@ -10,6 +10,8 @@ units = [
   "Ide.App.View",
   "Ide.Document.Model",
   "Ide.Document.Io",
+  "Ide.Diagnostic.Model",
+  "Ide.Diagnostic.Parser",
   "Ide.Process.Runner",
 ]
 

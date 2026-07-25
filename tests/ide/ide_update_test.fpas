@@ -1,12 +1,24 @@
 program IdeUpdateTest;
 
 uses
-  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Document.Model, Ide.Test.Files, Std.Str,
-  Std.Option, Std.Test, Std.Tui;
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Diagnostic.Model, Ide.Document.Model,
+  Ide.Test.Files, Std.Str, Std.Option, Std.Test, Std.Tui;
 
 const
   SavePath: string := IdeTestScratch + '/update_save.fpas';
   MissingPath: string := IdeTestScratch + '/update_missing.fpas';
+
+function EnterKey(): TuiKeyEvent;
+begin
+  return record
+    kind := TuiKeyKind.Enter;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
 
 begin
   EnsureIdeTestScratch();
@@ -50,5 +62,63 @@ begin
   var Opening: IdeModel := UpdateIde(MessageScrolled, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
   AssertEquals(2, Opening.MessageOffset.Y);
   var DialogScrollIgnored: IdeModel := UpdateIde(Opening, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 6)), Cmd);
-  AssertEquals(2, DialogScrollIgnored.MessageOffset.Y)
+  AssertEquals(2, DialogScrollIgnored.MessageOffset.Y);
+  var NavigationText: string := (('first' + Std.Str.Chr(10)) + 'second') +
+                                (Std.Str.Chr(10) + 'third');
+  var NavigationDocument: IdeDocument := IdeDocumentWithTextArea(LoadedIdeDocument(SavePath, NavigationText), NavigationText +
+                                                                                                              ' changed', 0, TuiPoint.Create(0, 0));
+  var NavigationDiagnostics: array of IdeDiagnostic := [
+                                                         record Path := SavePath; Line := 2; Column := 3; MessageLine := 2; end,
+                                                         record Path := SavePath; Line := 99; Column := 99; MessageLine := 5; end
+
+                                                       ];
+  var Navigation: IdeModel := record
+    Document := NavigationDocument;
+    Dialog := IdeDialog.NoDialog;
+    MessageText := 'header';
+    MessageOffset := TuiPoint.Create(0, 0);
+    Diagnostics := NavigationDiagnostics;
+    SelectedDiagnostic := Some(0);
+    LastExitCode := Some(1);
+    Focused := Some(MessageScrollControlId());
+  end;
+  var LaterDiagnostic: IdeModel := UpdateIde(Navigation, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 5)), Cmd);
+  case LaterDiagnostic.SelectedDiagnostic of
+    Some(Index):
+    begin
+      AssertEquals(1, Index)
+    end;
+    None:
+    begin
+      Fail('scrolling did not select the later diagnostic')
+    end
+  end;
+  var Navigated: IdeModel := UpdateIde(Navigation, TuiMsg.Key(EnterKey()), Cmd);
+  AssertEquals(8, Navigated.Document.Caret);
+  AssertEquals(2, Navigated.Document.Offset.X);
+  AssertEquals(1, Navigated.Document.Offset.Y);
+  AssertEquals(Navigation.Document.Text, Navigated.Document.Text);
+  AssertEquals(Navigation.Document.SavedText, Navigated.Document.SavedText);
+  AssertTrue(IsIdeDocumentDirty(Navigated.Document));
+  case Navigated.Focused of
+    Some(Id):
+    begin
+      AssertEquals(EditorControlId().Value, Id.Value)
+    end;
+    None:
+    begin
+      Fail('diagnostic navigation did not focus the editor')
+    end
+  end;
+  var Clamped: IdeModel := UpdateIde(LaterDiagnostic, TuiMsg.Key(EnterKey()), Cmd);
+  AssertEquals(Std.Str.Length(Clamped.Document.Text), Clamped.Document.Caret);
+  mutable var EditorFocused: IdeModel := Navigation;
+  EditorFocused.Focused := Some(EditorControlId());
+  var NotNavigated: IdeModel := UpdateIde(EditorFocused, TuiMsg.Key(EnterKey()), Cmd);
+  AssertEquals(EditorFocused.Document.Caret, NotNavigated.Document.Caret);
+  mutable var NoDiagnostics: IdeModel := Saved;
+  NoDiagnostics.Focused := Some(MessageScrollControlId());
+  var NoDiagnosticNavigation: IdeModel := UpdateIde(NoDiagnostics, TuiMsg.Key(EnterKey()), Cmd);
+  AssertEquals(NoDiagnostics.Document.Caret, NoDiagnosticNavigation.Document.Caret);
+  AssertEquals(NoDiagnostics.MessageText, NoDiagnosticNavigation.MessageText)
 end.

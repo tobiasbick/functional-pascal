@@ -30,6 +30,7 @@ not IDE startup targets.
 | Alt+X | Exit |
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
+| Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus and activate commands or dialog buttons |
 
@@ -39,8 +40,14 @@ shows dirty state and the one-based caret line and column.
 
 Click inside Messages to focus it and scroll captured output. When focus is
 already outside the editor, Tab can also reach it. Up, Down, Page Up, Page Down,
-Home, and End move its vertical viewport. New messages return the viewport to
-their first line.
+Home, and End move its vertical viewport. New non-Check messages return the
+viewport to their first line.
+
+A failed Check selects the first diagnostic for the open source and reveals its
+header in the viewport. The selected header begins with `>`. Scrolling past
+another diagnostic selects it; press Enter while Messages is focused to move
+the editor caret and viewport to that line and column. Diagnostics belonging to
+other files are not navigable. Run output remains plain captured output.
 
 ## Files and processes
 
@@ -55,8 +62,9 @@ failed save prevents the process from starting. Child programs must be
 non-interactive because their output is captured and no stdin is connected.
 
 The message panel retains the latest complete result and shows three lines
-inside its bounded scroll viewport. Resize the terminal when the
-terminal-too-small overlay is shown.
+inside its bounded scroll viewport. Diagnostic markers are display-only and do
+not modify the captured report. Resize the terminal when the terminal-too-small
+overlay is shown.
 
 ## Development checks
 

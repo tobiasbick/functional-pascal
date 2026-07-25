@@ -1,8 +1,8 @@
 program IdeProcessIntegrationTest;
 
 uses
-  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Document.Model, Ide.Test.Files, Std.Option,
-  Std.Str, Std.Test, Std.Tui;
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Document.Model, Ide.Test.Files,
+  Std.Option, Std.Array, Std.Str, Std.Test, Std.Tui;
 
 const
   SourcePath: string := IdeTestScratch + '/process_integration.fpas';
@@ -20,6 +20,19 @@ begin
       Fail('Expected a completed compiler process.')
     end
   end
+end;
+
+function HasVisibleSelectedError(Snapshot: TuiSurfaceSnapshot): boolean;
+begin
+  for Row: integer := 0 to Snapshot.Height - 1 do
+  begin
+    var Line: string := Snapshot.LineAt(Row);
+    if Std.Str.Contains(Line, '> Cannot build test program') then
+    begin
+      return true
+    end
+  end;
+  return false
 end;
 
 begin
@@ -44,6 +57,13 @@ begin
   AssertExitCode(CompileFailed, false);
   AssertTrue(Std.Str.Contains(CompileFailed.MessageText, 'Check exit code: '));
   AssertTrue(Std.Str.Contains(CompileFailed.MessageText, 'error['));
+  AssertTrue(Std.Array.Length(CompileFailed.Diagnostics) > 0);
+  AssertEquals(CompileFailed.Diagnostics[0].MessageLine, CompileFailed.MessageOffset.Y);
+  AssertTrue(Std.Option.IsSome(CompileFailed.SelectedDiagnostic));
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
+  var _: IdeModel := App.RunIterations(CompileFailed, UpdateIde, ViewIde, 0, 0);
+  AssertTrue(HasVisibleSelectedError(App.SurfaceSnapshot()));
+  App.Close();
   AssertEquals(CompileErrorSource, ReadIdeTestFile(SourcePath));
   var RuntimeErrorSource: string := (('program IdeProcessRuntimeError;' + NewLine) + 'begin') +
                                     (((NewLine + '  panic(''ide runtime marker'')') + NewLine) + 'end.');
@@ -53,6 +73,8 @@ begin
   AssertExitCode(RuntimeFailed, false);
   AssertTrue(Std.Str.Contains(RuntimeFailed.MessageText, 'Run exit code: '));
   AssertTrue(Std.Str.Contains(RuntimeFailed.MessageText, 'ide runtime marker'));
+  AssertEquals(0, Std.Array.Length(RuntimeFailed.Diagnostics));
+  AssertTrue(Std.Option.IsNone(RuntimeFailed.SelectedDiagnostic));
   AssertEquals(RuntimeErrorSource, ReadIdeTestFile(SourcePath));
   var Unsaved: IdeModel := InitialIdeModel(Some(IdeTestScratch));
   var DirtyUnsaved: IdeModel := UpdateIde(Unsaved, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), ValidSource, Std.Str.Length(ValidSource), TuiPoint.Create(0, 0)), Cmd);

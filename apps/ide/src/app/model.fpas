@@ -2,7 +2,7 @@
 
 unit Ide.App.Model;
 
-uses Ide.Document.Model, Std.Tui;
+uses Ide.Diagnostic.Model, Ide.Document.Model, Std.Tui;
 
 type
   /// Command resumed after a dirty-document decision.
@@ -26,6 +26,8 @@ type
     Dialog: IdeDialog;
     MessageText: string;
     MessageOffset: TuiPoint;
+    Diagnostics: array of IdeDiagnostic;
+    SelectedDiagnostic: option of integer;
     LastExitCode: option of integer;
     Focused: option of TuiControlId;
   end;
@@ -39,6 +41,8 @@ begin
     Dialog := IdeDialog.NoDialog;
     MessageText := 'Ready';
     MessageOffset := TuiPoint.Create(0, 0);
+    Diagnostics := [];
+    SelectedDiagnostic := None;
     LastExitCode := None;
     Focused := None;
   end

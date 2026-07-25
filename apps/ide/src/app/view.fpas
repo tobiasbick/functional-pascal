@@ -19,6 +19,24 @@ begin
   return FixedRowSettings().WithFixedHeight(5)
 end;
 
+private function IsSelectedDiagnosticLine(State: IdeModel; MessageLine: integer): boolean;
+begin
+  case State.SelectedDiagnostic of
+    Some(Index):
+    begin
+      if (Index < 0) or (Index >= Std.Array.Length(State.Diagnostics)) then
+      begin
+        return false
+      end;
+      return State.Diagnostics[Index].MessageLine = MessageLine
+    end;
+    None:
+    begin
+      return false
+    end
+  end
+end;
+
 private function ViewCommandBar(): TuiElement;
 begin
   return TuiElementBuilders.MakeMenuBar([
@@ -45,7 +63,12 @@ begin
   mutable var Items: array of TuiElement := [];
   for Index: integer := 0 to Std.Array.Length(Lines) - 1 do
   begin
-    Std.Array.Push(Items, TuiElementBuilders.MakeLabel(Lines[Index]))
+    mutable var LineText: string := Lines[Index];
+    if IsSelectedDiagnosticLine(State, Index) then
+    begin
+      LineText := '> ' + LineText
+    end;
+    Std.Array.Push(Items, TuiElementBuilders.MakeLabel(LineText))
   end;
   var Content: TuiElement := TuiElementBuilders.MakeColumn(Items);
   var Scroll: TuiElement := TuiElementBuilders.MakeScroll(MessageScrollControlId(), State.MessageOffset, MessageScrollChangedAction(), Content);

@@ -95,6 +95,8 @@ begin
     Dialog := IdeDialog.NoDialog;
     MessageText := MessageText;
     MessageOffset := TuiPoint.Create(0, 0);
+    Diagnostics := [];
+    SelectedDiagnostic := None;
     LastExitCode := Some(0);
     Focused := None;
   end;

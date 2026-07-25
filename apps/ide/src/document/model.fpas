@@ -2,7 +2,7 @@
 
 unit Ide.Document.Model;
 
-uses Std.Tui;
+uses Std.Array, Std.Console, Std.Str, Std.Tui;
 
 type
   /// Model-owned text, persistence baseline, caret, and viewport state.
@@ -75,6 +75,51 @@ begin
     SavedText := Document.Text;
     Caret := Document.Caret;
     Offset := Document.Offset;
+  end
+end;
+
+/// Moves the caret to a clamped one-based source position.
+
+function IdeDocumentAtSourcePosition(Document: IdeDocument; Line: integer; Column: integer): IdeDocument;
+begin
+  var Lines: array of string := Std.Str.Split(Document.Text, Std.Str.Chr(10));
+  mutable var TargetLine: integer := Line - 1;
+  if TargetLine < 0 then
+  begin
+    TargetLine := 0
+  end;
+  var LastLine: integer := Std.Array.Length(Lines) - 1;
+  if TargetLine > LastLine then
+  begin
+    TargetLine := LastLine
+  end;
+  mutable var TargetColumn: integer := Column - 1;
+  if TargetColumn < 0 then
+  begin
+    TargetColumn := 0
+  end;
+  mutable var LineStart: integer := 0;
+  for Index: integer := 0 to TargetLine - 1 do
+  begin
+    LineStart := (LineStart + Std.Str.Length(Lines[Index])) + 1
+  end;
+  mutable var CaretInLine: integer := Std.Str.Length(Lines[TargetLine]);
+  for Index: integer := 0 to Std.Str.Length(Lines[TargetLine]) - 1 do
+  begin
+    var Prefix: string := Std.Str.Substring(Lines[TargetLine], 0, Index + 1);
+    if Std.Console.DisplayWidth(Prefix) > TargetColumn then
+    begin
+      CaretInLine := Index;
+      break
+    end
+  end;
+  var DisplayColumn: integer := Std.Console.DisplayWidth(Std.Str.Substring(Lines[TargetLine], 0, CaretInLine));
+  return record
+    Path := Document.Path;
+    Text := Document.Text;
+    SavedText := Document.SavedText;
+    Caret := LineStart + CaretInLine;
+    Offset := TuiPoint.Create(DisplayColumn, TargetLine);
   end
 end;
 

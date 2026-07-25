@@ -1,6 +1,8 @@
 program IdeSurfaceTest;
 
-uses Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Document.Model, Std.Str, Std.Test, Std.Tui;
+uses
+  Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Diagnostic.Model, Ide.Document.Model, Std.Str,
+  Std.Test, Std.Tui;
 
 procedure AssertSurface(Size: TuiSize; State: IdeModel; ExpectedPath: string);
 begin
@@ -27,11 +29,17 @@ begin
   var NewLine: string := Std.Str.Chr(10);
   var MessageText: string := ((((((('first diagnostic line' + NewLine) + 'second diagnostic line') + NewLine) + 'third diagnostic line') + NewLine) + 'fourth clipped line') + NewLine) +
                              'fifth clipped line';
+  var Diagnostics: array of IdeDiagnostic := [
+                                               record Path := 'long.fpas'; Line := 2; Column := 1; MessageLine := 1; end
+
+                                             ];
   var LongMessage: IdeModel := record
     Document := NewIdeDocument(Some('long.fpas'));
     Dialog := IdeDialog.NoDialog;
     MessageText := MessageText;
     MessageOffset := TuiPoint.Create(0, 0);
+    Diagnostics := Diagnostics;
+    SelectedDiagnostic := Some(0);
     LastExitCode := Some(1);
     Focused := None;
   end;
@@ -40,7 +48,7 @@ begin
   var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(Surface.LineAt(19), 'Messages'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(20), 'first diagnostic line'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(21), 'second diagnostic line'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(21), '> second diagnostic line'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(22), 'third diagnostic line'));
   AssertFalse(Std.Str.Contains(Surface.LineAt(22), 'fourth clipped line'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(24), 'clean | Ln 1, Col 1'));

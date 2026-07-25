@@ -3,8 +3,8 @@
 unit Ide.App.DocumentFlow;
 
 uses
-  Ide.App.Actions, Ide.App.Model, Ide.Document.Io, Ide.Document.Model, Ide.Process.Runner, Std.Array,
-  Std.Str, Std.Tui;
+  Ide.App.Actions, Ide.App.Model, Ide.Diagnostic.Model, Ide.Diagnostic.Parser, Ide.Document.Io,
+  Ide.Document.Model, Ide.Process.Runner, Std.Array, Std.Str, Std.Tui;
 
 private function IdeState(
   State: IdeModel;
@@ -12,6 +12,8 @@ private function IdeState(
   Dialog: IdeDialog;
   MessageText: string;
   MessageOffset: TuiPoint;
+  Diagnostics: array of IdeDiagnostic;
+  SelectedDiagnostic: option of integer;
   Focused: option of TuiControlId
 ): IdeModel;
 begin
@@ -20,6 +22,8 @@ begin
     Dialog := Dialog;
     MessageText := MessageText;
     MessageOffset := MessageOffset;
+    Diagnostics := Diagnostics;
+    SelectedDiagnostic := SelectedDiagnostic;
     LastExitCode := State.LastExitCode;
     Focused := Focused;
   end
@@ -27,27 +31,27 @@ end;
 
 private function IdeStateWithMessage(State: IdeModel; MessageText: string): IdeModel;
 begin
-  return IdeState(State, State.Document, State.Dialog, MessageText, TuiPoint.Create(0, 0), State.Focused)
+  return IdeState(State, State.Document, State.Dialog, MessageText, TuiPoint.Create(0, 0), [], None, State.Focused)
 end;
 
 private function CloseDialog(State: IdeModel; MessageText: string): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.NoDialog, MessageText, TuiPoint.Create(0, 0), Some(EditorControlId()))
+  return IdeState(State, State.Document, IdeDialog.NoDialog, MessageText, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()))
 end;
 
 private function ShowOpenDialog(State: IdeModel): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.OpenPath('', 0), State.MessageText, State.MessageOffset, Some(DialogPathControlId()))
+  return IdeState(State, State.Document, IdeDialog.OpenPath('', 0), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()))
 end;
 
 private function ShowSaveDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.SavePath('', 0, Pending), State.MessageText, State.MessageOffset, Some(DialogPathControlId()))
+  return IdeState(State, State.Document, IdeDialog.SavePath('', 0, Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()))
 end;
 
 private function ShowDirtyDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.ConfirmDirty(Pending), State.MessageText, State.MessageOffset, Some(DirtySaveControlId()))
+  return IdeState(State, State.Document, IdeDialog.ConfirmDirty(Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DirtySaveControlId()))
 end;
 
 private function ResumePending(
@@ -64,11 +68,25 @@ begin
       case RunIdeProcess(Kind, Path) of
         Ok(Report):
         begin
+          mutable var Diagnostics: array of IdeDiagnostic := [];
+          if Kind = IdeProcessKind.CheckProcess then
+          begin
+            Diagnostics := ParseIdeDiagnostics(Report.MessageText, Path)
+          end;
+          mutable var SelectedDiagnostic: option of integer := None;
+          mutable var MessageOffset: TuiPoint := TuiPoint.Create(0, 0);
+          if Std.Array.Length(Diagnostics) > 0 then
+          begin
+            SelectedDiagnostic := Some(0);
+            MessageOffset.Y := Diagnostics[0].MessageLine
+          end;
           return record
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
             MessageText := Report.MessageText;
-            MessageOffset := TuiPoint.Create(0, 0);
+            MessageOffset := MessageOffset;
+            Diagnostics := Diagnostics;
+            SelectedDiagnostic := SelectedDiagnostic;
             LastExitCode := Some(Report.ExitCode);
             Focused := Some(EditorControlId());
           end
@@ -80,6 +98,8 @@ begin
             Dialog := IdeDialog.NoDialog;
             MessageText := Message;
             MessageOffset := TuiPoint.Create(0, 0);
+            Diagnostics := [];
+            SelectedDiagnostic := None;
             LastExitCode := None;
             Focused := Some(EditorControlId());
           end
@@ -123,7 +143,7 @@ begin
   case ReadIdeDocument(Path) of
     Ok(Document):
     begin
-      return IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, TuiPoint.Create(0, 0), Some(EditorControlId()))
+      return IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()))
     end;
     Error(Message):
     begin
@@ -137,8 +157,8 @@ begin
   case WriteIdeDocument(State.Document, Path) of
     Ok(Document):
     begin
-      return ResumePending(IdeState(State, Document, State.Dialog, State.MessageText, State.MessageOffset, State.Focused), Pending, 'Saved ' +
-                                                                                                                                    Path, Cmd)
+      return ResumePending(IdeState(State, Document, State.Dialog, State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, State.Focused), Pending, 'Saved ' +
+                                                                                                                                                                                 Path, Cmd)
     end;
     Error(Message):
     begin
@@ -193,11 +213,11 @@ begin
   case State.Dialog of
     IdeDialog.OpenPath(PathText, PreviousCaret):
     begin
-      return IdeState(State, State.Document, IdeDialog.OpenPath(Text, Caret), State.MessageText, State.MessageOffset, State.Focused)
+      return IdeState(State, State.Document, IdeDialog.OpenPath(Text, Caret), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, State.Focused)
     end;
     IdeDialog.SavePath(PathText, PreviousCaret, Pending):
     begin
-      return IdeState(State, State.Document, IdeDialog.SavePath(Text, Caret, Pending), State.MessageText, State.MessageOffset, State.Focused)
+      return IdeState(State, State.Document, IdeDialog.SavePath(Text, Caret, Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, State.Focused)
     end;
     IdeDialog.NoDialog, IdeDialog.ConfirmDirty(Pending):
     begin

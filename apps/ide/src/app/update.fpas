@@ -3,14 +3,16 @@
 unit Ide.App.Update;
 
 uses
-  Ide.App.Actions, Ide.App.DocumentFlow, Ide.App.Model, Ide.Document.Model, Std.Console, Std.Str,
-  Std.Tui;
+  Ide.App.Actions, Ide.App.DocumentFlow, Ide.App.Model, Ide.Diagnostic.Model, Ide.Document.Model,
+  Std.Array, Std.Console, Std.Str, Std.Tui;
 
 private function IdeState(
   State: IdeModel;
   Document: IdeDocument;
   MessageText: string;
   MessageOffset: TuiPoint;
+  Diagnostics: array of IdeDiagnostic;
+  SelectedDiagnostic: option of integer;
   Focused: option of TuiControlId
 ): IdeModel;
 begin
@@ -19,8 +21,61 @@ begin
     Dialog := State.Dialog;
     MessageText := MessageText;
     MessageOffset := MessageOffset;
+    Diagnostics := Diagnostics;
+    SelectedDiagnostic := SelectedDiagnostic;
     LastExitCode := State.LastExitCode;
     Focused := Focused;
+  end
+end;
+
+private function MessageIsFocused(State: IdeModel): boolean;
+begin
+  case State.Focused of
+    Some(Id):
+    begin
+      return Id.Value = MessageScrollControlId().Value
+    end;
+    None:
+    begin
+      return false
+    end
+  end
+end;
+
+private function SelectedDiagnosticForOffset(Diagnostics: array of IdeDiagnostic; Offset: TuiPoint): option of integer;
+begin
+  if Std.Array.Length(Diagnostics) = 0 then
+  begin
+    return None
+  end;
+  mutable var Selected: integer := 0;
+  for Index: integer := 0 to Std.Array.Length(Diagnostics) - 1 do
+  begin
+    if Diagnostics[Index].MessageLine <= Offset.Y then
+    begin
+      Selected := Index
+    end
+  end;
+  return Some(Selected)
+end;
+
+private function NavigateToSelectedDiagnostic(State: IdeModel): IdeModel;
+begin
+  case State.SelectedDiagnostic of
+    Some(Index):
+    begin
+      if (Index < 0) or (Index >= Std.Array.Length(State.Diagnostics)) then
+      begin
+        return State
+      end;
+      var Diagnostic: IdeDiagnostic := State.Diagnostics[Index];
+      var Document: IdeDocument := IdeDocumentAtSourcePosition(State.Document, Diagnostic.Line, Diagnostic.Column);
+      return IdeState(State, Document, State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(EditorControlId()))
+    end;
+    None:
+    begin
+      return State
+    end
   end
 end;
 
@@ -60,6 +115,20 @@ end;
 
 private function UpdateShortcut(State: IdeModel; Key: TuiKeyEvent; Cmd: TuiCmdOutput): IdeModel;
 begin
+  if ((((Key.kind = Std.Console.KeyKind.Enter) and not Key.ctrl) and not Key.alt) and not Key.meta) and
+     MessageIsFocused(State) then
+  begin
+    case State.Dialog of
+      IdeDialog.NoDialog:
+      begin
+        return NavigateToSelectedDiagnostic(State)
+      end;
+      IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+      begin
+        return State
+      end
+    end
+  end;
   if (((Key.kind = Std.Console.KeyKind.F2) and not Key.ctrl) and not Key.alt) and not Key.meta then
   begin
     return UpdateAction(State, SaveControlId(), SaveAction(), Cmd)
@@ -95,7 +164,7 @@ begin
   case Msg of
     TuiMsg.FocusChanged(Previous, Current):
     begin
-      return IdeState(State, State.Document, State.MessageText, State.MessageOffset, Current)
+      return IdeState(State, State.Document, State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Current)
     end;
     TuiMsg.Action(Source, Action):
     begin
@@ -113,7 +182,7 @@ begin
     begin
       if IsIdeCommand(Source, Action, EditorControlId(), EditorChangedAction()) then
       begin
-        return IdeState(State, IdeDocumentWithTextArea(State.Document, Text, Caret, Offset), State.MessageText, State.MessageOffset, State.Focused)
+        return IdeState(State, IdeDocumentWithTextArea(State.Document, Text, Caret, Offset), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, State.Focused)
       end;
       return State
     end;
@@ -141,7 +210,7 @@ begin
         begin
           if IsIdeCommand(Source, Action, MessageScrollControlId(), MessageScrollChangedAction()) then
           begin
-            return IdeState(State, State.Document, State.MessageText, ScrollOffset, State.Focused)
+            return IdeState(State, State.Document, State.MessageText, ScrollOffset, State.Diagnostics, SelectedDiagnosticForOffset(State.Diagnostics, ScrollOffset), State.Focused)
           end
         end;
         IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):

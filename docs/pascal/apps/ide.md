@@ -30,6 +30,7 @@ targets.
 | Alt+X | Exit |
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
+| Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus and activate commands or dialog buttons |
 
@@ -39,8 +40,15 @@ viewport to keep the caret visible.
 
 The Messages window is also focusable. Click inside it, or reach it with Tab
 when focus is already outside the editor. Then use Up, Down, Page Up, Page Down,
-Home, or End to scroll its captured output. A new status or process report
-resets the message viewport to its first line.
+Home, or End to scroll its captured output. A new status or non-Check process
+report resets the message viewport to its first line.
+
+Check diagnostics for the open source are navigable. The first diagnostic is
+selected automatically and revealed after Check. Its header is prefixed with
+`>`; scrolling past another diagnostic selects that location. Enter while
+Messages is focused moves the editor caret and viewport to the selected
+one-based line and column. Stale locations are clamped to the current text.
+Diagnostics for other files and Run output remain non-navigable.
 
 ## Document lifecycle
 
@@ -63,7 +71,8 @@ the command without starting a process.
 The IDE is blocked while Check or Run executes. Run is intended for
 non-interactive programs because child output is captured and child stdin is
 not connected. The message panel retains the latest complete result and shows
-three lines inside its bounded scroll viewport.
+three lines inside its bounded scroll viewport. Its selection marker does not
+change the retained process report.
 
 When the terminal is too small for the fixed screen, the application displays
 the terminal-too-small overlay until it is resized.

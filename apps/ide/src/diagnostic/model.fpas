@@ -1,0 +1,12 @@
+/// Parsed compiler diagnostic navigation data for the IDE.
+
+unit Ide.Diagnostic.Model;
+
+type
+  /// One source location retained from a compiler diagnostic header.
+  IdeDiagnostic = record
+    Path: string;
+    Line: integer;
+    Column: integer;
+    MessageLine: integer;
+  end;

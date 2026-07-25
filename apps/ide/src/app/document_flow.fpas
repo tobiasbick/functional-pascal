@@ -4,7 +4,8 @@ unit Ide.App.DocumentFlow;
 
 uses
   Ide.App.Actions, Ide.App.Model, Ide.Diagnostic.Model, Ide.Diagnostic.Parser, Ide.Document.Io,
-  Ide.Document.Model, Ide.Process.Runner, Std.Array, Std.Str, Std.Tui;
+  Ide.Document.Model, Ide.Process.Runner, Ide.Project.Model, Ide.Project.Session, Std.Array,
+  Std.Path, Std.Str, Std.Tui;
 
 private function IdeState(
   State: IdeModel;
@@ -18,6 +19,7 @@ private function IdeState(
 ): IdeModel;
 begin
   return record
+    Project := State.Project;
     Document := Document;
     Dialog := Dialog;
     MessageText := MessageText;
@@ -61,8 +63,21 @@ private function ResumePending(
   Cmd: TuiCmdOutput
 ): IdeModel;
 function RunSavedDocument(Kind: IdeProcessKind): IdeModel;
+function CommandPath(): option of string;
 begin
-  case State.Document.Path of
+  case State.Project of
+    Some(Project):
+    begin
+      return Some(Project.Path)
+    end;
+    None:
+    begin
+      return State.Document.Path
+    end
+  end
+end;
+begin
+  case CommandPath() of
     Some(Path):
     begin
       case RunIdeProcess(Kind, Path) of
@@ -81,6 +96,7 @@ begin
             MessageOffset.Y := Diagnostics[0].MessageLine
           end;
           return record
+            Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
             MessageText := Report.MessageText;
@@ -94,6 +110,7 @@ begin
         Error(Message):
         begin
           return record
+            Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
             MessageText := Message;
@@ -138,16 +155,53 @@ begin
   end
 end;
 
-private function OpenPath(State: IdeModel; Path: string): IdeModel;
+private function OpenSourcePath(State: IdeModel; Path: string): IdeModel;
 begin
   case ReadIdeDocument(Path) of
     Ok(Document):
     begin
-      return IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()))
+      mutable var Opened: IdeModel := IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
+      Opened.Project := None;
+      return Opened
     end;
     Error(Message):
     begin
       return IdeStateWithMessage(State, Message)
+    end
+  end
+end;
+
+private function OpenProjectPath(State: IdeModel; Path: string): IdeModel;
+begin
+  case LoadIdeProjectSession(Path) of
+    Ok(Session):
+    begin
+      mutable var Opened: IdeModel := IdeState(State, Session.Document, IdeDialog.NoDialog, 'Opened project ' +
+                                                                                            Session.Project.Name, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
+      Opened.Project := Some(Session.Project);
+      return Opened
+    end;
+    Error(Message):
+    begin
+      return IdeStateWithMessage(State, Message)
+    end
+  end
+end;
+
+private function OpenPath(State: IdeModel; Path: string): IdeModel;
+begin
+  case Std.Str.ToLower(Std.Path.Extension(Path)) of
+    'fpas':
+    begin
+      return OpenSourcePath(State, Path)
+    end;
+    'fpasprj':
+    begin
+      return OpenProjectPath(State, Path)
+    end
+    else
+    begin
+      return IdeStateWithMessage(State, 'Open path must end with .fpas or .fpasprj.')
     end
   end
 end;
@@ -317,11 +371,12 @@ begin
   end;
   if Std.Array.Length(Arguments) > 1 then
   begin
-    return IdeStateWithMessage(InitialIdeModel(None), 'Expected at most one .fpas path argument.')
+    return IdeStateWithMessage(InitialIdeModel(None), 'Expected at most one .fpas or .fpasprj path argument.')
   end;
-  if not Std.Str.EndsWith(Std.Str.ToLower(Arguments[0]), '.fpas') then
+  var Extension: string := Std.Str.ToLower(Std.Path.Extension(Arguments[0]));
+  if (Extension <> 'fpas') and (Extension <> 'fpasprj') then
   begin
-    return IdeStateWithMessage(InitialIdeModel(None), 'Startup path must end with .fpas.')
+    return IdeStateWithMessage(InitialIdeModel(None), 'Startup path must end with .fpas or .fpasprj.')
   end;
   return OpenPath(InitialIdeModel(None), Arguments[0])
 end;

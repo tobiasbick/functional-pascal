@@ -1,0 +1,159 @@
+program IdeProjectLoaderTest;
+
+uses
+  Ide.Project.Loader, Ide.Project.Model, Ide.Test.Files, Std.Array, Std.Option, Std.Path, Std.Str,
+  Std.Test;
+
+const
+  ProjectRoot: string := IdeTestScratch + '/project_loader';
+  SourceRoot: string := ProjectRoot + '/src';
+  MainPath: string := ProjectRoot + '/main.fpas';
+  UnitPath: string := SourceRoot + '/unit.fpas';
+  ExcludedPath: string := SourceRoot + '/excluded.fpas';
+  NotePath: string := ProjectRoot + '/note.txt';
+  ProgramPath: string := ProjectRoot + '/program.fpasprj';
+  LibraryPath: string := ProjectRoot + '/library.fpasprj';
+  TestPath: string := ProjectRoot + '/test.fpasprj';
+  InvalidPath: string := ProjectRoot + '/invalid.fpasprj';
+
+function ContainsPath(Paths: array of string; Expected: string): boolean;
+begin
+  var NormalizedExpected: string := Std.Path.Normalize(Expected);
+  for Index: integer := 0 to Std.Array.Length(Paths) - 1 do
+  begin
+    if Paths[Index] = NormalizedExpected then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+procedure AssertProgramProject(ManifestText: string);
+begin
+  case LoadIdeProject(ProgramPath) of
+    Ok(Project):
+    begin
+      AssertEquals('loader-program', Project.Name);
+      AssertTrue(Project.Kind = IdeProjectKind.ProgramProject);
+      AssertEquals(ManifestText, Project.ManifestText);
+      AssertEquals(Std.Path.Normalize(ProgramPath), Project.Path);
+      AssertEquals(Std.Path.Normalize(ProjectRoot), Project.Root);
+      case Project.MainFile of
+        Some(Path):
+        begin
+          AssertEquals(Std.Path.Normalize(MainPath), Path)
+        end;
+        None:
+        begin
+          Fail('Program project did not retain its main file.')
+        end
+      end;
+      AssertTrue(ContainsPath(Project.SourceFiles, MainPath));
+      AssertTrue(ContainsPath(Project.SourceFiles, UnitPath));
+      AssertFalse(ContainsPath(Project.SourceFiles, ExcludedPath));
+      AssertEquals(2, Std.Array.Length(Project.SourceFiles));
+      case IdeProjectInitialFile(Project) of
+        Some(Path):
+        begin
+          AssertEquals(Std.Path.Normalize(MainPath), Path)
+        end;
+        None:
+        begin
+          Fail('Program project did not select its main file.')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
+
+procedure AssertNonProgramProject(Path: string; ExpectedKind: IdeProjectKind);
+begin
+  case LoadIdeProject(Path) of
+    Ok(Project):
+    begin
+      AssertTrue(Project.Kind = ExpectedKind);
+      AssertTrue(Std.Option.IsNone(Project.MainFile));
+      AssertEquals(1, Std.Array.Length(Project.SourceFiles));
+      AssertTrue(ContainsPath(Project.SourceFiles, UnitPath));
+      AssertTrue(Std.Option.IsSome(IdeProjectInitialFile(Project)))
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end;
+
+procedure AssertProjectError(ManifestText: string; Expected: string);
+begin
+  WriteIdeTestFile(InvalidPath, ManifestText);
+  case LoadIdeProject(InvalidPath) of
+    Ok(Project):
+    begin
+      Fail('Invalid project was accepted.')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, Expected))
+    end
+  end
+end;
+
+begin
+  EnsureIdeTestScratch();
+  EnsureIdeTestDirectory(ProjectRoot);
+  EnsureIdeTestDirectory(SourceRoot);
+  WriteIdeTestFile(MainPath, 'program LoaderMain; begin end.');
+  WriteIdeTestFile(UnitPath, 'unit Loader.Unit; interface implementation end.');
+  WriteIdeTestFile(ExcludedPath, 'unit Loader.Excluded; interface implementation end.');
+  WriteIdeTestFile(NotePath, 'not a source');
+  var NewLine: string := Std.Str.Chr(10);
+  mutable var ProgramManifest: string := '[project]';
+  ProgramManifest := (ProgramManifest + NewLine) + 'name = ''loader-program''';
+  ProgramManifest := (ProgramManifest + NewLine) + 'kind = ''program''';
+  ProgramManifest := (ProgramManifest + NewLine) + 'main = ''main.fpas''';
+  ProgramManifest := (ProgramManifest + NewLine) + '[sources]';
+  ProgramManifest := (ProgramManifest + NewLine) +
+                     'include = [''main.fpas'', ''src/*.fpas'', ''src/unit.fpas'']';
+  ProgramManifest := (ProgramManifest + NewLine) + 'exclude = [''src/excluded.fpas'']';
+  WriteIdeTestFile(ProgramPath, ProgramManifest);
+  AssertProgramProject(ProgramManifest);
+  mutable var LibraryManifest: string := '[project]';
+  LibraryManifest := (LibraryManifest + NewLine) + 'name = ''loader-library''';
+  LibraryManifest := (LibraryManifest + NewLine) + 'kind = ''library''';
+  LibraryManifest := (LibraryManifest + NewLine) + '[sources]';
+  LibraryManifest := (LibraryManifest + NewLine) + 'include = [''src/unit.fpas'']';
+  WriteIdeTestFile(LibraryPath, LibraryManifest);
+  AssertNonProgramProject(LibraryPath, IdeProjectKind.LibraryProject);
+  mutable var TestManifest: string := '[project]';
+  TestManifest := (TestManifest + NewLine) + 'name = ''loader-test''';
+  TestManifest := (TestManifest + NewLine) + 'kind = ''test''';
+  TestManifest := (TestManifest + NewLine) + '[sources]';
+  TestManifest := (TestManifest + NewLine) + 'include = [''src/unit.fpas'']';
+  WriteIdeTestFile(TestPath, TestManifest);
+  AssertNonProgramProject(TestPath, IdeProjectKind.TestProject);
+  mutable var InvalidManifest: string := '[project]';
+  InvalidManifest := (InvalidManifest + NewLine) + 'name = ''invalid''';
+  InvalidManifest := (InvalidManifest + NewLine) + 'kind = ''library''';
+  InvalidManifest := (InvalidManifest + NewLine) + '[sources]';
+  InvalidManifest := (InvalidManifest + NewLine) + 'include = [''missing/*.fpas'']';
+  AssertProjectError(InvalidManifest, 'matched no files');
+  AssertProjectError('[project', 'Invalid project manifest');
+  AssertProjectError(((((('[project]' + NewLine) + 'kind = ''library''') + NewLine) + '[sources]') + NewLine) +
+                     'include = [''src/unit.fpas'']', 'project requires name');
+  AssertProjectError(((((((('[project]' + NewLine) + 'name = ''wrong-kind''') + NewLine) + 'kind = ''application''') + NewLine) + '[sources]') + NewLine) +
+                     'include = [''src/unit.fpas'']', 'program, library, or test');
+  AssertProjectError(((((((('[project]' + NewLine) + 'name = ''wrong-include''') + NewLine) + 'kind = ''library''') + NewLine) + '[sources]') + NewLine) +
+                     'include = ''src/unit.fpas''', 'array of strings');
+  AssertProjectError(((((((('[project]' + NewLine) + 'name = ''non-source''') + NewLine) + 'kind = ''library''') + NewLine) + '[sources]') + NewLine) +
+                     'include = [''note.txt'']', 'not an .fpas file');
+  AssertProjectError(((((((('[project]' + NewLine) + 'name = ''missing-main''') + NewLine) + 'kind = ''program''') + NewLine) + '[sources]') + NewLine) +
+                     'include = [''src/unit.fpas'']', 'requires project.main');
+  AssertProjectError(((((((((('[project]' + NewLine) + 'name = ''library-main''') + NewLine) + 'kind = ''library''') + NewLine) + 'main = ''main.fpas''') + NewLine) + '[sources]') + NewLine) +
+                     'include = [''src/unit.fpas'']', 'Only program projects')
+end.

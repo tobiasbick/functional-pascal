@@ -12,6 +12,8 @@ units = [
   "Ide.Document.Io",
   "Ide.Diagnostic.Model",
   "Ide.Diagnostic.Parser",
+  "Ide.Project.Model",
+  "Ide.Project.Loader",
   "Ide.Process.Runner",
 ]
 

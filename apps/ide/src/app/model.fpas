@@ -2,7 +2,7 @@
 
 unit Ide.App.Model;
 
-uses Ide.Diagnostic.Model, Ide.Document.Model, Std.Tui;
+uses Ide.Diagnostic.Model, Ide.Document.Model, Ide.Project.Model, Std.Tui;
 
 type
   /// Command resumed after a dirty-document decision.
@@ -22,6 +22,7 @@ type
   end;
   /// Complete immutable application state.
   IdeModel = record
+    Project: option of IdeProject;
     Document: IdeDocument;
     Dialog: IdeDialog;
     MessageText: string;
@@ -37,6 +38,7 @@ type
 function InitialIdeModel(Path: option of string): IdeModel;
 begin
   return record
+    Project := None;
     Document := NewIdeDocument(Path);
     Dialog := IdeDialog.NoDialog;
     MessageText := 'Ready';

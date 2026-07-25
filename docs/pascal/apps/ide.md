@@ -1,7 +1,8 @@
 # FPAS IDE
 
 The FPAS IDE is a supported single-document terminal application built on
-`Std.Tui`. Its fixed screen contains:
+`Std.Tui`. It can also retain one directly opened FPAS project. Its fixed
+screen contains:
 
 - a flat Open/Save/Check/Run/Exit command bar;
 - an optional source path;
@@ -15,10 +16,11 @@ Run the current application from the repository root:
 cargo run -q -p fpas-cli -- run --std-lib lib apps/ide/ide.fpasprj
 ```
 
-Pass at most one `.fpas` path after `--`. The IDE reads that UTF-8 file into a
-clean document and reports an error while retaining an empty untitled document
-when loading fails. `.fpasprj` and `.fpasworkspace` files are not IDE startup
-targets.
+Pass at most one `.fpas` or `.fpasprj` path after `--`. A source path loads one
+clean UTF-8 document. A project path establishes a project session and loads
+its program main file or the first direct library/test source. Loading errors
+leave the previous session unchanged; startup errors retain an empty untitled
+document. `.fpasworkspace` files are not IDE startup targets.
 
 ## Controls
 
@@ -52,9 +54,22 @@ Diagnostics for other files and Run output remain non-navigable.
 
 ## Document lifecycle
 
-Open accepts a path in a modal dialog. Save writes the current UTF-8 text to its
-known path; an untitled document uses the Save As path dialog. A failed read or
-write updates the message area without changing the current document.
+Open accepts a `.fpas` or `.fpasprj` path in a modal dialog. Save writes the
+current UTF-8 text to its known source path; an untitled document uses the Save
+As path dialog. A failed read or write updates the message area without
+changing the current document.
+
+The IDE parses project TOML itself. It validates the project name and kind,
+program main file, and source include/exclude arrays. Patterns are resolved
+relative to the manifest directory. The model retains the original manifest
+text, normalized manifest/root paths, typed project kind, optional main file,
+and a stable deduplicated list of direct `.fpas` sources. Dependency projects
+are not flattened. Opening a standalone source clears this project state.
+
+Project opening is atomic: both the manifest and initial source must load
+successfully before the current session changes. The fixed path row shows the
+project name with the active source. The retained source list is internal data
+for a later project tree; no tree is displayed yet.
 
 Modified text is derived from the difference between the editor text and its
 last successfully loaded or saved value. Open and Exit require a
@@ -64,9 +79,10 @@ Save/Discard/Cancel decision before continuing.
 
 Check and Run first save the current text. After a successful save, they invoke
 the current `fpas` executable synchronously as `check <path>` or `run <path>`.
-The message area retains a deterministic report containing the exit code,
-stdout, and stderr; empty streams are shown as `(empty)`. A failed save aborts
-the command without starting a process.
+The path is the source in a standalone session and the manifest in a project
+session. The message area retains a deterministic report containing the exit
+code, stdout, and stderr; empty streams are shown as `(empty)`. A failed save
+aborts the command without starting a process.
 
 The IDE is blocked while Check or Run executes. Run is intended for
 non-interactive programs because child output is captured and child stdin is

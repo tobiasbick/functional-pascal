@@ -1,0 +1,287 @@
+/// Typed validation of FPAS project manifest text.
+
+unit Ide.Project.Manifest;
+
+uses Ide.Project.Model, Std.Array, Std.Dict, Std.Str, Std.Toml;
+
+type
+  /// Manifest fields required to resolve one direct project.
+  IdeProjectManifest = record
+    ManifestText: string;
+    Name: string;
+    Kind: IdeProjectKind;
+    MainText: option of string;
+    IncludePatterns: array of string;
+    ExcludePatterns: array of string;
+  end;
+
+private function RequiredTable(Fields: dict of string to TomlValue; Key: string): result of dict of string to TomlValue, string;
+begin
+  case Std.Dict.Get(Fields, Key) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.Table(Table):
+        begin
+          return Ok(Table)
+        end
+        else
+        begin
+          return Error(('Project manifest field [' + Key) + '] must be a table.')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(('Project manifest requires [' + Key) + '].')
+    end
+  end
+end;
+
+private function RequiredString(Fields: dict of string to TomlValue; Key: string; Context: string): result of string, string;
+begin
+  case Std.Dict.Get(Fields, Key) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.String(Text):
+        begin
+          if Std.Str.Length(Text) = 0 then
+          begin
+            return Error(((Context + '.') + Key) + ' must not be empty.')
+          end;
+          return Ok(Text)
+        end
+        else
+        begin
+          return Error(((Context + '.') + Key) + ' must be a string.')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(((Context + ' requires ') + Key) + '.')
+    end
+  end
+end;
+
+private function OptionalString(Fields: dict of string to TomlValue; Key: string; Context: string): result of option of string, string;
+begin
+  case Std.Dict.Get(Fields, Key) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.String(Text):
+        begin
+          if Std.Str.Length(Text) = 0 then
+          begin
+            return Error(((Context + '.') + Key) + ' must not be empty.')
+          end;
+          return Ok(Some(Text))
+        end
+        else
+        begin
+          return Error(((Context + '.') + Key) + ' must be a string.')
+        end
+      end
+    end;
+    None:
+    begin
+      return Ok(None)
+    end
+  end
+end;
+
+private function StringArray(Fields: dict of string to TomlValue; Key: string; Required: boolean): result of array of string, string;
+begin
+  case Std.Dict.Get(Fields, Key) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.Array(Values):
+        begin
+          mutable var Texts: array of string := [];
+          for Index: integer := 0 to Std.Array.Length(Values) - 1 do
+          begin
+            case Values[Index] of
+              TomlValue.String(Text):
+              begin
+                if Std.Str.Length(Text) = 0 then
+                begin
+                  return Error(('sources.' + Key) + ' entries must not be empty.')
+                end;
+                Std.Array.Push(Texts, Text)
+              end
+              else
+              begin
+                return Error(('sources.' + Key) + ' must contain only strings.')
+              end
+            end
+          end;
+          if Required and (Std.Array.Length(Texts) = 0) then
+          begin
+            return Error(('sources.' + Key) + ' must contain at least one pattern.')
+          end;
+          return Ok(Texts)
+        end
+        else
+        begin
+          return Error(('sources.' + Key) + ' must be an array of strings.')
+        end
+      end
+    end;
+    None:
+    begin
+      if Required then
+      begin
+        return Error(('sources requires ' + Key) + '.')
+      end;
+      return Ok([])
+    end
+  end
+end;
+
+private function ParseProjectKind(Text: string): result of IdeProjectKind, string;
+begin
+  case Std.Str.ToLower(Text) of
+    'program':
+    begin
+      return Ok(IdeProjectKind.ProgramProject)
+    end;
+    'library':
+    begin
+      return Ok(IdeProjectKind.LibraryProject)
+    end;
+    'test':
+    begin
+      return Ok(IdeProjectKind.TestProject)
+    end
+    else
+    begin
+      return Error('project.kind must be program, library, or test.')
+    end
+  end
+end;
+
+private function BuildManifest(ManifestText: string; RootFields: dict of string to TomlValue): result of IdeProjectManifest, string;
+begin
+  mutable var ProjectFields: dict of string to TomlValue := [:];
+  mutable var SourceFields: dict of string to TomlValue := [:];
+  case RequiredTable(RootFields, 'project') of
+    Ok(Fields):
+    begin
+      ProjectFields := Fields
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case RequiredTable(RootFields, 'sources') of
+    Ok(Fields):
+    begin
+      SourceFields := Fields
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  mutable var Name: string := '';
+  mutable var KindText: string := '';
+  mutable var MainText: option of string := None;
+  mutable var IncludePatterns: array of string := [];
+  mutable var ExcludePatterns: array of string := [];
+  case RequiredString(ProjectFields, 'name', 'project') of
+    Ok(Value):
+    begin
+      Name := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case RequiredString(ProjectFields, 'kind', 'project') of
+    Ok(Value):
+    begin
+      KindText := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case OptionalString(ProjectFields, 'main', 'project') of
+    Ok(Value):
+    begin
+      MainText := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case StringArray(SourceFields, 'include', true) of
+    Ok(Value):
+    begin
+      IncludePatterns := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case StringArray(SourceFields, 'exclude', false) of
+    Ok(Value):
+    begin
+      ExcludePatterns := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  case ParseProjectKind(KindText) of
+    Ok(Kind):
+    begin
+      return Ok(record
+        ManifestText := ManifestText;
+        Name := Name;
+        Kind := Kind;
+        MainText := MainText;
+        IncludePatterns := IncludePatterns;
+        ExcludePatterns := ExcludePatterns;
+      end)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+/// Parses project TOML and validates the fields owned by the IDE.
+
+function ParseIdeProjectManifest(ManifestText: string): result of IdeProjectManifest, string;
+begin
+  case Std.Toml.Parse(ManifestText) of
+    Ok(Value):
+    begin
+      case Value of
+        TomlValue.Table(Fields):
+        begin
+          return BuildManifest(ManifestText, Fields)
+        end
+        else
+        begin
+          return Error('Project manifest root must be a TOML table.')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error('Invalid project manifest: ' + Message)
+    end
+  end
+end;

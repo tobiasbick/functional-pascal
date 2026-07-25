@@ -91,6 +91,7 @@ begin
   var MessageText: string := ((((((('line one' + NewLine) + 'line two') + NewLine) + 'line three') + NewLine) + 'line four') + NewLine) +
                              'line five';
   Model := record
+    Project := None;
     Document := Initial.Document;
     Dialog := IdeDialog.NoDialog;
     MessageText := MessageText;

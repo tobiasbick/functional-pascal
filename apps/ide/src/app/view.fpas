@@ -123,6 +123,20 @@ begin
   return TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint(StatusText(State))])
 end;
 
+private function OpenPathText(State: IdeModel): string;
+begin
+  case State.Project of
+    Some(Project):
+    begin
+      return (Project.Name + ' | ') + IdeDocumentPathText(State.Document)
+    end;
+    None:
+    begin
+      return IdeDocumentPathText(State.Document)
+    end
+  end
+end;
+
 private function ViewPathDialog(Title: string; AcceptText: string; PathText: string; Caret: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeDialog(Title, [
@@ -238,7 +252,7 @@ begin
 
                                                                                             ViewCommandBar(),
 
-                                                                                            TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeLabel(IdeDocumentPathText(State.Document))),
+                                                                                            TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeLabel(OpenPathText(State))),
 
                                                                                             ViewEditor(State),
 

@@ -1,7 +1,8 @@
 # Future: IDE next steps
 
-> Status snapshot: 2026-07-25. Scrollable message output and diagnostic source
-> navigation are implemented. The next decision is project/workspace startup.
+> Status snapshot: 2026-07-25. Scrollable message output, diagnostic source
+> navigation, and direct `.fpasprj` ingestion are implemented. The next slice
+> is a project tree over the retained direct source list.
 
 ## Purpose
 
@@ -22,7 +23,9 @@ this document until it is implemented and tested.
 
 The IDE is a fixed, single-document `Std.Tui` application:
 
-- it opens or starts with one UTF-8 `.fpas` source;
+- it opens or starts with one UTF-8 `.fpas` source or one `.fpasprj` project;
+- it retains validated project metadata, original manifest text, and direct
+  source paths without displaying a project tree yet;
 - it edits the source with a controlled multiline `TextArea`;
 - it supports Open, Save, Check, Run, and Exit;
 - it protects dirty documents with Save, Discard, and Cancel;
@@ -58,6 +61,12 @@ apps/ide/
       ├── diagnostic/
       │   ├── model.fpas        — parsed source navigation data
       │   └── parser.fpas       — captured diagnostic header parsing
+      ├── project/
+      │   ├── loader.fpas       — project file I/O entry point
+      │   ├── manifest.fpas     — typed TOML field validation
+      │   ├── model.fpas        — retained project session data
+      │   ├── session.fpas      — atomic project and initial-document loading
+      │   └── sources.fpas      — main/include/exclude path resolution
       └── process/
           └── runner.fpas       — Check/Run invocation and output formatting
 ```
@@ -72,7 +81,8 @@ process integration, and the document lifecycle.
 Deliberate limits are:
 
 - one open document only;
-- no `.fpasprj` or `.fpasworkspace` startup target;
+- no `.fpasworkspace` startup target;
+- no project tree or dependency-project view;
 - synchronous Check and Run;
 - no stdin connection for child programs;
 - no help system;
@@ -260,7 +270,7 @@ element or routing behavior is required.
 - Navigation preserves text, saved baseline, path, dirty state, messages, and
   diagnostic selection.
 
-### Intended file layout
+### Implemented file layout
 
 ```text
 apps/ide/src/diagnostic/
@@ -343,13 +353,160 @@ passed 383 tests with one expected skip.
 
 Continue in this order:
 
-1. Decide whether project/workspace startup is needed before multiple open
-   documents.
-2. Add multi-document state only when a concrete workflow requires it.
+1. Add a project tree over the retained direct source list.
+2. Decide whether `.fpasworkspace` ingestion is needed.
+3. Add multi-document state only when a concrete workflow requires it.
 
-Before implementation, extend this plan with the accepted startup target,
-command-line shape, project-root behavior, Check/Run invocation, and regression
-cases. Do not combine startup-target work with multiple-document state.
+Do not combine direct-project ingestion with the project tree, workspace, or
+multiple-document state.
+
+## Completed intermediate slice: direct project ingestion
+
+> Completed 2026-07-25.
+
+### Outcome
+
+Opening a `.fpasprj` establishes a project session. The IDE reads and parses the
+manifest itself, resolves its direct source files, retains that information in
+the application model, and opens one initial source in the existing
+single-document editor.
+
+This slice supplies the data boundary for a later Visual Studio-style project
+tree. It does not render that tree.
+
+### Project model
+
+`IdeProject` retains:
+
+- manifest `Path`, project `Root`, and the complete original `ManifestText`;
+- validated project `Name` and `Kind`;
+- resolved `MainFile` for program projects;
+- stable, deduplicated `SourceFiles` for the direct project.
+
+The project kind is a typed enum for `program`, `library`, and `test`.
+Dependency-project sources are not flattened into `SourceFiles`; a later tree
+can represent dependencies as separate projects.
+
+### Manifest and source resolution
+
+The IDE uses `Std.Fs.ReadText`, `Std.Toml.Parse`, `Std.Path`, and `Std.Fs.Glob`
+instead of compiler-internal project APIs.
+
+- `[project].name` and `[project].kind` are required.
+- `program` requires `[project].main`; `library` and `test` reject it.
+- `[sources].include` is a required non-empty string array.
+- `[sources].exclude` is an optional string array.
+- Patterns are resolved relative to the manifest directory.
+- Every include pattern must match and every retained file must end in
+  `.fpas`; exclude patterns may match nothing.
+- Duplicate and excluded paths are removed deterministically.
+- A program main file is retained exactly once even when an include also
+  matches it.
+- TOML, type, glob, missing-file, and extension errors return an IDE message
+  without replacing the current project or document.
+
+The original manifest text is retained so later project features do not need
+to reread or reconstruct sections that this slice does not interpret.
+
+### Session behavior
+
+- Startup and Open accept `.fpas` and `.fpasprj`, case-insensitively.
+- Opening a standalone `.fpas` clears the project session.
+- Opening a program project loads its main file.
+- Opening a library or test project loads its first resolved source.
+- Project open is atomic: manifest and initial source must both load before
+  replacing the current session.
+- Dirty-document Save/Discard/Cancel protection remains unchanged.
+- The fixed path row shows the project name together with the active document.
+- Save continues to write only the active source document.
+- Check and Run save the active source first, then invoke `fpas` with the
+  retained project manifest path. Standalone documents keep their current
+  command behavior.
+- Diagnostic navigation remains limited to the active source document.
+
+### Implemented file layout
+
+```text
+apps/ide/src/project/
+  ├── loader.fpas   — NEW: project file I/O entry point
+  ├── manifest.fpas — NEW: typed TOML field validation
+  ├── model.fpas    — NEW: retained direct-project session data
+  ├── session.fpas  — NEW: atomic project and initial-document loading
+  └── sources.fpas  — NEW: main/include/exclude path resolution
+
+apps/ide/src/
+  ├── app/model.fpas          — MODIFY: optional project session
+  ├── app/document_flow.fpas  — MODIFY: atomic project open and command target
+  └── app/view.fpas           — MODIFY: project-aware path row
+
+tests/ide/
+  ├── ide_project_loader_test.fpas — NEW: manifest and glob resolution
+  ├── ide_project_open_test.fpas   — NEW: startup/Open session behavior
+  └── ide_project_process_test.fpas — NEW: Check and Run target the project
+
+apps/ide/ide-core.fpasprj — MODIFY: export project units
+apps/ide/README.md        — MODIFY after implementation
+docs/pascal/apps/ide.md   — MODIFY after implementation
+```
+
+### Implementation sequence
+
+- [x] Add the retained project model.
+- [x] Parse and validate required manifest fields without panics.
+- [x] Resolve include/exclude patterns relative to the project root.
+- [x] Load the initial document atomically with the project.
+- [x] Accept project paths at startup and through Open.
+- [x] Preserve or clear project state through every model reconstruction.
+- [x] Target Check and Run at the retained manifest.
+- [x] Display project identity without adding the project tree.
+- [x] Update current documentation after focused tests pass.
+
+### Required regression coverage
+
+- [x] Load program, library, and test project metadata.
+- [x] Retain the original manifest text and normalized direct source list.
+- [x] Resolve includes, excludes, duplicates, and main-file overlap.
+- [x] Reject malformed TOML, missing/wrong fields, invalid kinds, unmatched
+  includes, non-FPAS matches, and missing program main.
+- [x] Startup and Open establish a project session and initial document.
+- [x] Failed project open preserves the current document and project.
+- [x] Opening a standalone source clears a previous project.
+- [x] Dirty-document protection also guards project Open.
+- [x] Check uses the project manifest while saving the active source.
+- [x] Existing source-only, diagnostic, IDE, and TUI regressions remain green.
+
+### Acceptance criteria
+
+- [x] `IdeModel` locally retains the open project and all direct source paths.
+- [x] No compiler-internal project loader is required by the IDE.
+- [x] A later project tree can be built without rereading the manifest.
+- [x] Project opening is atomic and does not lose dirty work.
+- [x] `.fpasworkspace`, dependency trees, tree UI, and multiple documents are
+  not introduced.
+
+### Verification
+
+Verified on 2026-07-25:
+
+```text
+cargo fmt --all -- --check
+cargo build --workspace
+cargo test --workspace
+cargo run -q -p fpas-cli -- fmt --check apps/ide tests/ide
+cargo run -q -p fpas-cli -- check apps/ide/ide.fpasworkspace
+cargo run -q -p fpas-cli -- test tests/ide/ide-tests.fpasprj
+cargo run -q -p fpas-cli -- test tests/stdlib/tui
+cargo run -q -p fpas-cli -- test tests/
+```
+
+The focused suites passed 18 IDE and 49 TUI tests. The complete FPAS suite
+passed 386 tests with one expected skip. The Rust workspace build and test
+suite passed.
+
+`cargo clippy --workspace --all-targets --all-features --locked -- -D warnings`
+was also attempted. It remains blocked by pre-existing warnings in
+`crates/fpas-bench/src/main.rs` and `crates/fpas-bench/src/results.rs`; this
+slice does not modify those files.
 
 ## Maintenance rule
 

@@ -36,6 +36,13 @@ begin
   EnsureDirectory(IdeTestScratch)
 end;
 
+/// Creates one direct child directory required by an IDE test.
+
+procedure EnsureIdeTestDirectory(Path: string);
+begin
+  EnsureDirectory(Path)
+end;
+
 /// Writes one required test fixture or fails the current test.
 
 procedure WriteIdeTestFile(Path: string; Text: string);

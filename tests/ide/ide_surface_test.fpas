@@ -34,6 +34,7 @@ begin
 
                                              ];
   var LongMessage: IdeModel := record
+    Workspace := None;
     Project := None;
     Document := NewIdeDocument(Some('long.fpas'));
     Dialog := IdeDialog.NoDialog;

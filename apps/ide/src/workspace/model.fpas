@@ -1,0 +1,26 @@
+/// In-memory representation of one directly opened FPAS workspace.
+
+unit Ide.Workspace.Model;
+
+uses Ide.Project.Model, Std.Array;
+
+type
+  /// Validated workspace data retained by the IDE session.
+  IdeWorkspace = record
+    Path: string;
+    Root: string;
+    ManifestText: string;
+    Name: string;
+    Projects: array of IdeProject;
+  end;
+
+/// Returns the first member project used as the initial active project.
+
+function IdeWorkspaceInitialProject(Workspace: IdeWorkspace): option of IdeProject;
+begin
+  if Std.Array.Length(Workspace.Projects) = 0 then
+  begin
+    return None
+  end;
+  return Some(Workspace.Projects[0])
+end;

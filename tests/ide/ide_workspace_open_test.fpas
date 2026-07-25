@@ -1,0 +1,104 @@
+program IdeWorkspaceOpenTest;
+
+uses
+  Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.Project.Model, Ide.Test.Files,
+  Ide.Workspace.Model, Std.Array, Std.Option, Std.Path, Std.Str, Std.Test, Std.Tui;
+
+const
+  WorkspaceRoot: string := IdeTestScratch + '/workspace_open';
+  MainPath: string := WorkspaceRoot + '/main.fpas';
+  UnitPath: string := WorkspaceRoot + '/member.fpas';
+  ProgramProjectPath: string := WorkspaceRoot + '/program.fpasprj';
+  LibraryProjectPath: string := WorkspaceRoot + '/library.fpasprj';
+  WorkspacePath: string := WorkspaceRoot + '/suite.fpasworkspace';
+  BrokenWorkspacePath: string := WorkspaceRoot + '/broken.fpasworkspace';
+  StandalonePath: string := WorkspaceRoot + '/standalone.fpas';
+
+function EnterAndAcceptOpen(State: IdeModel; Path: string; Cmd: TuiCmdOutput): IdeModel;
+begin
+  var Opening: IdeModel := UpdateIde(State, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  var Entered: IdeModel := UpdateIde(Opening, TuiMsgTextChanged(DialogPathControlId(), DialogPathChangedAction(), Path, Std.Str.Length(Path)), Cmd);
+  return UpdateIde(Entered, TuiMsgAction(DialogAcceptControlId(), DialogAcceptAction()), Cmd)
+end;
+
+begin
+  EnsureIdeTestScratch();
+  EnsureIdeTestDirectory(WorkspaceRoot);
+  var NewLine: string := Std.Str.Chr(10);
+  WriteIdeTestFile(MainPath, 'program WorkspaceOpen; begin end.');
+  WriteIdeTestFile(UnitPath, 'unit Workspace.Member;');
+  WriteIdeTestFile(StandalonePath, 'program Standalone; begin end.');
+  mutable var ProgramManifest: string := '[project]';
+  ProgramManifest := (ProgramManifest + NewLine) + 'name = ''workspace-program''';
+  ProgramManifest := (ProgramManifest + NewLine) + 'kind = ''program''';
+  ProgramManifest := (ProgramManifest + NewLine) + 'main = ''main.fpas''';
+  ProgramManifest := (ProgramManifest + NewLine) + '[sources]';
+  ProgramManifest := (ProgramManifest + NewLine) + 'include = [''main.fpas'']';
+  WriteIdeTestFile(ProgramProjectPath, ProgramManifest);
+  mutable var LibraryManifest: string := '[project]';
+  LibraryManifest := (LibraryManifest + NewLine) + 'name = ''workspace-library''';
+  LibraryManifest := (LibraryManifest + NewLine) + 'kind = ''library''';
+  LibraryManifest := (LibraryManifest + NewLine) + '[sources]';
+  LibraryManifest := (LibraryManifest + NewLine) + 'include = [''member.fpas'']';
+  WriteIdeTestFile(LibraryProjectPath, LibraryManifest);
+  mutable var WorkspaceManifest: string := '[workspace]';
+  WorkspaceManifest := (WorkspaceManifest + NewLine) + 'name = ''opened-workspace''';
+  WorkspaceManifest := (WorkspaceManifest + NewLine) +
+                       'members = [''program.fpasprj'', ''library.fpasprj'']';
+  WriteIdeTestFile(WorkspacePath, WorkspaceManifest);
+  var Opened: IdeModel := InitializeIdeFromArguments([WorkspacePath]);
+  AssertEquals('program WorkspaceOpen; begin end.', Opened.Document.Text);
+  case Opened.Workspace of
+    Some(Workspace):
+    begin
+      AssertEquals('opened-workspace', Workspace.Name);
+      AssertEquals(WorkspaceManifest, Workspace.ManifestText);
+      AssertEquals(Std.Path.Normalize(WorkspacePath), Workspace.Path);
+      AssertEquals(2, Std.Array.Length(Workspace.Projects))
+    end;
+    None:
+    begin
+      Fail('Opening a workspace did not establish a workspace session.')
+    end
+  end;
+  case Opened.Project of
+    Some(Project):
+    begin
+      AssertEquals('workspace-program', Project.Name)
+    end;
+    None:
+    begin
+      Fail('Opening a workspace did not select its first member.')
+    end
+  end;
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  WriteIdeTestFile(BrokenWorkspacePath, '[workspace]');
+  var Failed: IdeModel := EnterAndAcceptOpen(Opened, BrokenWorkspacePath, Cmd);
+  AssertTrue(Std.Option.IsSome(Failed.Workspace));
+  AssertTrue(Std.Option.IsSome(Failed.Project));
+  AssertEquals(Opened.Document.Text, Failed.Document.Text);
+  var Standalone: IdeModel := EnterAndAcceptOpen(Opened, StandalonePath, Cmd);
+  AssertTrue(Std.Option.IsNone(Standalone.Workspace));
+  AssertTrue(Std.Option.IsNone(Standalone.Project));
+  var DirectProject: IdeModel := EnterAndAcceptOpen(Opened, LibraryProjectPath, Cmd);
+  AssertTrue(Std.Option.IsNone(DirectProject.Workspace));
+  AssertTrue(Std.Option.IsSome(DirectProject.Project));
+  var Dirty: IdeModel := UpdateIde(Standalone, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'changed', 7, TuiPoint.Create(0, 0)), Cmd);
+  var Protected: IdeModel := UpdateIde(Dirty, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  case Protected.Dialog of
+    IdeDialog.ConfirmDirty(Pending):
+    begin
+      AssertTrue(Pending = IdePendingCommand.OpenDocument)
+    end;
+    IdeDialog.NoDialog, IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending):
+    begin
+      Fail('Dirty source did not protect workspace Open.')
+    end
+  end;
+  var Discarded: IdeModel := UpdateIde(Protected, TuiMsgAction(DirtyDiscardControlId(), DirtyDiscardAction()), Cmd);
+  var Entered: IdeModel := UpdateIde(Discarded, TuiMsgTextChanged(DialogPathControlId(), DialogPathChangedAction(), WorkspacePath, Std.Str.Length(WorkspacePath)), Cmd);
+  var Reopened: IdeModel := UpdateIde(Entered, TuiMsgAction(DialogAcceptControlId(), DialogAcceptAction()), Cmd);
+  AssertTrue(Std.Option.IsSome(Reopened.Workspace));
+  AssertTrue(Std.Option.IsSome(Reopened.Project));
+  AssertEquals('program WorkspaceOpen; begin end.', Reopened.Document.Text)
+end.

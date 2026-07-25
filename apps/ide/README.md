@@ -1,8 +1,9 @@
 # FPAS IDE
 
 The IDE is a supported single-document terminal application on `Std.Tui`. It
-edits one UTF-8 `.fpas` source, can retain one `.fpasprj` project session, and
-provides Open, Save, Check, Run, and Exit.
+edits one UTF-8 `.fpas` source, can retain one `.fpasprj` project session or
+one `.fpasworkspace` with all of its direct member projects, and provides Open,
+Save, Check, Run, and Exit.
 
 ## Run
 
@@ -12,14 +13,14 @@ Run it from the repository root:
 cargo run -q -p fpas-cli -- run --std-lib lib apps/ide/ide.fpasprj
 ```
 
-Optionally open one UTF-8 `.fpas` file or `.fpasprj` project at startup:
+Optionally open one UTF-8 `.fpas` file, `.fpasprj` project, or
+`.fpasworkspace` at startup:
 
 ```text
 cargo run -q -p fpas-cli -- run --std-lib lib apps/ide/ide.fpasprj -- example.fpas
 ```
 
-Only one optional path is accepted. Workspace manifests are not IDE startup
-targets.
+Only one optional path is accepted.
 
 ## Controls
 
@@ -52,12 +53,21 @@ other files are not navigable. Run output remains plain captured output.
 
 ## Files and processes
 
-Open uses a path-entry dialog and accepts `.fpas` or `.fpasprj`. Opening a
-project validates its manifest, retains its original text and resolved direct
-source list, and loads the program main file or the first library/test source.
-Opening a standalone source clears the project session. Project opening is
-atomic, so a failed manifest or source read leaves the current project and
-document unchanged.
+Open uses a path-entry dialog and accepts `.fpas`, `.fpasprj`, or
+`.fpasworkspace`. Opening a project validates its manifest, retains its
+original text and resolved direct source list, and loads the program main file
+or the first library/test source.
+
+Opening a workspace validates its manifest and every member project, retaining
+the original workspace text, normalized paths, member order, and complete
+direct project models. Its first member becomes the active project and supplies
+the initial source document. Workspace data is internal: no workspace tree,
+project selector, or dependency view is displayed.
+
+Opening a standalone source clears project and workspace state. Opening a
+project directly clears workspace state. Project and workspace opening is
+atomic, so a failed manifest, member, or source read leaves the current session
+unchanged.
 
 Save writes the active source path; saving an untitled document opens Save As.
 Failed reads and writes leave the document unchanged. Open and Exit protect
@@ -65,11 +75,11 @@ modified text with Save/Discard/Cancel.
 
 Check and Run save the document and synchronously invoke the same `fpas`
 executable that launched the IDE. A standalone session uses the source path; a
-project session uses the retained manifest path so its complete direct source
-set participates. The message area shows the exit code followed by normalized
-stdout and stderr. A failed save prevents the process from starting. Child
-programs must be non-interactive because their output is captured and no stdin
-is connected.
+project or workspace session uses the active project's retained manifest path
+so its complete direct source set participates. The message area shows the exit
+code followed by normalized stdout and stderr. A failed save prevents the
+process from starting. Child programs must be non-interactive because their
+output is captured and no stdin is connected.
 
 The message panel retains the latest complete result and shows three lines
 inside its bounded scroll viewport. Diagnostic markers are display-only and do

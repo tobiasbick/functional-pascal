@@ -1,8 +1,8 @@
 # FPAS IDE
 
 The FPAS IDE is a supported single-document terminal application built on
-`Std.Tui`. It can also retain one directly opened FPAS project. Its fixed
-screen contains:
+`Std.Tui`. It can also retain one directly opened FPAS project or one workspace
+with its direct member projects. Its fixed screen contains:
 
 - a flat Open/Save/Check/Run/Exit command bar;
 - an optional source path;
@@ -16,11 +16,13 @@ Run the current application from the repository root:
 cargo run -q -p fpas-cli -- run --std-lib lib apps/ide/ide.fpasprj
 ```
 
-Pass at most one `.fpas` or `.fpasprj` path after `--`. A source path loads one
-clean UTF-8 document. A project path establishes a project session and loads
-its program main file or the first direct library/test source. Loading errors
-leave the previous session unchanged; startup errors retain an empty untitled
-document. `.fpasworkspace` files are not IDE startup targets.
+Pass at most one `.fpas`, `.fpasprj`, or `.fpasworkspace` path after `--`. A
+source path loads one clean UTF-8 document. A project path establishes a
+project session and loads its program main file or the first direct
+library/test source. A workspace path retains all member projects in declared
+order and opens the initial source of its first member. Loading errors leave
+the previous session unchanged; startup errors retain an empty untitled
+document.
 
 ## Controls
 
@@ -54,10 +56,10 @@ Diagnostics for other files and Run output remain non-navigable.
 
 ## Document lifecycle
 
-Open accepts a `.fpas` or `.fpasprj` path in a modal dialog. Save writes the
-current UTF-8 text to its known source path; an untitled document uses the Save
-As path dialog. A failed read or write updates the message area without
-changing the current document.
+Open accepts a `.fpas`, `.fpasprj`, or `.fpasworkspace` path in a modal dialog.
+Save writes the current UTF-8 text to its known source path; an untitled
+document uses the Save As path dialog. A failed read or write updates the
+message area without changing the current document.
 
 The IDE parses project TOML itself. It validates the project name and kind,
 program main file, and source include/exclude arrays. Patterns are resolved
@@ -71,6 +73,18 @@ successfully before the current session changes. The fixed path row shows the
 project name with the active source. The retained source list is internal data
 for a later project tree; no tree is displayed yet.
 
+The IDE also parses workspace TOML itself. It retains the normalized workspace
+path and root, original manifest text, workspace name, and all validated member
+projects in manifest order. Duplicate member paths and duplicate
+case-insensitive project names are rejected. The first member is the active
+project and supplies the initial document. Loading is atomic across the
+workspace, every member manifest, and that document.
+
+Workspace state is retained only for later UI work. The current screen does not
+display a workspace tree, project selector, dependency view, or member list.
+Opening a standalone source clears project and workspace state; directly
+opening a project clears workspace state.
+
 Modified text is derived from the difference between the editor text and its
 last successfully loaded or saved value. Open and Exit require a
 Save/Discard/Cancel decision before continuing.
@@ -79,10 +93,10 @@ Save/Discard/Cancel decision before continuing.
 
 Check and Run first save the current text. After a successful save, they invoke
 the current `fpas` executable synchronously as `check <path>` or `run <path>`.
-The path is the source in a standalone session and the manifest in a project
-session. The message area retains a deterministic report containing the exit
-code, stdout, and stderr; empty streams are shown as `(empty)`. A failed save
-aborts the command without starting a process.
+The path is the source in a standalone session and the active project manifest
+in a project or workspace session. The message area retains a deterministic
+report containing the exit code, stdout, and stderr; empty streams are shown as
+`(empty)`. A failed save aborts the command without starting a process.
 
 The IDE is blocked while Check or Run executes. Run is intended for
 non-interactive programs because child output is captured and child stdin is

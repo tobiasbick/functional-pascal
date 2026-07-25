@@ -3,9 +3,9 @@
 unit Ide.App.DocumentFlow;
 
 uses
-  Ide.App.Actions, Ide.App.Model, Ide.Diagnostic.Model, Ide.Diagnostic.Parser, Ide.Document.Io,
-  Ide.Document.Model, Ide.Process.Runner, Ide.Project.Model, Ide.Project.Session, Std.Array,
-  Std.Path, Std.Str, Std.Tui;
+  Ide.App.Actions, Ide.App.Model, Ide.App.OpenFlow, Ide.Diagnostic.Model, Ide.Diagnostic.Parser,
+  Ide.Document.Io, Ide.Document.Model, Ide.Process.Runner, Ide.Project.Model, Std.Array, Std.Path,
+  Std.Str, Std.Tui;
 
 private function IdeState(
   State: IdeModel;
@@ -19,6 +19,7 @@ private function IdeState(
 ): IdeModel;
 begin
   return record
+    Workspace := State.Workspace;
     Project := State.Project;
     Document := Document;
     Dialog := Dialog;
@@ -96,6 +97,7 @@ begin
             MessageOffset.Y := Diagnostics[0].MessageLine
           end;
           return record
+            Workspace := State.Workspace;
             Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
@@ -110,6 +112,7 @@ begin
         Error(Message):
         begin
           return record
+            Workspace := State.Workspace;
             Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
@@ -155,53 +158,19 @@ begin
   end
 end;
 
-private function OpenSourcePath(State: IdeModel; Path: string): IdeModel;
-begin
-  case ReadIdeDocument(Path) of
-    Ok(Document):
-    begin
-      mutable var Opened: IdeModel := IdeState(State, Document, IdeDialog.NoDialog, 'Opened ' + Path, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
-      Opened.Project := None;
-      return Opened
-    end;
-    Error(Message):
-    begin
-      return IdeStateWithMessage(State, Message)
-    end
-  end
-end;
-
-private function OpenProjectPath(State: IdeModel; Path: string): IdeModel;
-begin
-  case LoadIdeProjectSession(Path) of
-    Ok(Session):
-    begin
-      mutable var Opened: IdeModel := IdeState(State, Session.Document, IdeDialog.NoDialog, 'Opened project ' +
-                                                                                            Session.Project.Name, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
-      Opened.Project := Some(Session.Project);
-      return Opened
-    end;
-    Error(Message):
-    begin
-      return IdeStateWithMessage(State, Message)
-    end
-  end
-end;
-
 private function OpenPath(State: IdeModel; Path: string): IdeModel;
 begin
-  case Std.Str.ToLower(Std.Path.Extension(Path)) of
-    'fpas':
+  case LoadIdeOpenPath(Path) of
+    Ok(Session):
     begin
-      return OpenSourcePath(State, Path)
+      mutable var Opened: IdeModel := IdeState(State, Session.Document, IdeDialog.NoDialog, Session.MessageText, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
+      Opened.Workspace := Session.Workspace;
+      Opened.Project := Session.Project;
+      return Opened
     end;
-    'fpasprj':
+    Error(Message):
     begin
-      return OpenProjectPath(State, Path)
-    end
-    else
-    begin
-      return IdeStateWithMessage(State, 'Open path must end with .fpas or .fpasprj.')
+      return IdeStateWithMessage(State, Message)
     end
   end
 end;
@@ -371,12 +340,12 @@ begin
   end;
   if Std.Array.Length(Arguments) > 1 then
   begin
-    return IdeStateWithMessage(InitialIdeModel(None), 'Expected at most one .fpas or .fpasprj path argument.')
+    return IdeStateWithMessage(InitialIdeModel(None), 'Expected at most one .fpas, .fpasprj, or .fpasworkspace path argument.')
   end;
   var Extension: string := Std.Str.ToLower(Std.Path.Extension(Arguments[0]));
-  if (Extension <> 'fpas') and (Extension <> 'fpasprj') then
+  if ((Extension <> 'fpas') and (Extension <> 'fpasprj')) and (Extension <> 'fpasworkspace') then
   begin
-    return IdeStateWithMessage(InitialIdeModel(None), 'Startup path must end with .fpas or .fpasprj.')
+    return IdeStateWithMessage(InitialIdeModel(None), 'Startup path must end with .fpas, .fpasprj, or .fpasworkspace.')
   end;
   return OpenPath(InitialIdeModel(None), Arguments[0])
 end;

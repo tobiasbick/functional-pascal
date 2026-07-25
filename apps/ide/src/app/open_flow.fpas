@@ -1,0 +1,97 @@
+/// Atomic loading and classification of IDE Open targets.
+
+unit Ide.App.OpenFlow;
+
+uses
+  Ide.Document.Io, Ide.Document.Model, Ide.Project.Model, Ide.Project.Session, Ide.Workspace.Model,
+  Ide.Workspace.Session, Std.Path, Std.Str;
+
+type
+  /// Loaded state fragment used to replace the current document session.
+  IdeOpenedPath = record
+    Workspace: option of IdeWorkspace;
+    Project: option of IdeProject;
+    Document: IdeDocument;
+    MessageText: string;
+  end;
+
+private function LoadSourcePath(Path: string): result of IdeOpenedPath, string;
+begin
+  case ReadIdeDocument(Path) of
+    Ok(Document):
+    begin
+      return Ok(record
+        Workspace := None;
+        Project := None;
+        Document := Document;
+        MessageText := 'Opened ' + Path;
+      end)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+private function LoadProjectPath(Path: string): result of IdeOpenedPath, string;
+begin
+  case LoadIdeProjectSession(Path) of
+    Ok(Session):
+    begin
+      return Ok(record
+        Workspace := None;
+        Project := Some(Session.Project);
+        Document := Session.Document;
+        MessageText := 'Opened project ' + Session.Project.Name;
+      end)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+private function LoadWorkspacePath(Path: string): result of IdeOpenedPath, string;
+begin
+  case LoadIdeWorkspaceSession(Path) of
+    Ok(Session):
+    begin
+      return Ok(record
+        Workspace := Some(Session.Workspace);
+        Project := Some(Session.Project);
+        Document := Session.Document;
+        MessageText := 'Opened workspace ' + Session.Workspace.Name;
+      end)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+/// Loads a supported source, project, or workspace path without partial state.
+
+function LoadIdeOpenPath(Path: string): result of IdeOpenedPath, string;
+begin
+  case Std.Str.ToLower(Std.Path.Extension(Path)) of
+    'fpas':
+    begin
+      return LoadSourcePath(Path)
+    end;
+    'fpasprj':
+    begin
+      return LoadProjectPath(Path)
+    end;
+    'fpasworkspace':
+    begin
+      return LoadWorkspacePath(Path)
+    end
+    else
+    begin
+      return Error('Open path must end with .fpas, .fpasprj, or .fpasworkspace.')
+    end
+  end
+end;

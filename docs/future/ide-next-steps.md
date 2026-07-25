@@ -1,15 +1,15 @@
 # Future: IDE next steps
 
 > Status snapshot: 2026-07-25. Scrollable message output, diagnostic source
-> navigation, and direct `.fpasprj` ingestion are implemented. The next slice
-> is a project tree over the retained direct source list.
+> navigation, direct `.fpasprj` ingestion, and internal `.fpasworkspace`
+> ingestion are implemented. Project/workspace trees are deliberately deferred.
 
 ## Purpose
 
 Continue the small terminal IDE in `apps/ide` without restoring the abandoned
 IDE architecture and without introducing a tiled window manager. Compiler
-output is now usable in the single-document workflow. Decide the required
-startup model before expanding the document or project state.
+output is usable in the single-document workflow. Project and workspace data is
+retained for a later UI without expanding the current screen.
 
 The implemented behavior is documented in:
 
@@ -23,9 +23,12 @@ this document until it is implemented and tested.
 
 The IDE is a fixed, single-document `Std.Tui` application:
 
-- it opens or starts with one UTF-8 `.fpas` source or one `.fpasprj` project;
+- it opens or starts with one UTF-8 `.fpas` source, one `.fpasprj` project, or
+  one `.fpasworkspace`;
 - it retains validated project metadata, original manifest text, and direct
   source paths without displaying a project tree yet;
+- it retains validated workspace metadata, original manifest text, member
+  order, and every direct member project without displaying workspace UI;
 - it edits the source with a controlled multiline `TextArea`;
 - it supports Open, Save, Check, Run, and Exit;
 - it protects dirty documents with Save, Discard, and Cancel;
@@ -53,6 +56,7 @@ apps/ide/
       │   ├── actions.fpas      — stable control and action identities
       │   ├── document_flow.fpas— document lifecycle and process dispatch
       │   ├── model.fpas        — root immutable application state
+      │   ├── open_flow.fpas    — atomic source/project/workspace Open targets
       │   ├── update.fpas       — TuiMsg routing and shortcuts
       │   └── view.fpas         — fixed IDE surface and modal dialogs
       ├── document/
@@ -67,6 +71,11 @@ apps/ide/
       │   ├── model.fpas        — retained project session data
       │   ├── session.fpas      — atomic project and initial-document loading
       │   └── sources.fpas      — main/include/exclude path resolution
+      ├── workspace/
+      │   ├── loader.fpas       — workspace file and member loading
+      │   ├── manifest.fpas     — typed workspace TOML validation
+      │   ├── model.fpas        — retained workspace and member projects
+      │   └── session.fpas      — atomic workspace and initial-document loading
       └── process/
           └── runner.fpas       — Check/Run invocation and output formatting
 ```
@@ -81,8 +90,8 @@ process integration, and the document lifecycle.
 Deliberate limits are:
 
 - one open document only;
-- no `.fpasworkspace` startup target;
 - no project tree or dependency-project view;
+- no workspace member selector;
 - synchronous Check and Run;
 - no stdin connection for child programs;
 - no help system;
@@ -351,14 +360,15 @@ passed 383 tests with one expected skip.
 
 ## Next work
 
-Continue in this order:
+There is no immediate project/workspace UI slice. Retain the current data
+boundary until a concrete UI workflow is requested:
 
-1. Add a project tree over the retained direct source list.
-2. Decide whether `.fpasworkspace` ingestion is needed.
+1. Add a project/workspace tree only when the user wants it displayed.
+2. Add workspace member selection together with that concrete workflow.
 3. Add multi-document state only when a concrete workflow requires it.
 
-Do not combine direct-project ingestion with the project tree, workspace, or
-multiple-document state.
+Do not add a tree, selector, dependency view, or multiple-document state merely
+because the data is now available.
 
 ## Completed intermediate slice: direct project ingestion
 
@@ -507,6 +517,76 @@ suite passed.
 was also attempted. It remains blocked by pre-existing warnings in
 `crates/fpas-bench/src/main.rs` and `crates/fpas-bench/src/results.rs`; this
 slice does not modify those files.
+
+## Completed intermediate slice: internal workspace ingestion
+
+> Completed 2026-07-25.
+
+### Outcome
+
+Opening a `.fpasworkspace` establishes a retained workspace session without
+adding workspace UI. The IDE parses the manifest itself, resolves and validates
+every member `.fpasprj`, and stores the complete member project models in
+declared order. The first member becomes the active project and supplies the
+initial source document.
+
+### Implemented ownership
+
+```text
+apps/ide/src/workspace/
+  ├── loader.fpas   — workspace file I/O, member paths, and project loading
+  ├── manifest.fpas — typed [workspace] name/member validation
+  ├── model.fpas    — retained manifest data and ordered member projects
+  └── session.fpas  — atomic workspace, active project, and document loading
+```
+
+`IdeModel.Workspace` retains the workspace independently from
+`IdeModel.Project`, which remains the active member used by the existing
+single-document and process flows.
+
+### Implemented behavior
+
+- [x] Startup and Open accept `.fpasworkspace` case-insensitively.
+- [x] Retain normalized path/root, original manifest text, name, member order,
+  and complete direct project models.
+- [x] Reject malformed manifests, empty members, non-project members,
+  duplicate paths, duplicate case-insensitive project names, and member load
+  failures.
+- [x] Replace workspace, active project, and document only after the complete
+  initial session loads successfully.
+- [x] Opening a source clears workspace and project state.
+- [x] Opening a project directly clears workspace state.
+- [x] Preserve dirty-document Save/Discard/Cancel protection.
+- [x] Check and Run continue to target the active member project manifest.
+- [x] Add no workspace tree, selector, dependency view, or multi-document UI.
+
+### Regression coverage
+
+```text
+tests/ide/
+  ├── ide_workspace_loader_test.fpas  — manifest/member validation and ordering
+  ├── ide_workspace_open_test.fpas    — startup, Open, atomicity, and clearing
+  └── ide_workspace_process_test.fpas — active-member Check and Run
+```
+
+### Verification
+
+Verified on 2026-07-25:
+
+```text
+cargo fmt --all -- --check
+cargo build --workspace
+cargo test --workspace
+fpas fmt --check apps/ide tests/ide
+fpas check apps/ide/ide.fpasworkspace
+fpas test tests/ide/ide-tests.fpasprj
+fpas test tests/
+```
+
+The focused IDE suite passed 21 tests. The complete FPAS suite passed 389 tests
+with one expected skip. The Rust workspace build and test suite passed. One
+Windows sidecar lock test failed once with `Access denied`; its isolated rerun
+and the repeated complete workspace test both passed.
 
 ## Maintenance rule
 

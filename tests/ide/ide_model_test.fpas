@@ -4,6 +4,7 @@ uses Ide.App.Model, Ide.Document.Model, Std.Array, Std.Option, Std.Test;
 
 begin
   var Empty: IdeModel := InitialIdeModel(None);
+  AssertTrue(Std.Option.IsNone(Empty.Workspace));
   AssertTrue(Std.Option.IsNone(Empty.Project));
   AssertTrue(Std.Option.IsNone(Empty.Document.Path));
   AssertEquals('', Empty.Document.Text);

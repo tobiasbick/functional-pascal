@@ -31,10 +31,10 @@ begin
   AssertTrue(Std.Str.Contains(Missing.MessageText, 'Open failed: ' + MissingPath));
   var Invalid: IdeModel := InitializeIdeFromArguments(['sample.txt']);
   AssertTrue(Std.Option.IsNone(Invalid.Document.Path));
-  AssertEquals('Startup path must end with .fpas or .fpasprj.', Invalid.MessageText);
+  AssertEquals('Startup path must end with .fpas, .fpasprj, or .fpasworkspace.', Invalid.MessageText);
   var Extra: IdeModel := InitializeIdeFromArguments(['one.fpas', 'two.fpas']);
   AssertTrue(Std.Option.IsNone(Extra.Document.Path));
-  AssertEquals('Expected at most one .fpas or .fpasprj path argument.', Extra.MessageText);
+  AssertEquals('Expected at most one .fpas, .fpasprj, or .fpasworkspace path argument.', Extra.MessageText);
   var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   var Edited: IdeModel := UpdateIde(Initial, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'new', 3, TuiPoint.Create(0, 0)), Cmd);
   AssertTrue(IsIdeDocumentDirty(Edited.Document));
@@ -73,6 +73,7 @@ begin
 
                                                        ];
   var Navigation: IdeModel := record
+    Workspace := None;
     Project := None;
     Document := NavigationDocument;
     Dialog := IdeDialog.NoDialog;

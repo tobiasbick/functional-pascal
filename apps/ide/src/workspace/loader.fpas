@@ -1,0 +1,109 @@
+/// File loading entry point for one FPAS workspace manifest.
+
+unit Ide.Workspace.Loader;
+
+uses
+  Ide.Project.Loader, Ide.Project.Model, Ide.Workspace.Manifest, Ide.Workspace.Model, Std.Array,
+  Std.Fs, Std.Path, Std.Str;
+
+private function ContainsPath(Projects: array of IdeProject; Path: string): boolean;
+begin
+  for Index: integer := 0 to Std.Array.Length(Projects) - 1 do
+  begin
+    if Projects[Index].Path = Path then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private function ContainsProjectName(Projects: array of IdeProject; Name: string): boolean;
+begin
+  var Key: string := Std.Str.ToLower(Name);
+  for Index: integer := 0 to Std.Array.Length(Projects) - 1 do
+  begin
+    if Std.Str.ToLower(Projects[Index].Name) = Key then
+    begin
+      return true
+    end
+  end;
+  return false
+end;
+
+private function ResolveMembers(Root: string; Members: array of string): result of array of IdeProject, string;
+begin
+  mutable var Projects: array of IdeProject := [];
+  for Index: integer := 0 to Std.Array.Length(Members) - 1 do
+  begin
+    var Path: string := Std.Path.Normalize(Std.Path.Join([Root, Members[Index]]));
+    if Std.Str.ToLower(Std.Path.Extension(Path)) <> 'fpasprj' then
+    begin
+      return Error('Workspace member must reference an .fpasprj file: ' + Members[Index])
+    end;
+    if ContainsPath(Projects, Path) then
+    begin
+      return Error('Duplicate workspace member: ' + Members[Index])
+    end;
+    case LoadIdeProject(Path) of
+      Ok(Project):
+      begin
+        if ContainsProjectName(Projects, Project.Name) then
+        begin
+          return Error('Duplicate workspace project name: ' + Project.Name)
+        end;
+        Std.Array.Push(Projects, Project)
+      end;
+      Error(Message):
+      begin
+        return Error((('Could not load workspace member ' + Members[Index]) + ': ') + Message)
+      end
+    end
+  end;
+  return Ok(Projects)
+end;
+
+/// Reads, validates, and resolves every member of one `.fpasworkspace`.
+
+function LoadIdeWorkspace(Path: string): result of IdeWorkspace, string;
+begin
+  if Std.Str.ToLower(Std.Path.Extension(Path)) <> 'fpasworkspace' then
+  begin
+    return Error('Workspace path must end with .fpasworkspace.')
+  end;
+  case Std.Fs.ReadText(Path) of
+    Ok(ManifestText):
+    begin
+      case ParseIdeWorkspaceManifest(ManifestText) of
+        Ok(Manifest):
+        begin
+          var Root: string := Std.Path.Normalize(Std.Path.DirName(Path));
+          case ResolveMembers(Root, Manifest.Members) of
+            Ok(Projects):
+            begin
+              return Ok(record
+                Path := Std.Path.Normalize(Path);
+                Root := Root;
+                ManifestText := Manifest.ManifestText;
+                Name := Manifest.Name;
+                Projects := Projects;
+              end)
+            end;
+            Error(Message):
+            begin
+              return Error(Message)
+            end
+          end
+        end;
+        Error(Message):
+        begin
+          return Error(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error('Could not read workspace manifest: ' + Message)
+    end
+  end
+end;

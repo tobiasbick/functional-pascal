@@ -17,6 +17,7 @@ private function IdeState(
 ): IdeModel;
 begin
   return record
+    Workspace := State.Workspace;
     Project := State.Project;
     Document := Document;
     Dialog := State.Dialog;

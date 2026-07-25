@@ -14,6 +14,8 @@ units = [
   "Ide.Diagnostic.Parser",
   "Ide.Project.Model",
   "Ide.Project.Loader",
+  "Ide.Workspace.Model",
+  "Ide.Workspace.Loader",
   "Ide.Process.Runner",
 ]
 

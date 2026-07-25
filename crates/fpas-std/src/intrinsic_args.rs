@@ -122,8 +122,19 @@ pub(crate) fn pop_dict(
 }
 
 pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
+    Ok(expect_array(v, location)?.into())
+}
+
+/// Takes ownership of a [`Value::Array`] without forcing a deep copy.
+///
+/// Prefer this for read-only array intrinsics (`Length`, `Contains`, …). Use
+/// [`pop_array`] when the callee needs a mutable owned [`Vec`].
+pub(crate) fn expect_array(
+    v: Value,
+    location: SourceLocation,
+) -> Result<fpas_bytecode::SharedArray, StdError> {
     match v {
-        Value::Array(a) => Ok(a.into()),
+        Value::Array(a) => Ok(a),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected array argument, got {}", other.type_name()),

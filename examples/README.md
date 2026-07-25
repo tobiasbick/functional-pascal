@@ -84,6 +84,7 @@ For Rust VM / runtime hot paths (integer ops, `Array.Push`, string concat), use 
 ```sh
 target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000
 target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
+target/release/fpas run examples/pascal/vm/array_length_benchmark.fpas -- 500000
 target/release/fpas run examples/pascal/vm/string_concat_benchmark.fpas -- 5000000
 ```
 
@@ -155,6 +156,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
+| `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |

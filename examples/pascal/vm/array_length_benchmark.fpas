@@ -1,0 +1,71 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 500000 }
+{ Guard: target/release/fpas run this-file.fpas -- 500000 MAX_MILLIS }
+
+program VmArrayLengthBenchmark;
+
+uses Std.Args, Std.Array, Std.Console, Std.Conv, Std.Time;
+
+const
+  WarmupIterations: integer := 10000;
+  ArraySize: integer := 10000;
+
+function MakeValues(Count: integer): array of integer;
+begin
+  mutable var Values: array of integer := [];
+  for Index: integer := 1 to Count do
+  begin
+    Std.Array.Push(Values, Index)
+  end;
+  return Values
+end;
+
+function RunLength(Values: array of integer; Iterations: integer): integer;
+begin
+  mutable var Total: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    Total := Total + Std.Array.Length(Values)
+  end;
+  return Total
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: array_length_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  var Values: array of integer := MakeValues(ArraySize);
+  mutable var Total: integer := RunLength(Values, WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Total := RunLength(Values, Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  mutable var OpsPerSecond: integer := Iterations;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (Iterations * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', array size: ') + IntToStr(ArraySize));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' lengths/s');
+  WriteLn('length total: ' + IntToStr(Total));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('array-length benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

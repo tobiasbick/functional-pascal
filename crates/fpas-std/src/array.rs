@@ -5,7 +5,7 @@
 //! `fpas-vm` (`ArrayPushLocal` / `ArrayPopLocal`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{pop_array, pop_int, pop_value};
+use crate::intrinsic_args::{expect_array, pop_array, pop_int, pop_value};
 use crate::limits::checked_collection_len;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -41,7 +41,7 @@ pub(crate) fn run(
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Array(ArrayIntrinsic::Length) => {
-            let arr = pop_array(pop_value(stack, location)?, location)?;
+            let arr = expect_array(pop_value(stack, location)?, location)?;
             stack.push(Value::Integer(arr.len() as i64));
         }
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
@@ -73,13 +73,13 @@ pub(crate) fn run(
         }
         Intrinsic::Array(ArrayIntrinsic::Contains) => {
             let needle = pop_value(stack, location)?;
-            let arr = pop_array(pop_value(stack, location)?, location)?;
+            let arr = expect_array(pop_value(stack, location)?, location)?;
             let found = arr.iter().any(|e| e == &needle);
             stack.push(Value::Boolean(found));
         }
         Intrinsic::Array(ArrayIntrinsic::IndexOf) => {
             let needle = pop_value(stack, location)?;
-            let arr = pop_array(pop_value(stack, location)?, location)?;
+            let arr = expect_array(pop_value(stack, location)?, location)?;
             let idx = arr
                 .iter()
                 .position(|e| e == &needle)
@@ -90,7 +90,7 @@ pub(crate) fn run(
         Intrinsic::Array(ArrayIntrinsic::Slice) => {
             let len = pop_int(pop_value(stack, location)?, location)?;
             let start = pop_int(pop_value(stack, location)?, location)?;
-            let arr = pop_array(pop_value(stack, location)?, location)?;
+            let arr = expect_array(pop_value(stack, location)?, location)?;
             let n = arr.len() as i64;
             if start < 0 || len < 0 || start > n || start + len > n {
                 return Err(std_runtime_error(

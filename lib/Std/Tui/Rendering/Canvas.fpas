@@ -89,6 +89,30 @@ type
     procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
     begin
       mutable var X: integer := Position.X;
+      mutable var AsciiOnly: boolean := true;
+      var TextLength: integer := Std.Str.Length(Text);
+      for Index: integer := 0 to TextLength - 1 do
+      begin
+        var Code: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
+        if (Code <> 10) and ((Code < 32) or (Code > 126)) then
+        begin
+          AsciiOnly := false
+        end
+      end;
+      if AsciiOnly then
+      begin
+        for Index: integer := 0 to TextLength - 1 do
+        begin
+          var Glyph: string := Std.Str.CharAt(Text, Index);
+          if Glyph = Std.Str.Chr(10) then
+          begin
+            return
+          end;
+          Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+          X := X + 1
+        end;
+        return
+      end;
       for Glyph: string in Std.Console.SplitGraphemes(Text) do
       begin
         if Glyph = Std.Str.Chr(10) then
@@ -110,9 +134,10 @@ type
   Role: TuiStyleRole
 );
     begin
+      var Cell: TuiCell := TuiCell.Create('─', Role);
       for Offset: integer := 0 to Width - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X + Offset, Y), TuiCell.Create('─', Role))
+        Self.PutCell(TuiPoint.Create(X + Offset, Y), Cell)
       end
     end;
 
@@ -126,9 +151,10 @@ type
   Role: TuiStyleRole
 );
     begin
+      var Cell: TuiCell := TuiCell.Create('│', Role);
       for Offset: integer := 0 to Height - 1 do
       begin
-        Self.PutCell(TuiPoint.Create(X, Y + Offset), TuiCell.Create('│', Role))
+        Self.PutCell(TuiPoint.Create(X, Y + Offset), Cell)
       end
     end;
 

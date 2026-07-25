@@ -7,19 +7,19 @@ type
   TuiCell = record
     Glyph: string;
     Role: TuiStyleRole;
+    Columns: integer;
 
     /// Creates a cell; the glyph must be one non-zero-width grapheme cluster.
 
     static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
     begin
-      TuiGlyphWidth(Glyph);
-      return record Glyph := Glyph; Role := Role; end
+      return record Glyph := Glyph; Role := Role; Columns := TuiGlyphWidth(Glyph); end
     end;
 
     /// Returns the terminal-column width of the cell glyph (`1` or `2`).
 
     function Width(Self: TuiCell): integer;
     begin
-      return TuiGlyphWidth(Self.Glyph)
+      return Self.Columns
     end;
   end;

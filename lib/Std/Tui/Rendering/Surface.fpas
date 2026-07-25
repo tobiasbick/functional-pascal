@@ -27,22 +27,12 @@ end;
 
 private function TuiSurfaceBlankRow(Width: integer): array of TuiCell;
 begin
-  mutable var Cells: array of TuiCell := [];
-  for X: integer := 0 to Width - 1 do
-  begin
-    Std.Array.Push(Cells, TuiSurfaceBlank())
-  end;
-  return Cells
+  return Std.Array.Fill(TuiSurfaceBlank(), Width)
 end;
 
 private function TuiSurfaceBlankContinuationRow(Width: integer): array of boolean;
 begin
-  mutable var Continuations: array of boolean := [];
-  for X: integer := 0 to Width - 1 do
-  begin
-    Std.Array.Push(Continuations, false)
-  end;
-  return Continuations
+  return Std.Array.Fill(false, Width)
 end;
 
 private function TuiSurfaceRequire(Slot: integer): integer;
@@ -220,17 +210,19 @@ type
       return Some(TuiSurfaceCells[RowIndex][Position.X])
     end;
 
-    /// Replaces every row with fresh blank leading cells.
+    /// Clears the surface by sharing one blank row across every line.
 
     procedure Clear(Self: TuiWorkingSurface);
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
       var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
       var RowOffset: integer := TuiSurfaceRowOffsets[Slot - 1];
+      var BlankRow: array of TuiCell := TuiSurfaceBlankRow(Size.Width);
+      var BlankContinuations: array of boolean := TuiSurfaceBlankContinuationRow(Size.Width);
       for Y: integer := 0 to Size.Height - 1 do
       begin
-        TuiSurfaceCells[RowOffset + Y] := TuiSurfaceBlankRow(Size.Width);
-        TuiSurfaceContinuations[RowOffset + Y] := TuiSurfaceBlankContinuationRow(Size.Width)
+        TuiSurfaceCells[RowOffset + Y] := BlankRow;
+        TuiSurfaceContinuations[RowOffset + Y] := BlankContinuations
       end
     end;
 

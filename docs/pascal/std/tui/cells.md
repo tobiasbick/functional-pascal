@@ -12,8 +12,8 @@ var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
 
 `TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and
 `Inverse` flags. `TuiCell.Create` requires exactly one non-zero-width extended
-grapheme cluster. `Width()` is one or two terminal columns through
-`Std.Console.GraphemeWidth`.
+grapheme cluster and stores its terminal column width (`1` or `2`).
+`Width()` returns that stored value.
 
 The cell stores a semantic `TuiStyleRole`; palette lookup supplies concrete
 colors. Continuation cells for wide glyphs remain private surface state and are

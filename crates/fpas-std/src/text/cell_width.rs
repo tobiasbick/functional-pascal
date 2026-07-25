@@ -24,23 +24,17 @@ pub fn display_width(ch: char) -> u8 {
     }
 }
 
-/// Sum display widths for every extended grapheme cluster in `text`.
-///
-/// Measuring clusters keeps joined emoji and a base glyph with combining marks together as one
-/// renderable unit. A cluster never contributes more than two terminal columns.
-#[must_use]
-pub fn str_display_width(text: &str) -> i64 {
-    text.graphemes(true)
-        .map(|grapheme| UnicodeWidthStr::width(grapheme).min(2) as i64)
-        .sum()
-}
-
 /// Returns the terminal width of one renderable extended grapheme cluster.
 ///
 /// Empty text, multiple clusters, and zero-width clusters return `None` so cell-oriented
 /// renderers can reject values that cannot occupy one logical cell.
 #[must_use]
 pub fn grapheme_cell_width(text: &str) -> Option<u8> {
+    let bytes = text.as_bytes();
+    // Single printable ASCII byte is always one terminal column.
+    if bytes.len() == 1 && (0x20..=0x7E).contains(&bytes[0]) {
+        return Some(1);
+    }
     let mut graphemes = text.graphemes(true);
     let grapheme = graphemes.next()?;
     if graphemes.next().is_some() {
@@ -53,7 +47,29 @@ pub fn grapheme_cell_width(text: &str) -> Option<u8> {
 /// Split text into its extended grapheme clusters.
 #[must_use]
 pub fn split_graphemes(text: &str) -> Vec<String> {
+    if text.is_ascii() {
+        let mut out = Vec::with_capacity(text.len());
+        for index in 0..text.len() {
+            out.push(text[index..index + 1].to_owned());
+        }
+        return out;
+    }
     text.graphemes(true).map(str::to_owned).collect()
+}
+
+/// Sum display widths for every extended grapheme cluster in `text`.
+///
+/// Measuring clusters keeps joined emoji and a base glyph with combining marks together as one
+/// renderable unit. A cluster never contributes more than two terminal columns.
+#[must_use]
+pub fn str_display_width(text: &str) -> i64 {
+    // Printable ASCII is one column per byte; controls and non-ASCII use the Unicode path.
+    if text.bytes().all(|byte| (0x20..=0x7E).contains(&byte)) {
+        return text.len() as i64;
+    }
+    text.graphemes(true)
+        .map(|grapheme| UnicodeWidthStr::width(grapheme).min(2) as i64)
+        .sum()
 }
 
 /// Display-column offset immediately before the scalar at `char_index`.

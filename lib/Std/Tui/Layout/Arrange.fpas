@@ -118,10 +118,11 @@ end;
 private function TuiArrangePushEntry(ParentIndex: integer; NodeBounds: TuiRect; Clip: TuiRect): integer;
 begin
   var Index: integer := Std.Array.Length(TuiArrangeBuilding);
-  TuiArrangeBuilding := Std.Array.Concat(TuiArrangeBuilding, [
-                                                               record ParentIndex := ParentIndex; Bounds := NodeBounds; Clip := Clip; end
-
-                                                             ]);
+  mutable var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
+  // Drop the shared handle before Push so copy-on-write stays unique (amortized O(1)).
+  TuiArrangeBuilding := [];
+  Std.Array.Push(Entries, record ParentIndex := ParentIndex; Bounds := NodeBounds; Clip := Clip; end);
+  TuiArrangeBuilding := Entries;
   return Index
 end;
 
@@ -151,17 +152,16 @@ begin
     AvailableCross := Area.Width
   end;
   var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(Area.Width, Area.Height));
-  mutable var Assigned: array of integer := [];
-  mutable var Preferred: array of integer := [];
+  var ChildCount: integer := Std.Array.Length(Children);
+  mutable var Assigned: array of integer := Std.Array.Fill(0, ChildCount);
+  mutable var Preferred: array of integer := Std.Array.Fill(0, ChildCount);
   mutable var ParticipatingIndices: array of integer := [];
   mutable var MinimumTotal: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  for Index: integer := 0 to ChildCount - 1 do
   begin
-    Assigned := Std.Array.Concat(Assigned, [0]);
-    Preferred := Std.Array.Concat(Preferred, [0]);
     if TuiArrangeChildParticipates(Children[Index]) then
     begin
-      ParticipatingIndices := Std.Array.Concat(ParticipatingIndices, [Index]);
+      Std.Array.Push(ParticipatingIndices, Index);
       var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
       Assigned[Index] := TuiArrangeMainMinimum(Measured, Horizontal);
       Preferred[Index] := TuiArrangeMainPreferred(Measured, Horizontal);
@@ -228,7 +228,7 @@ begin
     CrossOrigin := Area.X
   end;
   mutable var ParticipatingSeen: integer := 0;
-  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  for Index: integer := 0 to ChildCount - 1 do
   begin
     if not TuiArrangeChildParticipates(Children[Index]) then
     begin
@@ -265,10 +265,10 @@ procedure ArrangeStackVertical(
 );
 begin
   var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(Area.Width, Area.Height));
-  mutable var Assigned: array of integer := [];
-  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  var ChildCount: integer := Std.Array.Length(Children);
+  mutable var Assigned: array of integer := Std.Array.Fill(0, ChildCount);
+  for Index: integer := 0 to ChildCount - 1 do
   begin
-    Assigned := Std.Array.Concat(Assigned, [0]);
     if TuiArrangeChildParticipates(Children[Index]) then
     begin
       var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
@@ -276,7 +276,7 @@ begin
     end
   end;
   mutable var MainCursor: integer := Area.Y;
-  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  for Index: integer := 0 to ChildCount - 1 do
   begin
     if not TuiArrangeChildParticipates(Children[Index]) then
     begin

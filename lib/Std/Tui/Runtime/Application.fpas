@@ -209,9 +209,8 @@ type
       end;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
-      var Frame: TuiArrangedFrame := TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], Tree);
+      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree);
       TuiAppTrees[ApplicationId - 1] := Tree;
-      TuiAppFrames[ApplicationId - 1] := Frame;
       mutable var Remaining: integer := IterationCount;
       while Remaining > 0 do
       begin
@@ -246,9 +245,8 @@ type
           return Model
         end;
         var NextTree: TuiElement := View(Model);
-        var NextFrame: TuiArrangedFrame := TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], NextTree);
+        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree);
         TuiAppTrees[ApplicationId - 1] := NextTree;
-        TuiAppFrames[ApplicationId - 1] := NextFrame;
         Tree := NextTree
       end;
       return Model
@@ -286,9 +284,8 @@ type
       var ApplicationId: integer := App.Id;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
-      var Frame: TuiArrangedFrame := TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], Tree);
+      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree);
       TuiAppTrees[ApplicationId - 1] := Tree;
-      TuiAppFrames[ApplicationId - 1] := Frame;
       TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1]);
       while TuiAppOpen[ApplicationId - 1] do
       begin
@@ -319,9 +316,8 @@ type
           return Model
         end;
         var NextTree: TuiElement := View(Model);
-        var NextFrame: TuiArrangedFrame := TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], NextTree);
+        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree);
         TuiAppTrees[ApplicationId - 1] := NextTree;
-        TuiAppFrames[ApplicationId - 1] := NextFrame;
         TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1])
       end;
       return Model

@@ -29,6 +29,15 @@ begin
                                                                       ])
 end;
 
+function ViewWindowedTextArea(State: TextAreaModel): TuiElement;
+begin
+  var Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Editor', [Editor])
+
+                                                                      ])
+end;
+
 function UpdateTextArea(State: TextAreaModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TextAreaModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
@@ -50,6 +59,17 @@ function Press(App: TuiApplication; State: TextAreaModel; Kind: TuiKeyKind; Char
 begin
   App.InjectKeyForTest(MakeKey(Kind, Character));
   return App.RunIterations(State, UpdateTextArea, ViewTextArea, 1, 0)
+end;
+
+function PressWindowed(
+  App: TuiApplication;
+  State: TextAreaModel;
+  Kind: TuiKeyKind;
+  Character: string
+): TextAreaModel;
+begin
+  App.InjectKeyForTest(MakeKey(Kind, Character));
+  return App.RunIterations(State, UpdateTextArea, ViewWindowedTextArea, 1, 0)
 end;
 
 begin
@@ -121,5 +141,12 @@ begin
   AssertEquals(4, Model.Caret);
   AssertEquals(0, Model.Offset.X);
   AssertEquals(0, Model.Offset.Y);
+  App.Close();
+  App := TuiApplication.OpenForTest(TuiSize.Create(10, 5));
+  Model := record Text := 'first'; Caret := 5; Offset := TuiPoint.Create(0, 0); end;
+  Model := App.RunIterations(Model, UpdateTextArea, ViewWindowedTextArea, 0, 0);
+  Model := PressWindowed(App, Model, TuiKeyKind.Enter, '');
+  AssertEquals(0, Model.Offset.Y);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'first'));
   App.Close()
 end.

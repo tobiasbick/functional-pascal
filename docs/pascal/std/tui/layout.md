@@ -16,6 +16,10 @@ child order toward preferred extents, then distribute remaining cells through
 aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
 `Fill`.
 
+`Window` and `Dialog` arrange their inset children as a vertical column without
+spacing. Expanding children therefore receive remaining content rows after
+minimum and preferred extents have been satisfied.
+
 `TextArea` measures to a minimum of one cell, prefers its widest logical line
 and logical-line count, and permits expansion in both axes. A direct `TextArea`
 participates in stable remaining-space distribution, so its arranged bounds

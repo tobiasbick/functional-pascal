@@ -115,11 +115,12 @@ begin
   return TuiRect.Create(Outer.X + Margins.Left, Outer.Y + Margins.Top, Width, Height)
 end;
 
+// Clear the shared handle before Push so copy-on-write stays unique (amortized O(1)).
+
 private function TuiArrangePushEntry(ParentIndex: integer; NodeBounds: TuiRect; Clip: TuiRect): integer;
 begin
   var Index: integer := Std.Array.Length(TuiArrangeBuilding);
   mutable var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
-  // Drop the shared handle before Push so copy-on-write stays unique (amortized O(1)).
   TuiArrangeBuilding := [];
   Std.Array.Push(Entries, record ParentIndex := ParentIndex; Bounds := NodeBounds; Clip := Clip; end);
   TuiArrangeBuilding := Entries;
@@ -257,39 +258,6 @@ begin
     end
   end
 end;
-procedure ArrangeStackVertical(
-  Children: array of TuiElement;
-  Area: TuiRect;
-  Clip: TuiRect;
-  Parent: integer
-);
-begin
-  var Spec: TuiMeasureSpec := TuiMeasureSpec.AtMost(TuiSize.Create(Area.Width, Area.Height));
-  var ChildCount: integer := Std.Array.Length(Children);
-  mutable var Assigned: array of integer := Std.Array.Fill(0, ChildCount);
-  for Index: integer := 0 to ChildCount - 1 do
-  begin
-    if TuiArrangeChildParticipates(Children[Index]) then
-    begin
-      var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
-      Assigned[Index] := Measured.Preferred.Height
-    end
-  end;
-  mutable var MainCursor: integer := Area.Y;
-  for Index: integer := 0 to ChildCount - 1 do
-  begin
-    if not TuiArrangeChildParticipates(Children[Index]) then
-    begin
-      ArrangeNode(Children[Index], TuiRect.Create(Area.X, MainCursor, 0, 0), Clip, Parent)
-    end
-    else
-    begin
-      var ChildBounds: TuiRect := TuiRect.Create(Area.X, MainCursor, Area.Width, Assigned[Index]);
-      ArrangeNode(Children[Index], ChildBounds, Clip, Parent);
-      MainCursor := MainCursor + Assigned[Index]
-    end
-  end
-end;
 begin
   var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
@@ -336,7 +304,7 @@ begin
     end;
     TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
     begin
-      ArrangeStackVertical(Children, NodeBounds.Inset(), Clip, SelfIndex)
+      ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex)
     end;
     TuiElement.Desktop(Focused, Children):
     begin

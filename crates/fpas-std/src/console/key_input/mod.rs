@@ -90,8 +90,15 @@ impl KeyInput {
                 true
             }
             Event::Resize(width, height) => {
-                self.live_console_queue
-                    .push_back(LiveConsoleEvent::Resize(width, height));
+                if let Some(LiveConsoleEvent::Resize(queued_width, queued_height)) =
+                    self.live_console_queue.back_mut()
+                {
+                    *queued_width = width;
+                    *queued_height = height;
+                } else {
+                    self.live_console_queue
+                        .push_back(LiveConsoleEvent::Resize(width, height));
+                }
                 true
             }
             Event::Paste(text) => {

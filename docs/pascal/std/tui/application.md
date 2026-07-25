@@ -47,6 +47,9 @@ to 16 ms for an event before emitting `Tick(16)`.
 
 Keyboard, mouse, and positive resize events are normalized before routing;
 paste and focus events are ignored. Mouse coordinates become zero-based.
+Consecutive native resize events are coalesced to the latest dimensions before
+layout and painting, so keyboard input following a resize burst is not delayed
+by obsolete intermediate frames.
 `Std.Console` owns raw mode, alternate-screen, input features, and cursor
 rollback for the interactive session.
 

@@ -7,6 +7,8 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_INPUT_FAILURE;
 use std::time::Duration;
 
+const MAX_READY_EVENTS_PER_READ: usize = 256;
+
 impl KeyInput {
     pub fn key_pressed(&mut self, location: SourceLocation) -> Result<bool, StdError> {
         if !self.pending.is_empty()
@@ -185,12 +187,39 @@ impl KeyInput {
                 location,
             )
         })?;
-        if self.queue_live_event(ev)
-            && let Some(next) = self.take_live_console_event()
-        {
+        let resize_burst = matches!(ev, Event::Resize(_, _));
+        if self.queue_live_event(ev) && resize_burst {
+            self.buffer_ready_live_events(location)?;
+        }
+        if let Some(next) = self.take_live_console_event() {
             return Ok(Some(map_console_event(next)));
         }
         Ok(None)
+    }
+
+    fn buffer_ready_live_events(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        for _ in 0..MAX_READY_EVENTS_PER_READ {
+            if !event::poll(Duration::ZERO).map_err(|e| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("ReadEventTimeout failed while draining ready events (poll): {e}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })? {
+                break;
+            }
+            let event = event::read().map_err(|e| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("ReadEventTimeout failed while draining ready events (read): {e}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })?;
+            self.queue_live_event(event);
+        }
+        Ok(())
     }
 
     /// Non-blocking event poll — returns `Some(event)` if one is pending, `None` otherwise.

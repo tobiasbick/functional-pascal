@@ -143,6 +143,27 @@ fn key_input_live_key_event_is_visible_to_unified_event_api() {
 }
 
 #[test]
+fn key_input_coalesces_live_resize_burst_before_key() {
+    let mut k = test_key_input();
+    assert!(k.push_live_event(Event::Resize(80, 24)));
+    assert!(k.push_live_event(Event::Resize(100, 30)));
+    assert!(k.push_live_event(Event::Resize(120, 40)));
+    assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(
+        KeyCode::Char('x'),
+        KeyModifiers::NONE,
+    ))));
+
+    let resize = k.read_event_timeout(0, test_location()).unwrap().unwrap();
+    assert_eq!(resize.kind, event_kind_index("Resize"));
+    assert_eq!((resize.width, resize.height), (120, 40));
+
+    let key = k.read_event_timeout(0, test_location()).unwrap().unwrap();
+    assert_eq!(key.kind, event_kind_index("Key"));
+    assert_eq!(key.key.ch, 'x');
+    assert!(!k.event_pending(test_location()).unwrap());
+}
+
+#[test]
 fn key_input_read_event_of_live_key_clears_key_pressed() {
     let mut k = test_key_input();
     assert!(k.push_live_event(Event::Key(CrosstermKeyEvent::new(

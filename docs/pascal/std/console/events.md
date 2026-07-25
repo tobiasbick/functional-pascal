@@ -13,6 +13,10 @@
 
 Live terminal keys are mirrored so both `KeyPressed` / `EventPending` can observe them, but **consuming a live key from either API removes it from both**. Prefer one live input style per loop (`ReadEvent*` **or** `ReadKey*`), not both.
 
+Consecutive live `Resize` events are coalesced to the latest dimensions. When
+another event follows the burst, it remains next in FIFO order. Test-injected
+`ConsoleEvent` values retain their explicit queue order.
+
 ```pascal
 var E: Event := ReadEvent();
 if E.kind = EventKind.Resize then

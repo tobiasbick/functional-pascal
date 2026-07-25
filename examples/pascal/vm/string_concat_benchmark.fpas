@@ -1,0 +1,62 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 5000000 }
+{ Guard: target/release/fpas run this-file.fpas -- 5000000 MAX_MILLIS }
+
+program VmStringConcatBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+
+const
+  WarmupIterations: integer := 200000;
+  Prefix: string := 'frame-';
+  Suffix: string := '-ready';
+
+function RunConcat(Iterations: integer): integer;
+begin
+  mutable var Total: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    var Built: string := (Prefix + IntToStr(Index)) + Suffix;
+    Total := Total + Std.Str.Length(Built)
+  end;
+  return Total
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: string_concat_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  mutable var Total: integer := RunConcat(WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Total := RunConcat(Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  mutable var OpsPerSecond: integer := Iterations;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (Iterations * 1000) div Elapsed
+  end;
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' concats/s');
+  WriteLn('char total: ' + IntToStr(Total));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('string-concat benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

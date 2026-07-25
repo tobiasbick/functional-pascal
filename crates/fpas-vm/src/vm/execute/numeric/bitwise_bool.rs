@@ -4,7 +4,7 @@ use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 impl Worker {
-    pub(super) fn try_exec_bitwise_bool(
+    pub(in crate::vm::execute) fn try_exec_bitwise_bool(
         &mut self,
         op: Op,
         line: SourceLocation,

@@ -4,7 +4,7 @@ use fpas_bytecode::{Op, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_DIVISION_BY_ZERO;
 
 impl Worker {
-    pub(super) fn try_exec_real_ops(
+    pub(in crate::vm::execute) fn try_exec_real_ops(
         &mut self,
         op: Op,
         line: SourceLocation,

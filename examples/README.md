@@ -77,15 +77,24 @@ cargo build --release -p fpas-cli
 target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500
 ```
 
-On Windows, invoke `target/release/fpas.exe`. The benchmark warms up 100 frames, then measures the headless `Std.Tui` update, view, layout, and render loop. Compilation and console output are outside the measured interval.
+On Windows, invoke `target/release/fpas.exe`. The TUI benchmark warms up 100 frames, then measures the headless `Std.Tui` update, view, layout, and render loop. Compilation and console output are outside the measured interval.
+
+For Rust VM / runtime hot paths (integer ops, `Array.Push`, string concat), use the VM microbenchmarks instead — they spend most of their time in the interpreter rather than in FPAS stdlib logic:
+
+```sh
+target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000
+target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
+target/release/fpas run examples/pascal/vm/string_concat_benchmark.fpas -- 5000000
+```
 
 Record the elapsed time from a known-good checkout, then pass a locally chosen upper limit to turn a slowdown into a failing run:
 
 ```sh
 target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500 16000
+target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000 MAX_MILLIS
 ```
 
-The second argument is `MAX_MILLIS`; replace the illustrated `16000` with a limit derived from your own baseline. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
+Replace illustrated `MAX_MILLIS` values with limits derived from your own baseline. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
 
 ### Projects (`.fpasprj`)
 
@@ -144,6 +153,9 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
+| `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
+| `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
+| `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

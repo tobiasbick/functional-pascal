@@ -46,58 +46,163 @@ impl Worker {
 
     /// Fetch, decode and execute the next instruction.
     ///
-    /// All opcodes **except** `Return`, `Halt`, and `Panic` are fully handled
-    /// here. `Return`/`Halt` are signalled back via [`StepResult`] so that the
-    /// two loop drivers (`run` and `call_function_sync`) can apply their own
-    /// control-flow logic. `Panic` always returns an `Err`.
+    /// Dispatch is a single top-level `match` on [`Op`] so hot loops do not walk
+    /// cascaded `try_exec_*` handlers. Category helpers still own the opcode
+    /// bodies. `Return`/`Halt` are signalled via [`StepResult`]; `Panic` returns
+    /// `Err`.
     pub(super) fn exec_one(
         &mut self,
         fallback_line: SourceLocation,
     ) -> Result<StepResult, VmError> {
-        let op = self.shared.chunk.code()[self.ip];
+        let ip = self.ip;
+        let op = self.shared.chunk.code()[ip];
+        // `code` and `locations` stay the same length for every emitted chunk.
         let line = self
             .shared
             .chunk
-            .location_at(self.ip)
+            .locations()
+            .get(ip)
+            .copied()
             .unwrap_or(fallback_line);
         self.current_location = line;
-        self.ip += 1;
+        self.ip = ip + 1;
 
-        if self.try_exec_stack_scope(op, line)?
-            || self.try_exec_numeric(op, line)?
-            || self.try_exec_control_calls(op, line)?
-            || self.try_exec_closure_ops(op, line)?
-            || self.try_exec_concurrency(op, line)?
-            || self.try_exec_aggregates(op, line)?
-            || self.try_exec_result_option(op, line)?
-            || self.try_exec_enums(op, line)?
-            || self.try_exec_io(op, line)?
-        {
-            if self.task_suspended {
-                return Ok(StepResult::Suspended);
+        let handled = match op {
+            Op::Constant(_)
+            | Op::Unit
+            | Op::Pop
+            | Op::Dup
+            | Op::GetLocal(_)
+            | Op::SetLocal(_)
+            | Op::GetGlobal(_)
+            | Op::SetGlobal(_)
+            | Op::GetEnclosing(_, _)
+            | Op::SetEnclosing(_, _) => self.try_exec_stack_scope(op, line)?,
+
+            Op::AddInt
+            | Op::SubInt
+            | Op::MulInt
+            | Op::DivInt
+            | Op::ModInt
+            | Op::NegateInt
+            | Op::Shl
+            | Op::Shr
+            | Op::IntToReal => self.try_exec_int_ops(op, line)?,
+
+            Op::AddReal | Op::SubReal | Op::MulReal | Op::DivReal | Op::NegateReal => {
+                self.try_exec_real_ops(op, line)?
             }
-            self.maybe_timeslice_yield();
-            return Ok(StepResult::Continue);
-        }
 
-        match op {
-            Op::Return => Ok(StepResult::Return),
-            Op::Halt => Ok(StepResult::Halt),
+            Op::ConcatStr
+            | Op::EqInt
+            | Op::NeqInt
+            | Op::LtInt
+            | Op::GtInt
+            | Op::LeInt
+            | Op::GeInt
+            | Op::EqReal
+            | Op::NeqReal
+            | Op::LtReal
+            | Op::GtReal
+            | Op::LeReal
+            | Op::GeReal
+            | Op::EqStr
+            | Op::NeqStr
+            | Op::LtStr
+            | Op::GtStr
+            | Op::LeStr
+            | Op::GeStr => self.try_exec_comparisons(op, line)?,
+
+            Op::BitAnd
+            | Op::BitOr
+            | Op::BitXor
+            | Op::EqBool
+            | Op::NeqBool
+            | Op::Not
+            | Op::And
+            | Op::Or => self.try_exec_bitwise_bool(op, line)?,
+
+            Op::AddDyn
+            | Op::SubDyn
+            | Op::MulDyn
+            | Op::DivDyn
+            | Op::NegateDyn
+            | Op::EqDyn
+            | Op::NeqDyn
+            | Op::LtDyn
+            | Op::GtDyn
+            | Op::LeDyn
+            | Op::GeDyn => self.try_exec_dynamic_ops(op, line)?,
+
+            Op::Jump(_)
+            | Op::JumpIfFalse(_)
+            | Op::JumpIfTrue(_)
+            | Op::Call(_, _)
+            | Op::CallValue(_) => self.try_exec_control_calls(op, line)?,
+
+            Op::MakeClosure(_, _) | Op::MakeCell | Op::CellGet | Op::CellSet => {
+                self.try_exec_closure_ops(op, line)?
+            }
+
+            Op::SpawnTask(_) | Op::SpawnDetachedTask(_) | Op::Yield => {
+                self.try_exec_concurrency(op, line)?
+            }
+
+            Op::MakeArray(_)
+            | Op::MakeDict(_)
+            | Op::IndexGet
+            | Op::IndexSet
+            | Op::GlobalIndexSet(_, _)
+            | Op::Contains
+            | Op::MakeRecord(_, _)
+            | Op::FieldGet(_)
+            | Op::FieldSet(_)
+            | Op::UpdateRecord(_)
+            | Op::ArrayPushLocal(_, _)
+            | Op::ArrayPopLocal(_, _) => self.try_exec_aggregates(op, line)?,
+
+            Op::MakeOk
+            | Op::MakeErr
+            | Op::MakeSome
+            | Op::MakeNone
+            | Op::IsResultOk
+            | Op::IsOptionSome
+            | Op::UnwrapOk
+            | Op::UnwrapErr
+            | Op::UnwrapSome => self.try_exec_result_option(op, line)?,
+
+            Op::MakeEnum(_, _, _) | Op::IsVariant(_, _) | Op::EnumField(_) => {
+                self.try_exec_enums(op, line)?
+            }
+
+            Op::Print | Op::PrintLn | Op::Intrinsic(_) => self.try_exec_io(op, line)?,
+
+            Op::Return => return Ok(StepResult::Return),
+            Op::Halt => return Ok(StepResult::Halt),
             Op::Panic => {
                 let val = self.pop(line)?;
-                Err(runtime_error(
+                return Err(runtime_error(
                     RUNTIME_PROGRAM_PANIC,
                     format!("panic: {val}"),
                     "Remove the panic or guard the failing condition before calling panic.",
                     line,
-                ))
+                ));
             }
-            _ => Err(internal_error(
+        };
+
+        if !handled {
+            return Err(internal_error(
                 format!("Unhandled opcode in VM dispatcher: {op:?}"),
                 "This indicates a VM dispatch bug. Please report it.",
                 line,
-            )),
+            ));
         }
+
+        if self.task_suspended {
+            return Ok(StepResult::Suspended);
+        }
+        self.maybe_timeslice_yield();
+        Ok(StepResult::Continue)
     }
 
     pub fn run(&mut self) -> Result<(), VmError> {

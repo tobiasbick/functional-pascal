@@ -70,8 +70,11 @@ impl Worker {
                 self.jump_if_local_cmp(a, b, addr, line, |left, right| left < right)
             }
             Op::Call(name_idx, argc) => {
-                let name = self.const_str(name_idx, line)?;
-                self.call_named_function(&name, argc, line)?;
+                let (code_start, base_slot) = {
+                    let name = self.const_str_ref(name_idx, line)?;
+                    self.resolve_named_call(name, argc, line)
+                }?;
+                self.enter_function(code_start, base_slot, line)?;
                 Ok(true)
             }
             Op::CallValue(argc) => {
@@ -173,6 +176,16 @@ impl Worker {
         argc: u8,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        let (code_start, base_slot) = self.resolve_named_call(name, argc, line)?;
+        self.enter_function(code_start, base_slot, line)
+    }
+
+    fn resolve_named_call(
+        &self,
+        name: &str,
+        argc: u8,
+        line: SourceLocation,
+    ) -> Result<(usize, usize), VmError> {
         let (code_start, expected_arity) = self.lookup_function_entry(name).ok_or_else(|| {
             runtime_error(
                 RUNTIME_UNDEFINED_FUNCTION,
@@ -202,11 +215,19 @@ impl Worker {
             ));
         }
 
-        let base = self.stack.len() - argc as usize;
+        Ok((code_start, self.stack.len() - argc as usize))
+    }
+
+    fn enter_function(
+        &mut self,
+        code_start: usize,
+        base_slot: usize,
+        line: SourceLocation,
+    ) -> Result<(), VmError> {
         self.push_call_frame(
             CallFrame {
                 return_ip: self.ip,
-                base_slot: base,
+                base_slot,
             },
             line,
         )?;

@@ -75,6 +75,18 @@ begin
     end;
     TuiElement.Layout(Settings, Children):
     begin
+      if not Horizontal then
+      begin
+        case Settings.Height of
+          Some(Height):
+          begin
+            return 0
+          end;
+          None:
+          begin
+          end
+        end
+      end;
       if Settings.Stretch > 0 then
       begin
         return Settings.Stretch

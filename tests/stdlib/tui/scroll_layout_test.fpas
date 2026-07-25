@@ -39,9 +39,21 @@ begin
 end;
 
 begin
-  var Measured: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild()), TuiMeasureSpec.AtMost(TuiSize.Create(1, 1)));
+  var Scroll: TuiElement := TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild());
+  var Measured: TuiMeasureResult := TuiMeasure(Scroll, TuiMeasureSpec.Unbounded());
+  AssertEquals(1, Measured.Minimum.Width);
+  AssertEquals(1, Measured.Minimum.Height);
   AssertEquals(5, Measured.Preferred.Width);
   AssertEquals(5, Measured.Preferred.Height);
+  var Constrained: TuiMeasureResult := TuiMeasure(Scroll, TuiMeasureSpec.AtMost(TuiSize.Create(1, 1)));
+  AssertEquals(1, Constrained.Preferred.Width);
+  AssertEquals(1, Constrained.Preferred.Height);
+  var FixedViewport: TuiElement := TuiElementBuilders.MakeLayout(TuiLayoutSettings.Default()
+                                                                   .WithFixedHeight(2), TuiElementBuilders.MakeScroll(TuiControlId.Create(1), TuiPoint.Create(0, 0), TuiAction.Create(7), ScrollChild()));
+  var FixedMeasured: TuiMeasureResult := TuiMeasure(FixedViewport, TuiMeasureSpec.Unbounded());
+  AssertEquals(2, FixedMeasured.Minimum.Height);
+  AssertEquals(2, FixedMeasured.Preferred.Height);
+  AssertEquals(2, FixedMeasured.Maximum.Height);
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 5));
   mutable var Model: ScrollModel := record Offset := TuiPoint.Create(0, 4); end;
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);

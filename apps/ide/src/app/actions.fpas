@@ -58,6 +58,13 @@ begin
   return TuiControlId.Create(6)
 end;
 
+/// Returns the message-scroll control identity.
+
+function MessageScrollControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(13)
+end;
+
 /// Returns the Open application action.
 
 function OpenAction(): TuiAction;
@@ -98,6 +105,13 @@ end;
 function EditorChangedAction(): TuiAction;
 begin
   return TuiAction.Create(6)
+end;
+
+/// Returns the controlled message-scroll action.
+
+function MessageScrollChangedAction(): TuiAction;
+begin
+  return TuiAction.Create(13)
 end;
 
 /// Returns the path-dialog input identity.

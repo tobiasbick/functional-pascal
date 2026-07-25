@@ -65,14 +65,8 @@ impl IntoIterator for SharedArray {
 ///
 /// Cloning a string shares its UTF-8 buffer, avoiding a deep copy until an owning consumer needs
 /// to mutate the string.
-#[derive(Debug, Clone, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Hash)]
 pub struct SharedStr(Arc<String>);
-
-impl PartialEq for SharedStr {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
 
 impl From<String> for SharedStr {
     fn from(value: String) -> Self {

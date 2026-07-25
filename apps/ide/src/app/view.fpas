@@ -2,7 +2,7 @@
 
 unit Ide.App.View;
 
-uses Ide.App.Actions, Ide.App.Model, Ide.Document.Model, Std.Conv, Std.Str, Std.Tui;
+uses Ide.App.Actions, Ide.App.Model, Ide.Document.Model, Std.Array, Std.Conv, Std.Str, Std.Tui;
 
 private function FixedRowSettings(): TuiLayoutSettings;
 begin
@@ -12,6 +12,11 @@ end;
 private function EditorSettings(): TuiLayoutSettings;
 begin
   return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), 1)
+end;
+
+private function MessageSettings(): TuiLayoutSettings;
+begin
+  return FixedRowSettings().WithFixedHeight(5)
 end;
 
 private function ViewCommandBar(): TuiElement;
@@ -36,10 +41,18 @@ end;
 
 private function ViewMessages(State: IdeModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeLayout(FixedRowSettings(), TuiElementBuilders.MakeWindow('Messages', [
-                                                                                                       TuiElementBuilders.MakeLabel(State.MessageText)
+  var Lines: array of string := Std.Str.Split(State.MessageText, Std.Str.Chr(10));
+  mutable var Items: array of TuiElement := [];
+  for Index: integer := 0 to Std.Array.Length(Lines) - 1 do
+  begin
+    Std.Array.Push(Items, TuiElementBuilders.MakeLabel(Lines[Index]))
+  end;
+  var Content: TuiElement := TuiElementBuilders.MakeColumn(Items);
+  var Scroll: TuiElement := TuiElementBuilders.MakeScroll(MessageScrollControlId(), State.MessageOffset, MessageScrollChangedAction(), Content);
+  return TuiElementBuilders.MakeLayout(MessageSettings(), TuiElementBuilders.MakeWindow('Messages', [
+                                                                                                      Scroll
 
-                                                                                                     ]))
+                                                                                                    ]))
 end;
 
 private function CaretLine(Document: IdeDocument): integer;

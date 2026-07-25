@@ -32,6 +32,7 @@ implementation details.
 | `TuiElement` / `TuiElementBuilders` | Closed element tree and constructors. |
 | `TuiElementBuilders.MakeTextArea(...)` | Controlled multiline editor with model-owned text, caret, and offset. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` | Layout value inputs. |
+| `TuiLayoutSettings.WithFixedHeight(Height)` | Copy of layout settings with one fixed total height. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |
 | `TuiMsg` / `TuiPointerEvent` | Normalized application input. |
 | `TuiMenuItem` / `TuiStatusItem` | Menu-bar and status-line descriptions. |

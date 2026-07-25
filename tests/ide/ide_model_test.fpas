@@ -12,6 +12,8 @@ begin
   AssertEquals(0, Empty.Document.Offset.Y);
   AssertFalse(IsIdeDocumentDirty(Empty.Document));
   AssertEquals('Ready', Empty.MessageText);
+  AssertEquals(0, Empty.MessageOffset.X);
+  AssertEquals(0, Empty.MessageOffset.Y);
   AssertTrue(Std.Option.IsNone(Empty.LastExitCode));
   var Loaded: IdeModel := InitialIdeModel(Some('sample.fpas'));
   case Loaded.Document.Path of

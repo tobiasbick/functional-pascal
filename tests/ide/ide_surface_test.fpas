@@ -14,8 +14,8 @@ begin
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Exit'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(1), ExpectedPath));
   AssertTrue(Std.Str.Contains(Surface.LineAt(2), 'Editor'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 4), 'Messages'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 3), State.MessageText));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 6), 'Messages'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 5), State.MessageText));
   AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 1), 'clean | Ln 1, Col 1'));
   AssertEquals(State.Document.Text, Final.Document.Text);
   App.Close()
@@ -24,19 +24,25 @@ end;
 begin
   AssertSurface(TuiSize.Create(80, 25), InitialIdeModel(None), '(untitled)');
   AssertSurface(TuiSize.Create(40, 12), InitialIdeModel(Some('small.fpas')), 'small.fpas');
+  var NewLine: string := Std.Str.Chr(10);
+  var MessageText: string := ((((((('first diagnostic line' + NewLine) + 'second diagnostic line') + NewLine) + 'third diagnostic line') + NewLine) + 'fourth clipped line') + NewLine) +
+                             'fifth clipped line';
   var LongMessage: IdeModel := record
     Document := NewIdeDocument(Some('long.fpas'));
     Dialog := IdeDialog.NoDialog;
-    MessageText := ('first diagnostic line' + Std.Str.Chr(10)) + 'second clipped line';
+    MessageText := MessageText;
+    MessageOffset := TuiPoint.Create(0, 0);
     LastExitCode := Some(1);
     Focused := None;
   end;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   var _: IdeModel := App.RunIterations(LongMessage, UpdateIde, ViewIde, 0, 0);
   var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(Surface.LineAt(21), 'Messages'));
-  AssertTrue(Std.Str.Contains(Surface.LineAt(22), 'first diagnostic line'));
-  AssertFalse(Std.Str.Contains(Surface.LineAt(23), 'second clipped line'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(19), 'Messages'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(20), 'first diagnostic line'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(21), 'second diagnostic line'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(22), 'third diagnostic line'));
+  AssertFalse(Std.Str.Contains(Surface.LineAt(22), 'fourth clipped line'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(24), 'clean | Ln 1, Col 1'));
   App.Close()
 end.

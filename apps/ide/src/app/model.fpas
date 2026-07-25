@@ -25,6 +25,7 @@ type
     Document: IdeDocument;
     Dialog: IdeDialog;
     MessageText: string;
+    MessageOffset: TuiPoint;
     LastExitCode: option of integer;
     Focused: option of TuiControlId;
   end;
@@ -37,6 +38,7 @@ begin
     Document := NewIdeDocument(Path);
     Dialog := IdeDialog.NoDialog;
     MessageText := 'Ready';
+    MessageOffset := TuiPoint.Create(0, 0);
     LastExitCode := None;
     Focused := None;
   end

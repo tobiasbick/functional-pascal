@@ -29,10 +29,12 @@ begin
   WriteIdeTestFile(SourcePath, ValidSource);
   var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   var Loaded: IdeModel := InitializeIdeFromArguments([SourcePath]);
-  var Checked: IdeModel := UpdateIde(Loaded, TuiMsgAction(CheckControlId(), CheckAction()), Cmd);
+  var ScrolledLoaded: IdeModel := UpdateIde(Loaded, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 5)), Cmd);
+  var Checked: IdeModel := UpdateIde(ScrolledLoaded, TuiMsgAction(CheckControlId(), CheckAction()), Cmd);
   AssertExitCode(Checked, true);
   AssertTrue(Std.Str.Contains(Checked.MessageText, 'Check exit code: 0'));
   AssertTrue(Std.Str.Contains(Checked.MessageText, 'stdout:' + NewLine));
+  AssertEquals(0, Checked.MessageOffset.Y);
   AssertFalse(IsIdeDocumentDirty(Checked.Document));
   var CompileErrorSource: string := (('program IdeProcessCompileError;' + NewLine) + 'begin') +
                                     (((NewLine + '  MissingIdentifier()') + NewLine) + 'end.');
@@ -57,6 +59,7 @@ begin
   Cmd.Reset();
   var SaveFailed: IdeModel := UpdateIde(DirtyUnsaved, TuiMsgAction(CheckControlId(), CheckAction()), Cmd);
   AssertTrue(Std.Str.Contains(SaveFailed.MessageText, 'Save failed: '));
+  AssertEquals(0, SaveFailed.MessageOffset.Y);
   AssertTrue(Std.Option.IsNone(SaveFailed.LastExitCode));
   AssertTrue(IsIdeDocumentDirty(SaveFailed.Document));
   var Untitled: IdeModel := InitialIdeModel(None);

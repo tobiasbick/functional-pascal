@@ -318,3 +318,15 @@ fn tui_rejects_negative_text_area_offset() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn tui_rejects_negative_fixed_layout_height() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui/fixed_height_negative_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "negative Tui fixed layout height must fail");
+    assert!(
+        stderr.contains("Tui fixed layout height must not be negative"),
+        "stderr: {stderr}"
+    );
+}

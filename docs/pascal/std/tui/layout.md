@@ -14,7 +14,8 @@ and painting have succeeded.
 child order toward preferred extents, then distribute remaining cells through
 `Stretch` or `Expanding`. A `TuiLayoutSettings` wrapper applies margins and
 aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
-`Fill`.
+`Fill`. `Settings.WithFixedHeight(Height)` returns a copy whose total vertical
+extent is fixed to the supplied non-negative cell count.
 
 `Window` and `Dialog` arrange their inset children as a vertical column without
 spacing. Expanding children therefore receive remaining content rows after

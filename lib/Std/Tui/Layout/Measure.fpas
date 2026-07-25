@@ -184,7 +184,9 @@ begin
     begin
       if Std.Array.Length(Children) = 1 then
       begin
-        return TuiMeasure(Children[0], TuiMeasureSpec.Unbounded())
+        var Child: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.Unbounded());
+        var Preferred: TuiSize := TuiSize.Create(TuiMeasureAxis.Max(1, Child.Preferred.Width), TuiMeasureAxis.Max(1, Child.Preferred.Height));
+        return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(1, 1), Preferred, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum)), TuiSizePolicy.Expanding(), Spec)
       end;
       return TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
     end;
@@ -269,13 +271,22 @@ begin
       begin
         Child := TuiMeasure(Children[0], Spec)
       end;
-      var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(Child.Minimum.Width +
-                                                                           Settings.Margins.Horizontal(), Child.Minimum.Height +
-                                                                                                          Settings.Margins.Vertical()), TuiSize.Create(Child.Preferred.Width +
-                                                                                                                                                       Settings.Margins.Horizontal(), Child.Preferred.Height +
-                                                                                                                                                                                      Settings.Margins.Vertical()), TuiSize.Create(Child.Maximum.Width +
-                                                                                                                                                                                                                                   Settings.Margins.Horizontal(), Child.Maximum.Height +
-                                                                                                                                                                                                                                                                  Settings.Margins.Vertical()));
+      mutable var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(Child.Minimum.Width +
+                                                                                   Settings.Margins.Horizontal(), Child.Minimum.Height +
+                                                                                                                  Settings.Margins.Vertical()), TuiSize.Create(Child.Preferred.Width +
+                                                                                                                                                               Settings.Margins.Horizontal(), Child.Preferred.Height +
+                                                                                                                                                                                              Settings.Margins.Vertical()), TuiSize.Create(Child.Maximum.Width +
+                                                                                                                                                                                                                                           Settings.Margins.Horizontal(), Child.Maximum.Height +
+                                                                                                                                                                                                                                                                          Settings.Margins.Vertical()));
+      case Settings.Height of
+        Some(Height):
+        begin
+          Hint := TuiMeasureResult.Create(TuiSize.Create(Hint.Minimum.Width, Height), TuiSize.Create(Hint.Preferred.Width, Height), TuiSize.Create(Hint.Maximum.Width, Height))
+        end;
+        None:
+        begin
+        end
+      end;
       return TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec)
     end;
     TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):

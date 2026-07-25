@@ -37,6 +37,11 @@ The editor supports character insertion, Enter, Backspace, Delete, arrows,
 Home, End, Page Up, Page Down, and two-space Tab insertion. Its status line
 shows dirty state and the one-based caret line and column.
 
+Click inside Messages to focus it and scroll captured output. When focus is
+already outside the editor, Tab can also reach it. Up, Down, Page Up, Page Down,
+Home, and End move its vertical viewport. New messages return the viewport to
+their first line.
+
 ## Files and processes
 
 Open uses a path-entry dialog. Save writes to the current path; saving an
@@ -49,9 +54,9 @@ message area shows the exit code followed by normalized stdout and stderr. A
 failed save prevents the process from starting. Child programs must be
 non-interactive because their output is captured and no stdin is connected.
 
-The message panel retains the latest result and clips output to its fixed
-one-line viewport. Resize the terminal when the terminal-too-small overlay is
-shown.
+The message panel retains the latest complete result and shows three lines
+inside its bounded scroll viewport. Resize the terminal when the
+terminal-too-small overlay is shown.
 
 ## Development checks
 

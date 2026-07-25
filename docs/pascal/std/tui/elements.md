@@ -27,6 +27,10 @@ TuiElement.Desktop(Focused, Children)
 child. `MenuBar` uses `TuiMenuItem`; `StatusLine` uses `TuiStatusItem`.
 Hint-only status lines are not focusable.
 
+`Scroll` has a one-cell minimum on each axis while retaining its child's
+preferred content size. A constrained parent can therefore create a viewport
+smaller than the complete content.
+
 Interactive variants require typed control and action identities.
 `TuiControlId.Create` and `TuiAction.Create` require positive values. Repeated
 action identities are valid, while every control identity must be unique in one

@@ -1,7 +1,7 @@
 # Future: IDE next steps
 
-> Status snapshot: 2026-07-25. The current single-document IDE is implemented
-> and supported. This document records only the work that should follow.
+> Status snapshot: 2026-07-25. Scrollable message output is implemented. The
+> next work is diagnostic parsing and source navigation.
 
 ## Purpose
 
@@ -30,6 +30,8 @@ The IDE is a fixed, single-document `Std.Tui` application:
 - Check and Run save first and invoke the current `fpas` executable
   synchronously;
 - captured stdout and stderr are normalized and stored in `MessageText`;
+- the complete message text is displayed through a bounded three-line scroll
+  viewport with model-owned offset;
 - dialogs, pointer activation, resize handling, and terminal restoration have
   headless or lifecycle coverage.
 
@@ -60,26 +62,9 @@ surface, document I/O, dirty-document decisions, dialogs, pointer interaction,
 shortcuts, process argument/format behavior, process integration, and the
 document lifecycle.
 
-The completed baseline was verified with:
-
-```text
-cargo fmt --all -- --check
-cargo build --workspace
-cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
-cargo test --workspace
-cargo run -q -p fpas-cli -- fmt --check apps/ide tests/ide
-cargo run -q -p fpas-cli -- check --std-lib lib apps/ide/ide.fpasworkspace
-cargo run -q -p fpas-cli -- test --std-lib lib tests/ide/ide-tests.fpasprj
-cargo run -q -p fpas-cli -- test --std-lib lib tests/
-```
-
 ## Known limits
 
-The first practical limitation is the Messages window. It has a fixed
-one-line viewport, so all later lines of compiler diagnostics and program
-output are clipped.
-
-Other deliberate limits are:
+Deliberate limits are:
 
 - no diagnostic parsing or jump-to-source action;
 - one open document only;
@@ -91,42 +76,60 @@ Other deliberate limits are:
 
 Do not address these other limits in the next slice.
 
-## Next slice: scrollable message output
+## Completed slice: scrollable message output
+
+> Completed 2026-07-25.
 
 ### Outcome
 
-Replace the one-line Messages window with a bounded multiline viewport. The
-latest complete Check/Run report remains in the model and can be scrolled
-vertically without changing the editor document.
+The Messages window is a bounded multiline viewport. The latest complete
+Check/Run report remains in the model and can be scrolled vertically without
+changing the editor document.
 
 ### Reuse boundary
 
-Use the existing controlled `TuiElement.Scroll` API:
+The implementation reuses the controlled `TuiElement.Scroll` API:
 
 ```text
 MakeScroll(Id, Offset, ChangeAction, Child)
 TuiMsg.ScrollChanged(Source, Action, Offset)
 ```
 
-`Std.Tui` already routes scroll keyboard input and pointer focus. Do not create
-an IDE-specific scrolling implementation. Change `Std.Tui` only if a focused
-test first demonstrates that its layout cannot express a bounded multiline
-viewport; keep any such correction generic and independently tested.
+`Std.Tui` already routes scroll keyboard input and pointer focus. A focused
+layout audit showed that the old API could not bound a scroll viewport:
+`Scroll` inherited its complete content minimum, and `TuiLayoutSettings` had no
+explicit fixed height. The generic correction added a one-cell `Scroll`
+minimum and `TuiLayoutSettings.WithFixedHeight`.
 
-### Intended file layout
+### Implemented file layout
 
 ```text
 apps/ide/src/app/
   ├── actions.fpas       — MODIFY: message-scroll control and action identities
   ├── model.fpas         — MODIFY: controlled message offset
+  ├── document_flow.fpas — MODIFY: preserve or reset message offset
   ├── update.fpas        — MODIFY: accept the matching ScrollChanged message
   └── view.fpas          — MODIFY: bounded Messages window containing Scroll
 
+lib/Std/Tui/Layout/
+  ├── LayoutSettings.fpas — MODIFY: WithFixedHeight
+  ├── Measure.fpas        — MODIFY: bounded layouts and shrinkable Scroll
+  └── Arrange.fpas        — MODIFY: fixed-height wrappers do not grow
+
 tests/ide/
-  ├── ide_model_test.fpas       — MODIFY: initial message offset
-  ├── ide_update_test.fpas      — MODIFY: valid and unrelated scroll messages
-  ├── ide_surface_test.fpas     — MODIFY: multiline viewport and clipping
-  └── ide_interaction_test.fpas — MODIFY: focus, keyboard scrolling, and resize
+  ├── ide_model_test.fpas               — MODIFY: initial message offset
+  ├── ide_update_test.fpas              — MODIFY: scroll routing and reset
+  ├── ide_surface_test.fpas             — MODIFY: multiline viewport and clipping
+  ├── ide_interaction_test.fpas         — MODIFY: focus, scrolling, and resize
+  └── ide_process_integration_test.fpas — MODIFY: process-result offset reset
+
+tests/stdlib/tui/
+  ├── layout_values_test.fpas                 — MODIFY: fixed-height settings
+  ├── scroll_layout_test.fpas                 — MODIFY: bounded Scroll measurement
+  └── fixed_height_negative_runtime_error.fpas— NEW: negative-height rejection
+
+crates/fpas-cli/src/main_tests/
+  └── standard_library.rs — MODIFY: negative-height runtime-error regression
 
 apps/ide/README.md        — MODIFY after implementation
 docs/pascal/apps/ide.md   — MODIFY after implementation
@@ -137,52 +140,58 @@ Do not add a new application module unless one of the listed files approaches
 
 ### Implementation sequence
 
-1. Add a `MessageOffset: TuiPoint` field to `IdeModel`, initialized to `(0, 0)`.
-2. Preserve the offset in every root-model reconstruction.
-3. Add stable, unique message-scroll control and change-action identities using
-   the next unused values.
-4. Render `MessageText` as multiline content inside one `MakeScroll` child.
-5. Give the Messages window a predictable bounded height while leaving the
-   editor as the expanding region.
-6. Accept `TuiMsg.ScrollChanged` only when both the message control and action
-   identities match; unrelated scroll messages must leave the model unchanged.
-7. Reset `MessageOffset` to `(0, 0)` whenever a new status or process report
-   replaces `MessageText`, so the beginning of new output is visible.
-8. Preserve the current modal boundary: active dialogs retain focus and block
-   application shortcuts and message scrolling.
-9. Update current documentation only after the behavior passes its tests.
+- [x] Add a `MessageOffset: TuiPoint` field initialized to `(0, 0)`.
+- [x] Preserve the offset in every root-model reconstruction.
+- [x] Add stable, unique message-scroll control and action identities.
+- [x] Render `MessageText` as multiline content inside one `MakeScroll` child.
+- [x] Give Messages a bounded height while leaving the editor expanding.
+- [x] Accept only the matching `TuiMsg.ScrollChanged`.
+- [x] Reset the offset whenever a new message replaces `MessageText`.
+- [x] Keep dialogs as the active modal routing boundary.
+- [x] Update current documentation after the focused tests pass.
 
 ### Required regression coverage
 
-- Initial state has a zero message offset.
-- A matching `ScrollChanged` updates only `MessageOffset`.
-- An unrelated source or action is ignored.
-- A new Check/Run result and an error message reset the offset.
-- Multiple diagnostic lines are visible within the viewport.
-- Output beyond the viewport is clipped rather than painted over the editor or
-  status line.
-- Pointer focus followed by Down/PageDown scrolls the message viewport.
-- Home returns to the first output line.
-- Resize keeps the surface valid and clamps effective scrolling through the TUI
-  routing behavior.
-- Existing editor, dialog, dirty-document, shortcut, and process tests remain
-  green.
+- [x] Initial state has a zero message offset.
+- [x] Matching and unrelated `ScrollChanged` messages are distinguished.
+- [x] New process results and status/error messages reset the offset.
+- [x] Three diagnostic lines are visible and later lines remain clipped.
+- [x] Pointer focus, Down, PageDown, and Home scroll the viewport.
+- [x] Resize retains a valid surface.
+- [x] Existing IDE and TUI regressions remain green.
 
 ### Acceptance criteria
 
-- At least several lines of output are visible on a normal terminal.
-- Long output is vertically scrollable through existing TUI controls.
-- The complete report remains stored in `MessageText`.
-- New output starts at its first line.
-- Editor text, caret, viewport, dirty state, and document path are unaffected by
-  message scrolling.
-- No new compiler, VM, or `Std.Tui` behavior is introduced unless required by a
-  separately demonstrated TUI defect.
-- All verification commands from the baseline pass.
+- [x] Three output lines are visible on a normal terminal.
+- [x] Long output scrolls through existing TUI controls.
+- [x] The complete report remains stored in `MessageText`.
+- [x] New output starts at its first line.
+- [x] Message scrolling leaves the document unchanged.
+- [x] The required TUI correction is generic and independently tested.
 
-## Work after the next slice
+### Verification
 
-After the scrollable Messages window is complete, continue in this order:
+Verified on 2026-07-25:
+
+```text
+cargo fmt --all -- --check
+cargo build --workspace
+cargo test --workspace
+cargo run -q -p fpas-cli -- fmt --check <modified FPAS paths>
+cargo run -q -p fpas-cli -- check --std-lib lib apps/ide/ide.fpasworkspace
+cargo run -q -p fpas-cli -- test --std-lib lib tests/ide/ide-tests.fpasprj
+cargo run -q -p fpas-cli -- test --std-lib lib tests/stdlib/tui
+cargo run -q -p fpas-cli -- test --std-lib lib tests/
+```
+
+The workspace Clippy command is currently blocked by the unrelated existing
+`clippy::derived_hash_with_manual_eq` finding for `SharedStr` in
+`crates/fpas-bytecode/src/value/mod.rs`. This IDE slice does not change that
+file.
+
+## Next work
+
+Continue in this order:
 
 1. Parse compiler diagnostic locations from Check output and maintain a
    selected diagnostic.
@@ -192,8 +201,9 @@ After the scrollable Messages window is complete, continue in this order:
    documents.
 4. Add multi-document state only when a concrete workflow requires it.
 
-Each item should receive its own focused plan or extension of this file before
-implementation. Do not combine these items with the scrollable-output slice.
+Before implementing diagnostic parsing, extend this plan with the accepted
+diagnostic model, parsing boundary, file-matching rules, and regression cases.
+Do not start project or multi-document work in that slice.
 
 ## Maintenance rule
 

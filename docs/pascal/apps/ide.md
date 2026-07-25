@@ -37,6 +37,11 @@ The editor handles character insertion, Enter, Backspace, Delete, arrows, Home,
 End, Page Up, Page Down, and two-space Tab insertion. Caret movement updates the
 viewport to keep the caret visible.
 
+The Messages window is also focusable. Click inside it, or reach it with Tab
+when focus is already outside the editor. Then use Up, Down, Page Up, Page Down,
+Home, or End to scroll its captured output. A new status or process report
+resets the message viewport to its first line.
+
 ## Document lifecycle
 
 Open accepts a path in a modal dialog. Save writes the current UTF-8 text to its
@@ -57,8 +62,8 @@ the command without starting a process.
 
 The IDE is blocked while Check or Run executes. Run is intended for
 non-interactive programs because child output is captured and child stdin is
-not connected. The message panel retains the latest result and clips long
-output to its fixed one-line viewport.
+not connected. The message panel retains the latest complete result and shows
+three lines inside its bounded scroll viewport.
 
 When the terminal is too small for the fixed screen, the application displays
 the terminal-too-small overlay until it is resized.

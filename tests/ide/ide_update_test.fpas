@@ -26,15 +26,29 @@ begin
   var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
   var Edited: IdeModel := UpdateIde(Initial, TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'new', 3, TuiPoint.Create(0, 0)), Cmd);
   AssertTrue(IsIdeDocumentDirty(Edited.Document));
+  var Scrolled: IdeModel := UpdateIde(Edited, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 4)), Cmd);
+  AssertEquals(4, Scrolled.MessageOffset.Y);
+  AssertEquals(Edited.Document.Text, Scrolled.Document.Text);
   Cmd.Reset();
-  var Saved: IdeModel := UpdateIde(Edited, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
+  var Saved: IdeModel := UpdateIde(Scrolled, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
   AssertEquals('new', ReadIdeTestFile(SavePath));
   AssertEquals('new', Saved.Document.SavedText);
   AssertFalse(IsIdeDocumentDirty(Saved.Document));
   AssertTrue(Std.Str.Contains(Saved.MessageText, 'Saved '));
+  AssertEquals(0, Saved.MessageOffset.X);
+  AssertEquals(0, Saved.MessageOffset.Y);
   AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
   Cmd.Reset();
   var Ignored: IdeModel := UpdateIde(Saved, TuiMsgAction(OpenControlId(), SaveAction()), Cmd);
   AssertEquals(Saved.MessageText, Ignored.MessageText);
-  AssertEquals(Saved.Document.Text, Ignored.Document.Text)
+  AssertEquals(Saved.Document.Text, Ignored.Document.Text);
+  var WrongSource: IdeModel := UpdateIde(Saved, TuiMsgScrollChanged(OpenControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 2)), Cmd);
+  AssertEquals(0, WrongSource.MessageOffset.Y);
+  var WrongAction: IdeModel := UpdateIde(Saved, TuiMsgScrollChanged(MessageScrollControlId(), SaveAction(), TuiPoint.Create(0, 2)), Cmd);
+  AssertEquals(0, WrongAction.MessageOffset.Y);
+  var MessageScrolled: IdeModel := UpdateIde(Saved, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 2)), Cmd);
+  var Opening: IdeModel := UpdateIde(MessageScrolled, TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
+  AssertEquals(2, Opening.MessageOffset.Y);
+  var DialogScrollIgnored: IdeModel := UpdateIde(Opening, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 6)), Cmd);
+  AssertEquals(2, DialogScrollIgnored.MessageOffset.Y)
 end.

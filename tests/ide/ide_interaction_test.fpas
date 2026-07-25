@@ -1,6 +1,6 @@
 program IdeInteractionTest;
 
-uses Ide.App.Model, Ide.App.Update, Ide.App.View, Std.Str, Std.Test, Std.Tui;
+uses Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.App.View, Std.Str, Std.Test, Std.Tui;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
 begin
@@ -19,6 +19,18 @@ function EscapeKey(): TuiKeyEvent;
 begin
   return record
     kind := TuiKeyKind.Escape;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+function NavigationKey(Kind: TuiKeyKind): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
     ch := '';
     shift := false;
     ctrl := false;
@@ -71,7 +83,52 @@ begin
   AssertEquals(40, Resized.Width);
   AssertEquals(12, Resized.Height);
   AssertTrue(Std.Str.Contains(Resized.LineAt(0), 'Open'));
-  AssertTrue(Std.Str.Contains(Resized.LineAt(8), 'Messages'));
+  AssertTrue(Std.Str.Contains(Resized.LineAt(6), 'Messages'));
   AssertTrue(Std.Str.Contains(Resized.LineAt(11), 'clean | Ln 1, Col 1'));
+  App.Close();
+  var Initial: IdeModel := InitialIdeModel(None);
+  var NewLine: string := Std.Str.Chr(10);
+  var MessageText: string := ((((((('line one' + NewLine) + 'line two') + NewLine) + 'line three') + NewLine) + 'line four') + NewLine) +
+                             'line five';
+  Model := record
+    Document := Initial.Document;
+    Dialog := IdeDialog.NoDialog;
+    MessageText := MessageText;
+    MessageOffset := TuiPoint.Create(0, 0);
+    LastExitCode := Some(0);
+    Focused := None;
+  end;
+  App := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 0, 0);
+  var MessageAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'line one');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, MessageAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  case Model.Focused of
+    Some(Id):
+    begin
+      AssertEquals(MessageScrollControlId().Value, Id.Value)
+    end;
+    None:
+    begin
+      Fail('Pointer did not focus the message viewport.')
+    end
+  end;
+  App.InjectKeyForTest(NavigationKey(TuiKeyKind.Down));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertEquals(1, Model.MessageOffset.Y);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(7), 'line two'));
+  App.InjectKeyForTest(NavigationKey(TuiKeyKind.PageDown));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertEquals(2, Model.MessageOffset.Y);
+  App.InjectKeyForTest(NavigationKey(TuiKeyKind.Home));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  AssertEquals(0, Model.MessageOffset.Y);
+  App.InjectResizeForTest(TuiSize.Create(30, 11));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
+  var MessageResized: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals(30, MessageResized.Width);
+  AssertEquals(11, MessageResized.Height);
+  AssertTrue(Std.Str.Contains(MessageResized.LineAt(5), 'Messages'));
+  AssertTrue(Std.Str.Contains(MessageResized.LineAt(10), 'clean | Ln 1, Col 1'));
   App.Close()
 end.

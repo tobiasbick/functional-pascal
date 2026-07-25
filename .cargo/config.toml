@@ -1,4 +1,4 @@
 [alias]
 # Curated FPAS end-to-end benchmarks (see docs/bench/README.md).
-# Usage: cargo bench-fpas run | save <label> | compare <label>
+# Usage: cargo bench-fpas run | save <label> | compare <label> | record <title…>
 bench-fpas = "run -p fpas-bench --release --"

@@ -40,6 +40,7 @@ When asked to implement or modify behavior:
 | [`fpas-authoring`](.agents/skills/fpas-authoring/SKILL.md) | Writing or editing `.fpas` sources, formatting, file placement |
 | [`fpas-projects`](.agents/skills/fpas-projects/SKILL.md) | `.fpasprj`, `.fpasworkspace`, CLI, test bundles |
 | [`fpas-change-checklist`](.agents/skills/fpas-change-checklist/SKILL.md) | Docs, tests, verify before finishing a behavior change |
+| [`fpas-bench`](.agents/skills/fpas-bench/SKILL.md) | Perf benches: save/compare/record, `docs/bench/history.md` |
 
 ## Definition of done
 

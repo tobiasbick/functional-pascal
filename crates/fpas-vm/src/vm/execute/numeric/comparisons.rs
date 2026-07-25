@@ -1,6 +1,6 @@
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, runtime_error};
-use fpas_bytecode::{Op, SourceLocation, Value};
+use fpas_bytecode::{Op, SharedStr, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
 impl Worker {
@@ -35,10 +35,7 @@ impl Worker {
                         ));
                     }
                 };
-                let mut result = String::with_capacity(sa.len() + sb.len());
-                result.push_str(&sa);
-                result.push_str(&sb);
-                self.push(Value::Str(result.into()))?;
+                self.push(Value::Str(SharedStr::concat(&sa, &sb)))?;
                 Ok(true)
             }
             Op::EqInt => {

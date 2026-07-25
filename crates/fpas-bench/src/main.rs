@@ -5,7 +5,9 @@
 mod results;
 mod suite;
 
-use results::{CompareRow, compare_runs, has_regression, load_snapshot, save_snapshot};
+use results::{
+    CompareRow, compare_runs, has_regression, load_snapshot, record_history, save_snapshot,
+};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -58,6 +60,13 @@ fn run() -> Result<ExitCode, String> {
             }
             Ok(ExitCode::SUCCESS)
         }
+        Command::Record { title } => {
+            let runs = run_suite(&repo_root, &fpas, &specs)?;
+            print_run_table(&runs);
+            let path = record_history(&repo_root, &title, options.group.as_deref(), &runs)?;
+            println!("recorded {}", path.display());
+            Ok(ExitCode::SUCCESS)
+        }
     }
 }
 
@@ -66,6 +75,7 @@ enum Command {
     Run,
     Save { label: String },
     Compare { label: String },
+    Record { title: String },
 }
 
 #[derive(Debug)]
@@ -127,6 +137,9 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
         Some("compare") if positional.len() == 2 => Command::Compare {
             label: positional[1].clone(),
         },
+        Some("record") if positional.len() >= 2 => Command::Record {
+            title: positional[1..].join(" "),
+        },
         _ => return Err(usage()),
     };
 
@@ -139,7 +152,7 @@ fn parse_args(args: &[String]) -> Result<Options, String> {
 }
 
 fn usage() -> String {
-    "usage:\n  fpas-bench run [--group vm|tui]\n  fpas-bench save <label> [--group vm|tui]\n  fpas-bench compare <label> [--group vm|tui] [--fail-on-regression] [--threshold-pct N]\n\nSee docs/bench/README.md.".to_owned()
+    "usage:\n  fpas-bench run [--group vm|tui]\n  fpas-bench save <label> [--group vm|tui]\n  fpas-bench compare <label> [--group vm|tui] [--fail-on-regression] [--threshold-pct N]\n  fpas-bench record <title…> [--group vm|tui]\n\nSee docs/bench/README.md.".to_owned()
 }
 
 fn find_repo_root() -> Result<PathBuf, String> {

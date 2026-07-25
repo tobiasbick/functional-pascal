@@ -28,13 +28,8 @@ pub(crate) fn run(
     match intrinsic {
         Intrinsic::Str(StrIntrinsic::Length) => {
             let s = expect_str(pop_value(stack, location)?, location)?;
-            // ASCII scalars are one byte each, so byte length equals character count.
-            let len = if s.is_ascii() {
-                s.len()
-            } else {
-                s.chars().count()
-            };
-            stack.push(Value::Integer(len as i64));
+            // Character count is cached on SharedStr (set at construction / ConcatStr).
+            stack.push(Value::Integer(s.char_len() as i64));
         }
         Intrinsic::Str(StrIntrinsic::ToUpper) => {
             let s = pop_string(pop_value(stack, location)?, location)?;

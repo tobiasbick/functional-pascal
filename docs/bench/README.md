@@ -4,6 +4,8 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`).
 
+Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
+
 ## Prerequisites
 
 - Quiet machine (avoid heavy background load).
@@ -12,7 +14,26 @@ The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-ben
 
 Do not treat absolute times as portable across machines. Compare before/after on one machine.
 
-## Before / after workflow
+## Track progress (committed history)
+
+After a meaningful performance change, rebuild release `fpas-cli`, then **record** a snapshot into [`history.md`](history.md) (this file is meant to be committed):
+
+```sh
+cargo build --release -p fpas-cli
+cargo bench-fpas record "after SharedStr char_len cache"
+```
+
+VM-only:
+
+```sh
+cargo bench-fpas record "after array Length COW" --group vm
+```
+
+Newest entries are prepended. Include a short note naming the change so later diffs show what moved which bench.
+
+## Before / after workflow (local, gitignored)
+
+Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** committed.
 
 1. On a known-good checkout (before your change):
 
@@ -39,7 +60,7 @@ Do not treat absolute times as portable across machines. Compare before/after on
    # or: cargo bench-fpas compare before --group vm
    ```
 
-Results are written under `.temp-data/bench/<label>.json` (gitignored). Do not commit numeric baselines.
+4. When the win is real, record it into history (see above) and commit `docs/bench/history.md` with the change.
 
 ## Commands
 
@@ -50,6 +71,7 @@ Results are written under `.temp-data/bench/<label>.json` (gitignored). Do not c
 | `cargo bench-fpas run --group tui` | Headless TUI bench only |
 | `cargo bench-fpas save <label>` | Run and save JSON under `.temp-data/bench/` |
 | `cargo bench-fpas compare <label>` | Re-run and print Δ vs a saved label |
+| `cargo bench-fpas record <title…>` | Run and prepend a dated entry to [`history.md`](history.md) |
 
 Compare is **advisory** by default (exit 0 when all benches complete). To fail the process when any bench is slower by more than a percent threshold:
 
@@ -81,4 +103,5 @@ On Windows use `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` 
 
 ## See also
 
+- [Benchmark history](history.md)
 - [Examples README — Performance](../../examples/README.md#performance-benchmarks)

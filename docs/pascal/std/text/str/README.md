@@ -71,6 +71,8 @@ Requires `uses Std.Str;`.
 | Concern | Location |
 |---------|-----------|
 | Algorithms | [`str.rs`](../../../../../crates/fpas-std/src/str.rs) |
+| Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
+| `ConcatStr` (sums cached lengths) | [`comparisons.rs`](../../../../../crates/fpas-vm/src/vm/execute/numeric/comparisons.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

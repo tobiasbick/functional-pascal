@@ -70,18 +70,26 @@ fpas run examples/pascal/std/task_basics.fpas
 
 ### Performance benchmarks
 
-Build the release CLI before measuring so compiler debug checks do not dominate the result:
+Prefer the curated harness (before/after save/compare). Full steps: [`docs/bench/README.md`](../docs/bench/README.md).
+
+```sh
+cargo bench-fpas save before          # known-good checkout
+# … change code …
+cargo build --release -p fpas-cli
+cargo bench-fpas compare before
+```
+
+VM-only (faster):
+
+```sh
+cargo bench-fpas run --group vm
+```
+
+Manual single-file runs still work. Build the release CLI first so compiler debug checks do not dominate:
 
 ```sh
 cargo build --release -p fpas-cli
 target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500
-```
-
-On Windows, invoke `target/release/fpas.exe`. The TUI benchmark warms up 100 frames, then measures the headless `Std.Tui` update, view, layout, and render loop. Compilation and console output are outside the measured interval.
-
-For Rust VM / runtime hot paths (integer ops, `Array.Push`, string concat), use the VM microbenchmarks instead — they spend most of their time in the interpreter rather than in FPAS stdlib logic:
-
-```sh
 target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000
 target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
 target/release/fpas run examples/pascal/vm/array_length_benchmark.fpas -- 500000
@@ -89,14 +97,7 @@ target/release/fpas run examples/pascal/vm/string_concat_benchmark.fpas -- 50000
 target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 500000
 ```
 
-Record the elapsed time from a known-good checkout, then pass a locally chosen upper limit to turn a slowdown into a failing run:
-
-```sh
-target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500 16000
-target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000 MAX_MILLIS
-```
-
-Replace illustrated `MAX_MILLIS` values with limits derived from your own baseline. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
+On Windows, invoke `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` turns a slowdown into a panic. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
 
 ### Projects (`.fpasprj`)
 

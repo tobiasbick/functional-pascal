@@ -1,0 +1,39 @@
+# Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
+# Paths are relative to the repository root.
+# Groups: `vm` (interpreter hot paths), `tui` (headless Std.Tui).
+
+[[bench]]
+id = "integer_loop"
+group = "vm"
+path = "examples/pascal/vm/integer_loop_benchmark.fpas"
+args = ["50000000"]
+
+[[bench]]
+id = "array_push"
+group = "vm"
+path = "examples/pascal/vm/array_push_benchmark.fpas"
+args = ["2000000"]
+
+[[bench]]
+id = "array_length"
+group = "vm"
+path = "examples/pascal/vm/array_length_benchmark.fpas"
+args = ["500000"]
+
+[[bench]]
+id = "string_concat"
+group = "vm"
+path = "examples/pascal/vm/string_concat_benchmark.fpas"
+args = ["5000000"]
+
+[[bench]]
+id = "string_length"
+group = "vm"
+path = "examples/pascal/vm/string_length_benchmark.fpas"
+args = ["500000"]
+
+[[bench]]
+id = "tui_headless"
+group = "tui"
+path = "examples/pascal/tui/headless_render_benchmark.fpas"
+args = ["500"]

@@ -8,15 +8,14 @@ impl crate::vm::Worker {
         location: SourceLocation,
         f: impl FnOnce(i64, i64) -> Result<Value, VmError>,
     ) -> Result<(), VmError> {
-        let right = self.pop(location)?;
-        let left = self.pop(location)?;
+        let stack_len = self.stack.len();
+        if stack_len < 2 {
+            self.pop(location)?;
+            return self.pop(location).map(drop);
+        }
+        let left_index = stack_len - 2;
 
         // Hot path: typed integer ops almost always see Integer×Integer.
-        if let (Value::Integer(left), Value::Integer(right)) = (&left, &right) {
-            let result = f(*left, *right)?;
-            return self.push(result);
-        }
-
         let to_i64 = |value: &Value| -> Option<i64> {
             match value {
                 Value::Integer(number) => Some(*number),
@@ -25,17 +24,29 @@ impl crate::vm::Worker {
             }
         };
 
-        match (to_i64(&left), to_i64(&right)) {
-            (Some(left), Some(right)) => {
-                let result = f(left, right)?;
-                self.push(result)
+        let result = match (&self.stack[left_index], &self.stack[left_index + 1]) {
+            (Value::Integer(left), Value::Integer(right)) => f(*left, *right),
+            (left, right) => match (to_i64(left), to_i64(right)) {
+                (Some(left), Some(right)) => f(left, right),
+                _ => Err(runtime_error(
+                    TYPE_MISMATCH_CODE,
+                    "Integer operation requires integer operands",
+                    "Use integer-compatible operands (integer, boolean) for this operation.",
+                    location,
+                )),
+            },
+        };
+
+        match result {
+            Ok(result) => {
+                self.stack[left_index] = result;
+                self.stack.pop();
+                Ok(())
             }
-            _ => Err(runtime_error(
-                TYPE_MISMATCH_CODE,
-                "Integer operation requires integer operands",
-                "Use integer-compatible operands (integer, boolean) for this operation.",
-                location,
-            )),
+            Err(error) => {
+                self.stack.truncate(left_index);
+                Err(error)
+            }
         }
     }
 

@@ -78,3 +78,14 @@ fn jump_past_end_reports_internal_vm_error() {
     let err = run_err(chunk);
     assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
 }
+
+#[test]
+fn malformed_add_int_reports_internal_vm_error() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Integer(1));
+    chunk.emit(Op::AddInt, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+}

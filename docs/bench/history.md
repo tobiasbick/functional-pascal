@@ -14,6 +14,25 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-07-26 — after in-place binary integer stack reduction
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 4257 | throughput: 11745360 iters/s |
+| array_push | 126 | throughput: 15873015 pushes/s |
+| array_length | 54 | throughput: 9259259 lengths/s |
+| string_concat | 2093 | throughput: 2388915 concats/s |
+| string_length | 47 | throughput: 10638297 lengths/s |
+| function_call | 733 | throughput: 8185538 calls/s |
+| array_callbacks | 683 | throughput: 14055636 callbacks/s |
+| record_update | 493 | throughput: 2028397 updates/s |
+| unicode_char_at | 934 | throughput: 3211991 chars/s |
+| task_spawn_wait | 582 | throughput: 171821 tasks/s |
+| tui_headless | 3371 | throughput: 148 frames/s |
+
 ## 2026-07-25 — after compact shared Value storage
 
 - Group: `all`

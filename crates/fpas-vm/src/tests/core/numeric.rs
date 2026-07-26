@@ -1,5 +1,7 @@
 use fpas_bytecode::{Chunk, Op, Value};
-use fpas_diagnostics::codes::{RUNTIME_DIVISION_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR};
+use fpas_diagnostics::codes::{
+    RUNTIME_DIVISION_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+};
 
 use crate::tests::helpers::{emit_constant, loc, run_err};
 
@@ -114,4 +116,28 @@ fn mul_int_wraps_on_overflow() {
     chunk.emit(Op::Halt, loc());
 
     assert_eq!(crate::tests::helpers::run_ok_output(chunk), vec!["-2"]);
+}
+
+#[test]
+fn add_int_coerces_boolean_operands() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Boolean(true));
+    emit_constant(&mut chunk, Value::Integer(2));
+    chunk.emit(Op::AddInt, loc());
+    chunk.emit(Op::PrintLn, loc());
+    chunk.emit(Op::Halt, loc());
+
+    assert_eq!(crate::tests::helpers::run_ok_output(chunk), vec!["3"]);
+}
+
+#[test]
+fn add_int_rejects_incompatible_operands() {
+    let mut chunk = Chunk::new();
+    emit_constant(&mut chunk, Value::Str("not an integer".into()));
+    emit_constant(&mut chunk, Value::Integer(2));
+    chunk.emit(Op::AddInt, loc());
+    chunk.emit(Op::Halt, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
 }

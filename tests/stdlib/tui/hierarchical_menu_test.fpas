@@ -124,6 +124,10 @@ begin
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertTrue(Model.Menu.Open);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), 'Open'));
+  AssertEquals('░', App.SurfaceSnapshot().CellAt(16, 2).Glyph);
+  AssertTrue(App.SurfaceSnapshot().CellAt(16, 2).Role = TuiStyleRole.MenuShadow);
+  AssertEquals('░', App.SurfaceSnapshot().CellAt(2, 5).Glyph);
+  AssertTrue(App.SurfaceSnapshot().CellAt(2, 5).Role = TuiStyleRole.MenuShadow);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false, false));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false, false));
@@ -161,6 +165,8 @@ begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, DarkAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);
   AssertActive(Model.Menu, 6);
+  AssertTrue(App.SurfaceSnapshot().CellAt(DarkAt.X + 6, DarkAt.Y).Role = TuiStyleRole.MenuShadow);
+  AssertTrue(App.SurfaceSnapshot().CellAt(DarkAt.X, DarkAt.Y + 2).Role = TuiStyleRole.MenuShadow);
   AssertEquals(3, Std.Array.Length(Model.Actions));
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(39, 9)));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);

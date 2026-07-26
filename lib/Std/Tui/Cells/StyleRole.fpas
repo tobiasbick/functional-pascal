@@ -15,6 +15,7 @@ type
     MenuShortcut;
     MenuSelected;
     MenuSelectedShortcut;
+    MenuShadow;
     StatusNormal;
     StatusDisabled;
     StatusShortcut;

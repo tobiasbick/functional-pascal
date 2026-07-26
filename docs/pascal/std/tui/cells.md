@@ -27,10 +27,10 @@ original palette unchanged.
 
 The general roles (`Normal`, `Focused`, `Frame`, and `Title`) style the desktop
 and ordinary windows. Menus use `MenuNormal`, `MenuDisabled`, `MenuShortcut`,
-`MenuSelected`, and `MenuSelectedShortcut`; status lines use `StatusNormal`,
-`StatusDisabled`, `StatusShortcut`, and `StatusSelected`. The menu bar and
-status line paint their complete row with their normal role, so their chrome
-remains distinct from the desktop.
+`MenuSelected`, `MenuSelectedShortcut`, and `MenuShadow`; status lines use
+`StatusNormal`, `StatusDisabled`, `StatusShortcut`, and `StatusSelected`. The
+menu bar and status line paint their complete row with their normal role, so
+their chrome remains distinct from the desktop.
 
 Dialog painting uses separate `DialogNormal`,
 `DialogFrame`, `DialogTitle`, `DialogInput`, `DialogInputFocused`,

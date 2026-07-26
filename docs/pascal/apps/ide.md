@@ -45,8 +45,9 @@ and Monochrome palettes. The selected theme is retained for the current run
 but is not persisted. Light follows the Turbo Pascal 6-era Turbo Vision color
 hierarchy: a blue IDE surface with cyan frames and yellow accents, light-gray
 menu bars, popups, and status lines, red shortcut letters, green active menu
-items, and gray dialogs. Dark translates the same semantic roles to black and
-dark-gray surfaces. Monochrome uses only black, white, and gray. Open menus
+items, shadowed popups, and gray dialogs. Dark translates the same semantic
+roles to black and dark-gray surfaces. Monochrome uses only black, white, and
+gray. Open menus
 support arrows, Enter, Space, Escape,
 mnemonics, and pointer activation. Pointer movement over an open menu switches
 root popups, selects commands, and opens nested submenus without activating

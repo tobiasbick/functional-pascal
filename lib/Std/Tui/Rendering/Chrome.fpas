@@ -41,17 +41,24 @@ begin
   end
 end;
 
-/// Paints the right and bottom dialog shadow.
+/// Paints a two-column right and one-row bottom shadow with the supplied role.
 
-procedure TuiPaintDialogShadow(Canvas: TuiCanvas; Bounds: TuiRect);
+procedure TuiPaintShadow(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
 begin
   if Bounds.IsEmpty() then
   begin
     return
   end;
-  var Shadow: TuiCell := TuiCell.Create('░', TuiStyleRole.DialogShadow);
+  var Shadow: TuiCell := TuiCell.Create('░', Role);
   Canvas.FillRect(TuiRect.Create(Bounds.Right(), Bounds.Y + 1, 2, Bounds.Height), Shadow);
   Canvas.FillRect(TuiRect.Create(Bounds.X + 2, Bounds.Bottom(), Bounds.Width, 1), Shadow)
+end;
+
+/// Paints the right and bottom dialog shadow.
+
+procedure TuiPaintDialogShadow(Canvas: TuiCanvas; Bounds: TuiRect);
+begin
+  TuiPaintShadow(Canvas, Bounds, TuiStyleRole.DialogShadow)
 end;
 
 /// Paints the opaque dialog surface.

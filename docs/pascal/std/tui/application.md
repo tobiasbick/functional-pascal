@@ -93,7 +93,8 @@ and a one-row bottom shadow with `DialogShadow`. Their frame, title, input, and
 button cells use the matching dialog-specific palette roles.
 Menu bars, menu popups, and status lines likewise paint their complete chrome
 with dedicated menu or status roles. Mnemonics and status key hints retain
-their shortcut role inside normal or selected chrome.
+their shortcut role inside normal or selected chrome. Every menu popup paints
+a two-column right and one-row bottom `MenuShadow`.
 An open hierarchical menu handles Escape before the application-level quit
 request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
 described in [Menus](menus.md).

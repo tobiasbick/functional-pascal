@@ -23,6 +23,7 @@ begin
   AssertStyle(Palette.MenuShortcut, 12, 8);
   AssertStyle(Palette.MenuSelected, 15, 3);
   AssertStyle(Palette.MenuSelectedShortcut, 14, 3);
+  AssertStyle(Palette.MenuShadow, 0, 0);
   AssertStyle(Palette.StatusNormal, 15, 8);
   AssertStyle(Palette.StatusDisabled, 7, 8);
   AssertStyle(Palette.StatusShortcut, 12, 8);
@@ -54,6 +55,7 @@ begin
   AssertStyle(Palette.MenuShortcut, 0, 7);
   AssertStyle(Palette.MenuSelected, 15, 0);
   AssertStyle(Palette.MenuSelectedShortcut, 15, 0);
+  AssertStyle(Palette.MenuShadow, 8, 0);
   AssertStyle(Palette.StatusNormal, 0, 7);
   AssertStyle(Palette.StatusDisabled, 8, 7);
   AssertStyle(Palette.StatusShortcut, 0, 7);
@@ -85,6 +87,7 @@ begin
   AssertStyle(Palette.MenuShortcut, 4, 7);
   AssertStyle(Palette.MenuSelected, 0, 2);
   AssertStyle(Palette.MenuSelectedShortcut, 4, 2);
+  AssertStyle(Palette.MenuShadow, 8, 0);
   AssertStyle(Palette.StatusNormal, 0, 7);
   AssertStyle(Palette.StatusDisabled, 8, 7);
   AssertStyle(Palette.StatusShortcut, 4, 7);

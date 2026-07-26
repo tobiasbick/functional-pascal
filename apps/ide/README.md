@@ -10,9 +10,9 @@ immediately between Light, Dark, and Monochrome. The selected theme is
 kept in the application model for the current run; it is not persisted.
 Light follows the Turbo Pascal 6-era Turbo Vision color hierarchy: a blue IDE
 surface with cyan frames and yellow accents, light-gray menu bars, popups, and
-status lines, red shortcut letters, green active menu items, and gray dialogs.
-Dark translates the same semantic roles to black and dark-gray surfaces.
-Monochrome remains black, white, and gray.
+status lines, red shortcut letters, green active menu items, shadowed popups,
+and gray dialogs. Dark translates the same semantic roles to black and
+dark-gray surfaces. Monochrome remains black, white, and gray.
 
 ## Run
 

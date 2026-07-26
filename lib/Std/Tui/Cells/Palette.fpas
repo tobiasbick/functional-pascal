@@ -17,6 +17,7 @@ type
     MenuShortcut: TuiStyle;
     MenuSelected: TuiStyle;
     MenuSelectedShortcut: TuiStyle;
+    MenuShadow: TuiStyle;
     StatusNormal: TuiStyle;
     StatusDisabled: TuiStyle;
     StatusShortcut: TuiStyle;
@@ -48,6 +49,7 @@ type
   MenuShortcut: TuiStyle;
   MenuSelected: TuiStyle;
   MenuSelectedShortcut: TuiStyle;
+  MenuShadow: TuiStyle;
   StatusNormal: TuiStyle;
   StatusDisabled: TuiStyle;
   StatusShortcut: TuiStyle;
@@ -78,6 +80,7 @@ type
         MenuShortcut := MenuShortcut;
         MenuSelected := MenuSelected;
         MenuSelectedShortcut := MenuSelectedShortcut;
+        MenuShadow := MenuShadow;
         StatusNormal := StatusNormal;
         StatusDisabled := StatusDisabled;
         StatusShortcut := StatusShortcut;
@@ -116,7 +119,7 @@ type
       var ChromeShortcut: TuiStyle := TuiStyle.FromColors(Red, LightGray);
       var ChromeSelected: TuiStyle := TuiStyle.FromColors(Black, Green);
       var ChromeSelectedShortcut: TuiStyle := TuiStyle.FromColors(Red, Green);
-      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(Black, Green), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
+      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, TuiStyle.FromColors(DarkGray, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(Black, Green), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
     end;
 
     /// Resolves the concrete style for one semantic role.
@@ -171,6 +174,10 @@ type
         TuiStyleRole.MenuSelectedShortcut:
         begin
           return Self.MenuSelectedShortcut
+        end;
+        TuiStyleRole.MenuShadow:
+        begin
+          return Self.MenuShadow
         end;
         TuiStyleRole.StatusNormal:
         begin
@@ -288,6 +295,10 @@ type
         TuiStyleRole.MenuSelectedShortcut:
         begin
           Updated.MenuSelectedShortcut := Style
+        end;
+        TuiStyleRole.MenuShadow:
+        begin
+          Updated.MenuShadow := Style
         end;
         TuiStyleRole.StatusNormal:
         begin

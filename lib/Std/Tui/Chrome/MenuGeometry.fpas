@@ -137,7 +137,7 @@ begin
   return Opened
 end;
 
-/// Computes all visible popup rectangles, clamped to the terminal bounds.
+/// Computes popup rectangles while reserving their right and bottom terminal shadow.
 
 function TuiMenuPopupGeometry(
   Nodes: array of TuiMenuNode;
@@ -146,6 +146,15 @@ function TuiMenuPopupGeometry(
   TerminalBounds: TuiRect
 ): array of TuiMenuPopup;
 begin
+  mutable var PopupBounds: TuiRect := TerminalBounds;
+  if PopupBounds.Width > 2 then
+  begin
+    PopupBounds.Width := PopupBounds.Width - 2
+  end;
+  if PopupBounds.Height > 1 then
+  begin
+    PopupBounds.Height := PopupBounds.Height - 1
+  end;
   var Parents: array of TuiMenuNodeId := TuiMenuOpenParents(Nodes, State);
   mutable var Popups: array of TuiMenuPopup := [];
   for Index: integer := 0 to Std.Array.Length(Parents) - 1 do
@@ -159,7 +168,7 @@ begin
       X := Previous.Bounds.X + Previous.Bounds.Width;
       Y := (Previous.Bounds.Y + 1) + TuiMenuChildRow(Nodes, Previous.Parent, Parents[Index])
     end;
-    if X + Size.Width > TerminalBounds.X + TerminalBounds.Width then
+    if X + Size.Width > PopupBounds.X + PopupBounds.Width then
     begin
       if Index > 0 then
       begin
@@ -167,20 +176,20 @@ begin
       end
       else
       begin
-        X := (TerminalBounds.X + TerminalBounds.Width) - Size.Width
+        X := (PopupBounds.X + PopupBounds.Width) - Size.Width
       end
     end;
-    if X < TerminalBounds.X then
+    if X < PopupBounds.X then
     begin
-      X := TerminalBounds.X
+      X := PopupBounds.X
     end;
-    if Y + Size.Height > TerminalBounds.Y + TerminalBounds.Height then
+    if Y + Size.Height > PopupBounds.Y + PopupBounds.Height then
     begin
-      Y := (TerminalBounds.Y + TerminalBounds.Height) - Size.Height
+      Y := (PopupBounds.Y + PopupBounds.Height) - Size.Height
     end;
-    if Y < TerminalBounds.Y then
+    if Y < PopupBounds.Y then
     begin
-      Y := TerminalBounds.Y
+      Y := PopupBounds.Y
     end;
     Std.Array.Push(Popups, record
       Parent := Parents[Index];

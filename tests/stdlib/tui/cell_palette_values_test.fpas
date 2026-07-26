@@ -43,6 +43,7 @@ begin
   AssertEquals(7, Palette.ForRole(TuiStyleRole.MenuNormal).Background.Index);
   AssertEquals(4, Palette.ForRole(TuiStyleRole.MenuShortcut).Foreground.Index);
   AssertEquals(2, Palette.ForRole(TuiStyleRole.MenuSelected).Background.Index);
+  AssertEquals(8, Palette.ForRole(TuiStyleRole.MenuShadow).Foreground.Index);
   AssertEquals(0, Palette.ForRole(TuiStyleRole.StatusNormal).Foreground.Index);
   AssertEquals(4, Palette.ForRole(TuiStyleRole.StatusShortcut).Foreground.Index);
   AssertEquals(2, Palette.ForRole(TuiStyleRole.StatusSelected).Background.Index);

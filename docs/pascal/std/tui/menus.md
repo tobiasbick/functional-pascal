@@ -57,7 +57,8 @@ While a menu is open, pointer movement switches root popups, selects enabled
 commands, and opens nested submenus. Movement outside the menu preserves the
 current selection and never activates a command.
 Popups are painted as terminal-clamped overlays after the normal desktop
-contents.
+contents. Each popup has a two-column right and one-row bottom shadow painted
+with `MenuShadow`.
 
 Validation rejects duplicate or missing node identities, non-submenu parents,
 cycles, invalid controlled state, root commands, and duplicate sibling

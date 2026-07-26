@@ -150,6 +150,20 @@ begin
   return TuiAction.Create(17)
 end;
 
+/// Returns the movable dialog control identity.
+
+function DialogControlId(): TuiControlId;
+begin
+  return TuiControlId.Create(18)
+end;
+
+/// Returns the controlled movable dialog change action.
+
+function DialogChangedAction(): TuiAction;
+begin
+  return TuiAction.Create(18)
+end;
+
 /// Returns the path-dialog input identity.
 
 function DialogPathControlId(): TuiControlId;

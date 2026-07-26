@@ -13,11 +13,11 @@ procedure AssertDarkPalette(Palette: TuiPalette);
 begin
   AssertStyle(Palette.Normal, 7, 0);
   AssertStyle(Palette.Disabled, 8, 0);
-  AssertStyle(Palette.Focused, 0, 11);
-  AssertStyle(Palette.Selected, 15, 8);
-  AssertStyle(Palette.Shortcut, 11, 0);
-  AssertStyle(Palette.Frame, 8, 0);
-  AssertStyle(Palette.Title, 7, 0);
+  AssertStyle(Palette.Focused, 15, 8);
+  AssertStyle(Palette.Selected, 15, 3);
+  AssertStyle(Palette.Shortcut, 14, 0);
+  AssertStyle(Palette.Frame, 3, 0);
+  AssertStyle(Palette.Title, 11, 0);
   AssertStyle(Palette.Failure, 12, 0);
   AssertStyle(Palette.Warning, 14, 0);
   AssertStyle(Palette.Accent, 11, 0)
@@ -41,13 +41,13 @@ procedure AssertClassicBluePalette(Palette: TuiPalette);
 begin
   AssertStyle(Palette.Normal, 15, 1);
   AssertStyle(Palette.Disabled, 8, 1);
-  AssertStyle(Palette.Focused, 0, 11);
-  AssertStyle(Palette.Selected, 0, 7);
+  AssertStyle(Palette.Focused, 15, 3);
+  AssertStyle(Palette.Selected, 0, 11);
   AssertStyle(Palette.Shortcut, 14, 1);
   AssertStyle(Palette.Frame, 11, 1);
-  AssertStyle(Palette.Title, 15, 1);
-  AssertStyle(Palette.Failure, 12, 1);
-  AssertStyle(Palette.Warning, 14, 1);
+  AssertStyle(Palette.Title, 14, 1);
+  AssertStyle(Palette.Failure, 15, 4);
+  AssertStyle(Palette.Warning, 0, 14);
   AssertStyle(Palette.Accent, 11, 1)
 end;
 

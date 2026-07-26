@@ -34,6 +34,7 @@ type
     Spacer(Value: TuiSpacer);
     Window(Title: string; Children: array of TuiElement);
     Dialog(Title: string; Children: array of TuiElement);
+    MovableDialog(Id: TuiControlId; Title: string; Position: option of TuiPoint; DragOffset: option of TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
     Desktop(Focused: option of TuiControlId; Children: array of TuiElement);
   end;
   /// Named constructors for immutable Tui elements.
@@ -195,6 +196,20 @@ type
     static function MakeDialog(TitleValue: string; Items: array of TuiElement): TuiElement;
     begin
       return TuiElement.Dialog(TitleValue, Items)
+    end;
+
+    /// Creates a controlled modal dialog that can be dragged by its title bar.
+
+    static function MakeMovableDialog(
+  Id: TuiControlId;
+  TitleValue: string;
+  PositionValue: option of TuiPoint;
+  DragOffsetValue: option of TuiPoint;
+  ChangeAction: TuiAction;
+  Items: array of TuiElement
+): TuiElement;
+    begin
+      return TuiElement.MovableDialog(Id, TitleValue, PositionValue, DragOffsetValue, ChangeAction, Items)
     end;
 
     /// Creates the root element and declares the model-controlled focus.

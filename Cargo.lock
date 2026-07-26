@@ -510,6 +510,7 @@ dependencies = [
 name = "fpas-build"
 version = "0.0.1"
 dependencies = [
+ "blake3",
  "fpas-bytecode",
  "fpas-compiler",
  "fpas-linker",

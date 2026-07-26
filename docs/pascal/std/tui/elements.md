@@ -20,6 +20,7 @@ TuiElement.Layout(Settings, Children)
 TuiElement.Spacer(Value)
 TuiElement.Window(Title, Children)
 TuiElement.Dialog(Title, Children)
+TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children)
 TuiElement.Desktop(Focused, Children)
 ```
 
@@ -29,6 +30,14 @@ child. `MenuBar` is the simple flat action bar and uses `TuiMenuItem`.
 `Menu` is the controlled hierarchical menu described in
 [Menus](menus.md); `StatusLine` uses `TuiStatusItem`.
 Hint-only status lines are not focusable.
+
+`MakeDialog` creates a centered fixed modal. `MakeMovableDialog` creates a
+controlled modal with a model-owned optional position and drag offset. A
+position of `None` centers the dialog. Pressing its title bar, dragging with the
+left button, and releasing emit `DialogChanged`; the application stores the
+proposed position and drag offset and returns them from its next `View`.
+Movable dialogs are clamped so their frame and two-column, one-row shadow remain
+on the desktop whenever the terminal is large enough.
 
 `Scroll` has a one-cell minimum on each axis while retaining its child's
 preferred content size. A constrained parent can therefore create a viewport
@@ -45,8 +54,9 @@ negative text-area or scroll offsets, and focus identities absent from the
 tree.
 
 Controlled messages are `TextChanged`, `TextAreaChanged`, `CheckChanged`,
-`SelectionChanged`, `ScrollChanged`, and `MenuChanged`. `TuiFocusFirst` and `TuiFocusResolve`
-choose a valid focus from the active modal or full tree.
+`SelectionChanged`, `ScrollChanged`, `MenuChanged`, and `DialogChanged`.
+`TuiFocusFirst` and `TuiFocusResolve` choose a valid focus from the active modal
+or full tree.
 
 ## See also
 

@@ -21,6 +21,8 @@ begin
     Project := State.Project;
     Document := Document;
     Dialog := State.Dialog;
+    DialogPosition := State.DialogPosition;
+    DialogDragOffset := State.DialogDragOffset;
     MessageText := MessageText;
     MessageOffset := MessageOffset;
     Diagnostics := Diagnostics;
@@ -206,6 +208,25 @@ begin
       if IsIdeCommand(Source, Action, MenuControlId(), MenuChangedAction()) then
       begin
         return IdeStateWithMenu(State, Menu)
+      end;
+      return State
+    end;
+    TuiMsg.DialogChanged(Source, Action, Position, DragOffset):
+    begin
+      if IsIdeCommand(Source, Action, DialogControlId(), DialogChangedAction()) then
+      begin
+        case State.Dialog of
+          IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+          begin
+            mutable var Next: IdeModel := State;
+            Next.DialogPosition := Some(Position);
+            Next.DialogDragOffset := DragOffset;
+            return Next
+          end;
+          IdeDialog.NoDialog:
+          begin
+          end
+        end
       end;
       return State
     end;

@@ -19,9 +19,10 @@ See [Units](../program-structure/units.md) for `uses` rules and the reserved `St
 
 Source standard-library units are loaded from the `lib/stdlib.fpasprj` manifest beside `fpas` and
 use the same source-adjacent `.fpascu` compilation model as project units. Distribution staging
-precompiles matching sidecars; commands validate and reuse them or rebuild them from source when
-needed. Each build replaces the delivered `lib` tree with the complete current source tree, so
-removed units are not retained beside the executable. The units remain implementation-owned:
+discards staged sidecars, compiles every current unit with the current compiler identity, and
+replaces the delivered `lib` tree exactly. Removed units and obsolete build artifacts therefore
+cannot remain beside the executable. Commands validate and reuse the delivered sidecars or rebuild
+them from source when needed. The units remain implementation-owned:
 user projects cannot declare units under `Std.*`. The manifest controls which source units are
 public; its private implementation units cannot be imported by applications. Use
 `fpas run --std-lib <directory> …`, `fpas check --std-lib <directory> …`, or

@@ -16,6 +16,19 @@ begin
   return false
 end;
 
+function FindText(Surface: TuiSurfaceSnapshot; Text: string): TuiPoint;
+begin
+  for Row: integer := 0 to Surface.Height - 1 do
+  begin
+    var Column: integer := Std.Str.IndexOf(Surface.LineAt(Row), Text);
+    if Column >= 0 then
+    begin
+      return TuiPoint.Create(Column, Row)
+    end
+  end;
+  panic('text not found in surface')
+end;
+
 function Render(State: IdeModel): TuiSurfaceSnapshot;
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(60, 18));
@@ -42,5 +55,36 @@ begin
   AssertTrue(SurfaceContains(ConfirmSurface, ' Unsaved changes '));
   AssertTrue(SurfaceContains(ConfirmSurface, 'Save changes?'));
   AssertTrue(SurfaceContains(ConfirmSurface, 'Discard'));
-  AssertTrue(SurfaceContains(ConfirmSurface, 'Cancel'))
+  AssertTrue(SurfaceContains(ConfirmSurface, 'Cancel'));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(60, 18));
+  mutable var Moved: IdeModel := App.RunIterations(Open, UpdateIde, ViewIde, 0, 0);
+  var OpenTitle: TuiPoint := FindText(App.SurfaceSnapshot(), ' Open ');
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenTitle));
+  Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Drag, TuiPointerButton.Left, TuiPoint.Create(6, 2)));
+  Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
+  case Moved.DialogPosition of
+    Some(Position):
+    begin
+      AssertEquals(4, Position.X);
+      AssertEquals(2, Position.Y)
+    end;
+    None:
+    begin
+      AssertTrue(false)
+    end
+  end;
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), ' Open '));
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Up, TuiPointerButton.Left, TuiPoint.Create(6, 2)));
+  Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
+  case Moved.DialogDragOffset of
+    Some(Offset):
+    begin
+      AssertTrue(false)
+    end;
+    None:
+    begin
+    end
+  end;
+  App.Close()
 end.

@@ -19,7 +19,7 @@ begin
     begin
       return record Ticks := State.Ticks + 1; end
     end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return State

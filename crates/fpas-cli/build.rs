@@ -2,11 +2,16 @@ use std::io;
 use std::path::Path;
 
 mod stdlib_sync;
+mod version_sync;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source_root = manifest_dir.join("../../lib");
     println!("cargo:rerun-if-changed={}", source_root.display());
+    version_sync::validate_std_version(
+        &source_root.join("Std/Version.fpas"),
+        env!("CARGO_PKG_VERSION"),
+    )?;
 
     let out_dir = std::env::var_os("OUT_DIR")
         .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cargo must set OUT_DIR"))?;

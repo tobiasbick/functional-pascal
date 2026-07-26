@@ -152,74 +152,80 @@ begin
   end
 end;
 
-private function ViewPathDialog(Title: string; AcceptText: string; PathText: string; Caret: integer): TuiElement;
+private function ViewPathDialog(
+  State: IdeModel;
+  Title: string;
+  AcceptText: string;
+  PathText: string;
+  Caret: integer
+): TuiElement;
 begin
-  return TuiElementBuilders.MakeDialog(Title, [
-                                                TuiElementBuilders.MakeColumn([
+  return TuiElementBuilders.MakeMovableDialog(DialogControlId(), Title, State.DialogPosition, State.DialogDragOffset, DialogChangedAction(), [
+                                                                                                                                               TuiElementBuilders.MakeColumn([
 
-                                                                                TuiElementBuilders.MakeLabel('Path'),
+                                                                                                                                                                               TuiElementBuilders.MakeLabel('Path'),
 
-                                                                                TuiElementBuilders.MakeInput(DialogPathControlId(), PathText, Caret, DialogPathChangedAction()),
+                                                                                                                                                                               TuiElementBuilders.MakeInput(DialogPathControlId(), PathText, Caret, DialogPathChangedAction()),
 
-                                                                                TuiElementBuilders.MakeRow([
+                                                                                                                                                                               TuiElementBuilders.MakeRow([
 
-                                                
 
-                                                                                                             TuiElementBuilders.MakeButton(DialogAcceptControlId(), AcceptText, DialogAcceptAction()),
 
-                                                
+                                                                                                                                                                                                            TuiElementBuilders.MakeButton(DialogAcceptControlId(), AcceptText, DialogAcceptAction()),
 
-                                                                                                             TuiElementBuilders.MakeButton(DialogCancelControlId(), 'Cancel', DialogCancelAction())
 
-                                                
 
-                                                                                
+                                                                                                                                                                                                            TuiElementBuilders.MakeButton(DialogCancelControlId(), 'Cancel', DialogCancelAction())
 
-                                                
 
-                                                                                                           ])
 
-                                                
 
-                                                                              ])
 
-                                              ])
+
+
+                                                                                                                                                                                                          ])
+
+
+
+                                                                                                                                                                             ])
+
+                                                                                                                                             ])
 end;
 
-private function ViewDirtyDialog(): TuiElement;
+private function ViewDirtyDialog(State: IdeModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeDialog('Unsaved changes', [
-                                                            TuiElementBuilders.MakeColumn([
+  return TuiElementBuilders.MakeMovableDialog(DialogControlId(), 'Unsaved changes', State.DialogPosition, State.DialogDragOffset, DialogChangedAction(), [
+                                                                                                                                                           TuiElementBuilders.MakeColumn([
 
-                                                                                            TuiElementBuilders.MakeLabel('Save changes?'),
+                                                                                                                                                                                           TuiElementBuilders.MakeLabel('Save changes?'),
 
-                                                                                            TuiElementBuilders.MakeRow([
+                                                                                                                                                                                           TuiElementBuilders.MakeRow([
 
-                                                            
 
-                                                                                                                         TuiElementBuilders.MakeButton(DirtySaveControlId(), 'Save', DirtySaveAction()),
 
-                                                            
+                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtySaveControlId(), 'Save', DirtySaveAction()),
 
-                                                                                                                         TuiElementBuilders.MakeButton(DirtyDiscardControlId(), 'Discard', DirtyDiscardAction()),
 
-                                                            
 
-                                                                                                                         TuiElementBuilders.MakeButton(DirtyCancelControlId(), 'Cancel', DirtyCancelAction())
+                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtyDiscardControlId(), 'Discard', DirtyDiscardAction()),
 
-                                                            
 
-                                                                                            
 
-                                                            
+                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtyCancelControlId(), 'Cancel', DirtyCancelAction())
 
-                                                                                                                       ])
 
-                                                            
 
-                                                                                          ])
 
-                                                          ])
+
+
+
+                                                                                                                                                                                                                      ])
+
+
+
+                                                                                                                                                                                         ])
+
+                                                                                                                                                         ])
 end;
 
 private function ViewDialog(State: IdeModel): TuiElement;
@@ -231,15 +237,15 @@ begin
     end;
     IdeDialog.OpenPath(PathText, Caret):
     begin
-      return ViewPathDialog('Open', 'Open', PathText, Caret)
+      return ViewPathDialog(State, 'Open', 'Open', PathText, Caret)
     end;
     IdeDialog.SavePath(PathText, Caret, Pending):
     begin
-      return ViewPathDialog('Save As', 'Save', PathText, Caret)
+      return ViewPathDialog(State, 'Save As', 'Save', PathText, Caret)
     end;
     IdeDialog.ConfirmDirty(Pending):
     begin
-      return ViewDirtyDialog()
+      return ViewDirtyDialog(State)
     end
   end
 end;
@@ -275,7 +281,7 @@ begin
 
                                                                                             ViewStatus(State)
 
-                                                            
+
 
                                                                                           ]),
                                                             ViewDialog(State)

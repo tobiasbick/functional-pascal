@@ -42,7 +42,10 @@ document.
 
 Options > Theme switches immediately between the bundled Classic Blue, Dark,
 and Monochrome palettes. The selected theme is retained for the current run
-but is not persisted. Open menus support arrows, Enter, Space, Escape,
+but is not persisted. Classic Blue uses a Turbo Vision-inspired blue surface
+with cyan frames and selection plus yellow titles and shortcuts. Dark retains
+the cyan and yellow hierarchy on black and dark-gray surfaces. Monochrome uses
+only black, white, and gray. Open menus support arrows, Enter, Space, Escape,
 mnemonics, and pointer activation. Pointer movement over an open menu switches
 root popups, selects commands, and opens nested submenus without activating
 them.
@@ -69,6 +72,11 @@ Open accepts a `.fpas`, `.fpasprj`, or `.fpasworkspace` path in a modal dialog.
 Save writes the current UTF-8 text to its known source path; an untitled
 document uses the Save As path dialog. A failed read or write updates the
 message area without changing the current document.
+
+Open, Save As, and dirty-document dialogs use Turbo Vision-inspired frames with
+right/bottom shadows. Drag a dialog title bar with the left mouse button to
+move it within the visible desktop. Closing a dialog resets its position, so
+the next dialog opens centered.
 
 The IDE parses project TOML itself. It validates the project name and kind,
 program main file, and source include/exclude arrays. Patterns are resolved

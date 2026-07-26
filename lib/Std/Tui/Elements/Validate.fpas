@@ -35,7 +35,7 @@ end;
 private function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
     begin
       return Children
     end;
@@ -139,6 +139,36 @@ begin
       TuiMenuValidate(Nodes, State);
       Std.Array.Push(Seen, Id.Value)
     end;
+    TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    begin
+      TuiElementValidateControl(Id);
+      TuiElementValidateAction(ChangeAction);
+      case Position of
+        Some(Value):
+        begin
+          if (Value.X < 0) or (Value.Y < 0) then
+          begin
+            panic('Tui movable dialog position must not be negative')
+          end
+        end;
+        None:
+        begin
+        end
+      end;
+      case DragOffset of
+        Some(Value):
+        begin
+          if (Value.X < 0) or (Value.Y < 0) then
+          begin
+            panic('Tui movable dialog drag offset must not be negative')
+          end
+        end;
+        None:
+        begin
+        end
+      end;
+      Std.Array.Push(Seen, Id.Value)
+    end;
     TuiElement.StatusLine(Items):
     begin
       for Index: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -208,7 +238,7 @@ begin
         end
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(Id, DialogTitle, Position, DragOffset, ChangeAction, DialogChildren):
     begin
     end
   end;

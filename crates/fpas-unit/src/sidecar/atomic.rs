@@ -59,13 +59,16 @@ fn acquire_lock(sidecar: &Path, lock_path: &Path) -> Result<LockGuard, SidecarEr
                     path: lock_path.to_path_buf(),
                 });
             }
-            Err(error)
-                if error.kind() == std::io::ErrorKind::AlreadyExists
-                    || (error.kind() == std::io::ErrorKind::PermissionDenied
-                        && lock_path.exists()) =>
-            {
+            Err(error) if is_lock_contention(&error) => {
                 remove_stale_lock(lock_path);
                 if started.elapsed() >= LOCK_WAIT {
+                    if error.kind() == std::io::ErrorKind::PermissionDenied && !lock_path.exists() {
+                        return Err(SidecarError::Io {
+                            operation: "lock",
+                            path: lock_path.to_path_buf(),
+                            error,
+                        });
+                    }
                     return Err(SidecarError::LockTimeout(sidecar.to_path_buf()));
                 }
                 std::thread::sleep(LOCK_RETRY);
@@ -79,6 +82,11 @@ fn acquire_lock(sidecar: &Path, lock_path: &Path) -> Result<LockGuard, SidecarEr
             }
         }
     }
+}
+
+fn is_lock_contention(error: &std::io::Error) -> bool {
+    error.kind() == std::io::ErrorKind::AlreadyExists
+        || error.kind() == std::io::ErrorKind::PermissionDenied
 }
 
 fn remove_stale_lock(lock_path: &Path) {
@@ -205,5 +213,25 @@ impl Drop for FileCleanup {
 impl Drop for LockGuard {
     fn drop(&mut self) {
         let _ = fs::remove_file(&self.path);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_lock_contention;
+    use std::io;
+
+    #[test]
+    fn permission_denied_during_lock_replacement_is_retried() {
+        let error = io::Error::from(io::ErrorKind::PermissionDenied);
+
+        assert!(is_lock_contention(&error));
+    }
+
+    #[test]
+    fn unrelated_lock_errors_are_reported_immediately() {
+        let error = io::Error::from(io::ErrorKind::NotFound);
+
+        assert!(!is_lock_contention(&error));
     }
 }

@@ -184,6 +184,18 @@ begin
   return Std.Tui.Runtime.Msg.TuiMsgScrollChanged(Source, Action, Offset)
 end;
 
+/// Creates a source-aware controlled movable-dialog change message.
+
+function TuiMsgDialogChanged(
+  Source: Std.Tui.Ids.ControlId.TuiControlId;
+  Action: Std.Tui.Ids.Action.TuiAction;
+  Position: Std.Tui.Geometry.Point.TuiPoint;
+  DragOffset: option of Std.Tui.Geometry.Point.TuiPoint
+): Std.Tui.Runtime.Msg.TuiMsg;
+begin
+  return Std.Tui.Runtime.Msg.TuiMsgDialogChanged(Source, Action, Position, DragOffset)
+end;
+
 /// Returns the first focusable control in the active modal or full tree.
 
 function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;

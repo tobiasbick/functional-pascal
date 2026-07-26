@@ -14,6 +14,9 @@ fpas-parser = { path = "../fpas-parser" }
 fpas-project = { path = "../fpas-project" }
 fpas-unit = { path = "../fpas-unit" }
 
+[build-dependencies]
+blake3 = { workspace = true }
+
 [lints]
 workspace = true
 

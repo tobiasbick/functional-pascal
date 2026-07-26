@@ -30,6 +30,10 @@ begin
           TuiElement.Dialog(Title, DialogChildren):
           begin
             LastDialog := Index
+          end;
+          TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
+          begin
+            LastDialog := Index
           end
           else
           begin
@@ -54,7 +58,7 @@ begin
       end;
       return None
     end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
     begin
       for Index: integer := 0 to Std.Array.Length(Children) - 1 do
       begin

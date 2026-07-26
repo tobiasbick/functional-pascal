@@ -77,6 +77,8 @@ begin
     Project := None;
     Document := NavigationDocument;
     Dialog := IdeDialog.NoDialog;
+    DialogPosition := None;
+    DialogDragOffset := None;
     MessageText := 'header';
     MessageOffset := TuiPoint.Create(0, 0);
     Diagnostics := NavigationDiagnostics;

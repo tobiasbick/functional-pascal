@@ -37,6 +37,8 @@ begin
     Project := None;
     Document := NewIdeDocument(Some('long.fpas'));
     Dialog := IdeDialog.NoDialog;
+    DialogPosition := None;
+    DialogDragOffset := None;
     MessageText := MessageText;
     MessageOffset := TuiPoint.Create(0, 0);
     Diagnostics := Diagnostics;

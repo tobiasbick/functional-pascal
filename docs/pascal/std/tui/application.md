@@ -85,13 +85,18 @@ controlled `TextChanged` or `TextAreaChanged` messages; Enter or Space activates
 a focused button. Escape produces `QuitRequested`. Left-button pointer downs
 hit-test the previous arranged frame: focus changes are queued before an action
 or controlled change, and unhandled pointer input remains `TuiMsg.Pointer`.
+For a `MovableDialog`, a left-button press on the title row starts a controlled
+drag, `Drag` updates its clamped position, and `Up` clears the drag offset.
+Dialogs paint an opaque `Normal` surface plus a two-column right shadow and a
+one-row bottom shadow with the `Disabled` style role; frame titles use the
+`Title` role.
 An open hierarchical menu handles Escape before the application-level quit
 request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
 described in [Menus](menus.md).
 
 `InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
-reaches `Update`. When a dialog is present directly under the desktop, key and
-pointer targeting is limited to the last such dialog subtree.
+reaches `Update`. When a fixed or movable dialog is present directly under the
+desktop, key and pointer targeting is limited to the last such dialog subtree.
 
 Painting reads the arranged-frame index only. The private clipped canvas uses
 local coordinates and nested origins/clips. Overwriting either half of a wide

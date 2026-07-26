@@ -19,6 +19,7 @@ type
     SelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer);
     ScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint);
     MenuChanged(Source: TuiControlId; Action: TuiAction; State: TuiMenuState);
+    DialogChanged(Source: TuiControlId; Action: TuiAction; Position: TuiPoint; DragOffset: option of TuiPoint);
     QuitRequested;
   end;
 
@@ -68,4 +69,16 @@ end;
 function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
 begin
   return TuiMsg.ScrollChanged(Source, Action, Offset)
+end;
+
+/// Creates a source-aware controlled movable-dialog change message.
+
+function TuiMsgDialogChanged(
+  Source: TuiControlId;
+  Action: TuiAction;
+  Position: TuiPoint;
+  DragOffset: option of TuiPoint
+): TuiMsg;
+begin
+  return TuiMsg.DialogChanged(Source, Action, Position, DragOffset)
 end;

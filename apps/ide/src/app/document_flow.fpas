@@ -23,6 +23,8 @@ begin
     Project := State.Project;
     Document := Document;
     Dialog := Dialog;
+    DialogPosition := State.DialogPosition;
+    DialogDragOffset := State.DialogDragOffset;
     MessageText := MessageText;
     MessageOffset := MessageOffset;
     Diagnostics := Diagnostics;
@@ -41,22 +43,34 @@ end;
 
 private function CloseDialog(State: IdeModel; MessageText: string): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.NoDialog, MessageText, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()))
+  mutable var Next: IdeModel := IdeState(State, State.Document, IdeDialog.NoDialog, MessageText, TuiPoint.Create(0, 0), [], None, Some(EditorControlId()));
+  Next.DialogPosition := None;
+  Next.DialogDragOffset := None;
+  return Next
 end;
 
 private function ShowOpenDialog(State: IdeModel): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.OpenPath('', 0), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()))
+  mutable var Next: IdeModel := IdeState(State, State.Document, IdeDialog.OpenPath('', 0), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()));
+  Next.DialogPosition := None;
+  Next.DialogDragOffset := None;
+  return Next
 end;
 
 private function ShowSaveDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.SavePath('', 0, Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()))
+  mutable var Next: IdeModel := IdeState(State, State.Document, IdeDialog.SavePath('', 0, Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DialogPathControlId()));
+  Next.DialogPosition := None;
+  Next.DialogDragOffset := None;
+  return Next
 end;
 
 private function ShowDirtyDialog(State: IdeModel; Pending: IdePendingCommand): IdeModel;
 begin
-  return IdeState(State, State.Document, IdeDialog.ConfirmDirty(Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DirtySaveControlId()))
+  mutable var Next: IdeModel := IdeState(State, State.Document, IdeDialog.ConfirmDirty(Pending), State.MessageText, State.MessageOffset, State.Diagnostics, State.SelectedDiagnostic, Some(DirtySaveControlId()));
+  Next.DialogPosition := None;
+  Next.DialogDragOffset := None;
+  return Next
 end;
 
 private function ResumePending(
@@ -103,6 +117,8 @@ begin
             Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
+            DialogPosition := None;
+            DialogDragOffset := None;
             MessageText := Report.MessageText;
             MessageOffset := MessageOffset;
             Diagnostics := Diagnostics;
@@ -120,6 +136,8 @@ begin
             Project := State.Project;
             Document := State.Document;
             Dialog := IdeDialog.NoDialog;
+            DialogPosition := None;
+            DialogDragOffset := None;
             MessageText := Message;
             MessageOffset := TuiPoint.Create(0, 0);
             Diagnostics := [];

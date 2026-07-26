@@ -32,7 +32,10 @@ The version of the installed standard-library sources as a string.
 
 ## Implementation (contributors)
 
-The unit is a trusted FPAS source file at `lib/Std/Version.fpas`, exported by `lib/stdlib.fpasprj`. Building `fpas` copies `lib/` beside the executable; the CLI validates and links the selected source manifest when the unit is imported.
+The unit is a trusted FPAS source file at `lib/Std/Version.fpas`, exported by
+`lib/stdlib.fpasprj`. Building `fpas` requires both constants to match the Cargo package version,
+then stages the complete source library beside the executable. The CLI validates and links the
+selected source manifest when the unit is imported.
 
 ## See also
 

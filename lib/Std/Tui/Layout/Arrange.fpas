@@ -17,6 +17,15 @@ begin
   return Right
 end;
 
+private function TuiArrangeMax(Left: integer; Right: integer): integer;
+begin
+  if Left > Right then
+  begin
+    return Left
+  end;
+  return Right
+end;
+
 private function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
 begin
   if Value > Maximum then
@@ -33,7 +42,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -314,7 +323,7 @@ begin
         ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y - EffectiveY, Content.Width, Content.Height), Clip, SelfIndex)
       end
     end;
-    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
     begin
       ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex)
     end;
@@ -331,6 +340,29 @@ begin
             var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
             var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
             var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
+            ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex)
+          end;
+          TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
+          begin
+            var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
+            var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
+            var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
+            mutable var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
+            mutable var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
+            case Position of
+              Some(DialogPosition):
+              begin
+                X := DialogPosition.X;
+                Y := DialogPosition.Y
+              end;
+              None:
+              begin
+              end
+            end;
+            var MaximumX: integer := TuiArrangeMax(NodeBounds.X, (NodeBounds.Right() - Width) - 2);
+            var MaximumY: integer := TuiArrangeMax(NodeBounds.Y, (NodeBounds.Bottom() - Height) - 1);
+            X := TuiArrangeMax(NodeBounds.X, TuiArrangeMin(X, MaximumX));
+            Y := TuiArrangeMax(NodeBounds.Y, TuiArrangeMin(Y, MaximumY));
             ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex)
           end
           else

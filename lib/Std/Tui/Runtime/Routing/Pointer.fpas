@@ -4,8 +4,8 @@ uses
   Std.Array, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
   Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent,
-  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.MenuPointer,
-  Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.DialogPointer, Std.Tui.Runtime.Routing.Focus,
+  Std.Tui.Runtime.Routing.MenuPointer, Std.Tui.Runtime.Routing.TextArea;
 
 type
   /// Private hit result for pointer routing against arranged geometry.
@@ -28,6 +28,10 @@ begin
   begin
     case Children[Index] of
       TuiElement.Dialog(Title, DialogChildren):
+      begin
+        LastDialog := Index
+      end;
+      TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
       begin
         LastDialog := Index
       end;
@@ -146,7 +150,7 @@ begin
         Next := TuiRoutePointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits)
       end
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -187,6 +191,15 @@ end;
 function TuiRoutePointer(Root: TuiElement; Frame: TuiArrangedFrame; Pointer: TuiPointerEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
+  case TuiRouteDialogPointer(Root, Frame, Pointer) of
+    Some(Messages):
+    begin
+      return Messages
+    end;
+    None:
+    begin
+    end
+  end;
   var MenuPointer: boolean := (Pointer.Action = Std.Console.MouseAction.Move) or
                               ((Pointer.Action = Std.Console.MouseAction.Down) and (Pointer.Button = TuiPointerButton.Left));
   if MenuPointer then

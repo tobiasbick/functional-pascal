@@ -1,7 +1,7 @@
 unit Std.Tui.Rendering.Paint;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
+  Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Surface,
   Std.Tui.Rendering.Menu, Std.Tui.Rendering.TextArea;
@@ -39,9 +39,25 @@ begin
     .DrawFrame(TuiRect.Create(0, 0, Bounds.Width, Bounds.Height), TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
   begin
-    TuiPaintTextInBounds(Canvas, TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1), (' ' + Title) +
-                                                                                              ' ')
+    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
+      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title)
   end
+end;
+
+private procedure TuiPaintDialogShadow(Canvas: TuiCanvas; Bounds: TuiRect);
+begin
+  if Bounds.IsEmpty() then
+  begin
+    return
+  end;
+  var Shadow: TuiCell := TuiCell.Create('░', TuiStyleRole.Disabled);
+  Canvas.FillRect(TuiRect.Create(Bounds.Right(), Bounds.Y + 1, 2, Bounds.Height), Shadow);
+  Canvas.FillRect(TuiRect.Create(Bounds.X + 2, Bounds.Bottom(), Bounds.Width, 1), Shadow)
+end;
+
+private procedure TuiPaintDialogSurface(Canvas: TuiCanvas; Bounds: TuiRect);
+begin
+  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal))
 end;
 
 /// Paints one arranged node and returns the next unused frame index.
@@ -181,8 +197,18 @@ begin
         Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused)
       end
     end;
-    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Window(Title, Children):
     begin
+      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title);
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused)
+      end
+    end;
+    TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    begin
+      TuiPaintDialogShadow(Canvas, Entry.Bounds);
+      TuiPaintDialogSurface(Canvas, Entry.Bounds);
       TuiPaintFrameChrome(Clipped, Entry.Bounds, Title);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -226,6 +252,10 @@ begin
           TuiElement.Dialog(Title, DialogChildren):
           begin
             ModalIndex := ChildIndex
+          end;
+          TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
+          begin
+            ModalIndex := ChildIndex
           end
           else
           begin
@@ -238,7 +268,7 @@ begin
                                                                                 ((ModalIndex < 0) or (ModalIndex = ChildIndex)))
       end
     end;
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin

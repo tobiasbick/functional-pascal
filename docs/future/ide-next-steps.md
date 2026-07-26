@@ -3,7 +3,9 @@
 > Status snapshot: 2026-07-25. Scrollable message output, diagnostic source
 > navigation, direct `.fpasprj` ingestion, and internal `.fpasworkspace`
 > ingestion are implemented. The IDE also has hierarchical menus and three
-> runtime-switchable themes. Project/workspace trees are deliberately deferred.
+> runtime-switchable themes. Its modal dialogs have Turbo Vision-inspired
+> shadows and mouse-draggable title bars. Project/workspace trees are
+> deliberately deferred.
 
 ## Purpose
 
@@ -45,6 +47,8 @@ The IDE is a fixed, single-document `Std.Tui` application:
   with Enter;
 - dialogs, pointer activation, resize handling, and terminal restoration have
   headless or lifecycle coverage.
+- Open, Save As, and dirty-document dialogs are modal, shadowed, and movable by
+  dragging their title bars.
 
 Current ownership is intentionally small:
 
@@ -109,6 +113,10 @@ duplicating generic `Std.Tui` coverage:
 - `ide_editor_resilience_test.fpas` keeps the first line visible after Enter,
   queues repeated valid and terminal-too-small resizes, then proves that editor
   input and the final surface still advance;
+- `ide_dialog_surface_test.fpas` renders every IDE dialog and drives a real
+  title-bar press, drag, repaint, and release;
+- `dialog_pointer_test.fpas` covers centered movable-dialog layout, title and
+  shadow roles, model-owned drag state, movement, release, and edge clamping;
 - `ide_open_target_case_test.fpas` opens uppercase `.FPAS`, `.FPASPRJ`, and
   `.FPASWORKSPACE` targets, including an uppercase workspace member;
 - project/workspace loader tests now exercise missing files, wrong tables and
@@ -131,8 +139,8 @@ cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace
 ```
 
-The focused IDE suite passed 25 tests, the TUI suite passed 51 tests, and the
-complete FPAS suite passed 395 tests with one expected skip. The Rust workspace
+The focused IDE suite passed 25 tests, the TUI suite passed 52 tests, and the
+complete FPAS suite passed 396 tests with one expected skip. The Rust workspace
 format, build, strict Clippy gate, and test suite passed.
 
 ## Known limits
@@ -410,11 +418,12 @@ passed 383 tests with one expected skip.
 
 ## Next work
 
-There is no immediate project/workspace UI slice. Retain the current data
-boundary until a concrete UI workflow is requested:
+There is no automatically selected next IDE slice. Choose the next concrete
+single-document workflow before implementation. Project/workspace UI remains
+explicitly deferred:
 
-1. Add a project/workspace tree only when the user wants it displayed.
-2. Add workspace member selection together with that concrete workflow.
+1. Add a project/workspace tree only after a separate user request.
+2. Add workspace member selection together with that requested workflow.
 3. Add multi-document state only when a concrete workflow requires it.
 
 Do not add a tree, selector, dependency view, or multiple-document state merely

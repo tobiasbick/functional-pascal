@@ -16,9 +16,31 @@ pub struct BuildOptions {
 impl Default for BuildOptions {
     fn default() -> Self {
         Self {
-            compiler_version: concat!(env!("CARGO_PKG_VERSION"), "-fpascu-v9").to_string(),
+            compiler_version: concat!(
+                env!("CARGO_PKG_VERSION"),
+                "-",
+                env!("FPAS_COMPILER_BUILD_ID")
+            )
+            .to_string(),
             bytecode_version: fpas_bytecode::BYTECODE_VERSION,
             options_hash: Digest::of(b"fpas-default-compilation-options-v1"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BuildOptions;
+
+    #[test]
+    fn default_identity_contains_the_package_version_and_source_fingerprint() {
+        let identity = BuildOptions::default().compiler_version;
+        let prefix = concat!(env!("CARGO_PKG_VERSION"), "-source-");
+        let fingerprint = identity
+            .strip_prefix(prefix)
+            .expect("compiler identity must start with its package version");
+
+        assert_eq!(fingerprint.len(), 64);
+        assert!(fingerprint.bytes().all(|byte| byte.is_ascii_hexdigit()));
     }
 }

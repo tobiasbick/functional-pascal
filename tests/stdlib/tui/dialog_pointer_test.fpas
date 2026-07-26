@@ -1,0 +1,123 @@
+program TuiDialogPointerTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+type
+  DialogModel = record
+    Position: option of TuiPoint;
+    DragOffset: option of TuiPoint;
+    Changes: integer;
+  end;
+
+function ViewDialog(State: DialogModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(None, [
+                                                TuiElementBuilders.MakeColumn([
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'),
+
+                                                                                TuiElementBuilders.MakeLabel('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+
+                                                
+
+                                                                              ]),
+                                                TuiElementBuilders.MakeMovableDialog(TuiControlId.Create(1), 'Move', State.Position, State.DragOffset, TuiAction.Create(1), [
+
+                                                                                                                                                                              TuiElementBuilders.MakeLabel('Body')
+
+                                                
+
+                                                                                                                                                                            ])
+
+                                              ])
+end;
+
+function UpdateDialog(State: DialogModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DialogModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.DialogChanged(Source, Action, Position, DragOffset):
+    begin
+      if (Source.Value = 1) and (Action.Value = 1) then
+      begin
+        return record
+          Position := Some(Position);
+          DragOffset := DragOffset;
+          Changes := State.Changes + 1;
+        end
+      end;
+      return State
+    end;
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
+    begin
+      return State
+    end
+  end
+end;
+
+function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
+begin
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+end;
+
+procedure AssertPosition(Value: option of TuiPoint; X: integer; Y: integer);
+begin
+  case Value of
+    Some(Point):
+    begin
+      AssertEquals(X, Point.X);
+      AssertEquals(Y, Point.Y)
+    end;
+    None:
+    begin
+      AssertTrue(false)
+    end
+  end
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
+  mutable var Model: DialogModel := record Position := None; DragOffset := None; Changes := 0; end;
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 0, 0);
+  var InitialSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertEquals('░', InitialSurface.CellAt(25, 5).Glyph);
+  AssertTrue(InitialSurface.CellAt(25, 5).Role = TuiStyleRole.Disabled);
+  AssertTrue(InitialSurface.CellAt(17, 4).Role = TuiStyleRole.Title);
+  AssertEquals(' ', InitialSurface.CellAt(23, 5).Glyph);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, 17, 4));
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 1, 0);
+  AssertPosition(Model.Position, 15, 4);
+  AssertPosition(Model.DragOffset, 2, 0);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Drag, 6, 2));
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 1, 0);
+  AssertPosition(Model.Position, 4, 2);
+  AssertPosition(Model.DragOffset, 2, 0);
+  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), ' Move '));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, 6, 2));
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 1, 0);
+  AssertTrue(Model.Changes = 3);
+  case Model.DragOffset of
+    Some(Point):
+    begin
+      AssertTrue(false)
+    end;
+    None:
+    begin
+    end
+  end;
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, 6, 2));
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 1, 0);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Drag, 100, 100));
+  Model := App.RunIterations(Model, UpdateDialog, ViewDialog, 1, 0);
+  AssertPosition(Model.Position, 28, 8);
+  AssertEquals('░', App.SurfaceSnapshot().CellAt(39, 11).Glyph);
+  App.Close()
+end.

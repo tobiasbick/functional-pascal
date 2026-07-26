@@ -28,6 +28,8 @@ type
     Project: option of IdeProject;
     Document: IdeDocument;
     Dialog: IdeDialog;
+    DialogPosition: option of TuiPoint;
+    DialogDragOffset: option of TuiPoint;
     MessageText: string;
     MessageOffset: TuiPoint;
     Diagnostics: array of IdeDiagnostic;
@@ -47,6 +49,8 @@ begin
     Project := None;
     Document := NewIdeDocument(Path);
     Dialog := IdeDialog.NoDialog;
+    DialogPosition := None;
+    DialogDragOffset := None;
     MessageText := 'Ready';
     MessageOffset := TuiPoint.Create(0, 0);
     Diagnostics := [];

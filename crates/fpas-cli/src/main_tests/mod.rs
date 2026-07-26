@@ -22,4 +22,6 @@ mod test_project;
 mod test_runner;
 mod test_suite;
 mod test_suite_negative;
+#[path = "../../version_sync.rs"]
+mod version_sync;
 mod visibility;

@@ -116,6 +116,8 @@ begin
     Actions := [];
   end;
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
+  AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = TuiStyleRole.MenuShortcut);
+  AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = TuiStyleRole.MenuNormal);
   var ClosedFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ClosedFileAt));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);

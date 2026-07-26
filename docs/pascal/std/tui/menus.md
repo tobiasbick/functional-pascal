@@ -51,7 +51,8 @@ Accept the message by copying `State` into the model. Commands emit
 
 `F10`, Alt plus a root mnemonic, Enter, Space, Escape, arrows, and item
 mnemonics operate the menu. Enabled command shortcuts are routed globally
-inside the active modal subtree. A left-button press opens root menus, follows
+inside the active modal subtree. Only the first matching glyph in a menu label
+uses the mnemonic style. A left-button press opens root menus, follows
 submenus, activates commands, or closes an open menu when pressed outside.
 While a menu is open, pointer movement switches root popups, selects enabled
 commands, and opens nested submenus. Movement outside the menu preserves the

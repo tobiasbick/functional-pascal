@@ -29,13 +29,16 @@ private procedure TuiPaintMenuLabel(
 );
 begin
   mutable var X: integer := Position.X;
+  mutable var MnemonicPainted: boolean := false;
   for Index: integer := 0 to Std.Str.Length(Text) - 1 do
   begin
     var Glyph: string := Std.Str.CharAt(Text, Index);
     mutable var GlyphRole: TuiStyleRole := Role;
-    if (Mnemonic <> '') and (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Mnemonic)) then
+    if (not MnemonicPainted and (Mnemonic <> '')) and
+       (Std.Str.ToLower(Glyph) = Std.Str.ToLower(Mnemonic)) then
     begin
-      GlyphRole := MnemonicRole
+      GlyphRole := MnemonicRole;
+      MnemonicPainted := true
     end;
     Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
     X := X + Std.Console.DisplayWidth(Glyph)

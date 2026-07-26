@@ -58,6 +58,6 @@ begin
     LastExitCode := None;
     Focused := None;
     Menu := TuiMenuState.Closed();
-    Theme := IdeTheme.ClassicBlue;
+    Theme := IdeTheme.Light;
   end
 end;

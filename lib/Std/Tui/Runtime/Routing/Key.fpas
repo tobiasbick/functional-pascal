@@ -190,7 +190,7 @@ begin
       for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
       begin
         case Items[ItemIndex] of
-          TuiStatusItem.Hint(Text):
+          TuiStatusItem.Hint(Text), TuiStatusItem.KeyHint(KeyText, Text):
           begin
           end;
           TuiStatusItem.Command(Id, Text, Action, Enabled):

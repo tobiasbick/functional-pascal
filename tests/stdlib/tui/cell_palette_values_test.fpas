@@ -39,9 +39,28 @@ begin
   AssertEquals(7, NormalStyle.Foreground.Index);
   var AccentStyle: TuiStyle := Palette.ForRole(TuiStyleRole.Accent);
   AssertEquals(11, AccentStyle.Foreground.Index);
+  AssertEquals(0, Palette.ForRole(TuiStyleRole.MenuNormal).Foreground.Index);
+  AssertEquals(7, Palette.ForRole(TuiStyleRole.MenuNormal).Background.Index);
+  AssertEquals(4, Palette.ForRole(TuiStyleRole.MenuShortcut).Foreground.Index);
+  AssertEquals(2, Palette.ForRole(TuiStyleRole.MenuSelected).Background.Index);
+  AssertEquals(0, Palette.ForRole(TuiStyleRole.StatusNormal).Foreground.Index);
+  AssertEquals(4, Palette.ForRole(TuiStyleRole.StatusShortcut).Foreground.Index);
+  AssertEquals(2, Palette.ForRole(TuiStyleRole.StatusSelected).Background.Index);
+  AssertEquals(0, Palette.ForRole(TuiStyleRole.DialogNormal).Foreground.Index);
+  AssertEquals(7, Palette.ForRole(TuiStyleRole.DialogNormal).Background.Index);
+  AssertEquals(15, Palette.ForRole(TuiStyleRole.DialogFrame).Foreground.Index);
+  AssertEquals(15, Palette.ForRole(TuiStyleRole.DialogTitle).Foreground.Index);
+  AssertEquals(1, Palette.ForRole(TuiStyleRole.DialogInput).Background.Index);
+  AssertEquals(2, Palette.ForRole(TuiStyleRole.DialogInputFocused).Background.Index);
+  AssertEquals(2, Palette.ForRole(TuiStyleRole.DialogButton).Background.Index);
+  AssertEquals(15, Palette.ForRole(TuiStyleRole.DialogButtonFocused).Foreground.Index);
+  AssertEquals(8, Palette.ForRole(TuiStyleRole.DialogShadow).Foreground.Index);
   var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), Background);
   var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
   AssertEquals(2, Updated.ForRole(TuiStyleRole.Warning).Foreground.Green);
   AssertEquals(14, Updated.ForRole(TuiStyleRole.Title).Foreground.Index);
-  AssertEquals(14, Palette.ForRole(TuiStyleRole.Warning).Foreground.Index)
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.Warning).Foreground.Index);
+  var DialogUpdated: TuiPalette := Palette.WithRole(TuiStyleRole.DialogInput, Custom);
+  AssertEquals(2, DialogUpdated.ForRole(TuiStyleRole.DialogInput).Foreground.Green);
+  AssertEquals(1, Palette.ForRole(TuiStyleRole.DialogInput).Background.Index)
 end.

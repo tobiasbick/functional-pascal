@@ -102,6 +102,10 @@ end;
 
 private function UpdateAction(State: IdeModel; Source: TuiControlId; Action: TuiAction; Cmd: TuiCmdOutput): IdeModel;
 begin
+  if (Source.Value = DialogControlId().Value) and (Action.Value = DialogChangedAction().Value) then
+  begin
+    return CancelIdeDialog(State)
+  end;
   case State.Dialog of
     IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
     begin
@@ -131,9 +135,9 @@ begin
   begin
     return RequestIdeExit(State, Cmd)
   end;
-  if Action.Value = ClassicBlueThemeAction().Value then
+  if Action.Value = LightThemeAction().Value then
   begin
-    return IdeStateWithTheme(State, IdeTheme.ClassicBlue, Cmd)
+    return IdeStateWithTheme(State, IdeTheme.Light, Cmd)
   end;
   if Action.Value = DarkThemeAction().Value then
   begin

@@ -129,9 +129,9 @@ begin
   return TuiAction.Create(14)
 end;
 
-/// Returns the Classic Blue theme action.
+/// Returns the Light theme action.
 
-function ClassicBlueThemeAction(): TuiAction;
+function LightThemeAction(): TuiAction;
 begin
   return TuiAction.Create(15)
 end;

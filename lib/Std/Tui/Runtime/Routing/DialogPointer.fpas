@@ -131,6 +131,11 @@ begin
       begin
         if Route.Bounds.Contains(Pointer.Position) then
         begin
+          if (Pointer.Position.X >= Route.Bounds.X + 2) and
+             (Pointer.Position.X <= Route.Bounds.X + 4) then
+          begin
+            return Some([TuiMsg.Action(Route.Id, Route.ChangeAction)])
+          end;
           return Some([
                         TuiMsg.DialogChanged(Route.Id, Route.ChangeAction, TuiPoint.Create(Route.Bounds.X, Route.Bounds.Y), Some(TuiPoint.Create(Pointer.Position.X -
 

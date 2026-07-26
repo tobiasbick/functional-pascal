@@ -6,11 +6,13 @@ one `.fpasworkspace` with all of its direct member projects, and provides Open,
 Save, Check, Run, and Exit.
 
 The menu bar contains File, Edit, Run, and Options. Options > Theme switches
-immediately between Classic Blue, Dark, and Monochrome. The selected theme is
+immediately between Light, Dark, and Monochrome. The selected theme is
 kept in the application model for the current run; it is not persisted.
-Classic Blue uses a Turbo Vision-inspired blue surface with cyan frames and
-selection plus yellow titles and shortcuts. Dark keeps those cyan and yellow
-accents on black and dark-gray surfaces. Monochrome remains black and white.
+Light follows the Turbo Pascal 6-era Turbo Vision color hierarchy: a blue IDE
+surface with cyan frames and yellow accents, light-gray menu bars, popups, and
+status lines, red shortcut letters, green active menu items, and gray dialogs.
+Dark translates the same semantic roles to black and dark-gray surfaces.
+Monochrome remains black, white, and gray.
 
 ## Run
 
@@ -51,8 +53,9 @@ Pointer movement over an open menu switches root popups, selects commands, and
 opens nested submenus without activating them.
 
 Open, Save As, and dirty-document dialogs use Turbo Vision-inspired frames with
-right/bottom shadows. Drag a dialog title bar with the left mouse button to
-move it within the visible desktop. The next dialog opens centered again.
+right/bottom shadows. Their `[■]` close box cancels the dialog. Drag the rest of
+a dialog title bar with the left mouse button to move it within the visible
+desktop. The next dialog opens centered again.
 
 The editor supports character insertion, Enter, Backspace, Delete, arrows,
 Home, End, Page Up, Page Down, and two-space Tab insertion. Its status line

@@ -57,7 +57,7 @@ begin
                                                         TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(30), Some(RunId), 'Check', 'C', CheckAction(), TuiKeyGesture.Create(TuiKeyKind.F9, '', false, false, false, false, 'F9')),
                                                         TuiMenuNodeBuilders.CommandWithShortcut(TuiMenuNodeId.Create(31), Some(RunId), 'Run', 'R', RunAction(), TuiKeyGesture.Create(TuiKeyKind.F9, '', false, true, false, false, 'Ctrl+F9')),
                                                         TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
-                                                        TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(50), Some(ThemeId), 'Classic Blue', 'C', ClassicBlueThemeAction()),
+                                                        TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(50), Some(ThemeId), 'Light', 'L', LightThemeAction()),
                                                         TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(51), Some(ThemeId), 'Dark', 'D', DarkThemeAction()),
                                                         TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(52), Some(ThemeId), 'Monochrome', 'M', MonochromeThemeAction())
 
@@ -130,12 +130,18 @@ begin
   begin
     StateText := 'modified'
   end;
-  return (((((StateText + ' | Ln ') + IntToStr(CaretLine(State.Document))) + ', Col ') + IntToStr(CaretColumn(State.Document))) + ' | F2 Save | F9 Check | Ctrl+F9 Run')
+  return ((((StateText + ' | Ln ') + IntToStr(CaretLine(State.Document))) + ', Col ') + IntToStr(CaretColumn(State.Document)))
 end;
 
 private function ViewStatus(State: IdeModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint(StatusText(State))])
+  return TuiElementBuilders.MakeStatusLine([
+                                             TuiStatusItemBuilders.MakeHint(StatusText(State)),
+                                             TuiStatusItemBuilders.MakeKeyHint('F2', 'Save'),
+                                             TuiStatusItemBuilders.MakeKeyHint('F9', 'Check'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Ctrl+F9', 'Run')
+
+                                           ])
 end;
 
 private function OpenPathText(State: IdeModel): string;

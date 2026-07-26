@@ -13,11 +13,18 @@ begin
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Edit'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Run'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Options'));
+  AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.MenuNormal);
   AssertTrue(Std.Str.Contains(Surface.LineAt(1), ExpectedPath));
   AssertTrue(Std.Str.Contains(Surface.LineAt(2), 'Editor'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 6), 'Messages'));
   AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 5), State.MessageText));
   AssertTrue(Std.Str.Contains(Surface.LineAt(Size.Height - 1), 'clean | Ln 1, Col 1'));
+  AssertTrue(Surface.CellAt(0, Size.Height - 1).Role = TuiStyleRole.StatusNormal);
+  var F2Column: integer := Std.Str.IndexOf(Surface.LineAt(Size.Height - 1), 'F2');
+  if F2Column >= 0 then
+  begin
+    AssertTrue(Surface.CellAt(F2Column, Size.Height - 1).Role = TuiStyleRole.StatusShortcut)
+  end;
   AssertEquals(State.Document.Text, Final.Document.Text);
   App.Close()
 end;
@@ -46,7 +53,7 @@ begin
     LastExitCode := Some(1);
     Focused := None;
     Menu := TuiMenuState.Closed();
-    Theme := IdeTheme.ClassicBlue;
+    Theme := IdeTheme.Light;
   end;
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   var _: IdeModel := App.RunIterations(LongMessage, UpdateIde, ViewIde, 0, 0);

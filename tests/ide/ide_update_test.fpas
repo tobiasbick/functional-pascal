@@ -86,7 +86,7 @@ begin
     LastExitCode := Some(1);
     Focused := Some(MessageScrollControlId());
     Menu := TuiMenuState.Closed();
-    Theme := IdeTheme.ClassicBlue;
+    Theme := IdeTheme.Light;
   end;
   var LaterDiagnostic: IdeModel := UpdateIde(Navigation, TuiMsgScrollChanged(MessageScrollControlId(), MessageScrollChangedAction(), TuiPoint.Create(0, 5)), Cmd);
   case LaterDiagnostic.SelectedDiagnostic of

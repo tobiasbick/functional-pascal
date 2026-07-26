@@ -5,7 +5,7 @@ unit Ide.Theme.Model;
 type
   /// Stable identity of one bundled IDE theme.
   IdeTheme = enum
-    ClassicBlue;
+    Light;
     Dark;
     Monochrome;
   end;

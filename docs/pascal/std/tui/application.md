@@ -86,10 +86,14 @@ a focused button. Escape produces `QuitRequested`. Left-button pointer downs
 hit-test the previous arranged frame: focus changes are queued before an action
 or controlled change, and unhandled pointer input remains `TuiMsg.Pointer`.
 For a `MovableDialog`, a left-button press on the title row starts a controlled
-drag, `Drag` updates its clamped position, and `Up` clears the drag offset.
-Dialogs paint an opaque `Normal` surface plus a two-column right shadow and a
-one-row bottom shadow with the `Disabled` style role; frame titles use the
-`Title` role.
+drag, `Drag` updates its clamped position, and `Up` clears the drag offset. A
+press on its `[■]` close box emits `Action` instead of starting a drag.
+Dialogs paint an opaque `DialogNormal` surface plus a two-column right shadow
+and a one-row bottom shadow with `DialogShadow`. Their frame, title, input, and
+button cells use the matching dialog-specific palette roles.
+Menu bars, menu popups, and status lines likewise paint their complete chrome
+with dedicated menu or status roles. Mnemonics and status key hints retain
+their shortcut role inside normal or selected chrome.
 An open hierarchical menu handles Escape before the application-level quit
 request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
 described in [Menus](menus.md).

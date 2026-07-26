@@ -43,8 +43,15 @@ begin
   var Open: IdeModel := UpdateIde(InitialIdeModel(None), TuiMsgAction(OpenControlId(), OpenAction()), Cmd);
   var OpenSurface: TuiSurfaceSnapshot := Render(Open);
   AssertTrue(SurfaceContains(OpenSurface, ' Open '));
+  AssertTrue(SurfaceContains(OpenSurface, '[■]'));
   AssertTrue(SurfaceContains(OpenSurface, 'Path'));
   AssertTrue(SurfaceContains(OpenSurface, 'Cancel'));
+  var OpenClose: TuiPoint := FindText(OpenSurface, '[■]');
+  AssertTrue(OpenSurface.CellAt(OpenClose.X, OpenClose.Y).Role = TuiStyleRole.DialogTitle);
+  var OpenPath: TuiPoint := FindText(OpenSurface, 'Path');
+  AssertTrue(OpenSurface.CellAt(OpenPath.X, OpenPath.Y).Role = TuiStyleRole.DialogNormal);
+  var OpenCancel: TuiPoint := FindText(OpenSurface, 'Cancel');
+  AssertTrue(OpenSurface.CellAt(OpenCancel.X, OpenCancel.Y).Role = TuiStyleRole.DialogButton);
   var Dirty: IdeModel := UpdateIde(InitialIdeModel(None), TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'changed', 7, TuiPoint.Create(0, 0)), Cmd);
   var SaveAs: IdeModel := UpdateIde(Dirty, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
   var SaveSurface: TuiSurfaceSnapshot := Render(SaveAs);
@@ -58,10 +65,14 @@ begin
   AssertTrue(SurfaceContains(ConfirmSurface, 'Cancel'));
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(60, 18));
   mutable var Moved: IdeModel := App.RunIterations(Open, UpdateIde, ViewIde, 0, 0);
+  var InitialClose: TuiPoint := FindText(App.SurfaceSnapshot(), '[■]');
+  var InitialDialogX: integer := InitialClose.X - 2;
   var OpenTitle: TuiPoint := FindText(App.SurfaceSnapshot(), ' Open ');
+  var TitleOffset: integer := OpenTitle.X - InitialDialogX;
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, OpenTitle));
   Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Drag, TuiPointerButton.Left, TuiPoint.Create(6, 2)));
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Drag, TuiPointerButton.Left, TuiPoint.Create(4 +
+                                                                                                                TitleOffset, 2)));
   Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
   case Moved.DialogPosition of
     Some(Position):
@@ -75,7 +86,8 @@ begin
     end
   end;
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), ' Open '));
-  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Up, TuiPointerButton.Left, TuiPoint.Create(6, 2)));
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Up, TuiPointerButton.Left, TuiPoint.Create(4 +
+                                                                                                              TitleOffset, 2)));
   Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
   case Moved.DialogDragOffset of
     Some(Offset):
@@ -86,5 +98,17 @@ begin
     begin
     end
   end;
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(6, 2)));
+  Moved := App.RunIterations(Moved, UpdateIde, ViewIde, 1, 0);
+  case Moved.Dialog of
+    IdeDialog.NoDialog:
+    begin
+    end;
+    IdeDialog.OpenPath(PathText, Caret), IdeDialog.SavePath(PathText, Caret, Pending), IdeDialog.ConfirmDirty(Pending):
+    begin
+      AssertTrue(false)
+    end
+  end;
+  AssertTrue(not SurfaceContains(App.SurfaceSnapshot(), '[■]'));
   App.Close()
 end.

@@ -15,7 +15,7 @@ begin
 
                                                                                                          TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20))
 
-                                                                        
+
 
                                                                                                        ])
 
@@ -37,6 +37,10 @@ begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 3));
   mutable var Model: MenuModel := record  end;
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), '>Open  Save '));
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), ' Open  Save '));
+  AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.MenuSelected);
+  AssertTrue(Surface.CellAt(7, 0).Role = TuiStyleRole.MenuDisabled);
+  AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.MenuNormal);
   App.Close()
 end.

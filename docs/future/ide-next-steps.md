@@ -1,9 +1,10 @@
 # Future: IDE next steps
 
-> Status snapshot: 2026-07-25. Scrollable message output, diagnostic source
+> Status snapshot: 2026-07-26. Scrollable message output, diagnostic source
 > navigation, direct `.fpasprj` ingestion, and internal `.fpasworkspace`
 > ingestion are implemented. The IDE also has hierarchical menus and three
-> runtime-switchable themes. Its modal dialogs have Turbo Vision-inspired
+> runtime-switchable themes. Its menu, popup, status, and dialog chrome follows
+> the Turbo Pascal 6-era Turbo Vision color hierarchy; modal dialogs also have
 > shadows and mouse-draggable title bars. Project/workspace trees are
 > deliberately deferred.
 
@@ -35,7 +36,7 @@ The IDE is a fixed, single-document `Std.Tui` application:
 - it edits the source with a controlled multiline `TextArea`;
 - it supports Open, Save, Check, Run, and Exit through File/Edit/Run/Options
   popup menus with mnemonics and structural shortcuts;
-- it switches between Classic Blue, Dark, and Monochrome without restarting;
+- it switches between Light, Dark, and Monochrome without restarting;
 - it protects dirty documents with Save, Discard, and Cancel;
 - it provides F2, F9, Ctrl+F9, and Alt+X shortcuts;
 - Check and Run save first and invoke the current `fpas` executable
@@ -47,8 +48,8 @@ The IDE is a fixed, single-document `Std.Tui` application:
   with Enter;
 - dialogs, pointer activation, resize handling, and terminal restoration have
   headless or lifecycle coverage.
-- Open, Save As, and dirty-document dialogs are modal, shadowed, and movable by
-  dragging their title bars.
+- Open, Save As, and dirty-document dialogs are modal, shadowed, movable by
+  dragging their title bars, and cancelable through their `[■]` close boxes.
 
 Current ownership is intentionally small:
 

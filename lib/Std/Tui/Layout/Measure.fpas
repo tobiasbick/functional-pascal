@@ -90,6 +90,10 @@ begin
       TuiStatusItem.Hint(Text), TuiStatusItem.Command(Id, Text, Action, Enabled):
       begin
         Width := Width + Std.Console.DisplayWidth(Text)
+      end;
+      TuiStatusItem.KeyHint(KeyText, Text):
+      begin
+        Width := ((Width + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) + 1
       end
     end
   end;
@@ -333,7 +337,19 @@ begin
           ContentMaxH := TuiMeasureAxis.Add(ContentMaxH, Measured.Maximum.Height)
         end
       end;
-      var TitleWidth: integer := Std.Console.DisplayWidth(Title) + 6;
+      mutable var TitleWidth: integer := Std.Console.DisplayWidth(Title) + 6;
+      case Node of
+        TuiElement.MovableDialog(Id, DialogTitle, Position, DragOffset, ChangeAction, DialogChildren):
+        begin
+          TitleWidth := Std.Console.DisplayWidth(DialogTitle) + 9
+        end;
+        TuiElement.Window(WindowTitle, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
+        begin
+        end
+        else
+        begin
+        end
+      end;
       var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(TuiMeasureAxis.Max(ContentMinW +
                                                                                               2, TitleWidth), ContentMinH +
                                                                                                               2), TuiSize.Create(TuiMeasureAxis.Max(ContentPrefW +

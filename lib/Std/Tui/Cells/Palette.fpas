@@ -12,6 +12,23 @@ type
     Shortcut: TuiStyle;
     Frame: TuiStyle;
     Title: TuiStyle;
+    MenuNormal: TuiStyle;
+    MenuDisabled: TuiStyle;
+    MenuShortcut: TuiStyle;
+    MenuSelected: TuiStyle;
+    MenuSelectedShortcut: TuiStyle;
+    StatusNormal: TuiStyle;
+    StatusDisabled: TuiStyle;
+    StatusShortcut: TuiStyle;
+    StatusSelected: TuiStyle;
+    DialogNormal: TuiStyle;
+    DialogFrame: TuiStyle;
+    DialogTitle: TuiStyle;
+    DialogInput: TuiStyle;
+    DialogInputFocused: TuiStyle;
+    DialogButton: TuiStyle;
+    DialogButtonFocused: TuiStyle;
+    DialogShadow: TuiStyle;
     Failure: TuiStyle;
     Warning: TuiStyle;
     Accent: TuiStyle;
@@ -26,6 +43,23 @@ type
   Shortcut: TuiStyle;
   Frame: TuiStyle;
   Title: TuiStyle;
+  MenuNormal: TuiStyle;
+  MenuDisabled: TuiStyle;
+  MenuShortcut: TuiStyle;
+  MenuSelected: TuiStyle;
+  MenuSelectedShortcut: TuiStyle;
+  StatusNormal: TuiStyle;
+  StatusDisabled: TuiStyle;
+  StatusShortcut: TuiStyle;
+  StatusSelected: TuiStyle;
+  DialogNormal: TuiStyle;
+  DialogFrame: TuiStyle;
+  DialogTitle: TuiStyle;
+  DialogInput: TuiStyle;
+  DialogInputFocused: TuiStyle;
+  DialogButton: TuiStyle;
+  DialogButtonFocused: TuiStyle;
+  DialogShadow: TuiStyle;
   Failure: TuiStyle;
   Warning: TuiStyle;
   Accent: TuiStyle
@@ -39,6 +73,23 @@ type
         Shortcut := Shortcut;
         Frame := Frame;
         Title := Title;
+        MenuNormal := MenuNormal;
+        MenuDisabled := MenuDisabled;
+        MenuShortcut := MenuShortcut;
+        MenuSelected := MenuSelected;
+        MenuSelectedShortcut := MenuSelectedShortcut;
+        StatusNormal := StatusNormal;
+        StatusDisabled := StatusDisabled;
+        StatusShortcut := StatusShortcut;
+        StatusSelected := StatusSelected;
+        DialogNormal := DialogNormal;
+        DialogFrame := DialogFrame;
+        DialogTitle := DialogTitle;
+        DialogInput := DialogInput;
+        DialogInputFocused := DialogInputFocused;
+        DialogButton := DialogButton;
+        DialogButtonFocused := DialogButtonFocused;
+        DialogShadow := DialogShadow;
         Failure := Failure;
         Warning := Warning;
         Accent := Accent;
@@ -52,11 +103,20 @@ type
       var Black: TuiColor := TuiColor.FromCrt(0);
       var DarkGray: TuiColor := TuiColor.FromCrt(8);
       var LightGray: TuiColor := TuiColor.FromCrt(7);
+      var White: TuiColor := TuiColor.FromCrt(15);
+      var Blue: TuiColor := TuiColor.FromCrt(1);
+      var Green: TuiColor := TuiColor.FromCrt(2);
+      var Red: TuiColor := TuiColor.FromCrt(4);
       var LightCyan: TuiColor := TuiColor.FromCrt(11);
       var LightRed: TuiColor := TuiColor.FromCrt(12);
       var Yellow: TuiColor := TuiColor.FromCrt(14);
       var Normal: TuiStyle := TuiStyle.FromColors(LightGray, Black);
-      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
+      var ChromeNormal: TuiStyle := TuiStyle.FromColors(Black, LightGray);
+      var ChromeDisabled: TuiStyle := TuiStyle.FromColors(DarkGray, LightGray);
+      var ChromeShortcut: TuiStyle := TuiStyle.FromColors(Red, LightGray);
+      var ChromeSelected: TuiStyle := TuiStyle.FromColors(Black, Green);
+      var ChromeSelectedShortcut: TuiStyle := TuiStyle.FromColors(Red, Green);
+      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(Black, Green), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
     end;
 
     /// Resolves the concrete style for one semantic role.
@@ -92,6 +152,74 @@ type
         begin
           return Self.Title
         end;
+        TuiStyleRole.MenuNormal:
+        begin
+          return Self.MenuNormal
+        end;
+        TuiStyleRole.MenuDisabled:
+        begin
+          return Self.MenuDisabled
+        end;
+        TuiStyleRole.MenuShortcut:
+        begin
+          return Self.MenuShortcut
+        end;
+        TuiStyleRole.MenuSelected:
+        begin
+          return Self.MenuSelected
+        end;
+        TuiStyleRole.MenuSelectedShortcut:
+        begin
+          return Self.MenuSelectedShortcut
+        end;
+        TuiStyleRole.StatusNormal:
+        begin
+          return Self.StatusNormal
+        end;
+        TuiStyleRole.StatusDisabled:
+        begin
+          return Self.StatusDisabled
+        end;
+        TuiStyleRole.StatusShortcut:
+        begin
+          return Self.StatusShortcut
+        end;
+        TuiStyleRole.StatusSelected:
+        begin
+          return Self.StatusSelected
+        end;
+        TuiStyleRole.DialogNormal:
+        begin
+          return Self.DialogNormal
+        end;
+        TuiStyleRole.DialogFrame:
+        begin
+          return Self.DialogFrame
+        end;
+        TuiStyleRole.DialogTitle:
+        begin
+          return Self.DialogTitle
+        end;
+        TuiStyleRole.DialogInput:
+        begin
+          return Self.DialogInput
+        end;
+        TuiStyleRole.DialogInputFocused:
+        begin
+          return Self.DialogInputFocused
+        end;
+        TuiStyleRole.DialogButton:
+        begin
+          return Self.DialogButton
+        end;
+        TuiStyleRole.DialogButtonFocused:
+        begin
+          return Self.DialogButtonFocused
+        end;
+        TuiStyleRole.DialogShadow:
+        begin
+          return Self.DialogShadow
+        end;
         TuiStyleRole.Failure:
         begin
           return Self.Failure
@@ -111,47 +239,117 @@ type
 
     function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
     begin
+      mutable var Updated: TuiPalette := Self;
       case Role of
         TuiStyleRole.Normal:
         begin
-          return TuiPalette.Create(Style, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Normal := Style
         end;
         TuiStyleRole.Disabled:
         begin
-          return TuiPalette.Create(Self.Normal, Style, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Disabled := Style
         end;
         TuiStyleRole.Focused:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Style, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Focused := Style
         end;
         TuiStyleRole.Selected:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Style, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Selected := Style
         end;
         TuiStyleRole.Shortcut:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Style, Self.Frame, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Shortcut := Style
         end;
         TuiStyleRole.Frame:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Style, Self.Title, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Frame := Style
         end;
         TuiStyleRole.Title:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Style, Self.Failure, Self.Warning, Self.Accent)
+          Updated.Title := Style
+        end;
+        TuiStyleRole.MenuNormal:
+        begin
+          Updated.MenuNormal := Style
+        end;
+        TuiStyleRole.MenuDisabled:
+        begin
+          Updated.MenuDisabled := Style
+        end;
+        TuiStyleRole.MenuShortcut:
+        begin
+          Updated.MenuShortcut := Style
+        end;
+        TuiStyleRole.MenuSelected:
+        begin
+          Updated.MenuSelected := Style
+        end;
+        TuiStyleRole.MenuSelectedShortcut:
+        begin
+          Updated.MenuSelectedShortcut := Style
+        end;
+        TuiStyleRole.StatusNormal:
+        begin
+          Updated.StatusNormal := Style
+        end;
+        TuiStyleRole.StatusDisabled:
+        begin
+          Updated.StatusDisabled := Style
+        end;
+        TuiStyleRole.StatusShortcut:
+        begin
+          Updated.StatusShortcut := Style
+        end;
+        TuiStyleRole.StatusSelected:
+        begin
+          Updated.StatusSelected := Style
+        end;
+        TuiStyleRole.DialogNormal:
+        begin
+          Updated.DialogNormal := Style
+        end;
+        TuiStyleRole.DialogFrame:
+        begin
+          Updated.DialogFrame := Style
+        end;
+        TuiStyleRole.DialogTitle:
+        begin
+          Updated.DialogTitle := Style
+        end;
+        TuiStyleRole.DialogInput:
+        begin
+          Updated.DialogInput := Style
+        end;
+        TuiStyleRole.DialogInputFocused:
+        begin
+          Updated.DialogInputFocused := Style
+        end;
+        TuiStyleRole.DialogButton:
+        begin
+          Updated.DialogButton := Style
+        end;
+        TuiStyleRole.DialogButtonFocused:
+        begin
+          Updated.DialogButtonFocused := Style
+        end;
+        TuiStyleRole.DialogShadow:
+        begin
+          Updated.DialogShadow := Style
         end;
         TuiStyleRole.Failure:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Style, Self.Warning, Self.Accent)
+          Updated.Failure := Style
         end;
         TuiStyleRole.Warning:
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Style, Self.Accent)
+          Updated.Warning := Style
         end
         else
         begin
-          return TuiPalette.Create(Self.Normal, Self.Disabled, Self.Focused, Self.Selected, Self.Shortcut, Self.Frame, Self.Title, Self.Failure, Self.Warning, Style)
+          Updated.Accent := Style
         end
-      end
+      end;
+      return Updated
     end;
   end;

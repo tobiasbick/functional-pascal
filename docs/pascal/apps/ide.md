@@ -40,12 +40,14 @@ document.
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus and activate commands or dialog buttons |
 
-Options > Theme switches immediately between the bundled Classic Blue, Dark,
+Options > Theme switches immediately between the bundled Light, Dark,
 and Monochrome palettes. The selected theme is retained for the current run
-but is not persisted. Classic Blue uses a Turbo Vision-inspired blue surface
-with cyan frames and selection plus yellow titles and shortcuts. Dark retains
-the cyan and yellow hierarchy on black and dark-gray surfaces. Monochrome uses
-only black, white, and gray. Open menus support arrows, Enter, Space, Escape,
+but is not persisted. Light follows the Turbo Pascal 6-era Turbo Vision color
+hierarchy: a blue IDE surface with cyan frames and yellow accents, light-gray
+menu bars, popups, and status lines, red shortcut letters, green active menu
+items, and gray dialogs. Dark translates the same semantic roles to black and
+dark-gray surfaces. Monochrome uses only black, white, and gray. Open menus
+support arrows, Enter, Space, Escape,
 mnemonics, and pointer activation. Pointer movement over an open menu switches
 root popups, selects commands, and opens nested submenus without activating
 them.
@@ -74,9 +76,10 @@ document uses the Save As path dialog. A failed read or write updates the
 message area without changing the current document.
 
 Open, Save As, and dirty-document dialogs use Turbo Vision-inspired frames with
-right/bottom shadows. Drag a dialog title bar with the left mouse button to
-move it within the visible desktop. Closing a dialog resets its position, so
-the next dialog opens centered.
+right/bottom shadows. Their `[■]` close box cancels the dialog. Drag the rest of
+a dialog title bar with the left mouse button to move it within the visible
+desktop. Closing a dialog resets its position, so the next dialog opens
+centered.
 
 The IDE parses project TOML itself. It validates the project name and kind,
 program main file, and source include/exclude arrays. Patterns are resolved

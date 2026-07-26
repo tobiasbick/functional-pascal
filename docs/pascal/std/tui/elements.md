@@ -28,14 +28,21 @@ TuiElement.Desktop(Focused, Children)
 `MakeColumnSpaced` for gaps. `MakeLayout` and `MakeScroll` wrap exactly one
 child. `MenuBar` is the simple flat action bar and uses `TuiMenuItem`.
 `Menu` is the controlled hierarchical menu described in
-[Menus](menus.md); `StatusLine` uses `TuiStatusItem`.
-Hint-only status lines are not focusable.
+[Menus](menus.md); `StatusLine` uses `TuiStatusItem`. `MakeHint(Text)` paints
+ordinary status text, while `MakeKeyHint(KeyText, Text)` paints a display-only
+shortcut and its description with separate semantic roles. `MakeCommand`
+creates the focusable, actionable status item. Status lines containing only
+hints and key hints are not focusable.
 
 `MakeDialog` creates a centered fixed modal. `MakeMovableDialog` creates a
 controlled modal with a model-owned optional position and drag offset. A
 position of `None` centers the dialog. Pressing its title bar, dragging with the
 left button, and releasing emit `DialogChanged`; the application stores the
 proposed position and drag offset and returns them from its next `View`.
+The movable dialog frame includes a `[■]` close box. Pressing any of its three
+cells emits `Action(Id, ChangeAction)`; the application decides how that action
+closes or cancels the controlled dialog. The close box is excluded from the
+title-bar drag region.
 Movable dialogs are clamped so their frame and two-column, one-row shadow remain
 on the desktop whenever the terminal is large enough.
 

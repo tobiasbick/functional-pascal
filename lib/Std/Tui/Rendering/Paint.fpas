@@ -3,8 +3,9 @@ unit Std.Tui.Rendering.Paint;
 uses
   Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Surface,
-  Std.Tui.Rendering.Menu, Std.Tui.Rendering.TextArea;
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Chrome,
+  Std.Tui.Rendering.Menu, Std.Tui.Rendering.StatusLine, Std.Tui.Rendering.Surface,
+  Std.Tui.Rendering.TextArea;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -20,44 +21,13 @@ begin
   end
 end;
 
-private procedure TuiPaintTextInBounds(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
+private procedure TuiPaintTextInBounds(Canvas: TuiCanvas; Bounds: TuiRect; Text: string; Role: TuiStyleRole);
 begin
   if Bounds.IsEmpty() then
   begin
     return
   end;
-  Canvas.Child(Bounds).WriteText(TuiPoint.Create(0, 0), Text, TuiStyleRole.Normal)
-end;
-
-private procedure TuiPaintFrameChrome(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
-begin
-  if Bounds.IsEmpty() then
-  begin
-    return
-  end;
-  Canvas.Child(Bounds)
-    .DrawFrame(TuiRect.Create(0, 0, Bounds.Width, Bounds.Height), TuiStyleRole.Frame);
-  if (Title <> '') and (Bounds.Width > 6) then
-  begin
-    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
-      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title)
-  end
-end;
-
-private procedure TuiPaintDialogShadow(Canvas: TuiCanvas; Bounds: TuiRect);
-begin
-  if Bounds.IsEmpty() then
-  begin
-    return
-  end;
-  var Shadow: TuiCell := TuiCell.Create('░', TuiStyleRole.Disabled);
-  Canvas.FillRect(TuiRect.Create(Bounds.Right(), Bounds.Y + 1, 2, Bounds.Height), Shadow);
-  Canvas.FillRect(TuiRect.Create(Bounds.X + 2, Bounds.Bottom(), Bounds.Width, 1), Shadow)
-end;
-
-private procedure TuiPaintDialogSurface(Canvas: TuiCanvas; Bounds: TuiRect);
-begin
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal))
+  Canvas.Child(Bounds).WriteText(TuiPoint.Create(0, 0), Text, Role)
 end;
 
 /// Paints one arranged node and returns the next unused frame index.
@@ -67,7 +37,8 @@ private function TuiPaintArranged(
   Frame: TuiArrangedFrame;
   Node: TuiElement;
   Index: integer;
-  Focused: option of TuiControlId
+  Focused: option of TuiControlId;
+  InDialog: boolean
 ): integer;
 begin
   var Entry: TuiArrangedEntry := Frame.EntryAt(Index);
@@ -79,33 +50,65 @@ begin
     end;
     TuiElement.Label(Text):
     begin
-      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
+      mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
+      if InDialog then
+      begin
+        Role := TuiStyleRole.DialogNormal
+      end;
+      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text, Role)
     end;
     TuiElement.Button(Id, Text, Action):
     begin
       if TuiPaintFocused(Focused, Id) then
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('>[ ' + Text) + ' ]')
+        mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogButtonFocused
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('>[ ' + Text) + ' ]', Role)
       end
       else
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, (' [ ' + Text) + ' ]')
+        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogButton
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, (' [ ' + Text) + ' ]', Role)
       end
     end;
     TuiElement.Input(Id, Text, Caret, ChangeAction):
     begin
       if TuiPaintFocused(Focused, Id) then
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('> ' + Text) + '_')
+        mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogInputFocused
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('> ' + Text) + '_', Role)
       end
       else
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, '  ' + Text)
+        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogInput
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, '  ' + Text, Role)
       end
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
-      TuiPaintTextArea(Clipped, Entry.Bounds, Text, Caret, Offset, TuiPaintFocused(Focused, Id))
+      mutable var NormalRole: TuiStyleRole := TuiStyleRole.Normal;
+      mutable var FocusedRole: TuiStyleRole := TuiStyleRole.Focused;
+      if InDialog then
+      begin
+        NormalRole := TuiStyleRole.DialogInput;
+        FocusedRole := TuiStyleRole.DialogInputFocused
+      end;
+      TuiPaintTextArea(Clipped, Entry.Bounds, Text, Caret, Offset, TuiPaintFocused(Focused, Id), NormalRole, FocusedRole)
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
     begin
@@ -116,11 +119,21 @@ begin
       end;
       if TuiPaintFocused(Focused, Id) then
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, (('>[' + Mark) + '] ') + Text)
+        mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogButtonFocused
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, (('>[' + Mark) + '] ') + Text, Role)
       end
       else
       begin
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, ((' [' + Mark) + '] ') + Text)
+        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogNormal
+        end;
+        TuiPaintTextInBounds(Clipped, Entry.Bounds, ((' [' + Mark) + '] ') + Text, Role)
       end
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
@@ -137,25 +150,34 @@ begin
         begin
           Prefix := '> '
         end;
+        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
+        if InDialog then
+        begin
+          Role := TuiStyleRole.DialogNormal
+        end;
         TuiPaintTextInBounds(Clipped, TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y + Row, Entry.Bounds.Width, 1), Prefix +
-                                                                                                                   Items[Row])
+                                                                                                                   Items[Row], Role)
       end
     end;
     TuiElement.MenuBar(Items):
     begin
-      mutable var Text: string := '';
+      Clipped.FillRect(Entry.Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
+      mutable var X: integer := Entry.Bounds.X;
       for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
       begin
+        mutable var Role: TuiStyleRole := TuiStyleRole.MenuNormal;
         if Items[ItemIndex].Enabled and TuiPaintFocused(Focused, Items[ItemIndex].Id) then
         begin
-          Text := (Text + ('>' + Items[ItemIndex].Text)) + ' '
+          Role := TuiStyleRole.MenuSelected
         end
-        else
+        else if not Items[ItemIndex].Enabled then
         begin
-          Text := (Text + (' ' + Items[ItemIndex].Text)) + ' '
-        end
-      end;
-      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
+          Role := TuiStyleRole.MenuDisabled
+        end;
+        var ItemText: string := (' ' + Items[ItemIndex].Text) + ' ';
+        Clipped.WriteText(TuiPoint.Create(X, Entry.Bounds.Y), ItemText, Role);
+        X := X + Std.Console.DisplayWidth(ItemText)
+      end
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
     begin
@@ -163,63 +185,48 @@ begin
     end;
     TuiElement.StatusLine(Items):
     begin
-      mutable var Text: string := '';
-      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
-      begin
-        if ItemIndex > 0 then
-        begin
-          Text := Text + ' '
-        end;
-        case Items[ItemIndex] of
-          TuiStatusItem.Hint(ItemText):
-          begin
-            Text := Text + ItemText
-          end;
-          TuiStatusItem.Command(Id, ItemText, Action, Enabled):
-          begin
-            if Enabled and TuiPaintFocused(Focused, Id) then
-            begin
-              Text := Text + ('>' + ItemText)
-            end
-            else
-            begin
-              Text := Text + ItemText
-            end
-          end
-        end
-      end;
-      TuiPaintTextInBounds(Clipped, Entry.Bounds, Text)
+      TuiPaintStatusLine(Clipped, Entry.Bounds, Items, Focused)
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, InDialog)
       end
     end;
     TuiElement.Window(Title, Children):
     begin
-      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title);
+      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.Frame, TuiStyleRole.Title, false);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, InDialog)
       end
     end;
-    TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    TuiElement.Dialog(Title, Children):
     begin
       TuiPaintDialogShadow(Canvas, Entry.Bounds);
       TuiPaintDialogSurface(Canvas, Entry.Bounds);
-      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title);
+      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.DialogFrame, TuiStyleRole.DialogTitle, false);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, true)
+      end
+    end;
+    TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    begin
+      TuiPaintDialogShadow(Canvas, Entry.Bounds);
+      TuiPaintDialogSurface(Canvas, Entry.Bounds);
+      TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.DialogFrame, TuiStyleRole.DialogTitle, true);
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, true)
       end
     end;
     TuiElement.Desktop(DesktopFocus, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, DesktopFocus)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, DesktopFocus, false)
       end
     end
   end;
@@ -288,7 +295,7 @@ procedure TuiPaintView(Surface: TuiWorkingSurface; Frame: TuiArrangedFrame; Root
 begin
   Surface.Clear();
   var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Surface.Size()));
-  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None);
+  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None, false);
   if NextIndex <> Frame.Count() then
   begin
     panic('Tui paint did not consume the complete arranged frame')

@@ -25,6 +25,19 @@ not part of the public cell value.
 one style and `WithRole` returns a copy with one replacement, leaving the
 original palette unchanged.
 
+The general roles (`Normal`, `Focused`, `Frame`, and `Title`) style the desktop
+and ordinary windows. Menus use `MenuNormal`, `MenuDisabled`, `MenuShortcut`,
+`MenuSelected`, and `MenuSelectedShortcut`; status lines use `StatusNormal`,
+`StatusDisabled`, `StatusShortcut`, and `StatusSelected`. The menu bar and
+status line paint their complete row with their normal role, so their chrome
+remains distinct from the desktop.
+
+Dialog painting uses separate `DialogNormal`,
+`DialogFrame`, `DialogTitle`, `DialogInput`, `DialogInputFocused`,
+`DialogButton`, `DialogButtonFocused`, and `DialogShadow` roles. A theme can
+therefore use a gray dialog surface over a blue desktop without changing
+ordinary window content.
+
 ```pascal
 var Palette: TuiPalette := TuiPalette.Default();
 var Warning: TuiStyle := Palette.ForRole(TuiStyleRole.Warning);

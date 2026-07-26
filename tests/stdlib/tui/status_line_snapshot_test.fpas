@@ -13,11 +13,13 @@ begin
 
                                                                                                             TuiStatusItemBuilders.MakeHint('Ready'),
 
-                                                                                                            TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
+                                                                                                            TuiStatusItemBuilders.MakeKeyHint('F2', 'Save'),
+
+                                                                                                            TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
 
                                                                                                             TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
 
-                                                                        
+
 
                                                                                                           ])
 
@@ -39,6 +41,13 @@ begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 3));
   mutable var Model: StatusModel := record  end;
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'Ready >Save Quit'));
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));
+  AssertTrue(Surface.CellAt(0, 0).Role = TuiStyleRole.StatusNormal);
+  AssertTrue(Surface.CellAt(6, 0).Role = TuiStyleRole.StatusShortcut);
+  AssertTrue(Surface.CellAt(9, 0).Role = TuiStyleRole.StatusNormal);
+  AssertTrue(Surface.CellAt(14, 0).Role = TuiStyleRole.StatusSelected);
+  AssertTrue(Surface.CellAt(19, 0).Role = TuiStyleRole.StatusDisabled);
+  AssertTrue(Surface.CellAt(23, 0).Role = TuiStyleRole.StatusNormal);
   App.Close()
 end.

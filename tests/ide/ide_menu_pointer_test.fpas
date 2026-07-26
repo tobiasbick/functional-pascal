@@ -46,6 +46,12 @@ end;
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   mutable var Model: IdeModel := App.RunIterations(InitialIdeModel(None), UpdateIde, ViewIde, 0, 0);
+  var ClosedFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  AssertTrue(App.SurfaceSnapshot().CellAt(ClosedFileAt.X, ClosedFileAt.Y).Role =
+             TuiStyleRole.MenuShortcut);
+  AssertTrue(App.SurfaceSnapshot().CellAt(ClosedFileAt.X + 1, ClosedFileAt.Y).Role =
+             TuiStyleRole.MenuNormal);
+  AssertTrue(App.SurfaceSnapshot().CellAt(79, 0).Role = TuiStyleRole.MenuNormal);
   var ClosedOptionsAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, ClosedOptionsAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
@@ -53,6 +59,11 @@ begin
   App.InjectKeyForTest(MenuKey());
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
   AssertTrue(Model.Menu.Open);
+  var OpenFileAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'File');
+  AssertTrue(App.SurfaceSnapshot().CellAt(OpenFileAt.X, OpenFileAt.Y).Role =
+             TuiStyleRole.MenuSelectedShortcut);
+  AssertTrue(App.SurfaceSnapshot().CellAt(OpenFileAt.X + 1, OpenFileAt.Y).Role =
+             TuiStyleRole.MenuSelected);
   var OptionsAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Options');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, OptionsAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
@@ -65,12 +76,12 @@ begin
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, DarkAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertActive(Model.Menu, 51);
-  AssertTrue(Model.Theme = IdeTheme.ClassicBlue);
+  AssertTrue(Model.Theme = IdeTheme.Light);
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Move, TuiPointerButton.NoButton, TuiPoint.Create(79, 24)));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertTrue(Model.Menu.Open);
   AssertActive(Model.Menu, 51);
-  AssertTrue(Model.Theme = IdeTheme.ClassicBlue);
+  AssertTrue(Model.Theme = IdeTheme.Light);
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, DarkAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
   AssertFalse(Model.Menu.Open);

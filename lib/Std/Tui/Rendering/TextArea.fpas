@@ -12,7 +12,9 @@ procedure TuiPaintTextArea(
   Text: string;
   Caret: integer;
   Offset: TuiPoint;
-  Focused: boolean
+  Focused: boolean;
+  NormalRole: TuiStyleRole;
+  FocusedRole: TuiStyleRole
 );
 begin
   if Bounds.IsEmpty() then
@@ -26,7 +28,7 @@ begin
     var Line: integer := Offset.Y + Row;
     if Line < LineCount then
     begin
-      Area.WriteText(TuiPoint.Create(- Offset.X, Row), TuiTextAreaLineText(Text, Line), TuiStyleRole.Normal)
+      Area.WriteText(TuiPoint.Create(- Offset.X, Row), TuiTextAreaLineText(Text, Line), NormalRole)
     end
   end;
   if Focused then
@@ -36,7 +38,7 @@ begin
     var CaretY: integer := Position.Line - Offset.Y;
     if (((CaretX >= 0) and (CaretX < Bounds.Width)) and (CaretY >= 0)) and (CaretY < Bounds.Height) then
     begin
-      Area.PutCell(TuiPoint.Create(CaretX, CaretY), TuiCell.Create('▏', TuiStyleRole.Focused))
+      Area.PutCell(TuiPoint.Create(CaretX, CaretY), TuiCell.Create('▏', FocusedRole))
     end
   end
 end;

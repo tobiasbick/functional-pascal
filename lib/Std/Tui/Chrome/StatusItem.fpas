@@ -6,6 +6,7 @@ type
   /// Immutable display or action item in a status line.
   TuiStatusItem = enum
     Hint(Text: string);
+    KeyHint(KeyText: string; Text: string);
     Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
   end;
   /// Constructors for immutable status-line items.
@@ -15,6 +16,13 @@ type
     static function MakeHint(Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.Hint(Text)
+    end;
+
+    /// Creates a display-only shortcut and description pair.
+
+    static function MakeKeyHint(KeyText: string; Text: string): TuiStatusItem;
+    begin
+      return TuiStatusItem.KeyHint(KeyText, Text)
     end;
 
     /// Creates an enabled status-line command.

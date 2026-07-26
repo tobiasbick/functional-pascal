@@ -125,6 +125,11 @@ begin
           begin
             Cursor := Cursor + Std.Console.DisplayWidth(Text)
           end;
+          TuiStatusItem.KeyHint(KeyText, Text):
+          begin
+            Cursor := ((Cursor + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
+                      1
+          end;
           TuiStatusItem.Command(Id, Text, Action, Enabled):
           begin
             var Width: integer := Std.Console.DisplayWidth(Text);

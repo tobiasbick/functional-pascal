@@ -9,7 +9,7 @@ begin
   return TuiStyle.FromColors(TuiColor.FromCrt(Foreground), TuiColor.FromCrt(Background))
 end;
 
-private function ClassicBluePalette(): TuiPalette;
+private function LightPalette(): TuiPalette;
 begin
   return TuiPalette.Default()
            .WithRole(TuiStyleRole.Normal, IdeStyle(15, 1))
@@ -19,6 +19,23 @@ begin
            .WithRole(TuiStyleRole.Shortcut, IdeStyle(14, 1))
            .WithRole(TuiStyleRole.Frame, IdeStyle(11, 1))
            .WithRole(TuiStyleRole.Title, IdeStyle(14, 1))
+           .WithRole(TuiStyleRole.MenuNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.MenuDisabled, IdeStyle(8, 7))
+           .WithRole(TuiStyleRole.MenuShortcut, IdeStyle(4, 7))
+           .WithRole(TuiStyleRole.MenuSelected, IdeStyle(0, 2))
+           .WithRole(TuiStyleRole.MenuSelectedShortcut, IdeStyle(4, 2))
+           .WithRole(TuiStyleRole.StatusNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.StatusDisabled, IdeStyle(8, 7))
+           .WithRole(TuiStyleRole.StatusShortcut, IdeStyle(4, 7))
+           .WithRole(TuiStyleRole.StatusSelected, IdeStyle(0, 2))
+           .WithRole(TuiStyleRole.DialogNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.DialogFrame, IdeStyle(15, 7))
+           .WithRole(TuiStyleRole.DialogTitle, IdeStyle(15, 7))
+           .WithRole(TuiStyleRole.DialogInput, IdeStyle(15, 1))
+           .WithRole(TuiStyleRole.DialogInputFocused, IdeStyle(15, 2))
+           .WithRole(TuiStyleRole.DialogButton, IdeStyle(0, 2))
+           .WithRole(TuiStyleRole.DialogButtonFocused, IdeStyle(15, 2))
+           .WithRole(TuiStyleRole.DialogShadow, IdeStyle(8, 0))
            .WithRole(TuiStyleRole.Failure, IdeStyle(15, 4))
            .WithRole(TuiStyleRole.Warning, IdeStyle(0, 14))
            .WithRole(TuiStyleRole.Accent, IdeStyle(11, 1))
@@ -34,6 +51,23 @@ begin
            .WithRole(TuiStyleRole.Shortcut, IdeStyle(14, 0))
            .WithRole(TuiStyleRole.Frame, IdeStyle(3, 0))
            .WithRole(TuiStyleRole.Title, IdeStyle(11, 0))
+           .WithRole(TuiStyleRole.MenuNormal, IdeStyle(15, 8))
+           .WithRole(TuiStyleRole.MenuDisabled, IdeStyle(7, 8))
+           .WithRole(TuiStyleRole.MenuShortcut, IdeStyle(12, 8))
+           .WithRole(TuiStyleRole.MenuSelected, IdeStyle(15, 3))
+           .WithRole(TuiStyleRole.MenuSelectedShortcut, IdeStyle(14, 3))
+           .WithRole(TuiStyleRole.StatusNormal, IdeStyle(15, 8))
+           .WithRole(TuiStyleRole.StatusDisabled, IdeStyle(7, 8))
+           .WithRole(TuiStyleRole.StatusShortcut, IdeStyle(12, 8))
+           .WithRole(TuiStyleRole.StatusSelected, IdeStyle(15, 3))
+           .WithRole(TuiStyleRole.DialogNormal, IdeStyle(7, 8))
+           .WithRole(TuiStyleRole.DialogFrame, IdeStyle(15, 8))
+           .WithRole(TuiStyleRole.DialogTitle, IdeStyle(15, 8))
+           .WithRole(TuiStyleRole.DialogInput, IdeStyle(7, 0))
+           .WithRole(TuiStyleRole.DialogInputFocused, IdeStyle(15, 1))
+           .WithRole(TuiStyleRole.DialogButton, IdeStyle(7, 0))
+           .WithRole(TuiStyleRole.DialogButtonFocused, IdeStyle(15, 3))
+           .WithRole(TuiStyleRole.DialogShadow, IdeStyle(0, 0))
            .WithRole(TuiStyleRole.Failure, IdeStyle(12, 0))
            .WithRole(TuiStyleRole.Warning, IdeStyle(14, 0))
            .WithRole(TuiStyleRole.Accent, IdeStyle(11, 0))
@@ -49,6 +83,23 @@ begin
            .WithRole(TuiStyleRole.Shortcut, IdeStyle(15, 0))
            .WithRole(TuiStyleRole.Frame, IdeStyle(15, 0))
            .WithRole(TuiStyleRole.Title, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.MenuNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.MenuDisabled, IdeStyle(8, 7))
+           .WithRole(TuiStyleRole.MenuShortcut, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.MenuSelected, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.MenuSelectedShortcut, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.StatusNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.StatusDisabled, IdeStyle(8, 7))
+           .WithRole(TuiStyleRole.StatusShortcut, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.StatusSelected, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.DialogNormal, IdeStyle(0, 7))
+           .WithRole(TuiStyleRole.DialogFrame, IdeStyle(15, 7))
+           .WithRole(TuiStyleRole.DialogTitle, IdeStyle(15, 7))
+           .WithRole(TuiStyleRole.DialogInput, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.DialogInputFocused, IdeStyle(0, 15))
+           .WithRole(TuiStyleRole.DialogButton, IdeStyle(15, 0))
+           .WithRole(TuiStyleRole.DialogButtonFocused, IdeStyle(0, 15))
+           .WithRole(TuiStyleRole.DialogShadow, IdeStyle(8, 0))
            .WithRole(TuiStyleRole.Failure, IdeStyle(15, 0))
            .WithRole(TuiStyleRole.Warning, IdeStyle(15, 0))
            .WithRole(TuiStyleRole.Accent, IdeStyle(15, 0))
@@ -59,9 +110,9 @@ end;
 function IdeThemePalette(Theme: IdeTheme): TuiPalette;
 begin
   case Theme of
-    IdeTheme.ClassicBlue:
+    IdeTheme.Light:
     begin
-      return ClassicBluePalette()
+      return LightPalette()
     end;
     IdeTheme.Dark:
     begin

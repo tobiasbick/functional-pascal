@@ -163,7 +163,8 @@ private function ViewPathDialog(
   Title: string;
   AcceptText: string;
   PathText: string;
-  Caret: integer
+  Caret: integer;
+  Hint: string
 ): TuiElement;
 begin
   return TuiElementBuilders.MakeMovableDialog(DialogControlId(), Title, State.DialogPosition, State.DialogDragOffset, DialogChangedAction(), [
@@ -171,7 +172,7 @@ begin
 
                                                                                                                                                                                TuiElementBuilders.MakeLabel('Path'),
 
-                                                                                                                                                                               TuiElementBuilders.MakeInput(DialogPathControlId(), PathText, Caret, DialogPathChangedAction()),
+                                                                                                                                                                               TuiElementBuilders.MakeInputWithHint(DialogPathControlId(), PathText, Caret, Hint, DialogPathChangedAction()),
 
                                                                                                                                                                                TuiElementBuilders.MakeRowSpaced([
 
@@ -243,11 +244,11 @@ begin
     end;
     IdeDialog.OpenPath(PathText, Caret):
     begin
-      return ViewPathDialog(State, 'Open', 'Open', PathText, Caret)
+      return ViewPathDialog(State, 'Open', 'Open', PathText, Caret, 'Path to .fpas, .fpasprj, or .fpasworkspace')
     end;
     IdeDialog.SavePath(PathText, Caret, Pending):
     begin
-      return ViewPathDialog(State, 'Save As', 'Save', PathText, Caret)
+      return ViewPathDialog(State, 'Save As', 'Save', PathText, Caret, 'Path to .fpas')
     end;
     IdeDialog.ConfirmDirty(Pending):
     begin

@@ -43,7 +43,13 @@ Buttons use `ButtonNormal`, `ButtonDefault`, `ButtonSelected`,
 grouped in `TuiPalette.Buttons` as `TuiButtonPalette`. Focused buttons use
 `» … «`, unfocused default buttons use `→ … ←`, and enabled buttons paint a
 right/bottom block shadow. `TuiButtonPalette.WithRole` returns a copy with one
-button role replaced.
+button role replaced, while `ForRole` resolves one button role.
+
+One-line inputs use `InputNormal`, `InputFocused`, `InputHint`, `InputCursor`,
+and `InputScroll`, grouped in `TuiPalette.Inputs` as `TuiInputPalette`. Themes
+should keep these roles on a common field background while changing foreground
+or inverse cursor colors. `TuiInputPalette.WithRole` returns a copy with one
+input role replaced, while `ForRole` resolves one input role.
 
 ```pascal
 var Palette: TuiPalette := TuiPalette.Default();

@@ -1,9 +1,9 @@
 unit Std.Tui.Elements.Element;
 
 uses
-  Std.Tui.Chrome.Button, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
-  Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings,
-  Std.Tui.Layout.Spacer;
+  Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
+  Std.Tui.Chrome.StatusItem, Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
+  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Spacer;
 
 private function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -20,7 +20,7 @@ type
     Empty;
     Label(Text: string);
     Button(Value: TuiButtonSpec);
-    Input(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction);
+    Input(Value: TuiInputSpec);
     TextArea(Id: TuiControlId; Text: string; Caret: integer; Offset: TuiPoint; ChangeAction: TuiAction);
     CheckBox(Id: TuiControlId; Text: string; Checked: boolean; ChangeAction: TuiAction);
     List(Id: TuiControlId; Items: array of string; Selected: integer; ChangeAction: TuiAction);
@@ -100,7 +100,35 @@ type
   ChangeAction: TuiAction
 ): TuiElement;
     begin
-      return TuiElement.Input(Id, TextValue, CaretValue, ChangeAction)
+      return TuiElement.Input(TuiInputSpec.Create(Id, TextValue, CaretValue, ChangeAction))
+    end;
+
+    /// Creates a controlled one-line input with placeholder text.
+
+    static function MakeInputWithHint(
+  Id: TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  Hint: string;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Input(TuiInputSpec.WithHint(Id, TextValue, CaretValue, Hint, ChangeAction))
+    end;
+
+    /// Creates a controlled input with oldest-to-newest Up/Down history.
+
+    static function MakeHistoryInput(
+  Id: TuiControlId;
+  TextValue: string;
+  CaretValue: integer;
+  Hint: string;
+  History: array of string;
+  HistoryDraft: string;
+  ChangeAction: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Input(TuiInputSpec.WithHistory(Id, TextValue, CaretValue, Hint, History, HistoryDraft, ChangeAction))
     end;
 
     /// Creates a controlled multiline text area with model-owned caret and offset.

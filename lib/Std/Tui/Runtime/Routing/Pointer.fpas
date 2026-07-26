@@ -5,7 +5,7 @@ uses
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent,
   Std.Tui.Runtime.Routing.ButtonCapture, Std.Tui.Runtime.Routing.DialogPointer,
   Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.MenuPointer,
-  Std.Tui.Runtime.Routing.PointerHit, Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.PointerHit, Std.Tui.Runtime.Routing.TextArea, Std.Tui.Text.Input;
 
 private function TuiRoutePointerFocusMessages(Previous: option of TuiControlId; Target: TuiControlId): array of TuiMsg;
 begin
@@ -45,7 +45,7 @@ begin
     begin
       return Hit.Id.Value = Button.Id.Value
     end;
-    TuiPointerHit.Miss, TuiPointerHit.ImmediateButton(Id, Action), TuiPointerHit.Input(Id), TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds), TuiPointerHit.CheckBox(Id, Action, Checked), TuiPointerHit.List(Id, Action, CurrentSelected, Proposed), TuiPointerHit.Scroll(Id):
+    TuiPointerHit.Miss, TuiPointerHit.ImmediateButton(Id, Action), TuiPointerHit.Input(Input, Bounds), TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds), TuiPointerHit.CheckBox(Id, Action, Checked), TuiPointerHit.List(Id, Action, CurrentSelected, Proposed), TuiPointerHit.Scroll(Id):
     begin
       return false
     end
@@ -169,17 +169,16 @@ begin
 
                                                                                                               ]))
     end;
-    TuiPointerHit.Input(Id):
+    TuiPointerHit.Input(Input, Bounds):
     begin
-      var FocusMessages: array of TuiMsg := TuiRoutePointerFocusMessages(Previous, Id);
-      if Std.Array.Length(FocusMessages) = 0 then
-      begin
-        return TuiIdlePointerResult(ApplicationId, [
-                                                     TuiMsg.Pointer(TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta))
+      var Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, Bounds.Width -
+                                                                                     2);
+      var Caret: integer := TuiInputCaretAtColumn(Input.Text, Viewport, (PointerPosition.X - Bounds.X) -
+                                                                        1);
+      return TuiIdlePointerResult(ApplicationId, Std.Array.Concat(TuiRoutePointerFocusMessages(Previous, Input.Id), [
+                                                                                                                      TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret)
 
-                                                   ])
-      end;
-      return TuiIdlePointerResult(ApplicationId, FocusMessages)
+                                                                                                                    ]))
     end;
     TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds):
     begin

@@ -38,9 +38,10 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 6, 2))
 end;
 
-private function TuiMeasureLeafInput(Text: string): TuiMeasureResult;
+private function TuiMeasureLeafInput(Text: string; Hint: string): TuiMeasureResult;
 begin
-  var Preferred: integer := TuiMeasureAxis.Max(Std.Console.DisplayWidth(Text) + 3, 10);
+  var ContentWidth: integer := TuiMeasureAxis.Max(Std.Console.DisplayWidth(Text), Std.Console.DisplayWidth(Hint));
+  var Preferred: integer := TuiMeasureAxis.Max(ContentWidth + 2, 10);
   return TuiMeasureResult.Create(TuiSize.Create(10, 1), TuiSize.Create(Preferred, 1), TuiSize.Create(Preferred, 1))
 end;
 
@@ -163,7 +164,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -187,9 +188,9 @@ begin
     begin
       return TuiMeasureApplyPolicy(TuiMeasureLeafButton(Button.Text), TuiSizePolicy.Preferred(), Spec)
     end;
-    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Input(Input):
     begin
-      return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Text), TuiSizePolicy.Preferred(), Spec)
+      return TuiMeasureApplyPolicy(TuiMeasureLeafInput(Input.Text, Input.Hint), TuiSizePolicy.Preferred(), Spec)
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin

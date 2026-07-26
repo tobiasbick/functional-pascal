@@ -4,8 +4,8 @@ uses
   Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Button, Std.Tui.Rendering.Canvas,
-  Std.Tui.Rendering.Chrome, Std.Tui.Rendering.Menu, Std.Tui.Rendering.StatusLine,
-  Std.Tui.Rendering.Surface, Std.Tui.Rendering.TextArea;
+  Std.Tui.Rendering.Chrome, Std.Tui.Rendering.Input, Std.Tui.Rendering.Menu,
+  Std.Tui.Rendering.StatusLine, Std.Tui.Rendering.Surface, Std.Tui.Rendering.TextArea;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -62,26 +62,9 @@ begin
     begin
       TuiPaintButton(Clipped, Entry.Bounds, Button, TuiPaintFocused(Focused, Button.Id), TuiPaintFocused(Pressed, Button.Id))
     end;
-    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Input(Input):
     begin
-      if TuiPaintFocused(Focused, Id) then
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
-        if InDialog then
-        begin
-          Role := TuiStyleRole.DialogInputFocused
-        end;
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('> ' + Text) + '_', Role)
-      end
-      else
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
-        if InDialog then
-        begin
-          Role := TuiStyleRole.DialogInput
-        end;
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, '  ' + Text, Role)
-      end
+      TuiPaintInput(Clipped, Entry.Bounds, Input, TuiPaintFocused(Focused, Input.Id))
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin
@@ -266,7 +249,7 @@ begin
         Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;

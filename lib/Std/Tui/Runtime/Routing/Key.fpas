@@ -5,7 +5,7 @@ uses
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
-  Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.Input, Std.Tui.Runtime.Routing.TextArea;
 
 private function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
@@ -31,7 +31,7 @@ begin
         Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -51,47 +51,9 @@ begin
     begin
       return TuiRouteFocusedButtonKey(Button, Target, Key)
     end;
-    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Input(Input):
     begin
-      if Id.Value <> Target.Value then
-      begin
-        return None
-      end;
-      if Key.kind = Std.Console.KeyKind.Character then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Insert(Text, Caret, Key.ch), Caret +
-                                                                                              Std.Str.Length(Key.ch)))
-      end;
-      if Key.kind = Std.Console.KeyKind.Space then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Insert(Text, Caret, ' '), Caret + 1))
-      end;
-      if (Key.kind = Std.Console.KeyKind.Backspace) and (Caret > 0) then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Delete(Text, Caret - 1, 1), Caret -
-                                                                                             1))
-      end;
-      if (Key.kind = Std.Console.KeyKind.Delete) and (Caret < Std.Str.Length(Text)) then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Std.Str.Delete(Text, Caret, 1), Caret))
-      end;
-      if (Key.kind = Std.Console.KeyKind.Left) and (Caret > 0) then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Caret - 1))
-      end;
-      if (Key.kind = Std.Console.KeyKind.Right) and (Caret < Std.Str.Length(Text)) then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Caret + 1))
-      end;
-      if Key.kind = Std.Console.KeyKind.Home then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, 0))
-      end;
-      if (Key.kind = Std.Console.KeyKind.EndKey) then
-      begin
-        return Some(TuiMsg.TextChanged(Id, ChangeAction, Text, Std.Str.Length(Text)))
-      end;
-      return None
+      return TuiRouteInputKey(Input, Target, Key)
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
     begin

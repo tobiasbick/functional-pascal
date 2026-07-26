@@ -41,6 +41,11 @@ begin
   AssertStyle(Palette.Buttons.DefaultShortcut, 14, 0);
   AssertStyle(Palette.Buttons.SelectedShortcut, 14, 3);
   AssertStyle(Palette.Buttons.Shadow, 0, 8);
+  AssertStyle(Palette.Inputs.Normal, 7, 0);
+  AssertStyle(Palette.Inputs.Focused, 15, 0);
+  AssertStyle(Palette.Inputs.Hint, 8, 0);
+  AssertStyle(Palette.Inputs.Cursor, 0, 7);
+  AssertStyle(Palette.Inputs.Scroll, 11, 0);
   AssertStyle(Palette.DialogShadow, 0, 0);
   AssertStyle(Palette.Failure, 12, 0);
   AssertStyle(Palette.Warning, 14, 0);
@@ -79,6 +84,11 @@ begin
   AssertStyle(Palette.Buttons.DefaultShortcut, 0, 15);
   AssertStyle(Palette.Buttons.SelectedShortcut, 0, 15);
   AssertStyle(Palette.Buttons.Shadow, 8, 0);
+  AssertStyle(Palette.Inputs.Normal, 15, 0);
+  AssertStyle(Palette.Inputs.Focused, 15, 0);
+  AssertStyle(Palette.Inputs.Hint, 8, 0);
+  AssertStyle(Palette.Inputs.Cursor, 0, 15);
+  AssertStyle(Palette.Inputs.Scroll, 15, 0);
   AssertStyle(Palette.DialogShadow, 8, 0);
   AssertStyle(Palette.Failure, 15, 0);
   AssertStyle(Palette.Warning, 15, 0);
@@ -117,6 +127,11 @@ begin
   AssertStyle(Palette.Buttons.DefaultShortcut, 14, 2);
   AssertStyle(Palette.Buttons.SelectedShortcut, 14, 2);
   AssertStyle(Palette.Buttons.Shadow, 0, 7);
+  AssertStyle(Palette.Inputs.Normal, 7, 1);
+  AssertStyle(Palette.Inputs.Focused, 15, 1);
+  AssertStyle(Palette.Inputs.Hint, 8, 1);
+  AssertStyle(Palette.Inputs.Cursor, 1, 7);
+  AssertStyle(Palette.Inputs.Scroll, 14, 1);
   AssertStyle(Palette.DialogShadow, 8, 0);
   AssertStyle(Palette.Failure, 15, 4);
   AssertStyle(Palette.Warning, 0, 14);

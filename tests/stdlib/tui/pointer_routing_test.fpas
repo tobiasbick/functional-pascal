@@ -148,7 +148,7 @@ begin
   AssertEquals(1, Model.Focus);
   AssertEquals(1, Model.PointerHits);
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, InputAt.X, InputAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 2, 0);
   AssertEquals(2, Model.Focus);
   AssertEquals(1, Std.Array.Length(Model.Actions));
   AssertEquals(1, Model.PointerHits);

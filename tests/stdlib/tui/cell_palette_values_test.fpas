@@ -61,6 +61,11 @@ begin
   AssertEquals(14, Palette.ForRole(TuiStyleRole.ButtonDefaultShortcut).Foreground.Index);
   AssertEquals(14, Palette.ForRole(TuiStyleRole.ButtonSelectedShortcut).Foreground.Index);
   AssertEquals(7, Palette.ForRole(TuiStyleRole.ButtonShadow).Background.Index);
+  AssertEquals(1, Palette.ForRole(TuiStyleRole.InputNormal).Background.Index);
+  AssertEquals(15, Palette.ForRole(TuiStyleRole.InputFocused).Foreground.Index);
+  AssertEquals(8, Palette.ForRole(TuiStyleRole.InputHint).Foreground.Index);
+  AssertEquals(7, Palette.ForRole(TuiStyleRole.InputCursor).Background.Index);
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.InputScroll).Foreground.Index);
   AssertEquals(8, Palette.ForRole(TuiStyleRole.DialogShadow).Foreground.Index);
   var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), Background);
   var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);
@@ -69,5 +74,8 @@ begin
   AssertEquals(14, Palette.ForRole(TuiStyleRole.Warning).Foreground.Index);
   var DialogUpdated: TuiPalette := Palette.WithRole(TuiStyleRole.DialogInput, Custom);
   AssertEquals(2, DialogUpdated.ForRole(TuiStyleRole.DialogInput).Foreground.Green);
-  AssertEquals(1, Palette.ForRole(TuiStyleRole.DialogInput).Background.Index)
+  AssertEquals(1, Palette.ForRole(TuiStyleRole.DialogInput).Background.Index);
+  var InputUpdated: TuiPalette := Palette.WithRole(TuiStyleRole.InputHint, Custom);
+  AssertEquals(2, InputUpdated.ForRole(TuiStyleRole.InputHint).Foreground.Green);
+  AssertEquals(8, Palette.ForRole(TuiStyleRole.InputHint).Foreground.Index)
 end.

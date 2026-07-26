@@ -33,10 +33,22 @@ impl Emitter {
         Self::default()
     }
 
-    /// Returns the accumulated output.
+    /// Returns the accumulated output without trailing horizontal whitespace.
     #[must_use]
     pub(crate) fn finish(self) -> String {
-        self.out
+        let mut normalized = String::with_capacity(self.out.len());
+        for ch in self.out.chars() {
+            if ch == '\n' {
+                while matches!(normalized.as_bytes().last(), Some(b' ' | b'\t')) {
+                    normalized.pop();
+                }
+            }
+            normalized.push(ch);
+        }
+        while matches!(normalized.as_bytes().last(), Some(b' ' | b'\t')) {
+            normalized.pop();
+        }
+        normalized
     }
 
     /// Current indent depth in levels (each level is two spaces).
@@ -172,6 +184,20 @@ mod tests {
         emitter.blank_line();
         emitter.with_indent(|e| e.writeln("WriteLn('hi')"));
         assert_eq!(emitter.finish(), "program Hello;\n\n  WriteLn('hi')\n");
+    }
+
+    #[test]
+    fn finish_removes_trailing_horizontal_whitespace() {
+        let mut emitter = Emitter::new();
+        emitter.write("value  ");
+        emitter.write_line_end();
+        emitter.with_indent(|inner| {
+            inner.write_current_indent();
+            inner.write_line_end();
+        });
+        emitter.write("tail\t");
+
+        assert_eq!(emitter.finish(), "value\n\ntail");
     }
 
     #[test]

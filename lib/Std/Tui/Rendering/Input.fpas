@@ -1,0 +1,73 @@
+/// Turbo Vision-style one-line input painting.
+
+unit Std.Tui.Rendering.Input;
+
+uses
+  Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Input, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Text.Input;
+
+/// Paints one input with hint text, horizontal scroll markers, and a block cursor.
+
+procedure TuiPaintInput(Canvas: TuiCanvas; Bounds: TuiRect; Input: TuiInputSpec; Focused: boolean);
+begin
+  if Bounds.IsEmpty() then
+  begin
+    return
+  end;
+  mutable var Role: TuiStyleRole := TuiStyleRole.InputNormal;
+  if Focused then
+  begin
+    Role := TuiStyleRole.InputFocused
+  end;
+  Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
+  if Bounds.Width <= 2 then
+  begin
+    if Focused then
+    begin
+      Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), ' ', TuiStyleRole.InputCursor)
+    end;
+    return
+  end;
+  var ContentWidth: integer := Bounds.Width - 2;
+  var Viewport: TuiInputViewport := TuiInputViewportFor(Input.Text, Input.Caret, ContentWidth);
+  if Input.Text = '' then
+  begin
+    mutable var HintX: integer := Bounds.X + 1;
+    mutable var HintWidth: integer := ContentWidth;
+    if Focused and (HintWidth > 1) then
+    begin
+      HintX := HintX + 1;
+      HintWidth := HintWidth - 1
+    end;
+    Canvas.Child(TuiRect.Create(HintX, Bounds.Y, HintWidth, 1))
+      .WriteText(TuiPoint.Create(0, 0), Input.Hint, TuiStyleRole.InputHint)
+  end
+  else
+  begin
+    Canvas.Child(TuiRect.Create(Bounds.X + 1, Bounds.Y, ContentWidth, 1))
+      .WriteText(TuiPoint.Create(0, 0), Std.Str.Substring(Input.Text, Viewport.Start, Viewport.EndIndex -
+                                                                                      Viewport.Start), Role)
+  end;
+  if Viewport.LeftClipped then
+  begin
+    Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), '◄', TuiStyleRole.InputScroll)
+  end;
+  if Viewport.RightClipped then
+  begin
+    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), '►', TuiStyleRole.InputScroll)
+  end;
+  if Focused then
+  begin
+    mutable var CursorX: integer := (Bounds.X + 1) + Viewport.CaretColumn;
+    if CursorX >= Bounds.Right() - 1 then
+    begin
+      CursorX := Bounds.Right() - 2
+    end;
+    mutable var CursorGlyph: string := ' ';
+    if Input.Caret < Std.Str.Length(Input.Text) then
+    begin
+      CursorGlyph := Std.Str.CharAt(Input.Text, Input.Caret)
+    end;
+    Canvas.WriteText(TuiPoint.Create(CursorX, Bounds.Y), CursorGlyph, TuiStyleRole.InputCursor)
+  end
+end;

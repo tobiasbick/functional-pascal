@@ -44,6 +44,8 @@ Only one optional path is accepted.
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
 | Alt+O / Alt+S / Alt+D / Alt+C | Activate the matching dialog button mnemonic |
+| Ctrl+Left / Ctrl+Right in a path field | Move by path text words |
+| Ctrl+Backspace / Ctrl+Delete in a path field | Remove one path text word |
 | Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus commands; press and release inside a dialog button to activate it |
@@ -58,7 +60,8 @@ right/bottom shadows. Their buttons use focus/default markers, highlighted
 mnemonics, and block shadows; Open or Save is the default action. Their `[■]`
 close box cancels the dialog. Drag the rest of a dialog title bar with the left
 mouse button to move it within the visible desktop. The next dialog opens
-centered again.
+centered again. Path fields show accepted-path hints, a block cursor, pointer
+caret placement, and horizontal overflow arrows.
 
 The editor supports character insertion, Enter, Backspace, Delete, arrows,
 Home, End, Page Up, Page Down, and two-space Tab insertion. Its status line

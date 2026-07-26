@@ -1,0 +1,90 @@
+unit Std.Tui.Text.Input;
+
+uses Std.Console, Std.Str;
+
+type
+  /// Derived horizontal viewport for a one-line input.
+  TuiInputViewport = record
+    Start: integer;
+    EndIndex: integer;
+    LeftClipped: boolean;
+    RightClipped: boolean;
+    CaretColumn: integer;
+  end;
+
+private function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
+begin
+  if EndIndex <= Start then
+  begin
+    return 0
+  end;
+  return Std.Console.DisplayWidth(Std.Str.Substring(Text, Start, EndIndex - Start))
+end;
+
+/// Derives the smallest viewport that keeps the controlled caret visible.
+
+function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
+begin
+  mutable var Start: integer := 0;
+  if Width <= 0 then
+  begin
+    return record
+      Start := Caret;
+      EndIndex := Caret;
+      LeftClipped := Caret > 0;
+      RightClipped := Caret < Std.Str.Length(Text);
+      CaretColumn := 0;
+    end
+  end;
+  while Start < Caret do
+  begin
+    if TuiInputWidth(Text, Start, Caret) >= Width then
+    begin
+      Start := Start + 1
+    end
+    else
+    begin
+      break
+    end
+  end;
+  mutable var EndIndex: integer := Start;
+  while EndIndex < Std.Str.Length(Text) do
+  begin
+    if TuiInputWidth(Text, Start, EndIndex + 1) <= Width then
+    begin
+      EndIndex := EndIndex + 1
+    end
+    else
+    begin
+      break
+    end
+  end;
+  return record
+    Start := Start;
+    EndIndex := EndIndex;
+    LeftClipped := Start > 0;
+    RightClipped := EndIndex < Std.Str.Length(Text);
+    CaretColumn := TuiInputWidth(Text, Start, Caret);
+  end
+end;
+
+/// Maps one content-relative terminal column to a text caret.
+
+function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
+begin
+  if Column <= 0 then
+  begin
+    return Viewport.Start
+  end;
+  mutable var Width: integer := 0;
+  for Index: integer := Viewport.Start to Viewport.EndIndex - 1 do
+  begin
+    var GlyphWidth: integer := Std.Console.DisplayWidth(Std.Str.CharAt(Text, Index));
+    if Column < Width + GlyphWidth then
+    begin
+      return Index
+    end;
+    Width := Width + GlyphWidth
+  end;
+  return Viewport.EndIndex
+end;

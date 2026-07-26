@@ -1,0 +1,53 @@
+program TuiInputPointerTest;
+
+uses Std.Test, Std.Tui;
+
+type
+  InputPointerModel = record
+    Text: string;
+    Caret: integer;
+  end;
+
+function ViewInput(State: InputPointerModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.Text, State.Caret, TuiAction.Create(1))
+
+                                                                      ])
+end;
+
+function UpdateInput(State: InputPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InputPointerModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.TextChanged(Source, Action, Text, Caret):
+    begin
+      return record Text := Text; Caret := Caret; end
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function Click(App: TuiApplication; State: InputPointerModel; X: integer): InputPointerModel;
+begin
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, 0)));
+  return App.RunIterations(State, UpdateInput, ViewInput, 1, 0)
+end;
+
+begin
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
+  mutable var Model: InputPointerModel := record Text := 'abcdef'; Caret := 0; end;
+  Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
+  Model := Click(App, Model, 4);
+  AssertEquals(3, Model.Caret);
+  Model := Click(App, Model, 9);
+  AssertEquals(6, Model.Caret);
+  Model := record Text := 'a界b'; Caret := 0; end;
+  Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
+  Model := Click(App, Model, 3);
+  AssertEquals(1, Model.Caret);
+  App.Close()
+end.

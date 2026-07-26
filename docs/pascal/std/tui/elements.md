@@ -6,7 +6,7 @@
 TuiElement.Empty
 TuiElement.Label(Text)
 TuiElement.Button(Value)
-TuiElement.Input(Id, Text, Caret, ChangeAction)
+TuiElement.Input(Value)
 TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction)
 TuiElement.CheckBox(Id, Text, Checked, ChangeAction)
 TuiElement.List(Id, Items, Selected, ChangeAction)
@@ -47,6 +47,22 @@ builders:
 The mnemonic must occur in the button text, ignoring case. Buttons measure as
 two rows and reserve horizontal space for Turbo Vision-style markers and a
 right/bottom block shadow.
+
+`Input(Value)` stores a `TuiInputSpec` with controlled text and caret, optional
+hint text, optional oldest-to-newest history, a restorable history draft, and
+the source/action identities. Prefer:
+
+- `MakeInput` for a plain controlled input;
+- `MakeInputWithHint` for placeholder text shown while the value is empty;
+- `MakeHistoryInput` when Up/Down should traverse explicit history.
+
+One-line inputs follow the Turbo Vision `TInputLine` layout: content starts one
+cell inside the field, `◄` and `►` mark hidden text, and the viewport follows
+the caret. A focused input paints a block cursor. Home/End move to the complete
+text bounds; Ctrl+Left/Ctrl+Right move by space-delimited words;
+Ctrl+Backspace/Ctrl+Delete remove one such word. Up/Down remains unhandled for
+plain inputs. For history inputs, Up moves toward older entries and Down toward
+newer entries, finally restoring `HistoryDraft`.
 
 `MakeDialog` creates a centered fixed modal. `MakeMovableDialog` creates a
 controlled modal with a model-owned optional position and drag offset. A

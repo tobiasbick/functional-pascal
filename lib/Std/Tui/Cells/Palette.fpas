@@ -1,6 +1,8 @@
 unit Std.Tui.Cells.Palette;
 
-uses Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Color, Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
+uses
+  Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Color, Std.Tui.Cells.InputPalette,
+  Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
 
 type
   /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
@@ -23,6 +25,7 @@ type
     StatusShortcut: TuiStyle;
     StatusSelected: TuiStyle;
     Buttons: TuiButtonPalette;
+    Inputs: TuiInputPalette;
     DialogNormal: TuiStyle;
     DialogFrame: TuiStyle;
     DialogTitle: TuiStyle;
@@ -54,6 +57,7 @@ type
   StatusShortcut: TuiStyle;
   StatusSelected: TuiStyle;
   Buttons: TuiButtonPalette;
+  Inputs: TuiInputPalette;
   DialogNormal: TuiStyle;
   DialogFrame: TuiStyle;
   DialogTitle: TuiStyle;
@@ -84,6 +88,7 @@ type
         StatusShortcut := StatusShortcut;
         StatusSelected := StatusSelected;
         Buttons := Buttons;
+        Inputs := Inputs;
         DialogNormal := DialogNormal;
         DialogFrame := DialogFrame;
         DialogTitle := DialogTitle;
@@ -117,7 +122,8 @@ type
       var ChromeSelected: TuiStyle := TuiStyle.FromColors(Black, Green);
       var ChromeSelectedShortcut: TuiStyle := TuiStyle.FromColors(Red, Green);
       var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Black, Green), TuiStyle.FromColors(LightCyan, Green), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, LightGray), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Black, LightGray));
-      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, TuiStyle.FromColors(DarkGray, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, Buttons, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
+      var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(LightGray, Blue), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(DarkGray, Blue), TuiStyle.FromColors(Blue, LightGray), TuiStyle.FromColors(Yellow, Blue));
+      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, TuiStyle.FromColors(DarkGray, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, Buttons, Inputs, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
     end;
 
     /// Resolves the concrete style for one semantic role.
@@ -193,37 +199,13 @@ type
         begin
           return Self.StatusSelected
         end;
-        TuiStyleRole.ButtonNormal:
+        TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.ButtonShadow:
         begin
-          return Self.Buttons.Normal
+          return Self.Buttons.ForRole(Role)
         end;
-        TuiStyleRole.ButtonDefault:
+        TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
         begin
-          return Self.Buttons.Default
-        end;
-        TuiStyleRole.ButtonSelected:
-        begin
-          return Self.Buttons.Selected
-        end;
-        TuiStyleRole.ButtonDisabled:
-        begin
-          return Self.Buttons.Disabled
-        end;
-        TuiStyleRole.ButtonShortcut:
-        begin
-          return Self.Buttons.Shortcut
-        end;
-        TuiStyleRole.ButtonDefaultShortcut:
-        begin
-          return Self.Buttons.DefaultShortcut
-        end;
-        TuiStyleRole.ButtonSelectedShortcut:
-        begin
-          return Self.Buttons.SelectedShortcut
-        end;
-        TuiStyleRole.ButtonShadow:
-        begin
-          return Self.Buttons.Shadow
+          return Self.Inputs.ForRole(Role)
         end;
         TuiStyleRole.DialogNormal:
         begin
@@ -341,6 +323,10 @@ type
         TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.ButtonShadow:
         begin
           Updated.Buttons := Updated.Buttons.WithRole(Role, Style)
+        end;
+        TuiStyleRole.InputNormal, TuiStyleRole.InputFocused, TuiStyleRole.InputHint, TuiStyleRole.InputCursor, TuiStyleRole.InputScroll:
+        begin
+          Updated.Inputs := Updated.Inputs.WithRole(Role, Style)
         end;
         TuiStyleRole.DialogNormal:
         begin

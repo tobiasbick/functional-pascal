@@ -39,6 +39,50 @@ type
       end
     end;
 
+    /// Resolves one button role.
+
+    function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
+    begin
+      case Role of
+        TuiStyleRole.ButtonNormal:
+        begin
+          return Self.Normal
+        end;
+        TuiStyleRole.ButtonDefault:
+        begin
+          return Self.Default
+        end;
+        TuiStyleRole.ButtonSelected:
+        begin
+          return Self.Selected
+        end;
+        TuiStyleRole.ButtonDisabled:
+        begin
+          return Self.Disabled
+        end;
+        TuiStyleRole.ButtonShortcut:
+        begin
+          return Self.Shortcut
+        end;
+        TuiStyleRole.ButtonDefaultShortcut:
+        begin
+          return Self.DefaultShortcut
+        end;
+        TuiStyleRole.ButtonSelectedShortcut:
+        begin
+          return Self.SelectedShortcut
+        end;
+        TuiStyleRole.ButtonShadow:
+        begin
+          return Self.Shadow
+        end
+        else
+        begin
+          panic('Tui button palette requires a button style role')
+        end
+      end
+    end;
+
     /// Returns a copy with one button role replaced.
 
     function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;

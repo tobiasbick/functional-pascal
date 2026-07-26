@@ -2,16 +2,16 @@ unit Std.Tui;
 
 uses
   Std.Console, Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Cell, Std.Tui.Cells.Color,
-  Std.Tui.Cells.Palette, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Button,
-  Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
-  Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
-  Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment,
-  Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins,
-  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult,
-  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
-  Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface,
-  Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.PointerEvent;
+  Std.Tui.Cells.InputPalette, Std.Tui.Cells.Palette, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole,
+  Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Elements.Element, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem,
+  Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
+  Std.Tui.Layout.Alignment, Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings,
+  Std.Tui.Layout.Margins, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint,
+  Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy,
+  Std.Tui.Layout.Spacer, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint,
+  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd,
+  Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
 
 type
   /// Zero-based terminal-cell coordinate.
@@ -34,6 +34,8 @@ type
   TuiPalette = Std.Tui.Cells.Palette.TuiPalette;
   /// Concrete styles for every visual button state.
   TuiButtonPalette = Std.Tui.Cells.ButtonPalette.TuiButtonPalette;
+  /// Concrete styles for every visual one-line input state.
+  TuiInputPalette = Std.Tui.Cells.InputPalette.TuiInputPalette;
   /// Per-axis growth and shrink policy kind.
   TuiSizePolicyKind = Std.Tui.Layout.SizePolicy.TuiSizePolicyKind;
   /// Independent horizontal and vertical size policies.
@@ -66,6 +68,8 @@ type
   TuiAction = Std.Tui.Ids.Action.TuiAction;
   /// Immutable button identity, label, mnemonic, action, and state.
   TuiButtonSpec = Std.Tui.Chrome.Button.TuiButtonSpec;
+  /// Immutable one-line input state, hint, and optional history.
+  TuiInputSpec = Std.Tui.Chrome.Input.TuiInputSpec;
   /// Immutable description of one flat menu-bar action.
   TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
   /// Structural keyboard gesture used by menu commands.

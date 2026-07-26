@@ -52,6 +52,8 @@ The IDE is a fixed, single-document `Std.Tui` application:
   dragging their title bars, and cancelable through their `[■]` close boxes.
 - dialog buttons have default/focus markers, mnemonics, block shadows,
   Enter/Space/Alt routing, and release-inside pointer activation.
+- path dialogs use Turbo Vision-style one-line inputs with hints, horizontal
+  overflow markers, block cursors, pointer caret placement, and word editing.
 
 Current ownership is intentionally small:
 

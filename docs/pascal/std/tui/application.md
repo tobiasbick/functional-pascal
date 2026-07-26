@@ -86,20 +86,26 @@ a focused enabled button; otherwise Enter activates the enabled default button.
 Alt plus a button mnemonic activates its enabled button inside the active modal
 or full tree. Escape produces `QuitRequested`.
 
+Focused one-line inputs support Home/End, Ctrl+Left/Ctrl+Right word movement,
+and Ctrl+Backspace/Ctrl+Delete word removal. Up/Down produces ordinary
+`TuiMsg.Key` for a plain input; an input built with `MakeHistoryInput` instead
+uses those keys to traverse its explicit history and restore its draft.
+
 Left-button pointer downs hit-test the previous arranged frame. Ordinary
 buttons capture the press, paint selected while the pointer remains inside, and
 emit their action only on a left-button release inside the same button.
 Dragging outside cancels the selected appearance and releasing outside does not
 activate the button. Focus changes precede the pointer message used to repaint
 the pressed state. Other controls retain their immediate controlled changes,
-and unhandled pointer input remains `TuiMsg.Pointer`.
+and unhandled pointer input remains `TuiMsg.Pointer`. A press inside a one-line
+input focuses it and proposes the caret nearest the clicked visible cell.
 For a `MovableDialog`, a left-button press on the title row starts a controlled
 drag, `Drag` updates its clamped position, and `Up` clears the drag offset. A
 press on its `[■]` close box emits `Action` instead of starting a drag.
 Dialogs paint an opaque `DialogNormal` surface plus a two-column right shadow
-and a one-row bottom shadow with `DialogShadow`. Their frame, title, and input
-cells use the matching dialog roles. Buttons use their dedicated eight-state
-button palette in dialogs and elsewhere.
+and a one-row bottom shadow with `DialogShadow`. Their frame, title, and
+multiline input cells use the matching dialog roles. One-line inputs and
+buttons use their dedicated palettes in dialogs and elsewhere.
 Menu bars, menu popups, and status lines likewise paint their complete chrome
 with dedicated menu or status roles. Mnemonics and status key hints retain
 their shortcut role inside normal or selected chrome. Every menu popup paints

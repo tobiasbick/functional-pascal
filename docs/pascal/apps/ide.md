@@ -37,6 +37,8 @@ document.
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
 | Alt+O / Alt+S / Alt+D / Alt+C | Activate the matching dialog button mnemonic |
+| Ctrl+Left / Ctrl+Right in a path field | Move by path text words |
+| Ctrl+Backspace / Ctrl+Delete in a path field | Remove one path text word |
 | Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
 | Left pointer button | Focus commands; press and release inside a dialog button to activate it |
@@ -76,6 +78,10 @@ Open accepts a `.fpas`, `.fpasprj`, or `.fpasworkspace` path in a modal dialog.
 Save writes the current UTF-8 text to its known source path; an untitled
 document uses the Save As path dialog. A failed read or write updates the
 message area without changing the current document.
+
+Path fields use a blue Turbo Vision-style input surface with a block cursor,
+horizontal overflow arrows, pointer-based caret placement, and an empty-value
+hint describing the accepted path kind.
 
 Open, Save As, and dirty-document dialogs use Turbo Vision-inspired frames with
 right/bottom shadows. Dialog buttons use focus/default markers, highlighted

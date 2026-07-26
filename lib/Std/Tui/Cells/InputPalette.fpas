@@ -1,0 +1,98 @@
+unit Std.Tui.Cells.InputPalette;
+
+uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+
+type
+  /// Concrete styles for every one-line input state.
+  TuiInputPalette = record
+    Normal: TuiStyle;
+    Focused: TuiStyle;
+    Hint: TuiStyle;
+    Cursor: TuiStyle;
+    Scroll: TuiStyle;
+
+    /// Creates a complete one-line input palette.
+
+    static function Create(
+  Normal: TuiStyle;
+  Focused: TuiStyle;
+  Hint: TuiStyle;
+  Cursor: TuiStyle;
+  Scroll: TuiStyle
+): TuiInputPalette;
+    begin
+      return record
+        Normal := Normal;
+        Focused := Focused;
+        Hint := Hint;
+        Cursor := Cursor;
+        Scroll := Scroll;
+      end
+    end;
+
+    /// Resolves one input role.
+
+    function ForRole(Self: TuiInputPalette; Role: TuiStyleRole): TuiStyle;
+    begin
+      case Role of
+        TuiStyleRole.InputNormal:
+        begin
+          return Self.Normal
+        end;
+        TuiStyleRole.InputFocused:
+        begin
+          return Self.Focused
+        end;
+        TuiStyleRole.InputHint:
+        begin
+          return Self.Hint
+        end;
+        TuiStyleRole.InputCursor:
+        begin
+          return Self.Cursor
+        end;
+        TuiStyleRole.InputScroll:
+        begin
+          return Self.Scroll
+        end
+        else
+        begin
+          panic('Tui input palette requires an input style role')
+        end
+      end
+    end;
+
+    /// Returns a copy with one input role replaced.
+
+    function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
+    begin
+      mutable var Updated: TuiInputPalette := Self;
+      case Role of
+        TuiStyleRole.InputNormal:
+        begin
+          Updated.Normal := Style
+        end;
+        TuiStyleRole.InputFocused:
+        begin
+          Updated.Focused := Style
+        end;
+        TuiStyleRole.InputHint:
+        begin
+          Updated.Hint := Style
+        end;
+        TuiStyleRole.InputCursor:
+        begin
+          Updated.Cursor := Style
+        end;
+        TuiStyleRole.InputScroll:
+        begin
+          Updated.Scroll := Style
+        end
+        else
+        begin
+          panic('Tui input palette requires an input style role')
+        end
+      end;
+      return Updated
+    end;
+  end;

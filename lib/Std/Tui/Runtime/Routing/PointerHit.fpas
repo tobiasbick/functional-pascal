@@ -1,9 +1,9 @@
 unit Std.Tui.Runtime.Routing.PointerHit;
 
 uses
-  Std.Array, Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.Frame;
+  Std.Array, Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.StatusItem,
+  Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action,
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
 
 type
   /// Hit result for pointer routing against arranged geometry.
@@ -11,7 +11,7 @@ type
     Miss;
     ElementButton(Button: TuiButtonSpec);
     ImmediateButton(Id: TuiControlId; Action: TuiAction);
-    Input(Id: TuiControlId);
+    Input(Value: TuiInputSpec; Bounds: TuiRect);
     TextArea(Id: TuiControlId; Action: TuiAction; Text: string; Offset: TuiPoint; Bounds: TuiRect);
     CheckBox(Id: TuiControlId; Action: TuiAction; Checked: boolean);
     List(Id: TuiControlId; Action: TuiAction; CurrentSelected: integer; Proposed: integer);
@@ -34,7 +34,7 @@ begin
       begin
         LastDialog := Index
       end;
-      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
       begin
       end
     end
@@ -63,11 +63,11 @@ begin
         TuiPointerBestHit := TuiPointerHit.ElementButton(Button)
       end
     end;
-    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    TuiElement.Input(Input):
     begin
       if AllowHits and Entry.Clip.Contains(Point) then
       begin
-        TuiPointerBestHit := TuiPointerHit.Input(Id)
+        TuiPointerBestHit := TuiPointerHit.Input(Input, Entry.Bounds)
       end
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):

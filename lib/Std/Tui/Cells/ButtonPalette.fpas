@@ -1,0 +1,87 @@
+unit Std.Tui.Cells.ButtonPalette;
+
+uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
+
+type
+  /// Concrete styles for every Turbo Vision-style button state.
+  TuiButtonPalette = record
+    Normal: TuiStyle;
+    Default: TuiStyle;
+    Selected: TuiStyle;
+    Disabled: TuiStyle;
+    Shortcut: TuiStyle;
+    DefaultShortcut: TuiStyle;
+    SelectedShortcut: TuiStyle;
+    Shadow: TuiStyle;
+
+    /// Creates a complete button palette.
+
+    static function Create(
+  Normal: TuiStyle;
+  Default: TuiStyle;
+  Selected: TuiStyle;
+  Disabled: TuiStyle;
+  Shortcut: TuiStyle;
+  DefaultShortcut: TuiStyle;
+  SelectedShortcut: TuiStyle;
+  Shadow: TuiStyle
+): TuiButtonPalette;
+    begin
+      return record
+        Normal := Normal;
+        Default := Default;
+        Selected := Selected;
+        Disabled := Disabled;
+        Shortcut := Shortcut;
+        DefaultShortcut := DefaultShortcut;
+        SelectedShortcut := SelectedShortcut;
+        Shadow := Shadow;
+      end
+    end;
+
+    /// Returns a copy with one button role replaced.
+
+    function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
+    begin
+      mutable var Updated: TuiButtonPalette := Self;
+      case Role of
+        TuiStyleRole.ButtonNormal:
+        begin
+          Updated.Normal := Style
+        end;
+        TuiStyleRole.ButtonDefault:
+        begin
+          Updated.Default := Style
+        end;
+        TuiStyleRole.ButtonSelected:
+        begin
+          Updated.Selected := Style
+        end;
+        TuiStyleRole.ButtonDisabled:
+        begin
+          Updated.Disabled := Style
+        end;
+        TuiStyleRole.ButtonShortcut:
+        begin
+          Updated.Shortcut := Style
+        end;
+        TuiStyleRole.ButtonDefaultShortcut:
+        begin
+          Updated.DefaultShortcut := Style
+        end;
+        TuiStyleRole.ButtonSelectedShortcut:
+        begin
+          Updated.SelectedShortcut := Style
+        end;
+        TuiStyleRole.ButtonShadow:
+        begin
+          Updated.Shadow := Style
+        end
+        else
+        begin
+          panic('Tui button palette requires a button style role')
+        end
+      end;
+      return Updated
+    end;
+  end;

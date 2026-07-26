@@ -7,7 +7,8 @@ begin
   AssertEquals(2, LabelSize.Preferred.Width);
   AssertEquals(1, LabelSize.Preferred.Height);
   var ButtonSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Ok', TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(6, ButtonSize.Preferred.Width);
+  AssertEquals(8, ButtonSize.Preferred.Width);
+  AssertEquals(2, ButtonSize.Preferred.Height);
   var EmptyIgnored: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeRow([
                                                                                 TuiElementBuilders.MakeEmpty(),
                                                                                 TuiElementBuilders.MakeLabel('A'),
@@ -31,7 +32,7 @@ begin
 
                                                                                                                       TuiElementBuilders.MakeLabel('CD')
 
-                                                                                   
+
 
                                                                                                                     ], 1)
 

@@ -3,9 +3,9 @@
 > Status snapshot: 2026-07-26. Scrollable message output, diagnostic source
 > navigation, direct `.fpasprj` ingestion, and internal `.fpasworkspace`
 > ingestion are implemented. The IDE also has hierarchical menus and three
-> runtime-switchable themes. Its menu, popup, status, and dialog chrome follows
-> the Turbo Pascal 6-era Turbo Vision color hierarchy; modal dialogs also have
-> shadows and mouse-draggable title bars. Project/workspace trees are
+> runtime-switchable themes. Its menu, popup, status, dialog, and button chrome
+> follows the Turbo Pascal 6-era Turbo Vision color hierarchy; modal dialogs
+> also have shadows and mouse-draggable title bars. Project/workspace trees are
 > deliberately deferred.
 
 ## Purpose
@@ -50,6 +50,8 @@ The IDE is a fixed, single-document `Std.Tui` application:
   headless or lifecycle coverage.
 - Open, Save As, and dirty-document dialogs are modal, shadowed, movable by
   dragging their title bars, and cancelable through their `[■]` close boxes.
+- dialog buttons have default/focus markers, mnemonics, block shadows,
+  Enter/Space/Alt routing, and release-inside pointer activation.
 
 Current ownership is intentionally small:
 
@@ -115,7 +117,9 @@ duplicating generic `Std.Tui` coverage:
   queues repeated valid and terminal-too-small resizes, then proves that editor
   input and the final surface still advance;
 - `ide_dialog_surface_test.fpas` renders every IDE dialog and drives a real
-  title-bar press, drag, repaint, and release;
+  title-bar press, drag, repaint, and release; generic Tui button regressions
+  cover focus/default markers, mnemonics, disabled state, keyboard activation,
+  press capture, drag-out cancellation, and release-inside activation;
 - `dialog_pointer_test.fpas` covers centered movable-dialog layout, title and
   shadow roles, model-owned drag state, movement, release, and edge clamping;
 - `ide_open_target_case_test.fpas` opens uppercase `.FPAS`, `.FPASPRJ`, and

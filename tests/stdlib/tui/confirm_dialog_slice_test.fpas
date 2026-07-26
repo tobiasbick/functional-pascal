@@ -129,7 +129,7 @@ begin
 
                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(NoControlValue), 'No', TuiAction.Create(ConfirmNoActionValue))
 
-                                                          
+
 
                                                                                      ])
 
@@ -140,27 +140,27 @@ begin
 
                                                                                                                               TuiElementBuilders.MakeColumn([
 
-                                                                                    
+
 
                                                                                                                                                               TuiElementBuilders.MakeLabel('Name'),
 
-                                                                                    
+
 
                                                                                                                                                               TuiElementBuilders.MakeInput(TuiControlId.Create(NameControlValue), State.Name, State.NameCaret, TuiAction.Create(NameChangedActionValue)),
 
-                                                                                    
+
 
                                                                                                                                                               TuiElementBuilders.MakeButton(TuiControlId.Create(SaveControlValue), 'Save', TuiAction.Create(SaveActionValue))
 
-                                                                                    
 
-                                                                                                                              
 
-                                                                                    
+
+
+
 
                                                                                                                                                             ])
 
-                                                                                    
+
 
                                                                                                                             ]),
                                                                                     Overlay
@@ -206,8 +206,8 @@ begin
   AssertTrue(Model.ConfirmOpen);
   AssertEquals(YesControlValue, Model.Focused);
   var DialogSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(4), ' Confirm '));
-  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(5), 'Save changes?'));
+  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(3), ' Confirm '));
+  AssertTrue(Std.Str.Contains(DialogSurface.LineAt(4), 'Save changes?'));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));
   Model := App.RunIterations(Model, UpdateEditor, ViewEditor, 1, 0);
   AssertFalse(Model.ConfirmOpen);

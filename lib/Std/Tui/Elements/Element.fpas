@@ -1,7 +1,7 @@
 unit Std.Tui.Elements.Element;
 
 uses
-  Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
+  Std.Tui.Chrome.Button, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
   Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings,
   Std.Tui.Layout.Spacer;
 
@@ -19,7 +19,7 @@ type
   TuiElement = enum
     Empty;
     Label(Text: string);
-    Button(Id: TuiControlId; Text: string; Action: TuiAction);
+    Button(Value: TuiButtonSpec);
     Input(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction);
     TextArea(Id: TuiControlId; Text: string; Caret: integer; Offset: TuiPoint; ChangeAction: TuiAction);
     CheckBox(Id: TuiControlId; Text: string; Checked: boolean; ChangeAction: TuiAction);
@@ -57,7 +57,38 @@ type
 
     static function MakeButton(Id: TuiControlId; TextValue: string; Action: TuiAction): TuiElement;
     begin
-      return TuiElement.Button(Id, TextValue, Action)
+      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, '', Action))
+    end;
+
+    /// Creates an enabled normal button with a keyboard mnemonic.
+
+    static function MakeButtonWithMnemonic(
+  Id: TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Button(TuiButtonSpec.Normal(Id, TextValue, Mnemonic, Action))
+    end;
+
+    /// Creates an enabled default button with a keyboard mnemonic.
+
+    static function MakeDefaultButton(Id: TuiControlId; TextValue: string; Mnemonic: string; Action: TuiAction): TuiElement;
+    begin
+      return TuiElement.Button(TuiButtonSpec.DefaultButton(Id, TextValue, Mnemonic, Action))
+    end;
+
+    /// Creates a disabled button with an optional display mnemonic.
+
+    static function MakeDisabledButton(
+  Id: TuiControlId;
+  TextValue: string;
+  Mnemonic: string;
+  Action: TuiAction
+): TuiElement;
+    begin
+      return TuiElement.Button(TuiButtonSpec.Disabled(Id, TextValue, Mnemonic, Action))
     end;
 
     /// Creates a controlled one-line input.

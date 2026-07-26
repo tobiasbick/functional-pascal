@@ -10,9 +10,9 @@ type
     PointerHits: integer;
   end;
 
-function MakePointer(X: integer; Y: integer): TuiPointerEvent;
+function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y))
 end;
 
 function MakeKey(Kind: TuiKeyKind; Character: string): TuiKeyEvent;
@@ -53,7 +53,7 @@ begin
 
                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
 
-                                                          
+
 
                                                                                      ])
 
@@ -64,7 +64,7 @@ begin
 
                                                                                                                           TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Save', TuiAction.Create(10))
 
-                                                                                  
+
 
                                                                                                                         ]),
                                                                                   Overlay
@@ -138,18 +138,22 @@ begin
   end;
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
   var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
-  App.InjectPointerForTest(MakePointer(SaveAt.X, SaveAt.Y));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
+  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertTrue(Model.ConfirmOpen);
   AssertEquals(10, Model.Actions[0]);
   AssertEquals(3, Model.Focus);
-  App.InjectPointerForTest(MakePointer(SaveAt.X, SaveAt.Y));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
-  AssertEquals(1, Model.PointerHits);
+  AssertEquals(2, Model.PointerHits);
   AssertEquals(1, Std.Array.Length(Model.Actions));
   AssertTrue(Model.ConfirmOpen);
   var YesAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Yes');
-  App.InjectPointerForTest(MakePointer(YesAt.X, YesAt.Y));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, YesAt.X, YesAt.Y));
+  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, YesAt.X, YesAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertFalse(Model.ConfirmOpen);
   AssertEquals(2, Std.Array.Length(Model.Actions));

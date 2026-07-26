@@ -133,6 +133,34 @@ fn independently_compiled_program_uses_unit_interface_and_object() {
 }
 
 #[test]
+fn program_routine_shadows_imported_enum_constructor_during_lowering() {
+    let dependency = parse_unit(
+        "unit Demo.Events;
+         type Input = enum
+           Pointer(Value: integer);
+         end;",
+    );
+    let dependency = compile_unit_object(&dependency, &[]).expect("dependency compilation");
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Demo.Events, Std.Console;
+         function Pointer(Value: integer): integer;
+         begin return Value + 1 end;
+         begin Std.Console.WriteLn(Pointer(41)) end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+
+    let program_object =
+        compile_program_object(&program, std::slice::from_ref(&dependency.interface))
+            .expect("program compilation");
+    let chunk = link_objects(&[dependency.object], &program_object).expect("linking");
+    let mut vm = fpas_vm::Vm::new(chunk);
+    vm.run().expect("linked VM execution");
+
+    assert_eq!(vm.output().lines, ["42"]);
+}
+
+#[test]
 fn imported_record_defaults_are_compiled_from_the_unit_interface() {
     let dependency = parse_unit(
         "unit Demo.Config;

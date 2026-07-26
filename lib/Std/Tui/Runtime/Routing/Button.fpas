@@ -1,0 +1,147 @@
+unit Std.Tui.Runtime.Routing.Button;
+
+uses
+  Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.Button, Std.Tui.Elements.Element,
+  Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
+
+private function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
+begin
+  case Node of
+    TuiElement.Button(Button):
+    begin
+      if Button.Enabled and
+         ((RequireDefault and Button.Default) or ((Mnemonic <> '') and (Std.Str.ToLower(Button.Mnemonic) = Std.Str.ToLower(Mnemonic)))) then
+      begin
+        return Some(Button)
+      end;
+      return None
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      mutable var ModalIndex: integer := -1;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case Children[Index] of
+          TuiElement.Dialog(Title, DialogChildren), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
+          begin
+            ModalIndex := Index
+          end
+          else
+          begin
+          end
+        end
+      end;
+      if ModalIndex >= 0 then
+      begin
+        return TuiButtonFind(Children[ModalIndex], RequireDefault, Mnemonic)
+      end;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+          Some(Button):
+          begin
+            return Some(Button)
+          end;
+          None:
+          begin
+          end
+        end
+      end;
+      return None
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    begin
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case TuiButtonFind(Children[Index], RequireDefault, Mnemonic) of
+          Some(Button):
+          begin
+            return Some(Button)
+          end;
+          None:
+          begin
+          end
+        end
+      end;
+      return None
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    begin
+      return None
+    end
+  end
+end;
+
+/// Returns the first enabled default button in the active modal or full tree.
+
+function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
+begin
+  return TuiButtonFind(Root, true, '')
+end;
+
+/// Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
+
+function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
+begin
+  if Mnemonic = '' then
+  begin
+    return None
+  end;
+  return TuiButtonFind(Root, false, Mnemonic)
+end;
+
+/// Routes one Alt mnemonic to an enabled button action.
+
+function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+begin
+  if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
+  begin
+    return None
+  end;
+  case TuiFindMnemonicButton(Root, Key.ch) of
+    Some(Button):
+    begin
+      return Some([TuiMsg.Action(Button.Id, Button.Action)])
+    end;
+    None:
+    begin
+      return None
+    end
+  end
+end;
+
+/// Routes Enter or Space when an enabled button owns keyboard focus.
+
+function TuiRouteFocusedButtonKey(
+  Button: TuiButtonSpec;
+  Target: TuiControlId;
+  Key: Std.Console.KeyEvent
+): option of TuiMsg;
+begin
+  if Button.Id.Value <> Target.Value then
+  begin
+    return None
+  end;
+  if Button.Enabled and
+     ((Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space)) then
+  begin
+    return Some(TuiMsg.Action(Button.Id, Button.Action))
+  end;
+  return None
+end;
+
+/// Returns the enabled default button action for Enter.
+
+function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
+begin
+  case TuiFindDefaultButton(Root) of
+    Some(Button):
+    begin
+      return Some(TuiMsg.Action(Button.Id, Button.Action))
+    end;
+    None:
+    begin
+      return None
+    end
+  end
+end;

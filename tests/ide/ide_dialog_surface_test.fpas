@@ -51,7 +51,7 @@ begin
   var OpenPath: TuiPoint := FindText(OpenSurface, 'Path');
   AssertTrue(OpenSurface.CellAt(OpenPath.X, OpenPath.Y).Role = TuiStyleRole.DialogNormal);
   var OpenCancel: TuiPoint := FindText(OpenSurface, 'Cancel');
-  AssertTrue(OpenSurface.CellAt(OpenCancel.X, OpenCancel.Y).Role = TuiStyleRole.DialogButton);
+  AssertTrue(OpenSurface.CellAt(OpenCancel.X, OpenCancel.Y).Role = TuiStyleRole.ButtonShortcut);
   var Dirty: IdeModel := UpdateIde(InitialIdeModel(None), TuiMsgTextAreaChanged(EditorControlId(), EditorChangedAction(), 'changed', 7, TuiPoint.Create(0, 0)), Cmd);
   var SaveAs: IdeModel := UpdateIde(Dirty, TuiMsgAction(SaveControlId(), SaveAction()), Cmd);
   var SaveSurface: TuiSurfaceSnapshot := Render(SaveAs);

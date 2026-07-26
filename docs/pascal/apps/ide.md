@@ -36,9 +36,10 @@ document.
 | Alt+F / Alt+E / Alt+R / Alt+O | Open a top-level menu |
 | Tab | Insert two spaces in the editor; move focus elsewhere |
 | Enter or Space | Activate the focused command or dialog button |
+| Alt+O / Alt+S / Alt+D / Alt+C | Activate the matching dialog button mnemonic |
 | Enter in Messages | Jump to the selected Check diagnostic |
 | Escape | Cancel a dialog, or request Exit |
-| Left pointer button | Focus and activate commands or dialog buttons |
+| Left pointer button | Focus commands; press and release inside a dialog button to activate it |
 
 Options > Theme switches immediately between the bundled Light, Dark,
 and Monochrome palettes. The selected theme is retained for the current run
@@ -77,10 +78,11 @@ document uses the Save As path dialog. A failed read or write updates the
 message area without changing the current document.
 
 Open, Save As, and dirty-document dialogs use Turbo Vision-inspired frames with
-right/bottom shadows. Their `[■]` close box cancels the dialog. Drag the rest of
-a dialog title bar with the left mouse button to move it within the visible
-desktop. Closing a dialog resets its position, so the next dialog opens
-centered.
+right/bottom shadows. Dialog buttons use focus/default markers, highlighted
+mnemonics, and block shadows; Open or Save is the default action. Their `[■]`
+close box cancels the dialog. Drag the rest of a dialog title bar with the left
+mouse button to move it within the visible desktop. Closing a dialog resets its
+position, so the next dialog opens centered.
 
 The IDE parses project TOML itself. It validates the project name and kind,
 program main file, and source include/exclude arrays. Patterns are resolved

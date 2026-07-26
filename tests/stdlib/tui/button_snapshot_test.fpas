@@ -1,0 +1,61 @@
+program TuiButtonSnapshotTest;
+
+uses Std.Str, Std.Test, Std.Tui;
+
+function ViewButtons(State: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeWindow('Buttons', [
+
+                                                                                                                   TuiElementBuilders.MakeColumn([
+
+
+
+                                                                                                                                                   TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(1)),
+
+
+
+                                                                                                                                                   TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(2), 'OK', 'O', TuiAction.Create(2)),
+
+
+
+                                                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(3), 'Stop', 'S', TuiAction.Create(3))
+
+
+
+
+
+
+
+                                                                                                                                                 ])
+
+
+
+                                                                                                                 ])
+
+                                                                      ])
+end;
+
+function UpdateButtons(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  return State
+end;
+
+begin
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 10));
+  App.RunIterations(0, UpdateButtons, ViewButtons, 0, 0);
+  var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
+  AssertTrue(Std.Str.Contains(Surface.LineAt(1), '»'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(1), '«'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(2), '▀'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(3), '→'));
+  AssertTrue(Std.Str.Contains(Surface.LineAt(3), '←'));
+  var GoX: integer := Std.Str.IndexOf(Surface.LineAt(1), 'G');
+  var OkX: integer := Std.Str.IndexOf(Surface.LineAt(3), 'O');
+  var StopX: integer := Std.Str.IndexOf(Surface.LineAt(5), 'S');
+  AssertTrue(Surface.CellAt(GoX, 1).Role = TuiStyleRole.ButtonSelectedShortcut);
+  AssertTrue(Surface.CellAt(OkX, 3).Role = TuiStyleRole.ButtonDefaultShortcut);
+  AssertTrue(Surface.CellAt(StopX, 5).Role = TuiStyleRole.ButtonDisabled);
+  App.Close()
+end.

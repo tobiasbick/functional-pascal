@@ -32,6 +32,15 @@ impl Compiler {
     /// Build short-name → qualified-name aliases from the `uses` clause.
     pub(super) fn build_short_aliases(&mut self, program: &Program) {
         self.build_std_short_aliases(&program.uses);
+        self.shadow_imported_aliases_with_program_declarations(program);
+    }
+
+    /// Preserve semantic shadowing when a program declaration reuses an imported short name.
+    fn shadow_imported_aliases_with_program_declarations(&mut self, program: &Program) {
+        for declaration in &program.declarations {
+            self.short_aliases
+                .remove(&canonical_name(declaration_name(declaration)));
+        }
     }
 
     pub(super) fn build_unit_short_aliases(&mut self, unit: &Unit, interfaces: &[UnitInterface]) {

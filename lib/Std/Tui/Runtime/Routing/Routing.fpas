@@ -1,8 +1,9 @@
 unit Std.Tui.Runtime.Routing;
 
 uses
-  Std.Console, Std.Tui.Elements.Element, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing.Key, Std.Tui.Runtime.Routing.Pointer;
+  Std.Console, Std.Option, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
+  Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing.Key,
+  Std.Tui.Runtime.Routing.Pointer;
 
 /// Routes one key against the previous rendered tree into ordered framework messages.
 
@@ -12,8 +13,23 @@ begin
 end;
 
 /// Routes one pointer event against arranged geometry into ordered framework messages.
+/// Allocates idle pointer-button state for one application.
 
-function TuiRoutePointer(Root: TuiElement; Frame: TuiArrangedFrame; Pointer: TuiPointerEvent): array of TuiMsg;
+procedure TuiPointerRoutingOpen();
 begin
-  return Std.Tui.Runtime.Routing.Pointer.TuiRoutePointer(Root, Frame, Pointer)
+  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen()
+end;
+
+/// Clears pointer-button state for one application.
+
+procedure TuiPointerRoutingClose(ApplicationId: integer);
+begin
+  Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId)
+end;
+
+/// Returns the button painted pressed for one application.
+
+function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
+begin
+  return Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId)
 end;

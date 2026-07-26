@@ -4,7 +4,8 @@ uses
   Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu, Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
+  Std.Tui.Runtime.Routing.TextArea;
 
 private function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
@@ -30,7 +31,7 @@ begin
         Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -46,17 +47,9 @@ private function TuiRouteTarget(
 ): option of TuiMsg;
 begin
   case Node of
-    TuiElement.Button(Id, Text, Action):
+    TuiElement.Button(Button):
     begin
-      if Id.Value <> Target.Value then
-      begin
-        return None
-      end;
-      if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
-      begin
-        return Some(TuiMsg.Action(Id, Action))
-      end;
-      return None
+      return TuiRouteFocusedButtonKey(Button, Target, Key)
     end;
     TuiElement.Input(Id, Text, Caret, ChangeAction):
     begin
@@ -330,6 +323,15 @@ begin
   begin
     return [TuiMsg.QuitRequested]
   end;
+  case TuiRouteButtonMnemonicKey(Root, Key) of
+    Some(Messages):
+    begin
+      return Messages
+    end;
+    None:
+    begin
+    end
+  end;
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Array.Length(Controls) = 0 then
   begin
@@ -384,6 +386,19 @@ begin
     end;
     None:
     begin
+      if Key.kind = Std.Console.KeyKind.Enter then
+      begin
+        case TuiRouteDefaultButtonEnter(Root) of
+          Some(Msg):
+          begin
+            Std.Array.Push(Routed, Msg);
+            return Routed
+          end;
+          None:
+          begin
+          end
+        end
+      end;
       Std.Array.Push(Routed, TuiMsg.Key(Key))
     end
   end;

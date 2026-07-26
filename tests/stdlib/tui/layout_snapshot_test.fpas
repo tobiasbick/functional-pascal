@@ -13,27 +13,27 @@ begin
 
                                                                                                                  TuiElementBuilders.MakeColumn([
 
-                                                                          
+
 
                                                                                                                                                  TuiElementBuilders.MakeLabel('Hello'),
 
-                                                                          
+
 
                                                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1)),
 
-                                                                          
+
 
                                                                                                                                                  TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(2))
 
-                                                                          
 
-                                                                                                                 
 
-                                                                          
+
+
+
 
                                                                                                                                                ])
 
-                                                                          
+
 
                                                                                                                ])
 
@@ -43,7 +43,7 @@ begin
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(0), 'Win'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(1), 'Hello'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Go'));
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(3), 'ab'));
+  AssertTrue(Std.Str.Contains(Snapshot.LineAt(4), 'ab'));
   App.Close();
   var Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
   Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin

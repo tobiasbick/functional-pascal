@@ -82,6 +82,8 @@ begin
   var CancelAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Cancel');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, CancelAt));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 2, 0);
+  App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Up, TuiPointerButton.Left, CancelAt));
+  Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertNoDialog(Model);
   App.InjectResizeForTest(TuiSize.Create(40, 12));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);

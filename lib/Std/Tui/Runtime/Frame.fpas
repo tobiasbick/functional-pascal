@@ -1,14 +1,20 @@
 unit Std.Tui.Runtime.Frame;
 
 uses
-  Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
-  Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
+  Std.Option, Std.Tui.Elements.Element, Std.Tui.Elements.Validate, Std.Tui.Geometry.Rect,
+  Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame,
+  Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
 
 /// Validates, arranges, and paints one complete frame into the host-owned arranged frame.
 
-procedure TuiRenderFrame(Surface: TuiWorkingSurface; Frame: TuiArrangedFrame; Root: TuiElement);
+procedure TuiRenderFrame(
+  Surface: TuiWorkingSurface;
+  Frame: TuiArrangedFrame;
+  Root: TuiElement;
+  Pressed: option of TuiControlId
+);
 begin
   TuiElementValidate(Root);
   TuiArrange(Frame, Root, TuiRectForSize(Surface.Size()));
-  TuiPaintView(Surface, Frame, Root)
+  TuiPaintView(Surface, Frame, Root, Pressed)
 end;

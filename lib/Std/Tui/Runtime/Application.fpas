@@ -4,8 +4,8 @@ uses
   Std.Array, Std.Console, Std.Option, Std.Tui.Cells.Palette, Std.Tui.Elements.Element,
   Std.Tui.Geometry.Size, Std.Tui.Layout.Frame, Std.Tui.Rendering.Surface, Std.Tui.Runtime.Cmd,
   Std.Tui.Runtime.ConsoleEvents, Std.Tui.Runtime.Frame, Std.Tui.Runtime.Input, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing, Std.Tui.Runtime.TerminalRenderer,
-  Std.Tui.Runtime.TerminalSession;
+  Std.Tui.Runtime.PointerEvent, Std.Tui.Runtime.Routing, Std.Tui.Runtime.Routing.Pointer,
+  Std.Tui.Runtime.TerminalRenderer, Std.Tui.Runtime.TerminalSession;
 
 private mutable var TuiAppOpen: array of boolean := [];
 private mutable var TuiAppInputs: array of array of TuiHostInput := [];
@@ -83,8 +83,9 @@ begin
     end;
     TuiHostInput.Pointer(Pointer):
     begin
-      TuiAppPushMessages(ApplicationId, TuiRoutePointer(TuiAppTrees[ApplicationId - 1], TuiAppFrames[ApplicationId -
-                                                                                                     1], Pointer))
+      TuiAppPushMessages(ApplicationId, Std.Tui.Runtime.Routing.Pointer.TuiRouteApplicationPointer(Pointer, ApplicationId, TuiAppTrees[ApplicationId -
+                                                                                                                                       1], TuiAppFrames[ApplicationId -
+                                                                                                                                                        1]))
     end;
     TuiHostInput.Resize(Size):
     begin
@@ -160,6 +161,7 @@ type
       TuiAppCommands := Std.Array.Concat(TuiAppCommands, [TuiCmdOutput.Create()]);
       TuiAppInteractive := Std.Array.Concat(TuiAppInteractive, [false]);
       TuiAppPalettes := Std.Array.Concat(TuiAppPalettes, [Palette]);
+      Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
       return record Id := Std.Array.Length(TuiAppOpen); end
     end;
 
@@ -178,6 +180,7 @@ type
       TuiAppOpen[Self.Id - 1] := false;
       TuiAppInputs[Self.Id - 1] := [];
       TuiAppMessages[Self.Id - 1] := [];
+      Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(Self.Id);
       if TuiAppInteractive[Self.Id - 1] then
       begin
         TuiAppInteractive[Self.Id - 1] := false;
@@ -255,7 +258,7 @@ type
       end;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
-      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree);
+      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree, Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId));
       TuiAppTrees[ApplicationId - 1] := Tree;
       mutable var Remaining: integer := IterationCount;
       while Remaining > 0 do
@@ -291,7 +294,7 @@ type
           return Model
         end;
         var NextTree: TuiElement := View(Model);
-        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree);
+        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree, Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId));
         TuiAppTrees[ApplicationId - 1] := NextTree;
         Tree := NextTree
       end;
@@ -339,11 +342,12 @@ type
       TuiAppCommands := Std.Array.Concat(TuiAppCommands, [TuiCmdOutput.Create()]);
       TuiAppInteractive := Std.Array.Concat(TuiAppInteractive, [true]);
       TuiAppPalettes := Std.Array.Concat(TuiAppPalettes, [Palette]);
+      Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
       var App: TuiApplication := record Id := Std.Array.Length(TuiAppOpen); end;
       var ApplicationId: integer := App.Id;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
-      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree);
+      TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], Tree, Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId));
       TuiAppTrees[ApplicationId - 1] := Tree;
       TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1]);
       while TuiAppOpen[ApplicationId - 1] do
@@ -375,7 +379,7 @@ type
           return Model
         end;
         var NextTree: TuiElement := View(Model);
-        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree);
+        TuiRenderFrame(TuiAppSurfaces[ApplicationId - 1], TuiAppFrames[ApplicationId - 1], NextTree, Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId));
         TuiAppTrees[ApplicationId - 1] := NextTree;
         TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1])
       end;

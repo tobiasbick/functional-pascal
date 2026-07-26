@@ -9,9 +9,9 @@ type
     PointerHits: integer;
   end;
 
-function MakePointer(X: integer; Y: integer): TuiPointerEvent;
+function MakePointer(Action: TuiPointerAction; X: integer; Y: integer): TuiPointerEvent;
 begin
-  return TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, TuiPoint.Create(X, Y))
+  return TuiPointerEvent.Create(Action, TuiPointerButton.Left, TuiPoint.Create(X, Y))
 end;
 
 function FindGlyph(Snapshot: TuiSurfaceSnapshot; Glyph: string): TuiPoint;
@@ -35,27 +35,27 @@ begin
 
                                                                                                                           TuiElementBuilders.MakeColumn([
 
-                                                                                  
+
 
                                                                                                                                                           TuiElementBuilders.MakeLabel('Hello'),
 
-                                                                                  
+
 
                                                                                                                                                           TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(11)),
 
-                                                                                  
+
 
                                                                                                                                                           TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(22))
 
-                                                                                  
 
-                                                                                                                          
 
-                                                                                  
+
+
+
 
                                                                                                                                                         ])
 
-                                                                                  
+
 
                                                                                                                         ])
 
@@ -69,14 +69,14 @@ begin
 
                                                                                                                           TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Back', TuiAction.Create(11))
 
-                                                                                  
+
 
                                                                                                                         ]),
                                                                                   TuiElementBuilders.MakeWindow('Top', [
 
                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
 
-                                                                                  
+
 
                                                                                                                        ])
 
@@ -139,35 +139,39 @@ begin
   var GoAt: TuiPoint := FindGlyph(Snapshot, 'Go');
   var InputAt: TuiPoint := FindGlyph(Snapshot, 'ab');
   var HelloAt: TuiPoint := FindGlyph(Snapshot, 'Hello');
-  App.InjectPointerForTest(MakePointer(GoAt.X, GoAt.Y));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, GoAt.X, GoAt.Y));
+  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Up, GoAt.X, GoAt.Y));
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
   AssertEquals(1, Std.Array.Length(Model.Actions));
   AssertEquals(11, Model.Actions[0]);
   AssertEquals(1, Model.Focus);
-  AssertEquals(0, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(InputAt.X, InputAt.Y));
+  AssertEquals(1, Model.PointerHits);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, InputAt.X, InputAt.Y));
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
   AssertEquals(2, Model.Focus);
   AssertEquals(1, Std.Array.Length(Model.Actions));
-  AssertEquals(0, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(HelloAt.X, HelloAt.Y));
-  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
   AssertEquals(1, Model.PointerHits);
-  App.InjectPointerForTest(MakePointer(0, 0));
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, HelloAt.X, HelloAt.Y));
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
   AssertEquals(2, Model.PointerHits);
+  App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, 0, 0));
+  Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 1, 0);
+  AssertEquals(3, Model.PointerHits);
   App.Close();
   mutable var Overlap: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
   Model := record Focus := 1; Actions := []; PointerHits := 0; end;
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 0, 0);
   var FrontAt: TuiPoint := FindGlyph(Overlap.SurfaceSnapshot(), 'Front');
-  Overlap.InjectPointerForTest(MakePointer(FrontAt.X, FrontAt.Y));
+  Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Down, FrontAt.X, FrontAt.Y));
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 2, 0);
   AssertEquals(3, Model.Focus);
+  Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Up, FrontAt.X, FrontAt.Y));
+  Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 1, 0);
   AssertEquals(1, Std.Array.Length(Model.Actions));
   AssertEquals(33, Model.Actions[0]);
-  Overlap.InjectPointerForTest(MakePointer(19, FrontAt.Y));
+  Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Down, 19, FrontAt.Y));
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 1, 0);
-  AssertEquals(1, Model.PointerHits);
+  AssertEquals(2, Model.PointerHits);
   Overlap.Close()
 end.

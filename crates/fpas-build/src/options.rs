@@ -36,10 +36,13 @@ mod tests {
     fn default_identity_contains_the_package_version_and_source_fingerprint() {
         let identity = BuildOptions::default().compiler_version;
         let prefix = concat!(env!("CARGO_PKG_VERSION"), "-source-");
-        let fingerprint = identity
-            .strip_prefix(prefix)
-            .expect("compiler identity must start with its package version");
+        let fingerprint = identity.strip_prefix(prefix);
 
+        assert!(
+            fingerprint.is_some(),
+            "compiler identity must start with its package version"
+        );
+        let fingerprint = fingerprint.unwrap_or_default();
         assert_eq!(fingerprint.len(), 64);
         assert!(fingerprint.bytes().all(|byte| byte.is_ascii_hexdigit()));
     }

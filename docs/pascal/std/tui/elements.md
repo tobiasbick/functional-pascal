@@ -5,7 +5,7 @@
 ```pascal
 TuiElement.Empty
 TuiElement.Label(Text)
-TuiElement.Button(Id, Text, Action)
+TuiElement.Button(Value)
 TuiElement.Input(Id, Text, Caret, ChangeAction)
 TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction)
 TuiElement.CheckBox(Id, Text, Checked, ChangeAction)
@@ -34,6 +34,20 @@ shortcut and its description with separate semantic roles. `MakeCommand`
 creates the focusable, actionable status item. Status lines containing only
 hints and key hints are not focusable.
 
+`Button(Value)` stores a `TuiButtonSpec` containing its identity, text,
+one-character mnemonic, action, default state, and enabled state. Prefer the
+builders:
+
+- `MakeButton` creates an enabled ordinary button without a mnemonic;
+- `MakeButtonWithMnemonic` creates an enabled ordinary button;
+- `MakeDefaultButton` creates the action selected by Enter when no focused
+  control handles Enter;
+- `MakeDisabledButton` creates a non-focusable, non-actionable button.
+
+The mnemonic must occur in the button text, ignoring case. Buttons measure as
+two rows and reserve horizontal space for Turbo Vision-style markers and a
+right/bottom block shadow.
+
 `MakeDialog` creates a centered fixed modal. `MakeMovableDialog` creates a
 controlled modal with a model-owned optional position and drag offset. A
 position of `None` centers the dialog. Pressing its title bar, dragging with the
@@ -55,10 +69,10 @@ Interactive variants require typed control and action identities.
 action identities are valid, while every control identity must be unique in one
 rendered tree.
 
-Before every frame, validation rejects forged non-positive identities, duplicate
-control identities, invalid input or text-area carets, invalid list selections,
-negative text-area or scroll offsets, and focus identities absent from the
-tree.
+Before every frame, validation rejects forged non-positive identities,
+duplicate control identities, invalid or missing button mnemonics, invalid
+input or text-area carets, invalid list selections, negative text-area or
+scroll offsets, and focus identities absent from the tree.
 
 Controlled messages are `TextChanged`, `TextAreaChanged`, `CheckChanged`,
 `SelectionChanged`, `ScrollChanged`, `MenuChanged`, and `DialogChanged`.

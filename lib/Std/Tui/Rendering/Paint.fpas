@@ -3,9 +3,9 @@ unit Std.Tui.Rendering.Paint;
 uses
   Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
-  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Chrome,
-  Std.Tui.Rendering.Menu, Std.Tui.Rendering.StatusLine, Std.Tui.Rendering.Surface,
-  Std.Tui.Rendering.TextArea;
+  Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Rendering.Button, Std.Tui.Rendering.Canvas,
+  Std.Tui.Rendering.Chrome, Std.Tui.Rendering.Menu, Std.Tui.Rendering.StatusLine,
+  Std.Tui.Rendering.Surface, Std.Tui.Rendering.TextArea;
 
 private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
@@ -38,6 +38,7 @@ private function TuiPaintArranged(
   Node: TuiElement;
   Index: integer;
   Focused: option of TuiControlId;
+  Pressed: option of TuiControlId;
   InDialog: boolean
 ): integer;
 begin
@@ -57,26 +58,9 @@ begin
       end;
       TuiPaintTextInBounds(Clipped, Entry.Bounds, Text, Role)
     end;
-    TuiElement.Button(Id, Text, Action):
+    TuiElement.Button(Button):
     begin
-      if TuiPaintFocused(Focused, Id) then
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
-        if InDialog then
-        begin
-          Role := TuiStyleRole.DialogButtonFocused
-        end;
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, ('>[ ' + Text) + ' ]', Role)
-      end
-      else
-      begin
-        mutable var Role: TuiStyleRole := TuiStyleRole.Normal;
-        if InDialog then
-        begin
-          Role := TuiStyleRole.DialogButton
-        end;
-        TuiPaintTextInBounds(Clipped, Entry.Bounds, (' [ ' + Text) + ' ]', Role)
-      end
+      TuiPaintButton(Clipped, Entry.Bounds, Button, TuiPaintFocused(Focused, Button.Id), TuiPaintFocused(Pressed, Button.Id))
     end;
     TuiElement.Input(Id, Text, Caret, ChangeAction):
     begin
@@ -122,7 +106,7 @@ begin
         mutable var Role: TuiStyleRole := TuiStyleRole.Focused;
         if InDialog then
         begin
-          Role := TuiStyleRole.DialogButtonFocused
+          Role := TuiStyleRole.DialogInputFocused
         end;
         TuiPaintTextInBounds(Clipped, Entry.Bounds, (('>[' + Mark) + '] ') + Text, Role)
       end
@@ -191,7 +175,7 @@ begin
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, InDialog)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed, InDialog)
       end
     end;
     TuiElement.Window(Title, Children):
@@ -199,7 +183,7 @@ begin
       TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.Frame, TuiStyleRole.Title, false);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, InDialog)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed, InDialog)
       end
     end;
     TuiElement.Dialog(Title, Children):
@@ -209,7 +193,7 @@ begin
       TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.DialogFrame, TuiStyleRole.DialogTitle, false);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, true)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed, true)
       end
     end;
     TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
@@ -219,14 +203,14 @@ begin
       TuiPaintFrameChrome(Clipped, Entry.Bounds, Title, TuiStyleRole.DialogFrame, TuiStyleRole.DialogTitle, true);
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, true)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, Focused, Pressed, true)
       end
     end;
     TuiElement.Desktop(DesktopFocus, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
-        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, DesktopFocus, false)
+        Next := TuiPaintArranged(Canvas, Frame, Children[ChildIndex], Next, DesktopFocus, Pressed, false)
       end
     end
   end;
@@ -282,7 +266,7 @@ begin
         Next := TuiPaintMenuOverlays(Canvas, Frame, Children[ChildIndex], Next, AllowMenu)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Id, Text, Action), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -291,11 +275,16 @@ end;
 
 /// Paints one complete frame using arranged geometry only (no measurement).
 
-procedure TuiPaintView(Surface: TuiWorkingSurface; Frame: TuiArrangedFrame; Root: TuiElement);
+procedure TuiPaintView(
+  Surface: TuiWorkingSurface;
+  Frame: TuiArrangedFrame;
+  Root: TuiElement;
+  Pressed: option of TuiControlId
+);
 begin
   Surface.Clear();
   var Canvas: TuiCanvas := TuiCanvas.Create(Surface, TuiRectForSize(Surface.Size()));
-  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None, false);
+  var NextIndex: integer := TuiPaintArranged(Canvas, Frame, Root, 0, None, Pressed, false);
   if NextIndex <> Frame.Count() then
   begin
     panic('Tui paint did not consume the complete arranged frame')

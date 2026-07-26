@@ -32,11 +32,18 @@ and ordinary windows. Menus use `MenuNormal`, `MenuDisabled`, `MenuShortcut`,
 menu bar and status line paint their complete row with their normal role, so
 their chrome remains distinct from the desktop.
 
-Dialog painting uses separate `DialogNormal`,
-`DialogFrame`, `DialogTitle`, `DialogInput`, `DialogInputFocused`,
-`DialogButton`, `DialogButtonFocused`, and `DialogShadow` roles. A theme can
+Dialog painting uses separate `DialogNormal`, `DialogFrame`, `DialogTitle`,
+`DialogInput`, `DialogInputFocused`, and `DialogShadow` roles. A theme can
 therefore use a gray dialog surface over a blue desktop without changing
 ordinary window content.
+
+Buttons use `ButtonNormal`, `ButtonDefault`, `ButtonSelected`,
+`ButtonDisabled`, `ButtonShortcut`, `ButtonDefaultShortcut`,
+`ButtonSelectedShortcut`, and `ButtonShadow`. The corresponding styles are
+grouped in `TuiPalette.Buttons` as `TuiButtonPalette`. Focused buttons use
+`» … «`, unfocused default buttons use `→ … ←`, and enabled buttons paint a
+right/bottom block shadow. `TuiButtonPalette.WithRole` returns a copy with one
+button role replaced.
 
 ```pascal
 var Palette: TuiPalette := TuiPalette.Default();

@@ -1,9 +1,10 @@
 unit Std.Tui;
 
 uses
-  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette, Std.Tui.Cells.Style,
-  Std.Tui.Cells.StyleRole, Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Geometry.Size, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
+  Std.Console, Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Cell, Std.Tui.Cells.Color,
+  Std.Tui.Cells.Palette, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Button,
+  Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
+  Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
   Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment,
   Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult,
@@ -31,6 +32,8 @@ type
   TuiCell = Std.Tui.Cells.Cell.TuiCell;
   /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
   TuiPalette = Std.Tui.Cells.Palette.TuiPalette;
+  /// Concrete styles for every visual button state.
+  TuiButtonPalette = Std.Tui.Cells.ButtonPalette.TuiButtonPalette;
   /// Per-axis growth and shrink policy kind.
   TuiSizePolicyKind = Std.Tui.Layout.SizePolicy.TuiSizePolicyKind;
   /// Independent horizontal and vertical size policies.
@@ -61,6 +64,8 @@ type
   TuiControlId = Std.Tui.Ids.ControlId.TuiControlId;
   /// Positive application intent; repetitions across controls are allowed.
   TuiAction = Std.Tui.Ids.Action.TuiAction;
+  /// Immutable button identity, label, mnemonic, action, and state.
+  TuiButtonSpec = Std.Tui.Chrome.Button.TuiButtonSpec;
   /// Immutable description of one flat menu-bar action.
   TuiMenuItem = Std.Tui.Chrome.MenuItem.TuiMenuItem;
   /// Structural keyboard gesture used by menu commands.

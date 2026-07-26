@@ -53,8 +53,14 @@ begin
   AssertEquals(15, Palette.ForRole(TuiStyleRole.DialogTitle).Foreground.Index);
   AssertEquals(1, Palette.ForRole(TuiStyleRole.DialogInput).Background.Index);
   AssertEquals(2, Palette.ForRole(TuiStyleRole.DialogInputFocused).Background.Index);
-  AssertEquals(2, Palette.ForRole(TuiStyleRole.DialogButton).Background.Index);
-  AssertEquals(15, Palette.ForRole(TuiStyleRole.DialogButtonFocused).Foreground.Index);
+  AssertEquals(2, Palette.ForRole(TuiStyleRole.ButtonNormal).Background.Index);
+  AssertEquals(11, Palette.ForRole(TuiStyleRole.ButtonDefault).Foreground.Index);
+  AssertEquals(15, Palette.ForRole(TuiStyleRole.ButtonSelected).Foreground.Index);
+  AssertEquals(8, Palette.ForRole(TuiStyleRole.ButtonDisabled).Foreground.Index);
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.ButtonShortcut).Foreground.Index);
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.ButtonDefaultShortcut).Foreground.Index);
+  AssertEquals(14, Palette.ForRole(TuiStyleRole.ButtonSelectedShortcut).Foreground.Index);
+  AssertEquals(7, Palette.ForRole(TuiStyleRole.ButtonShadow).Background.Index);
   AssertEquals(8, Palette.ForRole(TuiStyleRole.DialogShadow).Foreground.Index);
   var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), Background);
   var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Warning, Custom);

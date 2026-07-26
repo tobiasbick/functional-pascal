@@ -10,7 +10,7 @@ end;
 function View(State: integer): TuiElement;
 begin
   var InvalidId: TuiControlId := record Value := 0; end;
-  return TuiElement.Button(InvalidId, 'Invalid', TuiAction.Create(10))
+  return TuiElement.Button(TuiButtonSpec.Normal(InvalidId, 'Invalid', '', TuiAction.Create(10)))
 end;
 
 begin

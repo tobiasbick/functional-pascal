@@ -1,0 +1,197 @@
+unit Std.Tui.Runtime.Routing.PointerHit;
+
+uses
+  Std.Array, Std.Console, Std.Tui.Chrome.Button, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
+  Std.Tui.Layout.Frame;
+
+type
+  /// Hit result for pointer routing against arranged geometry.
+  TuiPointerHit = enum
+    Miss;
+    ElementButton(Button: TuiButtonSpec);
+    ImmediateButton(Id: TuiControlId; Action: TuiAction);
+    Input(Id: TuiControlId);
+    TextArea(Id: TuiControlId; Action: TuiAction; Text: string; Offset: TuiPoint; Bounds: TuiRect);
+    CheckBox(Id: TuiControlId; Action: TuiAction; Checked: boolean);
+    List(Id: TuiControlId; Action: TuiAction; CurrentSelected: integer; Proposed: integer);
+    Scroll(Id: TuiControlId);
+  end;
+
+private mutable var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
+
+private function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
+begin
+  mutable var LastDialog: integer := -1;
+  for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+  begin
+    case Children[Index] of
+      TuiElement.Dialog(Title, DialogChildren):
+      begin
+        LastDialog := Index
+      end;
+      TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
+      begin
+        LastDialog := Index
+      end;
+      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Id, Text, Caret, ChangeAction), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      begin
+      end
+    end
+  end;
+  return LastDialog
+end;
+
+private function TuiPointerHitWalk(
+  Frame: TuiArrangedFrame;
+  Node: TuiElement;
+  Index: integer;
+  Point: TuiPoint;
+  AllowHits: boolean
+): integer;
+begin
+  var Entry: TuiArrangedEntry := Frame.EntryAt(Index);
+  mutable var Next: integer := Index + 1;
+  case Node of
+    TuiElement.Button(Button):
+    begin
+      var ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X + 1, Entry.Bounds.Y, Entry.Bounds.Width -
+                                                                                      2, Entry.Bounds.Height -
+                                                                                         1);
+      if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
+      begin
+        TuiPointerBestHit := TuiPointerHit.ElementButton(Button)
+      end
+    end;
+    TuiElement.Input(Id, Text, Caret, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        TuiPointerBestHit := TuiPointerHit.Input(Id)
+      end
+    end;
+    TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        TuiPointerBestHit := TuiPointerHit.TextArea(Id, ChangeAction, Text, Offset, Entry.Bounds)
+      end
+    end;
+    TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        TuiPointerBestHit := TuiPointerHit.CheckBox(Id, ChangeAction, Checked)
+      end
+    end;
+    TuiElement.List(Id, Items, Selected, ChangeAction):
+    begin
+      if AllowHits and Entry.Clip.Contains(Point) then
+      begin
+        var Row: integer := Point.Y - Entry.Bounds.Y;
+        if (Row >= 0) and (Row < Std.Array.Length(Items)) then
+        begin
+          TuiPointerBestHit := TuiPointerHit.List(Id, ChangeAction, Selected, Row)
+        end
+      end
+    end;
+    TuiElement.MenuBar(Items):
+    begin
+      mutable var Cursor: integer := Entry.Bounds.X;
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        var Width: integer := Std.Console.DisplayWidth(Items[ItemIndex].Text) + 2;
+        var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+        if (AllowHits and Items[ItemIndex].Enabled) and
+           Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+        begin
+          TuiPointerBestHit := TuiPointerHit.ImmediateButton(Items[ItemIndex].Id, Items[ItemIndex].Action)
+        end;
+        Cursor := Cursor + Width
+      end
+    end;
+    TuiElement.Menu(Id, Nodes, State, ChangeAction):
+    begin
+    end;
+    TuiElement.StatusLine(Items):
+    begin
+      mutable var Cursor: integer := Entry.Bounds.X;
+      for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
+      begin
+        if ItemIndex > 0 then
+        begin
+          Cursor := Cursor + 1
+        end;
+        case Items[ItemIndex] of
+          TuiStatusItem.Hint(Text):
+          begin
+            Cursor := Cursor + Std.Console.DisplayWidth(Text)
+          end;
+          TuiStatusItem.KeyHint(KeyText, Text):
+          begin
+            Cursor := ((Cursor + Std.Console.DisplayWidth(KeyText)) + Std.Console.DisplayWidth(Text)) +
+                      1
+          end;
+          TuiStatusItem.Command(Id, Text, Action, Enabled):
+          begin
+            var Width: integer := Std.Console.DisplayWidth(Text);
+            var ItemBounds: TuiRect := TuiRect.Create(Cursor, Entry.Bounds.Y, Width, 1);
+            if (AllowHits and Enabled) and Entry.Clip.Intersect(ItemBounds).Contains(Point) then
+            begin
+              TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action)
+            end;
+            Cursor := Cursor + Width
+          end
+        end
+      end
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
+    begin
+      var ScrollAllowsHits: boolean := AllowHits and Entry.Clip.Contains(Point);
+      if ScrollAllowsHits then
+      begin
+        TuiPointerBestHit := TuiPointerHit.Scroll(Id)
+      end;
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits)
+      end
+    end;
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits)
+      end
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      var ModalIndex: integer := TuiPointerModalChildIndex(Children);
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        mutable var ChildAllow: boolean := AllowHits;
+        if ModalIndex >= 0 then
+        begin
+          ChildAllow := AllowHits and (ChildIndex = ModalIndex)
+        end;
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ChildAllow)
+      end
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value):
+    begin
+    end
+  end;
+  return Next
+end;
+
+/// Returns the deepest eligible hit at a point.
+
+function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
+begin
+  TuiPointerBestHit := TuiPointerHit.Miss;
+  if TuiPointerHitWalk(Frame, Root, 0, Point, true) <> Frame.Count() then
+  begin
+    panic('Tui pointer routing did not consume the complete arranged frame')
+  end;
+  return TuiPointerBestHit
+end;

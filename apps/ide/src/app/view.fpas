@@ -173,15 +173,15 @@ begin
 
                                                                                                                                                                                TuiElementBuilders.MakeInput(DialogPathControlId(), PathText, Caret, DialogPathChangedAction()),
 
-                                                                                                                                                                               TuiElementBuilders.MakeRow([
+                                                                                                                                                                               TuiElementBuilders.MakeRowSpaced([
 
 
 
-                                                                                                                                                                                                            TuiElementBuilders.MakeButton(DialogAcceptControlId(), AcceptText, DialogAcceptAction()),
+                                                                                                                                                                                                                  TuiElementBuilders.MakeDefaultButton(DialogAcceptControlId(), AcceptText, Std.Str.CharAt(AcceptText, 0), DialogAcceptAction()),
 
 
 
-                                                                                                                                                                                                            TuiElementBuilders.MakeButton(DialogCancelControlId(), 'Cancel', DialogCancelAction())
+                                                                                                                                                                                                                  TuiElementBuilders.MakeButtonWithMnemonic(DialogCancelControlId(), 'Cancel', 'C', DialogCancelAction())
 
 
 
@@ -189,7 +189,7 @@ begin
 
 
 
-                                                                                                                                                                                                          ])
+                                                                                                                                                                                                                ], 2)
 
 
 
@@ -205,19 +205,19 @@ begin
 
                                                                                                                                                                                            TuiElementBuilders.MakeLabel('Save changes?'),
 
-                                                                                                                                                                                           TuiElementBuilders.MakeRow([
+                                                                                                                                                                                           TuiElementBuilders.MakeRowSpaced([
 
 
 
-                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtySaveControlId(), 'Save', DirtySaveAction()),
+                                                                                                                                                                                                                              TuiElementBuilders.MakeDefaultButton(DirtySaveControlId(), 'Save', 'S', DirtySaveAction()),
 
 
 
-                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtyDiscardControlId(), 'Discard', DirtyDiscardAction()),
+                                                                                                                                                                                                                              TuiElementBuilders.MakeButtonWithMnemonic(DirtyDiscardControlId(), 'Discard', 'D', DirtyDiscardAction()),
 
 
 
-                                                                                                                                                                                                                        TuiElementBuilders.MakeButton(DirtyCancelControlId(), 'Cancel', DirtyCancelAction())
+                                                                                                                                                                                                                              TuiElementBuilders.MakeButtonWithMnemonic(DirtyCancelControlId(), 'Cancel', 'C', DirtyCancelAction())
 
 
 
@@ -225,7 +225,7 @@ begin
 
 
 
-                                                                                                                                                                                                                      ])
+                                                                                                                                                                                                                            ], 2)
 
 
 

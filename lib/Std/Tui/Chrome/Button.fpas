@@ -1,0 +1,56 @@
+unit Std.Tui.Chrome.Button;
+
+uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
+
+type
+  /// Immutable description of one Turbo Vision-style button.
+  TuiButtonSpec = record
+    Id: TuiControlId;
+    Text: string;
+    Mnemonic: string;
+    Action: TuiAction;
+    Default: boolean;
+    Enabled: boolean;
+
+    /// Creates an enabled normal button.
+
+    static function Normal(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
+    begin
+      return record
+        Id := Id;
+        Text := Text;
+        Mnemonic := Mnemonic;
+        Action := Action;
+        Default := false;
+        Enabled := true;
+      end
+    end;
+
+    /// Creates an enabled default button.
+
+    static function DefaultButton(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
+    begin
+      return record
+        Id := Id;
+        Text := Text;
+        Mnemonic := Mnemonic;
+        Action := Action;
+        Default := true;
+        Enabled := true;
+      end
+    end;
+
+    /// Creates a disabled normal button.
+
+    static function Disabled(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
+    begin
+      return record
+        Id := Id;
+        Text := Text;
+        Mnemonic := Mnemonic;
+        Action := Action;
+        Default := false;
+        Enabled := false;
+      end
+    end;
+  end;

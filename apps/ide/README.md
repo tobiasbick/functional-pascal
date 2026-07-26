@@ -44,6 +44,8 @@ Only one optional path is accepted.
 
 When a menu is open, use arrows, Enter, Space, Escape, or the highlighted
 mnemonic. Pointer presses open popups and submenus or activate their commands.
+Pointer movement over an open menu switches root popups, selects commands, and
+opens nested submenus without activating them.
 
 The editor supports character insertion, Enter, Backspace, Delete, arrows,
 Home, End, Page Up, Page Down, and two-space Tab insertion. Its status line

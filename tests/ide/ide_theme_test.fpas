@@ -3,6 +3,54 @@ program IdeThemeTest;
 uses
   Ide.App.Actions, Ide.App.Model, Ide.App.Update, Ide.App.View, Ide.Theme.Model, Std.Test, Std.Tui;
 
+procedure AssertStyle(Style: TuiStyle; Foreground: integer; Background: integer);
+begin
+  AssertEquals(Foreground, Style.Foreground.Index);
+  AssertEquals(Background, Style.Background.Index)
+end;
+
+procedure AssertDarkPalette(Palette: TuiPalette);
+begin
+  AssertStyle(Palette.Normal, 7, 0);
+  AssertStyle(Palette.Disabled, 8, 0);
+  AssertStyle(Palette.Focused, 0, 11);
+  AssertStyle(Palette.Selected, 15, 8);
+  AssertStyle(Palette.Shortcut, 11, 0);
+  AssertStyle(Palette.Frame, 8, 0);
+  AssertStyle(Palette.Title, 7, 0);
+  AssertStyle(Palette.Failure, 12, 0);
+  AssertStyle(Palette.Warning, 14, 0);
+  AssertStyle(Palette.Accent, 11, 0)
+end;
+
+procedure AssertMonochromePalette(Palette: TuiPalette);
+begin
+  AssertStyle(Palette.Normal, 15, 0);
+  AssertStyle(Palette.Disabled, 8, 0);
+  AssertStyle(Palette.Focused, 0, 15);
+  AssertStyle(Palette.Selected, 0, 15);
+  AssertStyle(Palette.Shortcut, 15, 0);
+  AssertStyle(Palette.Frame, 15, 0);
+  AssertStyle(Palette.Title, 15, 0);
+  AssertStyle(Palette.Failure, 15, 0);
+  AssertStyle(Palette.Warning, 15, 0);
+  AssertStyle(Palette.Accent, 15, 0)
+end;
+
+procedure AssertClassicBluePalette(Palette: TuiPalette);
+begin
+  AssertStyle(Palette.Normal, 15, 1);
+  AssertStyle(Palette.Disabled, 8, 1);
+  AssertStyle(Palette.Focused, 0, 11);
+  AssertStyle(Palette.Selected, 0, 7);
+  AssertStyle(Palette.Shortcut, 14, 1);
+  AssertStyle(Palette.Frame, 11, 1);
+  AssertStyle(Palette.Title, 15, 1);
+  AssertStyle(Palette.Failure, 12, 1);
+  AssertStyle(Palette.Warning, 14, 1);
+  AssertStyle(Palette.Accent, 11, 1)
+end;
+
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 25));
   mutable var Model: IdeModel := InitialIdeModel(None);
@@ -10,15 +58,14 @@ begin
   App.Inject(TuiMsg.Action(MenuControlId(), DarkThemeAction()));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertTrue(Model.Theme = IdeTheme.Dark);
-  AssertEquals(0, App.Palette().Normal.Background.Index);
-  AssertEquals(7, App.Palette().Normal.Foreground.Index);
+  AssertDarkPalette(App.Palette());
   App.Inject(TuiMsg.Action(MenuControlId(), MonochromeThemeAction()));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertTrue(Model.Theme = IdeTheme.Monochrome);
-  AssertEquals(15, App.Palette().Normal.Foreground.Index);
+  AssertMonochromePalette(App.Palette());
   App.Inject(TuiMsg.Action(MenuControlId(), ClassicBlueThemeAction()));
   Model := App.RunIterations(Model, UpdateIde, ViewIde, 1, 0);
   AssertTrue(Model.Theme = IdeTheme.ClassicBlue);
-  AssertEquals(1, App.Palette().Normal.Background.Index);
+  AssertClassicBluePalette(App.Palette());
   App.Close()
 end.

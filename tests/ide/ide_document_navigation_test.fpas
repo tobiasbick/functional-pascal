@@ -20,5 +20,16 @@ begin
   var Before: IdeDocument := IdeDocumentAtSourcePosition(Document, 0, 0);
   AssertEquals(0, Before.Caret);
   AssertEquals(0, Before.Offset.X);
-  AssertEquals(0, Before.Offset.Y)
+  AssertEquals(0, Before.Offset.Y);
+  var Wide: IdeDocument := LoadedIdeDocument('wide.fpas', 'a界b');
+  var BeforeWideGlyph: IdeDocument := IdeDocumentAtSourcePosition(Wide, 1, 3);
+  AssertEquals(1, BeforeWideGlyph.Caret);
+  AssertEquals(1, BeforeWideGlyph.Offset.X);
+  var AfterWideGlyph: IdeDocument := IdeDocumentAtSourcePosition(Wide, 1, 4);
+  AssertEquals(2, AfterWideGlyph.Caret);
+  AssertEquals(3, AfterWideGlyph.Offset.X);
+  var Empty: IdeDocument := IdeDocumentAtSourcePosition(LoadedIdeDocument('empty.fpas', ''), 99, 99);
+  AssertEquals(0, Empty.Caret);
+  AssertEquals(0, Empty.Offset.X);
+  AssertEquals(0, Empty.Offset.Y)
 end.

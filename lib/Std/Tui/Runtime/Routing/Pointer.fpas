@@ -187,18 +187,24 @@ end;
 function TuiRoutePointer(Root: TuiElement; Frame: TuiArrangedFrame; Pointer: TuiPointerEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
+  var MenuPointer: boolean := (Pointer.Action = Std.Console.MouseAction.Move) or
+                              ((Pointer.Action = Std.Console.MouseAction.Down) and (Pointer.Button = TuiPointerButton.Left));
+  if MenuPointer then
+  begin
+    case TuiRouteMenuPointer(Root, Frame, Pointer.Position, Pointer.Action =
+                                                            Std.Console.MouseAction.Down) of
+      Some(Messages):
+      begin
+        return Messages
+      end;
+      None:
+      begin
+      end
+    end
+  end;
   if (Pointer.Action <> Std.Console.MouseAction.Down) or (Pointer.Button <> TuiPointerButton.Left) then
   begin
     return [TuiMsg.Pointer(Pointer)]
-  end;
-  case TuiRouteMenuPointer(Root, Frame, Pointer.Position) of
-    Some(Messages):
-    begin
-      return Messages
-    end;
-    None:
-    begin
-    end
   end;
   TuiPointerBestHit := TuiPointerHit.Miss;
   if TuiRoutePointerHitWalk(Frame, Root, 0, Pointer.Position, true) <> Frame.Count() then

@@ -155,5 +155,52 @@ begin
   AssertProjectError(((((((('[project]' + NewLine) + 'name = ''missing-main''') + NewLine) + 'kind = ''program''') + NewLine) + '[sources]') + NewLine) +
                      'include = [''src/unit.fpas'']', 'requires project.main');
   AssertProjectError(((((((((('[project]' + NewLine) + 'name = ''library-main''') + NewLine) + 'kind = ''library''') + NewLine) + 'main = ''main.fpas''') + NewLine) + '[sources]') + NewLine) +
-                     'include = [''src/unit.fpas'']', 'Only program projects')
+                     'include = [''src/unit.fpas'']', 'Only program projects');
+  AssertProjectError((('project = 7' + NewLine) + '[sources]') +
+                     (NewLine + 'include = [''src/unit.fpas'']'), 'field [project] must be a table');
+  AssertProjectError((((('sources = 7' + NewLine) + '[project]') + NewLine) + 'name = ''wrong-sources-table''') +
+                     (NewLine + 'kind = ''library'''), 'field [sources] must be a table');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''''') + NewLine) + 'kind = ''library''') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')), 'project.name must not be empty');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''wrong-kind-type''') + NewLine) + 'kind = 7') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')), 'project.kind must be a string');
+  AssertProjectError((((((('[project]' + NewLine) + 'name = ''wrong-main-type''') + NewLine) + 'kind = ''program''') + NewLine) + 'main = 7') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')), 'project.main must be a string');
+  AssertProjectError(((('[project]' + NewLine) + 'name = ''missing-sources''') + (NewLine + 'kind = ''library''')), 'requires [sources]');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''missing-include''') + NewLine) + 'kind = ''library''') +
+                     (NewLine + '[sources]'), 'sources requires include');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''empty-include''') + NewLine) + 'kind = ''library''') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = []')), 'must contain at least one pattern');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''mixed-include''') + NewLine) + 'kind = ''library''') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'', 7]')), 'include must contain only strings');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''wrong-exclude''') + NewLine) + 'kind = ''library''') +
+                     (((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')) + (NewLine + 'exclude = ''src/excluded.fpas''')), 'exclude must be an array of strings');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''empty-exclude-entry''') + NewLine) + 'kind = ''library''') +
+                     (((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')) + (NewLine + 'exclude = ['''']')), 'exclude entries must not be empty');
+  AssertProjectError((((((('[project]' + NewLine) + 'name = ''wrong-main-extension''') + NewLine) + 'kind = ''program''') + NewLine) + 'main = ''note.txt''') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')), 'project.main must reference an .fpas file');
+  AssertProjectError((((((('[project]' + NewLine) + 'name = ''missing-main-file''') + NewLine) + 'kind = ''program''') + NewLine) + 'main = ''missing.fpas''') +
+                     ((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')), 'Project main file does not exist');
+  AssertProjectError((((('[project]' + NewLine) + 'name = ''all-excluded''') + NewLine) + 'kind = ''library''') +
+                     (((NewLine + '[sources]') + (NewLine + 'include = [''src/unit.fpas'']')) + (NewLine + 'exclude = [''src/unit.fpas'']')), 'no source files after exclusions');
+  case LoadIdeProject(ProjectRoot + '/missing.fpasprj') of
+    Ok(Project):
+    begin
+      Fail('Missing project manifest unexpectedly loaded.')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Could not read project manifest'))
+    end
+  end;
+  case LoadIdeProject(MainPath) of
+    Ok(Project):
+    begin
+      Fail('Source path unexpectedly loaded as a project.')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Project path must end with .fpasprj'))
+    end
+  end
 end.

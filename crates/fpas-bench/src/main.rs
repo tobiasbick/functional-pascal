@@ -158,10 +158,10 @@ fn usage() -> String {
 fn find_repo_root() -> Result<PathBuf, String> {
     if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
         let crate_dir = PathBuf::from(manifest_dir);
-        if let Some(root) = crate_dir.parent().and_then(Path::parent) {
-            if root.join("docs/bench/suite.toml").is_file() {
-                return Ok(root.to_path_buf());
-            }
+        if let Some(root) = crate_dir.parent().and_then(Path::parent)
+            && root.join("docs/bench/suite.toml").is_file()
+        {
+            return Ok(root.to_path_buf());
         }
     }
 
@@ -179,7 +179,7 @@ fn find_repo_root() -> Result<PathBuf, String> {
 
 fn print_run_table(runs: &[BenchRun]) {
     println!();
-    println!("{:<16} {:>10}  {}", "bench", "elapsed_ms", "throughput");
+    println!("{:<16} {:>10}  throughput", "bench", "elapsed_ms");
     println!("{}", "-".repeat(60));
     for run in runs {
         let throughput = run.throughput.as_deref().unwrap_or("-");
@@ -191,8 +191,8 @@ fn print_run_table(runs: &[BenchRun]) {
 fn print_compare_table(rows: &[CompareRow]) {
     println!();
     println!(
-        "{:<16} {:>10} {:>10} {:>10}  {}",
-        "bench", "before_ms", "after_ms", "delta_%", "throughput"
+        "{:<16} {:>10} {:>10} {:>10}  throughput",
+        "bench", "before_ms", "after_ms", "delta_%"
     );
     println!("{}", "-".repeat(72));
     for row in rows {

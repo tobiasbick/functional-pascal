@@ -89,7 +89,51 @@ apps/ide/
 The regression suite is in `tests/ide/ide-tests.fpasprj`. It covers the model,
 surface, document I/O, dirty-document decisions, dialogs, pointer interaction,
 shortcuts, diagnostic parsing and navigation, process argument/format behavior,
-process integration, and the document lifecycle.
+process integration, and the document lifecycle. The current 25-test suite also
+covers hierarchical menu hover through a real IDE surface, every bundled theme
+role, recovery and continued input after a burst of terminal resizes, the
+first-line Enter regression, wide-glyph diagnostic navigation, case-insensitive
+Open target extensions, and defensive project/workspace manifest failures.
+
+## Current coverage audit
+
+> Audited 2026-07-26.
+
+The audit compared the implemented source, current user documentation, this
+plan, manifests, and existing tests. It added focused regressions instead of
+duplicating generic `Std.Tui` coverage:
+
+- `ide_menu_pointer_test.fpas` drives closed-menu hover, root switching, nested
+  submenu hover, command selection without activation, movement outside, and
+  the final theme click;
+- `ide_editor_resilience_test.fpas` keeps the first line visible after Enter,
+  queues repeated valid and terminal-too-small resizes, then proves that editor
+  input and the final surface still advance;
+- `ide_open_target_case_test.fpas` opens uppercase `.FPAS`, `.FPASPRJ`, and
+  `.FPASWORKSPACE` targets, including an uppercase workspace member;
+- project/workspace loader tests now exercise missing files, wrong tables and
+  scalar types, missing and empty required fields, mixed arrays, invalid main
+  paths, complete exclusion, wrong extensions, and duplicate members/names;
+- document and theme tests cover empty and wide-glyph navigation plus every
+  foreground/background role of all three bundled palettes.
+
+Verified on 2026-07-26:
+
+```text
+fpas fmt --check apps/ide tests/ide
+fpas check --std-lib lib apps/ide/ide.fpasworkspace
+fpas test --std-lib lib --strict --jobs 4 tests/ide/ide-tests.fpasprj
+fpas test --std-lib lib tests/stdlib/tui
+fpas test --std-lib lib tests/suite.fpasprj
+cargo fmt --all -- --check
+cargo build --workspace
+cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+cargo test --workspace
+```
+
+The focused IDE suite passed 25 tests, the TUI suite passed 51 tests, and the
+complete FPAS suite passed 395 tests with one expected skip. The Rust workspace
+format, build, strict Clippy gate, and test suite passed.
 
 ## Known limits
 
@@ -519,10 +563,7 @@ The focused suites passed 18 IDE and 49 TUI tests. The complete FPAS suite
 passed 386 tests with one expected skip. The Rust workspace build and test
 suite passed.
 
-`cargo clippy --workspace --all-targets --all-features --locked -- -D warnings`
-was also attempted. It remains blocked by pre-existing warnings in
-`crates/fpas-bench/src/main.rs` and `crates/fpas-bench/src/results.rs`; this
-slice does not modify those files.
+The strict workspace Clippy gate also passes as of 2026-07-26.
 
 ## Completed intermediate slice: internal workspace ingestion
 

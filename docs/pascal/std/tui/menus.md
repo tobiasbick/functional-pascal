@@ -53,6 +53,9 @@ Accept the message by copying `State` into the model. Commands emit
 mnemonics operate the menu. Enabled command shortcuts are routed globally
 inside the active modal subtree. A left-button press opens root menus, follows
 submenus, activates commands, or closes an open menu when pressed outside.
+While a menu is open, pointer movement switches root popups, selects enabled
+commands, and opens nested submenus. Movement outside the menu preserves the
+current selection and never activates a command.
 Popups are painted as terminal-clamped overlays after the normal desktop
 contents.
 

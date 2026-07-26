@@ -293,9 +293,10 @@ mod tests {
         let existing = format!("{HISTORY_HEADER}\n## old\n\n");
         let entry = "## new\n\n";
         let updated = insert_history_entry(&existing, entry);
-        let new_pos = updated.find("## new").expect("new entry");
-        let old_pos = updated.find("## old").expect("old entry");
-        assert!(new_pos < old_pos);
+        assert!(matches!(
+            (updated.find("## new"), updated.find("## old")),
+            (Some(new_pos), Some(old_pos)) if new_pos < old_pos
+        ));
         assert!(updated.contains("Newest entries are prepended below this header."));
     }
 

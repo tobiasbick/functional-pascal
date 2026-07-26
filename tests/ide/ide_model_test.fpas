@@ -1,6 +1,8 @@
 program IdeModelTest;
 
-uses Ide.App.Model, Ide.Document.Model, Std.Array, Std.Option, Std.Test;
+uses
+  Ide.App.Model, Ide.Document.Model, Ide.Project.Model, Ide.Workspace.Model, Std.Array, Std.Option,
+  Std.Test;
 
 begin
   var Empty: IdeModel := InitialIdeModel(None);
@@ -31,5 +33,23 @@ begin
     end
   end;
   AssertEquals('', Loaded.Document.Text);
-  AssertFalse(IsIdeDocumentDirty(Loaded.Document))
+  AssertFalse(IsIdeDocumentDirty(Loaded.Document));
+  var EmptyProject: IdeProject := record
+    Path := 'empty.fpasprj';
+    Root := '.';
+    ManifestText := '';
+    Name := 'empty';
+    Kind := IdeProjectKind.LibraryProject;
+    MainFile := None;
+    SourceFiles := [];
+  end;
+  AssertTrue(Std.Option.IsNone(IdeProjectInitialFile(EmptyProject)));
+  var EmptyWorkspace: IdeWorkspace := record
+    Path := 'empty.fpasworkspace';
+    Root := '.';
+    ManifestText := '';
+    Name := 'empty';
+    Projects := [];
+  end;
+  AssertTrue(Std.Option.IsNone(IdeWorkspaceInitialProject(EmptyWorkspace)))
 end.

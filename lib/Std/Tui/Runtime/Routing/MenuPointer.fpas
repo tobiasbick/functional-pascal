@@ -88,9 +88,31 @@ begin
   return [TuiMsg.FocusChanged(Previous, Some(Menu.Id))]
 end;
 
-private function TuiPointerMenuBarHit(Root: TuiElement; Menu: TuiPointerMenu; Point: TuiPoint): option of array of TuiMsg;
+private function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: TuiMenuNodeId): array of TuiMsg;
 begin
-  if not Menu.Bounds.Contains(Point) then
+  case Menu.State.Active of
+    Some(Active):
+    begin
+      if Active.Value = Id.Value then
+      begin
+        return []
+      end
+    end;
+    None:
+    begin
+    end
+  end;
+  return [TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(Id))]
+end;
+
+private function TuiPointerMenuBarHit(
+  Root: TuiElement;
+  Menu: TuiPointerMenu;
+  Point: TuiPoint;
+  Activate: boolean
+): option of array of TuiMsg;
+begin
+  if not TuiRect.Create(Menu.Bounds.X, Menu.Bounds.Y, Menu.Bounds.Width, 1).Contains(Point) then
   begin
     return None
   end;
@@ -107,6 +129,10 @@ begin
         if TuiRect.Create(X, Menu.Bounds.Y, Width, 1).Contains(Point) and
            TuiMenuNodeSelectable(Menu.Nodes[Index]) then
         begin
+          if not Activate then
+          begin
+            return Some(TuiPointerMenuHover(Menu, TuiMenuNodeIdOf(Menu.Nodes[Index])))
+          end;
           return Some(Std.Array.Concat(TuiPointerMenuFocus(Root, Menu), [
                                                                           TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
 
@@ -119,7 +145,12 @@ begin
   return Some([])
 end;
 
-private function TuiPointerMenuPopupHit(Menu: TuiPointerMenu; Point: TuiPoint; TerminalBounds: TuiRect): option of array of TuiMsg;
+private function TuiPointerMenuPopupHit(
+  Menu: TuiPointerMenu;
+  Point: TuiPoint;
+  TerminalBounds: TuiRect;
+  Activate: boolean
+): option of array of TuiMsg;
 begin
   var Popups: array of TuiMenuPopup := TuiMenuPopupGeometry(Menu.Nodes, Menu.State, Menu.Bounds, TerminalBounds);
   for PopupIndex: integer := Std.Array.Length(Popups) - 1 downto 0 do
@@ -144,10 +175,18 @@ begin
             end;
             if TuiMenuNodeIsSubmenu(Menu.Nodes[Index]) then
             begin
+              if not Activate then
+              begin
+                return Some(TuiPointerMenuHover(Menu, TuiMenuNodeIdOf(Menu.Nodes[Index])))
+              end;
               return Some([
                             TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
 
                           ])
+            end;
+            if not Activate then
+            begin
+              return Some(TuiPointerMenuHover(Menu, TuiMenuNodeIdOf(Menu.Nodes[Index])))
             end;
             case TuiMenuNodeAction(Menu.Nodes[Index]) of
               Some(Action):
@@ -173,9 +212,14 @@ begin
   return None
 end;
 
-/// Routes a left-button press through one active hierarchical menu.
+/// Routes a left-button press or movement over one active hierarchical menu.
 
-function TuiRouteMenuPointer(Root: TuiElement; Frame: TuiArrangedFrame; Point: TuiPoint): option of array of TuiMsg;
+function TuiRouteMenuPointer(
+  Root: TuiElement;
+  Frame: TuiArrangedFrame;
+  Point: TuiPoint;
+  Activate: boolean
+): option of array of TuiMsg;
 begin
   TuiPointerMenus := [];
   if TuiPointerMenuWalk(Frame, Root, 0, true) <> Frame.Count() then
@@ -187,7 +231,11 @@ begin
     return None
   end;
   var Menu: TuiPointerMenu := TuiPointerMenus[0];
-  case TuiPointerMenuBarHit(Root, Menu, Point) of
+  if not Activate and not Menu.State.Open then
+  begin
+    return None
+  end;
+  case TuiPointerMenuBarHit(Root, Menu, Point, Activate) of
     Some(Messages):
     begin
       return Some(Messages)
@@ -198,13 +246,17 @@ begin
   end;
   if Menu.State.Open then
   begin
-    case TuiPointerMenuPopupHit(Menu, Point, Frame.EntryAt(0).Bounds) of
+    case TuiPointerMenuPopupHit(Menu, Point, Frame.EntryAt(0).Bounds, Activate) of
       Some(Messages):
       begin
         return Some(Messages)
       end;
       None:
       begin
+        if not Activate then
+        begin
+          return Some([])
+        end;
         return Some([TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.Closed())])
       end
     end

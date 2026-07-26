@@ -43,7 +43,9 @@ document.
 Options > Theme switches immediately between the bundled Classic Blue, Dark,
 and Monochrome palettes. The selected theme is retained for the current run
 but is not persisted. Open menus support arrows, Enter, Space, Escape,
-mnemonics, and pointer activation.
+mnemonics, and pointer activation. Pointer movement over an open menu switches
+root popups, selects commands, and opens nested submenus without activating
+them.
 
 The editor handles character insertion, Enter, Backspace, Delete, arrows, Home,
 End, Page Up, Page Down, and two-space Tab insertion. Caret movement updates the

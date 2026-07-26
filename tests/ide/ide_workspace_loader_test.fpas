@@ -89,6 +89,8 @@ begin
   end;
   AssertWorkspaceError('[workspace', 'Invalid workspace manifest');
   AssertWorkspaceError('[other]', 'requires [workspace]');
+  AssertWorkspaceError('workspace = 7', 'field [workspace] must be a table');
+  AssertWorkspaceError(('[workspace]' + Std.Str.Chr(10)) + 'members = [''program.fpasprj'']', 'workspace requires name');
   AssertWorkspaceError((('[workspace]' + Std.Str.Chr(10)) + 'name = 7') +
                        (Std.Str.Chr(10) + 'members = [''program.fpasprj'']'), 'workspace.name must be a string');
   AssertWorkspaceError(WorkspaceManifest('', '''program.fpasprj'''), 'workspace.name must not be empty');
@@ -112,6 +114,16 @@ begin
     Error(Message):
     begin
       AssertTrue(Std.Str.Contains(Message, '.fpasworkspace'))
+    end
+  end;
+  case LoadIdeWorkspace(WorkspaceRoot + '/missing.fpasworkspace') of
+    Ok(Workspace):
+    begin
+      Fail('Missing workspace manifest unexpectedly loaded.')
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'Could not read workspace manifest'))
     end
   end
 end.

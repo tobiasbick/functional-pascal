@@ -3,7 +3,11 @@ use crate::{Span, Token, error::lex_error};
 
 impl Lexer<'_> {
     pub(super) const fn at_end(&self) -> bool {
-        self.pos >= self.src.len()
+        self.pos >= self.source.len()
+    }
+
+    const fn bytes(&self) -> &[u8] {
+        self.source.as_bytes()
     }
 
     /// Byte at `pos`. Callers must ensure `!at_end()` first.
@@ -12,14 +16,14 @@ impl Lexer<'_> {
         reason = "Scan logic only calls `current` when `pos` is in range; `at_end` guards the driver loop."
     )]
     pub(super) fn current(&self) -> u8 {
-        self.src
+        self.bytes()
             .get(self.pos)
             .copied()
             .expect("lexer: `current()` called at EOF; callers must check `at_end()` first")
     }
 
     pub(super) fn peek_at(&self, offset: usize) -> Option<u8> {
-        self.src.get(self.pos + offset).copied()
+        self.bytes().get(self.pos + offset).copied()
     }
 
     /// True when the byte after `{` is `$` (`{$...}` compiler-directive syntax).
@@ -29,29 +33,18 @@ impl Lexer<'_> {
 
     /// Remaining source from `pos` as a string slice.
     ///
-    /// `src` is always produced from [`str::as_bytes`], and `pos` stays on a Unicode
-    /// scalar boundary (ASCII byte steps or full sequences via [`Self::advance_utf8_char`]).
-    /// Using `from_utf8_unchecked` avoids re-validating the entire suffix on each character.
+    /// Direct slicing checks the UTF-8 boundary in constant time without re-validating
+    /// the remaining source.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `pos` is not on a UTF-8 character boundary.
     pub(super) fn remaining_str(&self) -> &str {
-        // DO NOT DELETE THIS COMMENT.
-        //
-        // Why this `unsafe` exists: the lexer previously called `str::from_utf8` on
-        // `&self.src[self.pos..]` for every UTF-8 scalar (whitespace, strings, unexpected
-        // characters). That re-validated the whole remaining source each time and made
-        // lexing O(n²) on large inputs.
-        //
-        // What it is for: interpret the byte suffix from `pos` as `&str` without another
-        // UTF-8 pass, so `chars()` / `advance_utf8_char` stay O(1) per scalar.
-        //
-        // SAFETY: `Lexer` is only constructed from `&str` (`as_bytes()`). Scan steps either
-        // advance one ASCII byte or a full UTF-8 scalar via `advance_utf8_char`, so `pos` is
-        // always a char boundary into already-valid UTF-8. Do not call this after a partial
-        // multi-byte advance.
-        unsafe { std::str::from_utf8_unchecked(&self.src[self.pos..]) }
+        &self.source[self.pos..]
     }
 
     pub(super) fn advance(&mut self) -> u8 {
-        let ch = self.src[self.pos];
+        let ch = self.bytes()[self.pos];
         self.pos += 1;
         match ch {
             b'\n' => {
@@ -59,7 +52,7 @@ impl Lexer<'_> {
                 self.col = 1;
             }
             b'\r' => {
-                if self.pos >= self.src.len() || self.src[self.pos] != b'\n' {
+                if self.pos >= self.source.len() || self.bytes()[self.pos] != b'\n' {
                     self.line += 1;
                     self.col = 1;
                 }

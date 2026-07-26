@@ -14,7 +14,7 @@ use crate::{LexError, SourceComment, SpannedToken, Token};
 use fpas_diagnostics::codes::LEX_UNEXPECTED_CHARACTER;
 
 pub struct Lexer<'a> {
-    src: &'a [u8],
+    source: &'a str,
     pos: usize,
     line: u32,
     col: u32,
@@ -31,7 +31,7 @@ impl<'a> Lexer<'a> {
 
     pub fn with_source_id(source: &'a str, source_id: u32) -> Self {
         Self {
-            src: source.as_bytes(),
+            source,
             pos: 0,
             line: 1,
             col: 1,

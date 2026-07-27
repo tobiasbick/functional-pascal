@@ -82,6 +82,12 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 - Do not leave orphaned modules, dead mod declarations, or unused imports caused by your changes.
 - In unit-owned crates such as fpas-std, group runtime files by FPAS unit. Keep src/lib.rs focused on module declarations and re-exports.
 
+## Naming and terminology
+
+- Use established, unsurprising terminology from Pascal or, when Pascal has no conventional term, from C# or Java.
+- Do not invent obscure, needlessly clever, academic, or project-specific names for standard programming-language concepts.
+- Prefer familiar concepts and keywords that already exist in FPAS. For visibility, use `private` and `public`; do not introduce `opaque` or similar terminology for that concept.
+
 ## Change Discipline
 
 - Make the minimum change that solves the task.

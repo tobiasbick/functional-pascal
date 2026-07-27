@@ -46,27 +46,27 @@ begin
   mutable var Overlay: TuiElement := TuiElementBuilders.MakeEmpty();
   if State.ConfirmOpen then
   begin
-    Overlay := TuiElementBuilders.MakeDialog('Confirm', [
-                                                          TuiElementBuilders.MakeRow([
+    Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
+                                                           TuiElementBuilders.MakeRow([
 
-                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
+                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
 
-                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
+                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
 
 
 
-                                                                                     ])
+                                                                                      ])
 
-                                                        ])
+                                                         ])
   end;
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeWindow('Host', [
+                                                                                  TuiElementBuilders.MakePanel('Host', [
 
-                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Save', TuiAction.Create(10))
+                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Save', TuiAction.Create(10))
 
 
 
-                                                                                                                        ]),
+                                                                                                                       ]),
                                                                                   Overlay
 
                                                                                 ])
@@ -121,7 +121,7 @@ begin
         PointerHits := State.PointerHits + 1;
       end
     end;
-    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       return State
     end

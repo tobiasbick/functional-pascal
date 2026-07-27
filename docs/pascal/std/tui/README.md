@@ -27,11 +27,14 @@ implementation details.
 | `TuiPoint.Create(X, Y)` | Zero-based terminal-cell coordinate. |
 | `TuiSize.Create(Width, Height)` | Non-negative terminal-cell extent. |
 | `TuiRect.Create(X, Y, Width, Height)` | Half-open rectangle from origin and extents. |
-| `TuiColor` / `TuiStyle` / `TuiCell` / `TuiPalette` | Cell painting values and semantic roles. |
+| `TuiColor` / `TuiStyle` / `TuiCell` / `TuiPalette` | Semantic or concrete truecolor cell painting. |
+| `TuiCellGrid.Create(Width, Height, Cells)` | Flat row-major terminal-cell content for custom visualizations. |
 | `TuiControlId.Create(Value)` | Positive focus and message-source identity. |
 | `TuiAction.Create(Value)` | Positive application intent; values may repeat. |
 | `TuiElement` / `TuiElementBuilders` | Closed element tree and constructors. |
 | `TuiElementBuilders.MakeTextArea(...)` | Controlled multiline editor with model-owned text, caret, and offset. |
+| `MakePanel` / `MakeOverlay` | Ordinary bordered content and fixed centered modal content. |
+| `MakeRule` / `MakeGauge` / `MakeCellGrid` | Dashboard separators, bounded values, and custom cell views. |
 | `TuiSizePolicy` / `TuiAlignment` / `TuiMargins` | Layout value inputs. |
 | `TuiLayoutSettings.WithFixedHeight(Height)` | Copy of layout settings with one fixed total height. |
 | `TuiMeasure` / `TuiMeasureSpec` / `TuiMeasureResult` | Pure intrinsic measurement. |

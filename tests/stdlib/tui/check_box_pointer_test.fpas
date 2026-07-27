@@ -31,29 +31,29 @@ end;
 function ViewCheck(State: CheckModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeWindow('Host', [
+                                                                                  TuiElementBuilders.MakePanel('Host', [
 
-                                                                                                                          TuiElementBuilders.MakeColumn([
+                                                                                                                         TuiElementBuilders.MakeColumn([
 
-                                                                                  
 
-                                                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Other', TuiAction.Create(2)),
 
-                                                                                  
+                                                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Other', TuiAction.Create(2)),
 
-                                                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
 
-                                                                                  
 
-                                                                                                                          
+                                                                                                                                                         TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
 
-                                                                                  
 
-                                                                                                                                                        ])
 
-                                                                                  
 
-                                                                                                                        ])
+
+
+
+                                                                                                                                                       ])
+
+
+
+                                                                                                                       ])
 
                                                                                 ])
 end;
@@ -85,7 +85,7 @@ begin
         Changes := Std.Array.Concat(State.Changes, [Checked]);
       end
     end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       return State
     end

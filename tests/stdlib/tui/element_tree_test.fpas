@@ -1,30 +1,25 @@
 program ElementTreeTest;
 
-uses Std.Array, Std.Tui, Std.Test;
+uses Std.Array, Std.Test, Std.Tui;
 
 function ViewTree(Value: integer): TuiElement;
 begin
-  var SharedAction: TuiAction := TuiAction.Create(10);
   return TuiElementBuilders.MakeDesktop(None, [
-                                                TuiElementBuilders.MakeWindow('Window', [
+                                                TuiElementBuilders.MakePanel('Dashboard', [
 
-                                                                                          TuiElementBuilders.MakeColumn([
-
-
-
-                                                                                                                          TuiElementBuilders.MakeLabel('Label'),
+                                                                                            TuiElementBuilders.MakeColumnSpaced([
 
 
 
-                                                                                                                          TuiElementBuilders.MakeRow([
+                                                                                                                                  TuiElementBuilders.MakeRule('Metrics'),
 
 
 
+                                                                                                                                  TuiElementBuilders.MakeGauge('Load', 3, 4),
 
 
 
-
-                                                                                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', SharedAction),
+                                                                                                                                  TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(2, 1, [
 
 
 
@@ -32,13 +27,15 @@ begin
 
 
 
-                                                                                                                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', SharedAction)
+                                                                                                                                                                                             TuiCell.Create('A', TuiStyleRole.Normal),
 
 
 
 
 
 
+
+                                                                                                                                                                                             TuiCell.Create('B', TuiStyleRole.Accent)
 
 
 
@@ -48,7 +45,13 @@ begin
 
 
 
-                                                                                                                                                     ])
+
+
+
+
+
+
+                                                                                                                                                                                           ]))
 
 
 
@@ -56,12 +59,12 @@ begin
 
 
 
-                                                                                                                        ])
+                                                                                                                                ], 1)
 
 
 
-                                                                                        ]),
-                                                TuiElementBuilders.MakeDialog('Dialog', [TuiElementBuilders.MakeLabel('Question')])
+                                                                                          ]),
+                                                TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('Continue?')])
 
                                               ])
 end;
@@ -79,147 +82,34 @@ begin
     begin
       AssertEquals(2, Std.Array.Length(DesktopChildren));
       case DesktopChildren[0] of
-        TuiElement.Window(Title, WindowChildren):
+        TuiElement.Panel(Title, PanelChildren):
         begin
-          AssertEquals('Window', Title);
-          AssertEquals(1, Std.Array.Length(WindowChildren));
-          case WindowChildren[0] of
-            TuiElement.Column(ColumnChildren, ColumnSpacing):
-            begin
-              AssertEquals(0, ColumnSpacing);
-              AssertEquals(2, Std.Array.Length(ColumnChildren));
-              case ColumnChildren[1] of
-                TuiElement.Row(RowChildren, RowSpacing):
-                begin
-                  AssertEquals(0, RowSpacing);
-                  AssertEquals(2, Std.Array.Length(RowChildren))
-                end;
-                TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Column(NestedChildren, NestedColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(NestedTitle, NestedChildren), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.MovableDialog(MovableId, NestedTitle, MovablePosition, MovableDragOffset, MovableAction, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
-                begin
-                  panic('expected row element')
-                end
-              end
-            end;
-            TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(NestedChildren, NestedRowSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(NestedTitle, NestedChildren), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.MovableDialog(MovableId, NestedTitle, MovablePosition, MovableDragOffset, MovableAction, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
-            begin
-              panic('expected column element')
-            end
-          end
-        end;
-        TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(NestedChildren, NestedRowSpacing), TuiElement.Column(NestedChildren, NestedColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Dialog(NestedTitle, NestedChildren), TuiElement.MovableDialog(MovableId, NestedTitle, MovablePosition, MovableDragOffset, MovableAction, NestedChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+          AssertEquals('Dashboard', Title);
+          AssertEquals(1, Std.Array.Length(PanelChildren))
+        end
+        else
         begin
-          panic('expected window element')
+          panic('expected panel element')
+        end
+      end;
+      case DesktopChildren[1] of
+        TuiElement.Overlay(Title, OverlayChildren):
+        begin
+          AssertEquals('Confirm', Title);
+          AssertEquals(1, Std.Array.Length(OverlayChildren))
+        end
+        else
+        begin
+          panic('expected overlay element')
         end
       end
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, RowSpacing), TuiElement.Column(Children, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(MovableId, Title, MovablePosition, MovableDragOffset, MovableAction, Children):
+    end
+    else
     begin
       panic('expected desktop element')
     end
   end;
-  var SpacedRow: TuiElement := TuiElementBuilders.MakeRowSpaced([TuiElementBuilders.MakeLabel('A')], 3);
-  case SpacedRow of
-    TuiElement.Row(RowChildren, RowSpacing):
-    begin
-      AssertEquals(3, RowSpacing);
-      AssertEquals(1, Std.Array.Length(RowChildren))
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(MovableId, DialogTitle, MovablePosition, MovableDragOffset, MovableAction, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected spaced row element')
-    end
-  end;
-  var SpacedColumn: TuiElement := TuiElementBuilders.MakeColumnSpaced([
-                                                                        TuiElementBuilders.MakeLabel('B')
-
-                                                                      ], 4);
-  case SpacedColumn of
-    TuiElement.Column(ColumnChildren, ColumnSpacing):
-    begin
-      AssertEquals(4, ColumnSpacing);
-      AssertEquals(1, Std.Array.Length(ColumnChildren))
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(MovableId, DialogTitle, MovablePosition, MovableDragOffset, MovableAction, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected spaced column element')
-    end
-  end;
-  var LayoutNode: TuiElement := TuiElementBuilders.MakeLayout(TuiLayoutSettings.Default(), TuiElementBuilders.MakeLabel('child'));
-  case LayoutNode of
-    TuiElement.Layout(LayoutSettings, LayoutChildren):
-    begin
-      AssertEquals(0, LayoutSettings.Stretch);
-      AssertEquals(1, Std.Array.Length(LayoutChildren))
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(MovableId, DialogTitle, MovablePosition, MovableDragOffset, MovableAction, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected layout element')
-    end
-  end;
-  var FixedSpacer: TuiElement := TuiElementBuilders.MakeSpacer(TuiSpacer.Fixed(2));
-  case FixedSpacer of
-    TuiElement.Spacer(Value):
-    begin
-      AssertTrue(Value.Kind = TuiSpacerKind.Fixed);
-      AssertEquals(2, Value.MinimumExtent)
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(MovableId, DialogTitle, MovablePosition, MovableDragOffset, MovableAction, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected fixed spacer element')
-    end
-  end;
-  var ExpandingSpacer: TuiElement := TuiElementBuilders.MakeSpacer(TuiSpacer.Expanding(1));
-  case ExpandingSpacer of
-    TuiElement.Spacer(Value):
-    begin
-      AssertTrue(Value.Kind = TuiSpacerKind.Expanding);
-      AssertEquals(1, Value.MinimumExtent)
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(MovableId, DialogTitle, MovablePosition, MovableDragOffset, MovableAction, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected expanding spacer element')
-    end
-  end;
-  var Movable: TuiElement := TuiElementBuilders.MakeMovableDialog(TuiControlId.Create(20), 'Movable', Some(TuiPoint.Create(2, 3)), Some(TuiPoint.Create(1, 0)), TuiAction.Create(20), [
-                                                                                                                                                                                        TuiElementBuilders.MakeLabel('child')
-
-                                                                                                                                                                                      ]);
-  case Movable of
-    TuiElement.MovableDialog(MovableId, MovableTitle, MovablePosition, MovableDragOffset, MovableAction, MovableChildren):
-    begin
-      AssertEquals(20, MovableId.Value);
-      AssertEquals('Movable', MovableTitle);
-      AssertEquals(20, MovableAction.Value);
-      AssertEquals(1, Std.Array.Length(MovableChildren));
-      case MovablePosition of
-        Some(Position):
-        begin
-          AssertEquals(2, Position.X);
-          AssertEquals(3, Position.Y)
-        end;
-        None:
-        begin
-          panic('expected movable position')
-        end
-      end;
-      case MovableDragOffset of
-        Some(Offset):
-        begin
-          AssertEquals(1, Offset.X);
-          AssertEquals(0, Offset.Y)
-        end;
-        None:
-        begin
-          panic('expected movable drag offset')
-        end
-      end
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.Desktop(Focused, DesktopChildren):
-    begin
-      panic('expected movable dialog element')
-    end
-  end;
-  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 8));
+  mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
   AssertEquals(0, App.RunIterations(0, UpdateTree, ViewTree, 0, 0));
   App.Close()
 end.

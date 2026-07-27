@@ -1,8 +1,8 @@
 unit Std.Tui.Rendering.Surface;
 
 uses
-  Std.Array, Std.Option, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+  Std.Array, Std.Option, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style,
+  Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
 
 private mutable var TuiSurfaceSizes: array of TuiSize := [];
 private mutable var TuiSurfaceRowOffsets: array of integer := [];
@@ -87,6 +87,50 @@ begin
   end
 end;
 
+private function TuiSurfaceColorEqual(Left: TuiColor; Right: TuiColor): boolean;
+begin
+  return ((((Left.Kind = Right.Kind) and (Left.Index = Right.Index)) and (Left.Red = Right.Red)) and (Left.Green = Right.Green)) and
+         (Left.Blue = Right.Blue)
+end;
+
+private function TuiSurfaceStyleEqual(Left: TuiStyle; Right: TuiStyle): boolean;
+begin
+  return ((((TuiSurfaceColorEqual(Left.Foreground, Right.Foreground) and TuiSurfaceColorEqual(Left.Background, Right.Background)) and (Left.Bold = Right.Bold)) and (Left.Dim = Right.Dim)) and (Left.Underline = Right.Underline)) and
+         (Left.Inverse = Right.Inverse)
+end;
+
+private function TuiSurfaceConcreteStyleEqual(Left: option of TuiStyle; Right: option of TuiStyle): boolean;
+begin
+  case Left of
+    Some(LeftStyle):
+    begin
+      case Right of
+        Some(RightStyle):
+        begin
+          return TuiSurfaceStyleEqual(LeftStyle, RightStyle)
+        end;
+        None:
+        begin
+          return false
+        end
+      end
+    end;
+    None:
+    begin
+      case Right of
+        Some(RightStyle):
+        begin
+          return false
+        end;
+        None:
+        begin
+          return true
+        end
+      end
+    end
+  end
+end;
+
 private function TuiSurfaceCellChanged(RowIndex: integer; X: integer): boolean;
 begin
   if TuiSurfaceContinuations[RowIndex][X] <> TuiSurfacePresentedContinuations[RowIndex][X] then
@@ -97,8 +141,8 @@ begin
   begin
     return false
   end;
-  return (TuiSurfaceCells[RowIndex][X].Glyph <> TuiSurfacePresentedCells[RowIndex][X].Glyph) or
-         (TuiSurfaceCells[RowIndex][X].Role <> TuiSurfacePresentedCells[RowIndex][X].Role)
+  return ((TuiSurfaceCells[RowIndex][X].Glyph <> TuiSurfacePresentedCells[RowIndex][X].Glyph) or (TuiSurfaceCells[RowIndex][X].Role <> TuiSurfacePresentedCells[RowIndex][X].Role)) or
+         not TuiSurfaceConcreteStyleEqual(TuiSurfaceCells[RowIndex][X].ConcreteStyle, TuiSurfacePresentedCells[RowIndex][X].ConcreteStyle)
 end;
 
 private function TuiSurfaceDamageForRange(RowIndex: integer; Y: integer; FirstX: integer; LastX: integer): TuiSurfaceDamage;

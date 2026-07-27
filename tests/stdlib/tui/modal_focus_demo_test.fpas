@@ -22,12 +22,12 @@ begin
   if State.Confirming then
   begin
     Content := [
-                 TuiElementBuilders.MakeDialog('Confirm', [TuiElementBuilders.MakeLabel('done'), Quit])
+                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('done'), Quit])
 
                ];
     Focused := Some(TuiControlId.Create(3))
   end;
-  return TuiElementBuilders.MakeDesktop(Focused, [TuiElementBuilders.MakeWindow('Host', Content)])
+  return TuiElementBuilders.MakeDesktop(Focused, [TuiElementBuilders.MakePanel('Host', Content)])
 end;
 
 begin

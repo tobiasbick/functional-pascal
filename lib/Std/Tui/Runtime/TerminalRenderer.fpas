@@ -24,7 +24,16 @@ end;
 
 private function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
-  var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  mutable var Style: TuiStyle := Palette.ForRole(Cell.Role);
+  case Cell.ConcreteStyle of
+    Some(Concrete):
+    begin
+      Style := Concrete
+    end;
+    None:
+    begin
+    end
+  end;
   return record
     glyph := Cell.Glyph;
     foreground := TuiColorToConsole(Style.Foreground);

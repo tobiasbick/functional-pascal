@@ -24,14 +24,14 @@ private function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
 begin
   mutable var Next: integer := Index + 1;
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
         Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
     begin
     end
   end;
@@ -242,7 +242,7 @@ begin
       end;
       return None
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       mutable var Next: integer := Index + 1;
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
@@ -260,7 +260,7 @@ begin
       end;
       return None
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
     begin
       return None
     end

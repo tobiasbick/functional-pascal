@@ -3,7 +3,7 @@ unit Std.Tui.Rendering.Menu;
 uses
   Std.Array, Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole,
   Std.Tui.Chrome.MenuGeometry, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
-  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Chrome;
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
 private function TuiMenuIdMatches(Value: option of TuiMenuNodeId; Id: TuiMenuNodeId): boolean;
 begin
@@ -113,7 +113,6 @@ private procedure TuiPaintMenuPopup(
 );
 begin
   var Bounds: TuiRect := Popup.Bounds;
-  TuiPaintShadow(Canvas, Bounds, TuiStyleRole.MenuShadow);
   Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.MenuNormal));
   Canvas.DrawFrame(Bounds, TuiStyleRole.MenuNormal);
   mutable var Row: integer := 0;

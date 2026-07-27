@@ -1,0 +1,16 @@
+unit Std.Tui.Chrome.Gauge;
+
+type
+  /// Immutable bounded value displayed as a compact dashboard gauge.
+  TuiGauge = record
+    LabelText: string;
+    Value: integer;
+    Maximum: integer;
+
+    /// Creates a gauge; validation rejects invalid ranges during rendering.
+
+    static function Create(LabelText: string; Value: integer; Maximum: integer): TuiGauge;
+    begin
+      return record LabelText := LabelText; Value := Value; Maximum := Maximum; end
+    end;
+  end;

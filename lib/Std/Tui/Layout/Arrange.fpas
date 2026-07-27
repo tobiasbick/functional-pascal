@@ -17,15 +17,6 @@ begin
   return Right
 end;
 
-private function TuiArrangeMax(Left: integer; Right: integer): integer;
-begin
-  if Left > Right then
-  begin
-    return Left
-  end;
-  return Right
-end;
-
 private function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
 begin
   if Value > Maximum then
@@ -42,7 +33,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -283,7 +274,7 @@ begin
   var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
     begin
     end;
     TuiElement.Row(Children, Spacing):
@@ -323,7 +314,7 @@ begin
         ArrangeNode(Children[0], TuiRect.Create(NodeBounds.X - EffectiveX, NodeBounds.Y - EffectiveY, Content.Width, Content.Height), Clip, SelfIndex)
       end
     end;
-    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
     begin
       ArrangeRowColumn(false, Children, 0, NodeBounds.Inset(), Clip, SelfIndex)
     end;
@@ -333,36 +324,13 @@ begin
       for Index: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
         case Children[Index] of
-          TuiElement.Dialog(Title, DialogChildren):
+          TuiElement.Overlay(Title, OverlayChildren):
           begin
             var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
             var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
             var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
             var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
             var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
-            ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex)
-          end;
-          TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
-          begin
-            var Measured: TuiMeasureResult := TuiMeasure(Children[Index], Spec);
-            var Width: integer := TuiArrangeMin(Measured.Preferred.Width, NodeBounds.Width);
-            var Height: integer := TuiArrangeMin(Measured.Preferred.Height, NodeBounds.Height);
-            mutable var X: integer := NodeBounds.X + ((NodeBounds.Width - Width) div 2);
-            mutable var Y: integer := NodeBounds.Y + ((NodeBounds.Height - Height) div 2);
-            case Position of
-              Some(DialogPosition):
-              begin
-                X := DialogPosition.X;
-                Y := DialogPosition.Y
-              end;
-              None:
-              begin
-              end
-            end;
-            var MaximumX: integer := TuiArrangeMax(NodeBounds.X, (NodeBounds.Right() - Width) - 2);
-            var MaximumY: integer := TuiArrangeMax(NodeBounds.Y, (NodeBounds.Bottom() - Height) - 1);
-            X := TuiArrangeMax(NodeBounds.X, TuiArrangeMin(X, MaximumX));
-            Y := TuiArrangeMax(NodeBounds.Y, TuiArrangeMin(Y, MaximumY));
             ArrangeNode(Children[Index], TuiRect.Create(X, Y, Width, Height), Clip, SelfIndex)
           end
           else

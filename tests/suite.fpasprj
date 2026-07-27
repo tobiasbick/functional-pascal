@@ -2,9 +2,6 @@
 name = "fpas-regression-tests"
 kind = "test"
 
-[dependencies]
-projects = ["../apps/ide/ide-core.fpasprj"]
-
 [sources]
 include = [
   "stdlib/**/*_test.fpas",
@@ -12,6 +9,4 @@ include = [
   "runner/**/*_test.fpas",
   "console/**/*_test.fpas",
   "graph/**/*_test.fpas",
-  "ide/**/*_test.fpas",
-  "ide/support/**/*.fpas",
 ]

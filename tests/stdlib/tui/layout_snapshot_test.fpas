@@ -9,33 +9,33 @@ begin
     return State
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                          TuiElementBuilders.MakeWindow('Win', [
+                                                                          TuiElementBuilders.MakePanel('Win', [
 
-                                                                                                                 TuiElementBuilders.MakeColumn([
-
-
-
-                                                                                                                                                 TuiElementBuilders.MakeLabel('Hello'),
+                                                                                                                TuiElementBuilders.MakeColumn([
 
 
 
-                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1)),
+                                                                                                                                                TuiElementBuilders.MakeLabel('Hello'),
 
 
 
-                                                                                                                                                 TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(2))
+                                                                                                                                                TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1)),
 
 
+
+                                                                                                                                                TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(2))
 
 
 
 
 
-                                                                                                                                               ])
+
+
+                                                                                                                                              ])
 
 
 
-                                                                                                               ])
+                                                                                                              ])
 
                                                                         ])
   end, 0, 0);
@@ -43,14 +43,14 @@ begin
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(0), 'Win'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(1), 'Hello'));
   AssertTrue(Std.Str.Contains(Snapshot.LineAt(2), 'Go'));
-  AssertTrue(Std.Str.Contains(Snapshot.LineAt(4), 'ab'));
+  AssertTrue(Std.Str.Contains(Snapshot.LineAt(3), 'ab'));
   App.Close();
   var Wide: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 10));
   Wide.RunIterations(0, function(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer begin
     return State
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(None, [
-                                                  TuiElementBuilders.MakeDialog('Dlg', [TuiElementBuilders.MakeLabel('Body')])
+                                                  TuiElementBuilders.MakeOverlay('Dlg', [TuiElementBuilders.MakeLabel('Body')])
 
                                                 ])
   end, 0, 0);

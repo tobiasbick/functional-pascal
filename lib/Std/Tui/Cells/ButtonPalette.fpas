@@ -3,7 +3,7 @@ unit Std.Tui.Cells.ButtonPalette;
 uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 
 type
-  /// Concrete styles for every Turbo Vision-style button state.
+  /// Concrete styles for every flat button state.
   TuiButtonPalette = record
     Normal: TuiStyle;
     Default: TuiStyle;
@@ -12,7 +12,6 @@ type
     Shortcut: TuiStyle;
     DefaultShortcut: TuiStyle;
     SelectedShortcut: TuiStyle;
-    Shadow: TuiStyle;
 
     /// Creates a complete button palette.
 
@@ -23,8 +22,7 @@ type
   Disabled: TuiStyle;
   Shortcut: TuiStyle;
   DefaultShortcut: TuiStyle;
-  SelectedShortcut: TuiStyle;
-  Shadow: TuiStyle
+  SelectedShortcut: TuiStyle
 ): TuiButtonPalette;
     begin
       return record
@@ -35,7 +33,6 @@ type
         Shortcut := Shortcut;
         DefaultShortcut := DefaultShortcut;
         SelectedShortcut := SelectedShortcut;
-        Shadow := Shadow;
       end
     end;
 
@@ -71,10 +68,6 @@ type
         TuiStyleRole.ButtonSelectedShortcut:
         begin
           return Self.SelectedShortcut
-        end;
-        TuiStyleRole.ButtonShadow:
-        begin
-          return Self.Shadow
         end
         else
         begin
@@ -116,10 +109,6 @@ type
         TuiStyleRole.ButtonSelectedShortcut:
         begin
           Updated.SelectedShortcut := Style
-        end;
-        TuiStyleRole.ButtonShadow:
-        begin
-          Updated.Shadow := Style
         end
         else
         begin

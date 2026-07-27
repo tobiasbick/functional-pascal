@@ -51,18 +51,9 @@ begin
   end
 end;
 
-/// Waits for one Console event and maps it to supported Tui host input.
+/// Blocks for one Console event and maps it to supported Tui host input.
 
-function TuiReadConsoleHostInput(TimeoutMilliseconds: integer): option of TuiHostInput;
+function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
-  case ReadEventTimeout(TimeoutMilliseconds) of
-    Some(Event):
-    begin
-      return TuiConsoleEventToHostInput(Event)
-    end;
-    None:
-    begin
-      return None
-    end
-  end
+  return TuiConsoleEventToHostInput(ReadEvent())
 end;

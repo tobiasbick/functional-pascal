@@ -22,24 +22,20 @@ private mutable var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 
 private function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
 begin
-  mutable var LastDialog: integer := -1;
+  mutable var LastOverlay: integer := -1;
   for Index: integer := 0 to Std.Array.Length(Children) - 1 do
   begin
     case Children[Index] of
-      TuiElement.Dialog(Title, DialogChildren):
+      TuiElement.Overlay(Title, OverlayChildren):
       begin
-        LastDialog := Index
+        LastOverlay := Index
       end;
-      TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, DialogChildren):
-      begin
-        LastDialog := Index
-      end;
-      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Panel(Title, PanelChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
       begin
       end
     end
   end;
-  return LastDialog
+  return LastOverlay
 end;
 
 private function TuiPointerHitWalk(
@@ -55,9 +51,12 @@ begin
   case Node of
     TuiElement.Button(Button):
     begin
-      var ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X + 1, Entry.Bounds.Y, Entry.Bounds.Width -
-                                                                                      2, Entry.Bounds.Height -
-                                                                                         1);
+      mutable var ActiveWidth: integer := Entry.Bounds.Width - 1;
+      if ActiveWidth < 0 then
+      begin
+        ActiveWidth := 0
+      end;
+      var ActiveBounds: TuiRect := TuiRect.Create(Entry.Bounds.X, Entry.Bounds.Y, ActiveWidth, 1);
       if (Button.Enabled and AllowHits) and Entry.Clip.Intersect(ActiveBounds).Contains(Point) then
       begin
         TuiPointerBestHit := TuiPointerHit.ElementButton(Button)
@@ -157,7 +156,7 @@ begin
         Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits)
       end
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -177,7 +176,7 @@ begin
         Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ChildAllow)
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
     begin
     end
   end;

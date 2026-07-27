@@ -10,7 +10,7 @@ begin
     begin
       return State + 1
     end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       return State
     end
@@ -30,7 +30,7 @@ begin
     Std.Array.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
   end;
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeWindow('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
+                                                                        TuiElementBuilders.MakePanel('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
 
                                                                       ])
 end;

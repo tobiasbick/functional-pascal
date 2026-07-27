@@ -1,4 +1,4 @@
-/// Turbo Vision-style button painting.
+/// Flat modern button painting.
 
 unit Std.Tui.Rendering.Button;
 
@@ -62,7 +62,7 @@ begin
   return TuiStyleRole.ButtonShortcut
 end;
 
-/// Paints a two-row button with focus/default markers and a block shadow.
+/// Paints a compact one-row button.
 
 procedure TuiPaintButton(
   Canvas: TuiCanvas;
@@ -78,34 +78,22 @@ begin
   end;
   mutable var Role: TuiStyleRole := TuiButtonRole(Button, Focused);
   mutable var ShortcutRole: TuiStyleRole := TuiButtonShortcutRole(Button, Focused);
-  var ContentWidth: integer := Bounds.Width - 1;
+  var ContentWidth: integer := Bounds.Width;
   var TextWidth: integer := Std.Console.DisplayWidth(Button.Text);
   mutable var TextX: integer := Bounds.X + ((ContentWidth - TextWidth) div 2);
   if TextX < Bounds.X + 1 then
   begin
     TextX := Bounds.X + 1
   end;
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.ButtonShadow));
   if Pressed and Button.Enabled then
   begin
     Role := TuiStyleRole.ButtonSelected;
-    ShortcutRole := TuiStyleRole.ButtonSelectedShortcut;
-    Canvas.FillRect(TuiRect.Create(Bounds.X + 1, Bounds.Y, Bounds.Width - 1, 1), TuiCell.Create(' ', Role));
-    TuiPaintButtonText(Canvas, TuiPoint.Create(TextX + 1, Bounds.Y), Button, Role, ShortcutRole);
-    return
+    ShortcutRole := TuiStyleRole.ButtonSelectedShortcut
   end;
-  Canvas.FillRect(TuiRect.Create(Bounds.X, Bounds.Y, ContentWidth, 1), TuiCell.Create(' ', Role));
-  Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), '▄', TuiStyleRole.ButtonShadow);
-  Canvas.FillRect(TuiRect.Create(Bounds.X + 2, Bounds.Bottom() - 1, Bounds.Width - 2, 1), TuiCell.Create('▀', TuiStyleRole.ButtonShadow));
+  Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
   TuiPaintButtonText(Canvas, TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
-  if Button.Enabled and Focused then
+  if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then
   begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), '»', Role);
-    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2, Bounds.Y), '«', Role)
-  end
-  else if Button.Enabled and Button.Default then
-  begin
-    Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), '→', Role);
-    Canvas.WriteText(TuiPoint.Create(Bounds.Right() - 2, Bounds.Y), '←', Role)
+    Canvas.WriteText(TuiPoint.Create(Bounds.X + 1, Bounds.Y), '•', Role)
   end
 end;

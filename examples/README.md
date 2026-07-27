@@ -32,7 +32,6 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
 | `tests/graph/` | Headless graph smoke + pixel golden |
-| `tests/ide/` | Headless terminal-IDE regression coverage |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
 Run via:
@@ -209,20 +208,13 @@ All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table b
 
 Helper units under those folders are built only through the project; see the one-line `{ ... }` comment at the top of each unit file.
 
-## Applications (`apps/`)
-
-Larger programs live outside `examples/` but follow the same `.fpasprj` workflow.
-
-The current single-document terminal IDE lives under [`apps/ide/`](../apps/ide/)
-and has its run and test commands in [`apps/ide/README.md`](../apps/ide/README.md).
-
 ## Interactive demos (terminal)
 
 These run until you exit (for example **Escape**). Run from a real terminal if possible.
 
 | Path | Notes |
 |------|--------|
-| `math/mandelbrot/mandelbrot.fpasprj` | Fullscreen terminal Mandelbrot explorer (`Std.Console`) |
+| `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with truecolor `TuiCellGrid`, gauges, and overlay |
 | `math/julia/julia.fpasprj` | Fullscreen terminal Julia explorer; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |

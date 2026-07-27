@@ -34,7 +34,7 @@ begin
       Cmd.Set(TuiCmd.Quit);
       return State
     end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
       return State
     end
@@ -51,7 +51,7 @@ begin
   if State.Confirming then
   begin
     Content := [
-                 TuiElementBuilders.MakeDialog('Confirm', [TuiElementBuilders.MakeLabel(State.Text), Quit])
+                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel(State.Text), Quit])
 
                ];
     Focused := Some(TuiControlId.Create(3))
@@ -61,10 +61,10 @@ begin
 
                                                                                     TuiMenuItem.WithShortcut(TuiControlId.Create(4), 'File', TuiAction.Create(3), 'F')
 
-                                                   
+
 
                                                                                   ]),
-                                                   TuiElementBuilders.MakeWindow('Tui interactive demo', Content),
+                                                   TuiElementBuilders.MakePanel('Tui interactive demo', Content),
                                                    TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')])
 
                                                  ])

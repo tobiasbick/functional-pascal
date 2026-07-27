@@ -1,8 +1,9 @@
-{ Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+{ Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see README.md. }
 
 program MandelbrotShowcase;
 
-uses Std.Console, Std.Conv, Std.Math, Std.Option, Std.Str, Mandelbrot.Color, Mandelbrot.Render;
+uses
+  Std.Array, Std.Console, Std.Conv, Std.Math, Std.Str, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
 
 type
   ExplorerState = record
@@ -25,9 +26,7 @@ type
 
     function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
     begin
-      var SafeWidth: integer := Max(Width, 1);
-      var SafeHeight: integer := Max(Height, 1);
-      return (Self.SpanY * (IntToReal(SafeWidth) / IntToReal(SafeHeight))) * 0.5
+      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5
     end;
 
     function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
@@ -57,283 +56,234 @@ type
 
     property Zoom: real read GetZoom;
   end;
-
-function RenderWidth(): integer;
-begin
-  return Max(ScreenWidth(), 1)
-end;
-
-function RenderHeight(): integer;
-begin
-  return Max(ScreenHeight() - 3, 1)
-end;
-
-{ 1-based cell in the render viewport → complex plane (same mapping as row iteration) }
-
-function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
-begin
-  var Wr: integer := Max(W - 1, 1);
-  return State.XMin(W, H) +
-         (IntToReal(CellX - 1) / IntToReal(Wr)) * (State.XMax(W, H) - State.XMin(W, H))
-end;
-
-function ViewportCY(State: ExplorerState; W: integer; H: integer; CellY: integer): real;
-begin
-  var Hr: integer := Max(H - 1, 1);
-  return State.YMax() - (IntToReal(CellY - 1) / IntToReal(Hr)) * (State.YMax() - State.YMin())
-end;
-
-procedure WriteHudText(Text: string; Width: integer);
-begin
-  if Width > 0 then
-  begin
-    var TextLength: integer := Min(Std.Str.Length(Text), Width);
-    if TextLength > 0 then
-    begin
-      Write(Substring(Text, 0, TextLength))
-    end
-  end
-end;
-
-procedure DrawHud(S: ExplorerState; Width: integer; Height: integer);
-begin
-  Window(1, 1, ScreenWidth(), ScreenHeight());
-  var HudTop: integer := Max(ScreenHeight() - 2, 1);
-  Window(1, HudTop, ScreenWidth(), ScreenHeight());
-  NormVideo();
-  ClrScr();
-  GotoXY(1, 1);
-  TextColorRGB(255, 220, 120);
-  var Title: string := 'Functional Pascal Mandelbrot';
-  WriteHudText(Title, Width);
-  TextColorRGB(156, 204, 255);
-  WriteHudText('  tasks | units | records | truecolor | mouse | focus | paste', Max(Width -
-                                                                                    Std.Str.Length(Title), 0));
-  if ScreenHeight() >= 2 then
-  begin
-    GotoXY(1, 2);
-    NormVideo();
-    WriteHudText(Format('size=%dx%d  center=(%f, %f)  zoom=%f  iter=%d  palette=%s', Width, Height, S.CenterX, S.CenterY, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width)
+  MandelbrotModel = record
+    Explorer: ExplorerState;
+    TerminalWidth: integer;
+    TerminalHeight: integer;
+    Grid: TuiCellGrid;
+    HelpOpen: boolean;
   end;
-  if ScreenHeight() >= 3 then
-  begin
-    GotoXY(1, 3);
-    NormVideo();
-    WriteHudText('click center  wheel zoom  M middle=reset  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width)
-  end;
-  NormVideo();
-  Window(1, 1, Width, Height)
+
+function GridWidth(TerminalWidth: integer): integer;
+begin
+  return Max(TerminalWidth - 2, 1)
 end;
 
-mutable var
-  mutable var State: ExplorerState := ExplorerState.Default();
-  mutable var RenderW: integer := 1;
-  mutable var RenderH: integer := 1;
-  mutable var NeedsRedraw: boolean := true;
-  mutable var Quit: boolean := false;
-
-procedure RequestRedraw();
+function GridHeight(TerminalHeight: integer): integer;
 begin
-  NeedsRedraw := true
+  return Max(TerminalHeight - 6, 1)
 end;
 
-procedure PaintFrame();
+function BuildModel(
+  Explorer: ExplorerState;
+  TerminalWidth: integer;
+  TerminalHeight: integer;
+  HelpOpen: boolean
+): MandelbrotModel;
 begin
-  RenderW := RenderWidth();
-  RenderH := RenderHeight();
-  BeginFrame();
-  FillRect(record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end, record
-    glyph := ' ';
-    foreground := RgbColor(0, 0, 0);
-    background := RgbColor(0, 0, 0);
-  end);
-  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette);
-  DrawHud(State, RenderW, RenderH);
-  Present()
+  var Width: integer := Max(TerminalWidth, 1);
+  var Height: integer := Max(TerminalHeight, 1);
+  var RenderWidth: integer := GridWidth(Width);
+  var RenderHeight: integer := GridHeight(Height);
+  return record
+    Explorer := Explorer;
+    TerminalWidth := Width;
+    TerminalHeight := Height;
+    Grid := RenderGrid(Explorer.XMin(RenderWidth, RenderHeight), Explorer.XMax(RenderWidth, RenderHeight), Explorer.YMin(), Explorer.YMax(), RenderWidth, RenderHeight, Explorer.MaxIter, Explorer.Palette);
+    HelpOpen := HelpOpen;
+  end
 end;
 
-function HandleKey(Key: KeyEvent): boolean;
+function ViewportX(State: ExplorerState; Width: integer; Height: integer; CellX: integer): real;
 begin
-  var StepX: real := State.SpanX(RenderW, RenderH) * 0.14;
-  var StepY: real := State.SpanY * 0.14;
-  if Key.kind = KeyKind.Escape then
+  return State.XMin(Width, Height) +
+         (IntToReal(CellX) / IntToReal(Max(Width - 1, 1))) * (State.XMax(Width, Height) - State.XMin(Width, Height))
+end;
+
+function ViewportY(State: ExplorerState; Height: integer; CellY: integer): real;
+begin
+  return State.YMax() -
+         (IntToReal(CellY) / IntToReal(Max(Height - 1, 1))) * (State.YMax() - State.YMin())
+end;
+
+function UpdateKey(State: MandelbrotModel; Key: TuiKeyEvent): MandelbrotModel;
+begin
+  mutable var Explorer: ExplorerState := State.Explorer;
+  var StepX: real := Explorer.SpanX(State.Grid.Width, State.Grid.Height) * 0.14;
+  var StepY: real := Explorer.SpanY * 0.14;
+  if Key.kind = TuiKeyKind.Left then
   begin
-    Quit := true;
-    return true
+    Explorer.CenterX := Explorer.CenterX - StepX
   end
-  else if Key.kind = KeyKind.Left then
+  else if Key.kind = TuiKeyKind.Right then
   begin
-    State.CenterX := State.CenterX - StepX;
-    RequestRedraw();
-    return true
+    Explorer.CenterX := Explorer.CenterX + StepX
   end
-  else if Key.kind = KeyKind.Right then
+  else if Key.kind = TuiKeyKind.Up then
   begin
-    State.CenterX := State.CenterX + StepX;
-    RequestRedraw();
-    return true
+    Explorer.CenterY := Explorer.CenterY + StepY
   end
-  else if Key.kind = KeyKind.Up then
+  else if Key.kind = TuiKeyKind.Down then
   begin
-    State.CenterY := State.CenterY + StepY;
-    RequestRedraw();
-    return true
+    Explorer.CenterY := Explorer.CenterY - StepY
   end
-  else if Key.kind = KeyKind.Down then
+  else if Key.kind = TuiKeyKind.PageUp then
   begin
-    State.CenterY := State.CenterY - StepY;
-    RequestRedraw();
-    return true
+    Explorer.MaxIter := Min(Explorer.MaxIter + 32, 2048)
   end
-  else if Key.kind = KeyKind.PageUp then
+  else if Key.kind = TuiKeyKind.PageDown then
   begin
-    State.MaxIter := Min(State.MaxIter + 32, 2048);
-    RequestRedraw();
-    return true
+    Explorer.MaxIter := Max(Explorer.MaxIter - 32, 32)
   end
-  else if Key.kind = KeyKind.PageDown then
-  begin
-    State.MaxIter := Max(State.MaxIter - 32, 32);
-    RequestRedraw();
-    return true
-  end
-  else if Key.kind = KeyKind.Character then
+  else if Key.kind = TuiKeyKind.Character then
   begin
     case Key.ch of
       '+', '=':
       begin
-        State.SpanY := Max(State.SpanY * 0.82, 0.000001);
-        RequestRedraw();
-        return true
+        Explorer.SpanY := Max(Explorer.SpanY * 0.82, 0.000001)
       end;
       '-':
       begin
-        State.SpanY := Min(State.SpanY / 0.82, 3.5);
-        RequestRedraw();
-        return true
+        Explorer.SpanY := Min(Explorer.SpanY / 0.82, 3.5)
       end;
       '1':
       begin
-        State.Palette := PaletteKind.DeepOcean;
-        RequestRedraw();
-        return true
+        Explorer.Palette := PaletteKind.DeepOcean
       end;
       '2':
       begin
-        State.Palette := PaletteKind.Ember;
-        RequestRedraw();
-        return true
+        Explorer.Palette := PaletteKind.Ember
       end;
       '3':
       begin
-        State.Palette := PaletteKind.Aurora;
-        RequestRedraw();
-        return true
+        Explorer.Palette := PaletteKind.Aurora
       end;
       'r', 'R':
       begin
-        State := ExplorerState.Default();
-        RequestRedraw();
-        return true
-      end
-    end
-  end;
-  return false
-end;
-
-procedure HandleMouse(Event: Event);
-begin
-  var InView: boolean := Event.mouse_x >= 1;
-  if Event.mouse_action = MouseAction.ScrollUp then
-  begin
-    State.SpanY := Max(State.SpanY * 0.88, 0.000001);
-    RequestRedraw()
-  end
-  else if Event.mouse_action = MouseAction.ScrollDown then
-  begin
-    State.SpanY := Min(State.SpanY / 0.88, 3.5);
-    RequestRedraw()
-  end
-  else if InView and (Event.mouse_action = MouseAction.Down) then
-  begin
-    if Event.mouse_button = MouseButton.Left then
-    begin
-      State.CenterX := ViewportCX(State, RenderW, RenderH, Event.mouse_x);
-      State.CenterY := ViewportCY(State, RenderW, RenderH, Event.mouse_y);
-      RequestRedraw()
-    end
-    else if Event.mouse_button = MouseButton.Middle then
-    begin
-      State := ExplorerState.Default();
-      RequestRedraw()
-    end
-  end
-end;
-
-procedure HandleResize(Width: integer; Height: integer);
-begin
-  var NewW: integer := Max(Width, 1);
-  var NewH: integer := Max(Height - 2, 1);
-  if (NewW <> RenderW) or (NewH <> RenderH) then
-  begin
-    RenderW := NewW;
-    RenderH := NewH;
-    RequestRedraw()
-  end
-end;
-
-procedure HandleEvent(E: Event);
-begin
-  if E.kind = EventKind.Key then
-  begin
-    HandleKey(E.key)
-  end
-  else if E.kind = EventKind.Mouse then
-  begin
-    HandleMouse(E)
-  end
-  else if E.kind = EventKind.Resize then
-  begin
-    HandleResize(E.width, E.height)
-  end
-end;
-
-procedure ShutdownTerminal();
-begin
-  CursorOn();
-  DisablePaste();
-  DisableFocus();
-  DisableMouse();
-  DisableRawMode();
-  LeaveAltScreen()
-end;
-
-begin
-  EnableRawMode();
-  EnterAltScreen();
-  EnableMouse();
-  EnableFocus();
-  EnablePaste();
-  CursorOff();
-  RenderW := RenderWidth();
-  RenderH := RenderHeight();
-  NeedsRedraw := true;
-  while not Quit do
-  begin
-    if NeedsRedraw then
-    begin
-      PaintFrame();
-      NeedsRedraw := false
-    end;
-    case ReadEventTimeout(16) of
-      Some(E):
-      begin
-        HandleEvent(E)
+        Explorer := ExplorerState.Default()
       end;
-      None:
+      'h', 'H':
       begin
+        return BuildModel(Explorer, State.TerminalWidth, State.TerminalHeight, not State.HelpOpen)
       end
     end
   end;
-  ShutdownTerminal()
+  return BuildModel(Explorer, State.TerminalWidth, State.TerminalHeight, State.HelpOpen)
+end;
+
+function UpdatePointer(State: MandelbrotModel; Pointer: TuiPointerEvent): MandelbrotModel;
+begin
+  mutable var Explorer: ExplorerState := State.Explorer;
+  if Pointer.Action = TuiPointerAction.ScrollUp then
+  begin
+    Explorer.SpanY := Max(Explorer.SpanY * 0.88, 0.000001)
+  end
+  else if Pointer.Action = TuiPointerAction.ScrollDown then
+  begin
+    Explorer.SpanY := Min(Explorer.SpanY / 0.88, 3.5)
+  end
+  else if ((((Pointer.Action = TuiPointerAction.Down) and (Pointer.Position.X >= 1)) and (Pointer.Position.X <= State.Grid.Width)) and (Pointer.Position.Y >= 1)) and
+          (Pointer.Position.Y <= State.Grid.Height) then
+  begin
+    if Pointer.Button = TuiPointerButton.Left then
+    begin
+      Explorer.CenterX := ViewportX(Explorer, State.Grid.Width, State.Grid.Height, Pointer.Position.X -
+                                                                                   1);
+      Explorer.CenterY := ViewportY(Explorer, State.Grid.Height, Pointer.Position.Y - 1)
+    end
+    else if Pointer.Button = TuiPointerButton.Middle then
+    begin
+      Explorer := ExplorerState.Default()
+    end
+  end;
+  return BuildModel(Explorer, State.TerminalWidth, State.TerminalHeight, State.HelpOpen)
+end;
+
+function UpdateMandelbrot(State: MandelbrotModel; Msg: TuiMsg; Cmd: TuiCmdOutput): MandelbrotModel;
+begin
+  Cmd.Set(TuiCmd.NoCommand);
+  case Msg of
+    TuiMsg.Key(Key):
+    begin
+      return UpdateKey(State, Key)
+    end;
+    TuiMsg.Pointer(Pointer):
+    begin
+      return UpdatePointer(State, Pointer)
+    end;
+    TuiMsg.Resize(Size):
+    begin
+      return BuildModel(State.Explorer, Size.Width, Size.Height, State.HelpOpen)
+    end;
+    TuiMsg.QuitRequested:
+    begin
+      if State.HelpOpen then
+      begin
+        return BuildModel(State.Explorer, State.TerminalWidth, State.TerminalHeight, false)
+      end;
+      Cmd.Set(TuiCmd.Quit);
+      return State
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function ViewMandelbrot(State: MandelbrotModel): TuiElement;
+begin
+  var Detail: string := Format('center=(%f, %f)  zoom=%f  palette=%s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette));
+  var Main: TuiElement := TuiElementBuilders.MakeColumn([
+                                                          TuiElementBuilders.MakePanel('Mandelbrot Explorer', [TuiElementBuilders.MakeCellGrid(State.Grid)]),
+                                                          TuiElementBuilders.MakeRule(Detail),
+                                                          TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+                                                          TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000),
+                                                          TuiElementBuilders.MakeStatusLine([
+
+                                                                                              TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
+
+                                                                                              TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
+
+                                                                                              TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
+
+                                                                                              TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
+
+                                                                                              TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
+
+
+
+                                                                                            ])
+
+                                                        ]);
+  mutable var Children: array of TuiElement := [Main];
+  if State.HelpOpen then
+  begin
+    Std.Array.Push(Children, TuiElementBuilders.MakeOverlay('Controls', [
+                                                                          TuiElementBuilders.MakeColumnSpaced([
+
+                                                                                                                TuiElementBuilders.MakeLabel('Arrow keys or click: pan and center'),
+
+                                                                                                                TuiElementBuilders.MakeLabel('+ / - or wheel: zoom'),
+
+                                                                                                                TuiElementBuilders.MakeLabel('PageUp / PageDown: iterations'),
+
+                                                                                                                TuiElementBuilders.MakeLabel('1 / 2 / 3: color palette'),
+
+                                                                                                                TuiElementBuilders.MakeLabel('R or middle click: reset'),
+
+                                                                                                                TuiElementBuilders.MakeLabel('Esc: close this overlay')
+
+
+
+                                                                                                              ], 1)
+
+                                                                        ]))
+  end;
+  return TuiElementBuilders.MakeDesktop(None, Children)
+end;
+
+begin
+  var Initial: MandelbrotModel := BuildModel(ExplorerState.Default(), ScreenWidth(), ScreenHeight(), false);
+  TuiApplication.Run(Initial, UpdateMandelbrot, ViewMandelbrot)
 end.

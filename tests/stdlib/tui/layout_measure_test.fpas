@@ -7,8 +7,8 @@ begin
   AssertEquals(2, LabelSize.Preferred.Width);
   AssertEquals(1, LabelSize.Preferred.Height);
   var ButtonSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Ok', TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
-  AssertEquals(8, ButtonSize.Preferred.Width);
-  AssertEquals(2, ButtonSize.Preferred.Height);
+  AssertEquals(6, ButtonSize.Preferred.Width);
+  AssertEquals(1, ButtonSize.Preferred.Height);
   var EmptyIgnored: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeRow([
                                                                                 TuiElementBuilders.MakeEmpty(),
                                                                                 TuiElementBuilders.MakeLabel('A'),
@@ -44,10 +44,10 @@ begin
   AssertEquals(5, Wrapped.Preferred.Width);
   AssertEquals(5, Wrapped.Preferred.Height);
   AssertEquals(5, Wrapped.Minimum.Width);
-  var WindowSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeWindow('Title', [
-                                                                                          TuiElementBuilders.MakeLabel('Body')
+  var WindowSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakePanel('Title', [
+                                                                                         TuiElementBuilders.MakeLabel('Body')
 
-                                                                                        ]), TuiMeasureSpec.Unbounded());
+                                                                                       ]), TuiMeasureSpec.Unbounded());
   AssertEquals(11, WindowSize.Preferred.Width);
   AssertEquals(3, WindowSize.Preferred.Height);
   var FixedSpacer: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeSpacer(TuiSpacer.Fixed(4)), TuiMeasureSpec.Unbounded());

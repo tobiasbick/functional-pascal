@@ -5,7 +5,7 @@ uses
   Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
 
 type
-  /// Maps every `TuiStyleRole` to a concrete `TuiStyle`.
+  /// Maps every semantic `TuiStyleRole` to a concrete terminal style.
   TuiPalette = record
     Normal: TuiStyle;
     Disabled: TuiStyle;
@@ -19,111 +19,64 @@ type
     MenuShortcut: TuiStyle;
     MenuSelected: TuiStyle;
     MenuSelectedShortcut: TuiStyle;
-    MenuShadow: TuiStyle;
     StatusNormal: TuiStyle;
     StatusDisabled: TuiStyle;
     StatusShortcut: TuiStyle;
     StatusSelected: TuiStyle;
     Buttons: TuiButtonPalette;
     Inputs: TuiInputPalette;
-    DialogNormal: TuiStyle;
-    DialogFrame: TuiStyle;
-    DialogTitle: TuiStyle;
-    DialogInput: TuiStyle;
-    DialogInputFocused: TuiStyle;
-    DialogShadow: TuiStyle;
+    Rule: TuiStyle;
+    GaugeTrack: TuiStyle;
+    GaugeFill: TuiStyle;
     Failure: TuiStyle;
     Warning: TuiStyle;
     Accent: TuiStyle;
 
-    /// Creates a palette from explicit per-role styles.
-
-    static function Create(
-  Normal: TuiStyle;
-  Disabled: TuiStyle;
-  Focused: TuiStyle;
-  Selected: TuiStyle;
-  Shortcut: TuiStyle;
-  Frame: TuiStyle;
-  Title: TuiStyle;
-  MenuNormal: TuiStyle;
-  MenuDisabled: TuiStyle;
-  MenuShortcut: TuiStyle;
-  MenuSelected: TuiStyle;
-  MenuSelectedShortcut: TuiStyle;
-  MenuShadow: TuiStyle;
-  StatusNormal: TuiStyle;
-  StatusDisabled: TuiStyle;
-  StatusShortcut: TuiStyle;
-  StatusSelected: TuiStyle;
-  Buttons: TuiButtonPalette;
-  Inputs: TuiInputPalette;
-  DialogNormal: TuiStyle;
-  DialogFrame: TuiStyle;
-  DialogTitle: TuiStyle;
-  DialogInput: TuiStyle;
-  DialogInputFocused: TuiStyle;
-  DialogShadow: TuiStyle;
-  Failure: TuiStyle;
-  Warning: TuiStyle;
-  Accent: TuiStyle
-): TuiPalette;
-    begin
-      return record
-        Normal := Normal;
-        Disabled := Disabled;
-        Focused := Focused;
-        Selected := Selected;
-        Shortcut := Shortcut;
-        Frame := Frame;
-        Title := Title;
-        MenuNormal := MenuNormal;
-        MenuDisabled := MenuDisabled;
-        MenuShortcut := MenuShortcut;
-        MenuSelected := MenuSelected;
-        MenuSelectedShortcut := MenuSelectedShortcut;
-        MenuShadow := MenuShadow;
-        StatusNormal := StatusNormal;
-        StatusDisabled := StatusDisabled;
-        StatusShortcut := StatusShortcut;
-        StatusSelected := StatusSelected;
-        Buttons := Buttons;
-        Inputs := Inputs;
-        DialogNormal := DialogNormal;
-        DialogFrame := DialogFrame;
-        DialogTitle := DialogTitle;
-        DialogInput := DialogInput;
-        DialogInputFocused := DialogInputFocused;
-        DialogShadow := DialogShadow;
-        Failure := Failure;
-        Warning := Warning;
-        Accent := Accent;
-      end
-    end;
-
-    /// Returns the standard CRT semantic palette.
+    /// Returns the modern dark default palette.
 
     static function Default(): TuiPalette;
     begin
-      var Black: TuiColor := TuiColor.FromCrt(0);
-      var DarkGray: TuiColor := TuiColor.FromCrt(8);
-      var LightGray: TuiColor := TuiColor.FromCrt(7);
-      var White: TuiColor := TuiColor.FromCrt(15);
-      var Blue: TuiColor := TuiColor.FromCrt(1);
-      var Green: TuiColor := TuiColor.FromCrt(2);
-      var Red: TuiColor := TuiColor.FromCrt(4);
-      var LightCyan: TuiColor := TuiColor.FromCrt(11);
-      var LightRed: TuiColor := TuiColor.FromCrt(12);
-      var Yellow: TuiColor := TuiColor.FromCrt(14);
-      var Normal: TuiStyle := TuiStyle.FromColors(LightGray, Black);
-      var ChromeNormal: TuiStyle := TuiStyle.FromColors(Black, LightGray);
-      var ChromeDisabled: TuiStyle := TuiStyle.FromColors(DarkGray, LightGray);
-      var ChromeShortcut: TuiStyle := TuiStyle.FromColors(Red, LightGray);
-      var ChromeSelected: TuiStyle := TuiStyle.FromColors(Black, Green);
-      var ChromeSelectedShortcut: TuiStyle := TuiStyle.FromColors(Red, Green);
-      var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Black, Green), TuiStyle.FromColors(LightCyan, Green), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, LightGray), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Yellow, Green), TuiStyle.FromColors(Black, LightGray));
-      var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(LightGray, Blue), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(DarkGray, Blue), TuiStyle.FromColors(Blue, LightGray), TuiStyle.FromColors(Yellow, Blue));
-      return TuiPalette.Create(Normal, TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(Black, LightCyan), TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(LightCyan, Black), Normal, TuiStyle.FromColors(Yellow, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, ChromeSelectedShortcut, TuiStyle.FromColors(DarkGray, Black), ChromeNormal, ChromeDisabled, ChromeShortcut, ChromeSelected, Buttons, Inputs, TuiStyle.FromColors(Black, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, LightGray), TuiStyle.FromColors(White, Blue), TuiStyle.FromColors(White, Green), TuiStyle.FromColors(DarkGray, Black), TuiStyle.FromColors(LightRed, Black), TuiStyle.FromColors(Yellow, Black), TuiStyle.FromColors(LightCyan, Black))
+      var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
+      var Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
+      var Text: TuiColor := TuiColor.FromRgb(201, 209, 217);
+      var Muted: TuiColor := TuiColor.FromRgb(139, 148, 158);
+      var Border: TuiColor := TuiColor.FromRgb(48, 54, 61);
+      var Accent: TuiColor := TuiColor.FromRgb(88, 166, 255);
+      var Selected: TuiColor := TuiColor.FromRgb(31, 111, 235);
+      var Success: TuiColor := TuiColor.FromRgb(63, 185, 80);
+      var Failure: TuiColor := TuiColor.FromRgb(248, 81, 73);
+      var Warning: TuiColor := TuiColor.FromRgb(210, 153, 34);
+      var NormalStyle: TuiStyle := TuiStyle.FromColors(Text, Background);
+      var SelectedStyle: TuiStyle := TuiStyle.FromColors(Text, Selected);
+      var AccentStyle: TuiStyle := TuiStyle.FromColors(Accent, Background);
+      var Buttons: TuiButtonPalette := TuiButtonPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Background, Accent), SelectedStyle, TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Accent, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Text, Selected));
+      var Inputs: TuiInputPalette := TuiInputPalette.Create(TuiStyle.FromColors(Text, Surface), TuiStyle.FromColors(Text, TuiColor.FromRgb(30, 36, 44)), TuiStyle.FromColors(Muted, Surface), TuiStyle.FromColors(Background, Accent), TuiStyle.FromColors(Accent, Surface));
+      return record
+        Normal := NormalStyle;
+        Disabled := TuiStyle.FromColors(Muted, Background);
+        Focused := SelectedStyle;
+        Selected := SelectedStyle;
+        Shortcut := AccentStyle;
+        Frame := TuiStyle.FromColors(Border, Background);
+        Title := TuiStyle.FromColors(Text, Background);
+        MenuNormal := TuiStyle.FromColors(Text, Surface);
+        MenuDisabled := TuiStyle.FromColors(Muted, Surface);
+        MenuShortcut := TuiStyle.FromColors(Accent, Surface);
+        MenuSelected := SelectedStyle;
+        MenuSelectedShortcut := TuiStyle.FromColors(Text, Selected);
+        StatusNormal := TuiStyle.FromColors(Text, Surface);
+        StatusDisabled := TuiStyle.FromColors(Muted, Surface);
+        StatusShortcut := TuiStyle.FromColors(Accent, Surface);
+        StatusSelected := SelectedStyle;
+        Buttons := Buttons;
+        Inputs := Inputs;
+        Rule := TuiStyle.FromColors(Border, Background);
+        GaugeTrack := TuiStyle.FromColors(Border, Background);
+        GaugeFill := TuiStyle.FromColors(Success, Background);
+        Failure := TuiStyle.FromColors(Failure, Background);
+        Warning := TuiStyle.FromColors(Warning, Background);
+        Accent := AccentStyle;
+      end
     end;
 
     /// Resolves the concrete style for one semantic role.
@@ -179,10 +132,6 @@ type
         begin
           return Self.MenuSelectedShortcut
         end;
-        TuiStyleRole.MenuShadow:
-        begin
-          return Self.MenuShadow
-        end;
         TuiStyleRole.StatusNormal:
         begin
           return Self.StatusNormal
@@ -199,7 +148,7 @@ type
         begin
           return Self.StatusSelected
         end;
-        TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.ButtonShadow:
+        TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
         begin
           return Self.Buttons.ForRole(Role)
         end;
@@ -207,29 +156,17 @@ type
         begin
           return Self.Inputs.ForRole(Role)
         end;
-        TuiStyleRole.DialogNormal:
+        TuiStyleRole.Rule:
         begin
-          return Self.DialogNormal
+          return Self.Rule
         end;
-        TuiStyleRole.DialogFrame:
+        TuiStyleRole.GaugeTrack:
         begin
-          return Self.DialogFrame
+          return Self.GaugeTrack
         end;
-        TuiStyleRole.DialogTitle:
+        TuiStyleRole.GaugeFill:
         begin
-          return Self.DialogTitle
-        end;
-        TuiStyleRole.DialogInput:
-        begin
-          return Self.DialogInput
-        end;
-        TuiStyleRole.DialogInputFocused:
-        begin
-          return Self.DialogInputFocused
-        end;
-        TuiStyleRole.DialogShadow:
-        begin
-          return Self.DialogShadow
+          return Self.GaugeFill
         end;
         TuiStyleRole.Failure:
         begin
@@ -238,15 +175,15 @@ type
         TuiStyleRole.Warning:
         begin
           return Self.Warning
-        end
-        else
+        end;
+        TuiStyleRole.Accent:
         begin
           return Self.Accent
         end
       end
     end;
 
-    /// Returns a copy with one role replaced; the original palette is unchanged.
+    /// Returns a copy with one semantic role replaced.
 
     function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
     begin
@@ -300,10 +237,6 @@ type
         begin
           Updated.MenuSelectedShortcut := Style
         end;
-        TuiStyleRole.MenuShadow:
-        begin
-          Updated.MenuShadow := Style
-        end;
         TuiStyleRole.StatusNormal:
         begin
           Updated.StatusNormal := Style
@@ -320,7 +253,7 @@ type
         begin
           Updated.StatusSelected := Style
         end;
-        TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut, TuiStyleRole.ButtonShadow:
+        TuiStyleRole.ButtonNormal, TuiStyleRole.ButtonDefault, TuiStyleRole.ButtonSelected, TuiStyleRole.ButtonDisabled, TuiStyleRole.ButtonShortcut, TuiStyleRole.ButtonDefaultShortcut, TuiStyleRole.ButtonSelectedShortcut:
         begin
           Updated.Buttons := Updated.Buttons.WithRole(Role, Style)
         end;
@@ -328,29 +261,17 @@ type
         begin
           Updated.Inputs := Updated.Inputs.WithRole(Role, Style)
         end;
-        TuiStyleRole.DialogNormal:
+        TuiStyleRole.Rule:
         begin
-          Updated.DialogNormal := Style
+          Updated.Rule := Style
         end;
-        TuiStyleRole.DialogFrame:
+        TuiStyleRole.GaugeTrack:
         begin
-          Updated.DialogFrame := Style
+          Updated.GaugeTrack := Style
         end;
-        TuiStyleRole.DialogTitle:
+        TuiStyleRole.GaugeFill:
         begin
-          Updated.DialogTitle := Style
-        end;
-        TuiStyleRole.DialogInput:
-        begin
-          Updated.DialogInput := Style
-        end;
-        TuiStyleRole.DialogInputFocused:
-        begin
-          Updated.DialogInputFocused := Style
-        end;
-        TuiStyleRole.DialogShadow:
-        begin
-          Updated.DialogShadow := Style
+          Updated.GaugeFill := Style
         end;
         TuiStyleRole.Failure:
         begin
@@ -359,8 +280,8 @@ type
         TuiStyleRole.Warning:
         begin
           Updated.Warning := Style
-        end
-        else
+        end;
+        TuiStyleRole.Accent:
         begin
           Updated.Accent := Style
         end

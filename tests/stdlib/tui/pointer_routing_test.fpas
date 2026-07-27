@@ -31,33 +31,33 @@ end;
 function ViewRoute(State: RouteModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeWindow('Host', [
+                                                                                  TuiElementBuilders.MakePanel('Host', [
 
-                                                                                                                          TuiElementBuilders.MakeColumn([
-
-
-
-                                                                                                                                                          TuiElementBuilders.MakeLabel('Hello'),
+                                                                                                                         TuiElementBuilders.MakeColumn([
 
 
 
-                                                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(11)),
+                                                                                                                                                         TuiElementBuilders.MakeLabel('Hello'),
 
 
 
-                                                                                                                                                          TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(22))
+                                                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(11)),
 
 
+
+                                                                                                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(22))
 
 
 
 
 
-                                                                                                                                                        ])
+
+
+                                                                                                                                                       ])
 
 
 
-                                                                                                                        ])
+                                                                                                                       ])
 
                                                                                 ])
 end;
@@ -65,20 +65,20 @@ end;
 function ViewOverlap(State: RouteModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
-                                                                                  TuiElementBuilders.MakeWindow('Back', [
+                                                                                  TuiElementBuilders.MakePanel('Back', [
 
-                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Back', TuiAction.Create(11))
-
-
-
-                                                                                                                        ]),
-                                                                                  TuiElementBuilders.MakeWindow('Top', [
-
-                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
+                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Back', TuiAction.Create(11))
 
 
 
-                                                                                                                       ])
+                                                                                                                       ]),
+                                                                                  TuiElementBuilders.MakePanel('Top', [
+
+                                                                                                                        TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
+
+
+
+                                                                                                                      ])
 
                                                                                 ])
 end;
@@ -124,7 +124,7 @@ begin
         PointerHits := State.PointerHits + 1;
       end
     end;
-    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       return State
     end

@@ -8,6 +8,7 @@ var Foreground: TuiColor := TuiColor.FromCrt(14);
 var Background: TuiColor := TuiColor.FromRgb(10, 20, 30);
 var Style: TuiStyle := TuiStyle.FromColors(Foreground, Background);
 var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
+var TruecolorCell: TuiCell := TuiCell.Styled('▓', Style);
 ```
 
 `TuiStyle.Create` additionally accepts `Bold`, `Dim`, `Underline`, and
@@ -15,9 +16,11 @@ var Cell: TuiCell := TuiCell.Create('X', TuiStyleRole.Focused);
 grapheme cluster and stores its terminal column width (`1` or `2`).
 `Width()` returns that stored value.
 
-The cell stores a semantic `TuiStyleRole`; palette lookup supplies concrete
-colors. Continuation cells for wide glyphs remain private surface state and are
-not part of the public cell value.
+`TuiCell.Create` stores a semantic `TuiStyleRole`; palette lookup supplies
+concrete colors. `TuiCell.Styled` stores a concrete style that bypasses palette
+lookup. This is useful inside `TuiCellGrid` for plots and images whose colors
+are data rather than theme roles. Continuation cells for wide glyphs remain
+private surface state and are not part of the public cell value.
 
 ## `TuiPalette`
 
@@ -25,25 +28,22 @@ not part of the public cell value.
 one style and `WithRole` returns a copy with one replacement, leaving the
 original palette unchanged.
 
-The general roles (`Normal`, `Focused`, `Frame`, and `Title`) style the desktop
-and ordinary windows. Menus use `MenuNormal`, `MenuDisabled`, `MenuShortcut`,
-`MenuSelected`, `MenuSelectedShortcut`, and `MenuShadow`; status lines use
+The RGB default palette uses a dark terminal background, restrained borders,
+and blue selection accents. General roles (`Normal`, `Focused`, `Frame`, and
+`Title`) style the desktop, panels, and overlays. Menus use `MenuNormal`,
+`MenuDisabled`, `MenuShortcut`, `MenuSelected`, and
+`MenuSelectedShortcut`; status lines use
 `StatusNormal`, `StatusDisabled`, `StatusShortcut`, and `StatusSelected`. The
 menu bar and status line paint their complete row with their normal role, so
 their chrome remains distinct from the desktop.
 
-Dialog painting uses separate `DialogNormal`, `DialogFrame`, `DialogTitle`,
-`DialogInput`, `DialogInputFocused`, and `DialogShadow` roles. A theme can
-therefore use a gray dialog surface over a blue desktop without changing
-ordinary window content.
-
 Buttons use `ButtonNormal`, `ButtonDefault`, `ButtonSelected`,
 `ButtonDisabled`, `ButtonShortcut`, `ButtonDefaultShortcut`,
-`ButtonSelectedShortcut`, and `ButtonShadow`. The corresponding styles are
-grouped in `TuiPalette.Buttons` as `TuiButtonPalette`. Focused buttons use
-`» … «`, unfocused default buttons use `→ … ←`, and enabled buttons paint a
-right/bottom block shadow. `TuiButtonPalette.WithRole` returns a copy with one
-button role replaced, while `ForRole` resolves one button role.
+and `ButtonSelectedShortcut`. The corresponding styles are grouped in
+`TuiPalette.Buttons` as `TuiButtonPalette`. `TuiButtonPalette.WithRole` returns
+a copy with one button role replaced, while `ForRole` resolves one button role.
+
+`Rule`, `GaugeTrack`, and `GaugeFill` style the dashboard primitives.
 
 One-line inputs use `InputNormal`, `InputFocused`, `InputHint`, `InputCursor`,
 and `InputScroll`, grouped in `TuiPalette.Inputs` as `TuiInputPalette`. Themes
@@ -58,10 +58,9 @@ var Custom: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(255, 128, 0), TuiCo
 var Updated: TuiPalette := Palette.WithRole(TuiStyleRole.Accent, Custom);
 ```
 
-A palette is ordinary public FPAS data. Applications may start from
-`TuiPalette.Default()`, replace only the roles they need with `WithRole`, or
-construct all role styles explicitly with `TuiPalette.Create`. This is the
-theme extension boundary; no theme registry or fixed set of color names is
+A palette is ordinary public FPAS data. Applications start from
+`TuiPalette.Default()` and replace the roles they need with `WithRole`. This is
+the theme extension boundary; no theme registry or fixed set of color names is
 required.
 
 Use `OpenForTestWithPalette` or `RunWithPalette` to select the initial palette.

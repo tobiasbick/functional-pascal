@@ -28,7 +28,7 @@ begin
     begin
       return record Actions := State.Actions; PointerEvents := State.PointerEvents + 1; end
     end;
-    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(DialogSource, DialogAction, Position, DragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       return State
     end
@@ -50,10 +50,8 @@ begin
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(0, Model.Actions);
   AssertEquals(1, Model.PointerEvents);
-  AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), '»'));
   App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), '»'));
   App.InjectPointerForTest(Pointer(TuiPointerAction.Up, TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(0, Model.Actions);
@@ -63,7 +61,6 @@ begin
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
-  AssertFalse(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), '»'));
   App.InjectPointerForTest(Pointer(TuiPointerAction.Up, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(1, Model.Actions);

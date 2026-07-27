@@ -1,0 +1,26 @@
+unit Std.Tui.Chrome.CellGrid;
+
+uses Std.Array, Std.Tui.Cells.Cell;
+
+type
+  /// Immutable rectangular grid of concrete or theme-resolved terminal cells.
+  TuiCellGrid = record
+    Width: integer;
+    Height: integer;
+    Cells: array of TuiCell;
+
+    /// Creates a row-major cell grid.
+
+    static function Create(Width: integer; Height: integer; Cells: array of TuiCell): TuiCellGrid;
+    begin
+      if (Width < 0) or (Height < 0) then
+      begin
+        panic('Tui cell grid dimensions must be non-negative')
+      end;
+      if Std.Array.Length(Cells) <> Width * Height then
+      begin
+        panic('Tui cell grid length must equal width times height')
+      end;
+      return record Width := Width; Height := Height; Cells := Cells; end
+    end;
+  end;

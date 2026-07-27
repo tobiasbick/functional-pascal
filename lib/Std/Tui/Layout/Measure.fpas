@@ -35,7 +35,7 @@ end;
 
 private function TuiMeasureLeafButton(Text: string): TuiMeasureResult;
 begin
-  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 6, 2))
+  return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1))
 end;
 
 private function TuiMeasureLeafInput(Text: string; Hint: string): TuiMeasureResult;
@@ -164,7 +164,7 @@ begin
     begin
       return false
     end;
-    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return true
     end
@@ -225,6 +225,21 @@ begin
     TuiElement.StatusLine(Items):
     begin
       return TuiMeasureApplyPolicy(TuiMeasureLeafStatusLine(Items), TuiSizePolicy.Preferred(), Spec)
+    end;
+    TuiElement.CellGrid(Grid):
+    begin
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Fixed(TuiSize.Create(Grid.Width, Grid.Height)), TuiSizePolicy.Preferred(), Spec)
+    end;
+    TuiElement.Rule(Text):
+    begin
+      var MinimumWidth: integer := Std.Console.DisplayWidth(Text) + 4;
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec)
+    end;
+    TuiElement.Gauge(Gauge):
+    begin
+      var MinimumWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText) + 10;
+      return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, 1), TuiSize.Create(MinimumWidth +
+                                                                                                           8, 1), TuiSize.Create(TuiMeasureExpandingMaximum, 1)), TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Fixed), Spec)
     end;
     TuiElement.Spacer(Value):
     begin
@@ -317,7 +332,7 @@ begin
       end;
       return TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec)
     end;
-    TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
     begin
       mutable var ContentMinW: integer := 0;
       mutable var ContentPrefW: integer := 0;
@@ -338,19 +353,7 @@ begin
           ContentMaxH := TuiMeasureAxis.Add(ContentMaxH, Measured.Maximum.Height)
         end
       end;
-      mutable var TitleWidth: integer := Std.Console.DisplayWidth(Title) + 6;
-      case Node of
-        TuiElement.MovableDialog(Id, DialogTitle, Position, DragOffset, ChangeAction, DialogChildren):
-        begin
-          TitleWidth := Std.Console.DisplayWidth(DialogTitle) + 9
-        end;
-        TuiElement.Window(WindowTitle, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren):
-        begin
-        end
-        else
-        begin
-        end
-      end;
+      var TitleWidth: integer := Std.Console.DisplayWidth(Title) + 6;
       var Hint: TuiMeasureResult := TuiMeasureResult.Create(TuiSize.Create(TuiMeasureAxis.Max(ContentMinW +
                                                                                               2, TitleWidth), ContentMinH +
                                                                                                               2), TuiSize.Create(TuiMeasureAxis.Max(ContentPrefW +

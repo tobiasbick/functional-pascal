@@ -1,0 +1,33 @@
+/// Compact dashboard-gauge painting.
+
+unit Std.Tui.Rendering.Gauge;
+
+uses
+  Std.Console, Std.Conv, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Gauge,
+  Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+
+/// Paints a label, bounded bar, and percentage on one row.
+
+procedure TuiPaintGauge(Canvas: TuiCanvas; Bounds: TuiRect; Gauge: TuiGauge);
+begin
+  if Bounds.IsEmpty() then
+  begin
+    return
+  end;
+  var LabelWidth: integer := Std.Console.DisplayWidth(Gauge.LabelText);
+  var Percent: integer := (Gauge.Value * 100) div Gauge.Maximum;
+  var PercentText: string := Std.Conv.IntToStr(Percent) + '%';
+  var PercentWidth: integer := Std.Console.DisplayWidth(PercentText);
+  mutable var BarWidth: integer := ((Bounds.Width - LabelWidth) - PercentWidth) - 4;
+  if BarWidth < 1 then
+  begin
+    BarWidth := 1
+  end;
+  var BarX: integer := (Bounds.X + LabelWidth) + 2;
+  var FillWidth: integer := (BarWidth * Gauge.Value) div Gauge.Maximum;
+  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
+  Canvas.WriteText(TuiPoint.Create(Bounds.X, Bounds.Y), Gauge.LabelText, TuiStyleRole.Normal);
+  Canvas.DrawHorizontalLine(BarX, Bounds.Y, BarWidth, TuiStyleRole.GaugeTrack);
+  Canvas.DrawHorizontalLine(BarX, Bounds.Y, FillWidth, TuiStyleRole.GaugeFill);
+  Canvas.WriteText(TuiPoint.Create(Bounds.Right() - PercentWidth, Bounds.Y), PercentText, TuiStyleRole.Accent)
+end;

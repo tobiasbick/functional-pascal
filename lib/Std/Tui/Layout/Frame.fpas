@@ -51,13 +51,13 @@ type
       var Slot: integer := TuiFrameRequire(Self.Slot);
       mutable var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
       var Index: integer := Std.Array.Length(Entries);
-      // Drop the shared slot handle before Push so copy-on-write stays unique.
       TuiFrameEntries[Slot - 1] := [];
       Std.Array.Push(Entries, record ParentIndex := ParentIndex; Bounds := Bounds; Clip := Clip; end);
       TuiFrameEntries[Slot - 1] := Entries;
       return Index
     end;
 
+    // Drop the shared slot handle before Push so copy-on-write stays unique.
     /// Replaces every entry atomically after a successful arrange pass.
 
     procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of TuiArrangedEntry);

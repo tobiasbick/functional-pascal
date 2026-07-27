@@ -56,20 +56,20 @@ begin
           Button := Event.Button;
         end
       end;
-      TuiMsg.Key(Key), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.DialogChanged(ChangedDialogSource, ChangedDialogAction, ChangedDialogPosition, ChangedDialogDragOffset), TuiMsg.QuitRequested:
+      TuiMsg.Key(Key), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
       begin
         return State
       end
     end
   end, function(State: PointerModel): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                          TuiElementBuilders.MakeWindow('Host', [
+                                                                          TuiElementBuilders.MakePanel('Host', [
 
-                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1))
+                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1))
 
-                                                                          
 
-                                                                                                                ])
+
+                                                                                                               ])
 
                                                                         ])
   end, 3, 0);

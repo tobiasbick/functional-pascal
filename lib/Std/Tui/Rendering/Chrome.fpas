@@ -1,69 +1,24 @@
-/// Window and dialog frame chrome painting.
+/// Flat panel and overlay chrome painting.
 
 unit Std.Tui.Rendering.Chrome;
 
 uses
-  Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
-  Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
+  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
+  Std.Tui.Rendering.Canvas;
 
-/// Paints a framed title row and an optional movable-dialog close box.
+/// Paints an opaque panel with a thin rounded frame and left-aligned title.
 
-procedure TuiPaintFrameChrome(
-  Canvas: TuiCanvas;
-  Bounds: TuiRect;
-  Title: string;
-  FrameRole: TuiStyleRole;
-  TitleRole: TuiStyleRole;
-  Closable: boolean
-);
+procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
 begin
   if Bounds.IsEmpty() then
   begin
     return
   end;
-  Canvas.Child(Bounds).DrawFrame(TuiRect.Create(0, 0, Bounds.Width, Bounds.Height), FrameRole);
-  if Closable and (Bounds.Width > 7) then
-  begin
-    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, 3, 1))
-      .WriteText(TuiPoint.Create(0, 0), '[■]', TitleRole)
-  end;
+  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.Normal));
+  Canvas.DrawFrame(Bounds, TuiStyleRole.Frame);
   if (Title <> '') and (Bounds.Width > 6) then
   begin
-    var TitleText: string := (' ' + Title) + ' ';
-    var TitleWidth: integer := Std.Console.DisplayWidth(TitleText);
-    mutable var TitleX: integer := Bounds.X + ((Bounds.Width - TitleWidth) div 2);
-    if Closable and (TitleX < Bounds.X + 6) then
-    begin
-      TitleX := Bounds.X + 6
-    end;
-    Canvas.Child(TuiRect.Create(TitleX, Bounds.Y, Bounds.Right() - TitleX, 1))
-      .WriteText(TuiPoint.Create(0, 0), TitleText, TitleRole)
+    Canvas.Child(TuiRect.Create(Bounds.X + 2, Bounds.Y, Bounds.Width - 4, 1))
+      .WriteText(TuiPoint.Create(0, 0), (' ' + Title) + ' ', TuiStyleRole.Title)
   end
-end;
-
-/// Paints a two-column right and one-row bottom shadow with the supplied role.
-
-procedure TuiPaintShadow(Canvas: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
-begin
-  if Bounds.IsEmpty() then
-  begin
-    return
-  end;
-  var Shadow: TuiCell := TuiCell.Create('░', Role);
-  Canvas.FillRect(TuiRect.Create(Bounds.Right(), Bounds.Y + 1, 2, Bounds.Height), Shadow);
-  Canvas.FillRect(TuiRect.Create(Bounds.X + 2, Bounds.Bottom(), Bounds.Width, 1), Shadow)
-end;
-
-/// Paints the right and bottom dialog shadow.
-
-procedure TuiPaintDialogShadow(Canvas: TuiCanvas; Bounds: TuiRect);
-begin
-  TuiPaintShadow(Canvas, Bounds, TuiStyleRole.DialogShadow)
-end;
-
-/// Paints the opaque dialog surface.
-
-procedure TuiPaintDialogSurface(Canvas: TuiCanvas; Bounds: TuiRect);
-begin
-  Canvas.FillRect(Bounds, TuiCell.Create(' ', TuiStyleRole.DialogNormal))
 end;

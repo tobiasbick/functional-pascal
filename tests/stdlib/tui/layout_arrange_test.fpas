@@ -23,7 +23,7 @@ begin
 
                                                                                                                  TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Leading(), 1), TuiElementBuilders.MakeLabel('B'))
 
-                                                                              
+
 
                                                                                                                ], 1)
 
@@ -36,7 +36,7 @@ begin
                                                                                  ]), TuiSize.Create(10, 4));
   AssertEquals('X', Trailing.CellAt(8, 2).Glyph);
   var Window: TuiSurfaceSnapshot := Paint(TuiElementBuilders.MakeDesktop(None, [
-                                                                                 TuiElementBuilders.MakeWindow('Title', [TuiElementBuilders.MakeLabel('Body')])
+                                                                                 TuiElementBuilders.MakePanel('Title', [TuiElementBuilders.MakeLabel('Body')])
 
                                                                                ]), TuiSize.Create(12, 5));
   AssertEquals('B', Window.CellAt(1, 1).Glyph);
@@ -47,7 +47,7 @@ begin
 
                                                                                                                         TuiElementBuilders.MakeLabel('IJK')
 
-                                                                                     
+
 
                                                                                                                       ], 1)
 

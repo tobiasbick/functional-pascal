@@ -3,7 +3,7 @@ unit Std.Tui.Chrome.Button;
 uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
 type
-  /// Immutable description of one Turbo Vision-style button.
+  /// Immutable description of one flat terminal button.
   TuiButtonSpec = record
     Id: TuiControlId;
     Text: string;

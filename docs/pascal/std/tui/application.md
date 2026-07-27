@@ -48,8 +48,13 @@ called.
 
 `TuiApplication.Run(InitialModel, Update, View)` owns one process terminal for
 its duration. It uses the same initial-render and update ordering as the
-headless driver, presents completed frames through `Std.Console`, and waits up
-to 16 ms for an event before emitting `Tick(16)`.
+headless driver, presents completed frames through `Std.Console`, and blocks
+for terminal input when no routed messages remain. Idle applications do not
+receive implicit ticks and do not rebuild or repaint their view.
+
+`TuiMsg.Tick` remains available for explicitly injected messages and for
+deterministic time steps produced by `RunIterations`. The interactive host does
+not assume that every application needs an animation timer.
 
 Keyboard, mouse, and positive resize events are normalized before routing;
 paste and focus events are ignored. Mouse coordinates become zero-based.
@@ -63,9 +68,9 @@ rollback for the interactive session.
 same lifecycle with a caller-defined initial palette.
 
 The first terminal frame transfers the complete logical surface. Later frames
-compare glyphs, semantic style roles, and wide-glyph continuation positions
-with the last presented surface. Adjacent changes are transferred as damage
-runs; an unchanged frame performs no Console frame write.
+compare glyphs, semantic style roles, concrete cell styles, and wide-glyph
+continuation positions with the last presented surface. Adjacent changes are
+transferred as damage runs; an unchanged frame performs no Console frame write.
 
 ## Headless frame and routing order
 
@@ -76,8 +81,9 @@ dequeue → Update → command check → View → validate → layout → paint
 ```
 
 Injected events are FIFO. Pending routed messages are drained before another
-external input is read. Empty routing results do not synthesize a tick. A
-`Quit` command stops before another `View` or paint.
+external input is read. Unsupported Console events and empty routing results
+return directly to the blocking input wait without calling `Update`, `View`, or
+paint. A `Quit` command stops before another `View` or paint.
 
 Tab moves through the active focusable subtree except when a `TextArea` is
 focused, where it inserts two spaces. Character and editing keys produce
@@ -99,24 +105,19 @@ activate the button. Focus changes precede the pointer message used to repaint
 the pressed state. Other controls retain their immediate controlled changes,
 and unhandled pointer input remains `TuiMsg.Pointer`. A press inside a one-line
 input focuses it and proposes the caret nearest the clicked visible cell.
-For a `MovableDialog`, a left-button press on the title row starts a controlled
-drag, `Drag` updates its clamped position, and `Up` clears the drag offset. A
-press on its `[■]` close box emits `Action` instead of starting a drag.
-Dialogs paint an opaque `DialogNormal` surface plus a two-column right shadow
-and a one-row bottom shadow with `DialogShadow`. Their frame, title, and
-multiline input cells use the matching dialog roles. One-line inputs and
-buttons use their dedicated palettes in dialogs and elsewhere.
+Panels and overlays paint an opaque normal surface with a thin rounded frame.
+An overlay is fixed and centered; it has no drag state or shadow.
 Menu bars, menu popups, and status lines likewise paint their complete chrome
 with dedicated menu or status roles. Mnemonics and status key hints retain
-their shortcut role inside normal or selected chrome. Every menu popup paints
-a two-column right and one-row bottom `MenuShadow`.
+their shortcut role inside normal or selected chrome. Menu popups are flat
+framed overlays without shadows.
 An open hierarchical menu handles Escape before the application-level quit
 request. Menu shortcuts, F10, mnemonics, arrows, and popup pointer hits are
 described in [Menus](menus.md).
 
 `InjectResizeForTest` replaces the host surface size before `TuiMsg.Resize`
-reaches `Update`. When a fixed or movable dialog is present directly under the
-desktop, key and pointer targeting is limited to the last such dialog subtree.
+reaches `Update`. When an overlay is present directly under the desktop, key
+and pointer targeting is limited to the last overlay subtree.
 
 Painting reads the arranged-frame index only. The private clipped canvas uses
 local coordinates and nested origins/clips. Overwriting either half of a wide

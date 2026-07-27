@@ -8,8 +8,8 @@ begin
     TuiElement.Label(Text):
     begin
       AssertEquals('hi', Text)
-    end;
-    TuiElement.Empty, TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(MenuId, MenuNodes, MenuState, MenuChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(Children, Spacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(MovableId, Title, MovablePosition, MovableDragOffset, MovableAction, Children), TuiElement.Desktop(Focused, Children):
+    end
+    else
     begin
       panic('expected label element')
     end

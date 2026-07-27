@@ -173,7 +173,7 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, `graph/`, and `ide/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Multi-file projects and libraries
 

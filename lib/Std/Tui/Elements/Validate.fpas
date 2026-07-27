@@ -35,11 +35,11 @@ end;
 private function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
       return Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Spacer(Value):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
     begin
       return []
     end
@@ -148,35 +148,16 @@ begin
       TuiMenuValidate(Nodes, State);
       Std.Array.Push(Seen, Id.Value)
     end;
-    TuiElement.MovableDialog(Id, Title, Position, DragOffset, ChangeAction, Children):
+    TuiElement.Gauge(Gauge):
     begin
-      TuiElementValidateControl(Id);
-      TuiElementValidateAction(ChangeAction);
-      case Position of
-        Some(Value):
-        begin
-          if (Value.X < 0) or (Value.Y < 0) then
-          begin
-            panic('Tui movable dialog position must not be negative')
-          end
-        end;
-        None:
-        begin
-        end
+      if Gauge.Maximum <= 0 then
+      begin
+        panic('Tui gauge maximum must be positive')
       end;
-      case DragOffset of
-        Some(Value):
-        begin
-          if (Value.X < 0) or (Value.Y < 0) then
-          begin
-            panic('Tui movable dialog drag offset must not be negative')
-          end
-        end;
-        None:
-        begin
-        end
-      end;
-      Std.Array.Push(Seen, Id.Value)
+      if (Gauge.Value < 0) or (Gauge.Value > Gauge.Maximum) then
+      begin
+        panic('Tui gauge value must be between zero and its maximum')
+      end
     end;
     TuiElement.StatusLine(Items):
     begin
@@ -213,7 +194,7 @@ begin
         panic('Tui layout wrappers require exactly one child')
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Spacer(Value), TuiElement.Window(Title, Children), TuiElement.Dialog(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
     begin
     end
   end;
@@ -247,7 +228,7 @@ begin
         end
       end
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Window(Title, WindowChildren), TuiElement.Dialog(DialogTitle, DialogChildren), TuiElement.MovableDialog(Id, DialogTitle, Position, DragOffset, ChangeAction, DialogChildren):
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Panel(Title, PanelChildren), TuiElement.Overlay(OverlayTitle, OverlayChildren):
     begin
     end
   end;

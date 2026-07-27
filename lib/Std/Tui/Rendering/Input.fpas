@@ -1,4 +1,4 @@
-/// Turbo Vision-style one-line input painting.
+/// One-line input painting.
 
 unit Std.Tui.Rendering.Input;
 

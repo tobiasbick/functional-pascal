@@ -1,9 +1,10 @@
 unit Std.Tui.Elements.Element;
 
 uses
-  Std.Tui.Chrome.Button, Std.Tui.Chrome.Input, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
-  Std.Tui.Chrome.StatusItem, Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Spacer;
+  Std.Tui.Chrome.Button, Std.Tui.Chrome.CellGrid, Std.Tui.Chrome.Gauge, Std.Tui.Chrome.Input,
+  Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.StatusItem,
+  Std.Tui.Geometry.Point, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.LayoutSettings,
+  Std.Tui.Layout.Spacer;
 
 private function TuiElementRequireNonNegativeSpacing(Value: integer): integer;
 begin
@@ -28,13 +29,15 @@ type
     MenuBar(Items: array of TuiMenuItem);
     Menu(Id: TuiControlId; Nodes: array of TuiMenuNode; State: TuiMenuState; ChangeAction: TuiAction);
     StatusLine(Items: array of TuiStatusItem);
+    CellGrid(Value: TuiCellGrid);
+    Rule(Text: string);
+    Gauge(Value: TuiGauge);
     Row(Children: array of TuiElement; Spacing: integer);
     Column(Children: array of TuiElement; Spacing: integer);
     Layout(Settings: TuiLayoutSettings; Children: array of TuiElement);
     Spacer(Value: TuiSpacer);
-    Window(Title: string; Children: array of TuiElement);
-    Dialog(Title: string; Children: array of TuiElement);
-    MovableDialog(Id: TuiControlId; Title: string; Position: option of TuiPoint; DragOffset: option of TuiPoint; ChangeAction: TuiAction; Children: array of TuiElement);
+    Panel(Title: string; Children: array of TuiElement);
+    Overlay(Title: string; Children: array of TuiElement);
     Desktop(Focused: option of TuiControlId; Children: array of TuiElement);
   end;
   /// Named constructors for immutable Tui elements.
@@ -201,6 +204,27 @@ type
       return TuiElement.StatusLine(Items)
     end;
 
+    /// Creates a rectangular grid of terminal cells.
+
+    static function MakeCellGrid(Value: TuiCellGrid): TuiElement;
+    begin
+      return TuiElement.CellGrid(Value)
+    end;
+
+    /// Creates a one-row separator with optional text.
+
+    static function MakeRule(TextValue: string): TuiElement;
+    begin
+      return TuiElement.Rule(TextValue)
+    end;
+
+    /// Creates a compact bounded-value gauge.
+
+    static function MakeGauge(LabelText: string; Value: integer; Maximum: integer): TuiElement;
+    begin
+      return TuiElement.Gauge(TuiGauge.Create(LabelText, Value, Maximum))
+    end;
+
     /// Creates a horizontal layout node with zero spacing.
 
     static function MakeRow(Items: array of TuiElement): TuiElement;
@@ -243,32 +267,18 @@ type
       return TuiElement.Spacer(Value)
     end;
 
-    /// Creates a bordered window.
+    /// Creates an ordinary bordered content panel.
 
-    static function MakeWindow(TitleValue: string; Items: array of TuiElement): TuiElement;
+    static function MakePanel(TitleValue: string; Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Window(TitleValue, Items)
+      return TuiElement.Panel(TitleValue, Items)
     end;
 
-    /// Creates a modal bordered dialog.
+    /// Creates a fixed centered modal overlay.
 
-    static function MakeDialog(TitleValue: string; Items: array of TuiElement): TuiElement;
+    static function MakeOverlay(TitleValue: string; Items: array of TuiElement): TuiElement;
     begin
-      return TuiElement.Dialog(TitleValue, Items)
-    end;
-
-    /// Creates a controlled modal dialog that can be dragged by its title bar.
-
-    static function MakeMovableDialog(
-  Id: TuiControlId;
-  TitleValue: string;
-  PositionValue: option of TuiPoint;
-  DragOffsetValue: option of TuiPoint;
-  ChangeAction: TuiAction;
-  Items: array of TuiElement
-): TuiElement;
-    begin
-      return TuiElement.MovableDialog(Id, TitleValue, PositionValue, DragOffsetValue, ChangeAction, Items)
+      return TuiElement.Overlay(TitleValue, Items)
     end;
 
     /// Creates the root element and declares the model-controlled focus.

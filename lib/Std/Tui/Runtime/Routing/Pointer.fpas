@@ -3,9 +3,9 @@ unit Std.Tui.Runtime.Routing.Pointer;
 uses
   Std.Array, Std.Console, Std.Tui.Chrome.Button, Std.Tui.Elements.Element, Std.Tui.Geometry.Point,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent,
-  Std.Tui.Runtime.Routing.ButtonCapture, Std.Tui.Runtime.Routing.DialogPointer,
-  Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.MenuPointer,
-  Std.Tui.Runtime.Routing.PointerHit, Std.Tui.Runtime.Routing.TextArea, Std.Tui.Text.Input;
+  Std.Tui.Runtime.Routing.ButtonCapture, Std.Tui.Runtime.Routing.Focus,
+  Std.Tui.Runtime.Routing.MenuPointer, Std.Tui.Runtime.Routing.PointerHit,
+  Std.Tui.Runtime.Routing.TextArea, Std.Tui.Text.Input;
 
 private function TuiRoutePointerFocusMessages(Previous: option of TuiControlId; Target: TuiControlId): array of TuiMsg;
 begin
@@ -111,15 +111,6 @@ begin
                                                      ], Button, Inside)
     end;
     TuiButtonPressState.Idle:
-    begin
-    end
-  end;
-  case TuiRouteDialogPointer(Root, Frame, TuiPointerEvent.WithModifiers(PointerAction, PointerButton, PointerPosition, PointerShift, PointerCtrl, PointerAlt, PointerMeta)) of
-    Some(Messages):
-    begin
-      return TuiIdlePointerResult(ApplicationId, Messages)
-    end;
-    None:
     begin
     end
   end;

@@ -17,9 +17,9 @@ aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
 `Fill`. `Settings.WithFixedHeight(Height)` returns a copy whose total vertical
 extent is fixed to the supplied non-negative cell count.
 
-`Window` and `Dialog` arrange their inset children as a vertical column without
-spacing. Expanding children therefore receive remaining content rows after
-minimum and preferred extents have been satisfied.
+`Panel` and `Overlay` arrange their inset children as a vertical column without
+spacing. A direct desktop `Overlay` is centered at its preferred size; a
+`Panel` participates in ordinary layout.
 
 `TextArea` measures to a minimum of one cell, prefers its widest logical line
 and logical-line count, and permits expansion in both axes. A direct `TextArea`

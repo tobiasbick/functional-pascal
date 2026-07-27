@@ -101,7 +101,7 @@ begin
     begin
       TuiAppApplyResize(ApplicationId, Size)
     end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(Source, Action, State), TuiMsg.DialogChanged(Source, Action, Position, DragOffset), TuiMsg.QuitRequested:
+    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(Source, Action, State), TuiMsg.QuitRequested:
     begin
     end
   end
@@ -354,7 +354,7 @@ type
       begin
         if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
         begin
-          case TuiReadConsoleHostInput(16) of
+          case TuiReadConsoleHostInput() of
             Some(Input):
             begin
               TuiAppRouteInput(ApplicationId, Input)
@@ -364,11 +364,11 @@ type
             end
           end
         end;
-        mutable var Msg: TuiMsg := TuiMsg.Tick(16);
-        if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
+        if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
         begin
-          Msg := TuiAppPopMessage(ApplicationId)
+          continue
         end;
+        var Msg: TuiMsg := TuiAppPopMessage(ApplicationId);
         TuiAppApplyResizeIfNeeded(ApplicationId, Msg);
         var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
         Cmd.Reset();

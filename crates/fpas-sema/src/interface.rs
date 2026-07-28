@@ -981,10 +981,10 @@ mod tests {
     fn unit_interface_exports_public_symbols_and_qualified_types() {
         let unit = parse_unit(
             "unit Demo.Types;
-             const Answer: integer := 42;
-             private const Secret: integer := 7;
-             type Point = record X: integer; Y: integer; end;
-             function GetX(P: Point): integer;
+             public const Answer: integer := 42;
+             const Secret: integer := 7;
+             public type Point = record public X: integer; public Y: integer; end;
+             public function GetX(P: Point): integer;
              begin return P.X end;",
         );
 
@@ -1024,8 +1024,8 @@ mod tests {
     fn consumer_analysis_uses_interface_without_dependency_ast() {
         let dependency = parse_unit(
             "unit Demo.Api;
-             type State = enum Idle; Ready; end;
-             function Next(Value: integer): integer;
+             public type State = enum Idle; Ready; end;
+             public function Next(Value: integer): integer;
              begin return Value + 1 end;",
         );
         let dependency_analysis =
@@ -1039,7 +1039,7 @@ mod tests {
         let consumer = parse_unit(
             "unit Demo.Consumer;
              uses Demo.Api;
-             function Run(Value: integer): integer;
+             public function Run(Value: integer): integer;
              begin
                var Current: State := State.Ready;
                return Next(Value)
@@ -1061,16 +1061,16 @@ mod tests {
     fn private_body_changes_do_not_change_interface_digest() {
         let left = parse_unit(
             "unit Demo.Stable;
-             function PublicValue(X: integer): integer;
+             public function PublicValue(X: integer): integer;
              begin return X end;
-             private function Hidden(): integer;
+             function Hidden(): integer;
              begin return 1 end;",
         );
         let right = parse_unit(
             "unit Demo.Stable;
-             function PublicValue(X: integer): integer;
+             public function PublicValue(X: integer): integer;
              begin return X + 99 end;
-             private function Hidden(): integer;
+             function Hidden(): integer;
              begin return 2 end;",
         );
         let left_interface = analyze_unit(&left, &[])
@@ -1091,12 +1091,12 @@ mod tests {
     fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
         let first = parse_unit(
             "unit Demo.First;
-             function Value(): integer;
+             public function Value(): integer;
              begin return 1 end;",
         );
         let second = parse_unit(
             "unit Demo.Second;
-             function Value(): integer;
+             public function Value(): integer;
              begin return 2 end;",
         );
         let interfaces = [
@@ -1113,7 +1113,7 @@ mod tests {
         let qualified = parse_unit(
             "unit Demo.Qualified;
              uses Demo.First, Demo.Second;
-             function Run(): integer;
+             public function Run(): integer;
              begin return Demo.First.Value() + Demo.Second.Value() end;",
         );
         let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
@@ -1126,7 +1126,7 @@ mod tests {
         let ambiguous = parse_unit(
             "unit Demo.Ambiguous;
              uses Demo.First, Demo.Second;
-             function Run(): integer;
+             public function Run(): integer;
              begin return Value() end;",
         );
         let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");

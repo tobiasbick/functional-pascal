@@ -6,9 +6,10 @@ uses
   Std.Tui.Layout.Margins, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
   Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer;
 
-private mutable var TuiArrangeBuilding: array of TuiArrangedEntry := [];
+mutable var
+  TuiArrangeBuilding: array of TuiArrangedEntry := [];
 
-private function TuiArrangeMin(Left: integer; Right: integer): integer;
+function TuiArrangeMin(Left: integer; Right: integer): integer;
 begin
   if Left < Right then
   begin
@@ -17,7 +18,7 @@ begin
   return Right
 end;
 
-private function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
+function TuiArrangeClamp(Value: integer; Maximum: integer): integer;
 begin
   if Value > Maximum then
   begin
@@ -26,7 +27,7 @@ begin
   return Value
 end;
 
-private function TuiArrangeChildParticipates(Node: TuiElement): boolean;
+function TuiArrangeChildParticipates(Node: TuiElement): boolean;
 begin
   case Node of
     TuiElement.Empty:
@@ -40,7 +41,7 @@ begin
   end
 end;
 
-private function TuiArrangeMainPreferred(Measured: TuiMeasureResult; Horizontal: boolean): integer;
+function TuiArrangeMainPreferred(Measured: TuiMeasureResult; Horizontal: boolean): integer;
 begin
   if Horizontal then
   begin
@@ -49,7 +50,7 @@ begin
   return Measured.Preferred.Height
 end;
 
-private function TuiArrangeMainMinimum(Measured: TuiMeasureResult; Horizontal: boolean): integer;
+function TuiArrangeMainMinimum(Measured: TuiMeasureResult; Horizontal: boolean): integer;
 begin
   if Horizontal then
   begin
@@ -58,7 +59,7 @@ begin
   return Measured.Minimum.Height
 end;
 
-private function TuiArrangeGrowthWeight(Node: TuiElement; Horizontal: boolean): integer;
+function TuiArrangeGrowthWeight(Node: TuiElement; Horizontal: boolean): integer;
 begin
   case Node of
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
@@ -112,7 +113,7 @@ begin
   end
 end;
 
-private function TuiArrangeContentRect(Outer: TuiRect; Margins: TuiMargins): TuiRect;
+function TuiArrangeContentRect(Outer: TuiRect; Margins: TuiMargins): TuiRect;
 begin
   mutable var Width: integer := Outer.Width - Margins.Horizontal();
   mutable var Height: integer := Outer.Height - Margins.Vertical();
@@ -129,7 +130,7 @@ end;
 
 // Clear the shared handle before Push so copy-on-write stays unique (amortized O(1)).
 
-private function TuiArrangePushEntry(ParentIndex: integer; NodeBounds: TuiRect; Clip: TuiRect): integer;
+function TuiArrangePushEntry(ParentIndex: integer; NodeBounds: TuiRect; Clip: TuiRect): integer;
 begin
   var Index: integer := Std.Array.Length(TuiArrangeBuilding);
   mutable var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
@@ -141,7 +142,7 @@ end;
 
 /// Builds a preorder arranged-frame index for one element tree.
 
-procedure TuiArrange(Frame: TuiArrangedFrame; Root: TuiElement; Bounds: TuiRect);
+public procedure TuiArrange(Frame: TuiArrangedFrame; Root: TuiElement; Bounds: TuiRect);
 procedure ArrangeNode(
   Node: TuiElement;
   NodeBounds: TuiRect;

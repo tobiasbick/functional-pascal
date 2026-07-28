@@ -6,7 +6,7 @@ uses
   Std.Console, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.Button,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
-private procedure TuiPaintButtonText(
+procedure TuiPaintButtonText(
   Canvas: TuiCanvas;
   Position: TuiPoint;
   Button: TuiButtonSpec;
@@ -28,7 +28,7 @@ begin
   end
 end;
 
-private function TuiButtonRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
+function TuiButtonRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
   begin
@@ -45,7 +45,7 @@ begin
   return TuiStyleRole.ButtonNormal
 end;
 
-private function TuiButtonShortcutRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
+function TuiButtonShortcutRole(Button: TuiButtonSpec; Focused: boolean): TuiStyleRole;
 begin
   if not Button.Enabled then
   begin
@@ -64,7 +64,7 @@ end;
 
 /// Paints a compact one-row button.
 
-procedure TuiPaintButton(
+public procedure TuiPaintButton(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
   Button: TuiButtonSpec;

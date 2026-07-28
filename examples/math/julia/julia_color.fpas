@@ -4,14 +4,14 @@ unit Julia.Color;
 
 uses Std.Console, Std.Math;
 
-type
+public type
   PaletteKind = enum
     DeepOcean;
     Ember;
     Aurora;
   end;
 
-function PaletteName(Kind: PaletteKind): string;
+public function PaletteName(Kind: PaletteKind): string;
 begin
   case Kind of
     PaletteKind.DeepOcean:
@@ -29,12 +29,12 @@ begin
   end
 end;
 
-private function BandIndex(EscapeValue: real): integer;
+function BandIndex(EscapeValue: real): integer;
 begin
   return Clamp(Trunc(Frac(EscapeValue * 0.08) * 12.0), 0, 11)
 end;
 
-function EscapeColor(Kind: PaletteKind; EscapeValue: real): Color;
+public function EscapeColor(Kind: PaletteKind; EscapeValue: real): Color;
 begin
   var Band: integer := BandIndex(EscapeValue);
   case Kind of
@@ -200,7 +200,7 @@ begin
   end
 end;
 
-function InsideColor(): Color;
+public function InsideColor(): Color;
 begin
   return RgbColor(0, 0, 0)
 end;

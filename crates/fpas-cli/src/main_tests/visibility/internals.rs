@@ -24,12 +24,12 @@ include = ["src/*.fpas"]
         "\
 unit App.Lib;
 
-private function Secret(): integer;
+function Secret(): integer;
 begin
   return 42
 end;
 
-function GetValue(): integer;
+public function GetValue(): integer;
 begin
   return Secret()
 end;
@@ -69,12 +69,12 @@ include = ["src/*.fpas"]
         "\
 unit App.Lib;
 
-private function Helper(): integer;
+function Helper(): integer;
 begin
   return 10
 end;
 
-function PublicFn(): integer;
+public function PublicFn(): integer;
 begin
   return Helper() + 5
 end;
@@ -112,10 +112,10 @@ include = ["src/*.fpas"]
         "\
 unit App.Lib;
 
-private const
+const
   SecretVal: integer := 99;
 
-function GetSecret(): integer;
+public function GetSecret(): integer;
 begin
   return SecretVal
 end;
@@ -154,10 +154,10 @@ include = ["src/*.fpas"]
         "\
 unit App.Lib;
 
-private mutable var
+mutable var
   Counter: integer := -1;
 
-function GetCounter(): integer;
+public function GetCounter(): integer;
 begin
   if Counter < 0 then
     Counter := 42;
@@ -199,7 +199,7 @@ include = ["src/*.fpas"]
 unit App.Caller;
 uses App.Lib;
 
-function TryCall(): integer;
+public function TryCall(): integer;
 begin
   return Secret()
 end;
@@ -210,7 +210,7 @@ end;
         "\
 unit App.Lib;
 
-private function Secret(): integer;
+function Secret(): integer;
 begin
   return 42
 end;
@@ -228,26 +228,27 @@ end;
 }
 
 #[test]
-fn private_visibility_in_program_is_rejected() {
-    let (exit_code, _, stderr_output) = support::run_source_and_capture_output(
-        "private_program_visibility.fpas",
+fn private_is_valid_identifier_in_program() {
+    let (exit_code, stdout_output, stderr_output) = support::run_source_and_capture_output(
+        "private_identifier.fpas",
         "\
 program Main;
 
-private var
-  X: integer := 1;
+uses Std.Console;
+
+function private(): integer;
+begin
+  return 42
+end;
 
 begin
-  WriteLn(X)
+  WriteLn(private())
 end.
 ",
     );
 
-    assert_eq!(exit_code, 1);
-    assert!(
-        stderr_output.contains("`private` is not valid in a `program` file"),
-        "expected program visibility error, got: {stderr_output}"
-    );
+    assert_eq!(exit_code, 0, "{stderr_output}");
+    assert_eq!(stdout_output.trim(), "42");
 }
 
 #[test]

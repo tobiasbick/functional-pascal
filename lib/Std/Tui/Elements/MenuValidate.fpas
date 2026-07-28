@@ -2,7 +2,7 @@ unit Std.Tui.Elements.MenuValidate;
 
 uses Std.Array, Std.Option, Std.Str, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery;
 
-private function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
+function TuiMenuSameOptionalId(Left: option of TuiMenuNodeId; Right: option of TuiMenuNodeId): boolean;
 begin
   case Left of
     Some(LeftId):
@@ -36,7 +36,7 @@ end;
 
 /// Validates identities, parents, cycles, mnemonics, shortcuts, and controlled state.
 
-procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
+public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
 begin
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
   begin

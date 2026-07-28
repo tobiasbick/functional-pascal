@@ -81,7 +81,7 @@ Rules:
 - `[exports].units` lists unit names that dependents may reference in `uses`. Other units in the library remain available only inside the library via `uses`.
 - Each name must match a `unit` in the library's `[sources]` (case-insensitive).
 - `[exports]` applies to `kind = "library"` projects only.
-- Per-unit `private` still hides symbols within a unit; `[exports]` hides whole units from other projects.
+- Declarations without `public` remain internal to their unit; `[exports]` hides whole units from other projects.
 
 Example:
 

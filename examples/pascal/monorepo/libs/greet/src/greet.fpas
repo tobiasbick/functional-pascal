@@ -4,7 +4,7 @@ unit Demo.Greet;
 
 uses Demo.Greet.Internal;
 
-function Message(): string;
+public function Message(): string;
 begin
   return GreetingText()
 end;

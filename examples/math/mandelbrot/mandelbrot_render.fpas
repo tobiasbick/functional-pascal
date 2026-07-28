@@ -4,41 +4,45 @@ unit Mandelbrot.Render;
 
 uses Std.Array, Std.Conv, Std.Math, Std.Str, Std.Task, Std.Tui, Mandelbrot.Color;
 
-private type Complex = record
-  Re: real;
-  Im: real;
+type
+  Complex = record
+    public Re: real;
+    public Im: real;
 
-  static function Zero(): Complex;
-  begin
-    return record Re := 0.0; Im := 0.0; end
+    public static function Zero(): Complex;
+    begin
+      return record Re := 0.0; Im := 0.0; end
+    end;
+
+    public static function Create(Re: real; Im: real): Complex;
+    begin
+      return record Re := Re; Im := Im; end
+    end;
+
+    public function Sq(Self: Complex): Complex;
+    begin
+      return record
+        Re := Self.Re * Self.Re - Self.Im * Self.Im;
+        Im := (2.0 * Self.Re) * Self.Im;
+      end
+    end;
+
+    public function Add(Self: Complex; Other: Complex): Complex;
+    begin
+      return record Re := Self.Re + Other.Re; Im := Self.Im + Other.Im; end
+    end;
+
+    public function MagSq(Self: Complex): real;
+    begin
+      return Self.Re * Self.Re + Self.Im * Self.Im
+    end;
+  end;
+  PixelSample = record
+    public IsInside: boolean;
+    public EscapeValue: real;
   end;
 
-  static function Create(Re: real; Im: real): Complex;
-  begin
-    return record Re := Re; Im := Im; end
-  end;
-
-  function Sq(Self: Complex): Complex;
-  begin
-    return record Re := Self.Re * Self.Re - Self.Im * Self.Im; Im := (2.0 * Self.Re) * Self.Im; end
-  end;
-
-  function Add(Self: Complex; Other: Complex): Complex;
-  begin
-    return record Re := Self.Re + Other.Re; Im := Self.Im + Other.Im; end
-  end;
-
-  function MagSq(Self: Complex): real;
-  begin
-    return Self.Re * Self.Re + Self.Im * Self.Im
-  end;
-end;
-private type PixelSample = record
-  IsInside: boolean;
-  EscapeValue: real;
-end;
-
-private function Iterate(C: Complex; MaxIter: integer): PixelSample;
+function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
   mutable var Z: Complex := Complex.Zero();
   mutable var N: integer := 0;
@@ -58,7 +62,7 @@ begin
   end
 end;
 
-private function ComputeRow(
+function ComputeRow(
   Py: integer;
   Width: integer;
   Height: integer;
@@ -81,7 +85,7 @@ begin
   return Row
 end;
 
-private function EscapeGlyph(EscapeValue: real): string;
+function EscapeGlyph(EscapeValue: real): string;
 begin
   var Ramp: string := ' ░▒▓█';
   var Count: integer := Std.Str.Length(Ramp);
@@ -89,7 +93,7 @@ begin
   return Std.Str.CharAt(Ramp, Index)
 end;
 
-private function RenderCell(Sample: PixelSample; Palette: PaletteKind): TuiCell;
+function RenderCell(Sample: PixelSample; Palette: PaletteKind): TuiCell;
 begin
   var Background: TuiColor := TuiColor.FromRgb(0, 0, 0);
   if Sample.IsInside then
@@ -102,7 +106,7 @@ end;
 
 /// Computes a flat row-major truecolor Mandelbrot cell grid.
 
-function RenderGrid(
+public function RenderGrid(
   XMin: real;
   XMax: real;
   YMin: real;

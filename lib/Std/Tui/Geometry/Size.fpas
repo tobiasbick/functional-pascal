@@ -1,6 +1,6 @@
 unit Std.Tui.Geometry.Size;
 
-private function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
+function TuiSizeRequireNonNegative(Value: integer; Name: string): integer;
 begin
   if Value < 0 then
   begin
@@ -9,15 +9,15 @@ begin
   return Value
 end;
 
-type
+public type
   /// Non-negative terminal-cell extent.
   TuiSize = record
-    Width: integer;
-    Height: integer;
+    public Width: integer;
+    public Height: integer;
 
     /// Creates a validated extent.
 
-    static function Create(Width: integer; Height: integer): TuiSize;
+    public static function Create(Width: integer; Height: integer): TuiSize;
     begin
       TuiSizeRequireNonNegative(Width, 'width');
       TuiSizeRequireNonNegative(Height, 'height');
@@ -26,7 +26,7 @@ type
 
     /// Returns whether either extent is zero.
 
-    function IsEmpty(Self: TuiSize): boolean;
+    public function IsEmpty(Self: TuiSize): boolean;
     begin
       return (Self.Width = 0) or (Self.Height = 0)
     end;

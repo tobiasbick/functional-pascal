@@ -2,7 +2,7 @@ unit MyLib.Core;
 
 uses MyLib.Internal;
 
-function Double(X: integer): integer;
+public function Double(X: integer): integer;
 begin
   return Scale(X)
 end;

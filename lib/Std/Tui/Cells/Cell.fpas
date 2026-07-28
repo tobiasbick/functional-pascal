@@ -2,17 +2,17 @@ unit Std.Tui.Cells.Cell;
 
 uses Std.Tui.Cells.Glyph, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 
-type
+public type
   /// One validated renderable grapheme with a semantic or concrete style.
   TuiCell = record
-    Glyph: string;
-    Role: TuiStyleRole;
-    ConcreteStyle: option of TuiStyle;
-    Columns: integer;
+    public Glyph: string;
+    public Role: TuiStyleRole;
+    public ConcreteStyle: option of TuiStyle;
+    public Columns: integer;
 
     /// Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
 
-    static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
+    public static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
     begin
       return record
         Glyph := Glyph;
@@ -24,7 +24,7 @@ type
 
     /// Creates a cell with a concrete style that bypasses theme lookup.
 
-    static function Styled(Glyph: string; Style: TuiStyle): TuiCell;
+    public static function Styled(Glyph: string; Style: TuiStyle): TuiCell;
     begin
       return record
         Glyph := Glyph;
@@ -36,7 +36,7 @@ type
 
     /// Returns the terminal-column width of the cell glyph (`1` or `2`).
 
-    function Width(Self: TuiCell): integer;
+    public function Width(Self: TuiCell): integer;
     begin
       return Self.Columns
     end;

@@ -5,6 +5,19 @@ writing use normal member syntax; accessors supply the behavior.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_property`).
 
+## Visibility
+
+A property in a record declared by a unit is private by default. Write `public`
+directly before each property that importing units may read or write:
+
+```pascal
+public property Text: string read GetText write SetText;
+```
+
+The accessor routines may remain private; the declaring unit uses them to
+implement the public property. The `public` modifier is not valid in a
+`program` file.
+
 ## Declaration
 
 ```pascal

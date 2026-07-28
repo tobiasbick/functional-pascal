@@ -19,7 +19,7 @@ impl Checker {
         value: &Expr,
         span: Span,
     ) -> bool {
-        let Some((event_name, _)) = target.parts.last().and_then(|part| match part {
+        let Some((event_name, event_span)) = target.parts.last().and_then(|part| match part {
             DesignatorPart::Ident(name, part_span) => Some((name.as_str(), *part_span)),
             _ => None,
         }) else {
@@ -54,6 +54,11 @@ impl Checker {
         let Ty::Record(record_ty) = resolved else {
             return false;
         };
+
+        if self.reject_private_record_member(&record_ty, event_name, event_span) {
+            let _ = self.check_expr(value);
+            return true;
+        }
 
         let Some(event) = self.find_record_event_on_type(&record_ty, event_name) else {
             return false;

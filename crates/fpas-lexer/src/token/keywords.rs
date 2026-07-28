@@ -45,7 +45,6 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("break") => Some(Token::Break),
         s if s.eq_ignore_ascii_case("continue") => Some(Token::Continue),
         s if s.eq_ignore_ascii_case("public") => Some(Token::Public),
-        s if s.eq_ignore_ascii_case("private") => Some(Token::Private),
         s if s.eq_ignore_ascii_case("result") => Some(Token::Result),
         s if s.eq_ignore_ascii_case("option") => Some(Token::OptionKw),
         s if s.eq_ignore_ascii_case("ok") => Some(Token::Ok),

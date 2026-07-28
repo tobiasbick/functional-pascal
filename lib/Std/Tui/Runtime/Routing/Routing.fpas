@@ -7,7 +7,7 @@ uses
 
 /// Routes one key against the previous rendered tree into ordered framework messages.
 
-function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
+public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   return Std.Tui.Runtime.Routing.Key.TuiRouteKey(Root, Frame, Key)
 end;
@@ -15,21 +15,21 @@ end;
 /// Routes one pointer event against arranged geometry into ordered framework messages.
 /// Allocates idle pointer-button state for one application.
 
-procedure TuiPointerRoutingOpen();
+public procedure TuiPointerRoutingOpen();
 begin
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen()
 end;
 
 /// Clears pointer-button state for one application.
 
-procedure TuiPointerRoutingClose(ApplicationId: integer);
+public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId)
 end;
 
 /// Returns the button painted pressed for one application.
 
-function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
+public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
 begin
   return Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId)
 end;

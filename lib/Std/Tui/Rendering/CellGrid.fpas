@@ -7,7 +7,7 @@ uses
 
 /// Paints the visible part of a row-major terminal cell grid.
 
-procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
+public procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
 begin
   mutable var Width: integer := Grid.Width;
   mutable var Height: integer := Grid.Height;

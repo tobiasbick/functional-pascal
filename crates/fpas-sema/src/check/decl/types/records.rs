@@ -91,26 +91,45 @@ impl Checker {
             self.record_defaults.insert(td.name.clone(), defaults_entry);
         }
 
-        let private_members = record
-            .fields
-            .iter()
-            .filter(|field| field.visibility == Visibility::Private)
-            .map(|field| field.name.clone())
-            .chain(
-                record
-                    .methods
-                    .iter()
-                    .filter(|method| method.visibility() == Visibility::Private)
-                    .map(|method| method.name().to_string()),
-            )
-            .collect();
+        let owner_unit = self
+            .scopes
+            .function_ctx
+            .as_ref()
+            .and_then(|context| context.owner_unit.clone());
+        let private_members = if owner_unit.is_some() {
+            record
+                .fields
+                .iter()
+                .filter(|field| field.visibility == Visibility::Private)
+                .map(|field| field.name.clone())
+                .chain(
+                    record
+                        .methods
+                        .iter()
+                        .filter(|method| method.visibility() == Visibility::Private)
+                        .map(|method| method.name().to_string()),
+                )
+                .chain(
+                    record
+                        .properties
+                        .iter()
+                        .filter(|property| property.visibility == Visibility::Private)
+                        .map(|property| property.name.clone()),
+                )
+                .chain(
+                    record
+                        .events
+                        .iter()
+                        .filter(|event| event.visibility == Visibility::Private)
+                        .map(|event| event.name.clone()),
+                )
+                .collect()
+        } else {
+            Vec::new()
+        };
         let record_ty = RecordTy {
             name: td.name.clone(),
-            owner_unit: self
-                .scopes
-                .function_ctx
-                .as_ref()
-                .and_then(|context| context.owner_unit.clone()),
+            owner_unit,
             private_members,
             fields,
             methods: Vec::new(),

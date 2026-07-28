@@ -86,7 +86,10 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 
 - Use established, unsurprising terminology from Pascal or, when Pascal has no conventional term, from C# or Java.
 - Do not invent obscure, needlessly clever, academic, or project-specific names for standard programming-language concepts.
-- Prefer familiar concepts and keywords that already exist in FPAS. For visibility, use `private` and `public`; do not introduce `opaque` or similar terminology for that concept.
+- Prefer familiar concepts and keywords that already exist in FPAS. Declarations
+  and record members are private by default; use only `public` to export them.
+  Do not introduce an explicit `private`, `opaque`, or similar keyword for
+  visibility.
 
 ## Change Discipline
 

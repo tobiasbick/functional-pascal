@@ -152,7 +152,8 @@ mod tests {
 
     #[test]
     fn attaches_doc_and_block_comments_to_following_decl() -> Result<(), String> {
-        let source = "/// Unit doc.\nunit Demo;\n\n{ field doc }\nprivate mutable var Count: integer := 0;\n";
+        let source =
+            "/// Unit doc.\nunit Demo;\n\n{ field doc }\nmutable var Count: integer := 0;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit);

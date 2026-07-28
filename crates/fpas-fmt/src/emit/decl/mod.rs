@@ -94,37 +94,28 @@ end.",
     }
 
     #[test]
-    fn unit_function_with_private() {
+    fn unit_function_visibility() {
         let formatted = format_unit_decls(
-            "unit MyApp.Utils; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min end else begin return Value end end; private function Hidden(): integer; begin return 0 end;",
+            "unit MyApp.Utils; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then begin return Min end else begin return Value end end; function Hidden(): integer; begin return 0 end;",
         );
-        assert!(formatted.contains("function Clamp"));
-        assert!(formatted.contains("private function Hidden"));
+        assert!(formatted.contains("public function Clamp"));
+        assert!(formatted.contains("\nfunction Hidden"));
     }
 
     #[test]
-    fn unit_private_vars_and_consts_are_not_block_grouped() {
+    fn unit_default_private_vars_and_consts_are_block_grouped() {
         let formatted = format_unit_decls(
-            "unit U; private mutable var A: integer := 1; private mutable var B: integer := 2; private const C: integer := 3; private const D: integer := 4;",
+            "unit U; mutable var A: integer := 1; mutable var B: integer := 2; const C: integer := 3; const D: integer := 4;",
         );
-        assert!(formatted.contains("private mutable var A: integer := 1;\n"));
-        assert!(formatted.contains("private const C: integer := 3;\n"));
-        assert!(
-            !formatted.contains("mutable var\n"),
-            "formatted:\n{formatted}"
-        );
-        assert!(
-            !formatted.contains("const\n  private"),
-            "formatted:\n{formatted}"
-        );
+        assert!(formatted.contains("mutable var\n  A: integer := 1;\n  B: integer := 2;\n"));
+        assert!(formatted.contains("const\n  C: integer := 3;\n  D: integer := 4;\n"));
     }
 
     #[test]
-    fn unit_private_type_keeps_type_keyword() {
-        let formatted =
-            format_unit_decls("unit U; private type Complex = record Re: real; Im: real; end;");
+    fn unit_default_private_type_uses_type_block() {
+        let formatted = format_unit_decls("unit U; type Complex = record Re: real; Im: real; end;");
         assert!(
-            formatted.contains("private type Complex = record\n"),
+            formatted.contains("type\n  Complex = record\n"),
             "formatted:\n{formatted}"
         );
     }

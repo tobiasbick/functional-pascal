@@ -8,7 +8,7 @@ uses
 
 /// Paints one input with hint text, horizontal scroll markers, and a block cursor.
 
-procedure TuiPaintInput(Canvas: TuiCanvas; Bounds: TuiRect; Input: TuiInputSpec; Focused: boolean);
+public procedure TuiPaintInput(Canvas: TuiCanvas; Bounds: TuiRect; Input: TuiInputSpec; Focused: boolean);
 begin
   if Bounds.IsEmpty() then
   begin

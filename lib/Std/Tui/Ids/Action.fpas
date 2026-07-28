@@ -1,6 +1,6 @@
 unit Std.Tui.Ids.Action;
 
-private function TuiActionRequirePositive(Value: integer): integer;
+function TuiActionRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
   begin
@@ -9,14 +9,14 @@ begin
   return Value
 end;
 
-type
+public type
   /// Positive application-intent identity; duplicates across controls are allowed.
   TuiAction = record
-    Value: integer;
+    public Value: integer;
 
     /// Creates a validated positive action identity.
 
-    static function Create(Value: integer): TuiAction;
+    public static function Create(Value: integer): TuiAction;
     begin
       return record Value := TuiActionRequirePositive(Value); end
     end;

@@ -2,7 +2,7 @@ unit Std.Tui.Runtime.PointerEvent;
 
 uses Std.Console, Std.Tui.Geometry.Point;
 
-type
+public type
   /// Pointer button carried by a normalized pointer event.
   TuiPointerButton = enum
     NoButton;
@@ -12,17 +12,17 @@ type
   end;
   /// Normalized pointer action in zero-based application coordinates.
   TuiPointerEvent = record
-    Action: Std.Console.MouseAction;
-    Button: TuiPointerButton;
-    Position: TuiPoint;
-    Shift: boolean;
-    Ctrl: boolean;
-    Alt: boolean;
-    Meta: boolean;
+    public Action: Std.Console.MouseAction;
+    public Button: TuiPointerButton;
+    public Position: TuiPoint;
+    public Shift: boolean;
+    public Ctrl: boolean;
+    public Alt: boolean;
+    public Meta: boolean;
 
     /// Creates a pointer event with no modifiers.
 
-    static function Create(Action: Std.Console.MouseAction; Button: TuiPointerButton; Position: TuiPoint): TuiPointerEvent;
+    public static function Create(Action: Std.Console.MouseAction; Button: TuiPointerButton; Position: TuiPoint): TuiPointerEvent;
     begin
       return record
         Action := Action;
@@ -37,7 +37,7 @@ type
 
     /// Creates a pointer event with explicit modifiers.
 
-    static function WithModifiers(
+    public static function WithModifiers(
   Action: Std.Console.MouseAction;
   Button: TuiPointerButton;
   Position: TuiPoint;

@@ -6,19 +6,20 @@ uses
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Focus;
 
-type
+public type
   /// Controlled menu and arranged bar bounds used by pointer routing.
   TuiPointerMenu = record
-    Id: TuiControlId;
-    Nodes: array of TuiMenuNode;
-    State: TuiMenuState;
-    ChangeAction: TuiAction;
-    Bounds: TuiRect;
+    public Id: TuiControlId;
+    public Nodes: array of TuiMenuNode;
+    public State: TuiMenuState;
+    public ChangeAction: TuiAction;
+    public Bounds: TuiRect;
   end;
 
-private mutable var TuiPointerMenus: array of TuiPointerMenu := [];
+mutable var
+  TuiPointerMenus: array of TuiPointerMenu := [];
 
-private function TuiPointerMenuWalk(
+function TuiPointerMenuWalk(
   Frame: TuiArrangedFrame;
   Node: TuiElement;
   Index: integer;
@@ -78,7 +79,7 @@ begin
   return Next
 end;
 
-private function TuiPointerMenuFocus(Root: TuiElement; Menu: TuiPointerMenu): array of TuiMsg;
+function TuiPointerMenuFocus(Root: TuiElement; Menu: TuiPointerMenu): array of TuiMsg;
 begin
   var Previous: option of TuiControlId := TuiRootFocus(Root);
   if TuiFocusMatches(Previous, Menu.Id) then
@@ -88,7 +89,7 @@ begin
   return [TuiMsg.FocusChanged(Previous, Some(Menu.Id))]
 end;
 
-private function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: TuiMenuNodeId): array of TuiMsg;
+function TuiPointerMenuHover(Menu: TuiPointerMenu; Id: TuiMenuNodeId): array of TuiMsg;
 begin
   case Menu.State.Active of
     Some(Active):
@@ -105,7 +106,7 @@ begin
   return [TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(Id))]
 end;
 
-private function TuiPointerMenuBarHit(
+function TuiPointerMenuBarHit(
   Root: TuiElement;
   Menu: TuiPointerMenu;
   Point: TuiPoint;
@@ -145,7 +146,7 @@ begin
   return Some([])
 end;
 
-private function TuiPointerMenuPopupHit(
+function TuiPointerMenuPopupHit(
   Menu: TuiPointerMenu;
   Point: TuiPoint;
   TerminalBounds: TuiRect;
@@ -214,7 +215,7 @@ end;
 
 /// Routes a left-button press or movement over one active hierarchical menu.
 
-function TuiRouteMenuPointer(
+public function TuiRouteMenuPointer(
   Root: TuiElement;
   Frame: TuiArrangedFrame;
   Point: TuiPoint;

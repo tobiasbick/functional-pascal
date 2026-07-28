@@ -4,7 +4,7 @@ uses
   Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size,
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.PointerEvent;
 
-type
+public type
   /// Framework messages delivered to an application's Update function.
   TuiMsg = enum
     Key(Key: Std.Console.KeyEvent);
@@ -24,21 +24,21 @@ type
 
 /// Creates a source-aware action message.
 
-function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
+public function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
 begin
   return TuiMsg.Action(Source, Action)
 end;
 
 /// Creates a source-aware controlled-input change message.
 
-function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
+public function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
   return TuiMsg.TextChanged(Source, Action, Text, Caret)
 end;
 
 /// Creates a source-aware controlled multiline text-area change message.
 
-function TuiMsgTextAreaChanged(
+public function TuiMsgTextAreaChanged(
   Source: TuiControlId;
   Action: TuiAction;
   Text: string;
@@ -51,21 +51,21 @@ end;
 
 /// Creates a source-aware controlled check-box change message.
 
-function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
+public function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
 begin
   return TuiMsg.CheckChanged(Source, Action, Checked)
 end;
 
 /// Creates a source-aware controlled list selection-change message.
 
-function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
+public function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
 begin
   return TuiMsg.SelectionChanged(Source, Action, Selected)
 end;
 
 /// Creates a source-aware controlled scroll-offset change message.
 
-function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
+public function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
 begin
   return TuiMsg.ScrollChanged(Source, Action, Offset)
 end;

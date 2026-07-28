@@ -1,52 +1,56 @@
 # Visibility
 
-All declarations in a unit are **public by default**. Use the `private` keyword to restrict a declaration to the unit that defines it.
+Declarations in a unit are **private by default**. Write `public` directly
+before a declaration that importing units may use. FPAS has no explicit
+`private` keyword and no visibility sections.
 
-Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`visibility` on
-declarations and `record_member`).
+Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`public_modifier` on
+declarations and record members).
 
-| Annotation | Meaning |
+| Modifier | Meaning |
 |---|---|
-| *(none)* | Public (default) — visible to importers |
-| `public` | Public (explicit, optional) — same as default |
-| `private` | Unit-internal — excluded from the unit export table |
-
-`private` declarations are compiled and available within the unit. Importers reference public symbols by short or qualified name only.
+| *(none)* | Private — usable only within the declaring unit |
+| `public` | Public — exported to importing units |
 
 ```pascal
 unit MyApp.Geometry;
+
 uses Std.Math;
 
-type
+public type
   Point = record
-    X: real;
-    Y: real;
+    public X: real;
+    public Y: real;
   end;
 
-function Distance(A: Point; B: Point): real;
-begin
-  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
-end;
-
-private function Square(V: real): real;
+function Square(V: real): real;
 begin
   return V * V
 end;
+
+public function Distance(A: Point; B: Point): real;
+begin
+  return Sqrt(Square(B.X - A.X) + Square(B.Y - A.Y))
+end;
 ```
 
-`Point` and `Distance` are public. `Square` is private — only callable from within `MyApp.Geometry`.
+`Point` and `Distance` are public. `Square` is private because it has no
+`public` modifier.
 
-The `private` and `public` keywords apply to `function`, `procedure`, `type`,
-`const`, and `var` declarations in units. They also apply directly to individual
-record fields, functions, and procedures declared in a unit. Record members are
-public by default, and there are no visibility sections. See
-[Records](../language/types/records.md#field-visibility) and
-[Record methods](../language/types/record-methods.md#routine-visibility).
+The modifier applies to `function`, `procedure`, `type`, `const`, `var`, and
+`mutable var` declarations in units. On records declared in units it also
+applies directly to individual fields, functions, procedures, properties, and
+events. Every such record member is private unless it is declared `public`.
+See [Records](../language/types/records.md#field-visibility),
+[Record methods](../language/types/record-methods.md#routine-visibility),
+[Record properties](../language/types/record-properties.md#visibility), and
+[Record events](../language/types/record-events.md#visibility).
 
-In `program` files, visibility modifiers are invalid, including inside record
-types.
+The `public` modifier is invalid in `program` files, including inside record
+types. The word `private` is an ordinary identifier.
 
-Project-level unit export lists (`[exports].units` on library projects) are documented in [Projects](projects.md#exports-section-library-projects-only).
+Project-level unit export lists (`[exports].units` on library projects) are
+documented in [Projects](projects.md#exports-section-library-projects-only).
 
 ## See also
 

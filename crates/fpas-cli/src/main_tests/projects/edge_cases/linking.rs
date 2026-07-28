@@ -33,7 +33,7 @@ fn unit_with_only_private_declarations_exports_nothing() {
         "\
 unit App.Internal;
 
-private function Secret(): integer;
+function Secret(): integer;
 begin
   return 0
 end;
@@ -60,7 +60,7 @@ fn calling_private_symbol_from_only_private_unit_fails() {
         "\
 unit App.Internal;
 
-private function Secret(): integer;
+function Secret(): integer;
 begin
   return 42
 end;

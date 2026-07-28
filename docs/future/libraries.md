@@ -39,7 +39,7 @@ These decisions are implemented and remain the baseline for later library work:
   consumers while the exported interface hash remains unchanged.
 - **Linking is reachability-based.** The final bytecode image includes only unit
   objects reachable from the program's `uses` graph.
-- **Existing visibility rules remain.** Unit `private` declarations and project
+- **Existing visibility rules remain.** Non-public unit declarations and project
   `[exports].units` continue to define the public boundaries.
 - **No new unit lifecycle syntax exists.** Existing top-level constant and
   variable initializers form unit startup code and execute in deterministic
@@ -141,7 +141,7 @@ pipeline:
 7. links the reachable objects with the program object.
 
 An exported interface change invalidates direct consumers and propagates
-through their rebuilt interface identities. A private implementation change
+through their rebuilt interface identities. A non-public implementation change
 does not cause semantic consumer recompilation when the public interface hash
 is unchanged, but the final program is relinked with the changed object.
 
@@ -202,7 +202,7 @@ The compiled-unit architecture is complete. Potential later work is deliberately
 separate:
 
 - finer per-symbol project export and re-export tables beyond unit-level
-  `[exports].units` and declaration-level `private`;
+  `[exports].units` and declaration-level `public`;
 - an explicit `fpas build` convenience command for eager compilation;
 - an explicit `fpas clean` workflow for derived sidecars and stale lock files;
 - an optional project-level `.fpaslib` container or index without collapsing

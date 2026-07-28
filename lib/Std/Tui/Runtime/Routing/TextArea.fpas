@@ -4,7 +4,7 @@ uses
   Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg, Std.Tui.Text.TextArea;
 
-private function TuiTextAreaClampLine(Text: string; Line: integer): integer;
+function TuiTextAreaClampLine(Text: string; Line: integer): integer;
 begin
   if Line < 0 then
   begin
@@ -20,7 +20,7 @@ end;
 
 /// Routes one key into a complete controlled text-area state proposal.
 
-function TuiRouteTextAreaKey(
+public function TuiRouteTextAreaKey(
   Id: TuiControlId;
   Text: string;
   Caret: integer;
@@ -129,7 +129,7 @@ end;
 
 /// Routes a pointer position into a complete controlled text-area state proposal.
 
-function TuiRouteTextAreaPointer(
+public function TuiRouteTextAreaPointer(
   Id: TuiControlId;
   Text: string;
   Offset: TuiPoint;

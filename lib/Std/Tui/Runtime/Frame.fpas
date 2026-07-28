@@ -7,7 +7,7 @@ uses
 
 /// Validates, arranges, and paints one complete frame into the host-owned arranged frame.
 
-procedure TuiRenderFrame(
+public procedure TuiRenderFrame(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;
   Root: TuiElement;

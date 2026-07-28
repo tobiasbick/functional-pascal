@@ -32,7 +32,7 @@ include = ["src/*.fpas"]
 }
 
 #[test]
-fn default_visibility_function_is_callable() {
+fn default_visibility_function_is_not_exported() {
     let cwd = create_temp_dir("vis-default-fn");
     let project_file = cwd.join("app.fpasprj");
     write_text(
@@ -55,11 +55,14 @@ include = ["src/*.fpas"]
         "unit App.Lib;\n\nfunction GetValue(): integer;\nbegin\n  return 99\nend;\n",
     );
 
-    let (exit_code, stdout_output, _) = support::run_cli_and_capture_output(&project_file, &cwd);
+    let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    assert_eq!(exit_code, 0);
-    assert_eq!(stdout_output, "99\n");
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr_output.contains("GetValue"),
+        "error should mention the non-public symbol, got: {stderr_output}"
+    );
 }
 
 #[test]
@@ -83,7 +86,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/config.fpas"),
-        "unit App.Config;\n\nconst\n  MaxSize: integer := 1024;\n",
+        "unit App.Config;\n\npublic const\n  MaxSize: integer := 1024;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

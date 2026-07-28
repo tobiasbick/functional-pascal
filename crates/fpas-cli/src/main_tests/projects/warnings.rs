@@ -11,7 +11,7 @@ fn run_cli_emits_warning_for_program_source_file_and_still_runs() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nfunction GetValue(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Util;\npublic function GetValue(): integer;\nbegin\n  return 42\nend;\n",
     );
     write_text(&cwd.join("src/tool.fpas"), "program Tool;\nbegin\nend.\n");
 
@@ -40,7 +40,7 @@ fn run_cli_emits_warning_for_duplicate_source_file_and_still_runs() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nfunction GetValue(): integer;\nbegin\n  return 7\nend;\n",
+        "unit App.Util;\npublic function GetValue(): integer;\nbegin\n  return 7\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

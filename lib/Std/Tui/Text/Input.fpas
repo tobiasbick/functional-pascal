@@ -2,17 +2,17 @@ unit Std.Tui.Text.Input;
 
 uses Std.Console, Std.Str;
 
-type
+public type
   /// Derived horizontal viewport for a one-line input.
   TuiInputViewport = record
-    Start: integer;
-    EndIndex: integer;
-    LeftClipped: boolean;
-    RightClipped: boolean;
-    CaretColumn: integer;
+    public Start: integer;
+    public EndIndex: integer;
+    public LeftClipped: boolean;
+    public RightClipped: boolean;
+    public CaretColumn: integer;
   end;
 
-private function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
+function TuiInputWidth(Text: string; Start: integer; EndIndex: integer): integer;
 begin
   if EndIndex <= Start then
   begin
@@ -23,7 +23,7 @@ end;
 
 /// Derives the smallest viewport that keeps the controlled caret visible.
 
-function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
+public function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
 begin
   mutable var Start: integer := 0;
   if Width <= 0 then
@@ -70,7 +70,7 @@ end;
 
 /// Maps one content-relative terminal column to a text caret.
 
-function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
+public function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
 begin
   if Column <= 0 then
   begin

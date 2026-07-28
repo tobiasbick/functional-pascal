@@ -2,7 +2,7 @@ unit Std.Tui.Layout.AlignmentBounds;
 
 uses Std.Tui.Geometry.Rect, Std.Tui.Layout.Alignment, Std.Tui.Layout.MeasureResult;
 
-private function TuiAlignmentBoundsMin(Left: integer; Right: integer): integer;
+function TuiAlignmentBoundsMin(Left: integer; Right: integer): integer;
 begin
   if Left < Right then
   begin
@@ -11,7 +11,7 @@ begin
   return Right
 end;
 
-private function TuiAlignmentBoundsMax(Left: integer; Right: integer): integer;
+function TuiAlignmentBoundsMax(Left: integer; Right: integer): integer;
 begin
   if Left > Right then
   begin
@@ -20,7 +20,7 @@ begin
   return Right
 end;
 
-private function TuiAlignmentBoundsExtent(
+function TuiAlignmentBoundsExtent(
   Minimum: integer;
   Preferred: integer;
   Maximum: integer;
@@ -41,7 +41,7 @@ begin
   return Extent
 end;
 
-private function TuiAlignmentBoundsOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
+function TuiAlignmentBoundsOffset(Available: integer; Extent: integer; Alignment: TuiAlignmentKind): integer;
 begin
   case Alignment of
     TuiAlignmentKind.Leading:
@@ -64,12 +64,12 @@ begin
   return 0
 end;
 
-type
+public type
   /// Resolves one measured element into an aligned rectangle within an allocated area.
   TuiAlignmentBounds = record
     /// Applies independent alignment and size limits on both axes.
 
-    static function Resolve(Measured: TuiMeasureResult; Alignment: TuiAlignment; Area: TuiRect): TuiRect;
+    public static function Resolve(Measured: TuiMeasureResult; Alignment: TuiAlignment; Area: TuiRect): TuiRect;
     begin
       var Width: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, Area.Width, Alignment.Horizontal);
       var Height: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Height, Measured.Preferred.Height, Measured.Maximum.Height, Area.Height, Alignment.Vertical);

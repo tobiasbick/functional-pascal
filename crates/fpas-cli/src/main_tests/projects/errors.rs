@@ -62,11 +62,11 @@ fn run_cli_reports_ambiguous_user_imports() {
     );
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit App.Math;\nfunction Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
+        "unit App.Math;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A + B\nend;\n",
     );
     write_text(
         &cwd.join("src/advanced.fpas"),
-        "unit App.Advanced;\nfunction Add(A: integer; B: integer): integer;\nbegin\n  return A - B\nend;\n",
+        "unit App.Advanced;\npublic function Add(A: integer; B: integer): integer;\nbegin\n  return A - B\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -87,7 +87,7 @@ fn run_cli_reports_unit_sema_errors_with_the_unit_path() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nfunction Broken(): integer;\nbegin\n  return Missing\nend;\n",
+        "unit App.Util;\npublic function Broken(): integer;\nbegin\n  return Missing\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -109,7 +109,7 @@ fn run_cli_reports_unit_runtime_errors_with_the_unit_path() {
     );
     write_text(
         &cwd.join("src/util.fpas"),
-        "unit App.Util;\nprocedure Trigger();\nbegin\n  var X: integer := 1 div 0\nend;\n",
+        "unit App.Util;\npublic procedure Trigger();\nbegin\n  var X: integer := 1 div 0\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

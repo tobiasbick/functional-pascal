@@ -42,8 +42,9 @@ enum DeclRunKind {
 #[derive(Clone, Copy, PartialEq, Eq)]
 struct DeclRunKey {
     kind: DeclRunKind,
-    /// `true` only for public `const` / `var` / `mutable var` / `type` lists.
+    /// `true` for `const` / `var` / `mutable var` / `type` lists.
     block: bool,
+    visibility: Visibility,
 }
 
 fn decl_run_key(decl: &Decl) -> DeclRunKey {
@@ -51,8 +52,12 @@ fn decl_run_key(decl: &Decl) -> DeclRunKey {
     let block = matches!(
         kind,
         DeclRunKind::Const | DeclRunKind::Var | DeclRunKind::MutableVar | DeclRunKind::Type
-    ) && decl.visibility() == Visibility::Public;
-    DeclRunKey { kind, block }
+    );
+    DeclRunKey {
+        kind,
+        block,
+        visibility: decl.visibility(),
+    }
 }
 
 fn decl_run_kind(decl: &Decl) -> DeclRunKind {
@@ -79,7 +84,7 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
 
     match key.kind {
         DeclRunKind::Const => {
-            emitter.writeln("const");
+            emit_block_header(emitter, key.visibility, "const");
             emitter.with_indent(|inner| {
                 for decl in decls {
                     let Decl::Const(def) = decl else {
@@ -91,31 +96,31 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
             });
         }
         DeclRunKind::Var => {
-            emitter.writeln("var");
+            emit_block_header(emitter, key.visibility, "var");
             emitter.with_indent(|inner| {
                 for decl in decls {
                     let Decl::Var(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset, false);
-                    emit_var_def(inner, "var", def, comments);
+                    emit_var_def(inner, "var", def, true, comments);
                 }
             });
         }
         DeclRunKind::MutableVar => {
-            emitter.writeln("mutable var");
+            emit_block_header(emitter, key.visibility, "mutable var");
             emitter.with_indent(|inner| {
                 for decl in decls {
                     let Decl::MutableVar(def) = decl else {
                         continue;
                     };
                     emit_leading_comments(inner, comments, def.span.offset, false);
-                    emit_var_def(inner, "mutable var", def, comments);
+                    emit_var_def(inner, "mutable var", def, true, comments);
                 }
             });
         }
         DeclRunKind::Type => {
-            emitter.writeln("type");
+            emit_block_header(emitter, key.visibility, "type");
             emitter.with_indent(|inner| {
                 for decl in decls {
                     let Decl::TypeDef(def) = decl else {
@@ -128,4 +133,11 @@ fn emit_decl_run(emitter: &mut Emitter, decls: &[Decl], comments: &CommentMap) {
         }
         DeclRunKind::Routine => unreachable!("block grouping excludes routines"),
     }
+}
+
+fn emit_block_header(emitter: &mut Emitter, visibility: Visibility, keyword: &str) {
+    if visibility == Visibility::Public {
+        emitter.write("public ");
+    }
+    emitter.writeln(keyword);
 }

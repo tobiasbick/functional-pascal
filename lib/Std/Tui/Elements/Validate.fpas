@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Conv, Std.Str, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element,
   Std.Tui.Elements.MenuValidate, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
-private function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
+function TuiElementControlSeen(Seen: array of integer; Value: integer): boolean;
 begin
   for Index: integer := 0 to Std.Array.Length(Seen) - 1 do
   begin
@@ -16,7 +16,7 @@ begin
   return false
 end;
 
-private procedure TuiElementValidateControl(Id: TuiControlId);
+procedure TuiElementValidateControl(Id: TuiControlId);
 begin
   if Id.Value <= 0 then
   begin
@@ -24,7 +24,7 @@ begin
   end
 end;
 
-private procedure TuiElementValidateAction(Action: TuiAction);
+procedure TuiElementValidateAction(Action: TuiAction);
 begin
   if Action.Value <= 0 then
   begin
@@ -32,7 +32,7 @@ begin
   end
 end;
 
-private function TuiElementChildren(Node: TuiElement): array of TuiElement;
+function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
     TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
@@ -46,7 +46,7 @@ begin
   end
 end;
 
-private function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
+function TuiElementValidateAndCollect(Node: TuiElement): array of integer;
 begin
   mutable var Seen: array of integer := [];
   case Node of
@@ -237,7 +237,7 @@ end;
 
 /// Validates one complete Tui view tree before layout or routing.
 
-procedure TuiElementValidate(Root: TuiElement);
+public procedure TuiElementValidate(Root: TuiElement);
 begin
   TuiElementValidateAndCollect(Root)
 end;

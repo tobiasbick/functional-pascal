@@ -15,7 +15,7 @@ fn check_cli_validates_library_project() {
     write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Lib.Math;\nfunction Double(X: integer): integer;\nbegin\n  return X + X\nend;\n",
+        "unit Lib.Math;\npublic function Double(X: integer): integer;\nbegin\n  return X + X\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -62,7 +62,7 @@ members = ["libs/math.fpasprj", "apps/demo.fpasprj"]
     write_library_fpasprj(&lib_project, &["src/**/*.fpas"]);
     write_text(
         &lib_project.parent().unwrap().join("src/math.fpas"),
-        "unit Suite.Math;\nfunction Square(X: integer): integer;\nbegin\n  return X * X\nend;\n",
+        "unit Suite.Math;\npublic function Square(X: integer): integer;\nbegin\n  return X * X\nend;\n",
     );
     let lib_dep = toml_path(&lib_project);
     write_program_fpasprj_with_deps(
@@ -147,7 +147,7 @@ fn check_cli_fails_on_type_error_in_library_project() {
     write_library_fpasprj(&project_file, &["src/**/*.fpas"]);
     write_text(
         &cwd.join("src/math.fpas"),
-        "unit Lib.Math;\nfunction Bad(X: integer): string;\nbegin\n  return X + X\nend;\n",
+        "unit Lib.Math;\npublic function Bad(X: integer): string;\nbegin\n  return X + X\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
@@ -179,13 +179,13 @@ fn check_cli_validates_transitive_library_dependencies() {
     write_library_fpasprj(&base_project, &["src/**/*.fpas"]);
     write_text(
         &base_dir.join("src/base.fpas"),
-        "unit Lib.Base;\nconst Tag: string := 'ok';\n",
+        "unit Lib.Base;\npublic const Tag: string := 'ok';\n",
     );
 
     write_library_fpasprj_with_deps(&util_project, &["src/**/*.fpas"], &["../base/base.fpasprj"]);
     write_text(
         &util_dir.join("src/util.fpas"),
-        "unit Lib.Util;\nuses Lib.Base;\nfunction Label(): string;\nbegin\n  return Tag\nend;\n",
+        "unit Lib.Util;\nuses Lib.Base;\npublic function Label(): string;\nbegin\n  return Tag\nend;\n",
     );
 
     let util_dep = toml_path(&util_project);

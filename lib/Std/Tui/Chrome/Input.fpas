@@ -2,20 +2,20 @@ unit Std.Tui.Chrome.Input;
 
 uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
-type
+public type
   /// Immutable controlled one-line input state and optional history.
   TuiInputSpec = record
-    Id: TuiControlId;
-    Text: string;
-    Caret: integer;
-    Hint: string;
-    History: array of string;
-    HistoryDraft: string;
-    ChangeAction: TuiAction;
+    public Id: TuiControlId;
+    public Text: string;
+    public Caret: integer;
+    public Hint: string;
+    public History: array of string;
+    public HistoryDraft: string;
+    public ChangeAction: TuiAction;
 
     /// Creates an input without a hint or history.
 
-    static function Create(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction): TuiInputSpec;
+    public static function Create(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction): TuiInputSpec;
     begin
       return record
         Id := Id;
@@ -30,7 +30,7 @@ type
 
     /// Creates an input that paints a hint while its text is empty.
 
-    static function WithHint(
+    public static function WithHint(
   Id: TuiControlId;
   Text: string;
   Caret: integer;
@@ -51,7 +51,7 @@ type
 
     /// Creates an input with oldest-to-newest Up/Down history and a restorable draft.
 
-    static function WithHistory(
+    public static function WithHistory(
   Id: TuiControlId;
   Text: string;
   Caret: integer;

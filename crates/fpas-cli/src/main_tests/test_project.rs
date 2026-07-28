@@ -137,7 +137,7 @@ fn test_cli_runs_setup_and_teardown_hooks() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\nprocedure Setup();\nbegin AssertTrue(true) end;\nprocedure Teardown();\nbegin AssertTrue(true) end;",
+        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Setup();\nbegin AssertTrue(true) end;\npublic procedure Teardown();\nbegin AssertTrue(true) end;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),
@@ -179,7 +179,7 @@ fn test_cli_fails_when_teardown_hook_fails() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nuses Std.Test;\nprocedure Teardown();\nbegin AssertTrue(false) end;",
+        "unit Tests.Fixture;\nuses Std.Test;\npublic procedure Teardown();\nbegin AssertTrue(false) end;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),
@@ -224,7 +224,7 @@ fn test_cli_timeout_aborts_hanging_setup_hook() {
     );
     write_text(
         &cwd.join("fixture.fpas"),
-        "unit Tests.Fixture;\nprocedure Setup();\nbegin\n  while 1 = 1 do\n  begin\n  end\nend;",
+        "unit Tests.Fixture;\npublic procedure Setup();\nbegin\n  while 1 = 1 do\n  begin\n  end\nend;",
     );
     write_text(
         &cwd.join("demo_test.fpas"),

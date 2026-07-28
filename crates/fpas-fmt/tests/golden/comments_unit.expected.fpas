@@ -2,6 +2,6 @@
 
 unit Demo;
 
-{ field doc }
-
-private mutable var Count: integer := 0;
+mutable var
+  { field doc }
+  Count: integer := 0;

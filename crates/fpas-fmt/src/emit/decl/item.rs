@@ -16,8 +16,8 @@ pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMa
     emit_leading_comments(emitter, comments, crate::span::decl_span(decl), true);
     match decl {
         Decl::Const(def) => emit_const_def(emitter, def, false, comments),
-        Decl::Var(def) => emit_var_def(emitter, "var", def, comments),
-        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, comments),
+        Decl::Var(def) => emit_var_def(emitter, "var", def, false, comments),
+        Decl::MutableVar(def) => emit_var_def(emitter, "mutable var", def, false, comments),
         Decl::TypeDef(def) => emit_type_def(emitter, def, comments, false),
         Decl::Function(function) => emit_function_decl(emitter, function, comments),
         Decl::Procedure(procedure) => emit_procedure_decl(emitter, procedure, comments),
@@ -25,8 +25,8 @@ pub(crate) fn emit_decl(emitter: &mut Emitter, decl: &Decl, comments: &CommentMa
 }
 
 fn emit_visibility(emitter: &mut Emitter, visibility: Visibility) {
-    if visibility == Visibility::Private {
-        emitter.write("private ");
+    if visibility == Visibility::Public {
+        emitter.write("public ");
     }
 }
 
@@ -37,7 +37,9 @@ pub(super) fn emit_const_def(
     comments: &CommentMap,
 ) {
     emitter.write_current_indent();
-    emit_visibility(emitter, def.visibility);
+    if !in_const_block {
+        emit_visibility(emitter, def.visibility);
+    }
     if !in_const_block {
         emitter.write("const ");
     }
@@ -53,12 +55,15 @@ pub(super) fn emit_var_def(
     emitter: &mut Emitter,
     keyword: &str,
     def: &VarDef,
+    in_var_block: bool,
     comments: &CommentMap,
 ) {
     emitter.write_current_indent();
-    emit_visibility(emitter, def.visibility);
-    emitter.write(keyword);
-    emitter.write(" ");
+    if !in_var_block {
+        emit_visibility(emitter, def.visibility);
+        emitter.write(keyword);
+        emitter.write(" ");
+    }
     emitter.write(&def.name);
     emitter.write(": ");
     emit_type_expr(emitter, &def.type_expr);
@@ -74,7 +79,9 @@ pub(super) fn emit_type_def(
     in_type_block: bool,
 ) {
     emitter.write_current_indent();
-    emit_visibility(emitter, def.visibility);
+    if !in_type_block {
+        emit_visibility(emitter, def.visibility);
+    }
     if !in_type_block {
         emitter.write("type ");
     }
@@ -212,6 +219,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
 fn emit_record_property(emitter: &mut Emitter, property: &RecordProperty, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, property.span.offset, false);
     emitter.write_current_indent();
+    emit_visibility(emitter, property.visibility);
     emitter.write("property ");
     emitter.write(&property.name);
     emitter.write(": ");
@@ -230,6 +238,7 @@ fn emit_record_property(emitter: &mut Emitter, property: &RecordProperty, commen
 fn emit_record_event(emitter: &mut Emitter, event: &RecordEvent, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, event.span.offset, false);
     emitter.write_current_indent();
+    emit_visibility(emitter, event.visibility);
     emitter.write("event ");
     emitter.write(&event.name);
     emitter.write(": ");

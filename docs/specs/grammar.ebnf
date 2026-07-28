@@ -94,7 +94,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'enum'      | 'array'     | 'panic'
                 | 'break'     | 'continue'  | 'result'    | 'option'
                 | 'ok'        | 'error'     | 'some'      | 'none'
-                | 'try'       | 'public'    | 'private'
+                | 'try'       | 'public'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
                 | 'event'     | 'nil' ;
 
@@ -162,14 +162,13 @@ program_declaration = const_block
                     | function_decl
                     | procedure_decl ;
 
-unit_declaration    = [ visibility ] program_declaration ;
+unit_declaration    = [ public_modifier ] program_declaration ;
 
-visibility          = 'public' | 'private' ;
+public_modifier     = 'public' ;
 
-(* Default visibility is `public`. At unit scope, `public`/`private` *)
-(* control whether a symbol is exported. Inside a record declared in *)
-(* a unit, they control access to individual fields and routines.    *)
-(* Visibility modifiers are not valid in `program` files.            *)
+(* Unit declarations are private unless marked `public`. The same rule *)
+(* applies to every member of a record declared in a unit. `public` is *)
+(* not valid in `program` files. `private` is an ordinary identifier. *)
 
 (* -- Constants -- *)
 const_block         = 'const' const_def { const_def } ;
@@ -222,9 +221,8 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 record_type         = 'record'
                       { record_member }
                       'end' ;
-record_member       = [ visibility ] ( field_def | record_method )
-                    | record_property
-                    | record_event ;
+record_member       = [ public_modifier ]
+                      ( field_def | record_method | record_property | record_event ) ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)

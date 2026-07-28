@@ -12,7 +12,7 @@ A unit file starts with a `unit` declaration followed by declarations (functions
 unit MyApp.Utils;
 uses Std.Str;
 
-function Clamp(Value: integer; Min: integer; Max: integer): integer;
+public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min
@@ -22,7 +22,7 @@ begin
     return Value
 end;
 
-function IsBlank(S: string): boolean;
+public function IsBlank(S: string): boolean;
 begin
   return Length(Trim(S)) = 0
 end;
@@ -107,12 +107,12 @@ incompatible sidecar. Sources and manifests remain authoritative; `.fpascu` file
 build products and are excluded from source discovery and formatting.
 
 A valid unchanged sidecar lets a later build use the unit without parsing or semantically
-analyzing its implementation. A private implementation change rebuilds that unit but does not
+analyzing its implementation. A non-public implementation change rebuilds that unit but does not
 invalidate consumers while its public interface hash stays unchanged. An exported signature,
 layout, constant value, or other public-interface change invalidates consuming units.
 
 For an exported record, the semantic interface also stores its declaring unit
-and the names of private fields and routines. Consumers therefore receive the
+and the names of non-public record members. Consumers therefore receive the
 complete runtime layout needed for linking while semantic analysis still
 enforces record member visibility.
 

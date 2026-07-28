@@ -1,17 +1,21 @@
 unit Demo.Counter;
 
-type
+public type
   Counter = record
-    private Value: integer;
-    Step: integer;
+    Value: integer;
+    public Step: integer;
 
-    private function Hidden(Self: Counter): integer;
+    function Hidden(Self: Counter): integer;
     begin
       return Self.Value
     end;
 
-    static function Create(): Counter;
+    public static function Create(): Counter;
     begin
       return record Value := 0; Step := 1; end
     end;
+
+    public property Current: integer read Hidden;
+
+    public event Changed: procedure() read ReadChanged write WriteChanged;
   end;

@@ -2,18 +2,18 @@ unit Std.Tui.Cells.InputPalette;
 
 uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 
-type
+public type
   /// Concrete styles for every one-line input state.
   TuiInputPalette = record
-    Normal: TuiStyle;
-    Focused: TuiStyle;
-    Hint: TuiStyle;
-    Cursor: TuiStyle;
-    Scroll: TuiStyle;
+    public Normal: TuiStyle;
+    public Focused: TuiStyle;
+    public Hint: TuiStyle;
+    public Cursor: TuiStyle;
+    public Scroll: TuiStyle;
 
     /// Creates a complete one-line input palette.
 
-    static function Create(
+    public static function Create(
   Normal: TuiStyle;
   Focused: TuiStyle;
   Hint: TuiStyle;
@@ -32,7 +32,7 @@ type
 
     /// Resolves one input role.
 
-    function ForRole(Self: TuiInputPalette; Role: TuiStyleRole): TuiStyle;
+    public function ForRole(Self: TuiInputPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
         TuiStyleRole.InputNormal:
@@ -64,7 +64,7 @@ type
 
     /// Returns a copy with one input role replaced.
 
-    function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
+    public function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
     begin
       mutable var Updated: TuiInputPalette := Self;
       case Role of

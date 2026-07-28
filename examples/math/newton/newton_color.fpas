@@ -4,7 +4,7 @@ unit Newton.Color;
 
 uses Std.Console, Std.Math;
 
-function RootColor(Root: integer; Shade: real): Color;
+public function RootColor(Root: integer; Shade: real): Color;
 begin
   var T: real := Clamp(Shade, 0.2, 1.0);
   if Root = 1 then
@@ -25,7 +25,7 @@ begin
   end
 end;
 
-function InsideColor(): Color;
+public function InsideColor(): Color;
 begin
   return RgbColor(0, 0, 0)
 end;

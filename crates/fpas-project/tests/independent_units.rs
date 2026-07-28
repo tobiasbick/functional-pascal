@@ -46,15 +46,15 @@ include = ["src/**/*.fpas"]
     write(
         &root.join("src/base.fpas"),
         "unit Demo.Base;
-         type Point = record X: integer := 1; end;
-         function Make(X: integer): Point;
+         public type Point = record public X: integer := 1; end;
+         public function Make(X: integer): Point;
          begin return record X := X; end end;",
     );
     write(
         &root.join("src/math.fpas"),
         "unit Demo.Math;
          uses Demo.Base;
-         function Compute(X: integer): integer;
+         public function Compute(X: integer): integer;
          begin
            var P: Point := Make(X);
            return P.X
@@ -64,7 +64,7 @@ include = ["src/**/*.fpas"]
         &root.join("src/app.fpas"),
         "unit Demo.App;
          uses Demo.Math;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            return Compute(7)
          end;",

@@ -61,7 +61,7 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     PARSE_EXPECTED_EXPRESSION = 1005;
     PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM = 1006;
 
-    /// Visibility modifier (`public`/`private`) used outside a `unit` file.
+    /// The `public` visibility modifier was used outside a `unit` file.
     PARSE_INVALID_VISIBILITY = 1007;
     /// `static` used outside a supported static record routine.
     PARSE_INVALID_STATIC_PLACEMENT = 1008;
@@ -93,7 +93,7 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     SEMA_TASK_BOUND_CALLABLE = 2016;
 
-    /// A private record field or routine is accessed outside its declaring unit.
+    /// A non-public record member is accessed outside its declaring unit.
     ///
     /// **Documentation:** `docs/pascal/language/types/records.md`
     SEMA_PRIVATE_RECORD_MEMBER = 2017;

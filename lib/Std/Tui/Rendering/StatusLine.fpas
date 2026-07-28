@@ -6,7 +6,7 @@ uses
   Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Chrome.StatusItem,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.ControlId, Std.Tui.Rendering.Canvas;
 
-private function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
+function TuiStatusFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
   case Focused of
     Some(Value):
@@ -20,7 +20,7 @@ begin
   end
 end;
 
-private function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
+function TuiStatusWrite(Canvas: TuiCanvas; X: integer; Y: integer; Text: string; Role: TuiStyleRole): integer;
 begin
   Canvas.WriteText(TuiPoint.Create(X, Y), Text, Role);
   return X + Std.Console.DisplayWidth(Text)
@@ -28,7 +28,7 @@ end;
 
 /// Paints one complete status row, including its unused background cells.
 
-procedure TuiPaintStatusLine(
+public procedure TuiPaintStatusLine(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
   Items: array of TuiStatusItem;

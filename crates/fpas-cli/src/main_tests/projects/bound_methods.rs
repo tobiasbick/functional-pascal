@@ -21,15 +21,15 @@ end.",
     write_text(
         &cwd.join("src/data.fpas"),
         "unit App.Data;
-type
+public type
   Counter = record
-    Base: integer;
-    function Add(Self: Counter; Value: integer): integer;
+    public Base: integer;
+    public function Add(Self: Counter; Value: integer): integer;
     begin
       return Self.Base + Value
     end;
   end;
-var Global: Counter := record Base := 12; end;
+public var Global: Counter := record Base := 12; end;
 ",
     );
 

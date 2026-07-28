@@ -8,7 +8,7 @@ uses
   Std.Tui.Rendering.Input, Std.Tui.Rendering.Menu, Std.Tui.Rendering.Rule,
   Std.Tui.Rendering.StatusLine, Std.Tui.Rendering.Surface, Std.Tui.Rendering.TextArea;
 
-private function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
+function TuiPaintFocused(Focused: option of TuiControlId; Id: TuiControlId): boolean;
 begin
   case Focused of
     Some(Value):
@@ -22,7 +22,7 @@ begin
   end
 end;
 
-private procedure TuiPaintTextInBounds(Canvas: TuiCanvas; Bounds: TuiRect; Text: string; Role: TuiStyleRole);
+procedure TuiPaintTextInBounds(Canvas: TuiCanvas; Bounds: TuiRect; Text: string; Role: TuiStyleRole);
 begin
   if Bounds.IsEmpty() then
   begin
@@ -33,7 +33,7 @@ end;
 
 /// Paints one arranged node and returns the next unused frame index.
 
-private function TuiPaintArranged(
+function TuiPaintArranged(
   Canvas: TuiCanvas;
   Frame: TuiArrangedFrame;
   Node: TuiElement;
@@ -165,7 +165,7 @@ begin
   return Next
 end;
 
-private function TuiPaintMenuOverlays(
+function TuiPaintMenuOverlays(
   Canvas: TuiCanvas;
   Frame: TuiArrangedFrame;
   Node: TuiElement;
@@ -219,7 +219,7 @@ end;
 
 /// Paints one complete frame using arranged geometry only (no measurement).
 
-procedure TuiPaintView(
+public procedure TuiPaintView(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;
   Root: TuiElement;
@@ -241,7 +241,7 @@ end;
 
 /// Overwrites the surface with a terminal-too-small notice when layout overflows.
 
-procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
+public procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
 begin
   Surface.Clear();
   var Size: TuiSize := Surface.Size();

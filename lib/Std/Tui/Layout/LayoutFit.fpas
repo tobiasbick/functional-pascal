@@ -2,7 +2,7 @@ unit Std.Tui.Layout.LayoutFit;
 
 uses Std.Tui.Geometry.Size;
 
-private function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
+function TuiLayoutFitOverflow(Minimum: integer; Available: integer): integer;
 begin
   if Minimum > Available then
   begin
@@ -11,16 +11,16 @@ begin
   return 0
 end;
 
-type
+public type
   /// Reports whether allocated bounds satisfy a measured minimum.
   TuiLayoutFit = record
-    Minimum: TuiSize;
-    Available: TuiSize;
-    Overflow: TuiSize;
+    public Minimum: TuiSize;
+    public Available: TuiSize;
+    public Overflow: TuiSize;
 
     /// Creates a fit report from minimum and available sizes.
 
-    static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
+    public static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
     begin
       return record
         Minimum := Minimum;
@@ -31,7 +31,7 @@ type
 
     /// Returns whether neither axis overflows.
 
-    function Fits(Self: TuiLayoutFit): boolean;
+    public function Fits(Self: TuiLayoutFit): boolean;
     begin
       return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0)
     end;

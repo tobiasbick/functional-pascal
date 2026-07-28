@@ -6,6 +6,20 @@ the public assignment syntax hides that `Option`.
 
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_event`).
 
+## Visibility
+
+An event in a record declared by a unit is private by default. Write `public`
+directly before each event that importing units may assign, clear, or inspect
+with `Assigned`:
+
+```pascal
+public event OnClick: ClickHandler read ReadOnClick write WriteOnClick;
+```
+
+The accessor routines may remain private. A visible event still may be raised
+only by its declaring unit. The `public` modifier is not valid in a `program`
+file.
+
 ## Declaration
 
 ```pascal

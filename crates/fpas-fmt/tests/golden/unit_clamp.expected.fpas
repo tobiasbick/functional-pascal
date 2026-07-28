@@ -2,7 +2,7 @@ unit MyApp.Utils;
 
 uses Std.Math;
 
-function Clamp(Value: integer; Min: integer; Max: integer): integer;
+public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
   begin

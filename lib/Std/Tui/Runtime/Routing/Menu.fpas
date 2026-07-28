@@ -5,16 +5,16 @@ uses
   Std.Tui.Elements.Element, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Focus;
 
-type
+public type
   /// One controlled menu found in the active routing subtree.
   TuiRouteMenu = record
-    Id: TuiControlId;
-    Nodes: array of TuiMenuNode;
-    State: TuiMenuState;
-    ChangeAction: TuiAction;
+    public Id: TuiControlId;
+    public Nodes: array of TuiMenuNode;
+    public State: TuiMenuState;
+    public ChangeAction: TuiAction;
   end;
 
-private function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
+function TuiFindRouteMenu(Node: TuiElement): option of TuiRouteMenu;
 begin
   case Node of
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
@@ -77,12 +77,12 @@ begin
   end
 end;
 
-private function TuiMenuChange(Menu: TuiRouteMenu; State: TuiMenuState): TuiMsg;
+function TuiMenuChange(Menu: TuiRouteMenu; State: TuiMenuState): TuiMsg;
 begin
   return TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, State)
 end;
 
-private function TuiMenuOpenFirst(Menu: TuiRouteMenu; Previous: option of TuiControlId): array of TuiMsg;
+function TuiMenuOpenFirst(Menu: TuiRouteMenu; Previous: option of TuiControlId): array of TuiMsg;
 begin
   case TuiMenuFirstSelectable(Menu.Nodes, None) of
     Some(First):
@@ -102,7 +102,7 @@ begin
   end
 end;
 
-private function TuiMenuCommandMessages(Menu: TuiRouteMenu; Node: TuiMenuNode): array of TuiMsg;
+function TuiMenuCommandMessages(Menu: TuiRouteMenu; Node: TuiMenuNode): array of TuiMsg;
 begin
   case TuiMenuNodeAction(Node) of
     Some(Action):
@@ -120,7 +120,7 @@ begin
   end
 end;
 
-private function TuiMenuShortcut(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+function TuiMenuShortcut(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   for Index: integer := 0 to Std.Array.Length(Menu.Nodes) - 1 do
   begin
@@ -143,7 +143,7 @@ begin
   return None
 end;
 
-private function TuiMenuMnemonic(
+function TuiMenuMnemonic(
   Menu: TuiRouteMenu;
   Key: Std.Console.KeyEvent;
   Parent: option of TuiMenuNodeId
@@ -168,7 +168,7 @@ begin
   return None
 end;
 
-private function TuiMenuRouteOpen(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+function TuiMenuRouteOpen(Menu: TuiRouteMenu; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   if Key.kind = Std.Console.KeyKind.Escape then
   begin
@@ -316,7 +316,7 @@ end;
 
 /// Routes menu shortcuts, F10, mnemonics, and open-menu navigation.
 
-function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+public function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   case TuiFindRouteMenu(Root) of
     Some(Menu):

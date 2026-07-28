@@ -4,7 +4,7 @@ uses
   Std.Console, Std.Option, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Runtime.Input,
   Std.Tui.Runtime.PointerEvent;
 
-private function TuiPointerButtonFromConsole(Button: Std.Console.MouseButton): TuiPointerButton;
+function TuiPointerButtonFromConsole(Button: Std.Console.MouseButton): TuiPointerButton;
 begin
   if Button = Std.Console.MouseButton.Left then
   begin
@@ -23,7 +23,7 @@ end;
 
 /// Converts one Console event to Tui host input, discarding unsupported event kinds.
 
-function TuiConsoleEventToHostInput(Event: Std.Console.Event): option of TuiHostInput;
+public function TuiConsoleEventToHostInput(Event: Std.Console.Event): option of TuiHostInput;
 begin
   case Event.kind of
     Std.Console.EventKind.Key:
@@ -53,7 +53,7 @@ end;
 
 /// Blocks for one Console event and maps it to supported Tui host input.
 
-function TuiReadConsoleHostInput(): option of TuiHostInput;
+public function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
   return TuiConsoleEventToHostInput(ReadEvent())
 end;

@@ -7,7 +7,7 @@ uses
   Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
   Std.Tui.Runtime.Routing.Input, Std.Tui.Runtime.Routing.TextArea;
 
-private function TuiScrollClamp(Value: integer; Maximum: integer): integer;
+function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
   if Value < 0 then
   begin
@@ -20,7 +20,7 @@ begin
   return Value
 end;
 
-private function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
+function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
 begin
   mutable var Next: integer := Index + 1;
   case Node of
@@ -38,7 +38,7 @@ begin
   return Next
 end;
 
-private function TuiRouteTarget(
+function TuiRouteTarget(
   Frame: TuiArrangedFrame;
   Node: TuiElement;
   Index: integer;
@@ -269,7 +269,7 @@ end;
 
 /// Routes one key against the previous rendered tree into ordered framework messages.
 
-function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
+public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);
   case TuiRouteMenuKey(Root, Key) of

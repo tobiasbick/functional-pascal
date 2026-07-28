@@ -45,7 +45,6 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Break => "break".into(),
         Token::Continue => "continue".into(),
         Token::Public => "public".into(),
-        Token::Private => "private".into(),
         Token::Result => "Result".into(),
         Token::OptionKw => "Option".into(),
         Token::Ok => "Ok".into(),

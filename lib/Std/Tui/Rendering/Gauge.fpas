@@ -8,7 +8,7 @@ uses
 
 /// Paints a label, bounded bar, and percentage on one row.
 
-procedure TuiPaintGauge(Canvas: TuiCanvas; Bounds: TuiRect; Gauge: TuiGauge);
+public procedure TuiPaintGauge(Canvas: TuiCanvas; Bounds: TuiRect; Gauge: TuiGauge);
 begin
   if Bounds.IsEmpty() then
   begin

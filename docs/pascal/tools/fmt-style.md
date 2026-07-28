@@ -278,7 +278,7 @@ Inside `begin` … `end` blocks: **no** extra blank lines between consecutive st
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `private`, `record`, `enum`, `array`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 
@@ -305,9 +305,9 @@ Semicolons are **separators**, not terminators:
 - Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
 - `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
-- Preserve `private` on individual record fields and routines. Omit explicit
-  `public`, because public is the canonical default. A routine modifier appears
-  before `static`.
+- Preserve `public` on exported unit declarations and individual record
+  members. Private declarations and members have no modifier. A routine
+  modifier appears before `static`.
 
 ## Spacing
 

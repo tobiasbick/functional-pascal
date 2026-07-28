@@ -22,7 +22,7 @@ use common::{parse_unit, run_zero_arity};
 fn independently_compiled_units_link_and_run_without_dependency_asts() {
     let dependency = parse_unit(
         "unit Demo.Base;
-         function AddOne(Value: integer): integer;
+         public function AddOne(Value: integer): integer;
          begin return Value + 1 end;",
     );
     let dependency_compiled =
@@ -31,7 +31,7 @@ fn independently_compiled_units_link_and_run_without_dependency_asts() {
     let consumer = parse_unit(
         "unit Demo.Consumer;
          uses Demo.Base;
-         function Run(): integer;
+         public function Run(): integer;
          begin return AddOne(41) end;",
     );
     let consumer_compiled = compile_unit_object(
@@ -76,7 +76,7 @@ fn independently_compiled_units_link_and_run_without_dependency_asts() {
 fn independently_compiled_program_uses_unit_interface_and_object() {
     let dependency = parse_unit(
         "unit Demo.Base;
-         function AddOne(Value: integer): integer;
+         public function AddOne(Value: integer): integer;
          begin return Value + 1 end;",
     );
     let dependency_compiled =
@@ -102,7 +102,7 @@ fn independently_compiled_program_uses_unit_interface_and_object() {
 fn program_routine_shadows_imported_enum_constructor_during_lowering() {
     let dependency = parse_unit(
         "unit Demo.Events;
-         type Input = enum
+         public type Input = enum
            Pointer(Value: integer);
          end;",
     );
@@ -130,9 +130,9 @@ fn program_routine_shadows_imported_enum_constructor_during_lowering() {
 fn imported_record_defaults_are_compiled_from_the_unit_interface() {
     let dependency = parse_unit(
         "unit Demo.Config;
-         type Config = record
-           Host: string := 'localhost';
-           Port: integer := 8080;
+         public type Config = record
+           public Host: string := 'localhost';
+           public Port: integer := 8080;
          end;",
     );
     let dependency_compiled =
@@ -164,7 +164,7 @@ fn imported_record_defaults_are_compiled_from_the_unit_interface() {
 fn imported_function_can_be_passed_as_a_callable_value() {
     let dependency = parse_unit(
         "unit Demo.Base;
-         function AddOne(Value: integer): integer;
+         public function AddOne(Value: integer): integer;
          begin return Value + 1 end;",
     );
     let dependency = compile_unit_object(&dependency, &[]).expect("dependency compilation");
@@ -173,7 +173,7 @@ fn imported_function_can_be_passed_as_a_callable_value() {
          uses Demo.Base;
          function Apply(F: function(X: integer): integer; Value: integer): integer;
          begin return F(Value) end;
-         function Run(): integer;
+         public function Run(): integer;
          begin return Apply(AddOne, 41) end;",
     );
     let consumer = compile_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
@@ -192,7 +192,7 @@ fn imported_function_can_be_passed_as_a_callable_value() {
 fn nested_unit_routines_resolve_to_their_qualified_object_entries() {
     let unit = parse_unit(
         "unit Demo.Nested;
-         function Run(): integer;
+         public function Run(): integer;
          function AddOne(Value: integer): integer;
          begin return Value + 1 end;
          begin return AddOne(41) end;",
@@ -207,20 +207,20 @@ fn concurrent_private_record_method_chains_resolve_to_qualified_unit_entries() {
     let unit = parse_unit(
         "unit Demo.RecordMethods;
          uses Std.Task;
-         private type Counter = record
+         type Counter = record
            Value: integer;
            function Increment(Self: Counter): Counter;
            begin return record Value := Self.Value + 1; end end;
            function Add(Self: Counter; Other: Counter): Counter;
            begin return record Value := Self.Value + Other.Value; end end;
          end;
-         private function Compute(): integer;
+         function Compute(): integer;
          begin
            var Left: Counter := record Value := 40; end;
            var Right: Counter := record Value := 1; end;
            return Left.Increment().Add(Right).Value
          end;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Work: task := go Compute();
            return Wait(Work)
@@ -238,7 +238,7 @@ fn concurrent_private_record_method_chains_resolve_to_qualified_unit_entries() {
 fn local_variables_shadow_imported_enum_variant_aliases_during_assignment() {
     let dependency = parse_unit(
         "unit Demo.Policy;
-         type
+         public type
            Policy = enum
              Preferred(Value: integer);
            end;",
@@ -247,7 +247,7 @@ fn local_variables_shadow_imported_enum_variant_aliases_during_assignment() {
     let consumer = parse_unit(
         "unit Demo.Consumer;
          uses Demo.Policy, Std.Array;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            mutable var Preferred: array of integer := [];
            Preferred := Std.Array.Concat(Preferred, [42]);
@@ -275,7 +275,7 @@ fn unit_owned_data_enum_patterns_use_the_qualified_runtime_identity() {
              Point(Value: integer);
              Empty;
            end;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Value: Shape := Shape.Point(42);
            case Value of

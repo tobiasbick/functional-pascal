@@ -121,6 +121,11 @@ impl Checker {
             return false;
         };
 
+        if self.reject_private_record_member(&record_ty, property_name, prop_span) {
+            let _ = self.check_expr(value);
+            return true;
+        }
+
         let Some(property) = self.find_record_property_on_type(&record_ty, property_name) else {
             return false;
         };

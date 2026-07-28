@@ -1,6 +1,6 @@
 unit Std.Tui.Cells.StyleRole;
 
-type
+public type
   /// Semantic style role resolved through `TuiPalette`.
   TuiStyleRole = enum
     Normal;

@@ -2,12 +2,12 @@ use super::toks;
 use crate::Token;
 
 #[test]
-fn all_57_keywords() {
+fn all_56_keywords() {
     let input = "program unit uses const var mutable function procedure begin end return \
                  if then else case of for to downto in in do while \
                  repeat until and or not xor div mod shl shr \
                  true false type record enum array panic break continue \
-                 public private result option ok error some none try \
+                 public result option ok error some none try \
                  go dict with static property event nil";
     let tokens = toks(input);
     assert_eq!(
@@ -56,7 +56,6 @@ fn all_57_keywords() {
             Token::Break,
             Token::Continue,
             Token::Public,
-            Token::Private,
             Token::Result,
             Token::OptionKw,
             Token::Ok,
@@ -73,6 +72,11 @@ fn all_57_keywords() {
             Token::Nil,
         ]
     );
+}
+
+#[test]
+fn private_is_an_identifier() {
+    assert_eq!(toks("private"), vec![Token::Ident("private".into())]);
 }
 
 #[test]

@@ -94,17 +94,20 @@ impl Checker {
             return Some(Ty::Error);
         };
 
-        let Some((event, receiver_reads, receiver_part_count)) =
-            self.resolve_event_designator(event_designator)
-        else {
-            self.error_with_code(
-                SEMA_TYPE_MISMATCH,
-                "`Assigned` requires an event designator",
-                "Write `Assigned(Receiver.EventName)`.",
-                event_designator.span,
-            );
-            return Some(Ty::Error);
-        };
+        let (event, receiver_reads, receiver_part_count) =
+            match self.resolve_event_designator(event_designator) {
+                Ok(Some(resolved)) => resolved,
+                Ok(None) => {
+                    self.error_with_code(
+                        SEMA_TYPE_MISMATCH,
+                        "`Assigned` requires an event designator",
+                        "Write `Assigned(Receiver.EventName)`.",
+                        event_designator.span,
+                    );
+                    return Some(Ty::Error);
+                }
+                Err(()) => return Some(Ty::Error),
+            };
 
         let key = Self::expr_lookup_key(call_expr);
         self.event_assigned.insert(
@@ -138,6 +141,10 @@ impl Checker {
             span,
             as_statement,
         } = request;
+        if self.reject_private_record_member(record_ty, event_name, span) {
+            self.check_args_only(args);
+            return Some(Ty::Error);
+        }
         let event = self.find_record_event_on_type(record_ty, event_name)?;
 
         if !self.caller_may_raise_event(&event) {
@@ -258,13 +265,13 @@ impl Checker {
     fn resolve_event_designator(
         &mut self,
         designator: &Designator,
-    ) -> Option<(EventTy, Vec<PropertyReadInfo>, usize)> {
+    ) -> Result<Option<(EventTy, Vec<PropertyReadInfo>, usize)>, ()> {
         if designator.parts.len() < 2 {
-            return None;
+            return Ok(None);
         }
-        let event_name = match designator.parts.last()? {
-            DesignatorPart::Ident(name, _) => name.clone(),
-            _ => return None,
+        let (event_name, event_span) = match designator.parts.last() {
+            Some(DesignatorPart::Ident(name, span)) => (name.clone(), *span),
+            _ => return Ok(None),
         };
         let receiver_key = crate::designator_lookup_key(designator);
         let receiver_ty = self.check_designator_prefix_expr(designator, designator.parts.len() - 1);
@@ -273,10 +280,15 @@ impl Checker {
             .remove(&receiver_key)
             .unwrap_or_default();
         let Ty::Record(record_ty) = self.resolve_visible_type(&receiver_ty) else {
-            return None;
+            return Ok(None);
         };
-        let event = self.find_record_event_on_type(&record_ty, &event_name)?;
-        Some((event, receiver_reads, designator.parts.len() - 1))
+        if self.reject_private_record_member(&record_ty, &event_name, event_span) {
+            return Err(());
+        }
+        let Some(event) = self.find_record_event_on_type(&record_ty, &event_name) else {
+            return Ok(None);
+        };
+        Ok(Some((event, receiver_reads, designator.parts.len() - 1)))
     }
 
     fn caller_may_raise_event(&self, event: &EventTy) -> bool {

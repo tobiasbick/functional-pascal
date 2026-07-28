@@ -105,7 +105,9 @@ Other habits:
 - Strings use single quotes: `'Hello'`, escape with doubled quote: `'It''s'`.
 - `Std.*` units require explicit `uses` — listing a file in `.fpasprj` does not import it.
 - Qualify ambiguous short names (`Length`, `Map`, `Unwrap`, …) with the unit: `Std.Str.Length`, `Std.Array.Length`.
-- `private` visibility applies in **units** only, not `program` files.
+- Unit declarations and record members are private by default. Write `public`
+  directly before each exported declaration or member. `public` is valid in
+  **units** only, not `program` files; `private` is an ordinary identifier.
 
 Canonical syntax reference: [`docs/specs/grammar.ebnf`](../../../docs/specs/grammar.ebnf). Language topics: [`docs/pascal/language/`](../../../docs/pascal/language/).
 

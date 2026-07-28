@@ -15,14 +15,18 @@ true      false     type      record
 enum      array     panic     break
 continue  result    option    ok
 error     some      none      try
-public    private   go        dict
-with      static    property  event
+public    go        dict      with
+static    property  event
 nil
 ```
 
 `property`, `event`, and `nil` are reserved words. `event` and `property` are also
 accepted as ordinary identifiers outside record-member declaration position so existing
 type names such as `Std.Console.Event` keep working.
+
+`private` is not a keyword. Unit declarations and record members without
+`public` are private by default, so `private` remains available as an ordinary
+identifier.
 
 Reserved words generally cannot be used as declarations or member names, even after a
 qualifier. Public APIs must therefore use an identifier-safe spelling such as `EndKey`

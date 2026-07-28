@@ -37,22 +37,23 @@ var
 
 ## Field visibility
 
-Fields in records declared by a unit are public by default. Write `private` or
-`public` directly before an individual field; FPAS has no visibility sections.
+Fields in records declared by a unit are private by default. Write `public`
+directly before each field that importing units may access. FPAS has no
+visibility sections and no explicit `private` keyword.
 
 ```pascal
 unit MyApp.Counters;
 
-type
+public type
   Counter = record
-    private Value: integer;
-    Step: integer;
+    Value: integer;
+    public Step: integer;
   end;
 ```
 
 Code in `MyApp.Counters` may read and write `Value`. Importing units may use
 `Step`, but cannot name `Value`. An explicit `public` modifier has the same
-meaning as the public default.
+meaning for that field.
 
 A named record with at least one private field can be constructed with a record
 literal only inside its declaring unit, even if all private fields have default
@@ -60,8 +61,9 @@ values. Importers obtain such values from public functions or static functions.
 They may copy received values and use record updates for public fields; private
 fields are preserved and cannot be named in an update.
 
-Record field visibility is valid only for records declared in unit files.
-Properties and events remain public.
+Record member visibility is valid only for records declared in unit files.
+Functions, procedures, properties, and events use the same private-default
+rule.
 
 ## Immutability
 

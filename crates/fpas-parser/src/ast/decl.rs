@@ -3,8 +3,8 @@ use fpas_lexer::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Visibility {
-    #[default]
     Public,
+    #[default]
     Private,
 }
 
@@ -97,6 +97,8 @@ pub struct RecordType {
 pub struct RecordProperty {
     pub name: String,
     pub type_expr: TypeExpr,
+    /// Member visibility; private when no modifier was written.
+    pub visibility: Visibility,
     /// Instance function name after contextual `read`.
     pub read: Option<String>,
     /// Instance procedure name after contextual `write`.
@@ -111,6 +113,8 @@ pub struct RecordProperty {
 pub struct RecordEvent {
     pub name: String,
     pub type_expr: TypeExpr,
+    /// Member visibility; private when no modifier was written.
+    pub visibility: Visibility,
     /// Instance getter returning `Option of` the handler type.
     pub read: String,
     /// Instance setter accepting `Option of` the handler type.
@@ -158,7 +162,7 @@ impl RecordMethod {
 pub struct FieldDef {
     pub name: String,
     pub type_expr: TypeExpr,
-    /// Member visibility; public when no modifier was written.
+    /// Member visibility; private when no modifier was written.
     pub visibility: Visibility,
     /// Optional default expression used when the field is omitted from a record literal.
     /// Only valid on a named record type definition, not on anonymous literals.

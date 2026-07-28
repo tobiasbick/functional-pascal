@@ -2,20 +2,20 @@ unit Std.Tui.Layout.MeasureAxis;
 
 uses Std.Tui.Layout.MeasureConstraint;
 
-const
+public const
   TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
 
-type
+public type
   /// Preferred and maximum extents after applying one axis constraint.
   TuiMeasureAxisResult = record
-    Preferred: integer;
-    Maximum: integer;
+    public Preferred: integer;
+    public Maximum: integer;
   end;
   /// Integer helpers for layout measurement.
   TuiMeasureAxis = record
     /// Returns the lesser of two extents.
 
-    static function Min(Left: integer; Right: integer): integer;
+    public static function Min(Left: integer; Right: integer): integer;
     begin
       if Left < Right then
       begin
@@ -26,7 +26,7 @@ type
 
     /// Returns the greater of two extents.
 
-    static function Max(Left: integer; Right: integer): integer;
+    public static function Max(Left: integer; Right: integer): integer;
     begin
       if Left > Right then
       begin
@@ -37,7 +37,7 @@ type
 
     /// Adds two extents and rejects overflow.
 
-    static function Add(Left: integer; Right: integer): integer;
+    public static function Add(Left: integer; Right: integer): integer;
     begin
       if Left > TuiMeasureAxisIntegerMax - Right then
       begin
@@ -48,7 +48,7 @@ type
 
     /// Constrains preferred and maximum extents by an axis constraint.
 
-    static function Apply(
+    public static function Apply(
   Minimum: integer;
   Preferred: integer;
   Maximum: integer;

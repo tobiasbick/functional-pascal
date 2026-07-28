@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Palette,
   Std.Tui.Cells.Style, Std.Tui.Rendering.Surface;
 
-private function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
+function TuiColorToConsole(Color: TuiColor): Std.Console.Color;
 begin
   case Color.Kind of
     TuiColorKind.Crt:
@@ -22,7 +22,7 @@ begin
   end
 end;
 
-private function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
+function TuiCellToConsole(Cell: TuiCell; Palette: TuiPalette): Std.Console.Cell;
 begin
   mutable var Style: TuiStyle := Palette.ForRole(Cell.Role);
   case Cell.ConcreteStyle of
@@ -41,7 +41,7 @@ begin
   end
 end;
 
-private function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
+function TuiTerminalDamageRow(Damage: TuiSurfaceDamage; Palette: TuiPalette): array of Std.Console.Cell;
 begin
   mutable var Row: array of Std.Console.Cell := [];
   for Cell: TuiCell in Damage.Cells do
@@ -56,7 +56,7 @@ end;
 /// The Console cell format carries glyph and colors. Tui style attributes are intentionally
 /// resolved here as color-only output because the existing Console frame API has no attributes.
 
-procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
+public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
   if Std.Array.Length(Damage) = 0 then

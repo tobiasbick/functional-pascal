@@ -2,32 +2,32 @@ unit Std.Tui.Chrome.MenuItem;
 
 uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
-type
+public type
   /// Immutable description of one flat menu-bar action.
   TuiMenuItem = record
-    Id: TuiControlId;
-    Text: string;
-    Action: TuiAction;
-    Enabled: boolean;
-    Shortcut: string;
+    public Id: TuiControlId;
+    public Text: string;
+    public Action: TuiAction;
+    public Enabled: boolean;
+    public Shortcut: string;
 
     /// Creates an enabled menu item without a shortcut hint.
 
-    static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+    public static function Create(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
     begin
       return record Id := Id; Text := Text; Action := Action; Enabled := true; Shortcut := ''; end
     end;
 
     /// Creates a disabled menu item without a shortcut hint.
 
-    static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
+    public static function Disabled(Id: TuiControlId; Text: string; Action: TuiAction): TuiMenuItem;
     begin
       return record Id := Id; Text := Text; Action := Action; Enabled := false; Shortcut := ''; end
     end;
 
     /// Creates an enabled menu item with a display-only shortcut hint.
 
-    static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
+    public static function WithShortcut(Id: TuiControlId; Text: string; Action: TuiAction; Shortcut: string): TuiMenuItem;
     begin
       return record
         Id := Id;

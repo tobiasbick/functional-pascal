@@ -26,7 +26,7 @@ include = ["src/**/*.fpas"]
     );
     write_text(
         &lib_project.parent().unwrap().join("src/greet.fpas"),
-        "unit Demo.Greet;\nconst Message: string := 'from lib';\n",
+        "unit Demo.Greet;\npublic const Message: string := 'from lib';\n",
     );
 
     write_text(

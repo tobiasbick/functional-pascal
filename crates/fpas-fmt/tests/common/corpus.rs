@@ -56,8 +56,8 @@ pub const SOURCES: &[(&str, &str)] = &[
         "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
     ),
     (
-        "unit_private_routine",
-        "unit MyApp.Utils; function Clamp(Value: integer): integer; begin return Value end; private function Hidden(): integer; begin return 0 end;",
+        "unit_mixed_visibility",
+        "unit MyApp.Utils; public function Clamp(Value: integer): integer; begin return Value end; function Hidden(): integer; begin return 0 end;",
     ),
     (
         "enum_type",

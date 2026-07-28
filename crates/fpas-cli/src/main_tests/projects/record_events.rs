@@ -28,25 +28,25 @@ end.",
     write_text(
         &cwd.join("src/widget.fpas"),
         "unit App.Widget;
-mutable var Slot: Option of procedure(Value: integer) := None;
-type
+public mutable var Slot: Option of procedure(Value: integer) := None;
+public type
   Button = record
-    Id: integer;
-    function ReadOnClick(Self: Button): Option of procedure(Value: integer);
+    public Id: integer;
+    public function ReadOnClick(Self: Button): Option of procedure(Value: integer);
     begin
       return Slot
     end;
-    procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
+    public procedure WriteOnClick(Self: Button; Handler: Option of procedure(Value: integer));
     begin
       Slot := Handler
     end;
-    event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
-    procedure Click(Self: Button);
+    public event OnClick: procedure(Value: integer) read ReadOnClick write WriteOnClick;
+    public procedure Click(Self: Button);
     begin
       if Assigned(Self.OnClick) then
         Self.OnClick(Self.Id)
     end;
-    static function Make(Id: integer): Button;
+    public static function Make(Id: integer): Button;
     begin
       return record Id := Id; end
     end;

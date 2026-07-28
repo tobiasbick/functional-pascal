@@ -58,7 +58,7 @@ impl Parser {
         }
     }
 
-    /// Parse an optional declaration or record-member visibility modifier.
+    /// Parse an optional `public` declaration or record-member modifier.
     ///
     /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit`
     /// files, including modifiers nested inside record declarations.
@@ -80,20 +80,7 @@ impl Parser {
                 }
                 Visibility::Public
             }
-            Token::Private => {
-                let span = self.current_span();
-                self.advance();
-                if !allow_visibility {
-                    self.error_with_code(
-                        PARSE_INVALID_VISIBILITY,
-                        "`private` is not valid in a `program` file",
-                        "Remove `private`. Program-level declarations are not imported, so visibility modifiers are not allowed here.",
-                        span,
-                    );
-                }
-                Visibility::Private
-            }
-            _ => Visibility::default(),
+            _ => Visibility::Private,
         }
     }
 }

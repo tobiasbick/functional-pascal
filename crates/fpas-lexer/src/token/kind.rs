@@ -1,7 +1,7 @@
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    // Keywords (57)
+    // Keywords (56)
     Program,
     Unit,
     Uses,
@@ -44,7 +44,6 @@ pub enum Token {
     Break,
     Continue,
     Public,
-    Private,
     Result,
     OptionKw,
     Ok,

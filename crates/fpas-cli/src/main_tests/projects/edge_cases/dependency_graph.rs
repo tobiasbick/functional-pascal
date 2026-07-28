@@ -11,15 +11,15 @@ fn diamond_dependency_graph() {
     );
     write_text(
         &cwd.join("src/a.fpas"),
-        "unit App.A;\nuses App.Shared;\nfunction FromA(): integer;\nbegin\n  return Base() + 1\nend;\n",
+        "unit App.A;\nuses App.Shared;\npublic function FromA(): integer;\nbegin\n  return Base() + 1\nend;\n",
     );
     write_text(
         &cwd.join("src/b.fpas"),
-        "unit App.B;\nuses App.Shared;\nfunction FromB(): integer;\nbegin\n  return Base() + 10\nend;\n",
+        "unit App.B;\nuses App.Shared;\npublic function FromB(): integer;\nbegin\n  return Base() + 10\nend;\n",
     );
     write_text(
         &cwd.join("src/shared.fpas"),
-        "unit App.Shared;\nfunction Base(): integer;\nbegin\n  return 100\nend;\n",
+        "unit App.Shared;\npublic function Base(): integer;\nbegin\n  return 100\nend;\n",
     );
 
     let (exit_code, stdout_output, stderr_output) =

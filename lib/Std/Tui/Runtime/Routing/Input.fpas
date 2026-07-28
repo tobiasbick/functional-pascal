@@ -3,7 +3,7 @@ unit Std.Tui.Runtime.Routing.Input;
 uses
   Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.Input, Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
 
-private function TuiInputPreviousWord(Text: string; Caret: integer): integer;
+function TuiInputPreviousWord(Text: string; Caret: integer): integer;
 begin
   mutable var Index: integer := Caret;
   while Index > 0 do
@@ -31,7 +31,7 @@ begin
   return Index
 end;
 
-private function TuiInputNextWord(Text: string; Caret: integer): integer;
+function TuiInputNextWord(Text: string; Caret: integer): integer;
 begin
   mutable var Index: integer := Caret;
   while Index < Std.Str.Length(Text) do
@@ -59,7 +59,7 @@ begin
   return Index
 end;
 
-private function TuiInputHistoryIndex(Input: TuiInputSpec): integer;
+function TuiInputHistoryIndex(Input: TuiInputSpec): integer;
 begin
   if Input.Text = Input.HistoryDraft then
   begin
@@ -75,7 +75,7 @@ begin
   return -1
 end;
 
-private function TuiInputHistoryKey(Input: TuiInputSpec; Key: Std.Console.KeyEvent): option of TuiMsg;
+function TuiInputHistoryKey(Input: TuiInputSpec; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
   if Std.Array.Length(Input.History) = 0 then
   begin
@@ -114,7 +114,7 @@ end;
 
 /// Routes one key when the supplied input owns focus.
 
-function TuiRouteInputKey(Input: TuiInputSpec; Target: TuiControlId; Key: Std.Console.KeyEvent): option of TuiMsg;
+public function TuiRouteInputKey(Input: TuiInputSpec; Target: TuiControlId; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
   if Input.Id.Value <> Target.Value then
   begin

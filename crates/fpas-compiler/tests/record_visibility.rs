@@ -13,37 +13,69 @@ use fpas_diagnostics::codes::{SEMA_PRIVATE_RECORD_MEMBER, SEMA_TYPE_MISMATCH};
 fn compile_counter_unit() -> CompiledUnitObject {
     let unit = parse_unit(
         "unit Demo.Counter;
-         type
-           Counter = record
-             private Value: integer := 0;
-             Step: integer := 1;
+         mutable var ChangedHandler: Option of procedure() := None;
 
-             private static function FromValue(Value: integer): Counter;
+         public type
+           Counter = record
+             Value: integer := 0;
+             public Step: integer := 1;
+
+             static function FromValue(Value: integer): Counter;
              begin
                return record Value := Value; Step := 1; end
              end;
 
-             static function Create(Value: integer): Counter;
+             public static function Create(Value: integer): Counter;
              begin
                return Counter.FromValue(Value)
              end;
 
-             private function Hidden(Self: Counter): integer;
+             function Hidden(Self: Counter): integer;
              begin
                return Self.Value
              end;
 
-             function Current(Self: Counter): integer;
+             public function Current(Self: Counter): integer;
              begin
                return Self.Hidden()
              end;
+
+             function ReadHiddenProperty(Self: Counter): integer;
+             begin return Self.Value end;
+
+             procedure WriteHiddenProperty(Self: Counter; NewValue: integer);
+             begin end;
+
+             function ReadPublicProperty(Self: Counter): integer;
+             begin return Self.Value + Self.Step end;
+
+             property HiddenProperty: integer read ReadHiddenProperty write WriteHiddenProperty;
+             public property PublicProperty: integer read ReadPublicProperty;
+
+             function ReadHiddenEvent(Self: Counter): Option of procedure();
+             begin return ChangedHandler end;
+
+             procedure WriteHiddenEvent(Self: Counter; Value: Option of procedure());
+             begin ChangedHandler := Value end;
+
+             function ReadPublicEvent(Self: Counter): Option of procedure();
+             begin return ChangedHandler end;
+
+             procedure WritePublicEvent(Self: Counter; Value: Option of procedure());
+             begin ChangedHandler := Value end;
+
+             event HiddenEvent: procedure() read ReadHiddenEvent write WriteHiddenEvent;
+             public event PublicEvent: procedure() read ReadPublicEvent write WritePublicEvent;
            end;
 
-         function LocalCheck(): integer;
+         public function LocalCheck(): integer;
          begin
            mutable var CounterValue: Counter := record Value := 40; Step := 2; end;
            CounterValue.Value := CounterValue.Value + 1;
-           return CounterValue.Hidden() + CounterValue.Step - 1
+           CounterValue.HiddenEvent := nil;
+           if Assigned(CounterValue.HiddenEvent) then
+             return 0;
+           return CounterValue.HiddenProperty + CounterValue.Step - 1
          end;",
     );
     compile_unit_object(&unit, &[]).expect("counter unit compilation")
@@ -54,7 +86,7 @@ fn assert_consumer_error(source_body: &str, expected: DiagnosticCode) {
     let consumer = parse_unit(&format!(
         "unit Demo.Consumer;
          uses Demo.Counter;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            {source_body}
          end;"
@@ -86,10 +118,13 @@ fn importing_unit_can_use_public_record_members() {
     let consumer = parse_unit(
         "unit Demo.Consumer;
          uses Demo.Counter;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Value: Counter := Counter.Create(40);
-           return Value.Current() + Value.Step
+           Value.PublicEvent := nil;
+           if Assigned(Value.PublicEvent) then
+             return 0;
+           return Value.PublicProperty - Value.Step + 1
          end;",
     );
     let consumer = compile_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
@@ -101,6 +136,52 @@ fn importing_unit_can_use_public_record_members() {
             "demo.consumer.run"
         ),
         ["41"]
+    );
+}
+
+#[test]
+fn importing_unit_cannot_read_private_property() {
+    assert_consumer_error(
+        "var Value: Counter := Counter.Create(1);
+         return Value.HiddenProperty",
+        SEMA_PRIVATE_RECORD_MEMBER,
+    );
+}
+
+#[test]
+fn importing_unit_cannot_write_private_property() {
+    assert_consumer_error(
+        "var Value: Counter := Counter.Create(1);
+         Value.HiddenProperty := 2;
+         return 0",
+        SEMA_PRIVATE_RECORD_MEMBER,
+    );
+}
+
+#[test]
+fn importing_unit_cannot_assign_or_inspect_private_event() {
+    assert_consumer_error(
+        "var Value: Counter := Counter.Create(1);
+         Value.HiddenEvent := nil;
+         return 0",
+        SEMA_PRIVATE_RECORD_MEMBER,
+    );
+    assert_consumer_error(
+        "var Value: Counter := Counter.Create(1);
+         if Assigned(Value.HiddenEvent) then
+           return 1;
+         return 0",
+        SEMA_PRIVATE_RECORD_MEMBER,
+    );
+}
+
+#[test]
+fn importing_unit_cannot_raise_private_event() {
+    assert_consumer_error(
+        "var Value: Counter := Counter.Create(1);
+         Value.HiddenEvent();
+         return 0",
+        SEMA_PRIVATE_RECORD_MEMBER,
     );
 }
 
@@ -168,7 +249,7 @@ fn structurally_equivalent_literal_cannot_bypass_private_construction() {
         "unit Demo.Consumer;
          uses Demo.Counter;
          type ForgedCounter = record Value: integer; Step: integer; end;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Forged: ForgedCounter := record Value := 1; Step := 2; end;
            var Value: Counter := Forged;
@@ -193,7 +274,7 @@ fn private_record_cannot_be_converted_to_structurally_equivalent_public_record()
         "unit Demo.Consumer;
          uses Demo.Counter;
          type ForgedCounter = record Value: integer; Step: integer; end;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Value: Counter := Counter.Create(1);
            var Forged: ForgedCounter := Value;
@@ -215,10 +296,10 @@ fn private_record_cannot_be_converted_to_structurally_equivalent_public_record()
 fn private_routine_without_private_fields_does_not_block_public_literal() {
     let dependency = parse_unit(
         "unit Demo.OpenRecord;
-         type
+         public type
            OpenRecord = record
-             Value: integer;
-             private function Hidden(Self: OpenRecord): integer;
+             public Value: integer;
+             function Hidden(Self: OpenRecord): integer;
              begin return Self.Value end;
            end;",
     );
@@ -226,7 +307,7 @@ fn private_routine_without_private_fields_does_not_block_public_literal() {
     let consumer = parse_unit(
         "unit Demo.Consumer;
          uses Demo.OpenRecord;
-         function Run(): integer;
+         public function Run(): integer;
          begin
            var Value: OpenRecord := record Value := 42; end;
            return Value.Value

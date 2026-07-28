@@ -7,15 +7,15 @@ uses
   Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
   Std.Tui.Text.TextArea;
 
-const
+public const
   TuiMeasureExpandingMaximum: integer := 9223372036854775807;
 
-private function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
+function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
 begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text), 1))
 end;
 
-private function TuiMeasureLeafMenu(Nodes: array of TuiMenuNode): TuiMeasureResult;
+function TuiMeasureLeafMenu(Nodes: array of TuiMenuNode): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -33,30 +33,30 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
-private function TuiMeasureLeafButton(Text: string): TuiMeasureResult;
+function TuiMeasureLeafButton(Text: string): TuiMeasureResult;
 begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1))
 end;
 
-private function TuiMeasureLeafInput(Text: string; Hint: string): TuiMeasureResult;
+function TuiMeasureLeafInput(Text: string; Hint: string): TuiMeasureResult;
 begin
   var ContentWidth: integer := TuiMeasureAxis.Max(Std.Console.DisplayWidth(Text), Std.Console.DisplayWidth(Hint));
   var Preferred: integer := TuiMeasureAxis.Max(ContentWidth + 2, 10);
   return TuiMeasureResult.Create(TuiSize.Create(10, 1), TuiSize.Create(Preferred, 1), TuiSize.Create(Preferred, 1))
 end;
 
-private function TuiMeasureLeafTextArea(Text: string): TuiMeasureResult;
+function TuiMeasureLeafTextArea(Text: string): TuiMeasureResult;
 begin
   var Content: TuiSize := TuiTextAreaContentSize(Text);
   return TuiMeasureResult.Create(TuiSize.Create(1, 1), Content, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum))
 end;
 
-private function TuiMeasureLeafCheckBox(Text: string): TuiMeasureResult;
+function TuiMeasureLeafCheckBox(Text: string): TuiMeasureResult;
 begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Std.Console.DisplayWidth(Text) + 4, 1))
 end;
 
-private function TuiMeasureLeafList(Items: array of string): TuiMeasureResult;
+function TuiMeasureLeafList(Items: array of string): TuiMeasureResult;
 begin
   mutable var Width: integer := 2;
   for Index: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -68,7 +68,7 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, Height))
 end;
 
-private function TuiMeasureLeafMenuBar(Items: array of TuiMenuItem): TuiMeasureResult;
+function TuiMeasureLeafMenuBar(Items: array of TuiMenuItem): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
   for Index: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -78,7 +78,7 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
-private function TuiMeasureLeafStatusLine(Items: array of TuiStatusItem): TuiMeasureResult;
+function TuiMeasureLeafStatusLine(Items: array of TuiStatusItem): TuiMeasureResult;
 begin
   mutable var Width: integer := 0;
   for Index: integer := 0 to Std.Array.Length(Items) - 1 do
@@ -101,7 +101,7 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
-private function TuiMeasureSpacerValue(Value: TuiSpacer; Horizontal: boolean): TuiMeasureResult;
+function TuiMeasureSpacerValue(Value: TuiSpacer; Horizontal: boolean): TuiMeasureResult;
 begin
   if Horizontal then
   begin
@@ -118,7 +118,7 @@ begin
   return TuiMeasureResult.Fixed(TuiSize.Create(0, Value.MinimumExtent))
 end;
 
-private function TuiMeasureApplyPolicy(Hint: TuiMeasureResult; Policy: TuiSizePolicy; Spec: TuiMeasureSpec): TuiMeasureResult;
+function TuiMeasureApplyPolicy(Hint: TuiMeasureResult; Policy: TuiSizePolicy; Spec: TuiMeasureSpec): TuiMeasureResult;
 begin
   mutable var MinimumWidth: integer := Hint.Minimum.Width;
   mutable var MinimumHeight: integer := Hint.Minimum.Height;
@@ -157,7 +157,7 @@ begin
   return TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(Width.Preferred, Height.Preferred), TuiSize.Create(Width.Maximum, Height.Maximum))
 end;
 
-private function TuiMeasureChildParticipates(Node: TuiElement): boolean;
+function TuiMeasureChildParticipates(Node: TuiElement): boolean;
 begin
   case Node of
     TuiElement.Empty:
@@ -173,7 +173,7 @@ end;
 
 /// Measures one element under the given constraints.
 
-function TuiMeasure(Node: TuiElement; Spec: TuiMeasureSpec): TuiMeasureResult;
+public function TuiMeasure(Node: TuiElement; Spec: TuiMeasureSpec): TuiMeasureResult;
 begin
   case Node of
     TuiElement.Empty:
@@ -391,7 +391,7 @@ end;
 
 /// Returns the unconstrained preferred size of an element subtree.
 
-function TuiMeasureElement(Node: TuiElement): TuiSize;
+public function TuiMeasureElement(Node: TuiElement): TuiSize;
 begin
   return TuiMeasure(Node, TuiMeasureSpec.Unbounded()).Preferred
 end;

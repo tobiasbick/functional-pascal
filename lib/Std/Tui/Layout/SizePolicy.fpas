@@ -1,6 +1,6 @@
 unit Std.Tui.Layout.SizePolicy;
 
-type
+public type
   /// Per-axis growth and shrink policy for layout.
   TuiSizePolicyKind = enum
     Fixed;
@@ -11,47 +11,47 @@ type
   end;
   /// Independent horizontal and vertical size policies.
   TuiSizePolicy = record
-    Horizontal: TuiSizePolicyKind;
-    Vertical: TuiSizePolicyKind;
+    public Horizontal: TuiSizePolicyKind;
+    public Vertical: TuiSizePolicyKind;
 
     /// Creates a mixed-axis size policy.
 
-    static function Create(Horizontal: TuiSizePolicyKind; Vertical: TuiSizePolicyKind): TuiSizePolicy;
+    public static function Create(Horizontal: TuiSizePolicyKind; Vertical: TuiSizePolicyKind): TuiSizePolicy;
     begin
       return record Horizontal := Horizontal; Vertical := Vertical; end
     end;
 
     /// Both axes fixed to preferred size.
 
-    static function Fixed(): TuiSizePolicy;
+    public static function Fixed(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Fixed, TuiSizePolicyKind.Fixed)
     end;
 
     /// Both axes use preferred as the minimum.
 
-    static function Minimum(): TuiSizePolicy;
+    public static function Minimum(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Minimum, TuiSizePolicyKind.Minimum)
     end;
 
     /// Both axes use preferred as the maximum.
 
-    static function Maximum(): TuiSizePolicy;
+    public static function Maximum(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Maximum, TuiSizePolicyKind.Maximum)
     end;
 
     /// Both axes treat preferred as ideal with grow and shrink.
 
-    static function Preferred(): TuiSizePolicy;
+    public static function Preferred(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Preferred)
     end;
 
     /// Both axes request additional space beyond preferred.
 
-    static function Expanding(): TuiSizePolicy;
+    public static function Expanding(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Expanding)
     end;

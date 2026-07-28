@@ -1,20 +1,22 @@
 use super::*;
 
 #[test]
-fn record_properties_do_not_accept_visibility_modifiers() {
-    let (_, errors) = parse_compilation_unit_with_errors(
+fn record_properties_default_to_private_and_accept_public() {
+    let unit = parse_unit_ok(
         "unit Demo.Types; \
          type Counter = record \
-           private property Value: integer read GetValue; \
+           property Hidden: integer read GetHidden; \
+           public property Value: integer read GetValue; \
          end;",
     );
-
-    assert!(errors.iter().any(|diagnostic| {
-        matches!(
-            diagnostic,
-            ParseDiagnostic::Parser(error) if error.code == fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY
-        )
-    }));
+    let Decl::TypeDef(type_def) = &unit.declarations[0] else {
+        panic!("expected type");
+    };
+    let TypeBody::Record(record) = &type_def.body else {
+        panic!("expected record");
+    };
+    assert_eq!(record.properties[0].visibility, Visibility::Private);
+    assert_eq!(record.properties[1].visibility, Visibility::Public);
 }
 
 #[test]

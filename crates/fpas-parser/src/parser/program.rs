@@ -220,7 +220,6 @@ impl Parser {
                 | Token::Continue
                 | Token::Type
                 | Token::Public
-                | Token::Private
                 | Token::Go
                 | Token::Eof
         )

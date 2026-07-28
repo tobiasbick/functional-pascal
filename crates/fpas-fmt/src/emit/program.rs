@@ -114,7 +114,6 @@ mod tests {
         let formatted = parse_and_format(source);
         assert!(formatted.starts_with("unit MyApp.Utils;\n\nuses Std.Math;\n\n"));
         assert!(formatted.contains("if Value < Min then\n  begin\n    return Min\n  end"));
-        assert!(!formatted.contains("private function Hidden"));
         assert!(formatted.contains("function IsBlank"));
     }
 

@@ -3,14 +3,14 @@ unit Std.Tui.Chrome.MenuGeometry;
 uses
   Std.Array, Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Geometry.Rect;
 
-type
+public type
   /// Bounds of one open popup and the submenu whose children it displays.
   TuiMenuPopup = record
-    Parent: TuiMenuNodeId;
-    Bounds: TuiRect;
+    public Parent: TuiMenuNodeId;
+    public Bounds: TuiRect;
   end;
 
-private function TuiMenuRootItemX(Nodes: array of TuiMenuNode; BarBounds: TuiRect; Target: TuiMenuNodeId): integer;
+function TuiMenuRootItemX(Nodes: array of TuiMenuNode; BarBounds: TuiRect; Target: TuiMenuNodeId): integer;
 begin
   mutable var X: integer := BarBounds.X;
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -32,7 +32,7 @@ begin
   return BarBounds.X
 end;
 
-private function TuiMenuChildRow(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId; Target: TuiMenuNodeId): integer;
+function TuiMenuChildRow(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId; Target: TuiMenuNodeId): integer;
 begin
   mutable var Row: integer := 0;
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -49,7 +49,7 @@ begin
   return 0
 end;
 
-private function TuiMenuPopupSize(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId): TuiRect;
+function TuiMenuPopupSize(Nodes: array of TuiMenuNode; Parent: TuiMenuNodeId): TuiRect;
 begin
   mutable var Width: integer := 4;
   mutable var Height: integer := 2;
@@ -81,7 +81,7 @@ begin
   return TuiRect.Create(0, 0, Width, Height)
 end;
 
-private function TuiMenuOpenParents(Nodes: array of TuiMenuNode; State: TuiMenuState): array of TuiMenuNodeId;
+function TuiMenuOpenParents(Nodes: array of TuiMenuNode; State: TuiMenuState): array of TuiMenuNodeId;
 begin
   mutable var Reversed: array of TuiMenuNodeId := [];
   mutable var Opened: array of TuiMenuNodeId := [];
@@ -139,7 +139,7 @@ end;
 
 /// Computes popup rectangles while reserving their right and bottom terminal shadow.
 
-function TuiMenuPopupGeometry(
+public function TuiMenuPopupGeometry(
   Nodes: array of TuiMenuNode;
   State: TuiMenuState;
   BarBounds: TuiRect;

@@ -22,20 +22,20 @@ end.",
         &cwd.join("src/data.fpas"),
         "unit App.Data;
 uses Std.Console, Std.Conv;
-type
+public type
   Counter = record
-    Base: integer;
-    function GetValue(Self: Counter): integer;
+    public Base: integer;
+    public function GetValue(Self: Counter): integer;
     begin
       return Self.Base
     end;
-    procedure SetValue(Self: Counter; Value: integer);
+    public procedure SetValue(Self: Counter; Value: integer);
     begin
       WriteLn('set:' + IntToStr(Value))
     end;
-    property Value: integer read GetValue write SetValue;
+    public property Value: integer read GetValue write SetValue;
   end;
-var Global: Counter := record Base := 12; end;
+public var Global: Counter := record Base := 12; end;
 ",
     );
 

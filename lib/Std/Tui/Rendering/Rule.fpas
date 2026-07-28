@@ -7,7 +7,7 @@ uses
 
 /// Paints a thin horizontal separator with optional left-aligned text.
 
-procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
+public procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
 begin
   if Bounds.IsEmpty() then
   begin

@@ -5,7 +5,7 @@ uses
   Std.Tui.Chrome.MenuGeometry, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery,
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
-private function TuiMenuIdMatches(Value: option of TuiMenuNodeId; Id: TuiMenuNodeId): boolean;
+function TuiMenuIdMatches(Value: option of TuiMenuNodeId; Id: TuiMenuNodeId): boolean;
 begin
   case Value of
     Some(Current):
@@ -19,7 +19,7 @@ begin
   end
 end;
 
-private procedure TuiPaintMenuLabel(
+procedure TuiPaintMenuLabel(
   Canvas: TuiCanvas;
   Position: TuiPoint;
   Text: string;
@@ -47,7 +47,7 @@ end;
 
 /// Paints the one-line root menu bar.
 
-procedure TuiPaintMenuBar(
+public procedure TuiPaintMenuBar(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
   Nodes: array of TuiMenuNode;
@@ -105,7 +105,7 @@ begin
   end
 end;
 
-private procedure TuiPaintMenuPopup(
+procedure TuiPaintMenuPopup(
   Canvas: TuiCanvas;
   Popup: TuiMenuPopup;
   Nodes: array of TuiMenuNode;
@@ -171,7 +171,7 @@ end;
 
 /// Paints all open menu popups over the completed desktop frame.
 
-procedure TuiPaintMenuPopups(
+public procedure TuiPaintMenuPopups(
   Canvas: TuiCanvas;
   BarBounds: TuiRect;
   Nodes: array of TuiMenuNode;

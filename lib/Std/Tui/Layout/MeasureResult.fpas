@@ -2,7 +2,7 @@ unit Std.Tui.Layout.MeasureResult;
 
 uses Std.Tui.Geometry.Size;
 
-private procedure TuiMeasureResultRequireOrdered(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize);
+procedure TuiMeasureResultRequireOrdered(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize);
 begin
   if (Minimum.Width > Preferred.Width) or (Minimum.Height > Preferred.Height) then
   begin
@@ -14,16 +14,16 @@ begin
   end
 end;
 
-type
+public type
   /// Minimum, preferred, and maximum extents for one element.
   TuiMeasureResult = record
-    Minimum: TuiSize;
-    Preferred: TuiSize;
-    Maximum: TuiSize;
+    public Minimum: TuiSize;
+    public Preferred: TuiSize;
+    public Maximum: TuiSize;
 
     /// Creates an ordered measure result.
 
-    static function Create(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize): TuiMeasureResult;
+    public static function Create(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize): TuiMeasureResult;
     begin
       TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
       return record Minimum := Minimum; Preferred := Preferred; Maximum := Maximum; end
@@ -31,7 +31,7 @@ type
 
     /// Creates a fixed measure where all three sizes match.
 
-    static function Fixed(Size: TuiSize): TuiMeasureResult;
+    public static function Fixed(Size: TuiSize): TuiMeasureResult;
     begin
       return TuiMeasureResult.Create(Size, Size, Size)
     end;

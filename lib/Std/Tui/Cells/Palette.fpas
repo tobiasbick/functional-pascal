@@ -4,37 +4,37 @@ uses
   Std.Tui.Cells.ButtonPalette, Std.Tui.Cells.Color, Std.Tui.Cells.InputPalette,
   Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
 
-type
+public type
   /// Maps every semantic `TuiStyleRole` to a concrete terminal style.
   TuiPalette = record
-    Normal: TuiStyle;
-    Disabled: TuiStyle;
-    Focused: TuiStyle;
-    Selected: TuiStyle;
-    Shortcut: TuiStyle;
-    Frame: TuiStyle;
-    Title: TuiStyle;
-    MenuNormal: TuiStyle;
-    MenuDisabled: TuiStyle;
-    MenuShortcut: TuiStyle;
-    MenuSelected: TuiStyle;
-    MenuSelectedShortcut: TuiStyle;
-    StatusNormal: TuiStyle;
-    StatusDisabled: TuiStyle;
-    StatusShortcut: TuiStyle;
-    StatusSelected: TuiStyle;
-    Buttons: TuiButtonPalette;
-    Inputs: TuiInputPalette;
-    Rule: TuiStyle;
-    GaugeTrack: TuiStyle;
-    GaugeFill: TuiStyle;
-    Failure: TuiStyle;
-    Warning: TuiStyle;
-    Accent: TuiStyle;
+    public Normal: TuiStyle;
+    public Disabled: TuiStyle;
+    public Focused: TuiStyle;
+    public Selected: TuiStyle;
+    public Shortcut: TuiStyle;
+    public Frame: TuiStyle;
+    public Title: TuiStyle;
+    public MenuNormal: TuiStyle;
+    public MenuDisabled: TuiStyle;
+    public MenuShortcut: TuiStyle;
+    public MenuSelected: TuiStyle;
+    public MenuSelectedShortcut: TuiStyle;
+    public StatusNormal: TuiStyle;
+    public StatusDisabled: TuiStyle;
+    public StatusShortcut: TuiStyle;
+    public StatusSelected: TuiStyle;
+    public Buttons: TuiButtonPalette;
+    public Inputs: TuiInputPalette;
+    public Rule: TuiStyle;
+    public GaugeTrack: TuiStyle;
+    public GaugeFill: TuiStyle;
+    public Failure: TuiStyle;
+    public Warning: TuiStyle;
+    public Accent: TuiStyle;
 
     /// Returns the modern dark default palette.
 
-    static function Default(): TuiPalette;
+    public static function Default(): TuiPalette;
     begin
       var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
       var Surface: TuiColor := TuiColor.FromRgb(22, 27, 34);
@@ -81,7 +81,7 @@ type
 
     /// Resolves the concrete style for one semantic role.
 
-    function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
+    public function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
         TuiStyleRole.Normal:
@@ -185,7 +185,7 @@ type
 
     /// Returns a copy with one semantic role replaced.
 
-    function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
+    public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
     begin
       mutable var Updated: TuiPalette := Self;
       case Role of

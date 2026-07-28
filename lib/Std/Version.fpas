@@ -1,5 +1,5 @@
 unit Std.Version;
 
-const
+public const
   CompilerVersion: string := '0.0.1';
   LibraryVersion: string := '0.0.1';

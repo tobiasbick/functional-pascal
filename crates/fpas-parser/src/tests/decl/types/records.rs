@@ -24,7 +24,7 @@ fn unit_record_fields_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
         "unit Demo.Types; \
          type Counter = record \
-           private Value: integer; \
+           Value: integer; \
            public Step: integer; \
            LabelText: string; \
          end;",
@@ -38,14 +38,14 @@ fn unit_record_fields_preserve_per_member_visibility() {
 
     assert_eq!(record.fields[0].visibility, Visibility::Private);
     assert_eq!(record.fields[1].visibility, Visibility::Public);
-    assert_eq!(record.fields[2].visibility, Visibility::Public);
+    assert_eq!(record.fields[2].visibility, Visibility::Private);
 }
 
 #[test]
-fn record_field_visibility_is_rejected_in_program_files() {
+fn public_record_field_is_rejected_in_program_files() {
     let (program, errors) = parse_with_errors(
         "program T; \
-         type Counter = record private Value: integer; end; \
+         type Counter = record public Value: integer; end; \
          begin end.",
     );
     let Decl::TypeDef(type_def) = &program.declarations[0] else {
@@ -55,7 +55,7 @@ fn record_field_visibility_is_rejected_in_program_files() {
         panic!("expected Record");
     };
 
-    assert_eq!(record.fields[0].visibility, Visibility::Private);
+    assert_eq!(record.fields[0].visibility, Visibility::Public);
     assert!(errors.iter().any(|diagnostic| {
         matches!(
             diagnostic,

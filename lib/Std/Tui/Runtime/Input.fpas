@@ -2,7 +2,7 @@ unit Std.Tui.Runtime.Input;
 
 uses Std.Console, Std.Tui.Geometry.Size, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
 
-type
+public type
   /// One externally injected headless event, kept in arrival order.
   TuiHostInput = enum
     Message(Msg: TuiMsg);

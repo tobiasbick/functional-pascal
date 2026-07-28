@@ -21,7 +21,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate function Secret(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -55,7 +55,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate function Secret(): integer;\nbegin\n  return 42\nend;\n",
+        "unit App.Lib;\n\nfunction Secret(): integer;\nbegin\n  return 42\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -89,7 +89,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate const\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -98,7 +98,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("Secret"),
-        "error should mention the private const name"
+        "error should mention the const name"
     );
 }
 
@@ -123,7 +123,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate procedure DoSecret();\nbegin\nend;\n",
+        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -132,7 +132,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("DoSecret"),
-        "error should mention the private procedure name, got: {stderr_output}"
+        "error should mention the procedure name, got: {stderr_output}"
     );
 }
 
@@ -166,7 +166,7 @@ end.
         "\
 unit App.Lib;
 
-private type
+type
   SecretPoint = record
     X: integer;
     Y: integer;
@@ -180,7 +180,7 @@ private type
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("SecretPoint"),
-        "error should mention the private type name, got: {stderr_output}"
+        "error should mention the type name, got: {stderr_output}"
     );
 }
 
@@ -214,7 +214,7 @@ end.
         "\
 unit App.Lib;
 
-private type
+type
   SecretPoint = record
     X: integer;
     Y: integer;
@@ -228,7 +228,7 @@ private type
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("App.Lib.SecretPoint"),
-        "error should mention the qualified private type, got: {stderr_output}"
+        "error should mention the qualified type, got: {stderr_output}"
     );
 }
 
@@ -253,7 +253,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate var\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -262,7 +262,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("Secret"),
-        "error should mention the private var name, got: {stderr_output}"
+        "error should mention the var name, got: {stderr_output}"
     );
 }
 
@@ -287,7 +287,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate mutable var\n  Counter: integer := 0;\n",
+        "unit App.Lib;\n\nmutable var\n  Counter: integer := 0;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -296,7 +296,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("Counter"),
-        "error should mention the private mutable var name, got: {stderr_output}"
+        "error should mention the mutable var name, got: {stderr_output}"
     );
 }
 
@@ -321,7 +321,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate var\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nvar\n  Secret: integer := 42;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -330,7 +330,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("App.Lib.Secret"),
-        "error should mention the qualified private var, got: {stderr_output}"
+        "error should mention the qualified var, got: {stderr_output}"
     );
 }
 
@@ -355,7 +355,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate const\n  Secret: integer := 42;\n",
+        "unit App.Lib;\n\nconst\n  Secret: integer := 42;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);
@@ -364,7 +364,7 @@ include = ["src/*.fpas"]
     assert_eq!(exit_code, 1);
     assert!(
         stderr_output.contains("App.Lib.Secret"),
-        "error should mention the qualified private const, got: {stderr_output}"
+        "error should mention the qualified const, got: {stderr_output}"
     );
 }
 
@@ -389,7 +389,7 @@ include = ["src/*.fpas"]
     );
     write_text(
         &cwd.join("src/lib.fpas"),
-        "unit App.Lib;\n\nprivate procedure DoSecret();\nbegin\nend;\n",
+        "unit App.Lib;\n\nprocedure DoSecret();\nbegin\nend;\n",
     );
 
     let (exit_code, _, stderr_output) = support::run_cli_and_capture_output(&project_file, &cwd);

@@ -2,25 +2,25 @@ unit Std.Tui.Text.TextArea;
 
 uses Std.Array, Std.Console, Std.Str, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
 
-type
+public type
   /// Logical and terminal-cell location of one controlled text-area caret.
   TuiTextAreaPosition = record
-    Line: integer;
-    LineStart: integer;
-    LineEnd: integer;
-    DisplayColumn: integer;
+    public Line: integer;
+    public LineStart: integer;
+    public LineEnd: integer;
+    public DisplayColumn: integer;
   end;
 
 /// Returns the number of logical LF-separated lines, including a trailing empty line.
 
-function TuiTextAreaLineCount(Text: string): integer;
+public function TuiTextAreaLineCount(Text: string): integer;
 begin
   return Std.Array.Length(Std.Str.Split(Text, Std.Str.Chr(10)))
 end;
 
 /// Returns one zero-based logical line without its LF separator.
 
-function TuiTextAreaLineText(Text: string; Line: integer): string;
+public function TuiTextAreaLineText(Text: string; Line: integer): string;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   if (Line < 0) or (Line >= Std.Array.Length(Lines)) then
@@ -30,7 +30,7 @@ begin
   return Lines[Line]
 end;
 
-private function TuiTextAreaLineStartAt(Text: string; Line: integer): integer;
+function TuiTextAreaLineStartAt(Text: string; Line: integer): integer;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var Target: integer := Line;
@@ -52,7 +52,7 @@ end;
 
 /// Locates a validated character-index caret in logical-line and terminal-column coordinates.
 
-function TuiTextAreaLocate(Text: string; Caret: integer): TuiTextAreaPosition;
+public function TuiTextAreaLocate(Text: string; Caret: integer): TuiTextAreaPosition;
 begin
   if (Caret < 0) or (Caret > Std.Str.Length(Text)) then
   begin
@@ -95,7 +95,7 @@ end;
 
 /// Returns a caret on `Line` nearest to the requested terminal display column.
 
-function TuiTextAreaCaretAtDisplayColumn(Text: string; Line: integer; DisplayColumn: integer): integer;
+public function TuiTextAreaCaretAtDisplayColumn(Text: string; Line: integer; DisplayColumn: integer): integer;
 begin
   mutable var TargetColumn: integer := DisplayColumn;
   if TargetColumn < 0 then
@@ -117,7 +117,7 @@ end;
 
 /// Returns minimum content size for all logical lines before viewport constraints.
 
-function TuiTextAreaContentSize(Text: string): TuiSize;
+public function TuiTextAreaContentSize(Text: string): TuiSize;
 begin
   var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
   mutable var Width: integer := 1;
@@ -134,7 +134,7 @@ end;
 
 /// Adjusts a non-negative model offset only as much as needed to reveal the caret.
 
-function TuiTextAreaEnsureCaretVisible(
+public function TuiTextAreaEnsureCaretVisible(
   Text: string;
   Caret: integer;
   Offset: TuiPoint;

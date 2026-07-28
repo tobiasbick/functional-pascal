@@ -4,7 +4,7 @@ uses Std.Console;
 
 /// Returns the display width of one validated renderable grapheme (`1` or `2`).
 
-function TuiGlyphWidth(Glyph: string): integer;
+public function TuiGlyphWidth(Glyph: string): integer;
 begin
   return Std.Console.GraphemeWidth(Glyph)
 end;

@@ -99,7 +99,7 @@ pub struct RecordType {
     pub name: String,
     /// Canonical source unit that owns private members.
     pub owner_unit: Option<String>,
-    /// Names of fields and routines declared `private`.
+    /// Names of record members not declared `public`.
     pub private_members: Vec<String>,
     /// Fields in layout order.
     pub fields: Vec<FieldType>,

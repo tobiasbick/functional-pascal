@@ -7,7 +7,7 @@ uses
 
 /// Returns the first focusable control in the active modal or full tree, or `None`.
 
-function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
+public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Array.Length(Controls) = 0 then
@@ -19,7 +19,7 @@ end;
 
 /// Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
 
-function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
+public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
   if Std.Array.Length(Controls) = 0 then
@@ -43,7 +43,7 @@ end;
 
 /// Reports whether the root's unconstrained minimum fits the available terminal size.
 
-function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
+public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
 begin
   var Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());
   return TuiLayoutFit.Create(Measured.Minimum, Available)

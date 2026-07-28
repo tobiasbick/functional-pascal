@@ -102,7 +102,7 @@ pub struct RecordTy {
     pub name: String,
     /// Exact source unit that declared the record, or `None` for local and intrinsic records.
     pub owner_unit: Option<String>,
-    /// Case-preserving names of fields and routines declared `private`.
+    /// Case-preserving names of members not declared `public`.
     pub private_members: Vec<String>,
     pub fields: Vec<(String, Ty)>,
     /// Instance methods (require implicit `Self`).

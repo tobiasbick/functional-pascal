@@ -2,7 +2,7 @@ unit Std.Tui.Layout.LayoutSettings;
 
 uses Std.Tui.Layout.Alignment, Std.Tui.Layout.Margins, Std.Tui.Layout.SizePolicy;
 
-private function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
+function TuiLayoutSettingsRequireNonNegativeStretch(Value: integer): integer;
 begin
   if Value < 0 then
   begin
@@ -11,18 +11,18 @@ begin
   return Value
 end;
 
-type
+public type
   /// Immutable layout inputs attached to a single-child layout wrapper.
   TuiLayoutSettings = record
-    Margins: TuiMargins;
-    SizePolicy: TuiSizePolicy;
-    Alignment: TuiAlignment;
-    Stretch: integer;
-    Height: option of integer;
+    public Margins: TuiMargins;
+    public SizePolicy: TuiSizePolicy;
+    public Alignment: TuiAlignment;
+    public Stretch: integer;
+    public Height: option of integer;
 
     /// Creates validated layout settings.
 
-    static function Create(
+    public static function Create(
   Margins: TuiMargins;
   SizePolicy: TuiSizePolicy;
   Alignment: TuiAlignment;
@@ -40,7 +40,7 @@ type
 
     /// Returns a copy constrained to one total height; negative heights panic.
 
-    function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
+    public function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
     begin
       if Height < 0 then
       begin
@@ -57,7 +57,7 @@ type
 
     /// Zero margins, preferred policy, fill alignment, and stretch zero.
 
-    static function Default(): TuiLayoutSettings;
+    public static function Default(): TuiLayoutSettings;
     begin
       return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0)
     end;

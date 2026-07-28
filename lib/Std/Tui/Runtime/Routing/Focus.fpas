@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
   Std.Tui.Layout.Frame;
 
-private function TuiRouteFrameMatchesNode(
+function TuiRouteFrameMatchesNode(
   Frame: TuiArrangedFrame;
   Node: TuiElement;
   Index: integer;
@@ -33,7 +33,7 @@ end;
 
 /// Panics when the arranged frame does not match the previous painted tree.
 
-procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
+public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
 begin
   if Frame.Count() = 0 then
   begin
@@ -47,7 +47,7 @@ end;
 
 /// Returns focusable control ids in the active modal or full tree order.
 
-function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
+public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
   case Node of
     TuiElement.Button(Button):
@@ -157,7 +157,7 @@ end;
 
 /// Reads the desktop focus id, or `None` when the root is not a desktop.
 
-function TuiRootFocus(Root: TuiElement): option of TuiControlId;
+public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
 begin
   case Root of
     TuiElement.Desktop(Focused, Children):
@@ -173,7 +173,7 @@ end;
 
 /// Returns the focusable-list index of a control id, or `-1` when absent.
 
-function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
+public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
 begin
   for Index: integer := 0 to Std.Array.Length(Controls) - 1 do
   begin
@@ -187,14 +187,14 @@ end;
 
 /// Returns whether two control ids refer to the same identity.
 
-function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
+public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
 begin
   return Left.Value = Right.Value
 end;
 
 /// Returns whether the option id matches the target control.
 
-function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
+public function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
 begin
   case Focused of
     Some(Id):

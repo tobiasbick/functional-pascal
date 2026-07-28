@@ -2,20 +2,20 @@ unit Std.Tui.Cells.ButtonPalette;
 
 uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 
-type
+public type
   /// Concrete styles for every flat button state.
   TuiButtonPalette = record
-    Normal: TuiStyle;
-    Default: TuiStyle;
-    Selected: TuiStyle;
-    Disabled: TuiStyle;
-    Shortcut: TuiStyle;
-    DefaultShortcut: TuiStyle;
-    SelectedShortcut: TuiStyle;
+    public Normal: TuiStyle;
+    public Default: TuiStyle;
+    public Selected: TuiStyle;
+    public Disabled: TuiStyle;
+    public Shortcut: TuiStyle;
+    public DefaultShortcut: TuiStyle;
+    public SelectedShortcut: TuiStyle;
 
     /// Creates a complete button palette.
 
-    static function Create(
+    public static function Create(
   Normal: TuiStyle;
   Default: TuiStyle;
   Selected: TuiStyle;
@@ -38,7 +38,7 @@ type
 
     /// Resolves one button role.
 
-    function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
+    public function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
         TuiStyleRole.ButtonNormal:
@@ -78,7 +78,7 @@ type
 
     /// Returns a copy with one button role replaced.
 
-    function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
+    public function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
     begin
       mutable var Updated: TuiButtonPalette := Self;
       case Role of

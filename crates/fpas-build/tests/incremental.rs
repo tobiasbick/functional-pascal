@@ -31,10 +31,10 @@ fn write(path: &Path, source: &str) {
 fn base_source(private_body: &str, offset: i64) -> String {
     format!(
         "unit Demo.Base;
-         const Offset: integer := {offset};
-         private function Hidden(Value: integer): integer;
+         public const Offset: integer := {offset};
+         function Hidden(Value: integer): integer;
          begin {private_body} end;
-         function AddOffset(Value: integer): integer;
+         public function AddOffset(Value: integer): integer;
          begin return Value + Offset end;"
     )
 }
@@ -66,7 +66,7 @@ include = ["src/**/*.fpas"]
             &root.join("src/consumer.fpas"),
             "unit Demo.Consumer;
              uses Demo.Base;
-             function Run(): integer;
+             public function Run(): integer;
              begin return AddOffset(41) end;",
         );
         write(

@@ -26,10 +26,10 @@ fn unit_record_routines_preserve_per_member_visibility() {
     let unit = parse_unit_ok(
         "unit Demo.Types; \
          type Counter = record \
-           private function Hidden(Self: Counter): integer; begin return 1 end; \
+           function Hidden(Self: Counter): integer; begin return 1 end; \
            public procedure Reset(Self: Counter); begin end; \
-           private static function CreateHidden(): Counter; begin return record end end; \
-           static procedure Clear(); begin end; \
+           static function CreateHidden(): Counter; begin return record end end; \
+           public static procedure Clear(); begin end; \
          end;",
     );
     let Decl::TypeDef(type_def) = &unit.declarations[0] else {
@@ -46,11 +46,11 @@ fn unit_record_routines_preserve_per_member_visibility() {
 }
 
 #[test]
-fn record_routine_visibility_is_rejected_in_program_files() {
+fn public_record_routine_is_rejected_in_program_files() {
     let (_, errors) = parse_with_errors(
         "program T; \
          type Counter = record \
-           private function Hidden(Self: Counter): integer; begin return 1 end; \
+           public function Hidden(Self: Counter): integer; begin return 1 end; \
          end; \
          begin end.",
     );

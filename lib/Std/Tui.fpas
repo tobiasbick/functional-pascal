@@ -6,15 +6,15 @@ uses
   Std.Tui.Chrome.Button, Std.Tui.Chrome.CellGrid, Std.Tui.Chrome.Gauge, Std.Tui.Chrome.Input,
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size,
   Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuItem, Std.Tui.Chrome.MenuNode,
-  Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId,
-  Std.Tui.Layout.Alignment, Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings,
-  Std.Tui.Layout.Margins, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint,
-  Std.Tui.Layout.MeasureResult, Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy,
-  Std.Tui.Layout.Spacer, Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint,
-  Std.Tui.Rendering.Surface, Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd,
-  Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
+  Std.Tui.Chrome.StatusItem, Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Layout.Alignment,
+  Std.Tui.Layout.LayoutFit, Std.Tui.Layout.LayoutSettings, Std.Tui.Layout.Margins,
+  Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult,
+  Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
+  Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface,
+  Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg,
+  Std.Tui.Runtime.PointerEvent;
 
-type
+public type
   /// Zero-based terminal-cell coordinate.
   TuiPoint = Std.Tui.Geometry.Point.TuiPoint;
   /// Fixed terminal extent used by headless Tui hosts.
@@ -122,7 +122,7 @@ type
 
 /// Creates a source-aware action message.
 
-function TuiMsgAction(
+public function TuiMsgAction(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction
 ): Std.Tui.Runtime.Msg.TuiMsg;
@@ -132,7 +132,7 @@ end;
 
 /// Measures one element under the given constraints.
 
-function TuiMeasure(
+public function TuiMeasure(
   Node: Std.Tui.Elements.Element.TuiElement;
   Spec: Std.Tui.Layout.MeasureSpec.TuiMeasureSpec
 ): Std.Tui.Layout.MeasureResult.TuiMeasureResult;
@@ -142,7 +142,7 @@ end;
 
 /// Creates a source-aware controlled-input change message.
 
-function TuiMsgTextChanged(
+public function TuiMsgTextChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
   Text: string;
@@ -154,7 +154,7 @@ end;
 
 /// Creates a source-aware controlled multiline text-area change message.
 
-function TuiMsgTextAreaChanged(
+public function TuiMsgTextAreaChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
   Text: string;
@@ -167,7 +167,7 @@ end;
 
 /// Creates a source-aware controlled check-box change message.
 
-function TuiMsgCheckChanged(
+public function TuiMsgCheckChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
   Checked: boolean
@@ -178,7 +178,7 @@ end;
 
 /// Creates a source-aware controlled list selection-change message.
 
-function TuiMsgSelectionChanged(
+public function TuiMsgSelectionChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
   Selected: integer
@@ -189,7 +189,7 @@ end;
 
 /// Creates a source-aware controlled scroll-offset change message.
 
-function TuiMsgScrollChanged(
+public function TuiMsgScrollChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
   Offset: Std.Tui.Geometry.Point.TuiPoint
@@ -200,14 +200,14 @@ end;
 
 /// Returns the first focusable control in the active modal or full tree.
 
-function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
+public function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
   return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root)
 end;
 
 /// Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
 
-function TuiFocusResolve(
+public function TuiFocusResolve(
   Root: Std.Tui.Elements.Element.TuiElement;
   Preferred: option of Std.Tui.Ids.ControlId.TuiControlId
 ): option of Std.Tui.Ids.ControlId.TuiControlId;
@@ -217,7 +217,7 @@ end;
 
 /// Reports whether a root's unconstrained minimum fits an available terminal size.
 
-function TuiLayoutFitFor(
+public function TuiLayoutFitFor(
   Root: Std.Tui.Elements.Element.TuiElement;
   Available: Std.Tui.Geometry.Size.TuiSize
 ): Std.Tui.Layout.LayoutFit.TuiLayoutFit;
@@ -227,7 +227,7 @@ end;
 
 /// Clears a working surface and paints the terminal-too-small notice.
 
-procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
+public procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
 begin
   Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface)
 end;

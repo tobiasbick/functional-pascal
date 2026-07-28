@@ -5,7 +5,7 @@ uses
   Std.Tui.Elements.Element, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Ids.Action,
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
 
-type
+public type
   /// Hit result for pointer routing against arranged geometry.
   TuiPointerHit = enum
     Miss;
@@ -18,9 +18,10 @@ type
     Scroll(Id: TuiControlId);
   end;
 
-private mutable var TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
+mutable var
+  TuiPointerBestHit: TuiPointerHit := TuiPointerHit.Miss;
 
-private function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
+function TuiPointerModalChildIndex(Children: array of TuiElement): integer;
 begin
   mutable var LastOverlay: integer := -1;
   for Index: integer := 0 to Std.Array.Length(Children) - 1 do
@@ -38,7 +39,7 @@ begin
   return LastOverlay
 end;
 
-private function TuiPointerHitWalk(
+function TuiPointerHitWalk(
   Frame: TuiArrangedFrame;
   Node: TuiElement;
   Index: integer;
@@ -185,7 +186,7 @@ end;
 
 /// Returns the deepest eligible hit at a point.
 
-function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
+public function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
 begin
   TuiPointerBestHit := TuiPointerHit.Miss;
   if TuiPointerHitWalk(Frame, Root, 0, Point, true) <> Frame.Count() then

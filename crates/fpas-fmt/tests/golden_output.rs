@@ -24,7 +24,7 @@ fn hello_uses() {
 fn unit_clamp() {
     common::assert_golden(
         "unit_clamp",
-        "unit MyApp.Utils; uses Std.Math; function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
+        "unit MyApp.Utils; uses Std.Math; public function Clamp(Value: integer; Min: integer; Max: integer): integer; begin if Value < Min then return Min else if Value > Max then return Max else return Value end; function IsBlank(S: string): boolean; begin return Length(Trim(S)) = 0 end;",
         include_str!("golden/unit_clamp.expected.fpas"),
     );
 }
@@ -33,7 +33,7 @@ fn unit_clamp() {
 fn record_member_visibility() {
     common::assert_golden(
         "record_visibility",
-        "unit Demo.Counter; type Counter = record private Value: integer; public Step: integer; private function Hidden(Self: Counter): integer; begin return Self.Value end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end end; end;",
+        "unit Demo.Counter; public type Counter = record Value: integer; public Step: integer; function Hidden(Self: Counter): integer; begin return Self.Value end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end end; public property Current: integer read Hidden; public event Changed: procedure() read ReadChanged write WriteChanged; end;",
         include_str!("golden/record_visibility.expected.fpas"),
     );
 }
@@ -69,7 +69,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "/// Unit doc.\nunit Demo;\n\n{ field doc }\nprivate mutable var Count: integer := 0;\n",
+        "/// Unit doc.\nunit Demo;\n\n{ field doc }\nmutable var Count: integer := 0;\n",
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }

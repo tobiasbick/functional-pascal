@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Str, Std.Tui.Chrome.Button, Std.Tui.Elements.Element,
   Std.Tui.Ids.ControlId, Std.Tui.Runtime.Msg;
 
-private function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
+function TuiButtonFind(Node: TuiElement; RequireDefault: boolean; Mnemonic: string): option of TuiButtonSpec;
 begin
   case Node of
     TuiElement.Button(Button):
@@ -74,14 +74,14 @@ end;
 
 /// Returns the first enabled default button in the active modal or full tree.
 
-function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
+public function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
 begin
   return TuiButtonFind(Root, true, '')
 end;
 
 /// Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
 
-function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
+public function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
 begin
   if Mnemonic = '' then
   begin
@@ -92,7 +92,7 @@ end;
 
 /// Routes one Alt mnemonic to an enabled button action.
 
-function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
+public function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
   begin
@@ -112,7 +112,7 @@ end;
 
 /// Routes Enter or Space when an enabled button owns keyboard focus.
 
-function TuiRouteFocusedButtonKey(
+public function TuiRouteFocusedButtonKey(
   Button: TuiButtonSpec;
   Target: TuiControlId;
   Key: Std.Console.KeyEvent
@@ -132,7 +132,7 @@ end;
 
 /// Returns the enabled default button action for Enter.
 
-function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
+public function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
 begin
   case TuiFindDefaultButton(Root) of
     Some(Button):

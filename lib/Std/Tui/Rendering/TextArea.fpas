@@ -6,7 +6,7 @@ uses
 
 /// Paints clipped text-area lines and a focused visible caret.
 
-procedure TuiPaintTextArea(
+public procedure TuiPaintTextArea(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
   Text: string;

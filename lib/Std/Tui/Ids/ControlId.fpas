@@ -1,6 +1,6 @@
 unit Std.Tui.Ids.ControlId;
 
-private function TuiControlIdRequirePositive(Value: integer): integer;
+function TuiControlIdRequirePositive(Value: integer): integer;
 begin
   if Value <= 0 then
   begin
@@ -9,14 +9,14 @@ begin
   return Value
 end;
 
-type
+public type
   /// Unique positive interactive-node identity within one rendered tree.
   TuiControlId = record
-    Value: integer;
+    public Value: integer;
 
     /// Creates a validated positive identity.
 
-    static function Create(Value: integer): TuiControlId;
+    public static function Create(Value: integer): TuiControlId;
     begin
       return record Value := TuiControlIdRequirePositive(Value); end
     end;

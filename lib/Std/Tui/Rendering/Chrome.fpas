@@ -8,7 +8,7 @@ uses
 
 /// Paints an opaque panel with a thin rounded frame and left-aligned title.
 
-procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
+public procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
 begin
   if Bounds.IsEmpty() then
   begin

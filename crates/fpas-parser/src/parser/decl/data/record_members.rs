@@ -2,9 +2,7 @@
 
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::{
-    PARSE_EXPECTED_TOKEN, PARSE_INVALID_STATIC_PLACEMENT, PARSE_INVALID_VISIBILITY,
-};
+use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_INVALID_STATIC_PLACEMENT};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -16,8 +14,6 @@ impl Parser {
         let mut properties = Vec::new();
         let mut events = Vec::new();
         while !self.check(&Token::End) && !self.at_end() {
-            let visibility_span = matches!(self.current_token(), Token::Public | Token::Private)
-                .then(|| self.current_span());
             let visibility = self.parse_visibility(allow_member_visibility);
             match self.current_token() {
                 Token::Function => {
@@ -34,12 +30,10 @@ impl Parser {
                     }
                 }
                 Token::Property => {
-                    self.reject_record_property_or_event_visibility(visibility_span);
-                    properties.push(self.parse_record_property());
+                    properties.push(self.parse_record_property(visibility));
                 }
                 Token::Event => {
-                    self.reject_record_property_or_event_visibility(visibility_span);
-                    events.push(self.parse_record_event());
+                    events.push(self.parse_record_event(visibility));
                 }
                 _ => fields.push(self.parse_field_def(visibility)),
             }
@@ -54,25 +48,10 @@ impl Parser {
         }
     }
 
-    fn reject_record_property_or_event_visibility(
-        &mut self,
-        visibility_span: Option<fpas_lexer::Span>,
-    ) {
-        let Some(span) = visibility_span else {
-            return;
-        };
-        self.error_with_code(
-            PARSE_INVALID_VISIBILITY,
-            "Visibility modifiers are not supported on record properties or events",
-            "Remove the modifier. Record member visibility applies to fields, functions, and procedures.",
-            span,
-        );
-    }
-
     /// Parse `property Name: Type [read Getter] [write Setter];`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-properties.md`
-    fn parse_record_property(&mut self) -> RecordProperty {
+    fn parse_record_property(&mut self, visibility: Visibility) -> RecordProperty {
         let start = self.current_span();
         self.advance();
         let (name, _) = self
@@ -139,6 +118,7 @@ impl Parser {
         RecordProperty {
             name,
             type_expr,
+            visibility,
             read,
             write,
             span: self.span_from(start),
@@ -148,7 +128,7 @@ impl Parser {
     /// Parse `event Name: HandlerType read Getter write Setter;`.
     ///
     /// **Documentation:** `docs/pascal/language/types/record-events.md`
-    fn parse_record_event(&mut self) -> RecordEvent {
+    fn parse_record_event(&mut self, visibility: Visibility) -> RecordEvent {
         let start = self.current_span();
         self.advance();
         let (name, _) = self
@@ -215,6 +195,7 @@ impl Parser {
         RecordEvent {
             name,
             type_expr,
+            visibility,
             read: read.unwrap_or_default(),
             write: write.unwrap_or_default(),
             span: self.span_from(start),

@@ -7,7 +7,7 @@ uses
   Std.Tui.Runtime.Routing.MenuPointer, Std.Tui.Runtime.Routing.PointerHit,
   Std.Tui.Runtime.Routing.TextArea, Std.Tui.Text.Input;
 
-private function TuiRoutePointerFocusMessages(Previous: option of TuiControlId; Target: TuiControlId): array of TuiMsg;
+function TuiRoutePointerFocusMessages(Previous: option of TuiControlId; Target: TuiControlId): array of TuiMsg;
 begin
   if TuiFocusMatches(Previous, Target) then
   begin
@@ -16,13 +16,13 @@ begin
   return [TuiMsg.FocusChanged(Previous, Some(Target))]
 end;
 
-private function TuiIdlePointerResult(ApplicationId: integer; Messages: array of TuiMsg): array of TuiMsg;
+function TuiIdlePointerResult(ApplicationId: integer; Messages: array of TuiMsg): array of TuiMsg;
 begin
   TuiButtonCaptureRelease(ApplicationId);
   return Messages
 end;
 
-private function TuiCapturedPointerResult(
+function TuiCapturedPointerResult(
   ApplicationId: integer;
   Messages: array of TuiMsg;
   Button: TuiButtonSpec;
@@ -33,7 +33,7 @@ begin
   return Messages
 end;
 
-private function TuiPointerInsideCapturedButton(
+function TuiPointerInsideCapturedButton(
   Root: TuiElement;
   Frame: TuiArrangedFrame;
   Position: TuiPoint;
@@ -54,28 +54,28 @@ end;
 
 /// Allocates idle pointer-button state for one application.
 
-procedure TuiPointerRoutingOpen();
+public procedure TuiPointerRoutingOpen();
 begin
   TuiButtonCaptureOpen()
 end;
 
 /// Clears pointer-button state for one application.
 
-procedure TuiPointerRoutingClose(ApplicationId: integer);
+public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   TuiButtonCaptureClose(ApplicationId)
 end;
 
 /// Returns the button painted pressed for one application.
 
-function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
+public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
 begin
   return TuiButtonCapturePressed(ApplicationId)
 end;
 
 /// Routes one pointer event and advances application-owned button capture.
 
-function TuiRouteApplicationPointer(
+public function TuiRouteApplicationPointer(
   Pointer: TuiPointerEvent;
   ApplicationId: integer;
   Root: TuiElement;

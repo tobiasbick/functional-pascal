@@ -15,11 +15,25 @@ The `fpas` command-line interface discovers projects, type-checks, runs programs
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
-- `fpas -h` / `fpas --help` — prints usage to stdout and exits successfully.
+- `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
+- `fpas run --help`, `fpas check --help`, `fpas test --help`, and `fpas fmt --help` — print focused command help with valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas run --std-lib <directory> …`, `fpas check --std-lib <directory> …`, and `fpas test --std-lib <directory> …` — replace the complete implementation-owned source standard library for that invocation. The directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads `lib` beside its executable.
 
 Program arguments after `--` require `fpas run` and are visible through `Std.Args` when running programs.
+
+## Command help
+
+Start with `fpas --help` to discover commands, then request the relevant command's
+help for its options and examples. This keeps terminal output concise and makes
+copy-pasteable invocations available where they are needed:
+
+```sh
+fpas run --help
+fpas check --help
+fpas test --help
+fpas fmt --help
+```
 
 ## Automatic compiled-unit builds
 

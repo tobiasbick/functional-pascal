@@ -1,5 +1,6 @@
 use super::support::run_cli_args_and_capture_output;
 use super::{ResolvedCli, resolve_cli_config, *};
+use crate::cli_input::HelpTopic;
 
 fn run_args(args: &[&str]) -> Vec<String> {
     std::iter::once("run")
@@ -233,13 +234,16 @@ fn resolve_cli_config_help_and_version_are_exclusive() {
     let cwd = create_temp_dir("flags");
     assert_eq!(
         resolve_cli_config(&[String::from("--help")], &cwd),
-        Ok(ResolvedCli::Help)
+        Ok(ResolvedCli::Help(HelpTopic::General))
     );
     assert_eq!(
         resolve_cli_config(&[String::from("-h")], &cwd),
-        Ok(ResolvedCli::Help)
+        Ok(ResolvedCli::Help(HelpTopic::General))
     );
-    assert_eq!(resolve_cli_config(&[], &cwd), Ok(ResolvedCli::Help));
+    assert_eq!(
+        resolve_cli_config(&[], &cwd),
+        Ok(ResolvedCli::Help(HelpTopic::General))
+    );
     assert_eq!(
         resolve_cli_config(&[String::from("--version")], &cwd),
         Ok(ResolvedCli::Version)
@@ -273,6 +277,7 @@ fn run_cli_help_and_version_exit_zero() {
     assert_eq!(code_h, 0);
     assert!(help_text.contains("Usage:"));
     assert!(help_text.contains("fpas run"));
+    assert!(help_text.contains("Examples:"));
     assert!(stderr_h.is_empty());
 
     let (code_bare, bare_help, stderr_bare) = run_cli_args_and_capture_output(&[], &cwd);
@@ -285,6 +290,38 @@ fn run_cli_help_and_version_exit_zero() {
     assert_eq!(code_v, 0);
     assert!(ver.starts_with("fpas "));
     assert!(stderr_v.is_empty());
+
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
+fn run_cli_subcommand_help_is_focused_and_includes_examples() {
+    let cwd = create_temp_dir("subcommand-help");
+
+    for (command, expected_usage, excluded_usage) in [
+        ("run", "fpas run [--std-lib", "fpas test ["),
+        ("check", "fpas check [--std-lib", "fpas test ["),
+        ("fmt", "fpas fmt [<path>...]", "fpas test ["),
+        ("test", "fpas test [--std-lib", "fpas fmt --stdout"),
+    ] {
+        let (exit_code, stdout, stderr) =
+            run_cli_args_and_capture_output(&[String::from(command), String::from("--help")], &cwd);
+
+        assert_eq!(exit_code, 0, "{command} help must succeed: {stderr}");
+        assert!(
+            stdout.contains(expected_usage),
+            "unexpected {command} help: {stdout}"
+        );
+        assert!(
+            stdout.contains("Examples:"),
+            "{command} help needs examples"
+        );
+        assert!(
+            !stdout.contains(excluded_usage),
+            "{command} help must not include unrelated command details: {stdout}"
+        );
+        assert!(stderr.is_empty());
+    }
 
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }

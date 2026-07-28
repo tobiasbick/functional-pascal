@@ -25,9 +25,8 @@ pub(crate) fn run_cli(
     };
 
     match resolved {
-        ResolvedCli::Help => {
-            use crate::cli_input::CLI_HELP;
-            let _ = stdout.write_all(CLI_HELP.as_bytes());
+        ResolvedCli::Help(topic) => {
+            let _ = stdout.write_all(crate::cli_input::help_text(topic).as_bytes());
             0
         }
         ResolvedCli::Version => {

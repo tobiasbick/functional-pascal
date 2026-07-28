@@ -11,9 +11,9 @@ use std::path::Path;
 use std::time::Duration;
 
 pub(crate) use discovery::discover_check_input;
-pub(crate) use help::CLI_HELP;
+pub(crate) use help::help_text;
 pub(crate) use types::{
-    CliConfig, CliInput, FmtCliConfig, ResolvedCli, TestCliConfig, TestReportFormat,
+    CliConfig, CliInput, FmtCliConfig, HelpTopic, ResolvedCli, TestCliConfig, TestReportFormat,
 };
 
 use mode::{
@@ -32,7 +32,7 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
         ResolvedCli::Fmt(_) => {
             Err("resolve_cli_input: use resolve_cli_config for `fpas fmt`".to_string())
         }
-        ResolvedCli::Test(_) | ResolvedCli::Help | ResolvedCli::Version => {
+        ResolvedCli::Test(_) | ResolvedCli::Help(_) | ResolvedCli::Version => {
             Err("resolve_cli_input: use resolve_cli_config for --help or --version".to_string())
         }
     }
@@ -45,12 +45,12 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         if !program_args.is_empty() {
             return Err(program_args_require_run_error());
         }
-        return Ok(ResolvedCli::Help);
+        return Ok(ResolvedCli::Help(HelpTopic::General));
     }
 
     if cli_args.len() == 1 {
         match cli_args[0].as_str() {
-            "-h" | "--help" => return Ok(ResolvedCli::Help),
+            "-h" | "--help" => return Ok(ResolvedCli::Help(HelpTopic::General)),
             "-V" | "--version" => return Ok(ResolvedCli::Version),
             _ => {}
         }
@@ -224,7 +224,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                 if positional.len() != 1 {
                     return Err(usage_error(mode));
                 }
-                return Ok(ResolvedCli::Help);
+                return Ok(ResolvedCli::Help(mode.help_topic()));
             }
             if arg == "-V" || arg == "--version" {
                 if positional.len() != 1 {
@@ -253,7 +253,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             if positional.len() != 1 {
                 return Err(usage_error(mode));
             }
-            return Ok(ResolvedCli::Help);
+            return Ok(ResolvedCli::Help(mode.help_topic()));
         }
         if arg == "-V" || arg == "--version" {
             if positional.len() != 1 {

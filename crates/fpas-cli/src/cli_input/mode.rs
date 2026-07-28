@@ -1,11 +1,24 @@
 //! CLI subcommand mode detection and shared argv helpers.
 
+use super::types::HelpTopic;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum CliMode {
     Run,
     Check,
     Fmt,
     Test,
+}
+
+impl CliMode {
+    pub(super) const fn help_topic(self) -> HelpTopic {
+        match self {
+            Self::Run => HelpTopic::Run,
+            Self::Check => HelpTopic::Check,
+            Self::Fmt => HelpTopic::Fmt,
+            Self::Test => HelpTopic::Test,
+        }
+    }
 }
 
 const SUBCOMMANDS: &str = "`run`, `check`, `test`, or `fmt`";
@@ -27,19 +40,19 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
 pub(super) fn usage_error(mode: CliMode) -> String {
     match mode {
         CliMode::Run => {
-            "Usage: fpas run [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas --help` shows options."
+            "Usage: fpas run [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas run --help` shows options and examples."
                 .to_string()
         }
         CliMode::Check => {
-            "Usage: fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas check [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas check --help` shows options and examples."
                 .to_string()
         }
         CliMode::Fmt => {
-            "Usage: fpas fmt [--check] [--list] [--stdout] [<path>...]\n  help: `fpas --help` shows options."
+            "Usage: fpas fmt [--check] [--list] [--stdout] [<path>...]\n  help: `fpas fmt --help` shows options and examples."
                 .to_string()
         }
         CliMode::Test => {
-            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas --help` shows options."
+            "Usage: fpas test [--list] [--fail-fast] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]\n  help: `fpas test --help` shows options and examples."
                 .to_string()
         }
     }

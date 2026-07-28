@@ -23,6 +23,16 @@ pub(crate) enum TestReportFormat {
     Json,
 }
 
+/// Help page selected by the top-level command or one of its subcommands.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum HelpTopic {
+    General,
+    Run,
+    Check,
+    Fmt,
+    Test,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FmtCliConfig {
     pub explicit_args: Vec<String>,
@@ -54,6 +64,6 @@ pub(crate) enum ResolvedCli {
     Check(CliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),
-    Help,
+    Help(HelpTopic),
     Version,
 }

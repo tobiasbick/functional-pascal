@@ -1,29 +1,129 @@
-//! Help text for `fpas -h` / `fpas --help`.
+//! Help text for the `fpas` command and its subcommands.
 
-/// Text printed for `fpas -h` / `fpas --help` (stdout).
-pub(crate) const CLI_HELP: &str = "\
+use super::types::HelpTopic;
+
+const GENERAL_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
-    fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj>] [-- <args>...]   Run a source file or project
-    fpas run [-- <args>...]                               Discover a workspace program or `.fpasprj` in cwd
-    fpas check [--std-lib <dir>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
-    fpas test [--std-lib <dir>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
-                                                          Type-check without running
-    fpas check                                            Discover `.fpasworkspace` or `.fpasprj` in cwd
-    fpas test [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
-                                                          Run `*_test.fpas` programs
-    fpas test [--list] [--fail-fast] [--strict] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<path>]             Discover tests in cwd when path omitted
-    fpas fmt [<path>...]                                  Format sources in place (multiple paths ok)
-    fpas fmt [--check] [--list] [<path>...]               Check formatting (exit 2 if changes needed)
-    fpas fmt --stdout <file.fpas>                         Print formatted text to stdout (one file)
-    fpas fmt                                              Discover `.fpasworkspace` or `.fpasprj` in cwd
+    fpas run [<path>] [-- <args>...]     Run a source file or project
+    fpas check [<path>]                  Type-check without running
+    fpas test [<path>]                   Run `*_test.fpas` programs
+    fpas fmt [<path>...]                 Format sources in place
 
 Options:
   -h, --help      Print this help
   -V, --version   Print version
 
-Program arguments after `--` are visible through `Std.Args` when running programs.
-`Std.*` source units are loaded through `lib/stdlib.fpasprj` beside `fpas`; `--std-lib <dir>` replaces that complete library for `run`, `check`, and `test`.
+Run `fpas <command> --help` for command-specific options and examples.
+
+Examples:
+  fpas run hello.fpas
+  fpas check my-app.fpasprj
+  fpas test --report json tests/
+  fpas fmt --check --list
 
 ";
+
+const RUN_HELP: &str = "\
+Run a Functional Pascal source file or program project.
+
+Usage:
+  fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj>] [-- <args>...]
+
+With no path, discovers the workspace program or `.fpasprj` in the current directory.
+
+Options:
+  --std-lib <dir>  Replace the complete source standard library
+  -h, --help       Print this help
+  -V, --version    Print version
+
+Examples:
+  fpas run hello.fpas
+  fpas run my-app.fpasprj -- input.txt verbose
+  fpas run --std-lib ./lib hello.fpas
+
+";
+
+const CHECK_HELP: &str = "\
+Type-check Functional Pascal sources and projects without running them.
+
+Usage:
+  fpas check [--std-lib <dir>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+
+With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
+
+Options:
+  --std-lib <dir>  Replace the complete source standard library
+  -h, --help       Print this help
+  -V, --version    Print version
+
+Examples:
+  fpas check hello.fpas
+  fpas check my-app.fpasprj
+  fpas check src/
+
+";
+
+const FMT_HELP: &str = "\
+Format Functional Pascal sources.
+
+Usage:
+  fpas fmt [<path>...]
+  fpas fmt --check [--list] [<path>...]
+  fpas fmt --stdout <file.fpas>
+
+With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
+
+Options:
+  --check          Exit 2 when formatting would change a file
+  --list           With --check, print only paths that would change
+  --stdout          Print one formatted file to stdout without modifying it
+  -h, --help       Print this help
+  -V, --version    Print version
+
+Examples:
+  fpas fmt src/main.fpas
+  fpas fmt --check --list
+  fpas fmt --stdout src/main.fpas > formatted.fpas
+
+";
+
+const TEST_HELP: &str = "\
+Run Functional Pascal test programs.
+
+Usage:
+  fpas test [--std-lib <dir>] [--list] [--fail-fast] [--strict] [--filter <pattern>] [--report json] [--timeout <secs>] [--jobs <n>] [--script <path>] [<file.fpas | dir | file.fpasprj | file.fpasworkspace>]
+
+With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
+
+Options:
+  --std-lib <dir>     Replace the complete source standard library
+  --list              Print discovered tests without running them
+  --fail-fast         Stop after the first failing test
+  --strict            Treat skipped tests as a failure
+  --filter <pattern>  Run matching test paths only
+  --report json        Write a machine-readable report to stdout
+  --timeout <secs>    Fail a test after a positive number of seconds
+  --jobs <n>          Run up to n tests in parallel; 0 uses available CPUs
+  --script <path>     Apply test-script overrides
+  -h, --help          Print this help
+  -V, --version       Print version
+
+Examples:
+  fpas test tests/
+  fpas test --filter tui --jobs 4 tests/
+  fpas test --report json tests/ > test-report.json
+
+";
+
+/// Returns stdout help text for a command or subcommand.
+pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
+    match topic {
+        HelpTopic::General => GENERAL_HELP,
+        HelpTopic::Run => RUN_HELP,
+        HelpTopic::Check => CHECK_HELP,
+        HelpTopic::Fmt => FMT_HELP,
+        HelpTopic::Test => TEST_HELP,
+    }
+}

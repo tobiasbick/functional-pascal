@@ -1,0 +1,7 @@
+program TuiFixedWidthNegativeRuntimeError;
+
+uses Std.Tui;
+
+begin
+  var _: TuiLayoutSettings := TuiLayoutSettings.Default().WithFixedWidth(-1)
+end.

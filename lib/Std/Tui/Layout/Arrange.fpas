@@ -76,7 +76,19 @@ begin
     end;
     TuiElement.Layout(Settings, Children):
     begin
-      if not Horizontal then
+      if Horizontal then
+      begin
+        case Settings.Width of
+          Some(Width):
+          begin
+            return 0
+          end;
+          None:
+          begin
+          end
+        end
+      end
+      else
       begin
         case Settings.Height of
           Some(Height):
@@ -126,6 +138,25 @@ begin
     Height := 0
   end;
   return TuiRect.Create(Outer.X + Margins.Left, Outer.Y + Margins.Top, Width, Height)
+end;
+
+function TuiArrangeLayoutChildMeasure(
+  Measured: TuiMeasureResult;
+  Policy: TuiSizePolicy;
+  Available: TuiSize
+): TuiMeasureResult;
+begin
+  mutable var MaximumWidth: integer := Measured.Maximum.Width;
+  mutable var MaximumHeight: integer := Measured.Maximum.Height;
+  if (Policy.Horizontal = TuiSizePolicyKind.Expanding) and (MaximumWidth < Available.Width) then
+  begin
+    MaximumWidth := Available.Width
+  end;
+  if (Policy.Vertical = TuiSizePolicyKind.Expanding) and (MaximumHeight < Available.Height) then
+  begin
+    MaximumHeight := Available.Height
+  end;
+  return TuiMeasureResult.Create(Measured.Minimum, Measured.Preferred, TuiSize.Create(MaximumWidth, MaximumHeight))
 end;
 
 // Clear the shared handle before Push so copy-on-write stays unique (amortized O(1)).
@@ -291,7 +322,8 @@ begin
       var Content: TuiRect := TuiArrangeContentRect(NodeBounds, Settings.Margins);
       if Std.Array.Length(Children) = 1 then
       begin
-        var Measured: TuiMeasureResult := TuiMeasure(Children[0], TuiMeasureSpec.AtMost(TuiSize.Create(Content.Width, Content.Height)));
+        var Available: TuiSize := TuiSize.Create(Content.Width, Content.Height);
+        var Measured: TuiMeasureResult := TuiArrangeLayoutChildMeasure(TuiMeasure(Children[0], TuiMeasureSpec.AtMost(Available)), Settings.SizePolicy, Available);
         ArrangeNode(Children[0], TuiAlignmentBounds.Resolve(Measured, Settings.Alignment, Content), Clip, SelfIndex)
       end
     end;

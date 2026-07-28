@@ -1,0 +1,54 @@
+program NoteRepositoryRoundtripTest;
+
+uses Notes.Model, Notes.Repository, Std.Array, Std.Fs, Std.Test;
+
+const
+  Root: string := '.temp-data';
+  Directory: string := Root + '/notes-repository-test';
+
+procedure EnsureRoot();
+begin
+  if not Std.Fs.Exists(Root) then
+  begin
+    case Std.Fs.CreateDir(Root) of
+      Ok(Created):
+      begin
+      end;
+      Error(Message):
+      begin
+        Fail(Message)
+      end
+    end
+  end
+end;
+
+begin
+  EnsureRoot();
+  mutable var NoteValue: Note := NoteCreate('repository-roundtrip', 1700000000000);
+  NoteValue.Title := 'Repository roundtrip';
+  NoteValue.Tags := ['storage'];
+  NoteValue.Body := 'Saved atomically';
+  case NotesSave(Directory, NoteValue) of
+    Ok(Written):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  case NotesLoadDirectory(Directory) of
+    Ok(Loaded):
+    begin
+      AssertEquals(1, Std.Array.Length(Loaded.Notes));
+      AssertEquals(0, Std.Array.Length(Loaded.Issues));
+      AssertEquals(NoteValue.Id, Loaded.Notes[0].Id);
+      AssertEquals(NoteValue.Title, Loaded.Notes[0].Title);
+      AssertEquals(NoteValue.Body, Loaded.Notes[0].Body)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

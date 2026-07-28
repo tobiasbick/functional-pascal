@@ -1,14 +1,22 @@
 {
   "version": 1,
   "skills": {
+    "cli-for-agents": {
+      "source": "cursor/plugins",
+      "sourceType": "github",
+      "skillPath": "cli-for-agent/skills/cli-for-agents/SKILL.md",
+      "computedHash": "dea509e7a742d98d2b5957521977720ba6a39c440b9fc33c98b690893fe71f0a"
+    },
     "rust-best-practices": {
       "source": "apollographql/skills",
       "sourceType": "github",
-      "computedHash": "3f89cd417842ca60bffefea01ee88fc28116b75a8e69329c4d6db446fbfcad02"
+      "skillPath": "skills/rust-best-practices/SKILL.md",
+      "computedHash": "5ae68ae0241d65dac8a73f06139457206dde55912aecd4c36cd462fa85570513"
     },
     "rust-refactor-helper": {
       "source": "zhanghandong/rust-skills",
       "sourceType": "github",
+      "skillPath": "skills/rust-refactor-helper/SKILL.md",
       "computedHash": "0dcbec9380651de430ce900f95e5ebcd93bb85cd371911df9f098a5baf29c50e"
     }
   }

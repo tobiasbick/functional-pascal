@@ -90,7 +90,9 @@ focused, where it inserts two spaces. Character and editing keys produce
 controlled `TextChanged` or `TextAreaChanged` messages. Enter or Space activates
 a focused enabled button; otherwise Enter activates the enabled default button.
 Alt plus a button mnemonic activates its enabled button inside the active modal
-or full tree. Escape produces `QuitRequested`.
+or full tree. When an enabled button owns focus, Up/Left moves to the previous
+enabled button and Down/Right moves to the next one. Navigation wraps and stays
+inside the active modal subtree. Escape produces `QuitRequested`.
 
 Focused one-line inputs support Home/End, Ctrl+Left/Ctrl+Right word movement,
 and Ctrl+Backspace/Ctrl+Delete word removal. Up/Down produces ordinary

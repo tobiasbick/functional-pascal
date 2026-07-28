@@ -38,4 +38,8 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     Glob = 343,
+    /// `Std.Fs.WriteTextAtomic(Path, Text)` - durably replace a UTF-8 text file.
+    ///
+    /// **Documentation:** `docs/pascal/std/host/fs.md`
+    WriteTextAtomic = 517,
 }

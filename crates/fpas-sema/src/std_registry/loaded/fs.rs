@@ -19,6 +19,12 @@ pub(super) fn register_std_fs(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_FS_WRITE_TEXT_ATOMIC,
+        vec![p("Path", Ty::String, false), p("Text", Ty::String, false)],
+        Ty::Result(Box::new(Ty::Boolean), Box::new(Ty::String)),
+    );
+    define_func(
+        checker,
         s::STD_FS_EXISTS,
         vec![p("Path", Ty::String, false)],
         Ty::Boolean,

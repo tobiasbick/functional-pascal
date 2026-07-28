@@ -14,7 +14,7 @@ end.
 
 `Std.Fs` reads and writes host files. Calls are blocking and may run on worker threads when invoked from `go`, but the runtime uses thread-safe Rust filesystem APIs.
 
-**Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
+**Trust boundary:** FPAS programs run with the same filesystem privileges as the host process. `ReadText`, `WriteText`, `WriteTextAtomic`, and related calls can access any path the OS allows for that process; the runtime does not sandbox paths.
 
 Text reads and writes use UTF-8.
 
@@ -26,7 +26,7 @@ Text reads and writes use UTF-8.
 
 ## Importing and names
 
-After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
+After `uses Std.Fs;` use **`ReadText`**, **`WriteText`**, **`WriteTextAtomic`**, **`Exists`**, **`IsFile`**, **`IsDir`**, **`CreateDir`**, **`Glob`**, or the fully qualified forms such as **`Std.Fs.ReadText`**.
 
 ---
 
@@ -38,6 +38,7 @@ Requires `uses Std.Fs;`.
 |------|------|-------|
 | function | `ReadText(Path: string): Result of string, string` | reads UTF-8 text |
 | function | `WriteText(Path: string; Text: string): Result of boolean, string` | writes UTF-8 text, returns `Ok(true)` |
+| function | `WriteTextAtomic(Path: string; Text: string): Result of boolean, string` | publishes complete UTF-8 text through a same-directory temporary file |
 | function | `Exists(Path: string): boolean` | `true` when the path exists |
 | function | `IsFile(Path: string): boolean` | `true` for a regular file |
 | function | `IsDir(Path: string): boolean` | `true` for a directory |
@@ -76,6 +77,28 @@ Writes UTF-8 text to `Path`, creating or replacing the file.
 if Std.Result.IsOk(WriteText('out.txt', 'hello')) then
   WriteLn('written')
 ```
+
+---
+
+## `function WriteTextAtomic(Path: string; Text: string): Result of boolean, string`
+
+Writes all UTF-8 bytes to a unique temporary sibling, flushes that file, and
+then replaces `Path`. A failure returns `Error(message)` and removes the
+temporary file. Callers therefore never observe a successfully published
+partially written file.
+
+```pascal
+case WriteTextAtomic('note.note', EncodedNote) of
+  Ok(Written): WriteLn('saved');
+  Error(Message): WriteLn(Message)
+end
+```
+
+On Unix, publishing uses one same-filesystem rename over the destination. On
+Windows, where the Rust standard-library rename cannot replace an existing
+file, the previous file is staged as a unique backup, the completed temporary
+file is published, and a failed publish restores the backup. The function
+removes its temporary and backup siblings after a successful replacement.
 
 ---
 

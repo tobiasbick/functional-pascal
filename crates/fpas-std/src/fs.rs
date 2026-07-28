@@ -9,9 +9,10 @@ use crate::intrinsic_args::{pop_string, pop_value};
 use crate::limits::{MAX_GLOB_MATCHES, MAX_READ_TEXT_BYTES};
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 use glob::glob;
-use std::fs::{self, File};
-use std::io::{self, Read};
-use std::path::Path;
+use std::fs::{self, File, OpenOptions};
+use std::io::{self, Read, Write};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Execute a `Std.Fs` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
@@ -28,6 +29,11 @@ pub(crate) fn run(
             let text = pop_string(pop_value(stack, location)?, location)?;
             let path = pop_string(pop_value(stack, location)?, location)?;
             stack.push(result_bool(fs::write(path, text)));
+        }
+        Intrinsic::Fs(FsIntrinsic::WriteTextAtomic) => {
+            let text = pop_string(pop_value(stack, location)?, location)?;
+            let path = pop_string(pop_value(stack, location)?, location)?;
+            stack.push(result_bool(write_text_atomic(Path::new(&path), &text)));
         }
         Intrinsic::Fs(FsIntrinsic::Exists) => {
             let path = pop_string(pop_value(stack, location)?, location)?;
@@ -100,6 +106,74 @@ fn result_string_array(result: Result<Vec<String>, String>) -> Value {
                 .collect(),
         ))),
         Err(message) => Value::ResultError(Box::new(Value::Str(message.into()))),
+    }
+}
+
+fn write_text_atomic(path: &Path, text: &str) -> io::Result<()> {
+    let temporary = unique_sibling(path, ".tmp");
+    let mut cleanup = FileCleanup::new(temporary.clone());
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)?;
+    file.write_all(text.as_bytes())?;
+    file.sync_all()?;
+    replace_file(path, &temporary)?;
+    cleanup.disarm();
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn replace_file(path: &Path, temporary: &Path) -> io::Result<()> {
+    fs::rename(temporary, path)
+}
+
+#[cfg(windows)]
+fn replace_file(path: &Path, temporary: &Path) -> io::Result<()> {
+    let backup = unique_sibling(path, ".bak");
+    let had_previous = path.exists();
+    if had_previous {
+        fs::rename(path, &backup)?;
+    }
+    if let Err(error) = fs::rename(temporary, path) {
+        if had_previous {
+            let _ = fs::rename(&backup, path);
+        }
+        return Err(error);
+    }
+    if had_previous {
+        fs::remove_file(backup)?;
+    }
+    Ok(())
+}
+
+fn unique_sibling(path: &Path, suffix: &str) -> PathBuf {
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    let id = NEXT.fetch_add(1, Ordering::Relaxed);
+    let mut value = path.as_os_str().to_os_string();
+    value.push(format!(".{}.{}{suffix}", std::process::id(), id));
+    PathBuf::from(value)
+}
+
+struct FileCleanup {
+    path: Option<PathBuf>,
+}
+
+impl FileCleanup {
+    fn new(path: PathBuf) -> Self {
+        Self { path: Some(path) }
+    }
+
+    fn disarm(&mut self) {
+        self.path = None;
+    }
+}
+
+impl Drop for FileCleanup {
+    fn drop(&mut self) {
+        if let Some(path) = self.path.take() {
+            let _ = fs::remove_file(path);
+        }
     }
 }
 
@@ -208,6 +282,38 @@ mod tests {
         run_fs(FsIntrinsic::WriteText, &mut stack);
         assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
         assert_eq!(fs::read_to_string(&path).expect("read"), "written");
+        let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn write_text_atomic_creates_and_replaces_utf8_file_without_leftovers() {
+        let path = unique_temp_path("atomic.txt");
+        fs::write(&path, "old").expect("write old fixture");
+        let mut stack = vec![
+            Value::Str(path.clone().into()),
+            Value::Str("replacement".into()),
+        ];
+
+        run_fs(FsIntrinsic::WriteTextAtomic, &mut stack);
+
+        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
+        assert_eq!(fs::read_to_string(&path).expect("read"), "replacement");
+        let parent = Path::new(&path).parent().expect("parent");
+        let file_name = Path::new(&path)
+            .file_name()
+            .expect("file name")
+            .to_string_lossy();
+        let leftovers = fs::read_dir(parent)
+            .expect("read parent")
+            .filter_map(Result::ok)
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_string_lossy()
+                    .starts_with(file_name.as_ref())
+            })
+            .count();
+        assert_eq!(leftovers, 1);
         let _ = fs::remove_file(path);
     }
 

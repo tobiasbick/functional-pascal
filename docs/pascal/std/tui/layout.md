@@ -14,8 +14,12 @@ and painting have succeeded.
 child order toward preferred extents, then distribute remaining cells through
 `Stretch` or `Expanding`. A `TuiLayoutSettings` wrapper applies margins and
 aligns its child independently per axis with `Leading`, `Center`, `Trailing`, or
-`Fill`. `Settings.WithFixedHeight(Height)` returns a copy whose total vertical
-extent is fixed to the supplied non-negative cell count.
+`Fill`. `Expanding` raises the wrapper's maximum on the selected axes; combined
+with `Fill`, the child consumes the corresponding allocated content area.
+`Settings.WithFixedWidth(Width)` and `Settings.WithFixedHeight(Height)` return
+copies whose total horizontal or vertical extent, including margins, is fixed
+to the supplied non-negative cell count. Fixed axes do not receive remaining
+space from a `Row` or `Column`; negative extents panic.
 
 `Panel` and `Overlay` arrange their inset children as a vertical column without
 spacing. A direct desktop `Overlay` is centered at its preferred size; a

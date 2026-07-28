@@ -2,8 +2,12 @@
 name = "fpas-regression-tests"
 kind = "test"
 
+[dependencies]
+projects = ["../apps/notes/notes-core.fpasprj"]
+
 [sources]
 include = [
+  "apps/**/*_test.fpas",
   "stdlib/**/*_test.fpas",
   "concurrency/**/*_test.fpas",
   "runner/**/*_test.fpas",

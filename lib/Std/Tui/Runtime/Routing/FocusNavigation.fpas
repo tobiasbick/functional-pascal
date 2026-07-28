@@ -1,0 +1,119 @@
+unit Std.Tui.Runtime.Routing.FocusNavigation;
+
+uses
+  Std.Array, Std.Console, Std.Tui.Chrome.StatusItem, Std.Tui.Elements.Element, Std.Tui.Ids.ControlId,
+  Std.Tui.Runtime.Msg, Std.Tui.Runtime.Routing.Focus;
+
+function TuiButtonFocusControls(Node: TuiElement): array of TuiControlId;
+begin
+  case Node of
+    TuiElement.Button(Button):
+    begin
+      if Button.Enabled then
+      begin
+        return [Button.Id]
+      end;
+      return []
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      mutable var LastOverlay: integer := -1;
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        case Children[Index] of
+          TuiElement.Overlay(Title, OverlayChildren):
+          begin
+            LastOverlay := Index
+          end
+          else
+          begin
+          end
+        end
+      end;
+      if LastOverlay >= 0 then
+      begin
+        return TuiButtonFocusControls(Children[LastOverlay])
+      end;
+      mutable var Controls: array of TuiControlId := [];
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+      end;
+      return Controls
+    end;
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+    begin
+      mutable var Controls: array of TuiControlId := [];
+      for Index: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Controls := Std.Array.Concat(Controls, TuiButtonFocusControls(Children[Index]))
+      end;
+      return Controls
+    end;
+    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
+    begin
+      return []
+    end
+  end
+end;
+
+/// Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
+
+public function TuiRouteButtonFocusNavigation(
+  Root: TuiElement;
+  Previous: option of TuiControlId;
+  Key: Std.Console.KeyEvent
+): option of array of TuiMsg;
+begin
+  if ((Key.shift or Key.ctrl) or Key.alt) or Key.meta then
+  begin
+    return None
+  end;
+  mutable var Direction: integer := 0;
+  if (Key.kind = Std.Console.KeyKind.Up) or (Key.kind = Std.Console.KeyKind.Left) then
+  begin
+    Direction := -1
+  end
+  else if (Key.kind = Std.Console.KeyKind.Down) or (Key.kind = Std.Console.KeyKind.Right) then
+  begin
+    Direction := 1
+  end
+  else
+  begin
+    return None
+  end;
+  var Controls: array of TuiControlId := TuiButtonFocusControls(Root);
+  if Std.Array.Length(Controls) = 0 then
+  begin
+    return None
+  end;
+  mutable var CurrentIndex: integer := -1;
+  case Previous of
+    Some(Id):
+    begin
+      CurrentIndex := TuiControlIndex(Controls, Id)
+    end;
+    None:
+    begin
+      return None
+    end
+  end;
+  if CurrentIndex < 0 then
+  begin
+    return None
+  end;
+  mutable var NextIndex: integer := CurrentIndex + Direction;
+  if NextIndex < 0 then
+  begin
+    NextIndex := Std.Array.Length(Controls) - 1
+  end
+  else if NextIndex >= Std.Array.Length(Controls) then
+  begin
+    NextIndex := 0
+  end;
+  if NextIndex = CurrentIndex then
+  begin
+    return Some([])
+  end;
+  return Some([TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))])
+end;

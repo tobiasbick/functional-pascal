@@ -1,0 +1,16 @@
+[project]
+name = "notes-core"
+kind = "library"
+
+[exports]
+units = [
+  "Notes.Format",
+  "Notes.Model",
+  "Notes.Repository",
+  "Notes.Theme",
+  "Notes.Update",
+  "Notes.View",
+]
+
+[sources]
+include = ["src/Notes/**/*.fpas"]

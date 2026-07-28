@@ -1,0 +1,327 @@
+unit Notes.View;
+
+uses Notes.Model, Notes.Update, Std.Array, Std.Conv, Std.Option, Std.Str, Std.Tui;
+
+function Expanding(Child: TuiElement; Stretch: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), Stretch), Child)
+end;
+
+function SidebarWidth(State: NotesModel): integer;
+begin
+  var Width: integer := State.Width div 3;
+  if Width < 32 then
+  begin
+    return 32
+  end;
+  if Width > 52 then
+  begin
+    return 52
+  end;
+  return Width
+end;
+
+function ListPaneWidth(State: NotesModel): integer;
+begin
+  if State.Width < 65 then
+  begin
+    return State.Width
+  end;
+  return SidebarWidth(State)
+end;
+
+function FixedWidthExpanding(Child: TuiElement; Width: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Expanding), TuiAlignment.Fill(), 0)
+                                         .WithFixedWidth(Width), Child)
+end;
+
+function Header(State: NotesModel): TuiElement;
+begin
+  mutable var Dirty: string := '';
+  mutable var Issues: string := '';
+  if State.Dirty then
+  begin
+    Dirty := '  ● unsaved'
+  end;
+  if Std.Array.Length(State.Issues) > 0 then
+  begin
+    Issues := ('  ·  ' + IntToStr(Std.Array.Length(State.Issues))) + ' invalid'
+  end;
+  return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Array.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
+                                     '  ·  Ctrl+K commands ')
+end;
+
+function ListPane(State: NotesModel): TuiElement;
+begin
+  var Search: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Search, State.SearchCaret, 'Search notes…', TuiAction.Create(1));
+  var Items: array of string := NotesListItems(State.Notes, State.Search, ListPaneWidth(State) - 4);
+  var NotesList: TuiElement := TuiElementBuilders.MakeList(TuiControlId.Create(2), Items, NotesSelectedFilteredPosition(State), TuiAction.Create(2));
+  return TuiElementBuilders.MakePanel('Notes', [
+                                                 Search,
+                                                 TuiElementBuilders.MakeRule(''),
+                                                 Expanding(NotesList, 1)
+
+                                               ])
+end;
+
+function EmptyEditor(): TuiElement;
+begin
+  return TuiElementBuilders.MakePanel('Editor', [
+                                                  TuiElementBuilders.MakeLabel('No note selected'),
+                                                  TuiElementBuilders.MakeLabel('Press Ctrl+N to create one.')
+
+                                                ])
+end;
+
+function EditorPane(State: NotesModel): TuiElement;
+begin
+  if (State.Selected < 0) or (State.Selected >= Std.Array.Length(State.Notes)) then
+  begin
+    return EmptyEditor()
+  end;
+  var NoteValue: Note := State.Notes[State.Selected];
+  var Title: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(3), NoteValue.Title, State.TitleCaret, 'Note title', TuiAction.Create(3));
+  var Tags: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(4), State.TagsText, State.TagsCaret, 'tags, separated, by commas', TuiAction.Create(4));
+  var Body: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(5), NoteValue.Body, State.BodyCaret, State.BodyOffset, TuiAction.Create(5));
+  mutable var Pin: string := '';
+  if NoteValue.Pinned then
+  begin
+    Pin := ' ★'
+  end;
+  return TuiElementBuilders.MakePanel('Editor' + Pin, [
+                                                        Title,
+                                                        Tags,
+                                                        TuiElementBuilders.MakeRule('Markdown'),
+                                                        Expanding(Body, 1)
+
+                                                      ])
+end;
+
+function MainContent(State: NotesModel): TuiElement;
+begin
+  if State.Width < 65 then
+  begin
+    if State.Pane = NotesPane.List then
+    begin
+      return ListPane(State)
+    end;
+    return EditorPane(State)
+  end;
+  return TuiElementBuilders.MakeRow([
+                                      FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
+                                      Expanding(EditorPane(State), 1)
+
+                                    ])
+end;
+
+function Status(State: NotesModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeStatusLine([
+                                             TuiStatusItemBuilders.MakeHint(State.Status),
+                                             TuiStatusItemBuilders.MakeKeyHint('Ctrl+N', 'new'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Ctrl+S', 'save'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Ctrl+F', 'search'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Ctrl+1/2', 'panes'),
+                                             TuiStatusItemBuilders.MakeKeyHint('F1', 'help')
+
+                                           ])
+end;
+
+function CommandOverlay(State: NotesModel): TuiElement;
+begin
+  var HasNote: boolean := (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes));
+  mutable var Save: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(21), 'Save note', '', TuiAction.Create(11));
+  mutable var Pin: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(22), 'Toggle pin', '', TuiAction.Create(12));
+  mutable var Archive: TuiElement := TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(23), 'Archive note', '', TuiAction.Create(13));
+  if HasNote then
+  begin
+    Save := TuiElementBuilders.MakeButton(TuiControlId.Create(21), 'Save note', TuiAction.Create(11));
+    Pin := TuiElementBuilders.MakeButton(TuiControlId.Create(22), 'Toggle pin', TuiAction.Create(12));
+    Archive := TuiElementBuilders.MakeButton(TuiControlId.Create(23), 'Archive note', TuiAction.Create(13))
+  end;
+  return TuiElementBuilders.MakeOverlay('Commands', [
+                                                      TuiElementBuilders.MakeLabel('Quick actions'),
+                                                      TuiElementBuilders.MakeButton(TuiControlId.Create(20), 'New note', TuiAction.Create(10)),
+                                                      Save,
+                                                      Pin,
+                                                      Archive,
+                                                      TuiElementBuilders.MakeButton(TuiControlId.Create(24), 'Help', TuiAction.Create(15)),
+                                                      TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(25), 'Close', 'C', TuiAction.Create(16))
+
+                                                    ])
+end;
+
+function HelpOverlay(): TuiElement;
+begin
+  return TuiElementBuilders.MakeOverlay('Keyboard help', [
+                                                           TuiElementBuilders.MakeLabel('Ctrl+N  Create a note'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+S  Save changes'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+F  Search notes'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+P  Toggle pin'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+K  Open commands'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+1  Focus note list'),
+                                                           TuiElementBuilders.MakeLabel('Ctrl+2  Focus editor'),
+                                                           TuiElementBuilders.MakeLabel('Enter   Open selected note'),
+                                                           TuiElementBuilders.MakeLabel('Alt+X   Quit Notes'),
+                                                           TuiElementBuilders.MakeLabel('Arrows  Move between dialog buttons'),
+                                                           TuiElementBuilders.MakeLabel('Esc     Close an overlay'),
+                                                           TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(26), 'Close', 'C', TuiAction.Create(16))
+
+                                                         ])
+end;
+
+function QuitOverlay(): TuiElement;
+begin
+  return TuiElementBuilders.MakeOverlay('Unsaved changes', [
+                                                             TuiElementBuilders.MakeLabel('Save the current note before quitting?'),
+                                                             TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(27), 'Save and quit', 'S', TuiAction.Create(17)),
+                                                             TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(28), 'Discard', 'D', TuiAction.Create(18)),
+                                                             TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(29), 'Cancel', 'C', TuiAction.Create(16))
+
+                                                           ])
+end;
+
+function ErrorOverlay(State: NotesModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeOverlay('Could not save note', [
+                                                                 TuiElementBuilders.MakeLabel(State.ErrorMessage),
+                                                                 TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(30), 'Close', 'C', TuiAction.Create(16))
+
+                                                               ])
+end;
+
+function Overlay(State: NotesModel): TuiElement;
+begin
+  case State.Overlay of
+    NotesOverlay.Commands:
+    begin
+      return CommandOverlay(State)
+    end;
+    NotesOverlay.Help:
+    begin
+      return HelpOverlay()
+    end;
+    NotesOverlay.QuitConfirmation:
+    begin
+      return QuitOverlay()
+    end;
+    NotesOverlay.SaveFailure:
+    begin
+      return ErrorOverlay(State)
+    end;
+    NotesOverlay.Closed:
+    begin
+      return TuiElementBuilders.MakeEmpty()
+    end
+  end
+end;
+
+function MainFocus(State: NotesModel): integer;
+begin
+  if State.Width < 65 then
+  begin
+    if State.Pane = NotesPane.List then
+    begin
+      if (State.Focus = 1) or (State.Focus = 2) then
+      begin
+        return State.Focus
+      end;
+      return 1
+    end;
+    if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
+    begin
+      if (State.Focus >= 3) and (State.Focus <= 5) then
+      begin
+        return State.Focus
+      end;
+      return 5
+    end
+  end
+  else
+  begin
+    if (State.Focus = 1) or (State.Focus = 2) then
+    begin
+      return State.Focus
+    end;
+    if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
+       ((State.Focus >= 3) and (State.Focus <= 5)) then
+    begin
+      return State.Focus
+    end;
+    if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
+    begin
+      return 5
+    end
+  end;
+  return 1
+end;
+
+function OverlayFocus(State: NotesModel): integer;
+begin
+  case State.Overlay of
+    NotesOverlay.Commands:
+    begin
+      if ((State.Focus = 20) or (State.Focus = 24)) or (State.Focus = 25) then
+      begin
+        return State.Focus
+      end;
+      if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
+         ((State.Focus >= 21) and (State.Focus <= 23)) then
+      begin
+        return State.Focus
+      end;
+      return 20
+    end;
+    NotesOverlay.Help:
+    begin
+      return 26
+    end;
+    NotesOverlay.QuitConfirmation:
+    begin
+      if (State.Focus >= 27) and (State.Focus <= 29) then
+      begin
+        return State.Focus
+      end;
+      return 27
+    end;
+    NotesOverlay.SaveFailure:
+    begin
+      return 30
+    end;
+    NotesOverlay.Closed:
+    begin
+      return MainFocus(State)
+    end
+  end
+end;
+
+/// Builds the responsive Notes element tree for one model state.
+
+public function NotesView(State: NotesModel): TuiElement;
+begin
+  if (State.Width < 50) or (State.Height < 14) then
+  begin
+    return TuiElementBuilders.MakeDesktop(None, [
+                                                  TuiElementBuilders.MakePanel('Notes', [
+
+                                                                                          TuiElementBuilders.MakeLabel('Terminal too small'),
+
+                                                                                          TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+
+
+
+                                                                                        ])
+
+                                                ])
+  end;
+  mutable var Children: array of TuiElement := [
+                                                 TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
+
+                                               ];
+  if State.Overlay <> NotesOverlay.Closed then
+  begin
+    Std.Array.Push(Children, Overlay(State))
+  end;
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(OverlayFocus(State))), Children)
+end;

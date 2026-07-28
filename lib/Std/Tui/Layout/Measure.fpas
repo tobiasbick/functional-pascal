@@ -139,6 +139,10 @@ begin
   begin
     MaximumWidth := PreferredWidth
   end;
+  if Policy.Horizontal = TuiSizePolicyKind.Expanding then
+  begin
+    MaximumWidth := TuiMeasureExpandingMaximum
+  end;
   if Policy.Vertical = TuiSizePolicyKind.Fixed then
   begin
     MinimumHeight := PreferredHeight;
@@ -151,6 +155,10 @@ begin
   if Policy.Vertical = TuiSizePolicyKind.Maximum then
   begin
     MaximumHeight := PreferredHeight
+  end;
+  if Policy.Vertical = TuiSizePolicyKind.Expanding then
+  begin
+    MaximumHeight := TuiMeasureExpandingMaximum
   end;
   var Width: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumWidth, PreferredWidth, MaximumWidth, Spec.Width);
   var Height: TuiMeasureAxisResult := TuiMeasureAxis.Apply(MinimumHeight, PreferredHeight, MaximumHeight, Spec.Height);
@@ -321,6 +329,16 @@ begin
                                                                                                                                                                                               Settings.Margins.Vertical()), TuiSize.Create(Child.Maximum.Width +
                                                                                                                                                                                                                                            Settings.Margins.Horizontal(), Child.Maximum.Height +
                                                                                                                                                                                                                                                                           Settings.Margins.Vertical()));
+      Hint := TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec);
+      case Settings.Width of
+        Some(Width):
+        begin
+          Hint := TuiMeasureResult.Create(TuiSize.Create(Width, Hint.Minimum.Height), TuiSize.Create(Width, Hint.Preferred.Height), TuiSize.Create(Width, Hint.Maximum.Height))
+        end;
+        None:
+        begin
+        end
+      end;
       case Settings.Height of
         Some(Height):
         begin
@@ -330,7 +348,7 @@ begin
         begin
         end
       end;
-      return TuiMeasureApplyPolicy(Hint, Settings.SizePolicy, Spec)
+      return Hint
     end;
     TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
     begin

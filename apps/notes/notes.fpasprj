@@ -1,0 +1,10 @@
+[project]
+name = "notes"
+kind = "program"
+main = "src/notes.fpas"
+
+[dependencies]
+projects = ["notes-core.fpasprj"]
+
+[sources]
+include = ["src/notes.fpas"]

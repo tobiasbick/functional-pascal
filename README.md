@@ -75,6 +75,19 @@ cargo run -p fpas-cli -- fmt --check examples tests apps
 
 Run `fpas fmt` manually when you want to apply formatting — there is no format-on-save or watch mode.
 
+## Applications
+
+[Notes](apps/notes/README.md) is a complete modern `Std.Tui` note-taking
+application with local human-readable `.note` files, responsive layouts,
+keyboard and mouse control, a command palette, and headless workflow tests.
+
+```sh
+fpas run apps/notes/notes.fpasprj -- ./my-notes
+```
+
+See [`apps/`](apps/README.md) for complete applications. Focused language and
+standard-library demonstrations remain under `examples/`.
+
 ## Examples
 
 ### Fibonacci

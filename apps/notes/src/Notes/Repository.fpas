@@ -1,0 +1,123 @@
+unit Notes.Repository;
+
+uses
+  Notes.Format, Notes.Model, Std.Array, Std.Conv, Std.Fs, Std.Path, Std.Random, Std.Result, Std.Str,
+  Std.Time;
+
+/// Creates the notes directory or validates that it already exists.
+
+public function NotesEnsureDirectory(Directory: string): result of boolean, string;
+begin
+  if Std.Fs.Exists(Directory) then
+  begin
+    if Std.Fs.IsDir(Directory) then
+    begin
+      return Ok(true)
+    end;
+    return Error('Notes path exists but is not a directory: ' + Directory)
+  end;
+  return Std.Fs.CreateDir(Directory)
+end;
+
+/// Resolves a note's existing or identity-derived `.note` path.
+
+public function NoteFilePath(Directory: string; NoteValue: Note): string;
+begin
+  if NoteValue.Path <> '' then
+  begin
+    return NoteValue.Path
+  end;
+  return Std.Path.Join([Directory, NoteValue.Id + '.note'])
+end;
+
+function NoteComesBefore(Left: Note; Right: Note): boolean;
+begin
+  if Left.Pinned <> Right.Pinned then
+  begin
+    return Left.Pinned
+  end;
+  return Left.UpdatedMillis > Right.UpdatedMillis
+end;
+
+/// Sorts pinned notes first and then by descending update timestamp.
+
+public function NotesSort(Notes: array of Note): array of Note;
+begin
+  mutable var Sorted: array of Note := Notes;
+  for Left: integer := 0 to Std.Array.Length(Sorted) - 1 do
+  begin
+    for Right: integer := Left + 1 to Std.Array.Length(Sorted) - 1 do
+    begin
+      if NoteComesBefore(Sorted[Right], Sorted[Left]) then
+      begin
+        var Previous: Note := Sorted[Left];
+        Sorted[Left] := Sorted[Right];
+        Sorted[Right] := Previous
+      end
+    end
+  end;
+  return Sorted
+end;
+
+/// Loads valid notes and preserves invalid files as visible issues.
+
+public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
+begin
+  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  var Paths: array of string := try Std.Fs.Glob(Std.Path.Join([Directory, '*.note']));
+  mutable var Notes: array of Note := [];
+  mutable var Issues: array of NoteIssue := [];
+  for Index: integer := 0 to Std.Array.Length(Paths) - 1 do
+  begin
+    var Path: string := Paths[Index];
+    case Std.Fs.ReadText(Path) of
+      Ok(Text):
+      begin
+        case NoteParse(Text) of
+          Ok(NoteValue):
+          begin
+            mutable var Loaded: Note := NoteValue;
+            Loaded.Path := Path;
+            Std.Array.Push(Notes, Loaded)
+          end;
+          Error(Message):
+          begin
+            Std.Array.Push(Issues, record Path := Path; Message := Message; end)
+          end
+        end
+      end;
+      Error(Message):
+      begin
+        Std.Array.Push(Issues, record Path := Path; Message := Message; end)
+      end
+    end
+  end;
+  return Ok(record Notes := NotesSort(Notes); Issues := Issues; end)
+end;
+
+/// Atomically writes one note to its stable file path.
+
+public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
+begin
+  var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
+  return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue))
+end;
+
+/// Generates an unused timestamp-and-random identity in one directory.
+
+public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
+begin
+  mutable var Candidate: string := '';
+  repeat
+    Candidate := (IntToStr(TimestampMillis) + '-') + IntToStr(Std.Random.RandomInt(100000, 999999))
+  until not Std.Fs.Exists(Std.Path.Join([Directory, Candidate + '.note']));
+  return Candidate
+end;
+
+/// Creates an in-memory draft with a new identity and current timestamp.
+
+public function NotesCreateDraft(Directory: string): Note;
+begin
+  var Now: integer := Std.Time.TimestampMillis();
+  return NoteCreate(NotesCreateId(Directory, Now), Now)
+end;

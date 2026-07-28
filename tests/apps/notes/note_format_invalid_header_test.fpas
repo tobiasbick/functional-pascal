@@ -1,0 +1,15 @@
+program NoteFormatInvalidHeaderTest;
+
+uses Notes.Format, Std.Result, Std.Test;
+
+begin
+  AssertTrue(Std.Result.IsError(NoteParse('plain text')));
+  AssertTrue(Std.Result.IsError(NoteParse(('+++' + '
+') + 'format = 1')));
+  AssertTrue(Std.Result.IsError(NoteParse((((((('+++' + '
+') + 'format = 2') + '
+') + 'id = ''wrong-version''') + '
+') + '+++') +
+                                          '
+')))
+end.

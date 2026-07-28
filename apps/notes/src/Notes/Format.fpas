@@ -1,0 +1,207 @@
+unit Notes.Format;
+
+uses Notes.Model, Std.Array, Std.Conv, Std.Dict, Std.Option, Std.Result, Std.Str, Std.Toml;
+
+const
+  NoteFormatVersion: integer := 1;
+
+function MissingField(Name: string): string;
+begin
+  return ('Missing required note field `' + Name) + '`'
+end;
+
+function FieldString(Fields: dict of string to TomlValue; Name: string): result of string, string;
+begin
+  case Std.Dict.Get(Fields, Name) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.String(Text):
+        begin
+          return Ok(Text)
+        end
+        else
+        begin
+          return Error(('Note field `' + Name) + '` must be a string')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(MissingField(Name))
+    end
+  end
+end;
+
+function FieldInteger(Fields: dict of string to TomlValue; Name: string): result of integer, string;
+begin
+  case Std.Dict.Get(Fields, Name) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.Integer(Number):
+        begin
+          return Ok(Number)
+        end
+        else
+        begin
+          return Error(('Note field `' + Name) + '` must be an integer')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(MissingField(Name))
+    end
+  end
+end;
+
+function FieldBoolean(Fields: dict of string to TomlValue; Name: string): result of boolean, string;
+begin
+  case Std.Dict.Get(Fields, Name) of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.Boolean(Flag):
+        begin
+          return Ok(Flag)
+        end
+        else
+        begin
+          return Error(('Note field `' + Name) + '` must be a boolean')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(MissingField(Name))
+    end
+  end
+end;
+
+function FieldTags(Fields: dict of string to TomlValue): result of array of string, string;
+begin
+  case Std.Dict.Get(Fields, 'tags') of
+    Some(Value):
+    begin
+      case Value of
+        TomlValue.Array(Items):
+        begin
+          mutable var Tags: array of string := [];
+          for Index: integer := 0 to Std.Array.Length(Items) - 1 do
+          begin
+            case Items[Index] of
+              TomlValue.String(Tag):
+              begin
+                Std.Array.Push(Tags, Tag)
+              end
+              else
+              begin
+                return Error('Every note tag must be a string')
+              end
+            end
+          end;
+          return Ok(Tags)
+        end
+        else
+        begin
+          return Error('Note field `tags` must be an array')
+        end
+      end
+    end;
+    None:
+    begin
+      return Error(MissingField('tags'))
+    end
+  end
+end;
+
+function ParseFields(Fields: dict of string to TomlValue; Body: string): result of Note, string;
+begin
+  var Version: integer := try FieldInteger(Fields, 'format');
+  if Version <> NoteFormatVersion then
+  begin
+    return Error(('Unsupported note format version ' + IntToStr(Version)) + '; expected 1')
+  end;
+  var Id: string := try FieldString(Fields, 'id');
+  if Std.Str.Trim(Id) = '' then
+  begin
+    return Error('Note field `id` must not be empty')
+  end;
+  var Title: string := try FieldString(Fields, 'title');
+  var Created: integer := try FieldInteger(Fields, 'created_ms');
+  var Updated: integer := try FieldInteger(Fields, 'updated_ms');
+  if (Created < 0) or (Updated < 0) then
+  begin
+    return Error('Note timestamps must not be negative')
+  end;
+  return Ok(record
+    Id := Id;
+    Title := Title;
+    CreatedMillis := Created;
+    UpdatedMillis := Updated;
+    Tags := try FieldTags(Fields);
+    Pinned := try FieldBoolean(Fields, 'pinned');
+    Archived := try FieldBoolean(Fields, 'archived');
+    Body := Body;
+    Path := '';
+  end)
+end;
+
+/// Parses one UTF-8 `.note` document with TOML frontmatter.
+
+public function NoteParse(Text: string): result of Note, string;
+begin
+  var NewLine: string := Std.Str.Chr(10);
+  var Source: string := Std.Str.Replace(Std.Str.Replace(Text, Std.Str.Chr(13) + NewLine, NewLine), Std.Str.Chr(13), NewLine);
+  var Prefix: string := '+++' + NewLine;
+  if not Std.Str.StartsWith(Source, Prefix) then
+  begin
+    return Error('A .note file must start with a `+++` TOML header')
+  end;
+  var Remaining: string := Std.Str.Substring(Source, Std.Str.Length(Prefix), Std.Str.Length(Source) -
+                                                                             Std.Str.Length(Prefix));
+  var Boundary: string := (NewLine + '+++') + NewLine;
+  var BoundaryIndex: integer := Std.Str.IndexOf(Remaining, Boundary);
+  if BoundaryIndex < 0 then
+  begin
+    return Error('A .note file must close its TOML header with `+++`')
+  end;
+  var Header: string := Std.Str.Substring(Remaining, 0, BoundaryIndex);
+  var BodyStart: integer := BoundaryIndex + Std.Str.Length(Boundary);
+  var Body: string := Std.Str.Substring(Remaining, BodyStart, Std.Str.Length(Remaining) - BodyStart);
+  case Std.Toml.Parse(Header) of
+    Ok(Value):
+    begin
+      case Value of
+        TomlValue.Table(Fields):
+        begin
+          return ParseFields(Fields, Body)
+        end
+        else
+        begin
+          return Error('The .note metadata root must be a TOML table')
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error('Invalid .note TOML header: ' + Message)
+    end
+  end
+end;
+
+/// Encodes one note as deterministic TOML frontmatter and Markdown body text.
+
+public function NoteStringify(NoteValue: Note): string;
+begin
+  mutable var TagValues: array of TomlValue := [];
+  for Index: integer := 0 to Std.Array.Length(NoteValue.Tags) - 1 do
+  begin
+    Std.Array.Push(TagValues, TomlValue.String(NoteValue.Tags[Index]))
+  end;
+  var Header: TomlValue := TomlValue.Table(['format': TomlValue.Integer(NoteFormatVersion), 'id': TomlValue.String(NoteValue.Id), 'title': TomlValue.String(NoteValue.Title), 'created_ms': TomlValue.Integer(NoteValue.CreatedMillis), 'updated_ms': TomlValue.Integer(NoteValue.UpdatedMillis), 'tags': TomlValue.Array(TagValues), 'pinned': TomlValue.Boolean(NoteValue.Pinned), 'archived': TomlValue.Boolean(NoteValue.Archived)]);
+  var NewLine: string := Std.Str.Chr(10);
+  return ((((('+++' + NewLine) + Std.Str.TrimRight(Std.Toml.Stringify(Header))) + NewLine) + '+++') + NewLine) +
+         NoteValue.Body
+end;

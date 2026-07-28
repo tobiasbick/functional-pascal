@@ -1,0 +1,49 @@
+program NoteFormatRoundtripTest;
+
+uses Notes.Format, Notes.Model, Std.Array, Std.Str, Std.Test;
+
+begin
+  var Source: Note := record
+    Id := '1700000000000-123456';
+    Title := 'Agent-era notes';
+    CreatedMillis := 1700000000000;
+    UpdatedMillis := 1700000000123;
+    Tags := ['fpas', 'tui'];
+    Pinned := true;
+    Archived := false;
+    Body := ('Human-readable body' + '
+') + 'with Markdown.';
+    Path := '';
+  end;
+  var Encoded: string := NoteStringify(Source);
+  case NoteParse(Encoded) of
+    Ok(Parsed):
+    begin
+      AssertEquals(Source.Id, Parsed.Id);
+      AssertEquals(Source.Title, Parsed.Title);
+      AssertEquals(Source.CreatedMillis, Parsed.CreatedMillis);
+      AssertEquals(Source.UpdatedMillis, Parsed.UpdatedMillis);
+      AssertEquals(2, Std.Array.Length(Parsed.Tags));
+      AssertEquals('fpas', Parsed.Tags[0]);
+      AssertEquals(true, Parsed.Pinned);
+      AssertEquals(false, Parsed.Archived);
+      AssertEquals(Source.Body, Parsed.Body)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+  var CrLf: string := Std.Str.Replace(Encoded, Std.Str.Chr(10), Std.Str.Chr(13) + Std.Str.Chr(10));
+  case NoteParse(CrLf) of
+    Ok(Parsed):
+    begin
+      AssertEquals(Source.Title, Parsed.Title);
+      AssertEquals(Source.Body, Parsed.Body)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

@@ -36,6 +36,27 @@ end."
 }
 
 #[test]
+fn std_fs_atomically_replaces_utf8_text() {
+    let path = unique_temp_path("atomic.txt");
+    fs::write(&path, "old").expect("write");
+    let escaped = escape_pascal_string(&path);
+    let source = format!(
+        "\
+program T;
+uses Std.Console, Std.Fs, Std.Result;
+begin
+  WriteLn(Std.Result.IsOk(WriteTextAtomic('{escaped}', 'new')));
+  WriteLn(Std.Result.Unwrap(ReadText('{escaped}')))
+end."
+    );
+
+    let out = compile_and_run(&source);
+
+    assert_eq!(out.lines, vec!["true", "new"]);
+    let _ = fs::remove_file(path);
+}
+
+#[test]
 fn std_fs_exists_is_file_and_is_dir() {
     let path = unique_temp_path("entry.txt");
     fs::write(&path, "x").expect("write");

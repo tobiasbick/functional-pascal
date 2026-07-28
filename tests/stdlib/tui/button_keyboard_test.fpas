@@ -89,5 +89,17 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
   AssertEquals(30, Model.Actions[2]);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, '', false));
+  Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
+  AssertEquals(2, Model.Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Up, '', false));
+  Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
+  AssertEquals(3, Model.Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Left, '', false));
+  Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
+  AssertEquals(2, Model.Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Right, '', false));
+  Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
+  AssertEquals(3, Model.Focus);
   App.Close()
 end.

@@ -5,7 +5,8 @@ uses
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame,
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Msg,
   Std.Tui.Runtime.Routing.Button, Std.Tui.Runtime.Routing.Focus, Std.Tui.Runtime.Routing.Menu,
-  Std.Tui.Runtime.Routing.Input, Std.Tui.Runtime.Routing.TextArea;
+  Std.Tui.Runtime.Routing.FocusNavigation, Std.Tui.Runtime.Routing.Input,
+  Std.Tui.Runtime.Routing.TextArea;
 
 function TuiScrollClamp(Value: integer; Maximum: integer): integer;
 begin
@@ -340,6 +341,15 @@ begin
       NextIndex := 0
     end;
     return [TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))]
+  end;
+  case TuiRouteButtonFocusNavigation(Root, Previous, Key) of
+    Some(Messages):
+    begin
+      return Messages
+    end;
+    None:
+    begin
+    end
   end;
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     Some(Msg):

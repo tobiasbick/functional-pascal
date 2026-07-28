@@ -145,6 +145,12 @@ begin
   AssertTrue(Model.ConfirmOpen);
   AssertEquals(10, Model.Actions[0]);
   AssertEquals(3, Model.Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Down, ''));
+  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  AssertEquals(4, Model.Focus);
+  App.InjectKeyForTest(MakeKey(TuiKeyKind.Up, ''));
+  Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
+  AssertEquals(3, Model.Focus);
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 1, 0);
   AssertEquals(2, Model.PointerHits);

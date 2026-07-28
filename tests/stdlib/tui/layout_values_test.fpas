@@ -21,6 +21,15 @@ begin
   AssertTrue(Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Preferred);
   AssertTrue(Settings.Alignment.Horizontal = TuiAlignmentKind.Fill);
   AssertEquals(0, Settings.Stretch);
+  case Settings.Width of
+    Some(Width):
+    begin
+      Fail('default layout settings must not constrain width')
+    end;
+    None:
+    begin
+    end
+  end;
   case Settings.Height of
     Some(Height):
     begin
@@ -28,6 +37,17 @@ begin
     end;
     None:
     begin
+    end
+  end;
+  var FixedWidth: TuiLayoutSettings := Settings.WithFixedWidth(7);
+  case FixedWidth.Width of
+    Some(Width):
+    begin
+      AssertEquals(7, Width)
+    end;
+    None:
+    begin
+      Fail('fixed-width layout settings must retain their width')
     end
   end;
   var FixedHeight: TuiLayoutSettings := Settings.WithFixedHeight(5);
@@ -39,6 +59,27 @@ begin
     None:
     begin
       Fail('fixed-height layout settings must retain their height')
+    end
+  end;
+  var FixedSize: TuiLayoutSettings := FixedWidth.WithFixedHeight(5);
+  case FixedSize.Width of
+    Some(Width):
+    begin
+      AssertEquals(7, Width)
+    end;
+    None:
+    begin
+      Fail('fixed-height layout settings must preserve their width')
+    end
+  end;
+  case FixedSize.Height of
+    Some(Height):
+    begin
+      AssertEquals(5, Height)
+    end;
+    None:
+    begin
+      Fail('fixed-size layout settings must retain their height')
     end
   end;
   var Custom: TuiLayoutSettings := TuiLayoutSettings.Create(Margins, TuiSizePolicy.Expanding(), TuiAlignment.Leading(), 3);

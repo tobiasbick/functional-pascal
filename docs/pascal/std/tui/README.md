@@ -63,5 +63,6 @@ implementation details.
 
 ## See also
 
+- [Notes application](../../../../apps/notes/README.md)
 - [Standard library](../README.md)
 - [Testing](../testing/README.md)

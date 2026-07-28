@@ -1,0 +1,38 @@
+unit Notes.Theme;
+
+uses Std.Tui;
+
+/// Returns the dark cyan-and-amber truecolor palette used by Notes.
+
+public function NotesPalette(): TuiPalette;
+begin
+  var Background: TuiColor := TuiColor.FromRgb(10, 15, 23);
+  var Surface: TuiColor := TuiColor.FromRgb(17, 24, 35);
+  var SurfaceFocused: TuiColor := TuiColor.FromRgb(24, 39, 53);
+  var Text: TuiColor := TuiColor.FromRgb(216, 226, 236);
+  var Muted: TuiColor := TuiColor.FromRgb(126, 145, 160);
+  var Border: TuiColor := TuiColor.FromRgb(42, 61, 75);
+  var Accent: TuiColor := TuiColor.FromRgb(70, 211, 196);
+  var Amber: TuiColor := TuiColor.FromRgb(245, 184, 76);
+  var Coral: TuiColor := TuiColor.FromRgb(244, 112, 106);
+  mutable var Palette: TuiPalette := TuiPalette.Default();
+  Palette.Normal := TuiStyle.FromColors(Text, Background);
+  Palette.Disabled := TuiStyle.FromColors(Muted, Background);
+  Palette.Focused := TuiStyle.FromColors(Text, SurfaceFocused);
+  Palette.Selected := TuiStyle.FromColors(Text, SurfaceFocused);
+  Palette.Shortcut := TuiStyle.Create(Accent, Background, true, false, false, false);
+  Palette.Frame := TuiStyle.FromColors(Border, Background);
+  Palette.Title := TuiStyle.Create(Text, Background, true, false, false, false);
+  Palette.StatusNormal := TuiStyle.FromColors(Text, Surface);
+  Palette.StatusShortcut := TuiStyle.Create(Accent, Surface, true, false, false, false);
+  Palette.StatusSelected := TuiStyle.FromColors(Background, Accent);
+  Palette.Rule := TuiStyle.FromColors(Border, Background);
+  Palette.Failure := TuiStyle.FromColors(Coral, Background);
+  Palette.Warning := TuiStyle.FromColors(Amber, Background);
+  Palette.Accent := TuiStyle.Create(Accent, Background, true, false, false, false);
+  Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputNormal, TuiStyle.FromColors(Text, Surface));
+  Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputFocused, TuiStyle.FromColors(Text, SurfaceFocused));
+  Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputHint, TuiStyle.FromColors(Muted, Surface));
+  Palette.Inputs := Palette.Inputs.WithRole(TuiStyleRole.InputCursor, TuiStyle.FromColors(Background, Accent));
+  return Palette
+end;

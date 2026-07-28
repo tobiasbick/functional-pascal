@@ -329,3 +329,15 @@ fn rejects_negative_fixed_layout_height() {
         "stderr: {stderr}"
     );
 }
+
+#[test]
+fn rejects_negative_fixed_layout_width() {
+    let (exit, _stdout, stderr) =
+        run_repo_std_program("tests/stdlib/tui/fixed_width_negative_runtime_error.fpas");
+
+    assert_ne!(exit, 0, "negative Tui fixed layout width must fail");
+    assert!(
+        stderr.contains("Tui fixed layout width must not be negative"),
+        "stderr: {stderr}"
+    );
+}

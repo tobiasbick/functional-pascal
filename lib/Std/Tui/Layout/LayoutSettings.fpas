@@ -18,6 +18,7 @@ public type
     public SizePolicy: TuiSizePolicy;
     public Alignment: TuiAlignment;
     public Stretch: integer;
+    public Width: option of integer;
     public Height: option of integer;
 
     /// Creates validated layout settings.
@@ -34,7 +35,26 @@ public type
         SizePolicy := SizePolicy;
         Alignment := Alignment;
         Stretch := TuiLayoutSettingsRequireNonNegativeStretch(Stretch);
+        Width := None;
         Height := None;
+      end
+    end;
+
+    /// Returns a copy constrained to one total width; negative widths panic.
+
+    public function WithFixedWidth(Self: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
+    begin
+      if Width < 0 then
+      begin
+        panic('Tui fixed layout width must not be negative')
+      end;
+      return record
+        Margins := Self.Margins;
+        SizePolicy := Self.SizePolicy;
+        Alignment := Self.Alignment;
+        Stretch := Self.Stretch;
+        Width := Some(Width);
+        Height := Self.Height;
       end
     end;
 
@@ -51,6 +71,7 @@ public type
         SizePolicy := Self.SizePolicy;
         Alignment := Self.Alignment;
         Stretch := Self.Stretch;
+        Width := Self.Width;
         Height := Some(Height);
       end
     end;

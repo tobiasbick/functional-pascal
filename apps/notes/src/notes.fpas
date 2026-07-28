@@ -1,0 +1,32 @@
+program Notes;
+
+uses
+  Notes.Model, Notes.Repository, Notes.Theme, Notes.Update, Notes.View, Std.Args, Std.Console,
+  Std.Random, Std.Tui;
+
+function NotesDirectory(): string;
+begin
+  if Std.Args.ParamCount() > 0 then
+  begin
+    return Std.Args.ParamStr(0)
+  end;
+  return 'notes'
+end;
+
+begin
+  Std.Random.Randomize();
+  var Directory: string := NotesDirectory();
+  case NotesLoadDirectory(Directory) of
+    Ok(Loaded):
+    begin
+      mutable var Initial: NotesModel := NotesModelCreate(Directory, Loaded);
+      Initial.Width := Std.Console.ScreenWidth();
+      Initial.Height := Std.Console.ScreenHeight();
+      TuiApplication.RunWithPalette(Initial, NotesUpdate, NotesView, NotesPalette())
+    end;
+    Error(Message):
+    begin
+      Std.Console.WriteLn('Could not open notes: ' + Message)
+    end
+  end
+end.

@@ -30,3 +30,6 @@ bin/
 
 # Scratch files created by FPAS filesystem tests/demos (cwd = repository root)
 .temp-data/
+
+# Local data directory used by the Notes example application
+/notes/

@@ -44,6 +44,14 @@ begin
   AssertEquals(5, Wrapped.Preferred.Width);
   AssertEquals(5, Wrapped.Preferred.Height);
   AssertEquals(5, Wrapped.Minimum.Width);
+  var FixedWidth: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeLayout(TuiLayoutSettings.Default()
+                                                                                 .WithFixedWidth(7), TuiElementBuilders.MakeLabel('A very long label')), TuiMeasureSpec.AtMost(TuiSize.Create(4, 2)));
+  AssertEquals(7, FixedWidth.Minimum.Width);
+  AssertEquals(7, FixedWidth.Preferred.Width);
+  AssertEquals(7, FixedWidth.Maximum.Width);
+  var Expanding: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), 1), TuiElementBuilders.MakeLabel('X')), TuiMeasureSpec.AtMost(TuiSize.Create(10, 4)));
+  AssertEquals(10, Expanding.Maximum.Width);
+  AssertEquals(4, Expanding.Maximum.Height);
   var WindowSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakePanel('Title', [
                                                                                          TuiElementBuilders.MakeLabel('Body')
 

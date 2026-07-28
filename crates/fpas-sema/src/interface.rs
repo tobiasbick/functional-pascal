@@ -438,6 +438,7 @@ fn qualify_owned_type(
         }
         Record(record) => {
             record.name = qualify_owned_name(&record.name, unit_name, own_types);
+            record.owner_unit = Some(unit_name.to_string());
             for field in &mut record.fields {
                 qualify_owned_type(&mut field.ty, unit_name, own_types);
             }
@@ -662,6 +663,8 @@ fn record_to_interface(
 ) -> Result<artifact::RecordType, InterfaceConversionError> {
     Ok(artifact::RecordType {
         name: record.name.clone(),
+        owner_unit: record.owner_unit.clone(),
+        private_members: record.private_members.clone(),
         fields: record
             .fields
             .iter()
@@ -870,6 +873,8 @@ fn interface_to_record(
     }
     Ok(RecordTy {
         name: record.name.clone(),
+        owner_unit: record.owner_unit.clone(),
+        private_members: record.private_members.clone(),
         fields: record
             .fields
             .iter()

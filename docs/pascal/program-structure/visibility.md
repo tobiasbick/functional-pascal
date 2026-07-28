@@ -2,7 +2,8 @@
 
 All declarations in a unit are **public by default**. Use the `private` keyword to restrict a declaration to the unit that defines it.
 
-Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`visibility` on declarations).
+Formal syntax: [`grammar.ebnf`](../../specs/grammar.ebnf) (`visibility` on
+declarations and `record_member`).
 
 | Annotation | Meaning |
 |---|---|
@@ -35,7 +36,15 @@ end;
 
 `Point` and `Distance` are public. `Square` is private — only callable from within `MyApp.Geometry`.
 
-The `private` and `public` keywords apply to `function`, `procedure`, `type`, `const`, and `var` declarations in units. In `program` files, top-level declarations are always visible.
+The `private` and `public` keywords apply to `function`, `procedure`, `type`,
+`const`, and `var` declarations in units. They also apply directly to individual
+record fields, functions, and procedures declared in a unit. Record members are
+public by default, and there are no visibility sections. See
+[Records](../language/types/records.md#field-visibility) and
+[Record methods](../language/types/record-methods.md#routine-visibility).
+
+In `program` files, visibility modifiers are invalid, including inside record
+types.
 
 Project-level unit export lists (`[exports].units` on library projects) are documented in [Projects](projects.md#exports-section-library-projects-only).
 

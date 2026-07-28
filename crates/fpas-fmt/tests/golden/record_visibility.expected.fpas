@@ -1,0 +1,17 @@
+unit Demo.Counter;
+
+type
+  Counter = record
+    private Value: integer;
+    Step: integer;
+
+    private function Hidden(Self: Counter): integer;
+    begin
+      return Self.Value
+    end;
+
+    static function Create(): Counter;
+    begin
+      return record Value := 0; Step := 1; end
+    end;
+  end;

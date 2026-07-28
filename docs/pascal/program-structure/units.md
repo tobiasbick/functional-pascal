@@ -111,6 +111,11 @@ analyzing its implementation. A private implementation change rebuilds that unit
 invalidate consumers while its public interface hash stays unchanged. An exported signature,
 layout, constant value, or other public-interface change invalidates consuming units.
 
+For an exported record, the semantic interface also stores its declaring unit
+and the names of private fields and routines. Consumers therefore receive the
+complete runtime layout needed for linking while semantic analysis still
+enforces record member visibility.
+
 The final executable bytecode image links only reachable unit objects in dependency order.
 Existing top-level constant and variable initializers run in that same dependency order before
 the program body. Units do not have separate initialization or finalization syntax.

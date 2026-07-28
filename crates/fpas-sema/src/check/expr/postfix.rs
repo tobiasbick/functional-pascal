@@ -132,6 +132,11 @@ impl Checker {
             return Ty::Error;
         };
 
+        if self.reject_private_record_member(record_ty, method_name, span) {
+            self.check_args_only(args);
+            return Ty::Error;
+        }
+
         let qualified = format!("{}.{}", record_ty.name, method_name);
         let op_key = Self::postfix_operation_lookup_key(operation);
 

@@ -1,6 +1,23 @@
 use super::*;
 
 #[test]
+fn record_events_do_not_accept_visibility_modifiers() {
+    let (_, errors) = parse_compilation_unit_with_errors(
+        "unit Demo.Types; \
+         type Counter = record \
+           private event Changed: procedure() read GetChanged write SetChanged; \
+         end;",
+    );
+
+    assert!(errors.iter().any(|diagnostic| {
+        matches!(
+            diagnostic,
+            ParseDiagnostic::Parser(error) if error.code == fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY
+        )
+    }));
+}
+
+#[test]
 fn record_event_parses() {
     let p = parse_ok(
         "program T; type Button = record \

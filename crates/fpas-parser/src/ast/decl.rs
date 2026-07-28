@@ -133,13 +133,33 @@ pub enum RecordMethod {
     Procedure(ProcedureDecl),
 }
 
+impl RecordMethod {
+    /// Return the visibility declared directly before this record routine.
+    pub fn visibility(&self) -> Visibility {
+        match self {
+            Self::Function(function) | Self::StaticFunction(function) => function.visibility,
+            Self::Procedure(procedure) | Self::StaticProcedure(procedure) => procedure.visibility,
+        }
+    }
+
+    /// Return the source name of this record routine.
+    pub fn name(&self) -> &str {
+        match self {
+            Self::Function(function) | Self::StaticFunction(function) => &function.name,
+            Self::Procedure(procedure) | Self::StaticProcedure(procedure) => &procedure.name,
+        }
+    }
+}
+
 /// A field declaration inside a `record … end` block.
 ///
-/// **Documentation:** `docs/pascal/language/types/records.md` (Default field values)
+/// **Documentation:** `docs/pascal/language/types/records.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct FieldDef {
     pub name: String,
     pub type_expr: TypeExpr,
+    /// Member visibility; public when no modifier was written.
+    pub visibility: Visibility,
     /// Optional default expression used when the field is omitted from a record literal.
     /// Only valid on a named record type definition, not on anonymous literals.
     pub default_value: Option<Expr>,

@@ -1,12 +1,13 @@
 #![allow(
     clippy::expect_used,
+    clippy::panic,
     reason = "interface fixtures use expect for compact round-trip assertions"
 )]
 
 use fpas_unit::interface::{
     CallableType, ConstantValue, EnumType, EnumVariant, FieldType, GenericParameter,
-    InterfaceSymbol, InterfaceType, ParameterType, SymbolKind, TypeConstraint, UnitInterface,
-    decode_interface, encode_interface,
+    InterfaceSymbol, InterfaceType, MethodType, ParameterType, RecordType, SymbolKind,
+    TypeConstraint, UnitInterface, decode_interface, encode_interface,
 };
 
 fn sample_interface() -> UnitInterface {
@@ -69,6 +70,35 @@ fn sample_interface() -> UnitInterface {
                 ty: InterfaceType::Integer,
                 kind: SymbolKind::Constant(Some(ConstantValue::Integer(10))),
             },
+            InterfaceSymbol {
+                name: "Counter".to_string(),
+                qualified_name: "Demo.Api.Counter".to_string(),
+                ty: InterfaceType::Record(Box::new(RecordType {
+                    name: "Demo.Api.Counter".to_string(),
+                    owner_unit: Some("Demo.Api".to_string()),
+                    private_members: vec!["CreateHidden".to_string(), "Value".to_string()],
+                    fields: vec![FieldType {
+                        name: "Value".to_string(),
+                        ty: InterfaceType::Integer,
+                        default_value: Some(ConstantValue::Integer(0)),
+                    }],
+                    methods: Vec::new(),
+                    static_routines: vec![MethodType {
+                        name: "CreateHidden".to_string(),
+                        callable: CallableType {
+                            type_parameters: Vec::new(),
+                            parameters: Vec::new(),
+                            result: Some(Box::new(InterfaceType::Named(
+                                "Demo.Api.Counter".to_string(),
+                            ))),
+                            variadic: false,
+                        },
+                    }],
+                    properties: Vec::new(),
+                    events: Vec::new(),
+                })),
+                kind: SymbolKind::Type,
+            },
         ],
     }
 }
@@ -112,6 +142,16 @@ fn observable_signature_and_value_changes_change_hash() {
     let original_hash = original.digest().expect("original digest");
     assert_ne!(original_hash, signature.digest().expect("signature digest"));
     assert_ne!(original_hash, value.digest().expect("value digest"));
+
+    let mut visibility = sample_interface();
+    let InterfaceType::Record(record) = &mut visibility.symbols[3].ty else {
+        panic!("expected record fixture");
+    };
+    record.private_members.clear();
+    assert_ne!(
+        original_hash,
+        visibility.digest().expect("visibility digest")
+    );
 }
 
 #[test]

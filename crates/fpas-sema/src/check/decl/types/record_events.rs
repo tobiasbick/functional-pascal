@@ -21,7 +21,12 @@ impl Checker {
         seen_members: &mut HashSet<String>,
     ) -> Vec<(String, EventTy)> {
         let mut checked = Vec::new();
-        let owner_unit = owner_unit_from_type_name(type_name);
+        let owner_unit = self
+            .scopes
+            .function_ctx
+            .as_ref()
+            .and_then(|context| context.owner_unit.clone())
+            .or_else(|| owner_unit_from_type_name(type_name));
         for event in events {
             if !seen_members.insert(canonical_symbol_name(&event.name)) {
                 self.error_with_code(

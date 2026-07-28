@@ -92,6 +92,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/functions/closures.md`
     SEMA_TASK_BOUND_CALLABLE = 2016;
+
+    /// A private record field or routine is accessed outside its declaring unit.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/records.md`
+    SEMA_PRIVATE_RECORD_MEMBER = 2017;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

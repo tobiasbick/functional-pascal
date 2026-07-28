@@ -60,6 +60,8 @@ pub(super) fn register_record_type(
 ) -> Ty {
     let record_ty = Ty::Record(Arc::new(RecordTy {
         name: qualified_name.into(),
+        owner_unit: None,
+        private_members: Vec::new(),
         fields,
         methods: Vec::new(),
         static_functions: Vec::new(),

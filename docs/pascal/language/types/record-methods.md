@@ -6,6 +6,29 @@ Records can declare functions and procedures that operate on their data, and
 Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`record_method`,
 `function_decl`, `procedure_decl`).
 
+## Routine visibility
+
+Record functions and procedures declared in a unit are public by default.
+`private` and `public` are written directly before each routine, before an
+optional `static`; FPAS has no visibility sections.
+
+```pascal
+type
+  Counter = record
+    private Value: integer;
+
+    private function ReadValue(Self: Counter): integer;
+    public static function Create(): Counter;
+    function Current(Self: Counter): integer;
+  end;
+```
+
+The declaring unit may call `ReadValue`; importing units cannot. `Create` and
+`Current` are public (`Current` through the default). Visibility applies to
+instance functions, instance procedures, static functions, and static
+procedures. It is valid only in unit files. Record properties and events remain
+public.
+
 ## Instance methods
 
 The first parameter must be `Self` typed as the record. Callers use value dot

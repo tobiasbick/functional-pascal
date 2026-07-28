@@ -36,6 +36,9 @@ impl Checker {
         method_name: &str,
         qualified: &str,
     ) -> Option<MethodKind> {
+        if !self.record_member_is_visible(record_ty, method_name) {
+            return None;
+        }
         if let Some((_, method_kind)) = record_ty
             .methods
             .iter()
@@ -58,6 +61,9 @@ impl Checker {
         method_name: &str,
         _qualified: &str,
     ) -> Option<crate::types::FunctionTy> {
+        if !self.record_member_is_visible(record_ty, method_name) {
+            return None;
+        }
         if let Some((_, function_ty)) = record_ty
             .static_functions
             .iter()
@@ -84,6 +90,9 @@ impl Checker {
         record_ty: &crate::types::RecordTy,
         method_name: &str,
     ) -> Option<crate::types::ProcedureTy> {
+        if !self.record_member_is_visible(record_ty, method_name) {
+            return None;
+        }
         if let Some((_, procedure_ty)) = record_ty
             .static_procedures
             .iter()
@@ -289,6 +298,11 @@ impl Checker {
             Ty::Record(record_ty) => record_ty.clone(),
             _ => return None,
         };
+
+        if self.reject_private_record_member(&record_ty, &method_name, span) {
+            self.check_args_only(args);
+            return Some(Ty::Error);
+        }
 
         let qualified = format!("{}.{}", record_ty.name, method_name);
         let call_key = Self::expr_lookup_key(call_expr);

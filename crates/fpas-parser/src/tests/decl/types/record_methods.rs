@@ -22,6 +22,48 @@ fn record_with_function_method() {
 }
 
 #[test]
+fn unit_record_routines_preserve_per_member_visibility() {
+    let unit = parse_unit_ok(
+        "unit Demo.Types; \
+         type Counter = record \
+           private function Hidden(Self: Counter): integer; begin return 1 end; \
+           public procedure Reset(Self: Counter); begin end; \
+           private static function CreateHidden(): Counter; begin return record end end; \
+           static procedure Clear(); begin end; \
+         end;",
+    );
+    let Decl::TypeDef(type_def) = &unit.declarations[0] else {
+        panic!("expected TypeDef");
+    };
+    let TypeBody::Record(record) = &type_def.body else {
+        panic!("expected Record");
+    };
+
+    assert_eq!(record.methods[0].visibility(), Visibility::Private);
+    assert_eq!(record.methods[1].visibility(), Visibility::Public);
+    assert_eq!(record.methods[2].visibility(), Visibility::Private);
+    assert_eq!(record.methods[3].visibility(), Visibility::Public);
+}
+
+#[test]
+fn record_routine_visibility_is_rejected_in_program_files() {
+    let (_, errors) = parse_with_errors(
+        "program T; \
+         type Counter = record \
+           private function Hidden(Self: Counter): integer; begin return 1 end; \
+         end; \
+         begin end.",
+    );
+
+    assert!(errors.iter().any(|diagnostic| {
+        matches!(
+            diagnostic,
+            ParseDiagnostic::Parser(error) if error.code == fpas_diagnostics::codes::PARSE_INVALID_VISIBILITY
+        )
+    }));
+}
+
+#[test]
 fn record_with_procedure_method() {
     let p = parse_ok(
         "program T; type Greeter = record Name: string; \

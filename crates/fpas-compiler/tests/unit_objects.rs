@@ -9,48 +9,14 @@ use std::collections::BTreeMap;
 use fpas_bytecode::Op;
 use fpas_compiler::{compile_program_object, compile_unit_object};
 use fpas_linker::link_objects;
-use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_unit::object::{
     DefinitionKind, ObjectConstant, ObjectImport, ObjectLocation, RelocatableObject,
     collect_relocations,
 };
 
-fn parse_unit(source: &str) -> fpas_parser::Unit {
-    let (parsed, diagnostics) = parse_compilation_unit(source);
-    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-    let CompilationUnit::Unit(unit) = parsed else {
-        panic!("fixture must be a unit");
-    };
-    unit
-}
+mod common;
 
-fn run_zero_arity(objects: Vec<RelocatableObject>, callable: &str) -> Vec<String> {
-    let code = vec![Op::Call(0, 0), Op::PrintLn, Op::Halt];
-    let program = RelocatableObject {
-        owner: "demo.program".to_string(),
-        constants: vec![ObjectConstant::String(callable.to_string())],
-        locations: vec![
-            ObjectLocation {
-                line: 1,
-                column: 1,
-                source_id: 0,
-            };
-            code.len()
-        ],
-        functions: BTreeMap::new(),
-        definitions: Vec::new(),
-        imports: vec![ObjectImport {
-            name: callable.to_string(),
-            kind: DefinitionKind::Callable,
-        }],
-        relocations: collect_relocations(&code),
-        code,
-    };
-    let chunk = link_objects(&objects, &program).expect("object linking");
-    let mut vm = fpas_vm::Vm::new(chunk);
-    vm.run().expect("linked VM execution");
-    vm.output().lines.clone()
-}
+use common::{parse_unit, run_zero_arity};
 
 #[test]
 fn independently_compiled_units_link_and_run_without_dependency_asts() {

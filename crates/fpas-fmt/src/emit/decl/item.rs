@@ -135,6 +135,7 @@ fn emit_record_type(emitter: &mut Emitter, record: &RecordType, comments: &Comme
 fn emit_field_def(emitter: &mut Emitter, field: &FieldDef, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, field.span.offset, false);
     emitter.write_current_indent();
+    emit_visibility(emitter, field.visibility);
     emitter.write(&field.name);
     emitter.write(": ");
     emit_type_expr(emitter, &field.type_expr);
@@ -150,6 +151,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
         RecordMethod::Function(function) => {
             emit_leading_comments(emitter, comments, function.span.offset, true);
             emitter.write_current_indent();
+            emit_visibility(emitter, function.visibility);
             emit_function_header(
                 emitter,
                 &function.name,
@@ -164,6 +166,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
         RecordMethod::StaticFunction(function) => {
             emit_leading_comments(emitter, comments, function.span.offset, true);
             emitter.write_current_indent();
+            emit_visibility(emitter, function.visibility);
             emitter.write("static ");
             emit_function_header(
                 emitter,
@@ -179,6 +182,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
         RecordMethod::StaticProcedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();
+            emit_visibility(emitter, procedure.visibility);
             emitter.write("static ");
             emit_procedure_header(
                 emitter,
@@ -192,6 +196,7 @@ fn emit_record_method(emitter: &mut Emitter, method: &RecordMethod, comments: &C
         RecordMethod::Procedure(procedure) => {
             emit_leading_comments(emitter, comments, procedure.span.offset, true);
             emitter.write_current_indent();
+            emit_visibility(emitter, procedure.visibility);
             emit_procedure_header(
                 emitter,
                 &procedure.name,

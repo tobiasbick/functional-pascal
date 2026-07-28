@@ -7,7 +7,9 @@ use super::Checker;
 use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};
 use crate::types::{FunctionTy, MethodKind, ParamTy, ProcedureTy, RecordTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_TYPE_MISMATCH};
-use fpas_parser::{FuncBody, FunctionDecl, RecordMethod, RecordType, TypeDef, TypeParam};
+use fpas_parser::{
+    FuncBody, FunctionDecl, RecordMethod, RecordType, TypeDef, TypeParam, Visibility,
+};
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -89,8 +91,27 @@ impl Checker {
             self.record_defaults.insert(td.name.clone(), defaults_entry);
         }
 
+        let private_members = record
+            .fields
+            .iter()
+            .filter(|field| field.visibility == Visibility::Private)
+            .map(|field| field.name.clone())
+            .chain(
+                record
+                    .methods
+                    .iter()
+                    .filter(|method| method.visibility() == Visibility::Private)
+                    .map(|method| method.name().to_string()),
+            )
+            .collect();
         let record_ty = RecordTy {
             name: td.name.clone(),
+            owner_unit: self
+                .scopes
+                .function_ctx
+                .as_ref()
+                .and_then(|context| context.owner_unit.clone()),
+            private_members,
             fields,
             methods: Vec::new(),
             static_functions: Vec::new(),
@@ -621,9 +642,14 @@ impl Checker {
             );
         }
         let previous_ctx = self.scopes.function_ctx.take();
-        let owner_unit = qualified_name
-            .rsplit_once('.')
-            .and_then(|(type_name, _)| super::record_events::owner_unit_from_type_name(type_name));
+        let owner_unit = previous_ctx
+            .as_ref()
+            .and_then(|context| context.owner_unit.clone())
+            .or_else(|| {
+                qualified_name.rsplit_once('.').and_then(|(type_name, _)| {
+                    super::record_events::owner_unit_from_type_name(type_name)
+                })
+            });
         self.scopes.function_ctx = Some(FunctionCtx {
             name: qualified_name.to_string(),
             return_type,

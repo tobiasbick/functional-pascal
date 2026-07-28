@@ -30,6 +30,15 @@ fn unit_clamp() {
 }
 
 #[test]
+fn record_member_visibility() {
+    common::assert_golden(
+        "record_visibility",
+        "unit Demo.Counter; type Counter = record private Value: integer; public Step: integer; private function Hidden(Self: Counter): integer; begin return Self.Value end; public static function Create(): Counter; begin return record Value := 0; Step := 1; end end; end;",
+        include_str!("golden/record_visibility.expected.fpas"),
+    );
+}
+
+#[test]
 fn long_uses() {
     common::assert_golden(
         "long_uses",

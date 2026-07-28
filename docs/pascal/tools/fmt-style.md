@@ -305,6 +305,9 @@ Semicolons are **separators**, not terminators:
 - Declarations in `type` blocks and unit/program headers: `;` between siblings; no trailing `;` before closing `end` of a nested block.
 - `case` arm labels: `;` after each arm’s closing `end` (including the last arm before `else`); `else` branch follows [`language/control-flow/case-of-intro.md`](../language/control-flow/case-of-intro.md).
 - Fields inside a `record` type: `;` after **every** field, including the last field before `end`, a blank line, or methods (matches existing FPAS sources).
+- Preserve `private` on individual record fields and routines. Omit explicit
+  `public`, because public is the canonical default. A routine modifier appears
+  before `static`.
 
 ## Spacing
 

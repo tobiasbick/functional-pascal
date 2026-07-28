@@ -212,6 +212,8 @@ impl Checker {
 
         Ty::Record(std::sync::Arc::new(crate::types::RecordTy {
             name: "<anonymous>".into(),
+            owner_unit: None,
+            private_members: Vec::new(),
             fields: field_types,
             methods: Vec::new(),
             static_functions: Vec::new(),
@@ -261,6 +263,10 @@ impl Checker {
 
         // Validate each override field.
         for field_init in fields {
+            if self.reject_private_record_member(&record_ty, &field_init.name, span) {
+                let _ = self.check_expr(&field_init.value);
+                continue;
+            }
             if let Some((_, field_ty)) = record_ty
                 .fields
                 .iter()

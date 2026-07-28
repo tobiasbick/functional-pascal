@@ -97,6 +97,10 @@ pub struct EventType {
 pub struct RecordType {
     /// Canonical qualified record name.
     pub name: String,
+    /// Canonical source unit that owns private members.
+    pub owner_unit: Option<String>,
+    /// Names of fields and routines declared `private`.
+    pub private_members: Vec<String>,
     /// Fields in layout order.
     pub fields: Vec<FieldType>,
     /// Instance methods in canonical name order.

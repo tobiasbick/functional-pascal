@@ -106,6 +106,11 @@ impl Checker {
             _ => return false,
         };
 
+        if self.reject_private_record_member(&record_ty, &method_name, span) {
+            self.check_args_only(args);
+            return true;
+        }
+
         let qualified = format!("{}.{}", record_ty.name, method_name);
         let call_key = crate::designator_lookup_key(designator);
 

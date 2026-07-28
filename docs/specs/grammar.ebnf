@@ -166,9 +166,10 @@ unit_declaration    = [ visibility ] program_declaration ;
 
 visibility          = 'public' | 'private' ;
 
-(* Default visibility is `public`. `public`/`private` control       *)
-(* whether a symbol is exported from a unit. They are not valid in  *)
-(* `program` files.                                                 *)
+(* Default visibility is `public`. At unit scope, `public`/`private` *)
+(* control whether a symbol is exported. Inside a record declared in *)
+(* a unit, they control access to individual fields and routines.    *)
+(* Visibility modifiers are not valid in `program` files.            *)
 
 (* -- Constants -- *)
 const_block         = 'const' const_def { const_def } ;
@@ -219,8 +220,11 @@ formal_type_param   = [ 'mutable' ] identifier ':' type_expr ;
 (* ---- 2.4 Record & Enum Types ---------------------------------- *)
 
 record_type         = 'record'
-                      { field_def | record_method | record_property | record_event }
+                      { record_member }
                       'end' ;
+record_member       = [ visibility ] ( field_def | record_method )
+                    | record_property
+                    | record_event ;
 field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 
 (* ':= expression' is an optional default value for the field.      *)
@@ -229,6 +233,10 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 (* a default must be supplied in every record literal.              *)
 
 record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
+
+(* Record member visibility is available only in unit files. The    *)
+(* modifier is written before each field or routine; there are no    *)
+(* visibility sections. Properties and events are always public.     *)
 
 (* Instance record methods must declare Self as the first parameter, *)
 (* typed as the enclosing record. Callers use value dot notation;    *)

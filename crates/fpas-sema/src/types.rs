@@ -100,6 +100,10 @@ pub enum Ty {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
     pub name: String,
+    /// Exact source unit that declared the record, or `None` for local and intrinsic records.
+    pub owner_unit: Option<String>,
+    /// Case-preserving names of fields and routines declared `private`.
+    pub private_members: Vec<String>,
     pub fields: Vec<(String, Ty)>,
     /// Instance methods (require implicit `Self`).
     pub methods: Vec<(String, MethodKind)>,
@@ -271,7 +275,13 @@ impl Ty {
                 n.eq_ignore_ascii_case(&r.name)
             }
             // Records: structural compatibility (ignore name)
-            (Ty::Record(a), Ty::Record(b)) => Self::record_fields_compatible(&a.fields, &b.fields),
+            (Ty::Record(a), Ty::Record(b)) => {
+                if !a.private_members.is_empty() || !b.private_members.is_empty() {
+                    a.name.eq_ignore_ascii_case(&b.name)
+                } else {
+                    Self::record_fields_compatible(&a.fields, &b.fields)
+                }
+            }
             // Enums: same name is sufficient (type-erased generics).
             (Ty::Enum(a), Ty::Enum(b)) => a.name.eq_ignore_ascii_case(&b.name),
             (Ty::Unit, Ty::Unit) => true,
@@ -344,7 +354,10 @@ impl Ty {
         matches!(self, Ty::Integer | Ty::Boolean) || matches!(self, Ty::Enum(e) if !e.has_data())
     }
 
-    fn record_fields_compatible(fields: &[(String, Ty)], other_fields: &[(String, Ty)]) -> bool {
+    pub(crate) fn record_fields_compatible(
+        fields: &[(String, Ty)],
+        other_fields: &[(String, Ty)],
+    ) -> bool {
         if fields.len() != other_fields.len() {
             return false;
         }
@@ -373,6 +386,8 @@ mod tests {
     fn cloning_record_type_shares_immutable_descriptor() {
         let ty = Ty::Record(Arc::new(RecordTy {
             name: "Point".to_string(),
+            owner_unit: None,
+            private_members: Vec::new(),
             fields: vec![("X".to_string(), Ty::Integer)],
             methods: Vec::new(),
             static_functions: Vec::new(),

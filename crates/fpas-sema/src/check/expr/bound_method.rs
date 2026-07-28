@@ -26,6 +26,9 @@ impl Checker {
     ) -> Ty {
         match ty {
             Ty::Record(record_ty) => {
+                if self.reject_private_record_member(record_ty, member, span) {
+                    return Ty::Error;
+                }
                 if let Some((_, field_ty)) = record_ty
                     .fields
                     .iter()

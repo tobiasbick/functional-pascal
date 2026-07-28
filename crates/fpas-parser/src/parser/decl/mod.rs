@@ -19,7 +19,9 @@ impl Parser {
                     decls.extend(self.parse_var_block(true, visibility));
                 }
                 Token::Mutable => break,
-                Token::Type => decls.extend(self.parse_type_block(visibility)),
+                Token::Type => {
+                    decls.extend(self.parse_type_block(visibility, allow_visibility));
+                }
                 Token::Function => {
                     decls.push(Decl::Function(self.parse_function_decl(visibility)));
                 }
@@ -56,11 +58,14 @@ impl Parser {
         }
     }
 
-    /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit` files.
+    /// Parse an optional declaration or record-member visibility modifier.
+    ///
+    /// `docs/pascal/program-structure/units.md`: visibility modifiers are valid only in `unit`
+    /// files, including modifiers nested inside record declarations.
     ///
     /// In a `program`, an invalid modifier still records the written visibility in the AST so the
     /// source intent is preserved; a diagnostic is always emitted.
-    fn parse_visibility(&mut self, allow_visibility: bool) -> Visibility {
+    pub(super) fn parse_visibility(&mut self, allow_visibility: bool) -> Visibility {
         match self.current_token() {
             Token::Public => {
                 let span = self.current_span();

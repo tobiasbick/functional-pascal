@@ -76,6 +76,8 @@ impl Checker {
         record_ty: &crate::types::RecordTy,
         span: fpas_lexer::Span,
     ) {
+        let construction_rejected = self.reject_private_record_construction(record_ty, span);
+
         // Check each provided field.
         let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
         for field_init in fields {
@@ -151,6 +153,10 @@ impl Checker {
                 // Still check sub-expressions to collect further errors.
                 let _ = self.check_expr(&field_init.value);
             }
+        }
+
+        if construction_rejected {
+            return;
         }
 
         // Check all required fields (those without a default) are provided.

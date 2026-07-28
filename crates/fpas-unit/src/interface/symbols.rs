@@ -104,6 +104,12 @@ fn canonicalize_type(ty: &mut InterfaceType) {
         Function(callable) | Procedure(callable) => canonicalize_callable(callable),
         Record(record) => {
             record.name = canonical_name(&record.name);
+            record.owner_unit = record.owner_unit.as_deref().map(canonical_name);
+            for member in &mut record.private_members {
+                *member = canonical_name(member);
+            }
+            record.private_members.sort();
+            record.private_members.dedup();
             for field in &mut record.fields {
                 canonicalize_type(&mut field.ty);
             }

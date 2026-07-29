@@ -3,7 +3,7 @@ name: fpas-projects
 description: >
   Guides Functional Pascal project manifests, workspaces, CLI workflows, and test bundles. Use when
   creating or editing `.fpasprj`, `.fpasworkspace`, dependencies, exports, `suite.fpasprj`, or running
-  `fpas run`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
+  `fpas build`, `fpas run`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
   library linking, workspace members, or how to run/check tests.
 ---
 
@@ -99,16 +99,20 @@ members = [
 ]
 ```
 
-Workspace lists members; **each consumer still declares its own** `[dependencies]`. `fpas check` with no path checks all members; `fpas run` with no path runs the sole `kind = "program"` member.
+Workspace lists members; **each consumer still declares its own** `[dependencies]`. `fpas check` with no path checks all members; `fpas run` with no path or an explicit `.fpasworkspace` runs the sole `kind = "program"` member.
 
 ## CLI quick reference
 
 | Command | Purpose |
 |---------|---------|
 | `fpas` | Print usage |
+| `fpas build [<path>]` | Build project or workspace artifacts |
+| `fpas build --executable [--name <name>] <path>` | Bundle exactly one program for the current host |
 | `fpas run` | Discover and run program in cwd (workspace or single `.fpasprj`) |
 | `fpas run <file.fpas>` | Run single program file |
-| `fpas run <file.fpasprj>` | Run program project |
+| `fpas run <file.fpasprj>` | Produce/reuse its `.fpascp` and run it |
+| `fpas run <file.fpasworkspace>` | Run its sole program member |
+| `fpas run <file.fpascp>` | Validate and run a compiled program without sources |
 | `fpas check [<path>]` | Type-check without running (`.fpas`, dir, `.fpasprj`, `.fpasworkspace`) |
 | `fpas test [<path>]` | Run `*_test.fpas` entries; discover `kind = "test"` in workspace |
 | `fpas fmt [<path>]` | Format `.fpas` sources |
@@ -124,7 +128,10 @@ Full CLI spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/pro
 
 ```text
 fpas check my-app.fpasprj          # type-check project
-fpas run my-app.fpasprj            # run program project
+fpas build my-app.fpasprj          # produce or reuse my-app.fpascp
+fpas build --executable my-app.fpasprj # produce native app / app.exe
+fpas run my-app.fpasprj            # produce/reuse and run my-app.fpascp
+fpas run my-app.fpascp             # run image without project sources
 fpas test tests/                   # full regression tree
 fpas test tests/suite.fpasprj      # bundled manifest
 fpas test tests/stdlib/tui/mvu_host_signature_test.fpas
@@ -137,7 +144,8 @@ Discovery with no path:
 2. Else if exactly one `.fpasprj` → use it.
 3. Multiple matches → error; pass an explicit path.
 
-`fpas run` does not accept a directory; use a `.fpas` or `.fpasprj` path.
+`fpas run` does not accept a directory; use a `.fpas`, `.fpasprj`,
+`.fpasworkspace`, or `.fpascp` path.
 
 ## Adding a new test to the suite
 

@@ -12,6 +12,8 @@ const WORKSPACE_FILE_EXTENSION: &str = "fpasworkspace";
 /// Resolved workspace with validated member project paths.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadedWorkspace {
+    /// Declared `workspace.name`.
+    pub name: String,
     /// Absolute or normalized paths to member `.fpasprj` files.
     pub member_projects: Vec<PathBuf>,
 }
@@ -146,7 +148,10 @@ pub fn load_workspace(path: &Path) -> Result<LoadedWorkspace, String> {
         );
     }
 
-    Ok(LoadedWorkspace { member_projects })
+    Ok(LoadedWorkspace {
+        name: workspace_file.workspace.name,
+        member_projects,
+    })
 }
 
 /// Discover a single `.fpasworkspace` file in `cwd`, if present.

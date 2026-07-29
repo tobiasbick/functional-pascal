@@ -515,9 +515,18 @@ dependencies = [
  "fpas-compiler",
  "fpas-linker",
  "fpas-parser",
+ "fpas-program",
  "fpas-project",
  "fpas-unit",
  "fpas-vm",
+]
+
+[[package]]
+name = "fpas-bundle"
+version = "0.0.1"
+dependencies = [
+ "fpas-bytecode",
+ "fpas-program",
 ]
 
 [[package]]
@@ -534,11 +543,13 @@ name = "fpas-cli"
 version = "0.0.1"
 dependencies = [
  "fpas-build",
+ "fpas-bundle",
  "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
  "fpas-fmt",
  "fpas-parser",
+ "fpas-program",
  "fpas-project",
  "fpas-std",
  "fpas-vm",
@@ -596,6 +607,17 @@ version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "fpas-lexer",
+]
+
+[[package]]
+name = "fpas-program"
+version = "0.0.1"
+dependencies = [
+ "blake3",
+ "fpas-bytecode",
+ "fpas-vm",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

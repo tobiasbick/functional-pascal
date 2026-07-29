@@ -1,0 +1,19 @@
+[package]
+name = "fpas-program"
+description = "Persistent executable program images for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+blake3 = { workspace = true }
+fpas-bytecode = { path = "../fpas-bytecode" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+fpas-vm = { path = "../fpas-vm" }
+
+[lints]
+workspace = true

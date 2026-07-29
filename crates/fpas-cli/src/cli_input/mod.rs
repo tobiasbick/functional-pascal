@@ -13,7 +13,8 @@ use std::time::Duration;
 pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
 pub(crate) use types::{
-    CliConfig, CliInput, FmtCliConfig, HelpTopic, ResolvedCli, TestCliConfig, TestReportFormat,
+    BuildCliConfig, CliConfig, CliInput, FmtCliConfig, HelpTopic, ResolvedCli, TestCliConfig,
+    TestReportFormat,
 };
 
 use mode::{
@@ -28,6 +29,7 @@ use discovery::{discover_input, resolve_explicit_input};
 #[cfg(test)]
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     match resolve_cli_config(args, cwd)? {
+        ResolvedCli::Build(config) => Ok(config.input),
         ResolvedCli::Run(config) | ResolvedCli::Check(config) => Ok(config.input),
         ResolvedCli::Fmt(_) => {
             Err("resolve_cli_input: use resolve_cli_config for `fpas fmt`".to_string())
@@ -58,15 +60,16 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let (mode, cli_args) = parse_cli_mode(cli_args)?;
 
-    if matches!(mode, CliMode::Check | CliMode::Fmt | CliMode::Test) && !program_args.is_empty() {
+    if mode != CliMode::Run && !program_args.is_empty() {
         let cmd = match mode {
+            CliMode::Build => "fpas build",
             CliMode::Check => "fpas check",
             CliMode::Fmt => "fpas fmt",
             CliMode::Test => "fpas test",
             CliMode::Run => unreachable!(),
         };
         return Err(format!(
-            "`{cmd}` does not accept program arguments after `--`.\n  help: Omit `--` and trailing args when type-checking or testing."
+            "`{cmd}` does not accept program arguments after `--`.\n  help: Omit `--` and trailing program arguments."
         ));
     }
 
@@ -82,23 +85,54 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     let mut timeout = None::<Duration>;
     let mut jobs = None::<usize>;
     let mut standard_library = None::<std::path::PathBuf>;
+    let mut executable = false;
+    let mut application_name = None::<String>;
     let mut positional = Vec::new();
     let mut index = 0;
     while index < cli_args.len() {
         match cli_args[index].as_str() {
-            "--std-lib" if matches!(mode, CliMode::Run | CliMode::Check | CliMode::Test) => {
+            "--std-lib"
+                if matches!(
+                    mode,
+                    CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Test
+                ) =>
+            {
                 index += 1;
                 let Some(path) = cli_args.get(index) else {
-                    return Err(
-                        "Missing directory after `--std-lib`.\n  help: `fpas run --std-lib ./lib hello.fpas`."
-                            .to_string(),
-                    );
+                    let example = match mode {
+                        CliMode::Build => "fpas build --std-lib ./lib my-app.fpasprj",
+                        CliMode::Run => "fpas run --std-lib ./lib hello.fpas",
+                        CliMode::Check => "fpas check --std-lib ./lib my-app.fpasprj",
+                        CliMode::Test => "fpas test --std-lib ./lib tests/",
+                        CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
+                    };
+                    return Err(format!(
+                        "Missing directory after `--std-lib`.\n  help: `{example}`."
+                    ));
                 };
                 if standard_library
                     .replace(std::path::PathBuf::from(path))
                     .is_some()
                 {
                     return Err("Duplicate `--std-lib` option.".to_string());
+                }
+            }
+            "--executable" if mode == CliMode::Build => {
+                if executable {
+                    return Err("Duplicate `--executable` option.".to_string());
+                }
+                executable = true;
+            }
+            "--name" if mode == CliMode::Build => {
+                index += 1;
+                let Some(name) = cli_args.get(index) else {
+                    return Err(
+                        "Missing application name after `--name`.\n  help: `fpas build --executable --name hello hello.fpasprj`."
+                            .to_string(),
+                    );
+                };
+                if application_name.replace(name.clone()).is_some() {
+                    return Err("Duplicate `--name` option.".to_string());
                 }
             }
             "--check" if mode == CliMode::Fmt => check_only = true,
@@ -264,6 +298,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
         if arg.starts_with('-') {
             let hint = match mode {
+                CliMode::Build => {
+                    "Pass a project or workspace path after `fpas build`, or use `fpas build --help`."
+                }
                 CliMode::Run => "Pass a source or project path after `fpas run`, or `fpas --help`.",
                 CliMode::Check => {
                     "Pass a source or project path after `fpas check`, or `fpas --help`."
@@ -284,7 +321,20 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         None => discover_input(cwd, mode),
     }?;
 
+    if mode == CliMode::Build && application_name.is_some() && !executable {
+        return Err(
+            "`--name` requires `--executable`.\n  help: `fpas build --executable --name hello hello.fpasprj`."
+                .to_string(),
+        );
+    }
+
     Ok(match mode {
+        CliMode::Build => ResolvedCli::Build(BuildCliConfig {
+            input,
+            standard_library,
+            executable,
+            name: application_name,
+        }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
             input,
             program_args,

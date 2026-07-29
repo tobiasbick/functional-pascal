@@ -6,6 +6,7 @@ use std::fs;
 
 use fpas_bytecode::Chunk;
 use fpas_parser::{Program, QualifiedId};
+use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
 use fpas_unit::interface::{UnitInterface, decode_interface, encode_interface};
 use fpas_unit::object::{RelocatableObject, decode_object, encode_object};
@@ -23,7 +24,7 @@ pub struct BuildError {
 }
 
 impl BuildError {
-    fn new(detail: impl Into<String>) -> Self {
+    pub(crate) fn new(detail: impl Into<String>) -> Self {
         Self {
             detail: detail.into(),
         }
@@ -46,6 +47,7 @@ pub struct BuiltUnits {
     pub interfaces: HashMap<String, UnitInterface>,
     /// Structured activity stream.
     pub events: Vec<BuildEvent>,
+    pub(crate) linked_units: Vec<LinkedUnitIdentity>,
     supporting_interfaces: Vec<UnitInterface>,
 }
 
@@ -85,6 +87,7 @@ pub fn build_library_units(
 ) -> Result<BuiltUnits, BuildError> {
     let mut interfaces = InterfaceRegistry::default();
     let mut objects = Vec::with_capacity(selection.len());
+    let mut linked_units = Vec::with_capacity(selection.len());
     let mut events = Vec::new();
 
     for unit_name in selection.order() {
@@ -113,18 +116,22 @@ pub fn build_library_units(
         let reusable = match load_sidecar(node.path(), &expected)
             .map_err(|error| BuildError::new(error.to_string()))?
         {
-            SidecarLoad::Reusable(compiled) => decode_payloads(&compiled)
-                .ok()
-                .map(|payloads| (payloads, compiled.identity.interface_hash)),
+            SidecarLoad::Reusable(compiled) => {
+                let interface_hash = compiled.identity.interface_hash;
+                let object_hash = compiled.identity.object_hash;
+                decode_payloads(&compiled)
+                    .ok()
+                    .map(|payloads| (payloads, interface_hash, object_hash))
+            }
             SidecarLoad::Missing
             | SidecarLoad::Stale(_)
             | SidecarLoad::Incompatible(_)
             | SidecarLoad::Corrupt(_) => None,
         };
-        let (interface, mut object, interface_hash) =
-            if let Some((payloads, interface_hash)) = reusable {
+        let (interface, mut object, interface_hash, object_hash) =
+            if let Some((payloads, interface_hash, object_hash)) = reusable {
                 events.push(event(unit_name, BuildEventKind::SidecarReused));
-                (payloads.0, payloads.1, interface_hash)
+                (payloads.0, payloads.1, interface_hash, object_hash)
             } else {
                 events.push(event(unit_name, BuildEventKind::Parsed));
                 let compiled = fpas_compiler::compile_unit_object_with_support(
@@ -143,12 +150,13 @@ pub fn build_library_units(
                 let interface_hash = Digest::of(&interface_bytes);
                 let object_bytes = encode_object(&compiled.object)
                     .map_err(|error| BuildError::new(error.to_string()))?;
+                let object_hash = Digest::of(&object_bytes);
                 let sidecar = CompiledUnit {
                     identity: UnitIdentity {
                         unit_name: unit_name.clone(),
                         source_hash: expected.source_hash,
                         interface_hash,
-                        object_hash: Digest::of(&object_bytes),
+                        object_hash,
                         compiler_version: options.compiler_version.clone(),
                         bytecode_version: options.bytecode_version,
                         options_hash: options.options_hash,
@@ -163,16 +171,25 @@ pub fn build_library_units(
                         node.path().display()
                     ))
                 })?;
-                (compiled.interface, compiled.object, interface_hash)
+                (
+                    compiled.interface,
+                    compiled.object,
+                    interface_hash,
+                    object_hash,
+                )
             };
         for location in &mut object.locations {
             location.source_id = node.source_id();
         }
         interfaces.insert(unit_name.clone(), interface, interface_hash);
+        linked_units.push(LinkedUnitIdentity {
+            unit_name: unit_name.clone(),
+            object_hash: fpas_program::Digest::from_bytes(*object_hash.as_bytes()),
+        });
         objects.push(object);
     }
 
-    Ok(interfaces.finish(objects, events))
+    Ok(interfaces.finish(objects, linked_units, events))
 }
 
 /// Build reachable units, compile the root program from interfaces, and link one [`Chunk`].
@@ -182,7 +199,14 @@ pub fn build_program(
     program: &Program,
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
-    let mut units = build_library_units(graph, selection, options)?;
+    let units = build_library_units(graph, selection, options)?;
+    link_program(units, program)
+}
+
+pub(crate) fn link_program(
+    mut units: BuiltUnits,
+    program: &Program,
+) -> Result<BuiltProgram, BuildError> {
     let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
     let program_object = fpas_compiler::compile_program_object_with_support(
         program,
@@ -266,7 +290,12 @@ impl InterfaceRegistry {
         self.hashes.insert(name, hash);
     }
 
-    fn finish(self, objects: Vec<RelocatableObject>, events: Vec<BuildEvent>) -> BuiltUnits {
+    fn finish(
+        self,
+        objects: Vec<RelocatableObject>,
+        linked_units: Vec<LinkedUnitIdentity>,
+        events: Vec<BuildEvent>,
+    ) -> BuiltUnits {
         let interfaces = self
             .names
             .into_iter()
@@ -276,6 +305,7 @@ impl InterfaceRegistry {
             objects,
             interfaces,
             events,
+            linked_units,
             supporting_interfaces: self.interfaces,
         }
     }

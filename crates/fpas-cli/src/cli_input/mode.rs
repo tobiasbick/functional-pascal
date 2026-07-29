@@ -4,6 +4,7 @@ use super::types::HelpTopic;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum CliMode {
+    Build,
     Run,
     Check,
     Fmt,
@@ -13,6 +14,7 @@ pub(super) enum CliMode {
 impl CliMode {
     pub(super) const fn help_topic(self) -> HelpTopic {
         match self {
+            Self::Build => HelpTopic::Build,
             Self::Run => HelpTopic::Run,
             Self::Check => HelpTopic::Check,
             Self::Fmt => HelpTopic::Fmt,
@@ -21,7 +23,7 @@ impl CliMode {
     }
 }
 
-const SUBCOMMANDS: &str = "`run`, `check`, `test`, or `fmt`";
+const SUBCOMMANDS: &str = "`build`, `run`, `check`, `test`, or `fmt`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -29,6 +31,7 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
     };
 
     match first.as_str() {
+        "build" => Ok((CliMode::Build, &cli_args[1..])),
         "check" => Ok((CliMode::Check, &cli_args[1..])),
         "fmt" => Ok((CliMode::Fmt, &cli_args[1..])),
         "test" => Ok((CliMode::Test, &cli_args[1..])),
@@ -39,8 +42,12 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
 
 pub(super) fn usage_error(mode: CliMode) -> String {
     match mode {
+        CliMode::Build => {
+            "Usage: fpas build [--std-lib <dir>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]\n  help: `fpas build --help` shows options and examples."
+                .to_string()
+        }
         CliMode::Run => {
-            "Usage: fpas run [<file.fpas | file.fpasprj>] [-- <args>...]\n  help: `fpas run --help` shows options and examples."
+            "Usage: fpas run [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]\n  help: `fpas run --help` shows options and examples."
                 .to_string()
         }
         CliMode::Check => {
@@ -63,7 +70,7 @@ pub(super) fn missing_subcommand_error() -> String {
 }
 
 pub(super) fn program_args_require_run_error() -> String {
-    "Program arguments after `--` require `fpas run`.\n  help: `fpas run [<file.fpas | file.fpasprj>] -- <args>...`"
+    "Program arguments after `--` require `fpas run`.\n  help: `fpas run [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] -- <args>...`"
         .to_string()
 }
 

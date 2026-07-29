@@ -1,5 +1,6 @@
 [package]
 name = "fpas-cli"
+default-run = "fpas"
 description = "Command-line interface for the Functional Pascal compiler"
 version.workspace = true
 edition.workspace = true
@@ -10,6 +11,10 @@ repository.workspace = true
 name = "fpas"
 path = "src/main.rs"
 
+[[bin]]
+name = "fpas-runner"
+path = "src/bin/fpas-runner.rs"
+
 [dependencies]
 fpas-project = { path = "../fpas-project" }
 fpas-fmt = { path = "../fpas-fmt" }
@@ -17,6 +22,8 @@ fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-build = { path = "../fpas-build" }
+fpas-bundle = { path = "../fpas-bundle" }
+fpas-program = { path = "../fpas-program" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-vm = { path = "../fpas-vm" }
 fpas-std = { path = "../fpas-std" }

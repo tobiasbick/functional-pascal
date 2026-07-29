@@ -105,6 +105,8 @@ impl ProjectLinkMeta {
 /// Resolved project metadata and source file set ready for linking.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadedProject {
+    /// Declared `project.name`.
+    pub name: String,
     /// Declared project kind.
     pub kind: ProjectKind,
     /// Main program file for executable projects.

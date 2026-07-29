@@ -58,6 +58,35 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn run_cli_executes_explicit_workspace_and_publishes_program_artifact() {
+    let cwd = create_temp_dir("run-explicit-workspace");
+    let workspace_file = cwd.join("suite.fpasworkspace");
+    let app_project = cwd.join("app/app.fpasprj");
+    write_text(
+        &workspace_file,
+        r#"[workspace]
+name = "suite"
+members = ["app/app.fpasprj"]
+"#,
+    );
+    support::write_program_project_file(&app_project, "src/main.fpas", &["src/**/*.fpas"]);
+    write_text(
+        &cwd.join("app/src/main.fpas"),
+        "program Main;\nuses Std.Console;\nbegin\n  WriteLn('workspace')\nend.\n",
+    );
+
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_cli_and_capture_output(&workspace_file, &cwd);
+    let artifact_exists = cwd.join("app/app.fpascp").is_file();
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(stdout_output, "workspace\n");
+    assert!(stderr_output.is_empty());
+    assert!(artifact_exists);
+}
+
+#[test]
 fn run_cli_errors_when_workspace_has_multiple_programs() {
     let cwd = create_temp_dir("run-workspace-many-programs");
     let workspace_file = cwd.join("suite.fpasworkspace");

@@ -1,24 +1,46 @@
 # CLI
 
-The `fpas` command-line interface discovers projects, type-checks, runs programs, and executes test bundles.
+The `fpas` command-line interface builds artifacts, discovers projects,
+type-checks, runs programs, and executes test bundles.
 
 ## Usage
 
 - `fpas` (no arguments) — prints usage to stdout and exits successfully.
+- `fpas build [<path>]` — build a `.fpasprj` or `.fpasworkspace`. With no path,
+  discovers a workspace first and otherwise a single project in the current
+  directory. Program projects produce or reuse `<project.name>.fpascp`;
+  libraries build `.fpascu` sidecars; workspaces process every member.
+- `fpas build --executable [--name <name>] [<path>]` — build exactly one
+  program and bundle it with the native FPAS runner for the current host.
+  Projects default to `project.name`; workspaces default to `workspace.name`.
+  Windows outputs `<name>.exe`; Linux outputs executable `<name>`. There is no
+  cross-compilation.
 - `fpas run` — discovers what to run in the current directory:
   - If a `.fpasworkspace` file exists: runs the sole `kind = "program"` member; errors when there are zero or multiple program members.
   - Otherwise searches for a `.fpasprj` file (no match, one match, or multiple matches with the same rules as before).
 - `fpas run <path>` — detects input type by extension:
   - `.fpas` — runs as a single source file with a `program` declaration (no project needed).
-  - `.fpasprj` — loads as a project file.
+  - `.fpasprj` — loads the program project, produces or reuses
+    `<project.name>.fpascp`, and runs that image.
+  - `.fpasworkspace` — runs its sole `kind = "program"` member through the same
+    project-artifact path; errors when there are zero or multiple programs.
+  - `.fpascp` — validates and runs the compiled program directly without
+    loading sources, manifests, compiled units, or the source standard library.
   - Other extensions — error.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
-- `fpas run --help`, `fpas check --help`, `fpas test --help`, and `fpas fmt --help` — print focused command help with valid examples and exit successfully.
+- `fpas build --help`, `fpas run --help`, `fpas check --help`,
+  `fpas test --help`, and `fpas fmt --help` — print focused command help with
+  valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
-- `fpas run --std-lib <directory> …`, `fpas check --std-lib <directory> …`, and `fpas test --std-lib <directory> …` — replace the complete implementation-owned source standard library for that invocation. The directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads `lib` beside its executable.
+- `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
+  `fpas check --std-lib <directory> …`, and
+  `fpas test --std-lib <directory> …` — replace the complete
+  implementation-owned source standard library for that invocation. The
+  directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads
+  `lib` beside its executable.
 
 Program arguments after `--` require `fpas run` and are visible through `Std.Args` when running programs.
 
@@ -29,17 +51,46 @@ help for its options and examples. This keeps terminal output concise and makes
 copy-pasteable invocations available where they are needed:
 
 ```sh
+fpas build --help
 fpas run --help
 fpas check --help
 fpas test --help
 fpas fmt --help
 ```
 
+## Building artifacts
+
+```sh
+fpas build my-app.fpasprj
+fpas build suite.fpasworkspace
+fpas build --executable my-app.fpasprj
+fpas build --executable --name hello suite.fpasworkspace
+fpas build
+```
+
+Program artifacts are named from `project.name` and written beside the
+`.fpasprj`. Repeating an unchanged build reports reuse and leaves the compatible
+artifact in place. A test project has multiple entry programs, so it validates
+those programs but does not produce one shared `.fpascp`.
+
+`--executable` requires a program project or a workspace containing exactly one
+program. Project applications are written beside the `.fpasprj`; workspace
+applications are written beside the `.fpasworkspace`. The resulting file
+contains the host-native runner and validated `.fpascp`, and runs without
+`fpas`, the separate runner, sources, manifests, `.fpascu`, `.fpascp`, or the
+source standard library. Repeating the command atomically replaces the same
+output.
+
+`fpas build --std-lib <directory>` uses the same complete source standard
+library override as the other compiler commands.
+
 ## Automatic compiled-unit builds
 
-Project- and workspace-aware `check`, `run`, and `test` commands automatically build and reuse
-source-adjacent `.fpascu` unit sidecars. No separate `fpas build` command is required. Successful
-reuse is silent.
+Project- and workspace-aware `check`, `run`, and `test` commands automatically
+build and reuse source-adjacent `.fpascu` unit sidecars. Project- and
+workspace-aware `run` also produces or reuses the program's `.fpascp`. Running
+`fpas build` explicitly is not required before those commands. Successful
+artifact reuse is silent.
 
 The compiler validates content hashes, compiler and bytecode compatibility, compilation options,
 and direct dependency interface hashes rather than relying on timestamps. Invalid derived files
@@ -55,11 +106,16 @@ unit that the command needs.
 ```sh
 fpas run hello.fpas
 fpas run my-app.fpasprj
+fpas run suite.fpasworkspace
+fpas run my-app.fpascp
 fpas run my-app.fpasprj -- input.txt verbose
 fpas run
 ```
 
-`fpas run` does not accept a directory path; pass a `.fpas` program file or a `.fpasprj` project.
+`fpas run` does not accept a directory path. A project or workspace run keeps
+sources authoritative and rebuilds a missing, stale, incompatible, or corrupt
+`.fpascp` before execution. A directly passed `.fpascp` has no source input to
+rebuild from, so invalid images fail with an actionable diagnostic.
 
 ## Checking without running
 

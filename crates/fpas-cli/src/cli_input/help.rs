@@ -6,7 +6,8 @@ const GENERAL_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
-    fpas run [<path>] [-- <args>...]     Run a source file or project
+    fpas build [<path>]                   Build project artifacts
+    fpas run [<path>] [-- <args>...]     Run a source, project, workspace, or image
     fpas check [<path>]                  Type-check without running
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
@@ -18,6 +19,7 @@ Options:
 Run `fpas <command> --help` for command-specific options and examples.
 
 Examples:
+  fpas build my-app.fpasprj
   fpas run hello.fpas
   fpas check my-app.fpasprj
   fpas test --report json tests/
@@ -25,13 +27,42 @@ Examples:
 
 ";
 
-const RUN_HELP: &str = "\
-Run a Functional Pascal source file or program project.
+const BUILD_HELP: &str = "\
+Build Functional Pascal project artifacts.
 
 Usage:
-  fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj>] [-- <args>...]
+  fpas build [--std-lib <dir>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]
+
+With no path, discovers a `.fpasworkspace` or `.fpasprj` in the current directory.
+Program projects produce or reuse `<project.name>.fpascp`. Library projects build
+their source-adjacent `.fpascu` files. Workspaces process every member.
+`--executable` requires exactly one program and produces a native application
+for the current host. `--name` overrides its output base name.
+
+Options:
+  --std-lib <dir>  Replace the complete source standard library
+  --executable     Bundle one program with the native FPAS runner
+  --name <name>    Application/output base name (requires --executable)
+  -h, --help       Print this help
+  -V, --version    Print version
+
+Examples:
+  fpas build my-app.fpasprj
+  fpas build --executable my-app.fpasprj
+  fpas build --executable --name hello suite.fpasworkspace
+  fpas build suite.fpasworkspace
+  fpas build
+
+";
+
+const RUN_HELP: &str = "\
+Run a Functional Pascal source, project, workspace, or compiled program.
+
+Usage:
+  fpas run [--std-lib <dir>] [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]
 
 With no path, discovers the workspace program or `.fpasprj` in the current directory.
+Direct `.fpascp` execution does not load sources or the source standard library.
 
 Options:
   --std-lib <dir>  Replace the complete source standard library
@@ -41,6 +72,8 @@ Options:
 Examples:
   fpas run hello.fpas
   fpas run my-app.fpasprj -- input.txt verbose
+  fpas run suite.fpasworkspace
+  fpas run my-app.fpascp
   fpas run --std-lib ./lib hello.fpas
 
 ";
@@ -121,6 +154,7 @@ Examples:
 pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
     match topic {
         HelpTopic::General => GENERAL_HELP,
+        HelpTopic::Build => BUILD_HELP,
         HelpTopic::Run => RUN_HELP,
         HelpTopic::Check => CHECK_HELP,
         HelpTopic::Fmt => FMT_HELP,

@@ -8,7 +8,7 @@ Units, projects, workspaces, and the `fpas` CLI.
 | [Visibility](visibility.md) | Private by default; `public` exports |
 | [Projects](projects.md) | `.fpasprj` format, kinds, dependencies |
 | [Workspaces](workspaces.md) | `.fpasworkspace` multi-project layout |
-| [CLI](cli.md) | `fpas run`, `fpas check`, `fpas test`, `fpas fmt` |
+| [CLI](cli.md) | `fpas build`, `fpas run`, `fpas check`, `fpas test`, `fpas fmt` |
 
 ## See also
 

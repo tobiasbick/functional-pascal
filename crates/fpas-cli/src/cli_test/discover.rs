@@ -15,6 +15,10 @@ pub(super) fn discover_test_files(input: &CliInput, cwd: &Path) -> Result<Vec<Pa
         CliInput::SourceFile(path) => discover_from_path(path, cwd),
         CliInput::ProjectFile(path) => discover_from_project(path),
         CliInput::WorkspaceFile(path) => discover_from_workspace(path),
+        CliInput::CompiledProgramFile(path) => Err(format!(
+            "Cannot discover tests in compiled program `{}`.\n  help: Pass a test source, project, workspace, or directory.",
+            path.display()
+        )),
     }
 }
 

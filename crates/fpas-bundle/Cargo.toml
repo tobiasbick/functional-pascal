@@ -1,0 +1,16 @@
+[package]
+name = "fpas-bundle"
+description = "Host-native application bundles for Functional Pascal programs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-program = { path = "../fpas-program" }
+
+[dev-dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
+
+[lints]
+workspace = true

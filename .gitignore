@@ -1,6 +1,7 @@
 # Rust / Cargo
 target/
 *.fpascu
+*.fpascp
 # Alternate CARGO_TARGET_DIR worktrees (e.g. CI/agent local runs)
 /target-*/
 debug/
@@ -23,8 +24,8 @@ debug/
 # OpenCode
 #opencode.jsonc
 
-# Functional pascal
-bin/
+# Functional pascal distributable layout (repo root)
+/bin/
 
 .mcp.json
 

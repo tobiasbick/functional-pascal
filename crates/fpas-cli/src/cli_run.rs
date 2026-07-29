@@ -33,6 +33,18 @@ pub(crate) fn run_cli(
             let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
             0
         }
+        ResolvedCli::Build(config) => {
+            let library = match crate::standard_library::resolve_standard_library(
+                config.standard_library.as_deref(),
+            ) {
+                Ok(library) => library,
+                Err(message) => {
+                    let _ = writeln!(stderr, "{message}");
+                    return 1;
+                }
+            };
+            crate::cli_build::build_cli(config, library.as_ref(), stdout.as_mut(), stderr)
+        }
         ResolvedCli::Check(config) => {
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
@@ -48,6 +60,12 @@ pub(crate) fn run_cli(
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Run(config) => {
+            let input = match config.input {
+                CliInput::CompiledProgramFile(path) => {
+                    return run_compiled_program_file(&path, config.program_args, stdout, stderr);
+                }
+                input => input,
+            };
             let library = match crate::standard_library::resolve_standard_library(
                 config.standard_library.as_deref(),
             ) {
@@ -57,7 +75,7 @@ pub(crate) fn run_cli(
                     return 1;
                 }
             };
-            match config.input {
+            match input {
                 CliInput::SourceFile(path) if path.is_dir() => {
                     let _ = writeln!(
                         stderr,
@@ -73,12 +91,10 @@ pub(crate) fn run_cli(
                     run_project_file(&path, library.as_ref(), config.program_args, stdout, stderr)
                 }
                 CliInput::WorkspaceFile(path) => {
-                    let _ = writeln!(
-                        stderr,
-                        "Cannot run workspace `{}`.\n  help: Use `fpas check` to validate workspace members, or pass a `.fpasprj` program path.",
-                        path.display()
-                    );
-                    1
+                    run_workspace_file(&path, library.as_ref(), config.program_args, stdout, stderr)
+                }
+                CliInput::CompiledProgramFile(_) => {
+                    unreachable!("handled before standard library resolution")
                 }
             }
         }
@@ -148,27 +164,21 @@ fn run_project_file(
 
     match loaded.kind {
         project::ProjectKind::Program => {
-            let Some(main) = loaded.main.as_ref() else {
-                let _ = writeln!(
-                    stderr,
-                    "Project is missing `project.main`.\n  help: Set `main = \"src/main.fpas\"` in `[project]`."
-                );
-                return 1;
-            };
-            let built_program = match crate::project_build::build_program(&loaded, standard_library)
-            {
-                Ok(program) => program,
-                Err(message) => {
-                    let _ = writeln!(stderr, "{message}");
-                    return 1;
-                }
-            };
+            let artifact =
+                match crate::project_build::build_program_artifact(path, &loaded, standard_library)
+                {
+                    Ok(artifact) => artifact,
+                    Err(message) => {
+                        let _ = writeln!(stderr, "{message}");
+                        return 1;
+                    }
+                };
 
-            let main_path = main.to_string_lossy();
+            let artifact_path = artifact.path.to_string_lossy();
             run_chunk(
-                main_path.as_ref(),
-                built_program.chunk,
-                Some(&built_program.source_paths),
+                artifact_path.as_ref(),
+                artifact.chunk,
+                Some(&artifact.source_paths),
                 program_args,
                 stdout,
                 stderr,
@@ -190,6 +200,73 @@ fn run_project_file(
             1
         }
     }
+}
+
+fn run_workspace_file(
+    path: &Path,
+    standard_library: Option<&project::StandardLibrary>,
+    program_args: Vec<String>,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let project_path = match project::discover_run_project_in_workspace(path) {
+        Ok(project_path) => project_path,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            return 1;
+        }
+    };
+    run_project_file(
+        &project_path,
+        standard_library,
+        program_args,
+        stdout,
+        stderr,
+    )
+}
+
+fn run_compiled_program_file(
+    path: &Path,
+    program_args: Vec<String>,
+    stdout: Box<dyn Write + Send>,
+    stderr: &mut dyn Write,
+) -> i32 {
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            let _ = writeln!(
+                stderr,
+                "Cannot read compiled program `{}`: {error}",
+                path.display()
+            );
+            return 1;
+        }
+    };
+    let image = match fpas_program::decode(&bytes) {
+        Ok(image) => image,
+        Err(error) => {
+            let _ = writeln!(
+                stderr,
+                "Cannot run compiled program `{}`: {error}\n  help: Rebuild the `.fpascp` from its project sources with `fpas build`.",
+                path.display()
+            );
+            return 1;
+        }
+    };
+    let source_paths = image
+        .source_paths()
+        .iter()
+        .map(PathBuf::from)
+        .collect::<Vec<_>>();
+    let path_text = path.to_string_lossy();
+    run_chunk(
+        path_text.as_ref(),
+        image.into_chunk(),
+        Some(&source_paths),
+        program_args,
+        stdout,
+        stderr,
+    )
 }
 
 fn run_source_impl(

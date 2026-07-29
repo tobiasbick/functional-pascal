@@ -41,6 +41,14 @@ fn collect_input_paths(input: &CliInput, stderr: &mut dyn Write) -> Result<Vec<P
         CliInput::SourceFile(path) => Ok(vec![path.clone()]),
         CliInput::ProjectFile(path) => collect_project_paths(path, stderr),
         CliInput::WorkspaceFile(path) => collect_workspace_paths(path, stderr),
+        CliInput::CompiledProgramFile(path) => {
+            let _ = writeln!(
+                stderr,
+                "Cannot format compiled program `{}`.\n  help: Format its `.fpas` sources instead.",
+                path.display()
+            );
+            Err(1)
+        }
     }
 }
 

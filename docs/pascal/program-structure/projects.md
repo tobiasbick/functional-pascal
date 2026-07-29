@@ -24,14 +24,16 @@ projects = ["../my-lib/my-lib.fpasprj"]
 
 | Field | Required | Description |
 |---|---|---|
-| `name` | Yes | Project name. Any non-empty string. |
+| `name` | Yes | Project name. Any non-empty string; names used for program artifacts must not contain path separators. |
 | `version` | No | Free-form version string. |
 | `kind` | Yes | `"program"`, `"library"`, or `"test"`. |
 | `main` | Program only | Path to the program file (relative to project root or absolute). |
 
 ### Project kinds
 
-- **`program`** — produces an executable. Requires `main` pointing to a file with a `program` declaration. The entry point is exactly one main program file per project.
+- **`program`** — produces a linked `.fpascp` bytecode image through `fpas build`.
+  Requires `main` pointing to a file with a `program` declaration. The entry
+  point is exactly one main program file per project.
 - **`library`** — reusable code as `unit` files. Other projects consume libraries via `[dependencies].projects`. Run library code through a `program` project that depends on it (`fpas check` type-checks a library manifest directly).
 - **`test`** — a test bundle for `fpas test`. Lists `unit` helpers and `*_test.fpas` program entry files in `[sources]`. Optional `[test.overrides."<file>_test.fpas"]` tables set per-test `script` and `headless_graph` for the runner. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
 
@@ -66,6 +68,28 @@ Rules:
   automatically beside their `.fpas` sources.
 - `.fpascu` is a derived build artifact, not a dependency syntax and not a source-less package
   format. The `.fpasprj` manifest and `.fpas` sources remain required and authoritative.
+
+### Build outputs
+
+`fpas build <project.fpasprj>` uses `project.name` for program artifacts:
+
+```text
+[project]
+name = "hello"
+kind = "program"
+```
+
+produces or reuses `hello.fpascp` beside the project manifest. Library projects
+build their source-adjacent `.fpascu` files and do not produce `.fpascp`.
+Test projects build helper-unit sidecars and validate all test programs without
+creating one shared program image. Both artifact types are derived outputs and
+are ignored by Git.
+
+`fpas build --executable <project.fpasprj>` additionally produces a
+host-native single-file application beside the project manifest. Its default
+base name is `project.name`; `--name <name>` overrides only the application and
+output name. Windows produces `<name>.exe`, while Linux produces executable
+`<name>`.
 
 ### Exports section (library projects only)
 

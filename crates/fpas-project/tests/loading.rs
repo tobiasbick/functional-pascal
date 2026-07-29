@@ -75,6 +75,7 @@ include = ["src/**/*.fpas"]
     let loaded = load_project(&app_project).expect("project should load");
     fs::remove_dir_all(&dir).ok();
 
+    assert_eq!(loaded.name, "app");
     assert_eq!(loaded.kind, ProjectKind::Program);
     assert_eq!(loaded.source_files.len(), 1);
 }
@@ -201,11 +202,12 @@ include = ["main.fpas"]
     write(&dir.join("main.fpas"), "program App;\nbegin\nend.\n");
 
     let program = discover_run_project_in_workspace(&workspace).expect("discover program");
-    let members = load_workspace(&workspace)
-        .expect("load workspace")
-        .member_projects;
+    let loaded_workspace = load_workspace(&workspace).expect("load workspace");
+    let workspace_name = loaded_workspace.name;
+    let members = loaded_workspace.member_projects;
     fs::remove_dir_all(&dir).ok();
 
+    assert_eq!(workspace_name, "suite");
     assert_eq!(members.len(), 2);
     assert!(program.ends_with("app.fpasprj"));
 }

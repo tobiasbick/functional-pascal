@@ -9,6 +9,7 @@ pub(crate) enum CliInput {
     SourceFile(PathBuf),
     ProjectFile(PathBuf),
     WorkspaceFile(PathBuf),
+    CompiledProgramFile(PathBuf),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,6 +17,14 @@ pub(crate) struct CliConfig {
     pub input: CliInput,
     pub program_args: Vec<String>,
     pub standard_library: Option<PathBuf>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct BuildCliConfig {
+    pub input: CliInput,
+    pub standard_library: Option<PathBuf>,
+    pub executable: bool,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -27,6 +36,7 @@ pub(crate) enum TestReportFormat {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum HelpTopic {
     General,
+    Build,
     Run,
     Check,
     Fmt,
@@ -60,6 +70,7 @@ pub(crate) struct TestCliConfig {
 /// Result of parsing CLI arguments before loading sources.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ResolvedCli {
+    Build(BuildCliConfig),
     Run(CliConfig),
     Check(CliConfig),
     Fmt(FmtCliConfig),

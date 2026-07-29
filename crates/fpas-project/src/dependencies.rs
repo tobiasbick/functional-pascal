@@ -76,6 +76,7 @@ pub(super) fn load_project_with_dependencies(
     };
 
     let loaded = LoadedProject {
+        name: own.name,
         kind: own.kind,
         main: own.main,
         source_files,

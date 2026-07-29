@@ -31,6 +31,23 @@ fn resolve_cli_input_uses_explicit_project_file() {
 }
 
 #[test]
+fn resolve_cli_input_uses_explicit_workspace_and_compiled_program() {
+    let cwd = create_temp_dir("run-artifact-inputs");
+    let workspace = resolve_cli_input(&run_args(&["suite.fpasworkspace"]), &cwd);
+    let compiled = resolve_cli_input(&run_args(&["app.fpascp"]), &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(
+        workspace,
+        Ok(CliInput::WorkspaceFile(cwd.join("suite.fpasworkspace")))
+    );
+    assert_eq!(
+        compiled,
+        Ok(CliInput::CompiledProgramFile(cwd.join("app.fpascp")))
+    );
+}
+
+#[test]
 fn resolve_cli_input_rejects_unknown_extension() {
     let cwd = create_temp_dir("unknown-ext");
     let result = resolve_cli_input(&run_args(&["project.toml"]), &cwd);
@@ -81,7 +98,10 @@ include = ["main.fpas"]
     let result = resolve_cli_input(&run_args(&[]), &cwd);
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 
-    assert_eq!(result, Ok(CliInput::ProjectFile(cwd.join("app.fpasprj"))));
+    assert_eq!(
+        result,
+        Ok(CliInput::WorkspaceFile(cwd.join("suite.fpasworkspace")))
+    );
 }
 
 #[test]
@@ -171,7 +191,9 @@ fn resolve_cli_input_rejects_more_than_one_argument() {
 
     let error = result.expect_err("multiple arguments must fail");
     assert!(
-        error.starts_with("Usage: fpas run [<file.fpas | file.fpasprj>]"),
+        error.starts_with(
+            "Usage: fpas run [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>]"
+        ),
         "unexpected error: {error}"
     );
 }
@@ -269,6 +291,98 @@ fn resolve_cli_config_rejects_program_args_without_run_subcommand() {
 }
 
 #[test]
+fn resolve_cli_config_discovers_workspace_for_build() {
+    let cwd = create_temp_dir("build-discover-workspace");
+    let workspace = cwd.join("suite.fpasworkspace");
+    write_text(
+        &workspace,
+        "[workspace]\nname = \"suite\"\nmembers = [\"app.fpasprj\"]\n",
+    );
+
+    let result = resolve_cli_config(&[String::from("build")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    match result {
+        Ok(ResolvedCli::Build(config)) => {
+            assert_eq!(config.input, CliInput::WorkspaceFile(workspace));
+            assert!(!config.executable);
+            assert_eq!(config.name, None);
+        }
+        other => panic!("expected build config, got {other:?}"),
+    }
+}
+
+#[test]
+fn resolve_cli_config_parses_native_application_options() {
+    let cwd = create_temp_dir("build-native-options");
+    let result = resolve_cli_config(
+        &[
+            String::from("build"),
+            String::from("--executable"),
+            String::from("--name"),
+            String::from("hello"),
+            String::from("app.fpasprj"),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    match result {
+        Ok(ResolvedCli::Build(config)) => {
+            assert!(config.executable);
+            assert_eq!(config.name.as_deref(), Some("hello"));
+            assert_eq!(config.input, CliInput::ProjectFile(cwd.join("app.fpasprj")));
+        }
+        other => panic!("expected build config, got {other:?}"),
+    }
+}
+
+#[test]
+fn resolve_cli_config_rejects_name_without_executable() {
+    let cwd = create_temp_dir("build-name-without-native");
+    let result = resolve_cli_config(
+        &[
+            String::from("build"),
+            String::from("--name"),
+            String::from("hello"),
+            String::from("app.fpasprj"),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("name without executable must fail");
+    assert!(error.contains("`--name` requires `--executable`"));
+}
+
+#[test]
+fn resolve_cli_config_rejects_program_arguments_for_build() {
+    let cwd = create_temp_dir("build-program-args");
+    let result = resolve_cli_config(
+        &[
+            String::from("build"),
+            String::from("--"),
+            String::from("argument"),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("build must reject program arguments");
+    assert!(error.contains("`fpas build` does not accept program arguments"));
+}
+
+#[test]
+fn resolve_cli_config_reports_build_specific_missing_stdlib_help() {
+    let cwd = create_temp_dir("build-missing-stdlib");
+    let result = resolve_cli_config(&[String::from("build"), String::from("--std-lib")], &cwd);
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("missing build stdlib path must fail");
+    assert!(error.contains("fpas build --std-lib ./lib my-app.fpasprj"));
+}
+
+#[test]
 fn run_cli_help_and_version_exit_zero() {
     let cwd = create_temp_dir("run-help");
 
@@ -299,6 +413,7 @@ fn run_cli_subcommand_help_is_focused_and_includes_examples() {
     let cwd = create_temp_dir("subcommand-help");
 
     for (command, expected_usage, excluded_usage) in [
+        ("build", "fpas build [--std-lib", "fpas test ["),
         ("run", "fpas run [--std-lib", "fpas test ["),
         ("check", "fpas check [--std-lib", "fpas test ["),
         ("fmt", "fpas fmt [<path>...]", "fpas test ["),

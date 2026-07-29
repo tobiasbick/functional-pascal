@@ -9,6 +9,8 @@ pub(crate) const SOURCE_FILE_EXTENSION: &str = "fpas";
 pub(crate) const PROJECT_FILE_EXTENSION: &str = "fpasprj";
 /// Workspace manifest extension (without dot).
 pub(crate) const WORKSPACE_FILE_EXTENSION: &str = "fpasworkspace";
+/// Compiled program extension (without dot).
+pub(crate) const COMPILED_PROGRAM_FILE_EXTENSION: &str = "fpascp";
 
 /// Returns true when `path` has the given extension (ASCII case-insensitive).
 pub(crate) fn has_extension(path: &Path, extension: &str) -> bool {

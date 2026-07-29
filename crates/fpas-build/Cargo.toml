@@ -11,6 +11,7 @@ fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-linker = { path = "../fpas-linker" }
 fpas-parser = { path = "../fpas-parser" }
+fpas-program = { path = "../fpas-program" }
 fpas-project = { path = "../fpas-project" }
 fpas-unit = { path = "../fpas-unit" }
 

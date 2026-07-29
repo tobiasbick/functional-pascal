@@ -1,6 +1,7 @@
 use super::*;
 
 mod bound_methods;
+mod build;
 mod check;
 mod dependencies;
 mod edge_cases;

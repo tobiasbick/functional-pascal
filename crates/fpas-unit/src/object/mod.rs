@@ -5,31 +5,12 @@ mod relocation;
 use std::collections::BTreeMap;
 use std::fmt;
 
-use fpas_bytecode::{Chunk, Op, Value};
+use fpas_bytecode::{Chunk, Op, PersistentValue};
 
 pub use relocation::{Relocation, RelocationKind, collect_relocations};
 
-/// Constant-pool value supported in a relocatable object.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum ObjectConstant {
-    /// Signed integer.
-    Integer(i64),
-    /// IEEE-754 bit representation.
-    Real(u64),
-    /// Boolean.
-    Boolean(bool),
-    /// UTF-8 string.
-    String(String),
-    /// Procedure result value.
-    Unit,
-    /// Named non-capturing function value.
-    Function {
-        /// Canonical callable name.
-        name: String,
-        /// Whether calls are restricted to the creating task.
-        task_bound: bool,
-    },
-}
+/// Persistent constant-pool value used by relocatable unit objects.
+pub type ObjectConstant = PersistentValue;
 
 /// Source location independent of a process-local source-path table.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -113,7 +94,13 @@ impl RelocatableObject {
         let constants = chunk
             .constants()
             .iter()
-            .map(ObjectConstant::from_value)
+            .map(|value| {
+                ObjectConstant::from_value(value).map_err(|error| match error {
+                    fpas_bytecode::PersistentValueError::UnsupportedRuntimeValue(value_type) => {
+                        ObjectError::UnsupportedConstant(value_type)
+                    }
+                })
+            })
             .collect::<Result<Vec<_>, _>>()?;
         let locations = chunk
             .locations()
@@ -276,38 +263,4 @@ pub fn decode_object(bytes: &[u8]) -> Result<RelocatableObject, ObjectError> {
         serde_json::from_slice(bytes).map_err(|error| ObjectError::Decode(error.to_string()))?;
     object.validate()?;
     Ok(object)
-}
-
-impl ObjectConstant {
-    fn from_value(value: &Value) -> Result<Self, ObjectError> {
-        match value {
-            Value::Integer(value) => Ok(Self::Integer(*value)),
-            Value::Real(value) => Ok(Self::Real(value.to_bits())),
-            Value::Boolean(value) => Ok(Self::Boolean(*value)),
-            Value::Str(value) => Ok(Self::String(value.to_string())),
-            Value::Unit => Ok(Self::Unit),
-            Value::Function(function) if function.captures.is_empty() => Ok(Self::Function {
-                name: function.name.clone(),
-                task_bound: function.task_bound,
-            }),
-            other => Err(ObjectError::UnsupportedConstant(
-                other.type_name().to_string(),
-            )),
-        }
-    }
-
-    /// Convert the persistent constant into its runtime bytecode value.
-    #[must_use]
-    pub fn to_value(&self) -> Value {
-        match self {
-            Self::Integer(value) => Value::Integer(*value),
-            Self::Real(bits) => Value::Real(f64::from_bits(*bits)),
-            Self::Boolean(value) => Value::Boolean(*value),
-            Self::String(value) => Value::Str(value.clone().into()),
-            Self::Unit => Value::Unit,
-            Self::Function { name, task_bound } => {
-                Value::function(name.clone(), Vec::new(), *task_bound)
-            }
-        }
-    }
 }

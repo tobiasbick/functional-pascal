@@ -15,7 +15,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 
 | Area | Document | Scope |
 |------|----------|-------|
-| Libraries | [Compiled-unit architecture](libraries.md) | Implemented `.fpascu` architecture and separately scoped extensions |
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
 
 ## Rules

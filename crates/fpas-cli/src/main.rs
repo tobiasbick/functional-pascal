@@ -19,12 +19,14 @@
         reason = "CLI tests use unwrap to keep fixture path setup compact"
     )
 )]
+mod cli_build;
 mod cli_check;
 mod cli_fmt;
 mod cli_input;
 mod cli_paths;
 mod cli_run;
 mod cli_test;
+mod native_executable;
 mod standard_library;
 mod test_script;
 

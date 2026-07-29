@@ -21,6 +21,8 @@ use std::path::{Path, PathBuf};
 /// One project's own metadata before dependency merging.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct OwnProject {
+    /// Declared `project.name`.
+    pub name: String,
     /// Declared project kind.
     pub kind: ProjectKind,
     /// Main program file for executable projects.
@@ -171,6 +173,7 @@ pub(crate) fn load_own_project(
     let test_manifest = parse_test_section(kind, project_file.test, &source_files, root_dir, path)?;
 
     Ok(OwnProject {
+        name: project_file.project.name,
         kind,
         main,
         source_files,

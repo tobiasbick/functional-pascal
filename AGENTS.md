@@ -121,7 +121,6 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 - **Do not add package managers, registries, semver dependency pins, `.fpaslib` containers, or a global artifact cache** as part of library work; path/workspace references and source-adjacent sidecars are the current model.
 - Loading and graph resolution live in `fpas-project`; unit builds in `fpas-build`; final linking in `fpas-linker`; CLI discovery/check/run in `fpas-cli`.
 - Library projects may list public units in `[exports].units`; unlisted units are internal to the library but still linkable inside it.
-- Possible later work: finer per-symbol export tables — see [`docs/future/libraries.md`](docs/future/libraries.md).
 
 ## Planning Output
 

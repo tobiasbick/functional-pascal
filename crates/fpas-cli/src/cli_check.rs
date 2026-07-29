@@ -25,6 +25,14 @@ pub(crate) fn check_cli(
         CliInput::SourceFile(path) => check_source_file(&path, standard_library, stderr),
         CliInput::ProjectFile(path) => check_project_file(&path, standard_library, stderr),
         CliInput::WorkspaceFile(path) => check_workspace_file(&path, standard_library, stderr),
+        CliInput::CompiledProgramFile(path) => {
+            let _ = writeln!(
+                stderr,
+                "Cannot check compiled program `{}`.\n  help: Check its source project instead.",
+                path.display()
+            );
+            1
+        }
     }
 }
 
@@ -136,43 +144,13 @@ fn check_test_project(
     standard_library: Option<&project::StandardLibrary>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let unit_files: Vec<PathBuf> = loaded
-        .source_files
-        .iter()
-        .filter(|source| !project::is_test_source_file(source))
-        .cloned()
-        .collect();
-
-    if !unit_files.is_empty() {
-        match crate::project_build::check_units(&unit_files, &loaded.link_meta, standard_library) {
-            Ok(()) => {}
-            Err(message) => {
-                let _ = writeln!(stderr, "{message}");
-                return 1;
-            }
+    match crate::project_build::check_test_project(loaded, standard_library) {
+        Ok(()) => 0,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            1
         }
     }
-
-    for test_path in loaded
-        .source_files
-        .iter()
-        .filter(|source| project::is_test_source_file(source))
-    {
-        match crate::project_build::build_test_program(
-            test_path,
-            &unit_files,
-            &loaded.link_meta,
-            standard_library,
-        ) {
-            Ok(_) => {}
-            Err(message) => {
-                let _ = writeln!(stderr, "{message}");
-                return 1;
-            }
-        }
-    }
-
-    0
 }
 
 fn check_workspace_file(

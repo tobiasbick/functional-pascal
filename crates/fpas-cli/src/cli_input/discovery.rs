@@ -3,11 +3,11 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use fpas_project::{discover_run_project_in_workspace, discover_workspace_file};
+use fpas_project::discover_workspace_file;
 
 use crate::cli_paths::{
-    PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION, WORKSPACE_FILE_EXTENSION, has_extension,
-    normalize_input_path,
+    COMPILED_PROGRAM_FILE_EXTENSION, PROJECT_FILE_EXTENSION, SOURCE_FILE_EXTENSION,
+    WORKSPACE_FILE_EXTENSION, has_extension, normalize_input_path,
 };
 
 use super::mode::CliMode;
@@ -20,9 +20,21 @@ pub(super) fn resolve_explicit_input(
 ) -> Result<CliInput, String> {
     let path = normalize_input_path(input, cwd);
     if path.is_dir() {
+        if mode == CliMode::Build {
+            return Err(format!(
+                "Unsupported build input `{}`. Expected a `.fpasprj` or `.fpasworkspace` file.",
+                path.display()
+            ));
+        }
         return Ok(CliInput::SourceFile(path));
     }
     if has_extension(&path, SOURCE_FILE_EXTENSION) {
+        if mode == CliMode::Build {
+            return Err(format!(
+                "Unsupported build input `{}`. Expected a `.fpasprj` or `.fpasworkspace` file.",
+                path.display()
+            ));
+        }
         if mode == CliMode::Test {
             crate::cli_test::validate_explicit_test_file(&path)?;
         }
@@ -31,14 +43,20 @@ pub(super) fn resolve_explicit_input(
     if has_extension(&path, PROJECT_FILE_EXTENSION) {
         return Ok(CliInput::ProjectFile(path));
     }
-    if matches!(mode, CliMode::Check | CliMode::Fmt | CliMode::Test)
-        && has_extension(&path, WORKSPACE_FILE_EXTENSION)
+    if matches!(
+        mode,
+        CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Fmt | CliMode::Test
+    ) && has_extension(&path, WORKSPACE_FILE_EXTENSION)
     {
         return Ok(CliInput::WorkspaceFile(path));
     }
+    if mode == CliMode::Run && has_extension(&path, COMPILED_PROGRAM_FILE_EXTENSION) {
+        return Ok(CliInput::CompiledProgramFile(path));
+    }
 
     let expected = match mode {
-        CliMode::Run => "a `.fpas` or `.fpasprj` file",
+        CliMode::Build => "a `.fpasprj` or `.fpasworkspace` file",
+        CliMode::Run => "a `.fpas`, `.fpasprj`, `.fpasworkspace`, or `.fpascp` file",
         CliMode::Check => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
         CliMode::Fmt => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
         CliMode::Test => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
@@ -51,15 +69,14 @@ pub(super) fn resolve_explicit_input(
 
 pub(super) fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     match mode {
-        CliMode::Check | CliMode::Fmt | CliMode::Test => discover_check_input(cwd),
+        CliMode::Build | CliMode::Check | CliMode::Fmt | CliMode::Test => discover_check_input(cwd),
         CliMode::Run => discover_run_input(cwd),
     }
 }
 
 fn discover_run_input(cwd: &Path) -> Result<CliInput, String> {
     if let Some(workspace_path) = discover_workspace_file(cwd)? {
-        let program_path = discover_run_project_in_workspace(&workspace_path)?;
-        return Ok(CliInput::ProjectFile(program_path));
+        return Ok(CliInput::WorkspaceFile(workspace_path));
     }
 
     discover_project_file(cwd)

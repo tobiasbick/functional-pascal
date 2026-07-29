@@ -29,9 +29,16 @@ cd functional-pascal
 cargo build --release
 ```
 
-The executable is at `target/release/fpas` (or `fpas.exe` on Windows). Keep the adjacent `target/release/lib/` directory with it: it contains the bundled source standard library. Run the executable directly or add the whole `target/release` directory to your `PATH`.
+The compiler is at `target/release/fpas` (or `fpas.exe` on Windows). Keep the
+adjacent `target/release/lib/` source standard library and
+`target/release/fpas-runner` (or `fpas-runner.exe`) with it. The runner is used
+by `fpas build --executable`; generated applications themselves are standalone.
+Run the compiler directly or add the whole `target/release` directory to your
+`PATH`.
 
-To prepare the distributable layout under `bin/`, run `./dist.sh` on Unix or `./dist.ps1` on Windows. Both scripts copy the executable and `lib/` together.
+To prepare the distributable layout under `bin/`, run `./dist.sh` on Linux or
+`./dist.ps1` on Windows. Both scripts copy `fpas`, `fpas-runner`, and `lib/`
+together.
 
 Alternatively, run without installing:
 
@@ -255,6 +262,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-bytecode` | Bytecode definitions and chunk format |
 | `fpas-unit` | Compiled-unit identities, format, and sidecar lifecycle |
 | `fpas-linker` | Deterministic linker from unit objects to executable chunks |
+| `fpas-program` | Persistent executable `.fpascp` program images |
+| `fpas-bundle` | Host-native runner bundle format and publication |
 | `fpas-vm` | Virtual machine / bytecode interpreter |
 | `fpas-std` | Standard library intrinsics |
 | `fpas-fmt` | Canonical FPAS source formatter |

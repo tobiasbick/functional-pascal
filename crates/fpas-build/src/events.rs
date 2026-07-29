@@ -24,6 +24,8 @@ pub enum BuildEventKind {
     SidecarReused,
     /// Objects were linked into an executable image.
     Relinked,
+    /// A compatible compiled program image was reused.
+    ProgramImageReused,
 }
 
 /// Aggregate counts derived from a build event stream.
@@ -41,6 +43,8 @@ pub struct BuildCounters {
     pub sidecar_reused: usize,
     /// Final links.
     pub relinked: usize,
+    /// Reused compiled program images.
+    pub program_image_reused: usize,
 }
 
 impl BuildCounters {
@@ -58,6 +62,7 @@ impl BuildCounters {
                 BuildEventKind::Compiled => counters.compiled += 1,
                 BuildEventKind::SidecarReused => counters.sidecar_reused += 1,
                 BuildEventKind::Relinked => counters.relinked += 1,
+                BuildEventKind::ProgramImageReused => counters.program_image_reused += 1,
             }
         }
         counters

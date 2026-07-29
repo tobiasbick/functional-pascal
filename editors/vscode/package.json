@@ -1,0 +1,46 @@
+{
+  "name": "functional-pascal",
+  "displayName": "Functional Pascal",
+  "description": "Local Functional Pascal editor integration",
+  "version": "0.0.1",
+  "publisher": "functional-pascal",
+  "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tobiasbick/functional-pascal.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onCommand:functionalPascal.showOutput"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "functionalPascal.showOutput",
+        "title": "Show Output",
+        "category": "Functional Pascal"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "node node_modules/typescript/bin/tsc",
+    "test": "node scripts/run-tests.mjs",
+    "package": "node scripts/package.mjs",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "0.5.8",
+    "@types/node": "24.13.3",
+    "@types/vscode": "1.85.0",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "3.9.2",
+    "adm-zip": "0.6.0",
+    "typescript": "7.0.2"
+  }
+}

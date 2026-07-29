@@ -111,6 +111,8 @@ used by the plan.
 
 ## Immediate first milestone
 
+**Completed:** 2026-07-29
+
 The first implementation phase does not wait for syntax highlighting, the
 Rust language service, or the language server. It creates the smallest real
 TypeScript extension, packages it locally, and produces:

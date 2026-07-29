@@ -4,7 +4,7 @@
 
 | Phase | Status | Deliverable |
 |------:|:------:|-------------|
-| 0 | open | immediately installable Hello World VSIX |
+| 0 | complete (2026-07-29) | installable Hello World VSIX |
 | 1 | open | confirmed protocol, package, and fixture contracts |
 | 2 | open | syntax-only development extension |
 | 3 | open | language-service foundation |
@@ -53,7 +53,7 @@ phase.
 - Check that the local Node.js version satisfies the pinned `@vscode/vsce`
   requirement before installing dependencies.
 - Create a TypeScript extension using the official VS Code extension API.
-- Pin `typescript`, `@types/vscode`, `@vscode/vsce`, `@vscode/test-cli`, and
+- Pin `typescript`, `@types/vscode`, `@vscode/vsce`, and
   `@vscode/test-electron` in `package-lock.json`.
 - Use `functional-pascal.functional-pascal` as the stable local extension ID;
   the publisher name in the manifest does not imply Marketplace registration.
@@ -120,6 +120,25 @@ working package path and proceed to Phase 1.
 Primary guidance for this phase is collected in
 [SDK and documentation references](references.md), especially Microsoft's
 Hello World, extension anatomy, testing, and `vsce` packaging documentation.
+
+### Verification — 2026-07-29
+
+- `npm ci` completed with a clean audit (`0` known vulnerabilities).
+- `npm test` compiled the TypeScript sources, validated the manifest, activated
+  the extension in an isolated VS Code Extension Host, and executed
+  `functionalPascal.showOutput`.
+- `npm run package` produced and inspected
+  `dist/functional-pascal-0.0.1-bootstrap.vsix`.
+- Archive verification confirmed that the VSIX contains only the runtime
+  manifest, compiled extension, README, and license, and that the compiled
+  extension contains the exact command and activation message.
+- The exact VSIX installed and uninstalled successfully with isolated VS Code
+  and Cursor profiles.
+- In isolated VS Code, the installed command opened the `Functional Pascal`
+  output channel with the exact Hello World line. The same check passed again
+  after reloading the editor window.
+- VSCodium was not checked because it was not locally installed; clone testing
+  is optional for this hobby-project phase.
 
 ## Phase 1 — contracts and fixtures
 

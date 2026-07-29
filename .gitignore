@@ -10,6 +10,10 @@ debug/
 
 # VS Code
 .vscode/
+/editors/vscode/node_modules/
+/editors/vscode/out/
+/editors/vscode/dist/
+/editors/vscode/.vscode-test/
 
 # Cursor — ignore local state; keep shared plans and rules
 .cursor/**

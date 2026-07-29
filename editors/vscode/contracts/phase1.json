@@ -22,7 +22,7 @@
         "shutdown",
         "exit"
       ],
-      "serviceQuery": "LanguageServerLifecycle"
+      "serviceQuery": "fpas_lsp::Backend"
     },
     {
       "phase": 4,
@@ -33,7 +33,7 @@
         "textDocument/didSave",
         "textDocument/didClose"
       ],
-      "serviceQuery": "DocumentStore::apply_full_text"
+      "serviceQuery": "SynchronizedDocuments over DocumentStore::apply_full_text"
     },
     {
       "phase": 5,
@@ -135,6 +135,41 @@
       "symbols": [
         "pub struct InterfaceSymbol",
         "pub struct UnitInterface"
+      ]
+    },
+    {
+      "path": "crates/fpas-lsp/src/server/backend.rs",
+      "symbols": [
+        "impl LanguageServer for Backend",
+        "async fn initialize",
+        "async fn shutdown",
+        "async fn did_open",
+        "async fn did_change",
+        "async fn did_save",
+        "async fn did_close"
+      ]
+    },
+    {
+      "path": "crates/fpas-lsp/src/convert/position.rs",
+      "symbols": [
+        "pub fn position_to_byte_offset",
+        "pub fn byte_offset_to_position"
+      ]
+    },
+    {
+      "path": "editors/vscode/src/languageClient.ts",
+      "symbols": [
+        "new LanguageClient(",
+        "await client.start()",
+        "await client.stop()"
+      ]
+    },
+    {
+      "path": "editors/vscode/src/serverPath.ts",
+      "symbols": [
+        "resolveServerPath",
+        "resolveHostTarget",
+        "vscode.env.remoteName"
       ]
     }
   ],

@@ -7,8 +7,8 @@
 | 0 | complete (2026-07-29) | installable Hello World VSIX |
 | 1 | complete (2026-07-29) | confirmed protocol, package, and fixture contracts |
 | 2 | complete (2026-07-29) | syntax-only development extension |
-| 3 | open | language-service foundation |
-| 4 | open | functioning stdio language server |
+| 3 | complete (2026-07-29) | language-service foundation |
+| 4 | complete (2026-07-29) | functioning stdio language server |
 | 5 | open | diagnostics and formatting |
 | 6 | open | symbols, hover, definitions, and completion |
 | 7 | open | reproducible final VSIX packaging |
@@ -287,6 +287,40 @@ structural thresholds; split symbol queries by responsibility.
 - The crate has no dependency on VS Code, Node, or LSP protocol types.
 - No editor query writes compiled-unit sidecars or executes FPAS code.
 
+### Verification — 2026-07-29
+
+- `fpas-language-service` is split into focused `document/`, `analysis/`,
+  `workspace/`, and `symbols/` modules plus diagnostic and formatting facades;
+  every production source file remains below 400 lines.
+- `DocumentStore` provides immutable snapshots, monotonically versioned editor
+  buffers, disk revisions, reusable UTF-8 line indexes, and normalized paths.
+  Open buffers override disk text, including before the first save.
+- `WorkspaceContext` discovers or explicitly loads loose files, projects, and
+  workspaces through `fpas-project`. Invalid manifests, missing dependencies,
+  invalid workspace members, and absent metadata are recoverable structured
+  states.
+- A new `fpas-project` parsed-source graph entry point lets analysis reuse
+  existing dependency ordering and validation with in-memory ASTs. It neither
+  reads compiled-unit sidecars nor requires the source paths to exist on disk.
+- `LanguageService` caches loose and project analysis by the exact revisions
+  of every participating source. It reuses parser and semantic-analysis
+  authority, resolves project unit interfaces dependency-first, merges
+  diagnostics, delegates formatting to `fpas-fmt`, and builds a declaration
+  index that preserves equal short names from different units.
+- Regression tests cover loose, project, and workspace analysis; invalid
+  metadata, a missing dependency, malformed source and malformed unsaved unit
+  text; empty, CRLF, Unicode, deleted, recreated, saved, reopened, and stale
+  documents; unsaved overlays; formatting; cache invalidation; and colliding
+  unqualified symbols.
+- `cargo tree -p fpas-language-service --depth 1` contains only FPAS parser,
+  diagnostics, formatter, project, semantic-analysis, and unit crates. There
+  is no VS Code, Node, LSP, compiler, linker, VM, or execution dependency.
+- `cargo clippy -p fpas-language-service --all-targets -- -D warnings`,
+  `cargo clippy -p fpas-project --all-targets -- -D warnings`,
+  `cargo fmt --check`, `cargo build`, and `cargo test --workspace` passed.
+- The project analysis test confirms that no `.fpascu` sidecar is created.
+  No FPAS source, syntax, semantics, or current language documentation changed.
+
 ## Phase 4 — LSP transport and lifecycle
 
 ### Files
@@ -320,6 +354,44 @@ request handling.
 - The server starts and shuts down cleanly from the extension.
 - Closing or restarting the editor leaves no orphan server process.
 - Invalid client input does not panic the server.
+
+### Verification — 2026-07-29
+
+- `fpas-lsp` is a separate binary/library crate using exact-pinned
+  `tower-lsp-server` 0.23.0. Lifecycle, synchronized-document state,
+  capabilities, and protocol conversion live in focused modules; every
+  production source remains below 200 lines.
+- Initialize advertises only UTF-16 positions and open/close, full-change, and
+  save-without-text synchronization. Diagnostics, formatting, hover,
+  definitions, symbols, completion, and proposed LSP 3.18 features remain
+  unadvertised.
+- `didOpen`, `didChange`, `didSave`, and `didClose` feed the Phase 3
+  `DocumentStore`. Incremental changes, unsupported URI schemes, unopened
+  saves, and stale versions are rejected recoverably and logged to stderr.
+- Position regressions cover ASCII, CRLF, BMP Unicode, surrogate-pair text,
+  a split surrogate pair, end-of-line, end-of-file, invalid lines,
+  out-of-range UTF-16 columns, and invalid UTF-8 byte offsets.
+- Raw process transcripts cover initialize/initialized, open/change/save/close,
+  shutdown/exit, a request before initialization, malformed parameters,
+  malformed JSON, cancellation, unsupported URIs, stale versions, and
+  incremental changes. The parser test accepts only valid
+  `Content-Length`-framed JSON on stdout.
+- The TypeScript extension uses exact-pinned `vscode-languageclient` 10.1.0,
+  resolves only the repository debug binary in development, rejects remote or
+  unsupported hosts, bundles the client into the JavaScript entry point, and
+  exposes a restart command. It never searches the system `PATH`.
+- A real isolated VS Code Extension Host started the Rust server, completed
+  the LSP handshake, opened a `.fpas` document, restarted the server, and
+  stopped cleanly. A process check after shutdown found no remaining
+  `fpas-lsp` process.
+- `npm audit` reported no known vulnerabilities. `npm test` and the bootstrap
+  `npm run package` path passed; the resulting bootstrap VSIX intentionally
+  still excludes the native binary until Phase 7.
+- `cargo clippy -p fpas-lsp --all-targets -- -D warnings` passed. Full
+  workspace formatting, build, tests, and Rust documentation are recorded in
+  the final Phase 4 verification run.
+- No FPAS source, language syntax, semantics, or current language
+  documentation changed.
 
 ## Phase 5 — diagnostics and formatting
 

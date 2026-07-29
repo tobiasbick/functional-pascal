@@ -1,6 +1,6 @@
 # Local VSIX and language server
 
-**Status:** implementation in progress; phases 0-2 complete
+**Status:** implementation in progress; phases 0-4 complete
 **Change class:** tooling and editor integration; no FPAS language change
 
 ## Goal
@@ -57,22 +57,24 @@ crates/
     Cargo.toml
     src/
       lib.rs                 — public editor-oriented analysis API
-      document.rs            — immutable source snapshot and line index
-      workspace.rs           — open documents and project context
+      document/              — immutable snapshots, line index, and open buffers
+      analysis/              — versioned parse/sema cache and project analysis
+      workspace/             — loose-file, project, and workspace context
       diagnostics.rs         — parser/sema diagnostic collection
-      symbols/               — symbol index, definitions, hover, completion
       formatting.rs          — canonical whole-document formatting
+      symbols/               — declaration extraction and workspace index
   fpas-lsp/
     Cargo.toml
     src/
+      lib.rs                 — reusable service construction and stdio serving
       main.rs                — stdio process entry point
-      server.rs              — LSP connection and request loop
       capabilities.rs        — advertised server capabilities
-      documents.rs           — LSP document synchronization
-      convert/               — URI, UTF-16 position, range, and diagnostic conversion
-      requests/              — hover, definition, symbols, completion, formatting
-      notifications/         — open/change/save/close handling
-      tests/                 — protocol-level fixtures and regression tests
+      documents.rs           — full-text document synchronization
+      server/                — lifecycle and notification backend
+      convert/               — file-URI and UTF-16 position conversion
+    tests/
+      protocol.rs            — conversion and invalid-request regressions
+      process.rs             — framed stdio transcript and process tests
 
 editors/
   vscode/
@@ -86,7 +88,6 @@ editors/
       extension.ts           — activation and lifecycle only
       languageClient.ts      — bundled server launch and client options
       serverPath.ts          — validated packaged executable lookup
-      commands.ts            — restart and output commands
     test/
       grammar/               — highlighting fixtures
       extension/             — activation and manifest tests
@@ -94,6 +95,7 @@ editors/
       <host-target>/
         fpas-lsp[.exe]       — host-native build input; not committed
     scripts/
+      compile.mjs            — type-check and bundle the language client
       stage-server.mjs       — copy and validate the release server
       package.mjs            — create the deterministic local VSIX
     dist/
@@ -129,12 +131,18 @@ locally available.
 
 ## Current implemented milestone
 
-**Phase 2 completed:** 2026-07-29
+**Phase 4 completed:** 2026-07-29
 
-The same local VSIX now registers `.fpas` as Functional Pascal and contains a
-language configuration plus TextMate grammar. Highlighting and editor pairs,
-comments, indentation, and folding work without a running language server.
-Formatting, diagnostics, and navigation remain later phases.
+The syntax-only VSIX from Phase 2 registers `.fpas` as Functional Pascal and
+provides language configuration plus TextMate highlighting without a server.
+Phase 3 added the protocol-independent language-service foundation. Phase 4
+now adds `fpas-lsp`, with standard initialize/shutdown/exit lifecycle,
+full-document synchronization, strict local-file URIs, and safe UTF-16
+position conversion. The development extension starts and restarts the native
+debug server through `vscode-languageclient` without using the system `PATH`.
+It still advertises no diagnostics, formatting, or navigation capability.
+The bootstrap VSIX remains platform-independent; native server staging into
+the final host-specific VSIX belongs to Phase 7.
 
 ## Non-goals
 

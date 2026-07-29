@@ -5,6 +5,7 @@
 
 mod model;
 mod order;
+mod parsed;
 mod resolve;
 mod source_map;
 
@@ -22,6 +23,9 @@ use crate::{StandardLibrary, is_test_source_file};
 use source_map::apply_unit_source_id;
 
 pub use model::{ResolvedUnitGraph, UnitGraph, UnitNode};
+pub use parsed::{
+    build_unit_graph_for_program_from_parsed_sources, build_unit_graph_from_parsed_sources,
+};
 pub(crate) use resolve::ImportPolicy;
 
 use order::resolve_order;

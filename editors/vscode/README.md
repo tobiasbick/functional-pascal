@@ -2,9 +2,10 @@
 
 This is the local editor extension for Functional Pascal. It provides `.fpas`
 language detection, TextMate syntax highlighting, comment and bracket
-configuration, indentation, and folding without requiring a language server.
-The repository builds, tests, and packages it as a VS Code-compatible VSIX
-without a Marketplace.
+configuration, indentation, and folding. In repository development mode it
+also starts the native `fpas-lsp` server over stdio for lifecycle and
+full-document synchronization. The repository builds and tests it without a
+Marketplace.
 
 ## Build
 
@@ -12,6 +13,7 @@ Node.js 22 or newer is required.
 
 ```text
 npm ci
+npm test
 npm run package
 ```
 
@@ -37,4 +39,8 @@ Run **Functional Pascal: Show Output** from the Command Palette. The
 Functional Pascal extension activated (Hello World).
 ```
 
-This phase does not yet provide formatting or a language server.
+The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
+VS Code Extension Host, restarts it once, and shuts it down with the extension.
+The bootstrap VSIX still does not bundle the native executable; host-native
+staging and final VSIX naming belong to the packaging phase. Diagnostics,
+formatting, and navigation are not advertised yet.

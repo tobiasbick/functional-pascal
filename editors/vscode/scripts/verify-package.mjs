@@ -71,6 +71,14 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     compiledExtension.includes("functionalPascal.showOutput"),
     "compiled extension contains the output command"
   );
+  assert.ok(
+    compiledExtension.includes("functionalPascal.restartLanguageServer"),
+    "compiled extension contains the restart command"
+  );
+  assert.ok(
+    compiledExtension.includes("Content-Length"),
+    "compiled extension bundles the stdio language client"
+  );
 
   const forbiddenPrefixes = [
     "extension/src/",

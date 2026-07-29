@@ -44,6 +44,15 @@ activation, and compatible-editor behavior before LSP complexity is introduced.
 Phase 2 adds `.fpas` registration, language configuration, and TextMate
 highlighting declaratively. Opening a Functional Pascal file therefore does
 not activate TypeScript code or depend on a server process.
+Phase 3 implements the protocol-independent service layer. `DocumentStore`
+owns immutable source snapshots and open-buffer overlays, `WorkspaceContext`
+loads loose/project/workspace metadata, and `LanguageService` caches parser
+and semantic results across all participating source revisions. LSP lifecycle
+and UTF-16 conversion remain isolated to the Phase 4 transport.
+Phase 4 implements that transport with `tower-lsp-server`: a native stdio
+binary, strict file-URI conversion, full-text synchronization, framed protocol
+tests, and a VS Code development client with explicit start/stop/restart
+ownership. Only implemented synchronization capabilities are advertised.
 
 ## Why a language-service crate
 
@@ -67,16 +76,22 @@ refactor is not part of the first phase.
 Open editor buffers are authoritative, including unsaved text. Each snapshot
 contains:
 
-- URI-backed local path
+- normalized local path
 - monotonically increasing document version
 - UTF-8 source text
 - line-start index
 - parsed compilation unit and parser diagnostics
-- semantic results when parsing permits analysis
+
+`DocumentAnalysis` pairs a snapshot with semantic results, merged diagnostics,
+and extracted declarations when parsing permits analysis. Keeping semantic
+state outside the immutable source snapshot allows one snapshot to participate
+in either loose-file or project analysis.
 
 The extension requests full-document synchronization initially. This keeps
 change handling deterministic and avoids premature incremental-parser work.
-The service may cache results by document version.
+The service caches results by the exact source revisions participating in an
+analysis. A changed open buffer therefore invalidates its loose analysis and
+any project analysis that includes it.
 
 LSP positions use UTF-16 code units while Rust source spans use UTF-8 byte
 offsets. All conversion lives under `fpas-lsp/src/convert/` and must handle:
@@ -98,10 +113,14 @@ Loose `.fpas` files without a project still receive syntax diagnostics,
 formatting, document symbols, and same-document navigation. Project-dependent
 features degrade gracefully when no valid manifest can be found.
 
-Opening or changing a manifest invalidates the affected project model.
 Unsaved `.fpas` buffers override the corresponding on-disk sources during
 analysis. The server must not create `.fpascu` files merely to answer editor
 queries.
+
+Phase 3 loads manifests when `WorkspaceContext` is constructed, and Phase 4
+constructs that context from the initialized workspace root. Dynamic manifest
+reload is still later server work; source-text invalidation already happens
+through `DocumentStore`.
 
 ## Capabilities
 
@@ -172,6 +191,13 @@ The extension contributes:
 - an optional trace setting disabled by default
 
 It does not modify user settings automatically.
+
+During Phase 4 development and tests, the extension resolves
+`target/debug/fpas-lsp[.exe]` relative to the repository. Production lookup is
+already limited to `server/<host-target>/fpas-lsp[.exe]`, but that file is not
+staged into the bootstrap VSIX. Phase 7 replaces the development-only gap with
+the release binary and host-labelled package. Neither path falls back to a
+globally installed executable.
 
 ## Packaging
 

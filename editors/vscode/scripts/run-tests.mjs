@@ -11,9 +11,8 @@ import { verifyManifest } from "./verify-manifest.mjs";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 
-function runNode(relativeScript, args = []) {
-  const script = path.join(extensionRoot, relativeScript);
-  const result = spawnSync(process.execPath, [script, ...args], {
+function runCommand(command, args) {
+  const result = spawnSync(command, args, {
     cwd: extensionRoot,
     encoding: "utf8",
     stdio: "inherit"
@@ -23,13 +22,14 @@ function runNode(relativeScript, args = []) {
     throw result.error;
   }
   if (result.status !== 0) {
-    throw new Error(`${relativeScript} exited with status ${result.status}`);
+    throw new Error(`${command} exited with status ${result.status}`);
   }
 }
 
 /** Runs compilation, manifest checks, and extension-host tests. */
 export async function runTests() {
-  runNode("node_modules/typescript/bin/tsc");
+  runCommand("cargo", ["build", "-p", "fpas-lsp"]);
+  runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   await verifyManifest();
   await verifyContracts();
   await verifyGrammar();

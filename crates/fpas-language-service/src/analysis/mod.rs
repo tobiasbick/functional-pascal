@@ -1,0 +1,247 @@
+//! Cached document and project semantic analysis.
+
+mod cache;
+mod project;
+
+use std::path::Path;
+use std::sync::Arc;
+
+use cache::{AnalysisCache, AnalysisFingerprint, AnalysisSet};
+use fpas_diagnostics::Diagnostic;
+use fpas_parser::CompilationUnit;
+use fpas_sema::AnalysisMetadata;
+use project::{analyze_project, project_identity};
+
+use crate::diagnostics::{merged_diagnostics, parse_diagnostics};
+use crate::{
+    DocumentSnapshot, DocumentStore, DocumentSymbols, LanguageServiceError, WorkspaceContext,
+    WorkspaceSymbolIndex,
+};
+
+/// Compiler semantic metadata tied to the immutable AST allocation in a document snapshot.
+pub struct SemanticAnalysis {
+    metadata: AnalysisMetadata,
+}
+
+impl SemanticAnalysis {
+    /// Returns compiler expression types and lowering metadata for the snapshot AST.
+    #[must_use]
+    pub fn metadata(&self) -> &AnalysisMetadata {
+        &self.metadata
+    }
+}
+
+/// Immutable parse, semantic, diagnostic, and declaration results for one source version.
+pub struct DocumentAnalysis {
+    snapshot: Arc<DocumentSnapshot>,
+    diagnostics: Arc<[Diagnostic]>,
+    semantic: Option<Arc<SemanticAnalysis>>,
+    symbols: DocumentSymbols,
+}
+
+impl DocumentAnalysis {
+    pub(super) fn syntax_only(snapshot: Arc<DocumentSnapshot>) -> Self {
+        let diagnostics = parse_diagnostics(&snapshot).into();
+        let symbols = DocumentSymbols::from_snapshot(&snapshot);
+        Self {
+            snapshot,
+            diagnostics,
+            semantic: None,
+            symbols,
+        }
+    }
+
+    /// Returns the exact parsed snapshot analyzed by this result.
+    #[must_use]
+    pub fn snapshot(&self) -> &Arc<DocumentSnapshot> {
+        &self.snapshot
+    }
+
+    /// Returns merged lexer, parser, and semantic diagnostics.
+    #[must_use]
+    pub fn diagnostics(&self) -> &[Diagnostic] {
+        &self.diagnostics
+    }
+
+    /// Returns semantic metadata when parsing permitted analysis.
+    #[must_use]
+    pub fn semantic(&self) -> Option<&SemanticAnalysis> {
+        self.semantic.as_deref()
+    }
+
+    /// Returns declaration symbols for the recovered AST.
+    #[must_use]
+    pub fn symbols(&self) -> &DocumentSymbols {
+        &self.symbols
+    }
+}
+
+pub(super) fn semantic_document(
+    snapshot: Arc<DocumentSnapshot>,
+    metadata: AnalysisMetadata,
+) -> DocumentAnalysis {
+    let diagnostics = merged_diagnostics(&snapshot, metadata.0.iter().cloned()).into();
+    let symbols = DocumentSymbols::from_snapshot(&snapshot);
+    DocumentAnalysis {
+        snapshot,
+        diagnostics,
+        semantic: Some(Arc::new(SemanticAnalysis { metadata })),
+        symbols,
+    }
+}
+
+/// Stateful source service that keeps editor overlays and analysis caches independent from LSP.
+pub struct LanguageService {
+    documents: DocumentStore,
+    workspace: WorkspaceContext,
+    analysis_cache: AnalysisCache,
+}
+
+impl LanguageService {
+    /// Creates a service for an already loaded workspace context.
+    #[must_use]
+    pub fn new(workspace: WorkspaceContext) -> Self {
+        Self {
+            documents: DocumentStore::new(),
+            workspace,
+            analysis_cache: AnalysisCache::default(),
+        }
+    }
+
+    /// Discovers and loads source, project, or workspace context.
+    #[must_use]
+    pub fn load(input: &Path) -> Self {
+        Self::new(WorkspaceContext::load(input))
+    }
+
+    /// Returns the recoverable project/workspace context.
+    #[must_use]
+    pub fn workspace(&self) -> &WorkspaceContext {
+        &self.workspace
+    }
+
+    /// Returns the versioned document store.
+    #[must_use]
+    pub fn documents(&self) -> &DocumentStore {
+        &self.documents
+    }
+
+    /// Returns mutable access for full-text open/change/close synchronization.
+    pub fn documents_mut(&mut self) -> &mut DocumentStore {
+        &mut self.documents
+    }
+
+    /// Loads the authoritative open-buffer or disk snapshot for a source path.
+    pub fn snapshot(&mut self, path: &Path) -> Result<Arc<DocumentSnapshot>, LanguageServiceError> {
+        self.documents.snapshot(path)
+    }
+
+    /// Returns cached or newly computed project-aware analysis for one document.
+    pub fn analyze_document(
+        &mut self,
+        path: &Path,
+    ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
+        let target = self.documents.snapshot(path)?;
+        if target.has_parse_errors() {
+            return self.cached_syntax_only(target);
+        }
+
+        let project = self.workspace.project_for_source(path).cloned();
+        let Some(project) = project else {
+            return self.analyze_loose(target);
+        };
+        let snapshots = self.project_snapshots(&project)?;
+        let fingerprint = AnalysisFingerprint::new(project_identity(&project), &snapshots);
+        let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
+            cached
+        } else {
+            let analysis = analyze_project(&project, &snapshots)?;
+            self.analysis_cache.insert(fingerprint, analysis)
+        };
+        set.document(path).ok_or_else(|| {
+            LanguageServiceError::analysis(
+                path,
+                "The source is not present in its loaded project analysis.",
+            )
+        })
+    }
+
+    /// Builds a collision-safe symbol index for every analyzable source in the current context.
+    pub fn workspace_symbol_index(&mut self) -> Result<WorkspaceSymbolIndex, LanguageServiceError> {
+        let mut index = WorkspaceSymbolIndex::new();
+        if self.workspace.projects().is_empty() {
+            return Ok(index);
+        }
+        let paths = self
+            .workspace
+            .projects()
+            .iter()
+            .flat_map(|project| project.all_source_paths())
+            .collect::<Vec<_>>();
+        for path in paths {
+            let analysis = self.analyze_document(&path)?;
+            index.replace_document(&path, analysis.symbols().clone());
+        }
+        Ok(index)
+    }
+
+    fn project_snapshots(
+        &mut self,
+        project: &crate::ProjectContext,
+    ) -> Result<Vec<Arc<DocumentSnapshot>>, LanguageServiceError> {
+        project
+            .all_source_paths()
+            .iter()
+            .map(|path| self.documents.snapshot(path))
+            .collect()
+    }
+
+    fn cached_syntax_only(
+        &mut self,
+        snapshot: Arc<DocumentSnapshot>,
+    ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
+        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)]);
+        let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
+            cached
+        } else {
+            let analysis = Arc::new(DocumentAnalysis::syntax_only(Arc::clone(&snapshot)));
+            self.analysis_cache
+                .insert(fingerprint, AnalysisSet::one(analysis))
+        };
+        set.document(snapshot.path()).ok_or_else(|| {
+            LanguageServiceError::analysis(
+                snapshot.path(),
+                "Cached syntax analysis lost its document.",
+            )
+        })
+    }
+
+    fn analyze_loose(
+        &mut self,
+        snapshot: Arc<DocumentSnapshot>,
+    ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
+        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)]);
+        let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
+            cached
+        } else {
+            let metadata = match snapshot.compilation_unit() {
+                CompilationUnit::Program(program) => {
+                    fpas_sema::analyze_program_with_interfaces(program, &[])
+                }
+                CompilationUnit::Unit(unit) => {
+                    fpas_sema::analyze_unit(unit, &[]).map(|analysis| analysis.metadata)
+                }
+            }
+            .map_err(|error| LanguageServiceError::analysis(snapshot.path(), error.to_string()))?;
+            let analysis = Arc::new(semantic_document(Arc::clone(&snapshot), metadata));
+            self.analysis_cache
+                .insert(fingerprint, AnalysisSet::one(analysis))
+        };
+        set.document(snapshot.path()).ok_or_else(|| {
+            LanguageServiceError::analysis(
+                snapshot.path(),
+                "Cached loose-file analysis lost its document.",
+            )
+        })
+    }
+}

@@ -22,8 +22,8 @@ The initial server contract is deliberately small:
 
 | Phase | Feature | LSP methods | Language-service query |
 |---:|---|---|---|
-| 4 | Lifecycle | `initialize`, `initialized`, `shutdown`, `exit` | `LanguageServerLifecycle` |
-| 4 | Documents | `didOpen`, `didChange`, `didSave`, `didClose` | `DocumentStore::apply_full_text` |
+| 4 | Lifecycle | `initialize`, `initialized`, `shutdown`, `exit` | `fpas_lsp::Backend` |
+| 4 | Documents | `didOpen`, `didChange`, `didSave`, `didClose` | `SynchronizedDocuments` over `DocumentStore::apply_full_text` |
 | 5 | Push diagnostics | `textDocument/publishDiagnostics` | `diagnostics_for_document` |
 | 5 | Formatting | `textDocument/formatting` | `format_document` |
 | 6 | Document symbols | `textDocument/documentSymbol` | `document_symbols` |
@@ -38,8 +38,8 @@ contract.
 ## Rust transport selection
 
 The selected transport is `tower-lsp-server`, using version `0.23.0` as the
-verified Phase 1 baseline. The actual Cargo dependency is added and locked when
-`fpas-lsp` is created in Phase 4.
+verified Phase 1 baseline. Phase 4 adds and locks that exact dependency in
+`fpas-lsp`.
 
 | Criterion | `tower-lsp-server` 0.23.0 | `lsp-server` 0.10.0 |
 |---|---|---|
@@ -76,22 +76,37 @@ compose those APIs and provide editor-oriented caching and indexes.
 | Editor feature | Current authority | Contract and remaining service work |
 |---|---|---|
 | Syntax highlighting | FPAS grammar, examples, and tests | Phase 2 TextMate grammar; no compiler logic in TypeScript |
-| Parsing | `fpas_parser::parse_compilation_unit` and `ParseDiagnostic` | Store AST and diagnostics in a versioned snapshot |
-| Diagnostics | `fpas-parser`, `fpas-sema`, `fpas-diagnostics::Diagnostic` | `diagnostics_for_document` merges lexer/parser/sema results and keeps codes, severity, help, and spans |
-| Formatting | `fpas_fmt::format_source` | `format_document` parses the unsaved buffer and returns no edit after parse failure |
-| Project discovery | `fpas_project::load_project` and `load_workspace` | `load_workspace_context` overlays open buffers without writing sidecars |
-| Unit interfaces | `fpas_sema::analyze_unit` and `fpas_unit::UnitInterface` | Cache public types and callables for loaded dependencies |
-| Document symbols | `fpas-parser` declarations and source spans | `document_symbols` builds hierarchical editor ranges |
+| Parsing | `fpas_parser::parse_compilation_unit` and `ParseDiagnostic` | Phase 3 `DocumentSnapshot` stores the AST and diagnostics by source revision |
+| Diagnostics | `fpas-parser`, `fpas-sema`, `fpas-diagnostics::Diagnostic` | Phase 3 `diagnostics_for_document` exposes merged parser/sema results; Phase 5 converts and publishes them |
+| Formatting | `fpas_fmt::format_source` | Phase 3 `format_document` formats the unsaved snapshot and returns no result after parse failure; Phase 5 returns the LSP edit |
+| Project discovery | `fpas_project::load_project` and `load_workspace` | Phase 3 `WorkspaceContext` loads metadata and parsed-source graphs overlay open buffers without writing sidecars |
+| Unit interfaces | `fpas_sema::analyze_unit` and `fpas_unit::UnitInterface` | Phase 3 project analysis caches dependency interfaces by participating source revisions |
+| Document symbols | `fpas-parser` declarations and source spans | Phase 3 `DocumentSymbols` and `WorkspaceSymbolIndex` provide the declaration foundation; Phase 6 adds the hierarchical LSP query |
 | Hover | AST spans, `ExprTypeMap`, and unit interfaces | `hover` formats declaration/type information at a source position |
 | Definition | Project graph, AST spans, and compiler name-resolution rules | `definition` needs a stable declaration/reference index in `fpas-language-service` |
 | Completion | Parsed declarations, project visibility, and unit interfaces | `completion` needs a stable visible-symbol query |
 
-The public compiler APIs already expose parsing, structured diagnostics,
-formatting, project/workspace loading, semantic type metadata, and compiled-unit
-interfaces. They do not expose a stable source-position-to-definition or
-visible-symbol index. Those are explicitly named language-service queries, and
-any focused semantic API they require must preserve current compiler behavior.
-No language change is required.
+The Phase 3 service now composes the public parser, diagnostic, formatter,
+project/workspace, semantic metadata, and unit-interface APIs behind stable
+document snapshots and a declaration index. A stable
+source-position-to-definition index and visibility-aware completion query are
+still Phase 6 work. Any focused semantic API they require must preserve current
+compiler behavior. No language change is required.
+
+## Phase 4 implementation
+
+The native server now enforces this baseline. Its initialize result advertises
+UTF-16 plus full-document open/close/change/save synchronization and no later
+capability. `tower-lsp-server` owns initialization-state errors, cancellation,
+JSON-RPC parameter validation, framing, shutdown, and exit semantics.
+`fpas-lsp` owns file-only URI conversion, UTF-16/UTF-8 conversion, ordered
+document-store access, and stderr-only operational logging.
+
+The development extension uses `vscode-languageclient` 10.1.0. That client
+library can speak newer protocol revisions, but FPAS requests and advertises
+only the stable LSP 3.17 contract recorded here. The client launches an
+explicit repository or packaged path and never resolves `fpas-lsp` through the
+system `PATH`.
 
 ## Host contract
 

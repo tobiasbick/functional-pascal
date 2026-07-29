@@ -10,13 +10,18 @@
     "url": "https://github.com/tobiasbick/functional-pascal.git"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.91.0"
   },
   "categories": [
     "Programming Languages"
   ],
   "activationEvents": [
+    "onLanguage:fpas",
+    "onCommand:functionalPascal.restartLanguageServer",
     "onCommand:functionalPascal.showOutput"
+  ],
+  "extensionKind": [
+    "ui"
   ],
   "main": "./out/src/extension.js",
   "contributes": {
@@ -45,24 +50,33 @@
         "command": "functionalPascal.showOutput",
         "title": "Show Output",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.restartLanguageServer",
+        "title": "Restart Language Server",
+        "category": "Functional Pascal"
       }
     ]
   },
   "scripts": {
-    "compile": "node node_modules/typescript/bin/tsc",
+    "compile": "node scripts/compile.mjs",
     "test": "node scripts/run-tests.mjs",
     "verify:contracts": "node scripts/verify-contracts.mjs",
     "verify:grammar": "node scripts/verify-grammar.mjs",
     "package": "node scripts/package.mjs",
     "vscode:prepublish": "npm run compile"
   },
+  "dependencies": {
+    "vscode-languageclient": "10.1.0"
+  },
   "devDependencies": {
     "@types/adm-zip": "0.5.8",
     "@types/node": "24.13.3",
-    "@types/vscode": "1.85.0",
+    "@types/vscode": "1.91.0",
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "3.9.2",
     "adm-zip": "0.6.0",
+    "esbuild": "0.25.12",
     "typescript": "7.0.2",
     "vscode-oniguruma": "2.0.1",
     "vscode-textmate": "9.3.2"

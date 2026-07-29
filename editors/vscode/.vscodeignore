@@ -5,6 +5,8 @@ scripts/**
 contracts/**
 node_modules/**
 out/test/**
+out/src/languageClient.js
+out/src/serverPath.js
 tsconfig.json
 package-lock.json
 dist/**

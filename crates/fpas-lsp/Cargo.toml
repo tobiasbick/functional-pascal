@@ -1,0 +1,20 @@
+[package]
+name = "fpas-lsp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Language Server Protocol transport for Functional Pascal"
+
+[dependencies]
+fpas-language-service = { path = "../fpas-language-service" }
+tokio = { version = "1", features = ["io-std", "macros", "rt-multi-thread", "sync"] }
+tower-lsp-server = "=0.23.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

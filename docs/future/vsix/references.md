@@ -79,14 +79,15 @@ and let users on other systems run the same build themselves.
   Protocol lifecycle, messages, capabilities, positions, diagnostics, and
   requests. Proposed protocol features are not required by this plan.
 - [`vscode-languageserver-node` — Microsoft on GitHub](https://github.com/microsoft/vscode-languageserver-node)  
-  Source for `vscode-languageclient`, the Node client used by the extension.
+  Source for exact-pinned `vscode-languageclient` 10.1.0, the Node client used
+  by the extension. Its declared VS Code engine floor is 1.91.
 - [LSP sample — Microsoft on GitHub](https://github.com/microsoft/vscode-extension-samples/tree/main/lsp-sample)  
   End-to-end language client/server extension example.
 
 ## Rust server implementation selection
 
 Phase 1 selected `tower-lsp-server` with `0.23.0` as the verified baseline.
-The dependency is added and locked when the server crate is created in Phase 4.
+Phase 4 adds and locks the dependency in the `fpas-lsp` crate.
 The comparison and rejection rationale are recorded in
 [Phase 1 editor contracts](contracts.md).
 

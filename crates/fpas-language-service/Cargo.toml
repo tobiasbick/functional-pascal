@@ -1,0 +1,18 @@
+[package]
+name = "fpas-language-service"
+description = "Editor-oriented analysis services for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-fmt = { path = "../fpas-fmt" }
+fpas-parser = { path = "../fpas-parser" }
+fpas-project = { path = "../fpas-project" }
+fpas-sema = { path = "../fpas-sema" }
+fpas-unit = { path = "../fpas-unit" }
+
+[lints]
+workspace = true

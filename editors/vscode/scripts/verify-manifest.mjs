@@ -17,7 +17,7 @@ export async function verifyManifest() {
   );
   assert.equal(manifest.version, "0.0.1");
   assert.equal(manifest.main, "./out/src/extension.js");
-  assert.equal(manifest.engines?.vscode, "^1.85.0");
+  assert.equal(manifest.engines?.vscode, "^1.91.0");
   assert.equal(manifest.scripts?.package, "node scripts/package.mjs");
   assert.equal(manifest.scripts?.publish, undefined);
 
@@ -27,12 +27,21 @@ export async function verifyManifest() {
       command: "functionalPascal.showOutput",
       title: "Show Output",
       category: "Functional Pascal"
+    },
+    {
+      command: "functionalPascal.restartLanguageServer",
+      title: "Restart Language Server",
+      category: "Functional Pascal"
     }
   ]);
 
   assert.deepEqual(manifest.activationEvents, [
+    "onLanguage:fpas",
+    "onCommand:functionalPascal.restartLanguageServer",
     "onCommand:functionalPascal.showOutput"
   ]);
+  assert.deepEqual(manifest.extensionKind, ["ui"]);
+  assert.equal(manifest.dependencies?.["vscode-languageclient"], "10.1.0");
 
   assert.deepEqual(manifest.contributes?.languages, [
     {

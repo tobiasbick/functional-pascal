@@ -2,6 +2,7 @@
 src/**
 test/**
 scripts/**
+contracts/**
 node_modules/**
 out/test/**
 tsconfig.json

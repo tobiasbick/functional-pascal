@@ -32,12 +32,18 @@ Each layer has one concern:
 
 The language server communicates only through standard LSP over stdin/stdout.
 Logs go to stderr so they cannot corrupt the protocol stream.
+Phase 1 selected `tower-lsp-server` as the Rust transport implementation and
+fixed full-document synchronization as the initial document contract. See
+[Phase 1 editor contracts](contracts.md) for the capability and host policies.
 
 The delivery order deliberately starts one step earlier than this final
 architecture. Phase 0 packages a minimal extension with no Rust server and
 writes a Hello World activation line to a Functional Pascal output channel.
 This proves the manifest, TypeScript toolchain, VSIX packaging, installation,
-activation, and clone compatibility before LSP complexity is introduced.
+activation, and compatible-editor behavior before LSP complexity is introduced.
+Phase 2 adds `.fpas` registration, language configuration, and TextMate
+highlighting declaratively. Opening a Functional Pascal file therefore does
+not activate TypeScript code or depend on a server process.
 
 ## Why a language-service crate
 

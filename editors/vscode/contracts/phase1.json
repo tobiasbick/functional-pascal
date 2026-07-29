@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "protocol": {
+    "version": "3.17",
+    "transport": "stdio",
+    "positionEncoding": "utf-16",
+    "textDocumentSync": {
+      "openClose": true,
+      "change": "full",
+      "save": {
+        "includeText": false
+      }
+    }
+  },
+  "capabilities": [
+    {
+      "phase": 4,
+      "feature": "lifecycle",
+      "methods": [
+        "initialize",
+        "initialized",
+        "shutdown",
+        "exit"
+      ],
+      "serviceQuery": "LanguageServerLifecycle"
+    },
+    {
+      "phase": 4,
+      "feature": "document synchronization",
+      "methods": [
+        "textDocument/didOpen",
+        "textDocument/didChange",
+        "textDocument/didSave",
+        "textDocument/didClose"
+      ],
+      "serviceQuery": "DocumentStore::apply_full_text"
+    },
+    {
+      "phase": 5,
+      "feature": "diagnostics",
+      "methods": [
+        "textDocument/publishDiagnostics"
+      ],
+      "serviceQuery": "diagnostics_for_document"
+    },
+    {
+      "phase": 5,
+      "feature": "formatting",
+      "methods": [
+        "textDocument/formatting"
+      ],
+      "serviceQuery": "format_document"
+    },
+    {
+      "phase": 6,
+      "feature": "document symbols",
+      "methods": [
+        "textDocument/documentSymbol"
+      ],
+      "serviceQuery": "document_symbols"
+    },
+    {
+      "phase": 6,
+      "feature": "hover",
+      "methods": [
+        "textDocument/hover"
+      ],
+      "serviceQuery": "hover"
+    },
+    {
+      "phase": 6,
+      "feature": "go to definition",
+      "methods": [
+        "textDocument/definition"
+      ],
+      "serviceQuery": "definition"
+    },
+    {
+      "phase": 6,
+      "feature": "completion",
+      "methods": [
+        "textDocument/completion"
+      ],
+      "serviceQuery": "completion"
+    }
+  ],
+  "transportLibrary": {
+    "selected": {
+      "crate": "tower-lsp-server",
+      "baselineVersion": "0.23.0"
+    },
+    "rejected": {
+      "crate": "lsp-server",
+      "baselineVersion": "0.10.0",
+      "reason": "It is a deliberately low-level synchronous scaffold, so FPAS would need to own dispatch, cancellation, concurrency, and more lifecycle plumbing."
+    }
+  },
+  "sourceEvidence": [
+    {
+      "path": "crates/fpas-parser/src/lib.rs",
+      "symbols": [
+        "pub enum ParseDiagnostic",
+        "pub fn parse_compilation_unit"
+      ]
+    },
+    {
+      "path": "crates/fpas-diagnostics/src/diagnostic.rs",
+      "symbols": [
+        "pub enum DiagnosticSeverity",
+        "pub struct Diagnostic"
+      ]
+    },
+    {
+      "path": "crates/fpas-fmt/src/lib.rs",
+      "symbols": [
+        "pub fn format_source"
+      ]
+    },
+    {
+      "path": "crates/fpas-project/src/lib.rs",
+      "symbols": [
+        "load_project",
+        "load_workspace"
+      ]
+    },
+    {
+      "path": "crates/fpas-sema/src/lib.rs",
+      "symbols": [
+        "analyze_program_with_interfaces",
+        "analyze_unit"
+      ]
+    },
+    {
+      "path": "crates/fpas-unit/src/interface/symbols.rs",
+      "symbols": [
+        "pub struct InterfaceSymbol",
+        "pub struct UnitInterface"
+      ]
+    }
+  ],
+  "hostPolicy": {
+    "localTargets": [
+      "win32-x64",
+      "win32-arm64",
+      "linux-x64",
+      "linux-arm64",
+      "darwin-x64",
+      "darwin-arm64"
+    ],
+    "unsupportedTargetMessage": "Unsupported Functional Pascal VSIX host target: {platform}-{arch}. Build on Windows, Linux, or macOS using an x64 or arm64 host.",
+    "remoteHost": "unsupported",
+    "remoteHostMessage": "Functional Pascal language-server support is unavailable in remote extension hosts. Open the workspace in a local desktop editor; remote SSH, WSL, and container extension hosts are not supported by this hobby-project build."
+  }
+}

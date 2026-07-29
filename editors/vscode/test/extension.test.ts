@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import * as vscode from "vscode";
 
 import type { FunctionalPascalExtensionApi } from "../src/extension";
@@ -8,7 +9,7 @@ const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
 const ACTIVATION_MESSAGE =
   "Functional Pascal extension activated (Hello World).";
 
-/** Runs the bootstrap extension-host regression test. */
+/** Runs the extension-shell regression test in a real Extension Host. */
 export async function run(): Promise<void> {
   const extension =
     vscode.extensions.getExtension<FunctionalPascalExtensionApi>(EXTENSION_ID);
@@ -22,6 +23,13 @@ export async function run(): Promise<void> {
   const commands = await vscode.commands.getCommands(true);
   assert.ok(commands.includes(SHOW_OUTPUT_COMMAND));
 
+  const fixture = vscode.Uri.file(
+    path.join(extension.extensionPath, "test", "grammar", "positive.fpas")
+  );
+  const document = await vscode.workspace.openTextDocument(fixture);
+  assert.equal(document.languageId, "fpas");
+  await vscode.window.showTextDocument(document);
+
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
-  console.log("Functional Pascal bootstrap extension test passed.");
+  console.log("Functional Pascal extension shell test passed.");
 }

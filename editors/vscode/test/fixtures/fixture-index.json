@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "requiredCoverage": [
+    "programs",
+    "units",
+    "records",
+    "functions",
+    "comments",
+    "strings",
+    "unicode-identifiers",
+    "unicode-text",
+    "malformed-syntax",
+    "multi-project-workspace"
+  ],
+  "sources": [
+    {
+      "path": "standalone/features.fpas",
+      "expected": "valid",
+      "covers": [
+        "programs",
+        "records",
+        "functions",
+        "comments",
+        "strings",
+        "unicode-text"
+      ]
+    },
+    {
+      "path": "standalone/malformed_syntax.fpas",
+      "expected": "diagnostic",
+      "diagnostics": [
+        "F1001"
+      ],
+      "covers": [
+        "malformed-syntax"
+      ]
+    },
+    {
+      "path": "standalone/unicode_identifier.fpas",
+      "expected": "diagnostic",
+      "diagnostics": [
+        "F0012"
+      ],
+      "covers": [
+        "unicode-identifiers"
+      ]
+    },
+    {
+      "path": "workspace/apps/demo/src/main.fpas",
+      "expected": "valid-workspace-member",
+      "covers": [
+        "programs"
+      ]
+    },
+    {
+      "path": "workspace/libs/greetings/src/greetings.fpas",
+      "expected": "valid-workspace-member",
+      "covers": [
+        "units",
+        "functions"
+      ]
+    }
+  ],
+  "workspace": {
+    "path": "workspace/phase1.fpasworkspace",
+    "projects": [
+      "workspace/apps/demo/demo.fpasprj",
+      "workspace/libs/greetings/greetings.fpasprj"
+    ],
+    "sources": [
+      "workspace/apps/demo/src/main.fpas",
+      "workspace/libs/greetings/src/greetings.fpas"
+    ],
+    "expected": "valid",
+    "covers": [
+      "multi-project-workspace"
+    ]
+  }
+}

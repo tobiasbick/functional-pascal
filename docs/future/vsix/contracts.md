@@ -1,0 +1,139 @@
+# Phase 1 editor contracts
+
+**Status:** confirmed on 2026-07-29  
+**Scope:** editor tooling only; no FPAS syntax or semantic change
+
+The machine-readable companion is
+[`editors/vscode/contracts/phase1.json`](../../../editors/vscode/contracts/phase1.json).
+`npm run verify:contracts --prefix editors/vscode` checks that its protocol,
+source-API, host, and fixture references remain valid.
+
+## Protocol baseline
+
+- LSP version: 3.17 stable features only
+- Transport: standard input and standard output
+- Log transport: standard error
+- Position encoding: UTF-16 code units
+- Document synchronization: open/close plus full-document changes
+- Save notification: enabled without repeating the complete document text
+- Capability rule: advertise a capability only after its handler is implemented
+
+The initial server contract is deliberately small:
+
+| Phase | Feature | LSP methods | Language-service query |
+|---:|---|---|---|
+| 4 | Lifecycle | `initialize`, `initialized`, `shutdown`, `exit` | `LanguageServerLifecycle` |
+| 4 | Documents | `didOpen`, `didChange`, `didSave`, `didClose` | `DocumentStore::apply_full_text` |
+| 5 | Push diagnostics | `textDocument/publishDiagnostics` | `diagnostics_for_document` |
+| 5 | Formatting | `textDocument/formatting` | `format_document` |
+| 6 | Document symbols | `textDocument/documentSymbol` | `document_symbols` |
+| 6 | Hover | `textDocument/hover` | `hover` |
+| 6 | Definition | `textDocument/definition` | `definition` |
+| 6 | Completion | `textDocument/completion` | `completion` |
+
+Incremental synchronization, semantic tokens, workspace symbols, rename,
+references, code actions, and proposed LSP 3.18 features are not part of this
+contract.
+
+## Rust transport selection
+
+The selected transport is `tower-lsp-server`, using version `0.23.0` as the
+verified Phase 1 baseline. The actual Cargo dependency is added and locked when
+`fpas-lsp` is created in Phase 4.
+
+| Criterion | `tower-lsp-server` 0.23.0 | `lsp-server` 0.10.0 |
+|---|---|---|
+| Maintenance | Active community fork; Rust 2024 and Rust 1.85 baseline | Maintained inside rust-analyzer; Rust 2024 |
+| Protocol types | Bundled `ls-types`; stable 3.17 coverage documented | Transport-only; protocol types are a separate dependency |
+| Execution model | Async Tower service; Tokio-backed by default | Synchronous crossbeam channels and a caller-owned dispatch loop |
+| Stdio and lifecycle | `Server` and `LspService` own framing, state, and stdio serving | `Connection` owns framing and handshake; the application owns the loop |
+| Cancellation | Pending `$/cancelRequest` handling is built into the service | Queue primitives exist, but the application must route and cancel work |
+| Testing | The service can be exercised directly without a child process | In-memory connections are testable, but dispatch remains application code |
+| Dependency impact | Larger: Tower, Tokio, `ls-types`, and async support | Smaller: crossbeam, Serde, JSON, and logging |
+
+`tower-lsp-server` is selected because it removes lifecycle, dispatch, and
+cancellation plumbing from this hobby project while still allowing transcript
+and service-level tests. The larger dependency graph is acceptable for the
+single native server executable.
+
+`lsp-server` is rejected for this implementation because its intentionally
+low-level API would make FPAS own more concurrency, dispatch, and cancellation
+code. Its smaller dependency footprint does not offset that maintenance cost.
+
+Primary evidence:
+
+- [`tower-lsp-server` repository](https://github.com/tower-lsp-community/tower-lsp-server)
+- [`tower-lsp-server` feature coverage](https://github.com/tower-lsp-community/tower-lsp-server/blob/main/FEATURES.md)
+- [`tower-lsp-server` 0.23.0 manifest](https://github.com/tower-lsp-community/tower-lsp-server/blob/main/Cargo.toml)
+- [`lsp-server` source](https://github.com/rust-lang/rust-analyzer/tree/master/lib/lsp-server)
+- [`lsp_server` 0.10.0 API](https://rust-lang.github.io/rust-analyzer/lsp_server/index.html)
+
+## FPAS authority map
+
+Existing crates remain authoritative. The language-service queries named below
+compose those APIs and provide editor-oriented caching and indexes.
+
+| Editor feature | Current authority | Contract and remaining service work |
+|---|---|---|
+| Syntax highlighting | FPAS grammar, examples, and tests | Phase 2 TextMate grammar; no compiler logic in TypeScript |
+| Parsing | `fpas_parser::parse_compilation_unit` and `ParseDiagnostic` | Store AST and diagnostics in a versioned snapshot |
+| Diagnostics | `fpas-parser`, `fpas-sema`, `fpas-diagnostics::Diagnostic` | `diagnostics_for_document` merges lexer/parser/sema results and keeps codes, severity, help, and spans |
+| Formatting | `fpas_fmt::format_source` | `format_document` parses the unsaved buffer and returns no edit after parse failure |
+| Project discovery | `fpas_project::load_project` and `load_workspace` | `load_workspace_context` overlays open buffers without writing sidecars |
+| Unit interfaces | `fpas_sema::analyze_unit` and `fpas_unit::UnitInterface` | Cache public types and callables for loaded dependencies |
+| Document symbols | `fpas-parser` declarations and source spans | `document_symbols` builds hierarchical editor ranges |
+| Hover | AST spans, `ExprTypeMap`, and unit interfaces | `hover` formats declaration/type information at a source position |
+| Definition | Project graph, AST spans, and compiler name-resolution rules | `definition` needs a stable declaration/reference index in `fpas-language-service` |
+| Completion | Parsed declarations, project visibility, and unit interfaces | `completion` needs a stable visible-symbol query |
+
+The public compiler APIs already expose parsing, structured diagnostics,
+formatting, project/workspace loading, semantic type metadata, and compiled-unit
+interfaces. They do not expose a stable source-position-to-definition or
+visible-symbol index. Those are explicitly named language-service queries, and
+any focused semantic API they require must preserve current compiler behavior.
+No language change is required.
+
+## Host contract
+
+The final native package script recognizes these local build targets:
+
+- `win32-x64`
+- `win32-arm64`
+- `linux-x64`
+- `linux-arm64`
+- `darwin-x64`
+- `darwin-arm64`
+
+It builds only the current host. There is no cross-compilation, target matrix,
+CI build, or publication.
+
+An unsupported local combination must fail before packaging with:
+
+```text
+Unsupported Functional Pascal VSIX host target: {platform}-{arch}. Build on Windows, Linux, or macOS using an x64 or arm64 host.
+```
+
+Remote SSH, WSL, and container extension hosts are outside this hobby-project
+contract. When a native server would start remotely, activation must stop with:
+
+```text
+Functional Pascal language-server support is unavailable in remote extension hosts. Open the workspace in a local desktop editor; remote SSH, WSL, and container extension hosts are not supported by this hobby-project build.
+```
+
+The extension does not inspect or special-case the editor product name.
+
+## Fixture contract
+
+Fixtures live under
+[`editors/vscode/test/fixtures/`](../../../editors/vscode/test/fixtures/).
+
+| Fixture | Expected result | Coverage |
+|---|---|---|
+| `standalone/features.fpas` | valid | program, record, function, all comment forms, escaped string, Unicode text |
+| `standalone/malformed_syntax.fpas` | `F1001` | malformed syntax and parser recovery |
+| `standalone/unicode_identifier.fpas` | `F0012` | current ASCII-only identifier rule |
+| `workspace/phase1.fpasworkspace` | valid | program project consuming an exported library unit |
+
+Unicode is valid in FPAS string contents, but identifiers currently permit only
+ASCII letters, digits, and `_`. The negative Unicode-identifier fixture records
+that implemented rule; it does not propose a language change.

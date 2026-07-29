@@ -1,0 +1,6 @@
+[workspace]
+name = "editor-phase1"
+members = [
+  "libs/greetings/greetings.fpasprj",
+  "apps/demo/demo.fpasprj",
+]

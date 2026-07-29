@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 
-/** Validates the bootstrap extension manifest. */
+/** Validates the local extension manifest and declarative language files. */
 export async function verifyManifest() {
   const manifestPath = path.join(extensionRoot, "package.json");
   const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
@@ -33,6 +33,45 @@ export async function verifyManifest() {
   assert.deepEqual(manifest.activationEvents, [
     "onCommand:functionalPascal.showOutput"
   ]);
+
+  assert.deepEqual(manifest.contributes?.languages, [
+    {
+      id: "fpas",
+      aliases: ["Functional Pascal", "fpas"],
+      extensions: [".fpas"],
+      configuration: "./language-configuration.json"
+    }
+  ]);
+  assert.deepEqual(manifest.contributes?.grammars, [
+    {
+      language: "fpas",
+      scopeName: "source.fpas",
+      path: "./syntaxes/fpas.tmLanguage.json"
+    }
+  ]);
+
+  const languageConfiguration = JSON.parse(
+    await readFile(
+      path.join(extensionRoot, "language-configuration.json"),
+      "utf8"
+    )
+  );
+  assert.equal(languageConfiguration.comments.lineComment, "//");
+  assert.deepEqual(languageConfiguration.comments.blockComment, ["{", "}"]);
+  assert.ok(languageConfiguration.brackets.length > 0);
+  assert.ok(languageConfiguration.autoClosingPairs.length > 0);
+  assert.ok(languageConfiguration.surroundingPairs.length > 0);
+  assert.ok(languageConfiguration.indentationRules);
+  assert.ok(languageConfiguration.folding?.markers);
+
+  const grammar = JSON.parse(
+    await readFile(
+      path.join(extensionRoot, "syntaxes", "fpas.tmLanguage.json"),
+      "utf8"
+    )
+  );
+  assert.equal(grammar.scopeName, "source.fpas");
+  assert.ok(grammar.patterns.length > 0);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

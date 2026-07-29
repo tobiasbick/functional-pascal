@@ -5,8 +5,8 @@
 | Phase | Status | Deliverable |
 |------:|:------:|-------------|
 | 0 | complete (2026-07-29) | installable Hello World VSIX |
-| 1 | open | confirmed protocol, package, and fixture contracts |
-| 2 | open | syntax-only development extension |
+| 1 | complete (2026-07-29) | confirmed protocol, package, and fixture contracts |
+| 2 | complete (2026-07-29) | syntax-only development extension |
 | 3 | open | language-service foundation |
 | 4 | open | functioning stdio language server |
 | 5 | open | diagnostics and formatting |
@@ -162,6 +162,34 @@ Hello World, extension anatomy, testing, and `vsce` packaging documentation.
 - Unsupported host targets and remote-host behavior fail with actionable
   messages.
 
+### Verification — 2026-07-29
+
+- [`contracts.md`](contracts.md) and
+  `editors/vscode/contracts/phase1.json` fix the LSP 3.17, stdio, UTF-16,
+  full-document synchronization, capability, native-host, and remote-host
+  contracts.
+- `tower-lsp-server` 0.23.0 was selected over `lsp-server` 0.10.0. The selected
+  library owns async dispatch, lifecycle state, stdio serving, and request
+  cancellation; the rejected option would leave more of that plumbing in this
+  hobby project.
+- `npm run verify:contracts --prefix editors/vscode` confirmed every LSP method
+  has a named service query, every source-API reference still exists, both
+  rejected-host policies have actionable messages, and every required fixture
+  category is present.
+- The valid standalone fixture passed `fpas fmt --check` and `fpas check`. A
+  copied instance of the multi-project workspace also passed `fpas check`
+  without writing derived sidecars into the checked-in fixtures.
+- The malformed syntax fixture failed with `F1001`; the current unsupported
+  Unicode-identifier fixture failed with `F0012`. Unicode source text in a
+  string passed.
+- `npm test` passed the contract, manifest, compile, and Extension Host checks.
+  `npm run package` rebuilt the bootstrap VSIX with the same six runtime files;
+  contracts and fixtures remain excluded.
+- `cargo fmt --check`, `cargo build`, and `cargo test --workspace` passed.
+- No FPAS language syntax, semantics, or current documentation changed. Runtime
+  enforcement of the contracted host errors belongs to the packaging and
+  server-lifecycle phases.
+
 ## Phase 2 — extension shell and syntax highlighting
 
 ### Files
@@ -196,6 +224,38 @@ installable package path established in Phase 0.
 - The development extension opens an `.fpas` fixture with useful highlighting
   even when no server exists.
 - VS Code's extension host reports no manifest or grammar errors.
+
+### Verification — 2026-07-29
+
+- `package.json` registers `.fpas` as language ID `fpas` and contributes
+  `language-configuration.json` plus `syntaxes/fpas.tmLanguage.json`.
+- The language configuration covers line and brace-block comments, both FPAS
+  block-comment styles as editor pairs, brackets, auto-closing and surrounding
+  pairs, word selection, indentation, and region folding markers.
+- The grammar covers declarations, named programs/units/routines/types,
+  control flow, word and symbolic operators, built-in and composite types,
+  language and numeric constants, strings, all FPAS comment styles, and
+  qualified names. It follows the language's case-insensitive keyword and
+  non-nesting comment rules.
+- `vscode-textmate` 9.3.2 and `vscode-oniguruma` 2.0.1 are exact-pinned
+  development dependencies. `npm run verify:grammar` loads the grammar with
+  the same tokenizer stack used by VS Code and checks positive, negative, and
+  edge fixtures, including escaped quotes, keyword boundaries, Unicode,
+  nested-looking comments, and an incomplete file.
+- The valid positive and negative fixtures passed `fpas fmt --check` and
+  `fpas check`. The incomplete edge fixture is tokenizer-only by design.
+- `npm test` compiled the TypeScript sources, validated the manifest and
+  referenced language files, ran the grammar and Phase 1 contract regressions,
+  opened a `.fpas` fixture as language `fpas` in an isolated VS Code Extension
+  Host, and exercised the existing output command without host errors.
+- `npm run package` produced and inspected
+  `dist/functional-pascal-0.0.1-bootstrap.vsix`. Its eight packaged files
+  include the grammar and language configuration while excluding development
+  dependencies, scripts, contracts, tests, fixtures, and source maps.
+- `cargo fmt --check`, `cargo build`, and `cargo test --workspace` passed; no
+  Rust source changed in this editor-only phase.
+- No compiler logic was added to TypeScript, no language server is required
+  for highlighting, and no FPAS language syntax or semantics changed.
 
 ## Phase 3 — language-service foundation
 

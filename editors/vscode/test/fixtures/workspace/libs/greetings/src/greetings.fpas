@@ -1,0 +1,8 @@
+{ Public library unit used by the editor workspace fixture. }
+
+unit Editor.Greetings;
+
+public function GreetingFor(Name: string): string;
+begin
+  return ('Hello, ' + Name) + '!'
+end;

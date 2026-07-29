@@ -1,0 +1,27 @@
+/// Positive syntax-highlighting fixture.
+
+program HighlightingShowcase;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: real;
+  end;
+
+function Distance(Value: Point): real;
+begin
+  return Value.X + Value.Y
+end;
+
+begin
+  { Brace comment. }
+  var Origin: Point := record X := 42; Y := 3.5; end;
+  (* Parenthesized comment. *)
+  var Mask: integer := 42;
+  if Mask >= 1 then
+  begin
+    Std.Console.WriteLn('It''s the origin')
+  end
+end.

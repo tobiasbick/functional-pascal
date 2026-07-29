@@ -20,6 +20,26 @@
   ],
   "main": "./out/src/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "fpas",
+        "aliases": [
+          "Functional Pascal",
+          "fpas"
+        ],
+        "extensions": [
+          ".fpas"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "fpas",
+        "scopeName": "source.fpas",
+        "path": "./syntaxes/fpas.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "functionalPascal.showOutput",
@@ -31,6 +51,8 @@
   "scripts": {
     "compile": "node node_modules/typescript/bin/tsc",
     "test": "node scripts/run-tests.mjs",
+    "verify:contracts": "node scripts/verify-contracts.mjs",
+    "verify:grammar": "node scripts/verify-grammar.mjs",
     "package": "node scripts/package.mjs",
     "vscode:prepublish": "npm run compile"
   },
@@ -41,6 +63,8 @@
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "3.9.2",
     "adm-zip": "0.6.0",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2"
   }
 }

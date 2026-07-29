@@ -12,7 +12,7 @@ const defaultVsixPath = path.join(
   "functional-pascal-0.0.1-bootstrap.vsix"
 );
 
-/** Verifies that the bootstrap VSIX contains only intended runtime files. */
+/** Verifies that the local VSIX contains only intended runtime files. */
 export function verifyPackage(vsixPath = defaultVsixPath) {
   const archive = new AdmZip(vsixPath);
   const entries = archive.getEntries().map((entry) => entry.entryName);
@@ -22,7 +22,9 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     "extension/package.json",
     "extension/out/src/extension.js",
     "extension/readme.md",
-    "extension/LICENSE.txt"
+    "extension/LICENSE.txt",
+    "extension/language-configuration.json",
+    "extension/syntaxes/fpas.tmLanguage.json"
   ]) {
     assert.ok(entrySet.has(required), `VSIX contains ${required}`);
   }
@@ -34,6 +36,27 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     packagedManifest.contributes.commands[0].command,
     "functionalPascal.showOutput"
   );
+  assert.deepEqual(packagedManifest.contributes.languages[0].extensions, [
+    ".fpas"
+  ]);
+  assert.equal(
+    packagedManifest.contributes.languages[0].configuration,
+    "./language-configuration.json"
+  );
+  assert.equal(
+    packagedManifest.contributes.grammars[0].path,
+    "./syntaxes/fpas.tmLanguage.json"
+  );
+
+  const packagedLanguageConfiguration = JSON.parse(
+    archive.readAsText("extension/language-configuration.json")
+  );
+  assert.equal(packagedLanguageConfiguration.comments.lineComment, "//");
+
+  const packagedGrammar = JSON.parse(
+    archive.readAsText("extension/syntaxes/fpas.tmLanguage.json")
+  );
+  assert.equal(packagedGrammar.scopeName, "source.fpas");
 
   const compiledExtension = archive.readAsText(
     "extension/out/src/extension.js"
@@ -53,6 +76,7 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     "extension/src/",
     "extension/test/",
     "extension/scripts/",
+    "extension/contracts/",
     "extension/node_modules/",
     "extension/out/test/",
     "extension/dist/",

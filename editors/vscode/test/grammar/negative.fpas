@@ -1,0 +1,18 @@
+program KeywordBoundaries;
+
+uses Std.Console;
+
+const
+  RecordCount: integer := 1;
+
+begin
+  var beginValue: string := 'if then begin end';
+  // function return record
+  var gifted: boolean := true;
+  { while repeat until }
+  var endif: integer := 0;
+  if gifted and (endif = 0) then
+  begin
+    WriteLn(beginValue)
+  end
+end.

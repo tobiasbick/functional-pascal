@@ -1,6 +1,6 @@
 # Local VSIX and language server
 
-**Status:** planned  
+**Status:** implementation in progress; phases 0-2 complete
 **Change class:** tooling and editor integration; no FPAS language change
 
 ## Goal
@@ -123,8 +123,18 @@ editors/vscode/dist/functional-pascal-0.0.1-bootstrap.vsix
 
 When installed, the extension exposes **Functional Pascal: Show Output** and
 writes `Functional Pascal extension activated (Hello World).` to its dedicated
-output channel. The same bootstrap VSIX is installed and checked in VS Code,
-Cursor, and VSCodium before architectural work begins.
+output channel. The bootstrap VSIX was exercised in VS Code and also installed
+successfully in Cursor. VSCodium is an optional compatibility check when it is
+locally available.
+
+## Current implemented milestone
+
+**Phase 2 completed:** 2026-07-29
+
+The same local VSIX now registers `.fpas` as Functional Pascal and contains a
+language configuration plus TextMate grammar. Highlighting and editor pairs,
+comments, indentation, and folding work without a running language server.
+Formatting, diagnostics, and navigation remain later phases.
 
 ## Non-goals
 

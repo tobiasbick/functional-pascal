@@ -58,10 +58,16 @@ and let users on other systems run the same build themselves.
   Separation between declarative language support and programmatic features.
 - [Syntax Highlight Guide — Microsoft](https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide)  
   TextMate JSON grammar format, scopes, and the `grammars` contribution point.
+- [Language Configuration Guide — Microsoft](https://code.visualstudio.com/api/language-extensions/language-configuration-guide)
+  Declarative comments, brackets, auto-closing and surrounding pairs,
+  indentation rules, word patterns, and folding markers.
 - [Language configuration sample — Microsoft on GitHub](https://github.com/microsoft/vscode-extension-samples/tree/main/language-configuration-sample)  
   Reference for comments, brackets, auto-closing, indentation, and folding.
 - [`vscode-textmate` — Microsoft on GitHub](https://github.com/microsoft/vscode-textmate)  
   VS Code's TextMate tokenization library; useful for grammar fixture tests.
+- [`vscode-oniguruma` — Microsoft on GitHub](https://github.com/microsoft/vscode-oniguruma)
+  VS Code's WebAssembly Oniguruma engine used by the real grammar regression
+  tests.
 
 ## Language client and LSP
 
@@ -77,20 +83,20 @@ and let users on other systems run the same build themselves.
 - [LSP sample — Microsoft on GitHub](https://github.com/microsoft/vscode-extension-samples/tree/main/lsp-sample)  
   End-to-end language client/server extension example.
 
-## Rust server implementation candidates
+## Rust server implementation selection
 
-Choose and pin one Rust protocol implementation during Phase 1 after checking
-maintenance, LSP 3.17 coverage, dependency impact, cancellation support, stdio
-correctness, and testability. Do not write a custom JSON-RPC/LSP stack.
+Phase 1 selected `tower-lsp-server` with `0.23.0` as the verified baseline.
+The dependency is added and locked when the server crate is created in Phase 4.
+The comparison and rejection rationale are recorded in
+[Phase 1 editor contracts](contracts.md).
 
 - [`tower-lsp-server` — community project on GitHub](https://github.com/tower-lsp-community/tower-lsp-server)  
-  Maintained Tower-based async LSP server with stdio support and bundled
-  `ls-types`.
+  Selected Tower-based async server with stdio support and bundled `ls-types`.
+- [`tower-lsp-server` feature coverage](https://github.com/tower-lsp-community/tower-lsp-server/blob/main/FEATURES.md)
+  Project-maintained LSP coverage inventory, including stable LSP 3.17.
+- [`tower-lsp-server` manifest](https://github.com/tower-lsp-community/tower-lsp-server/blob/main/Cargo.toml)
+  Version, Rust baseline, features, and direct dependency inventory.
 - [`lsp-server` — rust-analyzer project on GitHub](https://github.com/rust-lang/rust-analyzer/tree/master/lib/lsp-server)  
-  Transport-oriented synchronous LSP infrastructure used by rust-analyzer.
+  Rejected low-level synchronous transport scaffold.
 - [`lsp_server` API documentation — rust-analyzer](https://rust-lang.github.io/rust-analyzer/lsp_server/index.html)  
-  Public API and message-loop documentation for the `lsp-server` candidate.
-
-The selection belongs in the Phase 1 verification notes together with the
-rejected candidate and a short reason. This avoids silently depending on stale
-SDK assumptions.
+  Public API, stdio connection, handshake, and caller-owned message-loop model.

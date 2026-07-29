@@ -1,0 +1,9 @@
+[project]
+name = "editor-greetings"
+kind = "library"
+
+[exports]
+units = ["Editor.Greetings"]
+
+[sources]
+include = ["src/**/*.fpas"]

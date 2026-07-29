@@ -1,7 +1,9 @@
 # Functional Pascal
 
-This is the local bootstrap extension for Functional Pascal. It proves that the
-repository can build, test, package, and install a VS Code-compatible VSIX
+This is the local editor extension for Functional Pascal. It provides `.fpas`
+language detection, TextMate syntax highlighting, comment and bracket
+configuration, indentation, and folding without requiring a language server.
+The repository builds, tests, and packages it as a VS Code-compatible VSIX
 without a Marketplace.
 
 ## Build
@@ -24,6 +26,10 @@ desktop editor.
 
 ## Verify
 
+Open a `.fpas` file and confirm the status bar identifies the language as
+**Functional Pascal**. Syntax highlighting works before the extension's
+TypeScript entry point is activated.
+
 Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:
 
@@ -31,5 +37,4 @@ Run **Functional Pascal: Show Output** from the Command Palette. The
 Functional Pascal extension activated (Hello World).
 ```
 
-This bootstrap does not yet provide syntax highlighting, formatting, or a
-language server.
+This phase does not yet provide formatting or a language server.

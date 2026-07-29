@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 
 import { runTests as runExtensionTests } from "@vscode/test-electron";
 
+import { verifyContracts } from "./verify-contracts.mjs";
+import { verifyGrammar } from "./verify-grammar.mjs";
 import { verifyManifest } from "./verify-manifest.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -29,6 +31,8 @@ function runNode(relativeScript, args = []) {
 export async function runTests() {
   runNode("node_modules/typescript/bin/tsc");
   await verifyManifest();
+  await verifyContracts();
+  await verifyGrammar();
   await runExtensionTests({
     extensionDevelopmentPath: extensionRoot,
     extensionTestsPath: path.join(

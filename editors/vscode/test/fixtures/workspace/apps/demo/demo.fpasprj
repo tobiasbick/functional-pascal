@@ -1,0 +1,10 @@
+[project]
+name = "editor-demo"
+kind = "program"
+main = "src/main.fpas"
+
+[dependencies]
+workspace = ["editor-greetings"]
+
+[sources]
+include = ["src/**/*.fpas"]

@@ -2,6 +2,11 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  resolveHostTarget,
+  supportedHostTargets
+} from "./package/host.mjs";
+
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
 const repositoryRoot = path.resolve(extensionRoot, "..", "..");
@@ -38,18 +43,6 @@ function assertSameFiles(actual, expected) {
     JSON.stringify(actual) === JSON.stringify(expected),
     `Fixture index mismatch.\nExpected: ${expected.join(", ")}\nActual: ${actual.join(", ")}`
   );
-}
-
-function resolveHostTarget(hostPolicy, platform, architecture) {
-  const target = `${platform}-${architecture}`;
-  if (!hostPolicy.localTargets.includes(target)) {
-    throw new Error(
-      hostPolicy.unsupportedTargetMessage
-        .replace("{platform}", platform)
-        .replace("{arch}", architecture)
-    );
-  }
-  return target;
 }
 
 function assertLocalExtensionHost(hostPolicy, remoteName) {
@@ -133,10 +126,29 @@ export async function verifyContracts() {
       );
     }
   }
+  const serverPathSource = await readFile(
+    path.join(extensionRoot, "src", "serverPath.ts"),
+    "utf8"
+  );
+  assert(
+    /"target",\s*"debug"/u.test(serverPathSource) &&
+      /"server",/u.test(serverPathSource),
+    "Server lookup must retain explicit development and packaged paths"
+  );
+  assert(
+    !/(?:process\.env\.PATH|execFile|spawnSync|which|where\.exe)/u.test(
+      serverPathSource
+    ),
+    "Server lookup must never search the system PATH"
+  );
 
   assert(
     contract.hostPolicy.localTargets.length > 0,
     "At least one local native host target must be contracted"
+  );
+  assertSameFiles(
+    supportedHostTargets(),
+    [...contract.hostPolicy.localTargets].sort()
   );
   assert(
     contract.hostPolicy.unsupportedTargetMessage.includes("{platform}-{arch}")
@@ -149,12 +161,12 @@ export async function verifyContracts() {
     "Remote-host rejection needs an actionable local-workspace message"
   );
   assert(
-    resolveHostTarget(contract.hostPolicy, "win32", "x64") === "win32-x64",
+    resolveHostTarget("win32", "x64") === "win32-x64",
     "A supported local host target must resolve unchanged"
   );
   assertLocalExtensionHost(contract.hostPolicy, undefined);
   assertFailureMessage(
-    () => resolveHostTarget(contract.hostPolicy, "freebsd", "riscv64"),
+    () => resolveHostTarget("freebsd", "riscv64"),
     contract.hostPolicy.unsupportedTargetMessage
       .replace("{platform}", "freebsd")
       .replace("{arch}", "riscv64")

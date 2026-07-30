@@ -1,6 +1,6 @@
 # Local VSIX and language server
 
-**Status:** implementation in progress; phases 0-6 complete
+**Status:** implementation in progress; phases 0-7 complete
 **Change class:** tooling and editor integration; no FPAS language change
 
 ## Goal
@@ -135,7 +135,7 @@ locally available.
 
 ## Current implemented milestone
 
-**Phase 5 completed:** 2026-07-30
+**Phase 7 completed:** 2026-07-30
 
 The syntax-only VSIX from Phase 2 registers `.fpas` as Functional Pascal and
 provides language configuration plus TextMate highlighting without a server.
@@ -146,11 +146,11 @@ position conversion. The development extension starts and restarts the native
 debug server through `vscode-languageclient` without using the system `PATH`.
 Phase 5 publishes versioned parser and semantic diagnostics from unsaved
 buffers and advertises canonical whole-document formatting through
-`fpas-fmt`. A real VS Code Extension Host verified that an unsaved parser error
-appears and clears and that **Format Document** produces canonical output.
-Navigation capabilities remain unadvertised.
-The bootstrap VSIX remains platform-independent; native server staging into
-the final host-specific VSIX belongs to Phase 7.
+`fpas-fmt`. Phase 6 supplies document symbols, hover, definitions, and basic
+completion. Phase 7 builds and stages the current host's release `fpas-lsp`,
+creates a target-labelled VSIX, inspects its exact runtime contents, and
+exercises the server extracted from the finished package. The extension never
+falls back to a globally installed server.
 
 ## Non-goals
 

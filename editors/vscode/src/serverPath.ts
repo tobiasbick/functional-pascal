@@ -61,8 +61,12 @@ export function resolveServerPath(context: vscode.ExtensionContext): string {
     isFile = false;
   }
   if (!isFile) {
+    const recovery =
+      context.extensionMode === vscode.ExtensionMode.Production
+        ? "Rebuild the host-native VSIX and reinstall it."
+        : "Build it with `cargo build -p fpas-lsp` and restart the extension.";
     throw new Error(
-      `Functional Pascal language server was not found at ${candidate}. Build it with \`cargo build -p fpas-lsp\` and restart the extension.`
+      `Functional Pascal language server was not found at ${candidate}. ${recovery}`
     );
   }
   return candidate;

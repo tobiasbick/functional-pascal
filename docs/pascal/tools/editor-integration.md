@@ -18,22 +18,34 @@ The extension and native language server live under
 extension and Language Server Protocol APIs; no compiler behavior is
 reimplemented in TypeScript.
 
-## Current packaging boundary
+## Build and installation
 
-Repository development mode starts the locally built `fpas-lsp` executable and
-has verified diagnostics and formatting in a real VS Code Extension Host. The
-current bootstrap VSIX still omits the native executable, so it provides the
-language registration and syntax layer only. A host-native self-contained VSIX
-is a later packaging phase.
-
-Build and test the current development extension from the repository root:
+Node.js 22 or newer and a stable Rust toolchain are required. From the
+repository root, install the pinned Node dependencies once and build the
+extension:
 
 ```text
 npm ci --prefix editors/vscode
-npm test --prefix editors/vscode
+npm run package --prefix editors/vscode
 ```
 
-The package command and current bootstrap artifact are documented in the
+The package command is non-interactive. It runs the extension tests, builds
+`fpas-lsp` in Cargo release mode, stages only the current host binary, verifies
+the archive contents, and exercises the server extracted from the resulting
+VSIX. The output is:
+
+```text
+editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
+```
+
+Install that file through **Extensions: Install from VSIX** in a compatible
+desktop editor. The VSIX is self-contained for the operating system and
+architecture where it was built. Users on another host build the same source
+there; the hobby project does not cross-compile, publish, or maintain a release
+matrix.
+
+For development, `npm test --prefix editors/vscode` builds the debug language
+server and runs the real VS Code Extension Host checks. More detail is in the
 [extension README](../../../editors/vscode/README.md).
 
 ## Diagnostics

@@ -1,22 +1,53 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import AdmZip from "adm-zip";
 
+import {
+  resolveHostTarget,
+  serverExecutableName
+} from "./package/host.mjs";
+
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
+const sourceManifest = JSON.parse(
+  readFileSync(path.join(extensionRoot, "package.json"), "utf8")
+);
+const defaultHostTarget = resolveHostTarget(process.platform, process.arch);
 const defaultVsixPath = path.join(
   extensionRoot,
   "dist",
-  "functional-pascal-0.0.1-bootstrap.vsix"
+  `functional-pascal-${sourceManifest.version}-${defaultHostTarget}.vsix`
 );
 
 /** Verifies that the local VSIX contains only intended runtime files. */
-export function verifyPackage(vsixPath = defaultVsixPath) {
+export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
+  const hostTarget = options.hostTarget ?? defaultHostTarget;
+  const executableName =
+    options.executableName ?? serverExecutableName(process.platform);
+  const serverEntry =
+    `extension/server/${hostTarget}/${executableName}`;
   const archive = new AdmZip(vsixPath);
   const entries = archive.getEntries().map((entry) => entry.entryName);
   const entrySet = new Set(entries);
+  const expectedEntries = [
+    "[Content_Types].xml",
+    "extension.vsixmanifest",
+    "extension/LICENSE.txt",
+    "extension/language-configuration.json",
+    "extension/out/src/extension.js",
+    "extension/package.json",
+    "extension/readme.md",
+    serverEntry,
+    "extension/syntaxes/fpas.tmLanguage.json"
+  ].sort();
+  assert.deepEqual(
+    [...entries].sort(),
+    expectedEntries,
+    "VSIX contains exactly the intended runtime files"
+  );
 
   for (const required of [
     "extension/package.json",
@@ -24,10 +55,29 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     "extension/readme.md",
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
-    "extension/syntaxes/fpas.tmLanguage.json"
+    "extension/syntaxes/fpas.tmLanguage.json",
+    serverEntry
   ]) {
     assert.ok(entrySet.has(required), `VSIX contains ${required}`);
   }
+  assert.ok(
+    archive.readFile(serverEntry)?.length > 0,
+    "packaged language server is non-empty"
+  );
+  if (executableName === "fpas-lsp") {
+    const serverMode = archive.getEntry(serverEntry).attr >>> 16;
+    assert.ok(
+      (serverMode & 0o111) !== 0,
+      "packaged Unix language server is executable"
+    );
+  }
+
+  const vsixManifest = archive.readAsText("extension.vsixmanifest");
+  assert.match(
+    vsixManifest,
+    new RegExp(`TargetPlatform="${hostTarget}"`, "u"),
+    "VSIX metadata identifies the current host target"
+  );
 
   const packagedManifest = JSON.parse(
     archive.readAsText("extension/package.json")
@@ -79,6 +129,11 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     compiledExtension.includes("Content-Length"),
     "compiled extension bundles the stdio language client"
   );
+  assert.ok(
+    compiledExtension.includes("server") &&
+      compiledExtension.includes("fpas-lsp"),
+    "compiled extension resolves the packaged language server"
+  );
 
   const forbiddenPrefixes = [
     "extension/src/",
@@ -100,6 +155,37 @@ export function verifyPackage(vsixPath = defaultVsixPath) {
     assert.ok(
       !/^[a-zA-Z]:[\\/]/u.test(entry) && !entry.startsWith("/"),
       `VSIX entry is relative: ${entry}`
+    );
+  }
+
+  const serverEntries = entries.filter((entry) =>
+    entry.startsWith("extension/server/")
+  );
+  assert.deepEqual(
+    serverEntries,
+    [serverEntry],
+    "VSIX contains only the current host server"
+  );
+
+  const buildRoots = [
+    extensionRoot,
+    path.resolve(extensionRoot, "..", "..")
+  ].flatMap((root) => [root, root.replaceAll("\\", "/")]);
+  for (const entry of entries.filter((name) =>
+    /\.(?:json|js|md|xml)$/iu.test(name)
+  )) {
+    const content = archive.readAsText(entry);
+    for (const root of buildRoots) {
+      assert.ok(
+        !content.includes(root),
+        `VSIX text file excludes the local build path: ${entry}`
+      );
+    }
+    assert.ok(
+      !/(?:[a-zA-Z]:[\\/](?:Users|projects)[\\/]|\/(?:home|Users)\/[^/\s"']+)/u.test(
+        content
+      ),
+      `VSIX text file excludes machine-specific paths: ${entry}`
     );
   }
 }

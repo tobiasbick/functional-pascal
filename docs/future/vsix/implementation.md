@@ -11,7 +11,7 @@
 | 4 | complete (2026-07-29) | functioning stdio language server |
 | 5 | complete (2026-07-30) | diagnostics and formatting |
 | 6 | complete (2026-07-30) | symbols, hover, definitions, and completion |
-| 7 | open | reproducible final VSIX packaging |
+| 7 | complete (2026-07-30) | reproducible final VSIX packaging |
 | 8 | open | local host acceptance and current documentation |
 
 Work phases in order. Update the table and verification notes as each phase is
@@ -596,6 +596,36 @@ editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
 No marketplace login, network publication, or manual archive modification is
 needed. The build produces only the current host target. A user on a different
 system builds there.
+
+### Verification — 2026-07-30
+
+- `scripts/package.mjs` provides the single non-interactive entry point,
+  supports `--help`, rejects unknown arguments, maps Windows, Linux, and macOS
+  x64/arm64 hosts, and reports an actionable error for unsupported hosts.
+- The package path clears stale staged targets, runs the complete extension
+  test suite, builds `fpas-lsp` in release mode without a Rust target override,
+  and stages only `server/<host-target>/fpas-lsp[.exe]`.
+- On the local Windows x64 host, `npm run package --prefix editors/vscode`
+  produced
+  `dist/functional-pascal-0.0.1-win32-x64.vsix`. Its nine archive entries
+  contain exactly the target metadata, license, manifest, README, grammar,
+  language configuration, bundled extension, and native server.
+- Archive regressions reject missing runtime files, extra host servers,
+  development files, source maps, Cargo output, unrelated executables, and
+  machine-specific paths. The extension lookup regression rejects any system
+  `PATH` fallback.
+- The package test extracted the finished VSIX to a temporary directory and
+  completed initialize, initialized, shutdown, and exit against its bundled
+  server. No server executable remained after the test.
+- Two consecutive package builds replaced the same output path. Every archive
+  entry name and SHA-256 content hash was identical; packaging-tool metadata
+  was intentionally excluded from this comparison.
+- `cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`,
+  `npm test --prefix editors/vscode`, both final package runs, and `npm audit`
+  passed. The dependency audit reported no known vulnerabilities.
+- The root README, extension README, current editor-integration documentation,
+  architecture, and plan now describe the host-native local build. No FPAS
+  syntax, semantics, or language specification changed.
 
 ## Phase 8 — editor acceptance and completion
 

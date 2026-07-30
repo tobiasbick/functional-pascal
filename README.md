@@ -86,6 +86,23 @@ also provides diagnostics, **Format Document**, document symbols, hover,
 definition, and basic completion. It works with the editor's standard
 format-on-save setting; no FPAS watch mode is required.
 
+### VS Code-compatible extension
+
+With Node.js 22 or newer and a stable Rust toolchain installed, build the local
+host-native VSIX from the repository root:
+
+```sh
+npm ci --prefix editors/vscode
+npm run package --prefix editors/vscode
+```
+
+The result is
+`editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix`. Install
+it in VS Code, Cursor, VSCodium, or another compatible desktop editor through
+**Extensions: Install from VSIX**. The package includes the native language
+server for the host where it was built; users on another operating system or
+architecture build it there.
+
 ## Applications
 
 [Notes](apps/notes/README.md) is a complete modern `Std.Tui` note-taking

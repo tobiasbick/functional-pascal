@@ -58,6 +58,7 @@
     "test": "node scripts/run-tests.mjs",
     "verify:contracts": "node scripts/verify-contracts.mjs",
     "verify:grammar": "node scripts/verify-grammar.mjs",
+    "verify:packaging": "node scripts/verify-packaging.mjs",
     "package": "node scripts/package.mjs",
     "vscode:prepublish": "npm run compile"
   },

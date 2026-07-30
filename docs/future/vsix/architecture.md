@@ -194,16 +194,13 @@ It does not modify user settings automatically.
 
 During repository development and tests, the extension resolves
 `target/debug/fpas-lsp[.exe]` relative to the repository. Production lookup is
-already limited to `server/<host-target>/fpas-lsp[.exe]`, but that file is not
-staged into the bootstrap VSIX. Phase 7 replaces the development-only gap with
-the release binary and host-labelled package. Neither path falls back to a
+limited to `server/<host-target>/fpas-lsp[.exe]`; the package script stages the
+current host's release binary at that exact path. Neither path falls back to a
 globally installed executable.
 
 ## Packaging
 
-The bootstrap package script initially compiles TypeScript, runs the minimal
-extension tests, and calls `@vscode/vsce` to create an installable VSIX. The
-final package script extends that already-working path on the target host:
+The package script extends the proven bootstrap path on the current host:
 
 1. Build `fpas-lsp` in Cargo release mode.
 2. Derive the VS Code target name from the host operating system and
@@ -211,10 +208,12 @@ final package script extends that already-working path on the target host:
 3. Copy `fpas-lsp` or `fpas-lsp.exe` to
    `editors/vscode/server/<host-target>/`.
 4. Compile TypeScript.
-5. Run Rust, TypeScript, grammar, manifest, and package-content checks.
+5. Run TypeScript, grammar, manifest, and package-content checks.
 6. Create a target-labelled VSIX under `editors/vscode/dist/`.
 7. Inspect the archive and fail if the server, grammar, license, or extension
    entry point is missing.
+8. Extract the archive and complete an LSP initialize/shutdown transcript
+   against its server.
 
 Generated JavaScript, the staged server executable, Node dependencies, and
 VSIX files are local build artifacts and must be ignored by Git.

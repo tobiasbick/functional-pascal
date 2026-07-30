@@ -7,6 +7,7 @@ import { runTests as runExtensionTests } from "@vscode/test-electron";
 import { verifyContracts } from "./verify-contracts.mjs";
 import { verifyGrammar } from "./verify-grammar.mjs";
 import { verifyManifest } from "./verify-manifest.mjs";
+import { verifyPackaging } from "./verify-packaging.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
@@ -32,6 +33,7 @@ export async function runTests() {
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   await verifyManifest();
   await verifyContracts();
+  await verifyPackaging();
   await verifyGrammar();
   await runExtensionTests({
     extensionDevelopmentPath: extensionRoot,

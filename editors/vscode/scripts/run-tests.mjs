@@ -42,6 +42,7 @@ export async function runTests() {
       "extension.test.js"
     ),
     launchArgs: [
+      path.join(extensionRoot, "test", "fixtures", "workspace"),
       "--disable-extensions",
       "--disable-workspace-trust"
     ]

@@ -5,16 +5,19 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use fpas_language_service::{
-    DocumentAnalysis, DocumentSnapshot, LanguageService, LanguageServiceError, SourceVersion,
+    CompletionCandidate, DocumentAnalysis, DocumentSnapshot, DocumentSymbol, HoverInfo,
+    LanguageService, LanguageServiceError, NavigationResult, SourceVersion, SymbolLocation,
     format_document,
 };
 use tokio::sync::Mutex;
 use tower_lsp_server::ls_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    DidSaveTextDocumentParams, Uri,
+    DidSaveTextDocumentParams, Position, Uri,
 };
 
-use crate::convert::{FileUriError, file_uri_to_path};
+use crate::convert::{
+    FileUriError, PositionConversionError, file_uri_to_path, position_to_byte_offset,
+};
 
 /// Synchronized document state shared by concurrent LSP notification handlers.
 pub(crate) struct SynchronizedDocuments {
@@ -31,6 +34,11 @@ pub(crate) struct SynchronizedDocument {
 pub(crate) struct FormattedDocument {
     pub(crate) snapshot: Arc<DocumentSnapshot>,
     pub(crate) text: String,
+}
+
+pub(crate) struct DefinitionDocument {
+    pub(crate) snapshot: Arc<DocumentSnapshot>,
+    pub(crate) location: SymbolLocation,
 }
 
 impl SynchronizedDocuments {
@@ -152,6 +160,56 @@ impl SynchronizedDocuments {
         Ok(format_document(&snapshot).map(|text| FormattedDocument { snapshot, text }))
     }
 
+    pub(crate) async fn document_symbols_open(
+        &self,
+        path: &Path,
+    ) -> Result<NavigationResult<Vec<DocumentSymbol>>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        require_open(&service, path)?;
+        Ok(service.document_symbols(path)?)
+    }
+
+    pub(crate) async fn hover_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<NavigationResult<Option<HoverInfo>>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        Ok(service.hover(path, offset)?)
+    }
+
+    pub(crate) async fn definitions_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<Vec<DefinitionDocument>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        let result = service.definitions(path, offset)?;
+        let mut definitions = Vec::with_capacity(result.value.len());
+        for location in result.value {
+            definitions.push(DefinitionDocument {
+                snapshot: service.snapshot(&location.path)?,
+                location,
+            });
+        }
+        Ok(definitions)
+    }
+
+    pub(crate) async fn completions_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<NavigationResult<Vec<CompletionCandidate>>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        Ok(service.completions(path, offset)?)
+    }
+
     pub(crate) async fn close(
         &self,
         params: DidCloseTextDocumentParams,
@@ -163,6 +221,51 @@ impl SynchronizedDocuments {
             .documents_mut()
             .close_document(&path);
         Ok(())
+    }
+}
+
+fn require_open(
+    service: &LanguageService,
+    path: &Path,
+) -> Result<Arc<DocumentSnapshot>, DocumentRequestError> {
+    service
+        .documents()
+        .open_snapshot(path)
+        .ok_or_else(|| DocumentRequestError::DocumentNotOpen {
+            path: path.to_path_buf(),
+        })
+}
+
+#[derive(Debug)]
+pub(crate) enum DocumentRequestError {
+    Service(LanguageServiceError),
+    Position(PositionConversionError),
+    DocumentNotOpen { path: PathBuf },
+}
+
+impl fmt::Display for DocumentRequestError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Service(error) => error.fmt(formatter),
+            Self::Position(error) => error.fmt(formatter),
+            Self::DocumentNotOpen { path } => write!(
+                formatter,
+                "Cannot query `{}` because the document is not open.",
+                path.display()
+            ),
+        }
+    }
+}
+
+impl From<LanguageServiceError> for DocumentRequestError {
+    fn from(error: LanguageServiceError) -> Self {
+        Self::Service(error)
+    }
+}
+
+impl From<PositionConversionError> for DocumentRequestError {
+    fn from(error: PositionConversionError) -> Self {
+        Self::Position(error)
     }
 }
 

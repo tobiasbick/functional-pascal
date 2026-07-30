@@ -11,6 +11,7 @@ pub mod convert;
 mod diagnostics;
 mod documents;
 mod formatting;
+mod navigation;
 mod server;
 
 use std::path::PathBuf;

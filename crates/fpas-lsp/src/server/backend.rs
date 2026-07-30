@@ -5,9 +5,10 @@ use std::sync::Arc;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::{
-    DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    DidSaveTextDocumentParams, DocumentFormattingParams, InitializeParams, InitializeResult,
-    InitializedParams, TextEdit, Uri,
+    CompletionParams, CompletionResponse, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
+    DidOpenTextDocumentParams, DidSaveTextDocumentParams, DocumentFormattingParams,
+    DocumentSymbolParams, DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse,
+    Hover, HoverParams, InitializeParams, InitializeResult, InitializedParams, TextEdit, Uri,
 };
 use tower_lsp_server::{Client, LanguageServer};
 
@@ -19,7 +20,7 @@ use crate::formatting::whole_document_edit;
 
 /// Functional Pascal LSP backend with full-text synchronized documents.
 pub struct Backend {
-    documents: Arc<SynchronizedDocuments>,
+    pub(super) documents: Arc<SynchronizedDocuments>,
     diagnostics: DiagnosticPublisher,
 }
 
@@ -165,5 +166,27 @@ impl LanguageServer for Backend {
             Ok(None) => Ok(None),
             Err(error) => Err(Error::invalid_params(error.to_string())),
         }
+    }
+
+    async fn document_symbol(
+        &self,
+        params: DocumentSymbolParams,
+    ) -> Result<Option<DocumentSymbolResponse>> {
+        self.document_symbol_request(params).await
+    }
+
+    async fn hover(&self, params: HoverParams) -> Result<Option<Hover>> {
+        self.hover_request(params).await
+    }
+
+    async fn goto_definition(
+        &self,
+        params: GotoDefinitionParams,
+    ) -> Result<Option<GotoDefinitionResponse>> {
+        self.definition_request(params).await
+    }
+
+    async fn completion(&self, params: CompletionParams) -> Result<Option<CompletionResponse>> {
+        self.completion_request(params).await
     }
 }

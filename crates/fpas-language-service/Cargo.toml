@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-fmt = { path = "../fpas-fmt" }
+fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-project = { path = "../fpas-project" }
 fpas-sema = { path = "../fpas-sema" }

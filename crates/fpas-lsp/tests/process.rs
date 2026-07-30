@@ -74,12 +74,23 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
     assert_eq!(
         capability_names,
         [
+            "completionProvider",
+            "definitionProvider",
             "documentFormattingProvider",
+            "documentSymbolProvider",
+            "hoverProvider",
             "positionEncoding",
             "textDocumentSync"
         ]
     );
+    assert_eq!(
+        capabilities["completionProvider"]["triggerCharacters"],
+        json!(["."])
+    );
+    assert_eq!(capabilities["definitionProvider"], json!(true));
     assert_eq!(capabilities["documentFormattingProvider"], json!(true));
+    assert_eq!(capabilities["documentSymbolProvider"], json!(true));
+    assert_eq!(capabilities["hoverProvider"], json!(true));
     assert_eq!(
         capabilities["positionEncoding"],
         json!("utf-16"),

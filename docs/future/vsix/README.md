@@ -1,6 +1,6 @@
 # Local VSIX and language server
 
-**Status:** implementation in progress; phases 0-5 complete
+**Status:** implementation in progress; phases 0-6 complete
 **Change class:** tooling and editor integration; no FPAS language change
 
 ## Goal
@@ -176,4 +176,4 @@ editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
 That file must install without modification in a local VS Code-compatible
 desktop editor running on the same host target; open an `.fpas` file with
 highlighting; start the bundled language server; publish diagnostics; format
-the document; and provide the planned navigation features.
+the document; and provide the implemented navigation features.

@@ -35,11 +35,7 @@ export async function verifyManifest() {
     }
   ]);
 
-  assert.deepEqual(manifest.activationEvents, [
-    "onLanguage:fpas",
-    "onCommand:functionalPascal.restartLanguageServer",
-    "onCommand:functionalPascal.showOutput"
-  ]);
+  assert.equal(manifest.activationEvents, undefined);
   assert.deepEqual(manifest.extensionKind, ["ui"]);
   assert.equal(manifest.dependencies?.["vscode-languageclient"], "10.1.0");
 

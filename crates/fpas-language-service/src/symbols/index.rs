@@ -72,7 +72,7 @@ impl WorkspaceSymbolIndex {
         self.qualified.clear();
         self.unqualified.clear();
         for (path, document) in &self.documents {
-            for symbol in document.entries() {
+            for symbol in document.entries().iter().flat_map(all_symbols) {
                 let location = SymbolLocation {
                     path: path.clone(),
                     symbol: symbol.clone(),
@@ -99,6 +99,10 @@ impl WorkspaceSymbolIndex {
             });
         }
     }
+}
+
+fn all_symbols(symbol: &DocumentSymbol) -> Box<dyn Iterator<Item = &DocumentSymbol> + '_> {
+    Box::new(std::iter::once(symbol).chain(symbol.children.iter().flat_map(all_symbols)))
 }
 
 fn canonical_name(name: &str) -> String {

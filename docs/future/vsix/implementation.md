@@ -10,7 +10,7 @@
 | 3 | complete (2026-07-29) | language-service foundation |
 | 4 | complete (2026-07-29) | functioning stdio language server |
 | 5 | complete (2026-07-30) | diagnostics and formatting |
-| 6 | open | symbols, hover, definitions, and completion |
+| 6 | complete (2026-07-30) | symbols, hover, definitions, and completion |
 | 7 | open | reproducible final VSIX packaging |
 | 8 | open | local host acceptance and current documentation |
 
@@ -499,6 +499,43 @@ Current documentation must describe only features verified in this phase.
 - Navigation results agree with current compiler name resolution.
 - Partial or invalid source returns an empty/partial result rather than a
   server failure.
+
+### Verification — 2026-07-30
+
+- `fpas-language-service` now owns a protocol-independent navigation layer.
+  It indexes recovered AST declarations and lexer identifier spans without
+  changing `fpas-sema` or duplicating compiler behavior in TypeScript.
+- Hierarchical symbols cover compilation units, types, routines, parameters,
+  variables, enum members, and record fields, methods, properties, and events.
+  Full and selection spans are converted from UTF-8 to LSP UTF-16 ranges.
+- Hover and definition resolve declarations and references with sequential
+  lexical scopes, shadowing, direct `uses` imports, qualified unit names,
+  public/private visibility, record-member visibility, and library export
+  policy. Cross-unit locations use the defining snapshot.
+- Completion returns visible lexical and directly imported declarations.
+  Member completion works after unit, type, and typed-value dots; equal
+  imported candidates retain their qualified identities.
+- Queries use current open overlays for every project source. Comments,
+  strings, keywords, unknown or inaccessible names, files outside the loaded
+  project, and incomplete member access return empty or partial results rather
+  than a server error.
+- Language-service regressions cover same-file and cross-unit definitions,
+  shadowing, qualified names, private declarations and members, library
+  exports, equal import candidates, Unicode-adjacent positions, unsaved
+  declaration changes, partial syntax, and sources outside the project.
+- LSP transcripts cover all four capabilities and handlers, hierarchical
+  ranges, UTF-16 positions, completion details, and empty partial/unknown
+  results. A real VS Code Extension Host verifies hover, document symbols,
+  cross-unit definition, completion, diagnostics, formatting, restart, and
+  shutdown.
+- The symbol extractor is split by declarations, source spans, type members,
+  and routine scopes; every new production file remains below 400 lines.
+- `cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`, and
+  warning-free Clippy runs for both editor crates passed. `npm test` and
+  `npm run package` passed, including archive inspection of the regenerated
+  bootstrap VSIX.
+- No FPAS syntax, semantics, current language specification, or semantic
+  analyzer behavior changed.
 
 ## Phase 7 — deterministic final packaging
 

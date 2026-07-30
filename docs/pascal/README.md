@@ -45,7 +45,7 @@ Ordered learning path for newcomers:
 11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`
 12. [Standard library](std/README.md) — `Std.*` built-in units
 13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
-14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting
+14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting, navigation
 
 ## Future Features
 

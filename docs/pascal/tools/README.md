@@ -5,7 +5,7 @@ CLI tooling for Functional Pascal projects.
 | Tool | Description |
 |------|-------------|
 | [Formatter style](fmt-style.md) | Normative output rules for `fpas fmt` |
-| [Editor integration](editor-integration.md) | VS Code-compatible highlighting, diagnostics, and formatting |
+| [Editor integration](editor-integration.md) | VS Code-compatible highlighting, diagnostics, formatting, and navigation |
 | [CLI](../program-structure/cli.md) | `fpas`, `check`, `test`, `fmt` discovery |
 
 ## See also

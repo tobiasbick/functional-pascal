@@ -82,22 +82,22 @@ compose those APIs and provide editor-oriented caching and indexes.
 | Project discovery | `fpas_project::load_project` and `load_workspace` | Phase 3 `WorkspaceContext` loads metadata and parsed-source graphs overlay open buffers without writing sidecars |
 | Unit interfaces | `fpas_sema::analyze_unit` and `fpas_unit::UnitInterface` | Phase 3 project analysis caches dependency interfaces by participating source revisions |
 | Document symbols | `fpas-parser` declarations and source spans | Phase 3 `DocumentSymbols` and `WorkspaceSymbolIndex` provide the declaration foundation; Phase 6 adds the hierarchical LSP query |
-| Hover | AST spans, `ExprTypeMap`, and unit interfaces | `hover` formats declaration/type information at a source position |
-| Definition | Project graph, AST spans, and compiler name-resolution rules | `definition` needs a stable declaration/reference index in `fpas-language-service` |
-| Completion | Parsed declarations, project visibility, and unit interfaces | `completion` needs a stable visible-symbol query |
+| Hover | Parsed declaration spans and project-visible symbols | `hover` formats the resolved source declaration at a source position |
+| Definition | Project graph, AST spans, and compiler name-resolution rules | `definition` uses the stable declaration/reference index in `fpas-language-service` |
+| Completion | Parsed declarations, project visibility, and unit interfaces | `completion` uses the stable visible-symbol query in `fpas-language-service` |
 
-The Phase 3 service now composes the public parser, diagnostic, formatter,
+The service composes the public parser, lexer, diagnostic, formatter,
 project/workspace, semantic metadata, and unit-interface APIs behind stable
-document snapshots and a declaration index. A stable
-source-position-to-definition index and visibility-aware completion query are
-still Phase 6 work. Any focused semantic API they require must preserve current
-compiler behavior. No language change is required.
+document snapshots. Phase 6 adds a stable source-position-to-definition index
+and visibility-aware completion query without requiring a semantic-analyzer or
+language change.
 
 ## Phase 4 implementation
 
-The native server now enforces this baseline. Its initialize result advertises
-UTF-16 plus full-document open/close/change/save synchronization and no later
-capability. `tower-lsp-server` owns initialization-state errors, cancellation,
+Phase 4 established the native-server baseline. Phase 6 extends its initialize
+result with document symbols, hover, definition, and completion while retaining
+UTF-16 plus full-document open/close/change/save synchronization.
+`tower-lsp-server` owns initialization-state errors, cancellation,
 JSON-RPC parameter validation, framing, shutdown, and exit semantics.
 `fpas-lsp` owns file-only URI conversion, UTF-16/UTF-8 conversion, ordered
 document-store access, and stderr-only operational logging.

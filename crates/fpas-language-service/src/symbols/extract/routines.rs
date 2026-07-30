@@ -1,0 +1,226 @@
+//! Routine parameters, nested declarations, and statement-local symbols.
+
+use fpas_diagnostics::SourceSpan;
+use fpas_lexer::Span;
+use fpas_parser::{Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, Visibility};
+
+use super::{declaration_symbol, member_symbol, named_type, type_text};
+use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
+
+pub(crate) fn function_children(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    declaration: &FunctionDecl,
+) -> Vec<DocumentSymbol> {
+    routine_children(
+        snapshot,
+        owner,
+        &declaration.params,
+        &declaration.body,
+        declaration.span,
+    )
+}
+
+pub(crate) fn procedure_children(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    declaration: &ProcedureDecl,
+) -> Vec<DocumentSymbol> {
+    routine_children(
+        snapshot,
+        owner,
+        &declaration.params,
+        &declaration.body,
+        declaration.span,
+    )
+}
+
+pub(super) fn collect_statement_symbols(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    statements: &[Stmt],
+    scope_span: SourceSpan,
+    output: &mut Vec<DocumentSymbol>,
+) {
+    for statement in statements {
+        match statement {
+            Stmt::Var(value) | Stmt::MutableVar(value) => {
+                let declaration = if matches!(statement, Stmt::Var(_)) {
+                    Decl::Var(value.clone())
+                } else {
+                    Decl::MutableVar(value.clone())
+                };
+                output.push(declaration_symbol(
+                    snapshot,
+                    owner,
+                    &declaration,
+                    scope_span,
+                ));
+            }
+            Stmt::Block(body, span) => {
+                collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+            }
+            Stmt::If {
+                then_branch,
+                else_branch,
+                ..
+            } => {
+                collect_branch(snapshot, owner, then_branch, output);
+                if let Some(branch) = else_branch {
+                    collect_branch(snapshot, owner, branch, output);
+                }
+            }
+            Stmt::For {
+                var_name,
+                var_type,
+                body,
+                span,
+                ..
+            }
+            | Stmt::ForIn {
+                var_name,
+                var_type,
+                body,
+                span,
+                ..
+            } => {
+                output.push(member_symbol(
+                    snapshot,
+                    owner,
+                    var_name,
+                    SymbolKind::LoopVariable,
+                    *span,
+                    Visibility::Private,
+                    named_type(var_type),
+                    format!(
+                        "loop variable {var_name}: {}",
+                        type_text(snapshot, var_type)
+                    ),
+                    (*span).into(),
+                    Vec::new(),
+                ));
+                collect_statement_symbols(
+                    snapshot,
+                    owner,
+                    std::slice::from_ref(body.as_ref()),
+                    (*span).into(),
+                    output,
+                );
+            }
+            Stmt::While { body, span, .. } => collect_statement_symbols(
+                snapshot,
+                owner,
+                std::slice::from_ref(body.as_ref()),
+                (*span).into(),
+                output,
+            ),
+            Stmt::Repeat { body, span, .. } => {
+                collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+            }
+            Stmt::Case {
+                arms,
+                else_body,
+                span,
+                ..
+            } => {
+                for arm in arms {
+                    collect_statement_symbols(
+                        snapshot,
+                        owner,
+                        std::slice::from_ref(&arm.body),
+                        arm.span.into(),
+                        output,
+                    );
+                }
+                if let Some(body) = else_body {
+                    collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+fn routine_children(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    params: &[FormalParam],
+    body: &FuncBody,
+    routine_span: Span,
+) -> Vec<DocumentSymbol> {
+    let scope_span = routine_span.into();
+    let mut children = params
+        .iter()
+        .map(|param| parameter_symbol(snapshot, owner, param, scope_span))
+        .collect::<Vec<_>>();
+    let FuncBody::Block { nested, stmts } = body;
+    children.extend(
+        nested
+            .iter()
+            .map(|declaration| declaration_symbol(snapshot, owner, declaration, scope_span)),
+    );
+    collect_statement_symbols(snapshot, owner, stmts, scope_span, &mut children);
+    children.sort_by_key(|symbol| symbol.full_span.offset);
+    children
+}
+
+fn parameter_symbol(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    param: &FormalParam,
+    scope_span: SourceSpan,
+) -> DocumentSymbol {
+    member_symbol(
+        snapshot,
+        owner,
+        &param.name,
+        SymbolKind::Parameter,
+        param.span,
+        Visibility::Private,
+        named_type(&param.type_expr),
+        format!(
+            "{}parameter {}: {}",
+            if param.mutable { "mutable " } else { "" },
+            param.name,
+            type_text(snapshot, &param.type_expr)
+        ),
+        scope_span,
+        Vec::new(),
+    )
+}
+
+fn collect_branch(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    branch: &Stmt,
+    output: &mut Vec<DocumentSymbol>,
+) {
+    collect_statement_symbols(
+        snapshot,
+        owner,
+        std::slice::from_ref(branch),
+        stmt_span(branch).into(),
+        output,
+    );
+}
+
+fn stmt_span(statement: &Stmt) -> Span {
+    match statement {
+        Stmt::Block(_, span)
+        | Stmt::Return(_, span)
+        | Stmt::Panic(_, span)
+        | Stmt::Break(span)
+        | Stmt::Continue(span) => *span,
+        Stmt::Var(value) | Stmt::MutableVar(value) => value.span,
+        Stmt::Assign { span, .. }
+        | Stmt::If { span, .. }
+        | Stmt::Case { span, .. }
+        | Stmt::For { span, .. }
+        | Stmt::ForIn { span, .. }
+        | Stmt::While { span, .. }
+        | Stmt::Repeat { span, .. }
+        | Stmt::Call { span, .. }
+        | Stmt::Expression { span, .. }
+        | Stmt::Go { span, .. } => *span,
+    }
+}

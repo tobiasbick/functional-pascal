@@ -82,7 +82,8 @@ cargo run -p fpas-cli -- fmt --check examples tests apps
 
 Run `fpas fmt` manually for command-line workflows. The repository's
 [VS Code-compatible editor integration](docs/pascal/tools/editor-integration.md)
-also provides **Format Document** and works with the editor's standard
+also provides diagnostics, **Format Document**, document symbols, hover,
+definition, and basic completion. It works with the editor's standard
 format-on-save setting; no FPAS watch mode is required.
 
 ## Applications

@@ -84,10 +84,56 @@ export async function run(): Promise<void> {
 
   await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 
+  const workspaceMain = vscode.Uri.file(
+    path.join(
+      extension.extensionPath,
+      "test",
+      "fixtures",
+      "workspace",
+      "apps",
+      "demo",
+      "src",
+      "main.fpas"
+    )
+  );
+  const navigationDocument = await vscode.workspace.openTextDocument(workspaceMain);
+  await vscode.window.showTextDocument(navigationDocument);
+  const greetingOffset = navigationDocument
+    .getText()
+    .lastIndexOf("GreetingFor");
+  assert.ok(greetingOffset >= 0);
+  const greetingPosition = navigationDocument.positionAt(greetingOffset);
+
+  const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+    "vscode.executeHoverProvider",
+    navigationDocument.uri,
+    greetingPosition
+  );
+  assert.ok(hovers?.some((hover) => hover.contents.length > 0));
+  const definitions = await vscode.commands.executeCommand<
+    Array<vscode.Location | vscode.LocationLink>
+  >(
+    "vscode.executeDefinitionProvider",
+    navigationDocument.uri,
+    greetingPosition
+  );
+  assert.ok(definitions?.length);
+  const symbols = await vscode.commands.executeCommand<
+    Array<vscode.DocumentSymbol | vscode.SymbolInformation>
+  >("vscode.executeDocumentSymbolProvider", navigationDocument.uri);
+  assert.ok(symbols?.some((symbol) => symbol.name === "EditorDemo"));
+  const completions = await vscode.commands.executeCommand<vscode.CompletionList>(
+    "vscode.executeCompletionItemProvider",
+    navigationDocument.uri,
+    greetingPosition
+  );
+  assert.ok(completions?.items.some((item) => item.label === "GreetingFor"));
+
+  await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
   console.log(
-    "Functional Pascal extension diagnostics, formatting, and lifecycle test passed."
+    "Functional Pascal extension diagnostics, formatting, navigation, and lifecycle test passed."
   );
 }
 

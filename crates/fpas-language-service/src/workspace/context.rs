@@ -3,7 +3,8 @@
 use std::path::{Path, PathBuf};
 
 use fpas_project::{
-    LoadedProject, ProjectKind, discover_workspace_file, load_project, load_workspace,
+    LibraryExportPolicy, LoadedProject, ProjectKind, SourceOrigin, discover_workspace_file,
+    load_project, load_workspace,
 };
 
 use crate::document::normalized_path;
@@ -92,6 +93,34 @@ impl ProjectContext {
         paths.sort();
         paths.dedup();
         paths
+    }
+
+    pub(crate) fn source_visible_from(
+        &self,
+        from: &Path,
+        candidate: &Path,
+        candidate_unit: &str,
+    ) -> bool {
+        let from_origin = self
+            .project
+            .link_meta
+            .origin_for_source(&normalized_path(from));
+        let candidate_origin = self
+            .project
+            .link_meta
+            .origin_for_source(&normalized_path(candidate));
+        if from_origin == candidate_origin {
+            return true;
+        }
+        let SourceOrigin::Library(library) = candidate_origin else {
+            return false;
+        };
+        match self.project.link_meta.export_policy_for_library(&library) {
+            LibraryExportPolicy::AllUnits => true,
+            LibraryExportPolicy::ListedUnits(units) => {
+                units.contains(&candidate_unit.to_ascii_lowercase())
+            }
+        }
     }
 }
 

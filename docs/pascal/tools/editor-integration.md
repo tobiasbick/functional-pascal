@@ -7,6 +7,9 @@ desktop editors. The implemented editor features are:
 - comment, bracket, indentation, and folding configuration
 - parser and semantic diagnostics for the current unsaved buffer
 - canonical whole-document formatting
+- hierarchical document symbols
+- declaration hover and go to definition
+- basic visibility-aware completion
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -71,8 +74,32 @@ watcher or extension setting. For example:
 }
 ```
 
+## Navigation
+
+The language server provides hierarchical document symbols for programs,
+units, types, routines, parameters, variables, enum members, and record
+members. Symbol ranges cover the declaration, while selection ranges identify
+the declared name exactly.
+
+Hover shows the resolved source declaration. **Go to Definition** works for
+declarations and references in the same file and across units in the loaded
+project. Project navigation follows FPAS rules for lexical shadowing, direct
+`uses` imports, public declarations and record members, qualified unit names,
+and library `[exports].units`.
+
+Basic completion lists declarations visible at the cursor. After `.` it lists
+visible unit or record members. Equal candidates imported from different units
+remain distinct so the editor can present their qualified owners. Queries use
+the current unsaved buffers of every open project source.
+
+Comments, string contents, unknown names, inaccessible declarations, and
+sources outside the loaded project produce no navigation result. Recovered or
+incomplete syntax may produce a partial symbol/completion result, but does not
+fail the language server.
+
 ## Current limits
 
-The current language server does not yet provide hover, go to definition,
-document symbols, or completion. Remote SSH, WSL, and container extension
-hosts are outside the local hobby-project packaging contract.
+Completion is intentionally declaration-oriented; signature help, references,
+rename, semantic tokens, and code actions are not implemented. Remote SSH,
+WSL, and container extension hosts are outside the local hobby-project
+packaging contract.

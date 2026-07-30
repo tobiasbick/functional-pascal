@@ -1,0 +1,148 @@
+//! Record and enum member symbols.
+
+use fpas_diagnostics::SourceSpan;
+use fpas_parser::{RecordMethod, TypeBody, Visibility};
+
+use super::{
+    function_children, function_detail, member_symbol, named_type, procedure_children,
+    procedure_detail, type_text,
+};
+use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
+
+pub(super) fn type_children(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    body: &TypeBody,
+    type_span: SourceSpan,
+    declaration_scope: SourceSpan,
+) -> Vec<DocumentSymbol> {
+    match body {
+        TypeBody::Record(record) => {
+            let mut children = record
+                .fields
+                .iter()
+                .map(|field| {
+                    member_symbol(
+                        snapshot,
+                        owner,
+                        &field.name,
+                        SymbolKind::Field,
+                        field.span,
+                        field.visibility,
+                        named_type(&field.type_expr),
+                        format!(
+                            "field {}: {}",
+                            field.name,
+                            type_text(snapshot, &field.type_expr)
+                        ),
+                        type_span,
+                        Vec::new(),
+                    )
+                })
+                .collect::<Vec<_>>();
+            children.extend(
+                record
+                    .methods
+                    .iter()
+                    .map(|method| method_symbol(snapshot, owner, method, type_span)),
+            );
+            children.extend(record.properties.iter().map(|property| {
+                member_symbol(
+                    snapshot,
+                    owner,
+                    &property.name,
+                    SymbolKind::Property,
+                    property.span,
+                    property.visibility,
+                    named_type(&property.type_expr),
+                    format!(
+                        "property {}: {}",
+                        property.name,
+                        type_text(snapshot, &property.type_expr)
+                    ),
+                    type_span,
+                    Vec::new(),
+                )
+            }));
+            children.extend(record.events.iter().map(|event| {
+                member_symbol(
+                    snapshot,
+                    owner,
+                    &event.name,
+                    SymbolKind::Event,
+                    event.span,
+                    event.visibility,
+                    named_type(&event.type_expr),
+                    format!(
+                        "event {}: {}",
+                        event.name,
+                        type_text(snapshot, &event.type_expr)
+                    ),
+                    type_span,
+                    Vec::new(),
+                )
+            }));
+            children.sort_by_key(|symbol| symbol.full_span.offset);
+            children
+        }
+        TypeBody::Enum(value) => value
+            .members
+            .iter()
+            .map(|member| {
+                member_symbol(
+                    snapshot,
+                    owner,
+                    &member.name,
+                    SymbolKind::EnumMember,
+                    member.span,
+                    Visibility::Public,
+                    Some(owner.to_owned()),
+                    format!("enum member {owner}.{}", member.name),
+                    declaration_scope,
+                    Vec::new(),
+                )
+            })
+            .collect(),
+        TypeBody::Alias(_) => Vec::new(),
+    }
+}
+
+fn method_symbol(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    method: &RecordMethod,
+    type_span: SourceSpan,
+) -> DocumentSymbol {
+    match method {
+        RecordMethod::Function(value) | RecordMethod::StaticFunction(value) => {
+            let qualified = format!("{owner}.{}", value.name);
+            member_symbol(
+                snapshot,
+                owner,
+                &value.name,
+                SymbolKind::Function,
+                value.span,
+                value.visibility,
+                named_type(&value.return_type),
+                function_detail(snapshot, value),
+                type_span,
+                function_children(snapshot, &qualified, value),
+            )
+        }
+        RecordMethod::Procedure(value) | RecordMethod::StaticProcedure(value) => {
+            let qualified = format!("{owner}.{}", value.name);
+            member_symbol(
+                snapshot,
+                owner,
+                &value.name,
+                SymbolKind::Procedure,
+                value.span,
+                value.visibility,
+                None,
+                procedure_detail(snapshot, value),
+                type_span,
+                procedure_children(snapshot, &qualified, value),
+            )
+        }
+    }
+}

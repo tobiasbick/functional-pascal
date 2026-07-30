@@ -1,0 +1,377 @@
+//! Lexical, import, and member resolution for editor queries.
+
+use std::collections::HashMap;
+
+use fpas_diagnostics::SourceSpan;
+use fpas_lexer::Token;
+
+use super::{CompletionCandidate, NavigationDocument};
+use crate::{DocumentSymbol, SymbolKind, SymbolVisibility};
+
+pub(crate) fn resolve(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    offset: usize,
+) -> Option<(usize, DocumentSymbol, SourceSpan)> {
+    let target = documents.get(target_index)?;
+    let (token_index, name, range) = identifier_at(target, offset)?;
+
+    if let Some(symbol) = target
+        .all_symbols()
+        .into_iter()
+        .find(|symbol| contains(symbol.selection_span, offset))
+    {
+        return Some((target_index, symbol.clone(), range));
+    }
+
+    let (parts, selected_part) = qualified_parts(target, token_index);
+    if selected_part == 0 {
+        return resolve_unqualified(documents, target_index, &name, offset)
+            .map(|(index, symbol)| (index, symbol, range));
+    }
+
+    resolve_qualified(documents, target_index, &parts[..=selected_part], offset)
+        .map(|(index, symbol)| (index, symbol, range))
+}
+
+pub(crate) fn complete(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    offset: usize,
+) -> Vec<CompletionCandidate> {
+    let Some(target) = documents.get(target_index) else {
+        return Vec::new();
+    };
+    let (receiver, prefix) = completion_context(target.snapshot.source(), offset);
+    let symbols = if let Some(receiver) = receiver {
+        member_candidates(documents, target_index, &receiver, offset)
+    } else {
+        visible_candidates(documents, target_index, offset)
+    };
+    let mut candidates = symbols
+        .into_iter()
+        .filter(|symbol| {
+            prefix.is_empty()
+                || symbol
+                    .name
+                    .get(..prefix.len())
+                    .is_some_and(|start| start.eq_ignore_ascii_case(&prefix))
+        })
+        .map(CompletionCandidate::from)
+        .collect::<Vec<_>>();
+    candidates.sort_by(|left, right| {
+        left.label
+            .to_ascii_lowercase()
+            .cmp(&right.label.to_ascii_lowercase())
+            .then_with(|| left.qualified_name.cmp(&right.qualified_name))
+    });
+    candidates.dedup_by(|left, right| {
+        left.label.eq_ignore_ascii_case(&right.label)
+            && left
+                .qualified_name
+                .eq_ignore_ascii_case(&right.qualified_name)
+    });
+    candidates
+}
+
+fn identifier_at(
+    document: &NavigationDocument,
+    offset: usize,
+) -> Option<(usize, String, SourceSpan)> {
+    document
+        .tokens
+        .iter()
+        .enumerate()
+        .find_map(|(index, token)| {
+            let Token::Ident(name) = &token.token else {
+                return None;
+            };
+            let end = token.span.offset.saturating_add(token.span.length);
+            (token.span.offset <= offset && offset < end)
+                .then(|| (index, name.clone(), SourceSpan::from(token.span)))
+        })
+}
+
+fn qualified_parts(document: &NavigationDocument, selected: usize) -> (Vec<String>, usize) {
+    let mut start = selected;
+    while start >= 2
+        && matches!(document.tokens[start - 1].token, Token::Dot)
+        && matches!(document.tokens[start - 2].token, Token::Ident(_))
+    {
+        start -= 2;
+    }
+    let mut parts = Vec::new();
+    let mut selected_part = 0;
+    let mut index = start;
+    while let Token::Ident(name) = &document.tokens[index].token {
+        if index == selected {
+            selected_part = parts.len();
+        }
+        parts.push(name.clone());
+        if index + 2 >= document.tokens.len()
+            || !matches!(document.tokens[index + 1].token, Token::Dot)
+            || !matches!(document.tokens[index + 2].token, Token::Ident(_))
+        {
+            break;
+        }
+        index += 2;
+    }
+    (parts, selected_part)
+}
+
+fn resolve_unqualified(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    name: &str,
+    offset: usize,
+) -> Option<(usize, DocumentSymbol)> {
+    let target = documents.get(target_index)?;
+    let mut local = target
+        .all_symbols()
+        .into_iter()
+        .filter(|symbol| symbol.name.eq_ignore_ascii_case(name))
+        .filter(|symbol| unqualified_kind(symbol.kind))
+        .filter(|symbol| contains(symbol.scope_span, offset))
+        .filter(|symbol| symbol.visible_from <= offset)
+        .collect::<Vec<_>>();
+    local.sort_by(|left, right| {
+        left.scope_span
+            .length
+            .cmp(&right.scope_span.length)
+            .then_with(|| right.visible_from.cmp(&left.visible_from))
+    });
+    if let Some(symbol) = local.first() {
+        return Some((target_index, (*symbol).clone()));
+    }
+
+    let imported = imported_top_level(documents, target_index)
+        .into_iter()
+        .filter(|(_, symbol)| symbol.name.eq_ignore_ascii_case(name))
+        .collect::<Vec<_>>();
+    (imported.len() == 1).then(|| {
+        let (index, symbol) = imported[0];
+        (index, symbol.clone())
+    })
+}
+
+fn resolve_qualified(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    parts: &[String],
+    offset: usize,
+) -> Option<(usize, DocumentSymbol)> {
+    let first = parts.first()?;
+    if let Some((index, document, owner_parts)) =
+        documents.iter().enumerate().find_map(|(index, document)| {
+            let owner_parts = document.owner.split('.').count();
+            (parts.len() >= owner_parts
+                && parts[..owner_parts]
+                    .join(".")
+                    .eq_ignore_ascii_case(&document.owner)
+                && documents[target_index].uses_owner(&document.owner))
+            .then_some((index, document, owner_parts))
+        })
+    {
+        if parts.len() == owner_parts {
+            return document
+                .roots
+                .first()
+                .cloned()
+                .map(|symbol| (index, symbol));
+        }
+        let qualified = parts.join(".");
+        return document
+            .all_symbols()
+            .into_iter()
+            .find(|symbol| {
+                symbol.qualified_name.eq_ignore_ascii_case(&qualified)
+                    && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+            })
+            .cloned()
+            .map(|symbol| (index, symbol));
+    }
+
+    let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
+    let mut owner_type = if base.kind == SymbolKind::Type {
+        Some(base.qualified_name.clone())
+    } else {
+        base.type_name.clone()
+    }?;
+    for member_name in &parts[1..] {
+        let (type_index, type_symbol) =
+            find_type(documents, target_index, base_index, &owner_type)?;
+        let member = type_symbol.children.iter().find(|member| {
+            member.name.eq_ignore_ascii_case(member_name)
+                && (type_index == target_index || member.visibility == SymbolVisibility::Public)
+        })?;
+        owner_type = member
+            .type_name
+            .clone()
+            .unwrap_or_else(|| member.qualified_name.clone());
+        if member_name == parts.last()? {
+            return Some((type_index, member.clone()));
+        }
+    }
+    None
+}
+
+fn visible_candidates(
+    documents: &[NavigationDocument],
+    target_index: usize,
+    offset: usize,
+) -> Vec<&DocumentSymbol> {
+    let target = &documents[target_index];
+    let mut nearest = HashMap::<String, &DocumentSymbol>::new();
+    let mut local = target
+        .all_symbols()
+        .into_iter()
+        .filter(|symbol| unqualified_kind(symbol.kind))
+        .filter(|symbol| contains(symbol.scope_span, offset))
+        .filter(|symbol| symbol.visible_from <= offset)
+        .collect::<Vec<_>>();
+    local.sort_by(|left, right| {
+        left.scope_span
+            .length
+            .cmp(&right.scope_span.length)
+            .then_with(|| right.visible_from.cmp(&left.visible_from))
+    });
+    for symbol in local {
+        nearest
+            .entry(symbol.name.to_ascii_lowercase())
+            .or_insert(symbol);
+    }
+    let mut result = nearest.values().copied().collect::<Vec<_>>();
+    for (_, symbol) in imported_top_level(documents, target_index) {
+        if !nearest.contains_key(&symbol.name.to_ascii_lowercase()) {
+            result.push(symbol);
+        }
+    }
+    result
+}
+
+fn member_candidates<'a>(
+    documents: &'a [NavigationDocument],
+    target_index: usize,
+    receiver: &str,
+    offset: usize,
+) -> Vec<&'a DocumentSymbol> {
+    if let Some((index, document)) = documents.iter().enumerate().find(|(_, document)| {
+        document.owner.eq_ignore_ascii_case(receiver)
+            && documents[target_index].uses_owner(&document.owner)
+    }) {
+        return document
+            .top_level()
+            .iter()
+            .filter(|symbol| index == target_index || symbol.visibility == SymbolVisibility::Public)
+            .collect();
+    }
+
+    let parts = receiver.split('.').map(str::to_owned).collect::<Vec<_>>();
+    let Some((base_index, base)) = resolve_unqualified(documents, target_index, &parts[0], offset)
+    else {
+        return Vec::new();
+    };
+    let Some(type_name) = (if base.kind == SymbolKind::Type {
+        Some(base.qualified_name)
+    } else {
+        base.type_name
+    }) else {
+        return Vec::new();
+    };
+    let Some((type_index, type_symbol)) =
+        find_type(documents, target_index, base_index, &type_name)
+    else {
+        return Vec::new();
+    };
+    type_symbol
+        .children
+        .iter()
+        .filter(|member| {
+            type_index == target_index || member.visibility == SymbolVisibility::Public
+        })
+        .collect()
+}
+
+fn find_type<'a>(
+    documents: &'a [NavigationDocument],
+    target_index: usize,
+    preferred_index: usize,
+    name: &str,
+) -> Option<(usize, &'a DocumentSymbol)> {
+    let short = name.rsplit('.').next().unwrap_or(name);
+    let preferred = &documents[preferred_index];
+    if let Some(symbol) = preferred
+        .top_level()
+        .iter()
+        .find(|symbol| symbol.kind == SymbolKind::Type && symbol.name.eq_ignore_ascii_case(short))
+    {
+        return Some((preferred_index, symbol));
+    }
+    documents.iter().enumerate().find_map(|(index, document)| {
+        if index != target_index && !documents[target_index].uses_owner(&document.owner) {
+            return None;
+        }
+        document
+            .top_level()
+            .iter()
+            .find(|symbol| {
+                symbol.kind == SymbolKind::Type
+                    && (symbol.name.eq_ignore_ascii_case(short)
+                        || symbol.qualified_name.eq_ignore_ascii_case(name))
+                    && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+            })
+            .map(|symbol| (index, symbol))
+    })
+}
+
+fn imported_top_level(
+    documents: &[NavigationDocument],
+    target_index: usize,
+) -> Vec<(usize, &DocumentSymbol)> {
+    let target = &documents[target_index];
+    documents
+        .iter()
+        .enumerate()
+        .filter(|(index, document)| *index != target_index && target.uses_owner(&document.owner))
+        .flat_map(|(index, document)| {
+            document
+                .top_level()
+                .iter()
+                .filter(|symbol| symbol.visibility == SymbolVisibility::Public)
+                .map(move |symbol| (index, symbol))
+        })
+        .collect()
+}
+
+fn completion_context(source: &str, offset: usize) -> (Option<String>, String) {
+    let offset = offset.min(source.len());
+    let before = &source[..offset];
+    let start = before
+        .char_indices()
+        .rev()
+        .find(|(_, character)| {
+            !character.is_ascii_alphanumeric() && *character != '_' && *character != '.'
+        })
+        .map_or(0, |(index, character)| index + character.len_utf8());
+    let fragment = &before[start..];
+    if let Some((receiver, prefix)) = fragment.rsplit_once('.') {
+        (Some(receiver.to_owned()), prefix.to_owned())
+    } else {
+        (None, fragment.to_owned())
+    }
+}
+
+fn unqualified_kind(kind: SymbolKind) -> bool {
+    !matches!(
+        kind,
+        SymbolKind::Program
+            | SymbolKind::Unit
+            | SymbolKind::Field
+            | SymbolKind::Property
+            | SymbolKind::Event
+    )
+}
+
+fn contains(span: SourceSpan, offset: usize) -> bool {
+    span.offset <= offset && offset < span.offset.saturating_add(span.length)
+}

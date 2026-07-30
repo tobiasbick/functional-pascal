@@ -1,9 +1,9 @@
 //! Capabilities implemented by the native Functional Pascal transport.
 
 use tower_lsp_server::ls_types::{
-    InitializeResult, OneOf, PositionEncodingKind, SaveOptions, ServerCapabilities, ServerInfo,
-    TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
-    TextDocumentSyncSaveOptions,
+    CompletionOptions, HoverProviderCapability, InitializeResult, OneOf, PositionEncodingKind,
+    SaveOptions, ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
+    TextDocumentSyncOptions, TextDocumentSyncSaveOptions,
 };
 
 pub(crate) fn initialize_result() -> InitializeResult {
@@ -22,6 +22,13 @@ pub(crate) fn initialize_result() -> InitializeResult {
                 },
             )),
             document_formatting_provider: Some(OneOf::Left(true)),
+            document_symbol_provider: Some(OneOf::Left(true)),
+            hover_provider: Some(HoverProviderCapability::Simple(true)),
+            definition_provider: Some(OneOf::Left(true)),
+            completion_provider: Some(CompletionOptions {
+                trigger_characters: Some(vec![".".to_owned()]),
+                ..CompletionOptions::default()
+            }),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {

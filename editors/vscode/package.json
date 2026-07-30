@@ -15,11 +15,6 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:fpas",
-    "onCommand:functionalPascal.restartLanguageServer",
-    "onCommand:functionalPascal.showOutput"
-  ],
   "extensionKind": [
     "ui"
   ],

@@ -192,7 +192,7 @@ The extension contributes:
 
 It does not modify user settings automatically.
 
-During Phase 4 development and tests, the extension resolves
+During repository development and tests, the extension resolves
 `target/debug/fpas-lsp[.exe]` relative to the repository. Production lookup is
 already limited to `server/<host-target>/fpas-lsp[.exe]`, but that file is not
 staged into the bootstrap VSIX. Phase 7 replaces the development-only gap with

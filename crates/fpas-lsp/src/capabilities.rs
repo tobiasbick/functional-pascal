@@ -1,7 +1,7 @@
-//! Capabilities implemented by the Phase 4 transport.
+//! Capabilities implemented by the native Functional Pascal transport.
 
 use tower_lsp_server::ls_types::{
-    InitializeResult, PositionEncodingKind, SaveOptions, ServerCapabilities, ServerInfo,
+    InitializeResult, OneOf, PositionEncodingKind, SaveOptions, ServerCapabilities, ServerInfo,
     TextDocumentSyncCapability, TextDocumentSyncKind, TextDocumentSyncOptions,
     TextDocumentSyncSaveOptions,
 };
@@ -21,6 +21,7 @@ pub(crate) fn initialize_result() -> InitializeResult {
                     })),
                 },
             )),
+            document_formatting_provider: Some(OneOf::Left(true)),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {

@@ -2,7 +2,7 @@
 
 Canonical output rules for the AST pretty-printer. These are **normative for `fpas fmt`** once implemented. The emitter encodes them; this file is the human-readable spec.
 
-**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/); invoke manually — no watch/LSP. Edit golden examples when the style changes; the emitter must match them.
+**Status:** **complete** (2026-06). Normative for [`fpas fmt`](../../../crates/fpas-cli/src/cli_fmt/) and the [editor formatter](editor-integration.md#formatting). Edit golden examples when the style changes; both entry points must match them.
 
 **How to read this file**
 
@@ -460,7 +460,9 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 ## Non-goals (v1 and later)
 
 - Configurable style (`.fpasfmt.toml`, line width, indent size, keyword case) — **one official style only**; no per-project overrides.
-- Automatic formatting (`--watch`, LSP format-on-save) — user runs `fpas fmt` explicitly.
+- A separate formatter watch mode (`--watch`) — command-line users run
+  `fpas fmt` explicitly; editors use the LSP formatter and their standard
+  format-on-save setting.
 - Preserving blank lines between user-chosen sections (except the fixed rules above).
 - Sorting `uses` clauses or declaration order.
 - Formatting invalid or partial syntax (recovery).

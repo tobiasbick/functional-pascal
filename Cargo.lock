@@ -648,7 +648,10 @@ dependencies = [
 name = "fpas-lsp"
 version = "0.0.1"
 dependencies = [
+ "fpas-diagnostics",
+ "fpas-fmt",
  "fpas-language-service",
+ "fpas-parser",
  "serde_json",
  "tokio",
  "tower-lsp-server",

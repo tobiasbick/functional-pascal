@@ -25,7 +25,7 @@ Topic-based layout (Microsoft Learn style).
 | Language | [language/](language/README.md) | Types, basics, control flow, functions, pattern matching, errors, concurrency |
 | Program structure | [program-structure/](program-structure/README.md) | Units, projects, CLI, workspaces |
 | Standard library | [std/](std/README.md) | `Std.*` reference |
-| Tools | [tools/](tools/README.md) | `fpas fmt` |
+| Tools | [tools/](tools/README.md) | `fpas fmt`, VS Code-compatible editors |
 | Formal grammar | [../specs/grammar.ebnf](../specs/grammar.ebnf) | Lexer and parser syntax |
 
 ## Start here
@@ -45,6 +45,7 @@ Ordered learning path for newcomers:
 11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`
 12. [Standard library](std/README.md) — `Std.*` built-in units
 13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
+14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting
 
 ## Future Features
 

@@ -32,13 +32,77 @@ export async function run(): Promise<void> {
   assert.ok(commands.includes(RESTART_LANGUAGE_SERVER_COMMAND));
 
   const fixture = vscode.Uri.file(
-    path.join(extension.extensionPath, "test", "grammar", "positive.fpas")
+    path.join(
+      extension.extensionPath,
+      "test",
+      "fixtures",
+      "standalone",
+      "malformed_syntax.fpas"
+    )
   );
   const document = await vscode.workspace.openTextDocument(fixture);
   assert.equal(document.languageId, "fpas");
-  await vscode.window.showTextDocument(document);
+  const editor = await vscode.window.showTextDocument(document);
+
+  const parserDiagnostics = await waitForDiagnostics(
+    document.uri,
+    (diagnostics) => diagnostics.length > 0
+  );
+  assert.ok(
+    parserDiagnostics.some((diagnostic) => diagnostic.code === "F1001"),
+    JSON.stringify(parserDiagnostics)
+  );
+
+  const messySource =
+    "program Corrected; begin // kept\n var Value:integer:=1 end.";
+  await editor.edit((edit) => {
+    edit.replace(
+      new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length)),
+      messySource
+    );
+  });
+  await waitForDiagnostics(
+    document.uri,
+    (diagnostics) => diagnostics.length === 0
+  );
+
+  const formattingEdits = await vscode.commands.executeCommand<
+    vscode.TextEdit[]
+  >("vscode.executeFormatDocumentProvider", document.uri, {
+    tabSize: 2,
+    insertSpaces: true
+  });
+  assert.ok(formattingEdits);
+  assert.ok(formattingEdits.length > 0);
+  const formattingWorkspaceEdit = new vscode.WorkspaceEdit();
+  formattingWorkspaceEdit.set(document.uri, formattingEdits);
+  assert.equal(await vscode.workspace.applyEdit(formattingWorkspaceEdit), true);
+  assert.equal(
+    document.getText(),
+    "program Corrected;\n\nbegin\n  var Value: integer := 1\nend.\n// kept\n"
+  );
+
+  await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
-  console.log("Functional Pascal extension and LSP lifecycle test passed.");
+  console.log(
+    "Functional Pascal extension diagnostics, formatting, and lifecycle test passed."
+  );
+}
+
+async function waitForDiagnostics(
+  uri: vscode.Uri,
+  predicate: (diagnostics: readonly vscode.Diagnostic[]) => boolean
+): Promise<readonly vscode.Diagnostic[]> {
+  const deadline = Date.now() + 5_000;
+  while (Date.now() < deadline) {
+    const diagnostics = vscode.languages.getDiagnostics(uri);
+    if (predicate(diagnostics)) {
+      return diagnostics;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  const diagnostics = vscode.languages.getDiagnostics(uri);
+  assert.fail(`timed out waiting for diagnostics: ${JSON.stringify(diagnostics)}`);
 }

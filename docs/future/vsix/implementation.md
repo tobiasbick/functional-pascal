@@ -9,7 +9,7 @@
 | 2 | complete (2026-07-29) | syntax-only development extension |
 | 3 | complete (2026-07-29) | language-service foundation |
 | 4 | complete (2026-07-29) | functioning stdio language server |
-| 5 | open | diagnostics and formatting |
+| 5 | complete (2026-07-30) | diagnostics and formatting |
 | 6 | open | symbols, hover, definitions, and completion |
 | 7 | open | reproducible final VSIX packaging |
 | 8 | open | local host acceptance and current documentation |
@@ -420,8 +420,8 @@ request handling.
 
 Once the behavior exists, update:
 
-- `README.md`, which currently says there is no format-on-save
-- `docs/pascal/tools/fmt-style.md`, which currently says there is no LSP
+- `README.md`
+- `docs/pascal/tools/fmt-style.md`
 - a new current editor-integration page under `docs/pascal/tools/`
 - relevant documentation indexes linking the new current page
 
@@ -433,6 +433,40 @@ Current documentation must describe only features verified in this phase.
 - Format Document produces exactly the canonical formatter output.
 - Enabling the editor's standard format-on-save setting requires no FPAS
   watcher or extra extension setting.
+
+### Verification — 2026-07-30
+
+- `fpas-lsp` now owns focused `diagnostics/` conversion/publication modules
+  and a separate formatting-edit module. All production sources remain below
+  220 lines.
+- Open and full-change notifications schedule a 120 ms debounced analysis.
+  Per-document generations are invalidated before synchronization, analysis
+  requires the exact current editor version, and publication checks the
+  generation again. Close and shutdown cancel pending work.
+- Published diagnostics preserve `Fxxxx` codes, error/warning severity,
+  UTF-16 ranges, the `fpas` source label, and non-empty compiler help text.
+  Parser errors publish without semantic analysis; valid syntax receives
+  project-aware semantic diagnostics.
+- Protocol regressions cover parser and semantic failures, clearing after a
+  correction, multiple ranges, both severity conversions, a project dependency
+  unit, rapid versions, and close during debounce. No obsolete version is
+  published in the rapid-change transcript.
+- `textDocument/formatting` is advertised and formats the current unsaved
+  snapshot through `fpas-fmt`. Tests prove canonical parity, a single
+  whole-document LSP edit, idempotence, comment preservation, and no edit for
+  malformed syntax.
+- A real VS Code Extension Host opened the malformed fixture, observed
+  `F1001`, cleared diagnostics after an unsaved correction, invoked the
+  document formatter, applied canonical output, restarted the server, and
+  shut it down cleanly.
+- Current documentation now describes the implemented development-mode editor
+  integration and explicitly retains the bootstrap VSIX native-binary
+  boundary. No FPAS syntax or semantics changed.
+- `cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`, and
+  `cargo clippy -p fpas-lsp --all-targets -- -D warnings` passed.
+- `npm test --prefix editors/vscode` passed, and
+  `npm run package --prefix editors/vscode` recreated and inspected the
+  bootstrap VSIX without adding a native server prematurely.
 
 ## Phase 6 — language navigation
 

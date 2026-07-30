@@ -1,6 +1,6 @@
 # Local VSIX and language server
 
-**Status:** implementation in progress; phases 0-4 complete
+**Status:** implementation in progress; phases 0-5 complete
 **Change class:** tooling and editor integration; no FPAS language change
 
 ## Goal
@@ -70,9 +70,13 @@ crates/
       main.rs                — stdio process entry point
       capabilities.rs        — advertised server capabilities
       documents.rs           — full-text document synchronization
+      diagnostics/           — versioned conversion and push publication
+      formatting.rs          — canonical whole-document LSP edit
       server/                — lifecycle and notification backend
       convert/               — file-URI and UTF-16 position conversion
     tests/
+      diagnostics.rs         — publication, ranges, versions, and clearing
+      formatting.rs          — parity, comments, idempotence, and malformed input
       protocol.rs            — conversion and invalid-request regressions
       process.rs             — framed stdio transcript and process tests
 
@@ -131,16 +135,20 @@ locally available.
 
 ## Current implemented milestone
 
-**Phase 4 completed:** 2026-07-29
+**Phase 5 completed:** 2026-07-30
 
 The syntax-only VSIX from Phase 2 registers `.fpas` as Functional Pascal and
 provides language configuration plus TextMate highlighting without a server.
 Phase 3 added the protocol-independent language-service foundation. Phase 4
-now adds `fpas-lsp`, with standard initialize/shutdown/exit lifecycle,
+added `fpas-lsp`, with standard initialize/shutdown/exit lifecycle,
 full-document synchronization, strict local-file URIs, and safe UTF-16
 position conversion. The development extension starts and restarts the native
 debug server through `vscode-languageclient` without using the system `PATH`.
-It still advertises no diagnostics, formatting, or navigation capability.
+Phase 5 publishes versioned parser and semantic diagnostics from unsaved
+buffers and advertises canonical whole-document formatting through
+`fpas-fmt`. A real VS Code Extension Host verified that an unsaved parser error
+appears and clears and that **Format Document** produces canonical output.
+Navigation capabilities remain unadvertised.
 The bootstrap VSIX remains platform-independent; native server staging into
 the final host-specific VSIX belongs to Phase 7.
 

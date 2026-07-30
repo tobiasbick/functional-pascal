@@ -71,7 +71,15 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
         .expect("initialize capabilities object");
     let mut capability_names = capabilities.keys().map(String::as_str).collect::<Vec<_>>();
     capability_names.sort_unstable();
-    assert_eq!(capability_names, ["positionEncoding", "textDocumentSync"]);
+    assert_eq!(
+        capability_names,
+        [
+            "documentFormattingProvider",
+            "positionEncoding",
+            "textDocumentSync"
+        ]
+    );
+    assert_eq!(capabilities["documentFormattingProvider"], json!(true));
     assert_eq!(
         capabilities["positionEncoding"],
         json!("utf-16"),

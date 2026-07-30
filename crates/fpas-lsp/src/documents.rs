@@ -2,12 +2,16 @@
 
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-use fpas_language_service::{LanguageService, LanguageServiceError};
+use fpas_language_service::{
+    DocumentAnalysis, DocumentSnapshot, LanguageService, LanguageServiceError, SourceVersion,
+    format_document,
+};
 use tokio::sync::Mutex;
 use tower_lsp_server::ls_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
-    DidSaveTextDocumentParams,
+    DidSaveTextDocumentParams, Uri,
 };
 
 use crate::convert::{FileUriError, file_uri_to_path};
@@ -15,6 +19,18 @@ use crate::convert::{FileUriError, file_uri_to_path};
 /// Synchronized document state shared by concurrent LSP notification handlers.
 pub(crate) struct SynchronizedDocuments {
     service: Mutex<LanguageService>,
+}
+
+#[derive(Clone)]
+pub(crate) struct SynchronizedDocument {
+    pub(crate) path: PathBuf,
+    pub(crate) uri: Uri,
+    pub(crate) version: i32,
+}
+
+pub(crate) struct FormattedDocument {
+    pub(crate) snapshot: Arc<DocumentSnapshot>,
+    pub(crate) text: String,
 }
 
 impl SynchronizedDocuments {
@@ -35,7 +51,7 @@ impl SynchronizedDocuments {
     pub(crate) async fn open(
         &self,
         params: DidOpenTextDocumentParams,
-    ) -> Result<(), DocumentSyncError> {
+    ) -> Result<SynchronizedDocument, DocumentSyncError> {
         let document = params.text_document;
         let path = file_uri_to_path(&document.uri)?;
         self.service.lock().await.documents_mut().open_document(
@@ -43,13 +59,16 @@ impl SynchronizedDocuments {
             i64::from(document.version),
             document.text,
         )?;
-        Ok(())
+        Ok(SynchronizedDocument {
+            path,
+            uri: document.uri,
+            version: document.version,
+        })
     }
 
-    pub(crate) async fn change(
-        &self,
-        params: DidChangeTextDocumentParams,
-    ) -> Result<(), DocumentSyncError> {
+    pub(crate) fn validate_change(
+        params: &DidChangeTextDocumentParams,
+    ) -> Result<PathBuf, DocumentSyncError> {
         let path = file_uri_to_path(&params.text_document.uri)?;
         let [change] = params.content_changes.as_slice() else {
             return Err(DocumentSyncError::ExpectedOneFullChange {
@@ -59,12 +78,27 @@ impl SynchronizedDocuments {
         if change.range.is_some() {
             return Err(DocumentSyncError::IncrementalChange);
         }
+        Ok(path)
+    }
+
+    pub(crate) async fn change(
+        &self,
+        params: DidChangeTextDocumentParams,
+    ) -> Result<SynchronizedDocument, DocumentSyncError> {
+        let path = Self::validate_change(&params)?;
+        let [change] = params.content_changes.as_slice() else {
+            unreachable!("validate_change accepted exactly one content change");
+        };
         self.service.lock().await.documents_mut().apply_full_text(
             &path,
             i64::from(params.text_document.version),
             change.text.clone(),
         )?;
-        Ok(())
+        Ok(SynchronizedDocument {
+            path,
+            uri: params.text_document.uri,
+            version: params.text_document.version,
+        })
     }
 
     pub(crate) async fn save(
@@ -76,6 +110,46 @@ impl SynchronizedDocuments {
             return Err(DocumentSyncError::DocumentNotOpen { path });
         }
         Ok(())
+    }
+
+    pub(crate) async fn open_version(&self, path: &Path) -> Option<i32> {
+        let snapshot = self.service.lock().await.documents().open_snapshot(path)?;
+        let SourceVersion::Editor(version) = snapshot.version() else {
+            return None;
+        };
+        i32::try_from(version).ok()
+    }
+
+    pub(crate) async fn analyze_if_current(
+        &self,
+        path: &Path,
+        version: i32,
+    ) -> Result<Option<Arc<DocumentAnalysis>>, LanguageServiceError> {
+        let mut service = self.service.lock().await;
+        let Some(snapshot) = service.documents().open_snapshot(path) else {
+            return Ok(None);
+        };
+        if snapshot.version() != SourceVersion::Editor(i64::from(version)) {
+            return Ok(None);
+        }
+        let analysis = service.analyze_document(path)?;
+        if analysis.snapshot().version() != SourceVersion::Editor(i64::from(version)) {
+            return Ok(None);
+        }
+        Ok(Some(analysis))
+    }
+
+    pub(crate) async fn format_open(
+        &self,
+        path: &Path,
+    ) -> Result<Option<FormattedDocument>, DocumentSyncError> {
+        let service = self.service.lock().await;
+        let snapshot = service.documents().open_snapshot(path).ok_or_else(|| {
+            DocumentSyncError::DocumentNotOpen {
+                path: path.to_path_buf(),
+            }
+        })?;
+        Ok(format_document(&snapshot).map(|text| FormattedDocument { snapshot, text }))
     }
 
     pub(crate) async fn close(

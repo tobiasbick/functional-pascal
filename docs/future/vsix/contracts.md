@@ -108,6 +108,23 @@ only the stable LSP 3.17 contract recorded here. The client launches an
 explicit repository or packaged path and never resolves `fpas-lsp` through the
 system `PATH`.
 
+## Phase 5 implementation
+
+The server publishes diagnostics after open and full-document change
+notifications. A short debounce collapses rapid typing, while per-document
+generations and exact editor versions prevent superseded analysis from being
+published. Close cancels pending work and publishes an empty diagnostic set.
+
+Compiler diagnostics retain their `Fxxxx` code, error or warning severity,
+UTF-16 range, and help text. Parser errors suppress semantic analysis; valid
+syntax receives project-aware semantic diagnostics from the language service.
+
+Initialize now advertises `documentFormattingProvider`. The formatting handler
+uses the current open-buffer snapshot and the existing `fpas-fmt` query. It
+returns one whole-document edit when canonical output differs, an empty edit
+list when the text is already canonical, and no result for malformed syntax.
+No formatter preference or FPAS-specific format-on-save setting was added.
+
 ## Host contract
 
 The final native package script recognizes these local build targets:

@@ -80,7 +80,10 @@ Check without writing:
 cargo run -p fpas-cli -- fmt --check examples tests apps
 ```
 
-Run `fpas fmt` manually when you want to apply formatting — there is no format-on-save or watch mode.
+Run `fpas fmt` manually for command-line workflows. The repository's
+[VS Code-compatible editor integration](docs/pascal/tools/editor-integration.md)
+also provides **Format Document** and works with the editor's standard
+format-on-save setting; no FPAS watch mode is required.
 
 ## Applications
 
@@ -217,7 +220,7 @@ The full language specification lives in [`docs/pascal/`](docs/pascal/). Start w
 | Language | [language/](docs/pascal/language/README.md) |
 | Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
 | Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/`, `graph/app/`, …) |
-| Tools | [tools/](docs/pascal/tools/README.md) |
+| Tools | [tools/](docs/pascal/tools/README.md) — formatter and editor integration |
 | Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
 
 Ordered learning path:
@@ -235,6 +238,7 @@ Ordered learning path:
 11. [CLI](docs/pascal/program-structure/cli.md)
 12. [Standard Library](docs/pascal/std/README.md)
 13. [Formatter style](docs/pascal/tools/fmt-style.md)
+14. [Editor integration](docs/pascal/tools/editor-integration.md)
 
 Planned work (not current behavior): [`docs/future/`](docs/future/).
 

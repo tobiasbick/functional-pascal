@@ -141,6 +141,7 @@ impl LanguageService {
         &mut self,
         path: &Path,
     ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
+        self.ensure_source_context(path)?;
         let target = self.documents.snapshot(path)?;
         if target.has_parse_errors() {
             return self.cached_syntax_only(target);
@@ -194,6 +195,24 @@ impl LanguageService {
             .iter()
             .map(|path| self.documents.snapshot(path))
             .collect()
+    }
+
+    pub(crate) fn ensure_source_context(
+        &mut self,
+        path: &Path,
+    ) -> Result<(), LanguageServiceError> {
+        self.workspace
+            .discover_project_for_source(path)
+            .map_err(|issue| {
+                LanguageServiceError::analysis(
+                    path,
+                    format!(
+                        "Cannot resolve the FPAS project from `{}`: {}",
+                        issue.path.display(),
+                        issue.message
+                    ),
+                )
+            })
     }
 
     fn cached_syntax_only(

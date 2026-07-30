@@ -36,7 +36,15 @@ fn build_from_parsed_sources(
 ) -> Result<UnitGraph, String> {
     let mut nodes = std::collections::HashMap::new();
     for (path, unit) in sources {
-        insert_unit(&mut nodes, &mut source_paths, link_meta, &path, unit, true)?;
+        let validate_name = !link_meta.is_trusted_standard_library_source(&path);
+        insert_unit(
+            &mut nodes,
+            &mut source_paths,
+            link_meta,
+            &path,
+            unit,
+            validate_name,
+        )?;
     }
     Ok(UnitGraph::new(nodes, link_meta.clone(), source_paths))
 }

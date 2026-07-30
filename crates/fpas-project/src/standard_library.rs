@@ -5,7 +5,7 @@
 
 use crate::loading::own::{load_own_project, validate_standard_library_source_units};
 use crate::loading::parse_cache::ParsedSourceCache;
-use crate::{ProjectKind, ProjectLinkMeta, SourceOrigin};
+use crate::{LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
 use fpas_std::STD_UNITS_KNOWN;
 use std::path::{Path, PathBuf};
 
@@ -32,6 +32,57 @@ impl StandardLibrary {
 
 /// Loads the standard-library manifest below an implementation-owned library root.
 pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
+    let (manifest, own, source_files) = load_standard_library_sources(root)?;
+    let mut link_meta = ProjectLinkMeta::default();
+    link_meta
+        .library_export_policies
+        .insert(manifest.clone(), own.export_policy);
+    for source_file in &source_files {
+        link_meta
+            .source_origins
+            .insert(source_file.clone(), SourceOrigin::Library(manifest.clone()));
+        link_meta
+            .trusted_standard_library_sources
+            .insert(source_file.clone());
+    }
+
+    Ok(StandardLibrary {
+        source_files,
+        link_meta,
+    })
+}
+
+/// Loads the implementation-owned standard library as an editable project.
+///
+/// Sources retain their trusted standard-library provenance so overlay-safe
+/// editor graphs accept the reserved `Std.*` namespace.
+pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, String> {
+    let (_, own, source_files) = load_standard_library_sources(root)?;
+    let mut link_meta = ProjectLinkMeta::default();
+    for source_file in &source_files {
+        link_meta
+            .source_origins
+            .insert(source_file.clone(), SourceOrigin::Own);
+        link_meta
+            .trusted_standard_library_sources
+            .insert(source_file.clone());
+    }
+
+    Ok(LoadedProject {
+        name: own.name,
+        kind: own.kind,
+        main: own.main,
+        source_files,
+        warnings: own.warnings,
+        link_meta,
+        export_policy_for_dependents: own.export_policy,
+        test_manifest: own.test_manifest,
+    })
+}
+
+fn load_standard_library_sources(
+    root: &Path,
+) -> Result<(PathBuf, crate::loading::own::OwnProject, Vec<PathBuf>), String> {
     if !root.is_dir() {
         return Err(format!(
             "Standard library directory `{}` does not exist.\n  help: Pass `--std-lib <directory>` containing `{STANDARD_LIBRARY_MANIFEST}`.",
@@ -48,7 +99,7 @@ pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
     }
 
     let mut parse_cache = ParsedSourceCache::new();
-    let own = load_own_project(&manifest, &mut parse_cache)?;
+    let mut own = load_own_project(&manifest, &mut parse_cache)?;
     if own.kind != ProjectKind::Library {
         return Err(format!(
             "Standard library manifest `{}` must declare `project.kind = \"library\"`.\n  help: Change `[project].kind` to `\"library\"`.",
@@ -62,25 +113,16 @@ pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
         ));
     }
 
-    let source_files = validate_standard_library_source_units(own.source_files, &mut parse_cache)?;
+    let source_files = validate_standard_library_source_units(
+        std::mem::take(&mut own.source_files),
+        &mut parse_cache,
+    )?;
     validate_intrinsic_collisions(&source_files)?;
-
-    let canonical_manifest = crate::paths::canonical_project_path(&manifest);
-    let mut link_meta = ProjectLinkMeta::default();
-    link_meta
-        .library_export_policies
-        .insert(canonical_manifest.clone(), own.export_policy);
-    for source_file in &source_files {
-        link_meta.source_origins.insert(
-            source_file.clone(),
-            SourceOrigin::Library(canonical_manifest.clone()),
-        );
-    }
-
-    Ok(StandardLibrary {
+    Ok((
+        crate::paths::canonical_project_path(&manifest),
+        own,
         source_files,
-        link_meta,
-    })
+    ))
 }
 
 fn validate_intrinsic_collisions(source_files: &[PathBuf]) -> Result<(), String> {

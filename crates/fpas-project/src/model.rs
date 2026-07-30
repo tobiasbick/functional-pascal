@@ -77,6 +77,8 @@ pub struct ProjectLinkMeta {
     pub source_origins: HashMap<PathBuf, SourceOrigin>,
     /// Export policy for each library `.fpasprj` merged as a dependency.
     pub library_export_policies: HashMap<PathBuf, LibraryExportPolicy>,
+    /// Source paths allowed to use the implementation-owned `Std.*` namespace.
+    pub trusted_standard_library_sources: HashSet<PathBuf>,
 }
 
 impl ProjectLinkMeta {
@@ -99,6 +101,11 @@ impl ProjectLinkMeta {
             .get(library_project)
             .cloned()
             .unwrap_or(LibraryExportPolicy::AllUnits)
+    }
+
+    /// Returns whether a source belongs to the trusted implementation standard library.
+    pub fn is_trusted_standard_library_source(&self, source_path: &Path) -> bool {
+        self.trusted_standard_library_sources.contains(source_path)
     }
 }
 

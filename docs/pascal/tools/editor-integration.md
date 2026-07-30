@@ -60,9 +60,19 @@ during typing. Results carry the exact document version, and superseded work
 is discarded. Correcting the source or closing the document clears stale
 diagnostics.
 
-Project discovery uses the same `.fpasprj` and `.fpasworkspace` model as the
-compiler. Open dependency units are analyzed with their own URI and source
-ranges.
+The opened editor folder does not have to be an FPAS project. For each opened
+`.fpas` source, the server searches its parent directories up to that folder
+and loads the nearest `.fpasprj` or `.fpasworkspace` that directly owns the
+source. Multiple nested FPAS projects can therefore coexist inside a larger
+Rust repository. A direct source owner takes precedence over a project that
+only consumes the source through a dependency.
+
+Discovery uses the same manifests, source ownership, dependencies, workspace
+members, exports, and standard-library rules as the compiler. It does not scan
+the whole repository recursively. A file without a matching manifest remains
+a loose file, while overlapping direct owners produce an actionable
+ambiguity error. Open dependency units are analyzed with their own URI and
+source ranges.
 
 ## Formatting
 

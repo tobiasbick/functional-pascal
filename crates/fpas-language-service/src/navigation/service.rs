@@ -23,6 +23,7 @@ impl LanguageService {
         &mut self,
         path: &Path,
     ) -> Result<NavigationResult<Vec<DocumentSymbol>>, LanguageServiceError> {
+        self.ensure_source_context(path)?;
         let snapshot = self.snapshot(path)?;
         let value = if self.navigation_allowed(path) {
             DocumentSymbols::from_snapshot(&snapshot).entries().to_vec()
@@ -95,6 +96,7 @@ impl LanguageService {
         &mut self,
         path: &Path,
     ) -> Result<NavigationContext, LanguageServiceError> {
+        self.ensure_source_context(path)?;
         let target = self.snapshot(path)?;
         if !self.navigation_allowed(path) {
             return Ok(NavigationContext {
@@ -135,7 +137,9 @@ impl LanguageService {
     }
 
     fn navigation_allowed(&self, path: &Path) -> bool {
-        matches!(self.workspace().kind(), WorkspaceKind::Loose)
-            || self.workspace().project_for_source(path).is_some()
+        matches!(
+            self.workspace().kind(),
+            WorkspaceKind::Loose | WorkspaceKind::Folder
+        ) || self.workspace().project_for_source(path).is_some()
     }
 }

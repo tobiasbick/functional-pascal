@@ -56,6 +56,13 @@ reference, use **Go to Definition**, and invoke completion in a routine body or
 after a unit/record `.`. Project-aware results use the same `.fpasprj`,
 `.fpasworkspace`, visibility, and library-export boundaries as the compiler.
 
+The folder opened in the editor may be the complete Functional Pascal Rust
+repository or another parent folder without an FPAS manifest. When a `.fpas`
+file is opened, the server searches upward from that file and lazily loads its
+nearest directly owning project or workspace. Multiple nested FPAS projects
+can be used in one editor session; files without a matching manifest remain
+available as loose files.
+
 Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:
 

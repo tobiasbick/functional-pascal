@@ -17,7 +17,7 @@ mod workspace;
 
 pub use loading::load_project;
 pub use model::{LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
-pub use standard_library::{StandardLibrary, load_standard_library};
+pub use standard_library::{StandardLibrary, load_standard_library, load_standard_library_project};
 pub use test_manifest::{TestFileOverride, TestManifest};
 pub use test_sources::is_test_source_file;
 pub use unit_graph::{

@@ -629,6 +629,33 @@ system builds there.
 
 ## Phase 8 — editor acceptance and completion
 
+### Implementation checkpoint — 2026-07-30
+
+The installed-editor smoke test exposed false unknown-type diagnostics when
+the complete Rust repository was opened: the initialized folder had no root
+FPAS manifest, so the language service remained in loose-file mode.
+
+The language service now treats the editor folder as a discovery boundary and
+resolves context per source. It walks source ancestors, lazily loads the
+nearest manifest that directly owns the file, supports several nested projects
+in one session, prefers a direct owner over a dependency consumer, preserves
+unrelated loose files, and reports overlapping nearest owners as an actionable
+ambiguity. Standard-library projects use the trusted `fpas-project` loader
+while retaining source provenance.
+
+Regression coverage includes the actual repository root with
+`lib/Std/Tui.fpas`, two nested projects, ownership precedence, ambiguity, and a
+loose file beside a loaded project. An LSP transcript starts from a
+manifest-free repository root, and the real VS Code Extension Host now opens a
+manifest-free parent of its nested test workspace. The installed rebuilt VSIX
+still requires the manual smoke test below, so Phase 8 remains open.
+
+`cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`, focused
+Clippy checks with warnings denied, `npm test --prefix editors/vscode`, and
+`npm run package --prefix editors/vscode` passed. The package command produced
+and exercised
+`editors/vscode/dist/functional-pascal-0.0.1-win32-x64.vsix`.
+
 ### Automated verification
 
 Run at minimum:

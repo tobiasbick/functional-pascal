@@ -152,6 +152,14 @@ creates a target-labelled VSIX, inspects its exact runtime contents, and
 exercises the server extracted from the finished package. The extension never
 falls back to a globally installed server.
 
+The Phase 8 editor follow-up now permits opening the complete Rust repository
+instead of requiring an FPAS project at the editor root. Each `.fpas` source
+lazily selects its nearest directly owning project or workspace, so several
+nested FPAS projects and unrelated loose files can coexist in one session.
+Automated language-service, LSP transcript, and real Extension Host tests cover
+that behavior. Phase 8 remains open until the rebuilt VSIX passes the local
+installed-editor smoke test.
+
 ## Non-goals
 
 - changing FPAS syntax, semantics, or language documentation

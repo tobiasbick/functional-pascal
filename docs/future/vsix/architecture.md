@@ -105,9 +105,19 @@ offsets. All conversion lives under `fpas-lsp/src/convert/` and must handle:
 
 ## Workspace and project discovery
 
-The server treats the opened workspace folder as the discovery root and reuses
-`fpas-project` for `.fpasprj`, `.fpasworkspace`, dependencies, exported units,
-and standard-library resolution.
+The server treats the opened workspace folder as a discovery boundary; the
+folder itself does not need an FPAS manifest. For each source request it walks
+from the source directory toward that boundary and lazily loads the nearest
+`.fpasprj` or `.fpasworkspace` that directly owns the source. It reuses
+`fpas-project` for source ownership, dependencies, workspace members, exported
+units, and standard-library resolution.
+
+Several nested FPAS projects can be active in one editor session. A direct
+owner takes precedence over an already loaded project that only consumes the
+source as a dependency. Two manifests at the same nearest level that both
+claim the source are an actionable ambiguity instead of an arbitrary choice.
+Discovery inspects only ancestor directories and never recursively scans the
+repository.
 
 Loose `.fpas` files without a project still receive syntax diagnostics,
 formatting, document symbols, and same-document navigation. Project-dependent
@@ -117,10 +127,11 @@ Unsaved `.fpas` buffers override the corresponding on-disk sources during
 analysis. The server must not create `.fpascu` files merely to answer editor
 queries.
 
-Phase 3 loads manifests when `WorkspaceContext` is constructed, and Phase 4
-constructs that context from the initialized workspace root. Dynamic manifest
-reload is still later server work; source-text invalidation already happens
-through `DocumentStore`.
+`WorkspaceContext` loads a manifest at initialization when the opened folder
+itself contains an unambiguous project or workspace. Otherwise it starts as a
+folder context and adds per-source project contexts on demand. Dynamic
+manifest-content reload is still later server work; source-text invalidation
+already happens through `DocumentStore`.
 
 ## Capabilities
 

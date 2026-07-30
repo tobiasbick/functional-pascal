@@ -143,6 +143,13 @@ fn merge_dependency_link_meta(
     consumer
         .library_export_policies
         .extend(dependency_loaded.link_meta.library_export_policies.clone());
+    consumer.trusted_standard_library_sources.extend(
+        dependency_loaded
+            .link_meta
+            .trusted_standard_library_sources
+            .iter()
+            .cloned(),
+    );
 
     for source_path in &dependency_loaded.source_files {
         let origin = dependency_loaded
@@ -176,6 +183,9 @@ fn prune_link_meta_origins(link_meta: &mut ProjectLinkMeta, source_files: &[Path
     link_meta
         .source_origins
         .retain(|path, _| source_files.iter().any(|source| same_file(source, path)));
+    link_meta
+        .trusted_standard_library_sources
+        .retain(|path| source_files.iter().any(|source| same_file(source, path)));
 }
 
 fn mark_own_source_origins(

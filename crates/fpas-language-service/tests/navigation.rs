@@ -315,7 +315,7 @@ name = "lib"
 kind = "library"
 
 [exports]
-units = ["Demo.Public"]
+units = ["Demo.Exported"]
 
 [sources]
 include = ["src/**/*.fpas"]
@@ -323,7 +323,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "lib/src/public.fpas",
-        "unit Demo.Public;\n\npublic function Visible(): integer;\nbegin return 1 end;\n",
+        "unit Demo.Exported;\n\npublic function Visible(): integer;\nbegin return 1 end;\n",
     );
     temp.write(
         "lib/src/internal.fpas",

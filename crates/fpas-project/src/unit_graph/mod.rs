@@ -161,6 +161,12 @@ fn merge_standard_library_link_meta(
     combined
         .library_export_policies
         .extend(standard_library.link_meta().library_export_policies.clone());
+    combined.trusted_standard_library_sources.extend(
+        standard_library
+            .link_meta()
+            .trusted_standard_library_sources
+            .clone(),
+    );
     combined
 }
 

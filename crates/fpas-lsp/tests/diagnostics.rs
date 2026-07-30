@@ -167,7 +167,7 @@ include = ["src/**/*.fpas"]
     );
     temp.write(
         "src/main.fpas",
-        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value := Answer()\nend.\n",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
     );
     let unit_source =
         "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 'wrong'\nend;\n";
@@ -198,6 +198,54 @@ include = ["src/**/*.fpas"]
                 && diagnostic["range"]["start"]["line"] == json!(4)
         }),
         "{diagnostics:?}"
+    );
+}
+
+#[test]
+fn repository_root_discovers_a_nested_standard_library_before_diagnostics() {
+    let temp = TempDirectory::new("nested-standard-library");
+    temp.write(
+        "repository/lib/stdlib.fpasprj",
+        r#"[project]
+name = "test-stdlib"
+kind = "library"
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+    );
+    temp.write(
+        "repository/lib/Std/Point.fpas",
+        r#"unit Std.Point;
+
+public type Point = record
+  public X: integer;
+end;
+"#,
+    );
+    let facade_source = r#"unit Std.Facade;
+
+uses Std.Point;
+
+public type FacadePoint = Std.Point.Point;
+"#;
+    temp.write("repository/lib/Std/Facade.fpas", facade_source);
+    let root_uri = temp.uri("repository");
+    let facade_uri = temp.uri("repository/lib/Std/Facade.fpas");
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&facade_uri, 1, facade_source)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(shutdown(2)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert_success(&transcript);
+    let published = notifications(&transcript.messages, "textDocument/publishDiagnostics");
+    assert_eq!(
+        publication(&published, 1)["params"]["diagnostics"],
+        json!([])
     );
 }
 

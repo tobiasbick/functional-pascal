@@ -79,7 +79,7 @@ compose those APIs and provide editor-oriented caching and indexes.
 | Parsing | `fpas_parser::parse_compilation_unit` and `ParseDiagnostic` | Phase 3 `DocumentSnapshot` stores the AST and diagnostics by source revision |
 | Diagnostics | `fpas-parser`, `fpas-sema`, `fpas-diagnostics::Diagnostic` | Phase 3 `diagnostics_for_document` exposes merged parser/sema results; Phase 5 converts and publishes them |
 | Formatting | `fpas_fmt::format_source` | Phase 3 `format_document` formats the unsaved snapshot and returns no result after parse failure; Phase 5 returns the LSP edit |
-| Project discovery | `fpas_project::load_project` and `load_workspace` | Phase 3 `WorkspaceContext` loads metadata and parsed-source graphs overlay open buffers without writing sidecars |
+| Project discovery | `fpas_project::load_project`, `load_workspace`, and `load_standard_library_project` | `WorkspaceContext` lazily finds the nearest directly owning manifest for each source, supports several nested projects, and overlays open buffers on parsed-source graphs without writing sidecars |
 | Unit interfaces | `fpas_sema::analyze_unit` and `fpas_unit::UnitInterface` | Phase 3 project analysis caches dependency interfaces by participating source revisions |
 | Document symbols | `fpas-parser` declarations and source spans | Phase 3 `DocumentSymbols` and `WorkspaceSymbolIndex` provide the declaration foundation; Phase 6 adds the hierarchical LSP query |
 | Hover | Parsed declaration spans and project-visible symbols | `hover` formats the resolved source declaration at a source position |

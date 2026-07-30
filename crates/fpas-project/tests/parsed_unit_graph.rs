@@ -71,3 +71,48 @@ fn parsed_program_graph_reserves_main_source_and_resolves_dependencies() {
         &["demo.base".to_string(), "demo.feature".to_string()]
     );
 }
+
+#[test]
+fn parsed_graph_accepts_reserved_std_names_from_trusted_library_sources() {
+    let path = PathBuf::from("virtual/Std/Sample.fpas");
+    let sources = vec![parsed_unit(
+        path.to_str().expect("UTF-8 fixture path"),
+        "unit Std.Sample;\n",
+    )];
+    let mut link_meta = ProjectLinkMeta::default();
+    link_meta.trusted_standard_library_sources.insert(path);
+
+    let graph = build_unit_graph_from_parsed_sources(sources, &link_meta)
+        .expect("trusted standard-library graph");
+
+    assert_eq!(graph.len(), 1);
+}
+
+#[test]
+fn parsed_graph_still_validates_names_from_regular_library_dependencies() {
+    let path = PathBuf::from("virtual/Std/Sample.fpas");
+    let sources = vec![parsed_unit(
+        path.to_str().expect("UTF-8 fixture path"),
+        "unit Std.Sample;\n",
+    )];
+    let mut link_meta = ProjectLinkMeta::default();
+    link_meta.source_origins.insert(
+        path,
+        fpas_project::SourceOrigin::Library(PathBuf::from("virtual/dependency.fpasprj")),
+    );
+
+    let error = build_unit_graph_from_parsed_sources(sources, &link_meta)
+        .expect_err("regular dependencies must not claim the Std namespace");
+
+    assert!(error.contains("reserved for standard library units"));
+}
+
+#[test]
+fn parsed_graph_rejects_reserved_std_names_from_user_sources() {
+    let sources = vec![parsed_unit("virtual/Std/Sample.fpas", "unit Std.Sample;\n")];
+
+    let error = build_unit_graph_from_parsed_sources(sources, &ProjectLinkMeta::default())
+        .expect_err("user project must not claim the Std namespace");
+
+    assert!(error.contains("reserved for standard library units"));
+}

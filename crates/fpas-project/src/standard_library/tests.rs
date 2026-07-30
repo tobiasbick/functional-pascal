@@ -98,6 +98,33 @@ include = ["Std/**/*.fpas"]
 }
 
 #[test]
+fn editable_standard_library_project_keeps_trusted_source_provenance() {
+    let dir = temp_dir("editable-project");
+    write_text(
+        &dir.join("stdlib.fpasprj"),
+        r#"[project]
+name = "test-stdlib"
+kind = "library"
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+    );
+    let unit_path = dir.join("Std/Sample.fpas");
+    write_text(&unit_path, "unit Std.Sample;\n");
+
+    let project = load_standard_library_project(&dir).expect("editable standard library must load");
+    let origin = project.link_meta.origin_for_source(&unit_path);
+    let trusted = project
+        .link_meta
+        .is_trusted_standard_library_source(&unit_path);
+    remove_dir(&dir);
+
+    assert_eq!(origin, SourceOrigin::Own);
+    assert!(trusted);
+}
+
+#[test]
 fn private_standard_library_unit_is_not_importable_by_programs() {
     let dir = temp_dir("private-unit");
     write_text(

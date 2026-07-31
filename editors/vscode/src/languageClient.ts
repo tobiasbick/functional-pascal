@@ -9,6 +9,7 @@ import {
 } from "vscode-languageclient/node";
 
 import { resolveServerPath } from "./serverPath";
+import { resolveStandardLibraryPath } from "./standardLibraryPath";
 
 /** Owns exactly one Functional Pascal language-client process. */
 export class LanguageClientController {
@@ -27,6 +28,7 @@ export class LanguageClientController {
     }
 
     const serverPath = resolveServerPath(this.context);
+    const standardLibraryPath = resolveStandardLibraryPath(this.context);
     const workspaceDirectory = vscode.workspace.workspaceFolders?.find(
       (folder) => folder.uri.scheme === "file"
     )?.uri.fsPath;
@@ -38,6 +40,9 @@ export class LanguageClientController {
     };
     const clientOptions: LanguageClientOptions = {
       documentSelector: [{ scheme: "file", language: "fpas" }],
+      initializationOptions: {
+        standardLibraryUri: vscode.Uri.file(standardLibraryPath).toString()
+      },
       outputChannel: this.outputChannel,
       revealOutputChannelOn: RevealOutputChannelOn.Never
     };

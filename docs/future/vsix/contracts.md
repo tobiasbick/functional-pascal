@@ -139,6 +139,12 @@ The final native package script recognizes these local build targets:
 It builds only the current host. There is no cross-compilation, target matrix,
 CI build, or publication.
 
+Every final package also contains `standard-library/stdlib.fpasprj` and only
+the `.fpas` files selected from the authoritative repository `lib/` tree. The
+client sends that directory as `initializationOptions.standardLibraryUri`.
+The server rejects an invalid URI or manifest during initialization; it never
+falls back to a global compiler or standard-library path.
+
 An unsupported local combination must fail before packaging with:
 
 ```text

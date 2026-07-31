@@ -13,9 +13,10 @@ use fpas_sema::AnalysisMetadata;
 use project::{analyze_project, project_identity};
 
 use crate::diagnostics::{merged_diagnostics, parse_diagnostics};
+use crate::workspace::StandardLibraryContext;
 use crate::{
-    DocumentSnapshot, DocumentStore, DocumentSymbols, LanguageServiceError, WorkspaceContext,
-    WorkspaceSymbolIndex,
+    DocumentSnapshot, DocumentStore, DocumentSymbols, LanguageServiceError, ProjectContext,
+    WorkspaceContext, WorkspaceSymbolIndex,
 };
 
 /// Compiler semantic metadata tied to the immutable AST allocation in a document snapshot.
@@ -94,6 +95,7 @@ pub(super) fn semantic_document(
 pub struct LanguageService {
     documents: DocumentStore,
     workspace: WorkspaceContext,
+    standard_library: Option<StandardLibraryContext>,
     analysis_cache: AnalysisCache,
 }
 
@@ -104,6 +106,7 @@ impl LanguageService {
         Self {
             documents: DocumentStore::new(),
             workspace,
+            standard_library: None,
             analysis_cache: AnalysisCache::default(),
         }
     }
@@ -112,6 +115,23 @@ impl LanguageService {
     #[must_use]
     pub fn load(input: &Path) -> Self {
         Self::new(WorkspaceContext::load(input))
+    }
+
+    /// Loads editor context together with an implementation-owned source standard library.
+    ///
+    /// # Errors
+    ///
+    /// Returns an analysis error when the standard-library root or manifest is invalid.
+    pub fn load_with_standard_library(
+        input: &Path,
+        standard_library_root: &Path,
+    ) -> Result<Self, LanguageServiceError> {
+        let standard_library = StandardLibraryContext::load(standard_library_root)
+            .map_err(|message| LanguageServiceError::analysis(standard_library_root, message))?;
+        Ok(Self {
+            standard_library: Some(standard_library),
+            ..Self::load(input)
+        })
     }
 
     /// Returns the recoverable project/workspace context.
@@ -147,7 +167,7 @@ impl LanguageService {
             return self.cached_syntax_only(target);
         }
 
-        let project = self.workspace.project_for_source(path).cloned();
+        let project = self.analysis_project_for(path, target.compilation_unit());
         let Some(project) = project else {
             return self.analyze_loose(target);
         };
@@ -173,12 +193,19 @@ impl LanguageService {
         if self.workspace.projects().is_empty() {
             return Ok(index);
         }
-        let paths = self
+        let mut paths = self
             .workspace
             .projects()
             .iter()
+            .map(|project| {
+                self.standard_library
+                    .as_ref()
+                    .map_or_else(|| project.clone(), |library| library.compose(project))
+            })
             .flat_map(|project| project.all_source_paths())
             .collect::<Vec<_>>();
+        paths.sort();
+        paths.dedup();
         for path in paths {
             let analysis = self.analyze_document(&path)?;
             index.replace_document(&path, analysis.symbols().clone());
@@ -213,6 +240,26 @@ impl LanguageService {
                     ),
                 )
             })
+    }
+
+    pub(crate) fn analysis_project_for(
+        &self,
+        path: &Path,
+        compilation_unit: &CompilationUnit,
+    ) -> Option<ProjectContext> {
+        if let Some(project) = self.workspace.project_for_source(path) {
+            return Some(
+                self.standard_library
+                    .as_ref()
+                    .map_or_else(|| project.clone(), |library| library.compose(project)),
+            );
+        }
+        let standard_library = self.standard_library.as_ref()?;
+        let kind = match compilation_unit {
+            CompilationUnit::Program(_) => fpas_project::ProjectKind::Program,
+            CompilationUnit::Unit(_) => fpas_project::ProjectKind::Library,
+        };
+        Some(standard_library.compose_loose(path, kind))
     }
 
     fn cached_syntax_only(

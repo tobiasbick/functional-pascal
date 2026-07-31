@@ -105,7 +105,7 @@ impl LanguageService {
                 target_index: None,
             });
         }
-        let project = self.workspace().project_for_source(path).cloned();
+        let project = self.analysis_project_for(path, target.compilation_unit());
         let paths = project
             .as_ref()
             .map(|project| project.all_source_paths())

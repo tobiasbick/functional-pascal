@@ -130,11 +130,56 @@ export async function run(): Promise<void> {
   assert.ok(completions?.items.some((item) => item.label === "GreetingFor"));
 
   await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
+  const notesTheme = vscode.Uri.file(
+    path.resolve(
+      extension.extensionPath,
+      "..",
+      "..",
+      "apps",
+      "notes",
+      "src",
+      "Notes",
+      "Theme.fpas"
+    )
+  );
+  const notesDocument = await vscode.workspace.openTextDocument(notesTheme);
+  await vscode.window.showTextDocument(notesDocument);
+  const paletteOffset = notesDocument.getText().indexOf("TuiPalette");
+  assert.ok(paletteOffset >= 0);
+  const palettePosition = notesDocument.positionAt(paletteOffset);
+  const paletteHovers = await waitForHovers(notesDocument.uri, palettePosition);
+  assert.ok(paletteHovers.some((hover) => hover.contents.length > 0));
+  await waitForDiagnostics(
+    notesDocument.uri,
+    (diagnostics) => diagnostics.length === 0
+  );
+  await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
   console.log(
     "Functional Pascal extension diagnostics, formatting, navigation, and lifecycle test passed."
   );
+}
+
+async function waitForHovers(
+  uri: vscode.Uri,
+  position: vscode.Position
+): Promise<vscode.Hover[]> {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
+      "vscode.executeHoverProvider",
+      uri,
+      position
+    );
+    if (hovers?.length) {
+      return hovers;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail("timed out waiting for Notes TuiPalette hover");
 }
 
 async function waitForDiagnostics(

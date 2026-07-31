@@ -1,8 +1,15 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  chmodSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 import AdmZip from "adm-zip";
 
@@ -18,6 +25,8 @@ function responseReader(stdout, child) {
   let buffer = Buffer.alloc(0);
   const received = new Map();
   const waiters = new Map();
+  const receivedNotifications = new Map();
+  const notificationWaiters = new Map();
 
   function rejectWaiters(error) {
     for (const waiter of waiters.values()) {
@@ -29,6 +38,17 @@ function responseReader(stdout, child) {
 
   function dispatch(message) {
     if (message.id === undefined) {
+      const waiting = notificationWaiters.get(message.method) ?? [];
+      const waiterIndex = waiting.findIndex((waiter) => waiter.predicate(message));
+      if (waiterIndex >= 0) {
+        const [waiter] = waiting.splice(waiterIndex, 1);
+        clearTimeout(waiter.timeout);
+        waiter.resolve(message);
+        return;
+      }
+      const queued = receivedNotifications.get(message.method) ?? [];
+      queued.push(message);
+      receivedNotifications.set(message.method, queued);
       return;
     }
     const waiter = waiters.get(message.id);
@@ -91,6 +111,27 @@ function responseReader(stdout, child) {
         }, 15_000);
         waiters.set(id, { resolve, reject, timeout });
       });
+    },
+    notification(method, predicate) {
+      const queued = receivedNotifications.get(method) ?? [];
+      const notificationIndex = queued.findIndex(predicate);
+      if (notificationIndex >= 0) {
+        const [notification] = queued.splice(notificationIndex, 1);
+        return Promise.resolve(notification);
+      }
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          const waiting = notificationWaiters.get(method) ?? [];
+          notificationWaiters.set(
+            method,
+            waiting.filter((waiter) => waiter.resolve !== resolve)
+          );
+          reject(new Error(`timed out waiting for LSP notification ${method}`));
+        }, 15_000);
+        const waiting = notificationWaiters.get(method) ?? [];
+        waiting.push({ predicate, resolve, reject, timeout });
+        notificationWaiters.set(method, waiting);
+      });
     }
   };
 }
@@ -114,6 +155,21 @@ export async function smokePackagedServer({
       hostTarget,
       executableName
     );
+    const standardLibrary = path.join(
+      temporaryRoot,
+      "extension",
+      "standard-library"
+    );
+    const workspace = path.join(temporaryRoot, "external-project");
+    const source = path.join(workspace, "main.fpas");
+    mkdirSync(workspace, { recursive: true });
+    writeFileSync(
+      path.join(workspace, "external.fpasprj"),
+      `[project]\nname = "external"\nkind = "program"\nmain = "main.fpas"\n\n[sources]\ninclude = ["main.fpas"]\n`
+    );
+    const sourceText =
+      "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := TuiPalette.Default()\nend.\n";
+    writeFileSync(source, sourceText);
     if (platform !== "win32") {
       chmodSync(executable, 0o755);
     }
@@ -136,7 +192,16 @@ export async function smokePackagedServer({
       jsonrpc: "2.0",
       id: 1,
       method: "initialize",
-      params: { processId: null, capabilities: {} }
+      params: {
+        processId: null,
+        capabilities: {},
+        workspaceFolders: [
+          { uri: pathToFileURL(workspace).href, name: "external-project" }
+        ],
+        initializationOptions: {
+          standardLibraryUri: pathToFileURL(standardLibrary).href
+        }
+      }
     }));
     const initialize = await reader.response(1);
     assert.ok(
@@ -148,6 +213,29 @@ export async function smokePackagedServer({
       method: "initialized",
       params: {}
     }));
+    const sourceUri = pathToFileURL(source).href;
+    const diagnostics = reader.notification(
+      "textDocument/publishDiagnostics",
+      (message) => message.params?.uri === sourceUri
+    );
+    child.stdin.write(frame({
+      jsonrpc: "2.0",
+      method: "textDocument/didOpen",
+      params: {
+        textDocument: {
+          uri: sourceUri,
+          languageId: "fpas",
+          version: 1,
+          text: sourceText
+        }
+      }
+    }));
+    const published = await diagnostics;
+    assert.deepEqual(
+      published.params.diagnostics,
+      [],
+      `packaged server resolves bundled Std.Tui: ${JSON.stringify(published)}`
+    );
     child.stdin.write(frame({
       jsonrpc: "2.0",
       id: 2,

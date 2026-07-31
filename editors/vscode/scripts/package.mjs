@@ -12,6 +12,10 @@ import {
   clearStagedServers,
   stageServer
 } from "./package/stage-server.mjs";
+import {
+  clearStagedStandardLibrary,
+  stageStandardLibrary
+} from "./package/stage-standard-library.mjs";
 import { runTests } from "./run-tests.mjs";
 import { verifyPackage } from "./verify-package.mjs";
 
@@ -97,6 +101,7 @@ if (relativeDist !== "dist") {
 await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
 await clearStagedServers(extensionRoot);
+await clearStagedStandardLibrary(extensionRoot);
 await runTests();
 runCommand(
   "cargo",
@@ -114,6 +119,10 @@ await stageServer({
   hostTarget,
   executableName,
   platform: process.platform
+});
+await stageStandardLibrary({
+  extensionRoot,
+  sourceRoot: path.join(repositoryRoot, "lib")
 });
 
 const vsceScript = path.join(

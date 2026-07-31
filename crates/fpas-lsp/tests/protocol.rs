@@ -183,6 +183,33 @@ fn server_rejects_requests_before_initialize() {
 }
 
 #[test]
+fn server_rejects_a_non_string_standard_library_uri_and_continues() {
+    let invalid_initialize = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "processId": null,
+            "rootUri": "file:///phase4",
+            "capabilities": {},
+            "initializationOptions": {"standardLibraryUri": 42}
+        }
+    });
+    let transcript = run(&[invalid_initialize, initialize(2), shutdown(3), exit()]);
+
+    assert!(transcript.output.status.success());
+    assert_eq!(
+        response(&transcript.messages, 1)["error"]["code"],
+        serde_json::json!(-32602)
+    );
+    assert!(response(&transcript.messages, 2).get("result").is_some());
+    assert_eq!(
+        response(&transcript.messages, 3)["result"],
+        serde_json::Value::Null
+    );
+}
+
+#[test]
 fn server_rejects_malformed_request_parameters_and_continues() {
     let malformed_shutdown = serde_json::json!({
         "jsonrpc": "2.0",

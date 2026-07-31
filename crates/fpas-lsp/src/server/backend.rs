@@ -17,6 +17,7 @@ use crate::convert::file_uri_to_path;
 use crate::diagnostics::DiagnosticPublisher;
 use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
 use crate::formatting::whole_document_edit;
+use crate::server::initialization::InitializationPaths;
 
 /// Functional Pascal LSP backend with full-text synchronized documents.
 pub struct Backend {
@@ -33,15 +34,15 @@ impl Backend {
         }
     }
 
-    async fn configure_workspace(&self, params: &InitializeParams) {
-        let root_uri = initialization_root_uri(params);
-        let Some(root_uri) = root_uri else {
-            return;
+    async fn configure_workspace(&self, params: &InitializeParams) -> Result<()> {
+        let paths = InitializationPaths::from_params(params).map_err(Error::invalid_params)?;
+        let Some(root) = paths.workspace_root else {
+            return Ok(());
         };
-        match file_uri_to_path(root_uri) {
-            Ok(root) => self.documents.set_workspace_root(&root).await,
-            Err(error) => tracing::warn!(%error, "ignoring unsupported workspace root"),
-        }
+        self.documents
+            .set_workspace(&root, paths.standard_library_root.as_deref())
+            .await
+            .map_err(|error| Error::invalid_params(error.to_string()))
     }
 
     fn log_sync_error(operation: &str, error: impl std::fmt::Display) {
@@ -63,22 +64,9 @@ impl Backend {
     }
 }
 
-#[expect(
-    deprecated,
-    reason = "LSP 3.17 permits rootUri when workspaceFolders is unavailable"
-)]
-fn initialization_root_uri(params: &InitializeParams) -> Option<&tower_lsp_server::ls_types::Uri> {
-    params
-        .workspace_folders
-        .as_ref()
-        .and_then(|folders| folders.first())
-        .map(|folder| &folder.uri)
-        .or(params.root_uri.as_ref())
-}
-
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
-        self.configure_workspace(&params).await;
+        self.configure_workspace(&params).await?;
         tracing::info!("language server initialized");
         Ok(capabilities::initialize_result())
     }

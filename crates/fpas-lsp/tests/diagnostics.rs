@@ -250,6 +250,72 @@ public type FacadePoint = Std.Point.Point;
 }
 
 #[test]
+fn initialized_standard_library_resolves_std_units_for_an_external_project() {
+    let temp = TempDirectory::new("configured-standard-library");
+    temp.write(
+        "bundle/stdlib.fpasprj",
+        r#"[project]
+name = "test-stdlib"
+kind = "library"
+
+[exports]
+units = ["Std.Tui"]
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+    );
+    temp.write(
+        "bundle/Std/Tui.fpas",
+        "unit Std.Tui;\n\npublic type TuiPalette = integer;\n",
+    );
+    temp.write(
+        "external/external.fpasprj",
+        r#"[project]
+name = "external"
+kind = "program"
+main = "main.fpas"
+
+[sources]
+include = ["main.fpas"]
+"#,
+    );
+    let source =
+        "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := 1\nend.\n";
+    temp.write("external/main.fpas", source);
+    let root_uri = temp.uri("external");
+    let standard_library_uri = temp.uri("bundle");
+    let source_uri = temp.uri("external/main.fpas");
+    let transcript = run_script(&[
+        TranscriptStep::Message(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "processId": null,
+                "rootUri": root_uri,
+                "capabilities": {},
+                "initializationOptions": {
+                    "standardLibraryUri": standard_library_uri
+                }
+            }
+        })),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&source_uri, 1, source)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(shutdown(2)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert_success(&transcript);
+    let published = notifications(&transcript.messages, "textDocument/publishDiagnostics");
+    assert_eq!(
+        publication(&published, 1)["params"]["diagnostics"],
+        json!([])
+    );
+}
+
+#[test]
 fn close_during_debounce_cancels_analysis_and_clears_diagnostics() {
     let uri = "file:///phase5/closed.fpas";
     let transcript = run_script(&[

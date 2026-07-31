@@ -48,8 +48,18 @@ impl SynchronizedDocuments {
         }
     }
 
-    pub(crate) async fn set_workspace_root(&self, root: &Path) {
-        *self.service.lock().await = LanguageService::load(root);
+    pub(crate) async fn set_workspace(
+        &self,
+        root: &Path,
+        standard_library_root: Option<&Path>,
+    ) -> Result<(), LanguageServiceError> {
+        let service = if let Some(standard_library_root) = standard_library_root {
+            LanguageService::load_with_standard_library(root, standard_library_root)?
+        } else {
+            LanguageService::load(root)
+        };
+        *self.service.lock().await = service;
+        Ok(())
     }
 
     pub(crate) async fn barrier(&self) {

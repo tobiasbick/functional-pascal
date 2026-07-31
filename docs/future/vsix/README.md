@@ -34,7 +34,9 @@ Marketplace, or any other registry is explicitly out of scope.
 
 The Hello World bootstrap VSIX contains no native code and is platform
 independent. The completed extension bundles a native `fpas-lsp` executable,
-so its final VSIX is host-specific.
+so its final VSIX is host-specific. It also bundles the platform-independent
+source-standard-library manifest and `.fpas` files needed for project and
+loose-file analysis; no separate compiler installation is required.
 
 Whoever wants to use the extension builds it on the target system. A Windows
 build contains the Windows executable, a Linux build contains the Linux
@@ -157,8 +159,9 @@ instead of requiring an FPAS project at the editor root. Each `.fpas` source
 lazily selects its nearest directly owning project or workspace, so several
 nested FPAS projects and unrelated loose files can coexist in one session.
 Automated language-service, LSP transcript, and real Extension Host tests cover
-that behavior. Phase 8 remains open until the rebuilt VSIX passes the local
-installed-editor smoke test.
+that behavior. The locally installed `0.0.2` VSIX passed its final Notes
+diagnostics and F12 go-to-definition acceptance check on 2026-07-31, completing
+Phase 8.
 
 ## Non-goals
 

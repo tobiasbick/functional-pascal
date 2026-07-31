@@ -24,8 +24,10 @@ npm run package --prefix editors/vscode
 ```
 
 The command runs the extension tests, builds `fpas-lsp` in Cargo release mode,
-stages only the current host binary, creates the target-labelled archive, and
-tests the server extracted from that archive. It produces:
+stages the current host binary plus the authoritative source-standard-library
+manifest and `.fpas` files, creates the target-labelled archive, and tests an
+external FPAS project through the server extracted from that archive. Derived
+`.fpascu` files are excluded. It produces:
 
 ```text
 editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
@@ -62,6 +64,10 @@ file is opened, the server searches upward from that file and lazily loads its
 nearest directly owning project or workspace. Multiple nested FPAS projects
 can be used in one editor session; files without a matching manifest remain
 available as loose files.
+
+The installed VSIX supplies its own source standard library to the server, so
+`Std.Tui` and the other source-defined `Std.*` units do not depend on a global
+compiler installation or a `lib/` directory in the opened project.
 
 Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:

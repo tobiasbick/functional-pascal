@@ -12,7 +12,7 @@
 | 5 | complete (2026-07-30) | diagnostics and formatting |
 | 6 | complete (2026-07-30) | symbols, hover, definitions, and completion |
 | 7 | complete (2026-07-30) | reproducible final VSIX packaging |
-| 8 | open | local host acceptance and current documentation |
+| 8 | complete (2026-07-31) | local host acceptance and current documentation |
 
 Work phases in order. Update the table and verification notes as each phase is
 completed. Do not mark a phase complete while one of its acceptance checks is
@@ -647,14 +647,44 @@ Regression coverage includes the actual repository root with
 `lib/Std/Tui.fpas`, two nested projects, ownership precedence, ambiguity, and a
 loose file beside a loaded project. An LSP transcript starts from a
 manifest-free repository root, and the real VS Code Extension Host now opens a
-manifest-free parent of its nested test workspace. The installed rebuilt VSIX
-still requires the manual smoke test below, so Phase 8 remains open.
+manifest-free parent of its nested test workspace. At this checkpoint, the
+rebuilt VSIX still awaited the manual smoke test below.
 
 `cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`, focused
 Clippy checks with warnings denied, `npm test --prefix editors/vscode`, and
 `npm run package --prefix editors/vscode` passed. The package command produced
 and exercised
 `editors/vscode/dist/functional-pascal-0.0.1-win32-x64.vsix`.
+
+### Standard-library checkpoint — 2026-07-31
+
+The next installed-editor test showed that project discovery was working for
+`apps/notes/src/Notes/Theme.fpas`, but its project analysis lacked the
+source-defined `Std.Tui` interfaces. The previous VSIX contained only the
+native server, while the compiler normally supplies the implementation-owned
+`lib/` tree separately.
+
+The package now contains `standard-library/stdlib.fpasprj` and its 78
+authoritative `.fpas` sources, with derived `.fpascu` files excluded. The
+extension passes this root as a file URI during LSP initialization. The
+language service composes the trusted sources into every selected project and
+loose document while preserving export rules and user-unit validation.
+
+Regressions cover the real Notes theme, a loose `Std.Tui` program, an external
+project with a separately configured standard library, invalid initialization
+options, Notes hover in the real Extension Host, exact archive contents, and a
+packaged external-project diagnostic transcript.
+
+`cargo fmt --all -- --check`, `cargo build`, `cargo test --workspace`, focused
+Clippy with warnings denied, and the final package command passed. The Windows
+x64 VSIX contains 88 verified runtime entries and is 2.33 MB; its packaged
+server published no diagnostics for the external `Std.Tui` smoke project.
+The corrected package is versioned `0.0.2`, so an editor can distinguish it
+unambiguously from the earlier `0.0.1` package without relying on cache state.
+
+The locally installed `0.0.2` package was accepted in VS Code on 2026-07-31:
+the false `Std.Tui` unknown-type diagnostics disappeared in the Notes project,
+and F12 go to definition worked. This completes Phase 8.
 
 ### Automated verification
 

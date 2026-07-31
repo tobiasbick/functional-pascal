@@ -112,6 +112,12 @@ from the source directory toward that boundary and lazily loads the nearest
 `fpas-project` for source ownership, dependencies, workspace members, exported
 units, and standard-library resolution.
 
+The extension passes the packaged source-standard-library root as a file URI
+in LSP initialization options. The language service validates it through the
+trusted `fpas-project` loader and composes its sources into project and loose
+analysis without changing user manifests or writing `.fpascu` files. The same
+contract uses the repository `lib/` tree during extension development.
+
 Several nested FPAS projects can be active in one editor session. A direct
 owner takes precedence over an already loaded project that only consumes the
 source as a dependency. Two manifests at the same nearest level that both

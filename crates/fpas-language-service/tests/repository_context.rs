@@ -36,6 +36,48 @@ fn repository_root_discovers_the_nested_source_standard_library() {
 }
 
 #[test]
+fn repository_project_analysis_resolves_the_source_standard_library() {
+    let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let source = repository_root.join("apps/notes/src/Notes/Theme.fpas");
+    let mut service =
+        LanguageService::load_with_standard_library(&repository_root, &repository_root.join("lib"))
+            .expect("repository standard library");
+
+    let analysis = service
+        .analyze_document(&source)
+        .expect("Notes theme analysis with source standard library");
+
+    assert!(
+        analysis.diagnostics().is_empty(),
+        "{:?}",
+        analysis.diagnostics()
+    );
+}
+
+#[test]
+fn loose_program_analysis_resolves_the_source_standard_library() {
+    let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let temp = TempDirectory::new("loose-standard-library");
+    let source = temp.write(
+        "standalone.fpas",
+        "program Standalone;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := TuiPalette.Default()\nend.\n",
+    );
+    let mut service =
+        LanguageService::load_with_standard_library(temp.path(), &repository_root.join("lib"))
+            .expect("repository standard library");
+
+    let analysis = service
+        .analyze_document(&source)
+        .expect("loose analysis with source standard library");
+
+    assert!(
+        analysis.diagnostics().is_empty(),
+        "{:?}",
+        analysis.diagnostics()
+    );
+}
+
+#[test]
 fn one_repository_session_loads_multiple_nested_projects_lazily() {
     let temp = TempDirectory::new("repository-multiple-projects");
     let first = write_library(

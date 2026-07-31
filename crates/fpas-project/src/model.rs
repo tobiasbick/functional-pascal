@@ -125,7 +125,7 @@ pub struct LoadedProject {
     /// Origins and library export policies for dependency-aware linking.
     pub link_meta: ProjectLinkMeta,
     /// How dependents may import units from this project when it is a library dependency.
-    pub(crate) export_policy_for_dependents: LibraryExportPolicy,
+    pub export_policy_for_dependents: LibraryExportPolicy,
     /// Optional per-test runner overrides from `[test]` in the project manifest.
     pub test_manifest: TestManifest,
 }

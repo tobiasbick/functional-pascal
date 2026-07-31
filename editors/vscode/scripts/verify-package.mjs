@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -32,6 +32,12 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   const archive = new AdmZip(vsixPath);
   const entries = archive.getEntries().map((entry) => entry.entryName);
   const entrySet = new Set(entries);
+  const standardLibraryEntries = collectFiles(
+    path.join(extensionRoot, "standard-library")
+  ).map(
+    (relativePath) =>
+      `extension/standard-library/${relativePath.replaceAll("\\", "/")}`
+  );
   const expectedEntries = [
     "[Content_Types].xml",
     "extension.vsixmanifest",
@@ -41,7 +47,8 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "extension/package.json",
     "extension/readme.md",
     serverEntry,
-    "extension/syntaxes/fpas.tmLanguage.json"
+    "extension/syntaxes/fpas.tmLanguage.json",
+    ...standardLibraryEntries
   ].sort();
   assert.deepEqual(
     [...entries].sort(),
@@ -56,6 +63,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
     "extension/syntaxes/fpas.tmLanguage.json",
+    "extension/standard-library/stdlib.fpasprj",
     serverEntry
   ]) {
     assert.ok(entrySet.has(required), `VSIX contains ${required}`);
@@ -134,6 +142,11 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
       compiledExtension.includes("fpas-lsp"),
     "compiled extension resolves the packaged language server"
   );
+  assert.ok(
+    compiledExtension.includes("standardLibraryUri") &&
+      compiledExtension.includes("standard-library"),
+    "compiled extension resolves the packaged source standard library"
+  );
 
   const forbiddenPrefixes = [
     "extension/src/",
@@ -166,13 +179,27 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     [serverEntry],
     "VSIX contains only the current host server"
   );
+  const packagedStandardLibrary = entries.filter((entry) =>
+    entry.startsWith("extension/standard-library/")
+  );
+  assert.deepEqual(
+    packagedStandardLibrary.sort(),
+    standardLibraryEntries.sort(),
+    "VSIX contains exactly the staged standard-library manifest and sources"
+  );
+  assert.ok(
+    packagedStandardLibrary.every(
+      (entry) => entry.endsWith(".fpas") || entry.endsWith("stdlib.fpasprj")
+    ),
+    "VSIX excludes standard-library sidecars and unrelated files"
+  );
 
   const buildRoots = [
     extensionRoot,
     path.resolve(extensionRoot, "..", "..")
   ].flatMap((root) => [root, root.replaceAll("\\", "/")]);
   for (const entry of entries.filter((name) =>
-    /\.(?:json|js|md|xml)$/iu.test(name)
+    /\.(?:fpas|fpasprj|json|js|md|xml)$/iu.test(name)
   )) {
     const content = archive.readAsText(entry);
     for (const root of buildRoots) {
@@ -188,6 +215,22 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
       `VSIX text file excludes machine-specific paths: ${entry}`
     );
   }
+}
+
+function collectFiles(root, relativeDirectory = "") {
+  const files = [];
+  const directory = path.join(root, relativeDirectory);
+  const entries = readdirSync(directory, { withFileTypes: true });
+  entries.sort((left, right) => left.name.localeCompare(right.name));
+  for (const entry of entries) {
+    const relativePath = path.join(relativeDirectory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...collectFiles(root, relativePath));
+    } else if (entry.isFile()) {
+      files.push(relativePath);
+    }
+  }
+  return files;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -14,6 +14,7 @@ debug/
 /editors/vscode/out/
 /editors/vscode/dist/
 /editors/vscode/server/
+/editors/vscode/standard-library/
 /editors/vscode/.vscode-test/
 
 # Cursor — ignore local state; keep shared plans and rules

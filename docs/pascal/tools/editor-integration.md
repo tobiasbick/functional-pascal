@@ -30,9 +30,10 @@ npm run package --prefix editors/vscode
 ```
 
 The package command is non-interactive. It runs the extension tests, builds
-`fpas-lsp` in Cargo release mode, stages only the current host binary, verifies
+`fpas-lsp` in Cargo release mode, stages the current host binary together with
+the authoritative source-standard-library manifest and `.fpas` files, verifies
 the archive contents, and exercises the server extracted from the resulting
-VSIX. The output is:
+VSIX. Derived `.fpascu` files are not packaged. The output is:
 
 ```text
 editors/vscode/dist/functional-pascal-<version>-<host-target>.vsix
@@ -73,6 +74,12 @@ the whole repository recursively. A file without a matching manifest remains
 a loose file, while overlapping direct owners produce an actionable
 ambiguity error. Open dependency units are analyzed with their own URI and
 source ranges.
+
+The VSIX supplies its bundled source standard library to every loaded project
+and loose document. Source-defined units such as `Std.Tui` therefore work even
+when the opened project is outside the Functional Pascal repository. Projects
+do not need to declare that implementation-owned library as a dependency, and
+editor analysis does not write compiled-unit sidecars.
 
 ## Formatting
 

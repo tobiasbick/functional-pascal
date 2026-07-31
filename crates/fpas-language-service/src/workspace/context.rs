@@ -1,11 +1,14 @@
 //! Manifest-backed workspace context.
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 use fpas_project::{LoadedProject, load_project, load_standard_library_project, load_workspace};
 
 use super::ProjectContext;
+use super::catalog::load_folder;
 use super::discovery::{discover_initial_context, discover_source_context, has_extension};
+use crate::CancellationToken;
 use crate::document::normalized_path;
 
 /// Broad source ownership mode selected for a language-service session.
@@ -48,14 +51,38 @@ impl WorkspaceContext {
     /// Invalid or absent metadata becomes [`WorkspaceIssue`] state instead of a constructor error.
     #[must_use]
     pub fn load(input: &Path) -> Self {
+        Self::load_with_cancellation(input, &CancellationToken::new()).unwrap_or_else(|error| {
+            Self {
+                root: normalized_path(input),
+                manifest_path: None,
+                kind: WorkspaceKind::Unavailable,
+                projects: Vec::new(),
+                issues: vec![WorkspaceIssue {
+                    path: normalized_path(input),
+                    message: error.to_string(),
+                }],
+            }
+        })
+    }
+
+    /// Loads context while observing a cooperative cancellation signal.
+    pub fn load_with_cancellation(
+        input: &Path,
+        cancellation: &CancellationToken,
+    ) -> Result<Self, crate::LanguageServiceError> {
         let input = normalized_path(input);
-        if has_extension(&input, "fpasprj") {
+        cancellation.check()?;
+        let context = if has_extension(&input, "fpasprj") {
             Self::load_project_manifest(&input)
         } else if has_extension(&input, "fpasworkspace") {
             Self::load_workspace_manifest(&input)
+        } else if input.is_dir() {
+            return load_folder(&input, cancellation);
         } else {
             discover_initial_context(&input)
-        }
+        };
+        cancellation.check()?;
+        Ok(context)
     }
 
     /// Creates a loose-file context without project discovery.
@@ -118,11 +145,16 @@ impl WorkspaceContext {
         &mut self,
         path: &Path,
     ) -> Result<(), WorkspaceIssue> {
-        if self
+        let owners = self
             .projects
             .iter()
-            .any(|project| project.owns_source(path))
-        {
+            .filter(|project| project.owns_source(path))
+            .map(|project| project.manifest_path())
+            .collect::<Vec<_>>();
+        if owners.len() > 1 {
+            return Err(ambiguous_source_issue(path, &owners));
+        }
+        if owners.len() == 1 {
             return Ok(());
         }
         let Some(context) = discover_source_context(&self.root, path)? else {
@@ -130,6 +162,34 @@ impl WorkspaceContext {
         };
         self.merge_discovered(context);
         Ok(())
+    }
+
+    pub(crate) fn reload_folder(
+        &mut self,
+        cancellation: &CancellationToken,
+    ) -> Result<BTreeSet<PathBuf>, crate::LanguageServiceError> {
+        if self.kind != WorkspaceKind::Folder {
+            return Ok(BTreeSet::new());
+        }
+        let reloaded = load_folder(&self.root, cancellation)?;
+        let previous = self
+            .projects
+            .iter()
+            .map(|project| (project.manifest_path().to_path_buf(), project))
+            .collect::<BTreeMap<_, _>>();
+        let current = reloaded
+            .projects
+            .iter()
+            .map(|project| (project.manifest_path().to_path_buf(), project))
+            .collect::<BTreeMap<_, _>>();
+        let mut changed = BTreeSet::new();
+        for manifest in previous.keys().chain(current.keys()) {
+            if previous.get(manifest) != current.get(manifest) {
+                changed.insert(manifest.clone());
+            }
+        }
+        *self = reloaded;
+        Ok(changed)
     }
 
     pub(super) fn load_project_manifest(path: &Path) -> Self {
@@ -213,6 +273,22 @@ impl WorkspaceContext {
         if added && self.manifest_path.is_none() {
             self.kind = WorkspaceKind::Folder;
         }
+    }
+}
+
+fn ambiguous_source_issue(source: &Path, manifests: &[&Path]) -> WorkspaceIssue {
+    let mut names = manifests
+        .iter()
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
+    names.sort();
+    names.dedup();
+    WorkspaceIssue {
+        path: normalized_path(source),
+        message: format!(
+            "Source belongs directly to multiple FPAS projects: {}.\n  help: Adjust `[sources]` so exactly one nearest project owns this file.",
+            names.join(", ")
+        ),
     }
 }
 

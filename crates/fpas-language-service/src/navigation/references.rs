@@ -7,6 +7,7 @@ use fpas_lexer::Token;
 
 use super::{NavigationDocument, resolve};
 use crate::DocumentSymbol;
+use crate::{CancellationToken, LanguageServiceError};
 
 /// One declaration or usage location for a resolved symbol.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,7 +44,9 @@ pub(crate) fn find_references(
     documents: &[NavigationDocument],
     target: &ResolvedTarget,
     include_declaration: bool,
-) -> Vec<ReferenceLocation> {
+    cancellation: &CancellationToken,
+) -> Result<Vec<ReferenceLocation>, LanguageServiceError> {
+    cancellation.check()?;
     let declaration_document = &documents[target.document_index];
     let mut locations = Vec::new();
     if include_declaration {
@@ -61,7 +64,9 @@ pub(crate) fn find_references(
         .next()
         .unwrap_or(&target.symbol.name);
     for (document_index, document) in documents.iter().enumerate() {
+        cancellation.check()?;
         for token in &document.tokens {
+            cancellation.check()?;
             let Token::Ident(name) = &token.token else {
                 continue;
             };
@@ -95,7 +100,7 @@ pub(crate) fn find_references(
             .then_with(|| left.is_declaration.cmp(&right.is_declaration))
     });
     locations.dedup_by(|left, right| left.path == right.path && left.span == right.span);
-    locations
+    Ok(locations)
 }
 
 fn same_declaration(left: &ResolvedTarget, right: &ResolvedTarget) -> bool {

@@ -3,7 +3,7 @@
 Status: planned
 
 This roadmap expands the repository-owned VS Code-compatible extension from
-the implemented `0.0.4` baseline. Phases 1 through 7 are complete and remain
+the implemented `0.0.5` baseline. Phases 1 through 8 are complete and remain
 documented by current user documentation, tests, and Git history. They are not
 reopened here.
 
@@ -13,13 +13,14 @@ phase is implemented.
 
 ## Current baseline
 
-The existing extension provides:
+The existing `0.0.5` extension provides:
 
 - `.fpas` language detection, TextMate highlighting, indentation, comments,
   brackets, and folding markers
 - parser and semantic diagnostics for open buffers
 - canonical whole-document formatting
 - document symbols, hover, definition, references, and rename
+- a bounded, watched project catalog with open-order-independent references
 - basic visibility-aware completion
 - a bundled host-native language server and source standard library
 - local packaging and Extension Host/package smoke tests
@@ -28,11 +29,15 @@ Current behavior is documented in
 [`docs/pascal/tools/editor-integration.md`](../../pascal/tools/editor-integration.md).
 This roadmap must not be treated as implemented behavior.
 
+Latest completed increment: Phase 08 shipped locally as extension `0.0.5` in
+`editors/vscode/dist/functional-pascal-0.0.5-win32-x64.vsix` (Windows x64,
+2,546,584 bytes, SHA-256
+`3660C54948C8AE043F798C4A345AB7552F006862F14D92FC04BD681EC2A98220`).
+
 ## Phase status
 
 | Phase | Status | Outcome |
 |------:|--------|---------|
-| [08](phase-08-project-index.md) | Planned | Complete, invalidation-aware project and reference index |
 | [09](phase-09-navigation.md) | Planned | Workspace symbols and deeper source navigation |
 | [10](phase-10-intellisense.md) | Planned | Rich completion, signature help, and safe auto-imports |
 | [11](phase-11-semantic-tools.md) | Planned | Semantic highlighting and deterministic quick fixes |

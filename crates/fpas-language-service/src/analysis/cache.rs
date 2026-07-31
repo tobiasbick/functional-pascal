@@ -74,4 +74,23 @@ impl AnalysisCache {
         self.entries.insert(fingerprint, Arc::clone(&analysis));
         analysis
     }
+
+    pub(super) fn invalidate_identities(
+        &mut self,
+        identities: &std::collections::BTreeSet<PathBuf>,
+    ) {
+        self.entries
+            .retain(|fingerprint, _| !identities.contains(fingerprint.identity()));
+    }
+
+    pub(super) fn invalidate_path(&mut self, path: &Path) {
+        let path = normalized_path(path);
+        self.entries.retain(|fingerprint, _| {
+            fingerprint.identity() != path
+                && !fingerprint
+                    .versions
+                    .iter()
+                    .any(|(source, _)| *source == path)
+        });
+    }
 }

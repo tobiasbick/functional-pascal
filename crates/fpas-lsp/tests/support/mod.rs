@@ -19,6 +19,8 @@ pub struct Transcript {
 
 pub enum TranscriptStep {
     Message(Value),
+    Send(Value),
+    Action(Box<dyn Fn()>),
     Wait(Duration),
 }
 
@@ -42,6 +44,8 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
                     server.read_through_response(id, &mut messages);
                 }
             }
+            TranscriptStep::Send(message) => server.send(message),
+            TranscriptStep::Action(action) => action(),
             TranscriptStep::Wait(duration) => std::thread::sleep(*duration),
         }
     }

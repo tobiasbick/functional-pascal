@@ -12,6 +12,7 @@ mod diagnostics;
 mod documents;
 mod formatting;
 mod navigation;
+mod request_tasks;
 mod server;
 
 use std::path::PathBuf;

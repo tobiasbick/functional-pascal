@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 import path from "node:path";
 import * as vscode from "vscode";
 
@@ -154,6 +155,8 @@ export async function run(): Promise<void> {
 
   await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
+  await verifyExternalProjectChanges();
+
   const notesTheme = vscode.Uri.file(
     path.resolve(
       extension.extensionPath,
@@ -184,6 +187,79 @@ export async function run(): Promise<void> {
   console.log(
     "Functional Pascal extension diagnostics, formatting, navigation, and lifecycle test passed."
   );
+}
+
+async function verifyExternalProjectChanges(): Promise<void> {
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  assert.ok(workspaceRoot, "extension test workspace is open");
+  const fixtureRoot = path.join(
+    workspaceRoot,
+    `.project-index-${process.pid}-${Date.now()}`
+  );
+  const coreSource = path.join(fixtureRoot, "core", "src", "core.fpas");
+  const appSource = path.join(fixtureRoot, "app", "src", "main.fpas");
+  const appManifest = path.join(fixtureRoot, "app", "app.fpasprj");
+  try {
+    await fs.mkdir(path.dirname(coreSource), { recursive: true });
+    await fs.mkdir(path.dirname(appSource), { recursive: true });
+    await fs.writeFile(
+      path.join(fixtureRoot, "core", "core.fpasprj"),
+      '[project]\nname = "watch-core"\nkind = "library"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
+    );
+    const declarationSource =
+      "unit Watch.Core;\n\npublic function WatchedValue(): integer;\nbegin return 42 end;\n";
+    await fs.writeFile(coreSource, declarationSource);
+    await fs.writeFile(
+      appManifest,
+      '[project]\nname = "watch-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
+    );
+    await fs.writeFile(
+      appSource,
+      "program WatchApp;\n\nuses Watch.Core;\n\nbegin var First: integer := WatchedValue() end.\n"
+    );
+
+    const declarationUri = vscode.Uri.file(coreSource);
+    const document = await vscode.workspace.openTextDocument(declarationUri);
+    await vscode.window.showTextDocument(document);
+    const position = document.positionAt(document.getText().indexOf("WatchedValue"));
+    await waitForReferences(declarationUri, position, 1);
+
+    await fs.writeFile(
+      appManifest,
+      '[project]\nname = "watch-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
+    );
+    await waitForReferences(declarationUri, position, 2);
+
+    await fs.writeFile(
+      appSource,
+      "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  var First: integer := WatchedValue();\n  var Second: integer := WatchedValue()\nend.\n"
+    );
+    await waitForReferences(declarationUri, position, 3);
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+  } finally {
+    await fs.rm(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+async function waitForReferences(
+  uri: vscode.Uri,
+  position: vscode.Position,
+  expected: number
+): Promise<vscode.Location[]> {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const references =
+      (await vscode.commands.executeCommand<vscode.Location[]>(
+        "vscode.executeReferenceProvider",
+        uri,
+        position
+      )) ?? [];
+    if (references.length === expected) {
+      return references;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail(`timed out waiting for ${expected} references`);
 }
 
 async function waitForHovers(

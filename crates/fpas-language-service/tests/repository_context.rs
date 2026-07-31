@@ -72,13 +72,21 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         .expect("NotesUpdate references")
         .value;
 
-    assert_eq!(references.len(), 1, "{references:?}");
+    assert_eq!(references.len(), 22, "{references:?}");
     assert!(
-        references[0].path.ends_with(
+        references.iter().any(|reference| reference.path.ends_with(
             program
                 .strip_prefix(&repository_root)
                 .expect("relative program")
-        ),
+        )),
+        "{references:?}"
+    );
+    assert_eq!(
+        references
+            .iter()
+            .filter(|reference| reference.path.ends_with("note_tui_workflow_test.fpas"))
+            .count(),
+        21,
         "{references:?}"
     );
 }

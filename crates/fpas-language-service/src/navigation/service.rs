@@ -10,8 +10,8 @@ use super::{
     rename_symbol, resolve, resolve_target,
 };
 use crate::{
-    DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService, LanguageServiceError,
-    SymbolLocation, WorkspaceKind,
+    CancellationToken, DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService,
+    LanguageServiceError, SymbolLocation, WorkspaceKind,
 };
 
 struct NavigationContext {
@@ -85,11 +85,35 @@ impl LanguageService {
         offset: usize,
         include_declaration: bool,
     ) -> Result<NavigationResult<Vec<ReferenceLocation>>, LanguageServiceError> {
-        let context = self.reference_navigation_context(path, offset)?;
+        self.references_with_cancellation(
+            path,
+            offset,
+            include_declaration,
+            &CancellationToken::new(),
+        )
+    }
+
+    /// Returns project references while observing a cooperative cancellation signal.
+    pub fn references_with_cancellation(
+        &mut self,
+        path: &Path,
+        offset: usize,
+        include_declaration: bool,
+        cancellation: &CancellationToken,
+    ) -> Result<NavigationResult<Vec<ReferenceLocation>>, LanguageServiceError> {
+        let context = self.reference_navigation_context(path, offset, cancellation)?;
         let value = context
             .target_index
             .and_then(|target_index| resolve_target(&context.documents, target_index, offset))
-            .map(|target| find_references(&context.documents, &target, include_declaration))
+            .map(|target| {
+                find_references(
+                    &context.documents,
+                    &target,
+                    include_declaration,
+                    cancellation,
+                )
+            })
+            .transpose()?
             .unwrap_or_default();
         Ok(NavigationResult {
             snapshot: context.snapshot,
@@ -130,7 +154,18 @@ impl LanguageService {
         offset: usize,
         new_name: &str,
     ) -> Result<NavigationResult<Vec<RenameEdit>>, RenameError> {
-        let context = self.reference_navigation_context(path, offset)?;
+        self.rename_with_cancellation(path, offset, new_name, &CancellationToken::new())
+    }
+
+    /// Returns validated rename edits while observing a cooperative cancellation signal.
+    pub fn rename_with_cancellation(
+        &mut self,
+        path: &Path,
+        offset: usize,
+        new_name: &str,
+        cancellation: &CancellationToken,
+    ) -> Result<NavigationResult<Vec<RenameEdit>>, RenameError> {
+        let context = self.reference_navigation_context(path, offset, cancellation)?;
         let target_index = context.target_index.ok_or(RenameError::NoSymbol)?;
         let value = rename_symbol(
             &context.documents,
@@ -138,6 +173,7 @@ impl LanguageService {
             offset,
             self.workspace().root(),
             new_name,
+            cancellation,
         )?;
         Ok(NavigationResult {
             snapshot: context.snapshot,
@@ -210,7 +246,9 @@ impl LanguageService {
         &mut self,
         path: &Path,
         offset: usize,
+        cancellation: &CancellationToken,
     ) -> Result<NavigationContext, LanguageServiceError> {
+        cancellation.check()?;
         let initial = self.navigation_context(path)?;
         let Some(selected_index) = initial.target_index else {
             return Ok(initial);
@@ -231,6 +269,7 @@ impl LanguageService {
             .iter()
             .filter(|project| project.contains_source(&declaration_path))
         {
+            cancellation.check()?;
             for source_path in project.all_source_paths() {
                 if source_path == declaration_path
                     || project.source_visible_from(
@@ -246,6 +285,7 @@ impl LanguageService {
 
         let mut documents = Vec::with_capacity(paths.len());
         for source_path in paths {
+            cancellation.check()?;
             documents.push(NavigationDocument::new(self.snapshot(&source_path)?));
         }
         let target_index = documents

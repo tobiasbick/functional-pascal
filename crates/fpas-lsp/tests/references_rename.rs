@@ -8,7 +8,10 @@ mod support;
 
 use serde_json::{Value, json};
 
-use support::{TempDirectory, exit, initialize_with_root, initialized, response, run, shutdown};
+use support::{
+    TempDirectory, TranscriptStep, exit, initialize_with_root, initialized, response, run,
+    run_script, shutdown,
+};
 
 #[test]
 fn references_and_rename_use_utf16_ranges_and_workspace_edits() {
@@ -93,6 +96,72 @@ fn references_can_exclude_declarations_and_prepare_rejects_unit_names() {
     assert_eq!(response(&transcript.messages, 3)["result"], Value::Null);
 }
 
+#[test]
+fn watched_manifest_change_refreshes_reverse_consumers_without_restart() {
+    let temp = TempDirectory::new("watched-project-index");
+    let library = temp.write(
+        "core/src/core.fpas",
+        "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n",
+    );
+    temp.write(
+        "core/core.fpasprj",
+        "[project]\nname = \"core\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    let app_manifest = temp.write(
+        "app/app.fpasprj",
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    temp.write(
+        "app/src/main.fpas",
+        "program App;\n\nuses Demo.Core;\n\nbegin var Value: integer := Answer() end.\n",
+    );
+    let library_uri = temp.uri("core/src/core.fpas");
+    let manifest_uri = temp.uri("app/app.fpasprj");
+    let root_uri = tower_lsp_server::ls_types::Uri::from_file_path(temp.path())
+        .expect("root URI")
+        .to_string();
+    let source = std::fs::read_to_string(&library).expect("library source");
+    let answer = source.find("Answer").expect("Answer declaration");
+    let updated_manifest = app_manifest.clone();
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&library_uri, 1, &source)),
+        TranscriptStep::Message(references(
+            2,
+            &library_uri,
+            position(&source, answer),
+            false,
+        )),
+        TranscriptStep::Action(Box::new(move || {
+            std::fs::write(
+                &updated_manifest,
+                "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nprojects = [\"../core/core.fpasprj\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+            )
+            .expect("update app dependency");
+        })),
+        TranscriptStep::Message(watched_file(&manifest_uri)),
+        TranscriptStep::Message(references(
+            3,
+            &library_uri,
+            position(&source, answer),
+            false,
+        )),
+        TranscriptStep::Message(shutdown(4)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert!(transcript.output.status.success());
+    assert_eq!(response(&transcript.messages, 2)["result"], json!([]));
+    assert_eq!(
+        response(&transcript.messages, 3)["result"]
+            .as_array()
+            .expect("refreshed references")
+            .len(),
+        1
+    );
+}
+
 fn open(uri: &str, version: i32, text: &str) -> Value {
     json!({
         "jsonrpc": "2.0",
@@ -118,6 +187,14 @@ fn references(id: i32, uri: &str, position: Value, include_declaration: bool) ->
             "position": position,
             "context": {"includeDeclaration": include_declaration}
         }
+    })
+}
+
+fn watched_file(uri: &str) -> Value {
+    json!({
+        "jsonrpc": "2.0",
+        "method": "workspace/didChangeWatchedFiles",
+        "params": {"changes": [{"uri": uri, "type": 2}]}
     })
 }
 

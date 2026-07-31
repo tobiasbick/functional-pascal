@@ -8,7 +8,7 @@ use fpas_lexer::{Token, lex};
 
 use super::NavigationDocument;
 use super::references::{ResolvedTarget, find_references, resolve_target};
-use crate::{LanguageServiceError, SymbolKind};
+use crate::{CancellationToken, LanguageServiceError, SymbolKind};
 
 /// The source token selected by a successful prepare-rename query.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -121,13 +121,15 @@ pub(crate) fn rename_symbol(
     offset: usize,
     workspace_root: &Path,
     new_name: &str,
+    cancellation: &CancellationToken,
 ) -> Result<Vec<RenameEdit>, RenameError> {
+    cancellation.check()?;
     validate_identifier(new_name)?;
     let target = resolve_target(documents, target_index, offset).ok_or(RenameError::NoSymbol)?;
     renameable_target(documents, &target, workspace_root)?;
     reject_same_scope_conflict(documents, &target, new_name)?;
 
-    let mut edits = find_references(documents, &target, true)
+    let mut edits = find_references(documents, &target, true, cancellation)?
         .into_iter()
         .map(|location| RenameEdit {
             path: location.path,

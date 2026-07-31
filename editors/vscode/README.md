@@ -59,17 +59,20 @@ reference, use **Go to Definition**, and invoke completion in a routine body or
 after a unit/record `.`. Project-aware results use the same `.fpasprj`,
 `.fpasworkspace`, visibility, and library-export boundaries as the compiler.
 Use **Find All References** (`Shift+F12`) to list resolved declarations and
-usages, including uses in loaded programs that consume a directly owned
+usages, including uses in indexed programs that consume a directly owned
 library, and **Rename Symbol** (`F2`) to validate and edit a normal declaration
 across those loaded projects. Program/unit renames and declarations outside
 the opened folder are intentionally rejected.
 
 The folder opened in the editor may be the complete Functional Pascal Rust
-repository or another parent folder without an FPAS manifest. When a `.fpas`
-file is opened, the server searches upward from that file and lazily loads its
-nearest directly owning project or workspace. Multiple nested FPAS projects
-can be used in one editor session; files without a matching manifest remain
-available as loose files.
+repository or another parent folder without an FPAS manifest. The server
+catalogs the `.fpasprj` and `.fpasworkspace` manifests in that folder and uses
+the normal project loader to determine their sources and relationships.
+Multiple nested FPAS projects can be used in one editor session; files without
+a matching manifest remain available as loose files. External source and
+manifest changes refresh affected analysis, references, and rename results
+without a language-server restart, while unsaved open buffers remain
+authoritative.
 
 The installed VSIX supplies its own source standard library to the server, so
 `Std.Tui` and the other source-defined `Std.*` units do not depend on a global

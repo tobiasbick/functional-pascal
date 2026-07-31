@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use fpas_language_service::{
-    CompletionCandidate, DocumentAnalysis, DocumentSnapshot, DocumentSymbol, HoverInfo,
-    LanguageService, LanguageServiceError, NavigationResult, ReferenceLocation, RenameEdit,
-    RenameError, RenameTarget, SourceVersion, SymbolLocation, format_document,
+    CancellationToken, CompletionCandidate, DocumentAnalysis, DocumentSnapshot, DocumentSymbol,
+    HoverInfo, LanguageService, LanguageServiceError, NavigationResult, ReferenceLocation,
+    RenameEdit, RenameError, RenameTarget, SourceVersion, SymbolLocation, format_document,
 };
 use tokio::sync::Mutex;
 use tower_lsp_server::ls_types::{
@@ -21,7 +21,15 @@ use crate::convert::{
 
 /// Synchronized document state shared by concurrent LSP notification handlers.
 pub(crate) struct SynchronizedDocuments {
-    service: Mutex<LanguageService>,
+    service: Arc<Mutex<LanguageService>>,
+}
+
+struct CancelOnDrop(CancellationToken);
+
+impl Drop for CancelOnDrop {
+    fn drop(&mut self) {
+        self.0.cancel();
+    }
 }
 
 #[derive(Clone)]
@@ -54,7 +62,7 @@ pub(crate) struct RenameDocument {
 impl SynchronizedDocuments {
     pub(crate) fn new(initial_root: PathBuf) -> Self {
         Self {
-            service: Mutex::new(LanguageService::load(&initial_root)),
+            service: Arc::new(Mutex::new(LanguageService::load(&initial_root))),
         }
     }
 
@@ -63,17 +71,58 @@ impl SynchronizedDocuments {
         root: &Path,
         standard_library_root: Option<&Path>,
     ) -> Result<(), LanguageServiceError> {
-        let service = if let Some(standard_library_root) = standard_library_root {
-            LanguageService::load_with_standard_library(root, standard_library_root)?
-        } else {
-            LanguageService::load(root)
-        };
-        *self.service.lock().await = service;
-        Ok(())
+        let shared_service = Arc::clone(&self.service);
+        let root = root.to_path_buf();
+        let error_root = root.clone();
+        let standard_library_root = standard_library_root.map(Path::to_path_buf);
+        let cancellation = CancellationToken::new();
+        let task_cancellation = cancellation.clone();
+        let _cancel_on_drop = CancelOnDrop(cancellation);
+        tokio::task::spawn_blocking(move || {
+            let service = if let Some(standard_library_root) = standard_library_root {
+                LanguageService::load_with_standard_library_and_cancellation(
+                    &root,
+                    &standard_library_root,
+                    &task_cancellation,
+                )?
+            } else {
+                LanguageService::load_with_cancellation(&root, &task_cancellation)?
+            };
+            *shared_service.blocking_lock() = service;
+            Ok(())
+        })
+        .await
+        .map_err(|error| LanguageServiceError::Analysis {
+            path: error_root,
+            message: error.to_string(),
+        })?
     }
 
     pub(crate) async fn barrier(&self) {
         drop(self.service.lock().await);
+    }
+
+    pub(crate) async fn refresh_paths(
+        &self,
+        paths: Vec<PathBuf>,
+    ) -> Result<Vec<SynchronizedDocument>, LanguageServiceError> {
+        let mut service = self.service.lock().await;
+        service.refresh_paths(&paths, &CancellationToken::new())?;
+        Ok(service
+            .documents()
+            .open_snapshots()
+            .into_iter()
+            .filter_map(|snapshot| {
+                let SourceVersion::Editor(version) = snapshot.version() else {
+                    return None;
+                };
+                Some(SynchronizedDocument {
+                    path: snapshot.path().to_path_buf(),
+                    uri: Uri::from_file_path(snapshot.path())?,
+                    version: i32::try_from(version).ok()?,
+                })
+            })
+            .collect())
     }
 
     pub(crate) async fn open(
@@ -236,18 +285,13 @@ impl SynchronizedDocuments {
         position: Position,
         include_declaration: bool,
     ) -> Result<Vec<ReferenceDocument>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        let result = service.references(path, offset, include_declaration)?;
-        let mut references = Vec::with_capacity(result.value.len());
-        for location in result.value {
-            references.push(ReferenceDocument {
-                snapshot: service.snapshot(&location.path)?,
-                location,
-            });
-        }
-        Ok(references)
+        crate::request_tasks::references(
+            Arc::clone(&self.service),
+            path.to_path_buf(),
+            position,
+            include_declaration,
+        )
+        .await
     }
 
     pub(crate) async fn prepare_rename_open(
@@ -267,18 +311,13 @@ impl SynchronizedDocuments {
         position: Position,
         new_name: &str,
     ) -> Result<Vec<RenameDocument>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        let result = service.rename(path, offset, new_name)?;
-        let mut edits = Vec::with_capacity(result.value.len());
-        for edit in result.value {
-            edits.push(RenameDocument {
-                snapshot: service.snapshot(&edit.path)?,
-                edit,
-            });
-        }
-        Ok(edits)
+        crate::request_tasks::rename(
+            Arc::clone(&self.service),
+            path.to_path_buf(),
+            position,
+            new_name.to_owned(),
+        )
+        .await
     }
 
     pub(crate) async fn close(
@@ -295,7 +334,7 @@ impl SynchronizedDocuments {
     }
 }
 
-fn require_open(
+pub(crate) fn require_open(
     service: &LanguageService,
     path: &Path,
 ) -> Result<Arc<DocumentSnapshot>, DocumentRequestError> {
@@ -313,6 +352,7 @@ pub(crate) enum DocumentRequestError {
     Rename(RenameError),
     Position(PositionConversionError),
     DocumentNotOpen { path: PathBuf },
+    Task(String),
 }
 
 impl fmt::Display for DocumentRequestError {
@@ -326,6 +366,7 @@ impl fmt::Display for DocumentRequestError {
                 "Cannot query `{}` because the document is not open.",
                 path.display()
             ),
+            Self::Task(message) => write!(formatter, "Language-service task failed: {message}"),
         }
     }
 }

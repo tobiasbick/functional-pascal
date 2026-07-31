@@ -117,6 +117,17 @@ impl LanguageService {
         Self::new(WorkspaceContext::load(input))
     }
 
+    /// Discovers editor context while observing a cooperative cancellation signal.
+    pub fn load_with_cancellation(
+        input: &Path,
+        cancellation: &crate::CancellationToken,
+    ) -> Result<Self, LanguageServiceError> {
+        Ok(Self::new(WorkspaceContext::load_with_cancellation(
+            input,
+            cancellation,
+        )?))
+    }
+
     /// Loads editor context together with an implementation-owned source standard library.
     ///
     /// # Errors
@@ -126,11 +137,26 @@ impl LanguageService {
         input: &Path,
         standard_library_root: &Path,
     ) -> Result<Self, LanguageServiceError> {
+        Self::load_with_standard_library_and_cancellation(
+            input,
+            standard_library_root,
+            &crate::CancellationToken::new(),
+        )
+    }
+
+    /// Loads editor context and the source standard library with cooperative cancellation.
+    pub fn load_with_standard_library_and_cancellation(
+        input: &Path,
+        standard_library_root: &Path,
+        cancellation: &crate::CancellationToken,
+    ) -> Result<Self, LanguageServiceError> {
+        cancellation.check()?;
         let standard_library = StandardLibraryContext::load(standard_library_root)
             .map_err(|message| LanguageServiceError::analysis(standard_library_root, message))?;
+        cancellation.check()?;
         Ok(Self {
             standard_library: Some(standard_library),
-            ..Self::load(input)
+            ..Self::load_with_cancellation(input, cancellation)?
         })
     }
 
@@ -154,6 +180,22 @@ impl LanguageService {
     /// Loads the authoritative open-buffer or disk snapshot for a source path.
     pub fn snapshot(&mut self, path: &Path) -> Result<Arc<DocumentSnapshot>, LanguageServiceError> {
         self.documents.snapshot(path)
+    }
+
+    /// Refreshes changed sources and the bounded folder catalog while preserving open buffers.
+    pub fn refresh_paths(
+        &mut self,
+        paths: &[std::path::PathBuf],
+        cancellation: &crate::CancellationToken,
+    ) -> Result<(), LanguageServiceError> {
+        cancellation.check()?;
+        for path in paths {
+            self.documents.invalidate_disk(path);
+            self.analysis_cache.invalidate_path(path);
+        }
+        let changed_projects = self.workspace.reload_folder(cancellation)?;
+        self.analysis_cache.invalidate_identities(&changed_projects);
+        cancellation.check()
     }
 
     /// Returns cached or newly computed project-aware analysis for one document.

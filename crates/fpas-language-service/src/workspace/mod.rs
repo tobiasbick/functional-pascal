@@ -1,5 +1,6 @@
 //! Recoverable project and workspace context loading.
 
+mod catalog;
 mod context;
 mod discovery;
 mod project;

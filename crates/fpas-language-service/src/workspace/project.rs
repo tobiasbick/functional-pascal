@@ -8,7 +8,7 @@ use fpas_project::{LibraryExportPolicy, LoadedProject, ProjectKind, SourceOrigin
 use crate::document::normalized_path;
 
 /// One loaded project and its resolved source ownership.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectContext {
     manifest_path: PathBuf,
     project: LoadedProject,

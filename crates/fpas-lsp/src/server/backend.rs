@@ -5,12 +5,12 @@ use std::sync::Arc;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::{
-    CompletionParams, CompletionResponse, DidChangeTextDocumentParams, DidCloseTextDocumentParams,
-    DidOpenTextDocumentParams, DidSaveTextDocumentParams, DocumentFormattingParams,
-    DocumentSymbolParams, DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse,
-    Hover, HoverParams, InitializeParams, InitializeResult, InitializedParams, Location,
-    PrepareRenameResponse, ReferenceParams, RenameParams, TextDocumentPositionParams, TextEdit,
-    Uri, WorkspaceEdit,
+    CompletionParams, CompletionResponse, DidChangeTextDocumentParams, DidChangeWatchedFilesParams,
+    DidCloseTextDocumentParams, DidOpenTextDocumentParams, DidSaveTextDocumentParams,
+    DocumentFormattingParams, DocumentSymbolParams, DocumentSymbolResponse, GotoDefinitionParams,
+    GotoDefinitionResponse, Hover, HoverParams, InitializeParams, InitializeResult,
+    InitializedParams, Location, PrepareRenameResponse, ReferenceParams, RenameParams,
+    TextDocumentPositionParams, TextEdit, Uri, WorkspaceEdit,
 };
 use tower_lsp_server::{Client, LanguageServer};
 
@@ -125,6 +125,29 @@ impl LanguageServer for Backend {
     async fn did_save(&self, params: DidSaveTextDocumentParams) {
         if let Err(error) = self.documents.save(params).await {
             Self::log_sync_error("didSave", error);
+        }
+    }
+
+    async fn did_change_watched_files(&self, params: DidChangeWatchedFilesParams) {
+        let paths = params
+            .changes
+            .iter()
+            .filter_map(|change| match file_uri_to_path(&change.uri) {
+                Ok(path) => Some(path),
+                Err(error) => {
+                    Self::log_sync_error("didChangeWatchedFiles", error);
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        match self.documents.refresh_paths(paths).await {
+            Ok(documents) => {
+                for document in documents {
+                    let generation = self.diagnostics.invalidate(&document.path).await;
+                    self.schedule_diagnostics(document, generation);
+                }
+            }
+            Err(error) => Self::log_sync_error("didChangeWatchedFiles", error),
         }
     }
 

@@ -12,7 +12,10 @@ mod raw;
 use serde_json::json;
 
 use raw::{frame_bytes, run_frames};
-use support::{exit, initialize, initialized, response, run, shutdown};
+use support::{
+    TempDirectory, TranscriptStep, exit, initialize, initialize_with_root, initialized, response,
+    run, run_script, shutdown,
+};
 
 #[test]
 fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
@@ -203,4 +206,68 @@ fn malformed_json_receives_a_framed_parse_error() {
     assert!(transcript.messages.iter().any(|message| {
         message["error"]["code"] == json!(-32700) && message["id"] == serde_json::Value::Null
     }));
+}
+
+#[test]
+fn cancelling_an_active_reference_scan_keeps_the_server_responsive() {
+    let temp = TempDirectory::new("cancel-reference-scan");
+    temp.write(
+        "scan.fpasprj",
+        "[project]\nname = \"scan\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    let core = "unit Demo.Core;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    temp.write("src/core.fpas", core);
+    for index in 0..120 {
+        let calls = (0..60)
+            .map(|value| format!("  var Value{value}: integer := Answer()\n"))
+            .collect::<String>();
+        temp.write(
+            format!("src/use_{index}.fpas"),
+            &format!(
+                "unit Demo.Use{index};\n\nuses Demo.Core;\n\npublic procedure Exercise{index}();\nbegin\n{calls}end;\n"
+            ),
+        );
+    }
+    let root_uri = tower_lsp_server::ls_types::Uri::from_file_path(temp.path())
+        .expect("root URI")
+        .to_string();
+    let core_uri = temp.uri("src/core.fpas");
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(json!({
+            "jsonrpc": "2.0",
+            "method": "textDocument/didOpen",
+            "params": {"textDocument": {
+                "uri": core_uri,
+                "languageId": "fpas",
+                "version": 1,
+                "text": core
+            }}
+        })),
+        TranscriptStep::Send(json!({
+            "jsonrpc": "2.0",
+            "id": 2,
+            "method": "textDocument/references",
+            "params": {
+                "textDocument": {"uri": core_uri},
+                "position": {"line": 2, "character": 16},
+                "context": {"includeDeclaration": false}
+            }
+        })),
+        TranscriptStep::Send(json!({
+            "jsonrpc": "2.0",
+            "method": "$/cancelRequest",
+            "params": {"id": 2}
+        })),
+        TranscriptStep::Message(shutdown(3)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert!(
+        transcript.output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&transcript.output.stderr)
+    );
+    assert_eq!(response(&transcript.messages, 3)["result"], json!(null));
 }

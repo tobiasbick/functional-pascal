@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 /// A recoverable failure while loading or analyzing editor source.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LanguageServiceError {
+    /// A caller cancelled bounded discovery or navigation work.
+    Cancelled,
     /// A source file could not be read.
     SourceRead {
         /// Source path that could not be read.
@@ -55,6 +57,7 @@ impl LanguageServiceError {
 impl fmt::Display for LanguageServiceError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Cancelled => formatter.write_str("Language-service operation was cancelled."),
             Self::SourceRead { path, message } => {
                 write!(
                     formatter,

@@ -7,7 +7,7 @@ or sensitive data before sharing it.
 ```text
 Title: <short observable problem>
 
-Extension version: <for example 0.0.4>
+Extension version: <for example 0.0.5>
 Editor and version: <VS Code, Cursor, or compatible editor>
 Host target: <for example win32-x64 or linux-x64>
 FPAS context: <loose file, .fpasprj, or .fpasworkspace>

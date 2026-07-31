@@ -7,6 +7,7 @@
 #![deny(missing_docs)]
 
 mod analysis;
+mod cancellation;
 mod diagnostics;
 mod document;
 mod error;
@@ -16,6 +17,7 @@ mod symbols;
 mod workspace;
 
 pub use analysis::{DocumentAnalysis, LanguageService, SemanticAnalysis};
+pub use cancellation::CancellationToken;
 pub use diagnostics::diagnostics_for_document;
 pub use document::{
     DocumentSnapshot, DocumentStore, LineIndex, SourceVersion, TextPosition, TextRange,

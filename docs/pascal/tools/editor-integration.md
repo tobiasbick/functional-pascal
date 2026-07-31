@@ -62,19 +62,27 @@ during typing. Results carry the exact document version, and superseded work
 is discarded. Correcting the source or closing the document clears stale
 diagnostics.
 
-The opened editor folder does not have to be an FPAS project. For each opened
-`.fpas` source, the server searches its parent directories up to that folder
-and loads the nearest `.fpasprj` or `.fpasworkspace` that directly owns the
-source. Multiple nested FPAS projects can therefore coexist inside a larger
-Rust repository. A direct source owner takes precedence over a project that
-only consumes the source through a dependency.
+The opened editor folder does not have to be an FPAS project. At startup, the
+server builds a bounded catalog of `.fpasprj` and `.fpasworkspace` manifests
+inside that folder. It asks the normal project loader for the authoritative
+source sets, dependencies, workspace members, and exports; it does not treat
+every recursively found `.fpas` file as a loose project source. Multiple nested
+FPAS projects can therefore coexist inside a larger Rust repository. A direct
+source owner takes precedence over a project that only consumes the source
+through a dependency.
 
 Discovery uses the same manifests, source ownership, dependencies, workspace
-members, exports, and standard-library rules as the compiler. It does not scan
-the whole repository recursively. A file without a matching manifest remains
-a loose file, while overlapping direct owners produce an actionable
-ambiguity error. Open dependency units are analyzed with their own URI and
-source ranges.
+members, exports, and standard-library rules as the compiler. Generated and
+dependency directories such as `.git`, `target`, `node_modules`, and
+`.vscode-test` are excluded from catalog traversal. A file without a matching
+manifest remains a loose file, while overlapping direct owners produce an
+actionable ambiguity error. Open dependency units are analyzed with their own
+URI and source ranges.
+
+The extension watches `.fpas`, `.fpasprj`, and `.fpasworkspace` files inside
+the opened folder. Create, change, rename, and delete notifications rebuild the
+manifest catalog and invalidate affected analysis results without restarting
+the server. Unsaved open buffers remain authoritative over disk changes.
 
 The VSIX supplies its bundled source standard library to every loaded project
 and loose document. Source-defined units such as `Std.Tui` therefore work even
@@ -118,14 +126,14 @@ project. Project navigation follows FPAS rules for lexical shadowing, direct
 and library `[exports].units`.
 
 **Find All References** (`Shift+F12`) returns declaration and usage locations
-for the resolved symbol across every loaded project whose dependency and
+for the resolved symbol across every indexed project whose dependency and
 library-export graph makes that declaration visible. This includes a program
 that consumes a directly owned sibling library project. The search preserves
 lexical shadowing and ignores matching text in comments and strings.
 
 **Rename Symbol** (`F2`) validates the replacement as a non-keyword ASCII FPAS
 identifier, rejects same-scope declaration conflicts, and returns one workspace
-edit for the declaration and every resolved usage in those loaded projects. It
+edit for the declaration and every resolved usage in those indexed projects. It
 edits current unsaved snapshots of open files. Program and unit names are
 excluded because a correct rename would also have to rename source files or
 manifests. A declaration outside the opened editor folder, including a standard

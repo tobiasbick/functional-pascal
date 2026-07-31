@@ -84,6 +84,19 @@ impl DocumentStore {
         self.open.remove(&normalized_path(path))
     }
 
+    /// Discards a disk snapshot without affecting an authoritative open editor buffer.
+    pub fn invalidate_disk(&mut self, path: &Path) {
+        self.disk.remove(&normalized_path(path));
+    }
+
+    /// Returns every authoritative open editor snapshot in stable path order.
+    #[must_use]
+    pub fn open_snapshots(&self) -> Vec<Arc<DocumentSnapshot>> {
+        let mut snapshots = self.open.values().cloned().collect::<Vec<_>>();
+        snapshots.sort_by(|left, right| left.path().cmp(right.path()));
+        snapshots
+    }
+
     /// Returns the current open snapshot without reading from disk.
     #[must_use]
     pub fn open_snapshot(&self, path: &Path) -> Option<Arc<DocumentSnapshot>> {

@@ -80,6 +80,8 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
             "documentSymbolProvider",
             "hoverProvider",
             "positionEncoding",
+            "referencesProvider",
+            "renameProvider",
             "textDocumentSync"
         ]
     );
@@ -91,6 +93,11 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
     assert_eq!(capabilities["documentFormattingProvider"], json!(true));
     assert_eq!(capabilities["documentSymbolProvider"], json!(true));
     assert_eq!(capabilities["hoverProvider"], json!(true));
+    assert_eq!(capabilities["referencesProvider"], json!(true));
+    assert_eq!(
+        capabilities["renameProvider"]["prepareProvider"],
+        json!(true)
+    );
     assert_eq!(
         capabilities["positionEncoding"],
         json!("utf-16"),

@@ -1,9 +1,13 @@
-//! LSP request handlers for symbols, hover, definitions, and completion.
+//! LSP request handlers for symbols, navigation, completion, references, and rename.
+
+use std::collections::HashMap;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::{
     CompletionParams, CompletionResponse, DocumentSymbolParams, DocumentSymbolResponse,
-    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
+    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, Location,
+    PrepareRenameResponse, ReferenceParams, RenameParams, TextDocumentPositionParams, TextEdit,
+    Uri, WorkspaceEdit,
 };
 
 use super::Backend;
@@ -78,6 +82,64 @@ impl Backend {
                 .map(navigation::completion)
                 .collect(),
         )))
+    }
+
+    pub(super) async fn references_request(
+        &self,
+        params: ReferenceParams,
+    ) -> Result<Option<Vec<Location>>> {
+        let text = params.text_document_position;
+        let path = request_path(&text.text_document.uri)?;
+        let references = self
+            .documents
+            .references_open(&path, text.position, params.context.include_declaration)
+            .await
+            .map_err(invalid_params)?;
+        let locations = references
+            .iter()
+            .map(|reference| {
+                navigation::reference_location(&reference.snapshot, &reference.location)
+            })
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(conversion_error)?;
+        Ok(Some(locations))
+    }
+
+    pub(super) async fn prepare_rename_request(
+        &self,
+        params: TextDocumentPositionParams,
+    ) -> Result<Option<PrepareRenameResponse>> {
+        let path = request_path(&params.text_document.uri)?;
+        let result = self
+            .documents
+            .prepare_rename_open(&path, params.position)
+            .await
+            .map_err(invalid_params)?;
+        result
+            .value
+            .map(|target| navigation::prepare_rename(&result.snapshot, target))
+            .transpose()
+            .map_err(conversion_error)
+    }
+
+    pub(super) async fn rename_request(
+        &self,
+        params: RenameParams,
+    ) -> Result<Option<WorkspaceEdit>> {
+        let text = params.text_document_position;
+        let path = request_path(&text.text_document.uri)?;
+        let edits = self
+            .documents
+            .rename_open(&path, text.position, &params.new_name)
+            .await
+            .map_err(invalid_params)?;
+        let mut changes = HashMap::<Uri, Vec<TextEdit>>::new();
+        for edit in edits {
+            let (uri, text_edit) =
+                navigation::rename_edit(&edit.snapshot, edit.edit).map_err(conversion_error)?;
+            changes.entry(uri).or_default().push(text_edit);
+        }
+        Ok(Some(WorkspaceEdit::new(changes)))
     }
 }
 

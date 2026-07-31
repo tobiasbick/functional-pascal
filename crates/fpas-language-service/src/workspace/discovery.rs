@@ -76,6 +76,7 @@ fn select_context(
     contexts: Vec<WorkspaceContext>,
 ) -> Result<Option<WorkspaceContext>, WorkspaceIssue> {
     let mut owning = Vec::new();
+    let mut consuming = Vec::new();
     let mut load_issues = Vec::new();
     for context in contexts {
         let owners = context
@@ -85,7 +86,15 @@ fn select_context(
             .map(|project| project.manifest_path().to_path_buf())
             .collect::<Vec<_>>();
         if owners.is_empty() {
-            load_issues.extend(context.issues().iter().cloned());
+            if context
+                .projects()
+                .iter()
+                .any(|project| project.contains_source(source))
+            {
+                consuming.push(context);
+            } else {
+                load_issues.extend(context.issues().iter().cloned());
+            }
         } else {
             owning.push((owners, context));
         }
@@ -103,7 +112,15 @@ fn select_context(
                 Ok(None)
             }
         }
-        1 => Ok(owning.pop().map(|(_, context)| context)),
+        1 => {
+            let Some((_, mut context)) = owning.pop() else {
+                return Ok(None);
+            };
+            for consumer in consuming {
+                context.merge_discovered(consumer);
+            }
+            Ok(Some(context))
+        }
         _ => Err(ambiguous_source_issue(source, &owner_paths)),
     }
 }

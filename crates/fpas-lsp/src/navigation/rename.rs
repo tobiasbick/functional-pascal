@@ -1,0 +1,27 @@
+//! LSP conversion for prepare-rename selections and workspace text edits.
+
+use fpas_language_service::{DocumentSnapshot, RenameEdit, RenameTarget};
+use tower_lsp_server::ls_types::{PrepareRenameResponse, TextEdit, Uri};
+
+use super::{NavigationConversionError, span_range};
+
+pub(crate) fn prepare_rename(
+    snapshot: &DocumentSnapshot,
+    target: RenameTarget,
+) -> Result<PrepareRenameResponse, NavigationConversionError> {
+    Ok(PrepareRenameResponse::RangeWithPlaceholder {
+        range: span_range(snapshot, target.range)?,
+        placeholder: target.placeholder,
+    })
+}
+
+pub(crate) fn rename_edit(
+    snapshot: &DocumentSnapshot,
+    edit: RenameEdit,
+) -> Result<(Uri, TextEdit), NavigationConversionError> {
+    let uri = Uri::from_file_path(&edit.path).ok_or(NavigationConversionError::InvalidPath)?;
+    Ok((
+        uri,
+        TextEdit::new(span_range(snapshot, edit.range)?, edit.new_text),
+    ))
+}

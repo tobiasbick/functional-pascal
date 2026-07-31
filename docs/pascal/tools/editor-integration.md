@@ -8,7 +8,8 @@ desktop editors. The implemented editor features are:
 - parser and semantic diagnostics for the current unsaved buffer
 - canonical whole-document formatting
 - hierarchical document symbols
-- declaration hover and go to definition
+- declaration hover, go to definition, and find all references
+- validated project-wide symbol rename
 - basic visibility-aware completion
 - language-server restart and output-channel commands
 
@@ -116,6 +117,20 @@ project. Project navigation follows FPAS rules for lexical shadowing, direct
 `uses` imports, public declarations and record members, qualified unit names,
 and library `[exports].units`.
 
+**Find All References** (`Shift+F12`) returns declaration and usage locations
+for the resolved symbol across every loaded project whose dependency and
+library-export graph makes that declaration visible. This includes a program
+that consumes a directly owned sibling library project. The search preserves
+lexical shadowing and ignores matching text in comments and strings.
+
+**Rename Symbol** (`F2`) validates the replacement as a non-keyword ASCII FPAS
+identifier, rejects same-scope declaration conflicts, and returns one workspace
+edit for the declaration and every resolved usage in those loaded projects. It
+edits current unsaved snapshots of open files. Program and unit names are
+excluded because a correct rename would also have to rename source files or
+manifests. A declaration outside the opened editor folder, including a standard
+library bundled with an installed VSIX, is never modified.
+
 Basic completion lists declarations visible at the cursor. After `.` it lists
 visible unit or record members. Equal candidates imported from different units
 remain distinct so the editor can present their qualified owners. Queries use
@@ -128,7 +143,23 @@ fail the language server.
 
 ## Current limits
 
-Completion is intentionally declaration-oriented; signature help, references,
-rename, semantic tokens, and code actions are not implemented. Remote SSH,
-WSL, and container extension hosts are outside the local hobby-project
-packaging contract.
+Completion is intentionally declaration-oriented; signature help, semantic
+tokens, and code actions are not implemented. Remote SSH, WSL, and container
+extension hosts are outside the local hobby-project packaging contract.
+
+## Reporting editor problems
+
+The extension has no telemetry and does not submit reports automatically. For
+every reproducible problem, copy the local
+[editor bug-report template](../../../editors/vscode/BUG_REPORT.md), replace
+its placeholders, and save it as a local note or paste it into a repository
+issue. Include the smallest source that reproduces the behavior and the
+sanitized **Functional Pascal** output-channel excerpt.
+
+## Implementation references
+
+The pinned SDK, packaging, highlighting, testing, language-client, LSP, and
+Rust transport sources are collected in
+[editor implementation references](editor-references.md). These links are
+implementation inputs; repository tests remain authoritative for current
+behavior.

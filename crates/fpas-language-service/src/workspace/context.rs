@@ -192,7 +192,7 @@ impl WorkspaceContext {
         }
     }
 
-    fn merge_discovered(&mut self, context: Self) {
+    pub(super) fn merge_discovered(&mut self, context: Self) {
         let mut added = false;
         for project in context.projects {
             if self

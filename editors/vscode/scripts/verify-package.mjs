@@ -41,6 +41,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   const expectedEntries = [
     "[Content_Types].xml",
     "extension.vsixmanifest",
+    "extension/BUG_REPORT.md",
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
     "extension/out/src/extension.js",
@@ -58,6 +59,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
 
   for (const required of [
     "extension/package.json",
+    "extension/BUG_REPORT.md",
     "extension/out/src/extension.js",
     "extension/readme.md",
     "extension/LICENSE.txt",

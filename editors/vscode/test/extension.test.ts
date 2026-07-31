@@ -118,6 +118,29 @@ export async function run(): Promise<void> {
     greetingPosition
   );
   assert.ok(definitions?.length);
+  const references = await vscode.commands.executeCommand<vscode.Location[]>(
+    "vscode.executeReferenceProvider",
+    navigationDocument.uri,
+    greetingPosition
+  );
+  assert.ok(references?.length >= 2);
+  const renameEdit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
+    "vscode.executeDocumentRenameProvider",
+    navigationDocument.uri,
+    greetingPosition,
+    "GreetingForEditor"
+  );
+  assert.ok(renameEdit);
+  const renameEntries = renameEdit.entries();
+  assert.equal(
+    renameEntries.reduce((count, [, edits]) => count + edits.length, 0),
+    2
+  );
+  assert.ok(
+    renameEntries.every(([, edits]) =>
+      edits.every((edit) => edit.newText === "GreetingForEditor")
+    )
+  );
   const symbols = await vscode.commands.executeCommand<
     Array<vscode.DocumentSymbol | vscode.SymbolInformation>
   >("vscode.executeDocumentSymbolProvider", navigationDocument.uri);

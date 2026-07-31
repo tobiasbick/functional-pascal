@@ -2,8 +2,9 @@
 
 use tower_lsp_server::ls_types::{
     CompletionOptions, HoverProviderCapability, InitializeResult, OneOf, PositionEncodingKind,
-    SaveOptions, ServerCapabilities, ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
-    TextDocumentSyncOptions, TextDocumentSyncSaveOptions,
+    RenameOptions, SaveOptions, ServerCapabilities, ServerInfo, TextDocumentSyncCapability,
+    TextDocumentSyncKind, TextDocumentSyncOptions, TextDocumentSyncSaveOptions,
+    WorkDoneProgressOptions,
 };
 
 pub(crate) fn initialize_result() -> InitializeResult {
@@ -25,6 +26,11 @@ pub(crate) fn initialize_result() -> InitializeResult {
             document_symbol_provider: Some(OneOf::Left(true)),
             hover_provider: Some(HoverProviderCapability::Simple(true)),
             definition_provider: Some(OneOf::Left(true)),
+            references_provider: Some(OneOf::Left(true)),
+            rename_provider: Some(OneOf::Right(RenameOptions {
+                prepare_provider: Some(true),
+                work_done_progress_options: WorkDoneProgressOptions::default(),
+            })),
             completion_provider: Some(CompletionOptions {
                 trigger_characters: Some(vec![".".to_owned()]),
                 ..CompletionOptions::default()

@@ -1,10 +1,13 @@
 //! Language-service entry points for navigation queries.
 
+use std::collections::BTreeSet;
 use std::path::Path;
 use std::sync::Arc;
 
 use super::{
-    CompletionCandidate, HoverInfo, NavigationDocument, NavigationResult, complete, resolve,
+    CompletionCandidate, HoverInfo, NavigationDocument, NavigationResult, ReferenceLocation,
+    RenameEdit, RenameError, RenameTarget, complete, find_references, prepare_rename,
+    rename_symbol, resolve, resolve_target,
 };
 use crate::{
     DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService, LanguageServiceError,
@@ -75,6 +78,73 @@ impl LanguageService {
         })
     }
 
+    /// Returns project references for the declaration resolved at a UTF-8 byte offset.
+    pub fn references(
+        &mut self,
+        path: &Path,
+        offset: usize,
+        include_declaration: bool,
+    ) -> Result<NavigationResult<Vec<ReferenceLocation>>, LanguageServiceError> {
+        let context = self.reference_navigation_context(path, offset)?;
+        let value = context
+            .target_index
+            .and_then(|target_index| resolve_target(&context.documents, target_index, offset))
+            .map(|target| find_references(&context.documents, &target, include_declaration))
+            .unwrap_or_default();
+        Ok(NavigationResult {
+            snapshot: context.snapshot,
+            value,
+        })
+    }
+
+    /// Returns the renameable identifier range and source spelling at a UTF-8 byte offset.
+    pub fn prepare_rename(
+        &mut self,
+        path: &Path,
+        offset: usize,
+    ) -> Result<NavigationResult<Option<RenameTarget>>, LanguageServiceError> {
+        let context = self.navigation_context(path)?;
+        let value = context.target_index.and_then(|target_index| {
+            prepare_rename(
+                &context.documents,
+                target_index,
+                offset,
+                self.workspace().root(),
+            )
+        });
+        Ok(NavigationResult {
+            snapshot: context.snapshot,
+            value,
+        })
+    }
+
+    /// Returns validated project edits that rename the declaration at a UTF-8 byte offset.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`RenameError`] when source loading fails, the selected declaration is not safely
+    /// renameable, the replacement is invalid, or it conflicts in the declaration scope.
+    pub fn rename(
+        &mut self,
+        path: &Path,
+        offset: usize,
+        new_name: &str,
+    ) -> Result<NavigationResult<Vec<RenameEdit>>, RenameError> {
+        let context = self.reference_navigation_context(path, offset)?;
+        let target_index = context.target_index.ok_or(RenameError::NoSymbol)?;
+        let value = rename_symbol(
+            &context.documents,
+            target_index,
+            offset,
+            self.workspace().root(),
+            new_name,
+        )?;
+        Ok(NavigationResult {
+            snapshot: context.snapshot,
+            value,
+        })
+    }
+
     /// Returns declarations visible for completion at a UTF-8 byte offset.
     pub fn completions(
         &mut self,
@@ -131,6 +201,58 @@ impl LanguageService {
             .position(|document| document.path == target.path());
         Ok(NavigationContext {
             snapshot: target,
+            documents,
+            target_index,
+        })
+    }
+
+    fn reference_navigation_context(
+        &mut self,
+        path: &Path,
+        offset: usize,
+    ) -> Result<NavigationContext, LanguageServiceError> {
+        let initial = self.navigation_context(path)?;
+        let Some(selected_index) = initial.target_index else {
+            return Ok(initial);
+        };
+        let Some(target) = resolve_target(&initial.documents, selected_index, offset) else {
+            return Ok(initial);
+        };
+        let declaration_path = initial.documents[target.document_index].path.clone();
+        let declaration_owner = initial.documents[target.document_index].owner.clone();
+        let mut paths = initial
+            .documents
+            .iter()
+            .map(|document| document.path.clone())
+            .collect::<BTreeSet<_>>();
+        for project in self
+            .workspace()
+            .projects()
+            .iter()
+            .filter(|project| project.contains_source(&declaration_path))
+        {
+            for source_path in project.all_source_paths() {
+                if source_path == declaration_path
+                    || project.source_visible_from(
+                        &source_path,
+                        &declaration_path,
+                        &declaration_owner,
+                    )
+                {
+                    paths.insert(source_path);
+                }
+            }
+        }
+
+        let mut documents = Vec::with_capacity(paths.len());
+        for source_path in paths {
+            documents.push(NavigationDocument::new(self.snapshot(&source_path)?));
+        }
+        let target_index = documents
+            .iter()
+            .position(|document| document.path == initial.snapshot.path());
+        Ok(NavigationContext {
+            snapshot: initial.snapshot,
             documents,
             target_index,
         })

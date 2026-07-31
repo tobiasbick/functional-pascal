@@ -1,6 +1,8 @@
 //! Protocol-independent editor navigation queries.
 
 mod document;
+mod references;
+mod rename;
 mod resolve;
 mod service;
 
@@ -9,6 +11,10 @@ use std::sync::Arc;
 use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
 
 pub(crate) use document::NavigationDocument;
+pub use references::ReferenceLocation;
+pub(crate) use references::{find_references, resolve_target};
+pub use rename::{RenameEdit, RenameError, RenameTarget};
+pub(crate) use rename::{prepare_rename, rename_symbol};
 pub(crate) use resolve::{complete, resolve};
 
 /// A query result tied to the exact immutable source snapshot used for positions.

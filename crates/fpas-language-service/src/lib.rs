@@ -22,7 +22,10 @@ pub use document::{
 };
 pub use error::LanguageServiceError;
 pub use formatting::format_document;
-pub use navigation::{CompletionCandidate, HoverInfo, NavigationResult};
+pub use navigation::{
+    CompletionCandidate, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit, RenameError,
+    RenameTarget,
+};
 pub use symbols::{
     DocumentSymbol, DocumentSymbols, SymbolKind, SymbolLocation, SymbolVisibility,
     WorkspaceSymbolIndex,

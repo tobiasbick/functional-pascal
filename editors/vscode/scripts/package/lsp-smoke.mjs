@@ -21,6 +21,15 @@ function frame(message) {
   ]);
 }
 
+function positionAt(source, offset) {
+  const before = source.slice(0, offset);
+  const lines = before.split("\n");
+  return {
+    line: lines.length - 1,
+    character: lines.at(-1).length
+  };
+}
+
 function responseReader(stdout, child) {
   let buffer = Buffer.alloc(0);
   const received = new Map();
@@ -168,7 +177,7 @@ export async function smokePackagedServer({
       `[project]\nname = "external"\nkind = "program"\nmain = "main.fpas"\n\n[sources]\ninclude = ["main.fpas"]\n`
     );
     const sourceText =
-      "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := TuiPalette.Default()\nend.\n";
+      "program External;\n\nuses Std.Tui;\n\nbegin\n  var Palette: TuiPalette := TuiPalette.Default();\n  var Selected: TuiPalette := Palette\nend.\n";
     writeFileSync(source, sourceText);
     if (platform !== "win32") {
       chmodSync(executable, 0o755);
@@ -208,6 +217,11 @@ export async function smokePackagedServer({
       initialize?.result?.capabilities,
       `packaged server initialized: ${JSON.stringify(initialize)}`
     );
+    assert.equal(initialize.result.capabilities.referencesProvider, true);
+    assert.equal(
+      initialize.result.capabilities.renameProvider?.prepareProvider,
+      true
+    );
     child.stdin.write(frame({
       jsonrpc: "2.0",
       method: "initialized",
@@ -236,13 +250,47 @@ export async function smokePackagedServer({
       [],
       `packaged server resolves bundled Std.Tui: ${JSON.stringify(published)}`
     );
+    const paletteUse = sourceText.lastIndexOf("Palette");
     child.stdin.write(frame({
       jsonrpc: "2.0",
       id: 2,
+      method: "textDocument/references",
+      params: {
+        textDocument: { uri: sourceUri },
+        position: positionAt(sourceText, paletteUse),
+        context: { includeDeclaration: true }
+      }
+    }));
+    const references = await reader.response(2);
+    assert.equal(
+      references?.result?.length,
+      2,
+      `packaged server finds local references: ${JSON.stringify(references)}`
+    );
+    child.stdin.write(frame({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "textDocument/rename",
+      params: {
+        textDocument: { uri: sourceUri },
+        position: positionAt(sourceText, paletteUse),
+        newName: "ThemePalette"
+      }
+    }));
+    const rename = await reader.response(3);
+    const renameChanges = Object.values(rename?.result?.changes ?? {});
+    assert.deepEqual(
+      renameChanges.map((edits) => edits.length),
+      [2],
+      `packaged server returns rename edits: ${JSON.stringify(rename)}`
+    );
+    child.stdin.write(frame({
+      jsonrpc: "2.0",
+      id: 4,
       method: "shutdown",
       params: null
     }));
-    const shutdown = await reader.response(2);
+    const shutdown = await reader.response(4);
     assert.equal(
       shutdown?.result,
       null,
@@ -255,7 +303,7 @@ export async function smokePackagedServer({
     }));
     const exitCode = await exited;
     assert.equal(exitCode, 0, `packaged server exited with ${exitCode}: ${stderr}`);
-    console.log("Packaged LSP initialize/shutdown verification passed.");
+    console.log("Packaged LSP diagnostics, references, rename, and lifecycle verification passed.");
   } finally {
     if (child !== undefined && child.exitCode === null) {
       child.kill();

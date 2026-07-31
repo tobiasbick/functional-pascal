@@ -82,6 +82,23 @@
         "textDocument/completion"
       ],
       "serviceQuery": "completion"
+    },
+    {
+      "phase": 9,
+      "feature": "find all references",
+      "methods": [
+        "textDocument/references"
+      ],
+      "serviceQuery": "references"
+    },
+    {
+      "phase": 9,
+      "feature": "rename",
+      "methods": [
+        "textDocument/prepareRename",
+        "textDocument/rename"
+      ],
+      "serviceQuery": "prepare_rename and rename"
     }
   ],
   "transportLibrary": {

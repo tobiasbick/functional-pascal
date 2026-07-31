@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use fpas_language_service::{
     CompletionCandidate, DocumentAnalysis, DocumentSnapshot, DocumentSymbol, HoverInfo,
-    LanguageService, LanguageServiceError, NavigationResult, SourceVersion, SymbolLocation,
-    format_document,
+    LanguageService, LanguageServiceError, NavigationResult, ReferenceLocation, RenameEdit,
+    RenameError, RenameTarget, SourceVersion, SymbolLocation, format_document,
 };
 use tokio::sync::Mutex;
 use tower_lsp_server::ls_types::{
@@ -39,6 +39,16 @@ pub(crate) struct FormattedDocument {
 pub(crate) struct DefinitionDocument {
     pub(crate) snapshot: Arc<DocumentSnapshot>,
     pub(crate) location: SymbolLocation,
+}
+
+pub(crate) struct ReferenceDocument {
+    pub(crate) snapshot: Arc<DocumentSnapshot>,
+    pub(crate) location: ReferenceLocation,
+}
+
+pub(crate) struct RenameDocument {
+    pub(crate) snapshot: Arc<DocumentSnapshot>,
+    pub(crate) edit: RenameEdit,
 }
 
 impl SynchronizedDocuments {
@@ -220,6 +230,57 @@ impl SynchronizedDocuments {
         Ok(service.completions(path, offset)?)
     }
 
+    pub(crate) async fn references_open(
+        &self,
+        path: &Path,
+        position: Position,
+        include_declaration: bool,
+    ) -> Result<Vec<ReferenceDocument>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        let result = service.references(path, offset, include_declaration)?;
+        let mut references = Vec::with_capacity(result.value.len());
+        for location in result.value {
+            references.push(ReferenceDocument {
+                snapshot: service.snapshot(&location.path)?,
+                location,
+            });
+        }
+        Ok(references)
+    }
+
+    pub(crate) async fn prepare_rename_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<NavigationResult<Option<RenameTarget>>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        Ok(service.prepare_rename(path, offset)?)
+    }
+
+    pub(crate) async fn rename_open(
+        &self,
+        path: &Path,
+        position: Position,
+        new_name: &str,
+    ) -> Result<Vec<RenameDocument>, DocumentRequestError> {
+        let mut service = self.service.lock().await;
+        let snapshot = require_open(&service, path)?;
+        let offset = position_to_byte_offset(&snapshot, position)?;
+        let result = service.rename(path, offset, new_name)?;
+        let mut edits = Vec::with_capacity(result.value.len());
+        for edit in result.value {
+            edits.push(RenameDocument {
+                snapshot: service.snapshot(&edit.path)?,
+                edit,
+            });
+        }
+        Ok(edits)
+    }
+
     pub(crate) async fn close(
         &self,
         params: DidCloseTextDocumentParams,
@@ -249,6 +310,7 @@ fn require_open(
 #[derive(Debug)]
 pub(crate) enum DocumentRequestError {
     Service(LanguageServiceError),
+    Rename(RenameError),
     Position(PositionConversionError),
     DocumentNotOpen { path: PathBuf },
 }
@@ -257,6 +319,7 @@ impl fmt::Display for DocumentRequestError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Service(error) => error.fmt(formatter),
+            Self::Rename(error) => error.fmt(formatter),
             Self::Position(error) => error.fmt(formatter),
             Self::DocumentNotOpen { path } => write!(
                 formatter,
@@ -270,6 +333,12 @@ impl fmt::Display for DocumentRequestError {
 impl From<LanguageServiceError> for DocumentRequestError {
     fn from(error: LanguageServiceError) -> Self {
         Self::Service(error)
+    }
+}
+
+impl From<RenameError> for DocumentRequestError {
+    fn from(error: RenameError) -> Self {
+        Self::Rename(error)
     }
 }
 

@@ -1,5 +1,7 @@
 //! Conversion from protocol-independent navigation results to LSP values.
 
+mod references;
+mod rename;
 mod symbols;
 
 use fpas_diagnostics::SourceSpan;
@@ -13,6 +15,8 @@ use tower_lsp_server::ls_types::{
 
 use crate::convert::{PositionConversionError, byte_offset_to_position};
 
+pub(crate) use references::reference_location;
+pub(crate) use rename::{prepare_rename, rename_edit};
 pub(crate) use symbols::document_symbols;
 
 pub(crate) fn hover(

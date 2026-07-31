@@ -10,7 +10,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
-| Editor integration | [Local VSIX and language server](vsix/README.md) | Syntax highlighting, LSP features, formatting, and one locally built VSIX for VS Code-compatible editors |
 
 ## Architecture records and development intake
 

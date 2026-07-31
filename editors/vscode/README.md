@@ -4,9 +4,10 @@ This is the local editor extension for Functional Pascal. It provides `.fpas`
 language detection, TextMate syntax highlighting, comment and bracket
 configuration, indentation, and folding. Its bundled native `fpas-lsp` server
 provides parser and semantic diagnostics, canonical whole-document formatting,
-document symbols, hover, same- and cross-unit go to definition, and basic
-visibility-aware completion. The repository builds and tests the extension
-without a Marketplace.
+document symbols, hover, same- and cross-unit go to definition, find all
+references, validated project-wide rename, and basic visibility-aware
+completion. The repository builds and tests the extension without a
+Marketplace.
 
 ## Build
 
@@ -57,6 +58,11 @@ Open the Outline view to inspect FPAS declarations. Hover a declaration or
 reference, use **Go to Definition**, and invoke completion in a routine body or
 after a unit/record `.`. Project-aware results use the same `.fpasprj`,
 `.fpasworkspace`, visibility, and library-export boundaries as the compiler.
+Use **Find All References** (`Shift+F12`) to list resolved declarations and
+usages, including uses in loaded programs that consume a directly owned
+library, and **Rename Symbol** (`F2`) to validate and edit a normal declaration
+across those loaded projects. Program/unit renames and declarations outside
+the opened folder are intentionally rejected.
 
 The folder opened in the editor may be the complete Functional Pascal Rust
 repository or another parent folder without an FPAS manifest. When a `.fpas`
@@ -78,9 +84,13 @@ Functional Pascal extension activated (Hello World).
 
 The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
 VS Code Extension Host, verifies diagnostics, formatting, document symbols,
-hover, cross-unit definition, and completion, restarts it once, and shuts it
-down with the extension:
+hover, cross-unit definition, references, rename, and completion, restarts it
+once, and shuts it down with the extension:
 
 ```text
 npm test --prefix editors/vscode
 ```
+
+For daily use, record reproducible problems with the local
+[bug-report template](BUG_REPORT.md). The extension has no telemetry and sends
+nothing automatically.

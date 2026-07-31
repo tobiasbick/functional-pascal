@@ -55,6 +55,35 @@ fn repository_project_analysis_resolves_the_source_standard_library() {
 }
 
 #[test]
+fn repository_references_find_notes_update_in_the_consuming_program() {
+    let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let declaration = repository_root.join("apps/notes/src/Notes/Update.fpas");
+    let program = repository_root.join("apps/notes/src/notes.fpas");
+    let source = std::fs::read_to_string(&declaration).expect("Notes.Update source");
+    let offset = source
+        .find("NotesUpdate(State")
+        .expect("NotesUpdate declaration");
+    let mut service =
+        LanguageService::load_with_standard_library(&repository_root, &repository_root.join("lib"))
+            .expect("repository standard library");
+
+    let references = service
+        .references(&declaration, offset, false)
+        .expect("NotesUpdate references")
+        .value;
+
+    assert_eq!(references.len(), 1, "{references:?}");
+    assert!(
+        references[0].path.ends_with(
+            program
+                .strip_prefix(&repository_root)
+                .expect("relative program")
+        ),
+        "{references:?}"
+    );
+}
+
+#[test]
 fn loose_program_analysis_resolves_the_source_standard_library() {
     let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let temp = TempDirectory::new("loose-standard-library");

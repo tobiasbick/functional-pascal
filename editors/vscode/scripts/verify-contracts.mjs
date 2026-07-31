@@ -91,7 +91,10 @@ export async function verifyContracts() {
     "textDocument/documentSymbol",
     "textDocument/hover",
     "textDocument/definition",
-    "textDocument/completion"
+    "textDocument/completion",
+    "textDocument/references",
+    "textDocument/prepareRename",
+    "textDocument/rename"
   ]);
   const configuredMethods = new Set(
     contract.capabilities.flatMap((capability) => capability.methods)

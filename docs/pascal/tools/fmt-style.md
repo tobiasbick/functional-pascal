@@ -137,7 +137,10 @@ type
     begin
       var RX: integer := Self.X + Other.X;
       var RY: integer := Self.Y + Other.Y;
-      return record X := RX; Y := RY; end
+      return record
+        X := RX;
+        Y := RY;
+      end
     end;
 
     procedure Print(Self: Point);
@@ -147,8 +150,14 @@ type
   end;
 
 begin
-  var A: Point := record X := 3; Y := 4; end;
-  var B: Point := record X := 10; Y := 20; end;
+  var A: Point := record
+    X := 3;
+    Y := 4;
+  end;
+  var B: Point := record
+    X := 10;
+    Y := 20;
+  end;
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
@@ -230,7 +239,8 @@ end;
 |-----------|------------|
 | `uses` clause | After commas; continuation lines indented **2 spaces** from column 0 |
 | `function` / `procedure` formal lists | After `;` between parameters |
-| `record` / array literals | Multi-line when over width; keep v1 semicolon rules inside |
+| Record literals with fields | Always multi-line; keep semicolons after every field |
+| Array literals | Multi-line when over width |
 | Long binary chains / calls | Break at lowest-precedence operator; never inside string literals |
 | Postfix chains (`.Field` / `[Index]` / `.Method(...)`) | Break before each suffix; indent continuations **2 spaces** from the expression base column |
 
@@ -359,14 +369,28 @@ type
 
 ### Record literal (expression)
 
-Single line when it fits; multi-field literals use `;` between fields, no trailing `;` before `end`:
+Non-empty record literals are always multi-line. Every field keeps its trailing `;`, including the
+last field before `end`:
+
+Empty record literals stay on one line with exactly one space:
 
 ```pascal
-record X := 3; Y := 4; end
+record end
 ```
 
 ```pascal
-record Host := 'api'; Port := 443; Retries := 5; end
+record
+  X := 3;
+  Y := 4;
+end
+```
+
+```pascal
+record
+  Host := 'api';
+  Port := 443;
+  Retries := 5;
+end
 ```
 
 ### Long `uses` (wrapped, v2 golden)
@@ -385,7 +409,7 @@ begin
 end.
 ```
 
-### Wrapped record literal (v2 golden)
+### Record literal (v2 golden)
 
 ```pascal
 record

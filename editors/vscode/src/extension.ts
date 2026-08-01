@@ -17,7 +17,7 @@ export const OUTPUT_CHANNEL_NAME = "Functional Pascal";
 
 /** First line emitted when the extension activates. */
 export const ACTIVATION_MESSAGE =
-  "Functional Pascal extension activated (Hello World).";
+  "Functional Pascal extension activated.";
 
 /** Public API exposed to extension-host regression tests. */
 export interface FunctionalPascalExtensionApi {

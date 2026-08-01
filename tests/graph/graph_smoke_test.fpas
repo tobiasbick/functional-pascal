@@ -3,7 +3,7 @@ program GraphSmokeTest;
 uses Std.Console, Std.Graph, Std.Test;
 
 mutable var
-  mutable var QuitSeen: boolean := false;
+  QuitSeen: boolean := false;
 
 procedure OnPaint(App: Application);
 begin

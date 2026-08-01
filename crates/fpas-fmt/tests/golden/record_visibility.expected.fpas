@@ -12,7 +12,10 @@ public type
 
     public static function Create(): Counter;
     begin
-      return record Value := 0; Step := 1; end
+      return record
+        Value := 0;
+        Step := 1;
+      end
     end;
 
     public property Current: integer read Hidden;

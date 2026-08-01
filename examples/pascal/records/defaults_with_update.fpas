@@ -15,7 +15,7 @@ begin
 end;
 
 begin
-  var DefaultConfig: Config := record  end;
+  var DefaultConfig: Config := record end;
   var DevConfig: Config := DefaultConfig with Port := 3000; end;
   var ProdConfig: Config := DevConfig with Host := 'api.example'; Port := 443; end;
   WriteLn('Default: ' + ShowConfig(DefaultConfig));

@@ -16,7 +16,10 @@ type
     begin
       var RX: integer := Self.X + Other.X;
       var RY: integer := Self.Y + Other.Y;
-      return record X := RX; Y := RY; end
+      return record
+        X := RX;
+        Y := RY;
+      end
     end;
 
     procedure Print(Self: Point);
@@ -26,8 +29,14 @@ type
   end;
 
 begin
-  var A: Point := record X := 3; Y := 4; end;
-  var B: Point := record X := 10; Y := 20; end;
+  var A: Point := record
+    X := 3;
+    Y := 4;
+  end;
+  var B: Point := record
+    X := 10;
+    Y := 20;
+  end;
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));

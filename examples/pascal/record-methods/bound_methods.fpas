@@ -18,7 +18,9 @@ type
 
     static function Make(Base: integer): Counter;
     begin
-      return record Base := Base; end
+      return record
+        Base := Base;
+      end
     end;
   end;
 
@@ -28,9 +30,13 @@ begin
 end;
 
 begin
-  mutable var C: Counter := record Base := 10; end;
+  mutable var C: Counter := record
+    Base := 10;
+  end;
   var AddTen: function(Value: integer): integer := C.Add;
-  C := record Base := 99; end;
+  C := record
+    Base := 99;
+  end;
   WriteLn(IntToStr(AddTen(5)));
   WriteLn(IntToStr(Apply(AddTen, 7)));
   var ShowBase: procedure() := Counter.Make(3).Show;

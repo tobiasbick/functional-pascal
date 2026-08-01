@@ -152,7 +152,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   );
   assert.ok(
     compiledExtension.includes(
-      "Functional Pascal extension activated (Hello World)."
+      "Functional Pascal extension activated."
     ),
     "compiled extension contains the activation message"
   );

@@ -85,14 +85,24 @@ begin
   Model := Press(App, Model, TuiKeyKind.Backspace, true);
   AssertEquals('beta', Model.Text);
   AssertEquals(0, Model.Caret);
-  Model := record Text := 'alpha beta'; Caret := 0; UseHistory := false; KeyHits := 0; end;
+  Model := record
+    Text := 'alpha beta';
+    Caret := 0;
+    UseHistory := false;
+    KeyHits := 0;
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Delete, true);
   AssertEquals('beta', Model.Text);
   AssertEquals(0, Model.Caret);
   Model := Press(App, Model, TuiKeyKind.Up, false);
   AssertEquals(1, Model.KeyHits);
-  Model := record Text := 'draft'; Caret := 5; UseHistory := true; KeyHits := 0; end;
+  Model := record
+    Text := 'draft';
+    Caret := 5;
+    UseHistory := true;
+    KeyHits := 0;
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Up, false);
   AssertEquals('second', Model.Text);

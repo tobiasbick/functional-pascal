@@ -4,7 +4,7 @@ uses Std.Console, Std.Conv;
 
 mutable var
   { In-memory handler slot standing in for a live registry. }
-  mutable var ClickSlot: option of procedure(Sender: integer) := None;
+  ClickSlot: option of procedure(Sender: integer) := None;
 
 type
   ClickHandler = procedure(Sender: integer);
@@ -42,7 +42,9 @@ begin
 end;
 
 begin
-  var B: Button := record Id := 1; end;
+  var B: Button := record
+    Id := 1;
+  end;
   B.Click();
   B.OnClick := HandleClick;
   B.Click();

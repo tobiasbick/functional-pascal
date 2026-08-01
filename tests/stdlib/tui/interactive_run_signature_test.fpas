@@ -17,7 +17,9 @@ begin
     end;
     TuiMsg.Tick(Delta):
     begin
-      return record Ticks := State.Ticks + 1; end
+      return record
+        Ticks := State.Ticks + 1;
+      end
     end;
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -34,7 +36,9 @@ end;
 
 function RunSignatureOnly(): DemoModel;
 begin
-  return TuiApplication.Run(record Ticks := 0; end, UpdateDemo, ViewDemo)
+  return TuiApplication.Run(record
+    Ticks := 0;
+  end, UpdateDemo, ViewDemo)
 end;
 
 begin

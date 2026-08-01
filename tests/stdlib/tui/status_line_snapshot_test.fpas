@@ -39,7 +39,7 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 3));
-  mutable var Model: StatusModel := record  end;
+  mutable var Model: StatusModel := record end;
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), 'Ready F2 Save Open Quit'));

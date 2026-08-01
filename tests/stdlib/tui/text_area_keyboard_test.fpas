@@ -46,7 +46,11 @@ begin
     begin
       AssertEquals(1, Source.Value);
       AssertEquals(9, Action.Value);
-      return record Text := Text; Caret := Caret; Offset := Offset; end
+      return record
+        Text := Text;
+        Caret := Caret;
+        Offset := Offset;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -120,7 +124,11 @@ begin
   AssertEquals(1, Model.Offset.Y);
   App.Close();
   App := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
-  Model := record Text := 'abcdef'; Caret := 0; Offset := TuiPoint.Create(0, 0); end;
+  Model := record
+    Text := 'abcdef';
+    Caret := 0;
+    Offset := TuiPoint.Create(0, 0);
+  end;
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.EndKey, '');
   AssertEquals(6, Model.Caret);
@@ -143,7 +151,11 @@ begin
   AssertEquals(0, Model.Offset.Y);
   App.Close();
   App := TuiApplication.OpenForTest(TuiSize.Create(10, 5));
-  Model := record Text := 'first'; Caret := 5; Offset := TuiPoint.Create(0, 0); end;
+  Model := record
+    Text := 'first';
+    Caret := 5;
+    Offset := TuiPoint.Create(0, 0);
+  end;
   Model := App.RunIterations(Model, UpdateTextArea, ViewWindowedTextArea, 0, 0);
   Model := PressWindowed(App, Model, TuiKeyKind.Enter, '');
   AssertEquals(0, Model.Offset.Y);

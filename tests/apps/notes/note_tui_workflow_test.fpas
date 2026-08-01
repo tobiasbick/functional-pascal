@@ -72,7 +72,10 @@ end;
 
 begin
   EnsureRoot();
-  var EmptyLoaded: NotesLoad := record Notes := []; Issues := []; end;
+  var EmptyLoaded: NotesLoad := record
+    Notes := [];
+    Issues := [];
+  end;
   mutable var EmptyModel: NotesModel := NotesModelCreate(Directory, EmptyLoaded);
   var EmptyApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
   EmptyModel := EmptyApp.RunIterations(EmptyModel, NotesUpdate, NotesView, 0, 0);
@@ -94,7 +97,10 @@ begin
   EmptyApp.Close();
   var First: Note := NoteCreate('focus-first', 1);
   var Second: Note := NoteCreate('focus-second', 2);
-  var FocusLoaded: NotesLoad := record Notes := [First, Second]; Issues := []; end;
+  var FocusLoaded: NotesLoad := record
+    Notes := [First, Second];
+    Issues := [];
+  end;
   mutable var FocusModel: NotesModel := NotesModelCreate(Directory, FocusLoaded);
   var FocusApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
   FocusModel := FocusApp.RunIterations(FocusModel, NotesUpdate, NotesView, 0, 0);
@@ -138,8 +144,14 @@ begin
   AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
   mutable var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
-  var Issue: NoteIssue := record Path := 'broken.note'; Message := 'invalid header'; end;
-  var Loaded: NotesLoad := record Notes := [NoteValue]; Issues := [Issue]; end;
+  var Issue: NoteIssue := record
+    Path := 'broken.note';
+    Message := 'invalid header';
+  end;
+  var Loaded: NotesLoad := record
+    Notes := [NoteValue];
+    Issues := [Issue];
+  end;
   mutable var Model: NotesModel := NotesModelCreate(Directory, Loaded);
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(100, 24));
   Model := App.RunIterations(Model, NotesUpdate, NotesView, 0, 0);

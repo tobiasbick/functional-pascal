@@ -35,8 +35,14 @@ type
   end;
 
 begin
-  var R: Rectangle := record W := 5; H := 3; end;
+  var R: Rectangle := record
+    W := 5;
+    H := 3;
+  end;
   R.Describe();
-  var S: Rectangle := record W := 4; H := 4; end;
+  var S: Rectangle := record
+    W := 4;
+    H := 4;
+  end;
   S.Describe()
 end.

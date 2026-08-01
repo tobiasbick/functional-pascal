@@ -27,7 +27,9 @@ begin
   case Msg of
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
-      return record Selected := Selected; end
+      return record
+        Selected := Selected;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -38,7 +40,9 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record Selected := 1; end;
+  mutable var Model: ListModel := record
+    Selected := 1;
+  end;
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '  Alpha'));
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), '> Beta'));

@@ -11,17 +11,26 @@ type
 
     public static function Create(Re: real; Im: real): Complex;
     begin
-      return record Re := Re; Im := Im; end
+      return record
+        Re := Re;
+        Im := Im;
+      end
     end;
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
-      return record Re := Self.Re + Other.Re; Im := Self.Im + Other.Im; end
+      return record
+        Re := Self.Re + Other.Re;
+        Im := Self.Im + Other.Im;
+      end
     end;
 
     public function Sub(Self: Complex; Other: Complex): Complex;
     begin
-      return record Re := Self.Re - Other.Re; Im := Self.Im - Other.Im; end
+      return record
+        Re := Self.Re - Other.Re;
+        Im := Self.Im - Other.Im;
+      end
     end;
 
     public function Mul(Self: Complex; Other: Complex): Complex;
@@ -34,7 +43,10 @@ type
 
     public function Scale(Self: Complex; Factor: real): Complex;
     begin
-      return record Re := Self.Re * Factor; Im := Self.Im * Factor; end
+      return record
+        Re := Self.Re * Factor;
+        Im := Self.Im * Factor;
+      end
     end;
 
     public function Sq(Self: Complex): Complex;
@@ -45,7 +57,10 @@ type
     public function Inv(Self: Complex): Complex;
     begin
       var Den: real := Self.Re * Self.Re + Self.Im * Self.Im;
-      return record Re := Self.Re / Den; Im := - Self.Im / Den; end
+      return record
+        Re := Self.Re / Den;
+        Im := - Self.Im / Den;
+      end
     end;
 
     public function MagSq(Self: Complex): real;
@@ -90,18 +105,27 @@ begin
     var Z2: Complex := Z.Sq();
     if Z2.MagSq() < 0.000000000001 then
     begin
-      return record Root := 0; Shade := 0.0; end
+      return record
+        Root := 0;
+        Shade := 0.0;
+      end
     end;
     var Next: Complex := Z.Scale(2.0 / 3.0).Add(Z2.Inv().Scale(1.0 / 3.0));
     if Next.Sub(Z).MagSq() < Tolerance then
     begin
       var Shade: real := 1.0 - (IntToReal(N) / IntToReal(Max(MaxIter, 1)));
-      return record Root := ClosestRoot(Next); Shade := Shade; end
+      return record
+        Root := ClosestRoot(Next);
+        Shade := Shade;
+      end
     end;
     Z := Next;
     N := N + 1
   end;
-  return record Root := ClosestRoot(Z); Shade := 0.25; end
+  return record
+    Root := ClosestRoot(Z);
+    Shade := 0.25;
+  end
 end;
 
 function ComputeRow(
@@ -150,7 +174,11 @@ begin
   if Sample.Root = 0 then
   begin
     var CellShade: Color := InsideColor();
-    return record glyph := ' '; foreground := CellShade; background := CellShade; end
+    return record
+      glyph := ' ';
+      foreground := CellShade;
+      background := CellShade;
+    end
   end;
   var Fg: Color := RootColor(Sample.Root, Sample.Shade);
   return record

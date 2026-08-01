@@ -35,7 +35,7 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 3));
-  mutable var Model: MenuModel := record  end;
+  mutable var Model: MenuModel := record end;
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   var Surface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(Std.Str.Contains(Surface.LineAt(0), ' Open  Save '));

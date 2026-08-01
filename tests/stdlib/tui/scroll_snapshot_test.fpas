@@ -31,7 +31,9 @@ begin
   case Msg of
     TuiMsg.ScrollChanged(Source, Action, Offset):
     begin
-      return record Offset := Offset; end
+      return record
+        Offset := Offset;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -42,7 +44,9 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 2));
-  mutable var Model: ScrollModel := record Offset := TuiPoint.Create(0, 0); end;
+  mutable var Model: ScrollModel := record
+    Offset := TuiPoint.Create(0, 0);
+  end;
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
   App.Inject(TuiMsgScrollChanged(TuiControlId.Create(1), TuiAction.Create(7), TuiPoint.Create(0, 1)));

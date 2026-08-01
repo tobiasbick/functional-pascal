@@ -44,7 +44,11 @@ begin
       case Current of
         Some(Id):
         begin
-          return record Focus := Id.Value; Checked := State.Checked; Changes := State.Changes; end
+          return record
+            Focus := Id.Value;
+            Checked := State.Checked;
+            Changes := State.Changes;
+          end
         end;
         None:
         begin
@@ -71,7 +75,11 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record Focus := 1; Checked := false; Changes := []; end;
+  mutable var Model: CheckModel := record
+    Focus := 1;
+    Checked := false;
+    Changes := [];
+  end;
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, ''));
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 1, 0);

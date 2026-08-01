@@ -22,7 +22,10 @@ begin
   case Msg of
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
-      return record Text := Text; Caret := Caret; end
+      return record
+        Text := Text;
+        Caret := Caret;
+      end
     end
     else
     begin
@@ -39,13 +42,19 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
-  mutable var Model: InputPointerModel := record Text := 'abcdef'; Caret := 0; end;
+  mutable var Model: InputPointerModel := record
+    Text := 'abcdef';
+    Caret := 0;
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 4);
   AssertEquals(3, Model.Caret);
   Model := Click(App, Model, 9);
   AssertEquals(6, Model.Caret);
-  Model := record Text := 'a界b'; Caret := 0; end;
+  Model := record
+    Text := 'a界b';
+    Caret := 0;
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Click(App, Model, 3);
   AssertEquals(1, Model.Caret);

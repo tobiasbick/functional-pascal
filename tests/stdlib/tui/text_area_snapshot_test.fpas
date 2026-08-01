@@ -29,12 +29,16 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(4, 2));
-  App.RunIterations(record Focused := true; end, UpdateTextArea, ViewTextArea, 0, 0);
+  App.RunIterations(record
+    Focused := true;
+  end, UpdateTextArea, ViewTextArea, 0, 0);
   var Focused: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('l▏ha', Focused.LineAt(0));
   AssertEquals('mega', Focused.LineAt(1));
   AssertTrue(Focused.CellAt(1, 0).Role = TuiStyleRole.Focused);
-  App.RunIterations(record Focused := false; end, UpdateTextArea, ViewTextArea, 0, 0);
+  App.RunIterations(record
+    Focused := false;
+  end, UpdateTextArea, ViewTextArea, 0, 0);
   var Unfocused: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('lpha', Unfocused.LineAt(0));
   AssertEquals('mega', Unfocused.LineAt(1));

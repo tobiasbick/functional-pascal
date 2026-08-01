@@ -82,17 +82,26 @@ begin
           end;
           Error(Message):
           begin
-            Std.Array.Push(Issues, record Path := Path; Message := Message; end)
+            Std.Array.Push(Issues, record
+              Path := Path;
+              Message := Message;
+            end)
           end
         end
       end;
       Error(Message):
       begin
-        Std.Array.Push(Issues, record Path := Path; Message := Message; end)
+        Std.Array.Push(Issues, record
+          Path := Path;
+          Message := Message;
+        end)
       end
     end
   end;
-  return Ok(record Notes := NotesSort(Notes); Issues := Issues; end)
+  return Ok(record
+    Notes := NotesSort(Notes);
+    Issues := Issues;
+  end)
 end;
 
 /// Atomically writes one note to its stable file path.

@@ -72,7 +72,10 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  mutable var Model: FifoModel := record Events := []; SeenCmdWasNoCommand := true; end;
+  mutable var Model: FifoModel := record
+    Events := [];
+    SeenCmdWasNoCommand := true;
+  end;
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 0, 0);
   App.Inject(TuiMsg.Tick(1));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));

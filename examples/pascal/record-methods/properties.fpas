@@ -20,7 +20,9 @@ type
   end;
 
 begin
-  var C: Counter := record Base := 10; end;
+  var C: Counter := record
+    Base := 10;
+  end;
   WriteLn(IntToStr(C.Value));
   C.Value := 20;
   WriteLn(IntToStr(C.Value))

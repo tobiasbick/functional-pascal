@@ -11,12 +11,18 @@ type
 
     public static function Zero(): Complex;
     begin
-      return record Re := 0.0; Im := 0.0; end
+      return record
+        Re := 0.0;
+        Im := 0.0;
+      end
     end;
 
     public static function Create(Re: real; Im: real): Complex;
     begin
-      return record Re := Re; Im := Im; end
+      return record
+        Re := Re;
+        Im := Im;
+      end
     end;
 
     public function Sq(Self: Complex): Complex;
@@ -29,7 +35,10 @@ type
 
     public function Add(Self: Complex; Other: Complex): Complex;
     begin
-      return record Re := Self.Re + Other.Re; Im := Self.Im + Other.Im; end
+      return record
+        Re := Self.Re + Other.Re;
+        Im := Self.Im + Other.Im;
+      end
     end;
 
     public function MagSq(Self: Complex): real;
@@ -53,7 +62,10 @@ begin
   end;
   if N >= MaxIter then
   begin
-    return record IsInside := true; EscapeValue := 0.0; end
+    return record
+      IsInside := true;
+      EscapeValue := 0.0;
+    end
   end;
   var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
   return record

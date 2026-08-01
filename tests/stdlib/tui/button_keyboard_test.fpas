@@ -56,7 +56,10 @@ begin
       case Current of
         Some(Id):
         begin
-          return record Focus := Id.Value; Actions := State.Actions; end
+          return record
+            Focus := Id.Value;
+            Actions := State.Actions;
+          end
         end;
         None:
         begin
@@ -73,7 +76,10 @@ end;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(30, 10));
-  mutable var Model: ButtonKeyboardModel := record Focus := 1; Actions := []; end;
+  mutable var Model: ButtonKeyboardModel := record
+    Focus := 1;
+    Actions := [];
+  end;
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
@@ -84,7 +90,10 @@ begin
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Character, 'c', true));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
   AssertEquals(2, Std.Array.Length(Model.Actions));
-  Model := record Focus := 3; Actions := Model.Actions; end;
+  Model := record
+    Focus := 3;
+    Actions := Model.Actions;
+  end;
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);

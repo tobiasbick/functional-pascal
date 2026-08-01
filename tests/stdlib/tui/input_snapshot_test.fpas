@@ -25,19 +25,31 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(10, 2));
-  mutable var Model: InputSnapshotModel := record Text := ''; Caret := 0; Hint := 'Path'; end;
+  mutable var Model: InputSnapshotModel := record
+    Text := '';
+    Caret := 0;
+    Hint := 'Path';
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var HintSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(HintSurface.CellAt(1, 0).Role = TuiStyleRole.InputCursor);
   AssertEquals('P', HintSurface.CellAt(2, 0).Glyph);
   AssertTrue(HintSurface.CellAt(2, 0).Role = TuiStyleRole.InputHint);
-  Model := record Text := 'abcdefghijk'; Caret := 0; Hint := ''; end;
+  Model := record
+    Text := 'abcdefghijk';
+    Caret := 0;
+    Hint := '';
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var RightSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('►', RightSurface.CellAt(9, 0).Glyph);
   AssertTrue(RightSurface.CellAt(9, 0).Role = TuiStyleRole.InputScroll);
   AssertTrue(RightSurface.CellAt(1, 0).Role = TuiStyleRole.InputCursor);
-  Model := record Text := 'abcdefghijk'; Caret := 11; Hint := ''; end;
+  Model := record
+    Text := 'abcdefghijk';
+    Caret := 11;
+    Hint := '';
+  end;
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var LeftSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);

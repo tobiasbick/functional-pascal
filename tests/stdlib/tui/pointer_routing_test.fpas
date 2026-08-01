@@ -133,7 +133,11 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 8));
-  mutable var Model: RouteModel := record Focus := 1; Actions := []; PointerHits := 0; end;
+  mutable var Model: RouteModel := record
+    Focus := 1;
+    Actions := [];
+    PointerHits := 0;
+  end;
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   var GoAt: TuiPoint := FindGlyph(Snapshot, 'Go');
@@ -160,7 +164,11 @@ begin
   AssertEquals(3, Model.PointerHits);
   App.Close();
   mutable var Overlap: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 6));
-  Model := record Focus := 1; Actions := []; PointerHits := 0; end;
+  Model := record
+    Focus := 1;
+    Actions := [];
+    PointerHits := 0;
+  end;
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 0, 0);
   var FrontAt: TuiPoint := FindGlyph(Overlap.SurfaceSnapshot(), 'Front');
   Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Down, FrontAt.X, FrontAt.Y));

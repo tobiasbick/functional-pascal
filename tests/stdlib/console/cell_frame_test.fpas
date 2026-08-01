@@ -4,12 +4,21 @@ uses Std.Console, Std.Option, Std.Test;
 
 function MakeCell(Glyph: string; Foreground: Color; Background: Color): Cell;
 begin
-  return record glyph := Glyph; foreground := Foreground; background := Background; end
+  return record
+    glyph := Glyph;
+    foreground := Foreground;
+    background := Background;
+  end
 end;
 
 begin
   BeginFrame();
-  FillRect(record x := 1; y := 1; width := 5; height := 2; end, MakeCell('.', CrtColor(LightGray), CrtColor(Black)));
+  FillRect(record
+    x := 1;
+    y := 1;
+    width := 5;
+    height := 2;
+  end, MakeCell('.', CrtColor(LightGray), CrtColor(Black)));
   PutCell(2, 1, MakeCell('X', RgbColor(10, 20, 30), Ansi256Color(42)));
   WriteCells(3, 1, [
                      MakeCell('Y', CrtColor(Yellow), CrtColor(Blue)),

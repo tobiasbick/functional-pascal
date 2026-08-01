@@ -21,11 +21,19 @@ begin
     TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
-      return record LabelText := 'SHOULD NOT PAINT'; Quit := true; Updates := State.Updates + 1; end
+      return record
+        LabelText := 'SHOULD NOT PAINT';
+        Quit := true;
+        Updates := State.Updates + 1;
+      end
     end;
     TuiMsg.Tick(Delta):
     begin
-      return record LabelText := 'after-tick'; Quit := false; Updates := State.Updates + 1; end
+      return record
+        LabelText := 'after-tick';
+        Quit := false;
+        Updates := State.Updates + 1;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
     begin
@@ -40,7 +48,11 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
-  mutable var Model: QuitModel := record LabelText := 'before'; Quit := false; Updates := 0; end;
+  mutable var Model: QuitModel := record
+    LabelText := 'before';
+    Quit := false;
+    Updates := 0;
+  end;
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
   App.Inject(TuiMsg.QuitRequested);

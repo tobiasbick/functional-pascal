@@ -1,0 +1,14 @@
+program T;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+
+begin
+  var A: Point := record
+    X := 3;
+    Y := 4;
+  end
+end.

@@ -127,11 +127,11 @@ begin
 end;
 
 mutable var
-  mutable var State: ExplorerState := ExplorerState.Default();
-  mutable var RenderW: integer := 1;
-  mutable var RenderH: integer := 1;
-  mutable var NeedsRedraw: boolean := true;
-  mutable var Quit: boolean := false;
+  State: ExplorerState := ExplorerState.Default();
+  RenderW: integer := 1;
+  RenderH: integer := 1;
+  NeedsRedraw: boolean := true;
+  Quit: boolean := false;
 
 procedure RequestRedraw();
 begin
@@ -143,7 +143,12 @@ begin
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   BeginFrame();
-  FillRect(record x := 1; y := 1; width := ScreenWidth(); height := ScreenHeight(); end, record
+  FillRect(record
+    x := 1;
+    y := 1;
+    width := ScreenWidth();
+    height := ScreenHeight();
+  end, record
     glyph := ' ';
     foreground := RgbColor(0, 0, 0);
     background := RgbColor(0, 0, 0);

@@ -28,7 +28,10 @@ begin
   case Msg of
     TuiMsg.CheckChanged(Source, Action, Checked):
     begin
-      return record Focus := State.Focus; Checked := Checked; end
+      return record
+        Focus := State.Focus;
+        Checked := Checked;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -39,10 +42,16 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record Focus := 1; Checked := false; end;
+  mutable var Model: CheckModel := record
+    Focus := 1;
+    Checked := false;
+  end;
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[ ] Flag'));
-  Model := record Focus := 1; Checked := true; end;
+  Model := record
+    Focus := 1;
+    Checked := true;
+  end;
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
   App.Close()

@@ -14,7 +14,7 @@ const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
 const RESTART_LANGUAGE_SERVER_COMMAND =
   "functionalPascal.restartLanguageServer";
 const ACTIVATION_MESSAGE =
-  "Functional Pascal extension activated (Hello World).";
+  "Functional Pascal extension activated.";
 
 /** Runs the extension-shell regression test in a real Extension Host. */
 export async function run(): Promise<void> {

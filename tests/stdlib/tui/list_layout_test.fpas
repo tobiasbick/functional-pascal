@@ -45,7 +45,9 @@ begin
   AssertEquals(2, Empty.Preferred.Width);
   AssertEquals(1, Empty.Preferred.Height);
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record Selected := 0; end;
+  mutable var Model: ListModel := record
+    Selected := 0;
+  end;
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   App.InjectResizeForTest(TuiSize.Create(16, 5));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);

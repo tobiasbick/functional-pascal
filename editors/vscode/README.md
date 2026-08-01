@@ -125,7 +125,7 @@ Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:
 
 ```text
-Functional Pascal extension activated (Hello World).
+Functional Pascal extension activated.
 ```
 
 The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real

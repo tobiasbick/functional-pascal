@@ -81,7 +81,11 @@ begin
       case Current of
         Some(Id):
         begin
-          return record Focus := Id.Value; Menu := State.Menu; Actions := State.Actions; end
+          return record
+            Focus := Id.Value;
+            Menu := State.Menu;
+            Actions := State.Actions;
+          end
         end;
         None:
         begin
@@ -91,7 +95,11 @@ begin
     end;
     TuiMsg.MenuChanged(Source, Action, Menu):
     begin
-      return record Focus := State.Focus; Menu := Menu; Actions := State.Actions; end
+      return record
+        Focus := State.Focus;
+        Menu := Menu;
+        Actions := State.Actions;
+      end
     end;
     TuiMsg.Action(Source, Action):
     begin

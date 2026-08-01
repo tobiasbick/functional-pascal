@@ -40,7 +40,9 @@ begin
   var CheckedSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', true, TuiAction.Create(1)), TuiMeasureSpec.Unbounded());
   AssertEquals(8, CheckedSize.Preferred.Width);
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 6));
-  mutable var Model: CheckModel := record Checked := false; end;
+  mutable var Model: CheckModel := record
+    Checked := false;
+  end;
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
   App.InjectResizeForTest(TuiSize.Create(12, 4));

@@ -32,7 +32,9 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  var Model: DemoModel := App.RunIterations(record Confirming := true; end, UpdateDemo, ViewDemo, 0, 0);
+  var Model: DemoModel := App.RunIterations(record
+    Confirming := true;
+  end, UpdateDemo, ViewDemo, 0, 0);
   AssertTrue(Model.Confirming);
   App.Close()
 end.

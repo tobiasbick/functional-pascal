@@ -8,12 +8,7 @@ use super::super::Emitter;
 use super::super::wrap::{exceeds_width, measure_emit, text_width};
 
 pub(super) fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
-    let inline = measure_emit(|inner| {
-        inner.write("record ");
-        emit_record_field_inits(inner, fields);
-        inner.write(record_literal_end(fields));
-    });
-    if !exceeds_width(emitter.column(), text_width(&inline)) {
+    if fields.is_empty() {
         emitter.write("record ");
         emit_record_field_inits(emitter, fields);
         emitter.write(record_literal_end(fields));
@@ -30,7 +25,13 @@ pub(super) fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
         write_to_column(emitter, field_column);
         emitter.write(&field.name);
         emitter.write(" := ");
-        super::emit_expr_impl(emitter, &field.value, 0, false);
+        if matches!(&field.value, Expr::RecordLiteral { .. }) {
+            emitter.with_indent(|inner| {
+                super::emit_expr_impl(inner, &field.value, 0, false);
+            });
+        } else {
+            super::emit_expr_impl(emitter, &field.value, 0, false);
+        }
         emitter.write(";");
     }
     emitter.write("\n");
@@ -97,7 +98,7 @@ pub(super) fn emit_record_field_inits(emitter: &mut Emitter, fields: &[FieldInit
 }
 
 pub(super) fn record_literal_end(fields: &[FieldInit]) -> &'static str {
-    if fields.is_empty() { " end" } else { "; end" }
+    if fields.is_empty() { "end" } else { "; end" }
 }
 
 pub(super) fn format_string(value: &str) -> String {

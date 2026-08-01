@@ -264,7 +264,7 @@ mod tests {
             expr_from_body(
                 "program T; type Point = record X: integer; Y: integer; end; begin var X: Point := record X := 1; Y := 2; end; end."
             ),
-            "record X := 1; Y := 2; end"
+            "record\n  X := 1;\n  Y := 2;\nend"
         );
         assert_eq!(
             expr_from_body("program T; begin var X: result of integer, string := Ok(42); end."),
@@ -277,11 +277,38 @@ mod tests {
     }
 
     #[test]
-    fn wrapped_record_literal() {
+    fn nonempty_record_literal_is_multiline() {
         let formatted = expr_from_body(
-            "program T; type Config = record Host: string; Port: integer; Retries: integer; TimeoutSeconds: integer; Extra: string; end; begin var X: Config := record Host := 'https://api.example.com/v2/production'; Port := 443; Retries := 5; TimeoutSeconds := 30; Extra := 'metadata'; end; end.",
+            "program T; type Point = record X: integer; end; begin var Value: Point := record X := 1; end; end.",
         );
-        assert!(formatted.contains("record\n  Host := 'https://api.example.com/v2/production';"));
+        assert_eq!(formatted, "record\n  X := 1;\nend");
+    }
+
+    #[test]
+    fn empty_record_literal_has_one_space() {
+        let formatted = expr_from_body(
+            "program T; type Empty = record end; begin var Value: Empty := record  end; end.",
+        );
+        assert_eq!(formatted, "record end");
+    }
+
+    #[test]
+    fn empty_record_update_has_one_space() {
+        let formatted = expr_from_body(
+            "program T; type Empty = record end; begin var Value: Empty := Base with  end; end.",
+        );
+        assert_eq!(formatted, "Base with end");
+    }
+
+    #[test]
+    fn nested_record_literal_indents_from_its_field() {
+        let formatted = expr_from_body(
+            "program T; type Inner = record X: integer; end; Outer = record Item: Inner; end; begin var Value: Outer := record Item := record X := 1; end; end; end.",
+        );
+        assert_eq!(
+            formatted,
+            "record\n  Item := record\n    X := 1;\n  end;\nend"
+        );
     }
 
     #[test]

@@ -48,11 +48,11 @@ fn long_uses() {
 }
 
 #[test]
-fn wrapped_record_literal() {
+fn short_record_literal_is_multiline() {
     common::assert_golden(
-        "wrapped_record",
-        "program T; type Config = record Host: string; Port: integer; Retries: integer; TimeoutSeconds: integer; end; begin var C: Config := record Host := 'api.example.com'; Port := 443; Retries := 5; TimeoutSeconds := 30; end; end.",
-        include_str!("golden/wrapped_record.expected.fpas"),
+        "short_record",
+        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; end.",
+        include_str!("golden/short_record.expected.fpas"),
     );
 }
 

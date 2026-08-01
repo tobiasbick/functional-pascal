@@ -52,7 +52,10 @@ begin
     begin
       AssertEquals(1, Source.Value);
       AssertEquals(7, Action.Value);
-      return record Offset := Offset; Changes := Std.Array.Concat(State.Changes, [Offset.Y]); end
+      return record
+        Offset := Offset;
+        Changes := Std.Array.Concat(State.Changes, [Offset.Y]);
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -63,7 +66,10 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(12, 3));
-  mutable var Model: ScrollModel := record Offset := TuiPoint.Create(0, 0); Changes := []; end;
+  mutable var Model: ScrollModel := record
+    Offset := TuiPoint.Create(0, 0);
+    Changes := [];
+  end;
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);

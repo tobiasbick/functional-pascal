@@ -50,7 +50,10 @@ begin
       case Current of
         Some(Id):
         begin
-          return record Focus := Id.Value; Selected := State.Selected; end
+          return record
+            Focus := Id.Value;
+            Selected := State.Selected;
+          end
         end;
         None:
         begin
@@ -60,7 +63,10 @@ begin
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin
-      return record Focus := State.Focus; Selected := Selected; end
+      return record
+        Focus := State.Focus;
+        Selected := Selected;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -71,7 +77,10 @@ end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 8));
-  mutable var Model: ListModel := record Focus := 1; Selected := 0; end;
+  mutable var Model: ListModel := record
+    Focus := 1;
+    Selected := 0;
+  end;
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   var BetaAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Beta');
   App.InjectPointerForTest(MakePointer(BetaAt.X, BetaAt.Y));

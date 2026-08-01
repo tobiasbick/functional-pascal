@@ -22,11 +22,17 @@ begin
   case Msg of
     TuiMsg.Action(Source, Action):
     begin
-      return record Actions := State.Actions + 1; PointerEvents := State.PointerEvents; end
+      return record
+        Actions := State.Actions + 1;
+        PointerEvents := State.PointerEvents;
+      end
     end;
     TuiMsg.Pointer(Pointer):
     begin
-      return record Actions := State.Actions; PointerEvents := State.PointerEvents + 1; end
+      return record
+        Actions := State.Actions;
+        PointerEvents := State.PointerEvents + 1;
+      end
     end;
     TuiMsg.Key(Key), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
     begin
@@ -42,7 +48,10 @@ end;
 
 begin
   var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(16, 4));
-  mutable var Model: ButtonPointerModel := record Actions := 0; PointerEvents := 0; end;
+  mutable var Model: ButtonPointerModel := record
+    Actions := 0;
+    PointerEvents := 0;
+  end;
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
   var GoX: integer := Std.Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
   var Inside: TuiPoint := TuiPoint.Create(GoX, 0);

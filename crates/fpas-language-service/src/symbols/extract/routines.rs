@@ -4,7 +4,7 @@ use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
 use fpas_parser::{Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, Visibility};
 
-use super::{declaration_symbol, member_symbol, named_type, type_text};
+use super::{declaration_symbol, member_symbol, named_type, type_callable_signature, type_text};
 use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
 
 pub(crate) fn function_children(
@@ -84,7 +84,7 @@ pub(super) fn collect_statement_symbols(
                 span,
                 ..
             } => {
-                output.push(member_symbol(
+                let mut symbol = member_symbol(
                     snapshot,
                     owner,
                     var_name,
@@ -98,7 +98,9 @@ pub(super) fn collect_statement_symbols(
                     ),
                     (*span).into(),
                     Vec::new(),
-                ));
+                );
+                symbol.callable = type_callable_signature(snapshot, var_name, var_type);
+                output.push(symbol);
                 collect_statement_symbols(
                     snapshot,
                     owner,
@@ -170,7 +172,7 @@ fn parameter_symbol(
     param: &FormalParam,
     scope_span: SourceSpan,
 ) -> DocumentSymbol {
-    member_symbol(
+    let mut symbol = member_symbol(
         snapshot,
         owner,
         &param.name,
@@ -186,7 +188,9 @@ fn parameter_symbol(
         ),
         scope_span,
         Vec::new(),
-    )
+    );
+    symbol.callable = type_callable_signature(snapshot, &param.name, &param.type_expr);
+    symbol
 }
 
 fn collect_branch(

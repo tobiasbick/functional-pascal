@@ -5,9 +5,11 @@ language detection, TextMate syntax highlighting, comment and bracket
 configuration, indentation, and folding. Its bundled native `fpas-lsp` server
 provides parser and semantic diagnostics, canonical whole-document formatting,
 document symbols, hover, same- and cross-unit go to definition, find all
-references, validated project-wide rename, and basic visibility-aware
-completion. The repository builds and tests the extension without a
-Marketplace.
+references, workspace symbol search, document highlights, go to type
+definition, syntax-aware selection expansion, validated project-wide rename,
+rich visibility-aware completion, lazy completion documentation, signature
+help, checked FPAS snippets, and safe unambiguous auto-imports. The repository
+builds and tests the extension without a Marketplace.
 
 ## Build
 
@@ -55,14 +57,26 @@ result matches `fpas fmt`. The editor's standard `editor.formatOnSave` setting
 uses the same formatter without an FPAS-specific setting.
 
 Open the Outline view to inspect FPAS declarations. Hover a declaration or
-reference, use **Go to Definition**, and invoke completion in a routine body or
-after a unit/record `.`. Project-aware results use the same `.fpasprj`,
+reference, use **Go to Definition** or **Go to Type Definition**, search all
+project declarations with **Go to Symbol in Workspace** (`Ctrl+T`), and invoke
+completion in a routine body or after a unit/record `.`. Resolved identifiers
+highlight their declaration, reads, and writes in the current document.
+Selection expansion follows enclosing FPAS syntax. Project-aware results use
+the same `.fpasprj`,
 `.fpasworkspace`, visibility, and library-export boundaries as the compiler.
 Use **Find All References** (`Shift+F12`) to list resolved declarations and
 usages, including uses in indexed programs that consume a directly owned
 library, and **Rename Symbol** (`F2`) to validate and edit a normal declaration
 across those loaded projects. Program/unit renames and declarations outside
 the opened folder are intentionally rejected.
+
+Completion includes parameters, locals, imported declarations, record and enum
+members, and context-appropriate keywords with accurate kinds, owners, types,
+signatures, and replacement ranges. Signature help tracks nested and multiline
+calls. Type a prefix such as `function`, `record`, `if`, or `for` to select a
+repository-owned snippet. A completion may add a `uses` entry only when one
+accessible public declaration has one unambiguous unit import; ambiguous or
+inaccessible names are never guessed.
 
 The folder opened in the editor may be the complete Functional Pascal Rust
 repository or another parent folder without an FPAS manifest. The server
@@ -87,8 +101,9 @@ Functional Pascal extension activated (Hello World).
 
 The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
 VS Code Extension Host, verifies diagnostics, formatting, document symbols,
-hover, cross-unit definition, references, rename, and completion, restarts it
-once, and shuts it down with the extension:
+hover, cross-unit definition and type definition, workspace symbols, document
+highlights, references, rename, rich completion, signature help, snippets, and
+a safe auto-import, restarts it once, and shuts it down with the extension:
 
 ```text
 npm test --prefix editors/vscode

@@ -11,7 +11,10 @@ pub mod convert;
 mod diagnostics;
 mod documents;
 mod formatting;
+mod intellisense;
+mod intellisense_requests;
 mod navigation;
+mod navigation_requests;
 mod request_tasks;
 mod server;
 

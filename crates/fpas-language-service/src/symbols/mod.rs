@@ -4,5 +4,7 @@ mod document;
 mod extract;
 mod index;
 
-pub use document::{DocumentSymbol, DocumentSymbols, SymbolKind, SymbolVisibility};
+pub use document::{
+    CallableSignature, DocumentSymbol, DocumentSymbols, SymbolKind, SymbolVisibility,
+};
 pub use index::{SymbolLocation, WorkspaceSymbolIndex};

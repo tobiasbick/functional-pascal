@@ -1,13 +1,15 @@
-//! LSP request handlers for symbols, navigation, completion, references, and rename.
+//! LSP request handlers for symbols, navigation, references, and rename.
 
 use std::collections::HashMap;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
+use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
 use tower_lsp_server::ls_types::{
-    CompletionParams, CompletionResponse, DocumentSymbolParams, DocumentSymbolResponse,
+    DocumentHighlight, DocumentHighlightParams, DocumentSymbolParams, DocumentSymbolResponse,
     GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, Location,
-    PrepareRenameResponse, ReferenceParams, RenameParams, TextDocumentPositionParams, TextEdit,
-    Uri, WorkspaceEdit,
+    PrepareRenameResponse, ReferenceParams, RenameParams, SelectionRange, SelectionRangeParams,
+    TextDocumentPositionParams, TextEdit, Uri, WorkspaceEdit, WorkspaceSymbolParams,
+    WorkspaceSymbolResponse,
 };
 
 use super::Backend;
@@ -15,6 +17,22 @@ use crate::convert::file_uri_to_path;
 use crate::navigation;
 
 impl Backend {
+    pub(super) async fn workspace_symbol_request(
+        &self,
+        params: WorkspaceSymbolParams,
+    ) -> Result<Option<WorkspaceSymbolResponse>> {
+        let symbols = self
+            .documents
+            .workspace_symbols(&params.query)
+            .await
+            .map_err(invalid_params)?
+            .into_iter()
+            .map(navigation::workspace_symbol)
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(conversion_error)?;
+        Ok(Some(WorkspaceSymbolResponse::Flat(symbols)))
+    }
+
     pub(super) async fn document_symbol_request(
         &self,
         params: DocumentSymbolParams,
@@ -64,24 +82,62 @@ impl Backend {
         Ok((!locations.is_empty()).then_some(GotoDefinitionResponse::Array(locations)))
     }
 
-    pub(super) async fn completion_request(
+    pub(super) async fn type_definition_request(
         &self,
-        params: CompletionParams,
-    ) -> Result<Option<CompletionResponse>> {
-        let text = params.text_document_position;
+        params: GotoTypeDefinitionParams,
+    ) -> Result<Option<GotoTypeDefinitionResponse>> {
+        let text = params.text_document_position_params;
+        let path = request_path(&text.text_document.uri)?;
+        let definitions = self
+            .documents
+            .type_definitions_open(&path, text.position)
+            .await
+            .map_err(invalid_params)?;
+        let locations = definitions
+            .iter()
+            .map(|definition| navigation::location(&definition.snapshot, &definition.location))
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(conversion_error)?;
+        Ok((!locations.is_empty()).then_some(GotoDefinitionResponse::Array(locations)))
+    }
+
+    pub(super) async fn document_highlight_request(
+        &self,
+        params: DocumentHighlightParams,
+    ) -> Result<Option<Vec<DocumentHighlight>>> {
+        let text = params.text_document_position_params;
         let path = request_path(&text.text_document.uri)?;
         let result = self
             .documents
-            .completions_open(&path, text.position)
+            .document_highlights_open(&path, text.position)
             .await
             .map_err(invalid_params)?;
-        Ok(Some(CompletionResponse::Array(
-            result
-                .value
-                .into_iter()
-                .map(navigation::completion)
-                .collect(),
-        )))
+        let highlights = result
+            .value
+            .into_iter()
+            .map(|highlight| navigation::document_highlight(&result.snapshot, highlight))
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(conversion_error)?;
+        Ok(Some(highlights))
+    }
+
+    pub(super) async fn selection_range_request(
+        &self,
+        params: SelectionRangeParams,
+    ) -> Result<Option<Vec<SelectionRange>>> {
+        let path = request_path(&params.text_document.uri)?;
+        let document = self
+            .documents
+            .selection_ranges_open(&path, &params.positions)
+            .await
+            .map_err(invalid_params)?;
+        let ranges = document
+            .ranges
+            .into_iter()
+            .map(|range| navigation::selection_range(&document.snapshot, range))
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(conversion_error)?;
+        Ok(Some(ranges))
     }
 
     pub(super) async fn references_request(

@@ -1,23 +1,25 @@
 //! Conversion from protocol-independent navigation results to LSP values.
 
+mod highlights;
 mod references;
 mod rename;
+mod selection;
 mod symbols;
+mod workspace_symbols;
 
 use fpas_diagnostics::SourceSpan;
-use fpas_language_service::{
-    CompletionCandidate, DocumentSnapshot, HoverInfo, SymbolKind, SymbolLocation,
-};
+use fpas_language_service::{DocumentSnapshot, HoverInfo, SymbolKind, SymbolLocation};
 use tower_lsp_server::ls_types::{
-    CompletionItem, CompletionItemKind, Hover, HoverContents, Location, MarkupContent, MarkupKind,
-    Range, Uri,
+    Hover, HoverContents, Location, MarkupContent, MarkupKind, Range, Uri,
 };
 
 use crate::convert::{PositionConversionError, byte_offset_to_position};
 
 pub(crate) use references::reference_location;
 pub(crate) use rename::{prepare_rename, rename_edit};
+pub(crate) use selection::selection_range;
 pub(crate) use symbols::document_symbols;
+pub(crate) use workspace_symbols::workspace_symbol;
 
 pub(crate) fn hover(
     snapshot: &DocumentSnapshot,
@@ -41,15 +43,6 @@ pub(crate) fn location(
         uri,
         span_range(snapshot, value.symbol.selection_span)?,
     ))
-}
-
-pub(crate) fn completion(value: CompletionCandidate) -> CompletionItem {
-    CompletionItem {
-        label: value.label,
-        kind: Some(completion_kind(value.kind)),
-        detail: Some(value.detail),
-        ..CompletionItem::default()
-    }
 }
 
 pub(crate) fn span_range(
@@ -83,24 +76,6 @@ pub(crate) fn symbol_kind(kind: SymbolKind) -> tower_lsp_server::ls_types::Symbo
     }
 }
 
-fn completion_kind(kind: SymbolKind) -> CompletionItemKind {
-    match kind {
-        SymbolKind::Program => CompletionItemKind::FILE,
-        SymbolKind::Unit => CompletionItemKind::MODULE,
-        SymbolKind::Constant => CompletionItemKind::CONSTANT,
-        SymbolKind::Variable
-        | SymbolKind::MutableVariable
-        | SymbolKind::Parameter
-        | SymbolKind::LoopVariable => CompletionItemKind::VARIABLE,
-        SymbolKind::Type => CompletionItemKind::CLASS,
-        SymbolKind::Function | SymbolKind::Procedure => CompletionItemKind::FUNCTION,
-        SymbolKind::Field => CompletionItemKind::FIELD,
-        SymbolKind::Property => CompletionItemKind::PROPERTY,
-        SymbolKind::Event => CompletionItemKind::EVENT,
-        SymbolKind::EnumMember => CompletionItemKind::ENUM_MEMBER,
-    }
-}
-
 #[derive(Debug)]
 pub(crate) enum NavigationConversionError {
     InvalidPath,
@@ -121,3 +96,4 @@ impl From<PositionConversionError> for NavigationConversionError {
         Self::Position(error)
     }
 }
+pub(crate) use highlights::document_highlight;

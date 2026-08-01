@@ -6,13 +6,16 @@ mod source;
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
-use fpas_parser::{CompilationUnit, Decl, Visibility};
+use fpas_parser::{CompilationUnit, Decl, TypeBody, Visibility};
 
 use super::{DocumentSymbol, SymbolKind, SymbolVisibility};
 use crate::DocumentSnapshot;
 
 pub(crate) use routines::{function_children, procedure_children};
-pub(crate) use source::{function_detail, name_span, named_type, procedure_detail, type_text};
+pub(crate) use source::{
+    function_detail, function_signature, name_span, named_type, procedure_detail,
+    procedure_signature, type_callable_signature, type_text,
+};
 
 pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbol>) {
     match snapshot.compilation_unit() {
@@ -42,6 +45,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 visibility: SymbolVisibility::Private,
                 type_name: None,
                 detail: format!("program {}", program.name),
+                callable: None,
                 children,
             }];
             (owner, entries)
@@ -65,6 +69,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 visibility: SymbolVisibility::Public,
                 type_name: None,
                 detail: format!("unit {owner}"),
+                callable: None,
                 children,
             }];
             (owner, entries)
@@ -120,7 +125,10 @@ pub(super) fn declaration_symbol(
             SymbolKind::Type,
             value.span,
             value.visibility,
-            Some(value.name.clone()),
+            match &value.body {
+                TypeBody::Alias(target) => named_type(target),
+                TypeBody::Record(_) | TypeBody::Enum(_) => Some(value.name.clone()),
+            },
             format!("type {}", value.name),
         ),
         Decl::Function(value) => (
@@ -142,6 +150,15 @@ pub(super) fn declaration_symbol(
     };
     let full_span = span.into();
     let qualified_name = format!("{owner}.{name}");
+    let callable = match declaration {
+        Decl::Const(value) => type_callable_signature(snapshot, name, &value.type_expr),
+        Decl::Var(value) | Decl::MutableVar(value) => {
+            type_callable_signature(snapshot, name, &value.type_expr)
+        }
+        Decl::Function(value) => Some(function_signature(snapshot, value, 0)),
+        Decl::Procedure(value) => Some(procedure_signature(snapshot, value, 0)),
+        Decl::TypeDef(_) => None,
+    };
     let children = match declaration {
         Decl::TypeDef(value) => members::type_children(
             snapshot,
@@ -165,6 +182,7 @@ pub(super) fn declaration_symbol(
         visibility: visibility(decl_visibility),
         type_name,
         detail,
+        callable,
         children,
     }
 }
@@ -194,6 +212,7 @@ pub(super) fn member_symbol(
         visibility: visibility(visibility_value),
         type_name,
         detail,
+        callable: None,
         children,
     }
 }

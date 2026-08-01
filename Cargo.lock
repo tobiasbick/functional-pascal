@@ -653,6 +653,7 @@ dependencies = [
  "fpas-fmt",
  "fpas-language-service",
  "fpas-parser",
+ "serde",
  "serde_json",
  "tokio",
  "tower-lsp-server",

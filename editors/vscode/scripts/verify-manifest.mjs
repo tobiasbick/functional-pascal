@@ -15,7 +15,7 @@ export async function verifyManifest() {
     `${manifest.publisher}.${manifest.name}`,
     "functional-pascal.functional-pascal"
   );
-  assert.equal(manifest.version, "0.0.5");
+  assert.equal(manifest.version, "0.0.7");
   assert.equal(manifest.main, "./out/src/extension.js");
   assert.equal(manifest.engines?.vscode, "^1.91.0");
   assert.equal(manifest.scripts?.package, "node scripts/package.mjs");
@@ -54,6 +54,17 @@ export async function verifyManifest() {
       path: "./syntaxes/fpas.tmLanguage.json"
     }
   ]);
+  assert.deepEqual(manifest.contributes?.snippets, [
+    {
+      language: "fpas",
+      path: "./snippets/fpas.json"
+    }
+  ]);
+
+  const snippets = JSON.parse(
+    await readFile(path.join(extensionRoot, "snippets", "fpas.json"), "utf8")
+  );
+  assert.ok(Object.keys(snippets).length >= 10);
 
   const languageConfiguration = JSON.parse(
     await readFile(

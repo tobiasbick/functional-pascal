@@ -48,6 +48,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "extension/package.json",
     "extension/readme.md",
     serverEntry,
+    "extension/snippets/fpas.json",
     "extension/syntaxes/fpas.tmLanguage.json",
     ...standardLibraryEntries
   ].sort();
@@ -64,6 +65,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "extension/readme.md",
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
+    "extension/snippets/fpas.json",
     "extension/syntaxes/fpas.tmLanguage.json",
     "extension/standard-library/stdlib.fpasprj",
     serverEntry
@@ -107,6 +109,9 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     packagedManifest.contributes.grammars[0].path,
     "./syntaxes/fpas.tmLanguage.json"
   );
+  assert.deepEqual(packagedManifest.contributes.snippets, [
+    { language: "fpas", path: "./snippets/fpas.json" }
+  ]);
 
   const packagedLanguageConfiguration = JSON.parse(
     archive.readAsText("extension/language-configuration.json")
@@ -117,6 +122,11 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     archive.readAsText("extension/syntaxes/fpas.tmLanguage.json")
   );
   assert.equal(packagedGrammar.scopeName, "source.fpas");
+
+  const packagedSnippets = JSON.parse(
+    archive.readAsText("extension/snippets/fpas.json")
+  );
+  assert.ok(Object.keys(packagedSnippets).length >= 10);
 
   const compiledExtension = archive.readAsText(
     "extension/out/src/extension.js"

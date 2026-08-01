@@ -229,12 +229,9 @@ impl LanguageService {
         })
     }
 
-    /// Builds a collision-safe symbol index for every analyzable source in the current context.
+    /// Builds a collision-safe symbol index for every source in the current project catalog.
     pub fn workspace_symbol_index(&mut self) -> Result<WorkspaceSymbolIndex, LanguageServiceError> {
         let mut index = WorkspaceSymbolIndex::new();
-        if self.workspace.projects().is_empty() {
-            return Ok(index);
-        }
         let mut paths = self
             .workspace
             .projects()
@@ -246,12 +243,22 @@ impl LanguageService {
             })
             .flat_map(|project| project.all_source_paths())
             .collect::<Vec<_>>();
+        paths.extend(
+            self.documents
+                .open_snapshots()
+                .into_iter()
+                .map(|snapshot| snapshot.path().to_path_buf()),
+        );
         paths.sort();
         paths.dedup();
-        for path in paths {
-            let analysis = self.analyze_document(&path)?;
-            index.replace_document(&path, analysis.symbols().clone());
-        }
+        let documents = paths
+            .into_iter()
+            .map(|path| {
+                let snapshot = self.snapshot(&path)?;
+                Ok((path, DocumentSymbols::from_snapshot(&snapshot)))
+            })
+            .collect::<Result<Vec<_>, LanguageServiceError>>()?;
+        index.replace_documents(documents);
         Ok(index)
     }
 

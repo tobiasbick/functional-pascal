@@ -1,21 +1,29 @@
 //! Protocol-independent editor navigation queries.
 
 mod document;
+mod highlights;
 mod references;
 mod rename;
 mod resolve;
+mod selection;
 mod service;
+mod type_definition;
+mod workspace_symbols;
 
 use std::sync::Arc;
 
-use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
+use crate::DocumentSnapshot;
+
+pub use workspace_symbols::WORKSPACE_SYMBOL_LIMIT;
 
 pub(crate) use document::NavigationDocument;
+pub use highlights::{DocumentHighlight, HighlightKind};
 pub use references::ReferenceLocation;
 pub(crate) use references::{find_references, resolve_target};
 pub use rename::{RenameEdit, RenameError, RenameTarget};
 pub(crate) use rename::{prepare_rename, rename_symbol};
-pub(crate) use resolve::{complete, resolve};
+pub(crate) use resolve::{find_type, resolve, resolve_qualified, resolve_unqualified};
+pub use selection::SelectionRange;
 
 /// A query result tied to the exact immutable source snapshot used for positions.
 #[derive(Debug, Clone)]
@@ -33,28 +41,4 @@ pub struct HoverInfo {
     pub contents: String,
     /// Identifier range under the cursor.
     pub range: fpas_diagnostics::SourceSpan,
-}
-
-/// One completion entry derived from a currently visible declaration.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct CompletionCandidate {
-    /// Source spelling inserted by the editor.
-    pub label: String,
-    /// Declaration category.
-    pub kind: SymbolKind,
-    /// Compact source-level declaration detail.
-    pub detail: String,
-    /// Owner-qualified identity used to distinguish equal labels.
-    pub qualified_name: String,
-}
-
-impl From<&DocumentSymbol> for CompletionCandidate {
-    fn from(symbol: &DocumentSymbol) -> Self {
-        Self {
-            label: symbol.name.clone(),
-            kind: symbol.kind,
-            detail: symbol.detail.clone(),
-            qualified_name: symbol.qualified_name.clone(),
-        }
-    }
 }

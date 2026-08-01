@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use fpas_language_service::{
-    CancellationToken, CompletionCandidate, DocumentAnalysis, DocumentSnapshot, DocumentSymbol,
-    HoverInfo, LanguageService, LanguageServiceError, NavigationResult, ReferenceLocation,
-    RenameEdit, RenameError, RenameTarget, SourceVersion, SymbolLocation, format_document,
+    CancellationToken, DocumentAnalysis, DocumentSnapshot, DocumentSymbol, HoverInfo,
+    LanguageService, LanguageServiceError, NavigationResult, ReferenceLocation, RenameEdit,
+    RenameError, RenameTarget, SourceVersion, SymbolLocation, format_document,
 };
 use tokio::sync::Mutex;
 use tower_lsp_server::ls_types::{
@@ -21,7 +21,7 @@ use crate::convert::{
 
 /// Synchronized document state shared by concurrent LSP notification handlers.
 pub(crate) struct SynchronizedDocuments {
-    service: Arc<Mutex<LanguageService>>,
+    pub(crate) service: Arc<Mutex<LanguageService>>,
 }
 
 struct CancelOnDrop(CancellationToken);
@@ -266,17 +266,6 @@ impl SynchronizedDocuments {
             });
         }
         Ok(definitions)
-    }
-
-    pub(crate) async fn completions_open(
-        &self,
-        path: &Path,
-        position: Position,
-    ) -> Result<NavigationResult<Vec<CompletionCandidate>>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        Ok(service.completions(path, offset)?)
     }
 
     pub(crate) async fn references_open(

@@ -8,9 +8,12 @@ desktop editors. The implemented editor features are:
 - parser and semantic diagnostics for the current unsaved buffer
 - canonical whole-document formatting
 - hierarchical document symbols
-- declaration hover, go to definition, and find all references
+- declaration hover, go to definition, go to type definition, and find all references
+- workspace symbol search and same-document read/write highlights
+- syntax-aware selection-range expansion
 - validated project-wide symbol rename
-- basic visibility-aware completion
+- rich visibility-aware completion with lazy declaration documentation
+- signature help, repository snippets, and unambiguous auto-import completion
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -119,11 +122,30 @@ units, types, routines, parameters, variables, enum members, and record
 members. Symbol ranges cover the declaration, while selection ranges identify
 the declared name exactly.
 
+**Go to Symbol in Workspace** (`Ctrl+T`) searches declarations from every
+cataloged project plus current unsaved buffers. Matching is case-insensitive
+and ranks exact short names before prefixes, substrings, and qualified-name
+matches. Results have stable ordering, retain equal short names from distinct
+owners, and are limited to 100 entries per query.
+
 Hover shows the resolved source declaration. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct
 `uses` imports, public declarations and record members, qualified unit names,
 and library `[exports].units`.
+
+**Go to Type Definition** follows the named source type of variables,
+parameters, record fields and properties, function results, and aliases. It
+uses the same import, qualification, visibility, and record-member resolution
+as definition navigation. Built-in, unknown, or inaccessible types have no
+source target and therefore return no result.
+
+Selecting a resolved identifier highlights its declaration, reads, and direct
+assignment writes in the current document. Lexically shadowed declarations,
+comments, and strings are excluded. Editor selection expansion grows from the
+token through enclosing declarations and statements to the routine, type, and
+compilation-unit boundaries. Malformed source is restricted to its recovered
+token boundary so expansion does not jump across unreliable syntax.
 
 **Find All References** (`Shift+F12`) returns declaration and usage locations
 for the resolved symbol across every indexed project whose dependency and
@@ -139,10 +161,33 @@ excluded because a correct rename would also have to rename source files or
 manifests. A declaration outside the opened editor folder, including a standard
 library bundled with an installed VSIX, is never modified.
 
-Basic completion lists declarations visible at the cursor. After `.` it lists
-visible unit or record members. Equal candidates imported from different units
-remain distinct so the editor can present their qualified owners. Queries use
-the current unsaved buffers of every open project source.
+Completion lists parameters, locals, visible unit declarations, record and enum
+members, and keywords appropriate to the recovered source context. Each item
+reports its declaration kind, qualified owner, type or callable signature,
+stable sorting, and the exact identifier range it replaces. This replacement
+keeps punctuation and surrounding Unicode strings or comments unchanged.
+Declaration documentation is loaded only after the editor resolves a selected
+item. Equal candidates imported from different units remain distinct so the
+editor can present their qualified owners. Private, shadowed, and non-exported
+declarations are excluded.
+
+When one unresolved identifier maps to exactly one public declaration in one
+accessible unit, completion can add that unit to the compilation unit's `uses`
+clause. The edit is produced through the canonical formatter and is withheld
+when the declaration or unit is ambiguous, inaccessible, already visible, or
+the existing clause cannot be edited conservatively.
+
+Signature help covers functions, procedures, record methods, nested routines,
+function values, enum constructors with associated values, and generic calls.
+It tracks the active argument through nested and multiline expressions. The
+extension also contributes parser- and formatter-checked snippets for programs,
+units, routine and record declarations, variables, branches, and common loops.
+Type a snippet prefix such as `function`, `record`, `if`, or `for` and select
+the snippet item from completion.
+
+Queries use the current unsaved buffers of every open project source. Recovered
+or incomplete syntax can still provide candidates when its lexical and symbol
+context is reliable.
 
 Comments, string contents, unknown names, inaccessible declarations, and
 sources outside the loaded project produce no navigation result. Recovered or
@@ -151,8 +196,7 @@ fail the language server.
 
 ## Current limits
 
-Completion is intentionally declaration-oriented; signature help, semantic
-tokens, and code actions are not implemented. Remote SSH, WSL, and container
+Semantic tokens and code actions are not implemented. Remote SSH, WSL, and container
 extension hosts are outside the local hobby-project packaging contract.
 
 ## Reporting editor problems

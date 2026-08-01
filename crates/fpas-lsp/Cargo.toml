@@ -9,6 +9,8 @@ description = "Language Server Protocol transport for Functional Pascal"
 [dependencies]
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-language-service = { path = "../fpas-language-service" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tokio = { version = "1", features = ["io-std", "macros", "rt-multi-thread", "sync", "time"] }
 tower-lsp-server = "=0.23.0"
 tracing = "0.1"
@@ -17,7 +19,6 @@ tracing-subscriber = "0.3"
 [dev-dependencies]
 fpas-fmt = { path = "../fpas-fmt" }
 fpas-parser = { path = "../fpas-parser" }
-serde_json = "1"
 
 [lints]
 workspace = true

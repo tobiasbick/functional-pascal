@@ -12,6 +12,7 @@ mod diagnostics;
 mod document;
 mod error;
 mod formatting;
+mod intellisense;
 mod navigation;
 mod symbols;
 mod workspace;
@@ -24,12 +25,16 @@ pub use document::{
 };
 pub use error::LanguageServiceError;
 pub use formatting::format_document;
+pub use intellisense::{
+    CompletionCandidate, CompletionDocumentation, CompletionEdit, CompletionKind, CompletionSource,
+    SignatureHelp,
+};
 pub use navigation::{
-    CompletionCandidate, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit, RenameError,
-    RenameTarget,
+    DocumentHighlight, HighlightKind, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit,
+    RenameError, RenameTarget, SelectionRange, WORKSPACE_SYMBOL_LIMIT,
 };
 pub use symbols::{
-    DocumentSymbol, DocumentSymbols, SymbolKind, SymbolLocation, SymbolVisibility,
-    WorkspaceSymbolIndex,
+    CallableSignature, DocumentSymbol, DocumentSymbols, SymbolKind, SymbolLocation,
+    SymbolVisibility, WorkspaceSymbolIndex,
 };
 pub use workspace::{ProjectContext, WorkspaceContext, WorkspaceIssue, WorkspaceKind};

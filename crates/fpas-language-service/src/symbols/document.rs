@@ -46,6 +46,15 @@ pub enum SymbolVisibility {
     Private,
 }
 
+/// One editor-facing callable signature attached to a routine or callable value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CallableSignature {
+    /// Complete Functional Pascal signature shown by the editor.
+    pub label: String,
+    /// Explicit parameter labels in declaration order.
+    pub parameters: Vec<String>,
+}
+
 /// One named declaration with stable source spans and an owner-qualified identity.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DocumentSymbol {
@@ -69,6 +78,8 @@ pub struct DocumentSymbol {
     pub type_name: Option<String>,
     /// Compact source-level declaration detail for hover and completion.
     pub detail: String,
+    /// Explicit call shape when the declaration can be invoked.
+    pub callable: Option<CallableSignature>,
     /// Nested declarations in source order.
     pub children: Vec<DocumentSymbol>,
 }

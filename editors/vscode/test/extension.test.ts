@@ -4,6 +4,7 @@ import path from "node:path";
 import * as vscode from "vscode";
 
 import type { FunctionalPascalExtensionApi } from "../src/extension";
+import { verifyIntelliSense } from "./intellisense";
 
 const EXTENSION_ID = "functional-pascal.functional-pascal";
 const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -146,16 +147,18 @@ export async function run(): Promise<void> {
     Array<vscode.DocumentSymbol | vscode.SymbolInformation>
   >("vscode.executeDocumentSymbolProvider", navigationDocument.uri);
   assert.ok(symbols?.some((symbol) => symbol.name === "EditorDemo"));
-  const completions = await vscode.commands.executeCommand<vscode.CompletionList>(
-    "vscode.executeCompletionItemProvider",
+  const greetingCompletion = await waitForNamedCompletion(
     navigationDocument.uri,
-    greetingPosition
+    greetingPosition,
+    "GreetingFor"
   );
-  assert.ok(completions?.items.some((item) => item.label === "GreetingFor"));
+  assert.equal(completionLabel(greetingCompletion), "GreetingFor");
 
   await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
 
   await verifyExternalProjectChanges();
+  await verifyWorkspaceNavigation();
+  await verifyIntelliSense(extension.extensionPath);
 
   const notesTheme = vscode.Uri.file(
     path.resolve(
@@ -185,7 +188,7 @@ export async function run(): Promise<void> {
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
   console.log(
-    "Functional Pascal extension diagnostics, formatting, navigation, and lifecycle test passed."
+    "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, and lifecycle test passed."
   );
 }
 
@@ -241,6 +244,94 @@ async function verifyExternalProjectChanges(): Promise<void> {
   }
 }
 
+async function verifyWorkspaceNavigation(): Promise<void> {
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  assert.ok(workspaceRoot, "extension test workspace is open");
+  const fixtureRoot = path.join(
+    workspaceRoot,
+    `.workspace-navigation-${process.pid}-${Date.now()}`
+  );
+  const coreSource = path.join(fixtureRoot, "core", "src", "core.fpas");
+  const appSource = path.join(fixtureRoot, "app", "src", "main.fpas");
+  try {
+    await fs.mkdir(path.dirname(coreSource), { recursive: true });
+    await fs.mkdir(path.dirname(appSource), { recursive: true });
+    await fs.writeFile(
+      path.join(fixtureRoot, "core", "core.fpasprj"),
+      '[project]\nname = "navigation-core"\nkind = "library"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
+    );
+    await fs.writeFile(
+      coreSource,
+      "unit Navigation.Core;\n\npublic type HostPoint = record\n  public X: integer;\nend;\n"
+    );
+    await fs.writeFile(
+      path.join(fixtureRoot, "app", "app.fpasprj"),
+      '[project]\nname = "navigation-app"\nkind = "program"\nmain = "src/main.fpas"\n\n[dependencies]\nprojects = ["../core/core.fpasprj"]\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
+    );
+    const source =
+      "program NavigationApp;\n\nuses Navigation.Core;\n\nmutable var Counter: integer := 0;\n\nbegin\n  Counter := Counter + 1;\n  var Value: HostPoint := record X := Counter; end\nend.\n";
+    await fs.writeFile(appSource, source);
+
+    const symbols = await waitForWorkspaceSymbols("HostPoint");
+    assert.ok(
+      symbols.some(
+        (symbol) =>
+          symbol.name === "HostPoint" &&
+          symbol.containerName === "Navigation.Core"
+      )
+    );
+
+    const uri = vscode.Uri.file(appSource);
+    const document = await vscode.workspace.openTextDocument(uri);
+    await vscode.window.showTextDocument(document);
+    const counterPosition = document.positionAt(source.indexOf("Counter :="));
+    const highlights = await vscode.commands.executeCommand<
+      vscode.DocumentHighlight[]
+    >("vscode.executeDocumentHighlights", uri, counterPosition);
+    assert.equal(highlights?.length, 4);
+    assert.ok(
+      highlights.some(
+        (highlight) => highlight.kind === vscode.DocumentHighlightKind.Write
+      )
+    );
+
+    const valuePosition = document.positionAt(source.indexOf("Value:"));
+    const typeDefinitions = await vscode.commands.executeCommand<
+      Array<vscode.Location | vscode.LocationLink>
+    >("vscode.executeTypeDefinitionProvider", uri, valuePosition);
+    assert.ok(typeDefinitions?.length);
+    assert.ok(
+      typeDefinitions.some((definition) =>
+        (definition instanceof vscode.Location
+          ? definition.uri
+          : definition.targetUri
+        ).fsPath.endsWith(path.join("core", "src", "core.fpas"))
+      )
+    );
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+  } finally {
+    await fs.rm(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
+async function waitForWorkspaceSymbols(
+  query: string
+): Promise<vscode.SymbolInformation[]> {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const symbols =
+      (await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
+        "vscode.executeWorkspaceSymbolProvider",
+        query
+      )) ?? [];
+    if (symbols.some((symbol) => symbol.name === query)) {
+      return symbols;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail(`timed out waiting for workspace symbol ${query}`);
+}
+
 async function waitForReferences(
   uri: vscode.Uri,
   position: vscode.Position,
@@ -279,6 +370,33 @@ async function waitForHovers(
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
   assert.fail("timed out waiting for Notes TuiPalette hover");
+}
+
+async function waitForNamedCompletion(
+  uri: vscode.Uri,
+  position: vscode.Position,
+  name: string
+): Promise<vscode.CompletionItem> {
+  const deadline = Date.now() + 10_000;
+  while (Date.now() < deadline) {
+    const completions = await vscode.commands.executeCommand<vscode.CompletionList>(
+      "vscode.executeCompletionItemProvider",
+      uri,
+      position
+    );
+    const item = completions?.items.find(
+      (candidate) => completionLabel(candidate) === name
+    );
+    if (item) {
+      return item;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail(`timed out waiting for completion ${name}`);
+}
+
+function completionLabel(item: vscode.CompletionItem): string {
+  return typeof item.label === "string" ? item.label : item.label.label;
 }
 
 async function waitForDiagnostics(

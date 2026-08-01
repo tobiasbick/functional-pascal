@@ -36,6 +36,19 @@ impl WorkspaceSymbolIndex {
         self.rebuild();
     }
 
+    /// Replaces multiple documents while rebuilding the lookup tables only once.
+    pub fn replace_documents(
+        &mut self,
+        documents: impl IntoIterator<Item = (PathBuf, DocumentSymbols)>,
+    ) {
+        self.documents.extend(
+            documents
+                .into_iter()
+                .map(|(path, symbols)| (normalized_path(&path), symbols)),
+        );
+        self.rebuild();
+    }
+
     /// Removes one document and all declarations it contributed.
     pub fn remove_document(&mut self, path: &Path) {
         self.documents.remove(&normalized_path(path));
@@ -66,6 +79,37 @@ impl WorkspaceSymbolIndex {
     #[must_use]
     pub fn document_count(&self) -> usize {
         self.documents.len()
+    }
+
+    /// Returns every indexed declaration in stable path and source order.
+    #[must_use]
+    pub fn all_locations(&self) -> Vec<SymbolLocation> {
+        let mut locations = self
+            .documents
+            .iter()
+            .flat_map(|(path, document)| {
+                document
+                    .entries()
+                    .iter()
+                    .flat_map(all_symbols)
+                    .map(|symbol| SymbolLocation {
+                        path: path.clone(),
+                        symbol: symbol.clone(),
+                    })
+            })
+            .collect::<Vec<_>>();
+        locations.sort_by(|left, right| {
+            left.path
+                .cmp(&right.path)
+                .then_with(|| {
+                    left.symbol
+                        .selection_span
+                        .offset
+                        .cmp(&right.symbol.selection_span.offset)
+                })
+                .then_with(|| left.symbol.qualified_name.cmp(&right.symbol.qualified_name))
+        });
+        locations
     }
 
     fn rebuild(&mut self) {

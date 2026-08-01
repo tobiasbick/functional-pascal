@@ -1,0 +1,105 @@
+{
+  "Program": {
+    "prefix": "program",
+    "body": [
+      "program ${1:ProgramName};",
+      "",
+      "begin",
+      "  $0",
+      "end."
+    ],
+    "description": "Create a Functional Pascal program"
+  },
+  "Unit": {
+    "prefix": "unit",
+    "body": [
+      "unit ${1:UnitName};",
+      "",
+      "$0"
+    ],
+    "description": "Create a Functional Pascal unit"
+  },
+  "Function declaration": {
+    "prefix": "function",
+    "body": [
+      "function ${1:FunctionName}(${2:Value}: ${3:integer}): ${4:integer};",
+      "begin",
+      "  return ${2:Value}",
+      "end;"
+    ],
+    "description": "Declare a function"
+  },
+  "Procedure declaration": {
+    "prefix": "procedure",
+    "body": [
+      "procedure ${1:ProcedureName}(${2:Value}: ${3:integer});",
+      "begin",
+      "  $0",
+      "end;"
+    ],
+    "description": "Declare a procedure"
+  },
+  "Record type": {
+    "prefix": "record",
+    "body": [
+      "type ${1:RecordName} = record",
+      "  ${2:Value}: ${3:integer};",
+      "end;"
+    ],
+    "description": "Declare a record type"
+  },
+  "Mutable variable": {
+    "prefix": "mutable var",
+    "body": "mutable var ${1:Value}: ${2:integer} := ${3:0};",
+    "description": "Declare a mutable variable"
+  },
+  "If statement": {
+    "prefix": "if",
+    "body": [
+      "if ${1:true} then",
+      "begin",
+      "  $0",
+      "end"
+    ],
+    "description": "Insert an if statement"
+  },
+  "For loop": {
+    "prefix": "for",
+    "body": [
+      "for ${1:I}: ${2:integer} := ${3:0} to ${4:10} do",
+      "begin",
+      "  $0",
+      "end"
+    ],
+    "description": "Insert a for loop"
+  },
+  "While loop": {
+    "prefix": "while",
+    "body": [
+      "while ${1:true} do",
+      "begin",
+      "  $0",
+      "end"
+    ],
+    "description": "Insert a while loop"
+  },
+  "Repeat loop": {
+    "prefix": "repeat",
+    "body": [
+      "repeat",
+      "  $0",
+      "until ${1:true}"
+    ],
+    "description": "Insert a repeat loop"
+  },
+  "Case statement": {
+    "prefix": "case",
+    "body": [
+      "case ${1:Value} of",
+      "  ${2:0}:",
+      "    var ${3:Match}: ${4:integer} := ${1:Value}$0",
+      "end"
+    ],
+    "description": "Insert a case statement"
+  }
+}

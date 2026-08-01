@@ -5,19 +5,18 @@ use std::path::Path;
 use std::sync::Arc;
 
 use super::{
-    CompletionCandidate, HoverInfo, NavigationDocument, NavigationResult, ReferenceLocation,
-    RenameEdit, RenameError, RenameTarget, complete, find_references, prepare_rename,
-    rename_symbol, resolve, resolve_target,
+    HoverInfo, NavigationDocument, NavigationResult, ReferenceLocation, RenameEdit, RenameError,
+    RenameTarget, find_references, prepare_rename, rename_symbol, resolve, resolve_target,
 };
 use crate::{
     CancellationToken, DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService,
     LanguageServiceError, SymbolLocation, WorkspaceKind,
 };
 
-struct NavigationContext {
-    snapshot: Arc<DocumentSnapshot>,
-    documents: Vec<NavigationDocument>,
-    target_index: Option<usize>,
+pub(crate) struct NavigationContext {
+    pub(crate) snapshot: Arc<DocumentSnapshot>,
+    pub(crate) documents: Vec<NavigationDocument>,
+    pub(crate) target_index: Option<usize>,
 }
 
 impl LanguageService {
@@ -181,24 +180,7 @@ impl LanguageService {
         })
     }
 
-    /// Returns declarations visible for completion at a UTF-8 byte offset.
-    pub fn completions(
-        &mut self,
-        path: &Path,
-        offset: usize,
-    ) -> Result<NavigationResult<Vec<CompletionCandidate>>, LanguageServiceError> {
-        let context = self.navigation_context(path)?;
-        let value = context
-            .target_index
-            .map(|target_index| complete(&context.documents, target_index, offset))
-            .unwrap_or_default();
-        Ok(NavigationResult {
-            snapshot: context.snapshot,
-            value,
-        })
-    }
-
-    fn navigation_context(
+    pub(crate) fn navigation_context(
         &mut self,
         path: &Path,
     ) -> Result<NavigationContext, LanguageServiceError> {

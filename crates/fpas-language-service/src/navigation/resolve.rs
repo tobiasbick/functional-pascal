@@ -1,11 +1,9 @@
 //! Lexical, import, and member resolution for editor queries.
 
-use std::collections::HashMap;
-
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Token;
 
-use super::{CompletionCandidate, NavigationDocument};
+use super::NavigationDocument;
 use crate::{DocumentSymbol, SymbolKind, SymbolVisibility};
 
 pub(crate) fn resolve(
@@ -32,46 +30,6 @@ pub(crate) fn resolve(
 
     resolve_qualified(documents, target_index, &parts[..=selected_part], offset)
         .map(|(index, symbol)| (index, symbol, range))
-}
-
-pub(crate) fn complete(
-    documents: &[NavigationDocument],
-    target_index: usize,
-    offset: usize,
-) -> Vec<CompletionCandidate> {
-    let Some(target) = documents.get(target_index) else {
-        return Vec::new();
-    };
-    let (receiver, prefix) = completion_context(target.snapshot.source(), offset);
-    let symbols = if let Some(receiver) = receiver {
-        member_candidates(documents, target_index, &receiver, offset)
-    } else {
-        visible_candidates(documents, target_index, offset)
-    };
-    let mut candidates = symbols
-        .into_iter()
-        .filter(|symbol| {
-            prefix.is_empty()
-                || symbol
-                    .name
-                    .get(..prefix.len())
-                    .is_some_and(|start| start.eq_ignore_ascii_case(&prefix))
-        })
-        .map(CompletionCandidate::from)
-        .collect::<Vec<_>>();
-    candidates.sort_by(|left, right| {
-        left.label
-            .to_ascii_lowercase()
-            .cmp(&right.label.to_ascii_lowercase())
-            .then_with(|| left.qualified_name.cmp(&right.qualified_name))
-    });
-    candidates.dedup_by(|left, right| {
-        left.label.eq_ignore_ascii_case(&right.label)
-            && left
-                .qualified_name
-                .eq_ignore_ascii_case(&right.qualified_name)
-    });
-    candidates
 }
 
 fn identifier_at(
@@ -119,7 +77,7 @@ fn qualified_parts(document: &NavigationDocument, selected: usize) -> (Vec<Strin
     (parts, selected_part)
 }
 
-fn resolve_unqualified(
+pub(crate) fn resolve_unqualified(
     documents: &[NavigationDocument],
     target_index: usize,
     name: &str,
@@ -154,7 +112,7 @@ fn resolve_unqualified(
     })
 }
 
-fn resolve_qualified(
+pub(crate) fn resolve_qualified(
     documents: &[NavigationDocument],
     target_index: usize,
     parts: &[String],
@@ -215,84 +173,7 @@ fn resolve_qualified(
     None
 }
 
-fn visible_candidates(
-    documents: &[NavigationDocument],
-    target_index: usize,
-    offset: usize,
-) -> Vec<&DocumentSymbol> {
-    let target = &documents[target_index];
-    let mut nearest = HashMap::<String, &DocumentSymbol>::new();
-    let mut local = target
-        .all_symbols()
-        .into_iter()
-        .filter(|symbol| unqualified_kind(symbol.kind))
-        .filter(|symbol| contains(symbol.scope_span, offset))
-        .filter(|symbol| symbol.visible_from <= offset)
-        .collect::<Vec<_>>();
-    local.sort_by(|left, right| {
-        left.scope_span
-            .length
-            .cmp(&right.scope_span.length)
-            .then_with(|| right.visible_from.cmp(&left.visible_from))
-    });
-    for symbol in local {
-        nearest
-            .entry(symbol.name.to_ascii_lowercase())
-            .or_insert(symbol);
-    }
-    let mut result = nearest.values().copied().collect::<Vec<_>>();
-    for (_, symbol) in imported_top_level(documents, target_index) {
-        if !nearest.contains_key(&symbol.name.to_ascii_lowercase()) {
-            result.push(symbol);
-        }
-    }
-    result
-}
-
-fn member_candidates<'a>(
-    documents: &'a [NavigationDocument],
-    target_index: usize,
-    receiver: &str,
-    offset: usize,
-) -> Vec<&'a DocumentSymbol> {
-    if let Some((index, document)) = documents.iter().enumerate().find(|(_, document)| {
-        document.owner.eq_ignore_ascii_case(receiver)
-            && documents[target_index].uses_owner(&document.owner)
-    }) {
-        return document
-            .top_level()
-            .iter()
-            .filter(|symbol| index == target_index || symbol.visibility == SymbolVisibility::Public)
-            .collect();
-    }
-
-    let parts = receiver.split('.').map(str::to_owned).collect::<Vec<_>>();
-    let Some((base_index, base)) = resolve_unqualified(documents, target_index, &parts[0], offset)
-    else {
-        return Vec::new();
-    };
-    let Some(type_name) = (if base.kind == SymbolKind::Type {
-        Some(base.qualified_name)
-    } else {
-        base.type_name
-    }) else {
-        return Vec::new();
-    };
-    let Some((type_index, type_symbol)) =
-        find_type(documents, target_index, base_index, &type_name)
-    else {
-        return Vec::new();
-    };
-    type_symbol
-        .children
-        .iter()
-        .filter(|member| {
-            type_index == target_index || member.visibility == SymbolVisibility::Public
-        })
-        .collect()
-}
-
-fn find_type<'a>(
+pub(crate) fn find_type<'a>(
     documents: &'a [NavigationDocument],
     target_index: usize,
     preferred_index: usize,
@@ -341,24 +222,6 @@ fn imported_top_level(
                 .map(move |symbol| (index, symbol))
         })
         .collect()
-}
-
-fn completion_context(source: &str, offset: usize) -> (Option<String>, String) {
-    let offset = offset.min(source.len());
-    let before = &source[..offset];
-    let start = before
-        .char_indices()
-        .rev()
-        .find(|(_, character)| {
-            !character.is_ascii_alphanumeric() && *character != '_' && *character != '.'
-        })
-        .map_or(0, |(index, character)| index + character.len_utf8());
-    let fragment = &before[start..];
-    if let Some((receiver, prefix)) = fragment.rsplit_once('.') {
-        (Some(receiver.to_owned()), prefix.to_owned())
-    } else {
-        (None, fragment.to_owned())
-    }
 }
 
 fn unqualified_kind(kind: SymbolKind) -> bool {

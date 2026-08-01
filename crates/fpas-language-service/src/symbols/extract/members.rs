@@ -4,10 +4,10 @@ use fpas_diagnostics::SourceSpan;
 use fpas_parser::{RecordMethod, TypeBody, Visibility};
 
 use super::{
-    function_children, function_detail, member_symbol, named_type, procedure_children,
-    procedure_detail, type_text,
+    function_children, function_detail, function_signature, member_symbol, named_type,
+    procedure_children, procedure_detail, procedure_signature, type_callable_signature, type_text,
 };
-use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
+use crate::{CallableSignature, DocumentSnapshot, DocumentSymbol, SymbolKind};
 
 pub(super) fn type_children(
     snapshot: &DocumentSnapshot,
@@ -22,7 +22,7 @@ pub(super) fn type_children(
                 .fields
                 .iter()
                 .map(|field| {
-                    member_symbol(
+                    let mut symbol = member_symbol(
                         snapshot,
                         owner,
                         &field.name,
@@ -37,7 +37,10 @@ pub(super) fn type_children(
                         ),
                         type_span,
                         Vec::new(),
-                    )
+                    );
+                    symbol.callable =
+                        type_callable_signature(snapshot, &field.name, &field.type_expr);
+                    symbol
                 })
                 .collect::<Vec<_>>();
             children.extend(
@@ -47,7 +50,7 @@ pub(super) fn type_children(
                     .map(|method| method_symbol(snapshot, owner, method, type_span)),
             );
             children.extend(record.properties.iter().map(|property| {
-                member_symbol(
+                let mut symbol = member_symbol(
                     snapshot,
                     owner,
                     &property.name,
@@ -62,10 +65,13 @@ pub(super) fn type_children(
                     ),
                     type_span,
                     Vec::new(),
-                )
+                );
+                symbol.callable =
+                    type_callable_signature(snapshot, &property.name, &property.type_expr);
+                symbol
             }));
             children.extend(record.events.iter().map(|event| {
-                member_symbol(
+                let mut symbol = member_symbol(
                     snapshot,
                     owner,
                     &event.name,
@@ -80,7 +86,9 @@ pub(super) fn type_children(
                     ),
                     type_span,
                     Vec::new(),
-                )
+                );
+                symbol.callable = type_callable_signature(snapshot, &event.name, &event.type_expr);
+                symbol
             }));
             children.sort_by_key(|symbol| symbol.full_span.offset);
             children
@@ -89,7 +97,7 @@ pub(super) fn type_children(
             .members
             .iter()
             .map(|member| {
-                member_symbol(
+                let mut symbol = member_symbol(
                     snapshot,
                     owner,
                     &member.name,
@@ -100,7 +108,21 @@ pub(super) fn type_children(
                     format!("enum member {owner}.{}", member.name),
                     declaration_scope,
                     Vec::new(),
-                )
+                );
+                if !member.fields.is_empty() {
+                    let parameters = member
+                        .fields
+                        .iter()
+                        .map(|field| {
+                            format!("{}: {}", field.name, type_text(snapshot, &field.type_expr))
+                        })
+                        .collect::<Vec<_>>();
+                    symbol.callable = Some(CallableSignature {
+                        label: format!("{}({}): {owner}", member.name, parameters.join("; ")),
+                        parameters,
+                    });
+                }
+                symbol
             })
             .collect(),
         TypeBody::Alias(_) => Vec::new(),
@@ -116,7 +138,7 @@ fn method_symbol(
     match method {
         RecordMethod::Function(value) | RecordMethod::StaticFunction(value) => {
             let qualified = format!("{owner}.{}", value.name);
-            member_symbol(
+            let mut symbol = member_symbol(
                 snapshot,
                 owner,
                 &value.name,
@@ -127,11 +149,14 @@ fn method_symbol(
                 function_detail(snapshot, value),
                 type_span,
                 function_children(snapshot, &qualified, value),
-            )
+            );
+            let implicit = usize::from(matches!(method, RecordMethod::Function(_)));
+            symbol.callable = Some(function_signature(snapshot, value, implicit));
+            symbol
         }
         RecordMethod::Procedure(value) | RecordMethod::StaticProcedure(value) => {
             let qualified = format!("{owner}.{}", value.name);
-            member_symbol(
+            let mut symbol = member_symbol(
                 snapshot,
                 owner,
                 &value.name,
@@ -142,7 +167,10 @@ fn method_symbol(
                 procedure_detail(snapshot, value),
                 type_span,
                 procedure_children(snapshot, &qualified, value),
-            )
+            );
+            let implicit = usize::from(matches!(method, RecordMethod::Procedure(_)));
+            symbol.callable = Some(procedure_signature(snapshot, value, implicit));
+            symbol
         }
     }
 }

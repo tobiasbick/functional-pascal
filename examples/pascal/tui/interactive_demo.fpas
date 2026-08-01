@@ -31,10 +31,12 @@ begin
           Confirming := true;
         end
       end;
+
       if Action.Value = 3 then
       begin
         Cmd.Set(TuiCmd.Quit)
       end;
+
       return State
     end;
     TuiMsg.QuitRequested:
@@ -64,6 +66,7 @@ begin
                ];
     Focused := Some(TuiControlId.Create(3))
   end;
+
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeMenuBar([
 

@@ -37,6 +37,7 @@ begin
     X := 10;
     Y := 20;
   end;
+
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));

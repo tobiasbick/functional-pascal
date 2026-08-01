@@ -14,8 +14,10 @@ begin
     begin
       Fail(('Expected directory: ') + Dir)
     end;
+
     return
   end;
+
   case CreateDir(Dir) of
     Ok(_):
     begin
@@ -38,6 +40,7 @@ begin
       Fail(Message)
     end
   end;
+
   AssertTrue(Exists(Path));
   AssertTrue(IsFile(Path));
   case ReadText(Path) of

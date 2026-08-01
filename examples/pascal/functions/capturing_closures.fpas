@@ -27,6 +27,7 @@ begin
   var Increment: procedure() := procedure() begin
     Count := Count + 1
   end;
+
   Increment();
   Increment();
   WriteLn('shared count: ', IntToStr(Count));

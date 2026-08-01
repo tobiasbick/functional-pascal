@@ -46,12 +46,14 @@ begin
     Focus := 1;
     Checked := false;
   end;
+
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[ ] Flag'));
   Model := record
     Focus := 1;
     Checked := true;
   end;
+
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '>[x] Flag'));
   App.Close()

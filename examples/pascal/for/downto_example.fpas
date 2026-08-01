@@ -10,5 +10,6 @@ begin
   begin
     Sum := Sum + I
   end;
+
   WriteLn('sum: ', IntToStr(Sum))
 end.

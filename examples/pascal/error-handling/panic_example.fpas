@@ -8,6 +8,7 @@ begin
   begin
     panic('Division by zero')
   end;
+
   return A div B
 end;
 

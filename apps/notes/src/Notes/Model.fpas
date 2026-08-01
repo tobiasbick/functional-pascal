@@ -98,10 +98,12 @@ begin
     TagsText := Std.Str.Join(Loaded.Notes[0].Tags, ', ');
     TagsCaret := Std.Str.Length(TagsText)
   end;
+
   if Std.Array.Length(Loaded.Issues) > 0 then
   begin
     Status := IntToStr(Std.Array.Length(Loaded.Issues)) + ' invalid note file(s)'
   end;
+
   return record
     Directory := Directory;
     Notes := Loaded.Notes;
@@ -146,6 +148,7 @@ begin
       Std.Array.Push(Tags, Tag)
     end
   end;
+
   return Tags
 end;
 
@@ -158,10 +161,12 @@ begin
   begin
     return not NoteValue.Archived
   end;
+
   if NoteValue.Archived then
   begin
     return false
   end;
+
   return (Std.Str.Contains(Std.Str.ToLower(NoteValue.Title), Query) or Std.Str.Contains(Std.Str.ToLower(NoteValue.Body), Query)) or
          Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query)
 end;
@@ -178,6 +183,7 @@ begin
       Std.Array.Push(Indices, Index)
     end
   end;
+
   return Indices
 end;
 
@@ -187,10 +193,12 @@ begin
   begin
     return ''
   end;
+
   if Std.Console.DisplayWidth(Text) <= MaximumWidth then
   begin
     return Text
   end;
+
   if MaximumWidth = 1 then
   begin
     return '…'
@@ -205,9 +213,11 @@ begin
     begin
       return Clipped + '…'
     end;
+
     Clipped := Clipped + Grapheme;
     Width := Width + GraphemeWidth
   end;
+
   return Clipped
 end;
 
@@ -230,7 +240,9 @@ begin
     begin
       Tags := '  ·  ' + Tags
     end;
+
     Std.Array.Push(Items, ClipListText((Prefix + NoteValue.Title) + Tags, MaximumWidth))
   end;
+
   return Items
 end;

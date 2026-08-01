@@ -36,6 +36,7 @@ begin
     HostWidthAtResize := 0;
     HostHeightAtResize := 0;
   end;
+
   Model := App.RunIterations(Model, function(State: ResizeModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ResizeModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
@@ -45,6 +46,7 @@ begin
         begin
           return PushEvent(State, 'tick-1')
         end;
+
         return PushEvent(State, 'tick-2')
       end;
       TuiMsg.Resize(Size):

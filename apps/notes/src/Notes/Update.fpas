@@ -52,6 +52,7 @@ begin
       return Next
     end
   end;
+
   return Next
 end;
 
@@ -77,6 +78,7 @@ begin
     Next.TagsText := '';
     Next.TagsCaret := 0
   end;
+
   return Next
 end;
 
@@ -121,6 +123,7 @@ begin
       return Index
     end
   end;
+
   return -1
 end;
 
@@ -201,6 +204,7 @@ begin
     Empty.Focus := ListControl;
     return Empty
   end;
+
   return WithEditorFields(State, Indices[0])
 end;
 
@@ -220,6 +224,7 @@ begin
   begin
     return Next
   end;
+
   Next.Status := 'Note archived';
   return SelectFirstVisible(Next)
 end;
@@ -230,30 +235,36 @@ begin
   begin
     return CreateNote(State)
   end;
+
   if Action = SaveNoteAction then
   begin
     return NotesPersistCurrent(State)
   end;
+
   if Action = TogglePinAction then
   begin
     return TogglePin(State)
   end;
+
   if Action = ArchiveNoteAction then
   begin
     return ArchiveNote(State)
   end;
+
   if Action = CommandsAction then
   begin
     mutable var Next: NotesModel := State;
     Next.Overlay := NotesOverlay.Commands;
     return Next
   end;
+
   if Action = HelpAction then
   begin
     mutable var Next: NotesModel := State;
     Next.Overlay := NotesOverlay.Help;
     return Next
   end;
+
   if Action = CloseOverlayAction then
   begin
     mutable var Next: NotesModel := State;
@@ -261,6 +272,7 @@ begin
     Next.ErrorMessage := '';
     return Next
   end;
+
   if Action = SaveAndQuitAction then
   begin
     var Saved: NotesModel := NotesPersistCurrent(State);
@@ -268,13 +280,16 @@ begin
     begin
       Cmd.Set(TuiCmd.Quit)
     end;
+
     return Saved
   end;
+
   if Action = DiscardAndQuitAction then
   begin
     Cmd.Set(TuiCmd.Quit);
     return State
   end;
+
   return State
 end;
 
@@ -286,6 +301,7 @@ begin
     Next.Overlay := NotesOverlay.QuitConfirmation;
     return Next
   end;
+
   Cmd.Set(TuiCmd.Quit);
   return State
 end;
@@ -296,6 +312,7 @@ begin
   begin
     return HandleAction(State, HelpAction, Cmd)
   end;
+
   if ((Key.kind = Std.Console.KeyKind.Enter) and (State.Focus = ListControl)) and
      SelectedExists(State) then
   begin
@@ -304,6 +321,7 @@ begin
     Next.Pane := NotesPane.Editor;
     return Next
   end;
+
   if (((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and
      (not Key.meta) then
   begin
@@ -314,10 +332,12 @@ begin
       end
     end
   end;
+
   if (Key.kind <> Std.Console.KeyKind.Character) or (not Key.ctrl) then
   begin
     return State
   end;
+
   case Key.ch of
     'n', 'N':
     begin
@@ -357,6 +377,7 @@ begin
       return Next
     end
   end;
+
   return State
 end;
 
@@ -403,6 +424,7 @@ begin
                        ' matching note(s)';
         return Next
       end;
+
       if (Action.Value = TitleChangedAction) and SelectedExists(Next) then
       begin
         mutable var NoteValue: Note := Next.Notes[Next.Selected];
@@ -413,6 +435,7 @@ begin
         Next.Status := 'Unsaved changes';
         return Next
       end;
+
       if (Action.Value = TagsChangedAction) and SelectedExists(Next) then
       begin
         Next.TagsText := Text;
@@ -424,6 +447,7 @@ begin
         Next.Status := 'Unsaved changes';
         return Next
       end;
+
       return Next
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
@@ -439,6 +463,7 @@ begin
         Next.Dirty := true;
         Next.Status := 'Unsaved changes'
       end;
+
       return Next
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
@@ -447,6 +472,7 @@ begin
       begin
         return SelectFiltered(State, Selected)
       end;
+
       return State
     end;
     TuiMsg.Action(Source, Action):
@@ -459,6 +485,7 @@ begin
       begin
         return HandleAction(State, CloseOverlayAction, Cmd)
       end;
+
       return State
     end;
     TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.CheckChanged(CheckSource, CheckAction, Checked), TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):

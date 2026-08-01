@@ -21,6 +21,7 @@ begin
               Fail('Expected string title')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'integer')) of
             TomlValue.Integer(Number):
             begin
@@ -31,6 +32,7 @@ begin
               Fail('Expected integer value')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'float')) of
             TomlValue.Float(Number):
             begin
@@ -41,6 +43,7 @@ begin
               Fail('Expected float value')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'enabled')) of
             TomlValue.Boolean(Enabled):
             begin
@@ -51,6 +54,7 @@ begin
               Fail('Expected boolean value')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'when')) of
             TomlValue.Datetime(When):
             begin
@@ -61,6 +65,7 @@ begin
               Fail('Expected datetime value')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'items')) of
             TomlValue.Array(Items):
             begin
@@ -71,6 +76,7 @@ begin
               Fail('Expected array value')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'nested')) of
             TomlValue.Table(Nested):
             begin

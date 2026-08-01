@@ -45,6 +45,7 @@ begin
   var B: Button := record
     Id := 1;
   end;
+
   B.Click();
   B.OnClick := HandleClick;
   B.Click();

@@ -30,6 +30,7 @@ begin
     begin
     end
   end;
+
   case Settings.Height of
     Some(Height):
     begin
@@ -72,6 +73,7 @@ begin
       Fail('fixed-height layout settings must preserve their width')
     end
   end;
+
   case FixedSize.Height of
     Some(Height):
     begin

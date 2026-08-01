@@ -16,6 +16,7 @@ begin
   begin
     Std.Array.Push(Values, Index)
   end;
+
   return Std.Array.Length(Values)
 end;
 
@@ -47,6 +48,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' pushes/s');

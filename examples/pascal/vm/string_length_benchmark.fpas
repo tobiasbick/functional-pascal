@@ -17,6 +17,7 @@ begin
   begin
     Text := Text + 'x'
   end;
+
   return Text
 end;
 
@@ -27,6 +28,7 @@ begin
   begin
     Total := Total + Std.Str.Length(Text)
   end;
+
   return Total
 end;
 
@@ -59,6 +61,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', string size: ') + IntToStr(StringSize));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' lengths/s');

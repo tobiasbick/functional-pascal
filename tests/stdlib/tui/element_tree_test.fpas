@@ -92,6 +92,7 @@ begin
           panic('expected panel element')
         end
       end;
+
       case DesktopChildren[1] of
         TuiElement.Overlay(Title, OverlayChildren):
         begin

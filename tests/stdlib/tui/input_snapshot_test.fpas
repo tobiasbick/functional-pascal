@@ -30,6 +30,7 @@ begin
     Caret := 0;
     Hint := 'Path';
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var HintSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertTrue(HintSurface.CellAt(1, 0).Role = TuiStyleRole.InputCursor);
@@ -40,6 +41,7 @@ begin
     Caret := 0;
     Hint := '';
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var RightSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('►', RightSurface.CellAt(9, 0).Glyph);
@@ -50,6 +52,7 @@ begin
     Caret := 11;
     Hint := '';
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   var LeftSurface: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   AssertEquals('◄', LeftSurface.CellAt(0, 0).Glyph);

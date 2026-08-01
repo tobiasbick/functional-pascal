@@ -19,6 +19,7 @@ begin
   begin
     Text := Text + 'aé日😀'
   end;
+
   return Text
 end;
 
@@ -32,6 +33,7 @@ begin
       Matches := Matches + 1
     end
   end;
+
   return Matches
 end;
 
@@ -64,6 +66,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', text length: ') + IntToStr(TextLength));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' chars/s');

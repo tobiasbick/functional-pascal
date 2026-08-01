@@ -21,6 +21,7 @@ begin
     Application.HostRequestQuit(App);
     return true
   end;
+
   return false
 end;
 
@@ -38,6 +39,7 @@ begin
     OnPaint := OnPaint;
     OnKeyPressed := Some(OnKeyPressed);
   end;
+
   Application.Configure(App, Handlers);
   Application.TestSendKey(App, EscapeKey);
   Application.Run(App);

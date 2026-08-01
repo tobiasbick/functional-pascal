@@ -48,6 +48,7 @@ begin
   mutable var Model: ListModel := record
     Selected := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   App.InjectResizeForTest(TuiSize.Create(16, 5));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);

@@ -17,6 +17,7 @@ begin
   begin
     Std.Array.Push(Values, Index)
   end;
+
   return Values
 end;
 
@@ -27,6 +28,7 @@ begin
   begin
     Total := Total + Std.Array.Length(Values)
   end;
+
   return Total
 end;
 
@@ -59,6 +61,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', array size: ') + IntToStr(ArraySize));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' lengths/s');

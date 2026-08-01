@@ -19,6 +19,7 @@ begin
     var Built: string := (Prefix + IntToStr(Index)) + Suffix;
     Total := Total + Std.Str.Length(Built)
   end;
+
   return Total
 end;
 
@@ -50,6 +51,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' concats/s');

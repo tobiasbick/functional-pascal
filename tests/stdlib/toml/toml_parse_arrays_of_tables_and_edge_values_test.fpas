@@ -21,6 +21,7 @@ begin
               Fail('Expected empty array')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'special')) of
             TomlValue.Float(Number):
             begin
@@ -31,6 +32,7 @@ begin
               Fail('Expected float nan')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'point')) of
             TomlValue.Table(Point):
             begin
@@ -41,6 +43,7 @@ begin
               Fail('Expected point table')
             end
           end;
+
           case Std.Option.Unwrap(Std.Dict.Get(Fields, 'products')) of
             TomlValue.Array(Products):
             begin
@@ -64,6 +67,7 @@ begin
                   Fail('Expected first product table')
                 end
               end;
+
               case Products[1] of
                 TomlValue.Table(Product):
                 begin

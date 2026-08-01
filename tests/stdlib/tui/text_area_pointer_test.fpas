@@ -17,6 +17,7 @@ begin
   begin
     Focused := Some(TuiControlId.Create(State.Focus))
   end;
+
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
 
@@ -83,6 +84,7 @@ begin
     Caret := 0;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 2, 1, 2);
   AssertEquals(1, Model.Focus);
@@ -95,6 +97,7 @@ begin
     Caret := Model.Caret;
     Offset := TuiPoint.Create(2, 1);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Click(App, Model, 1, 1, 1);
   AssertEquals(12, Model.Caret);

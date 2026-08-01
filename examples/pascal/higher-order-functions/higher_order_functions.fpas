@@ -47,6 +47,7 @@ begin
   begin
     Write(V, ' ')
   end;
+
   WriteLn('');
   var Big: array of integer := Filter(Nums, IsGreaterThanThree);
   Write('Filter > 3: ');
@@ -54,6 +55,7 @@ begin
   begin
     Write(V, ' ')
   end;
+
   WriteLn('');
   var Total: integer := Reduce(Nums, 0, Sum);
   WriteLn('Reduce sum: ', Total);
@@ -64,5 +66,6 @@ begin
   begin
     Write(V, ' ')
   end;
+
   WriteLn('')
 end.

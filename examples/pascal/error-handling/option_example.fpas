@@ -11,6 +11,7 @@ begin
       return Some(Items[I])
     end
   end;
+
   return None
 end;
 
@@ -38,6 +39,7 @@ begin
       WriteLn('Nothing >= 40')
     end
   end;
+
   case FindFirst(Data, 100) of
     Some(V):
     begin
@@ -48,6 +50,7 @@ begin
       WriteLn('Nothing >= 100')
     end
   end;
+
   case DoubleFirst(Data, 10) of
     Some(S):
     begin
@@ -58,6 +61,7 @@ begin
       WriteLn('No match to double')
     end
   end;
+
   case DoubleFirst(Data, 100) of
     Some(S):
     begin

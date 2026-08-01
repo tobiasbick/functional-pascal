@@ -60,6 +60,7 @@ begin
     Z := Z.Sq().Add(C);
     N := N + 1
   end;
+
   if N >= MaxIter then
   begin
     return record
@@ -94,6 +95,7 @@ begin
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
     Std.Array.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter))
   end;
+
   return Row
 end;
 
@@ -113,6 +115,7 @@ begin
     var Shade: TuiColor := InsideColor();
     return TuiCell.Styled(' ', TuiStyle.FromColors(Shade, Shade))
   end;
+
   return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background))
 end;
 
@@ -143,5 +146,6 @@ begin
       Std.Array.Push(Cells, RenderCell(Row[Px], Palette))
     end
   end;
+
   return TuiCellGrid.Create(Width, Height, Cells)
 end;

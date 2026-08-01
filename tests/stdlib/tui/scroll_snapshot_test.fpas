@@ -47,6 +47,7 @@ begin
   mutable var Model: ScrollModel := record
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'First'));
   App.Inject(TuiMsgScrollChanged(TuiControlId.Create(1), TuiAction.Create(7), TuiPoint.Create(0, 1)));

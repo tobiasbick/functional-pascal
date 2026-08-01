@@ -37,6 +37,7 @@ begin
       return Some(I)
     end
   end;
+
   return None
 end;
 
@@ -57,6 +58,7 @@ begin
       WriteLn('Not found')
     end
   end;
+
   WriteLn('--- Result exhaustiveness ---');
   var R: result of integer, string := Ok(42);
   case R of

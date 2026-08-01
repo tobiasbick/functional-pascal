@@ -43,6 +43,7 @@ begin
   mutable var Model: ListModel := record
     Selected := 1;
   end;
+
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), '  Alpha'));
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(2), '> Beta'));

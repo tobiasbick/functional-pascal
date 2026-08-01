@@ -35,6 +35,7 @@ begin
     Action := TuiPointerAction.Unknown;
     Button := TuiPointerButton.Left;
   end;
+
   Model := App.RunIterations(Model, function(State: PointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PointerModel begin
     Cmd.Set(TuiCmd.NoCommand);
     case Msg of
@@ -44,6 +45,7 @@ begin
         begin
           return PushEvent(State, 'tick-1')
         end;
+
         return PushEvent(State, 'tick-2')
       end;
       TuiMsg.Pointer(Event):

@@ -119,9 +119,11 @@ begin
         Shade := Shade;
       end
     end;
+
     Z := Next;
     N := N + 1
   end;
+
   return record
     Root := ClosestRoot(Z);
     Shade := 0.25;
@@ -145,6 +147,7 @@ begin
   begin
     WidthRange := 1
   end;
+
   if HeightRange < 1 then
   begin
     HeightRange := 1
@@ -158,6 +161,7 @@ begin
     var cx: real := XMin + (Px / Wr) * (XMax - XMin);
     Push(Row, Iterate(Complex.Create(cx, cy), MaxIter))
   end;
+
   return Row
 end;
 
@@ -196,6 +200,7 @@ begin
   begin
     DrawWidth := CurrentWidth
   end;
+
   if DrawWidth < 1 then
   begin
     return
@@ -205,6 +210,7 @@ begin
   begin
     Push(Cells, RenderCell(Row[Px]))
   end;
+
   WriteCells(1, Y, Cells)
 end;
 
@@ -223,6 +229,7 @@ begin
   begin
     Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter))
   end;
+
   for Py: integer := 0 to Height - 1 do
   begin
     var Row: array of PixelSample := Wait(Tasks[Py]);

@@ -31,6 +31,7 @@ begin
       return TuiPoint.Create(X, Y)
     end
   end;
+
   panic('glyph not found in menu snapshot: ' + Glyph)
 end;
 
@@ -123,6 +124,7 @@ begin
     Menu := TuiMenuState.Closed();
     Actions := [];
   end;
+
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   AssertTrue(App.SurfaceSnapshot().CellAt(7, 0).Role = TuiStyleRole.MenuShortcut);
   AssertTrue(App.SurfaceSnapshot().CellAt(11, 0).Role = TuiStyleRole.MenuNormal);

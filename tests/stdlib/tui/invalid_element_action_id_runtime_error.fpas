@@ -12,6 +12,7 @@ begin
   var InvalidAction: TuiAction := record
     Value := 0;
   end;
+
   return TuiElement.Button(TuiButtonSpec.Normal(TuiControlId.Create(1), 'Invalid', '', InvalidAction))
 end;
 

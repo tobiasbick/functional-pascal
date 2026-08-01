@@ -29,8 +29,10 @@ begin
   var B: Box := record
     Value := 42;
   end;
+
   WriteLn(B.Map(ToText));
   var A: Accumulator := record end;
+
   WriteLn('numeric int: ', IntToStr(A.EchoNumeric(21)));
   WriteLn('numeric real ok: ', A.EchoNumeric(1.5) > 1.0)
 end.

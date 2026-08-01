@@ -52,6 +52,7 @@ begin
     Actions := 0;
     PointerEvents := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
   var GoX: integer := Std.Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
   var Inside: TuiPoint := TuiPoint.Create(GoX, 0);

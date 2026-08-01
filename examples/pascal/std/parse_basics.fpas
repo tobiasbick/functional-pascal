@@ -15,6 +15,7 @@ begin
       WriteLn('try int error: ', M)
     end
   end;
+
   case TryReal('1_024.0e-2') of
     Ok(R):
     begin
@@ -25,6 +26,7 @@ begin
       WriteLn('try real error: ', M)
     end
   end;
+
   case TryBool(' FALSE ') of
     Ok(B):
     begin

@@ -12,10 +12,12 @@ begin
       WriteLn('Stopping — score above 90 found');
       break
     end;
+
     if S <= 10 then
     begin
       continue
     end;
+
     WriteLn(S)
   end
 end.

@@ -25,6 +25,7 @@ begin
       return TuiPoint.Create(Index, Y)
     end
   end;
+
   panic('glyph not found in snapshot')
 end;
 
@@ -110,6 +111,7 @@ begin
       begin
         AssertEquals(3, State.Focus)
       end;
+
       return record
         Focus := State.Focus;
         Actions := Std.Array.Concat(State.Actions, [Action.Value]);
@@ -138,6 +140,7 @@ begin
     Actions := [];
     PointerHits := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateRoute, ViewRoute, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
   var GoAt: TuiPoint := FindGlyph(Snapshot, 'Go');
@@ -169,6 +172,7 @@ begin
     Actions := [];
     PointerHits := 0;
   end;
+
   Model := Overlap.RunIterations(Model, UpdateRoute, ViewOverlap, 0, 0);
   var FrontAt: TuiPoint := FindGlyph(Overlap.SurfaceSnapshot(), 'Front');
   Overlap.InjectPointerForTest(MakePointer(TuiPointerAction.Down, FrontAt.X, FrontAt.Y));

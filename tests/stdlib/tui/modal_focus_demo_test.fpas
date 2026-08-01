@@ -27,6 +27,7 @@ begin
                ];
     Focused := Some(TuiControlId.Create(3))
   end;
+
   return TuiElementBuilders.MakeDesktop(Focused, [TuiElementBuilders.MakePanel('Host', Content)])
 end;
 

@@ -14,8 +14,10 @@ begin
     begin
       return Ok(true)
     end;
+
     return Error('Notes path exists but is not a directory: ' + Directory)
   end;
+
   return Std.Fs.CreateDir(Directory)
 end;
 
@@ -27,6 +29,7 @@ begin
   begin
     return NoteValue.Path
   end;
+
   return Std.Path.Join([Directory, NoteValue.Id + '.note'])
 end;
 
@@ -36,6 +39,7 @@ begin
   begin
     return Left.Pinned
   end;
+
   return Left.UpdatedMillis > Right.UpdatedMillis
 end;
 
@@ -56,6 +60,7 @@ begin
       end
     end
   end;
+
   return Sorted
 end;
 
@@ -98,6 +103,7 @@ begin
       end
     end
   end;
+
   return Ok(record
     Notes := NotesSort(Notes);
     Issues := Issues;

@@ -10,6 +10,7 @@ begin
     begin
       continue
     end;
+
     WriteLn(K)
   end
 end.

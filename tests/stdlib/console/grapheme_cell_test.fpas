@@ -14,6 +14,7 @@ begin
     foreground := CrtColor(7);
     background := CrtColor(0);
   end;
+
   PutCell(1, 1, Value);
   AssertEquals('é', Std.Option.Unwrap(GetCell(1, 1)).glyph)
 end.

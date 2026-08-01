@@ -29,6 +29,7 @@ type
       begin
         Kind := 'Square'
       end;
+
       WriteLn((((((((Kind + ' ') + IntToStr(Self.W)) + 'x') + IntToStr(Self.H)) + ' area=') + IntToStr(Self.Area())) + ' perimeter=') +
               IntToStr(Self.Perimeter()))
     end;
@@ -39,10 +40,12 @@ begin
     W := 5;
     H := 3;
   end;
+
   R.Describe();
   var S: Rectangle := record
     W := 4;
     H := 4;
   end;
+
   S.Describe()
 end.

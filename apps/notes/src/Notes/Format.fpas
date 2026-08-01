@@ -101,6 +101,7 @@ begin
               end
             end
           end;
+
           return Ok(Tags)
         end
         else
@@ -135,6 +136,7 @@ begin
   begin
     return Error('Note timestamps must not be negative')
   end;
+
   return Ok(record
     Id := Id;
     Title := Title;

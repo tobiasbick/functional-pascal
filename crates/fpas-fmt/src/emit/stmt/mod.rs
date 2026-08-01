@@ -2,6 +2,7 @@
 
 mod line;
 mod loops;
+mod spacing;
 
 use fpas_parser::Stmt;
 
@@ -21,6 +22,9 @@ pub(crate) fn format_block_stmts(stmts: &[Stmt]) -> String {
 
 pub(crate) fn emit_stmts_in_block(emitter: &mut Emitter, stmts: &[Stmt], comments: &CommentMap) {
     for (index, stmt) in stmts.iter().enumerate() {
+        if index > 0 && spacing::needs_blank_line(&stmts[index - 1], stmt) {
+            emitter.blank_line();
+        }
         emit_leading_comments(emitter, comments, stmt_start(stmt), false);
         let is_last = index + 1 == stmts.len();
         emit_stmt_in_block(emitter, stmt, is_last, comments);

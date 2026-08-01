@@ -80,6 +80,7 @@ begin
     Focus := 1;
     Actions := [];
   end;
+
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);
@@ -94,6 +95,7 @@ begin
     Focus := 3;
     Actions := Model.Actions;
   end;
+
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Space, '', false));
   Model := App.RunIterations(Model, UpdateButtons, ViewButtons, 1, 0);

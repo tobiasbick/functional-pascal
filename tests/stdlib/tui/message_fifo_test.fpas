@@ -76,6 +76,7 @@ begin
     Events := [];
     SeenCmdWasNoCommand := true;
   end;
+
   Model := App.RunIterations(Model, UpdateFifo, ViewFifo, 0, 0);
   App.Inject(TuiMsg.Tick(1));
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter, ''));

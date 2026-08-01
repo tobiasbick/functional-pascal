@@ -46,6 +46,7 @@ begin
       panic('expected modal focus')
     end
   end;
+
   case TuiFocusResolve(Tree, Some(TuiControlId.Create(1))) of
     Some(Id):
     begin
@@ -56,6 +57,7 @@ begin
       panic('expected modal resolve')
     end
   end;
+
   case TuiFocusResolve(Tree, Some(TuiControlId.Create(3))) of
     Some(Id):
     begin
@@ -88,6 +90,7 @@ begin
       panic('expected host focus')
     end
   end;
+
   case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(9))) of
     Some(Id):
     begin

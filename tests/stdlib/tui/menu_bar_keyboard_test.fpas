@@ -78,6 +78,7 @@ begin
     Focus := 1;
     Actions := [];
   end;
+
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Enter));
   Model := App.RunIterations(Model, UpdateMenu, ViewMenu, 1, 0);

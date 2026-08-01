@@ -83,6 +83,7 @@ begin
     Caret := 2;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Enter, '');
   AssertEquals(('ab' + Std.Str.Chr(10)), Model.Text);
@@ -109,6 +110,7 @@ begin
     Caret := 3;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Down, '');
   AssertEquals(6, Model.Caret);
@@ -129,6 +131,7 @@ begin
     Caret := 0;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.EndKey, '');
   AssertEquals(6, Model.Caret);
@@ -138,6 +141,7 @@ begin
     Caret := 6;
     Offset := TuiPoint.Create(1, 1);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewTextArea, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Right, '');
   AssertEquals(7, Model.Caret);
@@ -156,6 +160,7 @@ begin
     Caret := 5;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateTextArea, ViewWindowedTextArea, 0, 0);
   Model := PressWindowed(App, Model, TuiKeyKind.Enter, '');
   AssertEquals(0, Model.Offset.Y);

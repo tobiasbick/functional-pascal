@@ -23,6 +23,7 @@ begin
               WriteLn('bad-name')
             end
           end;
+
           case Unwrap(ScoresValue) of
             JsonValue.Array(Scores):
             begin
@@ -33,6 +34,7 @@ begin
               WriteLn('bad-scores')
             end
           end;
+
           case Unwrap(ActiveValue) of
             JsonValue.Bool(Active):
             begin

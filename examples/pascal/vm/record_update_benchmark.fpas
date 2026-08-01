@@ -25,10 +25,12 @@ begin
     C := 3;
     D := 4;
   end;
+
   for Index: integer := 1 to Iterations do
   begin
     State := State with A := State.A + 1; C := State.C + State.B; end
   end;
+
   return ((State.A + State.B) + State.C) + State.D
 end;
 
@@ -60,6 +62,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn('iterations: ' + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' updates/s');

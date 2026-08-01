@@ -32,6 +32,7 @@ begin
   begin
     Focused := Some(TuiControlId.Create(State.Focus))
   end;
+
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
 
@@ -90,6 +91,7 @@ begin
     Focus := 0;
     Offset := TuiPoint.Create(0, 0);
   end;
+
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectPointerForTest(MakeDownPointer(10, 1));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);

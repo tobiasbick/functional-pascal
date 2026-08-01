@@ -38,6 +38,7 @@ begin
       return TuiPoint.Create(Index, Y)
     end
   end;
+
   panic('glyph not found in snapshot')
 end;
 
@@ -59,6 +60,7 @@ begin
 
                                                          ])
   end;
+
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Host', [
 
@@ -105,6 +107,7 @@ begin
           PointerHits := State.PointerHits;
         end
       end;
+
       return record
         Focus := 1;
         ConfirmOpen := false;
@@ -136,6 +139,7 @@ begin
     Actions := [];
     PointerHits := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateModal, ViewModal, 0, 0);
   var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(MakePointer(TuiPointerAction.Down, SaveAt.X, SaveAt.Y));

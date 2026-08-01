@@ -59,6 +59,7 @@ begin
       panic('expected concrete cell-grid style')
     end
   end;
+
   AssertTrue(Snapshot.CellAt(1, 0).Role = TuiStyleRole.Accent);
   AssertTrue(Snapshot.CellAt(0, 1).Role = TuiStyleRole.Rule);
   AssertTrue(Snapshot.CellAt(7, 2).Role = TuiStyleRole.GaugeFill);

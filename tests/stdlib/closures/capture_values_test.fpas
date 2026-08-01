@@ -19,11 +19,13 @@ begin
   var Inc: procedure() := procedure() begin
     Count := Count + 1
   end;
+
   Inc();
   AssertEquals(IntToStr(Count), '1');
   var Base: integer := 10;
   var Add: function(Value: integer): integer := function(Value: integer): integer begin
     return Base + Value
   end;
+
   AssertEquals(IntToStr(Add(5)), '15')
 end.

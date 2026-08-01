@@ -26,6 +26,7 @@ begin
   begin
     panic('TASK_COUNT must be positive')
   end;
+
   WriteLn(('spawning ' + IntToStr(TaskCount)) + ' tasks');
   var Started: integer := MonotonicMillis();
   mutable var Tasks: array of task := [];
@@ -37,6 +38,7 @@ begin
       WriteLn('spawned ' + IntToStr(I))
     end
   end;
+
   WriteLn('all tasks spawned; waiting');
   WaitAll(Tasks);
   WriteLn(('completed in ' + IntToStr(ElapsedMillis(Started))) + ' ms')

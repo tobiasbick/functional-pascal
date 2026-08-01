@@ -14,8 +14,10 @@ begin
     begin
       Fail(('Expected directory: ') + Path)
     end;
+
     return
   end;
+
   case CreateDir(Path) of
     Ok(_):
     begin
@@ -38,6 +40,7 @@ begin
       Fail(Message)
     end
   end;
+
   case WriteText(Prefix + 'a.txt', '') of
     Ok(_):
     begin
@@ -47,6 +50,7 @@ begin
       Fail(Message)
     end
   end;
+
   case Glob(Prefix + '*.txt') of
     Ok(Paths):
     begin

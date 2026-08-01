@@ -33,6 +33,7 @@ begin
   begin
     Std.Array.Push(Values, Index)
   end;
+
   return Values
 end;
 
@@ -45,6 +46,7 @@ begin
     var Filtered: array of integer := Std.Array.Filter(Mapped, IsEven);
     Total := Total + Std.Array.Reduce(Filtered, 0, Sum)
   end;
+
   return Total
 end;
 
@@ -78,6 +80,7 @@ begin
   begin
     OpsPerSecond := (Callbacks * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', callbacks: ') + IntToStr(Callbacks));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s');

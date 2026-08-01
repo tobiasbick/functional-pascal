@@ -168,6 +168,7 @@ begin
       end
     end
   end;
+
   return BuildModel(Explorer, State.TerminalWidth, State.TerminalHeight, State.HelpOpen)
 end;
 
@@ -196,6 +197,7 @@ begin
       Explorer := ExplorerState.Default()
     end
   end;
+
   return BuildModel(Explorer, State.TerminalWidth, State.TerminalHeight, State.HelpOpen)
 end;
 
@@ -221,6 +223,7 @@ begin
       begin
         return BuildModel(State.Explorer, State.TerminalWidth, State.TerminalHeight, false)
       end;
+
       Cmd.Set(TuiCmd.Quit);
       return State
     end
@@ -280,6 +283,7 @@ begin
 
                                                                         ]))
   end;
+
   return TuiElementBuilders.MakeDesktop(None, Children)
 end;
 

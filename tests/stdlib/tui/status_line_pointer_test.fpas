@@ -18,6 +18,7 @@ begin
       return TuiPoint.Create(Index, Y)
     end
   end;
+
   panic('glyph not found in snapshot')
 end;
 
@@ -79,6 +80,7 @@ begin
     Focus := 1;
     Actions := [];
   end;
+
   Model := App.RunIterations(Model, UpdateStatus, ViewStatus, 0, 0);
   var SaveAt: TuiPoint := FindGlyph(App.SurfaceSnapshot(), 'Save');
   App.InjectPointerForTest(TuiPointerEvent.Create(TuiPointerAction.Down, TuiPointerButton.Left, SaveAt));

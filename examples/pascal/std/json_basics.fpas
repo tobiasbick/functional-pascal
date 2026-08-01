@@ -22,6 +22,7 @@ begin
               WriteLn('missing name')
             end
           end;
+
           case Unwrap(ScoresValue) of
             JsonValue.Array(Scores):
             begin
@@ -32,6 +33,7 @@ begin
               WriteLn('missing scores')
             end
           end;
+
           WriteLn(Stringify(Value))
         end
         else

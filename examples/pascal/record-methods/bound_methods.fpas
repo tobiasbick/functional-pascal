@@ -37,6 +37,7 @@ begin
   C := record
     Base := 99;
   end;
+
   WriteLn(IntToStr(AddTen(5)));
   WriteLn(IntToStr(Apply(AddTen, 7)));
   var ShowBase: procedure() := Counter.Make(3).Show;

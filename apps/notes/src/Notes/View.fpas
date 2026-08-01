@@ -14,10 +14,12 @@ begin
   begin
     return 32
   end;
+
   if Width > 52 then
   begin
     return 52
   end;
+
   return Width
 end;
 
@@ -27,6 +29,7 @@ begin
   begin
     return State.Width
   end;
+
   return SidebarWidth(State)
 end;
 
@@ -44,10 +47,12 @@ begin
   begin
     Dirty := '  ● unsaved'
   end;
+
   if Std.Array.Length(State.Issues) > 0 then
   begin
     Issues := ('  ·  ' + IntToStr(Std.Array.Length(State.Issues))) + ' invalid'
   end;
+
   return TuiElementBuilders.MakeRule(((((' NOTES  ·  ' + IntToStr(Std.Array.Length(NotesFilteredIndices(State.Notes, '')))) + ' active') + Issues) + Dirty) +
                                      '  ·  Ctrl+K commands ')
 end;
@@ -89,6 +94,7 @@ begin
   begin
     Pin := ' ★'
   end;
+
   return TuiElementBuilders.MakePanel('Editor' + Pin, [
                                                         Title,
                                                         Tags,
@@ -106,8 +112,10 @@ begin
     begin
       return ListPane(State)
     end;
+
     return EditorPane(State)
   end;
+
   return TuiElementBuilders.MakeRow([
                                       FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
                                       Expanding(EditorPane(State), 1)
@@ -140,6 +148,7 @@ begin
     Pin := TuiElementBuilders.MakeButton(TuiControlId.Create(22), 'Toggle pin', TuiAction.Create(12));
     Archive := TuiElementBuilders.MakeButton(TuiControlId.Create(23), 'Archive note', TuiAction.Create(13))
   end;
+
   return TuiElementBuilders.MakeOverlay('Commands', [
                                                       TuiElementBuilders.MakeLabel('Quick actions'),
                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(20), 'New note', TuiAction.Create(10)),
@@ -227,14 +236,17 @@ begin
       begin
         return State.Focus
       end;
+
       return 1
     end;
+
     if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
     begin
       if (State.Focus >= 3) and (State.Focus <= 5) then
       begin
         return State.Focus
       end;
+
       return 5
     end
   end
@@ -244,16 +256,19 @@ begin
     begin
       return State.Focus
     end;
+
     if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
        ((State.Focus >= 3) and (State.Focus <= 5)) then
     begin
       return State.Focus
     end;
+
     if (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes)) then
     begin
       return 5
     end
   end;
+
   return 1
 end;
 
@@ -266,11 +281,13 @@ begin
       begin
         return State.Focus
       end;
+
       if ((State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))) and
          ((State.Focus >= 21) and (State.Focus <= 23)) then
       begin
         return State.Focus
       end;
+
       return 20
     end;
     NotesOverlay.Help:
@@ -283,6 +300,7 @@ begin
       begin
         return State.Focus
       end;
+
       return 27
     end;
     NotesOverlay.SaveFailure:
@@ -323,5 +341,6 @@ begin
   begin
     Std.Array.Push(Children, Overlay(State))
   end;
+
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(OverlayFocus(State))), Children)
 end;

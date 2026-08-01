@@ -57,6 +57,15 @@ fn short_record_literal_is_multiline() {
 }
 
 #[test]
+fn logical_block_spacing() {
+    common::assert_golden(
+        "logical_block_spacing",
+        "program T; type Point = record X: integer; Y: integer; end; begin var A: Point := record X := 3; Y := 4; end; var B: Point := record X := 10; Y := 20; end; var UpdatedB: Point := B with X := 11; end; A.Print(); if Ready then Save();\n// present result\nPresent(); if NeedsCount then Prepare(); var Count: integer := 1; WriteLn(Count); if Done then Finish() end.",
+        include_str!("golden/logical_block_spacing.expected.fpas"),
+    );
+}
+
+#[test]
 fn wrapped_parenthesized_comparisons_preserve_full_expression() {
     common::assert_golden(
         "wrapped_parenthesized_comparisons",

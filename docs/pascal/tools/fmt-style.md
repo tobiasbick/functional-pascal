@@ -29,7 +29,8 @@ Visual checklist:
 - Every **function** / **procedure** / **method** body: `begin` … `end`
 - Every **`if` / `else`**, **`for` / `while`**, **`case` arm**: extra nested `begin` … `end` (even for a single statement)
 - **`repeat` … `until`**: no extra `begin` / `end` around the body
-- **No** spare blank lines inside `begin` … `end` blocks
+- Inside `begin` … `end`, one blank line separates completed `end;` blocks from the next
+  non-variable statement
 
 ### Program — minimal
 
@@ -158,6 +159,7 @@ begin
     X := 10;
     Y := 20;
   end;
+
   A.Print();
   B.Print();
   WriteLn('Sum of A: ' + IntToStr(A.Sum()));
@@ -280,9 +282,12 @@ The formatter **inserts and removes** blank lines to match these rules. User-pla
 | `uses ...;` | **exactly one** |
 | `type` block (after closing `end;` of the block) | **exactly one** before the next top-level section (`begin` in programs, or `function` / `procedure` / … in units) |
 | last field in a `record` type (before methods) | **exactly one** before the first method |
+| sibling statement whose formatted output ends in `end;` | **exactly one**, unless the next sibling is `var` or `mutable var` |
 | last statement before `end` / `end.` | none |
 
-Inside `begin` … `end` blocks: **no** extra blank lines between consecutive statements unless we add a separate rule later.
+This statement-spacing rule applies only between sibling statements. It never inserts a blank line
+before structural continuations or closers such as `else`, `until`, `end`, or `end.`, and it does not
+separate `case` arms. Leading comments stay attached to the following statement after the blank line.
 
 ---
 

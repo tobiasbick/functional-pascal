@@ -21,6 +21,7 @@ begin
   begin
     Std.Array.Push(Tasks, go Worker(Index))
   end;
+
   WaitAll(Tasks);
   return Std.Array.Length(Tasks)
 end;
@@ -53,6 +54,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn('iterations: ' + IntToStr(Iterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' tasks/s');

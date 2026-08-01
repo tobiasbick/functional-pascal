@@ -43,6 +43,7 @@ begin
   mutable var Model: CheckModel := record
     Checked := false;
   end;
+
   Model := App.RunIterations(Model, UpdateCheck, ViewCheck, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(1), 'Flag'));
   App.InjectResizeForTest(TuiSize.Create(12, 4));

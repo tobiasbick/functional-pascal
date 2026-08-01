@@ -30,6 +30,7 @@ begin
     Value := Increment(Value);
     Value := AddCaptured(Value)
   end;
+
   return Value
 end;
 
@@ -62,6 +63,7 @@ begin
   begin
     OpsPerSecond := (Calls * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', calls: ') + IntToStr(Calls));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' calls/s');

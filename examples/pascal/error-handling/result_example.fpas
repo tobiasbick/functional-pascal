@@ -37,6 +37,7 @@ begin
       WriteLn('Error: ', E)
     end
   end;
+
   case Divide(7, 0) of
     Ok(V):
     begin
@@ -47,6 +48,7 @@ begin
       WriteLn('Error: ', E)
     end
   end;
+
   case Stringify(100, 4) of
     Ok(S):
     begin
@@ -57,6 +59,7 @@ begin
       WriteLn('Failed: ', E)
     end
   end;
+
   case Stringify(100, 0) of
     Ok(S):
     begin

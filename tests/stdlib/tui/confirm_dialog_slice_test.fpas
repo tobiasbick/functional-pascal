@@ -74,16 +74,19 @@ begin
         AssertEquals(SaveControlValue, Source.Value);
         return EditorState(State, State.Name, State.NameCaret, YesControlValue, true, State.Saved, State.Quit)
       end;
+
       if Action.Value = ConfirmYesActionValue then
       begin
         AssertEquals(YesControlValue, Source.Value);
         return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, true, State.Quit)
       end;
+
       if Action.Value = ConfirmNoActionValue then
       begin
         AssertEquals(NoControlValue, Source.Value);
         return EditorState(State, State.Name, State.NameCaret, SaveControlValue, false, State.Saved, State.Quit)
       end;
+
       return State
     end;
     TuiMsg.TextChanged(Source, Action, Text, Caret):
@@ -135,6 +138,7 @@ begin
 
                                                          ])
   end;
+
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focused)), [
                                                                                     TuiElementBuilders.MakePanel('Editor', [
 

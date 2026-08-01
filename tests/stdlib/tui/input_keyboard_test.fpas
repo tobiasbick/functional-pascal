@@ -33,6 +33,7 @@ begin
 
                                                                                                              ], 'draft', TuiAction.Create(1))
   end;
+
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [Input])
 end;
 
@@ -79,6 +80,7 @@ begin
     UseHistory := false;
     KeyHits := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Left, true);
   AssertEquals(6, Model.Caret);
@@ -91,6 +93,7 @@ begin
     UseHistory := false;
     KeyHits := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Delete, true);
   AssertEquals('beta', Model.Text);
@@ -103,6 +106,7 @@ begin
     UseHistory := true;
     KeyHits := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateInput, ViewInput, 0, 0);
   Model := Press(App, Model, TuiKeyKind.Up, false);
   AssertEquals('second', Model.Text);

@@ -53,6 +53,7 @@ begin
     Z := Z.Sq().Add(C);
     N := N + 1
   end;
+
   if N >= MaxIter then
   begin
     return record
@@ -87,6 +88,7 @@ begin
   begin
     WidthRange := 1
   end;
+
   if HeightRange < 1 then
   begin
     HeightRange := 1
@@ -101,6 +103,7 @@ begin
     var cx: real := XMin + (Px / Wr) * (XMax - XMin);
     Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter))
   end;
+
   return Row
 end;
 
@@ -124,6 +127,7 @@ begin
       background := CellShade;
     end
   end;
+
   return record
     glyph := EscapeGlyph(Sample.EscapeValue);
     foreground := EscapeColor(Palette, Sample.EscapeValue);
@@ -139,6 +143,7 @@ begin
   begin
     DrawWidth := CurrentWidth
   end;
+
   if DrawWidth < 1 then
   begin
     return
@@ -148,6 +153,7 @@ begin
   begin
     Push(Cells, RenderCell(Row[Px], Palette))
   end;
+
   WriteCells(1, Y, Cells)
 end;
 
@@ -169,6 +175,7 @@ begin
   begin
     Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji))
   end;
+
   for Py: integer := 0 to Height - 1 do
   begin
     var Row: array of PixelSample := Wait(Tasks[Py]);

@@ -22,6 +22,7 @@ begin
       end
     end
   end;
+
   case WriteText(DemoPath, 'hello from Std.Fs') of
     Ok(_):
     begin
@@ -32,6 +33,7 @@ begin
       WriteLn('write error: ', M)
     end
   end;
+
   case ReadText(DemoPath) of
     Ok(Text):
     begin
@@ -42,6 +44,7 @@ begin
       WriteLn('read error: ', M)
     end
   end;
+
   WriteLn('exists: ', Exists(DemoPath));
   WriteLn('isFile: ', IsFile(DemoPath))
 end.

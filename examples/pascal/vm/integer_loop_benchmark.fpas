@@ -16,6 +16,7 @@ begin
   begin
     Acc := (Acc + Index) - (Index div 3)
   end;
+
   return Acc
 end;
 
@@ -47,6 +48,7 @@ begin
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' iters/s');

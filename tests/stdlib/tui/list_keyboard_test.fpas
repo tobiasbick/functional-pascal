@@ -63,6 +63,7 @@ begin
     Selected := 0;
     Changes := [];
   end;
+
   Model := App.RunIterations(Model, UpdateList, ViewList, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateList, ViewList, 1, 0);

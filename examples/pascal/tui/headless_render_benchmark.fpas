@@ -40,6 +40,7 @@ begin
   begin
     Std.Array.Push(Children, TuiElementBuilders.MakeButton(TuiControlId.Create(Index), 'action', SharedAction))
   end;
+
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
 
@@ -76,6 +77,7 @@ begin
   begin
     FramesPerSecond := (Iterations * 1000) div Elapsed
   end;
+
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
   WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');

@@ -70,6 +70,7 @@ begin
     Offset := TuiPoint.Create(0, 0);
     Changes := [];
   end;
+
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 0, 0);
   App.InjectKeyForTest(MakeKey(TuiKeyKind.Down));
   Model := App.RunIterations(Model, UpdateScroll, ViewScroll, 1, 0);

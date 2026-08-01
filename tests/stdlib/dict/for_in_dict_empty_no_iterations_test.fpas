@@ -9,5 +9,6 @@ begin
   begin
     Count := Count + 1
   end;
+
   WriteLn(Count)
 end.

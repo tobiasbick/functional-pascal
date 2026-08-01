@@ -116,12 +116,14 @@ begin
     NormVideo();
     WriteHudText(Format('size=%dx%d  c=(%f,%f)  jr=%f  ji=%f  zoom=%f  iter=%d  pal=%s', Width, Height, S.CenterX, S.CenterY, S.Jr, S.Ji, S.Zoom, S.MaxIter, PaletteName(S.Palette)), Width)
   end;
+
   if ScreenHeight() >= 3 then
   begin
     GotoXY(1, 3);
     NormVideo();
     WriteHudText('WASD=const  click  wheel  arrows  +/-  PgUp/Dn  1/2/3  R  Esc', Width)
   end;
+
   NormVideo();
   Window(1, 1, Width, Height)
 end;
@@ -268,6 +270,7 @@ begin
       end
     end
   end;
+
   return false
 end;
 
@@ -355,6 +358,7 @@ begin
       PaintFrame();
       NeedsRedraw := false
     end;
+
     case ReadEventTimeout(16) of
       Some(E):
       begin
@@ -365,5 +369,6 @@ begin
       end
     end
   end;
+
   ShutdownTerminal()
 end.

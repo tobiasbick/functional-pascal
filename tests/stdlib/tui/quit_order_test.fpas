@@ -53,6 +53,7 @@ begin
     Quit := false;
     Updates := 0;
   end;
+
   Model := App.RunIterations(Model, UpdateQuit, ViewQuit, 0, 0);
   AssertTrue(Std.Str.Contains(App.SurfaceSnapshot().LineAt(0), 'before'));
   App.Inject(TuiMsg.QuitRequested);

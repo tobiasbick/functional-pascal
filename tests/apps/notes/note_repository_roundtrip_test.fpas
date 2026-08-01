@@ -37,6 +37,7 @@ begin
       Fail(Message)
     end
   end;
+
   case NotesLoadDirectory(Directory) of
     Ok(Loaded):
     begin

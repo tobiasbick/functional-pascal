@@ -15,6 +15,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, native graphics, strings, math, arrays, tasks, and more.
+- **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, and integrated tests.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
 - **Explicit types** — Every variable and parameter declares its type.
@@ -273,8 +274,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 
 ## Project Structure
 
-| Crate | Purpose |
-|-------|---------|
+| Component | Purpose |
+|-----------|---------|
 | `fpas-cli` | Command-line interface (`fpas` binary) |
 | `fpas-lexer` | Tokenizer / lexical analysis |
 | `fpas-parser` | Parser producing the AST |
@@ -291,6 +292,9 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-std` | Standard library intrinsics |
 | `fpas-fmt` | Canonical FPAS source formatter |
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
+| `fpas-language-service` | Compiler-backed editor analysis and language features |
+| `fpas-lsp` | Language Server Protocol transport |
+| `editors/vscode` | VS Code-compatible extension, packaging, and Extension Host tests |
 
 ## Status
 

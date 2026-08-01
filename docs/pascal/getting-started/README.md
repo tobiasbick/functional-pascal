@@ -13,4 +13,5 @@ Introduction, first programs, and reserved keywords.
 
 - [Basics](../language/basics/README.md) — types, variables, operators
 - [Program structure](../program-structure/README.md) — units and projects
+- [Editor integration](../tools/editor-integration.md) — VS Code-compatible extension
 - [Formal grammar](../../specs/grammar.ebnf)

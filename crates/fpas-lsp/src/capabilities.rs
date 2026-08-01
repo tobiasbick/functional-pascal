@@ -1,8 +1,10 @@
 //! Capabilities implemented by the native Functional Pascal transport.
 
 use tower_lsp_server::ls_types::{
-    CompletionOptions, HoverProviderCapability, InitializeResult, OneOf, PositionEncodingKind,
-    RenameOptions, SaveOptions, SelectionRangeProviderCapability, ServerCapabilities, ServerInfo,
+    CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
+    HoverProviderCapability, InitializeResult, OneOf, PositionEncodingKind, RenameOptions,
+    SaveOptions, SelectionRangeProviderCapability, SemanticTokensFullOptions,
+    SemanticTokensOptions, SemanticTokensServerCapabilities, ServerCapabilities, ServerInfo,
     SignatureHelpOptions, TextDocumentSyncCapability, TextDocumentSyncKind,
     TextDocumentSyncOptions, TextDocumentSyncSaveOptions, TypeDefinitionProviderCapability,
     WorkDoneProgressOptions,
@@ -46,6 +48,19 @@ pub(crate) fn initialize_result() -> InitializeResult {
                 retrigger_characters: Some(vec![",".to_owned()]),
                 work_done_progress_options: WorkDoneProgressOptions::default(),
             }),
+            semantic_tokens_provider: Some(
+                SemanticTokensServerCapabilities::SemanticTokensOptions(SemanticTokensOptions {
+                    work_done_progress_options: WorkDoneProgressOptions::default(),
+                    legend: crate::semantic_tools::semantic_tokens_legend(),
+                    range: None,
+                    full: Some(SemanticTokensFullOptions::Bool(true)),
+                }),
+            ),
+            code_action_provider: Some(CodeActionProviderCapability::Options(CodeActionOptions {
+                code_action_kinds: Some(vec![CodeActionKind::QUICKFIX]),
+                resolve_provider: Some(false),
+                work_done_progress_options: WorkDoneProgressOptions::default(),
+            })),
             ..ServerCapabilities::default()
         },
         server_info: Some(ServerInfo {

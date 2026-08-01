@@ -77,6 +77,7 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
     assert_eq!(
         capability_names,
         [
+            "codeActionProvider",
             "completionProvider",
             "definitionProvider",
             "documentFormattingProvider",
@@ -87,6 +88,7 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
             "referencesProvider",
             "renameProvider",
             "selectionRangeProvider",
+            "semanticTokensProvider",
             "signatureHelpProvider",
             "textDocumentSync",
             "typeDefinitionProvider",
@@ -101,11 +103,24 @@ fn stdio_transcript_supports_initialize_documents_shutdown_and_exit() {
         capabilities["completionProvider"]["resolveProvider"],
         json!(true)
     );
+    assert_eq!(
+        capabilities["codeActionProvider"]["codeActionKinds"],
+        json!(["quickfix"])
+    );
+    assert_eq!(
+        capabilities["codeActionProvider"]["resolveProvider"],
+        json!(false)
+    );
     assert_eq!(capabilities["definitionProvider"], json!(true));
     assert_eq!(capabilities["documentFormattingProvider"], json!(true));
     assert_eq!(capabilities["documentSymbolProvider"], json!(true));
     assert_eq!(capabilities["hoverProvider"], json!(true));
     assert_eq!(capabilities["referencesProvider"], json!(true));
+    assert_eq!(capabilities["semanticTokensProvider"]["full"], json!(true));
+    assert_eq!(
+        capabilities["semanticTokensProvider"]["range"],
+        serde_json::Value::Null
+    );
     assert_eq!(
         capabilities["renameProvider"]["prepareProvider"],
         json!(true)

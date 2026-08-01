@@ -152,6 +152,7 @@ fn auto_import_kind(kind: SymbolKind) -> bool {
             | SymbolKind::Variable
             | SymbolKind::MutableVariable
             | SymbolKind::Type
+            | SymbolKind::Enum
             | SymbolKind::Function
             | SymbolKind::Procedure
     )

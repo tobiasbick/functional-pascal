@@ -2,10 +2,14 @@
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::Span;
-use fpas_parser::{Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, Visibility};
+use fpas_parser::{
+    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, Stmt, TypeParam, Visibility,
+};
 
-use super::{declaration_symbol, member_symbol, named_type, type_callable_signature, type_text};
-use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind};
+use super::{
+    declaration_symbol, member_symbol, name_span, named_type, type_callable_signature, type_text,
+};
+use crate::{DocumentSnapshot, DocumentSymbol, SymbolKind, SymbolVisibility};
 
 pub(crate) fn function_children(
     snapshot: &DocumentSnapshot,
@@ -15,6 +19,7 @@ pub(crate) fn function_children(
     routine_children(
         snapshot,
         owner,
+        &declaration.type_params,
         &declaration.params,
         &declaration.body,
         declaration.span,
@@ -29,6 +34,7 @@ pub(crate) fn procedure_children(
     routine_children(
         snapshot,
         owner,
+        &declaration.type_params,
         &declaration.params,
         &declaration.body,
         declaration.span,
@@ -146,14 +152,20 @@ pub(super) fn collect_statement_symbols(
 fn routine_children(
     snapshot: &DocumentSnapshot,
     owner: &str,
+    type_params: &[TypeParam],
     params: &[FormalParam],
     body: &FuncBody,
     routine_span: Span,
 ) -> Vec<DocumentSymbol> {
     let scope_span = routine_span.into();
-    let mut children = params
+    let mut children = type_params
         .iter()
-        .map(|param| parameter_symbol(snapshot, owner, param, scope_span))
+        .map(|parameter| type_parameter_symbol(snapshot, owner, parameter, scope_span))
+        .chain(
+            params
+                .iter()
+                .map(|param| parameter_symbol(snapshot, owner, param, scope_span)),
+        )
         .collect::<Vec<_>>();
     let FuncBody::Block { nested, stmts } = body;
     children.extend(
@@ -164,6 +176,33 @@ fn routine_children(
     collect_statement_symbols(snapshot, owner, stmts, scope_span, &mut children);
     children.sort_by_key(|symbol| symbol.full_span.offset);
     children
+}
+
+fn type_parameter_symbol(
+    snapshot: &DocumentSnapshot,
+    owner: &str,
+    parameter: &TypeParam,
+    scope_span: SourceSpan,
+) -> DocumentSymbol {
+    let selection_span = name_span(snapshot, scope_span, &parameter.name);
+    let constraint = parameter
+        .constraint
+        .as_deref()
+        .map_or_else(String::new, |value| format!(": {value}"));
+    DocumentSymbol {
+        name: parameter.name.clone(),
+        qualified_name: format!("{owner}.{}", parameter.name),
+        kind: SymbolKind::TypeParameter,
+        full_span: selection_span,
+        selection_span,
+        scope_span,
+        visible_from: scope_span.offset,
+        visibility: SymbolVisibility::Private,
+        type_name: None,
+        detail: format!("type parameter {}{constraint}", parameter.name),
+        callable: None,
+        children: Vec::new(),
+    }
 }
 
 fn parameter_symbol(

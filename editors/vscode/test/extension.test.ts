@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 
 import type { FunctionalPascalExtensionApi } from "../src/extension";
 import { verifyIntelliSense } from "./intellisense";
+import { verifySemanticTools } from "./semantic_tools";
 
 const EXTENSION_ID = "functional-pascal.functional-pascal";
 const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -159,6 +160,7 @@ export async function run(): Promise<void> {
   await verifyExternalProjectChanges();
   await verifyWorkspaceNavigation();
   await verifyIntelliSense(extension.extensionPath);
+  await verifySemanticTools(extension);
 
   const notesTheme = vscode.Uri.file(
     path.resolve(
@@ -188,7 +190,7 @@ export async function run(): Promise<void> {
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
   console.log(
-    "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, and lifecycle test passed."
+    "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, semantic tools, and lifecycle test passed."
   );
 }
 

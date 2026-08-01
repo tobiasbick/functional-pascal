@@ -170,7 +170,7 @@ fn member_candidates<'a>(
     let Some((base_index, base)) = resolved else {
         return Vec::new();
     };
-    let Some(type_name) = (if base.kind == SymbolKind::Type {
+    let Some(type_name) = (if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
         Some(base.qualified_name)
     } else {
         base.type_name

@@ -106,7 +106,10 @@ fn symbol_completion_kind(kind: SymbolKind) -> CompletionItemKind {
         | SymbolKind::Parameter
         | SymbolKind::LoopVariable => CompletionItemKind::VARIABLE,
         SymbolKind::Type => CompletionItemKind::CLASS,
+        SymbolKind::Enum => CompletionItemKind::ENUM,
         SymbolKind::Function | SymbolKind::Procedure => CompletionItemKind::FUNCTION,
+        SymbolKind::Method => CompletionItemKind::METHOD,
+        SymbolKind::TypeParameter => CompletionItemKind::TYPE_PARAMETER,
         SymbolKind::Field => CompletionItemKind::FIELD,
         SymbolKind::Property => CompletionItemKind::PROPERTY,
         SymbolKind::Event => CompletionItemKind::EVENT,

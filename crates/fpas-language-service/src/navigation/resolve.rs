@@ -150,7 +150,7 @@ pub(crate) fn resolve_qualified(
     }
 
     let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
-    let mut owner_type = if base.kind == SymbolKind::Type {
+    let mut owner_type = if matches!(base.kind, SymbolKind::Type | SymbolKind::Enum) {
         Some(base.qualified_name.clone())
     } else {
         base.type_name.clone()
@@ -181,11 +181,10 @@ pub(crate) fn find_type<'a>(
 ) -> Option<(usize, &'a DocumentSymbol)> {
     let short = name.rsplit('.').next().unwrap_or(name);
     let preferred = &documents[preferred_index];
-    if let Some(symbol) = preferred
-        .top_level()
-        .iter()
-        .find(|symbol| symbol.kind == SymbolKind::Type && symbol.name.eq_ignore_ascii_case(short))
-    {
+    if let Some(symbol) = preferred.top_level().iter().find(|symbol| {
+        matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
+            && symbol.name.eq_ignore_ascii_case(short)
+    }) {
         return Some((preferred_index, symbol));
     }
     documents.iter().enumerate().find_map(|(index, document)| {
@@ -196,7 +195,7 @@ pub(crate) fn find_type<'a>(
             .top_level()
             .iter()
             .find(|symbol| {
-                symbol.kind == SymbolKind::Type
+                matches!(symbol.kind, SymbolKind::Type | SymbolKind::Enum)
                     && (symbol.name.eq_ignore_ascii_case(short)
                         || symbol.qualified_name.eq_ignore_ascii_case(name))
                     && (index == target_index || symbol.visibility == SymbolVisibility::Public)

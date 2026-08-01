@@ -16,6 +16,8 @@ mod intellisense_requests;
 mod navigation;
 mod navigation_requests;
 mod request_tasks;
+mod semantic_tools;
+mod semantic_tools_requests;
 mod server;
 
 use std::path::PathBuf;

@@ -19,10 +19,16 @@ pub enum SymbolKind {
     MutableVariable,
     /// Named type or alias.
     Type,
+    /// Named enum type.
+    Enum,
     /// Function declaration.
     Function,
     /// Procedure declaration.
     Procedure,
+    /// Record method declaration.
+    Method,
+    /// Generic routine type parameter.
+    TypeParameter,
     /// Formal routine or closure parameter.
     Parameter,
     /// Record field.

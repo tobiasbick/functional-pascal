@@ -3,7 +3,7 @@
 Status: planned
 
 This roadmap expands the repository-owned VS Code-compatible extension from
-the implemented `0.0.7` baseline. Phases 1 through 10 are complete and remain
+the implemented `0.0.8` baseline. Phases 1 through 11 are complete and remain
 documented by current user documentation, tests, and Git history. They are not
 reopened here.
 
@@ -13,7 +13,7 @@ phase is implemented.
 
 ## Current baseline
 
-The existing `0.0.7` extension provides:
+The existing `0.0.8` extension provides:
 
 - `.fpas` language detection, TextMate highlighting, indentation, comments,
   brackets, and folding markers
@@ -24,6 +24,8 @@ The existing `0.0.7` extension provides:
 - a bounded, watched project catalog with open-order-independent references
 - rich visibility-aware completion with lazy documentation
 - signature help, checked FPAS snippets, and safe unambiguous auto-imports
+- compiler-backed semantic highlighting with a TextMate fallback
+- deterministic `uses` import quick fixes for eligible `F2001` and `F2003`
 - a bundled host-native language server and source standard library
 - local packaging and Extension Host/package smoke tests
 
@@ -31,16 +33,15 @@ Current behavior is documented in
 [`docs/pascal/tools/editor-integration.md`](../../pascal/tools/editor-integration.md).
 This roadmap must not be treated as implemented behavior.
 
-Latest completed increment: Phase 10 shipped locally as extension `0.0.7` in
-`editors/vscode/dist/functional-pascal-0.0.7-win32-x64.vsix` (Windows x64,
-2,619,973 bytes, SHA-256
-`28A70F423DD4320F8A75A20D3E279B7D159A213F380C00CFE9CA512B997694C7`).
+Latest completed increment: Phase 11 shipped locally as extension `0.0.8` in
+`editors/vscode/dist/functional-pascal-0.0.8-win32-x64.vsix` (Windows x64,
+2,666,347 bytes, SHA-256
+`9FFAD7AACDF0912170497C08BE8729FDD852D9A31F9E0F2524B1D5D59BBF772D`).
 
 ## Phase status
 
 | Phase | Status | Outcome |
 |------:|--------|---------|
-| [11](phase-11-semantic-tools.md) | Planned | Semantic highlighting and deterministic quick fixes |
 | [12](phase-12-project-workflow.md) | Planned | Check, build, run, and test workflows in the editor |
 
 Items that are not phase commitments are kept in [`backlog.md`](backlog.md).

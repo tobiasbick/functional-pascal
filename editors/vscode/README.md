@@ -9,7 +9,10 @@ references, workspace symbol search, document highlights, go to type
 definition, syntax-aware selection expansion, validated project-wide rename,
 rich visibility-aware completion, lazy completion documentation, signature
 help, checked FPAS snippets, and safe unambiguous auto-imports. The repository
-builds and tests the extension without a Marketplace.
+builds and tests the extension without a Marketplace. Compiler-backed semantic
+tokens distinguish resolved declarations and references, and an `F2001` or
+`F2003` diagnostic can offer a safe import quick fix when exactly one public,
+accessible unit provides the missing type or callable.
 
 ## Build
 
@@ -78,6 +81,14 @@ repository-owned snippet. A completion may add a `uses` entry only when one
 accessible public declaration has one unambiguous unit import; ambiguous or
 inaccessible names are never guessed.
 
+Semantic highlighting refines the TextMate colors for resolved units, types,
+enums, type parameters, routines, parameters, variables, members, enum values,
+and constants. TextMate highlighting remains the startup and recovery fallback.
+Use **Quick Fix** (`Ctrl+.`) on an unknown type or callable diagnostic to add a
+`uses` import when that edit is uniquely determined and the resulting source is
+parseable and canonically formatted. Stale, ambiguous, or inaccessible
+diagnostics produce no edit.
+
 The folder opened in the editor may be the complete Functional Pascal Rust
 repository or another parent folder without an FPAS manifest. The server
 catalogs the `.fpasprj` and `.fpasworkspace` manifests in that folder and uses
@@ -103,7 +114,8 @@ The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
 VS Code Extension Host, verifies diagnostics, formatting, document symbols,
 hover, cross-unit definition and type definition, workspace symbols, document
 highlights, references, rename, rich completion, signature help, snippets, and
-a safe auto-import, restarts it once, and shuts it down with the extension:
+a safe auto-import, semantic tokens, and an applied diagnostic quick fix,
+restarts it once, and shuts it down with the extension:
 
 ```text
 npm test --prefix editors/vscode

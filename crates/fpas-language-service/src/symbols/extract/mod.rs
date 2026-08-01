@@ -122,7 +122,11 @@ pub(super) fn declaration_symbol(
         ),
         Decl::TypeDef(value) => (
             &value.name,
-            SymbolKind::Type,
+            if matches!(value.body, TypeBody::Enum(_)) {
+                SymbolKind::Enum
+            } else {
+                SymbolKind::Type
+            },
             value.span,
             value.visibility,
             match &value.body {

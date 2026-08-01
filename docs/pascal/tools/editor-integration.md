@@ -14,6 +14,8 @@ desktop editors. The implemented editor features are:
 - validated project-wide symbol rename
 - rich visibility-aware completion with lazy declaration documentation
 - signature help, repository snippets, and unambiguous auto-import completion
+- compiler-backed semantic highlighting with TextMate fallback
+- deterministic import quick fixes for eligible `F2001` and `F2003` diagnostics
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -189,6 +191,26 @@ Queries use the current unsaved buffers of every open project source. Recovered
 or incomplete syntax can still provide candidates when its lexical and symbol
 context is reliable.
 
+## Semantic highlighting and quick fixes
+
+The server emits full-document semantic tokens for resolved units, types,
+enums, type parameters, functions, procedures, methods, parameters, variables,
+fields, properties, events, enum members, and constants. Declaration,
+read-only, and public modifiers are emitted only when the resolved declaration
+proves them. Token ranges use UTF-16 positions, preserve lexical ordering, and
+remain non-overlapping. Recovered malformed source can return a safe partial
+result. The TextMate grammar remains active before server startup and whenever
+semantic analysis has no token for a source region.
+
+**Quick Fix** (`Ctrl+.`) can add a unit to `uses` for an unknown type (`F2001`)
+or unknown callable (`F2003`) when the project contains exactly one accessible
+public declaration that supplies it. The action is associated with the current
+diagnostic and is offered only if the edit still matches that diagnostic and
+produces parseable, canonically formatted source. Applying it re-analyzes the
+unsaved document and clears the resolved diagnostic without a server restart.
+Ambiguous, inaccessible, changed, malformed, and stale inputs receive no edit.
+Compiler help that only explains an error is not presented as an automatic fix.
+
 Comments, string contents, unknown names, inaccessible declarations, and
 sources outside the loaded project produce no navigation result. Recovered or
 incomplete syntax may produce a partial symbol/completion result, but does not
@@ -196,8 +218,11 @@ fail the language server.
 
 ## Current limits
 
-Semantic tokens and code actions are not implemented. Remote SSH, WSL, and container
-extension hosts are outside the local hobby-project packaging contract.
+Semantic-token delta responses are not implemented; the server sends complete
+document token sets. The only current code-action family is an unambiguous
+`uses` import for eligible unknown-type and unknown-callable diagnostics.
+Remote SSH, WSL, and container extension hosts are outside the local
+hobby-project packaging contract.
 
 ## Reporting editor problems
 

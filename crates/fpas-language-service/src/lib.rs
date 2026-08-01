@@ -14,6 +14,7 @@ mod error;
 mod formatting;
 mod intellisense;
 mod navigation;
+mod semantic_tools;
 mod symbols;
 mod workspace;
 
@@ -32,6 +33,10 @@ pub use intellisense::{
 pub use navigation::{
     DocumentHighlight, HighlightKind, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit,
     RenameError, RenameTarget, SelectionRange, WORKSPACE_SYMBOL_LIMIT,
+};
+pub use semantic_tools::{
+    DiagnosticIdentity, SemanticCodeAction, SemanticEdit, SemanticToken, SemanticTokenKind,
+    SemanticTokenModifiers,
 };
 pub use symbols::{
     CallableSignature, DocumentSymbol, DocumentSymbols, SymbolKind, SymbolLocation,

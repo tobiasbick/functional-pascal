@@ -15,25 +15,43 @@ export async function verifyManifest() {
     `${manifest.publisher}.${manifest.name}`,
     "functional-pascal.functional-pascal"
   );
-  assert.equal(manifest.version, "0.0.8");
+  assert.equal(manifest.version, "0.0.9");
   assert.equal(manifest.main, "./out/src/extension.js");
   assert.equal(manifest.engines?.vscode, "^1.91.0");
   assert.equal(manifest.scripts?.package, "node scripts/package.mjs");
   assert.equal(manifest.scripts?.publish, undefined);
 
   const commands = manifest.contributes?.commands ?? [];
-  assert.deepEqual(commands, [
+  assert.deepEqual(
+    commands.map((value) => value.command),
+    [
+      "functionalPascal.showOutput",
+      "functionalPascal.restartLanguageServer",
+      "functionalPascal.selectProject",
+      "functionalPascal.checkProject",
+      "functionalPascal.buildProject",
+      "functionalPascal.runProject",
+      "functionalPascal.testProject",
+      "functionalPascal.formatProject",
+      "functionalPascal.checkProjectFormatting",
+      "functionalPascal.cancelOperation",
+      "functionalPascal.refreshTests"
+    ]
+  );
+  assert.ok(
+    commands.every((value) => value.category === "Functional Pascal")
+  );
+  assert.deepEqual(
+    manifest.contributes?.configuration?.properties?.[
+      "functionalPascal.testTimeoutSeconds"
+    ],
     {
-      command: "functionalPascal.showOutput",
-      title: "Show Output",
-      category: "Functional Pascal"
-    },
-    {
-      command: "functionalPascal.restartLanguageServer",
-      title: "Restart Language Server",
-      category: "Functional Pascal"
+      type: "number",
+      minimum: 1,
+      default: 10,
+      description: "Timeout in seconds for each test started from the Testing view."
     }
-  ]);
+  );
 
   assert.equal(manifest.activationEvents, undefined);
   assert.deepEqual(manifest.extensionKind, ["ui"]);

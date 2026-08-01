@@ -27,3 +27,8 @@ export function resolveHostTarget(platform, architecture) {
 export function serverExecutableName(platform) {
   return platform === "win32" ? "fpas-lsp.exe" : "fpas-lsp";
 }
+
+/** Returns the native CLI filename for a supported host platform. */
+export function cliExecutableName(platform) {
+  return platform === "win32" ? "fpas.exe" : "fpas";
+}

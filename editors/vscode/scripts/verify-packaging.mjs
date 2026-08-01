@@ -14,6 +14,7 @@ import {
   clearStagedServers,
   stageServer
 } from "./package/stage-server.mjs";
+import { clearStagedCli, stageCli } from "./package/stage-cli.mjs";
 import {
   clearStagedStandardLibrary,
   stageStandardLibrary
@@ -32,8 +33,10 @@ export async function verifyPackaging() {
       "other-target"
     );
     const sourcePath = path.join(temporaryRoot, "fpas-lsp.test");
+    const cliSourcePath = path.join(temporaryRoot, "fpas.test");
     const sourceLibrary = path.join(temporaryRoot, "lib");
     await writeFile(sourcePath, "native-server-fixture");
+    await writeFile(cliSourcePath, "native-cli-fixture");
     await mkdir(path.join(sourceLibrary, "Std"), { recursive: true });
     await writeFile(
       path.join(sourceLibrary, "stdlib.fpasprj"),
@@ -65,6 +68,19 @@ export async function verifyPackaging() {
       await readdir(path.join(extensionRoot, "server")),
       ["test-x64"]
     );
+    await clearStagedCli(extensionRoot);
+    const stagedCli = await stageCli({
+      extensionRoot,
+      sourcePath: cliSourcePath,
+      hostTarget: "test-x64",
+      executableName: "fpas.test",
+      platform: "win32"
+    });
+    assert.equal(
+      stagedCli,
+      path.join(extensionRoot, "cli", "test-x64", "fpas.test")
+    );
+    assert.deepEqual(await readdir(path.join(extensionRoot, "cli")), ["test-x64"]);
     await clearStagedStandardLibrary(extensionRoot);
     const stagedSources = await stageStandardLibrary({
       extensionRoot,

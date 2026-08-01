@@ -29,7 +29,7 @@ function runCommand(command, args) {
 
 /** Runs compilation, manifest checks, and extension-host tests. */
 export async function runTests() {
-  runCommand("cargo", ["build", "-p", "fpas-lsp"]);
+  runCommand("cargo", ["build", "-p", "fpas-lsp", "-p", "fpas-cli"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
   await verifyManifest();
   await verifyContracts();

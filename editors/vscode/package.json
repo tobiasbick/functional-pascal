@@ -2,7 +2,7 @@
   "name": "functional-pascal",
   "displayName": "Functional Pascal",
   "description": "Local Functional Pascal editor integration",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publisher": "functional-pascal",
   "license": "BSD-3-Clause",
   "repository": {
@@ -56,8 +56,64 @@
         "command": "functionalPascal.restartLanguageServer",
         "title": "Restart Language Server",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.selectProject",
+        "title": "Select Project or Workspace",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.checkProject",
+        "title": "Check Project",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.buildProject",
+        "title": "Build Project",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.runProject",
+        "title": "Run Project in Terminal",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.testProject",
+        "title": "Test Project",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.formatProject",
+        "title": "Format Project",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.checkProjectFormatting",
+        "title": "Check Project Formatting",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.cancelOperation",
+        "title": "Cancel Active Operation",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.refreshTests",
+        "title": "Refresh Tests",
+        "category": "Functional Pascal"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Functional Pascal",
+      "properties": {
+        "functionalPascal.testTimeoutSeconds": {
+          "type": "number",
+          "minimum": 1,
+          "default": 10,
+          "description": "Timeout in seconds for each test started from the Testing view."
+        }
+      }
+    }
   },
   "scripts": {
     "compile": "node scripts/compile.mjs",

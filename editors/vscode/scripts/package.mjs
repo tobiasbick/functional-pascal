@@ -4,9 +4,12 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 import {
+  cliExecutableName,
   resolveHostTarget,
   serverExecutableName
 } from "./package/host.mjs";
+import { smokePackagedCli } from "./package/cli-smoke.mjs";
+import { clearStagedCli, stageCli } from "./package/stage-cli.mjs";
 import { smokePackagedServer } from "./package/lsp-smoke.mjs";
 import {
   clearStagedServers,
@@ -28,6 +31,7 @@ const manifest = JSON.parse(
 );
 const hostTarget = resolveHostTarget(process.platform, process.arch);
 const executableName = serverExecutableName(process.platform);
+const cliName = cliExecutableName(process.platform);
 const outputPath = path.join(
   distDirectory,
   `functional-pascal-${manifest.version}-${hostTarget}.vsix`
@@ -101,15 +105,17 @@ if (relativeDist !== "dist") {
 await rm(distDirectory, { recursive: true, force: true });
 await mkdir(distDirectory, { recursive: true });
 await clearStagedServers(extensionRoot);
+await clearStagedCli(extensionRoot);
 await clearStagedStandardLibrary(extensionRoot);
 await runTests();
 runCommand(
   "cargo",
-  ["build", "--release", "-p", "fpas-lsp"],
+  ["build", "--release", "-p", "fpas-lsp", "-p", "fpas-cli"],
   repositoryRoot
 );
+const targetDirectory = cargoTargetDirectory();
 const releaseServer = path.join(
-  cargoTargetDirectory(),
+  targetDirectory,
   "release",
   executableName
 );
@@ -118,6 +124,13 @@ await stageServer({
   sourcePath: releaseServer,
   hostTarget,
   executableName,
+  platform: process.platform
+});
+await stageCli({
+  extensionRoot,
+  sourcePath: path.join(targetDirectory, "release", cliName),
+  hostTarget,
+  executableName: cliName,
   platform: process.platform
 });
 await stageStandardLibrary({
@@ -148,6 +161,12 @@ await smokePackagedServer({
   vsixPath: outputPath,
   hostTarget,
   executableName,
+  platform: process.platform
+});
+smokePackagedCli({
+  vsixPath: outputPath,
+  hostTarget,
+  executableName: cliName,
   platform: process.platform
 });
 

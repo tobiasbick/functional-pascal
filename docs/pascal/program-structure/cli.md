@@ -30,6 +30,10 @@ type-checks, runs programs, and executes test bundles.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
+- `fpas fmt [<path> ...]` — format source files, directories, projects, or
+  workspaces. A program project includes its `project.main` source as well as
+  unit sources. `--check` reports formatting drift without changing files;
+  `--list` prints changed paths with `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
 - `fpas build --help`, `fpas run --help`, `fpas check --help`,
   `fpas test --help`, and `fpas fmt --help` — print focused command help with
@@ -130,6 +134,20 @@ fpas check
 ```
 
 With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects type-check here the same as program projects. When given a directory, every `.fpas` file under that tree is type-checked as a standalone source file (the same rules as `fpas fmt` for discovery).
+
+## Formatting project sources
+
+`fpas fmt` accepts the same project and workspace manifests used by the other
+project commands. It formats exactly the sources loaded from those manifests,
+including a program's main file:
+
+```sh
+fpas fmt my-app.fpasprj
+fpas fmt --check suite.fpasworkspace
+```
+
+Formatting never builds or runs the project. Parser diagnostics retain the
+source path, stable code, and location used by editor Problems integration.
 
 ## See also
 

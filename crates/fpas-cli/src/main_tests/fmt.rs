@@ -103,6 +103,38 @@ fn fmt_cli_formats_two_explicit_source_files() {
 }
 
 #[test]
+fn fmt_cli_project_includes_its_program_main() {
+    let cwd = create_temp_dir("fmt-program-project");
+    let project = cwd.join("app.fpasprj");
+    let main = cwd.join("src/main.fpas");
+    write_text(
+        &project,
+        r#"[project]
+name = "fmt-app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write_text(&main, "program Main; begin var Value:integer:=1 end.");
+
+    let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
+        &[String::from("fmt"), project.to_string_lossy().to_string()],
+        &cwd,
+    );
+    let formatted = fs::read_to_string(&main).expect("main source must exist");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert_eq!(
+        formatted,
+        "program Main;\n\nbegin\n  var Value: integer := 1\nend.\n"
+    );
+}
+
+#[test]
 fn fmt_cli_stdout_does_not_modify_file_on_disk() {
     let cwd = create_temp_dir("fmt-stdout");
     let source_path = cwd.join("hello.fpas");

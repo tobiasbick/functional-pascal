@@ -69,7 +69,7 @@ pub(crate) fn build_program_artifact(
     .map_err(|error| {
         format!(
             "Cannot build program project `{}`: {error}",
-            project_path.display()
+            prepared.main.display()
         )
     })?;
     let reused = built.counters().program_image_reused == 1;

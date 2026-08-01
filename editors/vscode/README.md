@@ -13,6 +13,9 @@ builds and tests the extension without a Marketplace. Compiler-backed semantic
 tokens distinguish resolved declarations and references, and an `F2001` or
 `F2003` diagnostic can offer a safe import quick fix when exactly one public,
 accessible unit provides the missing type or callable.
+The same VSIX bundles the host-native `fpas` CLI for project check, build, run,
+test, format, and format-check commands, Problems integration, and the Testing
+view.
 
 ## Build
 
@@ -29,8 +32,8 @@ Then build the VSIX:
 npm run package --prefix editors/vscode
 ```
 
-The command runs the extension tests, builds `fpas-lsp` in Cargo release mode,
-stages the current host binary plus the authoritative source-standard-library
+The command runs the extension tests, builds `fpas-lsp` and `fpas` in Cargo
+release mode, stages both current-host binaries plus the authoritative source-standard-library
 manifest and `.fpas` files, creates the target-labelled archive, and tests an
 external FPAS project through the server extracted from that archive. Derived
 `.fpascu` files are excluded. It produces:
@@ -103,6 +106,21 @@ The installed VSIX supplies its own source standard library to the server, so
 `Std.Tui` and the other source-defined `Std.*` units do not depend on a global
 compiler installation or a `lib/` directory in the opened project.
 
+Select **Functional Pascal: Select Project or Workspace** before using project
+commands in a folder containing multiple manifests. The remembered selection
+appears in the status bar. **Check Project**, **Build Project**, **Test
+Project**, **Format Project**, and **Check Project Formatting** run the bundled
+CLI without a shell and publish compiler failures in Problems. **Cancel Active
+Operation** stops a running non-interactive command. **Run Project in Terminal**
+starts the normal interactive CLI in an editor terminal and accepts program
+arguments as a JSON string array.
+
+The Testing view discovers `*_test.fpas` files for the selected manifest and
+supports all, selected, filtered, and rerun requests. Outcomes distinguish
+pass, assertion failure, skip, compile error, runtime error, and timeout. Set
+`functionalPascal.testTimeoutSeconds` to change the default 10-second per-test
+limit.
+
 Run **Functional Pascal: Show Output** from the Command Palette. The
 `Functional Pascal` output channel must contain:
 
@@ -114,7 +132,8 @@ The test command builds `target/debug/fpas-lsp[.exe]`, starts it from a real
 VS Code Extension Host, verifies diagnostics, formatting, document symbols,
 hover, cross-unit definition and type definition, workspace symbols, document
 highlights, references, rename, rich completion, signature help, snippets, and
-a safe auto-import, semantic tokens, and an applied diagnostic quick fix,
+a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
+commands, Problems, cancellation, and Testing API outcomes,
 restarts it once, and shuts it down with the extension:
 
 ```text

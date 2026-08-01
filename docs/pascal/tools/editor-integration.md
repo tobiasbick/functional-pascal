@@ -16,6 +16,8 @@ desktop editors. The implemented editor features are:
 - signature help, repository snippets, and unambiguous auto-import completion
 - compiler-backed semantic highlighting with TextMate fallback
 - deterministic import quick fixes for eligible `F2001` and `F2003` diagnostics
+- project check, build, run, test, format, and format-check workflows
+- Problems, Testing view, cancellation, active-project status, and terminal runs
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -54,6 +56,39 @@ matrix.
 For development, `npm test --prefix editors/vscode` builds the debug language
 server and runs the real VS Code Extension Host checks. More detail is in the
 [extension README](../../../editors/vscode/README.md).
+
+## Project workflows
+
+The extension bundles the host-native `fpas` CLI beside `fpas-lsp`; it never
+depends on a compiler from `PATH`. Before the first workflow operation it checks
+the CLI's stable `fpas --version` output. A missing or incompatible executable
+produces one actionable recovery message without stopping language-server
+features.
+
+Use **Functional Pascal: Select Project or Workspace** to choose a
+`.fpasprj` or `.fpasworkspace`. A folder with one manifest selects it
+automatically. When multiple manifests exist, the extension never chooses the
+first match: selection is explicit and remembered for the editor workspace.
+The status bar shows that manifest and changes to the active operation while a
+command runs.
+
+The Command Palette provides **Check Project**, **Build Project**, **Test
+Project**, **Format Project**, **Check Project Formatting**, **Run Project in
+Terminal**, and **Cancel Active Operation**. Non-interactive commands invoke the
+bundled CLI without a shell, so paths and arguments containing spaces remain
+separate. Cancellation terminates the owned CLI process. Run uses an editor
+terminal because interactive console, TUI, and graphical programs retain their
+normal host interaction; program arguments are entered as a JSON string array
+and forwarded after `--`.
+
+Compiler output becomes a dedicated `fpas workflow` Problems collection with
+the real source URI, source position, severity, stable `Fxxxx` code, message,
+and help. The Testing view discovers cases through `fpas test --list` and runs
+them through the versioned `fpas test --report json` contract. Run, rerun, all,
+and selected/filtered runs preserve pass, assertion failure, skip, compile
+error, runtime error, and timeout as distinct results. The per-test timeout is
+configured with `functionalPascal.testTimeoutSeconds` and defaults to 10
+seconds.
 
 ## Diagnostics
 

@@ -1,6 +1,9 @@
 import * as vscode from "vscode";
 
 import { LanguageClientController } from "./languageClient";
+import { WorkflowController, WORKFLOW_COMMANDS } from "./workflow/controller";
+import type { WorkflowTestStatus } from "./workflow/model";
+import type { ParsedWorkflowDiagnostic } from "./workflow/model";
 
 /** Command that reveals the Functional Pascal output channel. */
 export const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -26,6 +29,21 @@ export interface FunctionalPascalExtensionApi {
   readonly languageServerPath?: string;
   /** Actionable startup failure when the development server did not start. */
   readonly languageServerError?: string;
+  /** Project-workflow surface used by real Extension Host regression tests. */
+  readonly workflow: {
+    readonly commands: readonly string[];
+    cliPath(): string;
+    selectProject(uri: vscode.Uri): Promise<void>;
+    discoverTests(): Promise<string[]>;
+    runTests(files?: readonly string[]): Promise<Record<string, WorkflowTestStatus>>;
+    lastOperation():
+      | {
+          readonly exitCode: number | null;
+          readonly stderr: string;
+          readonly diagnostics: readonly ParsedWorkflowDiagnostic[];
+        }
+      | undefined;
+  };
 }
 
 let languageClient: LanguageClientController | undefined;
@@ -39,6 +57,15 @@ export async function activate(
   });
   outputChannel.appendLine(ACTIVATION_MESSAGE);
   languageClient = new LanguageClientController(context, outputChannel);
+  const workflow = new WorkflowController(context, outputChannel);
+  const workflowApi = {
+    commands: Object.values(WORKFLOW_COMMANDS),
+    cliPath: () => workflow.cliPath(),
+    selectProject: (uri: vscode.Uri) => workflow.selectProject(uri),
+    discoverTests: () => workflow.discoverTests(),
+    runTests: (files?: readonly string[]) => workflow.runTests(files),
+    lastOperation: () => workflow.lastOperation()
+  };
 
   const showOutput = vscode.commands.registerCommand(SHOW_OUTPUT_COMMAND, () => {
     outputChannel.show(true);
@@ -69,7 +96,8 @@ export async function activate(
     return {
       activationMessage: ACTIVATION_MESSAGE,
       languageServerStarted: true,
-      languageServerPath
+      languageServerPath,
+      workflow: workflowApi
     };
   } catch (error) {
     const message = errorMessage(error);
@@ -79,7 +107,8 @@ export async function activate(
     return {
       activationMessage: ACTIVATION_MESSAGE,
       languageServerStarted: false,
-      languageServerError: message
+      languageServerError: message,
+      workflow: workflowApi
     };
   }
 }

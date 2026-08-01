@@ -6,6 +6,8 @@ import * as vscode from "vscode";
 import type { FunctionalPascalExtensionApi } from "../src/extension";
 import { verifyIntelliSense } from "./intellisense";
 import { verifySemanticTools } from "./semantic_tools";
+import { verifyWorkflowHost } from "./workflow/host";
+import { verifyWorkflowUnits } from "./workflow/unit";
 
 const EXTENSION_ID = "functional-pascal.functional-pascal";
 const SHOW_OUTPUT_COMMAND = "functionalPascal.showOutput";
@@ -16,6 +18,7 @@ const ACTIVATION_MESSAGE =
 
 /** Runs the extension-shell regression test in a real Extension Host. */
 export async function run(): Promise<void> {
+  await verifyWorkflowUnits();
   const extension =
     vscode.extensions.getExtension<FunctionalPascalExtensionApi>(EXTENSION_ID);
 
@@ -161,6 +164,7 @@ export async function run(): Promise<void> {
   await verifyWorkspaceNavigation();
   await verifyIntelliSense(extension.extensionPath);
   await verifySemanticTools(extension);
+  await verifyWorkflowHost(api);
 
   const notesTheme = vscode.Uri.file(
     path.resolve(
@@ -190,7 +194,7 @@ export async function run(): Promise<void> {
   await vscode.commands.executeCommand(RESTART_LANGUAGE_SERVER_COMMAND);
   await vscode.commands.executeCommand(SHOW_OUTPUT_COMMAND);
   console.log(
-    "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, semantic tools, and lifecycle test passed."
+    "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, semantic tools, project workflows, and lifecycle test passed."
   );
 }
 

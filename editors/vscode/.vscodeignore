@@ -8,6 +8,8 @@ out/test/**
 out/src/languageClient.js
 out/src/serverPath.js
 out/src/standardLibraryPath.js
+out/src/cliPath.js
+out/src/workflow/**
 tsconfig.json
 package-lock.json
 dist/**

@@ -36,6 +36,41 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn build_cli_reports_main_diagnostics_against_the_source_path() {
+    let cwd = create_temp_dir("build-main-diagnostic-path");
+    let project_file = cwd.join("manifest.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "broken-app"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    let main = cwd.join("src/main.fpas");
+    write_text(&main, "program Broken;\nbegin\n  MissingCall()\nend.\n");
+
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("build"),
+            project_file.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(
+        stderr.contains("src/main.fpas`: 3:3: error[F2003]"),
+        "stderr: {stderr}"
+    );
+    assert!(!stderr.contains("manifest.fpasprj`: 3:3"));
+}
+
+#[test]
 fn build_cli_builds_library_unit_sidecars_without_program_artifact() {
     let cwd = create_temp_dir("build-library-artifact");
     let project_file = cwd.join("library.fpasprj");

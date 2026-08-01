@@ -65,7 +65,11 @@ fn collect_project_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<Path
         let _ = writeln!(stderr, "warning: {warning}");
     }
 
-    Ok(loaded.source_files)
+    let mut paths = loaded.source_files;
+    if let Some(main) = loaded.main {
+        paths.push(main);
+    }
+    Ok(dedupe_paths(paths))
 }
 
 fn collect_workspace_paths(path: &Path, stderr: &mut dyn Write) -> Result<Vec<PathBuf>, i32> {

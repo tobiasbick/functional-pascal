@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import AdmZip from "adm-zip";
 
 import {
+  cliExecutableName,
   resolveHostTarget,
   serverExecutableName
 } from "./package/host.mjs";
@@ -27,8 +28,10 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   const hostTarget = options.hostTarget ?? defaultHostTarget;
   const executableName =
     options.executableName ?? serverExecutableName(process.platform);
+  const cliName = options.cliName ?? cliExecutableName(process.platform);
   const serverEntry =
     `extension/server/${hostTarget}/${executableName}`;
+  const cliEntry = `extension/cli/${hostTarget}/${cliName}`;
   const archive = new AdmZip(vsixPath);
   const entries = archive.getEntries().map((entry) => entry.entryName);
   const entrySet = new Set(entries);
@@ -42,6 +45,7 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "[Content_Types].xml",
     "extension.vsixmanifest",
     "extension/BUG_REPORT.md",
+    cliEntry,
     "extension/LICENSE.txt",
     "extension/language-configuration.json",
     "extension/out/src/extension.js",
@@ -68,7 +72,8 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "extension/snippets/fpas.json",
     "extension/syntaxes/fpas.tmLanguage.json",
     "extension/standard-library/stdlib.fpasprj",
-    serverEntry
+    serverEntry,
+    cliEntry
   ]) {
     assert.ok(entrySet.has(required), `VSIX contains ${required}`);
   }
@@ -76,12 +81,20 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     archive.readFile(serverEntry)?.length > 0,
     "packaged language server is non-empty"
   );
+  assert.ok(
+    archive.readFile(cliEntry)?.length > 0,
+    "packaged Functional Pascal CLI is non-empty"
+  );
   if (executableName === "fpas-lsp") {
     const serverMode = archive.getEntry(serverEntry).attr >>> 16;
     assert.ok(
       (serverMode & 0o111) !== 0,
       "packaged Unix language server is executable"
     );
+  }
+  if (cliName === "fpas") {
+    const cliMode = archive.getEntry(cliEntry).attr >>> 16;
+    assert.ok((cliMode & 0o111) !== 0, "packaged Unix CLI is executable");
   }
 
   const vsixManifest = archive.readAsText("extension.vsixmanifest");
@@ -112,6 +125,12 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   assert.deepEqual(packagedManifest.contributes.snippets, [
     { language: "fpas", path: "./snippets/fpas.json" }
   ]);
+  assert.equal(
+    packagedManifest.contributes.configuration.properties[
+      "functionalPascal.testTimeoutSeconds"
+    ].default,
+    10
+  );
 
   const packagedLanguageConfiguration = JSON.parse(
     archive.readAsText("extension/language-configuration.json")
@@ -146,6 +165,12 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     "compiled extension contains the restart command"
   );
   assert.ok(
+    compiledExtension.includes("functionalPascal.checkProject") &&
+      compiledExtension.includes("functionalPascal.testProject") &&
+      compiledExtension.includes("functionalPascal.cancelOperation"),
+    "compiled extension contains project workflow commands"
+  );
+  assert.ok(
     compiledExtension.includes("Content-Length"),
     "compiled extension bundles the stdio language client"
   );
@@ -153,6 +178,10 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     compiledExtension.includes("server") &&
       compiledExtension.includes("fpas-lsp"),
     "compiled extension resolves the packaged language server"
+  );
+  assert.ok(
+    compiledExtension.includes("cli") && compiledExtension.includes("fpas"),
+    "compiled extension resolves the packaged Functional Pascal CLI"
   );
   assert.ok(
     compiledExtension.includes("standardLibraryUri") &&
@@ -190,6 +219,14 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
     serverEntries,
     [serverEntry],
     "VSIX contains only the current host server"
+  );
+  const cliEntries = entries.filter((entry) =>
+    entry.startsWith("extension/cli/")
+  );
+  assert.deepEqual(
+    cliEntries,
+    [cliEntry],
+    "VSIX contains only the current host CLI"
   );
   const packagedStandardLibrary = entries.filter((entry) =>
     entry.startsWith("extension/standard-library/")

@@ -1,9 +1,9 @@
 # VSIX roadmap
 
-Status: planned
+Status: complete
 
 This roadmap expands the repository-owned VS Code-compatible extension from
-the implemented `0.0.8` baseline. Phases 1 through 11 are complete and remain
+the implemented `0.0.9` baseline. Phases 1 through 12 are complete and remain
 documented by current user documentation, tests, and Git history. They are not
 reopened here.
 
@@ -13,7 +13,7 @@ phase is implemented.
 
 ## Current baseline
 
-The existing `0.0.8` extension provides:
+The existing `0.0.9` extension provides:
 
 - `.fpas` language detection, TextMate highlighting, indentation, comments,
   brackets, and folding markers
@@ -27,29 +27,35 @@ The existing `0.0.8` extension provides:
 - compiler-backed semantic highlighting with a TextMate fallback
 - deterministic `uses` import quick fixes for eligible `F2001` and `F2003`
 - a bundled host-native language server and source standard library
+- a bundled host-native `fpas` CLI for project check, build, run, test, and
+  formatting workflows
+- explicit remembered project selection, Problems integration, a compact
+  workflow status, cancellable non-interactive tasks, and interactive terminals
+- VS Code Testing integration with discovery, filtered runs, reruns, and
+  distinct pass, failure, skip, compile, runtime, and timeout results
 - local packaging and Extension Host/package smoke tests
 
 Current behavior is documented in
 [`docs/pascal/tools/editor-integration.md`](../../pascal/tools/editor-integration.md).
-This roadmap must not be treated as implemented behavior.
+Backlog items must not be treated as implemented behavior.
 
-Latest completed increment: Phase 11 shipped locally as extension `0.0.8` in
-`editors/vscode/dist/functional-pascal-0.0.8-win32-x64.vsix` (Windows x64,
-2,666,347 bytes, SHA-256
-`9FFAD7AACDF0912170497C08BE8729FDD852D9A31F9E0F2524B1D5D59BBF772D`).
+Latest completed increment: Phase 12 shipped locally as extension `0.0.9` in
+`editors/vscode/dist/functional-pascal-0.0.9-win32-x64.vsix` (Windows x64,
+5,017,524 bytes, SHA-256
+`CEED1B8972C13F34B3329E4346CCD0F1EDC74C4DBA56A9DD15AEDE15A09BF150`).
 
 ## Phase status
 
-| Phase | Status | Outcome |
-|------:|--------|---------|
-| [12](phase-12-project-workflow.md) | Planned | Check, build, run, and test workflows in the editor |
+There is no active implementation phase. Further ideas remain noncommittal
+backlog items until a new phase is agreed.
 
 Items that are not phase commitments are kept in [`backlog.md`](backlog.md).
 
 ## Execution rules
 
 1. Implement phases in order unless the plan is explicitly revised first.
-2. Mark exactly one phase as `In progress` in this table and its phase file.
+2. While implementation is active, mark exactly one phase as `In progress` in
+   this section and its phase file.
 3. Keep changes inside the phase scope; move discovered follow-ups to the
    backlog or a later phase.
 4. Reuse the compiler, formatter, project loader, and language-service logic.

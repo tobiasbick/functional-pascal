@@ -1,5 +1,6 @@
 //! Fresh standard-library compilation for distribution staging.
 
+mod publication;
 mod tree;
 
 use std::fmt;
@@ -60,7 +61,7 @@ pub fn stage_standard_library(
         .map_err(|error| DistributionError::new(error.to_string()))?;
     let counters = built.counters();
 
-    tree::replace_tree(source_root, destination_root).map_err(|error| {
+    publication::replace_tree(source_root, destination_root).map_err(|error| {
         DistributionError::new(format!(
             "cannot replace standard-library distribution directory `{}`: {error}",
             destination_root.display()

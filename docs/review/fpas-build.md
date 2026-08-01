@@ -1,7 +1,7 @@
 # `fpas-build` review follow-up
 
 Classification: compiler/build infrastructure and artifact persistence. No FPAS language change expected.
-Status: all findings open.
+Status: BUILD-02 done; all other findings open.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -16,3 +16,13 @@ Status: all findings open.
 BUILD-01 and BUILD-03 are the same invariant at different API layers and should be solved with one authoritative snapshot design. Coordinate BUILD-02 and BUILD-04 with `fpas-bundle`, `fpas-std`, and `fpas-unit` to avoid divergent publication semantics.
 
 Existing cold/warm, interface invalidation, corrupt-artifact, option-change, and staging tests provide useful scaffolding. Add the race and rollback cases before changing production code.
+
+## BUILD-02 completion record
+
+Completed on 2026-08-01.
+
+- Implementation: `distribution/publication.rs` now owns staging, backup, publish, rollback, and cleanup. The previous destination is moved to a unique backup instead of being deleted. A failed publish restores it; a failed restore is reported and preserves the backup.
+- Structure: tree validation, artifact cleanup, and recursive copying remain in `distribution/tree.rs`.
+- Regressions: deterministic tests cover successful restoration and failed restoration with a preserved backup. The end-to-end distribution test also rejects leftover transaction siblings.
+- Docs: normative `docs/pascal/` pages are unchanged because FPAS behavior and the documented exact-replacement contract did not change.
+- Verification: `cargo fmt`; `cargo test -p fpas-build`; `cargo clippy -p fpas-build --all-targets --locked -- -D warnings`; `cargo build`; `cargo test --workspace`.

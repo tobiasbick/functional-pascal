@@ -1,9 +1,6 @@
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
-
-static NEXT_STAGING_TREE: AtomicU64 = AtomicU64::new(1);
 
 pub(super) fn validate_separate_trees(source: &Path, destination: &Path) -> io::Result<()> {
     let source = canonical_target(source)?;
@@ -30,59 +27,14 @@ pub(super) fn remove_compiled_unit_artifacts(root: &Path) -> io::Result<()> {
     Ok(())
 }
 
-pub(super) fn replace_tree(source: &Path, destination: &Path) -> io::Result<()> {
-    let parent = destination.parent().ok_or_else(|| {
-        io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "distribution directory must have a parent",
-        )
-    })?;
-    fs::create_dir_all(parent)?;
-    let name = destination
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| {
-            io::Error::new(
-                io::ErrorKind::InvalidInput,
-                "distribution directory must have a UTF-8 name",
-            )
-        })?;
-    let id = NEXT_STAGING_TREE.fetch_add(1, Ordering::Relaxed);
-    let staging = parent.join(format!(
-        ".{name}.fpas-distribution-{}-{id}",
-        std::process::id()
-    ));
-    if let Err(error) = copy_tree(source, &staging) {
-        fs::remove_dir_all(&staging).ok();
-        return Err(error);
-    }
-
-    if destination.exists() {
-        let removal = if destination.is_dir() {
-            fs::remove_dir_all(destination)
-        } else {
-            fs::remove_file(destination)
-        };
-        if let Err(error) = removal {
-            fs::remove_dir_all(&staging).ok();
-            return Err(error);
-        }
-    }
-    if let Err(error) = fs::rename(&staging, destination) {
-        fs::remove_dir_all(staging).ok();
-        return Err(error);
-    }
-    Ok(())
-}
-
-fn copy_tree(source: &Path, destination: &Path) -> io::Result<()> {
-    fs::create_dir_all(destination)?;
+pub(super) fn copy_tree_contents(source: &Path, destination: &Path) -> io::Result<()> {
     for entry in fs::read_dir(source)? {
         let entry = entry?;
         let source_path = entry.path();
         let destination_path = destination.join(entry.file_name());
         if source_path.is_dir() {
-            copy_tree(&source_path, &destination_path)?;
+            fs::create_dir(&destination_path)?;
+            copy_tree_contents(&source_path, &destination_path)?;
         } else {
             fs::copy(source_path, destination_path)?;
         }

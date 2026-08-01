@@ -72,6 +72,12 @@ include = ["Std/**/*.fpas"]
     assert!(!distribution.join("Std/Removed.fpascu.lock").exists());
     assert!(!staging.join("Std/Removed.fpascu").exists());
     assert!(!staging.join("Std/Removed.fpascu.lock").exists());
+    assert!(
+        fs::read_dir(&root)
+            .expect("distribution parent must remain readable")
+            .map(|entry| entry.expect("distribution parent entry").file_name())
+            .all(|name| !name.to_string_lossy().contains("fpas-distribution-"))
+    );
     fs::remove_dir_all(root).expect("temp directory must be removed");
 }
 

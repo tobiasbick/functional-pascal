@@ -9,6 +9,7 @@ use std::collections::BTreeMap;
 use fpas_bytecode::Op;
 use fpas_compiler::{compile_program_object, compile_unit_object};
 use fpas_linker::link_objects;
+use fpas_unit::interface::InterfaceType;
 use fpas_unit::object::{
     DefinitionKind, ObjectConstant, ObjectImport, ObjectLocation, RelocatableObject,
     collect_relocations,
@@ -232,6 +233,56 @@ fn concurrent_private_record_method_chains_resolve_to_qualified_unit_entries() {
         run_zero_arity(vec![unit.object], "demo.recordmethods.run"),
         ["42"]
     );
+}
+
+#[test]
+fn unit_object_rejects_implicit_enum_backing_value_after_i64_max() {
+    let unit = parse_unit(
+        "unit Demo.EnumLimit;
+         public type Limit = enum
+           Last = 9223372036854775807;
+           Overflow;
+         end;",
+    );
+
+    let errors = match compile_unit_object(&unit, &[]) {
+        Ok(_) => panic!("implicit enum backing value after i64::MAX must fail"),
+        Err(errors) => errors,
+    };
+
+    assert!(errors.iter().any(|error| {
+        error.code == fpas_diagnostics::codes::SEMA_ENUM_BACKING_VALUE_EXHAUSTED
+            && error.message.contains("Limit.Overflow")
+    }));
+}
+
+#[test]
+fn unit_interface_preserves_explicit_restart_after_i64_max() {
+    let unit = parse_unit(
+        "unit Demo.EnumRestart;
+         public type Limit = enum
+           Last = 9223372036854775807;
+           Restart = 0;
+           Next;
+         end;",
+    );
+    let compiled = compile_unit_object(&unit, &[]).expect("unit compilation");
+    let symbol = compiled
+        .interface
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "Limit")
+        .expect("exported enum symbol");
+    let InterfaceType::Enum(enum_type) = &symbol.ty else {
+        panic!("Limit must be exported as an enum");
+    };
+    let backing_values: Vec<_> = enum_type
+        .variants
+        .iter()
+        .map(|variant| variant.backing_value)
+        .collect();
+
+    assert_eq!(backing_values, [Some(i64::MAX), Some(0), Some(1)]);
 }
 
 #[test]

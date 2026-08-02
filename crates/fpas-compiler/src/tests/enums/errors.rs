@@ -183,3 +183,20 @@ end.",
         fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW
     );
 }
+
+#[test]
+fn enum_implicit_backing_value_after_i64_max_is_rejected() {
+    let error = compile_err(
+        "program EnumBackingOverflow;
+         type Limit = enum
+           Last = 9223372036854775807;
+           Overflow;
+         end;
+         begin end.",
+    );
+
+    assert_eq!(
+        error.code,
+        fpas_diagnostics::codes::SEMA_ENUM_BACKING_VALUE_EXHAUSTED
+    );
+}

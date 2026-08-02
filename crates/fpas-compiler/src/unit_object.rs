@@ -156,11 +156,29 @@ fn collect_definitions(unit: &Unit) -> Vec<ObjectDefinition> {
             )),
             Decl::TypeDef(value) => {
                 if let TypeBody::Record(record) = &value.body {
+                    let public_accessors: Vec<_> = record
+                        .properties
+                        .iter()
+                        .filter(|property| property.visibility != Visibility::Private)
+                        .flat_map(|property| [property.read.as_ref(), property.write.as_ref()])
+                        .flatten()
+                        .chain(
+                            record
+                                .events
+                                .iter()
+                                .filter(|event| event.visibility != Visibility::Private)
+                                .flat_map(|event| [&event.read, &event.write]),
+                        )
+                        .collect();
                     for method in &record.methods {
+                        let method_is_public = method.visibility() != Visibility::Private
+                            || public_accessors
+                                .iter()
+                                .any(|accessor| accessor.eq_ignore_ascii_case(method.name()));
                         definitions.push(definition(
                             format!("{owner}.{}.{}", value.name, record_method_name(method)),
                             DefinitionKind::Callable,
-                            public,
+                            public && method_is_public,
                         ));
                     }
                 }
@@ -217,13 +235,28 @@ fn collect_record_imports(ty: &InterfaceType, imports: &mut Vec<ObjectImport>) {
     let InterfaceType::Record(record) = ty else {
         return;
     };
-    for method in record.methods.iter().chain(&record.static_routines) {
+    let member_is_public = |name: &str| {
+        !record
+            .private_members
+            .iter()
+            .any(|private| private.eq_ignore_ascii_case(name))
+    };
+    for method in record
+        .methods
+        .iter()
+        .chain(&record.static_routines)
+        .filter(|method| member_is_public(&method.name))
+    {
         imports.push(ObjectImport {
             name: format!("{}.{}", record.name, method.name),
             kind: DefinitionKind::Callable,
         });
     }
-    for property in &record.properties {
+    for property in record
+        .properties
+        .iter()
+        .filter(|property| member_is_public(&property.name))
+    {
         for name in [property.getter.as_ref(), property.setter.as_ref()]
             .into_iter()
             .flatten()
@@ -234,7 +267,11 @@ fn collect_record_imports(ty: &InterfaceType, imports: &mut Vec<ObjectImport>) {
             });
         }
     }
-    for event in &record.events {
+    for event in record
+        .events
+        .iter()
+        .filter(|event| member_is_public(&event.name))
+    {
         for name in [&event.getter, &event.setter] {
             imports.push(ObjectImport {
                 name: name.clone(),

@@ -97,6 +97,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/types/records.md`
     SEMA_PRIVATE_RECORD_MEMBER = 2017;
+
+    /// An implicit enum backing value would exceed the signed 64-bit integer range.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
+    SEMA_ENUM_BACKING_VALUE_EXHAUSTED = 2018;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

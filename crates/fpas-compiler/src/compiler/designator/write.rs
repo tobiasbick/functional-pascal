@@ -45,6 +45,8 @@ impl Compiler {
                 .iter()
                 .all(|part| matches!(part, DesignatorPart::Index(_, _)))
             {
+                let index_count =
+                    Self::checked_u8_at(suffix.len(), "global index operations", location)?;
                 for part in suffix {
                     if let DesignatorPart::Index(expr, _) = part {
                         self.compile_expr(expr)?;
@@ -52,7 +54,7 @@ impl Compiler {
                 }
                 self.compile_expr(value)?;
                 let idx = self.add_constant(Value::Str(global_name.into()), location)?;
-                self.emit(Op::GlobalIndexSet(idx, suffix.len() as u8), location);
+                self.emit(Op::GlobalIndexSet(idx, index_count), location);
                 self.emit(Op::Pop, location);
                 return Ok(());
             }
@@ -197,5 +199,81 @@ impl Compiler {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use fpas_bytecode::{Op, SourceLocation};
+    use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
+    use fpas_lexer::Span;
+    use fpas_parser::{Designator, DesignatorPart, Expr};
+    use fpas_sema::AnalysisMetadata;
+
+    use super::Compiler;
+
+    fn span() -> Span {
+        Span {
+            offset: 0,
+            length: 0,
+            line: 1,
+            column: 1,
+            source_id: 0,
+        }
+    }
+
+    fn indexed_global(index_count: usize) -> Designator {
+        let span = span();
+        let mut parts = Vec::with_capacity(index_count + 1);
+        parts.push(DesignatorPart::Ident("Values".to_string(), span));
+        parts.extend(
+            std::iter::repeat_with(|| DesignatorPart::Index(Expr::Integer(0, span), span))
+                .take(index_count),
+        );
+        Designator { parts, span }
+    }
+
+    fn compiler_with_global() -> Compiler {
+        let mut compiler = Compiler::new(AnalysisMetadata::default());
+        compiler.module_globals.insert("values".to_string());
+        compiler
+    }
+
+    #[test]
+    fn global_index_write_accepts_u8_max_indices() {
+        let mut compiler = compiler_with_global();
+        let target = indexed_global(usize::from(u8::MAX));
+
+        compiler
+            .compile_designator_write(
+                &target,
+                &Expr::Integer(1, span()),
+                SourceLocation::new(1, 1),
+            )
+            .expect("u8::MAX indices should compile");
+
+        assert!(
+            compiler
+                .finish()
+                .code()
+                .iter()
+                .any(|op| matches!(op, Op::GlobalIndexSet(_, count) if *count == u8::MAX))
+        );
+    }
+
+    #[test]
+    fn global_index_write_rejects_more_than_u8_max_indices() {
+        let mut compiler = compiler_with_global();
+        let target = indexed_global(usize::from(u8::MAX) + 1);
+
+        let error = compiler
+            .compile_designator_write(
+                &target,
+                &Expr::Integer(1, span()),
+                SourceLocation::new(1, 1),
+            )
+            .expect_err("an index count wider than the bytecode operand must fail");
+
+        assert_eq!(error.code, COMPILE_BYTECODE_OPERAND_OVERFLOW);
     }
 }

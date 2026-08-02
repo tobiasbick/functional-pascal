@@ -2,7 +2,7 @@ use super::Checker;
 use crate::scope::canonical_symbol_name;
 use crate::scope::{Symbol, SymbolKind};
 use crate::types::{EnumTy, EnumVariantTy, Ty};
-use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
+use fpas_diagnostics::codes::{SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_BACKING_VALUE_EXHAUSTED};
 use fpas_lexer::Span;
 use fpas_parser::{EnumType, TypeDef};
 use std::collections::HashSet;
@@ -22,6 +22,8 @@ impl Checker {
             self.define_type_symbol(td, Ty::Error);
             return;
         }
+
+        self.check_enum_backing_values(&td.name, enum_ty);
 
         let mut seen_variants = HashSet::new();
         let mut variants = Vec::new();
@@ -84,6 +86,31 @@ impl Checker {
                 kind: SymbolKind::Type,
                 task_bound: false,
             };
+        }
+    }
+
+    fn check_enum_backing_values(&mut self, enum_name: &str, enum_ty: &EnumType) {
+        let mut next_value = Some(0_i64);
+        for member in &enum_ty.members {
+            let backing = match member.value {
+                Some(value) => value,
+                None => {
+                    let Some(value) = next_value else {
+                        self.error_with_code(
+                            SEMA_ENUM_BACKING_VALUE_EXHAUSTED,
+                            format!(
+                                "Implicit backing value for enum member `{enum_name}.{}` exceeds the integer range",
+                                member.name
+                            ),
+                            "Assign an explicit integer backing value to this member, or choose a preceding value below 9223372036854775807.",
+                            member.span,
+                        );
+                        continue;
+                    };
+                    value
+                }
+            };
+            next_value = backing.checked_add(1);
         }
     }
 

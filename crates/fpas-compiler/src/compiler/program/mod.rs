@@ -4,8 +4,9 @@
 
 mod callables;
 
-use crate::error::CompileError;
+use crate::error::{CompileError, compile_error};
 use fpas_bytecode::{Op, Value};
+use fpas_diagnostics::codes::SEMA_ENUM_BACKING_VALUE_EXHAUSTED;
 use fpas_parser::{Decl, Program, TypeBody, Unit};
 use fpas_unit::interface::{InterfaceType, UnitInterface};
 
@@ -56,7 +57,7 @@ impl Compiler {
         interfaces: &[UnitInterface],
     ) -> Result<(), CompileError> {
         self.build_program_interface_aliases(interfaces);
-        self.register_interface_enums(interfaces);
+        self.register_interface_enums(interfaces, program.span)?;
         self.compile_program(program)
     }
 
@@ -77,7 +78,7 @@ impl Compiler {
         let owner = unit.name.parts.join(".");
         self.set_owner_unit(&owner);
         self.build_unit_short_aliases(unit, interfaces);
-        self.register_interface_enums(interfaces);
+        self.register_interface_enums(interfaces, unit.span)?;
         self.collect_unit_globals(unit);
 
         for declaration in &unit.declarations {
@@ -98,30 +99,41 @@ impl Compiler {
         }
     }
 
-    fn register_interface_enums(&mut self, interfaces: &[UnitInterface]) {
+    fn register_interface_enums(
+        &mut self,
+        interfaces: &[UnitInterface],
+        span: fpas_lexer::Span,
+    ) -> Result<(), CompileError> {
         for interface in interfaces {
             for symbol in &interface.symbols {
                 let InterfaceType::Enum(enum_ty) = &symbol.ty else {
                     continue;
                 };
-                let mut next_value = 0_i64;
-                let variants: Vec<_> = enum_ty
-                    .variants
-                    .iter()
-                    .map(|variant| {
-                        let backing = variant.backing_value.unwrap_or(next_value);
-                        next_value = backing.saturating_add(1);
-                        super::EnumVariantInfo {
-                            name: variant.name.clone(),
-                            backing,
-                            field_names: variant
-                                .fields
-                                .iter()
-                                .map(|field| field.name.clone())
-                                .collect(),
-                        }
-                    })
-                    .collect();
+                let mut next_value = Some(0_i64);
+                let mut variants = Vec::with_capacity(enum_ty.variants.len());
+                for variant in &enum_ty.variants {
+                    let backing = variant.backing_value.or(next_value).ok_or_else(|| {
+                        compile_error(
+                            SEMA_ENUM_BACKING_VALUE_EXHAUSTED,
+                            format!(
+                                "Implicit backing value for enum member `{}.{}` exceeds the integer range",
+                                enum_ty.name, variant.name
+                            ),
+                            "Rebuild the dependency after assigning an explicit backing value to this member.",
+                            span,
+                        )
+                    })?;
+                    next_value = backing.checked_add(1);
+                    variants.push(super::EnumVariantInfo {
+                        name: variant.name.clone(),
+                        backing,
+                        field_names: variant
+                            .fields
+                            .iter()
+                            .map(|field| field.name.clone())
+                            .collect(),
+                    });
+                }
                 let info = super::EnumInfo {
                     type_name: enum_ty.name.clone(),
                     has_data: variants
@@ -134,6 +146,7 @@ impl Compiler {
                 self.enums.insert(canonical_name(&symbol.name), info);
             }
         }
+        Ok(())
     }
 
     /// Whether the current declaration is at program/unit scope (not inside a callable body).
@@ -184,10 +197,20 @@ impl Compiler {
     fn compile_type_decl(&mut self, type_def: &fpas_parser::TypeDef) -> Result<(), CompileError> {
         if let TypeBody::Enum(enum_ty) = &type_def.body {
             let mut variants = Vec::new();
-            let mut next_value: i64 = 0;
+            let mut next_value = Some(0_i64);
             let mut has_data = false;
             for member in &enum_ty.members {
-                let backing = member.value.unwrap_or(next_value);
+                let backing = member.value.or(next_value).ok_or_else(|| {
+                    compile_error(
+                        SEMA_ENUM_BACKING_VALUE_EXHAUSTED,
+                        format!(
+                            "Implicit backing value for enum member `{}.{}` exceeds the integer range",
+                            type_def.name, member.name
+                        ),
+                        "Assign an explicit integer backing value to this member, or choose a preceding value below 9223372036854775807.",
+                        member.span,
+                    )
+                })?;
                 let field_names: Vec<String> = member
                     .fields
                     .iter()
@@ -201,7 +224,7 @@ impl Compiler {
                     backing,
                     field_names,
                 });
-                next_value = backing + 1;
+                next_value = backing.checked_add(1);
             }
             let runtime_type_name = self.qualify_owned_name(&type_def.name);
             self.enums.insert(

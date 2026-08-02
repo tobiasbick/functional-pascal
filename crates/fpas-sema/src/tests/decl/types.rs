@@ -11,6 +11,30 @@ fn enum_type_valid() {
 }
 
 #[test]
+fn enum_allows_explicit_i64_max_as_the_last_backing_value() {
+    check_ok("program T; type Limit = enum Last = 9223372036854775807; end; begin end.");
+}
+
+#[test]
+fn enum_rejects_implicit_backing_value_after_i64_max() {
+    let errors = check_errors(
+        "program T; type Limit = enum Last = 9223372036854775807; Overflow; end; begin end.",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error.code == fpas_diagnostics::codes::SEMA_ENUM_BACKING_VALUE_EXHAUSTED
+            && error.message.contains("Limit.Overflow")
+    }));
+}
+
+#[test]
+fn enum_explicit_value_restarts_sequence_after_i64_max() {
+    check_ok(
+        "program T; type Limit = enum Last = 9223372036854775807; Restart = 0; Next; end; begin end.",
+    );
+}
+
+#[test]
 fn enum_duplicate_member_rejected() {
     let errors = check_errors("program T; type Color = enum Red; red; end; begin end.");
     assert!(

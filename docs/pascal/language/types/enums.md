@@ -37,6 +37,21 @@ type
   end;
 ```
 
+Members without an explicit value start at `0` and continue with the previous member's value plus
+one. An explicit value restarts that sequence. The signed 64-bit maximum
+`9223372036854775807` is valid as an explicit final value, but it has no implicit successor. If a
+later member needs an implicit value, the compiler reports an error; assign that member an explicit
+value to restart the sequence.
+
+```pascal
+type
+  Limit = enum
+    Last = 9223372036854775807;
+    Restart = 0;
+    Next; // backing value 1
+  end;
+```
+
 ## Enums with associated data
 
 Enum variants can carry data fields (like Rust enums or tagged unions):

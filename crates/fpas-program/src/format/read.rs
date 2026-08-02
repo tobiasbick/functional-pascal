@@ -1,6 +1,7 @@
 //! Bounded `.fpascp` decoder.
 
 use crate::image::decode_payload;
+use crate::image::resources::MAX_TOTAL_STRING_BYTES;
 use crate::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
 use super::{
@@ -42,7 +43,7 @@ pub fn decode(bytes: &[u8]) -> Result<ProgramImage, FormatError> {
     if reader.remaining() != 0 {
         return Err(FormatError::TrailingBytes(reader.remaining()));
     }
-    if payload_hash != Digest::of(&payload) {
+    if payload_hash != Digest::of(payload) {
         return Err(FormatError::PayloadHashMismatch);
     }
     let identity = ProgramIdentity {
@@ -52,17 +53,22 @@ pub fn decode(bytes: &[u8]) -> Result<ProgramImage, FormatError> {
         options_hash,
         units,
     };
-    decode_payload(identity, source_paths, &payload).map_err(FormatError::Image)
+    decode_payload(identity, source_paths, payload, reader.string_bytes).map_err(FormatError::Image)
 }
 
 struct Reader<'a> {
     bytes: &'a [u8],
     position: usize,
+    string_bytes: usize,
 }
 
 impl<'a> Reader<'a> {
     fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes, position: 0 }
+        Self {
+            bytes,
+            position: 0,
+            string_bytes: 0,
+        }
     }
 
     fn remaining(&self) -> usize {
@@ -104,14 +110,24 @@ impl<'a> Reader<'a> {
     fn string(&mut self, field: &'static str) -> Result<String, FormatError> {
         let length = self.u32(field)? as usize;
         check_size(field, length, MAX_STRING_BYTES)?;
+        let string_bytes =
+            self.string_bytes
+                .checked_add(length)
+                .ok_or(FormatError::LimitExceeded {
+                    field: "strings",
+                    size: usize::MAX,
+                    maximum: MAX_TOTAL_STRING_BYTES,
+                })?;
+        check_size("strings", string_bytes, MAX_TOTAL_STRING_BYTES)?;
         let bytes = self.take(length, field)?;
         let value = std::str::from_utf8(bytes).map_err(|_| FormatError::InvalidUtf8(field))?;
+        self.string_bytes = string_bytes;
         Ok(value.to_string())
     }
 
-    fn bytes(&mut self, field: &'static str, maximum: usize) -> Result<Vec<u8>, FormatError> {
+    fn bytes(&mut self, field: &'static str, maximum: usize) -> Result<&'a [u8], FormatError> {
         let length = self.u32(field)? as usize;
         check_size(field, length, maximum)?;
-        Ok(self.take(length, field)?.to_vec())
+        self.take(length, field)
     }
 }

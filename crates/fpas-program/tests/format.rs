@@ -61,6 +61,44 @@ fn format_encoding_is_deterministic() {
 }
 
 #[test]
+fn unit_name_case_variants_produce_identical_canonical_images() {
+    let base = program_image();
+    let mut mixed_identity = base.identity().clone();
+    mixed_identity.units[0].unit_name = "Std.Console".to_string();
+    let mixed = ProgramImage::new(
+        mixed_identity,
+        base.source_paths().to_vec(),
+        base.chunk().clone(),
+    )
+    .expect("mixed-case image");
+    let canonical = program_image();
+
+    assert_eq!(mixed.identity().units[0].unit_name, "std.console");
+    assert_eq!(
+        encode(&mixed).expect("mixed-case encoding"),
+        encode(&canonical).expect("canonical encoding")
+    );
+}
+
+#[test]
+fn canonical_unit_names_preserve_case_insensitive_duplicate_detection() {
+    let base = program_image();
+    let mut identity = base.identity().clone();
+    identity.units[0].unit_name = "Std.Console".to_string();
+    identity.units.push(LinkedUnitIdentity {
+        unit_name: "STD.CONSOLE".to_string(),
+        object_hash: Digest::of(b"duplicate-console-object"),
+    });
+
+    assert_eq!(
+        ProgramImage::new(identity, base.source_paths().to_vec(), base.chunk().clone()).err(),
+        Some(fpas_program::ImageError::DuplicateUnit(
+            "std.console".to_string()
+        ))
+    );
+}
+
+#[test]
 fn decoder_rejects_invalid_magic() {
     let mut bytes = encode(&program_image()).expect("encoding");
     bytes[0] ^= 0xff;

@@ -83,7 +83,8 @@ produces or reuses `hello.fpascp` beside the project manifest. Library projects
 build their source-adjacent `.fpascu` files and do not produce `.fpascp`.
 Test projects build helper-unit sidecars and validate all test programs without
 creating one shared program image. Both artifact types are derived outputs and
-are ignored by Git.
+are ignored by Git. See [Compiled program images](compiled-programs.md) for the
+`.fpascp` identity, validation limits, and format-compatibility policy.
 
 Concurrent program builds coordinate through a persistent `hello.fpascp.lock`
 file beside the image. The lock file contains no program data, is ignored by

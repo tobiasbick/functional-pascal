@@ -84,6 +84,30 @@ fn image_rejects_source_id_outside_path_table() {
 }
 
 #[test]
+fn image_constructor_rejects_zero_line_or_column() {
+    for (line, column) in [(0, 1), (1, 0)] {
+        let mut chunk = Chunk::new();
+        chunk.emit(
+            Op::Halt,
+            SourceLocation {
+                line,
+                column,
+                source_id: 0,
+            },
+        );
+
+        assert_eq!(
+            ProgramImage::new(identity(), vec!["main.fpas".to_string()], chunk).err(),
+            Some(ImageError::InvalidLocation {
+                instruction: 0,
+                line,
+                column,
+            })
+        );
+    }
+}
+
+#[test]
 fn image_rejects_absolute_source_path() {
     assert!(matches!(
         ProgramImage::new(
@@ -99,6 +123,32 @@ fn image_rejects_absolute_source_path() {
         ),
         Err(ImageError::AbsoluteSourcePath(_))
     ));
+}
+
+#[test]
+fn image_rejects_absolute_source_paths_from_every_host_syntax() {
+    for path in [
+        "/workspace/main.fpas",
+        r"C:\workspace\main.fpas",
+        "C:/workspace/main.fpas",
+        r"\\server\share\main.fpas",
+        r"\workspace\main.fpas",
+    ] {
+        assert!(matches!(
+            ProgramImage::new(identity(), vec![path.to_string()], printable_chunk()),
+            Err(ImageError::AbsoluteSourcePath(rejected)) if rejected == path
+        ));
+    }
+}
+
+#[test]
+fn image_accepts_relative_source_paths_from_common_syntaxes() {
+    for path in ["src/main.fpas", r"src\main.fpas", "C:main.fpas"] {
+        assert!(
+            ProgramImage::new(identity(), vec![path.to_string()], printable_chunk()).is_ok(),
+            "relative path `{path}` must remain valid"
+        );
+    }
 }
 
 #[test]

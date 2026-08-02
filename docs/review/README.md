@@ -47,7 +47,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 | `fpas-linker` | [fpas-linker.md](fpas-linker.md) | Done | correctness findings completed; unmeasured optimization rejected 2026-08-02 |
 | `fpas-lsp` | [fpas-lsp.md](fpas-lsp.md) | P1 | ordering and cancellation |
 | `fpas-parser` | [fpas-parser.md](fpas-parser.md) | P1 | trailing input and recovery |
-| `fpas-program` | [fpas-program.md](fpas-program.md) | P1 | resource bounds and compatibility |
+| `fpas-program` | [fpas-program.md](fpas-program.md) | Done | all findings completed 2026-08-02 |
 | `fpas-project` | [fpas-project.md](fpas-project.md) | P1 | unit resolution and sidecar trust |
 | `fpas-sema` | [fpas-sema.md](fpas-sema.md) | P1 | ambiguous bindings |
 | `fpas-std` | [fpas-std.md](fpas-std.md) | Done | all findings completed 2026-08-02 |

@@ -1,16 +1,24 @@
 //! In-memory model and payload conversion for executable program images.
 
-use std::collections::{BTreeMap, HashSet};
+mod payload;
+pub(crate) mod resources;
+#[cfg(test)]
+mod tests;
+
+use std::collections::HashSet;
 use std::fmt;
-use std::path::Path;
 
 use fpas_bytecode::{
-    Chunk, ExecutableError, Op, PersistentValue, PersistentValueError, SourceLocation,
-    validate_executable,
+    Chunk, ExecutableError, PersistentValue, PersistentValueError, validate_executable,
 };
-use serde::{Deserialize, Serialize};
 
 use crate::ProgramIdentity;
+
+pub(crate) use payload::{decode_payload, encode_payload};
+use resources::{
+    MAX_CONSTANTS, MAX_FUNCTIONS, MAX_INSTRUCTIONS, MAX_LOCATIONS, MAX_TOTAL_STRING_BYTES,
+    add_string_bytes, check_resource_size, persistent_string_bytes,
+};
 
 /// Invalid in-memory program image.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +73,15 @@ pub enum ImageError {
     PayloadEncode(String),
     /// The JSON payload could not be decoded.
     PayloadDecode(String),
+    /// An in-memory payload resource exceeds its safety limit.
+    ResourceLimit {
+        /// Logical resource name.
+        field: &'static str,
+        /// Observed resource size.
+        size: usize,
+        /// Largest accepted resource size.
+        maximum: usize,
+    },
 }
 
 impl fmt::Display for ImageError {
@@ -83,12 +100,20 @@ pub struct ProgramImage {
 }
 
 impl ProgramImage {
-    /// Construct and validate a complete program image.
+    /// Construct, canonicalize, and validate a complete program image.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ImageError`] when the identity, source table, executable, or
+    /// persistent resources are invalid.
     pub fn new(
-        identity: ProgramIdentity,
+        mut identity: ProgramIdentity,
         source_paths: Vec<String>,
         chunk: Chunk,
     ) -> Result<Self, ImageError> {
+        for unit in &mut identity.units {
+            unit.unit_name.make_ascii_lowercase();
+        }
         let image = Self {
             identity,
             source_paths,
@@ -125,136 +150,11 @@ impl ProgramImage {
     pub(crate) fn validate(&self) -> Result<(), ImageError> {
         validate_identity(&self.identity)?;
         validate_source_paths(&self.source_paths)?;
+        validate_resources(self)?;
         validate_executable(&self.chunk).map_err(ImageError::Executable)?;
         validate_locations(&self.chunk, self.source_paths.len())?;
-        for value in self.chunk.constants() {
-            PersistentValue::from_value(value).map_err(ImageError::PersistentValue)?;
-        }
         Ok(())
     }
-}
-
-#[derive(Serialize, Deserialize)]
-struct EncodedChunk {
-    code: Vec<Op>,
-    constants: Vec<PersistentValue>,
-    locations: Vec<EncodedLocation>,
-    functions: BTreeMap<String, EncodedFunction>,
-}
-
-#[derive(Serialize, Deserialize)]
-struct EncodedLocation {
-    line: u32,
-    column: u32,
-    source_id: u32,
-}
-
-#[derive(Serialize, Deserialize)]
-struct EncodedFunction {
-    code_start: u32,
-    arity: u8,
-}
-
-pub(crate) fn encode_payload(image: &ProgramImage) -> Result<Vec<u8>, ImageError> {
-    image.validate()?;
-    let constants = image
-        .chunk
-        .constants()
-        .iter()
-        .map(PersistentValue::from_value)
-        .collect::<Result<Vec<_>, _>>()
-        .map_err(ImageError::PersistentValue)?;
-    let locations = image
-        .chunk
-        .locations()
-        .iter()
-        .map(|location| EncodedLocation {
-            line: location.line,
-            column: location.column,
-            source_id: location.source_id,
-        })
-        .collect();
-    let functions = image
-        .chunk
-        .functions()
-        .iter()
-        .map(|(name, (code_start, arity))| {
-            let code_start = u32::try_from(*code_start).map_err(|_| {
-                ImageError::Executable(ExecutableError::FunctionOffset {
-                    name: name.clone(),
-                    offset: *code_start,
-                    code: image.chunk.len(),
-                })
-            })?;
-            Ok((
-                name.clone(),
-                EncodedFunction {
-                    code_start,
-                    arity: *arity,
-                },
-            ))
-        })
-        .collect::<Result<BTreeMap<_, _>, ImageError>>()?;
-    let payload = EncodedChunk {
-        code: image.chunk.code().to_vec(),
-        constants,
-        locations,
-        functions,
-    };
-    serde_json::to_vec(&payload).map_err(|error| ImageError::PayloadEncode(error.to_string()))
-}
-
-pub(crate) fn decode_payload(
-    identity: ProgramIdentity,
-    source_paths: Vec<String>,
-    bytes: &[u8],
-) -> Result<ProgramImage, ImageError> {
-    let payload: EncodedChunk = serde_json::from_slice(bytes)
-        .map_err(|error| ImageError::PayloadDecode(error.to_string()))?;
-    let chunk = decode_chunk(payload)?;
-    ProgramImage::new(identity, source_paths, chunk)
-}
-
-fn decode_chunk(payload: EncodedChunk) -> Result<Chunk, ImageError> {
-    if payload.code.len() != payload.locations.len() {
-        return Err(ImageError::Executable(ExecutableError::Chunk(
-            fpas_bytecode::ChunkError::CodeLocationLengthMismatch {
-                code_len: payload.code.len(),
-                locations_len: payload.locations.len(),
-            },
-        )));
-    }
-
-    let mut chunk = Chunk::new();
-    for (index, constant) in payload.constants.iter().enumerate() {
-        let actual = chunk
-            .add_constant(constant.to_value())
-            .map_err(|error| ImageError::ConstantPool(error.to_string()))?;
-        if actual as usize != index {
-            return Err(ImageError::DuplicateConstant {
-                index,
-                existing: actual,
-            });
-        }
-    }
-    for (instruction, (op, location)) in payload.code.into_iter().zip(payload.locations).enumerate()
-    {
-        if location.line == 0 || location.column == 0 {
-            return Err(ImageError::InvalidLocation {
-                instruction,
-                line: location.line,
-                column: location.column,
-            });
-        }
-        chunk.emit(
-            op,
-            SourceLocation::new_with_source(location.line, location.column, location.source_id),
-        );
-    }
-    for (name, function) in payload.functions {
-        chunk.insert_function(name, function.code_start as usize, function.arity);
-    }
-    Ok(chunk)
 }
 
 fn validate_identity(identity: &ProgramIdentity) -> Result<(), ImageError> {
@@ -285,7 +185,7 @@ fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
         if source_path.trim().is_empty() {
             return Err(ImageError::EmptySourcePath(index));
         }
-        if Path::new(source_path).is_absolute() {
+        if is_portably_absolute(source_path) {
             return Err(ImageError::AbsoluteSourcePath(source_path.clone()));
         }
     }
@@ -294,6 +194,7 @@ fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
 
 fn validate_locations(chunk: &Chunk, source_path_count: usize) -> Result<(), ImageError> {
     for (instruction, location) in chunk.locations().iter().enumerate() {
+        validate_location(instruction, location.line, location.column)?;
         if location.source_id as usize >= source_path_count {
             return Err(ImageError::SourceId {
                 instruction,
@@ -305,55 +206,52 @@ fn validate_locations(chunk: &Chunk, source_path_count: usize) -> Result<(), Ima
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::Digest;
-
-    fn identity() -> ProgramIdentity {
-        ProgramIdentity {
-            compiler_version: "test-compiler".to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
-            source_hash: Digest::of(b"source"),
-            options_hash: Digest::of(b"options"),
-            units: Vec::new(),
-        }
+pub(super) fn validate_location(
+    instruction: usize,
+    line: u32,
+    column: u32,
+) -> Result<(), ImageError> {
+    if line == 0 || column == 0 {
+        return Err(ImageError::InvalidLocation {
+            instruction,
+            line,
+            column,
+        });
     }
+    Ok(())
+}
 
-    #[test]
-    fn payload_decoder_rejects_unknown_opcode_tag() {
-        let payload = br#"{"code":["Unknown"],"constants":[],"locations":[],"functions":{}}"#;
+fn is_portably_absolute(path: &str) -> bool {
+    let bytes = path.as_bytes();
+    path.starts_with('/')
+        || path.starts_with('\\')
+        || matches!(
+            bytes,
+            [drive, b':', separator, ..]
+                if drive.is_ascii_alphabetic() && matches!(separator, b'/' | b'\\')
+        )
+}
 
-        assert!(matches!(
-            decode_payload(identity(), vec!["main.fpas".to_string()], payload),
-            Err(ImageError::PayloadDecode(_))
-        ));
+fn validate_resources(image: &ProgramImage) -> Result<(), ImageError> {
+    check_resource_size("instructions", image.chunk.len(), MAX_INSTRUCTIONS)?;
+    check_resource_size("locations", image.chunk.locations().len(), MAX_LOCATIONS)?;
+    check_resource_size("functions", image.chunk.functions().len(), MAX_FUNCTIONS)?;
+    check_resource_size("constants", image.chunk.constants().len(), MAX_CONSTANTS)?;
+
+    let mut string_bytes = 0;
+    add_string_bytes(&mut string_bytes, image.identity.compiler_version.len())?;
+    for unit in &image.identity.units {
+        add_string_bytes(&mut string_bytes, unit.unit_name.len())?;
     }
-
-    #[test]
-    fn payload_decoder_rejects_zero_based_location() {
-        let payload = br#"{"code":["Halt"],"constants":[],"locations":[{"line":0,"column":1,"source_id":0}],"functions":{}}"#;
-
-        assert_eq!(
-            decode_payload(identity(), vec!["main.fpas".to_string()], payload).err(),
-            Some(ImageError::InvalidLocation {
-                instruction: 0,
-                line: 0,
-                column: 1,
-            })
-        );
+    for path in &image.source_paths {
+        add_string_bytes(&mut string_bytes, path.len())?;
     }
-
-    #[test]
-    fn payload_decoder_rejects_duplicate_constants() {
-        let payload = br#"{"code":["Halt"],"constants":[{"Integer":1},{"Integer":1}],"locations":[{"line":1,"column":1,"source_id":0}],"functions":{}}"#;
-
-        assert_eq!(
-            decode_payload(identity(), vec!["main.fpas".to_string()], payload).err(),
-            Some(ImageError::DuplicateConstant {
-                index: 1,
-                existing: 0,
-            })
-        );
+    for name in image.chunk.functions().keys() {
+        add_string_bytes(&mut string_bytes, name.len())?;
     }
+    for value in image.chunk.constants() {
+        let persistent = PersistentValue::from_value(value).map_err(ImageError::PersistentValue)?;
+        add_string_bytes(&mut string_bytes, persistent_string_bytes(&persistent))?;
+    }
+    check_resource_size("strings", string_bytes, MAX_TOTAL_STRING_BYTES)
 }

@@ -1,7 +1,7 @@
 # `fpas-program` review follow-up
 
 Classification: persistent program image format and validation. No language change expected. Format compatibility decisions must be explicit.
-Status: all findings open.
+Status: PROGRAM-01 through PROGRAM-05 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -14,3 +14,38 @@ Status: all findings open.
 ## Implementation notes
 
 PROGRAM-01 should align resource limits with `fpas-unit` and bundle decoding. PROGRAM-03 is a format-policy decision; document the chosen compatibility behavior in the program-image contributor documentation without describing unimplemented behavior first.
+
+## Implementation record
+
+- PROGRAM-01 borrows the JSON payload directly from the envelope and uses a custom Serde seed to
+  stop instructions, locations, constants, functions, and cumulative string data while they are
+  decoded. The 128 MiB envelope limit remains; in-memory construction and encoding apply the same
+  resource policy.
+- PROGRAM-02 validates one-based line and column values through one shared location check used by
+  both `ProgramImage::new` and payload decoding. Invalid decoded locations now return
+  `ImageError::InvalidLocation` before `SourceLocation` construction can assert.
+- PROGRAM-03 rejects unknown chunk, location, and function fields. Format version 1 is explicitly
+  strict; schema additions require a new `PROGRAM_FORMAT_VERSION`.
+- PROGRAM-04 recognizes Unix roots, Windows drive roots, root-relative Windows paths, and UNC
+  paths on every host while preserving relative slash and backslash paths.
+- PROGRAM-05 canonicalizes linked Unit identities to ASCII lowercase during image construction.
+  Case-only variants therefore retain duplicate detection and produce identical deterministic
+  bytes.
+- Payload conversion and bounded deserialization were split from the in-memory image model into
+  focused `image/payload.rs`, `image/resources.rs`, and `image/resources/collections.rs` modules.
+  Internal payload and boundary regressions moved beside their owning modules.
+- `docs/pascal/program-structure/compiled-programs.md` documents the implemented image identity,
+  validation limits, and strict compatibility policy. FPAS syntax, semantics, and `Std.*` APIs are
+  unchanged.
+
+## Verification
+
+- Baseline: `cargo test -p fpas-program --locked` — passed: 17 tests plus doc tests.
+- Targeted implementation: `cargo test -p fpas-program --locked` — passed: 31 tests plus doc
+  tests.
+- Direct dependents: `cargo test -p fpas-program -p fpas-build -p fpas-bundle --locked` — passed.
+- `cargo clippy -p fpas-program --all-targets --locked -- -D warnings` — passed.
+- `cargo fmt --all -- --check` — passed.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings` — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked` — passed.

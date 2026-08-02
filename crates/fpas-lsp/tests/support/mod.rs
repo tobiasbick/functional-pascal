@@ -190,10 +190,11 @@ pub fn exit() -> Value {
 }
 
 pub fn response(messages: &[Value], id: i64) -> &Value {
-    messages
+    let response = messages
         .iter()
-        .find(|message| message.get("id") == Some(&Value::from(id)))
-        .unwrap_or_else(|| panic!("missing response id {id}: {messages:?}"))
+        .find(|message| message.get("id") == Some(&Value::from(id)));
+    assert!(response.is_some(), "missing response id {id}: {messages:?}");
+    response.expect("response presence checked")
 }
 
 pub fn notifications<'a>(messages: &'a [Value], method: &str) -> Vec<&'a Value> {
@@ -210,8 +211,13 @@ pub fn parse_frames(stdout: &[u8]) -> Vec<Value> {
         let header_end = stdout[cursor..]
             .windows(4)
             .position(|window| window == b"\r\n\r\n")
-            .map(|position| cursor + position)
-            .unwrap_or_else(|| panic!("stdout contains unframed bytes: {:?}", &stdout[cursor..]));
+            .map(|position| cursor + position);
+        assert!(
+            header_end.is_some(),
+            "stdout contains unframed bytes: {:?}",
+            &stdout[cursor..]
+        );
+        let header_end = header_end.expect("frame header presence checked");
         let header = std::str::from_utf8(&stdout[cursor..header_end]).expect("ASCII LSP header");
         let content_length = header
             .lines()

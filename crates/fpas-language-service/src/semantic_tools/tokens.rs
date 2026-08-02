@@ -105,10 +105,7 @@ fn namespace_component(
     let mut names = Vec::<&str>::new();
     let mut selected_part = None;
     let mut index = start;
-    loop {
-        let Some(Token::Ident(name)) = target.tokens.get(index).map(|token| &token.token) else {
-            break;
-        };
+    while let Some(Token::Ident(name)) = target.tokens.get(index).map(|token| &token.token) {
         if index == selected {
             selected_part = Some(names.len());
         }

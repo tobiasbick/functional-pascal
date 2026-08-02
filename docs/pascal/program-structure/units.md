@@ -127,6 +127,12 @@ The final executable bytecode image links only reachable unit objects in depende
 Existing top-level constant and variable initializers run in that same dependency order before
 the program body. Units do not have separate initialization or finalization syntax.
 
+Before returning that image, the linker requires every callable definition to have a matching
+function-table entry in the same object, verifies that Unit function entries remain valid after
+the Unit's terminal `Halt` is removed, and applies the complete executable-bytecode validator.
+Malformed relocations, callable metadata, startup control flow, or opcode operands therefore fail
+during linking rather than being deferred to execution.
+
 Sidecars are written atomically in the source directory. Concurrent readers and writers use a
 persistent `.fpascu.lock` coordination file when it exists. The file contains no unit data and is
 ignored by Git; operating-system lock ownership is released automatically if the compiler exits,

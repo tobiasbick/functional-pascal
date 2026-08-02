@@ -123,8 +123,8 @@ fpas run
 sources authoritative and rebuilds a missing, stale, incompatible, or corrupt
 `.fpascp` before execution. A directly passed `.fpascp` has no source input to
 rebuild from, so invalid images fail with an actionable diagnostic. Validation
-checks constant and jump operands, requires initialization control flow to have
-at least one reachable `Halt` without falling into callable bodies, verifies
+checks constant and jump operands, requires root control flow to reach `Halt`
+or a root-level `Return` without falling into callable bodies, verifies
 that name operands are strings, and resolves direct calls and closure targets
 against the callable table (including direct-call arity) before the VM starts.
 

@@ -1,42 +1,21 @@
-#![allow(
+#![expect(
     clippy::expect_used,
     reason = "linker fixtures use expect for compact result assertions"
 )]
 
-use std::collections::BTreeMap;
+mod object_fixture;
 
 use fpas_bytecode::Op;
-use fpas_linker::{LinkError, link_objects};
-use fpas_unit::object::{
-    DefinitionKind, ObjectConstant, ObjectDefinition, ObjectFunction, ObjectImport, ObjectLocation,
-    RelocatableObject, collect_relocations,
-};
+use fpas_linker::link_objects;
+use fpas_unit::object::{ObjectConstant, ObjectFunction};
 
-fn object(owner: &str, code: Vec<Op>, constants: Vec<ObjectConstant>) -> RelocatableObject {
-    RelocatableObject {
-        owner: owner.to_string(),
-        locations: vec![
-            ObjectLocation {
-                line: 1,
-                column: 1,
-                source_id: 0,
-            };
-            code.len()
-        ],
-        relocations: collect_relocations(&code),
-        code,
-        constants,
-        functions: BTreeMap::new(),
-        definitions: Vec::new(),
-        imports: Vec::new(),
-    }
-}
+use object_fixture::object;
 
 #[test]
 fn linker_rebases_jumps_functions_and_constant_indices() {
     let mut unit = object(
         "demo.unit",
-        vec![Op::Jump(2), Op::Unit, Op::Halt],
+        vec![Op::Jump(3), Op::Unit, Op::Return, Op::Halt],
         vec![ObjectConstant::String("shared".to_string())],
     );
     unit.functions.insert(
@@ -55,7 +34,7 @@ fn linker_rebases_jumps_functions_and_constant_indices() {
     let linked = link_objects(&[unit], &program).expect("linking");
     assert_eq!(
         linked.code(),
-        &[Op::Jump(2), Op::Unit, Op::Constant(0), Op::Halt]
+        &[Op::Jump(3), Op::Unit, Op::Return, Op::Constant(0), Op::Halt]
     );
     assert_eq!(linked.constants().len(), 1);
     assert_eq!(linked.functions().get("demo.unit.run"), Some(&(1, 0)));
@@ -68,9 +47,12 @@ fn linker_rebases_every_constant_operand_shape() {
         vec![Op::Unit, Op::Halt],
         vec![ObjectConstant::String("prefix".to_string())],
     );
-    let unit = object(
+    let mut unit = object(
         "unit",
         vec![
+            Op::Jump(3),
+            Op::Unit,
+            Op::Return,
             Op::GetGlobal(0),
             Op::SetGlobal(0),
             Op::GlobalIndexSet(0, 2),
@@ -88,6 +70,13 @@ fn linker_rebases_every_constant_operand_shape() {
             ObjectConstant::String("Demo.Variant".to_string()),
         ],
     );
+    unit.functions.insert(
+        "demo.name".to_string(),
+        ObjectFunction {
+            code_start: 1,
+            arity: 1,
+        },
+    );
     let program = object("program", vec![Op::Halt], Vec::new());
 
     let linked = link_objects(&[prefix, unit], &program).expect("linking");
@@ -96,6 +85,9 @@ fn linker_rebases_every_constant_operand_shape() {
         linked.code(),
         &[
             Op::Unit,
+            Op::Jump(4),
+            Op::Unit,
+            Op::Return,
             Op::GetGlobal(1),
             Op::SetGlobal(1),
             Op::GlobalIndexSet(1, 2),
@@ -128,123 +120,4 @@ fn startup_sections_are_concatenated_dependency_first_with_one_halt() {
             .count(),
         1
     );
-}
-
-#[test]
-fn missing_private_and_kind_mismatched_imports_are_rejected() {
-    let mut unit = object("unit", vec![Op::Halt], Vec::new());
-    unit.definitions.push(ObjectDefinition {
-        name: "unit.hidden".to_string(),
-        kind: DefinitionKind::Callable,
-        public: false,
-    });
-    let mut program = object("program", vec![Op::Halt], Vec::new());
-    program.imports.push(ObjectImport {
-        name: "unit.hidden".to_string(),
-        kind: DefinitionKind::Callable,
-    });
-
-    assert!(matches!(
-        link_objects(&[unit], &program),
-        Err(LinkError::UnresolvedImport { .. })
-    ));
-}
-
-#[test]
-fn duplicate_definitions_are_rejected_case_insensitively() {
-    let mut first = object("first", vec![Op::Halt], Vec::new());
-    first.definitions.push(ObjectDefinition {
-        name: "Demo.Value".to_string(),
-        kind: DefinitionKind::Global,
-        public: true,
-    });
-    let mut second = object("second", vec![Op::Halt], Vec::new());
-    second.definitions.push(ObjectDefinition {
-        name: "demo.value".to_string(),
-        kind: DefinitionKind::Global,
-        public: true,
-    });
-    let program = object("program", vec![Op::Halt], Vec::new());
-
-    assert!(matches!(
-        link_objects(&[first, second], &program),
-        Err(LinkError::DuplicateDefinition(_))
-    ));
-}
-
-#[test]
-fn missing_program_code_is_rejected_before_linking_units() {
-    let program = object("program", Vec::new(), Vec::new());
-
-    assert!(matches!(
-        link_objects(&[], &program),
-        Err(LinkError::MissingProgram)
-    ));
-}
-
-#[test]
-fn internal_halt_in_a_startup_section_is_rejected() {
-    let unit = object("unit", vec![Op::Halt, Op::Unit, Op::Halt], Vec::new());
-    let program = object("program", vec![Op::Halt], Vec::new());
-
-    assert!(matches!(
-        link_objects(&[unit], &program),
-        Err(LinkError::InvalidObject { detail, .. }) if detail.contains("internal Halt")
-    ));
-}
-
-#[test]
-fn invalid_object_structure_is_reported_with_its_owner() {
-    let mut unit = object("broken.unit", vec![Op::Halt], Vec::new());
-    unit.locations.clear();
-    let program = object("program", vec![Op::Halt], Vec::new());
-
-    assert!(matches!(
-        link_objects(&[unit], &program),
-        Err(LinkError::InvalidObject { owner, detail })
-            if owner == "broken.unit" && detail.contains("LocationCount")
-    ));
-}
-
-#[test]
-fn public_matching_import_is_linked() {
-    let mut unit = object("unit", vec![Op::Halt], Vec::new());
-    unit.definitions.push(ObjectDefinition {
-        name: "unit.run".to_string(),
-        kind: DefinitionKind::Callable,
-        public: true,
-    });
-    let mut program = object("program", vec![Op::Halt], Vec::new());
-    program.imports.push(ObjectImport {
-        name: "UNIT.RUN".to_string(),
-        kind: DefinitionKind::Callable,
-    });
-
-    assert!(link_objects(&[unit], &program).is_ok());
-}
-
-#[test]
-fn duplicate_callable_names_are_rejected_case_insensitively() {
-    let mut first = object("first", vec![Op::Unit, Op::Halt], Vec::new());
-    first.functions.insert(
-        "Demo.Run".to_string(),
-        ObjectFunction {
-            code_start: 0,
-            arity: 0,
-        },
-    );
-    let mut second = object("second", vec![Op::Unit, Op::Halt], Vec::new());
-    second.functions.insert(
-        "demo.run".to_string(),
-        ObjectFunction {
-            code_start: 0,
-            arity: 0,
-        },
-    );
-    let program = object("program", vec![Op::Halt], Vec::new());
-
-    assert!(matches!(
-        link_objects(&[first, second], &program),
-        Err(LinkError::DuplicateFunction(name)) if name == "demo.run"
-    ));
 }

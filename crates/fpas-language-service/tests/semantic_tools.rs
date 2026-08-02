@@ -1,4 +1,4 @@
-#![allow(
+#![expect(
     clippy::expect_used,
     reason = "semantic tooling fixtures use explicit source offsets and diagnostics"
 )]
@@ -153,9 +153,8 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
         .code_actions(&fixture.main, &identity)
         .expect("safe import action")
         .value;
-    let [action] = actions.as_slice() else {
-        panic!("expected one import action, got {actions:#?}")
-    };
+    assert_eq!(actions.len(), 1, "expected one import action: {actions:#?}");
+    let action = actions.first().expect("one import action");
     assert_eq!(action.title, "Import Actions.Importable");
     assert_eq!(action.diagnostic, identity);
     let mut edited = fixture.source.clone();
@@ -205,9 +204,12 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
         .code_actions(&main, &identity)
         .expect("safe type import action")
         .value;
-    let [action] = actions.as_slice() else {
-        panic!("expected one type import action, got {actions:#?}")
-    };
+    assert_eq!(
+        actions.len(),
+        1,
+        "expected one type import action: {actions:#?}"
+    );
+    let action = actions.first().expect("one type import action");
     assert_eq!(action.title, "Import Actions.Types");
     let edit = &action.edits[0];
     let mut edited = source.to_owned();

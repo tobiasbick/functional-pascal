@@ -1,16 +1,16 @@
 //! Links relocatable Functional Pascal objects into the VM's executable [`Chunk`].
 
+mod append;
+mod definitions;
 mod operands;
 
-use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use fpas_bytecode::{Chunk, SourceLocation};
-use fpas_unit::object::{
-    DefinitionKind, ObjectDefinition, ObjectError, ObjectLocation, RelocatableObject,
-};
+use fpas_bytecode::{Chunk, ExecutableError, validate_executable};
+use fpas_unit::object::{DefinitionKind, ObjectError, RelocatableObject};
 
-use operands::relocate_instruction;
+use append::{append_object, validate_retained_function_entries};
+use definitions::validate_definitions_and_imports;
 
 /// Object-linking failure with a deterministic diagnostic message.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,6 +35,24 @@ pub enum LinkError {
     },
     /// Two callable tables define the same name.
     DuplicateFunction(String),
+    /// A callable definition has no implementation in its owning object.
+    MissingFunctionImplementation {
+        /// Object that declares the callable definition.
+        owner: String,
+        /// Callable definition without a matching function-table entry.
+        name: String,
+    },
+    /// A Unit callable points at code removed during startup-section concatenation.
+    StrippedFunctionEntry {
+        /// Object containing the invalid function entry.
+        owner: String,
+        /// Callable name.
+        name: String,
+        /// Object-local callable offset.
+        offset: u32,
+        /// Number of instructions retained from the object.
+        retained_code: usize,
+    },
     /// A local or final index exceeds the bytecode representation.
     Overflow(&'static str),
     /// Relocation metadata does not match its opcode.
@@ -46,6 +64,8 @@ pub enum LinkError {
     },
     /// Constant insertion failed.
     ConstantPool(String),
+    /// The completed linked executable violates a bytecode invariant.
+    InvalidExecutable(ExecutableError),
     /// No executable root object was supplied.
     MissingProgram,
 }
@@ -66,6 +86,19 @@ impl fmt::Display for LinkError {
             Self::DuplicateFunction(name) => {
                 write!(formatter, "duplicate linked callable `{name}`")
             }
+            Self::MissingFunctionImplementation { owner, name } => write!(
+                formatter,
+                "object `{owner}` defines callable `{name}` without a matching function implementation"
+            ),
+            Self::StrippedFunctionEntry {
+                owner,
+                name,
+                offset,
+                retained_code,
+            } => write!(
+                formatter,
+                "callable `{name}` in object `{owner}` starts at {offset}, but only {retained_code} instructions remain after removing the Unit terminator"
+            ),
             Self::Overflow(field) => write!(formatter, "linked {field} exceeds bytecode limits"),
             Self::InvalidRelocation { owner, instruction } => write!(
                 formatter,
@@ -73,6 +106,9 @@ impl fmt::Display for LinkError {
             ),
             Self::ConstantPool(detail) => {
                 write!(formatter, "cannot construct linked constant pool: {detail}")
+            }
+            Self::InvalidExecutable(error) => {
+                write!(formatter, "linked executable validation failed: {error}")
             }
             Self::MissingProgram => write!(formatter, "cannot link without a program object"),
         }
@@ -82,6 +118,11 @@ impl fmt::Display for LinkError {
 impl std::error::Error for LinkError {}
 
 /// Link dependency-first unit objects followed by one root program object.
+///
+/// # Errors
+///
+/// Returns [`LinkError`] when an input object, symbol relationship, relocation,
+/// or the completed executable image is invalid.
 pub fn link_objects(
     units: &[RelocatableObject],
     program: &RelocatableObject,
@@ -94,12 +135,7 @@ pub fn link_objects(
         append_object(&mut chunk, object, false)?;
     }
     append_object(&mut chunk, program, true)?;
-    chunk
-        .validate_invariants()
-        .map_err(|error| LinkError::InvalidObject {
-            owner: program.owner.clone(),
-            detail: error.to_string(),
-        })?;
+    validate_executable(&chunk).map_err(LinkError::InvalidExecutable)?;
     Ok(chunk)
 }
 
@@ -115,6 +151,9 @@ fn validate_objects(
             .validate()
             .map_err(|error| invalid_object(object, error))?;
     }
+    for object in units {
+        validate_retained_function_entries(object)?;
+    }
     Ok(())
 }
 
@@ -123,106 +162,4 @@ fn invalid_object(object: &RelocatableObject, error: ObjectError) -> LinkError {
         owner: object.owner.clone(),
         detail: error.to_string(),
     }
-}
-
-fn validate_definitions_and_imports(
-    units: &[RelocatableObject],
-    program: &RelocatableObject,
-) -> Result<(), LinkError> {
-    let mut definitions = HashMap::<String, &ObjectDefinition>::new();
-    for definition in units
-        .iter()
-        .chain(std::iter::once(program))
-        .flat_map(|object| &object.definitions)
-    {
-        let key = definition.name.to_ascii_lowercase();
-        if definitions.insert(key, definition).is_some() {
-            return Err(LinkError::DuplicateDefinition(definition.name.clone()));
-        }
-    }
-    for object in units.iter().chain(std::iter::once(program)) {
-        for import in &object.imports {
-            let key = import.name.to_ascii_lowercase();
-            let Some(definition) = definitions.get(&key) else {
-                return Err(LinkError::UnresolvedImport {
-                    owner: object.owner.clone(),
-                    name: import.name.clone(),
-                    kind: import.kind,
-                });
-            };
-            if !definition.public || definition.kind != import.kind {
-                return Err(LinkError::UnresolvedImport {
-                    owner: object.owner.clone(),
-                    name: import.name.clone(),
-                    kind: import.kind,
-                });
-            }
-        }
-    }
-    Ok(())
-}
-
-fn append_object(
-    chunk: &mut Chunk,
-    object: &RelocatableObject,
-    retain_halt: bool,
-) -> Result<(), LinkError> {
-    let code_base = u32::try_from(chunk.len()).map_err(|_| LinkError::Overflow("code"))?;
-    let mut constant_map = Vec::with_capacity(object.constants.len());
-    for constant in &object.constants {
-        let index = chunk
-            .add_constant(constant.to_value())
-            .map_err(|error| LinkError::ConstantPool(error.to_string()))?;
-        constant_map.push(index);
-    }
-
-    let relocation_by_instruction = relocation_map(object);
-    let code_length = object.code.len() - usize::from(!retain_halt);
-    for (offset, (op, location)) in object
-        .code
-        .iter()
-        .zip(&object.locations)
-        .take(code_length)
-        .enumerate()
-    {
-        let mut relocated = *op;
-        if let Some(relocations) = relocation_by_instruction.get(&(offset as u32)) {
-            for relocation in relocations {
-                relocate_instruction(&mut relocated, relocation.kind, &constant_map, code_base)
-                    .map_err(|()| LinkError::InvalidRelocation {
-                        owner: object.owner.clone(),
-                        instruction: offset as u32,
-                    })?;
-            }
-        }
-        chunk.emit(relocated, source_location(*location));
-    }
-
-    let mut function_names = HashSet::new();
-    for (name, function) in &object.functions {
-        let key = name.to_ascii_lowercase();
-        if !function_names.insert(key.clone()) || chunk.functions().contains_key(&key) {
-            return Err(LinkError::DuplicateFunction(name.clone()));
-        }
-        let start = code_base
-            .checked_add(function.code_start)
-            .ok_or(LinkError::Overflow("function address"))?;
-        chunk.insert_function(key, start as usize, function.arity);
-    }
-    Ok(())
-}
-
-fn relocation_map(object: &RelocatableObject) -> HashMap<u32, Vec<fpas_unit::object::Relocation>> {
-    let mut result = HashMap::<u32, Vec<_>>::new();
-    for relocation in &object.relocations {
-        result
-            .entry(relocation.instruction)
-            .or_default()
-            .push(*relocation);
-    }
-    result
-}
-
-fn source_location(location: ObjectLocation) -> SourceLocation {
-    SourceLocation::new_with_source(location.line, location.column, location.source_id)
 }

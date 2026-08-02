@@ -4,13 +4,13 @@ use crate::{Chunk, ExecutableError, Op};
 
 pub(super) fn validate_entry_control_flow(chunk: &Chunk) -> Result<(), ExecutableError> {
     if chunk.is_empty() {
-        return Err(ExecutableError::MissingHalt);
+        return Err(ExecutableError::MissingEntryExit);
     }
 
     let function_regions = discover_function_regions(chunk);
     let mut visited = vec![false; chunk.len()];
     let mut pending = vec![(0, 0)];
-    let mut reached_halt = false;
+    let mut reached_exit = false;
 
     while let Some((instruction, predecessor)) = pending.pop() {
         if function_regions[instruction] {
@@ -25,8 +25,7 @@ pub(super) fn validate_entry_control_flow(chunk: &Chunk) -> Result<(), Executabl
 
         let op = chunk.code()[instruction];
         match op {
-            Op::Halt => reached_halt = true,
-            Op::Return => return Err(ExecutableError::EntryReturn { instruction }),
+            Op::Halt | Op::Return => reached_exit = true,
             Op::Jump(target) => pending.push((target as usize, instruction)),
             Op::JumpIfFalse(target)
             | Op::JumpIfTrue(target)
@@ -39,10 +38,10 @@ pub(super) fn validate_entry_control_flow(chunk: &Chunk) -> Result<(), Executabl
         }
     }
 
-    if reached_halt {
+    if reached_exit {
         Ok(())
     } else {
-        Err(ExecutableError::MissingHalt)
+        Err(ExecutableError::MissingEntryExit)
     }
 }
 

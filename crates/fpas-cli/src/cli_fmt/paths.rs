@@ -27,10 +27,8 @@ pub(super) fn collect_format_paths(
 
     let mut paths = Vec::new();
     for arg in explicit_args {
-        match resolve_fmt_arg(arg, cwd, stderr) {
-            Ok(mut resolved) => paths.append(&mut resolved),
-            Err(code) => return Err(code),
-        }
+        let mut resolved = resolve_fmt_arg(arg, cwd, stderr)?;
+        paths.append(&mut resolved);
     }
 
     Ok(dedupe_paths(paths))

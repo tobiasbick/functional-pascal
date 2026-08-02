@@ -1,7 +1,7 @@
 # `fpas-bytecode` review follow-up
 
 Classification: bytecode format and validation. Fixes should tighten internal artifact validation without changing FPAS semantics.
-Status: BYTECODE-01 through BYTECODE-05 completed 2026-08-02.
+Status: BYTECODE-01 through BYTECODE-05 completed 2026-08-02; BYTECODE-01 root-return correction completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -19,11 +19,12 @@ Additional gaps: complete `PersistentValue` roundtrips and rejection paths, exac
 
 ## Implementation record
 
-- BYTECODE-01 traverses initialization control flow from instruction zero and derives callable
-  regions from function-table entries. Validation requires at least one structurally reachable
-  `Halt`, rejects entry fallthrough and `Return`, and prevents entry jumps or fallthrough into
-  callable bodies. Conditional loops retain their exit edge, so this does not require programs to
-  terminate at runtime.
+- BYTECODE-01 traverses root control flow from instruction zero and derives callable regions from
+  function-table entries. Validation requires at least one structurally reachable `Halt` or
+  root-level `Return`, rejects entry fallthrough, and prevents entry jumps or fallthrough into
+  callable bodies. Root `Return` is a valid early program exit implemented by the VM; the
+  workspace example regression caught and corrected its initial rejection. Conditional loops
+  retain their exit edge, so this does not require programs to terminate at runtime.
 - BYTECODE-02 formats capture cells as the stable opaque value `<cell>`. Formatting no longer
   acquires the cell mutex, so self-referential cells cannot recursively lock themselves.
 - BYTECODE-03 gives constant-pool identity a bit-exact real comparison while preserving runtime
@@ -45,12 +46,14 @@ Additional gaps: complete `PersistentValue` roundtrips and rejection paths, exac
 - Baseline: `cargo test -p fpas-bytecode --locked` — passed: 53 tests plus doc tests.
 - Targeted implementation: `cargo test -p fpas-bytecode --locked` — passed: 74 tests plus doc
   tests.
+- Root-return correction: `cargo test -p fpas-bytecode --locked` — passed: 74 tests plus doc
+  tests; `cargo test -p fpas-cli --bin fpas main_tests::examples::example_fs_basics --locked` —
+  passed.
 - Direct dependents: `cargo test -p fpas-program -p fpas-linker -p fpas-build -p fpas-bundle
   --locked` — passed.
 - `cargo clippy -p fpas-bytecode --all-targets --locked -- -D warnings` — passed.
 - `cargo fmt --all -- --check` — passed.
 - `cargo build --workspace --locked` — passed.
 - `cargo test --workspace --locked` — passed.
-- The optional full-workspace Clippy run reaches two pre-existing style findings in the untouched
-  `fpas-language-service` crate (`collapsible_match` and `while_let_loop`); the targeted changed
-  crate is warning-free.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings` — passed after the adjacent
+  workspace style findings were corrected as part of the linker review follow-up.

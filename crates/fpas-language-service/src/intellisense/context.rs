@@ -85,10 +85,8 @@ fn statement_context(document: &NavigationDocument, offset: usize) -> bool {
             Token::End => {
                 blocks.pop();
             }
-            Token::Until => {
-                if blocks.last() == Some(&true) {
-                    blocks.pop();
-                }
+            Token::Until if blocks.last() == Some(&true) => {
+                blocks.pop();
             }
             _ => {}
         }

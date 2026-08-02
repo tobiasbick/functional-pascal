@@ -52,10 +52,10 @@ fn executable_validation_accepts_jump_over_function_region() {
 }
 
 #[test]
-fn executable_validation_rejects_empty_chunk_without_halt() {
+fn executable_validation_rejects_empty_chunk_without_entry_exit() {
     assert_eq!(
         validate_executable(&Chunk::new()),
-        Err(ExecutableError::MissingHalt)
+        Err(ExecutableError::MissingEntryExit)
     );
 }
 
@@ -78,20 +78,17 @@ fn executable_validation_rejects_unreachable_halt_after_entry_loop() {
 
     assert_eq!(
         validate_executable(&chunk),
-        Err(ExecutableError::MissingHalt)
+        Err(ExecutableError::MissingEntryExit)
     );
 }
 
 #[test]
-fn executable_validation_rejects_return_from_entry() {
+fn executable_validation_accepts_return_from_entry() {
     let mut chunk = Chunk::new();
+    chunk.emit(Op::Unit, location());
     chunk.emit(Op::Return, location());
-    chunk.emit(Op::Halt, location());
 
-    assert_eq!(
-        validate_executable(&chunk),
-        Err(ExecutableError::EntryReturn { instruction: 0 })
-    );
+    assert_eq!(validate_executable(&chunk), Ok(()));
 }
 
 #[test]

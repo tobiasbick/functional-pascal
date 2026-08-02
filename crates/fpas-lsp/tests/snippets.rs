@@ -1,5 +1,10 @@
 //! Validates the VS Code snippets against the parser and formatter.
 
+#![expect(
+    clippy::expect_used,
+    reason = "snippet fixtures fail immediately when repository assets are missing or malformed"
+)]
+
 use std::{collections::HashMap, fs, path::PathBuf};
 
 use fpas_fmt::format_compilation_unit;

@@ -13,16 +13,11 @@ use control_flow::validate_entry_control_flow;
 pub enum ExecutableError {
     /// General chunk invariants are invalid.
     Chunk(ChunkError),
-    /// No halt instruction can terminate program initialization.
-    MissingHalt,
+    /// No root instruction can terminate program execution.
+    MissingEntryExit,
     /// Reachable initialization code falls past the end of the instruction stream.
     EntryFallthrough {
         /// Last reachable instruction before the fallthrough.
-        instruction: usize,
-    },
-    /// Reachable initialization code returns without a call frame.
-    EntryReturn {
-        /// Reachable return instruction.
         instruction: usize,
     },
     /// Initialization control flow enters a callable body instead of calling it.

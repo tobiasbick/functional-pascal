@@ -13,13 +13,21 @@ mod token;
 
 pub use comments::{CommentStyle, SourceComment};
 pub use error::LexError;
-pub use span::Span;
+pub use span::{SourcePosition, Span};
 pub use token::Token;
 
+/// A lexical token together with its exact source range and end position.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SpannedToken {
+    /// Token kind and decoded payload.
     pub token: Token,
+    /// Source range occupied by the token.
     pub span: Span,
+    /// Position immediately after the token, before any following trivia.
+    ///
+    /// Unlike `span.column + span.length`, this remains exact for multi-byte Unicode and
+    /// multi-line tokens.
+    pub end: SourcePosition,
 }
 
 pub fn lex(source: &str) -> (Vec<SpannedToken>, Vec<LexError>) {

@@ -59,9 +59,15 @@ impl Parser {
         self.expect(&Token::Begin);
         let body = self.parse_statement_list();
         self.expect(&Token::End);
-        self.expect(&Token::Dot);
+        let has_terminating_dot = self.expect(&Token::Dot).is_some();
 
         let span = self.span_from(start);
+        if has_terminating_dot {
+            self.reject_trailing_input(
+                "program terminator",
+                "Remove all tokens after the final `end.`.",
+            );
+        }
         Program {
             name,
             name_span,
@@ -81,23 +87,11 @@ impl Parser {
 
         let (uses, declarations) = self.parse_uses_and_declarations(true);
 
-        if !self.check(&Token::Eof) {
-            let span = self.current_span();
-            self.error_with_code(
-                PARSE_EXPECTED_TOKEN,
-                &format!(
-                    "Expected end of file after unit declarations, found `{}`",
-                    super::token_display(self.current_token())
-                ),
-                "Unit files contain declarations only. Remove trailing statements or blocks.",
-                span,
-            );
-            while !self.at_end() {
-                self.advance();
-            }
-        }
-
         let span = self.span_from(start);
+        self.reject_trailing_input(
+            "unit declarations",
+            "Unit files contain declarations only. Remove trailing statements or blocks.",
+        );
         Unit {
             name,
             uses,
@@ -179,6 +173,24 @@ impl Parser {
         while !self.at_end() {
             self.advance();
         }
+    }
+
+    fn reject_trailing_input(&mut self, after: &str, hint: &str) {
+        if self.at_end() {
+            return;
+        }
+
+        let span = self.current_span();
+        self.error_with_code(
+            PARSE_EXPECTED_TOKEN,
+            &format!(
+                "Expected end of file after {after}, found `{}`",
+                super::token_display(self.current_token())
+            ),
+            hint,
+            span,
+        );
+        self.skip_to_eof();
     }
 
     fn is_qualified_id_recovery_boundary(&self) -> bool {

@@ -56,7 +56,7 @@ fn invalid_record_field_start_recovers_without_hanging() {
 #[test]
 fn truncated_token_stream_without_eof_does_not_hang() {
     use crate::parse_tokens_compilation_unit;
-    use fpas_lexer::{Span, SpannedToken, Token, lex};
+    use fpas_lexer::{SourcePosition, Span, SpannedToken, Token, lex};
 
     let (mut tokens, _) = lex("program T; begin end.");
     // Drop the trailing Eof that lex always appends.
@@ -82,6 +82,11 @@ fn truncated_token_stream_without_eof_does_not_hang() {
             line: 1,
             column: 1,
             source_id: 0,
+        },
+        end: SourcePosition {
+            offset: 5,
+            line: 1,
+            column: 6,
         },
     }]);
     assert!(matches!(unit2, crate::CompilationUnit::Program(_)));

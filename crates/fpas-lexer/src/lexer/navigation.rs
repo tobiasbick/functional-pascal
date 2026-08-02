@@ -1,5 +1,5 @@
 use super::Lexer;
-use crate::{Span, Token, error::lex_error};
+use crate::{SourcePosition, Span, Token, error::lex_error};
 
 impl Lexer<'_> {
     pub(super) const fn at_end(&self) -> bool {
@@ -95,6 +95,14 @@ impl Lexer<'_> {
         (self.pos, self.line, self.col)
     }
 
+    const fn position_here(&self) -> SourcePosition {
+        SourcePosition {
+            offset: self.pos,
+            line: self.line,
+            column: self.col,
+        }
+    }
+
     pub(super) const fn make_span(
         &self,
         start_offset: usize,
@@ -112,7 +120,8 @@ impl Lexer<'_> {
 
     pub(super) fn push_tok(&mut self, token: Token, so: usize, sl: u32, sc: u32) {
         let span = self.make_span(so, sl, sc);
-        self.tokens.push(crate::SpannedToken { token, span });
+        let end = self.position_here();
+        self.tokens.push(crate::SpannedToken { token, span, end });
     }
 
     pub(super) fn push_err(

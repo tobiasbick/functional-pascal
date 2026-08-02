@@ -5,7 +5,7 @@
 use super::{ERROR_IDENT, Parser};
 use crate::error::parse_error;
 use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
-use fpas_lexer::{Span, SpannedToken, Token};
+use fpas_lexer::{SourcePosition, Span, SpannedToken, Token};
 
 impl Parser {
     /// Builds a parser from a pre-lexed token stream.
@@ -243,23 +243,28 @@ fn ensure_trailing_eof(mut tokens: Vec<SpannedToken>) -> Vec<SpannedToken> {
                 column: 1,
                 source_id: 0,
             },
+            end: SourcePosition {
+                offset: 0,
+                line: 1,
+                column: 1,
+            },
         });
         return tokens;
     }
     if !matches!(tokens.last().map(|t| &t.token), Some(Token::Eof)) {
-        let last_span = tokens[tokens.len() - 1].span;
+        let last = &tokens[tokens.len() - 1];
+        let last_span = last.span;
         let span = Span {
-            offset: last_span.offset.saturating_add(last_span.length),
+            offset: last.end.offset,
             length: 0,
-            line: last_span.line,
-            column: last_span
-                .column
-                .saturating_add(u32::try_from(last_span.length.max(1)).unwrap_or(u32::MAX)),
+            line: last.end.line,
+            column: last.end.column,
             source_id: last_span.source_id,
         };
         tokens.push(SpannedToken {
             token: Token::Eof,
             span,
+            end: last.end,
         });
     }
     tokens

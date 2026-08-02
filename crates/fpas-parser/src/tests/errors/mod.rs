@@ -5,5 +5,8 @@ mod api;
 mod chained_comparison;
 mod diagnostics;
 mod recovery;
+mod statement_separators;
 mod syntax;
+mod synthetic_eof;
+mod trailing_input;
 mod uses;

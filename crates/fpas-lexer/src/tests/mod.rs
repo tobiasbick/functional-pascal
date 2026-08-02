@@ -31,3 +31,4 @@ mod numbers;
 mod source_id;
 mod strings;
 mod symbols;
+mod token_positions;

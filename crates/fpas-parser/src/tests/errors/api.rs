@@ -78,3 +78,20 @@ fn wrong_program_header_emits_single_parser_error() {
         parser_errors[0].message
     );
 }
+
+#[test]
+fn source_api_orders_lexer_diagnostics_before_parser_diagnostics() {
+    let (_, errors) = parse_with_errors("program T begin @ end.");
+
+    assert!(matches!(
+        errors.first(),
+        Some(crate::ParseDiagnostic::Lexer(_))
+    ));
+    assert!(
+        errors
+            .iter()
+            .skip(1)
+            .any(|error| matches!(error, crate::ParseDiagnostic::Parser(_))),
+        "diagnostics: {errors:#?}"
+    );
+}

@@ -1,17 +1,12 @@
-//! Same-directory validated replacement for compiled program images.
+//! OS-locked, same-directory atomic replacement for compiled program images.
 
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::{Duration, Instant};
 
-const LOCK_WAIT: Duration = Duration::from_secs(10);
-const LOCK_RETRY: Duration = Duration::from_millis(10);
+use atomic_write_file::AtomicWriteFile;
 
 pub(super) fn read(path: &Path) -> Result<Option<Vec<u8>>, String> {
-    let lock_path = append_suffix(path, ".lock");
-    wait_until_unlocked(path, &lock_path)?;
     match fs::read(path) {
         Ok(bytes) => Ok(Some(bytes)),
         Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
@@ -20,134 +15,25 @@ pub(super) fn read(path: &Path) -> Result<Option<Vec<u8>>, String> {
 }
 
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    let lock_path = append_suffix(path, ".lock");
-    let _lock = acquire_lock(path, &lock_path)?;
-    let temporary = unique_path(path, ".tmp");
-    let mut temporary_cleanup = FileCleanup::new(temporary.clone());
-    let backup = unique_path(path, ".bak");
-
-    write_complete(&temporary, bytes)?;
-    validate_temporary(&temporary)?;
-    publish(path, &temporary, &backup)?;
-    temporary_cleanup.disarm();
-    Ok(())
+    validate_image(path, bytes)?;
+    let _lock = PublicationLock::acquire(path)?;
+    let mut replacement = AtomicWriteFile::open(path)
+        .map_err(|error| io_error("create temporary for", path, error))?;
+    replacement
+        .write_all(bytes)
+        .map_err(|error| io_error("write temporary for", path, error))?;
+    replacement
+        .commit()
+        .map_err(|error| io_error("replace", path, error))
 }
 
-fn wait_until_unlocked(path: &Path, lock_path: &Path) -> Result<(), String> {
-    let started = Instant::now();
-    while lock_path.exists() {
-        remove_stale_lock(lock_path);
-        if !lock_path.exists() {
-            break;
-        }
-        if started.elapsed() >= LOCK_WAIT {
-            return Err(lock_timeout(path));
-        }
-        std::thread::sleep(LOCK_RETRY);
-    }
-    Ok(())
-}
-
-fn acquire_lock(path: &Path, lock_path: &Path) -> Result<LockGuard, String> {
-    let started = Instant::now();
-    loop {
-        match OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(lock_path)
-        {
-            Ok(mut file) => {
-                writeln!(file, "{}", std::process::id())
-                    .map_err(|error| io_error("write lock for", lock_path, error))?;
-                return Ok(LockGuard {
-                    path: lock_path.to_path_buf(),
-                });
-            }
-            Err(error) if is_lock_contention(&error) => {
-                remove_stale_lock(lock_path);
-                if started.elapsed() >= LOCK_WAIT {
-                    if error.kind() == io::ErrorKind::PermissionDenied && !lock_path.exists() {
-                        return Err(io_error("lock", lock_path, error));
-                    }
-                    return Err(lock_timeout(path));
-                }
-                std::thread::sleep(LOCK_RETRY);
-            }
-            Err(error) => return Err(io_error("lock", lock_path, error)),
-        }
-    }
-}
-
-fn is_lock_contention(error: &io::Error) -> bool {
-    error.kind() == io::ErrorKind::AlreadyExists || error.kind() == io::ErrorKind::PermissionDenied
-}
-
-fn remove_stale_lock(lock_path: &Path) {
-    let is_stale = fs::metadata(lock_path)
-        .and_then(|metadata| metadata.modified())
-        .ok()
-        .and_then(|modified| modified.elapsed().ok())
-        .is_some_and(|age| age >= LOCK_WAIT);
-    if is_stale {
-        let _ = fs::remove_file(lock_path);
-    }
-}
-
-fn write_complete(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(path)
-        .map_err(|error| io_error("create temporary", path, error))?;
-    file.write_all(bytes)
-        .map_err(|error| io_error("write temporary", path, error))?;
-    file.sync_all()
-        .map_err(|error| io_error("flush temporary", path, error))
-}
-
-fn validate_temporary(path: &Path) -> Result<(), String> {
-    let bytes = fs::read(path).map_err(|error| io_error("read temporary", path, error))?;
-    fpas_program::decode(&bytes).map(|_| ()).map_err(|error| {
+fn validate_image(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    fpas_program::decode(bytes).map(|_| ()).map_err(|error| {
         format!(
             "temporary compiled program `{}` is invalid: {error}",
             path.display()
         )
     })
-}
-
-#[cfg(not(windows))]
-fn publish(path: &Path, temporary: &Path, _backup: &Path) -> Result<(), String> {
-    fs::rename(temporary, path).map_err(|error| io_error("replace", path, error))
-}
-
-#[cfg(windows)]
-fn publish(path: &Path, temporary: &Path, backup: &Path) -> Result<(), String> {
-    let had_previous = path.exists();
-    if had_previous {
-        fs::rename(path, backup).map_err(|error| io_error("stage previous", path, error))?;
-    }
-    if let Err(error) = fs::rename(temporary, path) {
-        if had_previous {
-            let _ = fs::rename(backup, path);
-        }
-        return Err(io_error("replace", path, error));
-    }
-    if had_previous {
-        fs::remove_file(backup).map_err(|error| io_error("remove previous", backup, error))?;
-    }
-    Ok(())
-}
-
-fn unique_path(path: &Path, suffix: &str) -> PathBuf {
-    static NEXT: AtomicU64 = AtomicU64::new(1);
-    let id = NEXT.fetch_add(1, Ordering::Relaxed);
-    append_suffix(path, &format!(".{}.{}{suffix}", std::process::id(), id))
-}
-
-fn append_suffix(path: &Path, suffix: &str) -> PathBuf {
-    let mut value = path.as_os_str().to_os_string();
-    value.push(suffix);
-    PathBuf::from(value)
 }
 
 fn io_error(operation: &str, path: &Path, error: io::Error) -> String {
@@ -157,41 +43,129 @@ fn io_error(operation: &str, path: &Path, error: io::Error) -> String {
     )
 }
 
-fn lock_timeout(path: &Path) -> String {
-    format!(
-        "timed out waiting to replace compiled program `{}`; another compiler process may still be writing it",
-        path.display()
-    )
+struct PublicationLock {
+    _file: File,
 }
 
-struct LockGuard {
-    path: PathBuf,
-}
-
-struct FileCleanup {
-    path: Option<PathBuf>,
-}
-
-impl FileCleanup {
-    fn new(path: PathBuf) -> Self {
-        Self { path: Some(path) }
-    }
-
-    fn disarm(&mut self) {
-        self.path = None;
+impl PublicationLock {
+    fn acquire(path: &Path) -> Result<Self, String> {
+        let lock_path = append_suffix(path, ".lock");
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(&lock_path)
+            .map_err(|error| io_error("open publication lock for", &lock_path, error))?;
+        file.lock()
+            .map_err(|error| io_error("lock", &lock_path, error))?;
+        Ok(Self { _file: file })
     }
 }
 
-impl Drop for LockGuard {
-    fn drop(&mut self) {
-        let _ = fs::remove_file(&self.path);
-    }
+fn append_suffix(path: &Path, suffix: &str) -> PathBuf {
+    let mut value = path.as_os_str().to_os_string();
+    value.push(suffix);
+    PathBuf::from(value)
 }
 
-impl Drop for FileCleanup {
-    fn drop(&mut self) {
-        if let Some(path) = self.path.take() {
-            let _ = fs::remove_file(path);
+#[cfg(test)]
+mod tests {
+    #![expect(
+        clippy::expect_used,
+        reason = "filesystem concurrency fixtures use expect for compact assertions"
+    )]
+
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::sync::{Arc, Barrier, mpsc};
+    use std::time::Duration;
+
+    use fpas_bytecode::{Chunk, Op, SourceLocation};
+    use fpas_program::{Digest, ProgramIdentity, ProgramImage};
+
+    use super::{PublicationLock, replace};
+
+    fn temp_path(name: &str) -> PathBuf {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
+        let id = NEXT.fetch_add(1, Ordering::Relaxed);
+        std::env::temp_dir()
+            .join(format!("fpas-build-atomic-{}-{id}", std::process::id()))
+            .join(name)
+    }
+
+    fn image_bytes(marker: u8) -> Vec<u8> {
+        let mut chunk = Chunk::new();
+        chunk.emit(Op::Halt, SourceLocation::new(1, 1));
+        let image = ProgramImage::new(
+            ProgramIdentity {
+                compiler_version: "atomic-test".to_string(),
+                bytecode_version: fpas_bytecode::BYTECODE_VERSION,
+                source_hash: Digest::of([marker]),
+                options_hash: Digest::of(b"options"),
+                units: Vec::new(),
+            },
+            vec!["main.fpas".to_string()],
+            chunk,
+        )
+        .expect("valid program image");
+        fpas_program::encode(&image).expect("program image encoding")
+    }
+
+    #[test]
+    fn concurrent_writers_publish_one_complete_image() {
+        let path = temp_path("concurrent.fpascp");
+        std::fs::create_dir_all(path.parent().expect("temporary parent"))
+            .expect("temporary directory");
+        let barrier = Arc::new(Barrier::new(5));
+        let mut writers = Vec::new();
+        for marker in 1..=4 {
+            let path = path.clone();
+            let barrier = Arc::clone(&barrier);
+            writers.push(std::thread::spawn(move || {
+                let bytes = image_bytes(marker);
+                barrier.wait();
+                replace(&path, &bytes)
+            }));
         }
+        barrier.wait();
+        for writer in writers {
+            writer.join().expect("writer thread").expect("publication");
+        }
+
+        let published = std::fs::read(&path).expect("published image");
+        fpas_program::decode(&published).expect("complete published image");
+        assert!((1..=4).any(|marker| published == image_bytes(marker)));
+        std::fs::remove_dir_all(path.parent().expect("temporary parent")).ok();
+    }
+
+    #[test]
+    fn live_writer_held_beyond_ten_seconds_keeps_its_os_lock() {
+        let path = temp_path("long-writer.fpascp");
+        std::fs::create_dir_all(path.parent().expect("temporary parent"))
+            .expect("temporary directory");
+        let lock = PublicationLock::acquire(&path).expect("first writer lock");
+        let writer_path = path.clone();
+        let (finished_tx, finished_rx) = mpsc::channel();
+        let writer = std::thread::spawn(move || {
+            finished_tx
+                .send(replace(&writer_path, &image_bytes(2)))
+                .expect("writer result receiver")
+        });
+
+        std::thread::sleep(Duration::from_millis(10_100));
+        assert!(
+            finished_rx.try_recv().is_err(),
+            "second writer must still wait"
+        );
+        drop(lock);
+        finished_rx
+            .recv_timeout(Duration::from_secs(5))
+            .expect("unblocked writer result")
+            .expect("publication after lock release");
+        writer.join().expect("writer thread");
+        fpas_program::decode(&std::fs::read(&path).expect("published image"))
+            .expect("complete published image");
+        std::fs::remove_dir_all(path.parent().expect("temporary parent")).ok();
     }
 }

@@ -9,6 +9,7 @@ const COMPILER_CRATES: &[&str] = &[
     "fpas-lexer",
     "fpas-linker",
     "fpas-parser",
+    "fpas-program",
     "fpas-project",
     "fpas-sema",
     "fpas-std",

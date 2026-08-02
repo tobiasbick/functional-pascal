@@ -43,6 +43,7 @@ fn build_from_parsed_sources(
             link_meta,
             &path,
             unit,
+            None,
             validate_name,
         )?;
     }

@@ -85,6 +85,11 @@ Test projects build helper-unit sidecars and validate all test programs without
 creating one shared program image. Both artifact types are derived outputs and
 are ignored by Git.
 
+Concurrent program builds coordinate through a persistent `hello.fpascp.lock`
+file beside the image. The lock file contains no program data, is ignored by
+Git, and may remain after the build; the operating system releases ownership
+automatically when the compiler process exits.
+
 `fpas build --executable <project.fpasprj>` additionally produces a
 host-native single-file application beside the project manifest. Its default
 base name is `project.name`; `--name <name>` overrides only the application and

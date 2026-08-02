@@ -552,9 +552,11 @@ dependencies = [
 name = "fpas-build"
 version = "0.0.1"
 dependencies = [
+ "atomic-write-file",
  "blake3",
  "fpas-bytecode",
  "fpas-compiler",
+ "fpas-diagnostics",
  "fpas-linker",
  "fpas-parser",
  "fpas-program",

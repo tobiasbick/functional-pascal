@@ -42,14 +42,42 @@ pub(super) fn parse_compilation_unit_file(
     path: &Path,
     source_id: u32,
 ) -> Result<(CompilationUnit, Vec<String>), String> {
-    let source_text = fs::read_to_string(path).map_err(|e| {
+    let source = fs::read(path).map_err(|e| {
         format!(
             "Error reading source file `{}`: {e}",
             path.to_string_lossy()
         )
     })?;
+    parse_compilation_unit_source(path, &source, source_id)
+}
 
-    let (tokens, _comments, lex_errors) = lex_with_source_id(&source_text, source_id);
+pub(super) fn read_compilation_unit_file(
+    path: &Path,
+    source_id: u32,
+) -> Result<(Vec<u8>, CompilationUnit, Vec<String>), String> {
+    let source = fs::read(path).map_err(|e| {
+        format!(
+            "Error reading source file `{}`: {e}",
+            path.to_string_lossy()
+        )
+    })?;
+    let (unit, warnings) = parse_compilation_unit_source(path, &source, source_id)?;
+    Ok((source, unit, warnings))
+}
+
+pub(super) fn parse_compilation_unit_source(
+    path: &Path,
+    source: &[u8],
+    source_id: u32,
+) -> Result<(CompilationUnit, Vec<String>), String> {
+    let source_text = std::str::from_utf8(source).map_err(|error| {
+        format!(
+            "Source file `{}` is not valid UTF-8: {error}",
+            path.to_string_lossy()
+        )
+    })?;
+
+    let (tokens, _comments, lex_errors) = lex_with_source_id(source_text, source_id);
     let (unit, parse_errors) = parse_tokens_compilation_unit(tokens);
 
     let mut diagnostics: Vec<Diagnostic> = lex_errors;

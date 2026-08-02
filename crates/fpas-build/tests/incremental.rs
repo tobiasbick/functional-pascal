@@ -258,3 +258,27 @@ fn library_build_reuses_all_units_without_linking_a_program() {
 
     fs::remove_dir_all(&fixture.root).ok();
 }
+
+#[test]
+fn source_changed_after_graph_creation_is_rejected_without_relabelling_sidecar() {
+    let fixture = Fixture::create();
+    fixture.build().expect("initial build");
+    let sidecar = fixture.base.with_extension("fpascu");
+    let previous = fs::read(&sidecar).expect("initial sidecar");
+    let project = load_project(&fixture.manifest).expect("project loading");
+    let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("unit graph");
+    let selection = resolve_library_units(&graph).expect("library units");
+
+    write(&fixture.base, &base_source("return Value + 100", 2));
+    let error = build_library_units(&graph, &selection, &BuildOptions::default())
+        .err()
+        .expect("stale graph must fail");
+
+    assert!(error.to_string().contains("changed after the build graph"));
+    assert_eq!(
+        fs::read(&sidecar).expect("preserved sidecar"),
+        previous,
+        "a stale graph must not publish an artifact under the changed source identity"
+    );
+    fs::remove_dir_all(&fixture.root).ok();
+}

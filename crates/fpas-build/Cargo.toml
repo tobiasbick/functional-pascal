@@ -7,8 +7,10 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+atomic-write-file = "0.3.0"
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-compiler = { path = "../fpas-compiler" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-linker = { path = "../fpas-linker" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-program = { path = "../fpas-program" }

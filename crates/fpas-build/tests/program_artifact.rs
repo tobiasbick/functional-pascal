@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use fpas_build::{BuildOptions, ProgramArtifactTarget, build_program_artifact};
-use fpas_project::{build_unit_graph_for_program, load_project, resolve_program_units};
+use fpas_project::{build_unit_graph_for_program, load_project};
 
 fn temp_dir() -> PathBuf {
     static NEXT: AtomicU64 = AtomicU64::new(1);
@@ -104,10 +104,6 @@ include = ["src/**/*.fpas"]
         let graph =
             build_unit_graph_for_program(&self.main, &project.source_files, &project.link_meta)
                 .expect("program unit graph");
-        let source_text = std::str::from_utf8(source).expect("UTF-8 main source");
-        let (program, diagnostics) = fpas_parser::parse(source_text);
-        assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-        let selection = resolve_program_units(&graph, &program.uses).expect("reachable units");
         let source_paths = graph
             .source_paths()
             .iter()
@@ -120,8 +116,6 @@ include = ["src/**/*.fpas"]
             .collect::<Vec<_>>();
         build_program_artifact(
             &graph,
-            &selection,
-            &program,
             ProgramArtifactTarget {
                 path: &self.artifact,
                 source,
@@ -244,6 +238,26 @@ fn failed_program_rebuild_preserves_the_previous_artifact() {
                     begin Std.Console.WriteLn(Missing()) end.";
 
     assert!(fixture.build_source(invalid).is_err());
+    assert_eq!(
+        fs::read(&fixture.artifact).expect("preserved artifact"),
+        previous
+    );
+    fs::remove_dir_all(&fixture.root).ok();
+}
+
+#[test]
+fn non_program_source_is_rejected_before_cached_artifact_lookup() {
+    let fixture = Fixture::create();
+    fixture.build().expect("initial build");
+    let previous = fs::read(&fixture.artifact).expect("initial artifact");
+    let unit_source = b"unit Demo; public const Value: integer := 1;";
+
+    let error = fixture
+        .build_source(unit_source)
+        .err()
+        .expect("unit source must not build as a program artifact");
+
+    assert!(error.to_string().contains("instead of a program"));
     assert_eq!(
         fs::read(&fixture.artifact).expect("preserved artifact"),
         previous

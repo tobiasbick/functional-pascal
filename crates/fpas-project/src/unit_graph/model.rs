@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 use fpas_parser::{QualifiedId, Unit};
+use fpas_unit::Digest;
 
 use crate::common::qualified_id_to_string;
 use crate::model::{ProjectLinkMeta, SourceOrigin};
@@ -17,12 +18,18 @@ pub struct UnitNode {
     path: PathBuf,
     origin: SourceOrigin,
     source_id: u32,
+    source_hash: Option<Digest>,
     direct_uses: Vec<QualifiedId>,
     unit: Arc<OnceLock<Result<Unit, String>>>,
 }
 
 impl UnitNode {
-    pub(super) fn new(path: PathBuf, origin: SourceOrigin, unit: Unit) -> Self {
+    pub(super) fn new(
+        path: PathBuf,
+        origin: SourceOrigin,
+        unit: Unit,
+        source_hash: Option<Digest>,
+    ) -> Self {
         let display_name = qualified_id_to_string(&unit.name);
         Self {
             canonical_name: display_name.to_ascii_lowercase(),
@@ -30,6 +37,7 @@ impl UnitNode {
             path,
             origin,
             source_id: unit.span.source_id,
+            source_hash,
             direct_uses: unit.uses.clone(),
             unit: Arc::new(OnceLock::from(Ok(unit))),
         }
@@ -41,6 +49,7 @@ impl UnitNode {
         display_name: String,
         direct_uses: Vec<QualifiedId>,
         source_id: u32,
+        source_hash: Digest,
     ) -> Self {
         Self {
             canonical_name: display_name.to_ascii_lowercase(),
@@ -48,6 +57,7 @@ impl UnitNode {
             path,
             origin,
             source_id,
+            source_hash: Some(source_hash),
             direct_uses,
             unit: Arc::new(OnceLock::new()),
         }
@@ -92,6 +102,14 @@ impl UnitNode {
         self.source_id
     }
 
+    /// Hash of the exact source bytes used to construct this filesystem graph node.
+    ///
+    /// Parsed overlay graphs return `None` because their caller owns the source snapshot.
+    #[must_use]
+    pub fn source_hash(&self) -> Option<Digest> {
+        self.source_hash
+    }
+
     /// Direct unit dependencies from this unit's `uses` clause.
     #[must_use]
     pub fn direct_uses(&self) -> &[QualifiedId] {
@@ -127,6 +145,40 @@ impl UnitNode {
             })
             .as_ref()
             .map_err(Clone::clone)
+    }
+
+    /// Parse an owned unit AST from the supplied source snapshot.
+    ///
+    /// The returned AST always originates from exactly `source`; callers can therefore couple
+    /// compilation with the digest of the same bytes instead of a separately cached AST.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the bytes are invalid source, no longer declare a unit, or declare a
+    /// different unit name than the graph node.
+    pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, String> {
+        let (parsed, _) =
+            crate::common::parse_compilation_unit_source(&self.path, source, self.source_id)?;
+        let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
+            return Err(format!(
+                "Source file `{}` no longer declares a unit.",
+                self.path.display()
+            ));
+        };
+        if !unit
+            .name
+            .parts
+            .join(".")
+            .eq_ignore_ascii_case(&self.display_name)
+        {
+            return Err(format!(
+                "Source file `{}` declares unit `{}`, but the build graph names `{}`.",
+                self.path.display(),
+                unit.name.parts.join("."),
+                self.display_name
+            ));
+        }
+        Ok(unit)
     }
 
     /// Returns whether this node's source AST has been materialized in this graph.

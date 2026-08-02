@@ -1,7 +1,7 @@
 # `fpas-build` review follow-up
 
 Classification: compiler/build infrastructure and artifact persistence. No FPAS language change expected.
-Status: BUILD-02 done; all other findings open.
+Status: all findings completed.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -26,3 +26,36 @@ Completed on 2026-08-01.
 - Regressions: deterministic tests cover successful restoration and failed restoration with a preserved backup. The end-to-end distribution test also rejects leftover transaction siblings.
 - Docs: normative `docs/pascal/` pages are unchanged because FPAS behavior and the documented exact-replacement contract did not change.
 - Verification: `cargo fmt`; `cargo test -p fpas-build`; `cargo clippy -p fpas-build --all-targets --locked -- -D warnings`; `cargo build`; `cargo test --workspace`.
+
+## BUILD-01 and BUILD-03 completion record
+
+Completed on 2026-08-02.
+
+- Implementation: filesystem-backed `UnitNode` values retain the hash of the exact bytes used to build the graph. `source_snapshot.rs` rejects a changed graph input, compiles an AST parsed from those same bytes, and rechecks the file before sidecar publication. Parsed overlay graphs remain read-only build inputs because they do not own filesystem snapshots.
+- Program API: `build_program_artifact` no longer accepts an independently parsed `Program` or caller-provided unit selection. It parses the authoritative source bytes and resolves reachable units internally before cache lookup, compilation, or publication.
+- Regressions: `source_changed_after_graph_creation_is_rejected_without_relabelling_sidecar` preserves the prior valid sidecar. `non_program_source_is_rejected_before_cached_artifact_lookup` proves that the authoritative bytes are parsed before an existing image can be reused.
+- Docs: public Rust snapshot contracts were documented. FPAS syntax and semantics are unchanged.
+
+## BUILD-04 completion record
+
+Completed on 2026-08-02.
+
+- Implementation: program publication now uses a stable OS lock file and `atomic-write-file` same-directory replacement. Lock ownership is tied to the open file handle and released by the operating system; no writer removes another writer's lock based on age.
+- Regressions: four simultaneous writers publish one complete decodable image. A controlled writer holds the OS lock for 10.1 seconds; the second writer remains blocked and publishes successfully only after the first lock is released.
+- Docs: `docs/pascal/program-structure/projects.md` documents the persistent derived `.fpascp.lock` coordination file, and `.gitignore` excludes it.
+
+## BUILD-05 completion record
+
+Completed on 2026-08-02.
+
+- Implementation: `fpas-program` sources and manifest now participate in `FPAS_COMPILER_BUILD_ID`.
+- Regression: `compiler_identity_lists_every_build_relevant_workspace_crate` checks the complete explicit identity input set.
+
+## Final verification
+
+- `cargo fmt --all -- --check`
+- `cargo test -p fpas-build --locked` — 5 unit, 1 identity, 4 distribution, 6 incremental, and 7 program-artifact tests passed.
+- `cargo test -p fpas-project --locked` — all unit, integration, and doc tests passed.
+- `cargo clippy -p fpas-build -p fpas-project --all-targets --locked -- -D warnings`
+- `cargo build --workspace --locked`
+- `cargo test --workspace --locked`

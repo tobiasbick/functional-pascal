@@ -2,12 +2,12 @@
 
 mod atomic;
 mod identity;
+mod source;
 
 use std::path::Path;
 
-use fpas_parser::Program;
 use fpas_program::{ProgramIdentity, ProgramImage};
-use fpas_project::{ResolvedUnitGraph, UnitGraph};
+use fpas_project::UnitGraph;
 
 use crate::engine::link_program;
 use crate::{
@@ -29,14 +29,24 @@ pub struct ProgramArtifactTarget<'a> {
 /// Missing, stale, incompatible, and corrupt artifacts are rebuilt. Publication
 /// happens only after compilation, linking, encoding, and temporary-file
 /// validation have succeeded.
+///
+/// The main program is parsed and its reachable units are resolved internally
+/// from [`ProgramArtifactTarget::source`], so an unrelated AST cannot be cached
+/// under that source identity.
+///
+/// # Errors
+///
+/// Returns an error when the source snapshot is invalid, unit resolution or
+/// compilation fails, or the validated image cannot be published atomically.
 pub fn build_program_artifact(
     graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    program: &Program,
     target: ProgramArtifactTarget<'_>,
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
-    let units = build_library_units(graph, selection, options)?;
+    let program = source::parse(target.source, target.source_paths)?;
+    let selection =
+        fpas_project::resolve_program_units(graph, &program.uses).map_err(BuildError::new)?;
+    let units = build_library_units(graph, &selection, options)?;
     let expected = identity::expected(target.source, &units, options);
 
     if let Some(chunk) = reusable_chunk(target.path, &expected, target.source_paths)? {
@@ -48,7 +58,7 @@ pub fn build_program_artifact(
         return Ok(BuiltProgram { chunk, events });
     }
 
-    let built = link_program(units, program)?;
+    let built = link_program(units, &program)?;
     let BuiltProgram { chunk, events } = built;
     let image = ProgramImage::new(expected, target.source_paths.to_vec(), chunk)
         .map_err(|error| BuildError::new(error.to_string()))?;

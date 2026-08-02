@@ -57,8 +57,6 @@ pub(crate) fn build_program_artifact(
     let source_paths = portable_source_paths(&prepared.graph, prepared.main, project_root)?;
     let built = fpas_build::build_program_artifact(
         &prepared.graph,
-        &prepared.selection,
-        &prepared.program,
         fpas_build::ProgramArtifactTarget {
             path: &artifact_path,
             source: prepared.source.as_bytes(),

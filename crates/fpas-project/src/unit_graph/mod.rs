@@ -16,7 +16,7 @@ use fpas_lexer::Span;
 use fpas_parser::{CompilationUnit, QualifiedId, Unit};
 
 use crate::common::{
-    display_unit_key, parse_compilation_unit_file, qualified_id_to_string, validate_user_unit_name,
+    display_unit_key, qualified_id_to_string, read_compilation_unit_file, validate_user_unit_name,
 };
 use crate::model::ProjectLinkMeta;
 use crate::{StandardLibrary, is_test_source_file};
@@ -91,7 +91,7 @@ pub(crate) fn build_unit_graph_with_base(
             insert_node(&mut nodes, &effective_link_meta, source_path, node, true)?;
             continue;
         }
-        let parsed = parse_compilation_unit_file(source_path, 0)?.0;
+        let (source, parsed, _) = read_compilation_unit_file(source_path, 0)?;
         let CompilationUnit::Unit(unit) = parsed else {
             if is_test_source_file(source_path) {
                 continue;
@@ -111,6 +111,7 @@ pub(crate) fn build_unit_graph_with_base(
             &effective_link_meta,
             source_path,
             unit,
+            Some(fpas_unit::Digest::of(&source)),
             true,
         )?;
     }
@@ -126,7 +127,7 @@ pub(crate) fn build_unit_graph_with_base(
                 insert_node(&mut nodes, &effective_link_meta, source_path, node, false)?;
                 continue;
             }
-            let parsed = parse_compilation_unit_file(source_path, 0)?.0;
+            let (source, parsed, _) = read_compilation_unit_file(source_path, 0)?;
             let CompilationUnit::Unit(unit) = parsed else {
                 return Err(format!(
                     "Standard library source file `{}` must declare a unit.",
@@ -139,6 +140,7 @@ pub(crate) fn build_unit_graph_with_base(
                 &effective_link_meta,
                 source_path,
                 unit,
+                Some(fpas_unit::Digest::of(&source)),
                 false,
             )?;
         }
@@ -176,6 +178,7 @@ fn insert_unit(
     link_meta: &ProjectLinkMeta,
     source_path: &Path,
     mut unit: Unit,
+    source_hash: Option<fpas_unit::Digest>,
     validate_name: bool,
 ) -> Result<(), String> {
     let source_id = next_source_id(source_paths.len())?;
@@ -201,6 +204,7 @@ fn insert_unit(
             source_path.to_path_buf(),
             link_meta.origin_for_source(source_path),
             unit,
+            source_hash,
         ),
     );
     Ok(())
@@ -242,6 +246,7 @@ fn sidecar_node(
         compiled.identity.unit_name,
         direct_uses,
         source_id,
+        compiled.identity.source_hash,
     ))
 }
 

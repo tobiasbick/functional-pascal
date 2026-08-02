@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 use std::fmt;
-use std::fs;
 
 use fpas_bytecode::Chunk;
 use fpas_parser::{Program, QualifiedId};
@@ -15,6 +14,7 @@ use fpas_unit::{
     load_sidecar, write_sidecar,
 };
 
+use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
 
 /// Incremental build failure.
@@ -98,15 +98,10 @@ pub fn build_library_units(
         })?;
         let dependencies = interfaces.direct_dependency_identities(node.direct_uses());
         let direct_interfaces = interfaces.direct_interfaces(node.direct_uses());
-        let source = fs::read(node.path()).map_err(|error| {
-            BuildError::new(format!(
-                "cannot read unit source `{}`: {error}",
-                node.path().display()
-            ))
-        })?;
+        let source = UnitSourceSnapshot::read(node)?;
         let expected = ExpectedUnitIdentity {
             unit_name: unit_name.clone(),
-            source_hash: Digest::of(&source),
+            source_hash: source.hash(),
             compiler_version: options.compiler_version.clone(),
             bytecode_version: options.bytecode_version,
             options_hash: options.options_hash,
@@ -134,8 +129,11 @@ pub fn build_library_units(
                 (payloads.0, payloads.1, interface_hash, object_hash)
             } else {
                 events.push(event(unit_name, BuildEventKind::Parsed));
+                let parsed = node
+                    .parse_source_snapshot(source.bytes())
+                    .map_err(BuildError::new)?;
                 let compiled = fpas_compiler::compile_unit_object_with_support(
-                    node.parsed_unit().map_err(BuildError::new)?,
+                    &parsed,
                     &direct_interfaces,
                     interfaces.all(),
                 )
@@ -165,6 +163,7 @@ pub fn build_library_units(
                     interface: interface_bytes,
                     object: object_bytes,
                 };
+                source.ensure_current(node)?;
                 write_sidecar(node.path(), &sidecar).map_err(|error| {
                     BuildError::new(format!(
                         "cannot publish compiled unit beside `{}`: {error}",

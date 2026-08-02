@@ -238,6 +238,75 @@ fn record_literal_field_names_are_case_insensitive() {
     );
 }
 
+fn duplicate_record_field_errors(source: &str) -> Vec<crate::SemaError> {
+    check_errors(source)
+        .into_iter()
+        .filter(|error| error.code == fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION)
+        .collect()
+}
+
+#[test]
+fn anonymous_record_literal_rejects_exact_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; var N: integer := record Value := 1; Value := 2; end; begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
+#[test]
+fn anonymous_record_literal_rejects_case_only_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; var N: integer := record Value := 1; value := 2; end; begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
+#[test]
+fn typed_record_literal_rejects_exact_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; \
+         type Point = record X: integer; Y: integer; end; \
+         var P: Point := record X := 1; X := 2; Y := 3; end; \
+         begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
+#[test]
+fn typed_record_literal_rejects_case_only_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; \
+         type Point = record X: integer; Y: integer; end; \
+         var P: Point := record X := 1; x := 2; Y := 3; end; \
+         begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
+#[test]
+fn record_update_rejects_exact_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; \
+         type Point = record X: integer; Y: integer; end; \
+         var P: Point := record X := 1; Y := 2; end; \
+         var Q: Point := P with X := 3; X := 4; end; \
+         begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
+#[test]
+fn record_update_rejects_case_only_duplicate_fields() {
+    let errors = duplicate_record_field_errors(
+        "program T; \
+         type Point = record X: integer; Y: integer; end; \
+         var P: Point := record X := 1; Y := 2; end; \
+         var Q: Point := P with X := 3; x := 4; end; \
+         begin end.",
+    );
+    assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:#?}");
+}
+
 #[test]
 fn record_duplicate_field_rejected() {
     let errors = check_errors(

@@ -22,8 +22,9 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errors.is_empty(), "{errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
+    let closures = metadata.closure_infos;
     assert_eq!(closures.len(), 2);
     assert!(
         closures.values().all(|info| info.captures.is_empty()),
@@ -52,8 +53,9 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errors.is_empty(), "{errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
+    let closures = metadata.closure_infos;
     assert_eq!(closures.len(), 1);
     assert!(
         closures.values().all(|info| info.captures.is_empty()),
@@ -80,8 +82,9 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errors.is_empty(), "{errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
+    let closures = metadata.closure_infos;
     assert_eq!(closures.len(), 1);
     let info = closures.values().next().expect("closure info");
     assert!(
@@ -117,14 +120,17 @@ end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
 
-    let (errors, _, _, _, _, closures, _, _, _, _, _, _, _) = analyze_with_types(&program);
+    let metadata = analyze_with_types(&program);
     assert!(
-        errors
+        metadata
+            .errors
             .iter()
             .any(|error| { error.code == fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE }),
-        "expected task-bound spawn error, got: {errors:#?}"
+        "expected task-bound spawn error, got: {:#?}",
+        metadata.errors
     );
-    let outer = closures
+    let outer = metadata
+        .closure_infos
         .values()
         .find(|info| {
             info.captures

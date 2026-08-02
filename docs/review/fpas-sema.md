@@ -1,7 +1,7 @@
 # `fpas-sema` review follow-up
 
 Classification: semantic analysis and internal API structure. Fixes should enforce existing case-insensitive names and pattern typing.
-Status: all findings open.
+Status: SEMA-01 through SEMA-04 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -13,3 +13,36 @@ Status: all findings open.
 ## Implementation notes
 
 Implement SEMA-01 before compiler work that relies on expression metadata. SEMA-03 and COMPILER-04 should be one refactor slice. Record `docs: unchanged` for internal corrections unless current user-facing docs make an incorrect claim.
+
+## Implementation record
+
+- SEMA-01 validates one case-insensitive binding signature for every label in an arm, reports
+  incompatible names or payload types, rejects duplicate data-enum bindings, and analyzes the
+  shared guard and body exactly once. Standard-library and TUI regression sources now use separate
+  arms when variants expose different bindings.
+- SEMA-02 routes anonymous literals, typed literals, and record updates through one
+  case-insensitive duplicate-field validator. Exact and case-only duplicates each produce one
+  duplicate-declaration diagnostic.
+- SEMA-03 replaces the thirteen-element tuple with documented `AnalysisMetadata` fields. All sema,
+  compiler, language-service, project, and unit-object consumers use the named structure; a
+  compiler regression populates every lowering map with a sentinel value.
+- SEMA-04 splits interface analysis, installation, export, conversion, and tests into focused
+  `interface/` modules. Record method collection and signature/body validation now live under
+  `records/`; every production file remains below 500 LOC.
+- The case-arm binding contract and duplicate record-field rules are documented under
+  `docs/pascal/language/`. No syntax was changed.
+
+## Verification
+
+- Baseline: `cargo test -p fpas-sema --locked` — passed: 353 tests plus doc tests.
+- `cargo test -p fpas-sema --locked` — passed: 365 tests plus doc tests.
+- `cargo doc -p fpas-sema --no-deps --locked` — passed.
+- `cargo test -p fpas-compiler --locked` — passed: 974 unit, 14 record-visibility, and 9
+  unit-object tests plus doc tests.
+- `cargo test -p fpas-cli --bin fpas main_tests::projects::check::check_cli_validates_library_project --locked` — passed.
+- `cargo test -p fpas-cli --bin fpas main_tests::test_suite::fpas_suite_stdlib_tui --locked` — passed: 58 FPAS tests.
+- `cargo fmt --all -- --check` and `fpas fmt --check` on every changed FPAS source — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked --quiet` — passed, including 378 CLI tests.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings` — passed.
+- Independent final audit found no remaining correctness, structure, API, documentation, or test-coverage blocker.

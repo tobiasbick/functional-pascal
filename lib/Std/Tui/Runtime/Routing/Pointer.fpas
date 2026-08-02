@@ -44,8 +44,8 @@ begin
     TuiPointerHit.ElementButton(Hit):
     begin
       return Hit.Id.Value = Button.Id.Value
-    end;
-    TuiPointerHit.Miss, TuiPointerHit.ImmediateButton(Id, Action), TuiPointerHit.Input(Input, Bounds), TuiPointerHit.TextArea(Id, Action, Text, Offset, Bounds), TuiPointerHit.CheckBox(Id, Action, Checked), TuiPointerHit.List(Id, Action, CurrentSelected, Proposed), TuiPointerHit.Scroll(Id):
+    end
+    else
     begin
       return false
     end

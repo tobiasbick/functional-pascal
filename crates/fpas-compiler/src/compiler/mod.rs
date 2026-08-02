@@ -7,9 +7,9 @@ use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::Chunk;
 use fpas_sema::{
-    BoundMethodMap, ClosureInfoMap, EventAssignedMap, EventRaiseMap, EventWriteMap, ExprTypeMap,
-    MethodCallMap, NestedRoutineCaptureMap, PropertyReadMap, PropertyWriteMap, RecordDefaultsMap,
-    ScalarCaseBindingMap,
+    AnalysisMetadata, BoundMethodMap, ClosureInfoMap, EventAssignedMap, EventRaiseMap,
+    EventWriteMap, ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, PropertyReadMap,
+    PropertyWriteMap, RecordDefaultsMap, ScalarCaseBindingMap,
 };
 
 mod binary_op;
@@ -118,21 +118,22 @@ fn canonical_name(name: &str) -> String {
 
 impl Compiler {
     /// Create a new compiler with the given sema results.
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        expr_types: ExprTypeMap,
-        method_calls: MethodCallMap,
-        record_defaults: RecordDefaultsMap,
-        scalar_case_bindings: ScalarCaseBindingMap,
-        closure_infos: ClosureInfoMap,
-        nested_routine_captures: NestedRoutineCaptureMap,
-        bound_methods: BoundMethodMap,
-        property_reads: PropertyReadMap,
-        property_writes: PropertyWriteMap,
-        event_writes: EventWriteMap,
-        event_assigned: EventAssignedMap,
-        event_raises: EventRaiseMap,
-    ) -> Self {
+    pub fn new(metadata: AnalysisMetadata) -> Self {
+        let AnalysisMetadata {
+            errors: _,
+            expr_types,
+            method_calls,
+            record_defaults,
+            scalar_case_bindings,
+            closure_infos,
+            nested_routine_captures,
+            bound_methods,
+            property_reads,
+            property_writes,
+            event_writes,
+            event_assigned,
+            event_raises,
+        } = metadata;
         Self {
             chunk: Chunk::new(),
             locals: Vec::new(),
@@ -177,5 +178,107 @@ impl Compiler {
 
     pub fn finish(self) -> Chunk {
         self.chunk
+    }
+}
+
+#[cfg(test)]
+mod metadata_tests {
+    use super::Compiler;
+    use fpas_sema::{
+        AnalysisMetadata, BoundMethodInfo, ClosureInfo, EventAssignedInfo, EventRaiseInfo,
+        EventWriteInfo, MethodCallTarget, NestedRoutineCaptureInfo, PropertyReadInfo,
+        PropertyWriteInfo, Ty,
+    };
+
+    #[test]
+    fn compiler_receives_every_lowering_metadata_map() {
+        let mut metadata = AnalysisMetadata::default();
+        metadata.expr_types.insert(1, Ty::Integer);
+        metadata
+            .method_calls
+            .insert(2, MethodCallTarget::Static("Record.Make".into()));
+        metadata.record_defaults.insert("Record".into(), Vec::new());
+        metadata.scalar_case_bindings.insert(4);
+        metadata.closure_infos.insert(
+            5,
+            ClosureInfo {
+                captures: Vec::new(),
+                task_bound: false,
+                synthetic_name: "Closure".into(),
+            },
+        );
+        metadata.nested_routine_captures.insert(
+            "Nested".into(),
+            NestedRoutineCaptureInfo {
+                captures: Vec::new(),
+                task_bound: false,
+            },
+        );
+        metadata.bound_methods.insert(
+            7,
+            BoundMethodInfo {
+                qualified_name: "Record.Method".into(),
+                visible_arity: 0,
+                receiver_part_count: 1,
+            },
+        );
+        metadata.property_reads.insert(
+            8,
+            vec![PropertyReadInfo {
+                getter_name: "Record.Get".into(),
+                receiver_part_count: 1,
+            }],
+        );
+        metadata.property_writes.insert(
+            9,
+            PropertyWriteInfo {
+                setter_name: "Record.Set".into(),
+                receiver_part_count: 1,
+                receiver_reads: Vec::new(),
+            },
+        );
+        metadata.event_writes.insert(
+            10,
+            EventWriteInfo {
+                setter_name: "Record.WriteEvent".into(),
+                receiver_part_count: 1,
+                receiver_reads: Vec::new(),
+                clear: false,
+            },
+        );
+        metadata.event_assigned.insert(
+            11,
+            EventAssignedInfo {
+                getter_name: "Record.ReadEvent".into(),
+                receiver_part_count: 1,
+                receiver_reads: Vec::new(),
+            },
+        );
+        metadata.event_raises.insert(
+            12,
+            EventRaiseInfo {
+                getter_name: "Record.ReadEvent".into(),
+                receiver_part_count: 1,
+                receiver_reads: Vec::new(),
+                arity: 1,
+            },
+        );
+
+        let compiler = Compiler::new(metadata);
+
+        assert!(
+            compiler.expr_types.contains_key(&1)
+                && compiler.method_calls.contains_key(&2)
+                && compiler.record_defaults.contains_key("Record")
+                && compiler.scalar_case_bindings.contains(&4)
+                && compiler.closure_infos.contains_key(&5)
+                && compiler.nested_routine_captures.contains_key("Nested")
+                && compiler.bound_methods.contains_key(&7)
+                && compiler.property_reads.contains_key(&8)
+                && compiler.property_writes.contains_key(&9)
+                && compiler.event_writes.contains_key(&10)
+                && compiler.event_assigned.contains_key(&11)
+                && compiler.event_raises.contains_key(&12)
+        );
     }
 }

@@ -158,6 +158,40 @@ pub type RecordDefaultsMap = HashMap<String, Vec<(String, Option<Expr>)>>;
 /// as scalar guard bindings instead of value labels.
 pub type ScalarCaseBindingMap = HashSet<usize>;
 
+/// Compiler-facing diagnostics and lowering metadata produced by semantic analysis.
+///
+/// All identity-keyed maps refer to nodes in the immutable AST passed to the analysis entry
+/// point and remain valid only while compiling or inspecting that same AST allocation.
+#[derive(Debug, Default)]
+pub struct AnalysisMetadata {
+    /// Semantic diagnostics. An empty collection means analysis succeeded.
+    pub errors: Vec<SemaError>,
+    /// Inferred expression types keyed by expression identity.
+    pub expr_types: ExprTypeMap,
+    /// Resolved record method calls keyed by expression or designator identity.
+    pub method_calls: MethodCallMap,
+    /// Named record defaults used while lowering record literals.
+    pub record_defaults: RecordDefaultsMap,
+    /// Scalar `case` labels interpreted as guard bindings.
+    pub scalar_case_bindings: ScalarCaseBindingMap,
+    /// Capture metadata for anonymous closures.
+    pub closure_infos: ClosureInfoMap,
+    /// Capture metadata for escaping named nested routines.
+    pub nested_routine_captures: NestedRoutineCaptureMap,
+    /// Bound instance-method values keyed by designator identity.
+    pub bound_methods: BoundMethodMap,
+    /// Property getter reads keyed by designator identity.
+    pub property_reads: PropertyReadMap,
+    /// Property setter assignments keyed by assignment-target identity.
+    pub property_writes: PropertyWriteMap,
+    /// Event setter assignments keyed by assignment-target identity.
+    pub event_writes: EventWriteMap,
+    /// `Assigned(event)` calls keyed by call-expression identity.
+    pub event_assigned: EventAssignedMap,
+    /// Event raise calls keyed by expression or designator identity.
+    pub event_raises: EventRaiseMap,
+}
+
 pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
@@ -244,39 +278,22 @@ impl Checker {
         }
     }
 
-    #[allow(clippy::type_complexity)]
-    pub fn finish(
-        self,
-    ) -> (
-        Vec<SemaError>,
-        ExprTypeMap,
-        MethodCallMap,
-        RecordDefaultsMap,
-        ScalarCaseBindingMap,
-        ClosureInfoMap,
-        NestedRoutineCaptureMap,
-        BoundMethodMap,
-        PropertyReadMap,
-        PropertyWriteMap,
-        EventWriteMap,
-        EventAssignedMap,
-        EventRaiseMap,
-    ) {
-        (
-            self.errors,
-            self.expr_types,
-            self.method_calls,
-            self.record_defaults,
-            self.scalar_case_bindings,
-            self.closure_infos,
-            self.nested_routine_captures,
-            self.bound_methods,
-            self.property_reads,
-            self.property_writes,
-            self.event_writes,
-            self.event_assigned,
-            self.event_raises,
-        )
+    pub fn finish(self) -> AnalysisMetadata {
+        AnalysisMetadata {
+            errors: self.errors,
+            expr_types: self.expr_types,
+            method_calls: self.method_calls,
+            record_defaults: self.record_defaults,
+            scalar_case_bindings: self.scalar_case_bindings,
+            closure_infos: self.closure_infos,
+            nested_routine_captures: self.nested_routine_captures,
+            bound_methods: self.bound_methods,
+            property_reads: self.property_reads,
+            property_writes: self.property_writes,
+            event_writes: self.event_writes,
+            event_assigned: self.event_assigned,
+            event_raises: self.event_raises,
+        }
     }
 
     /// Stable identity key for an AST expression node.

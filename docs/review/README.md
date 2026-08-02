@@ -49,7 +49,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 | `fpas-parser` | [fpas-parser.md](fpas-parser.md) | Done | all findings completed 2026-08-02 |
 | `fpas-program` | [fpas-program.md](fpas-program.md) | Done | all findings completed 2026-08-02 |
 | `fpas-project` | [fpas-project.md](fpas-project.md) | P1 | unit resolution and sidecar trust |
-| `fpas-sema` | [fpas-sema.md](fpas-sema.md) | P1 | ambiguous bindings |
+| `fpas-sema` | [fpas-sema.md](fpas-sema.md) | Done | all findings completed 2026-08-02 |
 | `fpas-std` | [fpas-std.md](fpas-std.md) | Done | all findings completed 2026-08-02 |
 | `fpas-unit` | [fpas-unit.md](fpas-unit.md) | Done | all findings completed 2026-08-02 |
 | `fpas-vm` | [fpas-vm.md](fpas-vm.md) | Done | all findings completed 2026-08-02 |

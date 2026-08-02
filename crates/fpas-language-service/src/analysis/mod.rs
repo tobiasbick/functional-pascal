@@ -81,7 +81,7 @@ pub(super) fn semantic_document(
     snapshot: Arc<DocumentSnapshot>,
     metadata: AnalysisMetadata,
 ) -> DocumentAnalysis {
-    let diagnostics = merged_diagnostics(&snapshot, metadata.0.iter().cloned()).into();
+    let diagnostics = merged_diagnostics(&snapshot, metadata.errors.iter().cloned()).into();
     let symbols = DocumentSymbols::from_snapshot(&snapshot);
     DocumentAnalysis {
         snapshot,

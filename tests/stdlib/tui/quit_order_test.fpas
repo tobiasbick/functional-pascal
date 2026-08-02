@@ -18,7 +18,16 @@ function UpdateQuit(State: QuitModel; Msg: TuiMsg; Cmd: TuiCmdOutput): QuitModel
 begin
   AssertTrue(Cmd.Read() = TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return record
+        LabelText := 'SHOULD NOT PAINT';
+        Quit := true;
+        Updates := State.Updates + 1;
+      end
+    end;
+    TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return record
@@ -34,8 +43,8 @@ begin
         Quit := false;
         Updates := State.Updates + 1;
       end
-    end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.Action(Source, Action), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset):
+    end
+    else
     begin
       return record
         LabelText := State.LabelText;

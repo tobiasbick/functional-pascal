@@ -14,28 +14,58 @@ begin
   begin
     return 0
   end;
+
   if Value > Maximum then
   begin
     return Maximum
   end;
+
   return Value
 end;
 
 function TuiRouteSubtreeEnd(Node: TuiElement; Index: integer): integer;
 begin
   mutable var Next: integer := Index + 1;
+  mutable var Descendants: array of TuiElement := [];
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
-      begin
-        Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
-      end
+      Descendants := Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
+    TuiElement.Row(Children, Spacing):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Column(Children, Spacing):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Panel(Title, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Overlay(Title, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      Descendants := Children
+    end
+    else
     begin
     end
   end;
+
+  for ChildIndex: integer := 0 to Std.Array.Length(Descendants) - 1 do
+  begin
+    Next := TuiRouteSubtreeEnd(Descendants[ChildIndex], Next)
+  end;
+
   return Next
 end;
 
@@ -47,6 +77,7 @@ function TuiRouteTarget(
   Key: Std.Console.KeyEvent
 ): option of TuiMsg;
 begin
+  mutable var Descendants: array of TuiElement := [];
   case Node of
     TuiElement.Button(Button):
     begin
@@ -62,6 +93,7 @@ begin
       begin
         return None
       end;
+
       return TuiRouteTextAreaKey(Id, Text, Caret, Offset, ChangeAction, Frame.EntryAt(Index).Bounds, Key)
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
@@ -70,10 +102,12 @@ begin
       begin
         return None
       end;
+
       if (Key.kind = Std.Console.KeyKind.Enter) or (Key.kind = Std.Console.KeyKind.Space) then
       begin
         return Some(TuiMsg.CheckChanged(Id, ChangeAction, not Checked))
       end;
+
       return None
     end;
     TuiElement.List(Id, Items, Selected, ChangeAction):
@@ -116,10 +150,12 @@ begin
       begin
         return None
       end;
+
       if NextSelected = Selected then
       begin
         return None
       end;
+
       return Some(TuiMsg.SelectionChanged(Id, ChangeAction, NextSelected))
     end;
     TuiElement.MenuBar(Items):
@@ -132,9 +168,11 @@ begin
           begin
             return Some(TuiMsg.Action(Items[ItemIndex].Id, Items[ItemIndex].Action))
           end;
+
           return None
         end
       end;
+
       return None
     end;
     TuiElement.Menu(Id, Nodes, State, ChangeAction):
@@ -146,9 +184,6 @@ begin
       for ItemIndex: integer := 0 to Std.Array.Length(Items) - 1 do
       begin
         case Items[ItemIndex] of
-          TuiStatusItem.Hint(Text), TuiStatusItem.KeyHint(KeyText, Text):
-          begin
-          end;
           TuiStatusItem.Command(Id, Text, Action, Enabled):
           begin
             if (Id.Value = Target.Value) and Enabled then
@@ -157,16 +192,20 @@ begin
               begin
                 return Some(TuiMsg.Action(Id, Action))
               end;
+
               return None
             end
           end
+          else
+          begin
+          end
         end
       end;
+
       return None
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
-      mutable var Next: integer := Index + 1;
       if Id.Value = Target.Value then
       begin
         mutable var Content: TuiSize := TuiSize.Create(0, 0);
@@ -181,6 +220,7 @@ begin
         begin
           MaximumX := 0
         end;
+
         if MaximumY < 0 then
         begin
           MaximumY := 0
@@ -222,50 +262,63 @@ begin
         begin
           return None
         end;
+
         if (NextOffset.X = Offset.X) and (NextOffset.Y = Offset.Y) then
         begin
           return None
         end;
+
         return Some(TuiMsg.ScrollChanged(Id, ChangeAction, NextOffset))
       end;
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
-      begin
-        case TuiRouteTarget(Frame, Children[ChildIndex], Next, Target, Key) of
-          Some(Msg):
-          begin
-            return Some(Msg)
-          end;
-          None:
-          begin
-          end
-        end;
-        Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
-      end;
-      return None
+
+      Descendants := Children
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Row(Children, Spacing):
     begin
-      mutable var Next: integer := Index + 1;
-      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
-      begin
-        case TuiRouteTarget(Frame, Children[ChildIndex], Next, Target, Key) of
-          Some(Msg):
-          begin
-            return Some(Msg)
-          end;
-          None:
-          begin
-          end
-        end;
-        Next := TuiRouteSubtreeEnd(Children[ChildIndex], Next)
-      end;
-      return None
+      Descendants := Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
+    TuiElement.Column(Children, Spacing):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Panel(Title, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Overlay(Title, Children):
+    begin
+      Descendants := Children
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      Descendants := Children
+    end
+    else
     begin
       return None
     end
-  end
+  end;
+  mutable var Next: integer := Index + 1;
+  for ChildIndex: integer := 0 to Std.Array.Length(Descendants) - 1 do
+  begin
+    case TuiRouteTarget(Frame, Descendants[ChildIndex], Next, Target, Key) of
+      Some(Msg):
+      begin
+        return Some(Msg)
+      end;
+      None:
+      begin
+      end
+    end;
+
+    Next := TuiRouteSubtreeEnd(Descendants[ChildIndex], Next)
+  end;
+
+  return None
 end;
 
 /// Routes one key against the previous rendered tree into ordered framework messages.
@@ -282,10 +335,12 @@ begin
     begin
     end
   end;
+
   if Key.kind = Std.Console.KeyKind.Escape then
   begin
     return [TuiMsg.QuitRequested]
   end;
+
   case TuiRouteButtonMnemonicKey(Root, Key) of
     Some(Messages):
     begin
@@ -321,6 +376,7 @@ begin
   begin
     Std.Array.Push(Routed, TuiMsg.FocusChanged(Previous, Some(Target)))
   end;
+
   if Key.kind = Std.Console.KeyKind.Tab then
   begin
     if CurrentIndex >= 0 then
@@ -340,8 +396,10 @@ begin
     begin
       NextIndex := 0
     end;
+
     return [TuiMsg.FocusChanged(Previous, Some(Controls[NextIndex]))]
   end;
+
   case TuiRouteButtonFocusNavigation(Root, Previous, Key) of
     Some(Messages):
     begin
@@ -351,6 +409,7 @@ begin
     begin
     end
   end;
+
   case TuiRouteTarget(Frame, Root, 0, Target, Key) of
     Some(Msg):
     begin
@@ -371,8 +430,10 @@ begin
           end
         end
       end;
+
       Std.Array.Push(Routed, TuiMsg.Key(Key))
     end
   end;
+
   return Routed
 end;

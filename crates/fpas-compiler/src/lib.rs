@@ -44,38 +44,11 @@ pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
 ///
 /// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
 pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
-    let (
-        sema_errors,
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    ) = fpas_sema::analyze_with_types(program);
-    if !sema_errors.is_empty() {
-        return Err(sema_errors);
+    let metadata = fpas_sema::analyze_with_types(program);
+    if !metadata.errors.is_empty() {
+        return Err(metadata.errors);
     }
-    let mut compiler = Compiler::new(
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    );
+    let mut compiler = Compiler::new(metadata);
     match compiler.compile_program(program) {
         Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),
         Err(e) => Err(vec![e]),

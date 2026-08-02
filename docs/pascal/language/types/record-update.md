@@ -44,6 +44,8 @@ var
 ```
 
 Unknown field names and type mismatches in override values are compile-time errors.
+Each field may be overridden at most once per `with` expression. Field names
+are case-insensitive, so `X` and `x` count as duplicate overrides.
 
 ## See also
 

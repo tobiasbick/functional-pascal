@@ -62,8 +62,8 @@ begin
     TuiMsg.Key(Key):
     begin
       return PushEvent(State, 'key', ResetOk)
-    end;
-    TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size), TuiMsg.TextChanged(Source, Action, Text, Caret), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
+    end
+    else
     begin
       return State
     end

@@ -56,7 +56,11 @@ begin
     begin
       return Some(Button.Id)
     end;
-    TuiButtonPressState.Idle, TuiButtonPressState.Captured(Button, Inside):
+    TuiButtonPressState.Idle:
+    begin
+      return None
+    end;
+    TuiButtonPressState.Captured(Button, Inside):
     begin
       return None
     end

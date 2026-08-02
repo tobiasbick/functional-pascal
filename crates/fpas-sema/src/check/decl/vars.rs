@@ -76,24 +76,19 @@ impl Checker {
         record_ty: &crate::types::RecordTy,
         span: fpas_lexer::Span,
     ) {
+        self.validate_unique_record_fields(fields, "record literal");
+        self.validate_typed_record_literal_fields(fields, record_ty, span);
+    }
+
+    fn validate_typed_record_literal_fields(
+        &mut self,
+        fields: &[FieldInit],
+        record_ty: &crate::types::RecordTy,
+        span: fpas_lexer::Span,
+    ) {
         let construction_rejected = self.reject_private_record_construction(record_ty, span);
 
-        // Check each provided field.
-        let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
         for field_init in fields {
-            // Duplicate field in literal.
-            if !seen_names.insert(field_init.name.clone()) {
-                self.error_with_code(
-                    SEMA_DUPLICATE_DECLARATION,
-                    format!(
-                        "Field `{}` is specified more than once in record literal",
-                        field_init.name
-                    ),
-                    format!("Remove the duplicate `{} := …` entry.", field_init.name),
-                    span,
-                );
-            }
-
             if let Some((_, field_ty)) = record_ty
                 .fields
                 .iter()
@@ -214,7 +209,7 @@ impl Checker {
                 },
                 Ty::Record(record_ty),
             ) => {
-                self.validate_typed_record_literal(fields, record_ty, *lit_span);
+                self.validate_typed_record_literal_fields(fields, record_ty, *lit_span);
                 let key = Self::expr_lookup_key(expr);
                 self.expr_types.insert(key, Ty::Record(record_ty.clone()));
             }

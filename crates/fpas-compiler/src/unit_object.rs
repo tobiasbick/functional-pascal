@@ -39,23 +39,8 @@ pub fn compile_unit_object_with_support(
                     unit.span.column,
                 )]
             })?;
-    let (
-        sema_errors,
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    ) = analysis.metadata;
-    if !sema_errors.is_empty() {
-        return Err(sema_errors);
+    if !analysis.metadata.errors.is_empty() {
+        return Err(analysis.metadata.errors);
     }
     let Some(interface) = analysis.interface else {
         return Err(vec![internal_compiler_error(
@@ -66,20 +51,7 @@ pub fn compile_unit_object_with_support(
         )]);
     };
 
-    let mut compiler = Compiler::new(
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    );
+    let mut compiler = Compiler::new(analysis.metadata);
     compiler
         .compile_unit(unit, interfaces)
         .map_err(|error| vec![error])?;
@@ -136,38 +108,10 @@ pub fn compile_program_object_with_support(
             program.span.column,
         )]
     })?;
-    let (
-        sema_errors,
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    ) = metadata;
-    if !sema_errors.is_empty() {
-        return Err(sema_errors);
+    if !metadata.errors.is_empty() {
+        return Err(metadata.errors);
     }
-    let mut compiler = Compiler::new(
-        expr_types,
-        method_calls,
-        record_defaults,
-        scalar_case_bindings,
-        closure_infos,
-        nested_routine_captures,
-        bound_methods,
-        property_reads,
-        property_writes,
-        event_writes,
-        event_assigned,
-        event_raises,
-    );
+    let mut compiler = Compiler::new(metadata);
     compiler
         .compile_program_with_interfaces(program, interfaces)
         .map_err(|error| vec![error])?;

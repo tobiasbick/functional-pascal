@@ -15,6 +15,7 @@ begin
   begin
     return Left
   end;
+
   return Right
 end;
 
@@ -24,6 +25,7 @@ begin
   begin
     return Maximum
   end;
+
   return Value
 end;
 
@@ -33,8 +35,8 @@ begin
     TuiElement.Empty:
     begin
       return false
-    end;
-    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    end
+    else
     begin
       return true
     end
@@ -47,6 +49,7 @@ begin
   begin
     return Measured.Preferred.Width
   end;
+
   return Measured.Preferred.Height
 end;
 
@@ -56,6 +59,7 @@ begin
   begin
     return Measured.Minimum.Width
   end;
+
   return Measured.Minimum.Height
 end;
 
@@ -72,6 +76,7 @@ begin
       begin
         return 1
       end;
+
       return 0
     end;
     TuiElement.Layout(Settings, Children):
@@ -100,22 +105,27 @@ begin
           end
         end
       end;
+
       if Settings.Stretch > 0 then
       begin
         return Settings.Stretch
       end;
+
       if Horizontal then
       begin
         if Settings.SizePolicy.Horizontal = TuiSizePolicyKind.Expanding then
         begin
           return 1
         end;
+
         return 0
       end;
+
       if Settings.SizePolicy.Vertical = TuiSizePolicyKind.Expanding then
       begin
         return 1
       end;
+
       return 0
     end
     else
@@ -133,10 +143,12 @@ begin
   begin
     Width := 0
   end;
+
   if Height < 0 then
   begin
     Height := 0
   end;
+
   return TuiRect.Create(Outer.X + Margins.Left, Outer.Y + Margins.Top, Width, Height)
 end;
 
@@ -152,10 +164,12 @@ begin
   begin
     MaximumWidth := Available.Width
   end;
+
   if (Policy.Vertical = TuiSizePolicyKind.Expanding) and (MaximumHeight < Available.Height) then
   begin
     MaximumHeight := Available.Height
   end;
+
   return TuiMeasureResult.Create(Measured.Minimum, Measured.Preferred, TuiSize.Create(MaximumWidth, MaximumHeight))
 end;
 
@@ -166,7 +180,11 @@ begin
   var Index: integer := Std.Array.Length(TuiArrangeBuilding);
   mutable var Entries: array of TuiArrangedEntry := TuiArrangeBuilding;
   TuiArrangeBuilding := [];
-  Std.Array.Push(Entries, record ParentIndex := ParentIndex; Bounds := NodeBounds; Clip := Clip; end);
+  Std.Array.Push(Entries, record
+    ParentIndex := ParentIndex;
+    Bounds := NodeBounds;
+    Clip := Clip;
+  end);
   TuiArrangeBuilding := Entries;
   return Index
 end;
@@ -224,6 +242,7 @@ begin
   begin
     AvailableForItems := 0
   end;
+
   if AvailableForItems >= MinimumTotal then
   begin
     mutable var Remaining: integer := AvailableForItems - MinimumTotal;
@@ -242,6 +261,7 @@ begin
         end
       end
     end;
+
     Progress := true;
     while (Remaining > 0) and Progress do
     begin
@@ -282,6 +302,7 @@ begin
       begin
         EmptyBounds := TuiRect.Create(CrossOrigin, MainCursor, 0, 0)
       end;
+
       ArrangeNode(Children[Index], EmptyBounds, Clip, Parent)
     end
     else
@@ -290,6 +311,7 @@ begin
       begin
         MainCursor := MainCursor + Spacing
       end;
+
       ParticipatingSeen := ParticipatingSeen + 1;
       var MainSize: integer := Assigned[Index];
       mutable var ChildBounds: TuiRect := TuiRect.Create(MainCursor, CrossOrigin, MainSize, AvailableCross);
@@ -297,6 +319,7 @@ begin
       begin
         ChildBounds := TuiRect.Create(CrossOrigin, MainCursor, AvailableCross, MainSize)
       end;
+
       ArrangeNode(Children[Index], ChildBounds, Clip, Parent);
       MainCursor := MainCursor + MainSize
     end
@@ -306,9 +329,6 @@ begin
   var Clip: TuiRect := NodeBounds.Intersect(ParentClip);
   var SelfIndex: integer := TuiArrangePushEntry(ParentIndex, NodeBounds, Clip);
   case Node of
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
-    begin
-    end;
     TuiElement.Row(Children, Spacing):
     begin
       ArrangeRowColumn(true, Children, Spacing, NodeBounds, Clip, SelfIndex)
@@ -338,6 +358,7 @@ begin
         begin
           MaximumX := 0
         end;
+
         if MaximumY < 0 then
         begin
           MaximumY := 0
@@ -372,6 +393,9 @@ begin
           end
         end
       end
+    end
+    else
+    begin
     end
   end
 end;

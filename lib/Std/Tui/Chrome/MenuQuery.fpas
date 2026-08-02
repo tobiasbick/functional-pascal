@@ -7,7 +7,15 @@ uses Std.Array, Std.Option, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuNode, 
 public function TuiMenuNodeIdOf(Node: TuiMenuNode): TuiMenuNodeId;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled), TuiMenuNode.Separator(Id, Parent):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return Id
+    end;
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    begin
+      return Id
+    end;
+    TuiMenuNode.Separator(Id, Parent):
     begin
       return Id
     end
@@ -19,7 +27,15 @@ end;
 public function TuiMenuNodeParent(Node: TuiMenuNode): option of TuiMenuNodeId;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled), TuiMenuNode.Separator(Id, Parent):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return Parent
+    end;
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    begin
+      return Parent
+    end;
+    TuiMenuNode.Separator(Id, Parent):
     begin
       return Parent
     end
@@ -31,7 +47,11 @@ end;
 public function TuiMenuNodeText(Node: TuiMenuNode): string;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return Text
+    end;
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
     begin
       return Text
     end;
@@ -47,7 +67,11 @@ end;
 public function TuiMenuNodeMnemonic(Node: TuiMenuNode): string;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return Mnemonic
+    end;
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
     begin
       return Mnemonic
     end;
@@ -63,7 +87,11 @@ end;
 public function TuiMenuNodeSelectable(Node: TuiMenuNode): boolean;
 begin
   case Node of
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return Enabled
+    end;
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
     begin
       return Enabled
     end;
@@ -83,7 +111,11 @@ begin
     begin
       return true
     end;
-    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut), TuiMenuNode.Separator(Id, Parent):
+    TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, Enabled, Shortcut):
+    begin
+      return false
+    end;
+    TuiMenuNode.Separator(Id, Parent):
     begin
       return false
     end
@@ -99,7 +131,11 @@ begin
     begin
       return Some(Action)
     end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled), TuiMenuNode.Separator(Id, Parent):
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    begin
+      return None
+    end;
+    TuiMenuNode.Separator(Id, Parent):
     begin
       return None
     end
@@ -115,7 +151,11 @@ begin
     begin
       return Shortcut
     end;
-    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled), TuiMenuNode.Separator(Id, Parent):
+    TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, Enabled):
+    begin
+      return None
+    end;
+    TuiMenuNode.Separator(Id, Parent):
     begin
       return None
     end
@@ -133,6 +173,7 @@ begin
       return Index
     end
   end;
+
   return -1
 end;
 
@@ -181,6 +222,7 @@ begin
       return Some(TuiMenuNodeIdOf(Nodes[Index]))
     end
   end;
+
   return None
 end;
 
@@ -206,6 +248,7 @@ begin
       Std.Array.Push(Siblings, TuiMenuNodeIdOf(Nodes[Index]))
     end
   end;
+
   if Std.Array.Length(Siblings) = 0 then
   begin
     return None
@@ -218,6 +261,7 @@ begin
       Position := Index
     end
   end;
+
   Position := Position + Direction;
   if Position < 0 then
   begin
@@ -227,6 +271,7 @@ begin
   begin
     Position := 0
   end;
+
   return Some(Siblings[Position])
 end;
 
@@ -244,6 +289,7 @@ begin
     begin
       return None
     end;
+
     case TuiMenuNodeParent(Nodes[Index]) of
       Some(Parent):
       begin
@@ -255,5 +301,6 @@ begin
       end
     end
   end;
+
   return None
 end;

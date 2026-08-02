@@ -13,6 +13,7 @@ begin
       return true
     end
   end;
+
   return false
 end;
 
@@ -35,11 +36,35 @@ end;
 function TuiElementChildren(Node: TuiElement): array of TuiElement;
 begin
   case Node of
-    TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    TuiElement.Scroll(Id, Offset, ChangeAction, Children):
     begin
       return Children
     end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
+    TuiElement.Row(Children, Spacing):
+    begin
+      return Children
+    end;
+    TuiElement.Column(Children, Spacing):
+    begin
+      return Children
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      return Children
+    end;
+    TuiElement.Panel(Title, Children):
+    begin
+      return Children
+    end;
+    TuiElement.Overlay(Title, Children):
+    begin
+      return Children
+    end;
+    TuiElement.Desktop(Focused, Children):
+    begin
+      return Children
+    end
+    else
     begin
       return []
     end
@@ -58,11 +83,13 @@ begin
       begin
         panic('Tui button mnemonic must be empty or one character')
       end;
+
       if (Button.Mnemonic <> '') and
          not Std.Str.Contains(Std.Str.ToLower(Button.Text), Std.Str.ToLower(Button.Mnemonic)) then
       begin
         panic('Tui button mnemonic must occur in its text')
       end;
+
       Std.Array.Push(Seen, Button.Id.Value)
     end;
     TuiElement.Input(Input):
@@ -73,6 +100,7 @@ begin
       begin
         panic('Tui input caret must be within its text')
       end;
+
       Std.Array.Push(Seen, Input.Id.Value)
     end;
     TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction):
@@ -83,10 +111,12 @@ begin
       begin
         panic('Tui text area caret must be within its text')
       end;
+
       if (Offset.X < 0) or (Offset.Y < 0) then
       begin
         panic('Tui text area offset must not be negative')
       end;
+
       Std.Array.Push(Seen, Id.Value)
     end;
     TuiElement.CheckBox(Id, Text, Checked, ChangeAction):
@@ -111,6 +141,7 @@ begin
       begin
         panic('Tui list selection must be within its items')
       end;
+
       Std.Array.Push(Seen, Id.Value)
     end;
     TuiElement.Scroll(Id, Offset, ChangeAction, Children):
@@ -121,10 +152,12 @@ begin
       begin
         panic('Tui scroll offset must not be negative')
       end;
+
       if Std.Array.Length(Children) <> 1 then
       begin
         panic('Tui scroll wrappers require exactly one child')
       end;
+
       Std.Array.Push(Seen, Id.Value)
     end;
     TuiElement.MenuBar(Items):
@@ -138,6 +171,7 @@ begin
           panic('Tui control id must be unique in one tree: ' +
                 Std.Conv.IntToStr(Items[Index].Id.Value))
         end;
+
         Std.Array.Push(Seen, Items[Index].Id.Value)
       end
     end;
@@ -154,6 +188,7 @@ begin
       begin
         panic('Tui gauge maximum must be positive')
       end;
+
       if (Gauge.Value < 0) or (Gauge.Value > Gauge.Maximum) then
       begin
         panic('Tui gauge value must be between zero and its maximum')
@@ -164,9 +199,6 @@ begin
       for Index: integer := 0 to Std.Array.Length(Items) - 1 do
       begin
         case Items[Index] of
-          TuiStatusItem.Hint(Text), TuiStatusItem.KeyHint(KeyText, Text):
-          begin
-          end;
           TuiStatusItem.Command(Id, Text, Action, Enabled):
           begin
             TuiElementValidateControl(Id);
@@ -175,7 +207,11 @@ begin
             begin
               panic('Tui control id must be unique in one tree: ' + Std.Conv.IntToStr(Id.Value))
             end;
+
             Std.Array.Push(Seen, Id.Value)
+          end
+          else
+          begin
           end
         end
       end
@@ -193,8 +229,8 @@ begin
       begin
         panic('Tui layout wrappers require exactly one child')
       end
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    end
+    else
     begin
     end
   end;
@@ -208,9 +244,11 @@ begin
       begin
         panic('Tui control id must be unique in one tree: ' + Std.Conv.IntToStr(ChildIds[IdIndex]))
       end;
+
       Std.Array.Push(Seen, ChildIds[IdIndex])
     end
   end;
+
   case Node of
     TuiElement.Desktop(Focused, DesktopChildren):
     begin
@@ -227,11 +265,12 @@ begin
         begin
         end
       end
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Panel(Title, PanelChildren), TuiElement.Overlay(OverlayTitle, OverlayChildren):
+    end
+    else
     begin
     end
   end;
+
   return Seen
 end;
 

@@ -92,10 +92,10 @@ include = ["src/**/*.fpas"]
         )
         .expect("interface installation");
         assert!(
-            analysis.metadata.0.is_empty(),
+            analysis.metadata.errors.is_empty(),
             "{} diagnostics: {:#?}",
             node.display_name(),
-            analysis.metadata.0
+            analysis.metadata.errors
         );
         interfaces.insert(
             unit_name.clone(),

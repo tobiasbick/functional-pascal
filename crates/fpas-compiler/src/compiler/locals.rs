@@ -228,27 +228,10 @@ mod tests {
     use super::*;
     use fpas_bytecode::SourceLocation;
     use fpas_diagnostics::codes::COMPILE_BYTECODE_OPERAND_OVERFLOW;
-    use fpas_sema::{
-        BoundMethodMap, ClosureInfoMap, EventAssignedMap, EventRaiseMap, EventWriteMap,
-        ExprTypeMap, MethodCallMap, NestedRoutineCaptureMap, PropertyReadMap, PropertyWriteMap,
-        RecordDefaultsMap, ScalarCaseBindingMap,
-    };
+    use fpas_sema::AnalysisMetadata;
 
     fn empty_compiler() -> Compiler {
-        Compiler::new(
-            ExprTypeMap::default(),
-            MethodCallMap::default(),
-            RecordDefaultsMap::default(),
-            ScalarCaseBindingMap::default(),
-            ClosureInfoMap::default(),
-            NestedRoutineCaptureMap::default(),
-            BoundMethodMap::default(),
-            PropertyReadMap::default(),
-            PropertyWriteMap::default(),
-            EventWriteMap::default(),
-            EventAssignedMap::default(),
-            EventRaiseMap::default(),
-        )
+        Compiler::new(AnalysisMetadata::default())
     }
 
     #[test]

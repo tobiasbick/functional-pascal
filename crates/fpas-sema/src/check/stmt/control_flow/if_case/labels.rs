@@ -1,8 +1,9 @@
 use super::Checker;
-use crate::scope::SymbolKind;
+use crate::scope::{SymbolKind, canonical_symbol_name};
 use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::{
-    SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_NON_BOOLEAN_CONDITION, SEMA_TYPE_MISMATCH,
+    SEMA_DUPLICATE_DECLARATION, SEMA_ENUM_FIELD_COUNT_MISMATCH, SEMA_NON_BOOLEAN_CONDITION,
+    SEMA_TYPE_MISMATCH,
 };
 use fpas_lexer::Span;
 use fpas_parser::{CaseLabel, Designator, DesignatorPart, DestructureVariant, Expr};
@@ -87,7 +88,22 @@ impl Checker {
         case_ty: &Ty,
         expr: &Expr,
     ) -> Vec<(String, Ty)> {
-        self.collect_enum_pattern_bindings(case_ty, expr, false)
+        let bindings = self.collect_enum_pattern_bindings(case_ty, expr, false);
+        let mut unique = Vec::with_capacity(bindings.len());
+        let mut seen = std::collections::HashSet::new();
+        for (name, ty) in bindings {
+            if seen.insert(canonical_symbol_name(&name)) {
+                unique.push((name, ty));
+            } else {
+                self.error_with_code(
+                    SEMA_DUPLICATE_DECLARATION,
+                    format!("Pattern binding `{name}` is declared more than once"),
+                    "Use a distinct binding name for each enum field.",
+                    expr.span(),
+                );
+            }
+        }
+        unique
     }
 
     fn collect_enum_pattern_bindings(

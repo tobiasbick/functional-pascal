@@ -21,6 +21,7 @@ mod std_registry;
 mod std_units;
 mod types;
 
+pub use check::AnalysisMetadata;
 pub use check::BoundMethodInfo;
 pub use check::BoundMethodMap;
 pub use check::CaptureBinding;
@@ -45,9 +46,9 @@ pub use check::RecordDefaultsMap;
 pub use check::ScalarCaseBindingMap;
 pub use error::SemaError;
 pub use interface::{
-    AnalysisMetadata, InterfaceConversionError, UnitAnalysis,
-    analyze_program_with_interface_support, analyze_program_with_interfaces, analyze_unit,
-    analyze_unit_with_interface_support, interface_type_to_ty, ty_to_interface_type,
+    InterfaceConversionError, UnitAnalysis, analyze_program_with_interface_support,
+    analyze_program_with_interfaces, analyze_unit, analyze_unit_with_interface_support,
+    interface_type_to_ty, ty_to_interface_type,
 };
 pub use types::Ty;
 
@@ -56,29 +57,12 @@ use fpas_parser::Program;
 /// Run semantic analysis on a parsed program.
 /// Returns a list of diagnostics (may be empty on success).
 pub fn analyze(program: &Program) -> Vec<SemaError> {
-    analyze_with_types(program).0
+    analyze_with_types(program).errors
 }
 
 /// Like [`analyze`], but also returns the inferred type of every expression (by source key)
 /// and the map of record type defaults used by the compiler for default field expansion.
-#[allow(clippy::type_complexity)]
-pub fn analyze_with_types(
-    program: &Program,
-) -> (
-    Vec<SemaError>,
-    ExprTypeMap,
-    MethodCallMap,
-    RecordDefaultsMap,
-    ScalarCaseBindingMap,
-    ClosureInfoMap,
-    NestedRoutineCaptureMap,
-    BoundMethodMap,
-    PropertyReadMap,
-    PropertyWriteMap,
-    EventWriteMap,
-    EventAssignedMap,
-    EventRaiseMap,
-) {
+pub fn analyze_with_types(program: &Program) -> AnalysisMetadata {
     let mut checker = check::Checker::new();
     checker.check_program(program);
     checker.finish()
@@ -105,7 +89,8 @@ pub fn postfix_operation_lookup_key(op: &fpas_parser::PostfixOperation) -> usize
     check::Checker::postfix_operation_lookup_key(op)
 }
 
-/// Stable key for call-statement method resolution (address of the call's [`Designator`] in the AST).
+/// Stable key for call-statement method resolution (address of the call's
+/// [`Designator`](fpas_parser::Designator) in the AST).
 ///
 /// **Documentation:** `docs/pascal/language/functions/README.md` (record method calls; from the repository root).
 #[must_use]

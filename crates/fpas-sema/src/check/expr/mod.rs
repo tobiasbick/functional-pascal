@@ -10,6 +10,7 @@ mod designator;
 mod event_access;
 mod operators;
 mod postfix;
+mod record_fields;
 
 use super::Checker;
 use crate::scope::SymbolKind;
@@ -205,6 +206,7 @@ impl Checker {
     }
 
     fn check_record_literal(&mut self, fields: &[FieldInit]) -> Ty {
+        self.validate_unique_record_fields(fields, "record literal");
         let field_types = fields
             .iter()
             .map(|field| (field.name.clone(), self.check_expr(&field.value)))
@@ -237,6 +239,7 @@ impl Checker {
         span: fpas_lexer::Span,
     ) -> Ty {
         let base_ty = self.check_expr(base);
+        self.validate_unique_record_fields(fields, "record update");
         let resolved = self.resolve_visible_type(&base_ty);
 
         let record_ty = match resolved {

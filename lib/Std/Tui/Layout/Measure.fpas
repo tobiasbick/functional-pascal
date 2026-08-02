@@ -30,6 +30,7 @@ begin
       end
     end
   end;
+
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
@@ -75,6 +76,7 @@ begin
   begin
     Width := (Width + Std.Console.DisplayWidth(Items[Index].Text)) + 2
   end;
+
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
@@ -87,8 +89,13 @@ begin
     begin
       Width := Width + 1
     end;
+
     case Items[Index] of
-      TuiStatusItem.Hint(Text), TuiStatusItem.Command(Id, Text, Action, Enabled):
+      TuiStatusItem.Hint(Text):
+      begin
+        Width := Width + Std.Console.DisplayWidth(Text)
+      end;
+      TuiStatusItem.Command(Id, Text, Action, Enabled):
       begin
         Width := Width + Std.Console.DisplayWidth(Text)
       end;
@@ -98,6 +105,7 @@ begin
       end
     end
   end;
+
   return TuiMeasureResult.Fixed(TuiSize.Create(Width, 1))
 end;
 
@@ -109,12 +117,15 @@ begin
     begin
       return TuiMeasureResult.Create(TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(Value.MinimumExtent, 0), TuiSize.Create(TuiMeasureExpandingMaximum, 0))
     end;
+
     return TuiMeasureResult.Fixed(TuiSize.Create(Value.MinimumExtent, 0))
   end;
+
   if Value.Kind = TuiSpacerKind.Expanding then
   begin
     return TuiMeasureResult.Create(TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, Value.MinimumExtent), TuiSize.Create(0, TuiMeasureExpandingMaximum))
   end;
+
   return TuiMeasureResult.Fixed(TuiSize.Create(0, Value.MinimumExtent))
 end;
 
@@ -131,31 +142,38 @@ begin
     MinimumWidth := PreferredWidth;
     MaximumWidth := PreferredWidth
   end;
+
   if Policy.Horizontal = TuiSizePolicyKind.Minimum then
   begin
     MinimumWidth := PreferredWidth
   end;
+
   if Policy.Horizontal = TuiSizePolicyKind.Maximum then
   begin
     MaximumWidth := PreferredWidth
   end;
+
   if Policy.Horizontal = TuiSizePolicyKind.Expanding then
   begin
     MaximumWidth := TuiMeasureExpandingMaximum
   end;
+
   if Policy.Vertical = TuiSizePolicyKind.Fixed then
   begin
     MinimumHeight := PreferredHeight;
     MaximumHeight := PreferredHeight
   end;
+
   if Policy.Vertical = TuiSizePolicyKind.Minimum then
   begin
     MinimumHeight := PreferredHeight
   end;
+
   if Policy.Vertical = TuiSizePolicyKind.Maximum then
   begin
     MaximumHeight := PreferredHeight
   end;
+
   if Policy.Vertical = TuiSizePolicyKind.Expanding then
   begin
     MaximumHeight := TuiMeasureExpandingMaximum
@@ -171,8 +189,8 @@ begin
     TuiElement.Empty:
     begin
       return false
-    end;
-    TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, Children), TuiElement.MenuBar(Items), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Spacer(Value), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children), TuiElement.Desktop(Focused, Children):
+    end
+    else
     begin
       return true
     end
@@ -220,6 +238,7 @@ begin
         var Preferred: TuiSize := TuiSize.Create(TuiMeasureAxis.Max(1, Child.Preferred.Width), TuiMeasureAxis.Max(1, Child.Preferred.Height));
         return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(1, 1), Preferred, TuiSize.Create(TuiMeasureExpandingMaximum, TuiMeasureExpandingMaximum)), TuiSizePolicy.Expanding(), Spec)
       end;
+
       return TuiMeasureResult.Fixed(TuiSize.Create(0, 0))
     end;
     TuiElement.MenuBar(Items):
@@ -273,6 +292,7 @@ begin
             PreferredMain := TuiMeasureAxis.Add(PreferredMain, Spacing);
             MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing)
           end;
+
           MinimumMain := TuiMeasureAxis.Add(MinimumMain, Measured.Minimum.Width);
           PreferredMain := TuiMeasureAxis.Add(PreferredMain, Measured.Preferred.Width);
           MaximumMain := TuiMeasureAxis.Add(MaximumMain, Measured.Maximum.Width);
@@ -282,6 +302,7 @@ begin
           VisibleCount := VisibleCount + 1
         end
       end;
+
       return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumMain, MinimumCross), TuiSize.Create(PreferredMain, PreferredCross), TuiSize.Create(MaximumMain, MaximumCross)), TuiSizePolicy.Preferred(), Spec)
     end;
     TuiElement.Column(Children, Spacing):
@@ -304,6 +325,7 @@ begin
             PreferredMain := TuiMeasureAxis.Add(PreferredMain, Spacing);
             MaximumMain := TuiMeasureAxis.Add(MaximumMain, Spacing)
           end;
+
           MinimumMain := TuiMeasureAxis.Add(MinimumMain, Measured.Minimum.Height);
           PreferredMain := TuiMeasureAxis.Add(PreferredMain, Measured.Preferred.Height);
           MaximumMain := TuiMeasureAxis.Add(MaximumMain, Measured.Maximum.Height);
@@ -313,6 +335,7 @@ begin
           VisibleCount := VisibleCount + 1
         end
       end;
+
       return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumCross, MinimumMain), TuiSize.Create(PreferredCross, PreferredMain), TuiSize.Create(MaximumCross, MaximumMain)), TuiSizePolicy.Preferred(), Spec)
     end;
     TuiElement.Layout(Settings, Children):
@@ -339,6 +362,7 @@ begin
         begin
         end
       end;
+
       case Settings.Height of
         Some(Height):
         begin
@@ -348,6 +372,7 @@ begin
         begin
         end
       end;
+
       return Hint
     end;
     TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
@@ -402,6 +427,7 @@ begin
           MaximumHeight := TuiMeasureAxis.Max(MaximumHeight, Measured.Maximum.Height)
         end
       end;
+
       return TuiMeasureApplyPolicy(TuiMeasureResult.Create(TuiSize.Create(MinimumWidth, MinimumHeight), TuiSize.Create(PreferredWidth, PreferredHeight), TuiSize.Create(MaximumWidth, MaximumHeight)), TuiSizePolicy.Preferred(), Spec)
     end
   end

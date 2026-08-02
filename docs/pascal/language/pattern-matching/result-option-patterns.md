@@ -23,6 +23,10 @@ case R of
 end;
 ```
 
+Because all labels share one body, they must expose the same binding names with
+compatible payload types. Binding names are case-insensitive. Use separate arms
+when labels expose different names or payload types.
+
 ## See also
 
 - [Types — Result and Option](../types/result-option-types.md)

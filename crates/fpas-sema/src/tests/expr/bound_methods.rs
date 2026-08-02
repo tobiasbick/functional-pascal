@@ -115,12 +115,14 @@ begin
 end.",
     );
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
-    let (errors, _, _, _, _, _, _, bound, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errors.is_empty(), "{errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
     assert!(
-        bound
+        metadata
+            .bound_methods
             .values()
             .any(|info| info.qualified_name.eq_ignore_ascii_case("Counter.Add")),
-        "{bound:#?}"
+        "{:#?}",
+        metadata.bound_methods
     );
 }

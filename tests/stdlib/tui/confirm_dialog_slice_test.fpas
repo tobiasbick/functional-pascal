@@ -46,7 +46,15 @@ function UpdateEditor(State: EditorModel; Msg: TuiMsg; Cmd: TuiCmdOutput): Edito
 begin
   Cmd.Set(TuiCmd.NoCommand);
   case Msg of
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Resize(Size):
+    TuiMsg.Key(Key):
+    begin
+      return State
+    end;
+    TuiMsg.Pointer(Pointer):
+    begin
+      return State
+    end;
+    TuiMsg.Resize(Size):
     begin
       return State
     end;
@@ -111,7 +119,12 @@ begin
     begin
       return State
     end;
-    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState), TuiMsg.QuitRequested:
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)
+    end;
+    TuiMsg.QuitRequested:
     begin
       Cmd.Set(TuiCmd.Quit);
       return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)

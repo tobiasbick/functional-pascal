@@ -28,6 +28,10 @@ var
   end;
 ```
 
+Each field may appear at most once in a record literal. Field names are
+case-insensitive, so `X` and `x` identify the same field and cannot both be
+specified.
+
 ## Accessing fields
 
 ```pascal

@@ -30,12 +30,13 @@ begin
       TuiElement.Overlay(Title, OverlayChildren):
       begin
         LastOverlay := Index
-      end;
-      TuiElement.Empty, TuiElement.Label(Text), TuiElement.Button(Button), TuiElement.Input(Input), TuiElement.TextArea(Id, Text, Caret, Offset, ChangeAction), TuiElement.CheckBox(Id, Text, Checked, ChangeAction), TuiElement.List(Id, Items, Selected, ChangeAction), TuiElement.Scroll(Id, Offset, ChangeAction, ScrollChildren), TuiElement.MenuBar(MenuItems), TuiElement.Menu(Id, Nodes, State, ChangeAction), TuiElement.StatusLine(StatusItems), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Row(RowChildren, RowSpacing), TuiElement.Column(ColumnChildren, ColumnSpacing), TuiElement.Layout(LayoutSettings, LayoutChildren), TuiElement.Spacer(SpacerValue), TuiElement.Panel(Title, PanelChildren), TuiElement.Desktop(NestedFocus, NestedChildren):
+      end
+      else
       begin
       end
     end
   end;
+
   return LastOverlay
 end;
 
@@ -107,6 +108,7 @@ begin
         begin
           TuiPointerBestHit := TuiPointerHit.ImmediateButton(Items[ItemIndex].Id, Items[ItemIndex].Action)
         end;
+
         Cursor := Cursor + Width
       end
     end;
@@ -122,6 +124,7 @@ begin
         begin
           Cursor := Cursor + 1
         end;
+
         case Items[ItemIndex] of
           TuiStatusItem.Hint(Text):
           begin
@@ -140,6 +143,7 @@ begin
             begin
               TuiPointerBestHit := TuiPointerHit.ImmediateButton(Id, Action)
             end;
+
             Cursor := Cursor + Width
           end
         end
@@ -152,12 +156,41 @@ begin
       begin
         TuiPointerBestHit := TuiPointerHit.Scroll(Id)
       end;
+
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
         Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ScrollAllowsHits)
       end
     end;
-    TuiElement.Row(Children, Spacing), TuiElement.Column(Children, Spacing), TuiElement.Layout(Settings, Children), TuiElement.Panel(Title, Children), TuiElement.Overlay(Title, Children):
+    TuiElement.Row(Children, Spacing):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits)
+      end
+    end;
+    TuiElement.Column(Children, Spacing):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits)
+      end
+    end;
+    TuiElement.Layout(Settings, Children):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits)
+      end
+    end;
+    TuiElement.Panel(Title, Children):
+    begin
+      for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
+      begin
+        Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, AllowHits)
+      end
+    end;
+    TuiElement.Overlay(Title, Children):
     begin
       for ChildIndex: integer := 0 to Std.Array.Length(Children) - 1 do
       begin
@@ -174,13 +207,15 @@ begin
         begin
           ChildAllow := AllowHits and (ChildIndex = ModalIndex)
         end;
+
         Next := TuiPointerHitWalk(Frame, Children[ChildIndex], Next, Point, ChildAllow)
       end
-    end;
-    TuiElement.Empty, TuiElement.Label(Text), TuiElement.CellGrid(Grid), TuiElement.Rule(RuleText), TuiElement.Gauge(Gauge), TuiElement.Spacer(Value):
+    end
+    else
     begin
     end
   end;
+
   return Next
 end;
 
@@ -193,5 +228,6 @@ begin
   begin
     panic('Tui pointer routing did not consume the complete arranged frame')
   end;
+
   return TuiPointerBestHit
 end;

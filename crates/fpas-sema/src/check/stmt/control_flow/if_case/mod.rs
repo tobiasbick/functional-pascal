@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/language/control-flow/README.md`, `docs/pascal/language/pattern-matching/README.md`, `docs/pascal/language/error-handling/README.md` (from the repository root).
 
+mod bindings;
 mod exhaustiveness;
 mod labels;
 
@@ -93,29 +94,17 @@ impl Checker {
                 continue;
             }
 
-            let mut binding_sets = Vec::new();
-            for label in &arm.labels {
-                if let Some(bindings) =
-                    self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
-                {
-                    binding_sets.push(bindings);
-                }
-            }
-
-            let labels_with_bindings = binding_sets
+            let binding_sets = arm
+                .labels
                 .iter()
-                .filter(|bindings| !bindings.is_empty())
-                .count();
-            if labels_with_bindings == 0 {
-                self.check_guard(&arm.guard, span);
-                self.check_stmt(&arm.body);
-                continue;
-            }
+                .map(|label| {
+                    self.check_case_label(&case_ty, is_result_or_option, is_data_enum, label)
+                        .unwrap_or_default()
+                })
+                .collect();
+            let bindings = self.shared_case_arm_bindings(binding_sets, arm.span);
 
-            for bindings in binding_sets
-                .into_iter()
-                .filter(|bindings| !bindings.is_empty())
-            {
+            if !bindings.is_empty() {
                 self.scopes.push_scope();
                 for (name, ty) in &bindings {
                     self.scopes.define(
@@ -128,8 +117,10 @@ impl Checker {
                         },
                     );
                 }
-                self.check_guard(&arm.guard, span);
-                self.check_stmt(&arm.body);
+            }
+            self.check_guard(&arm.guard, span);
+            self.check_stmt(&arm.body);
+            if !bindings.is_empty() {
                 self.scopes.pop_scope();
             }
         }

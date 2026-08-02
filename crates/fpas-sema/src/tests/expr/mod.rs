@@ -34,11 +34,11 @@ fn single_character_string_literal_defaults_to_string() {
         other => panic!("expected variable declaration, got {other:?}"),
     };
 
-    let (errors, types, _method_calls, _, _, _, _, _, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errors.is_empty(), "{errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:#?}", metadata.errors);
 
     let key = crate::expr_lookup_key(value);
-    assert_eq!(types.get(&key), Some(&crate::Ty::String));
+    assert_eq!(metadata.expr_types.get(&key), Some(&crate::Ty::String));
 }
 
 #[test]
@@ -63,10 +63,10 @@ fn analyze_with_types_records_expression_types() {
     let (program, parse_errors) =
         fpas_parser::parse("program T; var X: real := 1.0 + 2.0; begin end.");
     assert!(parse_errors.is_empty());
-    let (errs, map, _method_calls, _, _, _, _, _, _, _, _, _, _) = analyze_with_types(&program);
-    assert!(errs.is_empty(), "{errs:?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
     assert!(
-        map.len() >= 3,
+        metadata.expr_types.len() >= 3,
         "expected types for literals and binary expression"
     );
 }
@@ -160,6 +160,47 @@ fn equality_same_type() {
 #[test]
 fn equality_type_mismatch() {
     check_errors("program T; var X: boolean := 1 = true; begin end.");
+}
+
+#[test]
+fn analysis_metadata_exposes_all_named_results() {
+    let (program, parse_errors) = fpas_parser::parse("program T; begin end.");
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+
+    let crate::AnalysisMetadata {
+        errors,
+        expr_types,
+        method_calls,
+        record_defaults,
+        scalar_case_bindings,
+        closure_infos,
+        nested_routine_captures,
+        bound_methods,
+        property_reads,
+        property_writes,
+        event_writes,
+        event_assigned,
+        event_raises,
+    } = analyze_with_types(&program);
+
+    assert_eq!(
+        [
+            errors.len(),
+            expr_types.len(),
+            method_calls.len(),
+            record_defaults.len(),
+            scalar_case_bindings.len(),
+            closure_infos.len(),
+            nested_routine_captures.len(),
+            bound_methods.len(),
+            property_reads.len(),
+            property_writes.len(),
+            event_writes.len(),
+            event_assigned.len(),
+            event_raises.len(),
+        ],
+        [0; 13]
+    );
 }
 
 #[test]

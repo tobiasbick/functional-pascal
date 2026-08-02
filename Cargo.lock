@@ -581,6 +581,7 @@ dependencies = [
  "fpas-diagnostics",
  "num_enum",
  "serde",
+ "serde_json",
 ]
 
 [[package]]

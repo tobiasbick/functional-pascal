@@ -1,7 +1,7 @@
 # `fpas-bytecode` review follow-up
 
 Classification: bytecode format and validation. Fixes should tighten internal artifact validation without changing FPAS semantics.
-Status: all findings open.
+Status: BYTECODE-01 through BYTECODE-05 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -16,3 +16,41 @@ Status: all findings open.
 Define the validation ownership boundary together with `fpas-unit`, `fpas-linker`, `fpas-program`, and `fpas-vm`. A linked or decoded executable should not require downstream consumers to rediscover structural corruption.
 
 Additional gaps: complete `PersistentValue` roundtrips and rejection paths, exact real-bit preservation, captur­ing-function rejection, and a golden compatibility test for the serialized `Op` wire representation.
+
+## Implementation record
+
+- BYTECODE-01 traverses initialization control flow from instruction zero and derives callable
+  regions from function-table entries. Validation requires at least one structurally reachable
+  `Halt`, rejects entry fallthrough and `Return`, and prevents entry jumps or fallthrough into
+  callable bodies. Conditional loops retain their exit edge, so this does not require programs to
+  terminate at runtime.
+- BYTECODE-02 formats capture cells as the stable opaque value `<cell>`. Formatting no longer
+  acquires the cell mutex, so self-referential cells cannot recursively lock themselves.
+- BYTECODE-03 gives constant-pool identity a bit-exact real comparison while preserving runtime
+  equality (`+0.0 = -0.0`). Signed zeros now receive distinct pool indices and retain their exact
+  IEEE-754 bits through persistent JSON encoding.
+- BYTECODE-04 validates every string-name operand used by globals, calls, closures, records,
+  fields, and enums before execution, with the instruction, constant index, operand role, and
+  actual value category in the typed error.
+- BYTECODE-05 resolves direct calls and closure targets against the callable table using the VM's
+  case-insensitive fallback. Direct-call arity must match the table entry.
+- The additional test gaps are closed with complete supported `PersistentValue` roundtrips,
+  rejection coverage for every runtime-only category and capturing functions, and a bytecode-v1
+  JSON golden containing every `Op` variant.
+- `docs/pascal/program-structure/cli.md` documents the validation applied to directly executed
+  `.fpascp` images. FPAS syntax, language semantics, and `Std.*` APIs are unchanged.
+
+## Verification
+
+- Baseline: `cargo test -p fpas-bytecode --locked` — passed: 53 tests plus doc tests.
+- Targeted implementation: `cargo test -p fpas-bytecode --locked` — passed: 74 tests plus doc
+  tests.
+- Direct dependents: `cargo test -p fpas-program -p fpas-linker -p fpas-build -p fpas-bundle
+  --locked` — passed.
+- `cargo clippy -p fpas-bytecode --all-targets --locked -- -D warnings` — passed.
+- `cargo fmt --all -- --check` — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked` — passed.
+- The optional full-workspace Clippy run reaches two pre-existing style findings in the untouched
+  `fpas-language-service` crate (`collapsible_match` and `while_let_loop`); the targeted changed
+  crate is warning-free.

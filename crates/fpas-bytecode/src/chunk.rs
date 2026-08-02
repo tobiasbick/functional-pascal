@@ -1,5 +1,5 @@
 use crate::op::Op;
-use crate::value::Value;
+use crate::value::{Value, constant_values_equal};
 use fpas_diagnostics::SourceLocation;
 use std::collections::HashMap;
 use std::fmt;
@@ -162,7 +162,7 @@ impl Chunk {
     /// Add a constant to the pool, returning its index.
     pub fn add_constant(&mut self, value: Value) -> Result<u16, ChunkError> {
         for (i, c) in self.constants.iter().enumerate() {
-            if c == &value {
+            if constant_values_equal(c, &value) {
                 return Ok(i as u16);
             }
         }

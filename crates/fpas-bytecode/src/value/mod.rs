@@ -6,6 +6,7 @@ mod string;
 
 pub use aggregate::{EnumValue, RecordValue, SharedDict, SharedEnum, SharedRecord};
 pub use array::SharedArray;
+pub(crate) use equal::constant_values_equal;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
 pub use string::SharedStr;
@@ -160,10 +161,7 @@ impl std::fmt::Display for Value {
             Value::OptionSome(v) => write!(f, "Some({v})"),
             Value::OptionNone => write!(f, "None"),
             Value::Function(function) => write!(f, "<function {}>", function.name),
-            Value::Cell(cell) => match cell.lock() {
-                Ok(guard) => write!(f, "<cell {guard}>"),
-                Err(_) => write!(f, "<cell <poisoned>>"),
-            },
+            Value::Cell(_) => write!(f, "<cell>"),
             Value::Task(id) => write!(f, "<task {id}>"),
         }
     }
@@ -193,6 +191,14 @@ mod tests {
             (Value::Str("x".into()), Value::Boolean(true)),
         ]);
         assert_eq!(value.to_string(), "{k: 1, x: true}");
+    }
+
+    #[test]
+    fn display_formats_self_referential_cell_opaquely() {
+        let cell = std::sync::Arc::new(std::sync::Mutex::new(Value::Unit));
+        *cell.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = Value::Cell(cell.clone());
+
+        assert_eq!(Value::Cell(cell).to_string(), "<cell>");
     }
 
     #[test]

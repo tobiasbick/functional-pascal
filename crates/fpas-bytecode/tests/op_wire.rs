@@ -1,0 +1,136 @@
+#![expect(
+    clippy::expect_used,
+    reason = "wire-format fixtures use expect for compact assertions"
+)]
+
+use fpas_bytecode::{BYTECODE_VERSION, Op};
+
+#[test]
+fn bytecode_v1_op_json_matches_golden_wire_representation() {
+    assert_eq!(BYTECODE_VERSION, 1);
+    let encoded = serde_json::to_string(&all_ops()).expect("serialize opcodes");
+
+    assert_eq!(encoded, include_str!("fixtures/op_wire_v1.json").trim());
+}
+
+#[test]
+fn bytecode_v1_op_json_golden_decodes_to_all_ops() {
+    let decoded: Vec<Op> = serde_json::from_str(include_str!("fixtures/op_wire_v1.json"))
+        .expect("deserialize opcode golden");
+
+    assert_eq!(decoded, all_ops());
+}
+
+fn all_ops() -> Vec<Op> {
+    vec![
+        Op::Constant(1),
+        Op::Unit,
+        Op::Pop,
+        Op::Dup,
+        Op::GetLocal(2),
+        Op::SetLocal(3),
+        Op::SetLocalPop(4),
+        Op::IncLocal(5),
+        Op::DecLocal(6),
+        Op::GetGlobal(7),
+        Op::SetGlobal(8),
+        Op::GlobalIndexSet(9, 10),
+        Op::AddInt,
+        Op::SubInt,
+        Op::MulInt,
+        Op::DivInt,
+        Op::ModInt,
+        Op::AddReal,
+        Op::SubReal,
+        Op::MulReal,
+        Op::DivReal,
+        Op::NegateInt,
+        Op::NegateReal,
+        Op::AddDyn,
+        Op::SubDyn,
+        Op::MulDyn,
+        Op::DivDyn,
+        Op::NegateDyn,
+        Op::EqDyn,
+        Op::NeqDyn,
+        Op::LtDyn,
+        Op::GtDyn,
+        Op::LeDyn,
+        Op::GeDyn,
+        Op::ConcatStr,
+        Op::Shl,
+        Op::Shr,
+        Op::BitAnd,
+        Op::BitOr,
+        Op::BitXor,
+        Op::EqInt,
+        Op::NeqInt,
+        Op::LtInt,
+        Op::GtInt,
+        Op::LeInt,
+        Op::GeInt,
+        Op::EqReal,
+        Op::NeqReal,
+        Op::LtReal,
+        Op::GtReal,
+        Op::LeReal,
+        Op::GeReal,
+        Op::EqStr,
+        Op::NeqStr,
+        Op::LtStr,
+        Op::GtStr,
+        Op::LeStr,
+        Op::GeStr,
+        Op::EqBool,
+        Op::NeqBool,
+        Op::Not,
+        Op::And,
+        Op::Or,
+        Op::IntToReal,
+        Op::Jump(11),
+        Op::JumpIfFalse(12),
+        Op::JumpIfTrue(13),
+        Op::JumpIfLocalGt(14, 15, 16),
+        Op::JumpIfLocalLt(17, 18, 19),
+        Op::Call(20, 21),
+        Op::CallValue(22),
+        Op::MakeClosure(23, 24),
+        Op::MakeCell,
+        Op::CellGet,
+        Op::CellSet,
+        Op::Return,
+        Op::GetEnclosing(25, 26),
+        Op::SetEnclosing(27, 28),
+        Op::MakeArray(29),
+        Op::IndexGet,
+        Op::IndexSet,
+        Op::Contains,
+        Op::MakeDict(30),
+        Op::MakeRecord(31, 32),
+        Op::FieldGet(33),
+        Op::FieldSet(34),
+        Op::UpdateRecord(35),
+        Op::Print,
+        Op::PrintLn,
+        Op::Intrinsic(36),
+        Op::ArrayPushLocal(37, 38),
+        Op::ArrayPopLocal(39, 40),
+        Op::Halt,
+        Op::Panic,
+        Op::MakeOk,
+        Op::MakeErr,
+        Op::MakeSome,
+        Op::MakeNone,
+        Op::IsResultOk,
+        Op::IsOptionSome,
+        Op::UnwrapOk,
+        Op::UnwrapErr,
+        Op::UnwrapSome,
+        Op::MakeEnum(41, 42, 43),
+        Op::IsVariant(44, 45),
+        Op::EnumField(46),
+        Op::SpawnTask(47),
+        Op::SpawnDetachedTask(48),
+        Op::Yield,
+    ]
+}

@@ -10,6 +10,9 @@ fpas-diagnostics = { path = "../fpas-diagnostics" }
 num_enum = "0.7"
 serde = { workspace = true }
 
+[dev-dependencies]
+serde_json = { workspace = true }
+
 [lints]
 workspace = true
 

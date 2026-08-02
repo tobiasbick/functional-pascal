@@ -60,7 +60,9 @@ impl DocumentSnapshot {
         self.version
     }
 
-    pub(crate) fn revision(&self) -> u64 {
+    /// Returns the store-owned identity of this exact snapshot lifetime.
+    #[must_use]
+    pub fn revision(&self) -> u64 {
         self.revision
     }
 

@@ -2,7 +2,7 @@
 
 use tower_lsp_server::ls_types::{SymbolInformation, SymbolTag};
 
-use crate::navigation_requests::WorkspaceSymbolDocument;
+use crate::documents::WorkspaceSymbolDocument;
 
 use super::{NavigationConversionError, location, symbol_kind};
 

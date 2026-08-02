@@ -1,7 +1,7 @@
 # `fpas-lsp` review follow-up
 
 Classification: LSP transport, concurrency, and user-visible editor behavior. No language change expected.
-Status: all findings open.
+Status: LSP-01 through LSP-07 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -15,4 +15,23 @@ Status: all findings open.
 
 ## Implementation notes
 
-Coordinate LSP-01/02 with the snapshot identity work in `fpas-language-service`. `documents.rs` is over 400 LOC; the fix provides a natural split into lifecycle, result DTOs, task execution, and error classification modules.
+The oversized `documents.rs` was replaced by focused lifecycle, result, task,
+and error modules. Dispatch-edge sequencing preserves notification order while
+query snapshots run on cancellable blocking workers without holding the primary
+service lock. Disk snapshots and their exact revisions are shared between
+query forks, while editor overlays remain isolated.
+
+Rename and quick-fix results now use versioned `documentChanges` and are
+withheld when the client cannot apply them safely. Completion resolve validates
+the source revision plus qualified declaration identity. JSON-RPC errors are
+classified by cause, diagnostic output uses a dedicated ordered publisher, and
+code-action range selection follows half-open LSP semantics.
+
+Regressions cover notification sequencing, cancellation and lock release,
+open/disk edit versions, capability fallback, stale/deleted/manipulated
+completion identities, exact error codes, diagnostic backpressure, and
+touching/nested/disjoint/empty ranges.
+
+Verification passed: `cargo test -p fpas-language-service --test intellisense`,
+`cargo test -p fpas-lsp`, targeted Clippy with warnings denied,
+`cargo fmt --all -- --check`, `cargo build`, and `cargo test --workspace`.

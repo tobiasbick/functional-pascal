@@ -6,9 +6,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_language_service::diagnostics_for_document;
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, mpsc};
 use tower_lsp_server::Client;
-use tower_lsp_server::ls_types::Uri;
+use tower_lsp_server::ls_types::{Diagnostic, Uri};
 
 use super::convert::diagnostic_to_lsp;
 use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
@@ -16,17 +16,24 @@ use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
 const ANALYSIS_DEBOUNCE: Duration = Duration::from_millis(120);
 
 pub(crate) struct DiagnosticPublisher {
-    client: Client,
     documents: Arc<SynchronizedDocuments>,
     generations: Arc<Mutex<GenerationState>>,
+    publications: mpsc::UnboundedSender<Publication>,
 }
 
 impl DiagnosticPublisher {
     pub(crate) fn new(client: Client, documents: Arc<SynchronizedDocuments>) -> Self {
-        Self {
+        let generations = Arc::new(Mutex::new(GenerationState::default()));
+        let (publications, receiver) = mpsc::unbounded_channel();
+        tokio::spawn(dispatch_publications(
             client,
+            Arc::clone(&generations),
+            receiver,
+        ));
+        Self {
             documents,
-            generations: Arc::new(Mutex::new(GenerationState::default())),
+            generations,
+            publications,
         }
     }
 
@@ -35,9 +42,9 @@ impl DiagnosticPublisher {
     }
 
     pub(crate) fn schedule(&self, document: SynchronizedDocument, generation: u64) {
-        let client = self.client.clone();
         let documents = Arc::clone(&self.documents);
         let generations = Arc::clone(&self.generations);
+        let publications = self.publications.clone();
         tokio::spawn(async move {
             tokio::time::sleep(ANALYSIS_DEBOUNCE).await;
             if !is_current(&generations, &document.path, generation).await {
@@ -71,7 +78,11 @@ impl DiagnosticPublisher {
                     ),
                 }
             }
-            publish_if_current(&client, &generations, &document, generation, diagnostics).await;
+            let _ = publications.send(Publication::Diagnostics {
+                document,
+                generation,
+                diagnostics,
+            });
         });
     }
 
@@ -80,9 +91,8 @@ impl DiagnosticPublisher {
     }
 
     pub(crate) async fn cancel_and_clear(&self, path: &Path, uri: Uri) {
-        let mut generations = self.generations.lock().await;
-        generations.cancel(path);
-        self.client.publish_diagnostics(uri, Vec::new(), None).await;
+        self.generations.lock().await.cancel(path);
+        let _ = self.publications.send(Publication::Clear { uri });
     }
 
     pub(crate) async fn shutdown(&self) {
@@ -94,19 +104,41 @@ async fn is_current(generations: &Mutex<GenerationState>, path: &Path, generatio
     generations.lock().await.is_current(path, generation)
 }
 
-async fn publish_if_current(
-    client: &Client,
-    generations: &Mutex<GenerationState>,
-    document: &SynchronizedDocument,
-    generation: u64,
-    diagnostics: Vec<tower_lsp_server::ls_types::Diagnostic>,
+async fn dispatch_publications(
+    client: Client,
+    generations: Arc<Mutex<GenerationState>>,
+    mut receiver: mpsc::UnboundedReceiver<Publication>,
 ) {
-    let generations = generations.lock().await;
-    if generations.is_current(&document.path, generation) {
-        client
-            .publish_diagnostics(document.uri.clone(), diagnostics, Some(document.version))
-            .await;
+    while let Some(publication) = receiver.recv().await {
+        match publication {
+            Publication::Diagnostics {
+                document,
+                generation,
+                diagnostics,
+            } => {
+                if !is_current(&generations, &document.path, generation).await {
+                    continue;
+                }
+                client
+                    .publish_diagnostics(document.uri.clone(), diagnostics, Some(document.version))
+                    .await;
+            }
+            Publication::Clear { uri } => {
+                client.publish_diagnostics(uri, Vec::new(), None).await;
+            }
+        }
     }
+}
+
+enum Publication {
+    Diagnostics {
+        document: SynchronizedDocument,
+        generation: u64,
+        diagnostics: Vec<Diagnostic>,
+    },
+    Clear {
+        uri: Uri,
+    },
 }
 
 #[derive(Default)]
@@ -147,9 +179,31 @@ impl GenerationState {
     reason = "hard-coded generation fixtures use expect to keep failures local"
 )]
 mod tests {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
+    use std::sync::Arc;
 
-    use super::GenerationState;
+    use tower_lsp_server::ls_types::{InitializeParams, InitializeResult, Uri};
+    use tower_lsp_server::{Client, LanguageServer, LspService};
+
+    use super::{DiagnosticPublisher, GenerationState};
+    use crate::documents::SynchronizedDocuments;
+
+    struct TestServer {
+        client: Client,
+    }
+
+    impl LanguageServer for TestServer {
+        async fn initialize(
+            &self,
+            _params: InitializeParams,
+        ) -> tower_lsp_server::jsonrpc::Result<InitializeResult> {
+            Ok(InitializeResult::default())
+        }
+
+        async fn shutdown(&self) -> tower_lsp_server::jsonrpc::Result<()> {
+            Ok(())
+        }
+    }
 
     #[test]
     fn newer_generation_and_cancel_invalidate_older_work() {
@@ -174,5 +228,32 @@ mod tests {
 
         assert!(!state.is_current(path, generation));
         assert_eq!(state.invalidate(path), None);
+    }
+
+    #[tokio::test]
+    async fn backpressured_client_does_not_hold_generation_state() {
+        let (service, _socket) = LspService::new(|client| TestServer { client });
+        let client = service.inner().client.clone();
+        let uri = "file:///backpressure.fpas".parse::<Uri>().expect("URI");
+        client
+            .publish_diagnostics(uri.clone(), Vec::new(), None)
+            .await;
+        let publisher =
+            DiagnosticPublisher::new(client, Arc::new(SynchronizedDocuments::new(PathBuf::new())));
+        publisher
+            .cancel_and_clear(Path::new("backpressure.fpas"), uri)
+            .await;
+        tokio::task::yield_now().await;
+
+        let generation = tokio::time::timeout(
+            std::time::Duration::from_millis(100),
+            publisher.invalidate(Path::new("other.fpas")),
+        )
+        .await
+        .expect("generation state remains responsive");
+        assert!(generation.is_some());
+        tokio::time::timeout(std::time::Duration::from_millis(100), publisher.shutdown())
+            .await
+            .expect("shutdown remains responsive");
     }
 }

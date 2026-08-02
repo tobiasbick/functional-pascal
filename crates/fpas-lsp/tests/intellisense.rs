@@ -7,7 +7,10 @@
 mod support;
 
 use serde_json::{Value, json};
-use support::{TempDirectory, exit, initialize_with_root, initialized, response, run, shutdown};
+use support::{
+    TempDirectory, TranscriptStep, exit, initialize_with_root, initialized, response, run_script,
+    shutdown,
+};
 
 #[test]
 fn completion_resolve_auto_import_and_signature_help_use_utf16_ranges() {
@@ -64,28 +67,33 @@ end.
     let member_cursor = source.find("AmTail").expect("member fragment") + 2;
     let import_cursor = source.find("UniqueValue").expect("auto import") + "UniqueValue".len();
     let nested_cursor = source.find("Add(2, 3)").expect("nested call") + "Add(2, ".len();
-    let declaration_offset = std::fs::read_to_string(&importable)
-        .expect("importable source")
-        .find("function UniqueValue")
-        .expect("declaration");
-    let resolve_item = json!({
-        "label": "UniqueValue",
-        "data": {
-            "uri": import_uri,
-            "declarationOffset": declaration_offset
-        }
-    });
-
-    let transcript = run(&[
-        initialize_with_root(1, Some(&root_uri)),
-        initialized(),
-        open(&main_uri, source),
-        completion(2, &main_uri, position(source, member_cursor)),
-        completion(3, &main_uri, position(source, import_cursor)),
-        completion_resolve(4, resolve_item),
-        signature_help(5, &main_uri, position(source, nested_cursor)),
-        shutdown(6),
-        exit(),
+    let stale_source = "unit Demo.Importable;\n";
+    let stale_uri = import_uri.clone();
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&main_uri, source)),
+        TranscriptStep::Message(completion(2, &main_uri, position(source, member_cursor))),
+        TranscriptStep::Message(completion(3, &main_uri, position(source, import_cursor))),
+        TranscriptStep::MessageFrom(Box::new(|messages| {
+            completion_resolve(4, item(response(messages, 3), "UniqueValue").clone())
+        })),
+        TranscriptStep::Message(signature_help(
+            5,
+            &main_uri,
+            position(source, nested_cursor),
+        )),
+        TranscriptStep::MessageFrom(Box::new(|messages| {
+            let mut manipulated = item(response(messages, 3), "UniqueValue").clone();
+            manipulated["data"]["qualifiedName"] = json!("Demo.Importable.OtherValue");
+            completion_resolve(6, manipulated)
+        })),
+        TranscriptStep::Message(open(&stale_uri, stale_source)),
+        TranscriptStep::MessageFrom(Box::new(|messages| {
+            completion_resolve(7, item(response(messages, 3), "UniqueValue").clone())
+        })),
+        TranscriptStep::Message(shutdown(8)),
+        TranscriptStep::Message(exit()),
     ]);
 
     assert!(
@@ -126,6 +134,11 @@ end.
         "uses Demo.Core, Demo.Importable;"
     );
     assert_eq!(imported["data"]["uri"], import_uri);
+    assert!(imported["data"]["sourceRevision"].is_number());
+    assert_eq!(
+        imported["data"]["qualifiedName"],
+        "Demo.Importable.UniqueValue"
+    );
     assert_eq!(
         response(&transcript.messages, 4)["result"]["documentation"]["value"],
         "Returns a value from the importable unit."
@@ -141,6 +154,16 @@ end.
     assert_eq!(
         signature["signatures"][0]["parameters"][1]["label"],
         json!([28, 42])
+    );
+    assert_eq!(
+        response(&transcript.messages, 6)["result"]["documentation"],
+        Value::Null,
+        "manipulated opaque identity must not resolve another declaration"
+    );
+    assert_eq!(
+        response(&transcript.messages, 7)["result"]["documentation"],
+        Value::Null,
+        "stale completion identities must not resolve against a changed snapshot"
     );
 }
 

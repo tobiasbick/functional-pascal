@@ -18,6 +18,15 @@ use crate::navigation::span_range;
 struct CompletionResolveData {
     uri: String,
     declaration_offset: usize,
+    source_revision: u64,
+    qualified_name: String,
+}
+
+pub(crate) struct CompletionResolveIdentity {
+    pub(crate) path: std::path::PathBuf,
+    pub(crate) declaration_offset: usize,
+    pub(crate) source_revision: u64,
+    pub(crate) qualified_name: String,
 }
 
 pub(crate) fn completion_item(
@@ -74,18 +83,23 @@ pub(crate) fn resolve_completion_item(
     item
 }
 
-pub(crate) fn resolve_identity(item: &CompletionItem) -> Option<(std::path::PathBuf, usize)> {
+pub(crate) fn resolve_identity(item: &CompletionItem) -> Option<CompletionResolveIdentity> {
     let data = serde_json::from_value::<CompletionResolveData>(item.data.clone()?).ok()?;
     let uri = data.uri.parse::<Uri>().ok()?;
-    crate::convert::file_uri_to_path(&uri)
-        .ok()
-        .map(|path| (path, data.declaration_offset))
+    Some(CompletionResolveIdentity {
+        path: crate::convert::file_uri_to_path(&uri).ok()?,
+        declaration_offset: data.declaration_offset,
+        source_revision: data.source_revision,
+        qualified_name: data.qualified_name,
+    })
 }
 
 fn resolve_data(value: &CompletionDocumentation) -> Option<CompletionResolveData> {
     Some(CompletionResolveData {
         uri: Uri::from_file_path(&value.path)?.to_string(),
         declaration_offset: value.declaration_offset,
+        source_revision: value.source_revision,
+        qualified_name: value.qualified_name.clone(),
     })
 }
 

@@ -153,7 +153,10 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     assert_eq!(action["kind"], "quickfix");
     assert_eq!(action["isPreferred"], true);
     assert_eq!(action["diagnostics"], json!([diagnostic]));
-    let edit = &action["edit"]["changes"][&main_uri][0];
+    let document_edit = &action["edit"]["documentChanges"][0];
+    assert_eq!(document_edit["textDocument"]["uri"], main_uri);
+    assert_eq!(document_edit["textDocument"]["version"], 1);
+    let edit = &document_edit["edits"][0];
     assert_eq!(edit["newText"], "uses Actions.Core, Actions.Importable;");
     let edited = apply_edit(source, edit);
     let (unit, parse_diagnostics) = fpas_parser::parse_compilation_unit(&edited);

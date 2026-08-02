@@ -226,6 +226,8 @@ fn declaration_candidate(
         documentation: Some(CompletionDocumentation {
             path: documents[document_index].path.clone(),
             declaration_offset: symbol.full_span.offset,
+            source_revision: documents[document_index].snapshot.revision(),
+            qualified_name: symbol.qualified_name.clone(),
         }),
         additional_edit,
     }

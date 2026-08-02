@@ -2,39 +2,85 @@
 
 use std::path::Path;
 
-use fpas_language_service::{DocumentHighlight, NavigationResult, SelectionRange, SymbolLocation};
+use fpas_language_service::{
+    DocumentHighlight, DocumentSymbol, HoverInfo, NavigationResult, RenameTarget,
+};
 use tower_lsp_server::ls_types::Position;
 
 use crate::convert::position_to_byte_offset;
 use crate::documents::{
-    DefinitionDocument, DocumentRequestError, SynchronizedDocuments, require_open,
+    DefinitionDocument, DocumentRequestError, ReferenceDocument, RenameDocument, SelectionDocument,
+    SynchronizedDocuments, WorkspaceSymbolDocument, require_open, tasks,
 };
 
-pub(crate) struct WorkspaceSymbolDocument {
-    pub(crate) snapshot: std::sync::Arc<fpas_language_service::DocumentSnapshot>,
-    pub(crate) location: SymbolLocation,
-}
-
-pub(crate) struct SelectionDocument {
-    pub(crate) snapshot: std::sync::Arc<fpas_language_service::DocumentSnapshot>,
-    pub(crate) ranges: Vec<SelectionRange>,
-}
-
 impl SynchronizedDocuments {
+    pub(crate) async fn document_symbols_open(
+        &self,
+        path: &Path,
+    ) -> Result<NavigationResult<Vec<DocumentSymbol>>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            require_open(service, &path)?;
+            let result = service.document_symbols(&path)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
+    }
+
+    pub(crate) async fn hover_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<NavigationResult<Option<HoverInfo>>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.hover(&path, offset)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
+    }
+
+    pub(crate) async fn definitions_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<Vec<DefinitionDocument>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.definitions(&path, offset)?;
+            definition_documents(service, result.value, cancellation)
+        })
+        .await
+    }
+
     pub(crate) async fn workspace_symbols(
         &self,
         query: &str,
     ) -> Result<Vec<WorkspaceSymbolDocument>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let locations = service.workspace_symbols(query)?;
-        let mut symbols = Vec::with_capacity(locations.len());
-        for location in locations {
-            symbols.push(WorkspaceSymbolDocument {
-                snapshot: service.snapshot(&location.path)?,
-                location,
-            });
-        }
-        Ok(symbols)
+        let query = query.to_owned();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let locations = service.workspace_symbols(&query)?;
+            let mut symbols = Vec::with_capacity(locations.len());
+            for location in locations {
+                cancellation.check()?;
+                symbols.push(WorkspaceSymbolDocument {
+                    snapshot: service.snapshot(&location.path)?,
+                    location,
+                });
+            }
+            Ok(symbols)
+        })
+        .await
     }
 
     pub(crate) async fn document_highlights_open(
@@ -42,10 +88,16 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
     ) -> Result<NavigationResult<Vec<DocumentHighlight>>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        Ok(service.document_highlights(path, offset)?)
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.document_highlights(&path, offset)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
     }
 
     pub(crate) async fn type_definitions_open(
@@ -53,18 +105,23 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
     ) -> Result<Vec<DefinitionDocument>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        let result = service.type_definitions(path, offset)?;
-        let mut definitions = Vec::with_capacity(result.value.len());
-        for location in result.value {
-            definitions.push(DefinitionDocument {
-                snapshot: service.snapshot(&location.path)?,
-                location,
-            });
-        }
-        Ok(definitions)
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.type_definitions(&path, offset)?;
+            let mut definitions = Vec::with_capacity(result.value.len());
+            for location in result.value {
+                cancellation.check()?;
+                definitions.push(DefinitionDocument {
+                    snapshot: service.snapshot(&location.path)?,
+                    location,
+                });
+            }
+            Ok(definitions)
+        })
+        .await
     }
 
     pub(crate) async fn selection_ranges_open(
@@ -72,13 +129,107 @@ impl SynchronizedDocuments {
         path: &Path,
         positions: &[Position],
     ) -> Result<SelectionDocument, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offsets = positions
-            .iter()
-            .map(|position| position_to_byte_offset(&snapshot, *position))
-            .collect::<Result<Vec<_>, _>>()?;
-        let (snapshot, ranges) = service.selection_ranges(path, &offsets)?;
-        Ok(SelectionDocument { snapshot, ranges })
+        let path = path.to_path_buf();
+        let positions = positions.to_vec();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offsets = positions
+                .iter()
+                .map(|position| position_to_byte_offset(&snapshot, *position))
+                .collect::<Result<Vec<_>, _>>()?;
+            let (snapshot, ranges) = service.selection_ranges(&path, &offsets)?;
+            cancellation.check()?;
+            Ok(SelectionDocument { snapshot, ranges })
+        })
+        .await
     }
+
+    pub(crate) async fn references_open(
+        &self,
+        path: &Path,
+        position: Position,
+        include_declaration: bool,
+    ) -> Result<Vec<ReferenceDocument>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.references_with_cancellation(
+                &path,
+                offset,
+                include_declaration,
+                cancellation,
+            )?;
+            let mut references = Vec::with_capacity(result.value.len());
+            for location in result.value {
+                cancellation.check()?;
+                references.push(ReferenceDocument {
+                    snapshot: service.snapshot(&location.path)?,
+                    location,
+                });
+            }
+            Ok(references)
+        })
+        .await
+    }
+
+    pub(crate) async fn prepare_rename_open(
+        &self,
+        path: &Path,
+        position: Position,
+    ) -> Result<NavigationResult<Option<RenameTarget>>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.prepare_rename(&path, offset)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
+    }
+
+    pub(crate) async fn rename_open(
+        &self,
+        path: &Path,
+        position: Position,
+        new_name: &str,
+    ) -> Result<Vec<RenameDocument>, DocumentRequestError> {
+        let path = path.to_path_buf();
+        let new_name = new_name.to_owned();
+        tasks::run(&self.service, move |service, cancellation| {
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result =
+                service.rename_with_cancellation(&path, offset, &new_name, cancellation)?;
+            let mut edits = Vec::with_capacity(result.value.len());
+            for edit in result.value {
+                cancellation.check()?;
+                edits.push(RenameDocument {
+                    snapshot: service.snapshot(&edit.path)?,
+                    edit,
+                });
+            }
+            Ok(edits)
+        })
+        .await
+    }
+}
+
+fn definition_documents(
+    service: &mut fpas_language_service::LanguageService,
+    locations: Vec<fpas_language_service::SymbolLocation>,
+    cancellation: &fpas_language_service::CancellationToken,
+) -> Result<Vec<DefinitionDocument>, DocumentRequestError> {
+    let mut definitions = Vec::with_capacity(locations.len());
+    for location in locations {
+        cancellation.check()?;
+        definitions.push(DefinitionDocument {
+            snapshot: service.snapshot(&location.path)?,
+            location,
+        });
+    }
+    Ok(definitions)
 }

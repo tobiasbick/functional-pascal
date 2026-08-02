@@ -2,6 +2,7 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
@@ -23,12 +24,14 @@ use crate::convert::file_uri_to_path;
 use crate::diagnostics::DiagnosticPublisher;
 use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
 use crate::formatting::whole_document_edit;
+use crate::server::errors;
 use crate::server::initialization::InitializationPaths;
 
 /// Functional Pascal LSP backend with full-text synchronized documents.
 pub struct Backend {
     pub(super) documents: Arc<SynchronizedDocuments>,
     diagnostics: DiagnosticPublisher,
+    document_changes: AtomicBool,
 }
 
 impl Backend {
@@ -37,6 +40,7 @@ impl Backend {
         Self {
             diagnostics: DiagnosticPublisher::new(client, Arc::clone(&documents)),
             documents,
+            document_changes: AtomicBool::new(false),
         }
     }
 
@@ -48,7 +52,11 @@ impl Backend {
         self.documents
             .set_workspace(&root, paths.standard_library_root.as_deref())
             .await
-            .map_err(|error| Error::invalid_params(error.to_string()))
+            .map_err(errors::service)
+    }
+
+    pub(super) fn supports_document_changes(&self) -> bool {
+        self.document_changes.load(Ordering::Acquire)
     }
 
     fn log_sync_error(operation: &str, error: impl std::fmt::Display) {
@@ -72,6 +80,15 @@ impl Backend {
 
 impl LanguageServer for Backend {
     async fn initialize(&self, params: InitializeParams) -> Result<InitializeResult> {
+        let supports_document_changes = params
+            .capabilities
+            .workspace
+            .as_ref()
+            .and_then(|workspace| workspace.workspace_edit.as_ref())
+            .and_then(|workspace_edit| workspace_edit.document_changes)
+            .unwrap_or(false);
+        self.document_changes
+            .store(supports_document_changes, Ordering::Release);
         self.configure_workspace(&params).await?;
         tracing::info!("language server initialized");
         Ok(capabilities::initialize_result())
@@ -181,7 +198,7 @@ impl LanguageServer for Backend {
                 Error::internal_error()
             }),
             Ok(None) => Ok(None),
-            Err(error) => Err(Error::invalid_params(error.to_string())),
+            Err(error) => Err(errors::synchronization(error)),
         }
     }
 

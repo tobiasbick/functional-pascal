@@ -1,18 +1,19 @@
 //! LSP request handlers for symbols, navigation, references, and rename.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use tower_lsp_server::jsonrpc::{Error, Result};
 use tower_lsp_server::ls_types::request::{GotoTypeDefinitionParams, GotoTypeDefinitionResponse};
 use tower_lsp_server::ls_types::{
-    DocumentHighlight, DocumentHighlightParams, DocumentSymbolParams, DocumentSymbolResponse,
-    GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams, Location,
-    PrepareRenameResponse, ReferenceParams, RenameParams, SelectionRange, SelectionRangeParams,
+    DocumentChanges, DocumentHighlight, DocumentHighlightParams, DocumentSymbolParams,
+    DocumentSymbolResponse, GotoDefinitionParams, GotoDefinitionResponse, Hover, HoverParams,
+    Location, OneOf, OptionalVersionedTextDocumentIdentifier, PrepareRenameResponse,
+    ReferenceParams, RenameParams, SelectionRange, SelectionRangeParams, TextDocumentEdit,
     TextDocumentPositionParams, TextEdit, Uri, WorkspaceEdit, WorkspaceSymbolParams,
     WorkspaceSymbolResponse,
 };
 
-use super::Backend;
+use super::{Backend, errors};
 use crate::convert::file_uri_to_path;
 use crate::navigation;
 
@@ -25,7 +26,7 @@ impl Backend {
             .documents
             .workspace_symbols(&params.query)
             .await
-            .map_err(invalid_params)?
+            .map_err(errors::request)?
             .into_iter()
             .map(navigation::workspace_symbol)
             .collect::<std::result::Result<Vec<_>, _>>()
@@ -42,7 +43,7 @@ impl Backend {
             .documents
             .document_symbols_open(&path)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let symbols = navigation::document_symbols(&result.snapshot, result.value)
             .map_err(conversion_error)?;
         Ok(Some(DocumentSymbolResponse::Nested(symbols)))
@@ -55,7 +56,7 @@ impl Backend {
             .documents
             .hover_open(&path, text.position)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         result
             .value
             .map(|value| navigation::hover(&result.snapshot, value))
@@ -73,7 +74,7 @@ impl Backend {
             .documents
             .definitions_open(&path, text.position)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let locations = definitions
             .iter()
             .map(|definition| navigation::location(&definition.snapshot, &definition.location))
@@ -92,7 +93,7 @@ impl Backend {
             .documents
             .type_definitions_open(&path, text.position)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let locations = definitions
             .iter()
             .map(|definition| navigation::location(&definition.snapshot, &definition.location))
@@ -111,7 +112,7 @@ impl Backend {
             .documents
             .document_highlights_open(&path, text.position)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let highlights = result
             .value
             .into_iter()
@@ -130,7 +131,7 @@ impl Backend {
             .documents
             .selection_ranges_open(&path, &params.positions)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let ranges = document
             .ranges
             .into_iter()
@@ -150,7 +151,7 @@ impl Backend {
             .documents
             .references_open(&path, text.position, params.context.include_declaration)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         let locations = references
             .iter()
             .map(|reference| {
@@ -170,7 +171,7 @@ impl Backend {
             .documents
             .prepare_rename_open(&path, params.position)
             .await
-            .map_err(invalid_params)?;
+            .map_err(errors::request)?;
         result
             .value
             .map(|target| navigation::prepare_rename(&result.snapshot, target))
@@ -182,29 +183,42 @@ impl Backend {
         &self,
         params: RenameParams,
     ) -> Result<Option<WorkspaceEdit>> {
+        if !self.supports_document_changes() {
+            return Ok(None);
+        }
         let text = params.text_document_position;
         let path = request_path(&text.text_document.uri)?;
         let edits = self
             .documents
             .rename_open(&path, text.position, &params.new_name)
             .await
-            .map_err(invalid_params)?;
-        let mut changes = HashMap::<Uri, Vec<TextEdit>>::new();
+            .map_err(errors::request)?;
+        let mut changes = BTreeMap::<String, (Uri, Option<i32>, Vec<TextEdit>)>::new();
         for edit in edits {
-            let (uri, text_edit) =
+            let (uri, version, text_edit) =
                 navigation::rename_edit(&edit.snapshot, edit.edit).map_err(conversion_error)?;
-            changes.entry(uri).or_default().push(text_edit);
+            changes
+                .entry(uri.to_string())
+                .or_insert_with(|| (uri, version, Vec::new()))
+                .2
+                .push(text_edit);
         }
-        Ok(Some(WorkspaceEdit::new(changes)))
+        let edits = changes
+            .into_values()
+            .map(|(uri, version, edits)| TextDocumentEdit {
+                text_document: OptionalVersionedTextDocumentIdentifier { uri, version },
+                edits: edits.into_iter().map(OneOf::Left).collect(),
+            })
+            .collect();
+        Ok(Some(WorkspaceEdit {
+            document_changes: Some(DocumentChanges::Edits(edits)),
+            ..WorkspaceEdit::default()
+        }))
     }
 }
 
 fn request_path(uri: &tower_lsp_server::ls_types::Uri) -> Result<std::path::PathBuf> {
     file_uri_to_path(uri).map_err(|error| Error::invalid_params(error.to_string()))
-}
-
-fn invalid_params(error: impl std::fmt::Display) -> Error {
-    Error::invalid_params(error.to_string())
 }
 
 fn conversion_error(error: impl std::fmt::Debug) -> Error {

@@ -2,27 +2,28 @@
 
 use std::path::Path;
 
-use fpas_language_service::{
-    NavigationResult, SemanticCodeAction, SemanticToken as FpasSemanticToken,
-};
+use fpas_language_service::{NavigationResult, SemanticToken as FpasSemanticToken};
 use tower_lsp_server::ls_types::Diagnostic;
 
-use crate::documents::{DocumentRequestError, SynchronizedDocuments, require_open};
+use crate::documents::{
+    CodeActionResult, DocumentRequestError, SynchronizedDocuments, require_open, tasks,
+};
 use crate::semantic_tools;
-
-pub(crate) struct CodeActionResult {
-    pub(crate) snapshot: std::sync::Arc<fpas_language_service::DocumentSnapshot>,
-    pub(crate) actions: Vec<(SemanticCodeAction, Diagnostic)>,
-}
 
 impl SynchronizedDocuments {
     pub(crate) async fn semantic_tokens_open(
         &self,
         path: &Path,
     ) -> Result<NavigationResult<Vec<FpasSemanticToken>>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        require_open(&service, path)?;
-        Ok(service.semantic_tokens(path)?)
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            require_open(service, &path)?;
+            let result = service.semantic_tokens(&path)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
     }
 
     pub(crate) async fn code_actions_open(
@@ -30,18 +31,23 @@ impl SynchronizedDocuments {
         path: &Path,
         diagnostics: Vec<Diagnostic>,
     ) -> Result<CodeActionResult, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let mut actions = Vec::new();
-        for diagnostic in diagnostics {
-            let identity = match semantic_tools::diagnostic_identity(&snapshot, &diagnostic) {
-                Ok(Some(identity)) => identity,
-                Ok(None) | Err(_) => continue,
-            };
-            for action in service.code_actions(path, &identity)?.value {
-                actions.push((action, diagnostic.clone()));
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let mut actions = Vec::new();
+            for diagnostic in diagnostics {
+                cancellation.check()?;
+                let identity = match semantic_tools::diagnostic_identity(&snapshot, &diagnostic) {
+                    Ok(Some(identity)) => identity,
+                    Ok(None) | Err(_) => continue,
+                };
+                for action in service.code_actions(&path, &identity)?.value {
+                    actions.push((action, diagnostic.clone()));
+                }
             }
-        }
-        Ok(CodeActionResult { snapshot, actions })
+            Ok(CodeActionResult { snapshot, actions })
+        })
+        .await
     }
 }

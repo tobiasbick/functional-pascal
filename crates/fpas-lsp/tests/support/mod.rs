@@ -17,8 +17,11 @@ pub struct Transcript {
     pub messages: Vec<Value>,
 }
 
+type MessageFactory = Box<dyn Fn(&[Value]) -> Value>;
+
 pub enum TranscriptStep {
     Message(Value),
+    MessageFrom(MessageFactory),
     Send(Value),
     Action(Box<dyn Fn()>),
     Wait(Duration),
@@ -40,6 +43,13 @@ pub fn run_script(steps: &[TranscriptStep]) -> Transcript {
         match step {
             TranscriptStep::Message(message) => {
                 server.send(message);
+                if let Some(id) = message.get("id") {
+                    server.read_through_response(id, &mut messages);
+                }
+            }
+            TranscriptStep::MessageFrom(message) => {
+                let message = message(&messages);
+                server.send(&message);
                 if let Some(id) = message.get("id") {
                     server.read_through_response(id, &mut messages);
                 }
@@ -152,6 +162,23 @@ pub fn initialize(id: i64) -> Value {
 }
 
 pub fn initialize_with_root(id: i64, root_uri: Option<&str>) -> Value {
+    serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": id,
+        "method": "initialize",
+        "params": {
+            "processId": null,
+            "rootUri": root_uri,
+            "capabilities": {
+                "workspace": {
+                    "workspaceEdit": {"documentChanges": true}
+                }
+            }
+        }
+    })
+}
+
+pub fn initialize_without_document_changes(id: i64, root_uri: Option<&str>) -> Value {
     serde_json::json!({
         "jsonrpc": "2.0",
         "id": id,

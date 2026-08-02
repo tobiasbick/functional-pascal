@@ -253,6 +253,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
             .completion_documentation(
                 &documentation_key.path,
                 documentation_key.declaration_offset,
+                &documentation_key.qualified_name,
             )
             .expect("completion documentation")
             .as_deref(),

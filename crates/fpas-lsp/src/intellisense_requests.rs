@@ -6,7 +6,8 @@ use fpas_language_service::{CompletionCandidate, NavigationResult, SignatureHelp
 use tower_lsp_server::ls_types::Position;
 
 use crate::convert::position_to_byte_offset;
-use crate::documents::{DocumentRequestError, SynchronizedDocuments, require_open};
+use crate::documents::{DocumentRequestError, SynchronizedDocuments, require_open, tasks};
+use crate::intellisense::CompletionResolveIdentity;
 
 impl SynchronizedDocuments {
     pub(crate) async fn completions_open(
@@ -14,19 +15,37 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
     ) -> Result<NavigationResult<Vec<CompletionCandidate>>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        Ok(service.completions(path, offset)?)
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.completions(&path, offset)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
     }
 
     pub(crate) async fn completion_documentation(
         &self,
-        path: &Path,
-        declaration_offset: usize,
+        identity: CompletionResolveIdentity,
     ) -> Result<Option<String>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        Ok(service.completion_documentation(path, declaration_offset)?)
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = service.snapshot(&identity.path)?;
+            if snapshot.revision() != identity.source_revision {
+                return Ok(None);
+            }
+            let documentation = service.completion_documentation(
+                &identity.path,
+                identity.declaration_offset,
+                &identity.qualified_name,
+            )?;
+            cancellation.check()?;
+            Ok(documentation)
+        })
+        .await
     }
 
     pub(crate) async fn signature_help_open(
@@ -34,9 +53,15 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
     ) -> Result<NavigationResult<Option<SignatureHelp>>, DocumentRequestError> {
-        let mut service = self.service.lock().await;
-        let snapshot = require_open(&service, path)?;
-        let offset = position_to_byte_offset(&snapshot, position)?;
-        Ok(service.signature_help(path, offset)?)
+        let path = path.to_path_buf();
+        tasks::run(&self.service, move |service, cancellation| {
+            cancellation.check()?;
+            let snapshot = require_open(service, &path)?;
+            let offset = position_to_byte_offset(&snapshot, position)?;
+            let result = service.signature_help(&path, offset)?;
+            cancellation.check()?;
+            Ok(result)
+        })
+        .await
     }
 }

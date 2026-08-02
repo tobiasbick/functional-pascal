@@ -10,13 +10,19 @@ impl LanguageService {
         &mut self,
         path: &Path,
         declaration_offset: usize,
+        qualified_name: &str,
     ) -> Result<Option<String>, LanguageServiceError> {
         let known = self
             .workspace_symbol_index()?
             .all_locations()
             .into_iter()
             .any(|location| {
-                location.path == path && location.symbol.full_span.offset == declaration_offset
+                location.path == path
+                    && location.symbol.full_span.offset == declaration_offset
+                    && location
+                        .symbol
+                        .qualified_name
+                        .eq_ignore_ascii_case(qualified_name)
             });
         if !known {
             return Ok(None);

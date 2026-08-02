@@ -100,7 +100,9 @@ Each diagnostic preserves its stable `Fxxxx` code, error or warning severity,
 UTF-16 editor range, and compiler help text. Analysis is briefly debounced
 during typing. Results carry the exact document version, and superseded work
 is discarded. Correcting the source or closing the document clears stale
-diagnostics.
+diagnostics. Diagnostic delivery uses one ordered publication lane, so a slow
+editor connection does not block document changes or shutdown while an older
+diagnostic message is waiting to be sent.
 
 The opened editor folder does not have to be an FPAS project. At startup, the
 server builds a bounded catalog of `.fpasprj` and `.fpasworkspace` manifests
@@ -196,6 +198,10 @@ lexical shadowing and ignores matching text in comments and strings.
 identifier, rejects declaration conflicts and lexical capture or shadowing,
 and returns one workspace edit for the declaration and every resolved usage in
 those indexed projects. It edits current unsaved snapshots of open files.
+Each edit for an open document carries the analyzed editor version; edits for
+closed files are explicitly unversioned. Clients that cannot apply versioned
+`documentChanges` receive no rename edit, preventing stale ranges from being
+applied through an unsafe fallback.
 Program and unit names are excluded because a correct rename would also have to
 rename source files or manifests. A declaration outside the opened editor
 folder, including a standard library bundled with an installed VSIX, is never
@@ -207,8 +213,11 @@ reports its declaration kind, qualified owner, type or callable signature,
 stable sorting, and the exact identifier range it replaces. This replacement
 keeps punctuation and surrounding Unicode strings or comments unchanged.
 Declaration documentation is loaded only after the editor resolves a selected
-item. Equal candidates imported from different units remain distinct so the
-editor can present their qualified owners. Private, shadowed, and non-exported
+item. Resolve data identifies the exact source snapshot and qualified
+declaration; changed, deleted, or manipulated identities leave the completion
+item undocumented instead of attaching documentation from another symbol.
+Equal candidates imported from different units remain distinct so the editor
+can present their qualified owners. Private, shadowed, and non-exported
 declarations are excluded.
 
 When one unresolved identifier maps to exactly one public declaration in one
@@ -227,7 +236,10 @@ the snippet item from completion.
 
 Queries use the current unsaved buffers of every open project source. Recovered
 or incomplete syntax can still provide candidates when its lexical and symbol
-context is reliable.
+context is reliable. Document notifications are applied in received order
+before dependent requests. Analysis-heavy queries use isolated immutable
+snapshots on blocking workers and cooperate with request cancellation, so they
+do not hold the primary editor-state lock while running.
 
 ## Semantic highlighting and quick fixes
 
@@ -247,6 +259,10 @@ diagnostic and is offered only if the edit still matches that diagnostic and
 produces parseable, canonically formatted source. Applying it re-analyzes the
 unsaved document and clears the resolved diagnostic without a server restart.
 Ambiguous, inaccessible, changed, malformed, and stale inputs receive no edit.
+The edit carries the analyzed open-document version and is withheld from
+clients that cannot apply versioned `documentChanges`. Empty code-action ranges
+act as cursor positions; merely touching the exclusive end of a diagnostic
+does not select that diagnostic.
 Compiler help that only explains an error is not presented as an automatic fix.
 
 Comments, string contents, unknown names, inaccessible declarations, and

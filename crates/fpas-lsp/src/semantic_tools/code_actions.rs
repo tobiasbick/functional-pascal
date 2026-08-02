@@ -1,11 +1,12 @@
 //! Diagnostic identity parsing and single-document quick-fix conversion.
 
-use std::collections::HashMap;
-
 use fpas_diagnostics::{DiagnosticCode, SourceSpan};
-use fpas_language_service::{DiagnosticIdentity, DocumentSnapshot, SemanticCodeAction};
+use fpas_language_service::{
+    DiagnosticIdentity, DocumentSnapshot, SemanticCodeAction, SourceVersion,
+};
 use tower_lsp_server::ls_types::{
-    CodeAction, CodeActionKind, Diagnostic, NumberOrString, TextEdit, Uri, WorkspaceEdit,
+    CodeAction, CodeActionKind, Diagnostic, DocumentChanges, NumberOrString, OneOf,
+    OptionalVersionedTextDocumentIdentifier, TextDocumentEdit, TextEdit, Uri, WorkspaceEdit,
 };
 
 use crate::convert::{PositionConversionError, position_to_byte_offset};
@@ -70,7 +71,16 @@ pub(crate) fn code_action(
         kind: Some(CodeActionKind::QUICKFIX),
         diagnostics: Some(vec![diagnostic]),
         edit: Some(WorkspaceEdit {
-            changes: Some(HashMap::from([(uri, edits)])),
+            document_changes: Some(DocumentChanges::Edits(vec![TextDocumentEdit {
+                text_document: OptionalVersionedTextDocumentIdentifier {
+                    uri,
+                    version: match snapshot.version() {
+                        SourceVersion::Editor(version) => i32::try_from(version).ok(),
+                        SourceVersion::Disk(_) => None,
+                    },
+                },
+                edits: edits.into_iter().map(OneOf::Left).collect(),
+            }])),
             ..WorkspaceEdit::default()
         }),
         is_preferred: Some(true),

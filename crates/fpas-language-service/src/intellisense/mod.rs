@@ -48,6 +48,10 @@ pub struct CompletionDocumentation {
     pub path: PathBuf,
     /// Start offset of the complete declaration.
     pub declaration_offset: usize,
+    /// Store-owned identity of the exact declaration snapshot.
+    pub source_revision: u64,
+    /// Owner-qualified declaration name used to reject offset reuse.
+    pub qualified_name: String,
 }
 
 /// One completion entry grounded in a declaration or parser keyword.

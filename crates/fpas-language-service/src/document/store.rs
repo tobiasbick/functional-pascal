@@ -3,17 +3,34 @@
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use super::{DocumentSnapshot, SourceVersion, normalized_path};
 use crate::LanguageServiceError;
 
 /// Versioned source store whose open editor buffers override disk contents.
-#[derive(Default)]
+#[derive(Clone)]
 pub struct DocumentStore {
     open: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
-    disk: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
-    next_disk_revision: u64,
-    next_snapshot_revision: u64,
+    disk: Arc<Mutex<DiskSnapshots>>,
+    next_snapshot_revision: Arc<AtomicU64>,
+}
+
+#[derive(Default)]
+struct DiskSnapshots {
+    values: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
+    next_revision: u64,
+}
+
+impl Default for DocumentStore {
+    fn default() -> Self {
+        Self {
+            open: HashMap::new(),
+            disk: Arc::new(Mutex::new(DiskSnapshots::default())),
+            next_snapshot_revision: Arc::new(AtomicU64::new(0)),
+        }
+    }
 }
 
 impl DocumentStore {
@@ -91,7 +108,11 @@ impl DocumentStore {
 
     /// Discards a disk snapshot without affecting an authoritative open editor buffer.
     pub fn invalidate_disk(&mut self, path: &Path) {
-        self.disk.remove(&normalized_path(path));
+        self.disk
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .values
+            .remove(&normalized_path(path));
     }
 
     /// Returns every authoritative open editor snapshot in stable path order.
@@ -124,33 +145,44 @@ impl DocumentStore {
         let source = match std::fs::read_to_string(&path) {
             Ok(source) => source,
             Err(error) => {
-                self.disk.remove(&path);
+                self.disk
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .values
+                    .remove(&path);
                 return Err(LanguageServiceError::source_read(&path, error));
             }
         };
-        if let Some(snapshot) = self.disk.get(&path)
+        let mut disk = self
+            .disk
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(snapshot) = disk.values.get(&path)
             && snapshot.source() == source
         {
             return Ok(Arc::clone(snapshot));
         }
 
-        self.next_disk_revision = self.next_disk_revision.saturating_add(1);
+        disk.next_revision = disk.next_revision.saturating_add(1);
         let revision = self.next_snapshot_revision(&path)?;
         let snapshot = Arc::new(DocumentSnapshot::parse(
             &path,
-            SourceVersion::Disk(self.next_disk_revision),
+            SourceVersion::Disk(disk.next_revision),
             revision,
             Arc::<str>::from(source),
         ));
-        self.disk.insert(path, Arc::clone(&snapshot));
+        disk.values.insert(path, Arc::clone(&snapshot));
         Ok(snapshot)
     }
 
-    fn next_snapshot_revision(&mut self, path: &Path) -> Result<u64, LanguageServiceError> {
-        self.next_snapshot_revision =
-            self.next_snapshot_revision.checked_add(1).ok_or_else(|| {
+    fn next_snapshot_revision(&self, path: &Path) -> Result<u64, LanguageServiceError> {
+        self.next_snapshot_revision
+            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |revision| {
+                revision.checked_add(1)
+            })
+            .map(|revision| revision + 1)
+            .map_err(|_| {
                 LanguageServiceError::analysis(path, "document snapshot revision space exhausted")
-            })?;
-        Ok(self.next_snapshot_revision)
+            })
     }
 }

@@ -111,6 +111,20 @@ impl LanguageService {
         }
     }
 
+    /// Creates an isolated query service over the current immutable source snapshots.
+    ///
+    /// The returned service shares parsed snapshots but owns an independent document map and
+    /// analysis cache. Later editor mutations on either service do not affect the other.
+    #[must_use]
+    pub fn fork_for_queries(&self) -> Self {
+        Self {
+            documents: self.documents.clone(),
+            workspace: self.workspace.clone(),
+            standard_library: self.standard_library.clone(),
+            analysis_cache: AnalysisCache::default(),
+        }
+    }
+
     /// Discovers and loads source, project, or workspace context.
     #[must_use]
     pub fn load(input: &Path) -> Self {

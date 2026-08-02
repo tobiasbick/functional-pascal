@@ -34,7 +34,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 
 | Crate | File | Highest priority | Primary concern |
 | --- | --- | --- | --- |
-| `fpas-bench` | [fpas-bench.md](fpas-bench.md) | P1 | fail-open regression gates |
+| `fpas-bench` | [fpas-bench.md](fpas-bench.md) | Done | all findings completed 2026-08-02 |
 | `fpas-build` | [fpas-build.md](fpas-build.md) | P1 | cache identity and publication |
 | `fpas-bundle` | [fpas-bundle.md](fpas-bundle.md) | P1 | executable publication |
 | `fpas-bytecode` | [fpas-bytecode.md](fpas-bytecode.md) | P1 | executable validation and deadlock |

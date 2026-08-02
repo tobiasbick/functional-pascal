@@ -1,10 +1,16 @@
 //! Persist and compare benchmark run results.
 
+mod comparison;
+mod publication;
+
 use crate::suite::BenchRun;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
+
+pub use comparison::{CompareRow, ComparisonBaseline, has_regression};
+use publication::write_text;
 
 /// Saved suite snapshot written under `.temp-data/bench/`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,8 +19,21 @@ pub struct BenchSnapshot {
     pub label: String,
     /// Unix timestamp when the snapshot was written.
     pub timestamp_unix: u64,
+    /// Selected suite group, or `None` for the complete suite.
+    pub group: Option<String>,
     /// Per-bench measurements.
     pub benches: Vec<BenchResult>,
+}
+
+impl BenchSnapshot {
+    fn from_runs(label: &str, timestamp_unix: u64, group: Option<&str>, runs: &[BenchRun]) -> Self {
+        Self {
+            label: label.to_owned(),
+            timestamp_unix,
+            group: group.map(str::to_owned),
+            benches: runs.iter().map(BenchResult::from).collect(),
+        }
+    }
 }
 
 /// One bench row inside a snapshot.
@@ -57,6 +76,7 @@ pub fn save_snapshot(
     repo_root: &Path,
     label: &str,
     timestamp_unix: u64,
+    group: Option<&str>,
     runs: &[BenchRun],
 ) -> Result<PathBuf, String> {
     let path = snapshot_path(repo_root, label)?;
@@ -64,15 +84,10 @@ pub fn save_snapshot(
     fs::create_dir_all(&dir)
         .map_err(|error| format!("failed to create {}: {error}", dir.display()))?;
 
-    let snapshot = BenchSnapshot {
-        label: label.to_owned(),
-        timestamp_unix,
-        benches: runs.iter().map(BenchResult::from).collect(),
-    };
+    let snapshot = BenchSnapshot::from_runs(label, timestamp_unix, group, runs);
     let text = serde_json::to_string_pretty(&snapshot)
         .map_err(|error| format!("failed to serialize snapshot: {error}"))?;
-    fs::write(&path, text)
-        .map_err(|error| format!("failed to write {}: {error}", path.display()))?;
+    write_text(&path, &text)?;
     Ok(path)
 }
 
@@ -146,12 +161,7 @@ pub fn record_history(
 
     let entry = format_history_entry(title, group, runs);
     let updated = insert_history_entry(&existing, &entry);
-    if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|error| format!("failed to create {}: {error}", parent.display()))?;
-    }
-    fs::write(&path, updated)
-        .map_err(|error| format!("failed to write {}: {error}", path.display()))?;
+    write_text(&path, &updated)?;
     Ok(path)
 }
 
@@ -232,61 +242,21 @@ fn civil_from_days(days_since_epoch: i64) -> (i32, u32, u32) {
     (year as i32, m as u32, d as u32)
 }
 
-/// Comparison row for console output.
-#[derive(Debug, Clone)]
-pub struct CompareRow {
-    /// Bench id.
-    pub id: String,
-    /// Baseline elapsed ms, if present.
-    pub baseline_ms: Option<u64>,
-    /// Current elapsed ms.
-    pub current_ms: u64,
-    /// Percent change vs baseline: `(current - baseline) / baseline * 100`.
-    pub delta_pct: Option<f64>,
-    /// Optional throughput from the current run.
-    pub throughput: Option<String>,
-}
-
-/// Build comparison rows aligned by bench id.
-pub fn compare_runs(baseline: &BenchSnapshot, current: &[BenchRun]) -> Vec<CompareRow> {
-    current
-        .iter()
-        .map(|run| {
-            let baseline_ms = baseline
-                .benches
-                .iter()
-                .find(|entry| entry.id == run.id)
-                .map(|entry| entry.elapsed_ms);
-            let delta_pct = baseline_ms.map(|base| {
-                if base == 0 {
-                    0.0
-                } else {
-                    ((run.elapsed_ms as f64) - (base as f64)) / (base as f64) * 100.0
-                }
-            });
-            CompareRow {
-                id: run.id.clone(),
-                baseline_ms,
-                current_ms: run.elapsed_ms,
-                delta_pct,
-                throughput: run.throughput.clone(),
-            }
-        })
-        .collect()
-}
-
-/// True when any compared bench slowed by more than `threshold_pct`.
-pub fn has_regression(rows: &[CompareRow], threshold_pct: f64) -> bool {
-    rows.iter().any(|row| match row.delta_pct {
-        Some(delta) => delta > threshold_pct,
-        None => false,
-    })
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{HISTORY_HEADER, format_history_entry, insert_history_entry};
+    use super::{BenchSnapshot, HISTORY_HEADER, format_history_entry, insert_history_entry};
     use crate::suite::BenchRun;
+    use std::error::Error;
+
+    #[test]
+    fn snapshot_json_preserves_selected_group() -> Result<(), Box<dyn Error>> {
+        let snapshot = BenchSnapshot::from_runs("baseline", 1, Some("vm"), &[]);
+        let json = serde_json::to_string(&snapshot)?;
+        let decoded: BenchSnapshot = serde_json::from_str(&json)?;
+
+        assert_eq!(decoded.group.as_deref(), Some("vm"));
+        Ok(())
+    }
 
     #[test]
     fn insert_history_entry_prepends_after_header_marker() {

@@ -10,7 +10,7 @@ Committed progress over time lives in [`history.md`](history.md). Agent workflow
 
 - Quiet machine (avoid heavy background load).
 - Same power settings when comparing runs.
-- Release CLI: the harness builds `fpas-cli` in release mode if `target/release/fpas` is missing.
+- Release CLI: the harness asks `cargo metadata` for the effective target directory and builds `fpas-cli` in release mode if the corresponding `release/fpas` executable is missing. This honors `CARGO_TARGET_DIR` and Cargo configuration.
 
 Do not treat absolute times as portable across machines. Compare before/after on one machine.
 
@@ -68,7 +68,8 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 
 | Command | Meaning |
 |---------|---------|
-| `cargo bench-fpas run` | Run the full suite (`vm` + `tui`) |
+| `cargo bench-fpas --help` | Print usage, configured groups, and copyable examples |
+| `cargo bench-fpas run` | Run the full suite (`vm` + `concurrency` + `tui`) |
 | `cargo bench-fpas run --group vm` | VM microbenches only |
 | `cargo bench-fpas run --group concurrency` | Task scheduling benchmark only |
 | `cargo bench-fpas run --group tui` | Headless TUI bench only |
@@ -76,11 +77,19 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 | `cargo bench-fpas compare <label>` | Re-run and print Δ vs a saved label |
 | `cargo bench-fpas record <title…>` | Run and prepend a dated entry to [`history.md`](history.md) |
 
+Saved snapshots record whether they contain the complete suite or one `--group`. A comparison must use the same group selection and must find exactly one baseline result for every current benchmark. Re-run `save` for snapshots created before group metadata was introduced or after the selected suite changes.
+
 Compare is **advisory** by default (exit 0 when all benches complete). To fail the process when any bench is slower by more than a percent threshold:
 
 ```sh
 cargo bench-fpas compare before --fail-on-regression --threshold-pct 10
 ```
+
+The threshold is a finite, non-negative percentage. Values such as `NaN` or infinity are rejected so the regression gate cannot silently become ineffective.
+
+A baseline and current duration of 0 ms compare as no change. A 0 ms baseline followed by a positive duration is rejected as an invalid measurement; increase that benchmark's workload and save a new baseline.
+
+Snapshot JSON and committed history are written to a flushed same-directory staging file and atomically committed. A failed write or commit leaves the previous file intact.
 
 ## Editing the suite
 
@@ -90,6 +99,9 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` file relative to the repo root
 - `args` — arguments after `--` (usually iteration count)
+- `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps the process while retaining captured stdout/stderr in the diagnostic
+
+The curated suite currently uses 120 seconds per entry. Give intentionally longer workloads an explicit larger value instead of disabling the bound.
 
 Excluded from the suite: `examples/pascal/concurrency/task_memory_benchmark.fpas` (long sleep / memory focus).
 

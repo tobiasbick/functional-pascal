@@ -2,54 +2,88 @@
 //!
 //! See [`docs/bench/README.md`](../../../docs/bench/README.md).
 
+mod arguments;
 mod results;
 mod suite;
 
+use arguments::{Command, Options, ParseError, ParseOutcome, parse_args, usage};
 use results::{
-    CompareRow, compare_runs, has_regression, load_snapshot, record_history, save_snapshot,
+    CompareRow, ComparisonBaseline, has_regression, load_snapshot, record_history, save_snapshot,
 };
-use std::env;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 use suite::{
-    BenchRun, ensure_release_fpas, filter_group, load_suite, run_suite, unix_timestamp_secs,
+    BenchRun, ensure_release_fpas, filter_group, group_names, load_suite, run_suite,
+    unix_timestamp_secs,
 };
 
 fn main() -> ExitCode {
-    match run() {
-        Ok(code) => code,
-        Err(message) => {
-            eprintln!("error: {message}");
-            ExitCode::from(1)
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match parse_args(&args) {
+        Ok(ParseOutcome::Help) => {
+            println!("{}", usage(&configured_group_names()));
+            ExitCode::SUCCESS
         }
+        Ok(ParseOutcome::Execute(options)) => finish(execute(options)),
+        Err(ParseError::Message(message)) => fail(&message, false),
+        Err(ParseError::Usage(message)) => fail(&message, true),
     }
 }
 
-fn run() -> Result<ExitCode, String> {
-    let args: Vec<String> = env::args().skip(1).collect();
-    let options = parse_args(&args)?;
+fn finish(result: Result<ExitCode, String>) -> ExitCode {
+    match result {
+        Ok(code) => code,
+        Err(message) => fail(&message, false),
+    }
+}
+
+fn fail(message: &str, show_usage: bool) -> ExitCode {
+    eprintln!("error: {message}");
+    if show_usage {
+        eprintln!("\n{}", usage(&configured_group_names()));
+    }
+    ExitCode::from(1)
+}
+
+fn configured_group_names() -> Vec<String> {
+    find_repo_root()
+        .and_then(|repo_root| load_suite(&repo_root))
+        .map(|suite| group_names(&suite))
+        .unwrap_or_default()
+}
+
+fn execute(options: Options) -> Result<ExitCode, String> {
     let repo_root = find_repo_root()?;
     let suite = load_suite(&repo_root)?;
     let specs = filter_group(&suite, options.group.as_deref())?;
-    let fpas = ensure_release_fpas(&repo_root)?;
 
     match options.command {
         Command::Run => {
+            let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
             print_run_table(&runs);
             Ok(ExitCode::SUCCESS)
         }
         Command::Save { label } => {
+            let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
             print_run_table(&runs);
-            let path = save_snapshot(&repo_root, &label, unix_timestamp_secs(), &runs)?;
+            let path = save_snapshot(
+                &repo_root,
+                &label,
+                unix_timestamp_secs(),
+                options.group.as_deref(),
+                &runs,
+            )?;
             println!("saved {}", path.display());
             Ok(ExitCode::SUCCESS)
         }
         Command::Compare { label } => {
             let baseline = load_snapshot(&repo_root, &label)?;
+            let baseline = ComparisonBaseline::new(&baseline, options.group.as_deref())?;
+            let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
-            let rows = compare_runs(&baseline, &runs);
+            let rows = baseline.compare(&runs)?;
             print_compare_table(&rows);
             if options.fail_on_regression && has_regression(&rows, options.threshold_pct) {
                 eprintln!(
@@ -61,6 +95,7 @@ fn run() -> Result<ExitCode, String> {
             Ok(ExitCode::SUCCESS)
         }
         Command::Record { title } => {
+            let fpas = ensure_release_fpas(&repo_root)?;
             let runs = run_suite(&repo_root, &fpas, &specs)?;
             print_run_table(&runs);
             let path = record_history(&repo_root, &title, options.group.as_deref(), &runs)?;
@@ -70,93 +105,8 @@ fn run() -> Result<ExitCode, String> {
     }
 }
 
-#[derive(Debug)]
-enum Command {
-    Run,
-    Save { label: String },
-    Compare { label: String },
-    Record { title: String },
-}
-
-#[derive(Debug)]
-struct Options {
-    command: Command,
-    group: Option<String>,
-    fail_on_regression: bool,
-    threshold_pct: f64,
-}
-
-fn parse_args(args: &[String]) -> Result<Options, String> {
-    if args.is_empty() {
-        return Err(usage());
-    }
-
-    let mut group = None;
-    let mut fail_on_regression = false;
-    let mut threshold_pct = 10.0_f64;
-    let mut positional = Vec::new();
-    let mut index = 0;
-    while index < args.len() {
-        match args[index].as_str() {
-            "--group" => {
-                index += 1;
-                let value = args
-                    .get(index)
-                    .ok_or_else(|| "missing value for --group".to_owned())?;
-                group = Some(value.clone());
-            }
-            "--fail-on-regression" => {
-                fail_on_regression = true;
-            }
-            "--threshold-pct" => {
-                index += 1;
-                let value = args
-                    .get(index)
-                    .ok_or_else(|| "missing value for --threshold-pct".to_owned())?;
-                threshold_pct = value
-                    .parse::<f64>()
-                    .map_err(|_| format!("invalid --threshold-pct value: {value}"))?;
-                if threshold_pct < 0.0 {
-                    return Err("--threshold-pct must be non-negative".to_owned());
-                }
-            }
-            "--help" | "-h" => return Err(usage()),
-            flag if flag.starts_with('-') => {
-                return Err(format!("unknown flag `{flag}`\n{}", usage()));
-            }
-            other => positional.push(other.to_owned()),
-        }
-        index += 1;
-    }
-
-    let command = match positional.first().map(String::as_str) {
-        Some("run") if positional.len() == 1 => Command::Run,
-        Some("save") if positional.len() == 2 => Command::Save {
-            label: positional[1].clone(),
-        },
-        Some("compare") if positional.len() == 2 => Command::Compare {
-            label: positional[1].clone(),
-        },
-        Some("record") if positional.len() >= 2 => Command::Record {
-            title: positional[1..].join(" "),
-        },
-        _ => return Err(usage()),
-    };
-
-    Ok(Options {
-        command,
-        group,
-        fail_on_regression,
-        threshold_pct,
-    })
-}
-
-fn usage() -> String {
-    "usage:\n  fpas-bench run [--group vm|tui]\n  fpas-bench save <label> [--group vm|tui]\n  fpas-bench compare <label> [--group vm|tui] [--fail-on-regression] [--threshold-pct N]\n  fpas-bench record <title…> [--group vm|tui]\n\nSee docs/bench/README.md.".to_owned()
-}
-
 fn find_repo_root() -> Result<PathBuf, String> {
-    if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
+    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
         let crate_dir = PathBuf::from(manifest_dir);
         if let Some(root) = crate_dir.parent().and_then(Path::parent)
             && root.join("docs/bench/suite.toml").is_file()
@@ -165,7 +115,7 @@ fn find_repo_root() -> Result<PathBuf, String> {
         }
     }
 
-    let mut dir = env::current_dir().map_err(|error| format!("cwd: {error}"))?;
+    let mut dir = std::env::current_dir().map_err(|error| format!("cwd: {error}"))?;
     loop {
         if dir.join("docs/bench/suite.toml").is_file() {
             return Ok(dir);
@@ -196,14 +146,8 @@ fn print_compare_table(rows: &[CompareRow]) {
     );
     println!("{}", "-".repeat(72));
     for row in rows {
-        let before = row
-            .baseline_ms
-            .map(|value| value.to_string())
-            .unwrap_or_else(|| "-".to_owned());
-        let delta = row
-            .delta_pct
-            .map(|value| format!("{value:+.1}"))
-            .unwrap_or_else(|| "-".to_owned());
+        let before = row.baseline_ms.to_string();
+        let delta = format!("{:+.1}", row.delta_pct);
         let throughput = row.throughput.as_deref().unwrap_or("-");
         println!(
             "{:<16} {:>10} {:>10} {:>10}  {}",

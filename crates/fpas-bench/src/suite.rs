@@ -1,22 +1,29 @@
 //! Suite definition loading and running FPAS benchmark programs.
 
+mod executable;
+mod runner;
+
 use serde::Deserialize;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
+use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub use executable::ensure_release_fpas;
+pub use runner::run_suite;
 
 /// One curated benchmark from `docs/bench/suite.toml`.
 #[derive(Debug, Clone, Deserialize)]
 pub struct BenchSpec {
     /// Short identifier used in tables and JSON results.
     pub id: String,
-    /// Filter group (`vm` or `tui`).
+    /// Filter group configured by the suite (`vm`, `concurrency`, or `tui`).
     pub group: String,
     /// Path to the `.fpas` program, relative to the repository root.
     pub path: String,
     /// Arguments passed after `fpas run <path> --`.
     pub args: Vec<String>,
+    /// Maximum wall-clock runtime before the process is terminated.
+    pub timeout_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -47,7 +54,30 @@ pub fn load_suite(repo_root: &Path) -> Result<Vec<BenchSpec>, String> {
     if file.bench.is_empty() {
         return Err(format!("{} contains no [[bench]] entries", path.display()));
     }
+    validate_specs(&path, &file.bench)?;
     Ok(file.bench)
+}
+
+fn validate_specs(path: &Path, specs: &[BenchSpec]) -> Result<(), String> {
+    if let Some(spec) = specs.iter().find(|spec| spec.timeout_ms == 0) {
+        return Err(format!(
+            "{} benchmark `{}` has invalid timeout_ms 0",
+            path.display(),
+            spec.id
+        ));
+    }
+    Ok(())
+}
+
+/// Return configured group names in first-appearance order.
+pub fn group_names(specs: &[BenchSpec]) -> Vec<String> {
+    let mut groups = Vec::new();
+    for spec in specs {
+        if !groups.contains(&spec.group) {
+            groups.push(spec.group.clone());
+        }
+    }
+    groups
 }
 
 /// Filter suite entries by optional group name.
@@ -61,132 +91,12 @@ pub fn filter_group(specs: &[BenchSpec], group: Option<&str>) -> Result<Vec<Benc
         .cloned()
         .collect();
     if filtered.is_empty() {
+        let known_groups = group_names(specs).join(", ");
         return Err(format!(
-            "no benchmarks in group `{group}` (known groups: vm, tui)"
+            "no benchmarks in group `{group}` (known groups: {known_groups})"
         ));
     }
     Ok(filtered)
-}
-
-/// Ensure the release `fpas` binary exists, building `fpas-cli` when missing.
-pub fn ensure_release_fpas(repo_root: &Path) -> Result<PathBuf, String> {
-    let fpas = release_fpas_path(repo_root);
-    if fpas.is_file() {
-        return Ok(fpas);
-    }
-    eprintln!("release fpas not found; building fpas-cli --release…");
-    let status = Command::new("cargo")
-        .args(["build", "--release", "-p", "fpas-cli"])
-        .current_dir(repo_root)
-        .status()
-        .map_err(|error| format!("failed to run cargo build: {error}"))?;
-    if !status.success() {
-        return Err(format!(
-            "cargo build --release -p fpas-cli failed ({status})"
-        ));
-    }
-    if !fpas.is_file() {
-        return Err(format!(
-            "expected release binary at {} after build",
-            fpas.display()
-        ));
-    }
-    Ok(fpas)
-}
-
-fn release_fpas_path(repo_root: &Path) -> PathBuf {
-    let mut path = repo_root.join("target/release/fpas");
-    if cfg!(windows) {
-        path.set_extension("exe");
-    }
-    path
-}
-
-/// Run one suite entry and parse its elapsed time.
-pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<BenchRun, String> {
-    let program = repo_root.join(&spec.path);
-    if !program.is_file() {
-        return Err(format!("benchmark source missing: {}", program.display()));
-    }
-
-    let mut command = Command::new(fpas);
-    command
-        .arg("run")
-        .arg(&program)
-        .arg("--")
-        .args(&spec.args)
-        .current_dir(repo_root)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
-
-    let output = command
-        .output()
-        .map_err(|error| format!("failed to spawn {}: {error}", fpas.display()))?;
-    let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
-    let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
-
-    if !output.status.success() {
-        return Err(format!(
-            "benchmark `{}` failed ({})\n--- stdout ---\n{stdout}\n--- stderr ---\n{stderr}",
-            spec.id, output.status
-        ));
-    }
-
-    let elapsed_ms = parse_elapsed_ms(&stdout).ok_or_else(|| {
-        format!(
-            "benchmark `{}` stdout missing `elapsed: N ms` line:\n{stdout}",
-            spec.id
-        )
-    })?;
-    let throughput = parse_throughput_line(&stdout);
-
-    Ok(BenchRun {
-        id: spec.id.clone(),
-        elapsed_ms,
-        throughput,
-        raw_stdout: stdout,
-    })
-}
-
-/// Run all filtered specs in order.
-pub fn run_suite(
-    repo_root: &Path,
-    fpas: &Path,
-    specs: &[BenchSpec],
-) -> Result<Vec<BenchRun>, String> {
-    let mut runs = Vec::with_capacity(specs.len());
-    for spec in specs {
-        eprintln!("running {}…", spec.id);
-        runs.push(run_bench(repo_root, fpas, spec)?);
-    }
-    Ok(runs)
-}
-
-/// Parse `elapsed: <int> ms` from benchmark stdout.
-pub fn parse_elapsed_ms(stdout: &str) -> Option<u64> {
-    for line in stdout.lines() {
-        let line = line.trim();
-        let Some(rest) = line.strip_prefix("elapsed:") else {
-            continue;
-        };
-        let rest = rest.trim();
-        let Some(number) = rest.strip_suffix("ms") else {
-            continue;
-        };
-        let number = number.trim();
-        if let Ok(value) = number.parse::<u64>() {
-            return Some(value);
-        }
-    }
-    None
-}
-
-fn parse_throughput_line(stdout: &str) -> Option<String> {
-    stdout
-        .lines()
-        .map(str::trim)
-        .find(|line| line.starts_with("throughput:"))
-        .map(str::to_owned)
 }
 
 /// Unix timestamp seconds for result metadata.
@@ -199,16 +109,41 @@ pub fn unix_timestamp_secs() -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_elapsed_ms;
+    use super::{BenchSpec, filter_group, group_names, validate_specs};
+    use std::path::Path;
 
     #[test]
-    fn parse_elapsed_ms_reads_standard_line() {
-        let stdout = "iterations: 1\nelapsed: 142 ms\nthroughput: 7 ops/s\n";
-        assert_eq!(parse_elapsed_ms(stdout), Some(142));
+    fn group_names_include_every_configured_group() {
+        let specs = [spec("vm"), spec("concurrency"), spec("tui"), spec("vm")];
+        assert_eq!(group_names(&specs), ["vm", "concurrency", "tui"]);
     }
 
     #[test]
-    fn parse_elapsed_ms_ignores_noise() {
-        assert_eq!(parse_elapsed_ms("no timing here\n"), None);
+    fn unknown_group_diagnostic_lists_every_configured_group() {
+        let specs = [spec("vm"), spec("concurrency"), spec("tui")];
+        assert_eq!(
+            filter_group(&specs, Some("missing")).map(|_| ()),
+            Err("no benchmarks in group `missing` (known groups: vm, concurrency, tui)".to_owned())
+        );
+    }
+
+    #[test]
+    fn suite_rejects_zero_timeout() {
+        let mut spec = spec("vm");
+        spec.timeout_ms = 0;
+        assert_eq!(
+            validate_specs(Path::new("suite.toml"), &[spec]),
+            Err("suite.toml benchmark `vm_bench` has invalid timeout_ms 0".to_owned())
+        );
+    }
+
+    fn spec(group: &str) -> BenchSpec {
+        BenchSpec {
+            id: format!("{group}_bench"),
+            group: group.to_owned(),
+            path: "unused.fpas".to_owned(),
+            args: Vec::new(),
+            timeout_ms: 1,
+        }
     }
 }

@@ -118,7 +118,7 @@ Include:
 
 | Command | Purpose |
 |---------|---------|
-| `cargo bench-fpas run [--group vm\|tui]` | One-shot suite |
+| `cargo bench-fpas run [--group vm\|concurrency\|tui]` | One-shot suite |
 | `cargo bench-fpas save <label>` | Local JSON baseline |
 | `cargo bench-fpas compare <label>` | Δ vs local baseline |
 | `cargo bench-fpas record "<note>"` | Append to `docs/bench/history.md` |

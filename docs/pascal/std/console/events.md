@@ -29,6 +29,11 @@ if E.kind = EventKind.Resize then
 - **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
 - **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
 
+Terminal key-release notifications are not FPAS events. When one arrives, the
+runtime continues waiting with the remaining deadline instead of returning
+`None`. An immediately ready key press is still returned when the remaining
+deadline reaches zero.
+
 ```pascal
 uses Std.Console, Std.Option;
 
@@ -45,6 +50,10 @@ end
 - **Parameters:** none.
 - **Returns:** `Some(E)` if an event is already available; `None` if the queue is empty.
 - **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
+
+The poll drains immediately ready key-release notifications before deciding
+that no FPAS event is available, so a ready press following a release is
+returned by the same call.
 
 ```pascal
 uses Std.Console, Std.Option;
@@ -94,6 +103,10 @@ end
 - **Effect:** restores modes owned by the matching acquire, in reverse order. Idempotent when
   nothing is acquired. Console teardown also restores owned screen modes as a safety net; raw mode
   remains restored by `KeyInput` teardown when it was enabled.
+- **Errors:** if restoring one mode fails, modes already restored stay released
+  while the failed mode remains owned. Calling `ReleaseInteractiveTerminal`
+  again retries only the remaining modes; console teardown performs one final
+  best-effort retry.
 
 ## See also
 

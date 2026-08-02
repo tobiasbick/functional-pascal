@@ -32,6 +32,11 @@ pub struct GraphSession {
 
 impl GraphSession {
     /// Opens one graph session after validating the requested surface size.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error for an invalid surface size, a second active session,
+    /// or a backend initialization failure.
     pub fn open(
         &mut self,
         width: i64,
@@ -61,13 +66,24 @@ impl GraphSession {
     }
 
     /// Closes the active graph session and clears staged state.
+    ///
+    /// The session becomes closed even when backend teardown reports an error,
+    /// because the thread-local backend resource has already been detached.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the active backend cannot complete its teardown.
     pub fn close(&mut self, location: SourceLocation) -> Result<(), StdError> {
         if !self.open {
             return Ok(());
         }
 
-        backend::close_graph_backend(location)?;
+        let result = backend::close_graph_backend(location);
+        self.clear_session_state();
+        result
+    }
 
+    fn clear_session_state(&mut self) {
         self.open = false;
         self.width = 0;
         self.height = 0;
@@ -75,7 +91,6 @@ impl GraphSession {
         self.backbuffer = GraphBackbuffer::default();
         self.last_uploaded_frame = None;
         self.redraw_pending = false;
-        Ok(())
     }
 
     /// Returns whether a graph session is currently open.
@@ -349,6 +364,15 @@ impl GraphSession {
             self.backbuffer.resize(width, height, location)?;
         }
         Ok(())
+    }
+}
+
+impl Drop for GraphSession {
+    fn drop(&mut self) {
+        if self.open {
+            let _ = backend::close_graph_backend(SourceLocation::new(1, 1));
+            self.clear_session_state();
+        }
     }
 }
 

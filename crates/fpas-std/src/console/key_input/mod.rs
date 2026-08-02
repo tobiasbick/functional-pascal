@@ -7,6 +7,7 @@ use crossterm::terminal::disable_raw_mode;
 use fpas_bytecode::SourceLocation;
 use std::collections::VecDeque;
 
+mod event_source;
 mod mapping;
 mod read;
 

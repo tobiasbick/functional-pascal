@@ -1,5 +1,6 @@
 //! Graph session lifecycle tests.
 
+use super::super::backend::fail_next_graph_backend_close_for_tests;
 use super::super::session::GraphSession;
 use super::common::{test_location, with_headless};
 #[test]
@@ -163,5 +164,74 @@ fn graph_session_size_and_close_follow_open_state() {
             "message={}",
             error.message
         );
+    });
+}
+
+#[test]
+fn graph_session_drop_releases_backend_before_reopen_on_same_thread() {
+    with_headless(|| {
+        let mut first = GraphSession::default();
+        first
+            .open(320, 200, "First graph", test_location())
+            .expect("first open should succeed");
+
+        drop(first);
+
+        let mut second = GraphSession::default();
+        second
+            .open(160, 120, "Second graph", test_location())
+            .expect("drop must release the backend");
+        second
+            .close(test_location())
+            .expect("second close should succeed");
+    });
+}
+
+#[test]
+fn graph_session_drop_clears_backend_even_when_close_reports_failure() {
+    with_headless(|| {
+        let mut first = GraphSession::default();
+        first
+            .open(320, 200, "First graph", test_location())
+            .expect("first open should succeed");
+        fail_next_graph_backend_close_for_tests();
+
+        drop(first);
+
+        let mut second = GraphSession::default();
+        second
+            .open(160, 120, "Second graph", test_location())
+            .expect("failed drop close must still detach the backend");
+        second
+            .close(test_location())
+            .expect("second close should succeed");
+    });
+}
+
+#[test]
+fn graph_session_close_failure_leaves_session_closed_and_reopenable() {
+    with_headless(|| {
+        let mut session = GraphSession::default();
+        session
+            .open(320, 200, "First graph", test_location())
+            .expect("first open should succeed");
+        fail_next_graph_backend_close_for_tests();
+
+        let error = session
+            .close(test_location())
+            .expect_err("injected close must fail");
+
+        assert!(
+            error
+                .message
+                .contains("Injected Std.Graph backend close failure")
+        );
+        assert!(!session.is_open());
+        session
+            .open(160, 120, "Second graph", test_location())
+            .expect("closed session must reopen after failed teardown");
+        session
+            .close(test_location())
+            .expect("second close should succeed");
     });
 }

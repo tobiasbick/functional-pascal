@@ -55,8 +55,7 @@ impl Console {
         }
 
         if let Err(error) = self.enter_alt_screen(location) {
-            let _ = key_input.disable_raw_mode_explicit(location);
-            self.interactive.acquired = false;
+            self.interactive.acquired = key_input.disable_raw_mode_explicit(location).is_err();
             return Err(error);
         }
         self.interactive.owns_alt_screen = true;
@@ -97,47 +96,15 @@ impl Console {
             return Ok(());
         }
 
-        let mut first_error = None;
-        if self.interactive.owns_cursor_hidden
-            && let Err(error) = self.cursor_on(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
+        let mut first_error = self.restore_owned_console_modes(location);
+        if let Err(error) = key_input.disable_raw_mode_explicit(location) {
+            record_first_error(&mut first_error, error);
         }
-        if self.interactive.owns_paste
-            && let Err(error) = self.disable_paste(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
-        }
-        if self.interactive.owns_focus
-            && let Err(error) = self.disable_focus(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
-        }
-        if self.interactive.owns_mouse
-            && let Err(error) = self.disable_mouse(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
-        }
-        if self.interactive.owns_alt_screen
-            && let Err(error) = self.leave_alt_screen(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
-        }
-        if let Err(error) = key_input.disable_raw_mode_explicit(location)
-            && first_error.is_none()
-        {
-            first_error = Some(error);
-        }
-
-        self.clear_interactive_ownership();
         if let Some(error) = first_error {
             return Err(error);
         }
+
+        self.clear_interactive_ownership();
         Ok(())
     }
 
@@ -154,43 +121,67 @@ impl Console {
         if !self.interactive.acquired {
             return;
         }
-        let location = SourceLocation::new(0, 0);
-        if self.interactive.owns_cursor_hidden {
-            let _ = self.cursor_on(location);
+        let location = SourceLocation::new(1, 1);
+        if self.restore_owned_console_modes(location).is_none() {
+            self.clear_interactive_ownership();
         }
-        if self.interactive.owns_paste {
-            let _ = self.disable_paste(location);
-        }
-        if self.interactive.owns_focus {
-            let _ = self.disable_focus(location);
-        }
-        if self.interactive.owns_mouse {
-            let _ = self.disable_mouse(location);
-        }
-        if self.interactive.owns_alt_screen {
-            let _ = self.leave_alt_screen(location);
-        }
-        self.clear_interactive_ownership();
     }
 
     fn rollback_partial_acquire(&mut self, key_input: &mut KeyInput, location: SourceLocation) {
-        if self.interactive.owns_paste {
-            let _ = self.disable_paste(location);
+        let console_error = self.restore_owned_console_modes(location);
+        let raw_mode_restored = key_input.disable_raw_mode_explicit(location).is_ok();
+        if console_error.is_none() && raw_mode_restored {
+            self.clear_interactive_ownership();
         }
-        if self.interactive.owns_focus {
-            let _ = self.disable_focus(location);
+    }
+
+    fn restore_owned_console_modes(&mut self, location: SourceLocation) -> Option<StdError> {
+        let mut ownership = std::mem::take(&mut self.interactive);
+        let mut first_error = None;
+
+        if ownership.owns_cursor_hidden {
+            let result = self.cursor_on(location);
+            record_mode_restoration(&mut ownership.owns_cursor_hidden, result, &mut first_error);
         }
-        if self.interactive.owns_mouse {
-            let _ = self.disable_mouse(location);
+        if ownership.owns_paste {
+            let result = self.disable_paste(location);
+            record_mode_restoration(&mut ownership.owns_paste, result, &mut first_error);
         }
-        if self.interactive.owns_alt_screen {
-            let _ = self.leave_alt_screen(location);
+        if ownership.owns_focus {
+            let result = self.disable_focus(location);
+            record_mode_restoration(&mut ownership.owns_focus, result, &mut first_error);
         }
-        let _ = key_input.disable_raw_mode_explicit(location);
-        self.clear_interactive_ownership();
+        if ownership.owns_mouse {
+            let result = self.disable_mouse(location);
+            record_mode_restoration(&mut ownership.owns_mouse, result, &mut first_error);
+        }
+        if ownership.owns_alt_screen {
+            let result = self.leave_alt_screen(location);
+            record_mode_restoration(&mut ownership.owns_alt_screen, result, &mut first_error);
+        }
+
+        self.interactive = ownership;
+        first_error
     }
 
     fn clear_interactive_ownership(&mut self) {
         self.interactive = InteractiveTerminalOwnership::default();
+    }
+}
+
+fn record_mode_restoration(
+    owned: &mut bool,
+    result: Result<(), StdError>,
+    first_error: &mut Option<StdError>,
+) {
+    match result {
+        Ok(()) => *owned = false,
+        Err(error) => record_first_error(first_error, error),
+    }
+}
+
+fn record_first_error(first_error: &mut Option<StdError>, error: StdError) {
+    if first_error.is_none() {
+        *first_error = Some(error);
     }
 }

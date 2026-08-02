@@ -31,6 +31,11 @@ thread_local! {
     static HEADLESS_TEST_GUARD: RefCell<Option<HeadlessTestGuard>> = const { RefCell::new(None) };
 }
 
+#[cfg(test)]
+thread_local! {
+    static FAIL_NEXT_CLOSE: Cell<bool> = const { Cell::new(false) };
+}
+
 struct HeadlessTestGuard {
     previous: BackendMode,
 }
@@ -63,6 +68,15 @@ impl GraphBackend {
     }
 
     fn close(&mut self, location: SourceLocation) -> Result<(), StdError> {
+        #[cfg(test)]
+        if FAIL_NEXT_CLOSE.with(|failure| failure.replace(false)) {
+            return Err(missing_backend_error(
+                "Injected Std.Graph backend close failure.",
+                "Retry with a fresh graph session after the backend resource is released.",
+                location,
+            ));
+        }
+
         match self {
             Self::Headless(backend) => backend.close(location),
             Self::Native(backend) => backend.close(location),
@@ -137,6 +151,11 @@ pub(crate) fn close_graph_backend(location: SourceLocation) -> Result<(), StdErr
 
         backend.close(location)
     })
+}
+
+#[cfg(test)]
+pub(crate) fn fail_next_graph_backend_close_for_tests() {
+    FAIL_NEXT_CLOSE.with(|failure| failure.set(true));
 }
 
 /// Returns the current graph surface size from the active backend.

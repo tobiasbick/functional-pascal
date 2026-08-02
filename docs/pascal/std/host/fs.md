@@ -82,10 +82,12 @@ if Std.Result.IsOk(WriteText('out.txt', 'hello')) then
 
 ## `function WriteTextAtomic(Path: string; Text: string): Result of boolean, string`
 
-Writes all UTF-8 bytes to a unique temporary sibling, flushes that file, and
-then replaces `Path`. A failure returns `Error(message)` and removes the
-temporary file. Callers therefore never observe a successfully published
-partially written file.
+Writes all UTF-8 bytes to a collision-resistant temporary sibling, flushes that
+file, and then atomically replaces `Path`. The previous file remains at `Path`
+until the replacement commits. A failure returns `Error(message)`, preserves an
+existing destination, and removes the temporary file owned by that call.
+Callers therefore never observe a successfully published partially written
+file.
 
 ```pascal
 case WriteTextAtomic('note.note', EncodedNote) of
@@ -94,11 +96,9 @@ case WriteTextAtomic('note.note', EncodedNote) of
 end
 ```
 
-On Unix, publishing uses one same-filesystem rename over the destination. On
-Windows, where the Rust standard-library rename cannot replace an existing
-file, the previous file is staged as a unique backup, the completed temporary
-file is published, and a failed publish restores the backup. The function
-removes its temporary and backup siblings after a successful replacement.
+Publication uses the host's same-directory atomic replacement primitive on
+Unix and Windows. It does not rename the previous destination to a separate
+backup and does not remove stale sibling files that it does not own.
 
 ---
 
@@ -180,7 +180,10 @@ Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate.
 
 | Concern | Location |
 |---------|----------|
-| Runtime execution | [`fs.rs`](../../../../crates/fpas-std/src/fs.rs) |
+| Runtime dispatch | [`fs.rs`](../../../../crates/fpas-std/src/fs.rs) |
+| Atomic publication | [`fs/publication.rs`](../../../../crates/fpas-std/src/fs/publication.rs) |
+| Bounded reads | [`fs/read.rs`](../../../../crates/fpas-std/src/fs/read.rs) |
+| Glob expansion | [`fs/glob.rs`](../../../../crates/fpas-std/src/fs/glob.rs) |
 | Call lowering | [`std_calls/fs.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/fs.rs) |
 | Registration | [`std_registry/loaded/fs.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/fs.rs) |
 | Intrinsic ids | [`intrinsic/fs.rs`](../../../../crates/fpas-bytecode/src/intrinsic/fs.rs) |

@@ -1,11 +1,12 @@
 use super::KeyInput;
+use super::event_source::{CrosstermEventSource, TerminalEventSource};
 use super::mapping::{map_console_event, map_crossterm_key, map_key_for_read};
 use crate::error::{StdError, std_runtime_error};
 use crossterm::event::{self, Event, KeyEvent as CrosstermKeyEvent, KeyEventKind};
 use crossterm::terminal::enable_raw_mode;
 use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_INPUT_FAILURE;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const MAX_READY_EVENTS_PER_READ: usize = 256;
 
@@ -150,6 +151,15 @@ impl KeyInput {
         timeout_ms: i64,
         location: SourceLocation,
     ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
+        self.read_event_timeout_from(timeout_ms, location, &mut CrosstermEventSource)
+    }
+
+    fn read_event_timeout_from(
+        &mut self,
+        timeout_ms: i64,
+        location: SourceLocation,
+        source: &mut impl TerminalEventSource,
+    ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
         // Drain queued events first (test mode or previously buffered).
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(Some(event));
@@ -168,51 +178,59 @@ impl KeyInput {
             return Ok(None);
         }
 
-        if !event::poll(duration).map_err(|e| {
-            std_runtime_error(
-                RUNTIME_CONSOLE_INPUT_FAILURE,
-                format!("ReadEventTimeout failed (poll): {e}"),
-                "Check terminal input availability and try again.",
-                location,
-            )
-        })? {
-            return Ok(None);
-        }
+        let started = Instant::now();
+        for _ in 0..MAX_READY_EVENTS_PER_READ {
+            let remaining = duration.saturating_sub(started.elapsed());
+            if !source.poll(remaining).map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("ReadEventTimeout failed (poll): {error}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })? {
+                return Ok(None);
+            }
 
-        let ev = event::read().map_err(|e| {
-            std_runtime_error(
-                RUNTIME_CONSOLE_INPUT_FAILURE,
-                format!("ReadEventTimeout failed (read): {e}"),
-                "Check terminal input availability and try again.",
-                location,
-            )
-        })?;
-        let resize_burst = matches!(ev, Event::Resize(_, _));
-        if self.queue_live_event(ev) && resize_burst {
-            self.buffer_ready_live_events(location)?;
-        }
-        if let Some(next) = self.take_live_console_event() {
-            return Ok(Some(map_console_event(next)));
+            let event = source.read().map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("ReadEventTimeout failed (read): {error}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })?;
+            let resize_burst = matches!(event, Event::Resize(_, _));
+            if self.queue_live_event(event) && resize_burst {
+                self.buffer_ready_live_events(location, source)?;
+            }
+            if let Some(next) = self.take_live_console_event() {
+                return Ok(Some(map_console_event(next)));
+            }
         }
         Ok(None)
     }
 
-    fn buffer_ready_live_events(&mut self, location: SourceLocation) -> Result<(), StdError> {
+    fn buffer_ready_live_events(
+        &mut self,
+        location: SourceLocation,
+        source: &mut impl TerminalEventSource,
+    ) -> Result<(), StdError> {
         for _ in 0..MAX_READY_EVENTS_PER_READ {
-            if !event::poll(Duration::ZERO).map_err(|e| {
+            if !source.poll(Duration::ZERO).map_err(|error| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
-                    format!("ReadEventTimeout failed while draining ready events (poll): {e}"),
+                    format!("ReadEventTimeout failed while draining ready events (poll): {error}"),
                     "Check terminal input availability and try again.",
                     location,
                 )
             })? {
                 break;
             }
-            let event = event::read().map_err(|e| {
+            let event = source.read().map_err(|error| {
                 std_runtime_error(
                     RUNTIME_CONSOLE_INPUT_FAILURE,
-                    format!("ReadEventTimeout failed while draining ready events (read): {e}"),
+                    format!("ReadEventTimeout failed while draining ready events (read): {error}"),
                     "Check terminal input availability and try again.",
                     location,
                 )
@@ -230,6 +248,14 @@ impl KeyInput {
         &mut self,
         location: SourceLocation,
     ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
+        self.poll_event_from(location, &mut CrosstermEventSource)
+    }
+
+    fn poll_event_from(
+        &mut self,
+        location: SourceLocation,
+        source: &mut impl TerminalEventSource,
+    ) -> Result<Option<crate::console_event::ConsoleEvent>, StdError> {
         // Fast path: queued events.
         if let Some(event) = self.console_event_queue.pop_front() {
             return Ok(Some(event));
@@ -244,28 +270,30 @@ impl KeyInput {
         if !self.raw_mode {
             return Ok(None);
         }
-        if !event::poll(Duration::ZERO).map_err(|e| {
-            std_runtime_error(
-                RUNTIME_CONSOLE_INPUT_FAILURE,
-                format!("PollEvent failed (poll): {e}"),
-                "Check terminal input availability and try again.",
-                location,
-            )
-        })? {
-            return Ok(None);
-        }
-        let ev = event::read().map_err(|e| {
-            std_runtime_error(
-                RUNTIME_CONSOLE_INPUT_FAILURE,
-                format!("PollEvent failed (read): {e}"),
-                "Check terminal input availability and try again.",
-                location,
-            )
-        })?;
-        if self.queue_live_event(ev)
-            && let Some(next) = self.take_live_console_event()
-        {
-            return Ok(Some(map_console_event(next)));
+        for _ in 0..MAX_READY_EVENTS_PER_READ {
+            if !source.poll(Duration::ZERO).map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("PollEvent failed (poll): {error}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })? {
+                return Ok(None);
+            }
+            let event = source.read().map_err(|error| {
+                std_runtime_error(
+                    RUNTIME_CONSOLE_INPUT_FAILURE,
+                    format!("PollEvent failed (read): {error}"),
+                    "Check terminal input availability and try again.",
+                    location,
+                )
+            })?;
+            if self.queue_live_event(event)
+                && let Some(next) = self.take_live_console_event()
+            {
+                return Ok(Some(map_console_event(next)));
+            }
         }
         Ok(None)
     }
@@ -309,3 +337,6 @@ impl KeyInput {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

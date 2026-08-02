@@ -11,6 +11,12 @@
 
 Drawing helpers (`Clear`, `DrawLine`, `Present`, …) remain available inside `OnPaint` and other handlers. The host calls `Present` automatically after `OnPaint` during hosted redraw.
 
+Explicit `Application.Close` is recommended. If execution tears down an open
+application, the runtime still detaches and closes its backend best-effort so a
+later VM session on the same worker thread can open a fresh application. A host
+close error is reported for an explicit close, but the detached application is
+already considered closed.
+
 ### Native test lifecycle
 
 Headless graph tests use in-program APIs instead of `*.script.toml` graph events. See [`test.md`](../../testing/test.md).

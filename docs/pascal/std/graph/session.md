@@ -170,7 +170,11 @@ Open one native graphics window.
 
 ### `procedure Application.Close(App: Application)`
 
-Close the active graphics session. Closing an already closed session is a no-op.
+Close the active graphics session. Closing an already closed session is a
+no-op. Backend teardown detaches the session before reporting a host close
+error, so a failed close does not leave an orphaned backend that blocks a later
+`Application.Open`. Runtime teardown also releases an open session
+best-effort when execution ends without an explicit close.
 
 ### `function Application.Size(App: Application): Size`
 

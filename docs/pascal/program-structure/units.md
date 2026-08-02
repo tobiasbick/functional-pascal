@@ -106,6 +106,13 @@ Project units are compiled independently. Compiling `Geometry.fpas` creates the 
 incompatible sidecar. Sources and manifests remain authoritative; `.fpascu` files are replaceable
 build products and are excluded from source discovery and formatting.
 
+Before reuse, the compiler limits a complete sidecar to 136 MiB and each semantic-interface or
+relocatable-object payload to 64 MiB. It verifies payload hashes, requires the envelope,
+interface, and object to identify the same unit, rejects duplicate public symbols under Pascal's
+ASCII case-insensitive name rules, and validates that the object has exactly one final `Halt`.
+Any failure classifies the derived sidecar as corrupt and rebuilds it from the authoritative
+source.
+
 A valid unchanged sidecar lets a later build use the unit without parsing or semantically
 analyzing its implementation. A non-public implementation change rebuilds that unit but does not
 invalidate consumers while its public interface hash stays unchanged. An exported signature,
@@ -120,9 +127,12 @@ The final executable bytecode image links only reachable unit objects in depende
 Existing top-level constant and variable initializers run in that same dependency order before
 the program body. Units do not have separate initialization or finalization syntax.
 
-Sidecars are written atomically in the source directory. A read-only source tree therefore works
-when all required sidecars are valid; if rebuilding is required, the command reports the
-source-adjacent file it could not publish.
+Sidecars are written atomically in the source directory. Concurrent readers and writers use a
+persistent `.fpascu.lock` coordination file when it exists. The file contains no unit data and is
+ignored by Git; operating-system lock ownership is released automatically if the compiler exits,
+so a lock is never reclaimed merely because it is old. Reading an existing valid sidecar does not
+create a missing lock file, so a read-only source tree remains usable. If rebuilding is required,
+the command reports the source-adjacent file it could not publish.
 
 ### Validation snapshot
 

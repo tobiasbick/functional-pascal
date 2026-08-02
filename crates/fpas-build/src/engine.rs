@@ -7,8 +7,8 @@ use fpas_bytecode::Chunk;
 use fpas_parser::{Program, QualifiedId};
 use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
-use fpas_unit::interface::{UnitInterface, decode_interface, encode_interface};
-use fpas_unit::object::{RelocatableObject, decode_object, encode_object};
+use fpas_unit::interface::{UnitInterface, encode_interface};
+use fpas_unit::object::{RelocatableObject, encode_object};
 use fpas_unit::{
     CompiledUnit, DependencyIdentity, Digest, ExpectedUnitIdentity, SidecarLoad, UnitIdentity,
     load_sidecar, write_sidecar,
@@ -111,12 +111,14 @@ pub fn build_library_units(
         let reusable = match load_sidecar(node.path(), &expected)
             .map_err(|error| BuildError::new(error.to_string()))?
         {
-            SidecarLoad::Reusable(compiled) => {
-                let interface_hash = compiled.identity.interface_hash;
-                let object_hash = compiled.identity.object_hash;
-                decode_payloads(&compiled)
-                    .ok()
-                    .map(|payloads| (payloads, interface_hash, object_hash))
+            SidecarLoad::Reusable(loaded) => {
+                let interface_hash = loaded.compiled.identity.interface_hash;
+                let object_hash = loaded.compiled.identity.object_hash;
+                Some((
+                    (loaded.interface, loaded.object),
+                    interface_hash,
+                    object_hash,
+                ))
             }
             SidecarLoad::Missing
             | SidecarLoad::Stale(_)
@@ -222,12 +224,6 @@ pub(crate) fn link_program(
         chunk,
         events: units.events,
     })
-}
-
-fn decode_payloads(compiled: &CompiledUnit) -> Result<(UnitInterface, RelocatableObject), ()> {
-    let interface = decode_interface(&compiled.interface).map_err(|_| ())?;
-    let object = decode_object(&compiled.object).map_err(|_| ())?;
-    Ok((interface, object))
 }
 
 fn direct_interfaces_from_map(

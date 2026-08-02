@@ -123,6 +123,42 @@ fn validation_rejects_instruction_stream_without_final_halt() {
 }
 
 #[test]
+fn validation_rejects_multiple_trailing_halts() {
+    let mut object = object_with_all_relocation_shapes();
+    object.code.insert(object.code.len() - 1, Op::Halt);
+    object.locations.push(ObjectLocation {
+        line: 1,
+        column: 1,
+        source_id: 2,
+    });
+    object.relocations = collect_relocations(&object.code);
+
+    assert_eq!(
+        object.validate(),
+        Err(ObjectError::InternalHalt {
+            instruction: object.code.len() - 2,
+        })
+    );
+}
+
+#[test]
+fn validation_rejects_internal_halt_followed_by_code() {
+    let mut object = object_with_all_relocation_shapes();
+    object.code.insert(1, Op::Halt);
+    object.locations.push(ObjectLocation {
+        line: 1,
+        column: 1,
+        source_id: 2,
+    });
+    object.relocations = collect_relocations(&object.code);
+
+    assert_eq!(
+        object.validate(),
+        Err(ObjectError::InternalHalt { instruction: 1 })
+    );
+}
+
+#[test]
 fn validation_rejects_mismatched_location_count() {
     let mut object = object_with_all_relocation_shapes();
     object.locations.pop();

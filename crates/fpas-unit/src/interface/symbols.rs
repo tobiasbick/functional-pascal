@@ -75,6 +75,7 @@ impl UnitInterface {
     pub fn canonicalized(mut self) -> Self {
         for symbol in &mut self.symbols {
             canonicalize_type(&mut symbol.ty);
+            canonicalize_symbol_kind(&mut symbol.kind);
         }
         self.symbols.sort_by(|left, right| {
             canonical_name(&left.name)
@@ -112,6 +113,9 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             record.private_members.dedup();
             for field in &mut record.fields {
                 canonicalize_type(&mut field.ty);
+                if let Some(value) = &mut field.default_value {
+                    canonicalize_constant(value);
+                }
             }
             for method in record
                 .methods
@@ -137,15 +141,40 @@ fn canonicalize_type(ty: &mut InterfaceType) {
             sort_named(&mut record.events, |value| &value.name);
         }
         Enum(enum_ty) => {
+            enum_ty.name = canonical_name(&enum_ty.name);
             for variant in &mut enum_ty.variants {
                 for field in &mut variant.fields {
                     canonicalize_type(&mut field.ty);
+                    if let Some(value) = &mut field.default_value {
+                        canonicalize_constant(value);
+                    }
                 }
             }
         }
         Named(name) => *name = canonical_name(name),
         GenericParameter(_, _) => {}
         _ => {}
+    }
+}
+
+fn canonicalize_symbol_kind(kind: &mut SymbolKind) {
+    match kind {
+        SymbolKind::Constant(Some(value)) | SymbolKind::EnumMember(value) => {
+            canonicalize_constant(value);
+        }
+        _ => {}
+    }
+}
+
+fn canonicalize_constant(value: &mut ConstantValue) {
+    if let ConstantValue::EnumValue {
+        enum_name,
+        variant_name,
+        ..
+    } = value
+    {
+        *enum_name = canonical_name(enum_name);
+        *variant_name = canonical_name(variant_name);
     }
 }
 

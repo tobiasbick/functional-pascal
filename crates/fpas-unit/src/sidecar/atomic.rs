@@ -1,6 +1,6 @@
 //! Coordinated same-directory sidecar replacement.
 
-use std::fs::{self, OpenOptions};
+use std::fs::{self, File, OpenOptions, TryLockError};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -12,8 +12,7 @@ const LOCK_WAIT: Duration = Duration::from_secs(10);
 const LOCK_RETRY: Duration = Duration::from_millis(10);
 
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), SidecarError> {
-    let lock_path = append_suffix(path, ".lock");
-    let _lock = acquire_lock(path, &lock_path)?;
+    let _lock = acquire_lock(path, LockMode::Exclusive, LOCK_WAIT)?;
     let temporary = unique_path(path, ".tmp");
     let mut temporary_cleanup = FileCleanup::new(temporary.clone());
     let backup = unique_path(path, ".bak");
@@ -25,55 +24,72 @@ pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), SidecarError> {
     Ok(())
 }
 
-pub(super) fn wait_until_unlocked(sidecar: &Path) -> Result<(), SidecarError> {
+pub(super) fn acquire_read_lock(sidecar: &Path) -> Result<Option<LockGuard>, SidecarError> {
     let lock_path = append_suffix(sidecar, ".lock");
-    let started = Instant::now();
-    while lock_path.exists() {
-        remove_stale_lock(&lock_path);
-        if !lock_path.exists() {
-            break;
+    let file = match File::open(&lock_path) {
+        Ok(file) => file,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => {
+            return Err(SidecarError::Io {
+                operation: "open lock for",
+                path: lock_path,
+                error,
+            });
         }
-        if started.elapsed() >= LOCK_WAIT {
-            return Err(SidecarError::LockTimeout(sidecar.to_path_buf()));
-        }
-        std::thread::sleep(LOCK_RETRY);
-    }
-    Ok(())
+    };
+    wait_for_lock(sidecar, &lock_path, file, LockMode::Shared, LOCK_WAIT).map(Some)
 }
 
-fn acquire_lock(sidecar: &Path, lock_path: &Path) -> Result<LockGuard, SidecarError> {
+fn acquire_lock(sidecar: &Path, mode: LockMode, wait: Duration) -> Result<LockGuard, SidecarError> {
+    let lock_path = append_suffix(sidecar, ".lock");
     let started = Instant::now();
-    loop {
+    let file = loop {
         match OpenOptions::new()
+            .read(true)
             .write(true)
-            .create_new(true)
-            .open(lock_path)
+            .create(true)
+            .truncate(false)
+            .open(&lock_path)
         {
-            Ok(mut file) => {
-                writeln!(file, "{}", std::process::id()).map_err(|error| SidecarError::Io {
-                    operation: "write lock for",
-                    path: lock_path.to_path_buf(),
-                    error,
-                })?;
-                return Ok(LockGuard {
-                    path: lock_path.to_path_buf(),
-                });
-            }
-            Err(error) if is_lock_contention(&error) => {
-                remove_stale_lock(lock_path);
-                if started.elapsed() >= LOCK_WAIT {
-                    if error.kind() == std::io::ErrorKind::PermissionDenied && !lock_path.exists() {
-                        return Err(SidecarError::Io {
-                            operation: "lock",
-                            path: lock_path.to_path_buf(),
-                            error,
-                        });
-                    }
+            Ok(file) => break file,
+            Err(error)
+                if error.kind() == std::io::ErrorKind::PermissionDenied && lock_path.exists() =>
+            {
+                if started.elapsed() >= wait {
                     return Err(SidecarError::LockTimeout(sidecar.to_path_buf()));
                 }
                 std::thread::sleep(LOCK_RETRY);
             }
             Err(error) => {
+                return Err(SidecarError::Io {
+                    operation: "open lock for",
+                    path: lock_path,
+                    error,
+                });
+            }
+        }
+    };
+    wait_for_lock(sidecar, &lock_path, file, mode, wait)
+}
+
+fn wait_for_lock(
+    sidecar: &Path,
+    lock_path: &Path,
+    file: File,
+    mode: LockMode,
+    wait: Duration,
+) -> Result<LockGuard, SidecarError> {
+    let started = Instant::now();
+    loop {
+        match mode.try_acquire(&file) {
+            Ok(()) => return Ok(LockGuard { _file: file }),
+            Err(TryLockError::WouldBlock) => {
+                if started.elapsed() >= wait {
+                    return Err(SidecarError::LockTimeout(sidecar.to_path_buf()));
+                }
+                std::thread::sleep(LOCK_RETRY);
+            }
+            Err(TryLockError::Error(error)) => {
                 return Err(SidecarError::Io {
                     operation: "lock",
                     path: lock_path.to_path_buf(),
@@ -84,19 +100,18 @@ fn acquire_lock(sidecar: &Path, lock_path: &Path) -> Result<LockGuard, SidecarEr
     }
 }
 
-fn is_lock_contention(error: &std::io::Error) -> bool {
-    error.kind() == std::io::ErrorKind::AlreadyExists
-        || error.kind() == std::io::ErrorKind::PermissionDenied
+#[derive(Clone, Copy)]
+enum LockMode {
+    Shared,
+    Exclusive,
 }
 
-fn remove_stale_lock(lock_path: &Path) {
-    let is_stale = fs::metadata(lock_path)
-        .and_then(|metadata| metadata.modified())
-        .ok()
-        .and_then(|modified| modified.elapsed().ok())
-        .is_some_and(|age| age >= LOCK_WAIT);
-    if is_stale {
-        let _ = fs::remove_file(lock_path);
+impl LockMode {
+    fn try_acquire(self, file: &File) -> Result<(), TryLockError> {
+        match self {
+            Self::Shared => file.try_lock_shared(),
+            Self::Exclusive => file.try_lock(),
+        }
     }
 }
 
@@ -184,8 +199,8 @@ fn append_suffix(path: &Path, suffix: &str) -> PathBuf {
     PathBuf::from(value)
 }
 
-struct LockGuard {
-    path: PathBuf,
+pub(super) struct LockGuard {
+    _file: File,
 }
 
 struct FileCleanup {
@@ -210,28 +225,58 @@ impl Drop for FileCleanup {
     }
 }
 
-impl Drop for LockGuard {
-    fn drop(&mut self) {
-        let _ = fs::remove_file(&self.path);
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::is_lock_contention;
-    use std::io;
+    #![allow(
+        clippy::expect_used,
+        reason = "filesystem lock fixtures use expect for compact setup"
+    )]
+
+    use super::{LOCK_WAIT, LockMode, acquire_lock, acquire_read_lock, append_suffix};
+    use std::fs;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::thread;
+    use std::time::Duration;
 
     #[test]
-    fn permission_denied_during_lock_replacement_is_retried() {
-        let error = io::Error::from(io::ErrorKind::PermissionDenied);
+    fn live_writer_held_beyond_ten_seconds_keeps_its_os_lock() {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
+        let id = NEXT.fetch_add(1, Ordering::Relaxed);
+        let sidecar =
+            std::env::temp_dir().join(format!("fpas-unit-lock-{}-{id}.fpascu", std::process::id()));
+        let held = acquire_lock(&sidecar, LockMode::Exclusive, LOCK_WAIT).expect("first lock");
+        let waiting_sidecar = sidecar.clone();
+        let waiting = thread::spawn(move || {
+            acquire_lock(
+                &waiting_sidecar,
+                LockMode::Exclusive,
+                LOCK_WAIT + Duration::from_secs(2),
+            )
+        });
 
-        assert!(is_lock_contention(&error));
+        thread::sleep(LOCK_WAIT + Duration::from_millis(100));
+
+        assert!(!waiting.is_finished(), "second writer entered a live lock");
+        drop(held);
+        waiting
+            .join()
+            .expect("waiting writer thread")
+            .expect("released lock must be reusable");
+
+        fs::remove_file(append_suffix(&sidecar, ".lock")).ok();
     }
 
     #[test]
-    fn unrelated_lock_errors_are_reported_immediately() {
-        let error = io::Error::from(io::ErrorKind::NotFound);
+    fn reading_without_a_lock_file_does_not_create_one() {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
+        let id = NEXT.fetch_add(1, Ordering::Relaxed);
+        let sidecar =
+            std::env::temp_dir().join(format!("fpas-unit-read-{}-{id}.fpascu", std::process::id()));
+        let lock_path = append_suffix(&sidecar, ".lock");
 
-        assert!(!is_lock_contention(&error));
+        let lock = acquire_read_lock(&sidecar).expect("missing lock is readable");
+
+        assert!(lock.is_none());
+        assert!(!lock_path.exists());
     }
 }

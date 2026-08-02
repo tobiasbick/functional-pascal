@@ -141,6 +141,10 @@ impl RelocatableObject {
     }
 
     /// Validate local indices, relocation coverage, and structural invariants.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ObjectError`] when the object is not safe to encode or link.
     pub fn validate(&self) -> Result<(), ObjectError> {
         if self.code.len() > u32::MAX as usize {
             return Err(ObjectError::CodeSize(self.code.len()));
@@ -153,6 +157,12 @@ impl RelocatableObject {
         }
         if !matches!(self.code.last(), Some(Op::Halt)) {
             return Err(ObjectError::MissingHalt);
+        }
+        if let Some(instruction) = self.code[..self.code.len() - 1]
+            .iter()
+            .position(|op| matches!(op, Op::Halt))
+        {
+            return Err(ObjectError::InternalHalt { instruction });
         }
         for (name, function) in &self.functions {
             if function.code_start as usize >= self.code.len() {
@@ -206,6 +216,11 @@ pub enum ObjectError {
     },
     /// Object does not end in `Halt`.
     MissingHalt,
+    /// Object contains a `Halt` before the final instruction.
+    InternalHalt {
+        /// Zero-based instruction offset.
+        instruction: usize,
+    },
     /// Callable entry points outside the local stream.
     FunctionOffset {
         /// Callable name.
@@ -239,28 +254,74 @@ pub enum ObjectError {
     Encode(String),
     /// Object decoding failed.
     Decode(String),
+    /// Encoded object exceeds the compiled-unit payload limit.
+    PayloadSize {
+        /// Encoded or requested size.
+        size: usize,
+        /// Largest accepted size.
+        maximum: usize,
+    },
     /// Compiler emitted a runtime-only value into the persistent constant pool.
     UnsupportedConstant(String),
 }
 
 impl fmt::Display for ObjectError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "invalid relocatable object: {self:?}")
+        match self {
+            Self::InternalHalt { instruction } => write!(
+                formatter,
+                "invalid relocatable object: internal Halt at instruction {instruction}; only the final instruction may halt"
+            ),
+            _ => write!(formatter, "invalid relocatable object: {self:?}"),
+        }
     }
 }
 
 impl std::error::Error for ObjectError {}
 
 /// Encode and validate a relocatable object deterministically.
+///
+/// # Errors
+///
+/// Returns [`ObjectError`] when validation or serialization fails, or when
+/// the encoded object exceeds the compiled-unit payload limit.
 pub fn encode_object(object: &RelocatableObject) -> Result<Vec<u8>, ObjectError> {
     object.validate()?;
-    serde_json::to_vec(object).map_err(|error| ObjectError::Encode(error.to_string()))
+    let bytes =
+        serde_json::to_vec(object).map_err(|error| ObjectError::Encode(error.to_string()))?;
+    check_payload_size(bytes.len())?;
+    Ok(bytes)
 }
 
 /// Decode and validate a relocatable object.
+///
+/// # Errors
+///
+/// Returns [`ObjectError`] when the payload is oversized, malformed, or
+/// violates relocatable-object invariants.
 pub fn decode_object(bytes: &[u8]) -> Result<RelocatableObject, ObjectError> {
+    check_payload_size(bytes.len())?;
     let object: RelocatableObject =
         serde_json::from_slice(bytes).map_err(|error| ObjectError::Decode(error.to_string()))?;
     object.validate()?;
     Ok(object)
+}
+
+fn check_payload_size(size: usize) -> Result<(), ObjectError> {
+    crate::format::check_payload_size("object", size).map_err(|_| ObjectError::PayloadSize {
+        size,
+        maximum: crate::format::MAX_PAYLOAD_BYTES,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::check_payload_size;
+    use crate::format::MAX_PAYLOAD_BYTES;
+
+    #[test]
+    fn direct_object_codec_enforces_payload_limit() {
+        assert!(check_payload_size(MAX_PAYLOAD_BYTES).is_ok());
+        assert!(check_payload_size(MAX_PAYLOAD_BYTES + 1).is_err());
+    }
 }

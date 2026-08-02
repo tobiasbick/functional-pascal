@@ -4,11 +4,17 @@ use crate::{CompiledUnit, DependencyIdentity, Digest, UnitIdentity};
 
 use super::{
     FORMAT_VERSION, FormatError, MAGIC, MAX_DEPENDENCIES, MAX_PAYLOAD_BYTES, MAX_STRING_BYTES,
-    check_size,
+    check_sidecar_size, check_size,
 };
 
 /// Decodes and validates one complete `.fpascu` byte sequence.
+///
+/// # Errors
+///
+/// Returns [`FormatError`] when the envelope exceeds its resource budget, is
+/// malformed or incompatible, or fails payload integrity validation.
 pub fn decode(bytes: &[u8]) -> Result<CompiledUnit, FormatError> {
+    check_sidecar_size(bytes.len())?;
     let mut reader = Reader::new(bytes);
     if reader.take(MAGIC.len(), "magic")? != MAGIC {
         return Err(FormatError::InvalidMagic);

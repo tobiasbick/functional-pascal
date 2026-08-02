@@ -1,6 +1,7 @@
 # Rust / Cargo
 target/
 *.fpascu
+*.fpascu.lock
 *.fpascp
 *.fpascp.lock
 # Alternate CARGO_TARGET_DIR worktrees (e.g. CI/agent local runs)

@@ -1,15 +1,65 @@
 //! Source-adjacent `.fpascu` loading, validation, and coordinated replacement.
 
 mod atomic;
+mod payload;
 mod validation;
 
 use std::fmt;
 use std::io;
 use std::path::{Path, PathBuf};
 
+use crate::interface::UnitInterface;
+use crate::object::RelocatableObject;
 use crate::{CompiledUnit, ExpectedUnitIdentity, FormatError};
 
 pub use validation::{IncompatibilityReason, InvalidationReason, SidecarLoad};
+
+/// A reusable compiled unit whose semantic payloads and owner identities are validated.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadedUnit {
+    /// Original hashed compiled-unit envelope.
+    pub compiled: CompiledUnit,
+    /// Decoded canonical public interface.
+    pub interface: UnitInterface,
+    /// Decoded validated relocatable object.
+    pub object: RelocatableObject,
+}
+
+/// Why a hash-consistent sidecar still cannot represent a reusable logical unit.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SidecarCorruption {
+    /// Binary envelope is malformed or exceeds resource limits.
+    Format(FormatError),
+    /// Interface payload cannot be decoded within its resource limit.
+    InterfacePayload,
+    /// Object payload cannot be decoded or violates object invariants.
+    ObjectPayload,
+    /// Envelope and interface identify different units.
+    InterfaceUnitName {
+        /// Envelope unit name.
+        envelope: String,
+        /// Interface unit name.
+        payload: String,
+    },
+    /// Envelope and relocatable object identify different owners.
+    ObjectOwner {
+        /// Envelope unit name.
+        envelope: String,
+        /// Object owner.
+        payload: String,
+    },
+    /// Interface exports duplicate case-insensitive symbol identities.
+    DuplicateSymbol(String),
+    /// A qualified interface symbol is not owned by the interface unit.
+    SymbolOwner {
+        /// Short exported symbol name.
+        symbol: String,
+        /// Stored qualified symbol name.
+        qualified_name: String,
+        /// Interface unit name.
+        unit_name: String,
+    },
+}
 
 /// Returns the `.fpascu` sidecar path for a `.fpas` source.
 #[must_use]
@@ -18,12 +68,32 @@ pub fn sidecar_path(source_path: &Path) -> PathBuf {
 }
 
 /// Loads and validates a source-adjacent compiled unit.
+///
+/// # Errors
+///
+/// Returns [`SidecarError`] when the coordination lock or filesystem cannot
+/// be accessed. Invalid artifact contents are classified in [`SidecarLoad`].
 pub fn load_sidecar(
     source_path: &Path,
     expected: &ExpectedUnitIdentity,
 ) -> Result<SidecarLoad, SidecarError> {
     let path = sidecar_path(source_path);
-    atomic::wait_until_unlocked(&path)?;
+    let _lock = atomic::acquire_read_lock(&path)?;
+    let metadata = match std::fs::metadata(&path) {
+        Ok(metadata) => metadata,
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(SidecarLoad::Missing),
+        Err(error) => {
+            return Err(SidecarError::Io {
+                operation: "inspect",
+                path,
+                error,
+            });
+        }
+    };
+    let file_size = usize::try_from(metadata.len()).unwrap_or(usize::MAX);
+    if let Err(error) = crate::format::check_sidecar_size(file_size) {
+        return Ok(SidecarLoad::Corrupt(SidecarCorruption::Format(error)));
+    }
     let bytes = match std::fs::read(&path) {
         Ok(bytes) => bytes,
         Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(SidecarLoad::Missing),
@@ -42,9 +112,18 @@ pub fn load_sidecar(
                 IncompatibilityReason::FormatVersion(version),
             ));
         }
-        Err(error) => return Ok(SidecarLoad::Corrupt(error)),
+        Err(error) => {
+            return Ok(SidecarLoad::Corrupt(SidecarCorruption::Format(error)));
+        }
     };
-    Ok(validation::validate(unit, expected))
+    let unit = match validation::validate_identity(unit, expected) {
+        Ok(unit) => unit,
+        Err(load) => return Ok(load),
+    };
+    Ok(match payload::validate(unit) {
+        Ok(unit) => SidecarLoad::Reusable(Box::new(unit)),
+        Err(error) => SidecarLoad::Corrupt(error),
+    })
 }
 
 /// Atomically publishes one validated `.fpascu` beside its source.
@@ -69,7 +148,7 @@ pub enum SidecarError {
         /// Underlying operating-system error.
         error: io::Error,
     },
-    /// Another compiler invocation held the sidecar write lock too long.
+    /// Another compiler invocation held the sidecar lock too long.
     LockTimeout(PathBuf),
 }
 
@@ -88,7 +167,7 @@ impl fmt::Display for SidecarError {
             ),
             Self::LockTimeout(path) => write!(
                 formatter,
-                "timed out waiting to replace compiled unit `{}`; another compiler process may still be writing it",
+                "timed out waiting for compiled unit `{}`; another compiler process may still be using it",
                 path.display()
             ),
         }

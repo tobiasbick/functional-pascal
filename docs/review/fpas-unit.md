@@ -1,7 +1,7 @@
 # `fpas-unit` review follow-up
 
 Classification: compiled Unit format, compatibility, validation, and sidecar persistence. No language change expected.
-Status: all findings open.
+Status: UNIT-01 through UNIT-06 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -15,3 +15,36 @@ Status: all findings open.
 ## Implementation notes
 
 UNIT-01/02 share resource and lock policy with `fpas-build`; UNIT-03 shares validation policy with bytecode/linker. Agree those boundaries before coding. Keep sidecars source-adjacent and never commit generated `.fpascu` files.
+
+## Implementation record
+
+- UNIT-01 caps complete envelopes at 136 MiB before `fs::read` allocates them and caps direct
+  interface/object codecs at 64 MiB. Exact-limit and one-over checks cover both budgets; a sparse
+  oversized filesystem fixture proves metadata rejection happens before decoding.
+- UNIT-02 replaces age-based deletion with shared/exclusive operating-system file locks. A held
+  handle remains authoritative beyond the configured wait; process exit releases ownership.
+  Readers do not create a missing lock file, preserving valid read-only source trees.
+- UNIT-03 makes `RelocatableObject::validate` reject every `Halt` except the single final
+  instruction. The linker now relies on that object invariant instead of duplicating the scan.
+- UNIT-04 canonicalizes enum identities alongside the existing record, named type, owner,
+  getter/setter, and enum constant identities while preserving source spelling for diagnostics.
+  Format version 2 invalidates sidecars encoded under the earlier incomplete canonicalization
+  rules.
+- UNIT-05 is removed with the PID metadata protocol. Lock ownership now begins and ends with the
+  operating-system handle; no fallible metadata write or stale cleanup path remains.
+- UNIT-06 changes reusable loads to return `LoadedUnit`, containing the decoded canonical
+  interface and validated object. Envelope/interface/object identities, qualified symbol owners,
+  and case-insensitive symbol uniqueness are checked before `Reusable` is returned. `fpas-build`
+  consumes these validated payloads directly.
+- No FPAS syntax, language semantics, or `Std.*` API changed.
+
+## Verification
+
+- Baseline: `cargo test -p fpas-unit --locked` — passed: 40 tests plus doc tests.
+- Targeted implementation: `cargo test -p fpas-unit --locked` — passed: 51 tests plus doc tests.
+- Integration: `cargo test -p fpas-build --locked` and `cargo test -p fpas-linker --locked` — passed.
+- `cargo test -p fpas-cli --bin fpas main_tests::visibility::ambiguity::ambiguity_error_mentions_qualified_alternatives --locked` — passed after confirming source-spelled qualified diagnostics remain unchanged.
+- `cargo clippy -p fpas-unit -p fpas-build -p fpas-linker --all-targets --locked -- -D warnings` — passed.
+- `cargo fmt --all -- --check` — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked` — passed.

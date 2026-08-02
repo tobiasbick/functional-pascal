@@ -5,7 +5,7 @@ mod operands;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use fpas_bytecode::{Chunk, Op, SourceLocation};
+use fpas_bytecode::{Chunk, SourceLocation};
 use fpas_unit::object::{
     DefinitionKind, ObjectDefinition, ObjectError, ObjectLocation, RelocatableObject,
 };
@@ -114,15 +114,6 @@ fn validate_objects(
         object
             .validate()
             .map_err(|error| invalid_object(object, error))?;
-        if object.code[..object.code.len() - 1]
-            .iter()
-            .any(|op| matches!(op, Op::Halt))
-        {
-            return Err(LinkError::InvalidObject {
-                owner: object.owner.clone(),
-                detail: "an internal Halt would stop later startup sections".to_string(),
-            });
-        }
     }
     Ok(())
 }

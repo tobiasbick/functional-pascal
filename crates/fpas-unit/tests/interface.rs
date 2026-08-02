@@ -127,6 +127,30 @@ fn symbol_declaration_order_does_not_change_canonical_bytes_or_hash() {
 }
 
 #[test]
+fn canonical_identity_case_does_not_change_bytes_or_hash() {
+    let left = sample_interface();
+    let mut right = sample_interface();
+    let InterfaceType::Enum(enum_ty) = &mut right.symbols[1].ty else {
+        panic!("expected enum fixture");
+    };
+    enum_ty.name.make_ascii_lowercase();
+    let InterfaceType::Record(record) = &mut right.symbols[3].ty else {
+        panic!("expected record fixture");
+    };
+    record.name.make_ascii_lowercase();
+    record.owner_unit = Some("demo.api".to_string());
+
+    assert_eq!(
+        encode_interface(&left).expect("left encoding"),
+        encode_interface(&right).expect("right encoding")
+    );
+    assert_eq!(
+        left.digest().expect("left digest"),
+        right.digest().expect("right digest")
+    );
+}
+
+#[test]
 fn observable_signature_and_value_changes_change_hash() {
     let original = sample_interface();
     let mut signature = sample_interface();

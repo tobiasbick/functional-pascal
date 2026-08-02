@@ -1,6 +1,8 @@
 //! Sidecar reuse and invalidation classification.
 
-use crate::{CompiledUnit, DependencyIdentity, ExpectedUnitIdentity, FormatError};
+use crate::{CompiledUnit, DependencyIdentity, ExpectedUnitIdentity};
+
+use super::{LoadedUnit, SidecarCorruption};
 
 /// Why an otherwise readable sidecar must be rebuilt.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,24 +32,27 @@ pub enum IncompatibilityReason {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SidecarLoad {
     /// Sidecar matches every current input and may be reused.
-    Reusable(Box<CompiledUnit>),
+    Reusable(Box<LoadedUnit>),
     /// No sidecar exists.
     Missing,
     /// Sidecar is readable but one of its compilation inputs changed.
     Stale(InvalidationReason),
     /// Sidecar was produced for an incompatible compiler or bytecode format.
     Incompatible(IncompatibilityReason),
-    /// Sidecar bytes are malformed or use an unsupported envelope.
-    Corrupt(FormatError),
+    /// Sidecar envelope or semantic payloads are malformed.
+    Corrupt(SidecarCorruption),
 }
 
-pub(super) fn validate(unit: CompiledUnit, expected: &ExpectedUnitIdentity) -> SidecarLoad {
+pub(super) fn validate_identity(
+    unit: CompiledUnit,
+    expected: &ExpectedUnitIdentity,
+) -> Result<CompiledUnit, SidecarLoad> {
     let identity = &unit.identity;
     if identity.compiler_version != expected.compiler_version {
-        return SidecarLoad::Incompatible(IncompatibilityReason::Compiler);
+        return Err(SidecarLoad::Incompatible(IncompatibilityReason::Compiler));
     }
     if identity.bytecode_version != expected.bytecode_version {
-        return SidecarLoad::Incompatible(IncompatibilityReason::Bytecode);
+        return Err(SidecarLoad::Incompatible(IncompatibilityReason::Bytecode));
     }
     let reason = if identity.unit_name != expected.unit_name {
         Some(InvalidationReason::UnitName)
@@ -60,7 +65,10 @@ pub(super) fn validate(unit: CompiledUnit, expected: &ExpectedUnitIdentity) -> S
     } else {
         None
     };
-    reason.map_or(SidecarLoad::Reusable(Box::new(unit)), SidecarLoad::Stale)
+    match reason {
+        Some(reason) => Err(SidecarLoad::Stale(reason)),
+        None => Ok(unit),
+    }
 }
 
 fn dependencies_match(actual: &[DependencyIdentity], expected: &[DependencyIdentity]) -> bool {

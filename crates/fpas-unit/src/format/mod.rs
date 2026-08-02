@@ -13,11 +13,16 @@ pub use write::encode;
 pub(super) const MAGIC: &[u8; 8] = b"FPASCU\0\0";
 
 /// Current `.fpascu` envelope format version.
-pub const FORMAT_VERSION: u16 = 1;
+pub const FORMAT_VERSION: u16 = 2;
+
+/// Largest accepted encoded `.fpascu` file.
+///
+/// The budget covers both 64 MiB payloads plus 8 MiB for identity metadata.
+pub const MAX_SIDECAR_BYTES: usize = 136 * 1024 * 1024;
 
 pub(super) const MAX_STRING_BYTES: usize = 1024 * 1024;
 pub(super) const MAX_DEPENDENCIES: usize = 65_535;
-pub(super) const MAX_PAYLOAD_BYTES: usize = 64 * 1024 * 1024;
+pub(crate) const MAX_PAYLOAD_BYTES: usize = 64 * 1024 * 1024;
 
 /// Invalid or unsupported `.fpascu` binary data.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -117,7 +122,42 @@ pub(super) fn validate_for_write(unit: &CompiledUnit) -> Result<(), FormatError>
     if unit.identity.object_hash != crate::Digest::of(&unit.object) {
         return Err(FormatError::ObjectHashMismatch);
     }
+    check_size("file", encoded_size(unit)?, MAX_SIDECAR_BYTES)?;
     Ok(())
+}
+
+pub(crate) fn check_payload_size(field: &'static str, size: usize) -> Result<(), FormatError> {
+    check_size(field, size, MAX_PAYLOAD_BYTES)
+}
+
+pub(crate) fn check_sidecar_size(size: usize) -> Result<(), FormatError> {
+    check_size("file", size, MAX_SIDECAR_BYTES)
+}
+
+fn encoded_size(unit: &CompiledUnit) -> Result<usize, FormatError> {
+    const FIXED_BYTES: usize = MAGIC.len()
+        + size_of::<u16>()
+        + size_of::<u32>()
+        + 4 * crate::Digest::LENGTH
+        + 5 * size_of::<u32>();
+    let mut size = FIXED_BYTES;
+    size = add_encoded_size(size, unit.identity.compiler_version.len())?;
+    size = add_encoded_size(size, unit.identity.unit_name.len())?;
+    for dependency in &unit.identity.dependencies {
+        size = add_encoded_size(size, size_of::<u32>() + dependency.unit_name.len())?;
+        size = add_encoded_size(size, crate::Digest::LENGTH)?;
+    }
+    size = add_encoded_size(size, unit.interface.len())?;
+    add_encoded_size(size, unit.object.len())
+}
+
+fn add_encoded_size(size: usize, additional: usize) -> Result<usize, FormatError> {
+    size.checked_add(additional)
+        .ok_or(FormatError::LimitExceeded {
+            field: "file",
+            size: usize::MAX,
+            maximum: MAX_SIDECAR_BYTES,
+        })
 }
 
 pub(super) fn check_size(
@@ -133,4 +173,21 @@ pub(super) fn check_size(
         });
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{MAX_PAYLOAD_BYTES, MAX_SIDECAR_BYTES, check_payload_size, check_sidecar_size};
+
+    #[test]
+    fn payload_limit_accepts_exact_size_and_rejects_one_over() {
+        assert!(check_payload_size("payload", MAX_PAYLOAD_BYTES).is_ok());
+        assert!(check_payload_size("payload", MAX_PAYLOAD_BYTES + 1).is_err());
+    }
+
+    #[test]
+    fn sidecar_limit_accepts_exact_size_and_rejects_one_over() {
+        assert!(check_sidecar_size(MAX_SIDECAR_BYTES).is_ok());
+        assert!(check_sidecar_size(MAX_SIDECAR_BYTES + 1).is_err());
+    }
 }

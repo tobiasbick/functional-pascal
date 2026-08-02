@@ -1,5 +1,7 @@
 //! Validation and edit generation for project-aware symbol rename.
 
+mod conflicts;
+
 use std::fmt;
 use std::path::{Path, PathBuf};
 
@@ -49,7 +51,7 @@ pub enum RenameError {
         /// Rejected replacement text.
         name: String,
     },
-    /// Another declaration in the same lexical scope already has the replacement name.
+    /// The replacement would collide with a declaration or change lexical binding.
     Conflict {
         /// Requested replacement name.
         name: String,
@@ -77,7 +79,7 @@ impl fmt::Display for RenameError {
             ),
             Self::Conflict { name } => write!(
                 formatter,
-                "Cannot rename to `{name}` because that name is already declared in the same scope."
+                "Cannot rename to `{name}` because that name conflicts with a declaration or would change lexical binding."
             ),
         }
     }
@@ -127,9 +129,16 @@ pub(crate) fn rename_symbol(
     validate_identifier(new_name)?;
     let target = resolve_target(documents, target_index, offset).ok_or(RenameError::NoSymbol)?;
     renameable_target(documents, &target, workspace_root)?;
-    reject_same_scope_conflict(documents, &target, new_name)?;
+    let references = find_references(documents, &target, true, cancellation)?;
+    conflicts::reject_resolution_conflicts(
+        documents,
+        &target,
+        new_name,
+        &references,
+        cancellation,
+    )?;
 
-    let mut edits = find_references(documents, &target, true, cancellation)?
+    let mut edits = references
         .into_iter()
         .map(|location| RenameEdit {
             path: location.path,
@@ -179,25 +188,5 @@ fn validate_identifier(name: &str) -> Result<(), RenameError> {
         Err(RenameError::InvalidIdentifier {
             name: name.to_owned(),
         })
-    }
-}
-
-fn reject_same_scope_conflict(
-    documents: &[NavigationDocument],
-    target: &ResolvedTarget,
-    new_name: &str,
-) -> Result<(), RenameError> {
-    let target_document = &documents[target.document_index];
-    let conflict = target_document.all_symbols().into_iter().any(|symbol| {
-        symbol.selection_span != target.symbol.selection_span
-            && symbol.name.eq_ignore_ascii_case(new_name)
-            && symbol.scope_span == target.symbol.scope_span
-    });
-    if conflict {
-        Err(RenameError::Conflict {
-            name: new_name.to_owned(),
-        })
-    } else {
-        Ok(())
     }
 }

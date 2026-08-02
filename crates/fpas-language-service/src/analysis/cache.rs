@@ -4,26 +4,26 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use crate::document::{DocumentSnapshot, SourceVersion, normalized_path};
+use crate::document::{DocumentSnapshot, normalized_path};
 
 use super::DocumentAnalysis;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(super) struct AnalysisFingerprint {
     identity: PathBuf,
-    versions: Vec<(PathBuf, SourceVersion)>,
+    revisions: Vec<(PathBuf, u64)>,
 }
 
 impl AnalysisFingerprint {
     pub(super) fn new(identity: &Path, snapshots: &[Arc<DocumentSnapshot>]) -> Self {
-        let mut versions = snapshots
+        let mut revisions = snapshots
             .iter()
-            .map(|snapshot| (snapshot.path().to_path_buf(), snapshot.version()))
+            .map(|snapshot| (snapshot.path().to_path_buf(), snapshot.revision()))
             .collect::<Vec<_>>();
-        versions.sort_by(|left, right| left.0.cmp(&right.0));
+        revisions.sort_by(|left, right| left.0.cmp(&right.0));
         Self {
             identity: normalized_path(identity),
-            versions,
+            revisions,
         }
     }
 
@@ -88,7 +88,7 @@ impl AnalysisCache {
         self.entries.retain(|fingerprint, _| {
             fingerprint.identity() != path
                 && !fingerprint
-                    .versions
+                    .revisions
                     .iter()
                     .any(|(source, _)| *source == path)
         });

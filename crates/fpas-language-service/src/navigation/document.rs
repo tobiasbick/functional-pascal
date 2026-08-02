@@ -8,6 +8,7 @@ use fpas_parser::CompilationUnit;
 
 use crate::{DocumentSnapshot, DocumentSymbol, DocumentSymbols};
 
+#[derive(Clone)]
 pub(crate) struct NavigationDocument {
     pub(crate) path: PathBuf,
     pub(crate) snapshot: Arc<DocumentSnapshot>,

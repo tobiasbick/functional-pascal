@@ -118,35 +118,39 @@ pub(crate) fn resolve_qualified(
     parts: &[String],
     offset: usize,
 ) -> Option<(usize, DocumentSymbol)> {
+    let target = documents.get(target_index)?;
     let first = parts.first()?;
-    if let Some((index, document, owner_parts)) =
-        documents.iter().enumerate().find_map(|(index, document)| {
+    let owner_candidates = documents
+        .iter()
+        .enumerate()
+        .filter_map(|(index, document)| {
             let owner_parts = document.owner.split('.').count();
             (parts.len() >= owner_parts
                 && parts[..owner_parts]
                     .join(".")
                     .eq_ignore_ascii_case(&document.owner)
-                && documents[target_index].uses_owner(&document.owner))
+                && target.uses_owner(&document.owner))
             .then_some((index, document, owner_parts))
         })
-    {
-        if parts.len() == owner_parts {
-            return document
-                .roots
-                .first()
-                .cloned()
-                .map(|symbol| (index, symbol));
-        }
+        .collect::<Vec<_>>();
+    if !owner_candidates.is_empty() {
         let qualified = parts.join(".");
-        return document
-            .all_symbols()
+        let mut resolved = owner_candidates
             .into_iter()
-            .find(|symbol| {
-                symbol.qualified_name.eq_ignore_ascii_case(&qualified)
-                    && (index == target_index || symbol.visibility == SymbolVisibility::Public)
+            .filter_map(|(index, document, owner_parts)| {
+                let symbol = if parts.len() == owner_parts {
+                    document.roots.first()
+                } else {
+                    document.all_symbols().into_iter().find(|symbol| {
+                        symbol.qualified_name.eq_ignore_ascii_case(&qualified)
+                            && (index == target_index
+                                || symbol.visibility == SymbolVisibility::Public)
+                    })
+                }?;
+                Some((index, symbol.clone()))
             })
-            .cloned()
-            .map(|symbol| (index, symbol));
+            .collect::<Vec<_>>();
+        return (resolved.len() == 1).then(|| resolved.remove(0));
     }
 
     let (base_index, base) = resolve_unqualified(documents, target_index, first, offset)?;
@@ -155,7 +159,7 @@ pub(crate) fn resolve_qualified(
     } else {
         base.type_name.clone()
     }?;
-    for member_name in &parts[1..] {
+    for (member_index, member_name) in parts[1..].iter().enumerate() {
         let (type_index, type_symbol) =
             find_type(documents, target_index, base_index, &owner_type)?;
         let member = type_symbol.children.iter().find(|member| {
@@ -166,7 +170,7 @@ pub(crate) fn resolve_qualified(
             .type_name
             .clone()
             .unwrap_or_else(|| member.qualified_name.clone());
-        if member_name == parts.last()? {
+        if member_index + 2 == parts.len() {
             return Some((type_index, member.clone()));
         }
     }

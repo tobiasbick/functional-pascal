@@ -16,46 +16,72 @@ use support::TempDirectory;
 fn line_index_handles_empty_crlf_unicode_and_trailing_line() {
     let empty = LineIndex::new("");
     assert_eq!(empty.line_count(), 1);
-    assert_eq!(empty.line_range("", 0), Some(0..0));
+    assert_eq!(empty.line_range(0), Some(0..0));
 
     let source = "α\r\n🙂x\n";
     let index = LineIndex::new(source);
     assert_eq!(index.line_count(), 3);
-    assert_eq!(index.line_range(source, 0), Some(0.."α".len()));
-    assert_eq!(index.line_range(source, 1), Some(4..9));
-    assert_eq!(
-        index.line_range(source, 2),
-        Some(source.len()..source.len())
-    );
+    assert_eq!(index.line_range(0), Some(0.."α".len()));
+    assert_eq!(index.line_range(1), Some(4..9));
+    assert_eq!(index.line_range(2), Some(source.len()..source.len()));
 
     let emoji_offset = source.find('🙂').expect("emoji offset");
     assert_eq!(
-        index.position(source, emoji_offset),
+        index.position(emoji_offset),
         Some(TextPosition {
             line: 1,
             byte_column: 0
         })
     );
     assert_eq!(
-        index.offset(
-            source,
-            TextPosition {
-                line: 1,
-                byte_column: "🙂".len()
-            }
-        ),
+        index.offset(TextPosition {
+            line: 1,
+            byte_column: "🙂".len()
+        }),
         Some(emoji_offset + "🙂".len())
     );
     assert_eq!(
-        index.offset(
-            source,
-            TextPosition {
-                line: 1,
-                byte_column: 1
-            }
-        ),
+        index.offset(TextPosition {
+            line: 1,
+            byte_column: 1
+        }),
         None
     );
+}
+
+#[test]
+fn line_index_is_bound_to_its_source_layout_and_roundtrips_utf8_boundaries() {
+    let first_source = "a\nb";
+    let second_source = "ab\n";
+    assert_eq!(first_source.len(), second_source.len());
+
+    let first = LineIndex::new(first_source);
+    let second = LineIndex::new(second_source);
+    assert_eq!(
+        first.position(2),
+        Some(TextPosition {
+            line: 1,
+            byte_column: 0
+        })
+    );
+    assert_eq!(
+        second.position(2),
+        Some(TextPosition {
+            line: 0,
+            byte_column: 2
+        })
+    );
+
+    let unicode_source = "α\n🙂x";
+    let unicode = LineIndex::new(unicode_source);
+    for offset in 0..=unicode_source.len() {
+        if unicode_source.is_char_boundary(offset) {
+            let position = unicode.position(offset).expect("valid UTF-8 boundary");
+            assert_eq!(unicode.offset(position), Some(offset));
+        } else {
+            assert_eq!(unicode.position(offset), None);
+        }
+    }
 }
 
 #[test]

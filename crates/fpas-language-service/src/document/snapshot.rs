@@ -21,6 +21,7 @@ pub enum SourceVersion {
 pub struct DocumentSnapshot {
     path: PathBuf,
     version: SourceVersion,
+    revision: u64,
     source: Arc<str>,
     line_index: LineIndex,
     compilation_unit: Arc<CompilationUnit>,
@@ -28,12 +29,18 @@ pub struct DocumentSnapshot {
 }
 
 impl DocumentSnapshot {
-    pub(crate) fn parse(path: &Path, version: SourceVersion, source: Arc<str>) -> Self {
-        let line_index = LineIndex::new(&source);
+    pub(crate) fn parse(
+        path: &Path,
+        version: SourceVersion,
+        revision: u64,
+        source: Arc<str>,
+    ) -> Self {
+        let line_index = LineIndex::new(Arc::clone(&source));
         let (compilation_unit, parse_diagnostics) = parse_compilation_unit(&source);
         Self {
             path: normalized_path(path),
             version,
+            revision,
             source,
             line_index,
             compilation_unit: Arc::new(compilation_unit),
@@ -51,6 +58,10 @@ impl DocumentSnapshot {
     #[must_use]
     pub fn version(&self) -> SourceVersion {
         self.version
+    }
+
+    pub(crate) fn revision(&self) -> u64 {
+        self.revision
     }
 
     /// Returns the immutable UTF-8 source text.

@@ -26,7 +26,7 @@ pub(crate) fn name_span(
         return empty_span(full_span);
     };
     let offset = full_span.offset + token.span.offset;
-    let Some(position) = snapshot.line_index().position(source, offset) else {
+    let Some(position) = snapshot.line_index().position(offset) else {
         return empty_span(full_span);
     };
     SourceSpan::new_with_source(

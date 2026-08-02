@@ -13,6 +13,7 @@ pub struct DocumentStore {
     open: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
     disk: HashMap<std::path::PathBuf, Arc<DocumentSnapshot>>,
     next_disk_revision: u64,
+    next_snapshot_revision: u64,
 }
 
 impl DocumentStore {
@@ -40,9 +41,11 @@ impl DocumentStore {
                 received: version,
             });
         }
+        let revision = self.next_snapshot_revision(&path)?;
         let snapshot = Arc::new(DocumentSnapshot::parse(
             &path,
             SourceVersion::Editor(version),
+            revision,
             source.into(),
         ));
         self.open.insert(path, Arc::clone(&snapshot));
@@ -70,9 +73,11 @@ impl DocumentStore {
                 received: version,
             });
         }
+        let revision = self.next_snapshot_revision(&path)?;
         let snapshot = Arc::new(DocumentSnapshot::parse(
             &path,
             SourceVersion::Editor(version),
+            revision,
             source.into(),
         ));
         self.open.insert(path, Arc::clone(&snapshot));
@@ -130,12 +135,22 @@ impl DocumentStore {
         }
 
         self.next_disk_revision = self.next_disk_revision.saturating_add(1);
+        let revision = self.next_snapshot_revision(&path)?;
         let snapshot = Arc::new(DocumentSnapshot::parse(
             &path,
             SourceVersion::Disk(self.next_disk_revision),
+            revision,
             Arc::<str>::from(source),
         ));
         self.disk.insert(path, Arc::clone(&snapshot));
         Ok(snapshot)
+    }
+
+    fn next_snapshot_revision(&mut self, path: &Path) -> Result<u64, LanguageServiceError> {
+        self.next_snapshot_revision =
+            self.next_snapshot_revision.checked_add(1).ok_or_else(|| {
+                LanguageServiceError::analysis(path, "document snapshot revision space exhausted")
+            })?;
+        Ok(self.next_snapshot_revision)
     }
 }

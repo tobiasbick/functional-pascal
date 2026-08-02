@@ -114,6 +114,39 @@ fn open_unit_overlay_invalidates_cached_project_analysis_and_disk_is_unchanged()
 }
 
 #[test]
+fn reopened_editor_version_cannot_reuse_analysis_from_an_older_document_lifetime() {
+    let temp = TempDirectory::new("analysis-reopen-version");
+    let path = temp.write("source.fpas", "program Disk;\nbegin\nend.\n");
+    let mut service = LanguageService::new(WorkspaceContext::loose(temp.path()));
+
+    service
+        .documents_mut()
+        .open_document(&path, 1, "program Open;\nbegin\nend.\n")
+        .expect("first editor lifetime");
+    let first = service
+        .analyze_document(&path)
+        .expect("first lifetime analysis");
+    assert!(first.diagnostics().is_empty());
+
+    service.documents_mut().close_document(&path);
+    service
+        .documents_mut()
+        .open_document(
+            &path,
+            1,
+            "program Reopened;\nbegin\n  var Broken: integer := 'text'\nend.\n",
+        )
+        .expect("second editor lifetime reuses client version");
+    let reopened = service
+        .analyze_document(&path)
+        .expect("second lifetime analysis");
+
+    assert!(!Arc::ptr_eq(&first, &reopened));
+    assert!(reopened.diagnostics().iter().any(|item| item.is_error()));
+    assert_eq!(reopened.snapshot().version(), first.snapshot().version());
+}
+
+#[test]
 fn malformed_source_returns_parse_diagnostics_without_semantic_failure() {
     let temp = TempDirectory::new("analysis-malformed");
     let path = temp.write(

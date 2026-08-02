@@ -67,12 +67,13 @@ pub fn position_to_byte_offset(
         usize::try_from(position.line).map_err(|_| PositionConversionError::LineOutOfRange {
             line: position.line,
         })?;
-    let range = snapshot
-        .line_index()
-        .line_range(snapshot.source(), line)
-        .ok_or(PositionConversionError::LineOutOfRange {
-            line: position.line,
-        })?;
+    let range =
+        snapshot
+            .line_index()
+            .line_range(line)
+            .ok_or(PositionConversionError::LineOutOfRange {
+                line: position.line,
+            })?;
     let target = usize::try_from(position.character).map_err(|_| {
         PositionConversionError::CharacterOutOfRange {
             line: position.line,
@@ -112,11 +113,11 @@ pub fn byte_offset_to_position(
 ) -> Result<Position, PositionConversionError> {
     let text_position = snapshot
         .line_index()
-        .position(snapshot.source(), offset)
+        .position(offset)
         .ok_or(PositionConversionError::ByteOffsetOutOfRange { offset })?;
     let range = snapshot
         .line_index()
-        .line_range(snapshot.source(), text_position.line)
+        .line_range(text_position.line)
         .ok_or(PositionConversionError::ByteOffsetOutOfRange { offset })?;
     let content_offset = offset.min(range.end);
     if content_offset < range.start {

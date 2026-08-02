@@ -1,7 +1,7 @@
 # `fpas-language-service` review follow-up
 
 Classification: editor analysis and refactoring safety. No FPAS language change expected.
-Status: all findings open.
+Status: LS-01 through LS-05 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -14,3 +14,34 @@ Status: all findings open.
 ## Implementation notes
 
 Add cancellation tests during active folder/reference scans, not only tokens cancelled before entry. Coordinate LS-01 with LSP document sequencing so cache identity and transport ordering reinforce the same snapshot model.
+
+## Implementation record
+
+- LS-01 adds a store-owned monotonic revision to every parsed snapshot. Analysis cache keys use
+  that revision rather than the editor-protocol version, so closing and reopening a buffer with a
+  reused client version cannot recover analysis from an older document lifetime.
+- LS-02 validates rename against a hypothetical renamed symbol index. Edited references must still
+  resolve to the target, and existing uses of the replacement name must retain their declarations.
+  Same-scope collisions, inner capture, and new shadowing are rejected; disjoint lexical scopes
+  remain renameable.
+- LS-03 terminates member-chain traversal by component position rather than text equality. Repeated
+  names across nested record members now work for definition, hover, and completion.
+- LS-04 checks every imported owner prefix and accepts exactly one complete qualified match. This
+  removes document-order dependence for hierarchical units and withholds navigation for genuinely
+  ambiguous complete identities. Compiler and FPAS language resolution rules are unchanged.
+- LS-05 binds each public `LineIndex` to the immutable `Arc<str>` it indexes. Offset, position, line,
+  and range operations can no longer be paired with unrelated equal-length source text.
+- Active-scan cancellation was rechecked: folder and reference loops already contain cooperative
+  checks. No timing-dependent concurrency regression was added in this slice.
+
+## Verification
+
+- `cargo test -p fpas-language-service --test document_store --test analysis
+  --test navigation_resolution` — 17 regressions passed.
+- `cargo test -p fpas-language-service --test references_rename --test rename_safety
+  --test navigation_resolution` — 12 navigation and rename regressions passed.
+- `cargo test -p fpas-lsp --test document_lifetime` — close/reopen transport regression passed.
+- `cargo fmt --all -- --check` — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked` — all workspace and doc tests passed.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings` — passed.

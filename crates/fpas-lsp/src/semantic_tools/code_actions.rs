@@ -30,7 +30,7 @@ pub(crate) fn diagnostic_identity(
     };
     let start = position_to_byte_offset(snapshot, diagnostic.range.start)?;
     let end = position_to_byte_offset(snapshot, diagnostic.range.end)?;
-    let Some(position) = snapshot.line_index().position(snapshot.source(), start) else {
+    let Some(position) = snapshot.line_index().position(start) else {
         return Ok(None);
     };
     let message = diagnostic

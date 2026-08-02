@@ -1,6 +1,7 @@
 //! Reusable UTF-8 byte-offset line index.
 
 use std::ops::Range;
+use std::sync::Arc;
 
 /// A zero-based source position whose column is a UTF-8 byte offset.
 ///
@@ -23,17 +24,18 @@ pub struct TextRange {
     pub end: TextPosition,
 }
 
-/// Line-start table for translating compiler byte offsets without rescanning the source.
+/// Source-bound line-start table for translating compiler byte offsets without rescanning.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LineIndex {
     line_starts: Vec<usize>,
-    source_len: usize,
+    source: Arc<str>,
 }
 
 impl LineIndex {
-    /// Builds an index for UTF-8 source text.
+    /// Builds an index that owns the exact UTF-8 source text used by later translations.
     #[must_use]
-    pub fn new(source: &str) -> Self {
+    pub fn new(source: impl Into<Arc<str>>) -> Self {
+        let source = source.into();
         let mut line_starts = vec![0];
         line_starts.extend(
             source
@@ -43,7 +45,7 @@ impl LineIndex {
         );
         Self {
             line_starts,
-            source_len: source.len(),
+            source,
         }
     }
 
@@ -61,20 +63,17 @@ impl LineIndex {
 
     /// Returns the content byte range for a line, excluding `\n` and an optional preceding `\r`.
     #[must_use]
-    pub fn line_range(&self, source: &str, line: usize) -> Option<Range<usize>> {
-        if source.len() != self.source_len {
-            return None;
-        }
+    pub fn line_range(&self, line: usize) -> Option<Range<usize>> {
         let start = self.line_start(line)?;
         let mut end = self
             .line_starts
             .get(line + 1)
             .copied()
-            .unwrap_or(self.source_len);
-        if end > start && source.as_bytes().get(end - 1) == Some(&b'\n') {
+            .unwrap_or(self.source.len());
+        if end > start && self.source.as_bytes().get(end - 1) == Some(&b'\n') {
             end -= 1;
         }
-        if end > start && source.as_bytes().get(end - 1) == Some(&b'\r') {
+        if end > start && self.source.as_bytes().get(end - 1) == Some(&b'\r') {
             end -= 1;
         }
         Some(start..end)
@@ -82,11 +81,8 @@ impl LineIndex {
 
     /// Translates a UTF-8 byte offset to a zero-based line and byte column.
     #[must_use]
-    pub fn position(&self, source: &str, offset: usize) -> Option<TextPosition> {
-        if source.len() != self.source_len
-            || offset > self.source_len
-            || !source.is_char_boundary(offset)
-        {
+    pub fn position(&self, offset: usize) -> Option<TextPosition> {
+        if offset > self.source.len() || !self.source.is_char_boundary(offset) {
             return None;
         }
         let line = self.line_starts.partition_point(|start| *start <= offset) - 1;
@@ -98,19 +94,19 @@ impl LineIndex {
 
     /// Translates a zero-based line and UTF-8 byte column to a compiler byte offset.
     #[must_use]
-    pub fn offset(&self, source: &str, position: TextPosition) -> Option<usize> {
-        let line = self.line_range(source, position.line)?;
+    pub fn offset(&self, position: TextPosition) -> Option<usize> {
+        let line = self.line_range(position.line)?;
         let offset = line.start.checked_add(position.byte_column)?;
-        (offset <= line.end && source.is_char_boundary(offset)).then_some(offset)
+        (offset <= line.end && self.source.is_char_boundary(offset)).then_some(offset)
     }
 
     /// Converts a half-open compiler byte span to an editor-independent text range.
     #[must_use]
-    pub fn text_range(&self, source: &str, offset: usize, length: usize) -> Option<TextRange> {
+    pub fn text_range(&self, offset: usize, length: usize) -> Option<TextRange> {
         let end = offset.checked_add(length)?;
         Some(TextRange {
-            start: self.position(source, offset)?,
-            end: self.position(source, end)?,
+            start: self.position(offset)?,
+            end: self.position(end)?,
         })
     }
 }

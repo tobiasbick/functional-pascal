@@ -169,7 +169,9 @@ Hover shows the resolved source declaration. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct
 `uses` imports, public declarations and record members, qualified unit names,
-and library `[exports].units`.
+and library `[exports].units`. For hierarchical unit names, navigation checks
+every matching imported owner and returns a target only when the complete
+qualified identity resolves unambiguously.
 
 **Go to Type Definition** follows the named source type of variables,
 parameters, record fields and properties, function results, and aliases. It
@@ -191,12 +193,13 @@ that consumes a directly owned sibling library project. The search preserves
 lexical shadowing and ignores matching text in comments and strings.
 
 **Rename Symbol** (`F2`) validates the replacement as a non-keyword ASCII FPAS
-identifier, rejects same-scope declaration conflicts, and returns one workspace
-edit for the declaration and every resolved usage in those indexed projects. It
-edits current unsaved snapshots of open files. Program and unit names are
-excluded because a correct rename would also have to rename source files or
-manifests. A declaration outside the opened editor folder, including a standard
-library bundled with an installed VSIX, is never modified.
+identifier, rejects declaration conflicts and lexical capture or shadowing,
+and returns one workspace edit for the declaration and every resolved usage in
+those indexed projects. It edits current unsaved snapshots of open files.
+Program and unit names are excluded because a correct rename would also have to
+rename source files or manifests. A declaration outside the opened editor
+folder, including a standard library bundled with an installed VSIX, is never
+modified.
 
 Completion lists parameters, locals, visible unit declarations, record and enum
 members, and keywords appropriate to the recovered source context. Each item

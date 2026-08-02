@@ -66,7 +66,7 @@ fn start_offset(
         usize::try_from(span.column - 1).map_err(|_| DiagnosticConversionError::InvalidSpan)?;
     snapshot
         .line_index()
-        .offset(snapshot.source(), TextPosition { line, byte_column })
+        .offset(TextPosition { line, byte_column })
         .ok_or(DiagnosticConversionError::InvalidSpan)
 }
 

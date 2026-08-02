@@ -10,6 +10,14 @@ pub(crate) fn minimal_halt_chunk() -> Chunk {
     chunk
 }
 
+/// Build the smallest valid spawned-task body.
+pub(crate) fn minimal_return_chunk() -> Chunk {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Unit, loc());
+    chunk.emit(Op::Return, loc());
+    chunk
+}
+
 pub(crate) fn dummy_task(id: u64, ip: usize) -> TaskState {
     TaskState {
         id,

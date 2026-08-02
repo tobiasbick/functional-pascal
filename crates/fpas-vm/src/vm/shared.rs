@@ -1,6 +1,7 @@
 //! Shared state accessible by all worker threads.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 3), `docs/pascal/language/concurrency/README.md`.
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`.
 //!
 //! ## Lock ordering
 //!
@@ -11,13 +12,17 @@
 //! Result waits may take `task_results` and then briefly inspect `task_queue`; no path may acquire
 //! those two locks in the reverse order. Timer wakeup drops `task_queue` before taking
 //! `task_results` to notify a result waiter that runnable work exists.
+//! A due-timer handoff holds the timer queue lock while [`Self::enqueue_tasks`] briefly takes
+//! `task_queue`, releases it, and then takes `task_results`. This makes timer cancellation a
+//! teardown barrier; no path may acquire `task_queue` or `task_results` and then the timer lock.
 //! Pool workers follow [`super::Worker::pool_loop`]: take `task_queue`, then wait on
 //! `task_available` while holding that guard (standard `Condvar` pattern).
 //! `TaskWait` / `WaitAll` must not use that same wait for **result** readiness: notifications from
 //! [`Self::store_task_result`] are paired with [`Self::task_results_available`] while holding
 //! [`Self::task_results`] so wakeups cannot be missed between a poll and a block.
 
-use fpas_bytecode::{Chunk, Value};
+use fpas_bytecode::{Chunk, SourceLocation, Value};
+use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 use fpas_std::{Console, KeyInput, TextInput};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -29,7 +34,7 @@ mod graph;
 mod results;
 mod timers;
 
-pub(crate) use results::{TaskResultPoll, TaskResultState};
+pub(crate) use results::{TaskBatchPoll, TaskResultPoll, TaskResultState};
 pub(crate) use timers::TaskTimers;
 
 pub(crate) use graph::GraphState;
@@ -55,6 +60,8 @@ pub(crate) struct SharedState {
 
     /// Spawned tasks suspended by cooperative `Std.Time.Sleep`.
     pub task_timers: TaskTimers,
+    /// Cleared before teardown drains timers so no task can enter the timer queue afterward.
+    pub accept_task_timers: AtomicBool,
 
     /// Completed task states for tasks whose results can still be observed.
     pub task_results: Mutex<HashMap<u64, TaskResultState>>,
@@ -77,12 +84,12 @@ pub(crate) struct SharedState {
     /// Minimal shared `Std.Graph` application/session state.
     pub graph: Mutex<GraphState>,
 
-    /// Set when the main task completes or an error occurs.
+    /// Set when worker-pool teardown begins after the main task completes or an error occurs.
     pub shutdown: AtomicBool,
 
     /// Set when any worker hits a runtime error so in-flight spawned tasks cooperatively exit.
-    /// Plain [`Self::request_shutdown`] (after the main task finishes) does **not** set this flag,
-    /// so workers can still run tasks that were queued before teardown.
+    /// Worker teardown after the main task finishes does **not** set this flag, so workers can
+    /// still run tasks that were queued before teardown.
     pub abort_spawned_bytecode: AtomicBool,
 }
 
@@ -133,14 +140,28 @@ impl SharedState {
 
     /// Suspend a spawned task without holding its pool worker.
     pub(crate) fn schedule_task_after(&self, task: TaskState, milliseconds: u64) {
-        self.task_timers.schedule(task, milliseconds);
+        if let Err(cancelled) =
+            self.task_timers
+                .schedule(task, milliseconds, &self.accept_task_timers)
+            && cancelled.retain_result
+        {
+            self.store_task_failure(
+                cancelled.id,
+                cancelled_task_error(
+                    cancelled.id,
+                    "worker-pool teardown had already started",
+                    "Wait for retained tasks before the main task finishes.",
+                ),
+            );
+        }
     }
 
     /// Move due timer buckets to the shared ready queue until shutdown.
     pub(crate) fn timer_loop(&self) {
-        while let Some(tasks) = self.task_timers.wait_for_due(&self.shutdown) {
-            self.enqueue_tasks(tasks);
-        }
+        while self
+            .task_timers
+            .dispatch_next_due(&self.shutdown, |tasks| self.enqueue_tasks(tasks))
+        {}
     }
 
     /// Pop the oldest ready task from the queue (returns `None` if empty).
@@ -151,27 +172,59 @@ impl SharedState {
             .pop_front()
     }
 
-    /// Signal all workers to shut down.
-    pub(crate) fn request_shutdown(&self) {
+    /// Finish a normal main task: cancel sleepers, then let workers drain already-ready tasks.
+    pub(crate) fn finish_main_task(&self) {
+        self.accept_task_timers.store(false, Ordering::Release);
+        self.cancel_sleeping_tasks(
+            "the main task finished",
+            "Wait for retained tasks before the main task finishes.",
+        );
+        self.request_worker_shutdown();
+    }
+
+    fn cancel_sleeping_tasks(&self, reason: &'static str, help: &'static str) {
+        for task in self.task_timers.cancel_all() {
+            if task.retain_result {
+                self.store_task_failure(task.id, cancelled_task_error(task.id, reason, help));
+            }
+        }
+    }
+
+    /// Complete an in-flight retained task that stopped at cooperative runtime shutdown.
+    pub(crate) fn cancel_retained_task(&self, id: u64) {
+        self.store_task_failure(
+            id,
+            cancelled_task_error(
+                id,
+                "another task triggered runtime shutdown",
+                "Fix the first reported task failure before running the program again.",
+            ),
+        );
+    }
+
+    fn request_worker_shutdown(&self) {
         self.shutdown.store(true, Ordering::Release);
-        self.task_results
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .clear();
-        self.task_completions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .clear();
         self.task_timers.notify_shutdown();
         self.task_available.notify_all();
         self.task_results_available.notify_all();
+    }
+
+    /// Request worker-pool teardown without aborting already-ready bytecode tasks.
+    #[cfg(test)]
+    pub(crate) fn request_shutdown(&self) {
+        self.request_worker_shutdown();
     }
 
     /// Signal global shutdown **and** request in-flight spawned tasks to stop before the next
     /// instruction boundary (after a concurrent task failure).
     pub(crate) fn signal_runtime_failure(&self) {
         self.abort_spawned_bytecode.store(true, Ordering::Release);
-        self.request_shutdown();
+        self.accept_task_timers.store(false, Ordering::Release);
+        self.cancel_sleeping_tasks(
+            "another task triggered runtime shutdown",
+            "Fix the first reported task failure before running the program again.",
+        );
+        self.request_worker_shutdown();
     }
 
     /// Block until notified (task queued, result stored, or shutdown).
@@ -206,4 +259,13 @@ impl SharedState {
     pub(crate) fn is_shutdown(&self) -> bool {
         self.shutdown.load(Ordering::Acquire)
     }
+}
+
+fn cancelled_task_error(id: u64, reason: &str, help: &str) -> super::VmError {
+    super::runtime_error(
+        RUNTIME_VM_SHUTDOWN,
+        format!("Task {id} was canceled because {reason}"),
+        help,
+        SourceLocation::new(1, 1),
+    )
 }

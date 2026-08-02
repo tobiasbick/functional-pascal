@@ -1,5 +1,5 @@
 use crate::vm::diagnostics::VmError;
-use crate::vm::execute::StepResult;
+use crate::vm::execute::transition::{ExecutionContext, ExecutionTransition};
 use crate::vm::{CallFrame, Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -50,6 +50,8 @@ impl Worker {
             ));
         }
 
+        self.validate_code_entry(code_start, line)?;
+
         for arg in args {
             self.push(arg.clone())?;
         }
@@ -99,53 +101,15 @@ impl Worker {
         caller_line: SourceLocation,
     ) -> Result<Value, VmError> {
         while self.call_stack.len() > target_depth {
-            if self.shared.is_shutdown() {
-                if self.allow_shutdown_during_sync_call {
-                    // Allow cleanup callbacks (for example TUI OnExit) to finish during shutdown.
-                } else if self.current_task_id == 0 {
-                    return Err(runtime_error(
-                        fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
-                        "Execution aborted: a concurrent task failed",
-                        "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                        self.current_location,
-                    ));
-                } else {
-                    return Ok(Value::Unit);
-                }
-            }
-
-            if self.ip >= self.shared.chunk.code().len() {
-                return Err(internal_error(
-                    "IP ran past end of code during synchronous function call",
-                    "This indicates a compiler/runtime bug.",
-                    caller_line,
-                ));
-            }
-
-            match self.exec_one(caller_line)? {
-                StepResult::Continue => {}
-                StepResult::Halt => {
+            match self.advance_execution(ExecutionContext::SynchronousCallback, caller_line)? {
+                ExecutionTransition::Continue => {}
+                ExecutionTransition::Cancelled => return Ok(Value::Unit),
+                ExecutionTransition::Completed(_) | ExecutionTransition::Suspended => {
                     return Err(internal_error(
-                        "Halt during synchronous function call",
-                        "Synchronous callbacks must return with `Return`, not `Halt`. This indicates malformed bytecode.",
+                        "Synchronous callback produced an invalid terminal transition",
+                        "This indicates a VM callback execution bug. Please report it.",
                         caller_line,
                     ));
-                }
-                StepResult::Suspended => {
-                    return Err(internal_error(
-                        "Task suspended during synchronous function call",
-                        "Synchronous callbacks cannot suspend. This indicates a VM dispatch bug.",
-                        caller_line,
-                    ));
-                }
-                StepResult::Return => {
-                    let location = self.current_location;
-                    let return_value = self.pop(location)?;
-                    if let Some(frame) = self.call_stack.pop() {
-                        self.stack.truncate(frame.base_slot);
-                        self.push(return_value)?;
-                        self.ip = frame.return_ip;
-                    }
                 }
             }
         }

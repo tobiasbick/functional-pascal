@@ -27,6 +27,8 @@ WaitAll([T1, T2, T3]);
 
 `WaitAll` is a barrier only: it does not consume return values. You may still `Wait` each handle afterward. See [`Std.Task`](../../std/concurrency/task.md).
 
+If a retained task fails, `Wait` and `WaitAll` propagate its original runtime or internal diagnostic. If the main task ends while a retained task is still suspended in `Std.Time.Sleep`, teardown cancels that task with a shutdown diagnostic. Wait for required tasks before the main task returns or halts.
+
 ## `Std.Task`
 
 Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime errors): [`Std.Task`](../../std/concurrency/task.md).

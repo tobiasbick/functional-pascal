@@ -80,6 +80,67 @@ fn jump_past_end_reports_internal_vm_error() {
 }
 
 #[test]
+fn main_code_boundary_without_halt_reports_internal_vm_error() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Unit, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(err.message.contains("code boundary"));
+    assert!(err.message.contains("context=main task"));
+}
+
+#[test]
+fn call_target_at_code_length_is_rejected_before_entering_frame() {
+    let mut chunk = Chunk::new();
+    let name_idx = chunk
+        .add_constant(Value::Str(("MissingBody".to_string()).into()))
+        .expect("constant should fit in test chunk");
+    chunk.emit(Op::Call(name_idx, 0), loc());
+    chunk.emit(Op::Halt, loc());
+    chunk.insert_function("MissingBody".to_string(), chunk.len(), 0);
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(err.message.contains("Bytecode entry"));
+    assert!(err.message.contains("out of bounds"));
+}
+
+#[test]
+fn code_boundary_with_active_call_frame_is_rejected() {
+    let mut chunk = Chunk::new();
+    let name_idx = chunk
+        .add_constant(Value::Str(("FallsOff".to_string()).into()))
+        .expect("constant should fit in test chunk");
+    chunk.emit(Op::Call(name_idx, 0), loc());
+    chunk.emit(Op::Halt, loc());
+    let function_start = chunk.len();
+    chunk.insert_function("FallsOff".to_string(), function_start, 0);
+    chunk.emit(Op::Unit, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(err.message.contains("code boundary"));
+}
+
+#[test]
+fn halt_inside_main_call_frame_is_rejected() {
+    let mut chunk = Chunk::new();
+    let name_idx = chunk
+        .add_constant(Value::Str(("Halts".to_string()).into()))
+        .expect("constant should fit in test chunk");
+    chunk.emit(Op::Call(name_idx, 0), loc());
+    chunk.emit(Op::Halt, loc());
+    let function_start = chunk.len();
+    chunk.insert_function("Halts".to_string(), function_start, 0);
+    chunk.emit(Op::Halt, loc());
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(err.message.contains("Halt is invalid"));
+}
+
+#[test]
 fn malformed_add_int_reports_internal_vm_error() {
     let mut chunk = Chunk::new();
     emit_constant(&mut chunk, Value::Integer(1));

@@ -7,12 +7,13 @@ mod io;
 mod numeric;
 mod result_option;
 mod stack_scope;
+mod transition;
 
 use crate::vm::diagnostics::VmError;
 use crate::vm::{Worker, internal_error, runtime_error};
-use fpas_bytecode::{Op, SourceLocation, Value};
-use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
-use std::sync::atomic::Ordering;
+use fpas_bytecode::{Op, SourceLocation};
+use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
+use transition::{ExecutionContext, ExecutionTransition};
 
 /// Outcome of executing a single instruction via [`Worker::exec_one`].
 pub(super) enum StepResult {
@@ -27,23 +28,6 @@ pub(super) enum StepResult {
 }
 
 impl Worker {
-    fn check_shutdown(&self) -> Result<(), VmError> {
-        if !self.shared.is_shutdown() {
-            return Ok(());
-        }
-
-        if self.current_task_id == 0 {
-            return Err(runtime_error(
-                RUNTIME_VM_SHUTDOWN,
-                "Execution aborted: a concurrent task failed",
-                "A task spawned with `go` raised a runtime error. Fix the error in the spawned task.",
-                self.current_location,
-            ));
-        }
-
-        Ok(())
-    }
-
     /// Fetch, decode and execute the next instruction.
     ///
     /// Dispatch is a single top-level `match` on [`Op`] so hot loops do not walk
@@ -212,74 +196,35 @@ impl Worker {
 
     pub fn run(&mut self) -> Result<(), VmError> {
         loop {
-            if self.shared.abort_spawned_bytecode.load(Ordering::Acquire)
-                && self.current_task_id != 0
-                && self.current_task_id != u64::MAX
-            {
-                return Ok(());
-            }
-            if self.shared.is_shutdown() && self.current_task_id == 0 {
-                self.check_shutdown()?;
-            }
-
-            let code_len = self.shared.chunk.code().len();
-            if self.ip == code_len {
-                if self.current_task_id != 0 {
-                    let result = self.stack.pop().unwrap_or(Value::Unit);
+            let context = if self.current_task_id == 0 {
+                ExecutionContext::Main
+            } else {
+                ExecutionContext::SpawnedTask
+            };
+            match self.advance_execution(context, self.current_location)? {
+                ExecutionTransition::Continue => {}
+                ExecutionTransition::Cancelled => {
                     if self.current_task_retain_result {
-                        self.shared.store_task_result(self.current_task_id, result);
-                    }
-                    if self.pick_next_task() {
-                        continue;
-                    }
-                }
-                return Ok(());
-            }
-            if self.ip > code_len {
-                return Err(internal_error(
-                    format!(
-                        "Instruction pointer jumped past the end of the chunk: ip={}, len={code_len}",
-                        self.ip
-                    ),
-                    "This indicates malformed bytecode or a VM control-flow bug. Please report it.",
-                    self.current_location,
-                ));
-            }
-
-            match self.exec_one(self.current_location)? {
-                StepResult::Continue => {}
-                StepResult::Halt => {
-                    if self.current_task_id == 0
-                        && let Some(entry_ip) = self.pending_entry_ip.take()
-                    {
-                        self.ip = entry_ip;
-                        continue;
+                        self.shared.cancel_retained_task(self.current_task_id);
                     }
                     return Ok(());
                 }
-                StepResult::Suspended => {
+                ExecutionTransition::Suspended => {
                     self.task_suspended = false;
                     if !self.pick_next_task() {
                         return Ok(());
                     }
                 }
-                StepResult::Return => {
-                    let line = self.current_location;
-                    let return_val = self.pop(line)?;
-                    if let Some(frame) = self.call_stack.pop() {
-                        self.stack.truncate(frame.base_slot);
-                        self.push(return_val)?;
-                        self.ip = frame.return_ip;
-                    } else if self.current_task_id == 0 {
+                ExecutionTransition::Completed(return_value) => {
+                    if self.current_task_id == 0 {
                         return Ok(());
-                    } else {
-                        if self.current_task_retain_result {
-                            self.shared
-                                .store_task_result(self.current_task_id, return_val);
-                        }
-                        if !self.pick_next_task() {
-                            return Ok(());
-                        }
+                    }
+                    if self.current_task_retain_result {
+                        self.shared
+                            .store_task_result(self.current_task_id, return_value);
+                    }
+                    if !self.pick_next_task() {
+                        return Ok(());
                     }
                 }
             }

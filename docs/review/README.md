@@ -52,7 +52,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 | `fpas-sema` | [fpas-sema.md](fpas-sema.md) | P1 | ambiguous bindings |
 | `fpas-std` | [fpas-std.md](fpas-std.md) | Done | all findings completed 2026-08-02 |
 | `fpas-unit` | [fpas-unit.md](fpas-unit.md) | Done | all findings completed 2026-08-02 |
-| `fpas-vm` | [fpas-vm.md](fpas-vm.md) | P1 | task completion and shutdown |
+| `fpas-vm` | [fpas-vm.md](fpas-vm.md) | Done | all findings completed 2026-08-02 |
 
 ## Shared completion checklist
 

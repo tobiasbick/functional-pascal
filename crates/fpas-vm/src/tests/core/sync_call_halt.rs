@@ -29,8 +29,36 @@ fn sync_call_rejects_halt_in_callback() {
     assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
     assert!(
         err.message
-            .contains("Halt during synchronous function call"),
+            .contains("Halt is invalid during synchronous callback execution"),
         "unexpected message: {}",
         err.message
     );
+}
+
+#[test]
+fn sync_call_rejects_callback_reaching_code_boundary() {
+    let callee = "FallsOff";
+    let chunk = build_function_chunk(
+        callee,
+        1,
+        |chunk| {
+            emit_constant(chunk, Value::Array(vec![Value::Integer(1)].into()));
+            emit_constant(chunk, Value::function(callee.to_string(), vec![], false));
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Array(
+                    fpas_bytecode::ArrayIntrinsic::Map,
+                ))),
+                loc(),
+            );
+            chunk.emit(Op::Halt, loc());
+        },
+        |chunk| {
+            chunk.emit(Op::Unit, loc());
+        },
+    );
+
+    let err = run_err(chunk);
+    assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(err.message.contains("code boundary"));
+    assert!(err.message.contains("context=synchronous callback"));
 }

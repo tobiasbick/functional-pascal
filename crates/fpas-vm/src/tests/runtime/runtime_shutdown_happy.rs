@@ -1,10 +1,12 @@
 //! Successful [`Vm::run`] paths leave global shutdown set for pool teardown.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 9), `docs/pascal/language/concurrency/README.md`,
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`,
 //! `docs/pascal/std/concurrency/task.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
+use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
 use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc};
 
@@ -49,7 +51,39 @@ fn halt_only_program_without_pool_sets_shutdown() {
 }
 
 #[test]
-fn repeated_runs_with_spawn_chunk_each_complete_and_set_shutdown() {
+fn frame_free_main_return_completes_successfully() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Unit, loc());
+    chunk.emit(Op::Return, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.run().expect("root Return is a valid program exit");
+    assert!(vm.is_shutdown_for_tests());
+}
+
+#[test]
+fn second_run_on_same_vm_reports_single_use_contract() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Halt, loc());
+
+    let mut vm = Vm::new(chunk);
+    vm.run().expect("first run should succeed");
+    let error = vm
+        .run()
+        .expect_err("second run must fail deterministically");
+
+    assert_eq!(error.code, RUNTIME_VM_SHUTDOWN);
+    assert_eq!(error.message, "This VM instance has already been run");
+    assert!(
+        error
+            .help
+            .as_deref()
+            .is_some_and(|help| help.contains("single-use"))
+    );
+}
+
+#[test]
+fn repeated_fresh_vms_with_spawn_chunk_each_complete_and_set_shutdown() {
     let callee = "Nop";
     for _ in 0..24 {
         let chunk = build_zero_arg_function_chunk(

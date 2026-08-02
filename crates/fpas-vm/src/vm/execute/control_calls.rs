@@ -220,6 +220,7 @@ impl Worker {
         base_slot: usize,
         line: SourceLocation,
     ) -> Result<(), VmError> {
+        self.validate_code_entry(code_start, line)?;
         self.push_call_frame(
             CallFrame {
                 return_ip: self.ip,

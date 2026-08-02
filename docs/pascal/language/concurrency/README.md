@@ -20,6 +20,8 @@ The compiler lowers `go` to dedicated VM opcodes:
 
 At startup, the runtime scans the compiled instruction stream: if the program contains **no** retained or detached spawn opcodes, it does **not** start background worker threads. Opcodes used only for cooperative scheduling (for example **`Yield`**) do **not** by themselves imply a pool — only spawn opcodes do.
 
+The lifetime of spawned work is bounded by the main task. Tasks that are already runnable are drained during normal teardown; tasks still suspended in `Std.Time.Sleep` are canceled. Use retained spawn plus `Wait` when the main task must observe completion or a return value. See [Scheduling](scheduling.md) for the exact teardown policy.
+
 ## Keywords
 
 `go` — case-insensitive.

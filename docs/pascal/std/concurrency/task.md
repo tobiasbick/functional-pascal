@@ -67,7 +67,8 @@ An empty array completes immediately.
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
 - **Unknown or detached task handle:** `Wait` and `WaitAll` accept only handles returned by retained `go` expressions in the current VM. Forged handles and statement-form detached tasks produce an invalid-task diagnostic instead of waiting indefinitely.
-- **Task failure / VM shutdown:** if a spawned task aborts with a runtime error, the runtime sets a **failure** path (not just “main finished” teardown) so other spawned work can stop; a waiter may see an execution-aborted diagnostic. Fix the fault in the spawned task. See [Scheduling](../../language/concurrency/scheduling.md).
+- **Task failure:** `Wait` and `WaitAll` propagate the spawned task's original diagnostic, including its code and source location. The runtime also enters its **failure** path so other spawned work can stop cooperatively. Fix the reported fault in the spawned task.
+- **Main-task teardown:** retained tasks still suspended in `Std.Time.Sleep` are completed with a shutdown diagnostic when the main task finishes. Wait for every required result before leaving the main task. See [Scheduling](../../language/concurrency/scheduling.md).
 
 ## Implementation (contributors)
 

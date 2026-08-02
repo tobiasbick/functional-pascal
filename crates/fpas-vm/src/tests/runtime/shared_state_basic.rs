@@ -2,8 +2,9 @@
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/README.md`
 
-use crate::vm::TaskResultPoll;
+use crate::vm::{TaskBatchPoll, TaskResultPoll, TaskTimers};
 use fpas_bytecode::Value;
+use std::sync::atomic::AtomicBool;
 
 use crate::tests::helpers::minimal_shared_state;
 
@@ -67,7 +68,10 @@ fn registered_task_result_is_pending_until_stored() {
         shared.poll_task_result(5),
         TaskResultPoll::Pending
     ));
-    assert!(!shared.all_tasks_recorded(&[5]));
+    assert!(matches!(
+        shared.poll_task_batch(&[5]),
+        TaskBatchPoll::Pending
+    ));
 }
 
 #[test]
@@ -76,7 +80,10 @@ fn store_poll_available_then_consumed() {
     let v = Value::Integer(42);
     shared.store_task_result(5, v.clone());
 
-    assert!(shared.all_tasks_recorded(&[5]));
+    assert!(matches!(
+        shared.poll_task_batch(&[5]),
+        TaskBatchPoll::Complete
+    ));
 
     assert!(matches!(
         shared.poll_task_result(5),
@@ -88,10 +95,10 @@ fn store_poll_available_then_consumed() {
         TaskResultPoll::Consumed
     ));
 
-    assert!(
-        shared.all_tasks_recorded(&[5]),
-        "completion remains observable after consume so WaitAll can observe finished tasks"
-    );
+    assert!(matches!(
+        shared.poll_task_batch(&[5]),
+        TaskBatchPoll::Complete
+    ));
 }
 
 #[test]
@@ -104,4 +111,59 @@ fn poll_never_available_without_store() {
             TaskResultPoll::Pending
         ));
     }
+}
+
+#[test]
+fn normal_main_teardown_explicitly_fails_retained_sleepers() {
+    let shared = minimal_shared_state(minimal_halt_chunk());
+    let task_id = 7;
+    shared.register_task_result(task_id);
+    let mut task = dummy_task(task_id, 0);
+    task.retain_result = true;
+    shared.schedule_task_after(task, 60_000);
+
+    shared.finish_main_task();
+
+    let TaskResultPoll::Failed(error) = shared.poll_task_result(task_id) else {
+        panic!("retained sleeper should have an explicit cancellation result");
+    };
+    assert!(error.message.contains("main task finished"));
+    assert!(shared.is_shutdown());
+}
+
+#[test]
+fn timer_cancellation_removes_detached_sleepers_explicitly() {
+    let timers = TaskTimers::new();
+    let accepting_tasks = AtomicBool::new(true);
+    let task = dummy_task(9, 0);
+    assert!(!task.retain_result);
+    assert!(timers.schedule(task, 60_000, &accepting_tasks).is_ok());
+
+    let cancelled = timers.cancel_all();
+
+    assert_eq!(cancelled.len(), 1);
+    assert_eq!(cancelled[0].id, 9);
+    assert!(!cancelled[0].retain_result);
+    assert!(timers.cancel_all().is_empty());
+}
+
+#[test]
+fn task_batch_snapshot_cannot_treat_failure_as_successful_completion() {
+    let shared = minimal_shared_state(minimal_halt_chunk());
+    shared.register_task_result(1);
+    shared.register_task_result(2);
+    shared.store_task_result(1, Value::Unit);
+    shared.store_task_failure(
+        2,
+        crate::vm::internal_error(
+            "spawned task failed",
+            "test failure",
+            crate::tests::helpers::loc(),
+        ),
+    );
+
+    let TaskBatchPoll::Failed(error) = shared.poll_task_batch(&[1, 2]) else {
+        panic!("a failed WaitAll member must outrank successful completion");
+    };
+    assert_eq!(error.message, "spawned task failed");
 }

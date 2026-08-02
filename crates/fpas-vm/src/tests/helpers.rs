@@ -15,6 +15,7 @@ pub(crate) fn minimal_shared_state(chunk: Chunk) -> SharedState {
         task_queue: Mutex::new(VecDeque::new()),
         task_available: Condvar::new(),
         task_timers: TaskTimers::new(),
+        accept_task_timers: AtomicBool::new(true),
         task_results: Mutex::new(HashMap::new()),
         task_completions: Mutex::new(HashSet::new()),
         task_results_available: Condvar::new(),

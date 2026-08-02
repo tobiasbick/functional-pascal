@@ -1,11 +1,14 @@
 //! Panic paths: detached child after main halts, main panic with and without worker pool.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 9), `docs/pascal/language/concurrency/README.md`,
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`,
 //! `docs/pascal/std/concurrency/task.md`
 
 use crate::Vm;
 use fpas_bytecode::{Chunk, Op, Value};
 use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
+use std::sync::mpsc;
+use std::time::Duration;
 
 use crate::tests::helpers::{build_zero_arg_function_chunk, emit_constant, loc, run_err};
 
@@ -74,4 +77,38 @@ fn spawn_chunk_main_panic_still_sets_shutdown_with_worker_pool() {
     let err = vm.run().expect_err("panic after detached spawn enqueue");
     assert_eq!(err.code, RUNTIME_PROGRAM_PANIC);
     assert!(vm.is_shutdown_for_tests());
+}
+
+#[test]
+fn main_panic_aborts_ready_infinite_detached_task_within_bound() {
+    let callee = "Spins";
+    let mut chunk = Chunk::new();
+    emit_constant(
+        &mut chunk,
+        Value::function(callee.to_string(), vec![], false),
+    );
+    chunk.emit(Op::SpawnDetachedTask(0), loc());
+    emit_constant(&mut chunk, Value::Str("main".into()));
+    chunk.emit(Op::Panic, loc());
+
+    let code_start = chunk.len();
+    chunk.insert_function(callee.to_ascii_lowercase(), code_start, 0);
+    chunk.emit(Op::Yield, loc());
+    chunk.emit(Op::Jump(code_start as u32), loc());
+
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let handle = std::thread::spawn(move || {
+        let mut vm = Vm::new(chunk);
+        sender
+            .send(vm.run())
+            .expect("test receiver should remain connected");
+    });
+
+    let result = receiver
+        .recv_timeout(Duration::from_secs(2))
+        .expect("main failure must abort ready spawned bytecode before pool join");
+    handle.join().expect("VM thread should not panic");
+    let error = result.expect_err("main panic should remain the primary error");
+    assert_eq!(error.code, RUNTIME_PROGRAM_PANIC);
+    assert!(error.message.contains("main"));
 }

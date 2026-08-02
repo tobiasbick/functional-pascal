@@ -3,7 +3,8 @@
 //! The VM executes the main program on the calling thread. Tasks created with
 //! `go` are distributed across a thread pool for true parallel execution.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md`, `docs/pascal/language/concurrency/README.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`
 
 use fpas_bytecode::{Chunk, SourceLocation};
 use fpas_std::{
@@ -23,22 +24,48 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub(crate) use shared::{GraphState, SharedState, TaskResultPoll, TaskState, TaskTimers};
+pub(crate) use shared::{
+    GraphState, SharedState, TaskBatchPoll, TaskResultPoll, TaskState, TaskTimers,
+};
 pub use shutdown::VmShutdownHandle;
 pub(crate) use worker::Worker;
 
 const STACK_MAX: usize = 4096;
 const TIMESLICE: u32 = 256;
 
-/// Drops after [`Worker::run`] returns or unwinds so [`SharedState::request_shutdown`] always runs.
-/// Pool workers block on the task condvar; without this, a panic in the main worker could strand them.
+/// Distinguishes normal main completion from failure and treats unwinding as runtime failure.
+/// Pool workers block on the task condvar; without this guard, a panic in the main worker could
+/// strand them.
 ///
 /// **Documentation:** `docs/pascal/language/concurrency/README.md`.
-struct ShutdownAfterMain(Arc<SharedState>);
+struct ShutdownAfterMain {
+    shared: Arc<SharedState>,
+    completed: bool,
+}
+
+impl ShutdownAfterMain {
+    fn new(shared: Arc<SharedState>) -> Self {
+        Self {
+            shared,
+            completed: false,
+        }
+    }
+
+    fn complete(&mut self, succeeded: bool) {
+        if succeeded {
+            self.shared.finish_main_task();
+        } else {
+            self.shared.signal_runtime_failure();
+        }
+        self.completed = true;
+    }
+}
 
 impl Drop for ShutdownAfterMain {
     fn drop(&mut self) {
-        self.0.request_shutdown();
+        if !self.completed {
+            self.shared.signal_runtime_failure();
+        }
     }
 }
 
@@ -68,6 +95,8 @@ pub struct Vm {
     entry_ip: Option<usize>,
     /// Pool size for worker threads (0 = main-thread only until first `go`).
     pool_size: usize,
+    /// Whether this VM instance has already started its single permitted run.
+    has_run: bool,
 }
 
 impl Vm {
@@ -143,6 +172,7 @@ impl Vm {
             task_queue: Mutex::new(VecDeque::new()),
             task_available: Condvar::new(),
             task_timers: TaskTimers::new(),
+            accept_task_timers: AtomicBool::new(true),
             task_results: Mutex::new(HashMap::new()),
             task_completions: Mutex::new(HashSet::new()),
             task_results_available: Condvar::new(),
@@ -160,6 +190,7 @@ impl Vm {
             shared,
             entry_ip,
             pool_size,
+            has_run: false,
         }
     }
 
@@ -256,8 +287,26 @@ impl Vm {
     /// Execute the loaded program.
     ///
     /// The main program runs on the calling thread. If `go` tasks are spawned,
-    /// a thread pool is created to execute them in parallel.
+    /// a thread pool is created to execute them in parallel. A VM instance is single-use because
+    /// execution mutates globals, task state, input, and hosted runtime resources. Calling `run`
+    /// again returns a deterministic [`fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN`] diagnostic;
+    /// construct a new VM for another execution.
+    ///
+    /// # Errors
+    ///
+    /// Returns a runtime or internal diagnostic when bytecode execution fails, cooperative
+    /// shutdown aborts the program, malformed bytecode violates a VM invariant, or this VM
+    /// instance has already been run.
     pub fn run(&mut self) -> Result<(), VmError> {
+        if std::mem::replace(&mut self.has_run, true) {
+            return Err(runtime_error(
+                fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                "This VM instance has already been run",
+                "VM instances are single-use. Construct a new `Vm` for each program execution.",
+                SourceLocation::new(1, 1),
+            ));
+        }
+
         self.shared
             .abort_spawned_bytecode
             .store(false, std::sync::atomic::Ordering::Release);
@@ -265,10 +314,12 @@ impl Vm {
         // Programs without `go` never use the pool; avoid `thread::scope` so nested callers
         // (for example `fpas test --jobs`) do not stack scoped thread blocks on worker threads.
         if self.pool_size == 0 {
-            let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&self.shared));
+            let mut shutdown_after_main = ShutdownAfterMain::new(Arc::clone(&self.shared));
             let mut main_worker =
                 Worker::new_main_with_entry(Arc::clone(&self.shared), self.entry_ip);
-            return main_worker.run();
+            let result = main_worker.run();
+            shutdown_after_main.complete(result.is_ok());
+            return result;
         }
 
         let shared = Arc::clone(&self.shared);
@@ -292,10 +343,12 @@ impl Vm {
             // Run main program on this thread. Always shut down when the main worker returns or
             // unwinds so pool threads are not left blocked on an empty queue.
             let main_result = {
-                let _shutdown_after_main = ShutdownAfterMain(Arc::clone(&shared));
+                let mut shutdown_after_main = ShutdownAfterMain::new(Arc::clone(&shared));
                 let mut main_worker =
                     Worker::new_main_with_entry(Arc::clone(&shared), self.entry_ip);
-                main_worker.run()
+                let result = main_worker.run();
+                shutdown_after_main.complete(result.is_ok());
+                result
             };
 
             // Collect pool worker errors. If the main task already failed, prefer that diagnostic

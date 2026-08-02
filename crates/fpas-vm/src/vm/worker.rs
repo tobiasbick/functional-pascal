@@ -1,6 +1,7 @@
 //! Per-thread worker that executes bytecode for one task at a time.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md`, `docs/pascal/language/concurrency/README.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`
 
 use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
 use super::shared::{SharedState, TaskState};
@@ -222,6 +223,10 @@ impl Worker {
                 Ok(())
             }
             Err(e) => {
+                if self.current_task_retain_result {
+                    self.shared
+                        .store_task_failure(self.current_task_id, e.clone());
+                }
                 self.shared.signal_runtime_failure();
                 Err(e)
             }

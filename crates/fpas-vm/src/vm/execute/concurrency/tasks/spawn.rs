@@ -65,6 +65,8 @@ impl Worker {
             ));
         }
 
+        self.validate_code_entry(code_start, line)?;
+
         let arg_count = argc as usize;
         let args = self.drain_stack_tail(arg_count, line).map_err(|_| {
             internal_error(

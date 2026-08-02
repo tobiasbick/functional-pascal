@@ -3,6 +3,7 @@ use std::sync::Arc;
 use crate::Vm;
 use crate::tests::helpers::{emit_constant, loc};
 use fpas_bytecode::{Chunk, Op, Value};
+use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
 
 #[test]
 fn image_entry_runs_initialization_and_keeps_vm_output_isolated() {
@@ -32,4 +33,28 @@ fn image_entry_runs_initialization_and_keeps_vm_output_isolated() {
 
     assert_eq!(first.output().lines, vec!["init", "first"]);
     assert_eq!(second.output().lines, vec!["init", "second"]);
+}
+
+#[test]
+fn image_entry_at_code_length_is_rejected() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Halt, loc());
+    let entry = chunk.len();
+    let mut vm = Vm::from_image(Arc::new(chunk), entry);
+
+    let error = vm.run().expect_err("entry at code length must fail");
+    assert_eq!(error.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(error.message.contains("Bytecode entry"));
+}
+
+#[test]
+fn image_entry_above_code_length_is_rejected() {
+    let mut chunk = Chunk::new();
+    chunk.emit(Op::Halt, loc());
+    let entry = chunk.len() + 1;
+    let mut vm = Vm::from_image(Arc::new(chunk), entry);
+
+    let error = vm.run().expect_err("entry above code length must fail");
+    assert_eq!(error.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(error.message.contains("out of bounds"));
 }

@@ -3,8 +3,8 @@
 //! **Documentation:** `docs/pascal/std/concurrency/task.md` (from the repository root).
 
 use crate::vm::diagnostics::VmError;
-use crate::vm::execute::StepResult;
-use crate::vm::{TaskResultPoll, Worker, internal_error, runtime_error};
+use crate::vm::execute::transition::{ExecutionContext, ExecutionTransition};
+use crate::vm::{TaskBatchPoll, TaskResultPoll, Worker, internal_error, runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
@@ -21,6 +21,9 @@ impl Worker {
             TaskResultPoll::Available(result) => {
                 self.push(result)?;
             }
+            TaskResultPoll::Failed(error) => {
+                return Err(error);
+            }
             TaskResultPoll::Consumed => {
                 return Err(runtime_error(
                     RUNTIME_INVALID_TASK,
@@ -30,13 +33,13 @@ impl Worker {
                 ));
             }
             TaskResultPoll::Unknown if self.shared.is_shutdown() => {
-                return Err(waited_task_failed(line));
+                return Err(self.task_failure_or_shutdown(task_id, line));
             }
             TaskResultPoll::Unknown => {
                 return Err(unknown_task_error(task_id, line));
             }
             TaskResultPoll::Pending if self.shared.is_shutdown() => {
-                return Err(waited_task_failed(line));
+                return Err(self.task_failure_or_shutdown(task_id, line));
             }
             TaskResultPoll::Pending => {
                 self.push(Value::Task(task_id))?;
@@ -57,6 +60,9 @@ impl Worker {
                             self.ip += 1;
                             return Ok(());
                         }
+                        TaskResultPoll::Failed(error) => {
+                            return Err(error);
+                        }
                         TaskResultPoll::Consumed => {
                             return Err(runtime_error(
                                 RUNTIME_INVALID_TASK,
@@ -66,13 +72,13 @@ impl Worker {
                             ));
                         }
                         TaskResultPoll::Unknown if self.shared.is_shutdown() => {
-                            return Err(waited_task_failed(line));
+                            return Err(self.task_failure_or_shutdown(task_id, line));
                         }
                         TaskResultPoll::Unknown => {
                             return Err(unknown_task_error(task_id, line));
                         }
                         TaskResultPoll::Pending if self.shared.is_shutdown() => {
-                            return Err(waited_task_failed(line));
+                            return Err(self.task_failure_or_shutdown(task_id, line));
                         }
                         TaskResultPoll::Pending if self.sync_call_depth > 0 => {
                             self.shared.wait_until_task_result_ready_strict(task_id);
@@ -119,45 +125,52 @@ impl Worker {
         task_ids.sort_unstable();
         task_ids.dedup();
 
-        if let Some(task_id) = self.shared.first_unknown_task(&task_ids) {
-            if self.shared.is_shutdown() {
-                return Err(waited_task_failed(line));
+        match self.shared.poll_task_batch(&task_ids) {
+            TaskBatchPoll::Complete => return Ok(()),
+            TaskBatchPoll::Failed(error) => return Err(error),
+            TaskBatchPoll::Unknown(_) if self.shared.is_shutdown() => {
+                return Err(self.task_batch_failure_or_shutdown(&task_ids, line));
             }
-            return Err(unknown_task_error(task_id, line));
+            TaskBatchPoll::Unknown(task_id) => return Err(unknown_task_error(task_id, line)),
+            TaskBatchPoll::Pending if self.shared.is_shutdown() => {
+                return Err(self.task_batch_failure_or_shutdown(&task_ids, line));
+            }
+            TaskBatchPoll::Pending => {}
         }
 
-        let all_done = self.shared.all_tasks_recorded(&task_ids);
-
-        if all_done {
-            // `WaitAll` observes completion but does not consume task results.
-        } else if self.shared.is_shutdown() {
-            return Err(waited_task_failed(line));
-        } else {
-            self.push(Value::Array(tasks))?;
-            self.ip -= 1;
-            loop {
-                if self.sync_call_depth == 0 && self.exec_yield() {
-                    return Ok(());
-                }
-                if self.sync_call_depth > 0 {
-                    while self.help_run_one_ready_task(line)? {}
-                }
-                if self.shared.all_tasks_recorded(&task_ids) {
+        self.push(Value::Array(tasks))?;
+        self.ip -= 1;
+        loop {
+            if self.sync_call_depth == 0 && self.exec_yield() {
+                return Ok(());
+            }
+            if self.sync_call_depth > 0 {
+                while self.help_run_one_ready_task(line)? {}
+            }
+            match self.shared.poll_task_batch(&task_ids) {
+                TaskBatchPoll::Complete => {
                     let _ = self.pop(line)?;
                     self.ip += 1;
                     return Ok(());
                 }
-                if self.shared.is_shutdown() {
-                    return Err(waited_task_failed(line));
+                TaskBatchPoll::Failed(error) => return Err(error),
+                TaskBatchPoll::Unknown(_) if self.shared.is_shutdown() => {
+                    return Err(self.task_batch_failure_or_shutdown(&task_ids, line));
                 }
-                if self.sync_call_depth > 0 {
-                    self.shared.wait_until_all_tasks_recorded_strict(&task_ids);
-                } else {
-                    self.shared.wait_until_all_tasks_recorded(&task_ids);
+                TaskBatchPoll::Unknown(task_id) => {
+                    return Err(unknown_task_error(task_id, line));
                 }
+                TaskBatchPoll::Pending if self.shared.is_shutdown() => {
+                    return Err(self.task_batch_failure_or_shutdown(&task_ids, line));
+                }
+                TaskBatchPoll::Pending => {}
+            }
+            if self.sync_call_depth > 0 {
+                self.shared.wait_until_all_tasks_recorded_strict(&task_ids);
+            } else {
+                self.shared.wait_until_all_tasks_recorded(&task_ids);
             }
         }
-        Ok(())
     }
 
     fn pop_task_id(&mut self, line: SourceLocation) -> Result<u64, VmError> {
@@ -170,6 +183,19 @@ impl Worker {
                 "Pass a task handle from `go FunctionName(args)`.",
                 line,
             )),
+        }
+    }
+
+    fn task_failure_or_shutdown(&self, task_id: u64, line: SourceLocation) -> VmError {
+        self.shared
+            .task_failure(task_id)
+            .unwrap_or_else(|| waited_task_failed(line))
+    }
+
+    fn task_batch_failure_or_shutdown(&self, task_ids: &[u64], line: SourceLocation) -> VmError {
+        match self.shared.poll_task_batch(task_ids) {
+            TaskBatchPoll::Failed(error) => error,
+            _ => waited_task_failed(line),
         }
     }
 
@@ -188,6 +214,15 @@ impl Worker {
         self.sync_call_depth = 0;
 
         let helped = self.run_helped_task_until_parked_or_done(line);
+        if let Err(error) = &helped
+            && self.current_task_retain_result
+        {
+            self.shared
+                .store_task_failure(self.current_task_id, error.clone());
+        }
+        if helped.is_err() {
+            self.shared.signal_runtime_failure();
+        }
         self.sync_call_depth = saved_sync;
         self.pending_entry_ip = saved_pending;
         self.load_task(saved);
@@ -206,44 +241,23 @@ impl Worker {
             // abandon the waiting sync callback's saved state.
             self.instructions_until_yield = u32::MAX;
 
-            if self.shared.is_shutdown() {
-                return Ok(());
-            }
-            let code_len = self.shared.chunk.code().len();
-            if self.ip >= code_len {
-                let result = self.stack.pop().unwrap_or(Value::Unit);
-                if self.current_task_retain_result {
-                    self.shared.store_task_result(helped_id, result);
+            match self.advance_execution(ExecutionContext::SpawnedTask, caller_line)? {
+                ExecutionTransition::Continue => {}
+                ExecutionTransition::Cancelled => {
+                    if self.current_task_retain_result {
+                        self.shared.cancel_retained_task(helped_id);
+                    }
+                    return Ok(());
                 }
-                return Ok(());
-            }
-
-            match self.exec_one(caller_line)? {
-                StepResult::Continue => {}
-                StepResult::Halt => {
-                    return Err(internal_error(
-                        "Halt while helping a ready task during Wait",
-                        "Spawned tasks must return with `Return`, not `Halt`.",
-                        caller_line,
-                    ));
-                }
-                StepResult::Suspended => {
+                ExecutionTransition::Suspended => {
                     self.task_suspended = false;
                     return Ok(());
                 }
-                StepResult::Return => {
-                    let location = self.current_location;
-                    let return_val = self.pop(location)?;
-                    if let Some(frame) = self.call_stack.pop() {
-                        self.stack.truncate(frame.base_slot);
-                        self.push(return_val)?;
-                        self.ip = frame.return_ip;
-                    } else {
-                        if self.current_task_retain_result {
-                            self.shared.store_task_result(helped_id, return_val);
-                        }
-                        return Ok(());
+                ExecutionTransition::Completed(return_value) => {
+                    if self.current_task_retain_result {
+                        self.shared.store_task_result(helped_id, return_value);
                     }
+                    return Ok(());
                 }
             }
 

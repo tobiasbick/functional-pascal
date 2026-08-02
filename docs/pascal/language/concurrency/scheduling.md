@@ -8,7 +8,9 @@ If it does emit spawn bytecode, the runtime starts **`max(1, available_paralleli
 
 Background workers exist only for a single program run: the runtime **joins** pool threads before execution returns so short-lived hosts do not accumulate stray threads across many runs.
 
-When the **main task** finishes (normally or with a runtime error), the runtime signals **teardown shutdown** so idle workers wake and exit once the ready queue is drained. This is separate from **task failure**: when a spawned task aborts with a runtime error, other spawned work may be stopped cooperatively at the next instruction boundary. The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a worker error (for example after a spawned task **`panic`s**) is reported.
+When the **main task** finishes, the runtime begins **teardown shutdown**. Idle workers wake and exit after draining tasks that were already in the ready queue. Spawned tasks that are still suspended in `Std.Time.Sleep`, and ready tasks that try to sleep after teardown has begun, are canceled instead of delaying program exit. A retained canceled task is completed with a shutdown error; code that needs its result must call `Wait` before the main task finishes. Detached sleeping tasks are canceled without a result because they have no handle.
+
+Teardown is separate from **task failure**: when a spawned task aborts with a runtime error, other spawned work may be stopped cooperatively at the next instruction boundary. The host surfaces **one** primary diagnostic: if the main task failed, that error wins; otherwise a worker error (for example after a spawned task **`panic`s**) is reported.
 
 ## Cooperative scheduling
 

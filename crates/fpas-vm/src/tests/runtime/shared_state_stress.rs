@@ -10,13 +10,13 @@ use std::time::Duration;
 
 use crate::tests::helpers::{loc, minimal_shared_state};
 
-use super::shared_fixtures::{dummy_task, minimal_halt_chunk};
+use super::shared_fixtures::{dummy_task, minimal_halt_chunk, minimal_return_chunk};
 
 // --- Positive: pool worker integration (queue + condvar + shutdown) ---
 
 #[test]
 fn pool_worker_drains_prequeued_task_then_exits_on_shutdown() {
-    let chunk = minimal_halt_chunk();
+    let chunk = minimal_return_chunk();
     let shared = Arc::new(minimal_shared_state(chunk));
     shared.enqueue_task(dummy_task(10, 0));
 
@@ -34,7 +34,7 @@ fn pool_worker_drains_prequeued_task_then_exits_on_shutdown() {
 
 #[test]
 fn pool_worker_blocks_until_enqueue_then_shutdown() {
-    let chunk = minimal_halt_chunk();
+    let chunk = minimal_return_chunk();
     let shared = Arc::new(minimal_shared_state(chunk));
 
     let s2 = Arc::clone(&shared);

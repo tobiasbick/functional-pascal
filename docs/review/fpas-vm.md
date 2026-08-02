@@ -1,7 +1,7 @@
 # `fpas-vm` review follow-up
 
 Classification: VM runtime, concurrency, and malformed-bytecode defense. No FPAS language change expected. Performance changes require current benchmarks.
-Status: all findings open.
+Status: VM-01 through VM-05 completed 2026-08-02.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
@@ -14,3 +14,44 @@ Status: all findings open.
 ## Implementation notes
 
 Fix VM-01 and VM-03 after strengthening bytecode/linker validation, but retain VM boundary checks as defense in depth. The existing in-place integer binary hot path is already implemented and regression-covered; this review found no new measured performance fix. If runtime code changes, use targeted VM tests, the workspace suite, and relevant `cargo bench-fpas` comparisons.
+
+## Implementation record
+
+- VM-01 rejects `Halt` outside frame-free main execution. Retained task failures now complete an
+  explicit result state containing the original diagnostic, so `Wait` and `WaitAll` propagate the
+  actionable task error instead of hanging or replacing it with a generic shutdown message. Batch
+  waits inspect completion and failure atomically, including the transition into shutdown.
+- VM-02 separates worker-pool teardown from bytecode cancellation. Normal main completion drains
+  already-ready tasks and explicitly cancels timer-suspended tasks; attempts to sleep after
+  teardown begins are canceled under the same timer lock. Timer dispatch holds that lock until due
+  tasks are published to the ready queue, making cancellation a teardown barrier. Retained
+  cancellations receive a shutdown diagnostic, while detached sleepers end without a result.
+- VM-03 validates image, call, synchronous-callback, and spawn entries with `entry < code.len()`
+  before mutating execution state. Reaching the code boundary without `Halt` or `Return` is an
+  internal invariant failure in every execution context, including active call frames.
+- VM-04 moves fetch-boundary, shutdown, `Halt`, `Return`, and suspension policy into
+  `execute/transition.rs`. Main, spawned, synchronous-callback, and helped-task loops consume the
+  same context-parameterized transitions.
+- VM-05 models `Vm::run` as single-use. A second call returns a deterministic
+  `RUNTIME_VM_SHUTDOWN` diagnostic, and the public Rust API documents the contract and errors.
+- Main success, main failure, and unwinding use distinct teardown paths. Runtime failures abort
+  detached ready work instead of draining it indefinitely.
+- `docs/pascal/language/concurrency/` and `docs/pascal/std/concurrency/task.md` now document normal
+  teardown cancellation and original task-diagnostic propagation. FPAS syntax is unchanged.
+
+## Verification
+
+- Baseline: `cargo test -p fpas-vm --locked` — passed: 165 tests plus doc tests.
+- Baseline: `cargo clippy -p fpas-vm --all-targets --locked -- -D warnings` — passed.
+- Baseline: `cargo bench-fpas save before-vm-review --group concurrency` — `task_spawn_wait` 652
+  ms, 153374 tasks/s.
+- Targeted implementation: `cargo test -p fpas-vm --locked` — passed: 184 tests plus doc tests.
+- `cargo clippy -p fpas-vm --all-targets --locked -- -D warnings` — passed.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings` — passed.
+- `cargo fmt --all -- --check` — passed.
+- `cargo build --workspace --locked` — passed.
+- `cargo test --workspace --locked --quiet` — passed. The preceding non-quiet attempt reached the
+  command timeout after 122 seconds without a test failure; the completed rerun exited successfully.
+- Release benchmark comparisons against `before-vm-review` ranged from 620 ms (`-4.9%`) to 669 ms
+  (`+2.6%`) across repeated runs. The direction-changing spread is run noise, so no performance
+  claim or benchmark-history entry was recorded.

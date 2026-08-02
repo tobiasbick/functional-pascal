@@ -21,6 +21,7 @@ fn pool_tasks_stop_without_side_effects_after_abort_flag() {
         task_queue: Mutex::new(VecDeque::new()),
         task_available: Condvar::new(),
         task_timers: TaskTimers::new(),
+        accept_task_timers: AtomicBool::new(true),
         task_results: Mutex::new(HashMap::new()),
         task_completions: Mutex::new(HashSet::new()),
         task_results_available: Condvar::new(),

@@ -1,10 +1,11 @@
-//! `WaitAll` validation and shutdown when a spawned child panics.
+//! `WaitAll` validation and spawned-child failure propagation.
 //!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md` (Phase 8), `docs/pascal/std/concurrency/task.md`, `docs/pascal/language/concurrency/README.md`
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/std/concurrency/task.md`
 
 use fpas_bytecode::{Chunk, Intrinsic, Op, TaskIntrinsic, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
+    RUNTIME_INVALID_TASK, RUNTIME_PROGRAM_PANIC, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 use crate::tests::helpers::{emit_constant, loc, run_err};
@@ -28,7 +29,7 @@ fn wait_all_rejects_integer_element() {
 }
 
 #[test]
-fn wait_all_on_array_when_child_panicked_reports_shutdown() {
+fn wait_all_on_array_when_child_panicked_reports_original_diagnostic() {
     let ok = "OkTask";
     let bad = "BadTask";
     let mut chunk = Chunk::new();
@@ -59,7 +60,7 @@ fn wait_all_on_array_when_child_panicked_reports_shutdown() {
     chunk.emit(Op::Panic, loc());
 
     let err = run_err(chunk);
-    assert_eq!(err.code, RUNTIME_VM_SHUTDOWN);
+    assert_eq!(err.code, RUNTIME_PROGRAM_PANIC);
 }
 
 #[test]

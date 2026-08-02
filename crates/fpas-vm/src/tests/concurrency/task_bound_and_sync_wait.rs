@@ -4,7 +4,7 @@
 //! `docs/pascal/std/concurrency/task.md`
 
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, Op, TaskIntrinsic, Value};
-use fpas_diagnostics::codes::RUNTIME_INVALID_TASK;
+use fpas_diagnostics::codes::{INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_INVALID_TASK};
 
 use crate::Vm;
 use crate::tests::helpers::{
@@ -120,4 +120,48 @@ fn wait_inside_array_map_with_single_worker_completes() {
 fn wait_inside_array_map_callback_still_works_with_default_pool() {
     let chunk = map_spawn_wait_chunk(3, "SpawnAndWait", "DoubleLater");
     assert_eq!(run_ok_output(chunk), vec!["6"]);
+}
+
+#[test]
+fn wait_inside_sync_callback_reports_helped_task_halt() {
+    let callback = "SpawnAndWait";
+    let child = "Halts";
+    let chunk = build_function_chunk(
+        callback,
+        1,
+        |chunk| {
+            emit_constant(chunk, Value::Array(vec![Value::Integer(1)].into()));
+            emit_constant(chunk, Value::function(callback.to_string(), vec![], false));
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Array(ArrayIntrinsic::Map))),
+                loc(),
+            );
+            chunk.emit(Op::Halt, loc());
+
+            let child_start = chunk.len();
+            chunk.insert_function(child.to_string(), child_start, 0);
+            chunk.emit(Op::Halt, loc());
+        },
+        |chunk| {
+            emit_constant(chunk, Value::function(child.to_string(), vec![], false));
+            chunk.emit(Op::SpawnTask(0), loc());
+            chunk.emit(
+                Op::Intrinsic(u16::from(Intrinsic::Task(TaskIntrinsic::Wait))),
+                loc(),
+            );
+            chunk.emit(Op::Return, loc());
+        },
+    );
+
+    let mut vm = Vm::new(chunk);
+    vm.set_worker_pool_size_for_tests(0);
+    let error = vm
+        .run()
+        .expect_err("helped task Halt should fail the sync callback");
+    assert_eq!(error.code, INTERNAL_VM_INVARIANT_FAILURE);
+    assert!(
+        error
+            .message
+            .contains("Halt is invalid during spawned task")
+    );
 }

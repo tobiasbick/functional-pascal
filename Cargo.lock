@@ -569,6 +569,7 @@ dependencies = [
 name = "fpas-bundle"
 version = "0.0.1"
 dependencies = [
+ "atomic-write-file",
  "fpas-bytecode",
  "fpas-program",
 ]

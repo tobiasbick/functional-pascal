@@ -82,8 +82,11 @@ program. Project applications are written beside the `.fpasprj`; workspace
 applications are written beside the `.fpasworkspace`. The resulting file
 contains the host-native runner and validated `.fpascp`, and runs without
 `fpas`, the separate runner, sources, manifests, `.fpascu`, `.fpascp`, or the
-source standard library. Repeating the command atomically replaces the same
-output.
+source standard library. The complete bundle is validated and written to a
+same-directory staging file before one atomic replacement publishes it.
+Repeating the command therefore keeps the previous application in place until
+the replacement commits; a failed publication leaves that previous file
+unchanged. On Linux, executable permissions are applied before publication.
 
 `fpas build --std-lib <directory>` uses the same complete source standard
 library override as the other compiler commands.

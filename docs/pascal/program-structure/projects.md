@@ -94,7 +94,9 @@ automatically when the compiler process exits.
 host-native single-file application beside the project manifest. Its default
 base name is `project.name`; `--name <name>` overrides only the application and
 output name. Windows produces `<name>.exe`, while Linux produces executable
-`<name>`.
+`<name>`. Publication validates the complete bundle and atomically replaces an
+existing output from a same-directory staging file. If publication fails before
+the replacement commits, the existing application remains unchanged.
 
 ### Exports section (library projects only)
 

@@ -36,7 +36,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 | --- | --- | --- | --- |
 | `fpas-bench` | [fpas-bench.md](fpas-bench.md) | Done | all findings completed 2026-08-02 |
 | `fpas-build` | [fpas-build.md](fpas-build.md) | Done | all findings completed 2026-08-02 |
-| `fpas-bundle` | [fpas-bundle.md](fpas-bundle.md) | P1 | executable publication |
+| `fpas-bundle` | [fpas-bundle.md](fpas-bundle.md) | Done | all findings completed 2026-08-02 |
 | `fpas-bytecode` | [fpas-bytecode.md](fpas-bytecode.md) | P1 | executable validation and deadlock |
 | `fpas-cli` | [fpas-cli.md](fpas-cli.md) | P1 | timeout and false-success behavior |
 | `fpas-compiler` | [fpas-compiler.md](fpas-compiler.md) | P1 | overflow and object metadata |

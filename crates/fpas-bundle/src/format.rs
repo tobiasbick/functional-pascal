@@ -8,12 +8,11 @@ const FOOTER_LEN: usize = 24;
 const MAX_NAME_BYTES: usize = 4096;
 
 /// A validated program embedded in a host-native runner.
-#[derive(Debug, Clone, Copy)]
 pub struct BundledProgram<'a> {
     /// Application name recorded by the packager.
     pub name: &'a str,
-    /// Complete encoded `.fpascp` program image.
-    pub image: &'a [u8],
+    /// Decoded and validated `.fpascp` program image.
+    pub image: fpas_program::ProgramImage,
 }
 
 /// Invalid bundle input or executable footer.
@@ -66,6 +65,11 @@ impl fmt::Display for BundleError {
 impl std::error::Error for BundleError {}
 
 /// Append a validated program image, application name, and footer to runner bytes.
+///
+/// # Errors
+///
+/// Returns an error for an invalid name or program image, or when the complete
+/// bundle length exceeds the format's addressable limits.
 pub fn encode(runner: &[u8], image: &[u8], name: &str) -> Result<Vec<u8>, BundleError> {
     validate_name(name)?;
     fpas_program::decode(image).map_err(|error| BundleError::Program(error.to_string()))?;
@@ -91,6 +95,11 @@ pub fn encode(runner: &[u8], image: &[u8], name: &str) -> Result<Vec<u8>, Bundle
 }
 
 /// Read and validate the program appended to a host-native executable.
+///
+/// # Errors
+///
+/// Returns an error when the footer, lengths, name, or embedded program image
+/// violates the versioned bundle format.
 pub fn decode(executable: &[u8]) -> Result<BundledProgram<'_>, BundleError> {
     let footer_start = executable
         .len()
@@ -128,11 +137,12 @@ pub fn decode(executable: &[u8]) -> Result<BundledProgram<'_>, BundleError> {
     let name_start = payload_start
         .checked_add(image_len)
         .ok_or(BundleError::InvalidLengths)?;
-    let image = &executable[payload_start..name_start];
+    let image_bytes = &executable[payload_start..name_start];
     let name = std::str::from_utf8(&executable[name_start..footer_start])
         .map_err(|_| BundleError::InvalidName)?;
     validate_name(name)?;
-    fpas_program::decode(image).map_err(|error| BundleError::Program(error.to_string()))?;
+    let image = fpas_program::decode(image_bytes)
+        .map_err(|error| BundleError::Program(error.to_string()))?;
     Ok(BundledProgram { name, image })
 }
 

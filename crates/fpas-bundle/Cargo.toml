@@ -7,6 +7,7 @@ license.workspace = true
 repository.workspace = true
 
 [dependencies]
+atomic-write-file = "0.3.0"
 fpas-program = { path = "../fpas-program" }
 
 [dev-dependencies]

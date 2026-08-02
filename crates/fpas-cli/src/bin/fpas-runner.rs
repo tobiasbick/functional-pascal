@@ -41,13 +41,7 @@ fn run() -> i32 {
             return 1;
         }
     };
-    let image = match fpas_program::decode(bundled.image) {
-        Ok(image) => image,
-        Err(error) => {
-            eprintln!("Cannot load FPAS application `{}`: {error}", bundled.name);
-            return 1;
-        }
-    };
+    let fpas_bundle::BundledProgram { name, image } = bundled;
     let source_paths = image
         .source_paths()
         .iter()
@@ -59,10 +53,7 @@ fn run() -> i32 {
     if let Err(diagnostic) = vm.run() {
         let path = source_paths
             .get(usize::try_from(diagnostic.span.source_id).unwrap_or(usize::MAX))
-            .map_or_else(
-                || bundled.name.to_string(),
-                |path| path.display().to_string(),
-            );
+            .map_or_else(|| name.to_string(), |path| path.display().to_string());
         eprintln!("{}", fpas_diagnostics::render(&path, &diagnostic));
         return 2;
     }

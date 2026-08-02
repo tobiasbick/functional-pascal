@@ -4,6 +4,7 @@
 
 use super::loading::discover_workspace_file;
 use super::loading::{load_workspace, read_member_project_name};
+use crate::paths::absolute_project_path;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -29,6 +30,7 @@ pub fn resolve_workspace_dependency_paths(
         return Ok(Vec::new());
     }
 
+    let consumer_project = absolute_project_path(consumer_project)?;
     let consumer_root = consumer_project.parent().ok_or_else(|| {
         format!(
             "Cannot resolve project root for `{}`.\n  help: Use a normal file path inside a directory.",

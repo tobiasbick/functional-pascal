@@ -115,6 +115,16 @@ fn expand_source_pattern(
 
 const PROJECT_FILE_EXTENSION: &str = "fpasprj";
 
+/// Absolute manifest path used at public project-loading boundaries.
+pub(crate) fn absolute_project_path(path: &Path) -> Result<PathBuf, String> {
+    absolute(path).map_err(|error| {
+        format!(
+            "Cannot resolve absolute project path for `{}`: {error}",
+            path.display()
+        )
+    })
+}
+
 /// Canonical path used for project dependency graphs and deduplication.
 pub(crate) fn canonical_project_path(path: &Path) -> PathBuf {
     canonical_or_original(path)

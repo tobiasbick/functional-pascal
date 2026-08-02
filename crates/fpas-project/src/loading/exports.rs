@@ -2,11 +2,9 @@
 //!
 //! Documentation: `docs/pascal/program-structure/projects.md`
 
-use crate::common::{
-    SourceHeader, display_unit_key, qualified_id_to_string, read_source_header,
-    validate_non_empty_entry,
-};
+use crate::common::{display_unit_key, qualified_id_to_string, validate_non_empty_entry};
 use crate::loading::parse_cache::ParsedSourceCache;
+use fpas_parser::CompilationUnit;
 use std::collections::HashSet;
 use std::path::PathBuf;
 
@@ -14,7 +12,7 @@ use std::path::PathBuf;
 pub(crate) fn validate_library_exports(
     export_units: &[String],
     source_files: &[PathBuf],
-    _parse_cache: &mut ParsedSourceCache,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<HashSet<String>, String> {
     if export_units.is_empty() {
         return Err(
@@ -36,11 +34,11 @@ pub(crate) fn validate_library_exports(
 
     let mut defined_units = HashSet::<String>::new();
     for source_path in source_files {
-        let (unit, _) = read_source_header(source_path, 0)?;
-        let SourceHeader::Unit(unit) = unit else {
+        let (unit, _) = parse_cache.parse(source_path, 0)?;
+        let CompilationUnit::Unit(unit) = unit else {
             continue;
         };
-        defined_units.insert(qualified_id_to_string(&unit).to_ascii_lowercase());
+        defined_units.insert(qualified_id_to_string(&unit.name).to_ascii_lowercase());
     }
 
     for listed in &listed_units {

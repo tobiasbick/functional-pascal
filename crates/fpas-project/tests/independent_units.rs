@@ -86,11 +86,8 @@ include = ["src/**/*.fpas"]
                     .cloned()
             })
             .collect();
-        let analysis = fpas_sema::analyze_unit(
-            node.parsed_unit().expect("unit must parse"),
-            &direct_interfaces,
-        )
-        .expect("interface installation");
+        let analysis = fpas_sema::analyze_unit(node.parsed_unit(), &direct_interfaces)
+            .expect("interface installation");
         assert!(
             analysis.metadata.errors.is_empty(),
             "{} diagnostics: {:#?}",

@@ -8,7 +8,8 @@ use super::model::{
     LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin,
 };
 use super::paths::{
-    canonical_project_path, merge_source_files, resolve_project_dependency_path, same_file,
+    canonical_project_path, canonical_source_path, merge_source_files,
+    resolve_project_dependency_path, same_file,
 };
 use super::test_sources::validate_project_test_sources;
 use super::workspace::resolve_workspace_dependency_paths;
@@ -152,19 +153,14 @@ fn merge_dependency_link_meta(
     );
 
     for source_path in &dependency_loaded.source_files {
-        let origin = dependency_loaded
-            .link_meta
-            .source_origins
-            .get(source_path)
-            .cloned()
-            .unwrap_or(SourceOrigin::Own);
+        let origin = dependency_loaded.link_meta.origin_for_source(source_path);
         let remapped = match origin {
             SourceOrigin::Own => SourceOrigin::Library(dependency_canonical.clone()),
             SourceOrigin::Library(path) => SourceOrigin::Library(path),
         };
         consumer
             .source_origins
-            .insert(source_path.clone(), remapped);
+            .insert(canonical_source_path(source_path), remapped);
     }
 }
 
@@ -200,7 +196,7 @@ fn mark_own_source_origins(
         {
             link_meta
                 .source_origins
-                .insert(source_path.clone(), SourceOrigin::Own);
+                .insert(canonical_source_path(source_path), SourceOrigin::Own);
         }
     }
 }

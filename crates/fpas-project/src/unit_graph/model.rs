@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use fpas_parser::{QualifiedId, Unit};
 use fpas_unit::Digest;
@@ -20,7 +20,7 @@ pub struct UnitNode {
     source_id: u32,
     source_hash: Option<Digest>,
     direct_uses: Vec<QualifiedId>,
-    unit: Arc<OnceLock<Result<Unit, String>>>,
+    unit: Arc<Unit>,
 }
 
 impl UnitNode {
@@ -39,27 +39,7 @@ impl UnitNode {
             source_id: unit.span.source_id,
             source_hash,
             direct_uses: unit.uses.clone(),
-            unit: Arc::new(OnceLock::from(Ok(unit))),
-        }
-    }
-
-    pub(super) fn from_sidecar(
-        path: PathBuf,
-        origin: SourceOrigin,
-        display_name: String,
-        direct_uses: Vec<QualifiedId>,
-        source_id: u32,
-        source_hash: Digest,
-    ) -> Self {
-        Self {
-            canonical_name: display_name.to_ascii_lowercase(),
-            display_name,
-            path,
-            origin,
-            source_id,
-            source_hash: Some(source_hash),
-            direct_uses,
-            unit: Arc::new(OnceLock::new()),
+            unit: Arc::new(unit),
         }
     }
 
@@ -116,35 +96,10 @@ impl UnitNode {
         &self.direct_uses
     }
 
-    /// Parsed unit retained for semantic analysis or the transitional source linker.
-    pub fn parsed_unit(&self) -> Result<&Unit, String> {
-        self.unit
-            .get_or_init(|| {
-                let (parsed, _) =
-                    crate::common::parse_compilation_unit_file(&self.path, self.source_id)?;
-                let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
-                    return Err(format!(
-                        "Source file `{}` no longer declares a unit.",
-                        self.path.display()
-                    ));
-                };
-                if !unit
-                    .name
-                    .parts
-                    .join(".")
-                    .eq_ignore_ascii_case(&self.display_name)
-                {
-                    return Err(format!(
-                        "Source file `{}` declares unit `{}`, but its compiled metadata names `{}`.",
-                        self.path.display(),
-                        unit.name.parts.join("."),
-                        self.display_name
-                    ));
-                }
-                Ok(unit)
-            })
-            .as_ref()
-            .map_err(Clone::clone)
+    /// Parsed source unit retained by this authoritative graph snapshot.
+    #[must_use]
+    pub fn parsed_unit(&self) -> &Unit {
+        &self.unit
     }
 
     /// Parse an owned unit AST from the supplied source snapshot.
@@ -179,12 +134,6 @@ impl UnitNode {
             ));
         }
         Ok(unit)
-    }
-
-    /// Returns whether this node's source AST has been materialized in this graph.
-    #[must_use]
-    pub fn has_parsed_source(&self) -> bool {
-        self.unit.get().is_some()
     }
 }
 

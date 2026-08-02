@@ -26,6 +26,32 @@ pub const STD_UNIT_TUI: &str = "Std.Tui";
 pub const STD_UNIT_GRAPH: &str = "Std.Graph";
 pub const STD_UNIT_TEST: &str = "Std.Test";
 
+/// Standard units supplied entirely by compiler, VM, or runtime intrinsics.
+pub const STD_UNITS_INTRINSIC: &[&str] = &[
+    STD_UNIT_ARGS,
+    STD_UNIT_ENV,
+    STD_UNIT_PROC,
+    STD_UNIT_PATH,
+    STD_UNIT_FS,
+    STD_UNIT_TIME,
+    STD_UNIT_CONSOLE,
+    STD_UNIT_GRAPH,
+    STD_UNIT_STR,
+    STD_UNIT_CONV,
+    STD_UNIT_PARSE,
+    STD_UNIT_MATH,
+    STD_UNIT_RANDOM,
+    STD_UNIT_ARRAY,
+    STD_UNIT_RESULT,
+    STD_UNIT_OPTION,
+    STD_UNIT_TASK,
+    STD_UNIT_DICT,
+    STD_UNIT_JSON,
+    STD_UNIT_TOML,
+    STD_UNIT_TEST,
+];
+
+/// Standard units recognized by tooling, including source-defined units.
 pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_ARGS,
     STD_UNIT_ENV,
@@ -50,3 +76,15 @@ pub const STD_UNITS_KNOWN: &[&str] = &[
     STD_UNIT_TUI,
     STD_UNIT_TEST,
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::{STD_UNIT_CONSOLE, STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_INTRINSIC};
+
+    #[test]
+    fn intrinsic_units_exclude_source_defined_units() {
+        assert!(STD_UNITS_INTRINSIC.contains(&STD_UNIT_CONSOLE));
+        assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_TUI));
+        assert!(!STD_UNITS_INTRINSIC.contains(&STD_UNIT_VERSION));
+    }
+}

@@ -113,10 +113,12 @@ ASCII case-insensitive name rules, and validates that the object has exactly one
 Any failure classifies the derived sidecar as corrupt and rebuilds it from the authoritative
 source.
 
-A valid unchanged sidecar lets a later build use the unit without parsing or semantically
-analyzing its implementation. A non-public implementation change rebuilds that unit but does not
-invalidate consumers while its public interface hash stays unchanged. An exported signature,
-layout, constant value, or other public-interface change invalidates consuming units.
+A valid unchanged sidecar lets the compilation stage reuse the stored interface and object without
+parsing or semantically analyzing the implementation again. Project loading still reads current
+source declarations to construct the authoritative Unit graph. A non-public implementation change
+rebuilds that unit but does not invalidate consumers while its public interface hash stays
+unchanged. An exported signature, layout, constant value, or other public-interface change
+invalidates consuming units.
 
 For an exported record, the semantic interface also stores its declaring unit
 and the names of non-public record members. Consumers therefore receive the

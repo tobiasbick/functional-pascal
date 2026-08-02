@@ -3,10 +3,7 @@
 //! Spec: `docs/pascal/program-structure/projects.md`
 
 use super::exports::validate_library_exports;
-use crate::common::{
-    SourceHeader, qualified_id_to_string, read_source_header, validate_non_empty,
-    validate_user_unit_name,
-};
+use crate::common::{qualified_id_to_string, validate_non_empty, validate_user_unit_name};
 use crate::loading::parse_cache::ParsedSourceCache;
 use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
@@ -268,26 +265,26 @@ fn validate_program_main_file(
 pub(crate) fn validate_project_source_units(
     source_files: Vec<PathBuf>,
     warnings: &mut Vec<String>,
-    _parse_cache: &mut ParsedSourceCache,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<Vec<PathBuf>, String> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, parse_warnings) = read_source_header(&source_path, 0)?;
+        let (unit, parse_warnings) = parse_cache.parse(&source_path, 0)?;
         warnings.extend(parse_warnings);
 
         match unit {
-            SourceHeader::Program(program) => {
+            CompilationUnit::Program(program) => {
                 warnings.push(format!(
                     "Source file `{}` declares `program {}` and was skipped. Source files must use `unit` declarations.",
                     source_path.to_string_lossy(),
-                    program
+                    program.name
                 ));
             }
-            SourceHeader::Unit(unit) => {
-                validate_user_unit_name(&source_path, &unit)?;
-                let unit_name = qualified_id_to_string(&unit);
+            CompilationUnit::Unit(unit) => {
+                validate_user_unit_name(&source_path, &unit.name)?;
+                let unit_name = qualified_id_to_string(&unit.name);
                 let key = unit_name.to_ascii_lowercase();
                 if let Some(first_path) = seen_unit_names.get(&key) {
                     return Err(format!(
@@ -308,27 +305,28 @@ pub(crate) fn validate_project_source_units(
 /// Validates trusted standard-library sources declared by `stdlib.fpasprj`.
 pub(crate) fn validate_standard_library_source_units(
     source_files: Vec<PathBuf>,
-    _parse_cache: &mut ParsedSourceCache,
+    parse_cache: &mut ParsedSourceCache,
 ) -> Result<Vec<PathBuf>, String> {
     let mut validated = Vec::new();
     let mut seen_unit_names = HashMap::<String, PathBuf>::new();
 
     for source_path in source_files {
-        let (unit, _) = read_source_header(&source_path, 0)?;
-        let SourceHeader::Unit(unit) = unit else {
-            let SourceHeader::Program(program) = unit else {
-                unreachable!("source header is program or unit");
+        let (unit, _) = parse_cache.parse(&source_path, 0)?;
+        let CompilationUnit::Unit(unit) = unit else {
+            let CompilationUnit::Program(program) = unit else {
+                unreachable!("compilation unit is program or unit");
             };
             return Err(format!(
                 "Standard library source file `{}` declares `program {}`.\n  help: Standard library manifests may include `unit Std.*` files only.",
                 source_path.display(),
-                program
+                program.name
             ));
         };
 
-        let unit_name = qualified_id_to_string(&unit);
-        let is_std_unit = unit.parts.len() >= 2
+        let unit_name = qualified_id_to_string(&unit.name);
+        let is_std_unit = unit.name.parts.len() >= 2
             && unit
+                .name
                 .parts
                 .first()
                 .is_some_and(|head| head.eq_ignore_ascii_case("std"));

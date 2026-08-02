@@ -132,13 +132,6 @@ fn cold_warm_and_interface_invalidation_rebuild_the_minimum_units() {
     assert_eq!(warm.counters().compiled, 0);
     assert_eq!(warm.counters().parsed, 0);
     assert_eq!(warm.counters().sidecar_reused, 2);
-    let warm_project = load_project(&fixture.manifest).expect("warm project loading");
-    let warm_graph = build_unit_graph(&warm_project.source_files, &warm_project.link_meta)
-        .expect("warm unit graph");
-    assert!(
-        warm_graph.iter().all(|(_, node)| !node.has_parsed_source()),
-        "valid sidecars must build the dependency graph without parsing source ASTs"
-    );
     assert_eq!(warm.counters().relinked, 1);
     assert_output(warm, "42");
 

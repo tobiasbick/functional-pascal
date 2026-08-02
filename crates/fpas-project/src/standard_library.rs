@@ -5,8 +5,9 @@
 
 use crate::loading::own::{load_own_project, validate_standard_library_source_units};
 use crate::loading::parse_cache::ParsedSourceCache;
+use crate::paths::{canonical_project_path, canonical_source_path};
 use crate::{LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin};
-use fpas_std::STD_UNITS_KNOWN;
+use fpas_std::STD_UNITS_INTRINSIC;
 use std::path::{Path, PathBuf};
 
 const STANDARD_LIBRARY_MANIFEST: &str = "stdlib.fpasprj";
@@ -36,14 +37,15 @@ pub fn load_standard_library(root: &Path) -> Result<StandardLibrary, String> {
     let mut link_meta = ProjectLinkMeta::default();
     link_meta
         .library_export_policies
-        .insert(manifest.clone(), own.export_policy);
+        .insert(canonical_project_path(&manifest), own.export_policy);
     for source_file in &source_files {
-        link_meta
-            .source_origins
-            .insert(source_file.clone(), SourceOrigin::Library(manifest.clone()));
+        link_meta.source_origins.insert(
+            canonical_source_path(source_file),
+            SourceOrigin::Library(canonical_project_path(&manifest)),
+        );
         link_meta
             .trusted_standard_library_sources
-            .insert(source_file.clone());
+            .insert(canonical_source_path(source_file));
     }
 
     Ok(StandardLibrary {
@@ -62,10 +64,10 @@ pub fn load_standard_library_project(root: &Path) -> Result<LoadedProject, Strin
     for source_file in &source_files {
         link_meta
             .source_origins
-            .insert(source_file.clone(), SourceOrigin::Own);
+            .insert(canonical_source_path(source_file), SourceOrigin::Own);
         link_meta
             .trusted_standard_library_sources
-            .insert(source_file.clone());
+            .insert(canonical_source_path(source_file));
     }
 
     Ok(LoadedProject {
@@ -117,25 +119,23 @@ fn load_standard_library_sources(
         std::mem::take(&mut own.source_files),
         &mut parse_cache,
     )?;
-    validate_intrinsic_collisions(&source_files)?;
-    Ok((
-        crate::paths::canonical_project_path(&manifest),
-        own,
-        source_files,
-    ))
+    validate_intrinsic_collisions(&source_files, &mut parse_cache)?;
+    Ok((canonical_project_path(&manifest), own, source_files))
 }
 
-fn validate_intrinsic_collisions(source_files: &[PathBuf]) -> Result<(), String> {
+fn validate_intrinsic_collisions(
+    source_files: &[PathBuf],
+    parse_cache: &mut ParsedSourceCache,
+) -> Result<(), String> {
     for source_file in source_files {
-        let (header, _) = crate::common::read_source_header(source_file, 0)?;
-        let crate::common::SourceHeader::Unit(unit) = header else {
+        let (parsed, _) = parse_cache.parse(source_file, 0)?;
+        let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
             unreachable!("standard-library source validation accepts units only")
         };
-        let name = crate::common::qualified_id_to_string(&unit);
-        if !name.eq_ignore_ascii_case("Std.Tui")
-            && STD_UNITS_KNOWN
-                .iter()
-                .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))
+        let name = crate::common::qualified_id_to_string(&unit.name);
+        if STD_UNITS_INTRINSIC
+            .iter()
+            .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))
         {
             return Err(format!(
                 "Source standard-library unit `{name}` in `{}` collides with intrinsic unit `{name}`.\n  help: Choose a distinct `Std.*` unit name; source units cannot replace individual intrinsic units.",

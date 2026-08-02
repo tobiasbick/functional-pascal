@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use crate::TestManifest;
+use crate::paths::{canonical_project_path, canonical_source_path, same_file};
 
 /// Kind of `.fpasprj` project described in `docs/pascal/program-structure/projects.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -89,23 +90,40 @@ impl ProjectLinkMeta {
 
     /// Origin for a source path; defaults to [`SourceOrigin::Own`] when unknown.
     pub fn origin_for_source(&self, source_path: &Path) -> SourceOrigin {
+        let canonical = canonical_source_path(source_path);
         self.source_origins
-            .get(source_path)
+            .get(&canonical)
+            .or_else(|| {
+                self.source_origins
+                    .iter()
+                    .find_map(|(path, origin)| same_file(path, source_path).then_some(origin))
+            })
             .cloned()
             .unwrap_or(SourceOrigin::Own)
     }
 
     /// Export policy for a library project path, defaulting to [`LibraryExportPolicy::AllUnits`].
     pub fn export_policy_for_library(&self, library_project: &Path) -> LibraryExportPolicy {
+        let canonical = canonical_project_path(library_project);
         self.library_export_policies
-            .get(library_project)
+            .get(&canonical)
+            .or_else(|| {
+                self.library_export_policies
+                    .iter()
+                    .find_map(|(path, policy)| same_file(path, library_project).then_some(policy))
+            })
             .cloned()
             .unwrap_or(LibraryExportPolicy::AllUnits)
     }
 
     /// Returns whether a source belongs to the trusted implementation standard library.
     pub fn is_trusted_standard_library_source(&self, source_path: &Path) -> bool {
-        self.trusted_standard_library_sources.contains(source_path)
+        let canonical = canonical_source_path(source_path);
+        self.trusted_standard_library_sources.contains(&canonical)
+            || self
+                .trusted_standard_library_sources
+                .iter()
+                .any(|path| same_file(path, source_path))
     }
 }
 

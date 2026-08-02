@@ -488,7 +488,23 @@ begin
 
       return State
     end;
-    TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.CheckChanged(CheckSource, CheckAction, Checked), TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    TuiMsg.Pointer(Pointer):
+    begin
+      return State
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      return State
+    end;
+    TuiMsg.CheckChanged(CheckSource, CheckAction, Checked):
+    begin
+      return State
+    end;
+    TuiMsg.ScrollChanged(ScrollSource, ScrollAction, ScrollOffset):
+    begin
+      return State
+    end;
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
       return State
     end

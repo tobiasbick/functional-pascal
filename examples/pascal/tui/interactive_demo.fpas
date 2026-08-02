@@ -44,7 +44,43 @@ begin
       Cmd.Set(TuiCmd.Quit);
       return State
     end;
-    TuiMsg.Key(Key), TuiMsg.Pointer(Pointer), TuiMsg.Tick(Delta), TuiMsg.Resize(Size), TuiMsg.FocusChanged(Previous, Current), TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset), TuiMsg.CheckChanged(Source, Action, Checked), TuiMsg.SelectionChanged(Source, Action, Selected), TuiMsg.ScrollChanged(Source, Action, Offset), TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
+    TuiMsg.Key(Key):
+    begin
+      return State
+    end;
+    TuiMsg.Pointer(Pointer):
+    begin
+      return State
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      return State
+    end;
+    TuiMsg.Resize(Size):
+    begin
+      return State
+    end;
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      return State
+    end;
+    TuiMsg.TextAreaChanged(Source, Action, Text, Caret, TextAreaOffset):
+    begin
+      return State
+    end;
+    TuiMsg.CheckChanged(Source, Action, Checked):
+    begin
+      return State
+    end;
+    TuiMsg.SelectionChanged(Source, Action, Selected):
+    begin
+      return State
+    end;
+    TuiMsg.ScrollChanged(Source, Action, Offset):
+    begin
+      return State
+    end;
+    TuiMsg.MenuChanged(MenuSource, MenuAction, MenuState):
     begin
       return State
     end

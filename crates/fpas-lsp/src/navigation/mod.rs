@@ -49,9 +49,9 @@ pub(crate) fn span_range(
     snapshot: &DocumentSnapshot,
     span: SourceSpan,
 ) -> Result<Range, PositionConversionError> {
-    let end = span.offset.saturating_add(span.length);
+    let end = span.end();
     Ok(Range::new(
-        byte_offset_to_position(snapshot, span.offset)?,
+        byte_offset_to_position(snapshot, span.offset())?,
         byte_offset_to_position(snapshot, end)?,
     ))
 }

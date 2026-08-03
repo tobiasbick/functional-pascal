@@ -69,7 +69,7 @@ fn ensure_edited_references_still_bind(
             continue;
         }
         let resolved =
-            resolve_unqualified(renamed, document_index, new_name, reference.span.offset);
+            resolve_unqualified(renamed, document_index, new_name, reference.span.offset());
         if !resolved.is_some_and(|resolved| same_declaration(resolved, target)) {
             return conflict_error(new_name);
         }
@@ -90,7 +90,7 @@ fn ensure_existing_references_still_bind(
             let Token::Ident(name) = &token.token else {
                 continue;
             };
-            let span = SourceSpan::from(token.span);
+            let span = token.span.diagnostic_span_or_synthetic();
             if !name.eq_ignore_ascii_case(new_name) || !is_unqualified(document, span) {
                 continue;
             }
@@ -144,7 +144,7 @@ fn is_unqualified(document: &NavigationDocument, span: SourceSpan) -> bool {
     let Some(index) = document
         .tokens
         .iter()
-        .position(|token| token.span.offset == span.offset && token.span.length == span.length)
+        .position(|token| token.span.offset == span.offset() && token.span.length == span.length())
     else {
         return false;
     };

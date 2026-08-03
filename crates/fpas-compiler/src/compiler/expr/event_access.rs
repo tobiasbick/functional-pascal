@@ -23,16 +23,16 @@ impl Compiler {
             internal_compiler_error(
                 "`Assigned` lowering expected one event designator argument.",
                 "Re-run compilation and report this internal compiler error.",
-                location.line,
-                location.column,
+                location.line(),
+                location.column(),
             )
         })?
         else {
             return Err(internal_compiler_error(
                 "`Assigned` lowering expected a designator argument.",
                 "Re-run compilation and report this internal compiler error.",
-                location.line,
-                location.column,
+                location.line(),
+                location.column(),
             ));
         };
 

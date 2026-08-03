@@ -14,14 +14,14 @@ pub(crate) fn diagnostic_to_lsp(
     snapshot: &DocumentSnapshot,
     diagnostic: &FpasDiagnostic,
 ) -> Result<Diagnostic, DiagnosticConversionError> {
-    if diagnostic.span.source_id != 0 {
+    if diagnostic.span.source_id() != 0 {
         return Err(DiagnosticConversionError::ForeignSource {
-            source_id: diagnostic.span.source_id,
+            source_id: diagnostic.span.source_id(),
         });
     }
     let start_offset = start_offset(snapshot, diagnostic)?;
     let end_offset = start_offset
-        .checked_add(diagnostic.span.length)
+        .checked_add(diagnostic.span.length())
         .ok_or(DiagnosticConversionError::InvalidSpan)?;
     let range = Range::new(
         byte_offset_to_position(snapshot, start_offset)?,
@@ -56,14 +56,14 @@ fn start_offset(
     diagnostic: &FpasDiagnostic,
 ) -> Result<usize, DiagnosticConversionError> {
     let span = diagnostic.span;
-    if span.offset != 0 || (span.line == 1 && span.column == 1) {
-        return Ok(span.offset);
+    if span.offset() != 0 || (span.line() == 1 && span.column() == 1) {
+        return Ok(span.offset());
     }
 
     let line =
-        usize::try_from(span.line - 1).map_err(|_| DiagnosticConversionError::InvalidSpan)?;
+        usize::try_from(span.line() - 1).map_err(|_| DiagnosticConversionError::InvalidSpan)?;
     let byte_column =
-        usize::try_from(span.column - 1).map_err(|_| DiagnosticConversionError::InvalidSpan)?;
+        usize::try_from(span.column() - 1).map_err(|_| DiagnosticConversionError::InvalidSpan)?;
     snapshot
         .line_index()
         .offset(TextPosition { line, byte_column })

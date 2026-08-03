@@ -44,8 +44,7 @@ end.
     assert_eq!(amount.owner.as_deref(), Some("Complete.Counter"));
     assert_eq!(amount.detail, "field Amount: integer");
     assert_eq!(
-        &source[amount.replacement_span.offset
-            ..amount.replacement_span.offset + amount.replacement_span.length],
+        &source[amount.replacement_span.offset()..amount.replacement_span.end()],
         "AmTail"
     );
     assert!(
@@ -232,10 +231,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     assert_eq!(unique.source, CompletionSource::AutoImport);
     let edit = unique.additional_edit.as_ref().expect("uses edit");
     let mut edited = source.to_owned();
-    edited.replace_range(
-        edit.span.offset..edit.span.offset + edit.span.length,
-        &edit.new_text,
-    );
+    edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
     assert!(
         edited.contains("uses Demo.Core, Demo.Importable;"),
         "{edited}"

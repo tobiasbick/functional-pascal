@@ -106,9 +106,9 @@ impl RelocatableObject {
             .locations()
             .iter()
             .map(|location| ObjectLocation {
-                line: location.line,
-                column: location.column,
-                source_id: location.source_id,
+                line: location.line(),
+                column: location.column(),
+                source_id: location.source_id(),
             })
             .collect();
         let functions = chunk

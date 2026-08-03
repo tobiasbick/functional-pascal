@@ -48,15 +48,11 @@ end.
     assert_eq!(child(root, "Current").kind, SymbolKind::MutableVariable);
     for symbol in all_symbols(root) {
         assert_eq!(
-            &source[symbol.selection_span.offset
-                ..symbol.selection_span.offset + symbol.selection_span.length],
+            &source[symbol.selection_span.offset()..symbol.selection_span.end()],
             symbol.name
         );
-        assert!(symbol.full_span.offset <= symbol.selection_span.offset);
-        assert!(
-            symbol.selection_span.offset + symbol.selection_span.length
-                <= symbol.full_span.offset + symbol.full_span.length
-        );
+        assert!(symbol.full_span.offset() <= symbol.selection_span.offset());
+        assert!(symbol.selection_span.end() <= symbol.full_span.end());
     }
 }
 

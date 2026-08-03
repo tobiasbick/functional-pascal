@@ -104,12 +104,12 @@ pub(crate) fn prepare_rename(
     let document = &documents[target_index];
     let end = target
         .occurrence_span
-        .offset
-        .saturating_add(target.occurrence_span.length);
+        .offset()
+        .saturating_add(target.occurrence_span.length());
     let placeholder = document
         .snapshot
         .source()
-        .get(target.occurrence_span.offset..end)?
+        .get(target.occurrence_span.offset()..end)?
         .to_owned();
     Some(RenameTarget {
         range: target.occurrence_span,
@@ -149,7 +149,7 @@ pub(crate) fn rename_symbol(
     edits.sort_by(|left, right| {
         left.path
             .cmp(&right.path)
-            .then_with(|| right.range.offset.cmp(&left.range.offset))
+            .then_with(|| right.range.offset().cmp(&left.range.offset()))
     });
     Ok(edits)
 }

@@ -381,7 +381,7 @@ pub(crate) fn render_cli_diagnostic_with_sources(
 ) -> String {
     let Some(path) = source_paths
         .and_then(|paths| {
-            usize::try_from(diagnostic.span.source_id)
+            usize::try_from(diagnostic.span.source_id())
                 .ok()
                 .and_then(|index| paths.get(index))
         })

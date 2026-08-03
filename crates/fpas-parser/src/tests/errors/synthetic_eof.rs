@@ -26,7 +26,7 @@ fn synthetic_eof_matches_lexer_position_after_unicode_and_line_endings() {
 
         assert_eq!(
             synthetic_eof_error.span,
-            real_eof.span.into(),
+            real_eof.span.diagnostic_span_or_synthetic(),
             "source: {source:?}"
         );
     }

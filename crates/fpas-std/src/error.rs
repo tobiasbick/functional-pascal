@@ -11,7 +11,13 @@ pub type StdError = Diagnostic;
 
 #[must_use]
 fn synthetic_span(location: SourceLocation) -> SourceSpan {
-    SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id)
+    SourceSpan::new_with_source(
+        0,
+        1,
+        location.line(),
+        location.column(),
+        location.source_id(),
+    )
 }
 
 /// Runtime error with optional help line; pass `None` when the message alone is sufficient.

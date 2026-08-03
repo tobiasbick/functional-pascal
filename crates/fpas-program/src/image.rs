@@ -194,29 +194,13 @@ fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
 
 fn validate_locations(chunk: &Chunk, source_path_count: usize) -> Result<(), ImageError> {
     for (instruction, location) in chunk.locations().iter().enumerate() {
-        validate_location(instruction, location.line, location.column)?;
-        if location.source_id as usize >= source_path_count {
+        if location.source_id() as usize >= source_path_count {
             return Err(ImageError::SourceId {
                 instruction,
-                source_id: location.source_id,
+                source_id: location.source_id(),
                 source_paths: source_path_count,
             });
         }
-    }
-    Ok(())
-}
-
-pub(super) fn validate_location(
-    instruction: usize,
-    line: u32,
-    column: u32,
-) -> Result<(), ImageError> {
-    if line == 0 || column == 0 {
-        return Err(ImageError::InvalidLocation {
-            instruction,
-            line,
-            column,
-        });
     }
     Ok(())
 }

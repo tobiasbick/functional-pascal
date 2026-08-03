@@ -13,10 +13,10 @@ pub(crate) fn name_span(
 ) -> SourceSpan {
     let source = snapshot.source();
     let end = full_span
-        .offset
-        .saturating_add(full_span.length)
+        .offset()
+        .saturating_add(full_span.length())
         .min(source.len());
-    let Some(fragment) = source.get(full_span.offset..end) else {
+    let Some(fragment) = source.get(full_span.offset()..end) else {
         return empty_span(full_span);
     };
     let (tokens, _) = lex(fragment);
@@ -25,7 +25,7 @@ pub(crate) fn name_span(
     ) else {
         return empty_span(full_span);
     };
-    let offset = full_span.offset + token.span.offset;
+    let offset = full_span.offset() + token.span.offset;
     let Some(position) = snapshot.line_index().position(offset) else {
         return empty_span(full_span);
     };
@@ -34,7 +34,7 @@ pub(crate) fn name_span(
         token.span.length,
         u32::try_from(position.line + 1).unwrap_or(u32::MAX),
         u32::try_from(position.byte_column + 1).unwrap_or(u32::MAX),
-        full_span.source_id,
+        full_span.source_id(),
     )
 }
 
@@ -167,11 +167,11 @@ fn type_parameters(parameters: &[fpas_parser::TypeParam]) -> String {
 
 fn empty_span(full_span: SourceSpan) -> SourceSpan {
     SourceSpan::new_with_source(
-        full_span.offset,
+        full_span.offset(),
         0,
-        full_span.line,
-        full_span.column,
-        full_span.source_id,
+        full_span.line(),
+        full_span.column(),
+        full_span.source_id(),
     )
 }
 

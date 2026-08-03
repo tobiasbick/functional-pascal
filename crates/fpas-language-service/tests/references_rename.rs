@@ -52,12 +52,9 @@ fn references_preserve_lexical_shadowing() {
         .expect("shadowed references")
         .value;
     assert_eq!(references.len(), 2, "{references:?}");
-    assert!(
-        references
-            .iter()
-            .all(|location| location.span.offset
-                < source.find("end;\n\nbegin").expect("routine end"))
-    );
+    assert!(references.iter().all(
+        |location| location.span.offset() < source.find("end;\n\nbegin").expect("routine end")
+    ));
 }
 
 #[test]

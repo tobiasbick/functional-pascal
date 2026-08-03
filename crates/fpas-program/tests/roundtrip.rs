@@ -84,30 +84,6 @@ fn image_rejects_source_id_outside_path_table() {
 }
 
 #[test]
-fn image_constructor_rejects_zero_line_or_column() {
-    for (line, column) in [(0, 1), (1, 0)] {
-        let mut chunk = Chunk::new();
-        chunk.emit(
-            Op::Halt,
-            SourceLocation {
-                line,
-                column,
-                source_id: 0,
-            },
-        );
-
-        assert_eq!(
-            ProgramImage::new(identity(), vec!["main.fpas".to_string()], chunk).err(),
-            Some(ImageError::InvalidLocation {
-                instruction: 0,
-                line,
-                column,
-            })
-        );
-    }
-}
-
-#[test]
 fn image_rejects_absolute_source_path() {
     assert!(matches!(
         ProgramImage::new(

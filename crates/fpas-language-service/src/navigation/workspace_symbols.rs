@@ -66,7 +66,7 @@ fn compare_locations(left: &SymbolLocation, right: &SymbolLocation) -> Ordering 
         .then_with(|| {
             left.symbol
                 .selection_span
-                .offset
-                .cmp(&right.symbol.selection_span.offset)
+                .offset()
+                .cmp(&right.symbol.selection_span.offset())
         })
 }

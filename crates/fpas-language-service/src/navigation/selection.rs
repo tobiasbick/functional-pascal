@@ -43,11 +43,12 @@ fn selection_range(snapshot: &DocumentSnapshot, offset: usize) -> SelectionRange
     }
     spans.retain(|span| valid_span(snapshot, *span) && contains_offset(*span, offset));
     spans.sort_by(|left, right| {
-        left.length
-            .cmp(&right.length)
-            .then_with(|| right.offset.cmp(&left.offset))
+        left.length()
+            .cmp(&right.length())
+            .then_with(|| right.offset().cmp(&left.offset()))
     });
-    spans.dedup_by(|left, right| left.offset == right.offset && left.length == right.length);
+    spans
+        .dedup_by(|left, right| left.offset() == right.offset() && left.length() == right.length());
 
     let mut nested = Vec::new();
     for span in spans {
@@ -77,7 +78,7 @@ fn token_or_cursor_span(snapshot: &DocumentSnapshot, offset: usize) -> SourceSpa
                 && token.span.offset <= offset
                 && offset < token.span.offset.saturating_add(token.span.length)
         })
-        .map(|token| token.span.into())
+        .map(|token| token.span.diagnostic_span_or_synthetic())
         .unwrap_or_else(|| SourceSpan::new(offset, 0, 1, 1))
 }
 
@@ -96,12 +97,12 @@ fn collect_symbol_spans(snapshot: &DocumentSnapshot, offset: usize, spans: &mut 
 fn collect_syntax_spans(unit: &CompilationUnit, offset: usize, spans: &mut Vec<SourceSpan>) {
     match unit {
         CompilationUnit::Program(program) => {
-            spans.push(program.span.into());
+            spans.push(program.span.diagnostic_span_or_synthetic());
             collect_declarations(&program.declarations, offset, spans);
             collect_statements(&program.body, offset, spans);
         }
         CompilationUnit::Unit(unit) => {
-            spans.push(unit.span.into());
+            spans.push(unit.span.diagnostic_span_or_synthetic());
             collect_declarations(&unit.declarations, offset, spans);
         }
     }
@@ -192,8 +193,8 @@ fn statement_span(statement: &Stmt) -> SourceSpan {
         | Stmt::Return(_, span)
         | Stmt::Panic(_, span)
         | Stmt::Break(span)
-        | Stmt::Continue(span) => (*span).into(),
-        Stmt::Var(value) | Stmt::MutableVar(value) => value.span.into(),
+        | Stmt::Continue(span) => span.diagnostic_span_or_synthetic(),
+        Stmt::Var(value) | Stmt::MutableVar(value) => value.span.diagnostic_span_or_synthetic(),
         Stmt::Assign { span, .. }
         | Stmt::If { span, .. }
         | Stmt::Case { span, .. }
@@ -203,7 +204,7 @@ fn statement_span(statement: &Stmt) -> SourceSpan {
         | Stmt::Repeat { span, .. }
         | Stmt::Call { span, .. }
         | Stmt::Expression { span, .. }
-        | Stmt::Go { span, .. } => (*span).into(),
+        | Stmt::Go { span, .. } => span.diagnostic_span_or_synthetic(),
     }
 }
 
@@ -214,15 +215,13 @@ fn all_symbols(
 }
 
 fn valid_span(snapshot: &DocumentSnapshot, span: SourceSpan) -> bool {
-    span.offset <= snapshot.source().len()
-        && span.offset.saturating_add(span.length) <= snapshot.source().len()
+    span.offset() <= snapshot.source().len() && span.end() <= snapshot.source().len()
 }
 
 fn contains_offset(span: SourceSpan, offset: usize) -> bool {
-    span.offset <= offset && offset <= span.offset.saturating_add(span.length)
+    span.offset() <= offset && offset <= span.end()
 }
 
 fn contains_span(parent: SourceSpan, child: SourceSpan) -> bool {
-    parent.offset <= child.offset
-        && child.offset.saturating_add(child.length) <= parent.offset.saturating_add(parent.length)
+    parent.offset() <= child.offset() && child.end() <= parent.end()
 }

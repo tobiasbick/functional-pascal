@@ -90,7 +90,7 @@ pub(super) fn type_children(
                 symbol.callable = type_callable_signature(snapshot, &event.name, &event.type_expr);
                 symbol
             }));
-            children.sort_by_key(|symbol| symbol.full_span.offset);
+            children.sort_by_key(|symbol| symbol.full_span.offset());
             children
         }
         TypeBody::Enum(value) => value

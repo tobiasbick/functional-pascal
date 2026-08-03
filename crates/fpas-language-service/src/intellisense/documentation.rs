@@ -18,7 +18,7 @@ impl LanguageService {
             .into_iter()
             .any(|location| {
                 location.path == path
-                    && location.symbol.full_span.offset == declaration_offset
+                    && location.symbol.full_span.offset() == declaration_offset
                     && location
                         .symbol
                         .qualified_name

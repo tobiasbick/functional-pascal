@@ -34,9 +34,9 @@ fn runtime_vm_division_by_zero_has_code_column_and_help() {
         err.code, RUNTIME_DIVISION_BY_ZERO,
         "wrong runtime diagnostic code"
     );
-    assert_eq!(err.span.line, 3, "unexpected runtime error line");
+    assert_eq!(err.span.line(), 3, "unexpected runtime error line");
     assert!(
-        err.span.column > 0,
+        err.span.column() > 0,
         "runtime column must be 1-based and non-zero"
     );
     assert!(
@@ -61,9 +61,9 @@ fn runtime_std_conversion_failure_has_code_column_and_help() {
         err.code, RUNTIME_CONVERSION_FAILURE,
         "wrong std runtime diagnostic code"
     );
-    assert_eq!(err.span.line, 3, "unexpected std runtime error line");
+    assert_eq!(err.span.line(), 3, "unexpected std runtime error line");
     assert!(
-        err.span.column > 0,
+        err.span.column() > 0,
         "std runtime column must be 1-based and non-zero"
     );
     assert!(

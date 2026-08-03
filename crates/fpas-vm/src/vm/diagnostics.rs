@@ -13,7 +13,13 @@ use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 pub type VmError = Diagnostic;
 
 fn synthetic_span(location: SourceLocation) -> SourceSpan {
-    SourceSpan::new_with_source(0, 1, location.line, location.column, location.source_id)
+    SourceSpan::new_with_source(
+        0,
+        1,
+        location.line(),
+        location.column(),
+        location.source_id(),
+    )
 }
 
 pub(crate) fn runtime_error(

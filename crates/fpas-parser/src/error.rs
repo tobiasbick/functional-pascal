@@ -11,5 +11,10 @@ pub(crate) fn parse_error(
     hint: impl Into<String>,
     span: Span,
 ) -> ParseError {
-    Diagnostic::error(code, message, Some(hint.into()), span.into())
+    Diagnostic::error(
+        code,
+        message,
+        Some(hint.into()),
+        span.diagnostic_span_or_synthetic(),
+    )
 }

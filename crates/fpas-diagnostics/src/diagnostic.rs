@@ -1,4 +1,4 @@
-//! Diagnostic records and rendering helpers shared across the toolchain.
+//! Diagnostic records shared across the toolchain.
 
 use crate::{DiagnosticCode, SourceSpan};
 
@@ -25,11 +25,15 @@ pub enum DiagnosticSeverity {
 /// A structured diagnostic emitted by one stage of the FPAS toolchain.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Diagnostic {
+    /// Stable machine-readable diagnostic code.
     pub code: DiagnosticCode,
-    pub stage: DiagnosticStage,
+    /// Error or warning severity.
     pub severity: DiagnosticSeverity,
+    /// Human-readable primary message.
     pub message: String,
+    /// Optional actionable correction or explanation.
     pub help: Option<String>,
+    /// Source range associated with the diagnostic.
     pub span: SourceSpan,
 }
 
@@ -49,6 +53,12 @@ impl DiagnosticCode {
 }
 
 impl Diagnostic {
+    /// Returns the toolchain stage derived from this diagnostic's current code.
+    #[must_use]
+    pub const fn stage(&self) -> DiagnosticStage {
+        self.code.stage()
+    }
+
     /// Returns `true` when this diagnostic blocks compilation or execution.
     #[must_use]
     pub fn is_error(&self) -> bool {
@@ -91,7 +101,6 @@ impl Diagnostic {
         span: SourceSpan,
     ) -> Self {
         Self {
-            stage: code.stage(),
             code,
             severity,
             message: message.into(),
@@ -101,84 +110,10 @@ impl Diagnostic {
     }
 }
 
-/// Renders a diagnostic as a single-line summary with an optional help line.
-#[must_use]
-pub fn render(path: &str, diagnostic: &Diagnostic) -> String {
-    let severity = if diagnostic.is_warning() {
-        "warning"
-    } else {
-        "error"
-    };
-
-    let mut rendered = format!(
-        "{path}:{}:{}: {}[{}]: {}",
-        diagnostic.span.line, diagnostic.span.column, severity, diagnostic.code, diagnostic.message
-    );
-
-    if let Some(help) = diagnostic
-        .help
-        .as_deref()
-        .filter(|help| !help.trim().is_empty())
-    {
-        rendered.push_str("\n  help: ");
-        rendered.push_str(help);
-    }
-
-    rendered
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{Diagnostic, DiagnosticStage, render};
+    use super::{Diagnostic, DiagnosticStage};
     use crate::{DiagnosticCode, SourceSpan};
-
-    #[test]
-    fn render_without_help_line() {
-        let diagnostic = Diagnostic::error(
-            DiagnosticCode::new(1003),
-            "Expected `then`, found `do`",
-            None,
-            SourceSpan::new(0, 2, 12, 8),
-        );
-
-        let rendered = render("path/to/file.fpas", &diagnostic);
-        assert_eq!(
-            rendered,
-            "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`"
-        );
-    }
-
-    #[test]
-    fn render_with_help_line() {
-        let diagnostic = Diagnostic::error(
-            DiagnosticCode::new(1003),
-            "Expected `then`, found `do`",
-            Some("Insert `then` after the condition.".to_string()),
-            SourceSpan::new(0, 2, 12, 8),
-        );
-
-        let rendered = render("path/to/file.fpas", &diagnostic);
-        assert_eq!(
-            rendered,
-            "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`\n  help: Insert `then` after the condition."
-        );
-    }
-
-    #[test]
-    fn render_omits_whitespace_only_help() {
-        let diagnostic = Diagnostic::error(
-            DiagnosticCode::new(1003),
-            "Expected `then`, found `do`",
-            Some("   \n\t  ".to_string()),
-            SourceSpan::new(0, 2, 12, 8),
-        );
-
-        let rendered = render("path/to/file.fpas", &diagnostic);
-        assert_eq!(
-            rendered,
-            "path/to/file.fpas:12:8: error[F1003]: Expected `then`, found `do`"
-        );
-    }
 
     #[test]
     fn diagnostic_code_stage_matches_numeric_range() {
@@ -211,29 +146,16 @@ mod tests {
 
     #[test]
     fn diagnostic_stage_is_derived_from_code() {
-        let diagnostic = Diagnostic::error(
+        let mut diagnostic = Diagnostic::error(
             DiagnosticCode::new(3003),
             "arity mismatch",
             None,
             SourceSpan::new(0, 1, 4, 9),
         );
-        assert_eq!(diagnostic.stage, DiagnosticStage::Compile);
+        assert_eq!(diagnostic.stage(), DiagnosticStage::Compile);
         assert_eq!(diagnostic.code, DiagnosticCode::new(3003));
-    }
 
-    #[test]
-    fn render_warning_uses_warning_label() {
-        let diagnostic = Diagnostic::warning(
-            DiagnosticCode::new(5),
-            "Invalid character code in string literal",
-            Some("Use decimal digits after `#`, for example `#65` for 'A'.".to_string()),
-            SourceSpan::new(0, 4, 3, 5),
-        );
-
-        let rendered = render("path/to/file.fpas", &diagnostic);
-        assert_eq!(
-            rendered,
-            "path/to/file.fpas:3:5: warning[F0005]: Invalid character code in string literal\n  help: Use decimal digits after `#`, for example `#65` for 'A'."
-        );
+        diagnostic.code = DiagnosticCode::new(4001);
+        assert_eq!(diagnostic.stage(), DiagnosticStage::Runtime);
     }
 }

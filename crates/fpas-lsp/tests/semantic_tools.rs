@@ -42,8 +42,8 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     let diagnostic = json!({
         "range": range(
             source,
-            unknown.span.offset,
-            unknown.span.offset + unknown.span.length
+            unknown.span.offset(),
+            unknown.span.end()
         ),
         "severity": 1,
         "code": unknown.code.to_string(),

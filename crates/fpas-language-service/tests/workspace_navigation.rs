@@ -113,10 +113,8 @@ end.
     assert_eq!(highlights.len(), 5, "{highlights:?}");
     assert_eq!(highlights[0].kind, HighlightKind::Declaration);
     assert_eq!(highlights[2].kind, HighlightKind::Write);
-    assert!(
-        highlights.iter().all(|highlight| highlight.span.offset
-            != source.find("Value is ignored").expect("comment text"))
-    );
+    assert!(highlights.iter().all(|highlight| highlight.span.offset()
+        != source.find("Value is ignored").expect("comment text")));
 
     let parameter_use = source.find("return Value").expect("parameter use") + "return ".len();
     let parameter = service
@@ -258,7 +256,7 @@ fn unknown_type_definition_and_malformed_selection_are_safe() {
     let (_, ranges) = service
         .selection_ranges(&path, &[missing])
         .expect("malformed selection");
-    assert_eq!(ranges[0].span.length, "Missing".len());
+    assert_eq!(ranges[0].span.length(), "Missing".len());
     assert!(ranges[0].parent.is_none(), "{:?}", ranges[0]);
 }
 
@@ -296,18 +294,16 @@ end.
     }
 
     assert!(chain.len() >= 5, "{chain:?}");
+    assert_eq!(&source[chain[0].offset()..chain[0].end()], "Value");
     assert_eq!(
-        &source[chain[0].offset..chain[0].offset + chain[0].length],
-        "Value"
-    );
-    assert_eq!(
-        chain.last().expect("compilation range").length,
+        chain.last().expect("compilation range").length(),
         source.trim_end().len()
     );
-    assert!(chain.windows(2).all(|pair| {
-        pair[1].offset <= pair[0].offset
-            && pair[0].offset + pair[0].length <= pair[1].offset + pair[1].length
-    }));
+    assert!(
+        chain
+            .windows(2)
+            .all(|pair| { pair[1].offset() <= pair[0].offset() && pair[0].end() <= pair[1].end() })
+    );
 }
 
 #[test]

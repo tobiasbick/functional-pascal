@@ -64,7 +64,13 @@ pub(super) fn collect_statement_symbols(
                 ));
             }
             Stmt::Block(body, span) => {
-                collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+                collect_statement_symbols(
+                    snapshot,
+                    owner,
+                    body,
+                    span.diagnostic_span_or_synthetic(),
+                    output,
+                );
             }
             Stmt::If {
                 then_branch,
@@ -102,7 +108,7 @@ pub(super) fn collect_statement_symbols(
                         "loop variable {var_name}: {}",
                         type_text(snapshot, var_type)
                     ),
-                    (*span).into(),
+                    span.diagnostic_span_or_synthetic(),
                     Vec::new(),
                 );
                 symbol.callable = type_callable_signature(snapshot, var_name, var_type);
@@ -111,7 +117,7 @@ pub(super) fn collect_statement_symbols(
                     snapshot,
                     owner,
                     std::slice::from_ref(body.as_ref()),
-                    (*span).into(),
+                    span.diagnostic_span_or_synthetic(),
                     output,
                 );
             }
@@ -119,11 +125,17 @@ pub(super) fn collect_statement_symbols(
                 snapshot,
                 owner,
                 std::slice::from_ref(body.as_ref()),
-                (*span).into(),
+                span.diagnostic_span_or_synthetic(),
                 output,
             ),
             Stmt::Repeat { body, span, .. } => {
-                collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+                collect_statement_symbols(
+                    snapshot,
+                    owner,
+                    body,
+                    span.diagnostic_span_or_synthetic(),
+                    output,
+                );
             }
             Stmt::Case {
                 arms,
@@ -136,12 +148,18 @@ pub(super) fn collect_statement_symbols(
                         snapshot,
                         owner,
                         std::slice::from_ref(&arm.body),
-                        arm.span.into(),
+                        arm.span.diagnostic_span_or_synthetic(),
                         output,
                     );
                 }
                 if let Some(body) = else_body {
-                    collect_statement_symbols(snapshot, owner, body, (*span).into(), output);
+                    collect_statement_symbols(
+                        snapshot,
+                        owner,
+                        body,
+                        span.diagnostic_span_or_synthetic(),
+                        output,
+                    );
                 }
             }
             _ => {}
@@ -157,7 +175,7 @@ fn routine_children(
     body: &FuncBody,
     routine_span: Span,
 ) -> Vec<DocumentSymbol> {
-    let scope_span = routine_span.into();
+    let scope_span = routine_span.diagnostic_span_or_synthetic();
     let mut children = type_params
         .iter()
         .map(|parameter| type_parameter_symbol(snapshot, owner, parameter, scope_span))
@@ -174,7 +192,7 @@ fn routine_children(
             .map(|declaration| declaration_symbol(snapshot, owner, declaration, scope_span)),
     );
     collect_statement_symbols(snapshot, owner, stmts, scope_span, &mut children);
-    children.sort_by_key(|symbol| symbol.full_span.offset);
+    children.sort_by_key(|symbol| symbol.full_span.offset());
     children
 }
 
@@ -196,7 +214,7 @@ fn type_parameter_symbol(
         full_span: selection_span,
         selection_span,
         scope_span,
-        visible_from: scope_span.offset,
+        visible_from: scope_span.offset(),
         visibility: SymbolVisibility::Private,
         type_name: None,
         detail: format!("type parameter {}{constraint}", parameter.name),
@@ -242,7 +260,7 @@ fn collect_branch(
         snapshot,
         owner,
         std::slice::from_ref(branch),
-        stmt_span(branch).into(),
+        stmt_span(branch).diagnostic_span_or_synthetic(),
         output,
     );
 }

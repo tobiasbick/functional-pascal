@@ -382,24 +382,9 @@ fn format_diagnostic(
     path: Option<&std::path::Path>,
     diagnostic: &fpas_compiler::CompileError,
 ) -> String {
-    let location = path.map_or_else(
-        || format!("{}:{}", diagnostic.span.line, diagnostic.span.column),
-        |path| {
-            format!(
-                "{}:{}:{}",
-                path.display(),
-                diagnostic.span.line,
-                diagnostic.span.column
-            )
-        },
-    );
-    let mut text = format!(
-        "{location}: error[{}]: {}",
-        diagnostic.code, diagnostic.message
-    );
-    if let Some(help) = &diagnostic.help {
-        text.push_str("\n  help: ");
-        text.push_str(help);
+    if let Some(path) = path {
+        fpas_diagnostics::render(path.to_string_lossy().as_ref(), diagnostic)
+    } else {
+        fpas_diagnostics::render_without_path(diagnostic)
     }
-    text
 }

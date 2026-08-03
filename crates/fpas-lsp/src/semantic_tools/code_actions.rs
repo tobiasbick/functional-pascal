@@ -22,10 +22,10 @@ pub(crate) fn diagnostic_identity(
     let Some(NumberOrString::String(code)) = diagnostic.code.as_ref() else {
         return Ok(None);
     };
-    let Some(value) = code
+    let Some(code) = code
         .strip_prefix('F')
         .and_then(|value| value.parse::<u16>().ok())
-        .filter(|value| *value <= DiagnosticCode::MAX_VALUE)
+        .and_then(|value| DiagnosticCode::try_new(value).ok())
     else {
         return Ok(None);
     };
@@ -39,7 +39,7 @@ pub(crate) fn diagnostic_identity(
         .split_once("\n\nHelp: ")
         .map_or(diagnostic.message.as_str(), |(message, _)| message);
     Ok(Some(DiagnosticIdentity {
-        code: DiagnosticCode::new(value),
+        code,
         message: message.to_owned(),
         span: SourceSpan::new(
             start,

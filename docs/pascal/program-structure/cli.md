@@ -149,6 +149,19 @@ together, and every program is checked against those sibling units. Directory di
 deterministic, skips `target` directories and symbolic links, and aborts with the affected path when a
 directory entry cannot be read. `fpas fmt` and `fpas test` use the same traversal policy.
 
+## Terminal diagnostics
+
+Compiler and runtime diagnostics use the stable form
+`path:line:column: severity[Fxxxx]: message`. When no source path is available, the location starts
+with `line:column`. Printable Unicode and Windows path separators are preserved. Control characters
+in paths and non-line-ending control characters in messages or help text are rendered as visible
+escapes, so diagnostic content cannot inject terminal control sequences or synthetic location
+lines.
+
+`CRLF`, bare `CR`, and `LF` inside messages or help text are normalized as logical line breaks.
+Every continuation is explicit: message continuations use `  message: ` and every help line uses
+`  help: `. A source path always remains on one physical output line.
+
 ## Formatting project sources
 
 `fpas fmt` accepts the same project and workspace manifests used by the other

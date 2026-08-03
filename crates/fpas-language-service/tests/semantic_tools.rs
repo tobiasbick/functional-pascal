@@ -55,7 +55,7 @@ end;
         .iter()
         .map(|token| {
             (
-                &source[token.span.offset..token.span.offset + token.span.length],
+                &source[token.span.offset()..token.span.end()],
                 token.kind,
                 token.modifiers,
             )
@@ -120,15 +120,15 @@ end.
     let global_reference = source.rfind("Value").expect("global reference");
 
     assert!(tokens.iter().any(|token| {
-        token.span.offset == parameter_reference && token.kind == SemanticTokenKind::Parameter
+        token.span.offset() == parameter_reference && token.kind == SemanticTokenKind::Parameter
     }));
     assert!(tokens.iter().any(|token| {
-        token.span.offset == global_reference && token.kind == SemanticTokenKind::Variable
+        token.span.offset() == global_reference && token.kind == SemanticTokenKind::Variable
     }));
     assert!(
         tokens
             .windows(2)
-            .all(|pair| { pair[0].span.offset + pair[0].span.length <= pair[1].span.offset })
+            .all(|pair| pair[0].span.end() <= pair[1].span.offset())
     );
 }
 
@@ -159,10 +159,7 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
     assert_eq!(action.diagnostic, identity);
     let mut edited = fixture.source.clone();
     let edit = &action.edits[0];
-    edited.replace_range(
-        edit.span.offset..edit.span.offset + edit.span.length,
-        &edit.new_text,
-    );
+    edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
     let (unit, diagnostics) = parse_compilation_unit(&edited);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     assert_eq!(
@@ -216,10 +213,7 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
     assert_eq!(action.title, "Import Actions.Types");
     let edit = &action.edits[0];
     let mut edited = source.to_owned();
-    edited.replace_range(
-        edit.span.offset..edit.span.offset + edit.span.length,
-        &edit.new_text,
-    );
+    edited.replace_range(edit.span.offset()..edit.span.end(), &edit.new_text);
     let (unit, parse_diagnostics) = parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
     assert_eq!(

@@ -104,8 +104,8 @@ impl WorkspaceSymbolIndex {
                 .then_with(|| {
                     left.symbol
                         .selection_span
-                        .offset
-                        .cmp(&right.symbol.selection_span.offset)
+                        .offset()
+                        .cmp(&right.symbol.selection_span.offset())
                 })
                 .then_with(|| left.symbol.qualified_name.cmp(&right.symbol.qualified_name))
         });

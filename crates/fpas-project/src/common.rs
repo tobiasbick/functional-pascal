@@ -91,11 +91,7 @@ pub(super) fn parse_compilation_unit_source(
     for diagnostic in diagnostics {
         if diagnostic.is_error() {
             let path_text = path.to_string_lossy();
-            return Err(format!(
-                "Failed to parse `{}`:\n  {}",
-                path_text,
-                fpas_diagnostics::render(path_text.as_ref(), &diagnostic)
-            ));
+            return Err(fpas_diagnostics::render(path_text.as_ref(), &diagnostic));
         }
 
         warnings.push(fpas_diagnostics::render(

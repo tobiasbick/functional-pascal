@@ -36,7 +36,7 @@ fn pool_loop_task_with_ip_out_of_range_returns_error_and_shuts_down() {
 
     let err = pool.join().expect("join").expect_err("vm error expected");
     assert_eq!(err.code, INTERNAL_VM_INVARIANT_FAILURE);
-    assert_eq!(err.stage, DiagnosticStage::Internal);
+    assert_eq!(err.stage(), DiagnosticStage::Internal);
     assert!(
         shared.is_shutdown(),
         "failed task must request global shutdown"
@@ -67,7 +67,7 @@ fn pool_loop_runtime_panic_opcode_requests_shutdown() {
 
     let err = pool.join().expect("join").expect_err("panic opcode");
     assert_eq!(err.code, RUNTIME_PROGRAM_PANIC);
-    assert_eq!(err.stage, DiagnosticStage::Runtime);
+    assert_eq!(err.stage(), DiagnosticStage::Runtime);
     assert!(shared.is_shutdown());
 }
 

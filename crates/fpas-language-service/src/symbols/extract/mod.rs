@@ -21,7 +21,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
     match snapshot.compilation_unit() {
         CompilationUnit::Program(program) => {
             let owner = program.name.clone();
-            let full_span = SourceSpan::from(program.span);
+            let full_span = program.span.diagnostic_span_or_synthetic();
             let mut children = program
                 .declarations
                 .iter()
@@ -39,7 +39,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 qualified_name: program.name.clone(),
                 kind: SymbolKind::Program,
                 full_span,
-                selection_span: program.name_span.into(),
+                selection_span: program.name_span.diagnostic_span_or_synthetic(),
                 scope_span: full_span,
                 visible_from: 0,
                 visibility: SymbolVisibility::Private,
@@ -52,7 +52,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
         }
         CompilationUnit::Unit(unit) => {
             let owner = unit.name.parts.join(".");
-            let full_span = SourceSpan::from(unit.span);
+            let full_span = unit.span.diagnostic_span_or_synthetic();
             let children = unit
                 .declarations
                 .iter()
@@ -63,7 +63,7 @@ pub(super) fn extract(snapshot: &DocumentSnapshot) -> (String, Vec<DocumentSymbo
                 qualified_name: owner.clone(),
                 kind: SymbolKind::Unit,
                 full_span,
-                selection_span: unit.name.span.into(),
+                selection_span: unit.name.span.diagnostic_span_or_synthetic(),
                 scope_span: full_span,
                 visible_from: 0,
                 visibility: SymbolVisibility::Public,
@@ -152,7 +152,7 @@ pub(super) fn declaration_symbol(
             procedure_detail(snapshot, value),
         ),
     };
-    let full_span = span.into();
+    let full_span = span.diagnostic_span_or_synthetic();
     let qualified_name = format!("{owner}.{name}");
     let callable = match declaration {
         Decl::Const(value) => type_callable_signature(snapshot, name, &value.type_expr),
@@ -204,7 +204,7 @@ pub(super) fn member_symbol(
     scope_span: SourceSpan,
     children: Vec<DocumentSymbol>,
 ) -> DocumentSymbol {
-    let full_span = span.into();
+    let full_span = span.diagnostic_span_or_synthetic();
     DocumentSymbol {
         name: name.to_owned(),
         qualified_name: format!("{owner}.{name}"),

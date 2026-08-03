@@ -73,7 +73,7 @@ pub(crate) fn find_references(
             if !name.eq_ignore_ascii_case(candidate_name) {
                 continue;
             }
-            let token_span = SourceSpan::from(token.span);
+            let token_span = token.span.diagnostic_span_or_synthetic();
             if document_index == target.document_index
                 && spans_overlap(token_span, target.symbol.selection_span)
             {
@@ -96,7 +96,7 @@ pub(crate) fn find_references(
     locations.sort_by(|left, right| {
         left.path
             .cmp(&right.path)
-            .then_with(|| left.span.offset.cmp(&right.span.offset))
+            .then_with(|| left.span.offset().cmp(&right.span.offset()))
             .then_with(|| left.is_declaration.cmp(&right.is_declaration))
     });
     locations.dedup_by(|left, right| left.path == right.path && left.span == right.span);
@@ -109,7 +109,5 @@ fn same_declaration(left: &ResolvedTarget, right: &ResolvedTarget) -> bool {
 }
 
 fn spans_overlap(left: SourceSpan, right: SourceSpan) -> bool {
-    let left_end = left.offset.saturating_add(left.length);
-    let right_end = right.offset.saturating_add(right.length);
-    left.offset < right_end && right.offset < left_end
+    left.offset() < right.end() && right.offset() < left.end()
 }

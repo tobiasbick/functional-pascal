@@ -52,7 +52,7 @@ fn run() -> i32 {
         fpas_vm::Vm::with_writer_and_args(image.into_chunk(), Box::new(io::stdout()), args);
     if let Err(diagnostic) = vm.run() {
         let path = source_paths
-            .get(usize::try_from(diagnostic.span.source_id).unwrap_or(usize::MAX))
+            .get(usize::try_from(diagnostic.span.source_id()).unwrap_or(usize::MAX))
             .map_or_else(|| name.to_string(), |path| path.display().to_string());
         eprintln!("{}", fpas_diagnostics::render(&path, &diagnostic));
         return 2;

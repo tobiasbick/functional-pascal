@@ -110,8 +110,7 @@ end.
 
     let mut edited = source.to_owned();
     for edit in edits {
-        let end = edit.range.offset + edit.range.length;
-        edited.replace_range(edit.range.offset..end, &edit.new_text);
+        edited.replace_range(edit.range.offset()..edit.range.end(), &edit.new_text);
     }
     service
         .documents_mut()
@@ -124,7 +123,7 @@ end.
         .value;
     assert_eq!(definitions.len(), 1, "{definitions:?}");
     assert!(
-        definitions[0].symbol.selection_span.offset
+        definitions[0].symbol.selection_span.offset()
             < edited.find("function Second").expect("second routine")
     );
 }

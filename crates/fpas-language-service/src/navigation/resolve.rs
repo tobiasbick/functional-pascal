@@ -45,8 +45,13 @@ fn identifier_at(
                 return None;
             };
             let end = token.span.offset.saturating_add(token.span.length);
-            (token.span.offset <= offset && offset < end)
-                .then(|| (index, name.clone(), SourceSpan::from(token.span)))
+            (token.span.offset <= offset && offset < end).then(|| {
+                (
+                    index,
+                    name.clone(),
+                    token.span.diagnostic_span_or_synthetic(),
+                )
+            })
         })
 }
 
@@ -94,8 +99,8 @@ pub(crate) fn resolve_unqualified(
         .collect::<Vec<_>>();
     local.sort_by(|left, right| {
         left.scope_span
-            .length
-            .cmp(&right.scope_span.length)
+            .length()
+            .cmp(&right.scope_span.length())
             .then_with(|| right.visible_from.cmp(&left.visible_from))
     });
     if let Some(symbol) = local.first() {
@@ -239,5 +244,5 @@ fn unqualified_kind(kind: SymbolKind) -> bool {
 }
 
 fn contains(span: SourceSpan, offset: usize) -> bool {
-    span.offset <= offset && offset < span.offset.saturating_add(span.length)
+    span.offset() <= offset && offset < span.end()
 }

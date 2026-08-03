@@ -49,9 +49,9 @@ impl Compiler {
         Span {
             offset: 0,
             length: 0,
-            line: location.line,
-            column: location.column,
-            source_id: location.source_id,
+            line: location.line(),
+            column: location.column(),
+            source_id: location.source_id(),
         }
     }
 
@@ -81,8 +81,8 @@ impl Compiler {
             other => internal_compiler_error(
                 format!("Compiler failed to add a constant: {other}"),
                 "This is an internal compiler error. Re-run compilation and report the source program.",
-                location.line,
-                location.column,
+                location.line(),
+                location.column(),
             ),
         })
     }
@@ -153,8 +153,8 @@ impl Compiler {
                             "Compiler produced an invalid jump patch offset {offset} (code length: {code_len})."
                         ),
                         "This is an internal compiler error. Re-run compilation and report the source program.",
-                        location.line,
-                        location.column,
+                        location.line(),
+                        location.column(),
                     )
                 }
                 ChunkError::InvalidJumpTarget {
@@ -166,24 +166,24 @@ impl Compiler {
                         "Compiler tried to patch jump {offset} to target {target}, but the current code length is {code_len}."
                     ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
-                    location.line,
-                    location.column,
+                    location.line(),
+                    location.column(),
                 ),
                 ChunkError::NonJumpInstruction { offset, opcode } => internal_compiler_error(
                     format!(
                         "Compiler tried to patch instruction {offset}, but it is not a jump opcode ({opcode:?})."
                     ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
-                    location.line,
-                    location.column,
+                    location.line(),
+                    location.column(),
                 ),
                 ChunkError::ConstantPoolOverflow { max_constants } => internal_compiler_error(
                     format!(
                         "Compiler hit a constant pool overflow while patching jumps (limit: {max_constants})."
                     ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
-                    location.line,
-                    location.column,
+                    location.line(),
+                    location.column(),
                 ),
                 ChunkError::CodeLocationLengthMismatch {
                     code_len,
@@ -193,8 +193,8 @@ impl Compiler {
                         "Compiler produced a chunk with mismatched code ({code_len}) and location ({locations_len}) lengths."
                     ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
-                    location.line,
-                    location.column,
+                    location.line(),
+                    location.column(),
                 ),
             })
     }

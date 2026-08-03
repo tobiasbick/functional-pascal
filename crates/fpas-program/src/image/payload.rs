@@ -6,7 +6,7 @@ use fpas_bytecode::{Chunk, ExecutableError, Op, PersistentValue, SourceLocation}
 use serde::{Deserialize, Serialize};
 
 use super::resources::decode_encoded_chunk;
-use super::{ImageError, ProgramImage, validate_location};
+use super::{ImageError, ProgramImage};
 use crate::ProgramIdentity;
 
 #[derive(Serialize)]
@@ -46,9 +46,9 @@ pub(crate) fn encode_payload(image: &ProgramImage) -> Result<Vec<u8>, ImageError
         .locations()
         .iter()
         .map(|location| EncodedLocation {
-            line: location.line,
-            column: location.column,
-            source_id: location.source_id,
+            line: location.line(),
+            column: location.column(),
+            source_id: location.source_id(),
         })
         .collect();
     let functions = image
@@ -117,11 +117,14 @@ fn decode_chunk(payload: EncodedChunk) -> Result<Chunk, ImageError> {
     }
     for (instruction, (op, location)) in payload.code.into_iter().zip(payload.locations).enumerate()
     {
-        validate_location(instruction, location.line, location.column)?;
-        chunk.emit(
-            op,
-            SourceLocation::new_with_source(location.line, location.column, location.source_id),
-        );
+        let source_location =
+            SourceLocation::try_new_with_source(location.line, location.column, location.source_id)
+                .map_err(|_| ImageError::InvalidLocation {
+                    instruction,
+                    line: location.line,
+                    column: location.column,
+                })?;
+        chunk.emit(op, source_location);
     }
     for (name, function) in payload.functions {
         chunk.insert_function(name, function.code_start as usize, function.arity);

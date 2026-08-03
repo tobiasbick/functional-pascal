@@ -37,11 +37,12 @@ fn classify_document(documents: &[NavigationDocument], target_index: usize) -> V
             let Token::Ident(_) = &token.token else {
                 return None;
             };
-            let span = SourceSpan::from(token.span);
-            if let Some((document_index, symbol, _)) = resolve(documents, target_index, span.offset)
+            let span = token.span.diagnostic_span_or_synthetic();
+            if let Some((document_index, symbol, _)) =
+                resolve(documents, target_index, span.offset())
             {
-                let declaration =
-                    document_index == target_index && contains(symbol.selection_span, span.offset);
+                let declaration = document_index == target_index
+                    && contains(symbol.selection_span, span.offset());
                 return Some(SemanticToken {
                     span,
                     kind: token_kind(symbol.kind),
@@ -134,5 +135,5 @@ fn namespace_component(
 }
 
 fn contains(span: SourceSpan, offset: usize) -> bool {
-    span.offset <= offset && offset < span.offset.saturating_add(span.length)
+    span.offset() <= offset && offset < span.end()
 }

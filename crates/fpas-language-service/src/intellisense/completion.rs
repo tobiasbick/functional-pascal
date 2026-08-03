@@ -118,8 +118,8 @@ fn visible_candidates(
         .collect::<Vec<_>>();
     local.sort_by(|left, right| {
         left.scope_span
-            .length
-            .cmp(&right.scope_span.length)
+            .length()
+            .cmp(&right.scope_span.length())
             .then_with(|| right.visible_from.cmp(&left.visible_from))
     });
     for symbol in local {
@@ -225,7 +225,7 @@ fn declaration_candidate(
         source,
         documentation: Some(CompletionDocumentation {
             path: documents[document_index].path.clone(),
-            declaration_offset: symbol.full_span.offset,
+            declaration_offset: symbol.full_span.offset(),
             source_revision: documents[document_index].snapshot.revision(),
             qualified_name: symbol.qualified_name.clone(),
         }),
@@ -297,5 +297,5 @@ fn unqualified_kind(kind: SymbolKind) -> bool {
 }
 
 fn contains(span: fpas_diagnostics::SourceSpan, offset: usize) -> bool {
-    span.offset <= offset && offset < span.offset.saturating_add(span.length)
+    span.offset() <= offset && offset < span.end()
 }

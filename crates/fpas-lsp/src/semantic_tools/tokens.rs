@@ -14,11 +14,8 @@ pub(crate) fn semantic_tokens(
     let mut previous_start = 0;
     let mut data = Vec::with_capacity(values.len());
     for value in values {
-        let start = byte_offset_to_position(snapshot, value.span.offset)?;
-        let end = byte_offset_to_position(
-            snapshot,
-            value.span.offset.saturating_add(value.span.length),
-        )?;
+        let start = byte_offset_to_position(snapshot, value.span.offset())?;
+        let end = byte_offset_to_position(snapshot, value.span.end())?;
         let delta_line = start.line.saturating_sub(previous_line);
         let delta_start = if delta_line == 0 {
             start.character.saturating_sub(previous_start)

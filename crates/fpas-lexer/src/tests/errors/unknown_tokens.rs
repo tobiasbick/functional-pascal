@@ -54,16 +54,16 @@ fn error_messages_have_hints() {
 fn error_spans_are_set() {
     let (_, errs) = lex_with_errors("  @");
     assert_eq!(errs.len(), 1);
-    assert_eq!(errs[0].span.line, 1);
-    assert_eq!(errs[0].span.column, 3);
+    assert_eq!(errs[0].span.line(), 1);
+    assert_eq!(errs[0].span.column(), 3);
 }
 
 #[test]
 fn error_on_second_line() {
     let (_, errs) = lex_with_errors("\n@");
     assert_eq!(errs.len(), 1);
-    assert_eq!(errs[0].span.line, 2);
-    assert_eq!(errs[0].span.column, 1);
+    assert_eq!(errs[0].span.line(), 2);
+    assert_eq!(errs[0].span.column(), 1);
 }
 
 #[test]
@@ -76,8 +76,8 @@ fn unexpected_char_has_correct_code() {
         errs[0].code, LEX_UNEXPECTED_CHARACTER,
         "wrong diagnostic code"
     );
-    assert_eq!(errs[0].span.line, 1, "wrong line");
-    assert_eq!(errs[0].span.column, 3, "wrong column");
+    assert_eq!(errs[0].span.line(), 1, "wrong line");
+    assert_eq!(errs[0].span.column(), 3, "wrong column");
     assert!(
         errs[0].help.as_deref().is_some_and(|h| !h.is_empty()),
         "help text must be present"

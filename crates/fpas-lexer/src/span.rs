@@ -24,9 +24,26 @@ pub struct Span {
     pub source_id: u32,
 }
 
-impl From<Span> for fpas_diagnostics::SourceSpan {
-    fn from(span: Span) -> Self {
-        Self::new_with_source(
+impl Span {
+    /// Converts this span for diagnostic use, substituting a safe placeholder if it is invalid.
+    ///
+    /// Prefer the fallible [`fpas_diagnostics::SourceSpan::try_from`] conversion when callers can
+    /// propagate validation failures. This method keeps diagnostic reporting non-panicking for
+    /// malformed spans constructed through the public fields.
+    #[must_use]
+    pub fn diagnostic_span_or_synthetic(self) -> fpas_diagnostics::SourceSpan {
+        let source_id = self.source_id;
+        fpas_diagnostics::SourceSpan::try_from(self).unwrap_or_else(|_| {
+            fpas_diagnostics::SourceSpan::new_with_source(0, 0, 1, 1, source_id)
+        })
+    }
+}
+
+impl TryFrom<Span> for fpas_diagnostics::SourceSpan {
+    type Error = fpas_diagnostics::SourceSpanError;
+
+    fn try_from(span: Span) -> Result<Self, Self::Error> {
+        Self::try_new_with_source(
             span.offset,
             span.length,
             span.line,
@@ -39,11 +56,66 @@ impl From<Span> for fpas_diagnostics::SourceSpan {
 impl From<fpas_diagnostics::SourceSpan> for Span {
     fn from(span: fpas_diagnostics::SourceSpan) -> Self {
         Self {
-            offset: span.offset,
-            length: span.length,
-            line: span.line,
-            column: span.column,
-            source_id: span.source_id,
+            offset: span.offset(),
+            length: span.length(),
+            line: span.line(),
+            column: span.column(),
+            source_id: span.source_id(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use fpas_diagnostics::{SourceLocationError, SourceSpan, SourceSpanError};
+
+    use super::Span;
+
+    #[test]
+    fn diagnostic_span_conversion_preserves_valid_values() {
+        let span = Span {
+            offset: 8,
+            length: 3,
+            line: 2,
+            column: 4,
+            source_id: 7,
+        };
+
+        assert_eq!(
+            SourceSpan::try_from(span),
+            Ok(SourceSpan::new_with_source(8, 3, 2, 4, 7))
+        );
+    }
+
+    #[test]
+    fn diagnostic_span_conversion_rejects_invalid_public_fields() {
+        let span = Span {
+            offset: usize::MAX,
+            length: 1,
+            line: 0,
+            column: 1,
+            source_id: 7,
+        };
+
+        assert_eq!(
+            SourceSpan::try_from(span),
+            Err(SourceSpanError::Location(SourceLocationError::ZeroLine))
+        );
+    }
+
+    #[test]
+    fn diagnostic_span_fallback_is_non_panicking_and_retains_source_id() {
+        let span = Span {
+            offset: usize::MAX,
+            length: 1,
+            line: 1,
+            column: 1,
+            source_id: 7,
+        };
+
+        assert_eq!(
+            span.diagnostic_span_or_synthetic(),
+            SourceSpan::new_with_source(0, 0, 1, 1, 7)
+        );
     }
 }

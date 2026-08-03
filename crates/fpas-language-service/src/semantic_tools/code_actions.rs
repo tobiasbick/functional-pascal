@@ -21,9 +21,9 @@ impl LanguageService {
         let Some(current) = analysis.diagnostics().iter().find(|diagnostic| {
             diagnostic.code == trigger.code
                 && diagnostic.message == trigger.message
-                && diagnostic.span.offset == trigger.span.offset
-                && diagnostic.span.length == trigger.span.length
-                && diagnostic.span.source_id == 0
+                && diagnostic.span.offset() == trigger.span.offset()
+                && diagnostic.span.length() == trigger.span.length()
+                && diagnostic.span.source_id() == 0
         }) else {
             return Ok(ResultWithSnapshot {
                 snapshot,
@@ -53,9 +53,7 @@ fn import_action(
     }
     let name = diagnostic_name(&diagnostic.message)?;
     let identifier = identifier_in_span(snapshot.source(), diagnostic.span, name)?;
-    let completions = service
-        .completions(path, identifier.offset + identifier.length)
-        .ok()?;
+    let completions = service.completions(path, identifier.end()).ok()?;
     let candidate = completions.value.into_iter().find(|candidate| {
         candidate.source == CompletionSource::AutoImport
             && candidate.label.eq_ignore_ascii_case(name)
@@ -90,12 +88,12 @@ fn identifier_in_span(
     name: &str,
 ) -> Option<fpas_diagnostics::SourceSpan> {
     let end = diagnostic
-        .offset
-        .saturating_add(diagnostic.length)
+        .offset()
+        .saturating_add(diagnostic.length())
         .min(source.len());
-    let fragment = source.get(diagnostic.offset..end)?;
+    let fragment = source.get(diagnostic.offset()..end)?;
     let relative = fragment.find(name)?;
-    let offset = diagnostic.offset + relative;
+    let offset = diagnostic.offset() + relative;
     let before = source.as_bytes().get(offset.wrapping_sub(1)).copied();
     let after = source.as_bytes().get(offset + name.len()).copied();
     if before.is_some_and(identifier_byte) || after.is_some_and(identifier_byte) {
@@ -104,8 +102,8 @@ fn identifier_in_span(
     Some(fpas_diagnostics::SourceSpan::new(
         offset,
         name.len(),
-        diagnostic.line,
-        diagnostic.column,
+        diagnostic.line(),
+        diagnostic.column(),
     ))
 }
 
@@ -114,15 +112,15 @@ fn identifier_byte(value: u8) -> bool {
 }
 
 fn canonical_after_edit(source: &str, edit: &SemanticEdit) -> bool {
-    let end = edit.span.offset.saturating_add(edit.span.length);
+    let end = edit.span.end();
     if end > source.len()
-        || !source.is_char_boundary(edit.span.offset)
+        || !source.is_char_boundary(edit.span.offset())
         || !source.is_char_boundary(end)
     {
         return false;
     }
     let mut edited = source.to_owned();
-    edited.replace_range(edit.span.offset..end, &edit.new_text);
+    edited.replace_range(edit.span.offset()..end, &edit.new_text);
     let (unit, diagnostics) = parse_compilation_unit(&edited);
     diagnostics.is_empty()
         && fpas_fmt::format_source(&edited, &unit).is_ok_and(|formatted| formatted == edited)

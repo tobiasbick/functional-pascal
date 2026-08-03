@@ -24,8 +24,11 @@ impl Lexer<'_> {
             let Some(ch) = self.remaining_str().chars().next() else {
                 break;
             };
-            // Skip Unicode whitespace and a UTF-8 BOM (`U+FEFF`), which is not
-            // classified as whitespace by `char::is_whitespace`.
+            // Only the first scalar may be a UTF-8 BOM. A later U+FEFF must reach the
+            // unexpected-character path instead of silently separating tokens.
+            if ch == '\u{FEFF}' && self.pos != 0 {
+                break;
+            }
             if ch != '\u{FEFF}' && !ch.is_whitespace() {
                 break;
             }

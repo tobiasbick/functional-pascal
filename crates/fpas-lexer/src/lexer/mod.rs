@@ -83,6 +83,7 @@ impl<'a> Lexer<'a> {
             b'*' => self.emit_single(Token::Star),
             b'/' => self.emit_single(Token::Slash),
             b'=' => self.emit_single(Token::Equal),
+            _ if self.starts_non_ascii_identifier() => self.scan_invalid_identifier(),
             _ => {
                 let (so, sl, sc) = self.span_here();
                 let ch = self.advance_utf8_char();

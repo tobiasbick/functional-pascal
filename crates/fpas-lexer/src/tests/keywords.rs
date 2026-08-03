@@ -119,6 +119,17 @@ fn keyword_prefix_is_identifier() {
 }
 
 #[test]
+fn keyword_and_identifier_scanning_preserves_exact_source_spans() {
+    let source = "PROGRAM My_Name";
+    let (tokens, errors) = crate::lex(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    assert_eq!(tokens[0].token, Token::Program);
+    assert_eq!(tokens[0].span.text(source), Some("PROGRAM"));
+    assert_eq!(tokens[1].token, Token::Ident("My_Name".to_string()));
+    assert_eq!(tokens[1].span.text(source), Some("My_Name"));
+}
+
+#[test]
 fn keyword_as_part_of_longer_word() {
     assert_eq!(toks("myfunction"), vec![Token::Ident("myfunction".into())]);
     assert_eq!(toks("endgame"), vec![Token::Ident("endgame".into())]);

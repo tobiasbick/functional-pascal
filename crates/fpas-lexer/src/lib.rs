@@ -1,3 +1,27 @@
+//! UTF-8 lexer for Functional Pascal source files.
+//!
+//! Identifiers are ASCII-only and case-insensitive for keyword recognition. One leading UTF-8 BOM
+//! is accepted; later `U+FEFF` values are reported as unexpected characters. Token and comment
+//! spans use byte offsets plus one-based lines and Unicode-scalar columns. `LF`, `CRLF`, and bare
+//! `CR` are logical line endings.
+//!
+//! Lexical errors do not stop scanning. Every recovery path consumes input, invalid identifier-like
+//! sequences produce one diagnostic, and every token stream ends with [`Token::Eof`].
+//!
+//! # Example
+//!
+//! ```
+//! use fpas_lexer::{Token, lex};
+//!
+//! let source = "var café := 1;";
+//! let (tokens, errors) = lex(source);
+//!
+//! assert_eq!(tokens[0].token, Token::Var);
+//! assert_eq!(tokens[0].span.text(source), Some("var"));
+//! assert_eq!(errors.len(), 1);
+//! assert!(matches!(tokens.last().map(|token| &token.token), Some(Token::Eof)));
+//! ```
+
 #![cfg_attr(
     test,
     expect(
@@ -30,24 +54,37 @@ pub struct SpannedToken {
     pub end: SourcePosition,
 }
 
+/// Lexes `source`, returning recovered tokens and ordered diagnostics.
+///
+/// The token vector always ends with [`Token::Eof`], including when diagnostics were emitted.
+/// Comments are discarded; use [`lex_with_comments`] when their spans are required.
+#[must_use]
 pub fn lex(source: &str) -> (Vec<SpannedToken>, Vec<LexError>) {
     let (tokens, _, errors) = lex_with_comments(source);
     (tokens, errors)
 }
 
-/// Lexes `source` and returns comment spans alongside tokens.
+/// Lexes `source` and returns comment spans alongside recovered tokens and diagnostics.
+///
+/// The token vector always ends with [`Token::Eof`]. Every returned [`SourceComment`] refers to the
+/// exact `source` snapshot passed to this function.
 #[must_use]
 pub fn lex_with_comments(source: &str) -> (Vec<SpannedToken>, Vec<SourceComment>, Vec<LexError>) {
     lexer::Lexer::new(source).tokenize_with_comments()
 }
 
-/// Returns every comment span from `source` (same order as [`lex_with_comments`]).
+/// Returns every comment span from `source` in source order.
+///
+/// Each returned comment refers to the exact `source` snapshot passed to this function.
 #[must_use]
 pub fn collect_comments(source: &str) -> Vec<SourceComment> {
     lex_with_comments(source).1
 }
 
-/// Like [`lex`], but attaches `source_id` to token, comment, and diagnostic spans.
+/// Like [`lex_with_comments`], but attaches `source_id` to every returned span.
+///
+/// The identifier is opaque and lets callers associate spans with the exact source snapshot they
+/// supplied. The lexer does not interpret it.
 #[must_use]
 pub fn lex_with_source_id(
     source: &str,

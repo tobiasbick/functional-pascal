@@ -1,6 +1,6 @@
 # Rust crate review follow-up
 
-Status: open backlog
+Status: all crate reviews completed 2026-08-03
 Source: read-only review of all 19 workspace crates on 2026-08-01
 Scope: correctness, simplification, test gaps, error handling, resource safety, structure, and documentation
 
@@ -43,7 +43,7 @@ Where several crates implement temporary-file publication or stale-lock handling
 | `fpas-diagnostics` | [fpas-diagnostics.md](fpas-diagnostics.md) | Done | all findings completed 2026-08-03 |
 | `fpas-fmt` | [fpas-fmt.md](fpas-fmt.md) | Done | all findings completed 2026-08-03 |
 | `fpas-language-service` | [fpas-language-service.md](fpas-language-service.md) | Done | all findings completed 2026-08-02 |
-| `fpas-lexer` | [fpas-lexer.md](fpas-lexer.md) | P2 | recovery and span safety |
+| `fpas-lexer` | [fpas-lexer.md](fpas-lexer.md) | Done | all findings completed 2026-08-03 |
 | `fpas-linker` | [fpas-linker.md](fpas-linker.md) | Done | correctness findings completed; unmeasured optimization rejected 2026-08-02 |
 | `fpas-lsp` | [fpas-lsp.md](fpas-lsp.md) | Done | all findings completed 2026-08-02 |
 | `fpas-parser` | [fpas-parser.md](fpas-parser.md) | Done | all findings completed 2026-08-02 |

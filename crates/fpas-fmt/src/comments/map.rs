@@ -29,7 +29,7 @@ impl CommentMap {
         let comments = fpas_lexer::collect_comments(source);
         let anchors = traversal::collect(unit, source);
         validate_anchors(source, &anchors)?;
-        let mut map = Self::attach(source, &comments, &anchors.leading, &anchors.emission);
+        let mut map = Self::attach(source, &comments, &anchors.leading, &anchors.emission)?;
         map.uses_anchor = uses_keyword_offset(source);
         map.body_anchors = anchors.bodies;
         map.header_anchors = anchors.headers;
@@ -77,15 +77,24 @@ impl CommentMap {
         comments: &[SourceComment],
         leading_anchors: &[usize],
         emission_anchors: &[super::anchors::EmissionAnchor],
-    ) -> Self {
+    ) -> Result<Self, FormatError> {
         let mut leading: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
         let mut trailing: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
         let mut trailing_end: Vec<(usize, String)> = Vec::new();
         let mut previous_trailing: Option<(usize, usize)> = None;
 
         for comment in comments {
-            let text = format_comment_text(comment.text(source));
-            if is_end_of_line(comment, source) {
+            let end_offset = comment
+                .end_offset()
+                .ok_or_else(|| invalid_comment_span(comment, source))?;
+            let text = comment
+                .text(source)
+                .ok_or_else(|| invalid_comment_span(comment, source))?;
+            let text = format_comment_text(text);
+            let is_end_of_line = comment
+                .is_end_of_line(source)
+                .ok_or_else(|| invalid_comment_span(comment, source))?;
+            if is_end_of_line {
                 let direct = find_trailing_anchor(source, emission_anchors, comment.span.offset);
                 let continued = previous_trailing.and_then(|(previous_end, anchor)| {
                     super::anchors::same_line(source, previous_end, comment.span.offset)
@@ -96,8 +105,8 @@ impl CommentMap {
                         .entry(start)
                         .or_default()
                         .push((comment.span.offset, text));
-                    previous_trailing = Some((comment.end_offset(), start));
-                } else if let Some(anchor) = next_leading_anchor(leading_anchors, comment) {
+                    previous_trailing = Some((end_offset, start));
+                } else if let Some(anchor) = next_leading_anchor(leading_anchors, end_offset) {
                     leading
                         .entry(anchor)
                         .or_default()
@@ -115,7 +124,7 @@ impl CommentMap {
             if let Some(anchor) = leading_anchors
                 .iter()
                 .copied()
-                .filter(|anchor| *anchor > comment.end_offset())
+                .filter(|anchor| *anchor > end_offset)
                 .min()
             {
                 leading
@@ -127,22 +136,22 @@ impl CommentMap {
             }
         }
 
-        Self {
+        Ok(Self {
             leading: sort_grouped(leading),
             trailing: sort_grouped(trailing),
             trailing_end: sort_entries(trailing_end),
             uses_anchor: None,
             body_anchors: BTreeMap::new(),
             header_anchors: BTreeMap::new(),
-        }
+        })
     }
 }
 
-fn next_leading_anchor(leading_anchors: &[usize], comment: &SourceComment) -> Option<usize> {
+fn next_leading_anchor(leading_anchors: &[usize], comment_end: usize) -> Option<usize> {
     leading_anchors
         .iter()
         .copied()
-        .find(|anchor| *anchor > comment.end_offset())
+        .find(|anchor| *anchor > comment_end)
 }
 
 fn find_trailing_anchor(
@@ -176,16 +185,12 @@ fn format_comment_text(text: &str) -> String {
         .to_string()
 }
 
-fn is_end_of_line(comment: &SourceComment, source: &str) -> bool {
-    let Some(prefix) = source.get(..comment.span.offset) else {
-        return false;
-    };
-    let line_start = prefix
-        .rfind(['\n', '\r'])
-        .map_or(0, |index| index.saturating_add(1));
-    source
-        .get(line_start..comment.span.offset)
-        .is_some_and(|text| text.chars().any(|ch| !ch.is_whitespace()))
+fn invalid_comment_span(comment: &SourceComment, source: &str) -> FormatError {
+    FormatError::InvalidSourceSpan {
+        offset: comment.span.offset,
+        length: comment.span.length,
+        source_len: source.len(),
+    }
 }
 
 fn validate_anchors(

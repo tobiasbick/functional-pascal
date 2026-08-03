@@ -54,6 +54,7 @@ fn normalized_comments(source: &str) -> Vec<String> {
         .map(|comment| {
             comment
                 .text(source)
+                .expect("lexer-produced comment span must match its source")
                 .replace("\r\n", "\n")
                 .replace('\r', "\n")
                 .trim_end()

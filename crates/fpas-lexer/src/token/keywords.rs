@@ -71,10 +71,4 @@ impl Token {
     pub fn from_ident(raw: &str) -> Token {
         keyword_token(raw).unwrap_or_else(|| Token::Ident(raw.to_owned()))
     }
-
-    /// Like [`from_ident`](Self::from_ident), but takes ownership of the scanned identifier text.
-    #[must_use]
-    pub fn from_ident_owned(raw: String) -> Token {
-        keyword_token(&raw).unwrap_or(Token::Ident(raw))
-    }
 }

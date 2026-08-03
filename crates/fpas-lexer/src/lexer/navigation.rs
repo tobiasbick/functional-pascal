@@ -78,7 +78,10 @@ impl Lexer<'_> {
     /// # Panics
     ///
     /// Panics if called at end of input.
-    #[allow(clippy::expect_used)] // EOF without a scalar is a caller bug.
+    #[expect(
+        clippy::expect_used,
+        reason = "EOF without a scalar is a caller bug guarded by lexer scan control flow"
+    )]
     pub(super) fn advance_utf8_char(&mut self) -> char {
         let ch = self
             .remaining_str()

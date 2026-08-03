@@ -25,7 +25,9 @@ var
 
 Negative numbers are parsed as unary minus + literal: `-42` is `-(42)`.
 
-Identifiers use ASCII letters, digits, and `_` only (see the grammar `identifier` rule). A leading UTF-8 BOM (`U+FEFF`) in a source file is ignored as trivia.
+Identifiers use ASCII letters, digits, and `_` only (see the grammar `identifier` rule). A UTF-8 BOM
+(`U+FEFF`) is ignored only when it is the first scalar in a source file. A later `U+FEFF` is an
+unexpected character rather than invisible token-separating trivia.
 
 ## See also
 

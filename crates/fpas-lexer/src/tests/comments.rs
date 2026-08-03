@@ -90,6 +90,41 @@ fn utf8_bom_is_skipped_as_trivia() {
 }
 
 #[test]
+fn leading_bom_preserves_byte_offset_and_advances_scalar_column() {
+    let source = "\u{FEFF}42";
+    let (tokens, errors) = crate::lex(source);
+    assert!(errors.is_empty(), "{errors:?}");
+    assert_eq!(tokens[0].span.offset, '\u{FEFF}'.len_utf8());
+    assert_eq!(tokens[0].span.line, 1);
+    assert_eq!(tokens[0].span.column, 2);
+}
+
+#[test]
+fn bom_in_the_middle_is_an_unexpected_character() {
+    use fpas_diagnostics::codes::LEX_UNEXPECTED_CHARACTER;
+
+    let (tokens, errors) = lex_with_errors("foo\u{FEFF}bar");
+    assert_eq!(
+        tokens,
+        vec![Token::Ident("foo".into()), Token::Ident("bar".into())]
+    );
+    assert_eq!(errors.len(), 1);
+    assert_eq!(errors[0].code, LEX_UNEXPECTED_CHARACTER);
+    assert_eq!(errors[0].span.offset(), 3);
+    assert_eq!(errors[0].span.length(), '\u{FEFF}'.len_utf8());
+}
+
+#[test]
+fn bom_after_a_token_at_eof_is_an_unexpected_character() {
+    use fpas_diagnostics::codes::LEX_UNEXPECTED_CHARACTER;
+
+    let (tokens, errors) = lex_with_errors("x\u{FEFF}");
+    assert_eq!(tokens, vec![Token::Ident("x".into())]);
+    assert_eq!(errors.len(), 1);
+    assert_eq!(errors[0].code, LEX_UNEXPECTED_CHARACTER);
+}
+
+#[test]
 fn line_comment_crlf() {
     assert_eq!(toks("// comment\r\n42"), vec![Token::Integer(42)]);
 }

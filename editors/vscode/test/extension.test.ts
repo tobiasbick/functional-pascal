@@ -85,7 +85,7 @@ export async function run(): Promise<void> {
   assert.equal(await vscode.workspace.applyEdit(formattingWorkspaceEdit), true);
   assert.equal(
     document.getText(),
-    "program Corrected;\n\nbegin\n  var Value: integer := 1\nend.\n// kept\n"
+    "program Corrected;\n\nbegin\n  // kept\n  var Value: integer := 1\nend.\n"
   );
 
   await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
@@ -244,9 +244,8 @@ async function verifyExternalProjectChanges(): Promise<void> {
       "program WatchApp;\n\nuses Watch.Core;\n\nbegin\n  var First: integer := WatchedValue();\n  var Second: integer := WatchedValue()\nend.\n"
     );
     await waitForReferences(declarationUri, position, 3);
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   } finally {
-    await fs.rm(fixtureRoot, { recursive: true, force: true });
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   }
 }
 
@@ -314,9 +313,8 @@ async function verifyWorkspaceNavigation(): Promise<void> {
         ).fsPath.endsWith(path.join("core", "src", "core.fpas"))
       )
     );
-    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   } finally {
-    await fs.rm(fixtureRoot, { recursive: true, force: true });
+    await vscode.commands.executeCommand("workbench.action.closeActiveEditor");
   }
 }
 

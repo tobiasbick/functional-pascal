@@ -1,5 +1,6 @@
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { readdirSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import { runTests as runExtensionTests } from "@vscode/test-electron";
@@ -11,6 +12,19 @@ import { verifyPackaging } from "./verify-packaging.mjs";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const extensionRoot = path.resolve(scriptDirectory, "..");
+const fixtureRoot = path.join(extensionRoot, "test", "fixtures");
+const transientFixturePrefixes = [".project-index-", ".workspace-navigation-"];
+
+function cleanupTransientFixtures() {
+  for (const entry of readdirSync(fixtureRoot, { withFileTypes: true })) {
+    if (
+      entry.isDirectory() &&
+      transientFixturePrefixes.some((prefix) => entry.name.startsWith(prefix))
+    ) {
+      rmSync(path.join(fixtureRoot, entry.name), { recursive: true, force: true });
+    }
+  }
+}
 
 function runCommand(command, args) {
   const result = spawnSync(command, args, {
@@ -35,20 +49,21 @@ export async function runTests() {
   await verifyContracts();
   await verifyPackaging();
   await verifyGrammar();
-  await runExtensionTests({
-    extensionDevelopmentPath: extensionRoot,
-    extensionTestsPath: path.join(
-      extensionRoot,
-      "out",
-      "test",
-      "extension.test.js"
-    ),
-    launchArgs: [
-      path.join(extensionRoot, "test", "fixtures"),
-      "--disable-extensions",
-      "--disable-workspace-trust"
-    ]
-  });
+  cleanupTransientFixtures();
+  try {
+    await runExtensionTests({
+      extensionDevelopmentPath: extensionRoot,
+      extensionTestsPath: path.join(
+        extensionRoot,
+        "out",
+        "test",
+        "extension.test.js"
+      ),
+      launchArgs: [fixtureRoot, "--disable-extensions", "--disable-workspace-trust"]
+    });
+  } finally {
+    cleanupTransientFixtures();
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

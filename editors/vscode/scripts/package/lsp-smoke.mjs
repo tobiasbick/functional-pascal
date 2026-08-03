@@ -203,7 +203,11 @@ export async function smokePackagedServer({
       method: "initialize",
       params: {
         processId: null,
-        capabilities: {},
+        capabilities: {
+          workspace: {
+            workspaceEdit: { documentChanges: true }
+          }
+        },
         workspaceFolders: [
           { uri: pathToFileURL(workspace).href, name: "external-project" }
         ],
@@ -278,9 +282,9 @@ export async function smokePackagedServer({
       }
     }));
     const rename = await reader.response(3);
-    const renameChanges = Object.values(rename?.result?.changes ?? {});
+    const renameChanges = rename?.result?.documentChanges ?? [];
     assert.deepEqual(
-      renameChanges.map((edits) => edits.length),
+      renameChanges.map((change) => change.edits.length),
       [2],
       `packaged server returns rename edits: ${JSON.stringify(rename)}`
     );

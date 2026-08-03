@@ -243,44 +243,25 @@ begin
                                                           TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
                                                           TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000),
                                                           TuiElementBuilders.MakeStatusLine([
-
                                                                                               TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
-
                                                                                               TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
-
                                                                                               TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
-
                                                                                               TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
-
                                                                                               TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
-
-
-
                                                                                             ])
-
                                                         ]);
   mutable var Children: array of TuiElement := [Main];
   if State.HelpOpen then
   begin
     Std.Array.Push(Children, TuiElementBuilders.MakeOverlay('Controls', [
                                                                           TuiElementBuilders.MakeColumnSpaced([
-
                                                                                                                 TuiElementBuilders.MakeLabel('Arrow keys or click: pan and center'),
-
                                                                                                                 TuiElementBuilders.MakeLabel('+ / - or wheel: zoom'),
-
                                                                                                                 TuiElementBuilders.MakeLabel('PageUp / PageDown: iterations'),
-
                                                                                                                 TuiElementBuilders.MakeLabel('1 / 2 / 3: color palette'),
-
                                                                                                                 TuiElementBuilders.MakeLabel('R or middle click: reset'),
-
                                                                                                                 TuiElementBuilders.MakeLabel('Esc: close this overlay')
-
-
-
                                                                                                               ], 1)
-
                                                                         ]))
   end;
 

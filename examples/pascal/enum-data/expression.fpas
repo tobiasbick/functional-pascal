@@ -6,8 +6,8 @@ type
   { A simple expression tree using enums with associated data }
   Expr = enum
     Num(Value: integer);
-    Add(Left: integer; Right: integer);
-    Mul(Left: integer; Right: integer);
+    Add(Left: Expr; Right: Expr);
+    Mul(Left: Expr; Right: Expr);
   end;
 
 function Eval(E: Expr): integer;
@@ -19,11 +19,11 @@ begin
     end;
     Expr.Add(L, R):
     begin
-      return L + R
+      return Eval(L) + Eval(R)
     end;
     Expr.Mul(L, R):
     begin
-      return L * R
+      return Eval(L) * Eval(R)
     end
   end
 end;
@@ -37,19 +37,19 @@ begin
     end;
     Expr.Add(L, R):
     begin
-      return (IntToStr(L) + ' + ') + IntToStr(R)
+      return ((('(' + Show(L)) + ' + ') + Show(R)) + ')'
     end;
     Expr.Mul(L, R):
     begin
-      return (IntToStr(L) + ' * ') + IntToStr(R)
+      return ((('(' + Show(L)) + ' * ') + Show(R)) + ')'
     end
   end
 end;
 
 begin
   var E1: Expr := Expr.Num(42);
-  var E2: Expr := Expr.Add(3, 7);
-  var E3: Expr := Expr.Mul(4, 5);
+  var E2: Expr := Expr.Add(Expr.Num(3), Expr.Num(7));
+  var E3: Expr := Expr.Mul(E2, Expr.Add(Expr.Num(4), Expr.Num(5)));
   WriteLn((Show(E1) + ' = ') + IntToStr(Eval(E1)));
   WriteLn((Show(E2) + ' = ') + IntToStr(Eval(E2)));
   WriteLn((Show(E3) + ' = ') + IntToStr(Eval(E3)))

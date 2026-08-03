@@ -98,22 +98,16 @@ begin
   begin
     Content := [
                  TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel(State.Text), Quit])
-
                ];
     Focused := Some(TuiControlId.Create(3))
   end;
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeMenuBar([
-
                                                                                     TuiMenuItem.WithShortcut(TuiControlId.Create(4), 'File', TuiAction.Create(3), 'F')
-
-
-
                                                                                   ]),
                                                    TuiElementBuilders.MakePanel('Tui interactive demo', Content),
                                                    TuiElementBuilders.MakeStatusLine([TuiStatusItemBuilders.MakeHint('Type, confirm, then quit')])
-
                                                  ])
 end;
 

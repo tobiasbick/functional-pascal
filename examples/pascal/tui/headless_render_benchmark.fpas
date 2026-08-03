@@ -73,7 +73,6 @@ function ViewBenchmark(State: integer): TuiElement;
 begin
   mutable var Children: array of TuiElement := [
                                                  TuiElementBuilders.MakeLabel('frame ' + IntToStr(State))
-
                                                ];
   for Index: integer := 2 to 32 do
   begin
@@ -87,7 +86,6 @@ begin
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Headless benchmark', [TuiElementBuilders.MakeColumn(Children)])
-
                                                                       ])
 end;
 

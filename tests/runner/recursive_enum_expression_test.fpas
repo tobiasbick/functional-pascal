@@ -1,0 +1,32 @@
+program RecursiveEnumExpressionTest;
+
+uses Std.Test;
+
+type
+  Expr = enum
+    Num(Value: integer);
+    Add(Left: Expr; Right: Expr);
+    Mul(Left: Expr; Right: Expr);
+  end;
+
+function Eval(E: Expr): integer;
+begin
+  case E of
+    Expr.Num(Value):
+    begin
+      return Value
+    end;
+    Expr.Add(Left, Right):
+    begin
+      return Eval(Left) + Eval(Right)
+    end;
+    Expr.Mul(Left, Right):
+    begin
+      return Eval(Left) * Eval(Right)
+    end
+  end
+end;
+
+begin
+  AssertEquals(39, Eval(Expr.Mul(Expr.Add(Expr.Num(3), Expr.Num(10)), Expr.Num(3))))
+end.

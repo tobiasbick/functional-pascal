@@ -13,7 +13,7 @@ type
 
     procedure SetBase(Self: Counter; Value: integer);
     begin
-      WriteLn('SetBase: ' + IntToStr(Value))
+      WriteLn('Setter received: ' + IntToStr(Value))
     end;
 
     property Value: integer read GetBase write SetBase;
@@ -24,7 +24,8 @@ begin
     Base := 10;
   end;
 
-  WriteLn(IntToStr(C.Value));
+  WriteLn('Stored value: ' + IntToStr(C.Value));
+  { The setter receives Self by value, so this records the request but does not mutate C. }
   C.Value := 20;
-  WriteLn(IntToStr(C.Value))
+  WriteLn('Stored value after setter: ' + IntToStr(C.Value))
 end.

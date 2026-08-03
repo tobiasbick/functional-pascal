@@ -3,7 +3,7 @@ program ExhaustivenessExample;
 uses Std.Console, Std.Conv, Std.Array;
 
 type
-  { unless an else branch is present.                                    }
+  { Every enum variant must have a case arm unless an else branch is present. }
   Light = enum
     Red;
     Yellow;

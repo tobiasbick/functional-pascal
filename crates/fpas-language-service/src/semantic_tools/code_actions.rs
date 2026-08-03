@@ -124,5 +124,6 @@ fn canonical_after_edit(source: &str, edit: &SemanticEdit) -> bool {
     let mut edited = source.to_owned();
     edited.replace_range(edit.span.offset..end, &edit.new_text);
     let (unit, diagnostics) = parse_compilation_unit(&edited);
-    diagnostics.is_empty() && fpas_fmt::format_source(&edited, &unit) == edited
+    diagnostics.is_empty()
+        && fpas_fmt::format_source(&edited, &unit).is_ok_and(|formatted| formatted == edited)
 }

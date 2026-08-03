@@ -1,6 +1,6 @@
 //! Lightweight format stability checks on a deterministic sample of repository sources.
 
-#![allow(clippy::panic)]
+#![allow(clippy::expect_used, clippy::panic)]
 
 mod common;
 
@@ -54,14 +54,15 @@ fn format_and_reparse(path: &Path) {
         "{label}: source must parse before format: {errors:?}"
     );
 
-    let formatted = format_source(&source, &unit);
+    let formatted = format_source(&source, &unit).expect("matching source and AST");
     let (_, errors) = parse_compilation_unit(&formatted);
     assert!(
         errors.is_empty(),
         "{label}: formatted output must re-parse: {errors:?}\n--- formatted ---\n{formatted}"
     );
 
-    let formatted_again = format_source(&formatted, &parse_compilation_unit(&formatted).0);
+    let formatted_again = format_source(&formatted, &parse_compilation_unit(&formatted).0)
+        .expect("matching formatted source and AST");
     assert_eq!(
         formatted, formatted_again,
         "{label}: format must be idempotent"

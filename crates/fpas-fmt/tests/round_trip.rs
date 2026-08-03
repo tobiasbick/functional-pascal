@@ -1,5 +1,7 @@
 //! Format → re-parse round-trip tests (parser corpus and repository sources).
 
+#![allow(clippy::expect_used)]
+
 mod common;
 
 use std::path::Path;

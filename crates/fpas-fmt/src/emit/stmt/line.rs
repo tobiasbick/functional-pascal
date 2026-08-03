@@ -22,13 +22,8 @@ pub(super) fn emit_var_stmt(
     emitter.write(": ");
     emit_type_expr(emitter, &var.type_expr);
     emitter.write(" := ");
-    emit_expr(emitter, &var.value, 0);
-    let stmt = if keyword == "mutable var" {
-        Stmt::MutableVar(var.clone())
-    } else {
-        Stmt::Var(var.clone())
-    };
-    finish_stmt_line(emitter, comments, &stmt, is_last);
+    emit_expr(emitter, &var.value, 0, comments);
+    finish_stmt_line_at(emitter, comments, var.span.offset, is_last);
 }
 pub(super) fn write_indented(emitter: &mut Emitter) {
     emitter.write_current_indent();
@@ -40,10 +35,19 @@ pub(super) fn finish_stmt_line(
     stmt: &Stmt,
     is_last: bool,
 ) {
+    finish_stmt_line_at(emitter, comments, stmt_start(stmt), is_last);
+}
+
+fn finish_stmt_line_at(
+    emitter: &mut Emitter,
+    comments: &CommentMap,
+    anchor_start: usize,
+    is_last: bool,
+) {
     if !is_last {
         emitter.write(";");
     }
-    emit_trailing_comments(emitter, comments, stmt_start(stmt));
+    emit_trailing_comments(emitter, comments, anchor_start);
     if !is_last || !emitter.ends_with_newline() {
         emitter.write_line_end();
     }
@@ -55,6 +59,12 @@ pub(super) fn finish_stmt_after_newline(
     stmt: &Stmt,
     is_last: bool,
 ) {
+    emitter.remove_line_end();
+    if !is_last {
+        emitter.write(";");
+    }
     emit_trailing_comments(emitter, comments, stmt_start(stmt));
-    emitter.finish_statement_after_newline(is_last);
+    if !emitter.ends_with_newline() {
+        emitter.write_line_end();
+    }
 }

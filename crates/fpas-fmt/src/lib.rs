@@ -3,16 +3,19 @@
 //! Normative style: [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 //! Language reference: [`docs/pascal/`](../../../docs/pascal/).
 
-#![cfg_attr(test, allow(clippy::panic))]
+#![cfg_attr(test, allow(clippy::expect_used, clippy::panic))]
 
 mod comments;
 mod emit;
+mod error;
 mod span;
 mod style;
 
 use comments::CommentMap;
 use emit::{format_program as emit_program, format_unit as emit_unit};
 use fpas_parser::{CompilationUnit, Program, Unit};
+
+pub use error::FormatError;
 
 /// Formats a parsed compilation unit without access to original source.
 ///
@@ -28,9 +31,19 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
 /// Formats `unit` using `source` to preserve every comment (`///`, `//`, `{ }`, `(* *)`).
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md#comments`
-#[must_use]
-pub fn format_source(source: &str, unit: &CompilationUnit) -> String {
-    format_with_comments(unit, &CommentMap::build(source, unit))
+///
+/// # Errors
+///
+/// Returns [`FormatError::SourceMismatch`] when `unit` was parsed from different text, or
+/// [`FormatError::InvalidSourceSpan`] when a supplied span is outside the source or splits a
+/// UTF-8 code point.
+pub fn format_source(source: &str, unit: &CompilationUnit) -> Result<String, FormatError> {
+    let comments = CommentMap::build(source, unit)?;
+    let (parsed, _) = fpas_parser::parse_compilation_unit(source);
+    if &parsed != unit {
+        return Err(FormatError::SourceMismatch);
+    }
+    Ok(format_with_comments(unit, &comments))
 }
 
 /// Formats a `program` declaration and its body.
@@ -74,7 +87,7 @@ mod tests {
             "AST-only formatting cannot recover comments without source"
         );
 
-        let with_source = format_source(source, &unit);
+        let with_source = format_source(source, &unit).expect("matching source and AST");
         assert!(with_source.contains("/// Unit doc."));
         assert!(with_source.contains("{ field doc }"));
     }
@@ -84,7 +97,7 @@ mod tests {
         let source = "program T; begin\n  WriteLn('ok') // trail\nend.";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
-        let formatted = format_source(source, &unit);
+        let formatted = format_source(source, &unit).expect("matching source and AST");
         assert!(formatted.contains("// trail"));
     }
 }

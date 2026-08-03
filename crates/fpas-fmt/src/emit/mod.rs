@@ -16,6 +16,7 @@ mod types;
 mod wrap;
 
 pub(crate) use program::{format_program, format_unit};
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 use crate::style::INDENT;
 
@@ -110,7 +111,7 @@ impl Emitter {
             if ch == '\n' {
                 self.column = 0;
             } else {
-                self.column += 1;
+                self.column += ch.width().unwrap_or(0);
             }
         }
     }
@@ -144,6 +145,19 @@ impl Emitter {
     pub(crate) fn write_line_end(&mut self) {
         self.out.push('\n');
         self.column = 0;
+    }
+
+    /// Removes one trailing newline so a separator or end-of-line comment can precede it.
+    pub(crate) fn remove_line_end(&mut self) {
+        debug_assert!(self.out.ends_with('\n'));
+        if self.out.pop().is_none() {
+            return;
+        }
+        self.column = self
+            .out
+            .rsplit('\n')
+            .next()
+            .map_or(0, UnicodeWidthStr::width);
     }
 
     /// Ends a single-line statement: appends `;` and a newline when not last in the block.

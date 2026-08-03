@@ -34,7 +34,10 @@ pub(crate) fn emit_trailing_comments(
 ) {
     for text in comments.trailing_at(anchor_start) {
         emitter.write(" ");
-        emit_comment_line(emitter, text);
+        emitter.write(text);
+    }
+    if !comments.trailing_at(anchor_start).is_empty() && !emitter.ends_with_newline() {
+        emitter.write_line_end();
     }
 }
 

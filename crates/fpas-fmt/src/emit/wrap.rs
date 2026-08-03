@@ -3,12 +3,13 @@
 //! **Documentation:** `docs/pascal/tools/fmt-style.md#line-width-v2`
 
 use crate::style::{INDENT_WIDTH, MAX_LINE_WIDTH};
+use unicode_width::UnicodeWidthStr;
 
 use super::Emitter;
 
-/// Visible width of `text` in columns (Unicode scalar count, not terminal display width).
+/// Visible width of `text` in terminal-style Unicode display columns.
 pub(crate) fn text_width(text: &str) -> usize {
-    text.chars().count()
+    UnicodeWidthStr::width(text)
 }
 
 /// Renders `emit` into a fresh buffer and returns the text.
@@ -178,5 +179,13 @@ mod tests {
         assert!(out.starts_with("uses\n"));
         assert!(out.contains(','));
         assert!(out.ends_with(";\n"));
+    }
+
+    #[test]
+    fn text_width_counts_combining_and_wide_unicode_columns() {
+        assert_eq!(text_width("e\u{301}"), 1);
+        assert_eq!(text_width("界"), 2);
+        assert_eq!(text_width(&format!("{}界", "a".repeat(98))), 100);
+        assert_eq!(text_width(&format!("{}界", "a".repeat(99))), 101);
     }
 }

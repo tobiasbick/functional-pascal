@@ -232,7 +232,8 @@ end;
 ## Line width (v2)
 
 - **Maximum line length: 100 columns** (`MAX_LINE_WIDTH` in `crates/fpas-fmt/src/style.rs`).
-- Count includes leading indentation on the line being measured.
+- Count includes leading indentation and uses terminal-style Unicode display columns: combining
+  marks have width zero and wide characters have width two.
 - Lines at or below [`MAX_LINE_WIDTH`](../../../crates/fpas-fmt/src/style.rs) stay on one line; wrapping applies only when the rendered line would exceed the limit.
 
 ### Wrapping (v2, when over max width)
@@ -463,13 +464,19 @@ type
 
 **All comments are preserved** when formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs) / `fpas fmt`). That includes `///` doc lines, `//` line comments, and `{ }` / `(* *)` block comments — whether they appear before declarations, before `uses` / `begin`, between statements, or at end of line after code.
 
-The formatter may **normalize** comment text (for example `CRLF` → `LF`, trim trailing spaces on a comment line) but must not delete any comment.
+The formatter may **normalize** comment text (for example `CRLF` or bare `CR` → `LF`, trim trailing spaces on a comment line) but must not delete any comment.
 
-Placement after formatting follows emission anchors: leading comments stay on their own lines before the nearest following construct; end-of-line comments stay on the same line after the statement or declaration they trailed in source. One blank line after a leading doc/block group before a top-level declaration or unit/program header (see [Blank lines](#blank-lines)).
+Placement after formatting follows structural emission anchors: leading comments stay on their own
+lines before the nearest following construct, including each program, routine, or closure body.
+End-of-line comments stay on the same line after the compilation-unit/routine header, statement,
+declaration, record/enum member, routine body, or final `end.` they trailed in source. A comment
+after a control-flow clause such as `then` or `do` attaches to the following body and is emitted as
+a leading body comment. One blank line follows a leading doc/block group before a top-level
+declaration or unit/program header (see [Blank lines](#blank-lines)).
 
-[`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source cannot recover comments from the AST alone — use [`format_source`](../../../crates/fpas-fmt/src/lib.rs) when comments must be kept.
+[`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source cannot recover comments from the AST alone — use [`format_source`](../../../crates/fpas-fmt/src/lib.rs) when comments must be kept. `format_source` is fallible and rejects a compilation unit that was not parsed from the exact source snapshot, including invalid or out-of-range UTF-8 spans.
 
-**Golden tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_block_styles.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_block_styles.expected.fpas) (see [`golden_output.rs`](../../../crates/fpas-fmt/tests/golden_output.rs)).
+**Tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_block_styles.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_block_styles.expected.fpas), and the focused comment/API/layout regressions under [`crates/fpas-fmt/tests/`](../../../crates/fpas-fmt/tests/).
 
 ## Intentional diffs from source
 

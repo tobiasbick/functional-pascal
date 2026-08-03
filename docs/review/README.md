@@ -39,9 +39,9 @@ Where several crates implement temporary-file publication or stale-lock handling
 | `fpas-bundle` | [fpas-bundle.md](fpas-bundle.md) | Done | all findings completed 2026-08-02 |
 | `fpas-bytecode` | [fpas-bytecode.md](fpas-bytecode.md) | Done | all findings completed 2026-08-02 |
 | `fpas-cli` | [fpas-cli.md](fpas-cli.md) | Done | all findings completed 2026-08-03 |
-| `fpas-compiler` | [fpas-compiler.md](fpas-compiler.md) | P1 | overflow and object metadata |
+| `fpas-compiler` | [fpas-compiler.md](fpas-compiler.md) | Done | all findings completed 2026-08-02 |
 | `fpas-diagnostics` | [fpas-diagnostics.md](fpas-diagnostics.md) | P2 | safe rendering and invariants |
-| `fpas-fmt` | [fpas-fmt.md](fpas-fmt.md) | P1 | comment preservation |
+| `fpas-fmt` | [fpas-fmt.md](fpas-fmt.md) | Done | all findings completed 2026-08-03 |
 | `fpas-language-service` | [fpas-language-service.md](fpas-language-service.md) | Done | all findings completed 2026-08-02 |
 | `fpas-lexer` | [fpas-lexer.md](fpas-lexer.md) | P2 | recovery and span safety |
 | `fpas-linker` | [fpas-linker.md](fpas-linker.md) | Done | correctness findings completed; unmeasured optimization rejected 2026-08-02 |

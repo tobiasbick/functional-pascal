@@ -2,23 +2,30 @@
 
 use fpas_parser::{BinaryOp, Expr};
 
+use crate::comments::CommentMap;
+
 use super::super::Emitter;
 
-pub(super) fn emit_binary_with_break(emitter: &mut Emitter, expr: &Expr, base_column: usize) {
+pub(super) fn emit_binary_with_break(
+    emitter: &mut Emitter,
+    expr: &Expr,
+    base_column: usize,
+    comments: &CommentMap,
+) {
     let Expr::BinaryOp {
         op, left, right, ..
     } = expr
     else {
-        super::emit_expr_impl(emitter, expr, 0, false);
+        super::emit_expr_impl(emitter, expr, 0, false, comments);
         return;
     };
     let prec = binary_prec(*op);
-    super::emit_expr_impl(emitter, left, prec + 1, false);
+    super::emit_expr_impl(emitter, left, prec + 1, false, comments);
     let op_token = binary_op_spaced(*op).trim();
     emitter.write(" ");
     emitter.write(op_token);
     emitter.newline_to_column(base_column);
-    super::emit_expr_impl(emitter, right, prec, false);
+    super::emit_expr_impl(emitter, right, prec, false, comments);
 }
 pub(super) fn binary_prec(op: BinaryOp) -> u8 {
     match op {

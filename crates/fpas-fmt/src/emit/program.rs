@@ -2,7 +2,9 @@
 
 use fpas_parser::{Program, QualifiedId, Unit};
 
-use crate::comments::{CommentMap, emit_leading_comments, emit_trailing_end_comments};
+use crate::comments::{
+    CommentMap, emit_leading_comments, emit_trailing_comments, emit_trailing_end_comments,
+};
 
 use super::Emitter;
 use super::decl::emit_decls;
@@ -28,7 +30,8 @@ pub(crate) fn format_unit(unit: &Unit, comments: &CommentMap) -> String {
 
 fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, program.span.offset, true);
-    emitter.writeln(&format!("program {};", program.name));
+    emitter.write(&format!("program {};", program.name));
+    finish_header_line(emitter, comments, program.span.offset);
     emitter.blank_line();
     if let Some(anchor) = comments.uses_anchor() {
         emit_leading_comments(emitter, comments, anchor, false);
@@ -38,12 +41,17 @@ fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap)
         emit_decls(emitter, &program.declarations, comments);
         emitter.blank_line();
     }
-    if let Some(anchor) = comments.begin_anchor() {
+    if let Some(anchor) = comments.body_anchor(program.span.offset) {
         emit_leading_comments(emitter, comments, anchor, false);
     }
     emitter.writeln("begin");
     emitter.with_indent(|inner| emit_stmts_in_block(inner, &program.body, comments));
-    emitter.writeln("end.");
+    emitter.write_current_indent();
+    emitter.write("end.");
+    emit_trailing_comments(emitter, comments, program.span.offset);
+    if !emitter.ends_with_newline() {
+        emitter.write_line_end();
+    }
     emit_trailing_end_comments(emitter, comments);
 }
 
@@ -51,7 +59,8 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     emit_leading_comments(emitter, comments, unit.span.offset, true);
     emitter.write("unit ");
     emit_qualified_id(emitter, &unit.name);
-    emitter.write(";\n");
+    emitter.write(";");
+    finish_header_line(emitter, comments, unit.span.offset);
     emitter.blank_line();
     if let Some(anchor) = comments.uses_anchor() {
         emit_leading_comments(emitter, comments, anchor, false);
@@ -75,6 +84,15 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {
     emitter.blank_line();
 }
 
+fn finish_header_line(emitter: &mut Emitter, comments: &CommentMap, owner_start: usize) {
+    if let Some(anchor) = comments.header_anchor(owner_start) {
+        emit_trailing_comments(emitter, comments, anchor);
+    }
+    if !emitter.ends_with_newline() {
+        emitter.write_line_end();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::format_program;
@@ -85,7 +103,7 @@ mod tests {
     fn parse_and_format(source: &str) -> String {
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
-        format_source(source, &unit)
+        format_source(source, &unit).expect("matching source and AST")
     }
 
     #[test]

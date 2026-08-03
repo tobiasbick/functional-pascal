@@ -16,7 +16,7 @@ fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
     let source = "program Messy; begin var Value:integer:=1 end.";
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
-    let expected = fpas_fmt::format_source(source, &unit);
+    let expected = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
     let transcript = run(&[
         initialize(1),
         initialized(),
@@ -49,7 +49,7 @@ fn formatting_preserves_comments_and_is_idempotent() {
         "program Comments; // header\nbegin\n{ before }\nWriteLn('ok') (* tail *)\nend. // done\n";
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
-    let canonical = fpas_fmt::format_source(source, &unit);
+    let canonical = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
     for comment in ["// header", "{ before }", "(* tail *)", "// done"] {
         assert!(canonical.contains(comment), "{canonical}");
     }

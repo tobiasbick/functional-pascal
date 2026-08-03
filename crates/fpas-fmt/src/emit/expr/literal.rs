@@ -2,15 +2,20 @@
 
 use fpas_parser::{Expr, FieldInit};
 
+use crate::comments::CommentMap;
 use crate::style::INDENT_WIDTH;
 
 use super::super::Emitter;
 use super::super::wrap::{exceeds_width, measure_emit, text_width};
 
-pub(super) fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
+pub(super) fn emit_record_fields(
+    emitter: &mut Emitter,
+    fields: &[FieldInit],
+    comments: &CommentMap,
+) {
     if fields.is_empty() {
         emitter.write("record ");
-        emit_record_field_inits(emitter, fields);
+        emit_record_field_inits(emitter, fields, comments);
         emitter.write(record_literal_end(fields));
         return;
     }
@@ -27,10 +32,10 @@ pub(super) fn emit_record_fields(emitter: &mut Emitter, fields: &[FieldInit]) {
         emitter.write(" := ");
         if matches!(&field.value, Expr::RecordLiteral { .. }) {
             emitter.with_indent(|inner| {
-                super::emit_expr_impl(inner, &field.value, 0, false);
+                super::emit_expr_impl(inner, &field.value, 0, false, comments);
             });
         } else {
-            super::emit_expr_impl(emitter, &field.value, 0, false);
+            super::emit_expr_impl(emitter, &field.value, 0, false, comments);
         }
         emitter.write(";");
     }
@@ -44,10 +49,12 @@ pub(super) fn write_to_column(emitter: &mut Emitter, column: usize) {
     emitter.write(&" ".repeat(pad));
 }
 
-pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr]) {
+pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr], comments: &CommentMap) {
     let items: Vec<String> = elements
         .iter()
-        .map(|element| measure_emit(|inner| super::emit_expr_impl(inner, element, 0, false)))
+        .map(|element| {
+            measure_emit(|inner| super::emit_expr_impl(inner, element, 0, false, comments))
+        })
         .collect();
     if items.is_empty() {
         emitter.write("[]");
@@ -70,14 +77,13 @@ pub(super) fn emit_array_literal(emitter: &mut Emitter, elements: &[Expr]) {
         }
         emitter.write("\n");
     }
-    emitter.newline_to_column(base_column);
+    write_to_column(emitter, base_column);
     emitter.write("]");
 }
 
 pub(super) fn write_block_at_column(emitter: &mut Emitter, column: usize, text: &str) {
     for (index, line) in text.split('\n').enumerate() {
         if index > 0 {
-            emitter.write("\n");
             emitter.newline_to_column(column);
         } else {
             let pad = column.saturating_sub(emitter.column());
@@ -86,14 +92,18 @@ pub(super) fn write_block_at_column(emitter: &mut Emitter, column: usize, text: 
         emitter.write(line);
     }
 }
-pub(super) fn emit_record_field_inits(emitter: &mut Emitter, fields: &[FieldInit]) {
+pub(super) fn emit_record_field_inits(
+    emitter: &mut Emitter,
+    fields: &[FieldInit],
+    comments: &CommentMap,
+) {
     for (index, field) in fields.iter().enumerate() {
         if index > 0 {
             emitter.write("; ");
         }
         emitter.write(&field.name);
         emitter.write(" := ");
-        super::emit_expr(emitter, &field.value, 0);
+        super::emit_expr(emitter, &field.value, 0, comments);
     }
 }
 

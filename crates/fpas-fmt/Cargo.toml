@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 fpas-parser = { path = "../fpas-parser" }
 fpas-lexer = { path = "../fpas-lexer" }
+unicode-width.workspace = true
 
 [lints]
 workspace = true

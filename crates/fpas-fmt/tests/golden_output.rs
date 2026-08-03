@@ -1,5 +1,7 @@
 //! Golden-file output tests ([`docs/pascal/tools/fmt-style.md`](../../docs/pascal/tools/fmt-style.md)).
 
+#![allow(clippy::expect_used)]
+
 mod common;
 
 #[test]
@@ -119,7 +121,7 @@ fn postfix_chaining_wraps_long_chain() {
     let source = "program T; begin var X: integer := VeryLongFactoryName.CreateVeryLongThing().TransformWithVeryLongName(VeryLongArgumentAlpha).ScaleWithAnotherLongName(VeryLongArgumentBeta).Value; end.";
     let (unit, errors) = fpas_parser::parse_compilation_unit(source);
     assert!(errors.is_empty(), "{errors:?}");
-    let formatted = fpas_fmt::format_source(source, &unit);
+    let formatted = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
     assert!(
         formatted.contains("\n") && formatted.contains('.'),
         "expected wrapped postfix suffixes: {formatted}"

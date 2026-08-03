@@ -165,7 +165,10 @@ fn unknown_name_action_adds_one_canonical_unambiguous_import() {
     );
     let (unit, diagnostics) = parse_compilation_unit(&edited);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-    assert_eq!(fpas_fmt::format_source(&edited, &unit), edited);
+    assert_eq!(
+        fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
+        edited
+    );
     assert!(edited.contains("uses Actions.Core, Actions.Importable;"));
 }
 
@@ -219,7 +222,10 @@ fn unknown_type_action_adds_one_canonical_unambiguous_import() {
     );
     let (unit, parse_diagnostics) = parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
-    assert_eq!(fpas_fmt::format_source(&edited, &unit), edited);
+    assert_eq!(
+        fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
+        edited
+    );
     assert!(edited.contains("uses Actions.Core, Actions.Types;"));
 }
 

@@ -242,7 +242,10 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     );
     let (unit, errors) = parse_compilation_unit(&edited);
     assert!(errors.is_empty(), "{errors:?}");
-    assert_eq!(fpas_fmt::format_source(&edited, &unit), edited);
+    assert_eq!(
+        fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
+        edited
+    );
 
     let documentation_key = unique
         .documentation

@@ -23,12 +23,13 @@ pub(super) fn emit_if(emitter: &mut Emitter, stmt: &Stmt, prefix: &str, comments
     write_indented(emitter);
     emitter.write(prefix);
     emitter.write("if ");
-    emit_expr(emitter, condition, 0);
+    emit_expr(emitter, condition, 0, comments);
     emitter.write(" then\n");
     emit_wrapped_branch(emitter, then_branch, comments);
 
     match else_branch {
         Some(else_branch) if matches!(else_branch.as_ref(), Stmt::If { .. }) => {
+            emit_leading_comments(emitter, comments, stmt_start(else_branch), false);
             emit_if(emitter, else_branch, "else ", comments);
         }
         Some(else_branch) => {
@@ -49,6 +50,9 @@ pub(super) fn emit_wrapped_branch_with_semicolon(
     semicolon_after_end: bool,
     comments: &CommentMap,
 ) {
+    if matches!(branch, Stmt::Block(..)) {
+        emit_leading_comments(emitter, comments, stmt_start(branch), false);
+    }
     emitter.writeln("begin");
     emitter.with_indent(|inner| match branch {
         Stmt::Block(stmts, ..) => super::emit_stmts_in_block(inner, stmts, comments),
@@ -78,7 +82,7 @@ pub(super) fn emit_case(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMa
 
     write_indented(emitter);
     emitter.write("case ");
-    emit_expr(emitter, expr, 0);
+    emit_expr(emitter, expr, 0, comments);
     emitter.write(" of\n");
 
     emitter.with_indent(|inner| {
@@ -110,31 +114,31 @@ pub(super) fn emit_case_arm(
     comments: &CommentMap,
 ) {
     write_indented(emitter);
-    emit_case_labels(emitter, &arm.labels);
+    emit_case_labels(emitter, &arm.labels, comments);
     if let Some(guard) = &arm.guard {
         emitter.write(" if ");
-        emit_expr(emitter, guard, 0);
+        emit_expr(emitter, guard, 0, comments);
     }
     emitter.write(":\n");
     emit_wrapped_branch_with_semicolon(emitter, &arm.body, !is_last_arm, comments);
 }
 
-pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel]) {
+pub(super) fn emit_case_labels(emitter: &mut Emitter, labels: &[CaseLabel], comments: &CommentMap) {
     for (index, label) in labels.iter().enumerate() {
         if index > 0 {
             emitter.write(", ");
         }
-        emit_case_label(emitter, label);
+        emit_case_label(emitter, label, comments);
     }
 }
 
-pub(super) fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel) {
+pub(super) fn emit_case_label(emitter: &mut Emitter, label: &CaseLabel, comments: &CommentMap) {
     match label {
         CaseLabel::Value { start, end, .. } => {
-            emit_expr(emitter, start, 0);
+            emit_expr(emitter, start, 0, comments);
             if let Some(end_expr) = end {
                 emitter.write("..");
-                emit_expr(emitter, end_expr, 0);
+                emit_expr(emitter, end_expr, 0, comments);
             }
         }
         CaseLabel::Destructure {
@@ -174,14 +178,14 @@ pub(super) fn emit_for(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap
             emitter.write(": ");
             emit_type_expr(emitter, var_type);
             emitter.write(" := ");
-            emit_expr(emitter, start, 0);
+            emit_expr(emitter, start, 0, comments);
             emitter.write(" ");
             emitter.write(match direction {
                 ForDirection::To => "to",
                 ForDirection::Downto => "downto",
             });
             emitter.write(" ");
-            emit_expr(emitter, end, 0);
+            emit_expr(emitter, end, 0, comments);
             emitter.write(" do\n");
             emit_wrapped_branch(emitter, body, comments);
         }
@@ -198,7 +202,7 @@ pub(super) fn emit_for(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentMap
             emitter.write(": ");
             emit_type_expr(emitter, var_type);
             emitter.write(" in ");
-            emit_expr(emitter, iterable, 0);
+            emit_expr(emitter, iterable, 0, comments);
             emitter.write(" do\n");
             emit_wrapped_branch(emitter, body, comments);
         }
@@ -216,7 +220,7 @@ pub(super) fn emit_while(emitter: &mut Emitter, stmt: &Stmt, comments: &CommentM
 
     write_indented(emitter);
     emitter.write("while ");
-    emit_expr(emitter, condition, 0);
+    emit_expr(emitter, condition, 0, comments);
     emitter.write(" do\n");
     emit_wrapped_branch(emitter, body, comments);
 }
@@ -233,5 +237,5 @@ pub(super) fn emit_repeat(emitter: &mut Emitter, stmt: &Stmt, comments: &Comment
     emitter.with_indent(|inner| super::emit_stmts_in_block(inner, body, comments));
     write_indented(emitter);
     emitter.write("until ");
-    emit_expr(emitter, condition, 0);
+    emit_expr(emitter, condition, 0, comments);
 }

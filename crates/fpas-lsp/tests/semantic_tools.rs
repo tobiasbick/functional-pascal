@@ -161,7 +161,10 @@ fn semantic_tokens_and_quick_fixes_use_utf16_and_reject_stale_diagnostics() {
     let edited = apply_edit(source, edit);
     let (unit, parse_diagnostics) = fpas_parser::parse_compilation_unit(&edited);
     assert!(parse_diagnostics.is_empty(), "{parse_diagnostics:#?}");
-    assert_eq!(fpas_fmt::format_source(&edited, &unit), edited);
+    assert_eq!(
+        fpas_fmt::format_source(&edited, &unit).expect("matching source and AST"),
+        edited
+    );
 
     assert_eq!(
         response(&transcript.messages, 4)["result"],

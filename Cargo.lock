@@ -630,6 +630,7 @@ version = "0.0.1"
 dependencies = [
  "fpas-lexer",
  "fpas-parser",
+ "unicode-width",
 ]
 
 [[package]]

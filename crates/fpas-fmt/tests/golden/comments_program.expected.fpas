@@ -6,6 +6,5 @@ uses Std.Console;
 { before begin }
 begin
   // setup
-  WriteLn('ok')   // trail
-end.
-// tail
+  WriteLn('ok') // trail
+end. // tail

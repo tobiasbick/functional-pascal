@@ -90,7 +90,13 @@ fn format_source_file(
         return Err(1);
     }
 
-    let formatted = format_source(&source, &unit);
+    let formatted = match format_source(&source, &unit) {
+        Ok(formatted) => formatted,
+        Err(error) => {
+            let _ = writeln!(stderr, "Error formatting `{}`: {error}", path.display());
+            return Err(1);
+        }
+    };
     let changed = normalize_newlines(&source) != formatted;
 
     if config.list_changed && config.check_only && changed {

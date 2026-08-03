@@ -45,9 +45,9 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
         }
         Stmt::Assign { target, value, .. } => {
             write_indented(emitter);
-            emit_designator(emitter, target);
+            emit_designator(emitter, target, comments);
             emitter.write(" := ");
-            emit_expr(emitter, value, 0);
+            emit_expr(emitter, value, 0, comments);
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Return(expr, ..) => {
@@ -55,14 +55,14 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
             emitter.write("return");
             if let Some(value) = expr {
                 emitter.write(" ");
-                emit_expr(emitter, value, 0);
+                emit_expr(emitter, value, 0, comments);
             }
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Panic(expr, ..) => {
             write_indented(emitter);
             emitter.write("panic(");
-            emit_expr(emitter, expr, 0);
+            emit_expr(emitter, expr, 0, comments);
             emitter.write(")");
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
@@ -100,21 +100,21 @@ fn emit_stmt_in_block(emitter: &mut Emitter, stmt: &Stmt, is_last: bool, comment
             designator, args, ..
         } => {
             write_indented(emitter);
-            emit_designator(emitter, designator);
+            emit_designator(emitter, designator, comments);
             emitter.write("(");
-            emit_arg_list(emitter, args);
+            emit_arg_list(emitter, args, comments);
             emitter.write(")");
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Expression { expr, .. } => {
             write_indented(emitter);
-            emit_expr(emitter, expr, 0);
+            emit_expr(emitter, expr, 0, comments);
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
         Stmt::Go { expr, .. } => {
             write_indented(emitter);
             emitter.write("go ");
-            emit_expr(emitter, expr, 0);
+            emit_expr(emitter, expr, 0, comments);
             finish_stmt_line(emitter, comments, stmt, is_last);
         }
     }

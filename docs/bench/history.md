@@ -14,6 +14,25 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-03 — after completed Rust crate review fixes
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5291 | throughput: 9450009 iters/s |
+| array_push | 144 | throughput: 13888888 pushes/s |
+| array_length | 60 | throughput: 8333333 lengths/s |
+| string_concat | 2142 | throughput: 2334267 concats/s |
+| string_length | 53 | throughput: 9433962 lengths/s |
+| function_call | 789 | throughput: 7604562 calls/s |
+| array_callbacks | 875 | throughput: 10971428 callbacks/s |
+| record_update | 521 | throughput: 1919385 updates/s |
+| unicode_char_at | 946 | throughput: 3171247 chars/s |
+| task_spawn_wait | 595 | throughput: 168067 tasks/s |
+| tui_headless | 16660 | throughput: 30 frames/s |
+
 ## 2026-07-26 — after in-place binary integer stack reduction
 
 - Group: `all`

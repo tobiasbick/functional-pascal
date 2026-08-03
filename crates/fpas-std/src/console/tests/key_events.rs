@@ -91,6 +91,18 @@ fn key_input_read_event_returns_queued_resize() {
 }
 
 #[test]
+fn key_input_returns_queued_events_without_raw_mode() {
+    let mut k = test_key_input();
+    k.push_console_event(ConsoleEvent::resize(120, 40));
+    let timeout_event = k.read_event_timeout(0, test_location()).unwrap().unwrap();
+    assert_eq!(timeout_event.kind, event_kind_index("Resize"));
+
+    k.push_console_event(ConsoleEvent::focus_gained());
+    let polled_event = k.poll_event(test_location()).unwrap().unwrap();
+    assert_eq!(polled_event.kind, event_kind_index("FocusGained"));
+}
+
+#[test]
 fn key_input_read_event_preserves_fifo_across_event_kinds() {
     let mut k = test_key_input();
     k.push_console_event(ConsoleEvent::paste("hello".into()));

@@ -223,7 +223,7 @@ end;
 
 ## General
 
-- UTF-8 output. Preserve valid Unicode in string literals and identifiers.
+- UTF-8 output. Preserve valid Unicode in string literals and comments. Identifiers use ASCII letters, digits, and `_` only.
 - Unix line endings (`\n`) in formatted output.
 - Trailing newline at end of file.
 - No trailing whitespace on lines.

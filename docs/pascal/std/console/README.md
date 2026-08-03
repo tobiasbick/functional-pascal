@@ -86,8 +86,8 @@ Everything below requires `uses Std.Console;`.
 | function | `ReadKeyEvent(): KeyEvent` | structured key + modifiers |
 | function | `EventPending(): boolean` | true if `ReadEvent()` has data waiting |
 | function | `ReadEvent(): Event` | unified terminal event for keyboard, mouse, resize, paste, and focus |
-| function | `ReadEventTimeout(Milliseconds: integer): Option of Event` | wait up to N ms for an event; requires `EnableRawMode()` first |
-| function | `PollEvent(): Option of Event` | non-blocking check; `None` if no event is ready; requires `EnableRawMode()` first |
+| function | `ReadEventTimeout(Milliseconds: integer): Option of Event` | wait up to N ms for an event; raw mode is required only for live terminal input |
+| function | `PollEvent(): Option of Event` | non-blocking check; queued events are available without raw mode |
 | procedure | `EnableRawMode()` | explicitly enable terminal raw mode |
 | procedure | `DisableRawMode()` | explicitly disable terminal raw mode |
 | procedure | `EnterAltScreen()` | switch to the alternate terminal screen |

@@ -61,7 +61,7 @@ char_code       = '#' decimal_digits ;
 
 (* Strings may span multiple lines.                                 *)
 (* Doubled apostrophe is the escape for a literal quote: 'It''s'.   *)
-(* Char codes use decimal ASCII: #65 = 'A', #13#10 = CR+LF.        *)
+(* Char codes use decimal byte values: #65 = 'A', #13#10 = CR+LF.  *)
 (* Adjacent elements auto-concatenate: 'Hello'#13#10'World'.        *)
 (* No maximum length.                                               *)
 
@@ -80,7 +80,7 @@ doc_line_comment = '//' '/' { (* any char except newline *) } newline ;
 (* `///` is lexically a line comment; formatters treat it as a      *)
 (* preservable doc line (see docs/pascal/tools/fmt-style.md).             *)
 
-(* ---- Keywords (57, case-insensitive) --------------------------- *)
+(* ---- Keywords (56, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -233,15 +233,16 @@ field_def           = identifier ':' type_expr [ ':=' expression ] ';' ;
 record_method       = [ 'static' ] ( function_decl | procedure_decl ) ;
 
 (* Record member visibility is available only in unit files. The    *)
-(* modifier is written before each field or routine; there are no    *)
-(* visibility sections. Properties and events are always public.     *)
+(* modifier is written before each field, property, event, or routine; *)
+(* there are no visibility sections.                                 *)
 
 (* Instance record methods must declare Self as the first parameter, *)
 (* typed as the enclosing record. Callers use value dot notation;    *)
 (* Self is passed implicitly: A.DistanceTo(B) → Point.DistanceTo(A, B). *)
 (*                                                                   *)
 (* `static function` has no Self parameter and is called through the *)
-(* type: Point.Create(X, Y). Static procedures are not supported.    *)
+(* type: Point.Create(X, Y). Static procedures likewise have no Self *)
+(* parameter and are called as statements through the type.          *)
 (* Static and instance names share one case-insensitive name set.    *)
 (* Record methods may declare their own type_params via the shared   *)
 (* function_decl / procedure_decl grammar.                           *)

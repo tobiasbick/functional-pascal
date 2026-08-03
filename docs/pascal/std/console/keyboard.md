@@ -61,6 +61,10 @@ end
 
 ### `function EventPending(): boolean`
 
+- **Parameters:** none.
+- **Returns:** `true` if a unified terminal event is queued for `ReadEvent()`, otherwise `false`.
+- **Notes:** observes the unified event queue used by `ReadEvent`, `ReadEventTimeout`, and `PollEvent`.
+
 ## See also
 
 - [Console overview](README.md)

@@ -354,7 +354,9 @@ fn checked_pad_width(
 mod tests {
     use super::*;
     use crate::limits::MAX_COLLECTION_LEN;
-    use fpas_diagnostics::codes::RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS;
+    use fpas_diagnostics::codes::{
+        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    };
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -390,5 +392,60 @@ mod tests {
         ];
         let err = run_str(StrIntrinsic::Repeat, &mut stack).unwrap_err();
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn character_apis_accept_one_unicode_scalar() {
+        let mut from_char = vec![Value::Str("😀".into()), Value::Integer(2)];
+        run_str(StrIntrinsic::FromChar, &mut from_char).unwrap();
+        assert_eq!(from_char, vec![Value::Str("😀😀".into())]);
+
+        let mut set_char_at = vec![
+            Value::Str("a😀c".into()),
+            Value::Integer(1),
+            Value::Str("ß".into()),
+        ];
+        run_str(StrIntrinsic::SetCharAt, &mut set_char_at).unwrap();
+        assert_eq!(set_char_at, vec![Value::Str("aßc".into())]);
+
+        let mut ord = vec![Value::Str("😀".into())];
+        run_str(StrIntrinsic::Ord, &mut ord).unwrap();
+        assert_eq!(ord, vec![Value::Integer(0x1F600)]);
+    }
+
+    #[test]
+    fn character_apis_reject_empty_and_multiple_scalars() {
+        for (intrinsic, stack) in [
+            (
+                StrIntrinsic::FromChar,
+                vec![Value::Str("".into()), Value::Integer(1)],
+            ),
+            (
+                StrIntrinsic::FromChar,
+                vec![Value::Str("ab".into()), Value::Integer(1)],
+            ),
+            (
+                StrIntrinsic::SetCharAt,
+                vec![
+                    Value::Str("abc".into()),
+                    Value::Integer(1),
+                    Value::Str("".into()),
+                ],
+            ),
+            (
+                StrIntrinsic::SetCharAt,
+                vec![
+                    Value::Str("abc".into()),
+                    Value::Integer(1),
+                    Value::Str("ab".into()),
+                ],
+            ),
+            (StrIntrinsic::Ord, vec![Value::Str("".into())]),
+            (StrIntrinsic::Ord, vec![Value::Str("ab".into())]),
+        ] {
+            let mut stack = stack;
+            let err = run_str(intrinsic, &mut stack).unwrap_err();
+            assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+        }
     }
 }

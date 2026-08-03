@@ -105,8 +105,8 @@ editor connection does not block document changes or shutdown while an older
 diagnostic message is waiting to be sent.
 
 The opened editor folder does not have to be an FPAS project. At startup, the
-server builds a bounded catalog of `.fpasprj` and `.fpasworkspace` manifests
-inside that folder. It asks the normal project loader for the authoritative
+server recursively builds a deterministic catalog of `.fpasprj` and `.fpasworkspace`
+manifests inside that folder. It asks the normal project loader for the authoritative
 source sets, dependencies, workspace members, and exports; it does not treat
 every recursively found `.fpas` file as a loose project source. Multiple nested
 FPAS projects can therefore coexist inside a larger Rust repository. A direct
@@ -114,9 +114,9 @@ source owner takes precedence over a project that only consumes the source
 through a dependency.
 
 Discovery uses the same manifests, source ownership, dependencies, workspace
-members, exports, and standard-library rules as the compiler. Generated and
-dependency directories such as `.git`, `target`, `node_modules`, and
-`.vscode-test` are excluded from catalog traversal. A file without a matching
+members, exports, and standard-library rules as the compiler. Traversal excludes
+generated and dependency directories such as `.git`, `target`, `node_modules`, and
+`.vscode-test`; it has no fixed directory-depth, manifest-count, or time limit. A file without a matching
 manifest remains a loose file, while overlapping direct owners produce an
 actionable ambiguity error. Open dependency units are analyzed with their own
 URI and source ranges.

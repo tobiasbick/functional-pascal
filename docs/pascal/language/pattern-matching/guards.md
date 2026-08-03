@@ -36,7 +36,7 @@ end;
 ```
 
 The guard expression has access to any bindings introduced by the label.
-For enum patterns, pattern arguments bind names only; put literals and extra checks in the `when` guard.
+For enum patterns, pattern arguments bind names only; put literals and extra checks in the `if` guard.
 
 ## Scalar guard bindings
 

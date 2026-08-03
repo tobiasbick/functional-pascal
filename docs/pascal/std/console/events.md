@@ -1,8 +1,5 @@
 # Terminal events
 
-- **Parameters:** none.
-- **Returns:** `true` if a unified terminal event is queued for `ReadEvent()`.
-
 ### `function ReadEvent(): Event`
 
 - **Parameters:** none.
@@ -27,7 +24,7 @@ if E.kind = EventKind.Resize then
 
 - **Parameters:** `Milliseconds` — maximum time to wait in milliseconds (`0` = non-blocking poll).
 - **Returns:** `Some(E)` if an event arrived within the timeout; `None` otherwise.
-- **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
+- **Live terminal input:** call `EnableRawMode()` to poll the live terminal. Queued or buffered events, including injected test events, are returned before raw-mode state is checked.
 
 Terminal key-release notifications are not FPAS events. When one arrives, the
 runtime continues waiting with the remaining deadline instead of returning
@@ -49,7 +46,7 @@ end
 
 - **Parameters:** none.
 - **Returns:** `Some(E)` if an event is already available; `None` if the queue is empty.
-- **Prerequisite:** call `EnableRawMode()` before using this function. If raw mode is not active, `None` is returned immediately.
+- **Live terminal input:** call `EnableRawMode()` to poll the live terminal. Queued or buffered events, including injected test events, are returned before raw-mode state is checked.
 
 The poll drains immediately ready key-release notifications before deciding
 that no FPAS event is available, so a ready press following a release is

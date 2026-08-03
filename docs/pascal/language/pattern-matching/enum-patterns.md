@@ -39,7 +39,7 @@ Rules:
 
 - Each field position is a bare identifier binding, matched positionally to the variant fields.
 - A pattern variant must belong to the scrutinee enum type (`Shape.Circle` when matching `Shape`).
-- Use a `when` guard for additional constraints on a bound value (literals, ranges, or comparisons).
+- Use an `if` guard for additional constraints on a bound value (literals, ranges, or comparisons).
 
 ## See also
 

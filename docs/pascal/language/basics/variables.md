@@ -2,7 +2,7 @@
 
 Variables are **immutable by default**. Use `mutable var` to allow reassignment. This works both as a declaration block and as an inline statement inside a `begin..end` block.
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_decl`, `mutable`).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_block`, `var_stmt`, `mutable_var_block`, and `mutable_var_stmt`).
 
 ```pascal
 var

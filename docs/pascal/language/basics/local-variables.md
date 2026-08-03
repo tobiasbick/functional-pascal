@@ -2,7 +2,7 @@
 
 Variables can be declared inline inside `begin..end` blocks:
 
-Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_decl` in statement position).
+Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_stmt` in statement position).
 
 ```pascal
 function FullName(First: string; Last: string): string;

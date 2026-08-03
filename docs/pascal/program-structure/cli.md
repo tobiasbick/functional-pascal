@@ -33,7 +33,9 @@ type-checks, runs programs, and executes test bundles.
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
   unit sources. `--check` reports formatting drift without changing files;
-  `--list` prints changed paths with `--check`.
+  `--list` prints changed paths with `--check`. `--stdout <file.fpas>` formats
+  one source file to stdout without modifying it and cannot be combined with
+  `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
 - `fpas build --help`, `fpas run --help`, `fpas check --help`,
   `fpas test --help`, and `fpas fmt --help` — print focused command help with
@@ -171,10 +173,14 @@ including a program's main file:
 ```sh
 fpas fmt my-app.fpasprj
 fpas fmt --check suite.fpasworkspace
+fpas fmt --stdout src/main.fpas
 ```
 
 Formatting never builds or runs the project. Parser diagnostics retain the
 source path, stable code, and location used by editor Problems integration.
+`--stdout` accepts exactly one `.fpas` file, writes only the formatted source to
+stdout, and leaves that file unchanged. It cannot be combined with `--check`;
+use `--check --list` to list formatting drift instead.
 
 ## See also
 

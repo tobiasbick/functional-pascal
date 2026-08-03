@@ -13,7 +13,7 @@ WriteLn(IsNumeric('nope'))
 
 ## `function FromChar(C: string; Count: integer): string`
 
-Builds a string of `Count` copies of `C`. `Count` ≤ 0 yields an empty string.
+Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors. `Count` ≤ 0 yields an empty string.
 
 ```pascal
 WriteLn(FromChar('─', 40))
@@ -34,7 +34,7 @@ WriteLn(C)  { H }
 
 ## `function SetCharAt(S: string; Index: integer; C: string): string`
 
-Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. **Runtime error** if out of bounds.
+Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
 
 ```pascal
 WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
@@ -44,7 +44,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
 
 ## `function Ord(C: string): integer`
 
-Returns the Unicode codepoint (integer value) of `C`.
+Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
 WriteLn(Ord('A'))  { 65 }

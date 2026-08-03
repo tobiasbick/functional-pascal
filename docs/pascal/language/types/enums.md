@@ -88,7 +88,7 @@ end;
 ```
 
 Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
-Each field position uses a plain identifier binding; use a `when` guard on the `case` arm for extra constraints.
+Each field position uses a plain identifier binding; use an `if` guard on the `case` arm for extra constraints.
 
 A variant uses either backing values or associated data fields, not both on the same variant.
 

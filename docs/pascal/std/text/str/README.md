@@ -39,10 +39,10 @@ Requires `uses Std.Str;`.
 | function | `PadLeft(S: string; Width: integer; Fill: string): string` | left-pad to `Width` |
 | function | `PadRight(S: string; Width: integer; Fill: string): string` | right-pad to `Width` |
 | function | `PadCenter(S: string; Width: integer; Fill: string): string` | center-pad to `Width` |
-| function | `FromChar(C: string; Count: integer): string` | string of repeated char |
+| function | `FromChar(C: string; Count: integer): string` | repeated one-scalar string |
 | function | `CharAt(S: string; Index: integer): string` | character at 0-based index |
-| function | `SetCharAt(S: string; Index: integer; C: string): string` | new string with one char replaced |
-| function | `Ord(C: string): integer` | Unicode codepoint |
+| function | `SetCharAt(S: string; Index: integer; C: string): string` | replace with one-scalar string |
+| function | `Ord(C: string): integer` | codepoint of one-scalar string |
 | function | `Chr(N: integer): string` | character from codepoint |
 | function | `Insert(S: string; Index: integer; Sub: string): string` | insert `Sub` at index |
 | function | `Delete(S: string; Start: integer; Len: integer): string` | remove `Len` chars |

@@ -29,7 +29,7 @@ Violets are blue';
 
 ## Character codes
 
-The `#` prefix denotes a character by its ASCII code (decimal, range **0..255**). These can be concatenated directly with string literals:
+The `#` prefix denotes a character by its decimal byte value (range **0..255**). These can be concatenated directly with string literals:
 
 ```pascal
 var

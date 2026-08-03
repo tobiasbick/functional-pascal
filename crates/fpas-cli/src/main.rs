@@ -23,6 +23,7 @@ mod cli_build;
 mod cli_check;
 mod cli_fmt;
 mod cli_input;
+mod cli_output;
 mod cli_paths;
 mod cli_run;
 mod cli_test;
@@ -42,6 +43,9 @@ pub(crate) use cli_run::{render_cli_diagnostic, run_source};
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    if let Some(exit_code) = cli_test::run_process_worker(&args) {
+        process::exit(exit_code);
+    }
     let cwd = match env::current_dir() {
         Ok(cwd) => cwd,
         Err(e) => {

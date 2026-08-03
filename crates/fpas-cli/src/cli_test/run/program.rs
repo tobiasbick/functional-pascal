@@ -6,11 +6,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
+use fpas_std::UploadedFrame;
+use fpas_vm::VmError;
+use serde::{Deserialize, Serialize};
 
 use super::super::expect_pixels;
 use super::super::expect_stdout;
+use super::super::process;
 use super::super::report::TestOutcome;
-use super::super::timeout::{VmExecution, VmRunResult, run_with_timeout};
 use super::LinkContext;
 use crate::cli_run::render_cli_diagnostic_with_sources;
 
@@ -24,7 +27,8 @@ pub(in crate::cli_test) struct CompiledTestProgram {
 }
 
 /// Controls PASS/FAIL lines emitted while executing a linked program.
-pub(super) enum RunOutput {
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub(in crate::cli_test) enum RunOutput {
     /// Regular test body: prints PASS and FAIL banners.
     Test,
     /// Test body followed by a teardown hook: FAIL banners only; the caller
@@ -35,11 +39,11 @@ pub(super) enum RunOutput {
 }
 
 impl RunOutput {
-    fn emit_pass(&self) -> bool {
+    pub(in crate::cli_test) fn emit_pass(self) -> bool {
         matches!(self, Self::Test)
     }
 
-    fn emit_fail_banner(&self) -> bool {
+    pub(in crate::cli_test) fn emit_fail_banner(self) -> bool {
         matches!(self, Self::Test | Self::TestDeferredPass)
     }
 }
@@ -58,32 +62,61 @@ pub(super) struct ProgramRunOptions<'a> {
     pub compiled: Option<&'a CompiledTestProgram>,
 }
 
+/// Fully compiled test input transferable to an isolated worker process.
+pub(in crate::cli_test) struct PreparedProgram {
+    pub test_path: PathBuf,
+    pub chunk: fpas_bytecode::Chunk,
+    pub source_paths: Option<Arc<Vec<PathBuf>>>,
+    pub script_override: Option<PathBuf>,
+    pub manifest_override: Option<fpas_project::TestFileOverride>,
+    pub display: String,
+    pub output: RunOutput,
+}
+
 pub(super) fn run_test_program(
     path: &Path,
     link: Option<&LinkContext>,
     stderr: &mut dyn Write,
     options: ProgramRunOptions<'_>,
 ) -> TestOutcome {
+    let timeout = options.timeout;
+    let prepared = match prepare_test_program(path, link, stderr, options) {
+        Ok(prepared) => prepared,
+        Err(outcome) => return outcome,
+    };
+    if let Some(timeout) = timeout {
+        process::run_with_timeout(prepared, timeout, stderr)
+    } else {
+        run_prepared_program(prepared, stderr, || Ok(())).unwrap_or_else(|message| {
+            let _ = writeln!(stderr, "        test worker failed unexpectedly: {message}");
+            TestOutcome::RuntimeError
+        })
+    }
+}
+
+fn prepare_test_program(
+    path: &Path,
+    link: Option<&LinkContext>,
+    stderr: &mut dyn Write,
+    options: ProgramRunOptions<'_>,
+) -> Result<PreparedProgram, TestOutcome> {
     let ProgramRunOptions {
         script_override,
-        timeout,
+        timeout: _,
         display,
         output,
         compiled,
     } = options;
     let path_text = path.to_string_lossy();
-    let (mut vm, source_paths) = if let Some(compiled) = compiled {
+    let (chunk, source_paths) = if let Some(compiled) = compiled {
         (
-            fpas_vm::Vm::from_shared_chunk(Arc::clone(&compiled.image)),
+            (*compiled.image).clone(),
             Some(Arc::clone(&compiled.source_paths)),
         )
     } else if let Some(link) = link {
         if let Err(message) = super::load::reject_unit_test_entry(path, link) {
-            if output.emit_fail_banner() {
-                let _ = writeln!(stderr, "  FAIL  {display}");
-            }
-            let _ = writeln!(stderr, "        {message}");
-            return TestOutcome::CompileError;
+            render_compile_error(stderr, display, output, &message);
+            return Err(TestOutcome::CompileError);
         }
         let built = match crate::project_build::build_test_program(
             path,
@@ -93,29 +126,19 @@ pub(super) fn run_test_program(
         ) {
             Ok(built) => built,
             Err(message) => {
-                if output.emit_fail_banner() {
-                    let _ = writeln!(stderr, "  FAIL  {display}");
-                }
-                let _ = writeln!(stderr, "        {message}");
-                return TestOutcome::CompileError;
+                render_compile_error(stderr, display, output, &message);
+                return Err(TestOutcome::CompileError);
             }
         };
-        (
-            fpas_vm::Vm::new(built.chunk),
-            Some(Arc::new(built.source_paths)),
-        )
+        (built.chunk, Some(Arc::new(built.source_paths)))
     } else {
         let (program, source_paths) = match load_program(path) {
             Ok(value) => value,
             Err(message) => {
-                if output.emit_fail_banner() {
-                    let _ = writeln!(stderr, "  FAIL  {display}");
-                }
-                let _ = writeln!(stderr, "        {message}");
-                return TestOutcome::CompileError;
+                render_compile_error(stderr, display, output, &message);
+                return Err(TestOutcome::CompileError);
             }
         };
-
         let chunk = match fpas_compiler::compile_all(&program) {
             Ok(chunk) => chunk,
             Err(diagnostics) => {
@@ -134,74 +157,103 @@ pub(super) fn run_test_program(
                         .replace('\n', "\n        ")
                     );
                 }
-                return TestOutcome::CompileError;
+                return Err(TestOutcome::CompileError);
             }
         };
-        (fpas_vm::Vm::new(chunk), source_paths.map(Arc::new))
+        (chunk, source_paths.map(Arc::new))
     };
-    let manifest_override = link.and_then(|ctx| ctx.test_manifest.override_for(path));
-    let script_config = match apply_test_script(path, script_override, manifest_override, &mut vm) {
+
+    Ok(PreparedProgram {
+        test_path: path.to_path_buf(),
+        chunk,
+        source_paths,
+        script_override: script_override.map(Path::to_path_buf),
+        manifest_override: link
+            .and_then(|context| context.test_manifest.override_for(path))
+            .cloned(),
+        display: display.to_string(),
+        output,
+    })
+}
+
+fn render_compile_error(stderr: &mut dyn Write, display: &str, output: RunOutput, message: &str) {
+    if output.emit_fail_banner() {
+        let _ = writeln!(stderr, "  FAIL  {display}");
+    }
+    let _ = writeln!(stderr, "        {message}");
+}
+
+/// Applies scripted input, opens the execution gate, runs the VM, and classifies its result.
+pub(in crate::cli_test) fn run_prepared_program(
+    prepared: PreparedProgram,
+    stderr: &mut dyn Write,
+    gate: impl FnOnce() -> Result<(), String>,
+) -> Result<TestOutcome, String> {
+    let PreparedProgram {
+        test_path,
+        chunk,
+        source_paths,
+        script_override,
+        manifest_override,
+        display,
+        output,
+    } = prepared;
+    let mut vm = fpas_vm::Vm::new(chunk);
+    let script_config = match apply_test_script(
+        &test_path,
+        script_override.as_deref(),
+        manifest_override.as_ref(),
+        &mut vm,
+    ) {
         Ok(config) => config,
         Err(message) => {
-            if output.emit_fail_banner() {
-                let _ = writeln!(stderr, "  FAIL  {display}");
-            }
-            let _ = writeln!(stderr, "        {message}");
-            return TestOutcome::CompileError;
+            render_compile_error(stderr, &display, output, &message);
+            return Ok(TestOutcome::CompileError);
         }
     };
+    gate()?;
+    let execution = execute_vm(vm, script_config.headless_graph);
+    Ok(classify_execution(
+        &test_path,
+        source_paths.as_deref(),
+        &display,
+        output,
+        execution,
+        stderr,
+    ))
+}
 
-    let headless_graph = script_config.headless_graph;
-    let shutdown = vm.shutdown_handle();
-    let run_result = if let Some(timeout) = timeout {
-        run_with_timeout(shutdown, timeout, move || execute_vm(vm, headless_graph))
-    } else {
-        VmRunResult::Completed(execute_vm(vm, headless_graph))
-    };
+struct VmExecution {
+    result: Result<(), VmError>,
+    stdout_lines: Vec<String>,
+    headless_frame: Option<UploadedFrame>,
+    skipped: bool,
+}
 
-    match run_result {
-        VmRunResult::TimedOut => {
-            let seconds = timeout.map(|value| value.as_secs()).unwrap_or(0);
-            if output.emit_fail_banner() {
-                let _ = writeln!(stderr, "  TIMEOUT  {display}");
-            }
-            let _ = writeln!(
-                stderr,
-                "        test run exceeded {seconds} second timeout.\n  help: Fix an infinite loop or increase `--timeout`."
-            );
-            TestOutcome::TimedOut
-        }
-        VmRunResult::WorkerFailed => {
-            if output.emit_fail_banner() {
-                let _ = writeln!(stderr, "  FAIL  {display}");
-            }
-            let _ = writeln!(
-                stderr,
-                "        test worker failed unexpectedly.\n  help: Re-run under a debugger or report a compiler/runtime bug."
-            );
-            TestOutcome::RuntimeError
-        }
-        VmRunResult::Completed(VmExecution {
+fn classify_execution(
+    path: &Path,
+    source_paths: Option<&Vec<PathBuf>>,
+    display: &str,
+    output: RunOutput,
+    execution: VmExecution,
+    stderr: &mut dyn Write,
+) -> TestOutcome {
+    match execution {
+        VmExecution {
             result: Ok(()),
             ref stdout_lines,
             ref headless_frame,
             skipped,
-        }) => {
+        } => {
             if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
                 if let Err(message) = expect_stdout::compare_stdout(path, stdout_lines) {
-                    if output.emit_fail_banner() {
-                        let _ = writeln!(stderr, "  FAIL  {display}");
-                    }
-                    let _ = writeln!(stderr, "        {message}");
+                    render_assertion_error(stderr, display, output, &message);
                     return TestOutcome::AssertFailed;
                 }
                 if let Some(frame) = headless_frame.as_ref()
                     && let Err(message) = expect_pixels::compare_pixels(path, frame)
                 {
-                    if output.emit_fail_banner() {
-                        let _ = writeln!(stderr, "  FAIL  {display}");
-                    }
-                    let _ = writeln!(stderr, "        {message}");
+                    render_assertion_error(stderr, display, output, &message);
                     return TestOutcome::AssertFailed;
                 }
             }
@@ -216,21 +268,22 @@ pub(super) fn run_test_program(
             }
             TestOutcome::Pass
         }
-        VmRunResult::Completed(VmExecution {
+        VmExecution {
             result: Err(diagnostic),
             stdout_lines: _,
             headless_frame: _,
             skipped: _,
-        }) => {
+        } => {
             if output.emit_fail_banner() {
                 let _ = writeln!(stderr, "  FAIL  {display}");
             }
+            let path_text = path.to_string_lossy();
             let _ = writeln!(
                 stderr,
                 "        {}",
                 render_cli_diagnostic_with_sources(
                     path_text.as_ref(),
-                    source_paths.as_deref().map(Vec::as_slice),
+                    source_paths.map(Vec::as_slice),
                     &diagnostic,
                 )
                 .replace('\n', "\n        ")
@@ -242,6 +295,13 @@ pub(super) fn run_test_program(
             }
         }
     }
+}
+
+fn render_assertion_error(stderr: &mut dyn Write, display: &str, output: RunOutput, message: &str) {
+    if output.emit_fail_banner() {
+        let _ = writeln!(stderr, "  FAIL  {display}");
+    }
+    let _ = writeln!(stderr, "        {message}");
 }
 
 fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {

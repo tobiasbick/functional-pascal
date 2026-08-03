@@ -10,10 +10,10 @@ mod hooks;
 mod image;
 mod link;
 mod parallel;
+mod process;
 mod report;
 mod run;
 mod runner;
-mod timeout;
 
 #[cfg(test)]
 mod tests;
@@ -28,6 +28,11 @@ use std::path::Path;
 use std::sync::Arc;
 
 use parallel::effective_job_count;
+
+/// Runs the private test-process protocol before normal CLI parsing.
+pub(crate) fn run_process_worker(args: &[String]) -> Option<i32> {
+    process::run_worker_from_args(args)
+}
 
 /// Runs discovered tests and prints a pass/fail summary.
 pub(crate) fn test_cli(
@@ -73,7 +78,14 @@ pub(crate) fn test_cli(
     // progress and summaries stay on stderr.
     if config.list_only {
         for path in &paths {
-            let _ = writeln!(stdout, "{}", path.display());
+            if let Err(exit_code) = crate::cli_output::write_stdout(
+                stdout,
+                stderr,
+                "test file list to stdout",
+                |stdout| writeln!(stdout, "{}", path.display()),
+            ) {
+                return exit_code;
+            }
         }
         return 0;
     }

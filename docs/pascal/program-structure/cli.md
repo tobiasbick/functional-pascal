@@ -29,7 +29,7 @@ type-checks, runs programs, and executes test bundles.
   - Other extensions — error.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
-- `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr.
+- `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Timed tests run in a terminable process tree, so blocking VM or host calls cannot extend the requested runtime indefinitely.
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
   unit sources. `--check` reports formatting drift without changing files;
@@ -102,11 +102,13 @@ artifact reuse is silent.
 The compiler validates content hashes, compiler and bytecode compatibility, compilation options,
 and direct dependency interface hashes rather than relying on timestamps. Invalid derived files
 are rebuilt from their `.fpas` source. Plain standalone `.fpas` programs and directory checks do
-not create compiled-unit sidecars.
+not create compiled-unit sidecars. A directory check may reuse compatible sidecars that already
+exist, but newly compiled units remain in memory.
 
-For a source standard-library override, matching sidecars are read and rebuilt beside the sources
-selected by `--std-lib`. A read-only directory must already contain compatible sidecars for every
-unit that the command needs.
+For project- and workspace-aware commands, a source standard-library override reads and rebuilds
+matching sidecars beside the sources selected by `--std-lib`. Plain source and directory checks
+keep newly compiled standard-library units in memory as well. Other commands need compatible
+sidecars already present when the selected standard-library directory is read-only.
 
 ## Running programs
 
@@ -140,7 +142,12 @@ fpas check suite.fpasworkspace
 fpas check
 ```
 
-With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first, otherwise a single `.fpasprj`. Library projects type-check here the same as program projects. When given a directory, every `.fpas` file under that tree is type-checked as a standalone source file (the same rules as `fpas fmt` for discovery).
+With no path, `fpas check` discovers a single `.fpasworkspace` in the current directory first,
+otherwise a single `.fpasprj`. Library projects type-check here the same as program projects. When
+given a directory, all `.fpas` files under that tree form one source set: units are checked
+together, and every program is checked against those sibling units. Directory discovery is
+deterministic, skips `target` directories and symbolic links, and aborts with the affected path when a
+directory entry cannot be read. `fpas fmt` and `fpas test` use the same traversal policy.
 
 ## Formatting project sources
 

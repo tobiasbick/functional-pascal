@@ -85,6 +85,37 @@ pub fn build_library_units(
     selection: &ResolvedUnitGraph,
     options: &BuildOptions,
 ) -> Result<BuiltUnits, BuildError> {
+    compile_library_units(graph, selection, options, SidecarPublication::Enabled)
+}
+
+/// Compile every selected unit without publishing source-adjacent sidecars.
+///
+/// Existing compatible sidecars may still be reused. Newly compiled units remain in memory,
+/// making this path suitable for read-only validation commands.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a selected unit cannot be read, compiled, or decoded.
+pub fn check_library_units(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+) -> Result<BuiltUnits, BuildError> {
+    compile_library_units(graph, selection, options, SidecarPublication::Disabled)
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SidecarPublication {
+    Enabled,
+    Disabled,
+}
+
+fn compile_library_units(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+    sidecar_publication: SidecarPublication,
+) -> Result<BuiltUnits, BuildError> {
     let mut interfaces = InterfaceRegistry::default();
     let mut objects = Vec::with_capacity(selection.len());
     let mut linked_units = Vec::with_capacity(selection.len());
@@ -165,13 +196,15 @@ pub fn build_library_units(
                     interface: interface_bytes,
                     object: object_bytes,
                 };
-                source.ensure_current(node)?;
-                write_sidecar(node.path(), &sidecar).map_err(|error| {
-                    BuildError::new(format!(
-                        "cannot publish compiled unit beside `{}`: {error}",
-                        node.path().display()
-                    ))
-                })?;
+                if sidecar_publication == SidecarPublication::Enabled {
+                    source.ensure_current(node)?;
+                    write_sidecar(node.path(), &sidecar).map_err(|error| {
+                        BuildError::new(format!(
+                            "cannot publish compiled unit beside `{}`: {error}",
+                            node.path().display()
+                        ))
+                    })?;
+                }
                 (
                     compiled.interface,
                     compiled.object,
@@ -201,6 +234,23 @@ pub fn build_program(
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
     let units = build_library_units(graph, selection, options)?;
+    link_program(units, program)
+}
+
+/// Compile and link a program without publishing newly compiled unit sidecars.
+///
+/// This validates the complete program graph while leaving its source tree unchanged.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a selected unit or the root program cannot be compiled or linked.
+pub fn check_program(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    program: &Program,
+    options: &BuildOptions,
+) -> Result<BuiltProgram, BuildError> {
+    let units = check_library_units(graph, selection, options)?;
     link_program(units, program)
 }
 

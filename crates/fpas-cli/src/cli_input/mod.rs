@@ -5,10 +5,10 @@
 mod discovery;
 mod help;
 mod mode;
+mod options;
 mod types;
 
 use std::path::Path;
-use std::time::Duration;
 
 pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
@@ -20,6 +20,7 @@ pub(crate) use types::{
 use mode::{
     CliMode, parse_cli_mode, program_args_require_run_error, split_program_args, usage_error,
 };
+use options::parse_options;
 
 use discovery::{discover_input, resolve_explicit_input};
 
@@ -73,181 +74,17 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         ));
     }
 
-    let mut check_only = false;
-    let mut stdout_mode = false;
-    let mut list_changed = false;
-    let mut fail_fast = false;
-    let mut strict = false;
-    let mut list_only = false;
-    let mut script_path = None::<std::path::PathBuf>;
-    let mut filter = None::<String>;
-    let mut report = None::<TestReportFormat>;
-    let mut timeout = None::<Duration>;
-    let mut jobs = None::<usize>;
-    let mut standard_library = None::<std::path::PathBuf>;
-    let mut executable = false;
-    let mut application_name = None::<String>;
-    let mut positional = Vec::new();
-    let mut index = 0;
-    while index < cli_args.len() {
-        match cli_args[index].as_str() {
-            "--std-lib"
-                if matches!(
-                    mode,
-                    CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Test
-                ) =>
-            {
-                index += 1;
-                let Some(path) = cli_args.get(index) else {
-                    let example = match mode {
-                        CliMode::Build => "fpas build --std-lib ./lib my-app.fpasprj",
-                        CliMode::Run => "fpas run --std-lib ./lib hello.fpas",
-                        CliMode::Check => "fpas check --std-lib ./lib my-app.fpasprj",
-                        CliMode::Test => "fpas test --std-lib ./lib tests/",
-                        CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
-                    };
-                    return Err(format!(
-                        "Missing directory after `--std-lib`.\n  help: `{example}`."
-                    ));
-                };
-                if standard_library
-                    .replace(std::path::PathBuf::from(path))
-                    .is_some()
-                {
-                    return Err("Duplicate `--std-lib` option.".to_string());
-                }
-            }
-            "--executable" if mode == CliMode::Build => {
-                if executable {
-                    return Err("Duplicate `--executable` option.".to_string());
-                }
-                executable = true;
-            }
-            "--name" if mode == CliMode::Build => {
-                index += 1;
-                let Some(name) = cli_args.get(index) else {
-                    return Err(
-                        "Missing application name after `--name`.\n  help: `fpas build --executable --name hello hello.fpasprj`."
-                            .to_string(),
-                    );
-                };
-                if application_name.replace(name.clone()).is_some() {
-                    return Err("Duplicate `--name` option.".to_string());
-                }
-            }
-            "--check" if mode == CliMode::Fmt => check_only = true,
-            "--stdout" if mode == CliMode::Fmt => {
-                if stdout_mode {
-                    return Err("Duplicate `--stdout` option.".to_string());
-                }
-                stdout_mode = true;
-            }
-            "--list" if mode == CliMode::Fmt => {
-                if list_changed {
-                    return Err("Duplicate `--list` option.".to_string());
-                }
-                list_changed = true;
-            }
-            "--fail-fast" if mode == CliMode::Test => fail_fast = true,
-            "--strict" if mode == CliMode::Test => strict = true,
-            "--list" if mode == CliMode::Test => list_only = true,
-            "--script" if mode == CliMode::Test => {
-                index += 1;
-                let Some(path) = cli_args.get(index) else {
-                    return Err(
-                        "Missing path after `--script`.\n  help: `fpas test --script menu.script.toml`."
-                            .to_string(),
-                    );
-                };
-                if script_path
-                    .replace(std::path::PathBuf::from(path))
-                    .is_some()
-                {
-                    return Err("Duplicate `--script` option.".to_string());
-                }
-            }
-            "--filter" if mode == CliMode::Test => {
-                index += 1;
-                let Some(pattern) = cli_args.get(index) else {
-                    return Err(
-                        "Missing pattern after `--filter`.\n  help: `fpas test --filter menu`."
-                            .to_string(),
-                    );
-                };
-                if filter.replace(pattern.clone()).is_some() {
-                    return Err("Duplicate `--filter` option.".to_string());
-                }
-            }
-            "--report" if mode == CliMode::Test => {
-                index += 1;
-                let Some(format) = cli_args.get(index) else {
-                    return Err(
-                        "Missing format after `--report`.\n  help: `fpas test --report json`."
-                            .to_string(),
-                    );
-                };
-                if format != "json" {
-                    return Err(format!(
-                        "Unsupported report format `{format}`.\n  help: Only `--report json` is supported."
-                    ));
-                }
-                if report.replace(TestReportFormat::Json).is_some() {
-                    return Err("Duplicate `--report` option.".to_string());
-                }
-            }
-            "--timeout" if mode == CliMode::Test => {
-                index += 1;
-                let Some(secs) = cli_args.get(index) else {
-                    return Err(
-                        "Missing seconds after `--timeout`.\n  help: `fpas test --timeout 30`."
-                            .to_string(),
-                    );
-                };
-                let secs: u64 = secs.parse().map_err(|_| {
-                    format!(
-                        "Invalid `--timeout` value `{secs}`.\n  help: Pass a positive integer number of seconds."
-                    )
-                })?;
-                if secs == 0 {
-                    return Err(
-                        "`--timeout` must be at least 1 second.\n  help: `fpas test --timeout 30`."
-                            .to_string(),
-                    );
-                }
-                if timeout.replace(Duration::from_secs(secs)).is_some() {
-                    return Err("Duplicate `--timeout` option.".to_string());
-                }
-            }
-            "--jobs" if mode == CliMode::Test => {
-                index += 1;
-                let Some(count) = cli_args.get(index) else {
-                    return Err(
-                        "Missing count after `--jobs`.\n  help: `fpas test --jobs 4` or `fpas test --jobs 0` for machine parallelism."
-                            .to_string(),
-                    );
-                };
-                let count: usize = count.parse().map_err(|_| {
-                    format!(
-                        "Invalid `--jobs` value `{count}`.\n  help: Pass a non-negative integer (`0` uses available parallelism)."
-                    )
-                })?;
-                if jobs.replace(count).is_some() {
-                    return Err("Duplicate `--jobs` option.".to_string());
-                }
-            }
-            _ => positional.push(cli_args[index].clone()),
-        }
-        index += 1;
-    }
+    let options = parse_options(mode, cli_args)?;
+    let positional = options.positional;
 
     if mode == CliMode::Fmt {
-        if stdout_mode && check_only {
+        if options.stdout_mode && options.check_only {
             return Err(
                 "`fpas fmt --stdout` cannot be combined with `--check`.\n  help: Use `--stdout` to print formatted output, or `--check` to verify on disk."
                     .to_string(),
             );
         }
-        if list_changed && !check_only {
+        if options.list_changed && !options.check_only {
             return Err(
                 "`fpas fmt --list` requires `--check`.\n  help: `fpas fmt --check --list <path>...` prints paths that would change."
                     .to_string(),
@@ -275,9 +112,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         return Ok(ResolvedCli::Fmt(FmtCliConfig {
             explicit_args: positional,
             cwd: cwd.to_path_buf(),
-            check_only,
-            stdout: stdout_mode,
-            list_changed,
+            check_only: options.check_only,
+            stdout: options.stdout_mode,
+            list_changed: options.list_changed,
         }));
     }
 
@@ -321,7 +158,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
         None => discover_input(cwd, mode),
     }?;
 
-    if mode == CliMode::Build && application_name.is_some() && !executable {
+    if mode == CliMode::Build && options.application_name.is_some() && !options.executable {
         return Err(
             "`--name` requires `--executable`.\n  help: `fpas build --executable --name hello hello.fpasprj`."
                 .to_string(),
@@ -331,33 +168,33 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     Ok(match mode {
         CliMode::Build => ResolvedCli::Build(BuildCliConfig {
             input,
-            standard_library,
-            executable,
-            name: application_name,
+            standard_library: options.standard_library,
+            executable: options.executable,
+            name: options.application_name,
         }),
         CliMode::Run => ResolvedCli::Run(CliConfig {
             input,
             program_args,
-            standard_library,
+            standard_library: options.standard_library,
         }),
         CliMode::Check => ResolvedCli::Check(CliConfig {
             input,
             program_args,
-            standard_library,
+            standard_library: options.standard_library,
         }),
         CliMode::Fmt => unreachable!("fmt mode handled above"),
         CliMode::Test => ResolvedCli::Test(TestCliConfig {
             input,
             cwd: cwd.to_path_buf(),
-            fail_fast,
-            list_only,
-            script_path,
-            filter,
-            report,
-            timeout,
-            jobs: jobs.unwrap_or(1),
-            strict,
-            standard_library,
+            fail_fast: options.fail_fast,
+            list_only: options.list_only,
+            script_path: options.script_path,
+            filter: options.filter,
+            report: options.report,
+            timeout: options.timeout,
+            jobs: options.jobs.unwrap_or(1),
+            strict: options.strict,
+            standard_library: options.standard_library,
         }),
     })
 }

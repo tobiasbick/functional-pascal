@@ -1,6 +1,6 @@
 use crate::cli_input::TestCliConfig;
 use crate::cli_test::test_cli;
-use crate::test_support::{create_temp_dir, write_text};
+use crate::test_support::{FailingWriter, create_temp_dir, write_text};
 
 #[test]
 fn test_cli_runs_matching_tests_in_directory() {
@@ -76,6 +76,43 @@ fn test_cli_list_only_prints_paths_without_running() {
     let progress = String::from_utf8(stderr).expect("utf-8");
     assert!(!progress.contains("FAIL"));
     assert!(!progress.contains("one_test.fpas"));
+}
+
+#[test]
+fn test_cli_list_only_fails_when_stdout_cannot_be_written() {
+    let cwd = create_temp_dir("fpas-test-list-write-failure");
+    write_text(
+        &cwd.join("one_test.fpas"),
+        "program O;\nuses Std.Test;\nbegin AssertTrue(true) end.",
+    );
+    for mut stdout in [FailingWriter::immediately(), FailingWriter::after(8)] {
+        let mut stderr = Vec::new();
+        let exit = test_cli(
+            TestCliConfig {
+                input: crate::CliInput::SourceFile(cwd.clone()),
+                cwd: cwd.clone(),
+                fail_fast: false,
+                list_only: true,
+                script_path: None,
+                filter: None,
+                report: None,
+                timeout: None,
+                jobs: 1,
+                strict: false,
+                standard_library: None,
+            },
+            &mut stdout,
+            &mut stderr,
+        );
+        let stderr = String::from_utf8(stderr).expect("stderr must be UTF-8");
+
+        assert_eq!(exit, 1);
+        assert!(
+            stderr.contains("Cannot write test file list to stdout"),
+            "unexpected stderr: {stderr}"
+        );
+    }
+    std::fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
 
 #[test]

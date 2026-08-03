@@ -26,12 +26,26 @@ pub(crate) fn run_cli(
 
     match resolved {
         ResolvedCli::Help(topic) => {
-            let _ = stdout.write_all(crate::cli_input::help_text(topic).as_bytes());
-            0
+            match crate::cli_output::write_stdout(
+                stdout.as_mut(),
+                stderr,
+                "help to stdout",
+                |stdout| stdout.write_all(crate::cli_input::help_text(topic).as_bytes()),
+            ) {
+                Ok(()) => 0,
+                Err(exit_code) => exit_code,
+            }
         }
         ResolvedCli::Version => {
-            let _ = writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION"));
-            0
+            match crate::cli_output::write_stdout(
+                stdout.as_mut(),
+                stderr,
+                "version to stdout",
+                |stdout| writeln!(stdout, "fpas {}", env!("CARGO_PKG_VERSION")),
+            ) {
+                Ok(()) => 0,
+                Err(exit_code) => exit_code,
+            }
         }
         ResolvedCli::Build(config) => {
             let library = match crate::standard_library::resolve_standard_library(

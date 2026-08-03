@@ -234,3 +234,88 @@ fn check_cli_validates_directory_of_sources() {
         "stderr should contain compile diagnostic: {stderr_output}"
     );
 }
+
+#[test]
+fn check_cli_validates_directory_program_with_sibling_unit_without_sidecars() {
+    let cwd = create_temp_dir("check-directory-shared-unit");
+    write_text(
+        &cwd.join("math.fpas"),
+        "unit Demo.Math;\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+    );
+    write_text(
+        &cwd.join("main.fpas"),
+        "program Main;\nuses Demo.Math;\nbegin\n  Answer()\nend.\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[String::from("check"), cwd.to_string_lossy().to_string()],
+        &cwd,
+    );
+    let sidecar_exists = cwd.join("math.fpascu").exists();
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+    assert!(
+        !sidecar_exists,
+        "directory checks must not publish sidecars"
+    );
+}
+
+#[test]
+fn check_cli_validates_directory_containing_only_units() {
+    let cwd = create_temp_dir("check-directory-units-only");
+    write_text(
+        &cwd.join("base.fpas"),
+        "unit Demo.Base;\npublic const Answer: integer := 42;\n",
+    );
+    write_text(
+        &cwd.join("derived.fpas"),
+        "unit Demo.Derived;\nuses Demo.Base;\npublic function Value(): integer;\nbegin\n  return Answer\nend;\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[String::from("check"), cwd.to_string_lossy().to_string()],
+        &cwd,
+    );
+    let sidecars_exist = cwd.join("base.fpascu").exists() || cwd.join("derived.fpascu").exists();
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+    assert!(
+        !sidecars_exist,
+        "directory checks must not publish sidecars"
+    );
+}
+
+#[test]
+fn check_cli_validates_multiple_programs_against_shared_units() {
+    let cwd = create_temp_dir("check-directory-multiple-programs");
+    write_text(
+        &cwd.join("shared.fpas"),
+        "unit Demo.Shared;\npublic function Value(): integer;\nbegin\n  return 7\nend;\n",
+    );
+    write_text(
+        &cwd.join("first.fpas"),
+        "program First;\nuses Demo.Shared;\nbegin\n  Value()\nend.\n",
+    );
+    write_text(
+        &cwd.join("second.fpas"),
+        "program Second;\nuses Demo.Shared;\nbegin\n  Value()\nend.\n",
+    );
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[String::from("check"), cwd.to_string_lossy().to_string()],
+        &cwd,
+    );
+    let sidecar_exists = cwd.join("shared.fpascu").exists();
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 0, "stderr: {stderr_output}");
+    assert!(stderr_output.is_empty());
+    assert!(
+        !sidecar_exists,
+        "directory checks must not publish sidecars"
+    );
+}

@@ -20,9 +20,16 @@ pub(super) fn finish_test_run(
     stderr: &mut dyn Write,
 ) -> i32 {
     if config.report == Some(TestReportFormat::Json) {
-        let _ = print_json_report(stdout, summary);
-    } else {
-        let _ = print_summary(stderr, summary);
+        if let Err(exit_code) = crate::cli_output::write_stdout(
+            stdout,
+            stderr,
+            "JSON test report to stdout",
+            |stdout| print_json_report(stdout, summary),
+        ) {
+            return exit_code;
+        }
+    } else if let Err(error) = print_summary(stderr, summary) {
+        return crate::cli_output::report_write_error(stderr, "test summary to stderr", &error);
     }
     summary.exit_code(config.strict)
 }

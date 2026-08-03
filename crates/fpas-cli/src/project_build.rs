@@ -86,17 +86,7 @@ pub(crate) fn build_test_program(
     standard_library: Option<&StandardLibrary>,
 ) -> Result<ProjectProgram, String> {
     let (_, program) = parse_program(main)?;
-    let graph = standard_library.map_or_else(
-        || fpas_project::build_unit_graph_for_program(main, source_files, link_meta),
-        |library| {
-            fpas_project::build_unit_graph_for_program_with_standard_library(
-                main,
-                source_files,
-                link_meta,
-                library,
-            )
-        },
-    )?;
+    let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
     let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
     let built = fpas_build::build_program(
         &graph,
@@ -109,6 +99,45 @@ pub(crate) fn build_test_program(
         chunk: built.chunk,
         source_paths: graph.source_paths().to_vec(),
     })
+}
+
+/// Checks a standalone program against sibling source units without publishing sidecars.
+pub(crate) fn check_source_program(
+    main: &Path,
+    source_files: &[PathBuf],
+    link_meta: &fpas_project::ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> Result<(), String> {
+    let (_, program) = parse_program(main)?;
+    let graph = test_program_graph(main, source_files, link_meta, standard_library)?;
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    fpas_build::check_program(
+        &graph,
+        &selection,
+        &program,
+        &fpas_build::BuildOptions::default(),
+    )
+    .map(|_| ())
+    .map_err(|error| format!("Cannot check source program `{}`: {error}", main.display()))
+}
+
+fn test_program_graph(
+    main: &Path,
+    source_files: &[PathBuf],
+    link_meta: &fpas_project::ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> Result<UnitGraph, String> {
+    standard_library.map_or_else(
+        || fpas_project::build_unit_graph_for_program(main, source_files, link_meta),
+        |library| {
+            fpas_project::build_unit_graph_for_program_with_standard_library(
+                main,
+                source_files,
+                link_meta,
+                library,
+            )
+        },
+    )
 }
 
 pub(crate) fn check_library(
@@ -172,6 +201,24 @@ pub(crate) fn check_units(
     fpas_build::build_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
         .map(|_| ())
         .map_err(|error| format!("Cannot build source units: {error}"))
+}
+
+/// Checks standalone source units without publishing sidecars.
+pub(crate) fn check_source_units(
+    source_files: &[PathBuf],
+    link_meta: &fpas_project::ProjectLinkMeta,
+    standard_library: Option<&StandardLibrary>,
+) -> Result<(), String> {
+    let graph = standard_library.map_or_else(
+        || fpas_project::build_unit_graph(source_files, link_meta),
+        |library| {
+            fpas_project::build_unit_graph_with_standard_library(source_files, link_meta, library)
+        },
+    )?;
+    let selection = fpas_project::resolve_library_units(&graph)?;
+    fpas_build::check_library_units(&graph, &selection, &fpas_build::BuildOptions::default())
+        .map(|_| ())
+        .map_err(|error| format!("Cannot check source units: {error}"))
 }
 
 fn program_graph(

@@ -4,7 +4,7 @@
 
 mod hook_exec;
 mod load;
-mod program;
+pub(in crate::cli_test) mod program;
 
 use std::io::Write;
 use std::path::{Path, PathBuf};

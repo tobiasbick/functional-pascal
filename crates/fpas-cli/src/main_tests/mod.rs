@@ -13,6 +13,7 @@ mod diagnostics;
 mod examples;
 mod fmt;
 mod input;
+mod output;
 mod projects;
 mod standard_library;
 #[path = "../../stdlib_sync.rs"]

@@ -1,18 +1,31 @@
 # `fpas-cli` review follow-up
 
 Classification: CLI and project tooling. Preserve current FPAS discovery and automation contracts unless the matching docs change.
-Status: all findings open.
+Status: all findings completed 2026-08-03.
 
 | ID | Priority | Evidence | Finding and impact | Implementation direction | Required regression |
 | --- | --- | --- | --- | --- | --- |
-| CLI-01 | P1 | `crates/fpas-cli/src/cli_test/timeout.rs:45` | After a timeout and grace period, the CLI always calls blocking `join()`. A VM thread stuck in a non-cooperative operation makes `fpas test --timeout` hang forever. | Isolate timed tests in a terminable process, or otherwise provide a lifecycle that never blocks beyond the timeout contract. Do not detach a thread that can retain process resources without an explicit design. | A non-cooperative test must produce bounded failure and cleanup. |
-| CLI-02 | P2 | `crates/fpas-cli/src/cli_check.rs:54,68`, `src/project_build.rs:84` | `fpas check <dir>` builds every `.fpas` file as an independent program. Pure Units and programs importing sibling Units fail despite a valid combined source set. | Classify the directory once, construct a shared unit graph, and check program roots against it. | Directory with a program plus sibling Unit, a pure Unit set, and multiple related sources. |
-| CLI-03 | P2 | `crates/fpas-cli/src/cli_paths.rs:49`, `src/cli_test/discover.rs:74` | Recursive discovery silently drops `read_dir` and entry errors, so check/fmt/test can skip subtrees and still succeed. | Replace duplicate walkers with one fallible traversal that reports the exact path and aborts. | Unreadable directory and failing entry cases for check, fmt, and test. |
-| CLI-04 | P2 | `crates/fpas-cli/src/cli_input/mod.rs:93,154` | Value-taking flags consume the following option token as their value, producing misleading later errors. | Centralize value consumption and reject EOF or a known option token as a missing value. | Every value-taking option followed by another flag, including `--std-lib --help` and `--script --fail-fast`. |
-| CLI-05 | P2 | `crates/fpas-cli/src/cli_test/runner.rs:16` | JSON report and summary write errors are discarded; a missing/truncated contracted report can still exit zero. | Propagate output failures and return nonzero with best-effort stderr diagnostics. | Inject a writer failure for JSON, summary, list, and help output as applicable. |
+| CLI-01 | P1 | Done | Timed VM runs now use a private `fpas` worker with a Ready/Start handshake, bounded file protocol, process-tree termination, reaping, and scratch cleanup. | Blocking `Std.Time.Sleep`, a long-lived `Std.Proc` descendant, timeout classification, and cleanup are covered by integration tests. |
+| CLI-02 | P2 | Done | Directory checks classify one shared source set, check Units in memory without publishing `.fpascu`, and validate every Program against the sibling Unit graph. | Pure Units, Program plus Unit, multiple Programs, and absence of new sidecars are covered. |
+| CLI-03 | P2 | Done | Check, Fmt, and Test share one fallible deterministic walker. It skips `target` directories and symbolic links and reports `read_dir`, entry, and file-type failures with their path. | Injected traversal failures and sorted/non-following behavior are covered. |
+| CLI-04 | P2 | Done | Option parsing moved to `cli_input/options.rs`; one value helper rejects EOF and known option tokens for all seven value-taking flags without banning other hyphen-leading values. | Table-driven option-boundary tests and a hyphen-leading filter regression are covered. |
+| CLI-05 | P2 | Done | Contracted stdout and summary writes now return nonzero on failure with best-effort diagnostics through `cli_output.rs`. | Immediate and partial failures cover Help, Version, Fmt output/list, test list, JSON, and summary output. |
 
 ## Implementation notes
 
-CLI-03 and CLI-04 are concrete simplification opportunities: one fallible path walker and one option-value helper remove duplicated error-prone policy. Update focused command help and automation contracts when observable exit/output behavior changes.
+The implementation preserves FPAS syntax and semantics. Observable CLI behavior is documented in
+`docs/pascal/program-structure/cli.md` and timeout lifecycle behavior in
+`docs/pascal/std/testing/test.md`.
 
-Targeted verification should include crate tests plus relevant `fpas test tests/` or runner-suite coverage. Then run the shared workspace verification from the index.
+Verification:
+
+- `cargo fmt --all -- --check`
+- `cargo build --workspace`
+- `cargo clippy -p fpas-cli -p fpas-build --all-targets -- -D warnings`
+- `cargo test -p fpas-build --lib`
+- `cargo test -p fpas-cli -- --test-threads=1` — 393 unit, 2 native-executable, and 2 timeout integration tests passed
+- `cargo test --workspace -- --test-threads=1`
+
+The CLI crate is run serially because its integration fixtures intentionally replace the shared
+`target/debug/lib` standard-library copy; parallel unit-test threads can otherwise race on that
+fixture rather than exercising product behavior.

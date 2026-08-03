@@ -1,6 +1,46 @@
 use std::fs;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
+
+/// Writer that fails after accepting a configured number of bytes.
+pub(crate) struct FailingWriter {
+    bytes_before_failure: usize,
+}
+
+impl FailingWriter {
+    /// Creates a writer that fails on its first write.
+    pub(crate) const fn immediately() -> Self {
+        Self {
+            bytes_before_failure: 0,
+        }
+    }
+
+    /// Creates a writer that first accepts `bytes` bytes, then fails.
+    pub(crate) const fn after(bytes: usize) -> Self {
+        Self {
+            bytes_before_failure: bytes,
+        }
+    }
+}
+
+impl Write for FailingWriter {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        if self.bytes_before_failure == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "injected write failure",
+            ));
+        }
+        let written = buffer.len().min(self.bytes_before_failure);
+        self.bytes_before_failure -= written;
+        Ok(written)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
+}
 
 /// Creates a unique test directory below the platform temporary directory.
 pub(crate) fn create_temp_dir(prefix: &str) -> PathBuf {

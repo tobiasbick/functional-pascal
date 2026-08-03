@@ -2,11 +2,10 @@
 //!
 //! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::CliInput;
-use crate::cli_paths::normalize_path;
+use crate::cli_paths::{collect_files_in_dir, normalize_path};
 use fpas_project as project;
 
 /// Returns sorted paths to `*_test.fpas` files for the CLI input.
@@ -25,7 +24,7 @@ pub(super) fn discover_test_files(input: &CliInput, cwd: &Path) -> Result<Vec<Pa
 fn discover_from_path(path: &Path, cwd: &Path) -> Result<Vec<PathBuf>, String> {
     let resolved = normalize_path(path, cwd);
     if resolved.is_dir() {
-        return Ok(collect_test_files_recursive(&resolved));
+        return collect_files_in_dir(&resolved, project::is_test_source_file);
     }
 
     if project::is_test_source_file(&resolved) {
@@ -62,35 +61,6 @@ fn filter_test_files(source_files: Vec<PathBuf>) -> Vec<PathBuf> {
         .collect();
     paths.sort();
     paths
-}
-
-fn collect_test_files_recursive(dir: &Path) -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-    collect_test_files_recursive_inner(dir, &mut paths);
-    paths.sort();
-    paths
-}
-
-fn collect_test_files_recursive_inner(dir: &Path, out: &mut Vec<PathBuf>) {
-    let read_dir = match fs::read_dir(dir) {
-        Ok(read_dir) => read_dir,
-        Err(_) => return,
-    };
-
-    for entry in read_dir.flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            if path
-                .file_name()
-                .is_some_and(|name| name.eq_ignore_ascii_case("target"))
-            {
-                continue;
-            }
-            collect_test_files_recursive_inner(&path, out);
-        } else if project::is_test_source_file(&path) {
-            out.push(path);
-        }
-    }
 }
 
 /// Keeps paths whose file name or full path contains `pattern` (case-insensitive).

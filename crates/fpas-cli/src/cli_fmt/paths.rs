@@ -97,7 +97,10 @@ fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<
 
     let path = normalize_input_path(arg, cwd);
     if path.is_dir() {
-        let files = collect_fpas_files_in_dir(&path);
+        let files = collect_fpas_files_in_dir(&path).map_err(|message| {
+            let _ = writeln!(stderr, "{message}");
+            1
+        })?;
         if files.is_empty() {
             let _ = writeln!(stderr, "No `.fpas` files found under `{}`.", path.display());
             return Err(1);

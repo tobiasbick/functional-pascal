@@ -94,11 +94,15 @@ fn format_source_file(
     let changed = normalize_newlines(&source) != formatted;
 
     if config.list_changed && config.check_only && changed {
-        let _ = writeln!(stdout, "{}", path.display());
+        crate::cli_output::write_stdout(stdout, stderr, "changed file list to stdout", |stdout| {
+            writeln!(stdout, "{}", path.display())
+        })?;
     }
 
     if config.stdout {
-        let _ = write!(stdout, "{formatted}");
+        crate::cli_output::write_stdout(stdout, stderr, "formatted source to stdout", |stdout| {
+            write!(stdout, "{formatted}")
+        })?;
         return Ok(changed);
     }
 

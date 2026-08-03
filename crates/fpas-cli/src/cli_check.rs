@@ -12,6 +12,8 @@ use crate::cli_run::render_cli_diagnostic_with_sources;
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
 
+mod directory;
+
 /// Checks sources from CLI-resolved input without execution.
 pub(crate) fn check_cli(
     config: CliConfig,
@@ -41,7 +43,13 @@ fn check_source_directory(
     standard_library: Option<&project::StandardLibrary>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let files = collect_fpas_files_in_dir(dir);
+    let files = match collect_fpas_files_in_dir(dir) {
+        Ok(files) => files,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            return 1;
+        }
+    };
     if files.is_empty() {
         let _ = writeln!(
             stderr,
@@ -51,13 +59,7 @@ fn check_source_directory(
         return 1;
     }
 
-    let mut exit_code = 0;
-    for path in files {
-        if check_source_file(&path, standard_library, stderr) != 0 {
-            exit_code = 1;
-        }
-    }
-    exit_code
+    directory::check_source_set(&files, standard_library, stderr)
 }
 
 fn check_source_file(
@@ -216,7 +218,7 @@ fn check_parsed_program(
     }
 }
 
-fn emit_check_diagnostic(
+pub(super) fn emit_check_diagnostic(
     path: &str,
     source_paths: Option<&[PathBuf]>,
     diagnostic: &fpas_diagnostics::Diagnostic,

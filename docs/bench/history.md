@@ -14,6 +14,25 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-03 — after TUI surface bulk fills
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5292 | throughput: 9448223 iters/s |
+| array_push | 144 | throughput: 13888888 pushes/s |
+| array_length | 61 | throughput: 8196721 lengths/s |
+| string_concat | 2156 | throughput: 2319109 concats/s |
+| string_length | 52 | throughput: 9615384 lengths/s |
+| function_call | 798 | throughput: 7518796 calls/s |
+| array_callbacks | 897 | throughput: 10702341 callbacks/s |
+| record_update | 515 | throughput: 1941747 updates/s |
+| unicode_char_at | 953 | throughput: 3147953 chars/s |
+| task_spawn_wait | 622 | throughput: 160771 tasks/s |
+| tui_headless | 4274 | throughput: 116 frames/s |
+
 ## 2026-08-03 — after completed Rust crate review fixes
 
 - Group: `all`

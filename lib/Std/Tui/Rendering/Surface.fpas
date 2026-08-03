@@ -2,7 +2,7 @@ unit Std.Tui.Rendering.Surface;
 
 uses
   Std.Array, Std.Option, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.Color, Std.Tui.Cells.Style,
-  Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size;
+  Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size;
 
 mutable var
   TuiSurfaceSizes: array of TuiSize := [];
@@ -315,6 +315,38 @@ public type
       return record Width := Size.Width; Height := Size.Height; Cells := Cells; end
     end;
   end;
+
+/// Fills one clipped surface rectangle with a one-column cell.
+
+public procedure TuiSurfaceFillRect(Surface: TuiWorkingSurface; Bounds: TuiRect; Cell: TuiCell);
+begin
+  if Cell.Width() <> 1 then
+  begin
+    panic('Tui surface FillRect requires a one-column cell')
+  end;
+  var Slot: integer := TuiSurfaceRequire(Surface.Slot);
+  var Size: TuiSize := TuiSurfaceSizes[Slot - 1];
+  var Visible: TuiRect := Bounds.Intersect(TuiRect.Create(0, 0, Size.Width, Size.Height));
+  var RowOffset: integer := TuiSurfaceRowOffsets[Slot - 1];
+  if (Visible.X = 0) and (Visible.Width = Size.Width) then
+  begin
+    var FilledRow: array of TuiCell := Std.Array.Fill(Cell, Size.Width);
+    var FilledContinuations: array of boolean := Std.Array.Fill(false, Size.Width);
+    for Y: integer := Visible.Y to Visible.Bottom() - 1 do
+    begin
+      TuiSurfaceCells[RowOffset + Y] := FilledRow;
+      TuiSurfaceContinuations[RowOffset + Y] := FilledContinuations
+    end;
+    return
+  end;
+  for Y: integer := Visible.Y to Visible.Bottom() - 1 do
+  begin
+    for X: integer := Visible.X to Visible.Right() - 1 do
+    begin
+      TuiSurfacePutCellAt(RowOffset, Size, X, Y, Cell)
+    end
+  end
+end;
 
 /// Returns changed terminal-cell runs and commits the current surface as the presented baseline.
 

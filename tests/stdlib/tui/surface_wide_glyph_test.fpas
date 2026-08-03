@@ -30,5 +30,24 @@ begin
   AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(3, 0))).Glyph);
   Surface.PutCell(TuiPoint.Create(2, 1), TuiCell.Create('é', TuiStyleRole.Normal));
   AssertEquals(1, Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 1))).Width());
-  AssertEquals('é', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 1))).Glyph)
+  AssertEquals('é', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(2, 1))).Glyph);
+  var FillSurface: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(5, 1));
+  var FillCanvas: TuiCanvas := TuiCanvas.Create(FillSurface, TuiRect.Create(0, 0, 5, 1));
+  FillSurface.PutCell(TuiPoint.Create(1, 0), Wide);
+  FillCanvas.FillRect(TuiRect.Create(2, 0, 2, 1), TuiCell.Create('#', TuiStyleRole.Accent));
+  AssertEquals(' ', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(1, 0))).Glyph);
+  AssertEquals('#', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(2, 0))).Glyph);
+  AssertEquals('#', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(3, 0))).Glyph);
+  FillSurface.PutCell(TuiPoint.Create(3, 0), Wide);
+  FillCanvas.FillRect(TuiRect.Create(2, 0, 2, 1), TuiCell.Create('@', TuiStyleRole.Title));
+  AssertEquals('@', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(2, 0))).Glyph);
+  AssertEquals('@', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(3, 0))).Glyph);
+  AssertEquals(' ', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(4, 0))).Glyph);
+  FillSurface.PutCell(TuiPoint.Create(1, 0), Wide);
+  FillCanvas.FillRect(TuiRect.Create(0, 0, 5, 1), TuiCell.Create('*', TuiStyleRole.Accent));
+  AssertEquals('*', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
+  AssertEquals('*', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(1, 0))).Glyph);
+  AssertEquals('*', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(2, 0))).Glyph);
+  AssertEquals('*', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(3, 0))).Glyph);
+  AssertEquals('*', Std.Option.Unwrap(FillSurface.TryCellAt(TuiPoint.Create(4, 0))).Glyph)
 end.

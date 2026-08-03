@@ -75,13 +75,8 @@ public type
         panic('Tui canvas FillRect requires a one-column cell')
       end;
       var Visible: TuiRect := Bounds.Intersect(Self.Clip);
-      for Y: integer := Visible.Y to Visible.Bottom() - 1 do
-      begin
-        for X: integer := Visible.X to Visible.Right() - 1 do
-        begin
-          Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + X, Self.Origin.Y + Y), Cell)
-        end
-      end
+      TuiSurfaceFillRect(Self.Surface, TuiRect.Create(Self.Origin.X + Visible.X, Self.Origin.Y +
+                                                                                 Visible.Y, Visible.Width, Visible.Height), Cell)
     end;
 
     /// Draws one logical line of text; stops before a newline.

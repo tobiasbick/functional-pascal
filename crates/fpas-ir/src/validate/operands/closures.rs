@@ -64,10 +64,9 @@ fn validate_closure(
             function.id,
             Some(block),
             Some(instruction),
-            ValidationErrorKind::ClosureCapture {
-                index: captures.len(),
-                expected: target.captures.len() as u32,
-                actual: captures.len() as u32,
+            ValidationErrorKind::ClosureCaptureCount {
+                expected: target.captures.len(),
+                actual: captures.len(),
             },
         ));
     }
@@ -90,7 +89,7 @@ fn validate_closure(
                         function.id,
                         Some(block),
                         Some(instruction),
-                        ValidationErrorKind::ClosureCapture {
+                        ValidationErrorKind::ClosureCaptureType {
                             index,
                             expected: declaration.ty.get(),
                             actual: actual.get(),
@@ -105,7 +104,7 @@ fn validate_closure(
                 function.id,
                 Some(block),
                 Some(instruction),
-                ValidationErrorKind::ClosureCapture {
+                ValidationErrorKind::ClosureCaptureType {
                     index,
                     expected: declaration.ty.get(),
                     actual: actual_capture_type.get(),

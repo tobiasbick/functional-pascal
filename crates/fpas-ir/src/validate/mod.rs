@@ -146,13 +146,20 @@ pub enum ValidationErrorKind {
         /// Actual raw return type identifier.
         actual: u32,
     },
-    /// A closure's capture count, order, or type does not match the target function.
-    ClosureCapture {
+    /// A closure supplies the wrong number of captures for the target function.
+    ClosureCaptureCount {
+        /// Expected number of captures.
+        expected: usize,
+        /// Actual number of captures.
+        actual: usize,
+    },
+    /// A closure capture has the wrong type or representation for the target function.
+    ClosureCaptureType {
         /// Capture position in semantic order.
         index: usize,
-        /// Expected raw type identifier or capture count.
+        /// Expected raw type identifier.
         expected: u32,
-        /// Actual raw type identifier or capture count.
+        /// Actual raw type identifier.
         actual: u32,
     },
     /// A record or enum operation does not match its layout type.

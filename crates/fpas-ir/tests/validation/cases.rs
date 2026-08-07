@@ -17,10 +17,12 @@ fn branch_with_block_parameters_is_valid() {
             parameters: Vec::new(),
             instructions: vec![
                 Instruction {
+                    source: None,
                     result: Some(value(1, BOOLEAN)),
                     operation: Operation::Const(Constant::Boolean(true)),
                 },
                 Instruction {
+                    source: None,
                     result: Some(value(2, INTEGER)),
                     operation: Operation::Const(Constant::Integer(1)),
                 },
@@ -60,6 +62,73 @@ fn branch_with_block_parameters_is_valid() {
 }
 
 #[test]
+fn loop_backedge_with_block_parameter_is_valid() {
+    let mut program = scalar_program();
+    program.functions[0] = root(vec![
+        BasicBlock {
+            id: BlockId::new(0),
+            parameters: Vec::new(),
+            instructions: vec![Instruction {
+                source: None,
+                result: Some(value(1, INTEGER)),
+                operation: Operation::Const(Constant::Integer(0)),
+            }],
+            terminators: vec![Terminator::Jump(BlockTarget {
+                block: BlockId::new(1),
+                arguments: vec![ValueId::new(1)],
+            })],
+        },
+        BasicBlock {
+            id: BlockId::new(1),
+            parameters: vec![BlockParameter {
+                id: ValueId::new(2),
+                ty: INTEGER,
+            }],
+            instructions: vec![Instruction {
+                source: None,
+                result: Some(value(3, BOOLEAN)),
+                operation: Operation::Const(Constant::Boolean(false)),
+            }],
+            terminators: vec![Terminator::Branch {
+                condition: ValueId::new(3),
+                then_target: BlockTarget {
+                    block: BlockId::new(1),
+                    arguments: vec![ValueId::new(2)],
+                },
+                else_target: BlockTarget {
+                    block: BlockId::new(2),
+                    arguments: Vec::new(),
+                },
+            }],
+        },
+        BasicBlock {
+            id: BlockId::new(2),
+            parameters: Vec::new(),
+            instructions: Vec::new(),
+            terminators: vec![Terminator::Return(None)],
+        },
+    ]);
+    assert!(program.validate().is_ok());
+}
+
+#[test]
+fn semantic_instruction_preserves_source_span() {
+    let span = SourceSpan::new_with_source(7, 3, 2, 5, 11);
+    let mut program = scalar_program();
+    program.functions[0].blocks[0].instructions = vec![Instruction {
+        source: Some(span),
+        result: Some(value(1, INTEGER)),
+        operation: Operation::Const(Constant::Integer(1)),
+    }];
+
+    assert!(program.validate().is_ok());
+    assert_eq!(
+        program.functions[0].blocks[0].instructions[0].source,
+        Some(span)
+    );
+}
+
+#[test]
 fn duplicate_type_identifier_is_rejected() {
     let mut program = scalar_program();
     program.types.push(TypeDefinition {
@@ -84,10 +153,12 @@ fn duplicate_function_block_value_and_local_identifiers_are_rejected() {
     let mut defined_value = scalar_program();
     defined_value.functions[0].blocks[0].instructions = vec![
         Instruction {
+            source: None,
             result: Some(value(1, INTEGER)),
             operation: Operation::Const(Constant::Integer(1)),
         },
         Instruction {
+            source: None,
             result: Some(value(1, INTEGER)),
             operation: Operation::Const(Constant::Integer(2)),
         },
@@ -114,16 +185,19 @@ fn unknown_function_block_value_local_and_type_are_rejected() {
     assert!(program.validate().is_err());
     program.functions[0].entry = BlockId::new(0);
     program.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: Some(value(1, INTEGER)),
         operation: Operation::ReadLocal(LocalId::new(99)),
     }];
     assert!(program.validate().is_err());
     program.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: Some(value(1, TypeId::new(99))),
         operation: Operation::Const(Constant::Integer(1)),
     }];
     assert!(program.validate().is_err());
     program.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: Some(value(1, INTEGER)),
         operation: Operation::Binary {
             operation: BinaryOperation::AddInteger,
@@ -139,6 +213,7 @@ fn value_use_before_definition_is_rejected() {
     let mut program = scalar_program();
     program.functions[0].blocks[0].instructions = vec![
         Instruction {
+            source: None,
             result: Some(value(2, INTEGER)),
             operation: Operation::Binary {
                 operation: BinaryOperation::AddInteger,
@@ -147,6 +222,7 @@ fn value_use_before_definition_is_rejected() {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(1, INTEGER)),
             operation: Operation::Const(Constant::Integer(1)),
         },
@@ -220,6 +296,7 @@ fn block_argument_count_and_type_mismatches_are_rejected() {
     );
     let mut wrong_type = wrong_count;
     wrong_type.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: Some(value(2, BOOLEAN)),
         operation: Operation::Const(Constant::Boolean(true)),
     }];
@@ -254,7 +331,7 @@ fn operand_result_direct_call_return_capture_and_layout_errors_are_rejected() {
         kind: CaptureKind::Value,
     }];
     assert!(
-        matches!(capture.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::ClosureCapture { .. }))
+        matches!(capture.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::ClosureCaptureCount { expected: 1, actual: 0 }))
     );
     let mut cell_capture = all_operations_program();
     cell_capture.functions[1].captures = vec![CaptureDeclaration {
@@ -266,7 +343,7 @@ fn operand_result_direct_call_return_capture_and_layout_errors_are_rejected() {
         captures: vec![ValueId::new(1)],
     };
     assert!(
-        matches!(cell_capture.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::ClosureCapture { .. }))
+        matches!(cell_capture.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::ClosureCaptureType { index: 0, .. }))
     );
     let mut layout = all_operations_program();
     layout.functions[0].blocks[0].instructions[11].operation = Operation::LoadField {
@@ -281,6 +358,7 @@ fn operand_result_direct_call_return_capture_and_layout_errors_are_rejected() {
 fn result_shape_and_cell_type_errors_are_rejected() {
     let mut missing = scalar_program();
     missing.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: None,
         operation: Operation::Const(Constant::Integer(1)),
     }];
@@ -289,6 +367,7 @@ fn result_shape_and_cell_type_errors_are_rejected() {
     );
     let mut unexpected = scalar_program();
     unexpected.functions[0].blocks[0].instructions = vec![Instruction {
+        source: None,
         result: Some(value(1, UNIT)),
         operation: Operation::Yield,
     }];
@@ -300,12 +379,31 @@ fn result_shape_and_cell_type_errors_are_rejected() {
 #[test]
 fn maximum_ids_and_checked_count_boundaries_are_portable() {
     assert_eq!(FunctionId::MAX.get(), u32::MAX);
+    assert_eq!(BlockId::MAX.get(), u32::MAX);
+    assert_eq!(ValueId::MAX.get(), u32::MAX);
+    assert_eq!(LocalId::MAX.get(), u32::MAX);
+    assert_eq!(TypeId::MAX.get(), u32::MAX);
+    assert_eq!(GlobalId::MAX.get(), u32::MAX);
+    assert_eq!(RecordLayoutId::MAX.get(), u32::MAX);
+    assert_eq!(EnumLayoutId::MAX.get(), u32::MAX);
+    assert_eq!(FieldId::MAX.get(), u32::MAX);
+    assert_eq!(VariantId::MAX.get(), u32::MAX);
+    assert_eq!(IntrinsicId::MAX.get(), u32::MAX);
     assert!(FunctionId::try_from_index(u32::MAX as usize).is_ok());
     assert!(checked_count("test count", u32::MAX as usize).is_ok());
     if usize::BITS > 32 {
         assert!(FunctionId::try_from_index(u32::MAX as usize + 1).is_err());
         assert!(checked_count("test count", u32::MAX as usize + 1).is_err());
     }
+}
+
+#[test]
+fn maximum_block_identifier_is_valid() {
+    let mut program = scalar_program();
+    program.functions[0].entry = BlockId::MAX;
+    program.functions[0].blocks[0].id = BlockId::MAX;
+
+    assert!(program.validate().is_ok());
 }
 
 #[test]

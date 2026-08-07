@@ -161,22 +161,27 @@ pub fn all_operations_program() -> Program {
     });
     let instructions = vec![
         Instruction {
+            source: None,
             result: Some(value(1, INTEGER)),
             operation: Operation::Const(Constant::Integer(1)),
         },
         Instruction {
+            source: None,
             result: Some(value(2, BOOLEAN)),
             operation: Operation::Const(Constant::Boolean(true)),
         },
         Instruction {
+            source: None,
             result: Some(value(3, STRING)),
             operation: Operation::Const(Constant::String("x".to_string())),
         },
         Instruction {
+            source: None,
             result: Some(value(4, INTEGER)),
             operation: Operation::ReadLocal(LocalId::new(0)),
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::WriteLocal {
                 value: ValueId::new(1),
@@ -184,6 +189,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(5, INTEGER)),
             operation: Operation::Binary {
                 operation: BinaryOperation::AddInteger,
@@ -192,6 +198,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(6, INTEGER)),
             operation: Operation::CallDirect {
                 function: FunctionId::new(1),
@@ -199,6 +206,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(7, FUNCTION)),
             operation: Operation::MakeClosure {
                 function: FunctionId::new(1),
@@ -206,6 +214,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(8, INTEGER)),
             operation: Operation::CallValue {
                 callee: ValueId::new(7),
@@ -213,10 +222,12 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(9, INTEGER)),
             operation: Operation::LoadGlobal(GlobalId::new(0)),
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::StoreGlobal {
                 global: GlobalId::new(0),
@@ -224,6 +235,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(10, RECORD)),
             operation: Operation::MakeRecord {
                 layout: RecordLayoutId::new(0),
@@ -231,6 +243,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(11, INTEGER)),
             operation: Operation::LoadField {
                 record: ValueId::new(10),
@@ -239,6 +252,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::StoreField {
                 record: ValueId::new(10),
@@ -248,6 +262,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(12, ENUM)),
             operation: Operation::MakeEnum {
                 layout: EnumLayoutId::new(0),
@@ -256,6 +271,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(13, BOOLEAN)),
             operation: Operation::TestVariant {
                 value: ValueId::new(12),
@@ -264,6 +280,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(14, INTEGER)),
             operation: Operation::Intrinsic {
                 intrinsic: IntrinsicId::new(0),
@@ -271,14 +288,17 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(15, CELL)),
             operation: Operation::LoadGlobal(GlobalId::new(1)),
         },
         Instruction {
+            source: None,
             result: Some(value(16, INTEGER)),
             operation: Operation::CellRead(ValueId::new(15)),
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::CellWrite {
                 cell: ValueId::new(15),
@@ -286,6 +306,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: Some(value(17, TASK)),
             operation: Operation::SpawnTask {
                 callee: ValueId::new(7),
@@ -293,6 +314,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::SpawnDetachedTask {
                 callee: ValueId::new(7),
@@ -300,6 +322,7 @@ pub fn all_operations_program() -> Program {
             },
         },
         Instruction {
+            source: None,
             result: None,
             operation: Operation::Yield,
         },

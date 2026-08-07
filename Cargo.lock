@@ -636,6 +636,9 @@ dependencies = [
 [[package]]
 name = "fpas-ir"
 version = "0.0.1"
+dependencies = [
+ "fpas-diagnostics",
+]
 
 [[package]]
 name = "fpas-language-service"

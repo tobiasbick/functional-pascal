@@ -1,13 +1,15 @@
 //! Typed three-address IR operations.
 
 use crate::{
-    EnumLayoutId, FieldId, FunctionId, GlobalId, IntrinsicId, LocalId, RecordLayoutId,
+    EnumLayoutId, FieldId, FunctionId, GlobalId, IntrinsicId, LocalId, RecordLayoutId, SourceSpan,
     ValueDefinition, ValueId, VariantId,
 };
 
 /// An instruction with an optional typed result definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Instruction {
+    /// Source span for a semantic operation, or `None` for compiler-synthesized work.
+    pub source: Option<SourceSpan>,
     /// Result definition for value-producing operations.
     pub result: Option<ValueDefinition>,
     /// Typed operation evaluated by this instruction.

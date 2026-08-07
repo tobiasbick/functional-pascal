@@ -8,7 +8,7 @@ exist.
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 14 focused positive, negative, and boundary tests; `cargo test -p fpas-ir` passed | complete |
+| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 17 focused positive, negative, and boundary tests, including loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | size + all-form round-trip tests | planned |
 | PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/dispatch.rs` | opcode inventory + VM tests | planned |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
@@ -80,7 +80,7 @@ exist.
 |---|---|---|---|
 | PVM-QUAL-001 | Focused module/file layout | P1 `fpas-ir` uses responsibility-named IR files plus `validate/operands/` concern slices; every new Rust source and test file is below 500 lines | complete for P1 |
 | PVM-QUAL-002 | Public Rust documentation complete | `fpas-ir` uses `#![deny(missing_docs)]`; `cargo build -p fpas-ir` and crate clippy gate passed | complete for P1 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | `ValidationError`/`ValidationErrorKind` plus negative `fpas-ir` validation tests; no `unsafe`, `unwrap()`/`expect()` calls, or `panic!` in production `fpas-ir` sources | complete for P1 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | `ValidationError`/`ValidationErrorKind` plus negative `fpas-ir` validation tests; capture counts remain `usize` in diagnostics instead of narrowing; no `unsafe`, `unwrap()`/`expect()` calls, or `panic!` in production `fpas-ir` sources | complete for P1 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
 | PVM-QUAL-006 | Full Rust verification | P1: `cargo fmt --all -- --check`; `cargo build -p fpas-ir`; `cargo test -p fpas-ir`; `cargo clippy -p fpas-ir --all-targets --locked -- -D warnings`; `cargo test --workspace` | complete for P1 |

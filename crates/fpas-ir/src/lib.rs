@@ -13,6 +13,7 @@ mod program;
 mod terminator;
 pub mod validate;
 
+pub use fpas_diagnostics::SourceSpan;
 pub use function::{
     BasicBlock, BlockParameter, CaptureDeclaration, CaptureKind, Function, FunctionSignature,
     Local, ValueDefinition,

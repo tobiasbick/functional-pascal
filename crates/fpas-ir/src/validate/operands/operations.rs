@@ -111,6 +111,19 @@ fn validate_operation(
                 result,
             )
         }
+        Operation::Unary { operation, operand } => {
+            let operand_ty =
+                value_type(function, block, instruction, *operand, all_values, available)?;
+            validate_unary(
+                program,
+                function,
+                block,
+                instruction,
+                *operation,
+                operand_ty,
+                result,
+            )
+        }
         Operation::CallDirect {
             function: target,
             arguments,

@@ -3,7 +3,8 @@ use fpas_ir::{
     CaptureKind, Constant, EnumLayout, EnumLayoutId, EnumVariant, FieldId, Function, FunctionId,
     FunctionSignature, Global, GlobalId, Instruction, IntrinsicId, IntrinsicSignature, IrType,
     Local, LocalId, Operation, Program, RecordField, RecordLayout, RecordLayoutId, SourceSpan,
-    Terminator, TypeDefinition, TypeId, ValueDefinition, ValueId, VariantId, checked_count,
+    Terminator, TypeDefinition, TypeId, UnaryOperation, ValueDefinition, ValueId, VariantId,
+    checked_count,
 };
 
 mod support {

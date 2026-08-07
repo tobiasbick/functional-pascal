@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::instruction::{TypeCategory, binary_categories};
+use crate::instruction::{TypeCategory, binary_categories, unary_categories};
 use crate::{
     BasicBlock, BinaryOperation, BlockId, Constant, EnumLayoutId, Function, FunctionId, IrType,
     Operation, Program, RecordLayoutId, Terminator, TypeId, ValueDefinition, ValueId,

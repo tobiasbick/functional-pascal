@@ -11,7 +11,7 @@
 mod vm;
 
 pub use fpas_std::ScreenSnapshot;
-pub use vm::{Vm, VmError, VmOutput, VmShutdownHandle};
+pub use vm::{RegisterExecution, RegisterVm, Vm, VmError, VmOutput, VmShutdownHandle};
 
 #[cfg(test)]
 mod tests;

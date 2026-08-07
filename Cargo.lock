@@ -611,6 +611,7 @@ version = "0.0.1"
 dependencies = [
  "fpas-bytecode",
  "fpas-diagnostics",
+ "fpas-ir",
  "fpas-lexer",
  "fpas-linker",
  "fpas-parser",

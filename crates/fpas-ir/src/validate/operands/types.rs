@@ -104,15 +104,21 @@ fn require_category(
     ty: TypeId,
     category: TypeCategory,
 ) -> Result<(), ValidationError> {
-    let valid = match program.ty(ty).map(|definition| &definition.kind) {
-        Some(IrType::Unit) => category == TypeCategory::Unit,
-        Some(IrType::Boolean) => category == TypeCategory::Boolean,
-        Some(IrType::Integer) => category == TypeCategory::Integer,
-        Some(IrType::Real) => category == TypeCategory::Real,
-        Some(IrType::String) => category == TypeCategory::String,
-        Some(IrType::Dynamic) => category == TypeCategory::Dynamic,
-        _ => false,
-    };
+    let valid = matches!((program.ty(ty).map(|definition| &definition.kind), category),
+        (Some(IrType::Unit), TypeCategory::Unit)
+        | (Some(IrType::Boolean), TypeCategory::Boolean)
+        | (Some(IrType::Integer), TypeCategory::Integer)
+        | (Some(IrType::Real), TypeCategory::Real)
+        | (Some(IrType::String), TypeCategory::String)
+        | (Some(IrType::Dynamic), TypeCategory::Dynamic)
+        |
+        (
+            Some(
+                IrType::Boolean | IrType::Integer | IrType::Real | IrType::String | IrType::Dynamic,
+            ),
+            TypeCategory::Comparable,
+        )
+    );
     if valid {
         return Ok(());
     }
@@ -300,5 +306,6 @@ fn category_name(category: TypeCategory) -> &'static str {
         TypeCategory::Real => "Real",
         TypeCategory::String => "String",
         TypeCategory::Dynamic => "Dynamic",
+        TypeCategory::Comparable => "comparable scalar",
     }
 }

@@ -10,6 +10,7 @@ pub const FUNCTION: TypeId = TypeId::new(6);
 pub const CELL: TypeId = TypeId::new(7);
 pub const TASK: TypeId = TypeId::new(8);
 pub const DYNAMIC: TypeId = TypeId::new(9);
+pub const REAL: TypeId = TypeId::new(10);
 
 pub fn root(blocks: Vec<BasicBlock>) -> Function {
     Function {
@@ -87,6 +88,10 @@ pub fn types() -> Vec<TypeDefinition> {
         TypeDefinition {
             id: DYNAMIC,
             kind: IrType::Dynamic,
+        },
+        TypeDefinition {
+            id: REAL,
+            kind: IrType::Real,
         },
     ]
 }

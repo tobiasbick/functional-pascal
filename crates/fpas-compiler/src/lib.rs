@@ -13,15 +13,34 @@
     )
 )]
 
+mod bytecode;
 mod compiler;
 mod error;
+mod lowering;
 mod unit_object;
 
 pub use error::CompileError;
+pub use lowering::lower_register_subset;
 pub use unit_object::{
     CompiledUnitObject, compile_program_object, compile_program_object_with_support,
     compile_unit_object, compile_unit_object_with_support,
 };
+
+/// Compile the functionless scalar/control-flow subset through the inactive register pipeline.
+///
+/// This development API keeps the production CLI and stack VM unchanged until the complete
+/// register runtime reaches its cutover phase.
+///
+/// # Errors
+///
+/// Returns semantic diagnostics, a structured subset-lowering diagnostic, or a register-bytecode
+/// construction/verifier diagnostic represented as an internal compiler failure.
+pub fn compile_register_subset(
+    program: &Program,
+) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
+    let ir = lower_register_subset(program)?;
+    bytecode::compile_program(&ir).map_err(|error| vec![error])
+}
 
 use compiler::Compiler;
 use fpas_bytecode::{Chunk, ChunkError};

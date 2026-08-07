@@ -18,12 +18,14 @@ use std::sync::{Arc, Condvar, Mutex, RwLock};
 mod diagnostics;
 mod execute;
 mod helpers;
+mod register;
 mod shared;
 mod shutdown;
 mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
+pub use register::{RegisterExecution, RegisterVm};
 pub(crate) use shared::{
     GraphState, SharedState, TaskBatchPoll, TaskResultPoll, TaskState, TaskTimers,
 };

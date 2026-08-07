@@ -42,20 +42,83 @@ pub enum BinaryOperation {
     MultiplyInteger,
     /// Integer division.
     DivideInteger,
+    /// Integer remainder.
+    RemainderInteger,
     /// Real addition.
     AddReal,
+    /// Real subtraction.
+    SubtractReal,
+    /// Real multiplication.
+    MultiplyReal,
+    /// Real division.
+    DivideReal,
     /// A dynamically checked generic numeric addition.
     AddDynamic,
+    /// A dynamically checked generic numeric subtraction.
+    SubtractDynamic,
+    /// A dynamically checked generic numeric multiplication.
+    MultiplyDynamic,
+    /// A dynamically checked generic numeric division.
+    DivideDynamic,
     /// Equality comparison of like-typed values.
     Equal,
+    /// Inequality comparison of like-typed values.
+    NotEqual,
     /// Integer less-than comparison.
     LessThanInteger,
+    /// Integer greater-than comparison.
+    GreaterThanInteger,
+    /// Integer less-than-or-equal comparison.
+    LessEqualInteger,
+    /// Integer greater-than-or-equal comparison.
+    GreaterEqualInteger,
+    /// Real less-than comparison.
+    LessThanReal,
+    /// Real greater-than comparison.
+    GreaterThanReal,
+    /// Real less-than-or-equal comparison.
+    LessEqualReal,
+    /// Real greater-than-or-equal comparison.
+    GreaterEqualReal,
+    /// Dynamically checked less-than comparison.
+    LessThanDynamic,
+    /// Dynamically checked greater-than comparison.
+    GreaterThanDynamic,
+    /// Dynamically checked less-than-or-equal comparison.
+    LessEqualDynamic,
+    /// Dynamically checked greater-than-or-equal comparison.
+    GreaterEqualDynamic,
     /// Boolean conjunction.
     AndBoolean,
     /// Boolean disjunction.
     OrBoolean,
     /// UTF-8 string concatenation.
     ConcatString,
+    /// Integer left shift.
+    ShiftLeftInteger,
+    /// Integer right shift.
+    ShiftRightInteger,
+    /// Integer bitwise conjunction.
+    BitAndInteger,
+    /// Integer bitwise disjunction.
+    BitOrInteger,
+    /// Integer bitwise exclusive disjunction.
+    BitXorInteger,
+}
+
+/// A typed unary operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnaryOperation {
+    /// Checked integer negation.
+    NegateInteger,
+    /// IEEE-754 real negation.
+    NegateReal,
+    /// Dynamically checked generic numeric negation.
+    NegateDynamic,
+    /// Boolean negation.
+    NotBoolean,
+    /// Convert an integer value to a real value.
+    IntegerToReal,
 }
 
 /// A typed, target-independent operation.
@@ -80,6 +143,13 @@ pub enum Operation {
         left: ValueId,
         /// Right operand.
         right: ValueId,
+    },
+    /// Evaluates a typed unary operation.
+    Unary {
+        /// Chosen typed operation.
+        operation: UnaryOperation,
+        /// Source operand.
+        operand: ValueId,
     },
     /// Calls a semantically resolved function directly.
     CallDirect {
@@ -199,6 +269,7 @@ impl Operation {
             Self::Const(_)
                 | Self::ReadLocal(_)
                 | Self::Binary { .. }
+                | Self::Unary { .. }
                 | Self::CallDirect { .. }
                 | Self::CallValue { .. }
                 | Self::LoadGlobal(_)
@@ -221,15 +292,52 @@ pub const fn binary_categories(operation: BinaryOperation) -> (TypeCategory, Typ
         BinaryOperation::AddInteger
         | BinaryOperation::SubtractInteger
         | BinaryOperation::MultiplyInteger
-        | BinaryOperation::DivideInteger => (TypeCategory::Integer, TypeCategory::Integer),
-        BinaryOperation::AddReal => (TypeCategory::Real, TypeCategory::Real),
-        BinaryOperation::AddDynamic => (TypeCategory::Dynamic, TypeCategory::Dynamic),
-        BinaryOperation::Equal => (TypeCategory::Same, TypeCategory::Boolean),
-        BinaryOperation::LessThanInteger => (TypeCategory::Integer, TypeCategory::Boolean),
+        | BinaryOperation::DivideInteger
+        | BinaryOperation::RemainderInteger
+        | BinaryOperation::ShiftLeftInteger
+        | BinaryOperation::ShiftRightInteger
+        | BinaryOperation::BitAndInteger
+        | BinaryOperation::BitOrInteger
+        | BinaryOperation::BitXorInteger => (TypeCategory::Integer, TypeCategory::Integer),
+        BinaryOperation::AddReal
+        | BinaryOperation::SubtractReal
+        | BinaryOperation::MultiplyReal
+        | BinaryOperation::DivideReal => (TypeCategory::Real, TypeCategory::Real),
+        BinaryOperation::AddDynamic
+        | BinaryOperation::SubtractDynamic
+        | BinaryOperation::MultiplyDynamic
+        | BinaryOperation::DivideDynamic => (TypeCategory::Dynamic, TypeCategory::Dynamic),
+        BinaryOperation::Equal | BinaryOperation::NotEqual => {
+            (TypeCategory::Same, TypeCategory::Boolean)
+        }
+        BinaryOperation::LessThanInteger
+        | BinaryOperation::GreaterThanInteger
+        | BinaryOperation::LessEqualInteger
+        | BinaryOperation::GreaterEqualInteger => (TypeCategory::Integer, TypeCategory::Boolean),
+        BinaryOperation::LessThanReal
+        | BinaryOperation::GreaterThanReal
+        | BinaryOperation::LessEqualReal
+        | BinaryOperation::GreaterEqualReal => (TypeCategory::Real, TypeCategory::Boolean),
+        BinaryOperation::LessThanDynamic
+        | BinaryOperation::GreaterThanDynamic
+        | BinaryOperation::LessEqualDynamic
+        | BinaryOperation::GreaterEqualDynamic => (TypeCategory::Comparable, TypeCategory::Boolean),
         BinaryOperation::AndBoolean | BinaryOperation::OrBoolean => {
             (TypeCategory::Boolean, TypeCategory::Boolean)
         }
         BinaryOperation::ConcatString => (TypeCategory::String, TypeCategory::String),
+    }
+}
+
+/// Returns the required operand and result categories for a unary operation.
+#[must_use]
+pub const fn unary_categories(operation: UnaryOperation) -> (TypeCategory, TypeCategory) {
+    match operation {
+        UnaryOperation::NegateInteger => (TypeCategory::Integer, TypeCategory::Integer),
+        UnaryOperation::NegateReal => (TypeCategory::Real, TypeCategory::Real),
+        UnaryOperation::NegateDynamic => (TypeCategory::Dynamic, TypeCategory::Dynamic),
+        UnaryOperation::NotBoolean => (TypeCategory::Boolean, TypeCategory::Boolean),
+        UnaryOperation::IntegerToReal => (TypeCategory::Integer, TypeCategory::Real),
     }
 }
 
@@ -250,4 +358,6 @@ pub enum TypeCategory {
     String,
     /// Requires the lowered dynamic type.
     Dynamic,
+    /// Requires a scalar comparable or dynamically erased type.
+    Comparable,
 }

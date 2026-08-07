@@ -22,7 +22,7 @@ pub use id::{
     BlockId, EnumLayoutId, FieldId, FunctionId, GlobalId, IdConversionError, IntrinsicId, LocalId,
     RecordLayoutId, TypeId, ValueId, VariantId, checked_count,
 };
-pub use instruction::{BinaryOperation, Constant, Instruction, Operation};
+pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
 pub use program::{
     EnumLayout, EnumVariant, Global, IntrinsicSignature, IrType, Program, RecordField,
     RecordLayout, TypeDefinition,

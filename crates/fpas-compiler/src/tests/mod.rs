@@ -102,6 +102,7 @@ mod parallel_vm_phase1;
 mod pattern_matching;
 mod postfix_chaining;
 mod records;
+mod register_subset;
 mod result_option;
 mod routine_declarations;
 mod short_names;

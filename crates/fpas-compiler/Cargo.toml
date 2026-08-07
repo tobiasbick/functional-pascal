@@ -10,6 +10,7 @@ repository.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-lexer = { path = "../fpas-lexer" }
+fpas-ir = { path = "../fpas-ir" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-sema = { path = "../fpas-sema" }
 fpas-std = { path = "../fpas-std" }

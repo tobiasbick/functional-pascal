@@ -55,3 +55,25 @@ fn validate_binary(
     }
     require_result_category(program, function, block, instruction, result, output)
 }
+
+fn validate_unary(
+    program: &Program,
+    function: &Function,
+    block: BlockId,
+    instruction: usize,
+    operation: crate::UnaryOperation,
+    operand: TypeId,
+    result: Option<ValueDefinition>,
+) -> Result<(), ValidationError> {
+    let (input, output) = unary_categories(operation);
+    require_category(
+        program,
+        function,
+        block,
+        instruction,
+        "unary operand",
+        operand,
+        input,
+    )?;
+    require_result_category(program, function, block, instruction, result, output)
+}

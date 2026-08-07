@@ -9,6 +9,87 @@ fn typed_scalar_aggregate_call_closure_intrinsic_and_task_operations_are_valid()
 }
 
 #[test]
+fn p3_unary_operations_are_typed_and_valid() {
+    let mut program = scalar_program();
+    program.functions[0].blocks[0].instructions = vec![
+        Instruction {
+            source: None,
+            result: Some(value(1, INTEGER)),
+            operation: Operation::Const(Constant::Integer(1)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(2, INTEGER)),
+            operation: Operation::Unary {
+                operation: UnaryOperation::NegateInteger,
+                operand: ValueId::new(1),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(3, REAL)),
+            operation: Operation::Unary {
+                operation: UnaryOperation::IntegerToReal,
+                operand: ValueId::new(2),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(4, BOOLEAN)),
+            operation: Operation::Const(Constant::Boolean(true)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(5, BOOLEAN)),
+            operation: Operation::Unary {
+                operation: UnaryOperation::NotBoolean,
+                operand: ValueId::new(4),
+            },
+        },
+    ];
+    assert!(program.validate().is_ok());
+}
+
+#[test]
+fn p3_unary_operand_and_result_type_mismatches_are_rejected() {
+    let mut wrong_operand = scalar_program();
+    wrong_operand.functions[0].blocks[0].instructions = vec![
+        Instruction {
+            source: None,
+            result: Some(value(1, BOOLEAN)),
+            operation: Operation::Const(Constant::Boolean(true)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(2, INTEGER)),
+            operation: Operation::Unary {
+                operation: UnaryOperation::NegateInteger,
+                operand: ValueId::new(1),
+            },
+        },
+    ];
+    assert!(wrong_operand.validate().is_err());
+
+    let mut wrong_result = scalar_program();
+    wrong_result.functions[0].blocks[0].instructions = vec![
+        Instruction {
+            source: None,
+            result: Some(value(1, INTEGER)),
+            operation: Operation::Const(Constant::Integer(1)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(2, BOOLEAN)),
+            operation: Operation::Unary {
+                operation: UnaryOperation::NegateInteger,
+                operand: ValueId::new(1),
+            },
+        },
+    ];
+    assert!(wrong_result.validate().is_err());
+}
+
+#[test]
 fn branch_with_block_parameters_is_valid() {
     let mut program = scalar_program();
     program.functions[0] = root(vec![

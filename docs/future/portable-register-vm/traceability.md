@@ -8,14 +8,14 @@ exist.
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 17 focused positive, negative, and boundary tests, including loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
+| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/dispatch.rs` | opcode inventory + VM tests | planned |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P3 opcode match; 9 direct register-VM tests cover every scalar opcode family, dynamic numeric operations, aliasing, domain edges, control flow, diagnostics, verifier boundary, and lifecycle | complete through P3 |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
-| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | deterministic and max-register tests | planned |
+| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves byte-identical repeated output, lowest-free temporary reuse, bounded register count, and verifier-valid operands | complete through P3 |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model and verifier use no `unsafe`, `transmute`, or unchecked narrowing; full codec and execution proof remains in P3/P9 | complete through P2 |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P3 |
 
 ## Runtime lookup requirements
 
@@ -33,16 +33,16 @@ exist.
 
 | ID | Requirement | Primary test families | Required evidence | State |
 |---|---|---|---|---|
-| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no grammar change; full suite | planned |
-| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | differential output/files | planned |
-| PVM-SEM-003 | Integer and real behavior unchanged | VM numeric tests | edge diagnostics and bit cases | planned |
+| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; full workspace and FPAS suites pass | complete through P3 |
+| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | P3 expressions lower left before right; 11 stack/register differential tests and full existing suite pass | complete through P3 subset |
+| PVM-SEM-003 | Integer and real behavior unchanged | VM numeric tests | wrapping integer edges, mixed numeric conversion, typed/dynamic arithmetic, divide/modulo diagnostics, comparisons, and aliasing covered directly and differentially | complete through P3 subset |
 | PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | recursion/return/arity coverage | planned |
 | PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | mutable/immutable/task-bound cases | planned |
 | PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | clone/mutate/equality/order/display | planned |
 | PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | wrap/unwrap/combinator/error cases | planned |
 | PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | exhaustive intrinsic and headless tests | planned |
 | PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | stress, wait, sleep, shutdown, panic | planned |
-| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | differential structured diagnostics | planned |
+| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | P3 compiler differential tests compare code/message/help/line/column; VM tests prove sparse source lookup for runtime failures | complete through P3 subset |
 
 ## Artifact and portability requirements
 
@@ -52,8 +52,8 @@ exist.
 | PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | schema review + 32/64-bit compile evidence | planned |
 | PVM-FMT-003 | Bounded section decoder | program format | truncation/mutation/limit tests | planned |
 | PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | canonical digest and producer digests | planned |
-| PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 `SourceMap` uses sparse sorted runs and binary-search lookup; lookup/order/bounds/source/function-boundary tests pass; VM diagnostic integration remains | complete through P2 |
-| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | P2 `Executable::verify` is the only `VerifiedExecutable` constructor; 21 integration tests include exhaustive valid and malformed candidates; VM admission wiring remains | complete through P2 |
+| PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 sparse-map validation plus P3 metadata run coalescing and diagnostic-only lookup; direct VM failures resolve line 41/column 7 while ordinary dispatch does not query metadata | complete through P3 |
+| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | `compile_register_subset` returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler and direct VM admission/later-phase boundary tests pass | complete through P3 |
 | PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | direct error + project rebuild tests | planned |
 | PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | sources/manifests removed run test | planned |
 | PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows and Linux native tests | planned |
@@ -78,22 +78,38 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P1 `fpas-ir` and P2 `fpas-bytecode` use responsibility-named submodules; every new production Rust and integration-test file is below 500 lines | complete through P2 |
-| PVM-QUAL-002 | Public Rust documentation complete | P1 public IR and P2 public instruction/operand/function/executable/metadata/limit APIs have `///` documentation; build/doc/clippy gates pass | complete through P2 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P1 `ValidationError` and P2 contextual `ValidationError` reject malformed candidates; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `transmute`, or unchecked narrowing | complete through P2 |
+| PVM-QUAL-001 | Focused module/file layout | P1/P2 plus P3 lowering, case, allocation, selection, metadata, dispatch, access, diagnostics, and scalar/dynamic handler modules are responsibility-named; every new production/test file is below 500 lines | complete through P3 |
+| PVM-QUAL-002 | Public Rust documentation complete | Public P3 compiler entry points and register VM/result lifecycle APIs have `///` documentation; build/doc/clippy gates pass | complete through P3 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3 rejects unsupported constructs and invariant failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P3 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
-| PVM-QUAL-006 | Full Rust verification | P2: targeted `fpas-bytecode` build/test/clippy plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P2 |
-| PVM-QUAL-007 | Full FPAS verification | fmt check + `fpas test tests/` | planned |
-| PVM-QUAL-008 | Privacy preserved | P1/P2 diff inspection found no host-identifying metadata; fixed-width model and tests are target- and host-independent | complete through P2 |
+| PVM-QUAL-006 | Full Rust verification | P3 targeted IR/compiler/VM tests plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P3 |
+| PVM-QUAL-007 | Full FPAS verification | `scripts/format-fpas-sources.ps1 -Check` and `fpas test tests/` passed; P3 changes no FPAS source | complete through P3 |
+| PVM-QUAL-008 | Privacy preserved | P3 diff inspection found no host-identifying metadata; source metadata uses `<memory>`/`<micro>` and fixed-width IDs | complete through P3 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
+
+## P3 opcode implementation overlay
+
+P3 supplies inactive, verifier-gated successors for the following migration groups. This overlay is
+the phase-completion state; the P0 inventory below keeps `planned` in its final-migration column until
+the old production instruction is removed at cutover.
+
+| P3 group | Register implementation | Evidence | State |
+|---|---|---|---|
+| Constants, Unit, locals, discard/copy elimination | `LoadConstant`, `LoadUnit`, allocated value registers, pinned local registers | compiler differential tests plus fixed instruction-count and temporary-reuse assertions | complete |
+| Integer scalar operations | add/subtract/multiply/divide/remainder/negate, shifts, bitwise operations, six comparisons | direct VM opcode-family and domain-edge tests; compiler wrapping/bitwise differential case | complete |
+| Real scalar operations | add/subtract/multiply/divide/negate, six comparisons, integer conversion | direct VM opcode-family tests; compiler mixed numeric differential case | complete |
+| Dynamic numeric operations | add/subtract/multiply/divide/negate, equality and four ordered comparisons | direct VM mixed integer/real, type mismatch, and domain-edge tests | complete |
+| String and boolean operations | concatenation, six string comparisons, boolean equality/inequality/not/and/or | direct VM opcode-family tests; compiler string/boolean differential case | complete |
+| Scalar control flow | jump, true/false branches, `if`, scalar `case`, while/repeat/for, break/continue | nested compiler differential case and dispatched-instruction count | complete |
+| Root completion and panic | Unit return and panic terminators | success plus code/message/help/line/column differential tests | complete |
 
 ## P0 current-opcode migration inventory
 
 P0 read `crates/fpas-bytecode/src/op.rs` and recorded every current `Op` variant. No rows are
 grouped: even closely related instructions retain their own successor and preservation contract. The
-listed test families are the current owner coverage to preserve and extend; the `State` remains
-`planned` until the named implementation phase supplies the new code and tests.
+listed test families are the current owner coverage to preserve and extend. Its `State` column tracks
+final production migration and old-op deletion, not the inactive phase overlay above.
 
 | Current `Op` | Required register successor | Owner/tests to preserve | State |
 |---|---|---|---|

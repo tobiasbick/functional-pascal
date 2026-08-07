@@ -223,7 +223,7 @@ impl RegisterWorker {
                 } else {
                     self.read(register(operands.a)?)?.clone()
                 };
-                return Ok(DispatchStep::Return(value));
+                return self.return_from_call(value);
             }
             Opcode::Panic => {
                 let operands = self.abc(instruction)?;
@@ -234,13 +234,13 @@ impl RegisterWorker {
                     "Remove the panic or guard the failing condition before calling panic.",
                 ));
             }
-            Opcode::CallDirect
-            | Opcode::CallValue
-            | Opcode::MakeClosure
-            | Opcode::MakeCell
-            | Opcode::CellRead
-            | Opcode::CellWrite
-            | Opcode::LoadGlobal
+            Opcode::CallDirect => self.call_direct(self.abc(instruction)?)?,
+            Opcode::CallValue => self.call_value(self.abc(instruction)?)?,
+            Opcode::MakeClosure => self.make_closure(self.abc(instruction)?)?,
+            Opcode::MakeCell => self.make_cell(self.abc(instruction)?)?,
+            Opcode::CellRead => self.read_cell(self.abc(instruction)?)?,
+            Opcode::CellWrite => self.write_cell(self.abc(instruction)?)?,
+            Opcode::LoadGlobal
             | Opcode::StoreGlobal
             | Opcode::MakeArray
             | Opcode::IndexGet

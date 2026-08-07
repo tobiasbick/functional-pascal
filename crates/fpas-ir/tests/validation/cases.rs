@@ -436,28 +436,6 @@ fn operand_result_direct_call_return_capture_and_layout_errors_are_rejected() {
 }
 
 #[test]
-fn result_shape_and_cell_type_errors_are_rejected() {
-    let mut missing = scalar_program();
-    missing.functions[0].blocks[0].instructions = vec![Instruction {
-        source: None,
-        result: None,
-        operation: Operation::Const(Constant::Integer(1)),
-    }];
-    assert!(
-        matches!(missing.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::MissingResult))
-    );
-    let mut unexpected = scalar_program();
-    unexpected.functions[0].blocks[0].instructions = vec![Instruction {
-        source: None,
-        result: Some(value(1, UNIT)),
-        operation: Operation::Yield,
-    }];
-    assert!(
-        matches!(unexpected.validate(), Err(error) if matches!(error.kind, fpas_ir::validate::ValidationErrorKind::UnexpectedResult))
-    );
-}
-
-#[test]
 fn maximum_ids_and_checked_count_boundaries_are_portable() {
     assert_eq!(FunctionId::MAX.get(), u32::MAX);
     assert_eq!(BlockId::MAX.get(), u32::MAX);

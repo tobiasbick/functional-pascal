@@ -143,6 +143,11 @@ Add register alias permutations (`dst == left`, `dst == right`, all distinct) fo
 
 ## Calls, closures, and frames
 
+P4 evidence lives in `fpas-compiler/src/tests/register_subset/{functions,closures}.rs`,
+`fpas-vm/src/vm/register/tests/{calls,callbacks}.rs`, and the register-bytecode verifier suite.
+Compiler cases are differential against the production stack VM; direct VM cases isolate frame,
+capture, callback, and limit behavior without compiler coupling.
+
 Preserve and extend:
 
 - zero/many arguments, functions/procedures/methods, recursion, early return;

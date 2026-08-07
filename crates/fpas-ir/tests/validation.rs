@@ -14,3 +14,4 @@ mod support {
 use support::*;
 
 include!("validation/cases.rs");
+include!("validation/cell_cases.rs");

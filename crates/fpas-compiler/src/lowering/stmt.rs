@@ -31,15 +31,15 @@ impl LoweringContext {
                 let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
                     return Err(unsupported(target.span, "aggregate assignment"));
                 };
-                let (local, _) = self.resolve_local(name, target.span)?;
                 let value = self.lower_expression(value)?;
-                self.write_local(local, value, *span)
+                self.write_named_local(name, value, *span)
             }
-            Stmt::Return(value, span) => {
-                if value.is_some() {
-                    return Err(unsupported(*span, "value return from root entry"));
-                }
-                self.terminate(Terminator::Return(None))
+            Stmt::Return(value, _span) => {
+                let value = value
+                    .as_ref()
+                    .map(|value| self.lower_expression(value))
+                    .transpose()?;
+                self.terminate(Terminator::Return(value))
             }
             Stmt::Panic(value, span) => {
                 let value = self.lower_expression(value)?;
@@ -54,7 +54,20 @@ impl LoweringContext {
             | Stmt::Break(_)
             | Stmt::Continue(_) => self.lower_control_flow(statement),
             Stmt::ForIn { span, .. } => Err(unsupported(*span, "for-in loop")),
-            Stmt::Call { span, .. } => Err(unsupported(*span, "procedure call")),
+            Stmt::Call {
+                designator,
+                args,
+                span,
+            } => {
+                let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
+                    return Err(unsupported(designator.span, "method or qualified call"));
+                };
+                let result = self
+                    .call_result_type(name)
+                    .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;
+                let _ = self.lower_call(designator, args, result, *span)?;
+                Ok(())
+            }
             Stmt::Expression { span, .. } => Err(unsupported(*span, "effect expression")),
             Stmt::Go { span, .. } => Err(unsupported(*span, "task statement")),
         }
@@ -70,7 +83,18 @@ impl LoweringContext {
     fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
         let ty = self.expression_ir_type(&definition.value)?;
         let value = self.lower_expression(&definition.value)?;
-        let local = self.declare_local(&definition.name, ty, mutable, definition.span)?;
-        self.emit_effect(Operation::WriteLocal { value, local }, definition.span)
+        if mutable && self.is_cell_backed(&definition.name) {
+            let cell_ty = self.cell_type(ty, definition.span)?;
+            let cell = self.emit_value(Operation::MakeCell(value), cell_ty, definition.span)?;
+            let local = self.declare_local(&definition.name, cell_ty, true, definition.span)?;
+            self.mark_binding_cell(&definition.name, ty);
+            self.emit_effect(
+                Operation::WriteLocal { value: cell, local },
+                definition.span,
+            )
+        } else {
+            let local = self.declare_local(&definition.name, ty, mutable, definition.span)?;
+            self.emit_effect(Operation::WriteLocal { value, local }, definition.span)
+        }
     }
 }

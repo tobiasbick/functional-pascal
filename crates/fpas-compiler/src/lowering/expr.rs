@@ -34,7 +34,33 @@ impl LoweringContext {
                 let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
                     return Err(unsupported(designator.span, "aggregate designator"));
                 };
-                self.read_named_local(name, designator.span)
+                if self.has_binding(name) {
+                    self.read_named_local(name, designator.span)
+                } else if let Some(callable) = self.resolve_callable(name) {
+                    let captures = callable
+                        .captures
+                        .iter()
+                        .map(|capture| self.read_capture(&capture.name, designator.span))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    self.emit_value(
+                        Operation::MakeClosure {
+                            function: callable.function,
+                            captures,
+                        },
+                        callable.value_type,
+                        designator.span,
+                    )
+                } else {
+                    Err(unsupported(designator.span, "unresolved designator"))
+                }
+            }
+            Expr::Call {
+                designator,
+                args,
+                span,
+            } => {
+                let result = self.expression_ir_type(expression)?;
+                self.lower_call(designator, args, result, *span)
             }
             Expr::Paren(inner, _) => self.lower_expression(inner),
             Expr::UnaryOp { op, operand, span } => self.lower_unary(*op, operand, *span),
@@ -46,6 +72,24 @@ impl LoweringContext {
             } => {
                 let result_ty = self.expression_ir_type(expression)?;
                 self.lower_binary(*op, left, right, result_ty, *span)
+            }
+            Expr::Closure(_) => {
+                let target = self
+                    .closure_target(expression)
+                    .ok_or_else(|| unsupported(expression.span(), "unregistered closure"))?;
+                let captures = target
+                    .captures
+                    .iter()
+                    .map(|capture| self.read_capture(&capture.name, expression.span()))
+                    .collect::<Result<Vec<_>, _>>()?;
+                self.emit_value(
+                    Operation::MakeClosure {
+                        function: target.function,
+                        captures,
+                    },
+                    target.value_type,
+                    expression.span(),
+                )
             }
             _ => Err(unsupported(expression.span(), "expression")),
         }

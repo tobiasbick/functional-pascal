@@ -67,7 +67,8 @@ fn compare_values(a: &Value, b: &Value, real_comparison: RealComparison) -> bool
         (Value::OptionSome(a), Value::OptionSome(b)) => compare_values(a, b, real_comparison),
         (Value::OptionNone, Value::OptionNone) => true,
         (Value::Function(a), Value::Function(b)) => {
-            a.name == b.name
+            a.function == b.function
+                && a.name == b.name
                 && a.task_bound == b.task_bound
                 && a.captures.len() == b.captures.len()
                 && a.captures

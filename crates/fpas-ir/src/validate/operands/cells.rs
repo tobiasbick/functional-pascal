@@ -2,6 +2,44 @@
     clippy::too_many_arguments,
     reason = "typed validation needs explicit operand scopes"
 )]
+fn validate_cell_make(
+    program: &Program,
+    function: &Function,
+    block: BlockId,
+    instruction: usize,
+    value: ValueId,
+    result: Option<ValueDefinition>,
+    all_values: &BTreeMap<ValueId, TypeId>,
+    available: &BTreeSet<ValueId>,
+) -> Result<(), ValidationError> {
+    let value_ty = value_type(function, block, instruction, value, all_values, available)?;
+    let result = result.ok_or_else(|| {
+        function_error(
+            function.id,
+            Some(block),
+            Some(instruction),
+            ValidationErrorKind::MissingResult,
+        )
+    })?;
+    match program.ty(result.ty).map(|definition| &definition.kind) {
+        Some(IrType::Cell(inner)) if *inner == value_ty => Ok(()),
+        _ => Err(function_error(
+            function.id,
+            Some(block),
+            Some(instruction),
+            ValidationErrorKind::OperandType {
+                operand: "cell result",
+                expected: value_ty.get(),
+                actual: result.ty.get(),
+            },
+        )),
+    }
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "typed validation needs explicit operand scopes"
+)]
 fn validate_cell_read(
     program: &Program,
     function: &Function,

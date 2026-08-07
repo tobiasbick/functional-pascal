@@ -10,19 +10,19 @@ exist.
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P3 opcode match; 9 direct register-VM tests cover every scalar opcode family, dynamic numeric operations, aliasing, domain edges, control flow, diagnostics, verifier boundary, and lifecycle | complete through P3 |
-| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
-| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves byte-identical repeated output, lowest-free temporary reuse, bounded register count, and verifier-valid operands | complete through P3 |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P4 opcode match; 20 direct register-VM tests cover scalar/control-flow families plus calls, frames, closures, cells, callbacks, limits, diagnostics, and lifecycle | complete through P4 |
+| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit cases plus compiler contiguous call-window selection | complete through P4 |
+| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves byte-identical repeated output, lowest-free temporary reuse, bounded register count, verifier-valid operands, pinned parameters/captures, and one reserved contiguous call window | complete through P4 |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P3 |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3/P4 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P4 |
 
 ## Runtime lookup requirements
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | direct-call and wrong-ID tests; profile | planned |
-| PVM-ID-002 | First-class functions retain numeric target | bytecode value + VM | closure/callback/task tests | planned |
+| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler function differential tests and VM direct/wrong-ID tests | complete through P4 |
+| PVM-ID-002 | First-class functions retain numeric target | bytecode value + VM | named/anonymous closure, callback, task-bound, and capture tests | complete through P4 |
 | PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | initialization/read/write/concurrency tests | planned |
 | PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | get/set/update/default/COW tests | planned |
 | PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | construction/match/destructure tests | planned |
@@ -33,16 +33,16 @@ exist.
 
 | ID | Requirement | Primary test families | Required evidence | State |
 |---|---|---|---|---|
-| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; full workspace and FPAS suites pass | complete through P3 |
-| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | P3 expressions lower left before right; 11 stack/register differential tests and full existing suite pass | complete through P3 subset |
+| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; full workspace and FPAS suites pass | complete through P4 |
+| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | expressions and call arguments lower left before right; scalar/control-flow/function/closure stack-register differential tests and full existing suite pass | complete through P4 subset |
 | PVM-SEM-003 | Integer and real behavior unchanged | VM numeric tests | wrapping integer edges, mixed numeric conversion, typed/dynamic arithmetic, divide/modulo diagnostics, comparisons, and aliasing covered directly and differentially | complete through P3 subset |
-| PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | recursion/return/arity coverage | planned |
-| PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | mutable/immutable/task-bound cases | planned |
+| PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | direct/procedure/recursion/early-return differential tests; method receiver ABI; wrong arity | complete through P4 subset |
+| PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | named/anonymous, immutable/mutable cell, nested, capture-order, and task-bound cases | complete through P4 subset |
 | PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | clone/mutate/equality/order/display | planned |
 | PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | wrap/unwrap/combinator/error cases | planned |
 | PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | exhaustive intrinsic and headless tests | planned |
 | PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | stress, wait, sleep, shutdown, panic | planned |
-| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | P3 compiler differential tests compare code/message/help/line/column; VM tests prove sparse source lookup for runtime failures | complete through P3 subset |
+| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | compiler differential tests compare code/message/help/line/column; VM tests prove sparse source lookup and structured call/callback failures | complete through P4 subset |
 
 ## Artifact and portability requirements
 
@@ -53,7 +53,7 @@ exist.
 | PVM-FMT-003 | Bounded section decoder | program format | truncation/mutation/limit tests | planned |
 | PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | canonical digest and producer digests | planned |
 | PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 sparse-map validation plus P3 metadata run coalescing and diagnostic-only lookup; direct VM failures resolve line 41/column 7 while ordinary dispatch does not query metadata | complete through P3 |
-| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | `compile_register_subset` returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler and direct VM admission/later-phase boundary tests pass | complete through P3 |
+| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | `compile_register_subset` returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler, call-window, function-range, closure, and direct VM admission tests pass | complete through P4 |
 | PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | direct error + project rebuild tests | planned |
 | PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | sources/manifests removed run test | planned |
 | PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows and Linux native tests | planned |
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P1/P2 plus P3 lowering, case, allocation, selection, metadata, dispatch, access, diagnostics, and scalar/dynamic handler modules are responsibility-named; every new production/test file is below 500 lines | complete through P3 |
-| PVM-QUAL-002 | Public Rust documentation complete | Public P3 compiler entry points and register VM/result lifecycle APIs have `///` documentation; build/doc/clippy gates pass | complete through P3 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3 rejects unsupported constructs and invariant failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P3 |
+| PVM-QUAL-001 | Focused module/file layout | P1-P4 lowering, calls, routines, closures, capture typing, allocation, selection, frames, callbacks, and VM call handling are responsibility-named; every new production/test file is below 500 lines | complete through P4 |
+| PVM-QUAL-002 | Public Rust documentation complete | Public compiler entry points plus register VM/result/callback lifecycle APIs have `///` documentation; build/doc/clippy gates pass | complete through P4 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3/P4 reject unsupported constructs, resource limits, malformed calls, and invariant failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P4 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
-| PVM-QUAL-006 | Full Rust verification | P3 targeted IR/compiler/VM tests plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P3 |
-| PVM-QUAL-007 | Full FPAS verification | `scripts/format-fpas-sources.ps1 -Check` and `fpas test tests/` passed; P3 changes no FPAS source | complete through P3 |
-| PVM-QUAL-008 | Privacy preserved | P3 diff inspection found no host-identifying metadata; source metadata uses `<memory>`/`<micro>` and fixed-width IDs | complete through P3 |
+| PVM-QUAL-006 | Full Rust verification | P4 targeted IR/compiler/bytecode/VM tests plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P4 |
+| PVM-QUAL-007 | Full FPAS verification | `scripts/format-fpas-sources.ps1 -Check` and `fpas test tests/` passed with 385 passed and one skipped; P4 changes no FPAS source | complete through P4 |
+| PVM-QUAL-008 | Privacy preserved | P4 diff inspection found no host-identifying metadata; source metadata uses fixed development-path names and fixed-width IDs | complete through P4 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P3 opcode implementation overlay
@@ -182,15 +182,15 @@ final production migration and old-op deletion, not the inactive phase overlay a
 | `JumpIfTrue` | `BranchIfTrue(condition, target)` terminator | P3; `if` and short-circuit tests | planned |
 | `JumpIfLocalGt` | `GtInt` plus branch terminator | P3; `for to` bound tests | planned |
 | `JumpIfLocalLt` | `LtInt` plus branch terminator | P3; `for downto` bound tests | planned |
-| `Call` | `CallDirect(dst, FunctionId, arg_base, arg_count)` | P4; function/recursion/arity tests and `function_call` | planned |
-| `CallValue` | `CallValue(dst, callee, arg_base, arg_count)` | P4; first-class function tests | planned |
-| `MakeClosure` | `MakeClosure(dst, FunctionId, capture_base, capture_count)` | P4; closure capture-order/task-bound tests | planned |
-| `MakeCell` | `MakeCell(dst, src)` | P4; mutable capture tests | planned |
-| `CellGet` | `CellRead(dst, cell)` | P4; mutable capture tests | planned |
-| `CellSet` | `CellWrite(cell, src)` | P4; mutable capture tests | planned |
-| `Return` | `Return(src)` terminator | P3/P4; root, early-return, and function tests | planned |
-| `GetEnclosing` | capture/cell read using resolved capture slot | P4; nested closure tests | planned |
-| `SetEnclosing` | capture/cell write using resolved capture slot | P4; nested mutable capture tests | planned |
+| `Call` | `CallDirect(dst, FunctionId, arg_base, arg_count)` | compiler function differential tests; VM direct/recursive/arity tests | complete through P4 |
+| `CallValue` | `CallValue(dst, callee, arg_base, arg_count)` | named first-class and closure differential/direct VM tests | complete through P4 |
+| `MakeClosure` | `MakeClosure(dst, FunctionId, capture_base, capture_count)` | anonymous/nested capture and task-bound tests | complete through P4 |
+| `MakeCell` | `MakeCell(dst, src)` | mutable anonymous and direct cell tests | complete through P4 |
+| `CellGet` | `CellRead(dst, cell)` | mutable repeated-call tests | complete through P4 |
+| `CellSet` | `CellWrite(cell, src)` | mutable repeated-call tests | complete through P4 |
+| `Return` | `Return(src)` terminator | root, early-return, procedure, function, recursion tests | complete through P4 |
+| `GetEnclosing` | capture/cell read using resolved capture slot | nested and escaping closure tests | complete through P4 |
+| `SetEnclosing` | capture/cell write using resolved capture slot | enclosing cell representation and mutable closure tests | complete through P4 |
 | `MakeArray` | `MakeArray(dst, value_base, count)` | P5; array construction/COW tests | planned |
 | `IndexGet` | `IndexGet(dst, collection, index)` | P5; array/dict/string index tests | planned |
 | `IndexSet` | `IndexSet(dst, collection, index, value)` | P5; aggregate mutation tests | planned |

@@ -233,6 +233,8 @@ pub enum Operation {
         /// Captured values in semantic capture order.
         captures: Vec<ValueId>,
     },
+    /// Wraps a value in a shared mutable capture cell.
+    MakeCell(ValueId),
     /// Reads the value inside a mutable capture cell.
     CellRead(ValueId),
     /// Writes a value into a mutable capture cell.
@@ -279,6 +281,7 @@ impl Operation {
                 | Self::TestVariant { .. }
                 | Self::Intrinsic { .. }
                 | Self::MakeClosure { .. }
+                | Self::MakeCell(_)
                 | Self::CellRead(_)
                 | Self::SpawnTask { .. }
         )

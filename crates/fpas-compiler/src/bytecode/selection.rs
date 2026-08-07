@@ -1,4 +1,4 @@
-//! Total P3 IR instruction selection into checked packed instructions.
+//! Total active-subset IR instruction selection into checked packed instructions.
 
 use std::collections::BTreeMap;
 
@@ -22,10 +22,16 @@ pub(super) struct Selector<'a> {
 impl<'a> Selector<'a> {
     pub fn new(program: &'a Program, function: &Function, allocation: &'a Allocation) -> Self {
         let value_types = function
-            .blocks
+            .parameters
             .iter()
-            .flat_map(|block| block.instructions.iter())
-            .filter_map(|instruction| instruction.result)
+            .copied()
+            .chain(
+                function
+                    .blocks
+                    .iter()
+                    .flat_map(|block| block.instructions.iter())
+                    .filter_map(|instruction| instruction.result),
+            )
             .map(|result| (result.id, result.ty))
             .collect();
         Self {
@@ -39,9 +45,9 @@ impl<'a> Selector<'a> {
         &self,
         instruction: &fpas_ir::Instruction,
         metadata: &mut MetadataBuilder,
-    ) -> Result<Instruction, CompileError> {
+    ) -> Result<Vec<Instruction>, CompileError> {
         let result = instruction.result.map(|value| value.id);
-        match &instruction.operation {
+        let selected = match &instruction.operation {
             Operation::Const(constant) => {
                 let destination = self.result_register(result)?;
                 if let Some(constant) = metadata.constant(constant)? {
@@ -78,10 +84,134 @@ impl<'a> Selector<'a> {
                 self.allocation.value(*left)?.get(),
                 self.allocation.value(*right)?.get(),
             ),
+            Operation::CallDirect {
+                function,
+                arguments,
+            } => return self.select_direct_call(*function, arguments, result),
+            Operation::CallValue { callee, arguments } => {
+                return self.select_value_call(*callee, arguments, result);
+            }
+            Operation::MakeClosure { function, captures } => {
+                return self.select_closure(*function, captures, result);
+            }
+            Operation::MakeCell(value) => abc(
+                Opcode::MakeCell,
+                self.result_register(result)?,
+                self.allocation.value(*value)?.get(),
+                0,
+            ),
+            Operation::CellRead(value) => abc(
+                Opcode::CellRead,
+                self.result_register(result)?,
+                self.allocation.value(*value)?.get(),
+                0,
+            ),
+            Operation::CellWrite { cell, value } => abc(
+                Opcode::CellWrite,
+                self.allocation.value(*cell)?.get(),
+                self.allocation.value(*value)?.get(),
+                0,
+            ),
             other => Err(selection_error(&format!(
                 "IR operation {other:?} belongs to a later register-VM phase"
             ))),
+        }?;
+        Ok(vec![selected])
+    }
+
+    fn select_direct_call(
+        &self,
+        function: fpas_ir::FunctionId,
+        arguments: &[ValueId],
+        result: Option<ValueId>,
+    ) -> Result<Vec<Instruction>, CompileError> {
+        let target = self
+            .program
+            .function(function)
+            .ok_or_else(|| selection_error("direct call target is missing"))?;
+        let target_id = u16::try_from(function.get())
+            .map_err(|_| selection_error("function identifier exceeds u16"))?;
+        let mut instructions = self.prepare_window(arguments)?;
+        let returns_unit = matches!(
+            self.program
+                .ty(target.signature.result)
+                .map(|definition| &definition.kind),
+            Some(IrType::Unit)
+        );
+        let destination = if returns_unit {
+            fpas_bytecode::NO_REGISTER
+        } else {
+            self.result_register(result)?
+        };
+        instructions.push(abc_aux(
+            Opcode::CallDirect,
+            destination,
+            target_id,
+            self.allocation.call_window().get(),
+            argument_count(arguments)?,
+        )?);
+        if returns_unit {
+            instructions.push(abc(Opcode::LoadUnit, self.result_register(result)?, 0, 0)?);
         }
+        Ok(instructions)
+    }
+
+    fn select_value_call(
+        &self,
+        callee: ValueId,
+        arguments: &[ValueId],
+        result: Option<ValueId>,
+    ) -> Result<Vec<Instruction>, CompileError> {
+        let mut instructions = self.prepare_window(arguments)?;
+        instructions.push(abc_aux(
+            Opcode::CallValue,
+            self.result_register(result)?,
+            self.allocation.value(callee)?.get(),
+            self.allocation.call_window().get(),
+            argument_count(arguments)?,
+        )?);
+        Ok(instructions)
+    }
+
+    fn select_closure(
+        &self,
+        function: fpas_ir::FunctionId,
+        captures: &[ValueId],
+        result: Option<ValueId>,
+    ) -> Result<Vec<Instruction>, CompileError> {
+        let target_id = u16::try_from(function.get())
+            .map_err(|_| selection_error("function identifier exceeds u16"))?;
+        let mut instructions = self.prepare_window(captures)?;
+        instructions.push(abc_aux(
+            Opcode::MakeClosure,
+            self.result_register(result)?,
+            target_id,
+            self.allocation.call_window().get(),
+            argument_count(captures)?,
+        )?);
+        Ok(instructions)
+    }
+
+    fn prepare_window(&self, values: &[ValueId]) -> Result<Vec<Instruction>, CompileError> {
+        let base = self.allocation.call_window().get();
+        values
+            .iter()
+            .enumerate()
+            .map(|(offset, value)| {
+                let destination = base
+                    .checked_add(
+                        u16::try_from(offset)
+                            .map_err(|_| selection_error("call window offset exceeds u16"))?,
+                    )
+                    .ok_or_else(|| selection_error("call window exceeds u16"))?;
+                abc(
+                    Opcode::Move,
+                    destination,
+                    self.allocation.value(*value)?.get(),
+                    0,
+                )
+            })
+            .collect()
     }
 
     fn binary_opcode(
@@ -169,6 +299,21 @@ fn unary_opcode(operation: UnaryOperation) -> Opcode {
 
 pub(super) fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Result<Instruction, CompileError> {
     Instruction::abc(opcode, a, b, c, 0).map_err(|error| selection_error(&error.to_string()))
+}
+
+pub(super) fn abc_aux(
+    opcode: Opcode,
+    a: u16,
+    b: u16,
+    c: u16,
+    auxiliary: u8,
+) -> Result<Instruction, CompileError> {
+    Instruction::abc(opcode, a, b, c, auxiliary)
+        .map_err(|error| selection_error(&error.to_string()))
+}
+
+fn argument_count(values: &[ValueId]) -> Result<u8, CompileError> {
+    u8::try_from(values.len()).map_err(|_| selection_error("call or capture count exceeds u8"))
 }
 
 pub(super) fn abx(opcode: Opcode, a: u16, bx: u32) -> Result<Instruction, CompileError> {

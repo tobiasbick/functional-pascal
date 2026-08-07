@@ -81,6 +81,18 @@ impl Value {
         Self::Function(SharedFunction::new(name, captures, task_bound))
     }
 
+    /// Create a first-class function value for the numeric register ABI.
+    pub fn register_function(
+        function: crate::FunctionId,
+        name: String,
+        captures: Vec<Value>,
+        task_bound: bool,
+    ) -> Self {
+        Self::Function(SharedFunction::numeric(
+            function, name, captures, task_bound,
+        ))
+    }
+
     /// Return the runtime type category name for diagnostics.
     pub fn type_name(&self) -> &'static str {
         match self {

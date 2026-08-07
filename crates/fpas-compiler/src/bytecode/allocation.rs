@@ -11,28 +11,51 @@ use crate::error::internal_compiler_error;
 pub(super) struct Allocation {
     locals: BTreeMap<LocalId, Register>,
     values: BTreeMap<ValueId, Register>,
+    call_window: Register,
     pub register_count: u16,
 }
 
 impl Allocation {
     pub fn build(function: &Function) -> Result<Self, CompileError> {
-        if !function.parameters.is_empty() || !function.captures.is_empty() {
-            return Err(limit_error(
-                "P3 register allocation does not accept parameters or captures",
-            ));
-        }
         let mut locals = BTreeMap::new();
-        for (index, local) in function.locals.iter().enumerate() {
+        let mut values = BTreeMap::new();
+        for (index, parameter) in function.parameters.iter().enumerate() {
             let register =
                 Register::try_from_index(index).map_err(|error| limit_error(&error.to_string()))?;
+            values.insert(parameter.id, register);
+        }
+        let capture_locals = function
+            .locals
+            .iter()
+            .filter(|local| local.capture.is_some())
+            .collect::<Vec<_>>();
+        if capture_locals.len() != function.captures.len() {
+            return Err(limit_error(
+                "capture declarations must have one ordered capture local",
+            ));
+        }
+        let mut next_fixed = function.parameters.len();
+        for local in capture_locals {
+            let register = Register::try_from_index(next_fixed)
+                .map_err(|error| limit_error(&error.to_string()))?;
             locals.insert(local.id, register);
+            next_fixed = next_fixed.saturating_add(1);
+        }
+        for local in function
+            .locals
+            .iter()
+            .filter(|local| local.capture.is_none())
+        {
+            let register = Register::try_from_index(next_fixed)
+                .map_err(|error| limit_error(&error.to_string()))?;
+            locals.insert(local.id, register);
+            next_fixed = next_fixed.saturating_add(1);
         }
 
         let last_uses = last_uses(function);
-        let mut values = BTreeMap::new();
         let mut active: Vec<(ValueId, usize, Register)> = Vec::new();
         let mut position = 0_usize;
-        let mut high_water = function.locals.len();
+        let mut high_water = next_fixed;
         for block in &function.blocks {
             if !block.parameters.is_empty() {
                 return Err(limit_error(
@@ -47,7 +70,7 @@ impl Allocation {
                         .map(|(_, _, register)| register.get())
                         .chain(locals.values().map(|register| register.get()))
                         .collect();
-                    let register = lowest_free(function.locals.len(), &used)?;
+                    let register = lowest_free(next_fixed, &used)?;
                     high_water = high_water.max(usize::from(register.get()) + 1);
                     let last_use = last_uses.get(&result.id).copied().unwrap_or(position);
                     active.push((result.id, last_use, register));
@@ -57,11 +80,15 @@ impl Allocation {
             }
             position = position.saturating_add(1);
         }
-        let register_count = u16::try_from(high_water)
+        let call_window = Register::try_from_index(high_water)
+            .map_err(|error| limit_error(&error.to_string()))?;
+        let window_size = largest_window(function);
+        let register_count = u16::try_from(high_water.saturating_add(window_size))
             .map_err(|_| limit_error("register count exceeds the portable u16 frame limit"))?;
         Ok(Self {
             locals,
             values,
+            call_window,
             register_count,
         })
     }
@@ -79,6 +106,28 @@ impl Allocation {
             .copied()
             .ok_or_else(|| limit_error(&format!("value {} has no allocated register", id.get())))
     }
+
+    pub fn call_window(&self) -> Register {
+        self.call_window
+    }
+}
+
+fn largest_window(function: &Function) -> usize {
+    function
+        .blocks
+        .iter()
+        .flat_map(|block| &block.instructions)
+        .map(|instruction| match &instruction.operation {
+            Operation::CallDirect { arguments, .. }
+            | Operation::CallValue { arguments, .. }
+            | Operation::SpawnTask { arguments, .. }
+            | Operation::SpawnDetachedTask { arguments, .. }
+            | Operation::Intrinsic { arguments, .. } => arguments.len(),
+            Operation::MakeClosure { captures, .. } => captures.len(),
+            _ => 0,
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 fn lowest_free(first_temporary: usize, used: &BTreeSet<u16>) -> Result<Register, CompileError> {
@@ -120,6 +169,7 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::Yield => Vec::new(),
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
+        | Operation::MakeCell(value)
         | Operation::CellRead(value) => vec![*value],
         Operation::Binary { left, right, .. } => vec![*left, *right],
         Operation::Unary { operand, .. } => vec![*operand],

@@ -30,6 +30,14 @@ impl MetadataBuilder {
         Ok((builder, name))
     }
 
+    pub fn function_name(&mut self, function_name: &str) -> Result<StringId, CompileError> {
+        self.intern_string(function_name)
+    }
+
+    pub fn begin_function(&mut self) {
+        self.last_location = None;
+    }
+
     pub fn constant(
         &mut self,
         value: &fpas_ir::Constant,

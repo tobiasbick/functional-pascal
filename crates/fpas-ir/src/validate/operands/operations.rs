@@ -285,6 +285,16 @@ fn validate_operation(
             all_values,
             available,
         ),
+        Operation::MakeCell(value) => validate_cell_make(
+            program,
+            function,
+            block,
+            instruction,
+            *value,
+            result,
+            all_values,
+            available,
+        ),
         Operation::CellRead(cell) => validate_cell_read(
             program,
             function,

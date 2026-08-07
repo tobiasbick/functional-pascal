@@ -24,6 +24,8 @@ fn assert_both_succeed(source: &str) -> fpas_vm::RegisterExecution {
     run_register(source).expect("register path should succeed")
 }
 
+mod closures;
 mod control_flow;
 mod diagnostics;
+mod functions;
 mod structure;

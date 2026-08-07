@@ -10,7 +10,7 @@ use super::worker::RegisterWorker;
 impl RegisterWorker {
     pub fn read(&self, register: Register) -> Result<&Value, VmError> {
         self.registers
-            .get(usize::from(register.get()))
+            .get(self.base + usize::from(register.get()))
             .ok_or_else(|| {
                 diagnostics::internal(
                     self.executable.executable(),
@@ -28,7 +28,7 @@ impl RegisterWorker {
         let address = self.current_address;
         let slot = self
             .registers
-            .get_mut(usize::from(register.get()))
+            .get_mut(self.base + usize::from(register.get()))
             .ok_or_else(|| {
                 diagnostics::internal(
                     executable,
@@ -96,11 +96,34 @@ impl RegisterWorker {
                         ),
                     )
                 }),
-            Constant::Function { .. } => Err(diagnostics::internal(
-                executable,
-                self.current_address,
-                "Function constant reached the P3 scalar interpreter",
-            )),
+            Constant::Function {
+                function,
+                task_bound,
+            } => {
+                let info = executable
+                    .functions
+                    .get(usize::from(function.get()))
+                    .ok_or_else(|| {
+                        diagnostics::internal(
+                            executable,
+                            self.current_address,
+                            "Function constant target is missing",
+                        )
+                    })?;
+                let name = executable.strings.get(info.name).ok_or_else(|| {
+                    diagnostics::internal(
+                        executable,
+                        self.current_address,
+                        "Function constant name is missing",
+                    )
+                })?;
+                Ok(Value::register_function(
+                    function,
+                    name.to_owned(),
+                    Vec::new(),
+                    task_bound,
+                ))
+            }
         }
     }
 

@@ -8,7 +8,7 @@ exist.
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | IR positive/negative validation tests | planned |
+| PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 14 focused positive, negative, and boundary tests; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | size + all-form round-trip tests | planned |
 | PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/dispatch.rs` | opcode inventory + VM tests | planned |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | file-size and responsibility review | planned |
-| PVM-QUAL-002 | Public Rust documentation complete | rustdoc/lint inspection | planned |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | negative tests + source review | planned |
+| PVM-QUAL-001 | Focused module/file layout | P1 `fpas-ir` uses responsibility-named IR files plus `validate/operands/` concern slices; every new Rust source and test file is below 500 lines | complete for P1 |
+| PVM-QUAL-002 | Public Rust documentation complete | `fpas-ir` uses `#![deny(missing_docs)]`; `cargo build -p fpas-ir` and crate clippy gate passed | complete for P1 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | `ValidationError`/`ValidationErrorKind` plus negative `fpas-ir` validation tests; no `unsafe`, `unwrap()`/`expect()` calls, or `panic!` in production `fpas-ir` sources | complete for P1 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
-| PVM-QUAL-006 | Full Rust verification | fmt/build/test/clippy commands | planned |
+| PVM-QUAL-006 | Full Rust verification | P1: `cargo fmt --all -- --check`; `cargo build -p fpas-ir`; `cargo test -p fpas-ir`; `cargo clippy -p fpas-ir --all-targets --locked -- -D warnings`; `cargo test --workspace` | complete for P1 |
 | PVM-QUAL-007 | Full FPAS verification | fmt check + `fpas test tests/` | planned |
-| PVM-QUAL-008 | Privacy preserved | repository diff inspection | planned |
+| PVM-QUAL-008 | Privacy preserved | P1 diff inspection found no host-identifying metadata; P1 is target- and host-independent | complete for P1 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P0 current-opcode migration inventory

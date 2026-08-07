@@ -28,7 +28,7 @@ only "done".
 | Phase | State | Evidence |
 |---|---|---|
 | P0 Contract and baseline | complete | `p0-contract-baseline.md`; full 16-row `register-vm-before` snapshot; two VM repeats; artifact tests (10 + 8 + 18 + 1 + 1); `cargo fmt`/build/test/clippy and FPAS fmt/test gates passed |
-| P1 Typed IR | not started | — |
+| P1 Typed IR | complete | `fpas-ir` validation integration tests: 14 passed; `cargo fmt --all -- --check`; `cargo build -p fpas-ir`; `cargo clippy -p fpas-ir --all-targets --locked -- -D warnings`; `cargo test --workspace` passed; production path unchanged |
 | P2 Register bytecode model and verifier | not started | — |
 | P3 Scalar/control-flow compiler and interpreter | not started | — |
 | P4 Calls, frames, closures, and callbacks | not started | — |

@@ -29,7 +29,7 @@ only "done".
 |---|---|---|
 | P0 Contract and baseline | complete | `p0-contract-baseline.md`; full 16-row `register-vm-before` snapshot; two VM repeats; artifact tests (10 + 8 + 18 + 1 + 1); `cargo fmt`/build/test/clippy and FPAS fmt/test gates passed |
 | P1 Typed IR | complete | `fpas-ir` validation integration tests: 17 passed, including loop backedges, source spans, maximum IDs, and checked conversions; no unchecked narrowing remains; `cargo fmt --all -- --check`; `cargo build -p fpas-ir`; `cargo clippy -p fpas-ir --all-targets --locked -- -D warnings`; `cargo test --workspace` passed; production path unchanged |
-| P2 Register bytecode model and verifier | not started | — |
+| P2 Register bytecode model and verifier | complete | 94 explicit opcode slots and all-form round trips; 21 register-bytecode integration tests plus resource-limit unit coverage; all active opcodes accepted in a compiler-independent fixture; malformed register/ID/window/CFG/layout/source categories rejected; 8-byte `Instruction` and <=16-byte `Value` assertions; targeted and full workspace fmt/build/test/clippy gates passed; production path unchanged |
 | P3 Scalar/control-flow compiler and interpreter | not started | — |
 | P4 Calls, frames, closures, and callbacks | not started | — |
 | P5 Globals, records, enums, arrays, and dictionaries | not started | — |

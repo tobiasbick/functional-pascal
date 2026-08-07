@@ -1,6 +1,6 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; not implemented.
+Status: approved implementation direction; P0 through P2 implemented, production cutover not started.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -50,6 +50,10 @@ An implementation agent must read these files in order before editing code:
 9. [Terra runbook](terra-runbook.md).
 10. [Traceability](traceability.md).
 
+Completed phase evidence is recorded in [P0 contract and baseline](p0-contract-baseline.md) and
+[P2 register bytecode implementation](p2-register-bytecode.md). P1 evidence lives directly beside
+the typed IR tests and in the traceability matrix.
+
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
 `.agents/skills/fpas-change-checklist/SKILL.md`.
@@ -78,6 +82,10 @@ Revalidate these facts before implementation because file names can move:
   payload in a bounded binary `.fpascp` envelope.
 - `Value` is already constrained to at most 16 bytes and compound values already use shared or
   copy-on-write storage. Preserve that useful baseline until a measurement disproves it.
+- [`fpas-ir`](../../../crates/fpas-ir/src/lib.rs) now owns the validated target-independent typed IR
+  introduced in P1.
+- [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and its verifier now
+  own the inactive register representation introduced in P2; production still uses `Chunk`.
 
 ## Desired pipeline
 

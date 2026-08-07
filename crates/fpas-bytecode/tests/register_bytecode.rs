@@ -1,0 +1,13 @@
+//! Register-bytecode representation and verifier integration tests.
+
+#![expect(
+    clippy::expect_used,
+    reason = "test-only executable builders fail fast when a fixture is malformed"
+)]
+
+mod register_bytecode {
+    mod executable;
+    mod instruction;
+    mod support;
+    mod verifier;
+}

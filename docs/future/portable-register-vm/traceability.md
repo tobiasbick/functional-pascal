@@ -9,13 +9,13 @@ exist.
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 17 focused positive, negative, and boundary tests, including loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
-| PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | size + all-form round-trip tests | planned |
+| PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
 | PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/dispatch.rs` | opcode inventory + VM tests | planned |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
 | PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | deterministic and max-register tests | planned |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | no new `unsafe`; lint/test gates | planned |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model and verifier use no `unsafe`, `transmute`, or unchecked narrowing; full codec and execution proof remains in P3/P9 | complete through P2 |
 
 ## Runtime lookup requirements
 
@@ -52,8 +52,8 @@ exist.
 | PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | schema review + 32/64-bit compile evidence | planned |
 | PVM-FMT-003 | Bounded section decoder | program format | truncation/mutation/limit tests | planned |
 | PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | canonical digest and producer digests | planned |
-| PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | compression and lookup edge tests | planned |
-| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | malformed executable rejection | planned |
+| PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 `SourceMap` uses sparse sorted runs and binary-search lookup; lookup/order/bounds/source/function-boundary tests pass; VM diagnostic integration remains | complete through P2 |
+| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | P2 `Executable::verify` is the only `VerifiedExecutable` constructor; 21 integration tests include exhaustive valid and malformed candidates; VM admission wiring remains | complete through P2 |
 | PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | direct error + project rebuild tests | planned |
 | PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | sources/manifests removed run test | planned |
 | PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows and Linux native tests | planned |
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P1 `fpas-ir` uses responsibility-named IR files plus `validate/operands/` concern slices; every new Rust source and test file is below 500 lines | complete for P1 |
-| PVM-QUAL-002 | Public Rust documentation complete | `fpas-ir` uses `#![deny(missing_docs)]`; `cargo build -p fpas-ir` and crate clippy gate passed | complete for P1 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | `ValidationError`/`ValidationErrorKind` plus negative `fpas-ir` validation tests; capture counts remain `usize` in diagnostics instead of narrowing; no `unsafe`, `unwrap()`/`expect()` calls, or `panic!` in production `fpas-ir` sources | complete for P1 |
+| PVM-QUAL-001 | Focused module/file layout | P1 `fpas-ir` and P2 `fpas-bytecode` use responsibility-named submodules; every new production Rust and integration-test file is below 500 lines | complete through P2 |
+| PVM-QUAL-002 | Public Rust documentation complete | P1 public IR and P2 public instruction/operand/function/executable/metadata/limit APIs have `///` documentation; build/doc/clippy gates pass | complete through P2 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P1 `ValidationError` and P2 contextual `ValidationError` reject malformed candidates; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `transmute`, or unchecked narrowing | complete through P2 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
-| PVM-QUAL-006 | Full Rust verification | P1: `cargo fmt --all -- --check`; `cargo build -p fpas-ir`; `cargo test -p fpas-ir`; `cargo clippy -p fpas-ir --all-targets --locked -- -D warnings`; `cargo test --workspace` | complete for P1 |
+| PVM-QUAL-006 | Full Rust verification | P2: targeted `fpas-bytecode` build/test/clippy plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P2 |
 | PVM-QUAL-007 | Full FPAS verification | fmt check + `fpas test tests/` | planned |
-| PVM-QUAL-008 | Privacy preserved | P1 diff inspection found no host-identifying metadata; P1 is target- and host-independent | complete for P1 |
+| PVM-QUAL-008 | Privacy preserved | P1/P2 diff inspection found no host-identifying metadata; fixed-width model and tests are target- and host-independent | complete through P2 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P0 current-opcode migration inventory

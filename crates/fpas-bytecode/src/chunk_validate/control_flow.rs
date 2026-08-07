@@ -1,4 +1,4 @@
-//! Entry-point control-flow validation.
+//! Entry-point control-flow validation for legacy stack chunks.
 
 use crate::{Chunk, ExecutableError, Op};
 

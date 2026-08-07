@@ -10,6 +10,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
+| Runtime performance | [Portable register VM](portable-register-vm/README.md) | Rewrite the stack bytecode and interpreter as a portable register VM; defer Cranelift |
 
 ## Architecture records and development intake
 

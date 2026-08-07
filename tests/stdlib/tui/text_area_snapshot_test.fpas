@@ -17,7 +17,6 @@ begin
   var Text: string := (('012345' + Std.Str.Chr(10)) + 'alpha') + (Std.Str.Chr(10) + 'omega');
   return TuiElementBuilders.MakeDesktop(Focus, [
                                                  TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, 9, TuiPoint.Create(1, 1), TuiAction.Create(9))
-
                                                ])
 end;
 

@@ -12,7 +12,6 @@ function ViewInput(State: InputPointerModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(1), State.Text, State.Caret, TuiAction.Create(1))
-
                                                                       ])
 end;
 

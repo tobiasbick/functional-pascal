@@ -66,7 +66,6 @@ begin
                                                  Search,
                                                  TuiElementBuilders.MakeRule(''),
                                                  Expanding(NotesList, 1)
-
                                                ])
 end;
 
@@ -75,7 +74,6 @@ begin
   return TuiElementBuilders.MakePanel('Editor', [
                                                   TuiElementBuilders.MakeLabel('No note selected'),
                                                   TuiElementBuilders.MakeLabel('Press Ctrl+N to create one.')
-
                                                 ])
 end;
 
@@ -100,7 +98,6 @@ begin
                                                         Tags,
                                                         TuiElementBuilders.MakeRule('Markdown'),
                                                         Expanding(Body, 1)
-
                                                       ])
 end;
 
@@ -119,7 +116,6 @@ begin
   return TuiElementBuilders.MakeRow([
                                       FixedWidthExpanding(ListPane(State), SidebarWidth(State)),
                                       Expanding(EditorPane(State), 1)
-
                                     ])
 end;
 
@@ -132,7 +128,6 @@ begin
                                              TuiStatusItemBuilders.MakeKeyHint('Ctrl+F', 'search'),
                                              TuiStatusItemBuilders.MakeKeyHint('Ctrl+1/2', 'panes'),
                                              TuiStatusItemBuilders.MakeKeyHint('F1', 'help')
-
                                            ])
 end;
 
@@ -157,7 +152,6 @@ begin
                                                       Archive,
                                                       TuiElementBuilders.MakeButton(TuiControlId.Create(24), 'Help', TuiAction.Create(15)),
                                                       TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(25), 'Close', 'C', TuiAction.Create(16))
-
                                                     ])
 end;
 
@@ -176,7 +170,6 @@ begin
                                                            TuiElementBuilders.MakeLabel('Arrows  Move between dialog buttons'),
                                                            TuiElementBuilders.MakeLabel('Esc     Close an overlay'),
                                                            TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(26), 'Close', 'C', TuiAction.Create(16))
-
                                                          ])
 end;
 
@@ -187,7 +180,6 @@ begin
                                                              TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(27), 'Save and quit', 'S', TuiAction.Create(17)),
                                                              TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(28), 'Discard', 'D', TuiAction.Create(18)),
                                                              TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(29), 'Cancel', 'C', TuiAction.Create(16))
-
                                                            ])
 end;
 
@@ -196,7 +188,6 @@ begin
   return TuiElementBuilders.MakeOverlay('Could not save note', [
                                                                  TuiElementBuilders.MakeLabel(State.ErrorMessage),
                                                                  TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(30), 'Close', 'C', TuiAction.Create(16))
-
                                                                ])
 end;
 
@@ -322,20 +313,13 @@ begin
   begin
     return TuiElementBuilders.MakeDesktop(None, [
                                                   TuiElementBuilders.MakePanel('Notes', [
-
                                                                                           TuiElementBuilders.MakeLabel('Terminal too small'),
-
                                                                                           TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
-
-
-
                                                                                         ])
-
                                                 ])
   end;
   mutable var Children: array of TuiElement := [
                                                  TuiElementBuilders.MakeColumn([Header(State), Expanding(MainContent(State), 1), Status(State)])
-
                                                ];
   if State.Overlay <> NotesOverlay.Closed then
   begin

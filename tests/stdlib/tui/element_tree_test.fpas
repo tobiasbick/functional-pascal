@@ -6,66 +6,16 @@ function ViewTree(Value: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(None, [
                                                 TuiElementBuilders.MakePanel('Dashboard', [
-
                                                                                             TuiElementBuilders.MakeColumnSpaced([
-
-
-
                                                                                                                                   TuiElementBuilders.MakeRule('Metrics'),
-
-
-
                                                                                                                                   TuiElementBuilders.MakeGauge('Load', 3, 4),
-
-
-
                                                                                                                                   TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(2, 1, [
-
-
-
-
-
-
-
                                                                                                                                                                                              TuiCell.Create('A', TuiStyleRole.Normal),
-
-
-
-
-
-
-
                                                                                                                                                                                              TuiCell.Create('B', TuiStyleRole.Accent)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                                                                                                                                                                            ]))
-
-
-
-
-
-
-
                                                                                                                                 ], 1)
-
-
-
                                                                                           ]),
                                                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('Continue?')])
-
                                               ])
 end;
 

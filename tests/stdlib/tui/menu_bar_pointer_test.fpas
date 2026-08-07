@@ -26,17 +26,10 @@ function ViewMenu(State: MenuModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeMenuBar([
-
                                                                                                                    TuiMenuItem.Create(TuiControlId.Create(1), 'Open', TuiAction.Create(10)),
-
                                                                                                                    TuiMenuItem.Disabled(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
-
                                                                                                                    TuiMenuItem.Create(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
-
-
-
                                                                                                                  ])
-
                                                                                 ])
 end;
 

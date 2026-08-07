@@ -115,7 +115,6 @@ begin
   var Spaced: TuiElement := TuiElementBuilders.MakeRowSpaced([
                                                                TuiElementBuilders.MakeLabel('A'),
                                                                TuiElementBuilders.MakeLabel('B')
-
                                                              ], 2);
   case Spaced of
     TuiElement.Row(Children, Spacing):

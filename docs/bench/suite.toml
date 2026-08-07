@@ -11,6 +11,41 @@ args = ["50000000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "global_access"
+group = "vm"
+path = "examples/pascal/vm/global_access_benchmark.fpas"
+args = ["5000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "record_field_access"
+group = "vm"
+path = "examples/pascal/vm/record_field_access_benchmark.fpas"
+args = ["3000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "closure_call"
+group = "vm"
+path = "examples/pascal/vm/closure_call_benchmark.fpas"
+args = ["3000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "branch_dispatch"
+group = "vm"
+path = "examples/pascal/vm/branch_dispatch_benchmark.fpas"
+args = ["20000000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "dynamic_numeric"
+group = "vm"
+path = "examples/pascal/vm/dynamic_numeric_benchmark.fpas"
+args = ["5000000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "array_push"
 group = "vm"
 path = "examples/pascal/vm/array_push_benchmark.fpas"

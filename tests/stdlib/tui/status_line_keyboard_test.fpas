@@ -24,17 +24,10 @@ function ViewStatus(State: StatusModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeStatusLine([
-
                                                                                                                       TuiStatusItemBuilders.MakeHint('Ready'),
-
                                                                                                                       TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Save', TuiAction.Create(20)),
-
                                                                                                                       TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(3), 'Quit', TuiAction.Create(30))
-
-
-
                                                                                                                     ])
-
                                                                                 ])
 end;
 

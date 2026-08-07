@@ -32,7 +32,6 @@ begin
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Repeated frames', [TuiElementBuilders.MakeColumn(Children)])
-
                                                                       ])
 end;
 

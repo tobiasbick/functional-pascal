@@ -30,15 +30,9 @@ begin
   AssertEquals(1, Constrained.Preferred.Height);
   var Filled: TuiSurfaceSnapshot := Paint(TuiElementBuilders.MakeDesktop(None, [
                                                                                  TuiElementBuilders.MakeColumn([
-
                                                                                                                  TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), 'x', 0, TuiPoint.Create(0, 0), TuiAction.Create(9)),
-
                                                                                                                  TuiElementBuilders.MakeLabel('tail')
-
-
-
                                                                                                                ])
-
                                                                                ]), TuiSize.Create(8, 4));
   AssertEquals('t', Filled.CellAt(0, 3).Glyph)
 end.

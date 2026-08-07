@@ -14,7 +14,7 @@ exist.
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | calls/recursion/window edge tests | planned |
 | PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | deterministic and max-register tests | planned |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
-| PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | no Cranelift dependencies or native backend code | planned |
+| PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
 | PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | no new `unsafe`; lint/test gates | planned |
 
 ## Runtime lookup requirements
@@ -65,7 +65,7 @@ exist.
 
 | ID | Requirement | Workload/evidence | Acceptance | State |
 |---|---|---|---|---|
-| PVM-PERF-001 | Trustworthy pre-change baseline | `cargo bench-fpas save register-vm-before` | complete final suite shape | planned |
+| PVM-PERF-001 | Trustworthy pre-change baseline | `cargo bench-fpas save register-vm-before` | P0 final 16-row snapshot in `.temp-data/bench/register-vm-before.json`, with two VM repeats | complete |
 | PVM-PERF-002 | VM geometric mean improvement | full `vm` group, repeated | >= 1.5x | planned |
 | PVM-PERF-003 | Integer loop improvement | `integer_loop`, repeated | >= 1.5x; 2x stretch | planned |
 | PVM-PERF-004 | Direct-call improvement | `function_call`, repeated | >= 1.5x; 2x stretch | planned |
@@ -88,29 +88,124 @@ exist.
 | PVM-QUAL-008 | Privacy preserved | repository diff inspection | planned |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
-## Current-opcode migration inventory template
+## P0 current-opcode migration inventory
 
-Populate this table in P0 with every current `Op` variant. Grouping is allowed only when operand and
-error semantics are identical. Do not delete a row until its new code and tests exist.
+P0 read `crates/fpas-bytecode/src/op.rs` and recorded every current `Op` variant. No rows are
+grouped: even closely related instructions retain their own successor and preservation contract. The
+listed test families are the current owner coverage to preserve and extend; the `State` remains
+`planned` until the named implementation phase supplies the new code and tests.
 
-| Current family | Required register successor | Special preservation concern | State |
+| Current `Op` | Required register successor | Owner/tests to preserve | State |
 |---|---|---|---|
-| constants and Unit | destination-based constant load | exact persistent identity | planned |
-| Pop/Dup | normally eliminated; explicit move where needed | no hidden side effects | planned |
-| local/enclosing access | register/local/cell operations | capture and mutation semantics | planned |
-| globals | numeric global load/store | initialization and task synchronization | planned |
-| typed integer/real/string/bool ops | three-address typed operations | all numeric/error edge cases | planned |
-| dynamic generic ops | three-address dynamic operations | type-erased behavior | planned |
-| jumps/conditions | function-local terminators/branches | short-circuit and loop targets | planned |
-| direct/value calls | numeric direct/dynamic register calls | arity, frames, captures | planned |
-| closures/cells | numeric closure and cell operations | task-bound mutable captures | planned |
-| arrays/dictionaries | register aggregate operations | order, COW, indexing errors | planned |
-| records | layout-slot operations | defaults, properties, events, formatting | planned |
-| Result/Option | destination-based tagged operations | unwrap diagnostics | planned |
-| enums | numeric type/variant operations | associated data and matching | planned |
-| intrinsics/print | uniform intrinsic register ABI | host behavior and callbacks | planned |
-| tasks/yield | register task operations | scheduling and saved state | planned |
-| Halt/Return/Panic | root/function terminators | entry policy and diagnostics | planned |
+| `Constant` | `LoadConstant(dst, ConstantId)` | P3; bytecode constant identity, compiler literals, VM scalar tests | planned |
+| `Unit` | `LoadUnit(dst)` | P3; compiler basics and root-return tests | planned |
+| `Pop` | eliminated by value liveness; explicit discard only | P3; compiler statement/expression tests | planned |
+| `Dup` | `Move(dst, src)` only when liveness requires a second value | P3; alias and evaluation-order tests | planned |
+| `GetLocal` | `ReadLocal(dst, LocalId)` then allocated register | P3; compiler local and VM local tests | planned |
+| `SetLocal` | `WriteLocal(LocalId, src)` while preserving live source | P3; compiler mutable-local tests | planned |
+| `SetLocalPop` | `WriteLocal(LocalId, src)` with dead source | P3; compiler mutable-local tests | planned |
+| `IncLocal` | `AddInt` plus `WriteLocal` | P3; `for` loop regression family | planned |
+| `DecLocal` | `SubInt` plus `WriteLocal` | P3; `downto` loop regression family | planned |
+| `GetGlobal` | `LoadGlobal(dst, GlobalId)` | P5; VM globals and `global_access` | planned |
+| `SetGlobal` | `StoreGlobal(GlobalId, src)` | P5; VM globals and concurrency globals | planned |
+| `GlobalIndexSet` | global-slot aggregate path ending in `StoreGlobal` | P5; global array indexing tests | planned |
+| `AddInt` | `AddInt(dst, left, right)` | P3; VM numeric wrapping tests | planned |
+| `SubInt` | `SubInt(dst, left, right)` | P3; VM numeric wrapping tests | planned |
+| `MulInt` | `MulInt(dst, left, right)` | P3; VM numeric tests | planned |
+| `DivInt` | `DivInt(dst, left, right)` | P3; divide-by-zero and overflow tests | planned |
+| `ModInt` | `ModInt(dst, left, right)` | P3; modulo-by-zero and overflow tests | planned |
+| `AddReal` | `AddReal(dst, left, right)` | P3; VM real-operation tests | planned |
+| `SubReal` | `SubReal(dst, left, right)` | P3; VM real-operation tests | planned |
+| `MulReal` | `MulReal(dst, left, right)` | P3; VM real-operation tests | planned |
+| `DivReal` | `DivReal(dst, left, right)` | P3; real divide-by-zero tests | planned |
+| `NegateInt` | `NegateInt(dst, src)` | P3; minimum-integer negation test | planned |
+| `NegateReal` | `NegateReal(dst, src)` | P3; VM real-operation tests | planned |
+| `AddDyn` | `AddDyn(dst, left, right)` | P3; generic numeric compiler/VM tests and `dynamic_numeric` | planned |
+| `SubDyn` | `SubDyn(dst, left, right)` | P3; generic numeric compiler/VM tests | planned |
+| `MulDyn` | `MulDyn(dst, left, right)` | P3; generic numeric compiler/VM tests | planned |
+| `DivDyn` | `DivDyn(dst, left, right)` | P3; generic division error tests | planned |
+| `NegateDyn` | `NegateDyn(dst, src)` | P3; dynamic negation overflow test | planned |
+| `EqDyn` | `EqDyn(dst, left, right)` | P3; dynamic aggregate equality tests | planned |
+| `NeqDyn` | `NeqDyn(dst, left, right)` | P3; dynamic aggregate equality tests | planned |
+| `LtDyn` | `LtDyn(dst, left, right)` | P3; dynamic ordering diagnostic tests | planned |
+| `GtDyn` | `GtDyn(dst, left, right)` | P3; dynamic ordering diagnostic tests | planned |
+| `LeDyn` | `LeDyn(dst, left, right)` | P3; dynamic ordering diagnostic tests | planned |
+| `GeDyn` | `GeDyn(dst, left, right)` | P3; dynamic ordering diagnostic tests | planned |
+| `ConcatStr` | `ConcatStr(dst, left, right)` | P3; string compiler and VM tests | planned |
+| `Shl` | `ShlInt(dst, left, right)` | P3; shift-bound diagnostics | planned |
+| `Shr` | `ShrInt(dst, left, right)` | P3; shift-bound diagnostics | planned |
+| `BitAnd` | `BitAndInt(dst, left, right)` | P3; bitwise regression tests | planned |
+| `BitOr` | `BitOrInt(dst, left, right)` | P3; bitwise regression tests | planned |
+| `BitXor` | `BitXorInt(dst, left, right)` | P3; bitwise regression tests | planned |
+| `EqInt` | `EqInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `NeqInt` | `NeqInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `LtInt` | `LtInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `GtInt` | `GtInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `LeInt` | `LeInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `GeInt` | `GeInt(dst, left, right)` | P3; typed comparison tests | planned |
+| `EqReal` | `EqReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `NeqReal` | `NeqReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `LtReal` | `LtReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `GtReal` | `GtReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `LeReal` | `LeReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `GeReal` | `GeReal(dst, left, right)` | P3; IEEE-754 comparison tests | planned |
+| `EqStr` | `EqStr(dst, left, right)` | P3; Unicode/string comparison tests | planned |
+| `NeqStr` | `NeqStr(dst, left, right)` | P3; Unicode/string comparison tests | planned |
+| `LtStr` | `LtStr(dst, left, right)` | P3; string ordering tests | planned |
+| `GtStr` | `GtStr(dst, left, right)` | P3; string ordering tests | planned |
+| `LeStr` | `LeStr(dst, left, right)` | P3; string ordering tests | planned |
+| `GeStr` | `GeStr(dst, left, right)` | P3; string ordering tests | planned |
+| `EqBool` | `EqBool(dst, left, right)` | P3; boolean comparison tests | planned |
+| `NeqBool` | `NeqBool(dst, left, right)` | P3; boolean comparison tests | planned |
+| `Not` | `NotBool(dst, src)` | P3; boolean coercion tests | planned |
+| `And` | `AndBool(dst, left, right)` | P3; short-circuit lowering tests | planned |
+| `Or` | `OrBool(dst, left, right)` | P3; short-circuit lowering tests | planned |
+| `IntToReal` | `IntToReal(dst, src)` | P3; conversion tests | planned |
+| `Jump` | function-local `Jump(target)` terminator | P3; loop and branch CFG tests | planned |
+| `JumpIfFalse` | `BranchIfFalse(condition, target)` terminator | P3; `if` and short-circuit tests | planned |
+| `JumpIfTrue` | `BranchIfTrue(condition, target)` terminator | P3; `if` and short-circuit tests | planned |
+| `JumpIfLocalGt` | `GtInt` plus branch terminator | P3; `for to` bound tests | planned |
+| `JumpIfLocalLt` | `LtInt` plus branch terminator | P3; `for downto` bound tests | planned |
+| `Call` | `CallDirect(dst, FunctionId, arg_base, arg_count)` | P4; function/recursion/arity tests and `function_call` | planned |
+| `CallValue` | `CallValue(dst, callee, arg_base, arg_count)` | P4; first-class function tests | planned |
+| `MakeClosure` | `MakeClosure(dst, FunctionId, capture_base, capture_count)` | P4; closure capture-order/task-bound tests | planned |
+| `MakeCell` | `MakeCell(dst, src)` | P4; mutable capture tests | planned |
+| `CellGet` | `CellRead(dst, cell)` | P4; mutable capture tests | planned |
+| `CellSet` | `CellWrite(cell, src)` | P4; mutable capture tests | planned |
+| `Return` | `Return(src)` terminator | P3/P4; root, early-return, and function tests | planned |
+| `GetEnclosing` | capture/cell read using resolved capture slot | P4; nested closure tests | planned |
+| `SetEnclosing` | capture/cell write using resolved capture slot | P4; nested mutable capture tests | planned |
+| `MakeArray` | `MakeArray(dst, value_base, count)` | P5; array construction/COW tests | planned |
+| `IndexGet` | `IndexGet(dst, collection, index)` | P5; array/dict/string index tests | planned |
+| `IndexSet` | `IndexSet(dst, collection, index, value)` | P5; aggregate mutation tests | planned |
+| `Contains` | `Contains(dst, value, collection)` | P5; array/dict/string membership tests | planned |
+| `MakeDict` | `MakeDict(dst, pair_base, pair_count)` | P5; dictionary order/equality tests | planned |
+| `MakeRecord` | `MakeRecord(dst, RecordTypeId, value_base)` | P5; record defaults/layout tests | planned |
+| `FieldGet` | `LoadField(dst, record, RecordFieldId)` | P5; record field tests and `record_field_access` | planned |
+| `FieldSet` | `StoreField(dst, record, RecordFieldId, value)` | P5; record field mutation tests | planned |
+| `UpdateRecord` | `UpdateRecord(dst, record, override_base, count)` | P5; record-update/COW tests and `record_update` | planned |
+| `Print` | `Intrinsic(dst, PrintId, arg_base, arg_count)` | P6; console output tests | planned |
+| `PrintLn` | `Intrinsic(dst, PrintLnId, arg_base, arg_count)` | P6; console output tests | planned |
+| `Intrinsic` | `Intrinsic(dst, IntrinsicId, arg_base, arg_count)` | P6; all-intrinsics inventory | planned |
+| `ArrayPushLocal` | local/capture array mutation plus write-back | P5; local array mutation tests | planned |
+| `ArrayPopLocal` | local/capture array mutation plus result | P5; local array mutation tests | planned |
+| `Halt` | root `Return(Unit)` terminator | P3/P9; entry completion tests | planned |
+| `Panic` | `Panic(src)` terminator | P3; runtime diagnostic tests | planned |
+| `MakeOk` | `MakeOk(dst, src)` | P5; Result tests | planned |
+| `MakeErr` | `MakeErr(dst, src)` | P5; Result tests | planned |
+| `MakeSome` | `MakeSome(dst, src)` | P5; Option tests | planned |
+| `MakeNone` | `MakeNone(dst)` | P5; Option tests | planned |
+| `IsResultOk` | `IsResultOk(dst, src)` | P5; Result tests | planned |
+| `IsOptionSome` | `IsOptionSome(dst, src)` | P5; Option tests | planned |
+| `UnwrapOk` | `UnwrapOk(dst, src)` | P5; Result error tests | planned |
+| `UnwrapErr` | `UnwrapErr(dst, src)` | P5; Result error tests | planned |
+| `UnwrapSome` | `UnwrapSome(dst, src)` | P5; Option error tests | planned |
+| `MakeEnum` | `MakeEnum(dst, EnumVariantId, value_base)` | P5; enum construction/match tests | planned |
+| `IsVariant` | `TestVariant(dst, value, EnumVariantId)` | P5; enum type/variant tests | planned |
+| `EnumField` | `LoadEnumField(dst, value, field)` | P5; enum associated-data tests | planned |
+| `SpawnTask` | `SpawnTask(dst, callee, arg_base, arg_count)` | P7; spawn/wait/scheduler tests | planned |
+| `SpawnDetachedTask` | `SpawnDetachedTask(callee, arg_base, arg_count)` | P7; detached task tests | planned |
+| `Yield` | `Yield` scheduler operation | P7; timeslice/yield tests | planned |
 
 ## Final sign-off
 

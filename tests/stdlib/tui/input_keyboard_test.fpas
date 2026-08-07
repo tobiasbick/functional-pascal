@@ -30,7 +30,6 @@ begin
     Input := TuiElementBuilders.MakeHistoryInput(TuiControlId.Create(1), State.Text, State.Caret, 'Command', [
                                                                                                                'first',
                                                                                                                'second'
-
                                                                                                              ], 'draft', TuiAction.Create(1))
   end;
 

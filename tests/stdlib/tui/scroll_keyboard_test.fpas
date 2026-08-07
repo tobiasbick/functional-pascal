@@ -24,23 +24,13 @@ function ViewScroll(State: ScrollModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('One'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Two'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Three'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Four'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Five'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Six')
-
-
-
                                                                                                                                                                                                ]))
-
                                                                       ])
 end;
 

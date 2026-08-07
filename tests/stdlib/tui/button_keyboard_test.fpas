@@ -24,19 +24,11 @@ function ViewButtons(State: ButtonKeyboardModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeColumn([
-
                                                                                                                   TuiElementBuilders.MakeInput(TuiControlId.Create(1), '', 0, TuiAction.Create(1)),
-
                                                                                                                   TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(2), 'Save', 'S', TuiAction.Create(20)),
-
                                                                                                                   TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(3), 'Discard', 'D', TuiAction.Create(30)),
-
                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(4), 'Cancel', 'C', TuiAction.Create(40))
-
-
-
                                                                                                                 ])
-
                                                                                 ])
 end;
 

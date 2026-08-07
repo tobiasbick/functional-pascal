@@ -140,48 +140,21 @@ begin
     Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
                                                            TuiElementBuilders.MakeLabel('Save changes?'),
                                                            TuiElementBuilders.MakeRow([
-
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(YesControlValue), 'Yes', TuiAction.Create(ConfirmYesActionValue)),
-
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(NoControlValue), 'No', TuiAction.Create(ConfirmNoActionValue))
-
-
-
                                                                                       ])
-
                                                          ])
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focused)), [
                                                                                     TuiElementBuilders.MakePanel('Editor', [
-
                                                                                                                              TuiElementBuilders.MakeColumn([
-
-
-
                                                                                                                                                              TuiElementBuilders.MakeLabel('Name'),
-
-
-
                                                                                                                                                              TuiElementBuilders.MakeInput(TuiControlId.Create(NameControlValue), State.Name, State.NameCaret, TuiAction.Create(NameChangedActionValue)),
-
-
-
                                                                                                                                                              TuiElementBuilders.MakeButton(TuiControlId.Create(SaveControlValue), 'Save', TuiAction.Create(SaveActionValue))
-
-
-
-
-
-
-
                                                                                                                                                            ])
-
-
-
                                                                                                                            ]),
                                                                                     Overlay
-
                                                                                   ])
 end;
 

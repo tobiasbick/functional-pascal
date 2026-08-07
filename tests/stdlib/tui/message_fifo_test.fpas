@@ -32,13 +32,8 @@ function ViewFifo(State: FifoModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(7))
-
-
-
                                                                                                              ])
-
                                                                       ])
 end;
 

@@ -46,29 +46,11 @@ begin
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                      TuiElementBuilders.MakeRow([
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-
-
-
-
-
-
-
                                                                                                                                                 ])
-
-
-
                                                                                                                    ])
-
                                                                             ])
   end, 0, 0);
   AssertEquals(0, Model);
@@ -102,29 +84,11 @@ begin
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                      TuiElementBuilders.MakeRow([
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-
-
-
-
-
-
-
                                                                                                                                                 ])
-
-
-
                                                                                                                    ])
-
                                                                             ])
   end, 1, 0);
   AssertEquals(2, Focus);
@@ -157,29 +121,11 @@ begin
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(Focus)), [
                                                                               TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                      TuiElementBuilders.MakeRow([
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-
-
-
-
-
-
-
                                                                                                                                                 ])
-
-
-
                                                                                                                    ])
-
                                                                             ])
   end, 1, 0);
   AssertEquals(2, Model);

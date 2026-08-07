@@ -6,7 +6,6 @@ begin
   var Source: TomlValue := TomlValue.Table(['project': TomlValue.Table(['name': TomlValue.String('demo'), 'version': TomlValue.Integer(1), 'released': TomlValue.Datetime('2026-07-14')]), 'enabled': TomlValue.Boolean(true), 'targets': TomlValue.Array([
                                                                                                                                                                                                                                                             TomlValue.String('linux'),
                                                                                                                                                                                                                                                             TomlValue.String('windows')
-
                                                                                                                                                                                                                                                           ])]);
   var Encoded: string := Stringify(Source);
   var Parsed: result of TomlValue, string := Parse(Encoded);

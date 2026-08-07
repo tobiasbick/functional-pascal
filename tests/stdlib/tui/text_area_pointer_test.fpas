@@ -20,7 +20,6 @@ begin
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-
                                                  ])
 end;
 

@@ -6,33 +6,12 @@ function ViewButtons(State: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Buttons', [
-
                                                                                                                   TuiElementBuilders.MakeColumn([
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(1)),
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(2), 'OK', 'O', TuiAction.Create(2)),
-
-
-
                                                                                                                                                   TuiElementBuilders.MakeDisabledButton(TuiControlId.Create(3), 'Stop', 'S', TuiAction.Create(3))
-
-
-
-
-
-
-
                                                                                                                                                 ])
-
-
-
                                                                                                                 ])
-
                                                                       ])
 end;
 

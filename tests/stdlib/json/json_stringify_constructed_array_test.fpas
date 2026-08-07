@@ -8,7 +8,6 @@ begin
                                         JsonValue.Null,
                                         JsonValue.String('hi'),
                                         JsonValue.Number(1.5)
-
                                       ]);
   WriteLn(Stringify(V))
 end.

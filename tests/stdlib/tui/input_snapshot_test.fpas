@@ -13,7 +13,6 @@ function ViewInput(State: InputSnapshotModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(1), State.Text, State.Caret, State.Hint, TuiAction.Create(1))
-
                                                                       ])
 end;
 

@@ -11,13 +11,8 @@ function ViewList(State: ListModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                TuiElementBuilders.MakeList(TuiControlId.Create(1), ['Alpha', 'Beta', 'Gamma'], State.Selected, TuiAction.Create(5))
-
-
-
                                                                                                              ])
-
                                                                       ])
 end;
 

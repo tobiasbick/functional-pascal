@@ -5,36 +5,14 @@ uses Std.Test, Std.Tui;
 begin
   var Tree: TuiElement := TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(2)), [
                                                                                          TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                                 TuiElementBuilders.MakeColumn([
-
-
-
                                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-
-
-
                                                                                                                                                                 TuiElementBuilders.MakeTextArea(TuiControlId.Create(2), 'Two', 0, TuiPoint.Create(0, 0), TuiAction.Create(2))
-
-
-
-
-
-
-
                                                                                                                                                               ])
-
-
-
                                                                                                                               ]),
                                                                                          TuiElementBuilders.MakeOverlay('Modal', [
-
                                                                                                                                    TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(3))
-
-
-
                                                                                                                                  ])
-
                                                                                        ]);
   case TuiFocusFirst(Tree) of
     Some(Id):
@@ -70,15 +48,9 @@ begin
   end;
   var HostOnly: TuiElement := TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(2)), [
                                                                                              TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                                     TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'One', TuiAction.Create(1)),
-
                                                                                                                                     TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Two', TuiAction.Create(2))
-
-
-
                                                                                                                                   ])
-
                                                                                            ]);
   case TuiFocusResolve(HostOnly, Some(TuiControlId.Create(2))) of
     Some(Id):

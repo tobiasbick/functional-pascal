@@ -25,13 +25,8 @@ function ViewCheck(State: CheckModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                          TuiElementBuilders.MakeCheckBox(TuiControlId.Create(1), 'Flag', State.Checked, TuiAction.Create(9))
-
-
-
                                                                                                                        ])
-
                                                                                 ])
 end;
 

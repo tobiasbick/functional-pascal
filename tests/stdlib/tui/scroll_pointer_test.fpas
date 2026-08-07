@@ -35,19 +35,11 @@ begin
 
   return TuiElementBuilders.MakeDesktop(Focused, [
                                                    TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
-
                                                                                                                                                                             TuiElementBuilders.MakeLabel('One'),
-
                                                                                                                                                                             TuiElementBuilders.MakeLabel('Two'),
-
                                                                                                                                                                             TuiElementBuilders.MakeLabel('Three'),
-
                                                                                                                                                                             TuiElementBuilders.MakeLabel('Four')
-
-
-
                                                                                                                                                                           ]))
-
                                                  ])
 end;
 

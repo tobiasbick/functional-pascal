@@ -49,28 +49,17 @@ begin
   begin
     Overlay := TuiElementBuilders.MakeOverlay('Confirm', [
                                                            TuiElementBuilders.MakeRow([
-
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Yes', TuiAction.Create(30)),
-
                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(4), 'No', TuiAction.Create(40))
-
-
-
                                                                                       ])
-
                                                          ])
   end;
 
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Save', TuiAction.Create(10))
-
-
-
                                                                                                                        ]),
                                                                                   Overlay
-
                                                                                 ])
 end;
 

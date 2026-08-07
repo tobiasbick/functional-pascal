@@ -61,7 +61,6 @@ begin
            TuiMenuNodeBuilders.Separator(TuiMenuNodeId.Create(4), FileId),
            TuiMenuNodeBuilders.Submenu(ThemeId, Some(OptionsId), 'Theme', 'T'),
            TuiMenuNodeBuilders.Command(TuiMenuNodeId.Create(6), Some(ThemeId), 'Dark', 'D', TuiAction.Create(20))
-
          ]
 end;
 
@@ -69,7 +68,6 @@ function ViewMenu(State: MenuModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakeMenu(TuiControlId.Create(100), MenuNodes(), State.Menu, TuiAction.Create(101))
-
                                                                                 ])
 end;
 

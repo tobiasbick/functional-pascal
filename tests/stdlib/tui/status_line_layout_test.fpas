@@ -7,7 +7,6 @@ begin
                                                                                    TuiStatusItemBuilders.MakeHint('Ready'),
                                                                                    TuiStatusItemBuilders.MakeCommand(TuiControlId.Create(1), 'Save', TuiAction.Create(10)),
                                                                                    TuiStatusItemBuilders.MakeDisabledCommand(TuiControlId.Create(2), 'Quit', TuiAction.Create(20))
-
                                                                                  ]), TuiMeasureSpec.Unbounded());
   AssertEquals(15, Measured.Preferred.Width);
   AssertEquals(1, Measured.Preferred.Height)

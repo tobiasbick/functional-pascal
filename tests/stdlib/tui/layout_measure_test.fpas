@@ -14,28 +14,20 @@ begin
                                                                                 TuiElementBuilders.MakeLabel('A'),
                                                                                 TuiElementBuilders.MakeEmpty(),
                                                                                 TuiElementBuilders.MakeLabel('B')
-
                                                                               ]), TuiMeasureSpec.Unbounded());
   AssertEquals(2, EmptyIgnored.Preferred.Width);
   AssertEquals(1, EmptyIgnored.Preferred.Height);
   var Spaced: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeRowSpaced([
                                                                                 TuiElementBuilders.MakeLabel('A'),
                                                                                 TuiElementBuilders.MakeLabel('B')
-
                                                                               ], 3), TuiMeasureSpec.Unbounded());
   AssertEquals(5, Spaced.Preferred.Width);
   var Nested: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakeColumnSpaced([
                                                                                    TuiElementBuilders.MakeLabel('One'),
                                                                                    TuiElementBuilders.MakeRowSpaced([
-
                                                                                                                       TuiElementBuilders.MakeLabel('AB'),
-
                                                                                                                       TuiElementBuilders.MakeLabel('CD')
-
-
-
                                                                                                                     ], 1)
-
                                                                                  ], 2), TuiMeasureSpec.Unbounded());
   AssertEquals(5, Nested.Preferred.Width);
   AssertEquals(4, Nested.Preferred.Height);
@@ -54,7 +46,6 @@ begin
   AssertEquals(4, Expanding.Maximum.Height);
   var WindowSize: TuiMeasureResult := TuiMeasure(TuiElementBuilders.MakePanel('Title', [
                                                                                          TuiElementBuilders.MakeLabel('Body')
-
                                                                                        ]), TuiMeasureSpec.Unbounded());
   AssertEquals(11, WindowSize.Preferred.Width);
   AssertEquals(3, WindowSize.Preferred.Height);

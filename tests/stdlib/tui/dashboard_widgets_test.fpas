@@ -7,33 +7,13 @@ begin
   var Concrete: TuiStyle := TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6));
   return TuiElementBuilders.MakeDesktop(None, [
                                                 TuiElementBuilders.MakeColumn([
-
                                                                                 TuiElementBuilders.MakeCellGrid(TuiCellGrid.Create(2, 1, [
-
-
-
                                                                                                                                            TuiCell.Styled('A', Concrete),
-
-
-
                                                                                                                                            TuiCell.Create('B', TuiStyleRole.Accent)
-
-
-
-
-
-
-
                                                                                                                                          ])),
-
                                                                                 TuiElementBuilders.MakeRule('Metrics'),
-
                                                                                 TuiElementBuilders.MakeGauge('Load', 3, 4)
-
-
-
                                                                               ])
-
                                               ])
 end;
 

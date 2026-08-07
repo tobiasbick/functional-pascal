@@ -23,7 +23,6 @@ begin
   begin
     Content := [
                  TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('done'), Quit])
-
                ];
     Focused := Some(TuiControlId.Create(3))
   end;

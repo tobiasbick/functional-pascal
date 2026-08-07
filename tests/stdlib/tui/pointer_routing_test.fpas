@@ -33,33 +33,12 @@ function ViewRoute(State: RouteModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                          TuiElementBuilders.MakeColumn([
-
-
-
                                                                                                                                                          TuiElementBuilders.MakeLabel('Hello'),
-
-
-
                                                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(11)),
-
-
-
                                                                                                                                                          TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(22))
-
-
-
-
-
-
-
                                                                                                                                                        ])
-
-
-
                                                                                                                        ])
-
                                                                                 ])
 end;
 
@@ -67,20 +46,11 @@ function ViewOverlap(State: RouteModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
                                                                                   TuiElementBuilders.MakePanel('Back', [
-
                                                                                                                          TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Back', TuiAction.Create(11))
-
-
-
                                                                                                                        ]),
                                                                                   TuiElementBuilders.MakePanel('Top', [
-
                                                                                                                         TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Front', TuiAction.Create(33))
-
-
-
                                                                                                                       ])
-
                                                                                 ])
 end;
 

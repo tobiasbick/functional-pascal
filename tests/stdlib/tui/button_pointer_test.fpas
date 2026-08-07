@@ -12,7 +12,6 @@ function ViewButton(State: ButtonPointerModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
-
                                                                       ])
 end;
 

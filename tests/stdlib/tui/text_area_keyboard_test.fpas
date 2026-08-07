@@ -25,7 +25,6 @@ function ViewTextArea(State: TextAreaModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9))
-
                                                                       ])
 end;
 
@@ -34,7 +33,6 @@ begin
   var Editor: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), State.Text, State.Caret, State.Offset, TuiAction.Create(9));
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakePanel('Editor', [Editor])
-
                                                                       ])
 end;
 

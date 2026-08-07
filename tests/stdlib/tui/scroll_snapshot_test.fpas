@@ -11,17 +11,10 @@ function ViewScroll(State: ScrollModel): TuiElement;
 begin
   return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                         TuiElementBuilders.MakeScroll(TuiControlId.Create(1), State.Offset, TuiAction.Create(7), TuiElementBuilders.MakeColumn([
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('First'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Second'),
-
                                                                                                                                                                                                  TuiElementBuilders.MakeLabel('Third')
-
-
-
                                                                                                                                                                                                ]))
-
                                                                       ])
 end;
 

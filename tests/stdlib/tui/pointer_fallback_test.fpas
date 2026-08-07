@@ -66,13 +66,8 @@ begin
   end, function(State: PointerModel): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Host', [
-
                                                                                                                  TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1))
-
-
-
                                                                                                                ])
-
                                                                         ])
   end, 3, 0);
   AssertEquals(3, Std.Array.Length(Model.Events));

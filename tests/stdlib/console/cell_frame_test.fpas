@@ -23,7 +23,6 @@ begin
   WriteCells(3, 1, [
                      MakeCell('Y', CrtColor(Yellow), CrtColor(Blue)),
                      MakeCell('Z', CrtColor(White), CrtColor(Red))
-
                    ]);
   Present();
   AssertScreenLine('.XYZ.', 1);

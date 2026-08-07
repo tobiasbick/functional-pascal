@@ -10,33 +10,12 @@ begin
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
                                                                           TuiElementBuilders.MakePanel('Win', [
-
                                                                                                                 TuiElementBuilders.MakeColumn([
-
-
-
                                                                                                                                                 TuiElementBuilders.MakeLabel('Hello'),
-
-
-
                                                                                                                                                 TuiElementBuilders.MakeButton(TuiControlId.Create(1), 'Go', TuiAction.Create(1)),
-
-
-
                                                                                                                                                 TuiElementBuilders.MakeInput(TuiControlId.Create(2), 'ab', 2, TuiAction.Create(2))
-
-
-
-
-
-
-
                                                                                                                                               ])
-
-
-
                                                                                                               ])
-
                                                                         ])
   end, 0, 0);
   var Snapshot: TuiSurfaceSnapshot := App.SurfaceSnapshot();
@@ -51,7 +30,6 @@ begin
   end, function(State: integer): TuiElement begin
     return TuiElementBuilders.MakeDesktop(None, [
                                                   TuiElementBuilders.MakeOverlay('Dlg', [TuiElementBuilders.MakeLabel('Body')])
-
                                                 ])
   end, 0, 0);
   AssertTrue(Std.Str.Contains(Wide.SurfaceSnapshot().LineAt(3), 'Dlg'));

@@ -1,0 +1,73 @@
+{ Build first: cargo build --release -p fpas-cli }
+{ Baseline: target/release/fpas run this-file.fpas -- 3000000 }
+{ Guard: target/release/fpas run this-file.fpas -- 3000000 MAX_MILLIS }
+
+program VmRecordFieldAccessBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time;
+
+const
+  WarmupIterations: integer := 10000;
+
+type
+  BenchmarkState = record
+    Value: integer;
+    Total: integer;
+  end;
+
+function RunAccess(Iterations: integer): integer;
+begin
+  mutable var State: BenchmarkState := record
+    Value := 0;
+    Total := 0;
+  end;
+
+  for Index: integer := 1 to Iterations do
+  begin
+    State.Value := State.Value + 1;
+    State.Total := State.Total + State.Value
+  end;
+
+  return State.Total
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: record_field_access_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  mutable var Checksum: integer := RunAccess(WarmupIterations);
+  var Started: integer := MonotonicMillis();
+  Checksum := RunAccess(Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  var FieldAccesses: integer := Iterations * 4;
+  mutable var OpsPerSecond: integer := FieldAccesses;
+  if Elapsed > 0 then
+  begin
+    OpsPerSecond := (FieldAccesses * 1000) div Elapsed
+  end;
+
+  WriteLn((('iterations: ' + IntToStr(Iterations)) + ', field accesses: ') + IntToStr(FieldAccesses));
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' field accesses/s');
+  WriteLn('checksum: ' + IntToStr(Checksum));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic(((('record-field-access benchmark regression: ' + IntToStr(Elapsed)) + ' ms exceeds limit ') + IntToStr(MaxMillis)) +
+          ' ms')
+  end
+end.

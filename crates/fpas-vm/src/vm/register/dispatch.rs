@@ -240,30 +240,30 @@ impl RegisterWorker {
             Opcode::MakeCell => self.make_cell(self.abc(instruction)?)?,
             Opcode::CellRead => self.read_cell(self.abc(instruction)?)?,
             Opcode::CellWrite => self.write_cell(self.abc(instruction)?)?,
-            Opcode::LoadGlobal
-            | Opcode::StoreGlobal
-            | Opcode::MakeArray
-            | Opcode::IndexGet
-            | Opcode::IndexSet
-            | Opcode::Contains
-            | Opcode::MakeDictionary
-            | Opcode::MakeRecord
-            | Opcode::LoadField
-            | Opcode::StoreField
-            | Opcode::UpdateRecord
-            | Opcode::Intrinsic
-            | Opcode::MakeOk
-            | Opcode::MakeError
-            | Opcode::MakeSome
-            | Opcode::MakeNone
-            | Opcode::IsResultOk
-            | Opcode::IsOptionSome
-            | Opcode::UnwrapOk
-            | Opcode::UnwrapError
-            | Opcode::UnwrapSome
-            | Opcode::MakeEnum
-            | Opcode::TestVariant
-            | Opcode::LoadEnumField
+            Opcode::LoadGlobal => self.load_global(self.abx(instruction)?)?,
+            Opcode::StoreGlobal => self.store_global(self.abx(instruction)?)?,
+            Opcode::MakeArray => self.make_array(self.abc(instruction)?)?,
+            Opcode::IndexGet => self.index_get(self.abc(instruction)?)?,
+            Opcode::IndexSet => self.index_set(self.abc(instruction)?)?,
+            Opcode::Contains => self.contains(self.abc(instruction)?)?,
+            Opcode::MakeDictionary => self.make_dictionary(self.abc(instruction)?)?,
+            Opcode::MakeRecord => self.make_record(self.abc(instruction)?)?,
+            Opcode::LoadField => self.load_field(self.abc(instruction)?)?,
+            Opcode::StoreField => self.store_field(self.abc(instruction)?)?,
+            Opcode::UpdateRecord => self.update_record(self.abc(instruction)?)?,
+            Opcode::MakeOk => self.wrap(self.abc(instruction)?, Value::ResultOk)?,
+            Opcode::MakeError => self.wrap(self.abc(instruction)?, Value::ResultError)?,
+            Opcode::MakeSome => self.wrap(self.abc(instruction)?, Value::OptionSome)?,
+            Opcode::MakeNone => self.none(self.abc(instruction)?)?,
+            Opcode::IsResultOk => self.test_ok(self.abc(instruction)?)?,
+            Opcode::IsOptionSome => self.test_some(self.abc(instruction)?)?,
+            Opcode::UnwrapOk => self.unwrap(self.abc(instruction)?, "Ok")?,
+            Opcode::UnwrapError => self.unwrap(self.abc(instruction)?, "Error")?,
+            Opcode::UnwrapSome => self.unwrap(self.abc(instruction)?, "Some")?,
+            Opcode::MakeEnum => self.make_enum(self.abc(instruction)?)?,
+            Opcode::TestVariant => self.test_variant(self.abc(instruction)?)?,
+            Opcode::LoadEnumField => self.load_enum_field(self.abc(instruction)?)?,
+            Opcode::Intrinsic
             | Opcode::SpawnTask
             | Opcode::SpawnDetachedTask
             | Opcode::Yield

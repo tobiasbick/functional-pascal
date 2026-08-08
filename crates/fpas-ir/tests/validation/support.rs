@@ -11,6 +11,10 @@ pub const CELL: TypeId = TypeId::new(7);
 pub const TASK: TypeId = TypeId::new(8);
 pub const DYNAMIC: TypeId = TypeId::new(9);
 pub const REAL: TypeId = TypeId::new(10);
+pub const ARRAY: TypeId = TypeId::new(11);
+pub const DICTIONARY: TypeId = TypeId::new(12);
+pub const RESULT: TypeId = TypeId::new(13);
+pub const OPTION: TypeId = TypeId::new(14);
 
 pub fn root(blocks: Vec<BasicBlock>) -> Function {
     Function {
@@ -93,6 +97,28 @@ pub fn types() -> Vec<TypeDefinition> {
             id: REAL,
             kind: IrType::Real,
         },
+        TypeDefinition {
+            id: ARRAY,
+            kind: IrType::Array(INTEGER),
+        },
+        TypeDefinition {
+            id: DICTIONARY,
+            kind: IrType::Dictionary {
+                key: STRING,
+                value: INTEGER,
+            },
+        },
+        TypeDefinition {
+            id: RESULT,
+            kind: IrType::Result {
+                ok: INTEGER,
+                error: STRING,
+            },
+        },
+        TypeDefinition {
+            id: OPTION,
+            kind: IrType::Option(INTEGER),
+        },
     ]
 }
 
@@ -102,15 +128,20 @@ pub fn scalar_program() -> Program {
         globals: Vec::new(),
         record_layouts: vec![RecordLayout {
             id: RecordLayoutId::new(0),
+            name: "Point".to_string(),
             fields: vec![RecordField {
                 id: FieldId::new(0),
+                name: "x".to_string(),
                 ty: INTEGER,
             }],
         }],
         enum_layouts: vec![EnumLayout {
             id: EnumLayoutId::new(0),
+            name: "Choice".to_string(),
             variants: vec![EnumVariant {
                 id: VariantId::new(0),
+                name: "Some".to_string(),
+                field_names: vec!["value".to_string()],
                 fields: vec![INTEGER],
             }],
         }],
@@ -132,11 +163,15 @@ pub fn all_operations_program() -> Program {
     program.globals = vec![
         Global {
             id: GlobalId::new(0),
+            name: "answer".to_string(),
             ty: INTEGER,
+            mutable: true,
         },
         Global {
             id: GlobalId::new(1),
+            name: "cell".to_string(),
             ty: CELL,
+            mutable: false,
         },
     ];
     program.intrinsics = vec![IntrinsicSignature {
@@ -330,6 +365,108 @@ pub fn all_operations_program() -> Program {
             source: None,
             result: None,
             operation: Operation::Yield,
+        },
+        Instruction {
+            source: None,
+            result: Some(value(18, ARRAY)),
+            operation: Operation::MakeArray(vec![ValueId::new(1)]),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(19, INTEGER)),
+            operation: Operation::IndexGet {
+                collection: ValueId::new(18),
+                index: ValueId::new(1),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(20, ARRAY)),
+            operation: Operation::IndexSet {
+                collection: ValueId::new(18),
+                index: ValueId::new(1),
+                value: ValueId::new(19),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(21, BOOLEAN)),
+            operation: Operation::Contains {
+                value: ValueId::new(1),
+                collection: ValueId::new(18),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(22, DICTIONARY)),
+            operation: Operation::MakeDictionary(vec![(ValueId::new(3), ValueId::new(1))]),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(23, INTEGER)),
+            operation: Operation::IndexGet {
+                collection: ValueId::new(22),
+                index: ValueId::new(3),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(24, RECORD)),
+            operation: Operation::UpdateRecord {
+                record: ValueId::new(10),
+                layout: RecordLayoutId::new(0),
+                fields: vec![(FieldId::new(0), ValueId::new(1))],
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(25, RESULT)),
+            operation: Operation::MakeOk(ValueId::new(1)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(26, RESULT)),
+            operation: Operation::MakeError(ValueId::new(3)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(27, BOOLEAN)),
+            operation: Operation::IsResultOk(ValueId::new(25)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(28, INTEGER)),
+            operation: Operation::UnwrapOk(ValueId::new(25)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(29, OPTION)),
+            operation: Operation::MakeSome(ValueId::new(1)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(30, OPTION)),
+            operation: Operation::MakeNone,
+        },
+        Instruction {
+            source: None,
+            result: Some(value(31, BOOLEAN)),
+            operation: Operation::IsOptionSome(ValueId::new(29)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(32, INTEGER)),
+            operation: Operation::UnwrapSome(ValueId::new(29)),
+        },
+        Instruction {
+            source: None,
+            result: Some(value(33, INTEGER)),
+            operation: Operation::LoadEnumField {
+                value: ValueId::new(12),
+                layout: EnumLayoutId::new(0),
+                variant: VariantId::new(0),
+                field: FieldId::new(0),
+            },
         },
     ];
     program.functions[0] = root(vec![BasicBlock {

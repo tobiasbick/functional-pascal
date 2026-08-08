@@ -1,6 +1,6 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; P0 through P4 implemented, production cutover not started.
+Status: approved implementation direction; P0 through P5 implemented, production cutover not started.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -55,7 +55,9 @@ Completed phase evidence is recorded in [P0 contract and baseline](p0-contract-b
 the typed IR tests and in the traceability matrix. The first end-to-end inactive compiler and
 interpreter slice is recorded in [P3 scalar/control-flow implementation](p3-scalar-control-flow.md).
 Numeric calls, frame windows, closures, cells, and callbacks are recorded in
-[P4 calls, frames, closures, and callbacks](p4-calls-closures.md).
+[P4 calls, frames, closures, and callbacks](p4-calls-closures.md). Dense globals, positional
+aggregate layouts, record members, and collection operations are recorded in
+[P5 globals and aggregates](p5-globals-aggregates.md).
 
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
@@ -89,9 +91,10 @@ Revalidate these facts before implementation because file names can move:
   introduced in P1.
 - [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and its verifier now
   own the inactive register representation introduced in P2; production still uses `Chunk`.
-- [`compile_register_subset`](../../../crates/fpas-compiler/src/lib.rs) lowers the P4 scalar,
-  routine, and closure subset through typed IR, deterministic allocation, bytecode selection, and
-  verification without exposing a CLI backend switch.
+- [`compile_register_subset`](../../../crates/fpas-compiler/src/lib.rs) lowers the P5 scalar,
+  routine, closure, global, record, enum, array, and dictionary subset through typed IR,
+  deterministic allocation, bytecode selection, and verification without exposing a CLI backend
+  switch.
 - [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) executes only a
   `VerifiedExecutable` through one exhaustive packed-opcode dispatch loop; production still uses
   the stack VM.

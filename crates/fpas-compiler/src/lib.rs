@@ -26,7 +26,7 @@ pub use unit_object::{
     compile_unit_object, compile_unit_object_with_support,
 };
 
-/// Compile the scalar/control-flow/call/closure subset through the inactive register pipeline.
+/// Compile the P5 scalar, call, closure, global, and aggregate subset through the inactive register pipeline.
 ///
 /// This development API keeps the production CLI and stack VM unchanged until the complete
 /// register runtime reaches its cutover phase.

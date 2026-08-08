@@ -167,6 +167,61 @@ impl LoweringContext {
             .any(|binding| binding.name.eq_ignore_ascii_case(name))
     }
 
+    pub(in crate::lowering) fn has_global(&self, name: &str) -> bool {
+        self.globals.contains_key(&name.to_ascii_lowercase())
+    }
+
+    pub(in crate::lowering) fn enum_constant(&self, name: &str) -> Option<i64> {
+        self.enum_constants.get(&name.to_ascii_lowercase()).copied()
+    }
+
+    pub(in crate::lowering) fn read_global(
+        &mut self,
+        name: &str,
+        span: Span,
+    ) -> Result<ValueId, CompileError> {
+        let global = self
+            .globals
+            .get(&name.to_ascii_lowercase())
+            .copied()
+            .ok_or_else(|| {
+                internal_compiler_error(
+                    format!("Global `{name}` is missing from lowering metadata."),
+                    "Re-run compilation and report the source program.",
+                    span.line,
+                    span.column,
+                )
+            })?;
+        self.emit_value(Operation::LoadGlobal(global.id), global.ty, span)
+    }
+
+    pub(in crate::lowering) fn write_global(
+        &mut self,
+        name: &str,
+        value: ValueId,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let global = self
+            .globals
+            .get(&name.to_ascii_lowercase())
+            .copied()
+            .ok_or_else(|| {
+                internal_compiler_error(
+                    format!("Global `{name}` is missing from lowering metadata."),
+                    "Re-run compilation and report the source program.",
+                    span.line,
+                    span.column,
+                )
+            })?;
+        self.emit_effect(
+            Operation::StoreGlobal {
+                global: global.id,
+                value,
+            },
+            span,
+        )
+    }
+
     pub(in crate::lowering) fn call_result_type(&self, name: &str) -> Option<TypeId> {
         self.bindings
             .iter()
@@ -174,6 +229,46 @@ impl LoweringContext {
             .find(|binding| binding.name.eq_ignore_ascii_case(name))
             .and_then(|binding| self.type_table.function_result(binding.ty))
             .or_else(|| self.resolve_callable(name).map(|callable| callable.result))
+    }
+
+    pub(in crate::lowering) fn root_type(&self, name: &str) -> Option<TypeId> {
+        self.bindings
+            .iter()
+            .rev()
+            .find(|binding| binding.name.eq_ignore_ascii_case(name))
+            .map(|binding| binding.ty)
+            .or_else(|| {
+                self.globals
+                    .get(&name.to_ascii_lowercase())
+                    .map(|global| global.ty)
+            })
+    }
+
+    pub(in crate::lowering) fn type_kind(&self, ty: TypeId) -> Option<fpas_ir::IrType> {
+        self.type_table.kind(ty).cloned()
+    }
+
+    pub(in crate::lowering) fn record_field(
+        &self,
+        layout: fpas_ir::RecordLayoutId,
+        name: &str,
+    ) -> Option<(fpas_ir::FieldId, TypeId)> {
+        self.type_table.record_field(layout, name)
+    }
+
+    pub(in crate::lowering) fn record_layout_id(
+        &self,
+        ty: TypeId,
+    ) -> Option<fpas_ir::RecordLayoutId> {
+        self.type_table.record_layout_id(ty)
+    }
+
+    pub(in crate::lowering) fn enum_variant(
+        &self,
+        layout: fpas_ir::EnumLayoutId,
+        name: &str,
+    ) -> Option<(fpas_ir::VariantId, Vec<TypeId>)> {
+        self.type_table.enum_variant(layout, name)
     }
 
     pub(in crate::lowering) fn record_call_arguments(

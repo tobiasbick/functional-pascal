@@ -174,6 +174,33 @@ pub enum Operation {
         /// Value written into the global.
         value: ValueId,
     },
+    /// Constructs an array from elements in source order.
+    MakeArray(Vec<ValueId>),
+    /// Constructs an insertion-ordered dictionary.
+    MakeDictionary(Vec<(ValueId, ValueId)>),
+    /// Reads an array element or dictionary value.
+    IndexGet {
+        /// Indexed collection.
+        collection: ValueId,
+        /// Array index or dictionary key.
+        index: ValueId,
+    },
+    /// Produces a copy-on-write aggregate with one indexed value replaced.
+    IndexSet {
+        /// Original collection.
+        collection: ValueId,
+        /// Array index or dictionary key.
+        index: ValueId,
+        /// Replacement value.
+        value: ValueId,
+    },
+    /// Tests array membership or dictionary-key membership.
+    Contains {
+        /// Searched element or key.
+        value: ValueId,
+        /// Array or dictionary.
+        collection: ValueId,
+    },
     /// Constructs a record from layout-ordered fields.
     MakeRecord {
         /// Record layout.
@@ -201,6 +228,33 @@ pub enum Operation {
         /// Replacement field value.
         value: ValueId,
     },
+    /// Produces a record with positional field overrides.
+    UpdateRecord {
+        /// Original record.
+        record: ValueId,
+        /// Expected layout.
+        layout: RecordLayoutId,
+        /// Numeric field/value pairs in source evaluation order.
+        fields: Vec<(FieldId, ValueId)>,
+    },
+    /// Wraps a success payload.
+    MakeOk(ValueId),
+    /// Wraps an error payload.
+    MakeError(ValueId),
+    /// Wraps an optional payload.
+    MakeSome(ValueId),
+    /// Constructs an empty option.
+    MakeNone,
+    /// Tests whether a Result is successful.
+    IsResultOk(ValueId),
+    /// Tests whether an Option contains a value.
+    IsOptionSome(ValueId),
+    /// Extracts a success payload.
+    UnwrapOk(ValueId),
+    /// Extracts an error payload.
+    UnwrapError(ValueId),
+    /// Extracts an optional payload.
+    UnwrapSome(ValueId),
     /// Constructs an enum variant with ordered associated values.
     MakeEnum {
         /// Enum layout.
@@ -218,6 +272,17 @@ pub enum Operation {
         layout: EnumLayoutId,
         /// Variant inside the layout.
         variant: VariantId,
+    },
+    /// Reads one associated enum field by positional slot.
+    LoadEnumField {
+        /// Enum value.
+        value: ValueId,
+        /// Expected enum layout.
+        layout: EnumLayoutId,
+        /// Expected active variant.
+        variant: VariantId,
+        /// Associated field slot.
+        field: FieldId,
     },
     /// Invokes a registered intrinsic.
     Intrinsic {
@@ -275,10 +340,26 @@ impl Operation {
                 | Self::CallDirect { .. }
                 | Self::CallValue { .. }
                 | Self::LoadGlobal(_)
+                | Self::MakeArray(_)
+                | Self::MakeDictionary(_)
+                | Self::IndexGet { .. }
+                | Self::IndexSet { .. }
+                | Self::Contains { .. }
                 | Self::MakeRecord { .. }
                 | Self::LoadField { .. }
+                | Self::UpdateRecord { .. }
+                | Self::MakeOk(_)
+                | Self::MakeError(_)
+                | Self::MakeSome(_)
+                | Self::MakeNone
+                | Self::IsResultOk(_)
+                | Self::IsOptionSome(_)
+                | Self::UnwrapOk(_)
+                | Self::UnwrapError(_)
+                | Self::UnwrapSome(_)
                 | Self::MakeEnum { .. }
                 | Self::TestVariant { .. }
+                | Self::LoadEnumField { .. }
                 | Self::Intrinsic { .. }
                 | Self::MakeClosure { .. }
                 | Self::MakeCell(_)

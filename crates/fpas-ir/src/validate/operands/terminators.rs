@@ -31,6 +31,9 @@ fn validate_terminator(
         Terminator::Return(value) => match value {
             Some(value) => {
                 let actual = value_type(function, block, None, *value, all_values, available)?;
+                if types_compatible(program, function.signature.result, actual) {
+                    return Ok(());
+                }
                 require_exact(
                     function,
                     block,

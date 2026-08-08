@@ -1,8 +1,92 @@
 //! Copy-on-write storage for compound FPAS values.
 
 use super::Value;
+use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
+
+/// Shared immutable names for one positional record layout.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PositionalRecordLayout {
+    /// Numeric executable-local record identity.
+    pub record: RecordTypeId,
+    /// Canonical runtime type name.
+    pub type_name: String,
+    /// Canonical field names in numeric slot order.
+    pub fields: Vec<String>,
+}
+
+/// Stored positional record body with copy-on-write values.
+#[derive(Debug, Clone)]
+pub struct PositionalRecordValue {
+    /// Shared layout metadata.
+    pub layout: Arc<PositionalRecordLayout>,
+    /// Values in layout order.
+    pub values: Vec<Value>,
+}
+
+/// Compact shared positional record value used by register bytecode.
+#[derive(Debug, Clone)]
+pub struct SharedPositionalRecord(Arc<PositionalRecordValue>);
+
+impl SharedPositionalRecord {
+    /// Construct a positional record from shared layout metadata.
+    pub fn new(layout: Arc<PositionalRecordLayout>, values: Vec<Value>) -> Self {
+        Self(Arc::new(PositionalRecordValue { layout, values }))
+    }
+
+    /// Borrow the immutable body.
+    #[must_use]
+    pub fn body(&self) -> &PositionalRecordValue {
+        &self.0
+    }
+
+    /// Mutably borrow values, detaching only when the body is shared.
+    pub fn values_mut(&mut self) -> &mut Vec<Value> {
+        &mut Arc::make_mut(&mut self.0).values
+    }
+}
+
+/// Shared immutable names and numeric identity for one enum variant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PositionalEnumLayout {
+    /// Numeric executable-local enum identity.
+    pub enumeration: EnumTypeId,
+    /// Numeric executable-wide variant identity.
+    pub variant_id: EnumVariantId,
+    /// Canonical enum type name.
+    pub type_name: String,
+    /// Canonical variant name.
+    pub variant: String,
+    /// Associated field names in slot order.
+    pub fields: Vec<String>,
+}
+
+/// Stored positional enum body.
+#[derive(Debug, Clone)]
+pub struct PositionalEnumValue {
+    /// Shared variant layout metadata.
+    pub layout: Arc<PositionalEnumLayout>,
+    /// Associated values in declaration order.
+    pub values: Vec<Value>,
+}
+
+/// Compact shared positional enum value used by register bytecode.
+#[derive(Debug, Clone)]
+pub struct SharedPositionalEnum(Arc<PositionalEnumValue>);
+
+impl SharedPositionalEnum {
+    /// Construct a positional enum from shared layout metadata.
+    pub fn new(layout: Arc<PositionalEnumLayout>, values: Vec<Value>) -> Self {
+        Self(Arc::new(PositionalEnumValue { layout, values }))
+    }
+
+    /// Borrow the immutable body.
+    #[must_use]
+    pub fn body(&self) -> &PositionalEnumValue {
+        &self.0
+    }
+}
 
 /// Stored enum data shared by cloned enum values.
 #[derive(Debug, Clone)]

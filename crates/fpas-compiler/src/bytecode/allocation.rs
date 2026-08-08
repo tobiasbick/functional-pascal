@@ -124,6 +124,12 @@ fn largest_window(function: &Function) -> usize {
             | Operation::SpawnDetachedTask { arguments, .. }
             | Operation::Intrinsic { arguments, .. } => arguments.len(),
             Operation::MakeClosure { captures, .. } => captures.len(),
+            Operation::MakeRecord { fields, .. } | Operation::MakeEnum { fields, .. } => {
+                fields.len()
+            }
+            Operation::MakeArray(values) => values.len(),
+            Operation::MakeDictionary(pairs) => pairs.len().saturating_mul(2),
+            Operation::UpdateRecord { fields, .. } => fields.len().saturating_mul(2),
             _ => 0,
         })
         .max()
@@ -166,11 +172,32 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
         Operation::Const(_)
         | Operation::ReadLocal(_)
         | Operation::LoadGlobal(_)
+        | Operation::MakeNone
         | Operation::Yield => Vec::new(),
         Operation::WriteLocal { value, .. }
         | Operation::StoreGlobal { value, .. }
         | Operation::MakeCell(value)
         | Operation::CellRead(value) => vec![*value],
+        Operation::MakeOk(value)
+        | Operation::MakeError(value)
+        | Operation::MakeSome(value)
+        | Operation::IsResultOk(value)
+        | Operation::IsOptionSome(value)
+        | Operation::UnwrapOk(value)
+        | Operation::UnwrapError(value)
+        | Operation::UnwrapSome(value) => vec![*value],
+        Operation::MakeArray(values) => values.clone(),
+        Operation::MakeDictionary(pairs) => pairs
+            .iter()
+            .flat_map(|(key, value)| [*key, *value])
+            .collect(),
+        Operation::IndexGet { collection, index } => vec![*collection, *index],
+        Operation::IndexSet {
+            collection,
+            index,
+            value,
+        } => vec![*collection, *index, *value],
+        Operation::Contains { value, collection } => vec![*value, *collection],
         Operation::Binary { left, right, .. } => vec![*left, *right],
         Operation::Unary { operand, .. } => vec![*operand],
         Operation::CallDirect { arguments, .. } | Operation::Intrinsic { arguments, .. } => {
@@ -189,12 +216,16 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
             captures: fields, ..
         } => fields.clone(),
         Operation::LoadField { record, .. } => vec![*record],
+        Operation::UpdateRecord { record, fields, .. } => std::iter::once(*record)
+            .chain(fields.iter().map(|(_, value)| *value))
+            .collect(),
         Operation::StoreField { record, value, .. }
         | Operation::CellWrite {
             cell: record,
             value,
         } => vec![*record, *value],
         Operation::TestVariant { value, .. } => vec![*value],
+        Operation::LoadEnumField { value, .. } => vec![*value],
     }
 }
 

@@ -14,10 +14,44 @@ impl LoweringContext {
         arguments: &[Expr],
         result: TypeId,
         span: fpas_lexer::Span,
+        call_key: usize,
     ) -> Result<ValueId, CompileError> {
-        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-            return Err(unsupported(designator.span, "method or qualified call"));
-        };
+        if let Some(target) = self.method_calls.get(&call_key).cloned() {
+            return self.lower_method_call(designator, arguments, &target, span);
+        }
+        if let Some(fpas_ir::IrType::Enum(layout)) = self.type_kind(result) {
+            let name = designator
+                .parts
+                .last()
+                .and_then(|part| match part {
+                    DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                    DesignatorPart::Index(_, _) => None,
+                })
+                .ok_or_else(|| unsupported(designator.span, "enum constructor"))?;
+            if let Some((variant, _)) = self.enum_variant(layout, name) {
+                let fields = self.lower_call_arguments(arguments, span)?;
+                return self.emit_value(
+                    Operation::MakeEnum {
+                        layout,
+                        variant,
+                        fields,
+                    },
+                    result,
+                    span,
+                );
+            }
+        }
+        let qualified = designator
+            .parts
+            .iter()
+            .map(|part| match part {
+                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                DesignatorPart::Index(_, _) => None,
+            })
+            .collect::<Option<Vec<_>>>()
+            .map(|parts| parts.join("."))
+            .ok_or_else(|| unsupported(designator.span, "method or qualified call"))?;
+        let name = qualified.as_str();
         if self.has_binding(name) {
             let callee = self.read_named_local(name, designator.span)?;
             let values = self.lower_call_arguments(arguments, span)?;

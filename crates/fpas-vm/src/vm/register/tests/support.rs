@@ -24,6 +24,17 @@ pub(super) fn verified(
     strings: Vec<&str>,
     register_count: u16,
 ) -> VerifiedExecutable {
+    unverified(code, constants, strings, register_count)
+        .verify()
+        .expect("test executable must verify")
+}
+
+pub(super) fn unverified(
+    code: Vec<Instruction>,
+    constants: Vec<Constant>,
+    strings: Vec<&str>,
+    register_count: u16,
+) -> Executable {
     let code_len = u32::try_from(code.len()).expect("test code length must fit u32");
     Executable {
         code,
@@ -56,8 +67,6 @@ pub(super) fn verified(
         },
         entry: FunctionId::new(0),
     }
-    .verify()
-    .expect("test executable must verify")
 }
 
 pub(super) fn execute(executable: VerifiedExecutable) -> Result<(Value, Vec<Value>, u64), VmError> {

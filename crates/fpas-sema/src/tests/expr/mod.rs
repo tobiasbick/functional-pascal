@@ -170,6 +170,7 @@ fn analysis_metadata_exposes_all_named_results() {
     let crate::AnalysisMetadata {
         errors,
         expr_types,
+        named_types,
         method_calls,
         record_defaults,
         scalar_case_bindings,
@@ -183,6 +184,7 @@ fn analysis_metadata_exposes_all_named_results() {
         event_raises,
     } = analyze_with_types(&program);
 
+    assert_eq!(named_types.len(), 4);
     assert_eq!(
         [
             errors.len(),

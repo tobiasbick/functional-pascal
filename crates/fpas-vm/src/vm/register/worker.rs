@@ -1,11 +1,12 @@
 //! Register-window state and execution loop.
 
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, InstructionAddress, Value, VerifiedExecutable};
 
 use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
+use super::layouts::RuntimeLayouts;
 use super::{RegisterExecution, VmError, diagnostics};
 
 pub(super) struct RegisterWorker {
@@ -14,21 +15,34 @@ pub(super) struct RegisterWorker {
     pub ip: usize,
     pub base: usize,
     pub registers: Vec<Value>,
+    pub globals: Arc<RwLock<Vec<Option<Value>>>>,
+    pub layouts: Arc<RuntimeLayouts>,
     pub call_stack: Vec<CallFrame>,
     pub instruction_count: u64,
     pub current_address: InstructionAddress,
 }
 
 impl RegisterWorker {
+    #[cfg(test)]
     pub fn new(executable: Arc<VerifiedExecutable>) -> Result<Self, VmError> {
         let entry = executable.executable().entry;
-        Self::for_function(executable, entry, Vec::new())
+        let globals = Arc::new(RwLock::new(vec![
+            None;
+            executable.executable().globals.len()
+        ]));
+        let layouts = Arc::new(RuntimeLayouts::build(
+            executable.executable(),
+            InstructionAddress::new(0),
+        )?);
+        Self::for_function_with_state(executable, entry, Vec::new(), globals, layouts)
     }
 
-    pub fn for_function(
+    pub fn for_function_with_state(
         executable: Arc<VerifiedExecutable>,
         entry: FunctionId,
         arguments: Vec<Value>,
+        globals: Arc<RwLock<Vec<Option<Value>>>>,
+        layouts: Arc<RuntimeLayouts>,
     ) -> Result<Self, VmError> {
         let image = executable.executable();
         let info = image
@@ -71,6 +85,8 @@ impl RegisterWorker {
             ip,
             base: 0,
             registers,
+            globals,
+            layouts,
             call_stack: Vec::new(),
             instruction_count: 0,
             current_address: start,

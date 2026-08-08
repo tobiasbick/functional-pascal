@@ -3,7 +3,9 @@
 use std::collections::BTreeMap;
 
 use fpas_ir::{Function, FunctionId, TypeId};
-use fpas_parser::{Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl};
+use fpas_parser::{
+    Decl, FormalParam, FuncBody, FunctionDecl, ProcedureDecl, RecordMethod, TypeBody,
+};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
@@ -14,27 +16,49 @@ use super::types;
 pub(super) enum Routine<'a> {
     Function(&'a FunctionDecl),
     Procedure(&'a ProcedureDecl),
+    RecordFunction(&'a str, &'a FunctionDecl),
+    RecordProcedure(&'a str, &'a ProcedureDecl),
+}
+
+pub(super) struct LoweringInput<'a> {
+    pub id: FunctionId,
+    pub metadata: &'a AnalysisMetadata,
+    pub callables: &'a BTreeMap<String, Callable>,
+    pub globals: &'a BTreeMap<String, super::context::GlobalBinding>,
+    pub enum_constants: &'a BTreeMap<String, i64>,
+    pub closure_targets: std::collections::HashMap<usize, super::context::ClosureTarget>,
+    pub bound_method_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
+    pub cell_names: std::collections::BTreeSet<String>,
 }
 
 impl Routine<'_> {
     fn name(&self) -> &str {
         match self {
-            Self::Function(function) => &function.name,
-            Self::Procedure(procedure) => &procedure.name,
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.name,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.name,
         }
     }
 
     fn params(&self) -> &[FormalParam] {
         match self {
-            Self::Function(function) => &function.params,
-            Self::Procedure(procedure) => &procedure.params,
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.params,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.params,
+        }
+    }
+
+    fn type_params(&self) -> &[fpas_parser::TypeParam] {
+        match self {
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.type_params,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
+                &procedure.type_params
+            }
         }
     }
 
     fn body(&self) -> &FuncBody {
         match self {
-            Self::Function(function) => &function.body,
-            Self::Procedure(procedure) => &procedure.body,
+            Self::Function(function) | Self::RecordFunction(_, function) => &function.body,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => &procedure.body,
         }
     }
 
@@ -45,15 +69,25 @@ impl Routine<'_> {
 
     fn result(&self, types: &mut types::TypeTable) -> Result<TypeId, CompileError> {
         match self {
-            Self::Function(function) => types.type_expr(&function.return_type),
-            Self::Procedure(_) => Ok(types::UNIT),
+            Self::Function(function) | Self::RecordFunction(_, function) => {
+                types.type_expr_with_params(&function.return_type, &function.type_params)
+            }
+            Self::Procedure(_) | Self::RecordProcedure(_, _) => Ok(types::UNIT),
         }
     }
 
     fn span(&self) -> fpas_lexer::Span {
         match self {
-            Self::Function(function) => function.span,
-            Self::Procedure(procedure) => procedure.span,
+            Self::Function(function) | Self::RecordFunction(_, function) => function.span,
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => procedure.span,
+        }
+    }
+
+    fn runtime_name(&self) -> String {
+        match self {
+            Self::RecordFunction(owner, function) => format!("{owner}.{}", function.name),
+            Self::RecordProcedure(owner, procedure) => format!("{owner}.{}", procedure.name),
+            _ => self.name().to_string(),
         }
     }
 }
@@ -71,7 +105,23 @@ pub(super) fn collect<'a>(declarations: &'a [Decl], routines: &mut Vec<Routine<'
                 let FuncBody::Block { nested, .. } = &procedure.body;
                 collect(nested, routines);
             }
-            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) | Decl::TypeDef(_) => {}
+            Decl::TypeDef(definition) => {
+                if let TypeBody::Record(record) = &definition.body {
+                    for method in &record.methods {
+                        match method {
+                            RecordMethod::Function(function)
+                            | RecordMethod::StaticFunction(function) => {
+                                routines.push(Routine::RecordFunction(&definition.name, function))
+                            }
+                            RecordMethod::Procedure(procedure)
+                            | RecordMethod::StaticProcedure(procedure) => {
+                                routines.push(Routine::RecordProcedure(&definition.name, procedure))
+                            }
+                        }
+                    }
+                }
+            }
+            Decl::Const(_) | Decl::Var(_) | Decl::MutableVar(_) => {}
         }
     }
 }
@@ -90,10 +140,12 @@ pub(super) fn callable_table(
         let parameters = routine
             .params()
             .iter()
-            .map(|parameter| types.type_expr(&parameter.type_expr))
+            .map(|parameter| {
+                types.type_expr_with_params(&parameter.type_expr, routine.type_params())
+            })
             .collect::<Result<Vec<_>, _>>()?;
         let result = routine.result(types)?;
-        let value_type = types.function_type(parameters, result, routine.span())?;
+        let value_type = types.function_type(parameters.clone(), result, routine.span())?;
         let captures = metadata
             .nested_routine_captures
             .get(&routine.name().to_ascii_lowercase())
@@ -130,9 +182,10 @@ pub(super) fn callable_table(
             .transpose()?
             .unwrap_or_default();
         table.insert(
-            routine.name().to_ascii_lowercase(),
+            routine.runtime_name().to_ascii_lowercase(),
             Callable {
                 function,
+                parameters,
                 result,
                 value_type,
                 captures,
@@ -144,15 +197,22 @@ pub(super) fn callable_table(
 
 pub(super) fn lower(
     routine: &Routine<'_>,
-    id: FunctionId,
-    metadata: &AnalysisMetadata,
-    callables: &BTreeMap<String, Callable>,
     types: &mut types::TypeTable,
-    closure_targets: std::collections::HashMap<usize, super::context::ClosureTarget>,
-    cell_names: std::collections::BTreeSet<String>,
+    input: LoweringInput<'_>,
 ) -> Result<Function, CompileError> {
+    let LoweringInput {
+        id,
+        metadata,
+        callables,
+        globals,
+        enum_constants,
+        closure_targets,
+        bound_method_targets,
+        cell_names,
+    } = input;
+    let runtime_name = routine.runtime_name();
     let captures = callables
-        .get(&routine.name().to_ascii_lowercase())
+        .get(&runtime_name.to_ascii_lowercase())
         .map(|callable| callable.captures.clone())
         .unwrap_or_default();
     let parameters = routine
@@ -160,19 +220,22 @@ pub(super) fn lower(
         .iter()
         .map(|parameter| {
             types
-                .type_expr(&parameter.type_expr)
+                .type_expr_with_params(&parameter.type_expr, routine.type_params())
                 .map(|ty| (parameter.name.clone(), ty))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let mut context = LoweringContext::new(FunctionInput {
-        name: routine.name(),
+        name: &runtime_name,
         id,
         result: routine.result(types)?,
         parameters: &parameters,
         captures: &captures,
+        globals: globals.clone(),
+        enum_constants: enum_constants.clone(),
         metadata,
         callables: callables.clone(),
         closure_targets,
+        bound_method_targets,
         cell_names,
         type_table: types.clone(),
     })?;

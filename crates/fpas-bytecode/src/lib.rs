@@ -38,8 +38,9 @@ pub use operand::{
 pub use persistent_value::{PersistentValue, PersistentValueError};
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumValue, FunctionValue, RecordValue, SharedArray, SharedDict, SharedEnum, SharedFunction,
-    SharedRecord, SharedStr, Value,
+    EnumValue, FunctionValue, PositionalEnumLayout, PositionalEnumValue, PositionalRecordLayout,
+    PositionalRecordValue, RecordValue, SharedArray, SharedDict, SharedEnum, SharedFunction,
+    SharedPositionalEnum, SharedPositionalRecord, SharedRecord, SharedStr, Value,
 };
 
 /// Persistent instruction-set version recorded in `.fpascu` identities.

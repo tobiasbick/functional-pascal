@@ -100,16 +100,16 @@ fn out_of_range_shift_is_a_numeric_domain_error() {
 }
 
 #[test]
-fn verified_later_phase_opcode_fails_as_internal_invariant() {
+fn verified_p6_opcode_fails_as_internal_invariant() {
     let error = execute(verified(
-        vec![abc(Opcode::MakeNone, 0, 0, 0), return_unit()],
+        vec![abc(Opcode::Yield, 0, 0, 0), return_unit()],
         Vec::new(),
         vec!["root", "test.fpas"],
         1,
     ))
-    .expect_err("P4 opcode must not execute in P3");
+    .expect_err("P6 opcode must not execute in P5");
     assert_eq!(error.code, INTERNAL_VM_INVARIANT_FAILURE);
-    assert!(error.message.contains("MakeNone"));
+    assert!(error.message.contains("Yield"));
 }
 
 #[test]

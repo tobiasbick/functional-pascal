@@ -46,5 +46,5 @@ end.",
     let error = crate::compile_register_subset(&program)
         .expect_err("imports and intrinsics belong to a later phase");
 
-    assert!(error[0].message.contains("outside the P4"));
+    assert!(error[0].message.contains("outside the P5"));
 }

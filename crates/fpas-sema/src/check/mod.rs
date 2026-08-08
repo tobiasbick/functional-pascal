@@ -27,6 +27,7 @@ pub use context::EventWriteMap;
 pub use context::ExprTypeMap;
 pub use context::MethodCallMap;
 pub use context::MethodCallTarget;
+pub use context::NamedTypeMap;
 pub use context::PropertyReadInfo;
 pub use context::PropertyReadMap;
 pub use context::PropertyWriteInfo;

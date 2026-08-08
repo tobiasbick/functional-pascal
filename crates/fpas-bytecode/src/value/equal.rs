@@ -61,6 +61,48 @@ fn compare_values(a: &Value, b: &Value, real_comparison: RealComparison) -> bool
                     .zip(&b.fields)
                     .all(|((an, av), (bn, bv))| an == bn && compare_values(av, bv, real_comparison))
         }
+        (Value::PositionalRecord(a), Value::PositionalRecord(b)) => {
+            let a = a.body();
+            let b = b.body();
+            a.layout == b.layout
+                && a.values.len() == b.values.len()
+                && a.values
+                    .iter()
+                    .zip(&b.values)
+                    .all(|(left, right)| compare_values(left, right, real_comparison))
+        }
+        (Value::Record(a), Value::PositionalRecord(b))
+        | (Value::PositionalRecord(b), Value::Record(a)) => {
+            let b = b.body();
+            a.type_name == b.layout.type_name
+                && a.fields.len() == b.values.len()
+                && a.fields
+                    .iter()
+                    .zip(b.layout.fields.iter().zip(&b.values))
+                    .all(|((a_name, a_value), (b_name, b_value))| {
+                        a_name == b_name && compare_values(a_value, b_value, real_comparison)
+                    })
+        }
+        (Value::PositionalEnum(a), Value::PositionalEnum(b)) => {
+            let a = a.body();
+            let b = b.body();
+            a.layout == b.layout
+                && a.values.len() == b.values.len()
+                && a.values
+                    .iter()
+                    .zip(&b.values)
+                    .all(|(left, right)| compare_values(left, right, real_comparison))
+        }
+        (Value::Enum(a), Value::PositionalEnum(b)) | (Value::PositionalEnum(b), Value::Enum(a)) => {
+            let b = b.body();
+            a.type_name == b.layout.type_name
+                && a.variant == b.layout.variant
+                && a.fields.len() == b.values.len()
+                && a.fields
+                    .iter()
+                    .zip(&b.values)
+                    .all(|(left, right)| compare_values(left, right, real_comparison))
+        }
         (Value::Unit, Value::Unit) => true,
         (Value::ResultOk(a), Value::ResultOk(b)) => compare_values(a, b, real_comparison),
         (Value::ResultError(a), Value::ResultError(b)) => compare_values(a, b, real_comparison),

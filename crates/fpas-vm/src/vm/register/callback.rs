@@ -1,10 +1,11 @@
 //! Synchronous hosted-callback entry using numeric function identifiers.
 
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
+use super::layouts::RuntimeLayouts;
 use super::worker::RegisterWorker;
 use super::{RegisterExecution, VmError, diagnostics};
 
@@ -15,6 +16,8 @@ use super::{RegisterExecution, VmError, diagnostics};
 pub struct RegisterCallbackSession {
     executable: Arc<VerifiedExecutable>,
     stopped: bool,
+    globals: Arc<RwLock<Vec<Option<Value>>>>,
+    layouts: Result<Arc<RuntimeLayouts>, VmError>,
 }
 
 impl RegisterCallbackSession {
@@ -27,9 +30,20 @@ impl RegisterCallbackSession {
     /// Create a callback session sharing immutable executable storage.
     #[must_use]
     pub fn from_shared(executable: Arc<VerifiedExecutable>) -> Self {
+        let globals = Arc::new(RwLock::new(vec![
+            None;
+            executable.executable().globals.len()
+        ]));
+        let layouts = RuntimeLayouts::build(
+            executable.executable(),
+            fpas_bytecode::InstructionAddress::new(0),
+        )
+        .map(Arc::new);
         Self {
             executable,
             stopped: false,
+            globals,
+            layouts,
         }
     }
 
@@ -47,7 +61,14 @@ impl RegisterCallbackSession {
         if self.stopped {
             return Err(stopped_error(self.executable.executable()));
         }
-        RegisterWorker::for_function(Arc::clone(&self.executable), function, arguments)?.run()
+        RegisterWorker::for_function_with_state(
+            Arc::clone(&self.executable),
+            function,
+            arguments,
+            Arc::clone(&self.globals),
+            self.layouts.clone()?,
+        )?
+        .run()
     }
 
     /// Cancel further hosted callback invocations.

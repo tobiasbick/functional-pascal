@@ -5,6 +5,7 @@ include!("operands/operations.rs");
 include!("operands/scalar.rs");
 include!("operands/calls.rs");
 include!("operands/aggregates.rs");
+include!("operands/p5.rs");
 include!("operands/closures.rs");
 include!("operands/cells.rs");
 include!("operands/terminators.rs");

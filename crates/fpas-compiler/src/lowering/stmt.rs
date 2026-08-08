@@ -28,11 +28,15 @@ impl LoweringContext {
                 value,
                 span,
             } => {
-                let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
-                    return Err(unsupported(target.span, "aggregate assignment"));
-                };
+                let key = fpas_sema::designator_lookup_key(target);
+                if let Some(info) = self.event_writes.get(&key).cloned() {
+                    return self.lower_event_write(target, value, &info, *span);
+                }
+                if let Some(info) = self.property_writes.get(&key).cloned() {
+                    return self.lower_property_write(target, value, &info, *span);
+                }
                 let value = self.lower_expression(value)?;
-                self.write_named_local(name, value, *span)
+                self.lower_designator_write(target, value, *span)
             }
             Stmt::Return(value, _span) => {
                 let value = value
@@ -59,13 +63,21 @@ impl LoweringContext {
                 args,
                 span,
             } => {
-                let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-                    return Err(unsupported(designator.span, "method or qualified call"));
-                };
+                let call_key = fpas_sema::designator_lookup_key(designator);
+                if let Some(info) = self.event_raises.get(&call_key).cloned() {
+                    let _ = self.lower_event_raise(designator, args, &info, *span)?;
+                    return Ok(());
+                }
                 let result = self
-                    .call_result_type(name)
+                    .member_call_result(call_key)
+                    .or_else(|| {
+                        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
+                            return None;
+                        };
+                        self.call_result_type(name)
+                    })
                     .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;
-                let _ = self.lower_call(designator, args, result, *span)?;
+                let _ = self.lower_call(designator, args, result, *span, call_key)?;
                 Ok(())
             }
             Stmt::Expression { span, .. } => Err(unsupported(*span, "effect expression")),
@@ -81,7 +93,7 @@ impl LoweringContext {
     }
 
     fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
-        let ty = self.expression_ir_type(&definition.value)?;
+        let ty = self.declared_type(&definition.type_expr)?;
         let value = self.lower_expression(&definition.value)?;
         if mutable && self.is_cell_backed(&definition.name) {
             let cell_ty = self.cell_type(ty, definition.span)?;

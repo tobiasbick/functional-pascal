@@ -4,7 +4,11 @@ mod equal;
 mod function;
 mod string;
 
-pub use aggregate::{EnumValue, RecordValue, SharedDict, SharedEnum, SharedRecord};
+pub use aggregate::{
+    EnumValue, PositionalEnumLayout, PositionalEnumValue, PositionalRecordLayout,
+    PositionalRecordValue, RecordValue, SharedDict, SharedEnum, SharedPositionalEnum,
+    SharedPositionalRecord, SharedRecord,
+};
 pub use array::SharedArray;
 pub(crate) use equal::constant_values_equal;
 use equal::values_equal;
@@ -30,6 +34,10 @@ pub enum Value {
     Dict(SharedDict),
     /// Record with named fields (field order matches definition).
     Record(SharedRecord),
+    /// Positional record with executable-shared field names.
+    PositionalRecord(SharedPositionalRecord),
+    /// Positional enum with executable-shared variant metadata.
+    PositionalEnum(SharedPositionalEnum),
     /// Unit / void — result of procedures, statements.
     Unit,
     /// Result::Ok wrapped value.
@@ -104,6 +112,8 @@ impl Value {
             Value::Array(_) => "array",
             Value::Dict(_) => "dict",
             Value::Record(_) => "record",
+            Value::PositionalRecord(_) => "record",
+            Value::PositionalEnum(_) => "enum",
             Value::Unit => "unit",
             Value::ResultOk(_) => "Result.Ok",
             Value::ResultError(_) => "Result.Error",
@@ -166,6 +176,34 @@ impl std::fmt::Display for Value {
                     write!(f, "{name}: {val}")?;
                 }
                 write!(f, "}}")
+            }
+            Value::PositionalRecord(record) => {
+                let body = record.body();
+                write!(f, "{}{{", body.layout.type_name)?;
+                for (index, (name, value)) in
+                    body.layout.fields.iter().zip(&body.values).enumerate()
+                {
+                    if index > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{name}: {value}")?;
+                }
+                write!(f, "}}")
+            }
+            Value::PositionalEnum(value) => {
+                let body = value.body();
+                write!(f, "{}.{}", body.layout.type_name, body.layout.variant)?;
+                if !body.values.is_empty() {
+                    write!(f, "(")?;
+                    for (index, field) in body.values.iter().enumerate() {
+                        if index > 0 {
+                            write!(f, ", ")?;
+                        }
+                        write!(f, "{field}")?;
+                    }
+                    write!(f, ")")?;
+                }
+                Ok(())
             }
             Value::Unit => write!(f, "()"),
             Value::ResultOk(v) => write!(f, "Ok({v})"),
@@ -276,6 +314,45 @@ mod tests {
 
         assert_ne!(dict, reordered_dict);
         assert_ne!(record, reordered_record);
+    }
+
+    #[test]
+    fn positional_aggregates_preserve_legacy_equality_and_display() {
+        let record = Value::PositionalRecord(SharedPositionalRecord::new(
+            std::sync::Arc::new(PositionalRecordLayout {
+                record: crate::RecordTypeId::new(0),
+                type_name: "Demo.Point".to_string(),
+                fields: vec!["x".to_string(), "y".to_string()],
+            }),
+            vec![Value::Integer(1), Value::Integer(2)],
+        ));
+        let legacy_record = Value::record(
+            "Demo.Point".to_string(),
+            vec![
+                ("x".to_string(), Value::Integer(1)),
+                ("y".to_string(), Value::Integer(2)),
+            ],
+        );
+        assert_eq!(record, legacy_record);
+        assert_eq!(record.to_string(), "Demo.Point{x: 1, y: 2}");
+
+        let enumeration = Value::PositionalEnum(SharedPositionalEnum::new(
+            std::sync::Arc::new(PositionalEnumLayout {
+                enumeration: crate::EnumTypeId::new(0),
+                variant_id: crate::EnumVariantId::new(0),
+                type_name: "Demo.Choice".to_string(),
+                variant: "Number".to_string(),
+                fields: vec!["value".to_string()],
+            }),
+            vec![Value::Integer(3)],
+        ));
+        let legacy_enum = Value::enum_value(
+            "Demo.Choice".to_string(),
+            "Number".to_string(),
+            vec![Value::Integer(3)],
+        );
+        assert_eq!(enumeration, legacy_enum);
+        assert_eq!(enumeration.to_string(), "Demo.Choice.Number(3)");
     }
 
     #[test]

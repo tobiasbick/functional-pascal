@@ -1,4 +1,5 @@
 use crate::types::Ty;
+use std::collections::BTreeMap;
 use std::collections::HashMap;
 
 pub(crate) fn canonical_symbol_name(name: &str) -> String {
@@ -188,6 +189,16 @@ impl ScopeStack {
             .symbols
             .get(&canonical_name)
             .map(|entry| &entry.symbol)
+    }
+
+    /// Return resolved root type declarations in deterministic canonical-name order.
+    pub(crate) fn root_types(&self) -> BTreeMap<String, Ty> {
+        self.scopes[0]
+            .symbols
+            .iter()
+            .filter(|(_, entry)| entry.symbol.kind == SymbolKind::Type)
+            .map(|(name, entry)| (name.clone(), entry.symbol.ty.clone()))
+            .collect()
     }
 
     /// Mutable lookup for updating a symbol after initial definition.

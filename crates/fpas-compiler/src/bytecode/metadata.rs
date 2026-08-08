@@ -96,7 +96,7 @@ impl MetadataBuilder {
         )
     }
 
-    fn intern_string(&mut self, value: &str) -> Result<StringId, CompileError> {
+    pub fn intern_string(&mut self, value: &str) -> Result<StringId, CompileError> {
         if let Some(index) = self.strings.iter().position(|existing| existing == value) {
             return StringId::try_from_index(index)
                 .map_err(|error| metadata_error(&error.to_string()));

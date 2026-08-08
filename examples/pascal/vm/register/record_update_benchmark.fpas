@@ -1,0 +1,28 @@
+program RegisterRecordUpdateBenchmark;
+
+type
+  BenchmarkState = record
+    A: integer;
+    B: integer;
+    C: integer;
+    D: integer;
+  end;
+
+begin
+  mutable var State: BenchmarkState := record
+    A := 1;
+    B := 2;
+    C := 3;
+    D := 4;
+  end;
+
+  for Index: integer := 1 to 1000000 do
+  begin
+    State := State with A := State.A + 1; C := State.C + State.B; end
+  end;
+
+  if (State.A <> 1000001) or (State.C <> 2000003) then
+  begin
+    panic('register record-update checksum mismatch')
+  end
+end.

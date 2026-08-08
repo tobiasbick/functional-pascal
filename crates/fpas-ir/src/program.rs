@@ -80,6 +80,24 @@ pub enum IrType {
     String,
     /// A generic-erased value whose operation remains dynamically checked.
     Dynamic,
+    /// Ordered value-semantic array.
+    Array(TypeId),
+    /// Ordered value-semantic dictionary.
+    Dictionary {
+        /// Key type.
+        key: TypeId,
+        /// Stored value type.
+        value: TypeId,
+    },
+    /// Result value with success and error payload types.
+    Result {
+        /// Success payload type.
+        ok: TypeId,
+        /// Error payload type.
+        error: TypeId,
+    },
+    /// Optional value.
+    Option(TypeId),
     /// A function value with ordered parameter and result types.
     Function {
         /// Ordered parameter types.
@@ -111,8 +129,12 @@ pub struct TypeDefinition {
 pub struct Global {
     /// Stable global identifier.
     pub id: GlobalId,
+    /// Canonical source-level name used for diagnostics and display.
+    pub name: String,
     /// Type of values stored in the global.
     pub ty: TypeId,
+    /// Whether stores after initialization are permitted.
+    pub mutable: bool,
 }
 
 /// A record layout known to the IR.
@@ -120,6 +142,8 @@ pub struct Global {
 pub struct RecordLayout {
     /// Stable record-layout identifier.
     pub id: RecordLayoutId,
+    /// Canonical qualified record name.
+    pub name: String,
     /// Field declarations in declaration order.
     pub fields: Vec<RecordField>,
 }
@@ -129,6 +153,8 @@ pub struct RecordLayout {
 pub struct RecordField {
     /// Stable field identifier within the layout.
     pub id: FieldId,
+    /// Canonical declared field name.
+    pub name: String,
     /// Type stored in the field.
     pub ty: TypeId,
 }
@@ -138,6 +164,8 @@ pub struct RecordField {
 pub struct EnumLayout {
     /// Stable enum-layout identifier.
     pub id: EnumLayoutId,
+    /// Canonical qualified enum name.
+    pub name: String,
     /// Variant declarations in declaration order.
     pub variants: Vec<EnumVariant>,
 }
@@ -147,6 +175,10 @@ pub struct EnumLayout {
 pub struct EnumVariant {
     /// Stable variant identifier within the layout.
     pub id: VariantId,
+    /// Canonical declared variant name.
+    pub name: String,
+    /// Canonical associated-field names in declaration order.
+    pub field_names: Vec<String>,
     /// Associated-value types in declaration order.
     pub fields: Vec<TypeId>,
 }

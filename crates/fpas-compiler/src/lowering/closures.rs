@@ -1,5 +1,6 @@
 //! Anonymous-closure discovery, capture typing, and body lowering.
 
+mod bound_methods;
 mod capture_types;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -11,7 +12,8 @@ use fpas_sema::AnalysisMetadata;
 use crate::CompileError;
 
 use super::context::{
-    Callable, CaptureInput, ClosureTarget, FunctionInput, LoweringContext, unsupported,
+    BoundMethodTarget, Callable, CaptureInput, ClosureTarget, FunctionInput, LoweringContext,
+    unsupported,
 };
 use super::types;
 
@@ -24,19 +26,35 @@ pub(super) struct ClosureRoutine<'a> {
     captures: Vec<CaptureInput>,
 }
 
+pub(super) struct BoundMethodRoutine {
+    id: FunctionId,
+    name: String,
+    target: FunctionId,
+    receiver_ty: fpas_ir::TypeId,
+    parameters: Vec<fpas_ir::TypeId>,
+    result: fpas_ir::TypeId,
+    span: fpas_lexer::Span,
+}
+
 pub(super) struct ClosureRegistry<'a> {
     pub routines: Vec<ClosureRoutine<'a>>,
     pub targets: HashMap<usize, ClosureTarget>,
+    pub bound_routines: Vec<BoundMethodRoutine>,
+    pub bound_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
+    callables: BTreeMap<String, Callable>,
     next_id: u32,
 }
 
 impl<'a> ClosureRegistry<'a> {
-    pub fn new(first_id: u32) -> Self {
+    pub fn new(first_id: u32, callables: BTreeMap<String, Callable>) -> Self {
         Self {
             routines: Vec::new(),
             targets: HashMap::new(),
+            bound_routines: Vec::new(),
+            bound_targets: HashMap::new(),
             cell_names: HashMap::new(),
+            callables,
             next_id: first_id,
         }
     }
@@ -60,6 +78,8 @@ impl<'a> ClosureRegistry<'a> {
         metadata: &AnalysisMetadata,
         callables: &BTreeMap<String, Callable>,
         types: &mut types::TypeTable,
+        globals: &BTreeMap<String, super::context::GlobalBinding>,
+        enum_constants: &BTreeMap<String, i64>,
     ) -> Result<Function, CompileError> {
         let Expr::Closure(closure) = routine.expression else {
             return Err(unsupported(
@@ -88,9 +108,12 @@ impl<'a> ClosureRegistry<'a> {
             result,
             parameters: &parameters,
             captures: &routine.captures,
+            globals: globals.clone(),
+            enum_constants: enum_constants.clone(),
             metadata,
             callables: callables.clone(),
             closure_targets: self.targets.clone(),
+            bound_method_targets: self.bound_targets.clone(),
             cell_names: self
                 .cell_names
                 .get(&routine.id)
@@ -289,6 +312,10 @@ impl<'a> ClosureRegistry<'a> {
                 self.discover_statements(stmts, id, metadata, types)?;
             }
             Expr::Designator(designator) => {
+                let key = fpas_sema::designator_lookup_key(designator);
+                if let Some(info) = metadata.bound_methods.get(&key) {
+                    self.register_bound_method(key, info, designator.span, types)?;
+                }
                 self.visit_designator(&designator.parts, owner, metadata, types)?
             }
             Expr::Call {
@@ -348,7 +375,12 @@ impl<'a> ClosureRegistry<'a> {
                                 self.visit_expression(argument, owner, metadata, types)?;
                             }
                         }
-                        PostfixOperation::Field { .. } => {}
+                        PostfixOperation::Field { span, .. } => {
+                            let key = fpas_sema::postfix_operation_lookup_key(operation);
+                            if let Some(info) = metadata.bound_methods.get(&key) {
+                                self.register_bound_method(key, info, *span, types)?;
+                            }
+                        }
                     }
                 }
             }

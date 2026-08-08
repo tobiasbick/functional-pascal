@@ -31,11 +31,36 @@ impl LoweringContext {
                 *span,
             ),
             Expr::Designator(designator) => {
+                let designator_key = fpas_sema::designator_lookup_key(designator);
+                if self.bound_method_targets.contains_key(&designator_key) {
+                    return self.lower_bound_method(designator, designator_key);
+                }
+                if let Some(reads) = self.property_reads.get(&designator_key).cloned() {
+                    return self.lower_property_read(designator, &reads);
+                }
+                let qualified = designator
+                    .parts
+                    .iter()
+                    .map(|part| match part {
+                        DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                        DesignatorPart::Index(_, _) => None,
+                    })
+                    .collect::<Option<Vec<_>>>()
+                    .map(|parts| parts.join("."));
+                if let Some(value) = qualified.as_ref().and_then(|name| self.enum_constant(name)) {
+                    return self.emit_value(
+                        Operation::Const(Constant::Integer(value)),
+                        types::INTEGER,
+                        designator.span,
+                    );
+                }
                 let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-                    return Err(unsupported(designator.span, "aggregate designator"));
+                    return self.lower_designator_read(designator);
                 };
                 if self.has_binding(name) {
                     self.read_named_local(name, designator.span)
+                } else if self.has_global(name) {
+                    self.read_global(name, designator.span)
                 } else if let Some(callable) = self.resolve_callable(name) {
                     let captures = callable
                         .captures
@@ -59,8 +84,15 @@ impl LoweringContext {
                 args,
                 span,
             } => {
+                let call_key = fpas_sema::expr_lookup_key(expression);
+                if let Some(info) = self.event_assigned.get(&call_key).cloned() {
+                    return self.lower_event_assigned(args, &info, *span);
+                }
+                if let Some(info) = self.event_raises.get(&call_key).cloned() {
+                    return self.lower_event_raise(designator, args, &info, *span);
+                }
                 let result = self.expression_ir_type(expression)?;
-                self.lower_call(designator, args, result, *span)
+                self.lower_call(designator, args, result, *span, call_key)
             }
             Expr::Paren(inner, _) => self.lower_expression(inner),
             Expr::UnaryOp { op, operand, span } => self.lower_unary(*op, operand, *span),
@@ -91,6 +123,22 @@ impl LoweringContext {
                     expression.span(),
                 )
             }
+            Expr::ArrayLiteral(values, _) => self.lower_array_literal(values, expression),
+            Expr::DictLiteral(values, _) => self.lower_dictionary_literal(values, expression),
+            Expr::RecordLiteral { fields, .. } => self.lower_record_literal(fields, expression),
+            Expr::RecordUpdate { base, fields, .. } => {
+                self.lower_record_update(base, fields, expression)
+            }
+            Expr::ResultOk(value, _) => self.lower_wrapper(Some(value), expression, 0),
+            Expr::ResultError(value, _) => self.lower_wrapper(Some(value), expression, 1),
+            Expr::OptionSome(value, _) => self.lower_wrapper(Some(value), expression, 2),
+            Expr::OptionNone(_) => self.lower_wrapper(None, expression, 3),
+            Expr::Try(value, _) => self.lower_try(value, expression),
+            Expr::Postfix {
+                base,
+                operations,
+                span,
+            } => self.lower_postfix(base, operations, *span),
             _ => Err(unsupported(expression.span(), "expression")),
         }
     }
@@ -264,7 +312,15 @@ impl LoweringContext {
                     span,
                 )
             }
-            BinaryOp::In => Err(unsupported(span, "membership expression")),
+            BinaryOp::In => {
+                let value = self.lower_expression(left)?;
+                let collection = self.lower_expression(right)?;
+                self.emit_value(
+                    Operation::Contains { value, collection },
+                    types::BOOLEAN,
+                    span,
+                )
+            }
         }
     }
 

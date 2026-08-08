@@ -10,12 +10,12 @@ exist.
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P4 opcode match; 20 direct register-VM tests cover scalar/control-flow families plus calls, frames, closures, cells, callbacks, limits, diagnostics, and lifecycle | complete through P4 |
-| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit cases plus compiler contiguous call-window selection | complete through P4 |
-| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves byte-identical repeated output, lowest-free temporary reuse, bounded register count, verifier-valid operands, pinned parameters/captures, and one reserved contiguous call window | complete through P4 |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P5 opcode match; direct register-VM tests cover scalar/control-flow, calls, closures, callbacks, globals, layouts, aggregates, wrappers, limits, diagnostics, and lifecycle | complete through P5 |
+| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit and aggregate-window cases plus compiler contiguous call-window selection | complete through P5 |
+| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves deterministic allocation; P5 reserves contiguous constructor, update, and call windows | complete through P5 |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3/P4 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P4 |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3-P5 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P5 |
 
 ## Runtime lookup requirements
 
@@ -23,26 +23,26 @@ exist.
 |---|---|---|---|---|
 | PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler function differential tests and VM direct/wrong-ID tests | complete through P4 |
 | PVM-ID-002 | First-class functions retain numeric target | bytecode value + VM | named/anonymous closure, callback, task-bound, and capture tests | complete through P4 |
-| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | initialization/read/write/concurrency tests | planned |
-| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | get/set/update/default/COW tests | planned |
-| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | construction/match/destructure tests | planned |
+| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler global differential test; direct dense/immutable register-global tests; `register_global_access` | complete through P5 development path |
+| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | defaults/get/set/update/nested/shared-layout/COW tests; invalid-slot tests; `register_record_update` | complete through P5 development path |
+| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | simple/data enum construction, case match, destructuring, associated-field, and invalid-slot tests | complete through P5 development path |
 | PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | exhaustive intrinsic inventory | planned |
-| PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | search/profile and formatting tests | planned |
+| PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | P5 positional operations carry IDs/slots; names are shared once for diagnostics/display; equality/display tests cover legacy and positional values | complete through P5 development path |
 
 ## Semantic preservation requirements
 
 | ID | Requirement | Primary test families | Required evidence | State |
 |---|---|---|---|---|
-| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; full workspace and FPAS suites pass | complete through P4 |
-| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | expressions and call arguments lower left before right; scalar/control-flow/function/closure stack-register differential tests and full existing suite pass | complete through P4 subset |
+| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; existing syntax and semantic suites retained | complete through P5 |
+| PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | stack/register differential tests include nested properties and receiver-before-value event/property effects | complete through P5 subset |
 | PVM-SEM-003 | Integer and real behavior unchanged | VM numeric tests | wrapping integer edges, mixed numeric conversion, typed/dynamic arithmetic, divide/modulo diagnostics, comparisons, and aliasing covered directly and differentially | complete through P3 subset |
-| PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | direct/procedure/recursion/early-return differential tests; method receiver ABI; wrong arity | complete through P4 subset |
+| PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | P4 call coverage plus P5 instance/static/generic methods, properties, events, and bound-method values | complete through P5 subset |
 | PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | named/anonymous, immutable/mutable cell, nested, capture-order, and task-bound cases | complete through P4 subset |
-| PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | clone/mutate/equality/order/display | planned |
-| PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | wrap/unwrap/combinator/error cases | planned |
+| PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | stack/register differential collection and record tests; direct shared-layout/COW tests; positional/legacy equality and display | complete through P5 subset |
+| PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | construction/equality, test, unwrap payload/error, pattern, and `try` success/early-return cases | complete through P5 subset |
 | PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | exhaustive intrinsic and headless tests | planned |
 | PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | stress, wait, sleep, shutdown, panic | planned |
-| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | compiler differential tests compare code/message/help/line/column; VM tests prove sparse source lookup and structured call/callback failures | complete through P4 subset |
+| PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | prior differential diagnostics plus P5 missing array/dictionary index codes, immutable globals, wrong unwrap variant, and malformed layout admission | complete through P5 subset |
 
 ## Artifact and portability requirements
 
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P1-P4 lowering, calls, routines, closures, capture typing, allocation, selection, frames, callbacks, and VM call handling are responsibility-named; every new production/test file is below 500 lines | complete through P4 |
-| PVM-QUAL-002 | Public Rust documentation complete | Public compiler entry points plus register VM/result/callback lifecycle APIs have `///` documentation; build/doc/clippy gates pass | complete through P4 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3/P4 reject unsupported constructs, resource limits, malformed calls, and invariant failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P4 |
+| PVM-QUAL-001 | Focused module/file layout | P5 adds responsibility-named aggregate lowering/selection/execution, layout, bound-method, wrapper-validation, and CFG-state modules; every changed/new Rust file is at or below 500 lines | complete through P5 |
+| PVM-QUAL-002 | Public Rust documentation complete | Public compiler, value-layout, benchmark-engine, and register VM APIs have `///` documentation | complete through P5 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P5 reject unsupported constructs, malformed aggregate types/layouts, runtime bounds, and resource failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P5 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
-| PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/` diff + link search | planned |
-| PVM-QUAL-006 | Full Rust verification | P4 targeted IR/compiler/bytecode/VM tests plus `cargo fmt --all -- --check`, workspace build/test, and all-target/all-feature workspace clippy passed | complete through P4 |
-| PVM-QUAL-007 | Full FPAS verification | `scripts/format-fpas-sources.ps1 -Check` and `fpas test tests/` passed with 385 passed and one skipped; P4 changes no FPAS source | complete through P4 |
-| PVM-QUAL-008 | Privacy preserved | P4 diff inspection found no host-identifying metadata; source metadata uses fixed development-path names and fixed-width IDs | complete through P4 |
+| PVM-QUAL-005 | Current user docs reconciled | no language or production behavior changed; `docs/pascal/` remains unchanged and P5 truth is recorded only under `docs/future/` | complete through P5 |
+| PVM-QUAL-006 | Full Rust verification | P5 targeted and full-gate results are recorded in `p5-globals-aggregates.md` | complete through P5 |
+| PVM-QUAL-007 | Full FPAS verification | FPAS formatting and regression gates retained; three new benchmark sources are formatter-checked | complete through P5 |
+| PVM-QUAL-008 | Privacy preserved | P5 docs, fixtures, metadata, and benchmark output contain no host-identifying metadata | complete through P5 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P3 opcode implementation overlay
@@ -103,6 +103,20 @@ the old production instruction is removed at cutover.
 | String and boolean operations | concatenation, six string comparisons, boolean equality/inequality/not/and/or | direct VM opcode-family tests; compiler string/boolean differential case | complete |
 | Scalar control flow | jump, true/false branches, `if`, scalar `case`, while/repeat/for, break/continue | nested compiler differential case and dispatched-instruction count | complete |
 | Root completion and panic | Unit return and panic terminators | success plus code/message/help/line/column differential tests | complete |
+
+## P5 opcode implementation overlay
+
+Like the P3 overlay, this records the inactive implementation. The P0 inventory below remains
+`planned` until the production stack operation is removed at cutover.
+
+| P5 group | Register implementation | Evidence | State |
+|---|---|---|---|
+| Dense globals | `LoadGlobal` and `StoreGlobal` with `GlobalId`; `RwLock<Vec<Option<Value>>>` | compiler differential global mutation; direct initialization/immutable-store tests; register benchmark | complete |
+| Arrays and dictionaries | `MakeArray`, `MakeDictionary`, `IndexGet`, `IndexSet`, and `Contains` | construction/index/update/membership differential tests; COW and missing index/key direct tests; register array benchmark | complete |
+| Record layouts | `MakeRecord`, `LoadField`, `StoreField`, and `UpdateRecord` with numeric slots | anonymous/named/default/generic/nested/COW/member differential tests; direct shared-layout test; verifier negatives; register record benchmark | complete |
+| Enum layouts | `MakeEnum`, `TestVariant`, and `LoadEnumField` with numeric variants/fields | simple/data/generic enum construction, matching, destructuring, associated fields, and invalid-slot tests | complete |
+| Result and Option | `MakeOk`, `MakeError`, `MakeSome`, `MakeNone`, tests, and unwrap operations | equality, pattern, `try`, payload, wrong-wrapper, and wrong-variant tests | complete |
+| Record members | numeric direct calls plus generated bound-receiver closures | instance/static/generic method, property, event, bound method/event, and evaluation-order differential tests | complete |
 
 ## P0 current-opcode migration inventory
 

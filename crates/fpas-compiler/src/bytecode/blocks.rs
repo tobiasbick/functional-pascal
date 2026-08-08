@@ -65,6 +65,13 @@ fn operation_width(program: &Program, operation: &Operation) -> Result<u32, Comp
         }
         Operation::CallValue { arguments, .. } => arguments.len().saturating_add(1),
         Operation::MakeClosure { captures, .. } => captures.len().saturating_add(1),
+        Operation::MakeArray(values) => values.len().saturating_add(1),
+        Operation::MakeDictionary(pairs) => pairs.len().saturating_mul(2).saturating_add(1),
+        Operation::MakeRecord { fields, .. } | Operation::MakeEnum { fields, .. } => {
+            fields.len().saturating_add(1)
+        }
+        Operation::IndexSet { .. } => 2,
+        Operation::UpdateRecord { fields, .. } => fields.len().saturating_mul(2).saturating_add(2),
         _ => 1,
     };
     u32::try_from(width).map_err(|_| address_error())

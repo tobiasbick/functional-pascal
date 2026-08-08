@@ -32,7 +32,9 @@ fn validate_binary(
 ) -> Result<(), ValidationError> {
     let (operands, output) = binary_categories(operation);
     if operands == TypeCategory::Same {
-        require_exact(function, block, instruction, "right operand", left, right)?;
+        if !types_compatible(program, left, right) {
+            require_exact(function, block, instruction, "right operand", left, right)?;
+        }
     } else {
         require_category(
             program,

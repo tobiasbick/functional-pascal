@@ -1,12 +1,13 @@
 //! Mutable CFG, lexical-scope, local, and loop lowering state.
 
 mod bindings;
+mod blocks;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use fpas_ir::{
-    BasicBlock, BlockId, BlockTarget, Function, FunctionId, FunctionSignature, Instruction, Local,
-    LocalId, Operation, Terminator, TypeId, ValueDefinition, ValueId,
+    BasicBlock, BlockId, BlockTarget, FunctionId, GlobalId, Instruction, Local, LocalId, Operation,
+    TypeId, ValueDefinition, ValueId,
 };
 use fpas_lexer::Span;
 use fpas_sema::{AnalysisMetadata, ExprTypeMap, ScalarCaseBindingMap, Ty};
@@ -34,6 +35,7 @@ enum BindingStorage {
 #[derive(Debug, Clone)]
 pub(super) struct Callable {
     pub function: FunctionId,
+    pub parameters: Vec<TypeId>,
     pub result: TypeId,
     pub value_type: TypeId,
     pub captures: Vec<CaptureInput>,
@@ -54,6 +56,12 @@ pub(super) struct ClosureTarget {
     pub captures: Vec<CaptureInput>,
 }
 
+#[derive(Debug, Clone)]
+pub(super) struct BoundMethodTarget {
+    pub function: FunctionId,
+    pub value_type: TypeId,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(super) struct LoopTargets {
     pub break_block: BlockId,
@@ -66,9 +74,12 @@ pub(super) struct FunctionInput<'a> {
     pub result: TypeId,
     pub parameters: &'a [(String, TypeId)],
     pub captures: &'a [CaptureInput],
+    pub globals: BTreeMap<String, GlobalBinding>,
+    pub enum_constants: BTreeMap<String, i64>,
     pub metadata: &'a AnalysisMetadata,
     pub callables: BTreeMap<String, Callable>,
     pub closure_targets: HashMap<usize, ClosureTarget>,
+    pub bound_method_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: BTreeSet<String>,
     pub type_table: types::TypeTable,
 }
@@ -81,10 +92,21 @@ pub(super) struct LoweringContext {
     captures: Vec<fpas_ir::CaptureDeclaration>,
     callables: BTreeMap<String, Callable>,
     closure_targets: HashMap<usize, ClosureTarget>,
+    pub(super) bound_method_targets: HashMap<usize, BoundMethodTarget>,
     cell_names: BTreeSet<String>,
+    globals: BTreeMap<String, GlobalBinding>,
+    enum_constants: BTreeMap<String, i64>,
     type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
     pub(super) scalar_case_bindings: ScalarCaseBindingMap,
+    pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
+    pub(super) method_calls: fpas_sema::MethodCallMap,
+    pub(super) bound_methods: fpas_sema::BoundMethodMap,
+    pub(super) property_reads: fpas_sema::PropertyReadMap,
+    pub(super) property_writes: fpas_sema::PropertyWriteMap,
+    pub(super) event_writes: fpas_sema::EventWriteMap,
+    pub(super) event_assigned: fpas_sema::EventAssignedMap,
+    pub(super) event_raises: fpas_sema::EventRaiseMap,
     blocks: Vec<BasicBlock>,
     current: BlockId,
     locals: Vec<Local>,
@@ -95,6 +117,12 @@ pub(super) struct LoweringContext {
     max_call_arguments: u32,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(super) struct GlobalBinding {
+    pub id: GlobalId,
+    pub ty: TypeId,
+}
+
 impl LoweringContext {
     pub(super) fn new(input: FunctionInput<'_>) -> Result<Self, CompileError> {
         let FunctionInput {
@@ -103,9 +131,12 @@ impl LoweringContext {
             result,
             parameters: parameter_types,
             captures,
+            globals,
+            enum_constants,
             metadata,
             callables,
             closure_targets,
+            bound_method_targets,
             cell_names,
             type_table,
         } = input;
@@ -175,10 +206,21 @@ impl LoweringContext {
                 .collect(),
             callables,
             closure_targets,
+            bound_method_targets,
             cell_names,
+            globals,
+            enum_constants,
             type_table,
             expr_types: metadata.expr_types.clone(),
             scalar_case_bindings: metadata.scalar_case_bindings.clone(),
+            record_defaults: metadata.record_defaults.clone(),
+            method_calls: metadata.method_calls.clone(),
+            bound_methods: metadata.bound_methods.clone(),
+            property_reads: metadata.property_reads.clone(),
+            property_writes: metadata.property_writes.clone(),
+            event_writes: metadata.event_writes.clone(),
+            event_assigned: metadata.event_assigned.clone(),
+            event_raises: metadata.event_raises.clone(),
             blocks: vec![empty_block(BlockId::new(0))],
             current: BlockId::new(0),
             locals,
@@ -226,6 +268,13 @@ impl LoweringContext {
             .id(&self.expression_type(expression)?, span.line, span.column)
     }
 
+    pub(super) fn declared_type(
+        &mut self,
+        type_expr: &fpas_parser::TypeExpr,
+    ) -> Result<TypeId, CompileError> {
+        self.type_table.type_expr(type_expr)
+    }
+
     pub(super) fn emit_value(
         &mut self,
         operation: Operation,
@@ -261,148 +310,12 @@ impl LoweringContext {
         });
         Ok(())
     }
-
-    pub(super) fn new_block(&mut self, span: Span) -> Result<BlockId, CompileError> {
-        let id = BlockId::try_from_index(self.blocks.len()).map_err(|error| {
-            internal_compiler_error(
-                error.to_string(),
-                "Split the program into smaller functions.",
-                span.line,
-                span.column,
-            )
-        })?;
-        self.blocks.push(empty_block(id));
-        Ok(id)
-    }
-
-    pub(super) fn switch_to(&mut self, block: BlockId) {
-        self.current = block;
-    }
-
-    pub(super) fn is_terminated(&self) -> bool {
-        self.block(self.current)
-            .is_none_or(|block| !block.terminators.is_empty())
-    }
-
-    pub(super) fn terminate(&mut self, terminator: Terminator) -> Result<(), CompileError> {
-        let current = self.current;
-        let block = self.current_block_mut()?;
-        if !block.terminators.is_empty() {
-            return Err(internal_compiler_error(
-                format!(
-                    "Register IR block {} received multiple terminators.",
-                    current.get()
-                ),
-                "This is an internal compiler error. Re-run compilation and report the source program.",
-                1,
-                1,
-            ));
-        }
-        block.terminators.push(terminator);
-        Ok(())
-    }
-
-    pub(super) fn set_last_instruction_source(&mut self, source: Span) -> Result<(), CompileError> {
-        let block = self.current_block_mut()?;
-        let Some(instruction) = block.instructions.last_mut() else {
-            return Err(internal_compiler_error(
-                "A source-bearing terminator has no preceding value instruction.",
-                "This is an internal compiler error. Re-run compilation and report the source program.",
-                source.line,
-                source.column,
-            ));
-        };
-        instruction.source = Some(source.diagnostic_span_or_synthetic());
-        Ok(())
-    }
-
-    pub(super) fn jump(&mut self, block: BlockId) -> Result<(), CompileError> {
-        self.terminate(Terminator::Jump(target(block)))
-    }
-
-    pub(super) fn push_loop(&mut self, targets: LoopTargets) {
-        self.loops.push(targets);
-    }
-
-    pub(super) fn pop_loop(&mut self) {
-        let _ = self.loops.pop();
-    }
-
-    pub(super) fn loop_targets(&self, span: Span) -> Result<LoopTargets, CompileError> {
-        self.loops.last().copied().ok_or_else(|| {
-            internal_compiler_error(
-                "Loop control reached lowering without an active loop.",
-                "Use `break` or `continue` only inside a loop.",
-                span.line,
-                span.column,
-            )
-        })
-    }
-
-    pub(super) fn remove_last_block_if(&mut self, id: BlockId) {
-        if self.blocks.last().is_some_and(|block| block.id == id) {
-            let _ = self.blocks.pop();
-        }
-    }
-
-    pub(super) fn finish(mut self, span: Span) -> Result<Function, CompileError> {
-        if !self.is_terminated() {
-            self.terminate(Terminator::Return(None))?;
-        }
-        let blocks = reverse_postorder(&self.blocks, BlockId::new(0));
-        if blocks.is_empty() {
-            return Err(internal_compiler_error(
-                "Register IR root has no reachable entry block.",
-                "This is an internal compiler error. Re-run compilation and report the source program.",
-                span.line,
-                span.column,
-            ));
-        }
-        Ok(Function {
-            id: self.function_id,
-            name: self.program_name,
-            signature: FunctionSignature {
-                parameters: self
-                    .parameters
-                    .iter()
-                    .map(|parameter| parameter.ty)
-                    .collect(),
-                result: self.result_type,
-            },
-            parameters: self.parameters,
-            locals: self.locals,
-            captures: self.captures,
-            blocks,
-            entry: BlockId::new(0),
-            max_call_arguments: self.max_call_arguments,
-            can_spawn_tasks: false,
-        })
-    }
-
-    fn current_block_mut(&mut self) -> Result<&mut BasicBlock, CompileError> {
-        let id = self.current;
-        self.blocks
-            .iter_mut()
-            .find(|block| block.id == id)
-            .ok_or_else(|| {
-                internal_compiler_error(
-                    format!("Register IR current block {} is missing.", id.get()),
-                    "This is an internal compiler error. Re-run compilation and report the source program.",
-                    1,
-                    1,
-                )
-            })
-    }
-
-    fn block(&self, id: BlockId) -> Option<&BasicBlock> {
-        self.blocks.iter().find(|block| block.id == id)
-    }
 }
 
 pub(super) fn unsupported(span: Span, construct: &str) -> CompileError {
     internal_compiler_error(
-        format!("`{construct}` is outside the P4 register-development subset."),
-        "This development path accepts scalar control flow, routines, first-class calls, and closures without imports, globals, aggregates, intrinsics, or tasks.",
+        format!("`{construct}` is outside the P5 register-development subset."),
+        "This development path accepts scalar control flow, routines, closures, globals, and aggregates without imports, intrinsics, tasks, or persistent artifacts.",
         span.line,
         span.column,
     )

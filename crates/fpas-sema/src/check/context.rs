@@ -5,10 +5,14 @@ use crate::types::Ty;
 use fpas_diagnostics::DiagnosticCode;
 use fpas_lexer::Span;
 use fpas_parser::Expr;
+use std::collections::BTreeMap;
 use std::collections::{HashMap, HashSet};
 
 /// Maps expression identity (`Expr` as `*const Expr`) to its semantic type.
 pub type ExprTypeMap = HashMap<usize, Ty>;
+
+/// Canonical root type name to its fully resolved semantic type.
+pub type NamedTypeMap = BTreeMap<String, Ty>;
 
 /// How a record member call should be lowered by the compiler.
 ///
@@ -168,6 +172,8 @@ pub struct AnalysisMetadata {
     pub errors: Vec<SemaError>,
     /// Inferred expression types keyed by expression identity.
     pub expr_types: ExprTypeMap,
+    /// Fully resolved named types used to construct deterministic runtime layouts.
+    pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
     pub method_calls: MethodCallMap,
     /// Named record defaults used while lowering record literals.
@@ -279,9 +285,11 @@ impl Checker {
     }
 
     pub fn finish(self) -> AnalysisMetadata {
+        let named_types = self.scopes.root_types();
         AnalysisMetadata {
             errors: self.errors,
             expr_types: self.expr_types,
+            named_types,
             method_calls: self.method_calls,
             record_defaults: self.record_defaults,
             scalar_case_bindings: self.scalar_case_bindings,

@@ -1,0 +1,16 @@
+program RegisterGlobalAccessBenchmark;
+
+mutable var
+  GlobalValue: integer := 0;
+
+begin
+  for Index: integer := 1 to 5000000 do
+  begin
+    GlobalValue := GlobalValue + Index
+  end;
+
+  if GlobalValue <> 12500002500000 then
+  begin
+    panic('register global-access checksum mismatch')
+  end
+end.

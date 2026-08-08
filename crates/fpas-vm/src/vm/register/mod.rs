@@ -1,4 +1,4 @@
-//! Safe register interpreter lifecycle through P4 calls and closures.
+//! Safe register interpreter lifecycle through P5 globals and aggregates.
 
 mod access;
 mod callback;
@@ -7,15 +7,17 @@ mod diagnostics;
 mod dispatch;
 mod execute;
 mod frame;
+mod layouts;
 mod worker;
 
 #[cfg(test)]
 mod tests;
 
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
 
+use self::layouts::RuntimeLayouts;
 use self::worker::RegisterWorker;
 use super::VmError;
 
@@ -32,11 +34,13 @@ pub struct RegisterExecution {
 
 /// Single-use VM for a pre-verified register executable.
 ///
-/// This API is intentionally not wired to the production CLI until later cutover phases complete
-/// calls, aggregates, intrinsics, tasks, and persistent artifacts.
+/// This API is intentionally not wired to the production CLI until later phases complete
+/// intrinsics, tasks, persistent artifacts, and the production cutover.
 pub struct RegisterVm {
     executable: Arc<VerifiedExecutable>,
     has_run: bool,
+    globals: Arc<RwLock<Vec<Option<Value>>>>,
+    layouts: Result<Arc<RuntimeLayouts>, VmError>,
 }
 
 impl RegisterVm {
@@ -49,9 +53,20 @@ impl RegisterVm {
     /// Construct an isolated VM sharing immutable verified executable metadata.
     #[must_use]
     pub fn from_shared(executable: Arc<VerifiedExecutable>) -> Self {
+        let globals = Arc::new(RwLock::new(vec![
+            None;
+            executable.executable().globals.len()
+        ]));
+        let layouts = RuntimeLayouts::build(
+            executable.executable(),
+            fpas_bytecode::InstructionAddress::new(0),
+        )
+        .map(Arc::new);
         Self {
             executable,
             has_run: false,
+            globals,
+            layouts,
         }
     }
 
@@ -71,7 +86,14 @@ impl RegisterVm {
                 "Register VM instances are single-use. Construct a new instance for each run.",
             ));
         }
-        RegisterWorker::new(Arc::clone(&self.executable))?.run()
+        RegisterWorker::for_function_with_state(
+            Arc::clone(&self.executable),
+            self.executable.executable().entry,
+            Vec::new(),
+            Arc::clone(&self.globals),
+            self.layouts.clone()?,
+        )?
+        .run()
     }
 
     /// Execute one numeric function as a synchronous hosted callback.
@@ -94,6 +116,13 @@ impl RegisterVm {
                 "Register VM instances are single-use. Construct a new instance for each callback.",
             ));
         }
-        RegisterWorker::for_function(Arc::clone(&self.executable), function, arguments)?.run()
+        RegisterWorker::for_function_with_state(
+            Arc::clone(&self.executable),
+            function,
+            arguments,
+            Arc::clone(&self.globals),
+            self.layouts.clone()?,
+        )?
+        .run()
     }
 }

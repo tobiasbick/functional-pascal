@@ -1,5 +1,7 @@
 //! Total active-subset IR instruction selection into checked packed instructions.
 
+mod aggregates;
+
 use std::collections::BTreeMap;
 
 use fpas_bytecode::{Instruction, Opcode};
@@ -47,6 +49,9 @@ impl<'a> Selector<'a> {
         metadata: &mut MetadataBuilder,
     ) -> Result<Vec<Instruction>, CompileError> {
         let result = instruction.result.map(|value| value.id);
+        if let Some(selected) = self.select_aggregate(&instruction.operation, result, metadata)? {
+            return Ok(selected);
+        }
         let selected = match &instruction.operation {
             Operation::Const(constant) => {
                 let destination = self.result_register(result)?;
@@ -276,7 +281,8 @@ impl<'a> Selector<'a> {
             (IrType::String, false) => Ok(Opcode::NotEqualString),
             (IrType::Dynamic, true) => Ok(Opcode::EqualDynamic),
             (IrType::Dynamic, false) => Ok(Opcode::NotEqualDynamic),
-            _ => Err(selection_error("equality operand is not a P3 scalar type")),
+            (_, true) => Ok(Opcode::EqualDynamic),
+            (_, false) => Ok(Opcode::NotEqualDynamic),
         }
     }
 
@@ -285,6 +291,12 @@ impl<'a> Selector<'a> {
             .ok_or_else(|| selection_error("value-producing IR operation has no result"))
             .and_then(|value| self.allocation.value(value).map(|register| register.get()))
     }
+}
+
+fn narrow(value: impl TryInto<u16>, kind: &str) -> Result<u16, CompileError> {
+    value
+        .try_into()
+        .map_err(|_| selection_error(&format!("{kind} identifier exceeds u16")))
 }
 
 fn unary_opcode(operation: UnaryOperation) -> Opcode {

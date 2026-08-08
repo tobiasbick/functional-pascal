@@ -122,6 +122,7 @@ impl Compiler {
         let AnalysisMetadata {
             errors: _,
             expr_types,
+            named_types: _,
             method_calls,
             record_defaults,
             scalar_case_bindings,

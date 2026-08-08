@@ -266,7 +266,7 @@ pub(super) fn validate_layout_operand(
                 opcode,
                 "record override window",
                 b,
-                usize::from(c),
+                usize::from(c) * 2,
             )?;
             canonical(
                 executable,

@@ -32,13 +32,11 @@ fn validate_direct_call(
         all_values,
         available,
     )?;
-    require_result_type(
-        function,
-        block,
-        instruction,
-        result,
-        target.signature.result,
-    )
+    let result = result.ok_or_else(|| function_error(function.id, Some(block), Some(instruction), ValidationErrorKind::MissingResult))?;
+    if types_compatible(program, target.signature.result, result.ty) {
+        return Ok(());
+    }
+    require_result_type(function, block, instruction, Some(result), target.signature.result)
 }
 
 #[expect(
@@ -90,8 +88,10 @@ fn validate_call_value(
         all_values,
         available,
     )?;
-    if result.is_some() {
-        require_result_type(function, block, instruction, result, *expected_result)?;
+    if let Some(result) = result
+        && !types_compatible(program, *expected_result, result.ty)
+    {
+        require_result_type(function, block, instruction, Some(result), *expected_result)?;
     }
     Ok(())
 }
@@ -130,15 +130,23 @@ fn validate_arguments(
             all_values,
             available,
         )?;
-        require_exact(
-            function,
-            block,
-            instruction,
-            "call argument",
-            *expected,
-            actual,
-        )?;
+        if !types_compatible(program, *expected, actual) {
+            require_exact(function, block, instruction, "call argument", *expected, actual)?;
+        }
     }
-    let _ = program;
     Ok(())
+}
+
+fn types_compatible(program: &Program, expected: TypeId, actual: TypeId) -> bool {
+    if expected == actual { return true; }
+    match (program.ty(expected).map(|item| &item.kind), program.ty(actual).map(|item| &item.kind)) {
+        (Some(IrType::Dynamic), _) | (_, Some(IrType::Dynamic)) => true,
+        (Some(IrType::Array(a)), Some(IrType::Array(b))) | (Some(IrType::Option(a)), Some(IrType::Option(b))) => types_compatible(program, *a, *b),
+        (Some(IrType::Dictionary { key: ak, value: av }), Some(IrType::Dictionary { key: bk, value: bv })) => types_compatible(program, *ak, *bk) && types_compatible(program, *av, *bv),
+        (Some(IrType::Result { ok: ao, error: ae }), Some(IrType::Result { ok: bo, error: be })) => types_compatible(program, *ao, *bo) && types_compatible(program, *ae, *be),
+        (Some(IrType::Function { parameters: ap, result: ar }), Some(IrType::Function { parameters: bp, result: br })) => ap.len() == bp.len() && ap.iter().zip(bp).all(|(a, b)| types_compatible(program, *a, *b)) && types_compatible(program, *ar, *br),
+        (Some(IrType::Record(a)), Some(IrType::Record(b))) => a == b,
+        (Some(IrType::Enum(a)), Some(IrType::Enum(b))) => a == b,
+        _ => false,
+    }
 }

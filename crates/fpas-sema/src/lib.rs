@@ -36,6 +36,7 @@ pub use check::EventWriteMap;
 pub use check::ExprTypeMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
+pub use check::NamedTypeMap;
 pub use check::NestedRoutineCaptureInfo;
 pub use check::NestedRoutineCaptureMap;
 pub use check::PropertyReadInfo;
@@ -50,7 +51,7 @@ pub use interface::{
     analyze_program_with_interfaces, analyze_unit, analyze_unit_with_interface_support,
     interface_type_to_ty, ty_to_interface_type,
 };
-pub use types::Ty;
+pub use types::{EnumTy, RecordTy, Ty};
 
 use fpas_parser::Program;
 

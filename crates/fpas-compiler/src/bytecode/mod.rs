@@ -46,16 +46,67 @@ pub(super) fn compile_program(
             &mut metadata,
         )?);
     }
+    let globals = program
+        .globals
+        .iter()
+        .map(|global| {
+            metadata
+                .intern_string(&global.name)
+                .map(|name| fpas_bytecode::GlobalInfo {
+                    name,
+                    mutable: global.mutable,
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let records = program
+        .record_layouts
+        .iter()
+        .map(|layout| {
+            let name = metadata.intern_string(&layout.name)?;
+            let fields = layout
+                .fields
+                .iter()
+                .map(|field| {
+                    metadata
+                        .intern_string(&field.name)
+                        .map(|name| fpas_bytecode::RecordField { name })
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(fpas_bytecode::RecordLayout { name, fields })
+        })
+        .collect::<Result<Vec<_>, CompileError>>()?;
+    let mut enums = Vec::new();
+    let mut enum_variants = Vec::new();
+    for layout in &program.enum_layouts {
+        enums.push(fpas_bytecode::EnumLayout {
+            name: metadata.intern_string(&layout.name)?,
+        });
+        for variant in &layout.variants {
+            let fields = variant
+                .field_names
+                .iter()
+                .map(|name| metadata.intern_string(name))
+                .collect::<Result<Vec<_>, _>>()?;
+            enum_variants.push(fpas_bytecode::EnumVariant {
+                owner: fpas_bytecode::EnumTypeId::new(
+                    u16::try_from(layout.id.get())
+                        .map_err(|_| compile_error("enum layout exceeds u16"))?,
+                ),
+                name: metadata.intern_string(&variant.name)?,
+                fields,
+            });
+        }
+    }
     let (constants, strings, source_map) = metadata.finish();
     let executable = Executable {
         code,
         functions,
         constants,
         strings,
-        globals: Vec::new(),
-        records: Vec::new(),
-        enums: Vec::new(),
-        enum_variants: Vec::new(),
+        globals,
+        records,
+        enums,
+        enum_variants,
         source_map,
         entry: FunctionId::new(0),
     };

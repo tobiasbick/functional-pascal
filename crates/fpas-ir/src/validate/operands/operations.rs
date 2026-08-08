@@ -84,6 +84,9 @@ fn validate_operation(
             let local = function.local(*local).ok_or_else(|| {
                 unknown(function, block, instruction, EntityKind::Local, local.get())
             })?;
+            if types_compatible(program, local.ty, value_ty) {
+                return Ok(());
+            }
             require_exact(
                 function,
                 block,
@@ -172,6 +175,9 @@ fn validate_operation(
                 )
             })?;
             let value_ty = value_type(function, block, instruction, *value, all_values, available)?;
+            if types_compatible(program, global.ty, value_ty) {
+                return Ok(());
+            }
             require_exact(
                 function,
                 block,
@@ -181,6 +187,24 @@ fn validate_operation(
                 value_ty,
             )
         }
+        Operation::MakeArray(_)
+        | Operation::MakeDictionary(_)
+        | Operation::IndexGet { .. }
+        | Operation::IndexSet { .. }
+        | Operation::Contains { .. }
+        | Operation::UpdateRecord { .. }
+        | Operation::MakeOk(_)
+        | Operation::MakeError(_)
+        | Operation::MakeSome(_)
+        | Operation::MakeNone
+        | Operation::IsResultOk(_)
+        | Operation::IsOptionSome(_)
+        | Operation::UnwrapOk(_)
+        | Operation::UnwrapError(_)
+        | Operation::UnwrapSome(_)
+        | Operation::LoadEnumField { .. } => validate_p5(
+            program, function, block, instruction, operation, result, all_values, available,
+        ),
         Operation::MakeRecord { layout, fields } => validate_record_make(
             program,
             function,

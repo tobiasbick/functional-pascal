@@ -13,14 +13,10 @@ impl Checker {
         // Special handling: if the value is a record literal and the declared type resolves
         // to a concrete named record, validate field presence (including defaults) and
         // annotate the literal with the named type so the compiler can expand defaults.
-        let skip_compat = if let Expr::RecordLiteral { fields, span } = &v.value {
+        let skip_compat = if matches!(&v.value, Expr::RecordLiteral { .. }) {
             let resolved = self.resolve_visible_type(&declared_ty);
-            if let crate::types::Ty::Record(record_ty) = resolved {
-                self.validate_typed_record_literal(fields, &record_ty, *span);
-                // Override the annotation so the compiler sees the named type.
-                let key = Self::expr_lookup_key(&v.value);
-                self.expr_types
-                    .insert(key, crate::types::Ty::Record(record_ty));
+            if matches!(resolved, crate::types::Ty::Record(_)) {
+                self.try_annotate_expected_record_literals(&v.value, &declared_ty);
                 true
             } else {
                 false
@@ -60,24 +56,6 @@ impl Checker {
                 v.span,
             );
         }
-    }
-
-    /// Validate a record literal against a concrete named record type.
-    ///
-    /// Checks that:
-    /// - every provided field name exists in `record_ty`;
-    /// - no field is specified more than once;
-    /// - every required field (no default) is present in `fields`.
-    ///
-    /// Also type-checks each provided field value.
-    pub(crate) fn validate_typed_record_literal(
-        &mut self,
-        fields: &[FieldInit],
-        record_ty: &crate::types::RecordTy,
-        span: fpas_lexer::Span,
-    ) {
-        self.validate_unique_record_fields(fields, "record literal");
-        self.validate_typed_record_literal_fields(fields, record_ty, span);
     }
 
     fn validate_typed_record_literal_fields(
@@ -209,9 +187,19 @@ impl Checker {
                 },
                 Ty::Record(record_ty),
             ) => {
+                self.validate_unique_record_fields(fields, "record literal");
                 self.validate_typed_record_literal_fields(fields, record_ty, *lit_span);
                 let key = Self::expr_lookup_key(expr);
                 self.expr_types.insert(key, Ty::Record(record_ty.clone()));
+                for field in fields {
+                    if let Some((_, field_ty)) = record_ty
+                        .fields
+                        .iter()
+                        .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
+                    {
+                        self.try_annotate_expected_record_literals(&field.value, field_ty);
+                    }
+                }
             }
             (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
                 let element_resolved = self.resolve_visible_type(element_ty);

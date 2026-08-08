@@ -73,7 +73,7 @@ mod tests {
     }
 
     fn run_dict(intrinsic: DictIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        crate::run_intrinsic(Intrinsic::Dict(intrinsic), stack, loc()).map(|_| ())
+        crate::execute_test_intrinsic(Intrinsic::Dict(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

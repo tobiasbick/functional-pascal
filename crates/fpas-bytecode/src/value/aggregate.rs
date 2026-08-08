@@ -1,13 +1,14 @@
 //! Copy-on-write storage for compound FPAS values.
 
-use super::Value;
-use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-/// Shared immutable names for one positional record layout.
+use super::Value;
+use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
+
+/// Shared immutable metadata for one runtime record layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PositionalRecordLayout {
+pub struct RuntimeRecordLayout {
     /// Numeric executable-local record identity.
     pub record: RecordTypeId,
     /// Canonical runtime type name.
@@ -16,28 +17,29 @@ pub struct PositionalRecordLayout {
     pub fields: Vec<String>,
 }
 
-/// Stored positional record body with copy-on-write values.
+/// Stored record body with copy-on-write values.
 #[derive(Debug, Clone)]
-pub struct PositionalRecordValue {
+pub struct RecordValue {
     /// Shared layout metadata.
-    pub layout: Arc<PositionalRecordLayout>,
+    pub layout: Arc<RuntimeRecordLayout>,
     /// Values in layout order.
     pub values: Vec<Value>,
 }
 
-/// Compact shared positional record value used by register bytecode.
+/// Compact copy-on-write record value.
 #[derive(Debug, Clone)]
-pub struct SharedPositionalRecord(Arc<PositionalRecordValue>);
+pub struct SharedRecord(Arc<RecordValue>);
 
-impl SharedPositionalRecord {
-    /// Construct a positional record from shared layout metadata.
-    pub fn new(layout: Arc<PositionalRecordLayout>, values: Vec<Value>) -> Self {
-        Self(Arc::new(PositionalRecordValue { layout, values }))
+impl SharedRecord {
+    /// Construct a record from shared layout metadata.
+    #[must_use]
+    pub fn new(layout: Arc<RuntimeRecordLayout>, values: Vec<Value>) -> Self {
+        Self(Arc::new(RecordValue { layout, values }))
     }
 
     /// Borrow the immutable body.
     #[must_use]
-    pub fn body(&self) -> &PositionalRecordValue {
+    pub fn body(&self) -> &RecordValue {
         &self.0
     }
 
@@ -47,9 +49,9 @@ impl SharedPositionalRecord {
     }
 }
 
-/// Shared immutable names and numeric identity for one enum variant.
+/// Shared immutable metadata for one runtime enum variant.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PositionalEnumLayout {
+pub struct RuntimeEnumLayout {
     /// Numeric executable-local enum identity.
     pub enumeration: EnumTypeId,
     /// Numeric executable-wide variant identity.
@@ -62,68 +64,29 @@ pub struct PositionalEnumLayout {
     pub fields: Vec<String>,
 }
 
-/// Stored positional enum body.
+/// Stored enum body.
 #[derive(Debug, Clone)]
-pub struct PositionalEnumValue {
+pub struct EnumValue {
     /// Shared variant layout metadata.
-    pub layout: Arc<PositionalEnumLayout>,
+    pub layout: Arc<RuntimeEnumLayout>,
     /// Associated values in declaration order.
     pub values: Vec<Value>,
 }
 
-/// Compact shared positional enum value used by register bytecode.
-#[derive(Debug, Clone)]
-pub struct SharedPositionalEnum(Arc<PositionalEnumValue>);
-
-impl SharedPositionalEnum {
-    /// Construct a positional enum from shared layout metadata.
-    pub fn new(layout: Arc<PositionalEnumLayout>, values: Vec<Value>) -> Self {
-        Self(Arc::new(PositionalEnumValue { layout, values }))
-    }
-
-    /// Borrow the immutable body.
-    #[must_use]
-    pub fn body(&self) -> &PositionalEnumValue {
-        &self.0
-    }
-}
-
-/// Stored enum data shared by cloned enum values.
-#[derive(Debug, Clone)]
-pub struct EnumValue {
-    /// Canonical runtime enum type name.
-    pub type_name: String,
-    /// Active variant name.
-    pub variant: String,
-    /// Associated variant fields in declaration order.
-    pub fields: Vec<Value>,
-}
-
-/// Shared immutable storage for an enum value.
+/// Compact shared enum value.
 #[derive(Debug, Clone)]
 pub struct SharedEnum(Arc<EnumValue>);
 
 impl SharedEnum {
-    /// Create a shared enum value.
-    pub fn new(type_name: String, variant: String, fields: Vec<Value>) -> Self {
-        Self(Arc::new(EnumValue {
-            type_name,
-            variant,
-            fields,
-        }))
+    /// Construct an enum from shared variant metadata.
+    #[must_use]
+    pub fn new(layout: Arc<RuntimeEnumLayout>, values: Vec<Value>) -> Self {
+        Self(Arc::new(EnumValue { layout, values }))
     }
 
-    /// Consume the wrapper, cloning the body only when other values still share it.
-    pub fn into_parts(self) -> (String, String, Vec<Value>) {
-        let value = Arc::unwrap_or_clone(self.0);
-        (value.type_name, value.variant, value.fields)
-    }
-}
-
-impl Deref for SharedEnum {
-    type Target = EnumValue;
-
-    fn deref(&self) -> &Self::Target {
+    /// Borrow the immutable body.
+    #[must_use]
+    pub fn body(&self) -> &EnumValue {
         &self.0
     }
 }
@@ -176,46 +139,6 @@ impl IntoIterator for SharedDict {
     }
 }
 
-/// Stored record data shared by cloned record values.
-#[derive(Debug, Clone)]
-pub struct RecordValue {
-    /// Canonical runtime record type name.
-    pub type_name: String,
-    /// Record fields in declaration order.
-    pub fields: Vec<(String, Value)>,
-}
-
-/// Copy-on-write storage for a record value.
-#[derive(Debug, Clone)]
-pub struct SharedRecord(Arc<RecordValue>);
-
-impl SharedRecord {
-    /// Create a shared record value.
-    pub fn new(type_name: String, fields: Vec<(String, Value)>) -> Self {
-        Self(Arc::new(RecordValue { type_name, fields }))
-    }
-
-    /// Consume the wrapper, cloning the body only when other values still share it.
-    pub fn into_parts(self) -> (String, Vec<(String, Value)>) {
-        let value = Arc::unwrap_or_clone(self.0);
-        (value.type_name, value.fields)
-    }
-}
-
-impl Deref for SharedRecord {
-    type Target = RecordValue;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl DerefMut for SharedRecord {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        Arc::make_mut(&mut self.0)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,24 +147,22 @@ mod tests {
     fn cloned_dict_detaches_on_mutation() {
         let original = SharedDict::from(vec![(Value::Integer(1), Value::Integer(2))]);
         let mut updated = original.clone();
-
         updated[0].1 = Value::Integer(3);
-
         assert_eq!(original[0].1, Value::Integer(2));
         assert_eq!(updated[0].1, Value::Integer(3));
     }
 
     #[test]
     fn cloned_record_detaches_on_mutation() {
-        let original = SharedRecord::new(
-            "Point".to_string(),
-            vec![("x".to_string(), Value::Integer(1))],
-        );
+        let layout = Arc::new(RuntimeRecordLayout {
+            record: RecordTypeId::new(0),
+            type_name: "Point".to_string(),
+            fields: vec!["x".to_string()],
+        });
+        let original = SharedRecord::new(layout, vec![Value::Integer(1)]);
         let mut updated = original.clone();
-
-        updated.fields[0].1 = Value::Integer(2);
-
-        assert_eq!(original.fields[0].1, Value::Integer(1));
-        assert_eq!(updated.fields[0].1, Value::Integer(2));
+        updated.values_mut()[0] = Value::Integer(2);
+        assert_eq!(original.body().values[0], Value::Integer(1));
+        assert_eq!(updated.body().values[0], Value::Integer(2));
     }
 }

@@ -1,55 +1,7 @@
 # Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
 # Paths are relative to the repository root.
-# Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling),
-# `tui` (headless Std.Tui), and `register-p5` through `register-p7` (inactive register path).
-
-[[bench]]
-id = "register_task_spawn_wait"
-group = "register-p7"
-engine = "register"
-path = "examples/pascal/vm/register/task_spawn_wait_benchmark.fpas"
-args = []
-timeout_ms = 120000
-
-[[bench]]
-id = "register_string_length"
-group = "register-p6"
-engine = "register"
-path = "examples/pascal/vm/register/string_intrinsic_benchmark.fpas"
-args = []
-timeout_ms = 120000
-
-[[bench]]
-id = "register_array_callbacks"
-group = "register-p6"
-engine = "register"
-path = "examples/pascal/vm/register/array_callbacks_benchmark.fpas"
-args = []
-timeout_ms = 120000
-
-[[bench]]
-id = "register_global_access"
-group = "register-p5"
-engine = "register"
-path = "examples/pascal/vm/register/global_access_benchmark.fpas"
-args = []
-timeout_ms = 120000
-
-[[bench]]
-id = "register_array_access"
-group = "register-p5"
-engine = "register"
-path = "examples/pascal/vm/register/array_access_benchmark.fpas"
-args = []
-timeout_ms = 120000
-
-[[bench]]
-id = "register_record_update"
-group = "register-p5"
-engine = "register"
-path = "examples/pascal/vm/register/record_update_benchmark.fpas"
-args = []
-timeout_ms = 120000
+# Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
+# `tui` (headless Std.Tui). Every row runs through the production `fpas run` path.
 
 [[bench]]
 id = "integer_loop"

@@ -3,7 +3,7 @@
 use fpas_bytecode::GlobalId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
-use crate::RegisterLinkError;
+use crate::LinkError;
 use crate::symbols::SymbolTable;
 
 pub(super) struct GlobalIds {
@@ -14,7 +14,7 @@ pub(super) struct GlobalIds {
 pub(super) fn assign(
     objects: &[&RelocatableObject],
     symbols: &SymbolTable,
-) -> Result<GlobalIds, RegisterLinkError> {
+) -> Result<GlobalIds, LinkError> {
     let mut maps = objects
         .iter()
         .map(|object| vec![None; object.globals.len()])
@@ -33,8 +33,7 @@ pub(super) fn assign(
         order.extend(local.into_iter().map(|index| (object_index, index)));
     }
     for (index, (object, local)) in order.iter().copied().enumerate() {
-        let id = GlobalId::try_from_index(index)
-            .map_err(|_| RegisterLinkError::Overflow("global IDs"))?;
+        let id = GlobalId::try_from_index(index).map_err(|_| LinkError::Overflow("global IDs"))?;
         maps[object][local] = Some(id);
     }
     Ok(GlobalIds { maps, order })

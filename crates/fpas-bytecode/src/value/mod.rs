@@ -5,12 +5,10 @@ mod function;
 mod string;
 
 pub use aggregate::{
-    EnumValue, PositionalEnumLayout, PositionalEnumValue, PositionalRecordLayout,
-    PositionalRecordValue, RecordValue, SharedDict, SharedEnum, SharedPositionalEnum,
-    SharedPositionalRecord, SharedRecord,
+    EnumValue, RecordValue, RuntimeEnumLayout, RuntimeRecordLayout, SharedDict, SharedEnum,
+    SharedRecord,
 };
 pub use array::SharedArray;
-pub(crate) use equal::constant_values_equal;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
 pub use string::SharedStr;
@@ -32,12 +30,8 @@ pub enum Value {
     ///
     /// **Documentation:** `docs/pascal/language/types/dictionaries.md`
     Dict(SharedDict),
-    /// Record with named fields (field order matches definition).
+    /// Record whose values follow its executable-shared field layout.
     Record(SharedRecord),
-    /// Positional record with executable-shared field names.
-    PositionalRecord(SharedPositionalRecord),
-    /// Positional enum with executable-shared variant metadata.
-    PositionalEnum(SharedPositionalEnum),
     /// Unit / void — result of procedures, statements.
     Unit,
     /// Result::Ok wrapped value.
@@ -66,39 +60,24 @@ pub enum Value {
     ///
     /// **Documentation:** `docs/pascal/language/concurrency/README.md`
     Task(u64),
+    /// Opaque host-resource handle that FPAS code can only pass back to its owning intrinsic.
+    OpaqueHandle(u64),
 }
 
 impl Value {
-    /// Create an enum value with shared immutable storage.
-    pub fn enum_value(type_name: String, variant: String, fields: Vec<Value>) -> Self {
-        Self::Enum(SharedEnum::new(type_name, variant, fields))
-    }
-
     /// Create an ordered dictionary value with copy-on-write storage.
     pub fn dict(pairs: Vec<(Value, Value)>) -> Self {
         Self::Dict(pairs.into())
     }
 
-    /// Create a record value with copy-on-write storage.
-    pub fn record(type_name: String, fields: Vec<(String, Value)>) -> Self {
-        Self::Record(SharedRecord::new(type_name, fields))
-    }
-
     /// Create a first-class function value with shared immutable storage.
-    pub fn function(name: String, captures: Vec<Value>, task_bound: bool) -> Self {
-        Self::Function(SharedFunction::new(name, captures, task_bound))
-    }
-
-    /// Create a first-class function value for the numeric register ABI.
-    pub fn register_function(
+    pub fn function(
         function: crate::FunctionId,
         name: String,
         captures: Vec<Value>,
         task_bound: bool,
     ) -> Self {
-        Self::Function(SharedFunction::numeric(
-            function, name, captures, task_bound,
-        ))
+        Self::Function(SharedFunction::new(function, name, captures, task_bound))
     }
 
     /// Return the runtime type category name for diagnostics.
@@ -112,8 +91,6 @@ impl Value {
             Value::Array(_) => "array",
             Value::Dict(_) => "dict",
             Value::Record(_) => "record",
-            Value::PositionalRecord(_) => "record",
-            Value::PositionalEnum(_) => "enum",
             Value::Unit => "unit",
             Value::ResultOk(_) => "Result.Ok",
             Value::ResultError(_) => "Result.Error",
@@ -122,6 +99,7 @@ impl Value {
             Value::Function(_) => "function",
             Value::Cell(_) => "cell",
             Value::Task(_) => "task",
+            Value::OpaqueHandle(_) => "opaque handle",
         }
     }
 }
@@ -134,10 +112,11 @@ impl std::fmt::Display for Value {
             Value::Boolean(b) => write!(f, "{b}"),
             Value::Str(s) => write!(f, "{s}"),
             Value::Enum(value) => {
-                write!(f, "{}.{}", value.type_name, value.variant)?;
-                if !value.fields.is_empty() {
+                let body = value.body();
+                write!(f, "{}.{}", body.layout.type_name, body.layout.variant)?;
+                if !body.values.is_empty() {
                     write!(f, "(")?;
-                    for (i, v) in value.fields.iter().enumerate() {
+                    for (i, v) in body.values.iter().enumerate() {
                         if i > 0 {
                             write!(f, ", ")?;
                         }
@@ -168,16 +147,6 @@ impl std::fmt::Display for Value {
                 write!(f, "}}")
             }
             Value::Record(record) => {
-                write!(f, "{}{{", record.type_name)?;
-                for (i, (name, val)) in record.fields.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{name}: {val}")?;
-                }
-                write!(f, "}}")
-            }
-            Value::PositionalRecord(record) => {
                 let body = record.body();
                 write!(f, "{}{{", body.layout.type_name)?;
                 for (index, (name, value)) in
@@ -190,21 +159,6 @@ impl std::fmt::Display for Value {
                 }
                 write!(f, "}}")
             }
-            Value::PositionalEnum(value) => {
-                let body = value.body();
-                write!(f, "{}.{}", body.layout.type_name, body.layout.variant)?;
-                if !body.values.is_empty() {
-                    write!(f, "(")?;
-                    for (index, field) in body.values.iter().enumerate() {
-                        if index > 0 {
-                            write!(f, ", ")?;
-                        }
-                        write!(f, "{field}")?;
-                    }
-                    write!(f, ")")?;
-                }
-                Ok(())
-            }
             Value::Unit => write!(f, "()"),
             Value::ResultOk(v) => write!(f, "Ok({v})"),
             Value::ResultError(v) => write!(f, "Error({v})"),
@@ -213,6 +167,7 @@ impl std::fmt::Display for Value {
             Value::Function(function) => write!(f, "<function {}>", function.name),
             Value::Cell(_) => write!(f, "<cell>"),
             Value::Task(id) => write!(f, "<task {id}>"),
+            Value::OpaqueHandle(_) => write!(f, "<opaque handle>"),
         }
     }
 }
@@ -227,11 +182,44 @@ impl PartialEq for Value {
 mod tests {
     use super::*;
 
+    fn record(type_name: &str, fields: &[&str], values: Vec<Value>) -> Value {
+        Value::Record(SharedRecord::new(
+            std::sync::Arc::new(RuntimeRecordLayout {
+                record: crate::RecordTypeId::new(0),
+                type_name: type_name.to_string(),
+                fields: fields.iter().map(|field| (*field).to_string()).collect(),
+            }),
+            values,
+        ))
+    }
+
+    fn enumeration(type_name: &str, variant: &str, fields: Vec<Value>) -> Value {
+        Value::Enum(SharedEnum::new(
+            std::sync::Arc::new(RuntimeEnumLayout {
+                enumeration: crate::EnumTypeId::new(0),
+                variant_id: crate::EnumVariantId::new(0),
+                type_name: type_name.to_string(),
+                variant: variant.to_string(),
+                fields: (0..fields.len())
+                    .map(|index| {
+                        if fields.len() == 1 {
+                            "value".to_string()
+                        } else {
+                            format!("field{index}")
+                        }
+                    })
+                    .collect(),
+            }),
+            fields,
+        ))
+    }
+
     #[test]
     fn type_name_reports_runtime_categories() {
         assert_eq!(Value::Integer(1).type_name(), "integer");
         assert_eq!(Value::dict(Vec::new()).type_name(), "dict");
         assert_eq!(Value::Task(9).type_name(), "task");
+        assert_eq!(Value::OpaqueHandle(9).type_name(), "opaque handle");
     }
 
     #[test]
@@ -273,14 +261,14 @@ mod tests {
 
     #[test]
     fn partial_eq_compares_enum_fields_structurally() {
-        let left = Value::enum_value(
-            "Result".to_string(),
-            "Ok".to_string(),
+        let left = enumeration(
+            "Result",
+            "Ok",
             vec![Value::Array(vec![Value::Integer(1)].into())],
         );
-        let right = Value::enum_value(
-            "Result".to_string(),
-            "Ok".to_string(),
+        let right = enumeration(
+            "Result",
+            "Ok",
             vec![Value::Array(vec![Value::Integer(1)].into())],
         );
 
@@ -297,47 +285,43 @@ mod tests {
             (Value::Str("age".into()), Value::Integer(2)),
             (Value::Str("name".into()), Value::Integer(1)),
         ]);
-        let record = Value::record(
-            "Demo.Point".to_string(),
-            vec![
-                ("x".to_string(), Value::Integer(1)),
-                ("y".to_string(), Value::Integer(2)),
-            ],
+        let original_record = record(
+            "Demo.Point",
+            &["x", "y"],
+            vec![Value::Integer(1), Value::Integer(2)],
         );
-        let reordered_record = Value::record(
-            "Demo.Point".to_string(),
-            vec![
-                ("y".to_string(), Value::Integer(2)),
-                ("x".to_string(), Value::Integer(1)),
-            ],
+        let reordered_record = record(
+            "Demo.Point",
+            &["y", "x"],
+            vec![Value::Integer(2), Value::Integer(1)],
         );
 
         assert_ne!(dict, reordered_dict);
-        assert_ne!(record, reordered_record);
+        assert_ne!(original_record, reordered_record);
     }
 
     #[test]
-    fn positional_aggregates_preserve_legacy_equality_and_display() {
-        let record = Value::PositionalRecord(SharedPositionalRecord::new(
-            std::sync::Arc::new(PositionalRecordLayout {
+    fn aggregate_values_preserve_layout_equality_and_display() {
+        let record = Value::Record(SharedRecord::new(
+            std::sync::Arc::new(RuntimeRecordLayout {
                 record: crate::RecordTypeId::new(0),
                 type_name: "Demo.Point".to_string(),
                 fields: vec!["x".to_string(), "y".to_string()],
             }),
             vec![Value::Integer(1), Value::Integer(2)],
         ));
-        let legacy_record = Value::record(
-            "Demo.Point".to_string(),
-            vec![
-                ("x".to_string(), Value::Integer(1)),
-                ("y".to_string(), Value::Integer(2)),
-            ],
+        assert_eq!(
+            record,
+            self::record(
+                "Demo.Point",
+                &["x", "y"],
+                vec![Value::Integer(1), Value::Integer(2)],
+            )
         );
-        assert_eq!(record, legacy_record);
         assert_eq!(record.to_string(), "Demo.Point{x: 1, y: 2}");
 
-        let enumeration = Value::PositionalEnum(SharedPositionalEnum::new(
-            std::sync::Arc::new(PositionalEnumLayout {
+        let enumeration = Value::Enum(SharedEnum::new(
+            std::sync::Arc::new(RuntimeEnumLayout {
                 enumeration: crate::EnumTypeId::new(0),
                 variant_id: crate::EnumVariantId::new(0),
                 type_name: "Demo.Choice".to_string(),
@@ -346,20 +330,33 @@ mod tests {
             }),
             vec![Value::Integer(3)],
         ));
-        let legacy_enum = Value::enum_value(
-            "Demo.Choice".to_string(),
-            "Number".to_string(),
-            vec![Value::Integer(3)],
+        assert_eq!(
+            enumeration,
+            self::enumeration("Demo.Choice", "Number", vec![Value::Integer(3)])
         );
-        assert_eq!(enumeration, legacy_enum);
         assert_eq!(enumeration.to_string(), "Demo.Choice.Number(3)");
     }
 
     #[test]
     fn partial_eq_compares_function_captures_and_task_binding() {
-        let left = Value::function("demo.run".to_string(), vec![Value::Integer(1)], false);
-        let right = Value::function("demo.run".to_string(), vec![Value::Integer(1)], false);
-        let task_bound = Value::function("demo.run".to_string(), vec![Value::Integer(1)], true);
+        let left = Value::function(
+            crate::FunctionId::new(1),
+            "demo.run".to_string(),
+            vec![Value::Integer(1)],
+            false,
+        );
+        let right = Value::function(
+            crate::FunctionId::new(1),
+            "demo.run".to_string(),
+            vec![Value::Integer(1)],
+            false,
+        );
+        let task_bound = Value::function(
+            crate::FunctionId::new(1),
+            "demo.run".to_string(),
+            vec![Value::Integer(1)],
+            true,
+        );
 
         assert_eq!(left, right);
         assert_ne!(right, task_bound);

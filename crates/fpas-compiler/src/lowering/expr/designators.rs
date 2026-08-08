@@ -53,7 +53,7 @@ impl LoweringContext {
                     DesignatorPart::Index(_, _) => None,
                 })
                 .is_some_and(|root| !self.has_binding(root) && !self.has_global(root))
-            && let Some(value) = crate::compiler::builtin_const_value(name)
+            && let Some(value) = super::super::builtin_constants::value(name)
         {
             let (constant, ty) = match value {
                 fpas_bytecode::Value::Integer(value) => (Constant::Integer(value), types::INTEGER),

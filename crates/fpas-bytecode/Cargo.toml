@@ -1,6 +1,6 @@
 [package]
 name = "fpas-bytecode"
-description = "Bytecode definitions and chunk format for Functional Pascal"
+description = "Portable bytecode definitions for Functional Pascal"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

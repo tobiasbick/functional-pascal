@@ -1,8 +1,6 @@
 //! Run benchmark processes with bounded execution and captured diagnostics.
 
-use super::{BenchEngine, BenchRun, BenchSpec};
-use fpas_bytecode::VerifiedExecutable;
-use std::fs;
+use super::{BenchRun, BenchSpec};
 use std::io::{self, Read};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus, Stdio};
@@ -17,10 +15,6 @@ struct CapturedOutput {
 
 /// Run one suite entry and parse its elapsed time.
 pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<BenchRun, String> {
-    if spec.engine == BenchEngine::Register {
-        return run_register_bench(repo_root, spec);
-    }
-
     let program = repo_root.join(&spec.path);
     if !program.is_file() {
         return Err(format!("benchmark source missing: {}", program.display()));
@@ -63,70 +57,6 @@ pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<Benc
         throughput,
         raw_stdout: stdout,
     })
-}
-
-fn run_register_bench(repo_root: &Path, spec: &BenchSpec) -> Result<BenchRun, String> {
-    let program_path = repo_root.join(&spec.path);
-    let source = fs::read_to_string(&program_path)
-        .map_err(|error| format!("failed to read {}: {error}", program_path.display()))?;
-    let (program, diagnostics) = fpas_parser::parse(&source);
-    if let Some(error) = diagnostics.first() {
-        let diagnostic = error.as_diagnostic();
-        return Err(format!(
-            "register benchmark `{}` did not parse: {}: {}",
-            spec.id, diagnostic.code, diagnostic.message
-        ));
-    }
-    let executable = fpas_compiler::compile_register_subset(&program)
-        .map_err(|errors| format_diagnostics("compile", &spec.id, &errors))?;
-    execute_register_bench(spec, executable)
-}
-
-fn execute_register_bench(
-    spec: &BenchSpec,
-    executable: VerifiedExecutable,
-) -> Result<BenchRun, String> {
-    let started = Instant::now();
-    let execution = fpas_vm::RegisterVm::new(executable)
-        .run()
-        .map_err(|error| {
-            format!(
-                "register benchmark `{}` failed: {}: {}",
-                spec.id, error.code, error.message
-            )
-        })?;
-    let elapsed_ms = u64::try_from(started.elapsed().as_millis())
-        .unwrap_or(u64::MAX)
-        .max(1);
-    let operations_per_second = execution
-        .instruction_count
-        .saturating_mul(1_000)
-        .checked_div(elapsed_ms)
-        .unwrap_or(0);
-    let throughput = format!("throughput: {operations_per_second} instructions/s");
-    let raw_stdout = format!(
-        "elapsed: {elapsed_ms} ms\n{throughput}\ninstructions: {}\n",
-        execution.instruction_count
-    );
-    Ok(BenchRun {
-        id: spec.id.clone(),
-        elapsed_ms,
-        throughput: Some(throughput),
-        raw_stdout,
-    })
-}
-
-fn format_diagnostics(
-    stage: &str,
-    benchmark_id: &str,
-    errors: &[fpas_compiler::CompileError],
-) -> String {
-    let details = errors
-        .iter()
-        .map(|error| format!("{}: {}", error.code, error.message))
-        .collect::<Vec<_>>()
-        .join("; ");
-    format!("register benchmark `{benchmark_id}` failed to {stage}: {details}")
 }
 
 /// Run all filtered specs in order.

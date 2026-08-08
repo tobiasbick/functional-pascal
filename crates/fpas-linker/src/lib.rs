@@ -1,183 +1,25 @@
-//! Links relocatable Functional Pascal objects into the VM's executable [`Chunk`].
+//! Links relocatable Functional Pascal objects into a verified executable.
 
-mod append;
 mod constants;
-mod definitions;
+mod error;
 mod functions;
 mod globals;
 mod layouts;
-mod operands;
-mod register_error;
 mod relocation;
 mod source_map;
 mod strings;
 mod symbols;
 
-use std::fmt;
-
-use fpas_bytecode::{Chunk, ExecutableError, validate_executable};
-use fpas_unit::object::{ChunkDefinitionKind as DefinitionKind, ChunkObject, ChunkObjectError};
-
-use append::{append_object, validate_retained_function_entries};
-use definitions::validate_definitions_and_imports;
-
+pub use error::LinkError;
 use functions::FunctionIds;
 use globals::GlobalIds;
 use layouts::LayoutIds;
-pub use register_error::RegisterLinkError;
 
 struct LinkIds {
     functions: FunctionIds,
     globals: GlobalIds,
     layouts: LayoutIds,
 }
-
-/// Object-linking failure with a deterministic diagnostic message.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum LinkError {
-    /// An input object failed its structural validation.
-    InvalidObject {
-        /// Object owner.
-        owner: String,
-        /// Validation detail.
-        detail: String,
-    },
-    /// Two objects define the same canonical runtime name.
-    DuplicateDefinition(String),
-    /// An import has no public compatible definition.
-    UnresolvedImport {
-        /// Importing object.
-        owner: String,
-        /// Missing definition.
-        name: String,
-        /// Required category.
-        kind: DefinitionKind,
-    },
-    /// Two callable tables define the same name.
-    DuplicateFunction(String),
-    /// A callable definition has no implementation in its owning object.
-    MissingFunctionImplementation {
-        /// Object that declares the callable definition.
-        owner: String,
-        /// Callable definition without a matching function-table entry.
-        name: String,
-    },
-    /// A Unit callable points at code removed during startup-section concatenation.
-    StrippedFunctionEntry {
-        /// Object containing the invalid function entry.
-        owner: String,
-        /// Callable name.
-        name: String,
-        /// Object-local callable offset.
-        offset: u32,
-        /// Number of instructions retained from the object.
-        retained_code: usize,
-    },
-    /// A local or final index exceeds the bytecode representation.
-    Overflow(&'static str),
-    /// Relocation metadata does not match its opcode.
-    InvalidRelocation {
-        /// Object owner.
-        owner: String,
-        /// Object-local instruction.
-        instruction: u32,
-    },
-    /// Constant insertion failed.
-    ConstantPool(String),
-    /// The completed linked executable violates a bytecode invariant.
-    InvalidExecutable(ExecutableError),
-    /// No executable root object was supplied.
-    MissingProgram,
-}
-
-impl fmt::Display for LinkError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidObject { owner, detail } => {
-                write!(formatter, "cannot link invalid object `{owner}`: {detail}")
-            }
-            Self::DuplicateDefinition(name) => {
-                write!(formatter, "duplicate linked definition `{name}`")
-            }
-            Self::UnresolvedImport { owner, name, kind } => write!(
-                formatter,
-                "object `{owner}` requires missing public {kind:?} definition `{name}`"
-            ),
-            Self::DuplicateFunction(name) => {
-                write!(formatter, "duplicate linked callable `{name}`")
-            }
-            Self::MissingFunctionImplementation { owner, name } => write!(
-                formatter,
-                "object `{owner}` defines callable `{name}` without a matching function implementation"
-            ),
-            Self::StrippedFunctionEntry {
-                owner,
-                name,
-                offset,
-                retained_code,
-            } => write!(
-                formatter,
-                "callable `{name}` in object `{owner}` starts at {offset}, but only {retained_code} instructions remain after removing the Unit terminator"
-            ),
-            Self::Overflow(field) => write!(formatter, "linked {field} exceeds bytecode limits"),
-            Self::InvalidRelocation { owner, instruction } => write!(
-                formatter,
-                "object `{owner}` has invalid relocation at instruction {instruction}"
-            ),
-            Self::ConstantPool(detail) => {
-                write!(formatter, "cannot construct linked constant pool: {detail}")
-            }
-            Self::InvalidExecutable(error) => {
-                write!(formatter, "linked executable validation failed: {error}")
-            }
-            Self::MissingProgram => write!(formatter, "cannot link without a program object"),
-        }
-    }
-}
-
-impl std::error::Error for LinkError {}
-
-/// Link dependency-first unit objects followed by one root program object.
-///
-/// # Errors
-///
-/// Returns [`LinkError`] when an input object, symbol relationship, relocation,
-/// or the completed executable image is invalid.
-pub fn link_objects(units: &[ChunkObject], program: &ChunkObject) -> Result<Chunk, LinkError> {
-    validate_objects(units, program)?;
-    validate_definitions_and_imports(units, program)?;
-
-    let mut chunk = Chunk::new();
-    for object in units {
-        append_object(&mut chunk, object, false)?;
-    }
-    append_object(&mut chunk, program, true)?;
-    validate_executable(&chunk).map_err(LinkError::InvalidExecutable)?;
-    Ok(chunk)
-}
-
-fn validate_objects(units: &[ChunkObject], program: &ChunkObject) -> Result<(), LinkError> {
-    if program.code.is_empty() {
-        return Err(LinkError::MissingProgram);
-    }
-    for object in units.iter().chain(std::iter::once(program)) {
-        object
-            .validate()
-            .map_err(|error| invalid_object(object, error))?;
-    }
-    for object in units {
-        validate_retained_function_entries(object)?;
-    }
-    Ok(())
-}
-
-fn invalid_object(object: &ChunkObject, error: ChunkObjectError) -> LinkError {
-    LinkError::InvalidObject {
-        owner: object.owner.clone(),
-        detail: error.to_string(),
-    }
-}
-
 /// Link dependency-first unit objects and one root object into a verified register executable.
 ///
 /// IDs are assigned by dependency order and canonical symbol order, except that the root entry is
@@ -185,12 +27,12 @@ fn invalid_object(object: &ChunkObject, error: ChunkObjectError) -> LinkError {
 ///
 /// # Errors
 ///
-/// Returns [`RegisterLinkError`] before executable publication for invalid objects, symbols,
+/// Returns [`LinkError`] before executable publication for invalid objects, symbols,
 /// visibility, ABI/layout mismatches, relocations, overflows, or final verifier rejection.
-pub fn link_register_objects(
+pub fn link_objects(
     units: &[fpas_unit::object::RelocatableObject],
     program: &fpas_unit::object::RelocatableObject,
-) -> Result<fpas_bytecode::VerifiedExecutable, RegisterLinkError> {
+) -> Result<fpas_bytecode::VerifiedExecutable, LinkError> {
     use std::collections::BTreeMap;
 
     use fpas_bytecode::{
@@ -205,26 +47,25 @@ pub fn link_register_objects(
         .chain(std::iter::once(program))
         .collect::<Vec<_>>();
     for unit in units {
-        unit.validate()
-            .map_err(|error| RegisterLinkError::InvalidObject {
-                owner: unit.owner.clone(),
-                detail: error.to_string(),
-            })?;
+        unit.validate().map_err(|error| LinkError::InvalidObject {
+            owner: unit.owner.clone(),
+            detail: error.to_string(),
+        })?;
         if unit.entry.is_some() {
-            return Err(RegisterLinkError::UnitEntry(unit.owner.clone()));
+            return Err(LinkError::UnitEntry(unit.owner.clone()));
         }
     }
     program
         .validate()
-        .map_err(|error| RegisterLinkError::InvalidObject {
+        .map_err(|error| LinkError::InvalidObject {
             owner: program.owner.clone(),
             detail: error.to_string(),
         })?;
     let entry = program
         .entry
         .and_then(|index| usize::try_from(index).ok())
-        .ok_or(RegisterLinkError::MissingProgramEntry)?;
-    validate_register_initializers(units)?;
+        .ok_or(LinkError::MissingProgramEntry)?;
+    validate_initializers(units)?;
     let program_index = units.len();
     let symbols = symbols::SymbolTable::build(&objects)?;
     let functions = functions::assign(&objects, program_index, entry, &symbols)?;
@@ -245,11 +86,11 @@ pub fn link_register_objects(
         })
         .map(|(object_index, initializer)| {
             ids.functions.maps[object_index][initializer]
-                .ok_or(RegisterLinkError::Overflow("unit initializer function ID"))
+                .ok_or(LinkError::Overflow("unit initializer function ID"))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let initializer_count = u32::try_from(initializer_targets.len())
-        .map_err(|_| RegisterLinkError::Overflow("unit initializer call count"))?;
+        .map_err(|_| LinkError::Overflow("unit initializer call count"))?;
     let mut strings = strings::StringInterner::default();
 
     let linked_globals = ids
@@ -263,7 +104,7 @@ pub fn link_register_objects(
                 mutable: global.mutable,
             })
         })
-        .collect::<Result<Vec<_>, RegisterLinkError>>()?;
+        .collect::<Result<Vec<_>, LinkError>>()?;
     let linked_records = ids
         .layouts
         .record_order
@@ -279,7 +120,7 @@ pub fn link_register_objects(
                     .collect::<Result<Vec<_>, _>>()?,
             })
         })
-        .collect::<Result<Vec<_>, RegisterLinkError>>()?;
+        .collect::<Result<Vec<_>, LinkError>>()?;
     let mut linked_enums = Vec::with_capacity(ids.layouts.enum_order.len());
     let mut linked_variants = Vec::new();
     for (object, local) in &ids.layouts.enum_order {
@@ -287,8 +128,7 @@ pub fn link_register_objects(
         linked_enums.push(EnumLayout {
             name: strings.intern(&enumeration.name)?,
         });
-        let owner =
-            ids.layouts.enums[*object][*local].ok_or(RegisterLinkError::Overflow("enum owner"))?;
+        let owner = ids.layouts.enums[*object][*local].ok_or(LinkError::Overflow("enum owner"))?;
         for variant in &enumeration.variants {
             linked_variants.push(EnumVariant {
                 owner,
@@ -316,16 +156,16 @@ pub fn link_register_objects(
         code_bases.push(
             code_length
                 .checked_add(prefix)
-                .ok_or(RegisterLinkError::Overflow("instruction addresses"))?,
+                .ok_or(LinkError::Overflow("instruction addresses"))?,
         );
         code_length = code_length
             .checked_add(prefix)
-            .ok_or(RegisterLinkError::Overflow("instruction addresses"))?
+            .ok_or(LinkError::Overflow("instruction addresses"))?
             .checked_add(
                 u32::try_from(objects[*object].functions[*function].code.len())
-                    .map_err(|_| RegisterLinkError::Overflow("function code length"))?,
+                    .map_err(|_| LinkError::Overflow("function code length"))?,
             )
-            .ok_or(RegisterLinkError::Overflow("instruction addresses"))?;
+            .ok_or(LinkError::Overflow("instruction addresses"))?;
     }
     let mut code = Vec::with_capacity(code_length as usize);
     let mut linked_functions = Vec::with_capacity(ids.functions.order.len());
@@ -340,7 +180,7 @@ pub fn link_register_objects(
             for target in &initializer_targets {
                 code.push(
                     Instruction::abc(Opcode::CallDirect, NO_REGISTER, target.get(), 0, 0)
-                        .map_err(|error| RegisterLinkError::Instruction(error.to_string()))?,
+                        .map_err(|error| LinkError::Instruction(error.to_string()))?,
                 );
             }
         }
@@ -352,26 +192,24 @@ pub fn link_register_objects(
             .collect::<BTreeMap<_, _>>();
         for (instruction_index, word) in function.code.iter().copied().enumerate() {
             let instruction = Instruction::from_word(word);
-            let instruction =
-                if let Some(relocation) =
-                    relocation_map.get(&u32::try_from(instruction_index).map_err(|_| {
-                        RegisterLinkError::Overflow("function-local instruction index")
-                    })?)
-                {
-                    relocation::relocate(
-                        &objects,
-                        object_index,
-                        function_index,
-                        instruction,
-                        relocation,
-                        code_base,
-                        &symbols,
-                        &ids,
-                        &constants,
-                    )?
-                } else {
-                    instruction
-                };
+            let instruction = if let Some(relocation) = relocation_map.get(
+                &u32::try_from(instruction_index)
+                    .map_err(|_| LinkError::Overflow("function-local instruction index"))?,
+            ) {
+                relocation::relocate(
+                    &objects,
+                    object_index,
+                    function_index,
+                    instruction,
+                    relocation,
+                    code_base,
+                    &symbols,
+                    &ids,
+                    &constants,
+                )?
+            } else {
+                instruction
+            };
             code.push(instruction);
         }
         let end = code_start
@@ -380,12 +218,12 @@ pub fn link_register_objects(
             } else {
                 0
             })
-            .ok_or(RegisterLinkError::Overflow("function code range"))?
+            .ok_or(LinkError::Overflow("function code range"))?
             .checked_add(
                 u32::try_from(function.code.len())
-                    .map_err(|_| RegisterLinkError::Overflow("function code range"))?,
+                    .map_err(|_| LinkError::Overflow("function code range"))?,
             )
-            .ok_or(RegisterLinkError::Overflow("function code range"))?;
+            .ok_or(LinkError::Overflow("function code range"))?;
         linked_functions.push(FunctionInfo {
             name: strings.intern(&function.name)?,
             code: CodeRange::new(
@@ -423,14 +261,10 @@ pub fn link_register_objects(
         source_map,
         entry: fpas_bytecode::FunctionId::new(0),
     };
-    executable
-        .verify()
-        .map_err(RegisterLinkError::InvalidExecutable)
+    executable.verify().map_err(LinkError::InvalidExecutable)
 }
 
-fn validate_register_initializers(
-    units: &[fpas_unit::object::RelocatableObject],
-) -> Result<(), RegisterLinkError> {
+fn validate_initializers(units: &[fpas_unit::object::RelocatableObject]) -> Result<(), LinkError> {
     use fpas_unit::object::ObjectReturn;
 
     for object in units {
@@ -448,7 +282,7 @@ fn validate_register_initializers(
             None
         };
         if let Some(detail) = detail {
-            return Err(RegisterLinkError::InvalidInitializer {
+            return Err(LinkError::InvalidInitializer {
                 owner: object.owner.clone(),
                 detail,
             });

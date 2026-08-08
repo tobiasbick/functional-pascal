@@ -43,11 +43,8 @@ pub enum SidecarStatus<T> {
     Corrupt(SidecarCorruption),
 }
 
-/// Stack-object sidecar load result retained for P10 cleanup of the legacy implementation.
+/// Compiled-unit sidecar load result used by the production backend.
 pub type SidecarLoad = SidecarStatus<super::LoadedUnit>;
-
-/// Register-object sidecar load result used by the production register backend.
-pub type RegisterSidecarLoad = SidecarStatus<super::LoadedRegisterUnit>;
 
 pub(super) fn validate_identity<T>(
     unit: CompiledUnit,

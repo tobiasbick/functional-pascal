@@ -11,7 +11,7 @@ use fpas_program::{decode, encode};
 fn decoded_register_program_executes_without_sources() {
     let bytes = encode(&common::program_image()).expect("encoded image");
     let image = decode(&bytes).expect("decoded image");
-    let mut vm = fpas_vm::RegisterVm::new(image.into_executable());
+    let mut vm = fpas_vm::Vm::new(image.into_executable());
 
     assert!(vm.run().is_ok());
 }

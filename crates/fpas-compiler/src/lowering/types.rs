@@ -350,7 +350,7 @@ impl TypeTable {
 
 fn type_error(construct: &str, span: fpas_lexer::Span) -> CompileError {
     internal_compiler_error(
-        format!("The register compiler could not lower type `{construct}`."),
+        format!("The compiler could not lower type `{construct}`."),
         "This is an internal compiler error. Re-run compilation and report the source program.",
         span.line,
         span.column,
@@ -379,7 +379,7 @@ pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileEr
         Ty::Enum(enumeration) if !enumeration.has_data() => Ok(INTEGER),
         Ty::Error | Ty::Named(_) => Ok(DYNAMIC),
         other => Err(internal_compiler_error(
-            format!("The register compiler could not lower type `{other}`."),
+            format!("The compiler could not lower type `{other}`."),
             "This is an internal compiler error. Re-run compilation and report the source program.",
             line,
             column,

@@ -59,9 +59,9 @@ limits are:
 | Cumulative UTF-8 string data | 64 MiB |
 | Linked Units | 1,000,000 |
 
-The same validation is applied before encoding. After decoding, the complete register-executable
+The same validation is applied before encoding. After decoding, the complete executable
 verifier checks instruction forms, register windows, numeric IDs, function ranges, control flow,
-layouts, source maps, and the entry function before a `RegisterVm` can execute the image.
+layouts, source maps, and the entry function before the VM can execute the image.
 
 ## Format compatibility
 
@@ -70,9 +70,9 @@ producer that changes either wire contract must increment the corresponding vers
 bytecode changes made for one cutover are versioned together. Readers reject unsupported program or
 bytecode versions before execution and `fpas run` tells the user to rebuild from project sources.
 
-Old stack-bytecode images are not migrated. Source-backed project builds replace stale or
-incompatible artifacts automatically. A source-less old `.fpascp` cannot run and must be rebuilt on
-a checkout that still has its sources.
+Earlier bytecode formats are not migrated. Source-backed project builds replace stale or
+incompatible artifacts automatically. A source-less incompatible `.fpascp` cannot run and must be
+rebuilt from its original sources.
 
 `.fpascp` is an internal derived format, not a source distribution or package boundary. Rebuild it
 from its project sources with the current compiler rather than editing or migrating it by hand.

@@ -66,7 +66,7 @@ pub(super) fn apply_test_script(
     test_path: &Path,
     cli_script: Option<&Path>,
     manifest_override: Option<&project::TestFileOverride>,
-    vm: &mut fpas_vm::RegisterVm,
+    vm: &mut fpas_vm::Vm,
 ) -> Result<ScriptConfig, String> {
     let script_path = resolve_script_path(test_path, cli_script, manifest_override)?;
 

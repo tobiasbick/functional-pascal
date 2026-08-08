@@ -1,5 +1,6 @@
 //! Borrowed argument decoding shared by stack and register intrinsic callers.
 
+use crate::AggregateFactory;
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::{SharedArray, SharedStr, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -15,21 +16,45 @@ pub(crate) struct IntrinsicCall<'a> {
     arguments: &'a [Value],
     consumed: usize,
     result: Option<Value>,
+    factory: &'a dyn AggregateFactory,
 }
 
 impl<'a> IntrinsicCall<'a> {
     /// Start decoding one borrowed argument window.
-    pub(crate) fn new(arguments: &'a [Value]) -> Self {
+    pub(crate) fn new(arguments: &'a [Value], factory: &'a dyn AggregateFactory) -> Self {
         Self {
             arguments,
             consumed: 0,
             result: None,
+            factory,
         }
     }
 
     /// Record the single value produced by an intrinsic function.
     pub(crate) fn push(&mut self, value: Value) {
         self.result = Some(value);
+    }
+
+    /// Construct a typed record through the executing runtime.
+    pub(crate) fn record(
+        &self,
+        type_name: &str,
+        values: Vec<Value>,
+        location: SourceLocation,
+    ) -> Result<Value, StdError> {
+        self.factory.record(type_name, values, location)
+    }
+
+    /// Construct a typed enum variant through the executing runtime.
+    pub(crate) fn enumeration(
+        &self,
+        type_name: &str,
+        variant: &str,
+        values: Vec<Value>,
+        location: SourceLocation,
+    ) -> Result<Value, StdError> {
+        self.factory
+            .enumeration(type_name, variant, values, location)
     }
 
     /// Finish the invocation and return consumed argument count plus its optional result.

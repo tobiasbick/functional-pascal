@@ -1,6 +1,6 @@
 //! `Std.Console.KeyKind` discriminant order — must match `fpas-sema` / `fpas-compiler` registration and `KeyInput` mapping.
 
-/// Ordered variant names; runtime discriminant is the index as `integer` (same as legacy enum encoding).
+/// Ordered variant names; the runtime discriminant is the index as `integer`.
 pub const KEY_KIND_VARIANTS: &[&str] = &[
     "Unknown",
     "Escape",

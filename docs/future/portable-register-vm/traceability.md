@@ -10,10 +10,10 @@ exist.
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive opcode match through P9; direct, compiler, CLI, and full FPAS tests cover production execution | complete through P9 |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/src/vm/dispatch.rs` | exhaustive opcode match; direct, compiler, CLI, and full FPAS tests cover production execution | complete through P10 |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit and aggregate-window cases plus production compiler contiguous call-window selection | complete through P9 |
 | PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | deterministic structure tests plus cold/warm artifact byte equality | complete through P9 |
-| PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
+| PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | P10 deletion inventory and zero production old-symbol search hits in `p10-stack-removal.md` | complete |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
 | PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier, P3-P9 compiler/interpreter, and bounded P9 artifact codec use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input | complete through P9 |
 
@@ -53,7 +53,7 @@ exist.
 | PVM-FMT-003 | Bounded section decoder | program format | exhaustive truncation, deterministic mutation, section topology, UTF-8/opcode/boolean, and configured-limit tests | complete |
 | PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | cold/warm build equality and canonical `.fpascp` digest; additional native hosts remain unverified | complete on Windows x86-64; cross-host unverified |
 | PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 sparse-map validation plus P3 metadata run coalescing and diagnostic-only lookup; direct VM failures resolve line 41/column 7 while ordinary dispatch does not query metadata | complete through P3 |
-| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | artifact decode returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler and VM admission tests pass | complete |
+| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | artifact decode returns `VerifiedExecutable`; `Vm` accepts no unverified image; compiler and VM admission tests pass | complete |
 | PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | old `.fpascu` rebuild/replacement plus direct old `.fpascp` version and actionable rebuild-help tests | complete |
 | PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | decoded-program and CLI source/manifest removal tests | complete |
 | PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows x86-64 source-less native application tests; other hosts unverified | complete on Windows x86-64; other hosts unverified |
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P9 splits program header/sections/executable codec, aggregate records, expression designators, type layouts, and register-object imports; changed/new production Rust files stay below 500 lines | complete through P9 |
-| PVM-QUAL-002 | Public Rust documentation complete | P9 public artifact, build, compiler, runner, and VM APIs retain complete `///` documentation | complete through P9 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P9 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, object/import/relocation/initializer failures, and artifact resource/format errors through diagnostics | complete through P9 |
-| PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
-| PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/program-structure/compiled-programs.md` describes the production register image, limits, version policy, and rebuild behavior; language/Std APIs unchanged | complete through P9 |
-| PVM-QUAL-006 | Full Rust verification | P9 targeted and full-gate results are recorded in `p9-artifact-cli-cutover.md` | complete through P9 |
-| PVM-QUAL-007 | Full FPAS verification | P9 changes no FPAS source; full FPAS regression result is recorded in `p9-artifact-cli-cutover.md` | complete through P9 |
-| PVM-QUAL-008 | Privacy preserved | P9 docs, fixtures, artifact metadata, and test output contain no host-identifying metadata | complete through P9 |
+| PVM-QUAL-001 | Focused module/file layout | P10 file inventory in `p10-stack-removal.md`; no changed production Rust file exceeds 500 lines | complete through P10 |
+| PVM-QUAL-002 | Public Rust documentation complete | public artifact, build, compiler, runner, bytecode, aggregate-factory, and VM APIs retain complete `///` documentation | complete through P10 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P10 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, object/import/relocation/initializer failures, and artifact resource/format errors through diagnostics | complete through P10 |
+| PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | P10 deletion inventory and focused symbol searches in `p10-stack-removal.md` | complete |
+| PVM-QUAL-005 | Current user docs reconciled | compiled-program and concurrency implementation pages describe the current artifact/VM paths; language/Std APIs unchanged | complete through P10 |
+| PVM-QUAL-006 | Full Rust verification | P10 fmt, build, workspace-test, and all-target Clippy results are recorded in `p10-stack-removal.md` | complete through P10 |
+| PVM-QUAL-007 | Full FPAS verification | P10 full FPAS regression result is recorded in `p10-stack-removal.md` | complete through P10 |
+| PVM-QUAL-008 | Privacy preserved | P10 docs, fixtures, artifact metadata, and test output contain no host-identifying metadata | complete through P10 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P3 opcode implementation overlay

@@ -5,50 +5,34 @@
         reason = "compiler tests use expect to keep bytecode assertions focused on behavior"
     )
 )]
-#![cfg_attr(
-    test,
-    expect(
-        clippy::panic,
-        reason = "compiler tests use explicit panic for structural mismatches"
-    )
-)]
-
 mod bytecode;
-mod compiler;
 mod error;
 mod intrinsic_catalog;
 mod lowering;
-mod register_object;
-mod unit_object;
+mod object;
 
 pub use error::CompileError;
-pub use lowering::lower_register_subset;
-pub use register_object::{
-    CompiledRegisterUnitObject, compile_register_program_object_with_support,
-    compile_register_unit_object, compile_register_unit_object_with_support,
-};
-pub use unit_object::{
-    CompiledUnitObject, compile_program_object, compile_program_object_with_support,
-    compile_unit_object, compile_unit_object_with_support,
+pub use lowering::lower;
+pub use object::{
+    CompiledUnitObject, compile_program_object_with_support, compile_unit_object,
+    compile_unit_object_with_support,
 };
 
-/// Compile one program directly to a verified register executable.
+/// Compile one program directly to a verified executable.
 ///
-/// Production commands use the register object/linker path; this direct API remains available for
+/// Production commands use the object/linker path; this direct API remains available for
 /// focused compiler tests and callers that do not need separately compiled units.
 ///
 /// # Errors
 ///
-/// Returns semantic diagnostics, a structured subset-lowering diagnostic, or a register-bytecode
+/// Returns semantic diagnostics, a structured lowering diagnostic, or a bytecode
 /// construction/verifier diagnostic represented as an internal compiler failure.
-pub fn compile_register_subset(
-    program: &Program,
-) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
-    let ir = lower_register_subset(program)?;
+pub fn compile(program: &Program) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
+    let ir = lower(program)?;
     bytecode::compile_program(&ir).map_err(|error| vec![error])
 }
 
-/// Compile one root program into a relocatable register object.
+/// Compile one root program into a relocatable object.
 ///
 /// The object keeps functions independently encoded, converts numeric table references to
 /// object-local relocations, and is the production compiler input to the register linker.
@@ -56,14 +40,14 @@ pub fn compile_register_subset(
 /// # Errors
 ///
 /// Returns semantic/lowering diagnostics or an internal object-construction diagnostic.
-pub fn compile_register_object(
+pub fn compile_object(
     program: &Program,
 ) -> Result<fpas_unit::object::RelocatableObject, Vec<CompileError>> {
-    let executable = compile_register_subset(program)?;
+    let executable = compile(program)?;
     fpas_unit::object::RelocatableObject::from_executable(&program.name, executable).map_err(
         |error| {
             vec![error::internal_compiler_error(
-                format!("Register object construction failed: {error}."),
+                format!("Object construction failed: {error}."),
                 "This is an internal compiler error. Re-run compilation and report the source program.",
                 program.span.line,
                 program.span.column,
@@ -72,61 +56,7 @@ pub fn compile_register_object(
     )
 }
 
-use compiler::Compiler;
-use fpas_bytecode::{Chunk, ChunkError};
 use fpas_parser::Program;
-
-use error::internal_compiler_error;
-
-/// Compile a parsed program into bytecode.
-///
-/// Returns the first error encountered (sema or codegen). Prefer [`compile_all`] when you need
-/// every semantic error at once (for example CLI or IDE integration).
-///
-/// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
-pub fn compile(program: &Program) -> Result<Chunk, CompileError> {
-    compile_all(program).map_err(|mut errors| errors.remove(0))
-}
-
-/// Like [`compile`], but returns **all** semantic-analysis errors when sema fails, or a single
-/// element when codegen fails after successful sema.
-///
-/// **Documentation:** `docs/pascal/program-structure/projects.md` (from the repository root).
-pub fn compile_all(program: &Program) -> Result<Chunk, Vec<CompileError>> {
-    let metadata = fpas_sema::analyze_with_types(program);
-    if !metadata.errors.is_empty() {
-        return Err(metadata.errors);
-    }
-    let mut compiler = Compiler::new(metadata);
-    match compiler.compile_program(program) {
-        Ok(()) => validated_chunk(compiler).map_err(|error| vec![error]),
-        Err(e) => Err(vec![e]),
-    }
-}
-
-fn validated_chunk(compiler: Compiler) -> Result<Chunk, CompileError> {
-    let chunk = compiler.finish();
-    chunk.validate_invariants().map_err(|error| match error {
-        ChunkError::CodeLocationLengthMismatch {
-            code_len,
-            locations_len,
-        } => internal_compiler_error(
-            format!(
-                "Compiled chunk has {code_len} instructions but {locations_len} source locations."
-            ),
-            "This is an internal compiler error. Re-run compilation and report the source program.",
-            1,
-            1,
-        ),
-        other => internal_compiler_error(
-            format!("Compiled chunk failed invariant check: {other}"),
-            "This is an internal compiler error. Re-run compilation and report the source program.",
-            1,
-            1,
-        ),
-    })?;
-    Ok(chunk)
-}
 
 #[cfg(test)]
 mod tests;

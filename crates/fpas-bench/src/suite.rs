@@ -11,17 +11,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub use executable::ensure_release_fpas;
 pub use runner::run_suite;
 
-/// Execution engine selected by one benchmark row.
-#[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "kebab-case")]
-pub enum BenchEngine {
-    /// Legacy stack baseline retained until the P11 benchmark migration.
-    #[default]
-    Stack,
-    /// Production register compiler and VM path.
-    Register,
-}
-
 /// One curated benchmark from `docs/bench/suite.toml`.
 #[derive(Debug, Clone, Deserialize)]
 pub struct BenchSpec {
@@ -29,9 +18,6 @@ pub struct BenchSpec {
     pub id: String,
     /// Filter group configured by the suite (`vm`, `concurrency`, or `tui`).
     pub group: String,
-    /// Execution engine; omitted rows retain the legacy P0 baseline selection.
-    #[serde(default)]
-    pub engine: BenchEngine,
     /// Path to the `.fpas` program, relative to the repository root.
     pub path: String,
     /// Arguments passed after `fpas run <path> --`.
@@ -123,7 +109,7 @@ pub fn unix_timestamp_secs() -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{BenchEngine, BenchSpec, SuiteFile, filter_group, group_names, validate_specs};
+    use super::{BenchSpec, filter_group, group_names, validate_specs};
     use std::path::Path;
 
     #[test]
@@ -151,21 +137,10 @@ mod tests {
         );
     }
 
-    #[test]
-    fn register_engine_is_explicit_and_stack_remains_the_default() -> Result<(), toml::de::Error> {
-        let file: SuiteFile = toml::from_str(
-            "[[bench]]\nid = 'stack'\ngroup = 'vm'\npath = 'a'\nargs = []\ntimeout_ms = 1\n\n[[bench]]\nid = 'register'\ngroup = 'register-p5'\nengine = 'register'\npath = 'b'\nargs = []\ntimeout_ms = 1\n",
-        )?;
-        assert_eq!(file.bench[0].engine, BenchEngine::Stack);
-        assert_eq!(file.bench[1].engine, BenchEngine::Register);
-        Ok(())
-    }
-
     fn spec(group: &str) -> BenchSpec {
         BenchSpec {
             id: format!("{group}_bench"),
             group: group.to_owned(),
-            engine: BenchEngine::Stack,
             path: "unused.fpas".to_owned(),
             args: Vec::new(),
             timeout_ms: 1,

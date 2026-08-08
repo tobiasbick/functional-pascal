@@ -1,7 +1,7 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; P0 through P9 implemented, production register cutover
-complete.
+Status: approved implementation direction; P0 through P10 implemented, one compiler and VM path
+remain.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -23,8 +23,8 @@ evidence proves one impossible.
    target triples, object code, or host ABI layouts.
 4. A Windows-produced `.fpascp` must be consumable by a compatible Linux, macOS, or FreeBSD `fpas`
    runtime, including on ARM, when the repository and its external crates build on that target.
-5. The old stack bytecode does not need backward compatibility. Increment format and bytecode versions
-   at cutover and return a precise rebuild diagnostic for old artifacts.
+5. Earlier bytecode does not need backward compatibility. Increment format and bytecode versions at
+   cutover and return a precise rebuild diagnostic for incompatible artifacts.
 6. The final implementation has one compiler path and one interpreter path. Temporary side-by-side
    code is allowed only inside the development branch and must be removed before completion.
 7. Link-time names become deterministic numeric IDs. Runtime lookup by function, global, record-field,
@@ -67,6 +67,8 @@ Relocatable register unit objects, deterministic numeric linking, and old-sideca
 recorded in [P8 unit objects and linker](p8-unit-objects-linker.md).
 The sectioned portable program image, source-less execution, bundle integration, and production CLI
 cutover are recorded in [P9 artifact and CLI cutover](p9-artifact-cli-cutover.md).
+Deletion of the superseded compiler, bytecode, VM, artifact, aggregate, and benchmark paths is
+recorded in [P10 stack removal](p10-stack-removal.md).
 
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
@@ -74,7 +76,7 @@ performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work
 
 ## Current implementation snapshot
 
-Revalidate these facts before P10 because file names can move:
+Revalidate these facts before P11 because file names can move:
 
 - [`fpas-ir`](../../../crates/fpas-ir/src/lib.rs) owns the validated target-independent typed IR.
 - [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and
@@ -88,12 +90,12 @@ Revalidate these facts before P10 because file names can move:
   ten bounded, explicitly little-endian sections without JSON or host ABI metadata.
 - [`fpas-build`](../../../crates/fpas-build/src/engine.rs), the CLI, test worker, bundle publisher, and
   thin `fpas-runner` use one register artifact and execution path without a backend switch.
-- [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) accepts only a
+- [`Vm`](../../../crates/fpas-vm/src/vm/mod.rs) accepts only a
   `VerifiedExecutable` and executes it through one exhaustive packed-opcode dispatch path.
-- The old stack compiler, bytecode, VM, and compatibility types remain only for P10 deletion and
-  temporary regression coverage; they are no longer selected by production build or execution.
-- `Value` remains constrained to at most 16 bytes and compound values retain shared or copy-on-write
-  storage.
+- No superseded compiler, bytecode, VM, compatibility decoder, differential adapter, or alternate
+  benchmark engine remains.
+- `Value` remains constrained to at most 16 bytes. Records, enums, arrays, dictionaries, strings, and
+  function values use one shared or copy-on-write runtime representation each.
 
 ## Desired pipeline
 

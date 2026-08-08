@@ -184,7 +184,7 @@ end.
         Some(&standard_library),
     )
     .expect("Tui idle regression program must build");
-    let mut vm = fpas_vm::RegisterVm::new(built.executable);
+    let mut vm = fpas_vm::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::focus_gained());
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
         key_kind_index("Escape"),

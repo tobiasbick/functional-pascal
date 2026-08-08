@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 use fpas_bytecode::{EnumTypeId, EnumVariantId, RecordTypeId};
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
-use crate::RegisterLinkError;
+use crate::LinkError;
 use crate::symbols::SymbolTable;
 
 pub(super) struct LayoutIds {
@@ -19,7 +19,7 @@ pub(super) struct LayoutIds {
 pub(super) fn assign(
     objects: &[&RelocatableObject],
     symbols: &SymbolTable,
-) -> Result<LayoutIds, RegisterLinkError> {
+) -> Result<LayoutIds, LinkError> {
     let mut records = objects
         .iter()
         .map(|object| vec![None; object.records.len()])
@@ -42,7 +42,7 @@ pub(super) fn assign(
                 id
             } else {
                 let id = RecordTypeId::try_from_index(record_order.len())
-                    .map_err(|_| RegisterLinkError::Overflow("record type IDs"))?;
+                    .map_err(|_| LinkError::Overflow("record type IDs"))?;
                 canonical_records.insert(canonical, id);
                 record_order.push((object_index, local));
                 id
@@ -59,7 +59,7 @@ pub(super) fn assign(
                 id
             } else {
                 let id = EnumTypeId::try_from_index(enum_order.len())
-                    .map_err(|_| RegisterLinkError::Overflow("enum type IDs"))?;
+                    .map_err(|_| LinkError::Overflow("enum type IDs"))?;
                 canonical_enums.insert(canonical, id);
                 enum_order.push((object_index, local));
                 id
@@ -97,7 +97,7 @@ pub(super) fn assign(
                     id
                 } else {
                     let id = EnumVariantId::try_from_index(next)
-                        .map_err(|_| RegisterLinkError::Overflow("enum variant IDs"))?;
+                        .map_err(|_| LinkError::Overflow("enum variant IDs"))?;
                     canonical_variants.insert(key, id);
                     next += 1;
                     id

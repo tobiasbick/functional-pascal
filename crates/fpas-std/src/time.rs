@@ -77,7 +77,7 @@ mod tests {
     }
 
     fn run_time(intrinsic: TimeIntrinsic, stack: &mut Vec<Value>) {
-        crate::run_intrinsic(Intrinsic::Time(intrinsic), stack, test_location()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Time(intrinsic), stack, test_location()).unwrap();
     }
 
     #[test]

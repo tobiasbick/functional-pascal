@@ -1,4 +1,4 @@
-//! Built-in intrinsic identifiers (embedded in `Op::Intrinsic`).
+//! Built-in intrinsic identifiers embedded in [`crate::Opcode::Intrinsic`] instructions.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root); each `Std.*` unit page maps API names to these variants.
 //! **Maintenance:** When adding or renumbering variants, update that documentation and the affected implementation crates.
@@ -47,7 +47,7 @@ pub use test::TestIntrinsic;
 pub use time::TimeIntrinsic;
 pub use toml::TomlIntrinsic;
 
-/// VM intrinsic opcode payload (`Op::Intrinsic(u16::from(self))`).
+/// VM intrinsic instruction payload.
 ///
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

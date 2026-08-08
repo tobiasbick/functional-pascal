@@ -324,7 +324,7 @@ fn run_compiled_program(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let executable = match fpas_compiler::compile_register_subset(program) {
+    let executable = match fpas_compiler::compile(program) {
         Ok(executable) => executable,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
@@ -345,7 +345,7 @@ fn run_executable(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let mut vm = fpas_vm::RegisterVm::with_writer_and_args(executable, stdout, program_args);
+    let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
         emit_diagnostic(path, source_paths, &diagnostic, stderr);
         return 2;

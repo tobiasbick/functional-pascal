@@ -1,0 +1,256 @@
+//! Register-VM task opcodes and task-aware intrinsics.
+//!
+//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
+//! `docs/pascal/language/concurrency/scheduling.md`.
+
+pub(super) mod pool;
+mod scheduler;
+mod state;
+
+pub(super) use scheduler::TaskScheduler;
+pub(super) use state::TaskState;
+
+use std::sync::Arc;
+
+use fpas_bytecode::{AbcOperands, Intrinsic, Register, TaskIntrinsic, TimeIntrinsic, Value};
+use fpas_diagnostics::codes::{
+    RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
+};
+
+use super::worker::Worker;
+use super::{VmError, diagnostics};
+use crate::vm::{TaskBatchPoll, TaskResultPoll};
+
+impl Worker {
+    pub(super) fn spawn_task(
+        &mut self,
+        operands: AbcOperands,
+        detached: bool,
+    ) -> Result<(), VmError> {
+        let scheduler = self
+            .scheduler
+            .as_ref()
+            .ok_or_else(|| {
+                self.unavailable_opcode(if detached {
+                    fpas_bytecode::Opcode::SpawnDetachedTask
+                } else {
+                    fpas_bytecode::Opcode::SpawnTask
+                })
+            })?
+            .clone();
+        let (callee_register, argument_base) = if detached {
+            (operands.a, operands.b)
+        } else {
+            (operands.b, operands.c)
+        };
+        let callee = self
+            .read(Register::new(callee_register).map_err(|e| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    e.to_string(),
+                )
+            })?)?
+            .clone();
+        let Value::Function(function) = callee else {
+            return Err(self.task_type_error("function", &callee));
+        };
+        if function.task_bound {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_INVALID_TASK,
+                format!(
+                    "Cannot spawn task-bound closure `{}` across a task boundary",
+                    function.name
+                ),
+                "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
+            ));
+        }
+        let target = function.function;
+        let info = self
+            .executable
+            .executable()
+            .functions
+            .get(usize::from(target.get()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Task target is outside the function table",
+                )
+            })?;
+        if usize::from(info.arity) != usize::from(operands.auxiliary) {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_WRONG_CALL_ARITY,
+                format!(
+                    "Function `{}` expects {} arguments, got {}",
+                    function.name, info.arity, operands.auxiliary
+                ),
+                "Spawn the task with the declared number of arguments.",
+            ));
+        }
+        let register_count = info.register_count;
+        let task_start = info.code.start;
+        let arguments = self.clone_window(argument_base, operands.auxiliary)?;
+        let mut registers = vec![Value::Unit; usize::from(register_count)];
+        for (slot, value) in arguments
+            .into_iter()
+            .chain(function.captures.iter().cloned())
+            .enumerate()
+        {
+            registers[slot] = value;
+        }
+        let id = scheduler.alloc_id();
+        if !detached {
+            scheduler.register_result(id);
+            self.write(
+                Register::new(operands.a).map_err(|e| {
+                    diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        e.to_string(),
+                    )
+                })?,
+                Value::Task(id),
+            )?;
+        }
+        scheduler.enqueue(TaskState {
+            id,
+            function: target,
+            ip: usize::try_from(task_start.get()).map_err(|_| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Task address does not fit this host",
+                )
+            })?,
+            base: 0,
+            registers,
+            frames: Vec::new(),
+            retain_result: !detached,
+            instruction_count: 0,
+        });
+        Ok(())
+    }
+
+    pub(super) fn yield_task(&mut self) {
+        if self.task_id == 0 {
+            std::thread::yield_now();
+        } else {
+            self.suspend_and_enqueue();
+        }
+    }
+
+    pub(super) fn task_intrinsic(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+    ) -> Result<Option<Option<Value>>, VmError> {
+        match intrinsic {
+            Intrinsic::Task(TaskIntrinsic::Wait) => {
+                let [Value::Task(id)] = arguments else {
+                    return Err(
+                        self.task_type_error("task", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                loop {
+                    match self.scheduler_ref()?.poll_result(*id) {
+                        TaskResultPoll::Available(value) => return Ok(Some(Some(value))),
+                        TaskResultPoll::Failed(error) => return Err(error),
+                        TaskResultPoll::Consumed => return Err(self.invalid_task(*id)),
+                        TaskResultPoll::Unknown => return Err(self.invalid_task(*id)),
+                        TaskResultPoll::Pending => self.help_or_wait_result(*id)?,
+                    }
+                }
+            }
+            Intrinsic::Task(TaskIntrinsic::WaitAll) => {
+                let [Value::Array(values)] = arguments else {
+                    return Err(
+                        self.task_type_error("array", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                let mut ids = values
+                    .iter()
+                    .map(|value| match value {
+                        Value::Task(id) => Ok(*id),
+                        other => Err(self.task_type_error("task", other)),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                ids.sort_unstable();
+                ids.dedup();
+                loop {
+                    match self.scheduler_ref()?.poll_batch(&ids) {
+                        TaskBatchPoll::Complete => return Ok(Some(None)),
+                        TaskBatchPoll::Failed(error) => return Err(error),
+                        TaskBatchPoll::Unknown(id) => return Err(self.invalid_task(id)),
+                        TaskBatchPoll::Pending => self.help_or_wait_batch(&ids)?,
+                    }
+                }
+            }
+            Intrinsic::Time(TimeIntrinsic::Sleep) if self.task_id != 0 => {
+                let [Value::Integer(milliseconds)] = arguments else {
+                    return Err(
+                        self.task_type_error("integer", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                let milliseconds = u64::try_from(*milliseconds).map_err(|_| {
+                    self.task_type_error("non-negative integer", &Value::Integer(*milliseconds))
+                })?;
+                let state = self.take_task_state();
+                self.scheduler_ref()?.schedule(state, milliseconds);
+                self.suspend_requested = true;
+                Ok(Some(None))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    fn help_or_wait_result(&mut self, id: u64) -> Result<(), VmError> {
+        let scheduler = Arc::clone(self.scheduler_ref()?);
+        if let Some(task) = scheduler.try_dequeue() {
+            pool::run_helped(self, task, Arc::clone(&scheduler))?;
+        } else {
+            scheduler.wait_for_result(id);
+        }
+        Ok(())
+    }
+    fn help_or_wait_batch(&mut self, ids: &[u64]) -> Result<(), VmError> {
+        let scheduler = Arc::clone(self.scheduler_ref()?);
+        if let Some(task) = scheduler.try_dequeue() {
+            pool::run_helped(self, task, Arc::clone(&scheduler))?;
+        } else {
+            scheduler.wait_for_batch(ids);
+        }
+        Ok(())
+    }
+    fn scheduler_ref(&self) -> Result<&Arc<TaskScheduler>, VmError> {
+        self.scheduler.as_ref().ok_or_else(|| {
+            diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                "Task intrinsic ran without a scheduler",
+            )
+        })
+    }
+    fn task_type_error(&self, expected: &str, actual: &Value) -> VmError {
+        diagnostics::at_address(
+            self.executable.executable(),
+            self.current_address,
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            format!("Expected {expected}, got `{}`", actual.type_name()),
+            format!("Pass a {expected} value."),
+        )
+    }
+    fn invalid_task(&self, id: u64) -> VmError {
+        diagnostics::at_address(
+            self.executable.executable(),
+            self.current_address,
+            RUNTIME_INVALID_TASK,
+            format!("Task {id} was not created by this VM or its result was already consumed"),
+            "Pass an unconsumed task handle returned by a `go` expression.",
+        )
+    }
+}

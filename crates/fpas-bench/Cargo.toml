@@ -12,10 +12,6 @@ path = "src/main.rs"
 
 [dependencies]
 atomic-write-file = "0.3.0"
-fpas-bytecode = { path = "../fpas-bytecode" }
-fpas-compiler = { path = "../fpas-compiler" }
-fpas-parser = { path = "../fpas-parser" }
-fpas-vm = { path = "../fpas-vm" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 toml = { workspace = true }

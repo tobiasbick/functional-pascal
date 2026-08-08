@@ -75,9 +75,9 @@ An empty array completes immediately.
 | Concern | Location |
 |---------|----------|
 | Registration | [`loaded/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/channel_task.rs), [`builtins/channel_task.rs`](../../../../crates/fpas-sema/src/std_registry/builtins/channel_task.rs) |
-| Compiler | [`std_calls/task.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/task.rs), [`compiler/stmt/concurrency/mod.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/concurrency/mod.rs), [`compiler/expr/mod.rs`](../../../../crates/fpas-compiler/src/compiler/expr/mod.rs) |
-| Bytecode | [`chunk.rs`](../../../../crates/fpas-bytecode/src/chunk.rs), [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs) |
-| VM | [`shared.rs`](../../../../crates/fpas-vm/src/vm/shared.rs), [`shared/timers.rs`](../../../../crates/fpas-vm/src/vm/shared/timers.rs), [`tasks/spawn.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/spawn.rs), [`tasks/sleep.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/sleep.rs), [`tasks/wait.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/wait.rs), [`tasks/scheduling.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/tasks/scheduling.rs), [`concurrency/mod.rs`](../../../../crates/fpas-vm/src/vm/execute/concurrency/mod.rs) |
+| Compiler | [`lowering/concurrency.rs`](../../../../crates/fpas-compiler/src/lowering/concurrency.rs), [`lowering/stmt.rs`](../../../../crates/fpas-compiler/src/lowering/stmt.rs), [`bytecode/selection.rs`](../../../../crates/fpas-compiler/src/bytecode/selection.rs) |
+| Bytecode | [`instruction.rs`](../../../../crates/fpas-bytecode/src/instruction.rs), [`intrinsic/task.rs`](../../../../crates/fpas-bytecode/src/intrinsic/task.rs) |
+| VM | [`tasks/mod.rs`](../../../../crates/fpas-vm/src/vm/tasks/mod.rs), [`tasks/scheduler.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler.rs), [`tasks/state.rs`](../../../../crates/fpas-vm/src/vm/tasks/state.rs), [`shared/task_results.rs`](../../../../crates/fpas-vm/src/vm/shared/task_results.rs) |
 
 ## See also
 

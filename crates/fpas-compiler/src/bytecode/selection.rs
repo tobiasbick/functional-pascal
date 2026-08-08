@@ -129,7 +129,7 @@ impl<'a> Selector<'a> {
             }
             Operation::Yield => abc(Opcode::Yield, 0, 0, 0),
             other => Err(selection_error(&format!(
-                "IR operation {other:?} belongs to a later register-VM phase"
+                "IR operation {other:?} has no bytecode selection"
             ))),
         }?;
         Ok(vec![selected])

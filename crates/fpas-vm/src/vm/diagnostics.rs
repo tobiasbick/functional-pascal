@@ -1,55 +1,62 @@
-//! VM runtime diagnostic helpers (`Diagnostic` with placeholder `SourceSpan` offset/length).
-//!
-//! Like `fpas-std::error`, spans use `offset` 0 and `length` 1 because the VM tracks line/column
-//! and `source_id`, not byte offsets into source text.
+//! Instruction-address-based diagnostics with lazy sparse-source resolution.
 
-use fpas_bytecode::SourceLocation;
-use fpas_diagnostics::codes::{
-    INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-};
+use fpas_bytecode::{Executable, InstructionAddress};
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan};
 
+/// Structured runtime diagnostic returned by VM operations.
 pub type VmError = Diagnostic;
-
-fn synthetic_span(location: SourceLocation) -> SourceSpan {
-    SourceSpan::new_with_source(
-        0,
-        1,
-        location.line(),
-        location.column(),
-        location.source_id(),
-    )
-}
 
 pub(crate) fn runtime_error(
     code: DiagnosticCode,
     message: impl Into<String>,
     help: impl Into<String>,
-    location: SourceLocation,
+    location: fpas_bytecode::SourceLocation,
 ) -> VmError {
     Diagnostic::error(
         code,
-        message.into(),
+        message,
         Some(help.into()),
-        synthetic_span(location),
+        SourceSpan::new(0, 1, location.line(), location.column()),
     )
 }
 
 pub(crate) fn internal_error(
     message: impl Into<String>,
     help: impl Into<String>,
-    location: SourceLocation,
+    location: fpas_bytecode::SourceLocation,
 ) -> VmError {
-    Diagnostic::error(
-        INTERNAL_VM_INVARIANT_FAILURE,
-        message.into(),
-        Some(help.into()),
-        synthetic_span(location),
+    runtime_error(
+        fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+        message,
+        help,
+        location,
     )
 }
 
-pub(super) const STACK_OVERFLOW_CODE: fpas_diagnostics::DiagnosticCode =
-    RUNTIME_INTRINSIC_STACK_STATE_ERROR;
-pub(super) const TYPE_MISMATCH_CODE: fpas_diagnostics::DiagnosticCode =
-    RUNTIME_VM_OPERAND_TYPE_MISMATCH;
+pub(super) fn at_address(
+    executable: &Executable,
+    address: InstructionAddress,
+    code: DiagnosticCode,
+    message: impl Into<String>,
+    help: impl Into<String>,
+) -> Diagnostic {
+    let span = executable.source_map.lookup(address).map_or_else(
+        || SourceSpan::new(0, 1, 1, 1),
+        |run| SourceSpan::new_with_source(0, 1, run.line, run.column, run.source.get()),
+    );
+    Diagnostic::error(code, message, Some(help.into()), span)
+}
+
+pub(super) fn internal(
+    executable: &Executable,
+    address: InstructionAddress,
+    message: impl Into<String>,
+) -> Diagnostic {
+    at_address(
+        executable,
+        address,
+        fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE,
+        message,
+        "This indicates a compiler, verifier, or register-runtime invariant failure. Please report it.",
+    )
+}

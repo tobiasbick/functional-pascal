@@ -14,7 +14,7 @@ use fpas_unit::interface::{UnitInterface, encode_interface};
 use fpas_unit::object::RelocatableObject;
 use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
-use self::backend::{RegisterBackend, UnitBackend};
+use self::backend::{Backend, UnitBackend};
 use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
@@ -67,7 +67,7 @@ impl BuiltUnits {
 
 /// Linked executable program and incremental build activity.
 pub struct BuiltProgram {
-    /// Fully verified register executable.
+    /// Fully verified executable.
     pub executable: VerifiedExecutable,
     /// Structured unit and link activity.
     pub events: Vec<BuildEvent>,
@@ -118,7 +118,7 @@ fn compile_library_units(
     options: &BuildOptions,
     sidecar_publication: SidecarPublication,
 ) -> Result<BuiltUnits, BuildError> {
-    let units = compile_units::<RegisterBackend>(graph, selection, options, sidecar_publication)?;
+    let units = compile_units::<Backend>(graph, selection, options, sidecar_publication)?;
     Ok(BuiltUnits {
         objects: units.objects,
         interfaces: units.interfaces,
@@ -231,7 +231,7 @@ fn compile_units<Backend: UnitBackend>(
     Ok(interfaces.finish(objects, linked_units, events))
 }
 
-/// Build reachable units, compile the root program, and link one verified register executable.
+/// Build reachable units, compile the root program, and link one verified executable.
 pub fn build_program(
     graph: &UnitGraph,
     selection: &ResolvedUnitGraph,
@@ -264,14 +264,14 @@ pub(crate) fn link_program(
     program: &Program,
 ) -> Result<BuiltProgram, BuildError> {
     let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
-    let mut program_object = fpas_compiler::compile_register_program_object_with_support(
+    let mut program_object = fpas_compiler::compile_program_object_with_support(
         program,
         &root_interfaces,
         units.supporting_interfaces(),
     )
     .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
     normalize_sources(&mut program_object, 0);
-    let executable = fpas_linker::link_register_objects(&units.objects, &program_object)
+    let executable = fpas_linker::link_objects(&units.objects, &program_object)
         .map_err(|error| BuildError::new(error.to_string()))?;
     units
         .events

@@ -54,7 +54,7 @@ mod tests {
     }
 
     fn run_random(intrinsic: RandomIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        crate::run_intrinsic(Intrinsic::Random(intrinsic), stack, loc()).map(|_| ())
+        crate::execute_test_intrinsic(Intrinsic::Random(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

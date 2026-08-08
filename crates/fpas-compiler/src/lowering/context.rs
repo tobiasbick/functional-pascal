@@ -417,7 +417,7 @@ impl LoweringContext {
 
 pub(super) fn unsupported(span: Span, construct: &str) -> CompileError {
     internal_compiler_error(
-        format!("The register compiler could not lower `{construct}`."),
+        format!("The compiler could not lower `{construct}`."),
         "This is an internal compiler error. Re-run compilation and report the source program.",
         span.line,
         span.column,

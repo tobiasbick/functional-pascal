@@ -10,45 +10,74 @@ use fpas_bytecode::{Intrinsic, JsonIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 use serde_json::{Map, Number, Value as JsonValue};
 
-fn json_variant(variant: &str, fields: Vec<Value>) -> Value {
-    Value::enum_value(s::STD_JSON_VALUE.into(), variant.into(), fields)
+fn json_variant(
+    call: &IntrinsicCall<'_>,
+    variant: &str,
+    fields: Vec<Value>,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    call.enumeration(s::STD_JSON_VALUE, variant, fields, location)
 }
 
 fn json_depth_exceeded_message() -> String {
     format!("JSON nesting exceeds maximum depth of {MAX_JSON_DEPTH}")
 }
 
-fn json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, String> {
+fn json_to_fpas_at_depth(
+    call: &IntrinsicCall<'_>,
+    value: JsonValue,
+    depth: usize,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
     if depth > MAX_JSON_DEPTH {
-        return Err(json_depth_exceeded_message());
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            json_depth_exceeded_message(),
+            format!("Keep JSON trees at most {MAX_JSON_DEPTH} levels deep."),
+            location,
+        ));
     }
     match value {
-        JsonValue::Null => Ok(json_variant("Null", Vec::new())),
-        JsonValue::Bool(value) => Ok(json_variant("Bool", vec![Value::Boolean(value)])),
+        JsonValue::Null => json_variant(call, "Null", Vec::new(), location),
+        JsonValue::Bool(value) => json_variant(call, "Bool", vec![Value::Boolean(value)], location),
         JsonValue::Number(number) => {
             let Some(value) = number.as_f64() else {
-                return Err("JSON number is outside the FPAS real range".into());
+                return Err(std_runtime_error(
+                    RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                    "JSON number is outside the FPAS real range",
+                    "Use a JSON number representable as an FPAS real.",
+                    location,
+                ));
             };
-            Ok(json_variant("Number", vec![Value::Real(value)]))
+            json_variant(call, "Number", vec![Value::Real(value)], location)
         }
-        JsonValue::String(value) => Ok(json_variant("String", vec![Value::Str(value.into())])),
+        JsonValue::String(value) => {
+            json_variant(call, "String", vec![Value::Str(value.into())], location)
+        }
         JsonValue::Array(items) => items
             .into_iter()
-            .map(|item| json_to_fpas_at_depth(item, depth + 1))
+            .map(|item| json_to_fpas_at_depth(call, item, depth + 1, location))
             .collect::<Result<Vec<_>, _>>()
-            .map(|items| json_variant("Array", vec![Value::Array(items.into())])),
+            .and_then(|items| {
+                json_variant(call, "Array", vec![Value::Array(items.into())], location)
+            }),
         JsonValue::Object(fields) => fields
             .into_iter()
             .map(|(key, value)| {
-                json_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
+                json_to_fpas_at_depth(call, value, depth + 1, location)
+                    .map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
-            .map(|fields| json_variant("Object", vec![Value::dict(fields)])),
+            .and_then(|fields| json_variant(call, "Object", vec![Value::dict(fields)], location)),
     }
 }
 
-fn json_to_fpas(value: JsonValue) -> Result<Value, String> {
-    json_to_fpas_at_depth(value, 1)
+fn json_to_fpas(
+    call: &IntrinsicCall<'_>,
+    value: JsonValue,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    json_to_fpas_at_depth(call, value, 1, location)
 }
 
 fn expected_json_value_error(value: &Value, location: SourceLocation) -> StdError {
@@ -91,8 +120,7 @@ fn fpas_to_json_at_depth(
     }
 
     let (type_name, variant, fields) = match value {
-        Value::Enum(value) => value.into_parts(),
-        Value::PositionalEnum(value) => {
+        Value::Enum(value) => {
             let body = value.body();
             (
                 body.layout.type_name.clone(),
@@ -243,11 +271,11 @@ pub(crate) fn run(
         Intrinsic::Json(JsonIntrinsic::Parse) => {
             let text = pop_string(pop_value(call, location)?, location)?;
             match serde_json::from_str::<JsonValue>(&text).map_err(|err| err.to_string()) {
-                Ok(value) => match json_to_fpas(value) {
+                Ok(value) => match json_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::ResultOk(Box::new(value))),
-                    Err(message) => {
-                        call.push(Value::ResultError(Box::new(Value::Str(message.into()))))
-                    }
+                    Err(error) => call.push(Value::ResultError(Box::new(Value::Str(
+                        error.message.into(),
+                    )))),
                 },
                 Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
             }
@@ -271,6 +299,18 @@ mod tests {
         SourceLocation::new(1, 1)
     }
 
+    fn call() -> IntrinsicCall<'static> {
+        IntrinsicCall::new(&[], &crate::intrinsics::TEST_AGGREGATES)
+    }
+
+    fn test_variant(variant: &str, fields: Vec<Value>) -> Value {
+        json_variant(&call(), variant, fields, loc()).expect("test aggregate layout")
+    }
+
+    fn test_json_to_fpas_at_depth(value: JsonValue, depth: usize) -> Result<Value, StdError> {
+        json_to_fpas_at_depth(&call(), value, depth, loc())
+    }
+
     fn nested_array_json(levels: usize) -> String {
         let mut text = String::from("null");
         for _ in 0..levels {
@@ -282,43 +322,45 @@ mod tests {
     #[test]
     fn parse_accepts_shallow_json() {
         let mut stack = vec![Value::Str("null".into())];
-        crate::run_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc())
+            .unwrap();
         assert!(matches!(stack.as_slice(), [Value::ResultOk(_)]));
     }
 
     #[test]
     fn json_to_fpas_accepts_container_at_depth_limit() {
         let json = JsonValue::Array(vec![JsonValue::Null]);
-        assert!(json_to_fpas_at_depth(json, MAX_JSON_DEPTH - 1).is_ok());
+        assert!(test_json_to_fpas_at_depth(json, MAX_JSON_DEPTH - 1).is_ok());
     }
 
     #[test]
     fn json_to_fpas_rejects_container_child_beyond_depth_limit() {
         let json = JsonValue::Array(vec![JsonValue::Null]);
-        assert!(json_to_fpas_at_depth(json, MAX_JSON_DEPTH).is_err());
+        assert!(test_json_to_fpas_at_depth(json, MAX_JSON_DEPTH).is_err());
     }
 
     #[test]
     fn parse_rejects_json_above_max_depth() {
         let mut stack = vec![Value::Str(nested_array_json(MAX_JSON_DEPTH).into())];
-        crate::run_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc())
+            .unwrap();
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }
 
     #[test]
     fn fpas_to_json_accepts_container_at_depth_limit() {
-        let value = json_variant(
+        let value = test_variant(
             "Array",
-            vec![Value::Array(vec![json_variant("Null", vec![])].into())],
+            vec![Value::Array(vec![test_variant("Null", vec![])].into())],
         );
         assert!(fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH - 1).is_ok());
     }
 
     #[test]
     fn fpas_to_json_rejects_container_child_beyond_depth_limit() {
-        let value = json_variant(
+        let value = test_variant(
             "Array",
-            vec![Value::Array(vec![json_variant("Null", vec![])].into())],
+            vec![Value::Array(vec![test_variant("Null", vec![])].into())],
         );
         let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH).unwrap_err();
         assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);

@@ -149,13 +149,14 @@ fn value_type_name(v: &Value) -> &'static str {
         Value::Str(_) => "string",
         Value::Array(_) => "array",
         Value::Dict(_) => "dict",
-        Value::Record(_) | Value::PositionalRecord(_) => "record",
-        Value::Enum(_) | Value::PositionalEnum(_) => "enum",
+        Value::Record(_) => "record",
+        Value::Enum(_) => "enum",
         Value::Unit => "unit",
         Value::ResultOk(_) | Value::ResultError(_) => "result",
         Value::OptionSome(_) | Value::OptionNone => "option",
         Value::Function(_) => "function",
         Value::Cell(_) => "cell",
         Value::Task(_) => "task",
+        Value::OpaqueHandle(_) => "opaque handle",
     }
 }

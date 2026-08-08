@@ -19,6 +19,7 @@
 //! **Documentation:** `docs/pascal/std/README.md` and per-unit files under `docs/pascal/std/` (from the repository root).
 //! **Maintenance:** Keep those Markdown files aligned with this crate, `fpas-vm`, `fpas-compiler`, `fpas-bytecode`, and `fpas-sema` `std_registry.rs`.
 
+mod aggregate_factory;
 mod array;
 mod console;
 mod console_event;
@@ -48,6 +49,7 @@ mod time;
 mod toml;
 mod ui;
 
+pub use aggregate_factory::{AggregateFactory, RUNTIME_AGGREGATE_TYPES};
 pub use console::{
     CONSOLE_COLOR_KIND_VARIANTS, CapturedOutput, Console, ConsoleCell, ConsoleColor, ConsoleRect,
     KeyInput, ReadLnQueue, SavedRegionId, ScreenSnapshot, TextInput, read_line_from_stdin,
@@ -64,7 +66,9 @@ pub use graph::{
     last_headless_graph_frame_for_tests, pop_headless_graph_test_mode,
     push_headless_graph_test_mode, with_headless_graph_backend_for_tests,
 };
-pub use intrinsics::{run_intrinsic, run_intrinsic_borrowed};
+#[cfg(test)]
+pub(crate) use intrinsics::execute_test_intrinsic;
+pub use intrinsics::run_intrinsic_borrowed;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,

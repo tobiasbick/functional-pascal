@@ -129,7 +129,7 @@ mod tests {
     }
 
     fn run_conv(intrinsic: ConvIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        crate::run_intrinsic(Intrinsic::Conv(intrinsic), stack, loc()).map(|_| ())
+        crate::execute_test_intrinsic(Intrinsic::Conv(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

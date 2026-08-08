@@ -1,19 +1,13 @@
-mod chunk;
-mod chunk_validate;
 mod executable;
 mod function;
 mod instruction;
 pub mod intrinsic;
 pub mod limits;
 mod metadata;
-mod op;
 mod operand;
-mod persistent_value;
 mod validate;
 mod value;
 
-pub use chunk::{Chunk, ChunkError, MAX_CONSTANT_INDEX};
-pub use chunk_validate::{ExecutableError, validate_executable};
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
 pub use function::{CodeRange, FunctionFlags, FunctionInfo, ReturnConvention};
@@ -30,17 +24,14 @@ pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, SourceMap, SourceRun,
     StringTable,
 };
-pub use op::Op;
 pub use operand::{
     ConstantId, EnumTypeId, EnumVariantId, FunctionId, GlobalId, InstructionAddress, IntrinsicId,
     NO_REGISTER, OperandError, RecordFieldId, RecordTypeId, Register, SourceId, StringId,
 };
-pub use persistent_value::{PersistentValue, PersistentValueError};
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
-    EnumValue, FunctionValue, PositionalEnumLayout, PositionalEnumValue, PositionalRecordLayout,
-    PositionalRecordValue, RecordValue, SharedArray, SharedDict, SharedEnum, SharedFunction,
-    SharedPositionalEnum, SharedPositionalRecord, SharedRecord, SharedStr, Value,
+    EnumValue, FunctionValue, RecordValue, RuntimeEnumLayout, RuntimeRecordLayout, SharedArray,
+    SharedDict, SharedEnum, SharedFunction, SharedRecord, SharedStr, Value,
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.

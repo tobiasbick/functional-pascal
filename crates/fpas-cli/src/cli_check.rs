@@ -207,7 +207,7 @@ fn check_parsed_program(
     source_paths: Option<&[PathBuf]>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    match fpas_compiler::compile_all(program) {
+    match fpas_compiler::compile(program) {
         Ok(_chunk) => 0,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {

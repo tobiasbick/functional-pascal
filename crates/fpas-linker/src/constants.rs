@@ -7,7 +7,7 @@ use fpas_unit::object::{DefinitionTarget, ObjectConstant, RelocatableObject, Sym
 
 use crate::strings::StringInterner;
 use crate::symbols::SymbolTable;
-use crate::{LinkIds, RegisterLinkError};
+use crate::{LinkError, LinkIds};
 
 pub(super) struct ConstantIds {
     pub maps: Vec<Vec<ConstantId>>,
@@ -19,7 +19,7 @@ pub(super) fn merge(
     symbols: &SymbolTable,
     ids: &LinkIds,
     strings: &mut StringInterner,
-) -> Result<ConstantIds, RegisterLinkError> {
+) -> Result<ConstantIds, LinkError> {
     let mut maps = objects
         .iter()
         .map(|object| Vec::with_capacity(object.constants.len()))
@@ -41,7 +41,7 @@ pub(super) fn merge(
                     let resolved =
                         symbols.resolve(object_index, *function, SymbolKind::Function)?;
                     let DefinitionTarget::Function(local) = resolved.target else {
-                        return Err(RegisterLinkError::Overflow("constant function target"));
+                        return Err(LinkError::Overflow("constant function target"));
                     };
                     Constant::Function {
                         function: function_id(ids, resolved.object, local)?,
@@ -53,7 +53,7 @@ pub(super) fn merge(
                 *id
             } else {
                 let id = ConstantId::try_from_index(values.len())
-                    .map_err(|_| RegisterLinkError::Overflow("constant IDs"))?;
+                    .map_err(|_| LinkError::Overflow("constant IDs"))?;
                 values.push(value);
                 indices.insert(value, id);
                 id
@@ -64,11 +64,11 @@ pub(super) fn merge(
     Ok(ConstantIds { maps, values })
 }
 
-fn function_id(ids: &LinkIds, object: usize, local: u32) -> Result<FunctionId, RegisterLinkError> {
+fn function_id(ids: &LinkIds, object: usize, local: u32) -> Result<FunctionId, LinkError> {
     ids.functions
         .maps
         .get(object)
         .and_then(|map| map.get(local as usize))
         .and_then(|id| *id)
-        .ok_or(RegisterLinkError::Overflow("function reference"))
+        .ok_or(LinkError::Overflow("function reference"))
 }

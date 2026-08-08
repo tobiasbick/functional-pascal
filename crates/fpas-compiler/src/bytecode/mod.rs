@@ -1,4 +1,4 @@
-//! Typed IR to verified register-bytecode construction for the development VM.
+//! Typed IR to verified bytecode construction.
 
 mod allocation;
 mod blocks;

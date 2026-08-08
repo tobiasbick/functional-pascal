@@ -29,7 +29,8 @@ pub(crate) fn run(
         Intrinsic::Proc(ProcIntrinsic::RunCapture) => {
             let args = pop_string_array(pop_value(call, location)?, location)?;
             let command = pop_string(pop_value(call, location)?, location)?;
-            call.push(run_process_capture(&command, &args));
+            let result = run_process_capture(&command, &args, call, location)?;
+            call.push(result);
         }
         _ => return Ok(None),
     }
@@ -64,28 +65,30 @@ fn current_executable() -> Value {
     }
 }
 
-fn run_process_capture(command: &str, args: &[String]) -> Value {
+fn run_process_capture(
+    command: &str,
+    args: &[String],
+    call: &IntrinsicCall<'_>,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
     match Command::new(command).args(args).output() {
         Ok(output) => match output.status.code() {
-            Some(code) => Value::ResultOk(Box::new(Value::record(
-                s::STD_PROC_PROCESS_OUTPUT.into(),
+            Some(code) => Ok(Value::ResultOk(Box::new(call.record(
+                s::STD_PROC_PROCESS_OUTPUT,
                 vec![
-                    ("ExitCode".into(), Value::Integer(i64::from(code))),
-                    (
-                        "Stdout".into(),
-                        Value::Str(String::from_utf8_lossy(&output.stdout).into_owned().into()),
-                    ),
-                    (
-                        "Stderr".into(),
-                        Value::Str(String::from_utf8_lossy(&output.stderr).into_owned().into()),
-                    ),
+                    Value::Integer(i64::from(code)),
+                    Value::Str(String::from_utf8_lossy(&output.stdout).into_owned().into()),
+                    Value::Str(String::from_utf8_lossy(&output.stderr).into_owned().into()),
                 ],
-            ))),
-            None => Value::ResultError(Box::new(Value::Str(
+                location,
+            )?))),
+            None => Ok(Value::ResultError(Box::new(Value::Str(
                 "process terminated without an exit code".into(),
-            ))),
+            )))),
         },
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
+        Err(error) => Ok(Value::ResultError(Box::new(Value::Str(
+            error.to_string().into(),
+        )))),
     }
 }
 
@@ -98,11 +101,12 @@ mod tests {
     }
 
     fn run_proc(stack: &mut Vec<Value>) {
-        crate::run_intrinsic(Intrinsic::Proc(ProcIntrinsic::Run), stack, test_location()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Proc(ProcIntrinsic::Run), stack, test_location())
+            .unwrap();
     }
 
     fn run_capture(stack: &mut Vec<Value>) {
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Proc(ProcIntrinsic::RunCapture),
             stack,
             test_location(),
@@ -196,16 +200,17 @@ mod tests {
         let Value::ResultOk(output) = value else {
             panic!("capture must return Ok");
         };
+        let Value::Record(output) = output.as_ref() else {
+            panic!("capture output must be a record");
+        };
+        assert_eq!(output.body().layout.type_name, s::STD_PROC_PROCESS_OUTPUT);
         assert_eq!(
-            **output,
-            Value::record(
-                s::STD_PROC_PROCESS_OUTPUT.into(),
-                vec![
-                    ("ExitCode".into(), Value::Integer(exit_code)),
-                    ("Stdout".into(), Value::Str(stdout.into())),
-                    ("Stderr".into(), Value::Str(stderr.into())),
-                ],
-            )
+            output.body().values,
+            [
+                Value::Integer(exit_code),
+                Value::Str(stdout.into()),
+                Value::Str(stderr.into()),
+            ]
         );
     }
 

@@ -12,45 +12,75 @@ use toml::Value as TomlValue;
 use toml::map::Map;
 use toml::value::Datetime;
 
-fn toml_variant(variant: &str, fields: Vec<Value>) -> Value {
-    Value::enum_value(s::STD_TOML_VALUE.into(), variant.into(), fields)
+fn toml_variant(
+    call: &IntrinsicCall<'_>,
+    variant: &str,
+    fields: Vec<Value>,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    call.enumeration(s::STD_TOML_VALUE, variant, fields, location)
 }
 
 fn toml_depth_exceeded_message() -> String {
     format!("TOML nesting exceeds maximum depth of {MAX_TOML_DEPTH}")
 }
 
-fn toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, String> {
+fn toml_to_fpas_at_depth(
+    call: &IntrinsicCall<'_>,
+    value: TomlValue,
+    depth: usize,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
     if depth > MAX_TOML_DEPTH {
-        return Err(toml_depth_exceeded_message());
+        return Err(std_runtime_error(
+            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+            toml_depth_exceeded_message(),
+            format!("Keep TOML trees at most {MAX_TOML_DEPTH} levels deep."),
+            location,
+        ));
     }
 
     match value {
-        TomlValue::String(value) => Ok(toml_variant("String", vec![Value::Str(value.into())])),
-        TomlValue::Integer(value) => Ok(toml_variant("Integer", vec![Value::Integer(value)])),
-        TomlValue::Float(value) => Ok(toml_variant("Float", vec![Value::Real(value)])),
-        TomlValue::Boolean(value) => Ok(toml_variant("Boolean", vec![Value::Boolean(value)])),
-        TomlValue::Datetime(value) => Ok(toml_variant(
+        TomlValue::String(value) => {
+            toml_variant(call, "String", vec![Value::Str(value.into())], location)
+        }
+        TomlValue::Integer(value) => {
+            toml_variant(call, "Integer", vec![Value::Integer(value)], location)
+        }
+        TomlValue::Float(value) => toml_variant(call, "Float", vec![Value::Real(value)], location),
+        TomlValue::Boolean(value) => {
+            toml_variant(call, "Boolean", vec![Value::Boolean(value)], location)
+        }
+        TomlValue::Datetime(value) => toml_variant(
+            call,
             "Datetime",
             vec![Value::Str(value.to_string().into())],
-        )),
+            location,
+        ),
         TomlValue::Array(items) => items
             .into_iter()
-            .map(|item| toml_to_fpas_at_depth(item, depth + 1))
+            .map(|item| toml_to_fpas_at_depth(call, item, depth + 1, location))
             .collect::<Result<Vec<_>, _>>()
-            .map(|items| toml_variant("Array", vec![Value::Array(items.into())])),
+            .and_then(|items| {
+                toml_variant(call, "Array", vec![Value::Array(items.into())], location)
+            }),
         TomlValue::Table(fields) => fields
             .into_iter()
             .map(|(key, value)| {
-                toml_to_fpas_at_depth(value, depth + 1).map(|value| (Value::Str(key.into()), value))
+                toml_to_fpas_at_depth(call, value, depth + 1, location)
+                    .map(|value| (Value::Str(key.into()), value))
             })
             .collect::<Result<Vec<_>, _>>()
-            .map(|fields| toml_variant("Table", vec![Value::dict(fields)])),
+            .and_then(|fields| toml_variant(call, "Table", vec![Value::dict(fields)], location)),
     }
 }
 
-fn toml_to_fpas(value: TomlValue) -> Result<Value, String> {
-    toml_to_fpas_at_depth(value, 1)
+fn toml_to_fpas(
+    call: &IntrinsicCall<'_>,
+    value: TomlValue,
+    location: SourceLocation,
+) -> Result<Value, StdError> {
+    toml_to_fpas_at_depth(call, value, 1, location)
 }
 
 fn expected_toml_value_error(value: &Value, location: SourceLocation) -> StdError {
@@ -93,8 +123,7 @@ fn fpas_to_toml_at_depth(
     }
 
     let (type_name, variant, fields) = match value {
-        Value::Enum(value) => value.into_parts(),
-        Value::PositionalEnum(value) => {
+        Value::Enum(value) => {
             let body = value.body();
             (
                 body.layout.type_name.clone(),
@@ -217,11 +246,11 @@ pub(crate) fn run(
         Intrinsic::Toml(TomlIntrinsic::Parse) => {
             let text = pop_string(pop_value(call, location)?, location)?;
             match toml::from_str::<TomlValue>(&text).map_err(|error| error.to_string()) {
-                Ok(value) => match toml_to_fpas(value) {
+                Ok(value) => match toml_to_fpas(call, value, location) {
                     Ok(value) => call.push(Value::ResultOk(Box::new(value))),
-                    Err(message) => {
-                        call.push(Value::ResultError(Box::new(Value::Str(message.into()))))
-                    }
+                    Err(error) => call.push(Value::ResultError(Box::new(Value::Str(
+                        error.message.into(),
+                    )))),
                 },
                 Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
             }
@@ -252,6 +281,18 @@ mod tests {
         SourceLocation::new(1, 1)
     }
 
+    fn call() -> IntrinsicCall<'static> {
+        IntrinsicCall::new(&[], &crate::intrinsics::TEST_AGGREGATES)
+    }
+
+    fn test_variant(variant: &str, fields: Vec<Value>) -> Value {
+        toml_variant(&call(), variant, fields, loc()).expect("test aggregate layout")
+    }
+
+    fn test_toml_to_fpas_at_depth(value: TomlValue, depth: usize) -> Result<Value, StdError> {
+        toml_to_fpas_at_depth(&call(), value, depth, loc())
+    }
+
     #[test]
     fn parse_preserves_all_toml_value_kinds() {
         let text = r#"
@@ -266,7 +307,8 @@ value = "ok"
 "#;
         let mut stack = vec![Value::Str(text.into())];
 
-        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc())
+            .unwrap();
 
         assert!(matches!(stack.as_slice(), [Value::ResultOk(_)]));
         let Value::ResultOk(value) = &stack[0] else {
@@ -275,14 +317,15 @@ value = "ok"
         let Value::Enum(value) = value.as_ref() else {
             panic!("expected a TomlValue enum");
         };
-        assert_eq!(value.variant, "Table");
+        assert_eq!(value.body().layout.variant, "Table");
     }
 
     #[test]
     fn parse_returns_error_for_invalid_toml() {
         let mut stack = vec![Value::Str("answer = [1,".into())];
 
-        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc())
+            .unwrap();
 
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }
@@ -291,22 +334,22 @@ value = "ok"
     fn toml_to_fpas_accepts_container_at_depth_limit() {
         let value = TomlValue::Array(vec![TomlValue::String("ok".into())]);
 
-        assert!(toml_to_fpas_at_depth(value, MAX_TOML_DEPTH - 1).is_ok());
+        assert!(test_toml_to_fpas_at_depth(value, MAX_TOML_DEPTH - 1).is_ok());
     }
 
     #[test]
     fn toml_to_fpas_rejects_container_child_beyond_depth_limit() {
         let value = TomlValue::Array(vec![TomlValue::String("too deep".into())]);
 
-        assert!(toml_to_fpas_at_depth(value, MAX_TOML_DEPTH).is_err());
+        assert!(test_toml_to_fpas_at_depth(value, MAX_TOML_DEPTH).is_err());
     }
 
     #[test]
     fn fpas_to_toml_accepts_container_at_depth_limit() {
-        let value = toml_variant(
+        let value = test_variant(
             "Array",
             vec![Value::Array(
-                vec![toml_variant("String", vec![Value::Str("ok".into())])].into(),
+                vec![test_variant("String", vec![Value::Str("ok".into())])].into(),
             )],
         );
 
@@ -315,10 +358,10 @@ value = "ok"
 
     #[test]
     fn fpas_to_toml_rejects_container_child_beyond_depth_limit() {
-        let value = toml_variant(
+        let value = test_variant(
             "Array",
             vec![Value::Array(
-                vec![toml_variant("String", vec![Value::Str("too deep".into())])].into(),
+                vec![test_variant("String", vec![Value::Str("too deep".into())])].into(),
             )],
         );
 
@@ -329,7 +372,7 @@ value = "ok"
 
     #[test]
     fn stringify_rejects_invalid_datetime() {
-        let value = toml_variant("Datetime", vec![Value::Str("not-a-date".into())]);
+        let value = test_variant("Datetime", vec![Value::Str("not-a-date".into())]);
 
         let error = fpas_to_toml(value, loc()).unwrap_err();
 
@@ -342,13 +385,14 @@ value = "ok"
         let mut stack = vec![Value::Str(
             "[[products]]\nname = \"Hammer\"\n[[products]]\nname = \"Nail\"\n".into(),
         )];
-        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc())
+            .unwrap();
         let Value::ResultOk(value) = stack.pop().expect("parse result") else {
             panic!("expected a parsed TOML value");
         };
         let mut stringify_stack = vec![*value];
 
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Toml(TomlIntrinsic::Stringify),
             &mut stringify_stack,
             loc(),

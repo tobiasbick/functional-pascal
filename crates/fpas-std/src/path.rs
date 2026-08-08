@@ -136,7 +136,7 @@ mod tests {
     }
 
     fn run_path(intrinsic: PathIntrinsic, stack: &mut Vec<Value>) {
-        crate::run_intrinsic(Intrinsic::Path(intrinsic), stack, test_location()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Path(intrinsic), stack, test_location()).unwrap();
     }
 
     #[test]

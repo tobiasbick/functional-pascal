@@ -37,7 +37,7 @@ only "done".
 | P7 Tasks and concurrency | complete | `p7-tasks-concurrency.md`; retained/detached task lowering and register scheduler state; Wait/WaitAll, cooperative sleep, timeslice, nested-frame/live-aggregate, task-bound capture, cancellation, direct VM, differential compiler, and `register-p7` exercised-path evidence; production path unchanged |
 | P8 Unit objects and linker | complete | `p8-unit-objects-linker.md`; persistent per-function register objects; compiler unit/import path; deterministic numeric linker and dependency initializers; register project/library/workspace build path; deterministic cold/warm executable and object payload equality; missing/old/corrupt/incompatible sidecar recovery; full verification gates passed; production CLI path unchanged |
 | P9 `.fpascp`, `.fpascu`, bundle, and CLI cutover | complete | `p9-artifact-cli-cutover.md` |
-| P10 Delete stack VM and reconcile documentation | not started | — |
+| P10 Delete stack VM and reconcile documentation | complete | `p10-stack-removal.md`; superseded compiler/bytecode/VM/object/linker and benchmark paths deleted; runtime values reconciled; zero focused old-symbol hits; full fmt/build/workspace-test/all-target-clippy and 385-pass FPAS gates passed |
 | P11 Final performance and platform acceptance | not started | — |
 
 Valid states are `not started`, `in progress`, `blocked`, and `complete`. A phase is `blocked` only with

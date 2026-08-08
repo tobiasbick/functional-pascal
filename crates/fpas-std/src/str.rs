@@ -363,7 +363,7 @@ mod tests {
     }
 
     fn run_str(intrinsic: StrIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        crate::run_intrinsic(Intrinsic::Str(intrinsic), stack, loc()).map(|_| ())
+        crate::execute_test_intrinsic(Intrinsic::Str(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

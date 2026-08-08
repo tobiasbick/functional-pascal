@@ -1,4 +1,4 @@
-//! Dispatches `Op::Intrinsic` to unit modules (`env`, `str`, `conv`, `math`, `random`, `array`, `result_option`, `dict`).
+//! Dispatches intrinsic instructions to their standard-library unit modules.
 //! Console, task wait, and higher-order (callback) intrinsics are handled in `fpas-vm`, not here.
 //!
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root).
@@ -226,8 +226,9 @@ pub fn run_intrinsic_borrowed(
     intrinsic: Intrinsic,
     arguments: &[Value],
     location: SourceLocation,
+    factory: &dyn crate::AggregateFactory,
 ) -> Result<Option<Value>, StdError> {
-    let mut call = IntrinsicCall::new(arguments);
+    let mut call = IntrinsicCall::new(arguments, factory);
     dispatch_intrinsic(intrinsic, &mut call, location)?;
     let (consumed, result) = call.finish();
     if consumed != arguments.len() {
@@ -244,28 +245,79 @@ pub fn run_intrinsic_borrowed(
     Ok(result)
 }
 
-/// Execute a standard-library intrinsic on the legacy operand stack.
-///
-/// This compatibility adapter is retained for P10 cleanup and legacy differential tests while
-/// sharing the borrowed decoder and standard-library implementation with the production register VM.
-pub fn run_intrinsic(
+#[cfg(test)]
+pub(crate) static TEST_AGGREGATES: TestAggregateFactory = TestAggregateFactory;
+
+#[cfg(test)]
+pub(crate) struct TestAggregateFactory;
+
+#[cfg(test)]
+impl crate::AggregateFactory for TestAggregateFactory {
+    fn record(
+        &self,
+        type_name: &str,
+        values: Vec<Value>,
+        _location: SourceLocation,
+    ) -> Result<Value, StdError> {
+        let fields = match type_name {
+            crate::std_symbols::STD_PROC_PROCESS_OUTPUT => {
+                ["ExitCode", "Stdout", "Stderr"].map(str::to_owned).to_vec()
+            }
+            _ => (0..values.len())
+                .map(|index| format!("field{index}"))
+                .collect(),
+        };
+        Ok(Value::Record(fpas_bytecode::SharedRecord::new(
+            std::sync::Arc::new(fpas_bytecode::RuntimeRecordLayout {
+                record: fpas_bytecode::RecordTypeId::new(test_id(type_name)),
+                type_name: type_name.to_owned(),
+                fields,
+            }),
+            values,
+        )))
+    }
+
+    fn enumeration(
+        &self,
+        type_name: &str,
+        variant: &str,
+        values: Vec<Value>,
+        _location: SourceLocation,
+    ) -> Result<Value, StdError> {
+        Ok(Value::Enum(fpas_bytecode::SharedEnum::new(
+            std::sync::Arc::new(fpas_bytecode::RuntimeEnumLayout {
+                enumeration: fpas_bytecode::EnumTypeId::new(test_id(type_name)),
+                variant_id: fpas_bytecode::EnumVariantId::new(test_id(&format!(
+                    "{type_name}.{variant}"
+                ))),
+                type_name: type_name.to_owned(),
+                variant: variant.to_owned(),
+                fields: (0..values.len())
+                    .map(|index| format!("field{index}"))
+                    .collect(),
+            }),
+            values,
+        )))
+    }
+}
+
+#[cfg(test)]
+fn test_id(name: &str) -> u16 {
+    name.bytes().fold(0_u16, |hash, byte| {
+        hash.wrapping_mul(31).wrapping_add(u16::from(byte))
+    })
+}
+
+#[cfg(test)]
+pub(crate) fn execute_test_intrinsic(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    arguments: &mut Vec<Value>,
     location: SourceLocation,
 ) -> Result<(), StdError> {
-    let mut call = IntrinsicCall::new(stack);
-    dispatch_intrinsic(intrinsic, &mut call, location)?;
-    let (consumed, result) = call.finish();
-    let remaining = stack.len().checked_sub(consumed).ok_or_else(|| {
-        std_internal_error(
-            "Intrinsic consumed more arguments than the legacy stack contains",
-            "This indicates a compiler/runtime stack layout bug. Please report it.",
-            location,
-        )
-    })?;
-    stack.truncate(remaining);
+    let result = run_intrinsic_borrowed(intrinsic, arguments, location, &TEST_AGGREGATES)?;
+    arguments.clear();
     if let Some(value) = result {
-        stack.push(value);
+        arguments.push(value);
     }
     Ok(())
 }
@@ -274,7 +326,7 @@ pub fn run_intrinsic(
 mod vm_only_guard_tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-    use super::{run_intrinsic, run_intrinsic_borrowed};
+    use super::{TEST_AGGREGATES, execute_test_intrinsic, run_intrinsic_borrowed};
     use fpas_bytecode::{
         ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation,
         StrIntrinsic, TaskIntrinsic, Value,
@@ -286,7 +338,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn args_param_count_is_vm_only() {
-        let err = run_intrinsic(
+        let err = execute_test_intrinsic(
             Intrinsic::Args(ArgsIntrinsic::ParamCount),
             &mut Vec::new(),
             loc(),
@@ -297,7 +349,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn console_poll_event_is_vm_only() {
-        let err = run_intrinsic(
+        let err = execute_test_intrinsic(
             Intrinsic::Console(ConsoleIntrinsic::PollEvent),
             &mut Vec::new(),
             loc(),
@@ -312,7 +364,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn graph_open_is_vm_only() {
-        let err = run_intrinsic(
+        let err = execute_test_intrinsic(
             Intrinsic::Graph(GraphIntrinsic::ApplicationOpen),
             &mut Vec::new(),
             loc(),
@@ -327,8 +379,9 @@ mod vm_only_guard_tests {
 
     #[test]
     fn task_wait_is_vm_only() {
-        let err = run_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc())
-            .expect_err("err");
+        let err =
+            execute_test_intrinsic(Intrinsic::Task(TaskIntrinsic::Wait), &mut Vec::new(), loc())
+                .expect_err("err");
         assert!(
             err.message.contains("Std.Task wait"),
             "message={}",
@@ -338,7 +391,7 @@ mod vm_only_guard_tests {
 
     #[test]
     fn array_map_is_vm_only() {
-        let err = run_intrinsic(
+        let err = execute_test_intrinsic(
             Intrinsic::Array(ArrayIntrinsic::Map),
             &mut Vec::new(),
             loc(),
@@ -354,7 +407,7 @@ mod vm_only_guard_tests {
     #[test]
     fn str_length_still_dispatches() {
         let mut stack = vec![Value::Str("ab".into())];
-        run_intrinsic(Intrinsic::Str(StrIntrinsic::Length), &mut stack, loc()).unwrap();
+        execute_test_intrinsic(Intrinsic::Str(StrIntrinsic::Length), &mut stack, loc()).unwrap();
         assert_eq!(stack, vec![Value::Integer(2)]);
     }
 
@@ -364,9 +417,13 @@ mod vm_only_guard_tests {
             vec![Value::Integer(1), Value::Integer(2)].into(),
         )];
         let before = arguments.clone();
-        let result =
-            run_intrinsic_borrowed(Intrinsic::Array(ArrayIntrinsic::Reverse), &arguments, loc())
-                .unwrap();
+        let result = run_intrinsic_borrowed(
+            Intrinsic::Array(ArrayIntrinsic::Reverse),
+            &arguments,
+            loc(),
+            &TEST_AGGREGATES,
+        )
+        .unwrap();
         assert_eq!(arguments, before);
         assert_eq!(
             result,
@@ -382,6 +439,7 @@ mod vm_only_guard_tests {
             Intrinsic::Str(StrIntrinsic::Length),
             &[Value::Integer(99), Value::Str("text".into())],
             loc(),
+            &TEST_AGGREGATES,
         )
         .expect_err("extra argument");
         assert!(extra.message.contains("argument count mismatch"));
@@ -390,6 +448,7 @@ mod vm_only_guard_tests {
             Intrinsic::Str(StrIntrinsic::Length),
             &[Value::Integer(99)],
             loc(),
+            &TEST_AGGREGATES,
         )
         .expect_err("wrong type");
         assert!(wrong.message.contains("Expected string"));

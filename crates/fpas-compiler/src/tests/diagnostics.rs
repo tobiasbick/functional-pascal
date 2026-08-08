@@ -1,102 +1,35 @@
 use super::*;
 
 #[test]
-fn intrinsic_arity_error_has_correct_code() {
-    use fpas_diagnostics::codes::SEMA_WRONG_ARGUMENT_COUNT;
-    let e = compile_err(
-        "\
-program T;
-uses Std.Console;
+fn division_by_zero_preserves_code_message_and_source_location() {
+    let source = "\
+program RegisterDivisionError;
 begin
-  var X: string := Std.Console.ReadLn(1)
-end.",
-    );
-    assert_eq!(e.code, SEMA_WRONG_ARGUMENT_COUNT, "wrong diagnostic code");
-    assert!(
-        e.help.as_deref().is_some_and(|h| !h.is_empty()),
-        "help text must be present"
-    );
-}
-
-#[test]
-fn runtime_vm_division_by_zero_has_code_column_and_help() {
-    use fpas_diagnostics::codes::RUNTIME_DIVISION_BY_ZERO;
-
-    let err = compile_run_error(
-        "\
-  program T;
-  begin
-    var X: integer := 10 div 0
-  end.",
-    );
-
+  var X: integer := 7 div 0
+end.";
+    let error = run_program(source).expect_err("division should fail");
     assert_eq!(
-        err.code, RUNTIME_DIVISION_BY_ZERO,
-        "wrong runtime diagnostic code"
-    );
-    assert_eq!(err.span.line(), 3, "unexpected runtime error line");
-    assert!(
-        err.span.column() > 0,
-        "runtime column must be 1-based and non-zero"
+        error.code,
+        fpas_diagnostics::codes::RUNTIME_DIVISION_BY_ZERO
     );
     assert!(
-        err.help.as_deref().is_some_and(|h| !h.trim().is_empty()),
-        "runtime help text must be present"
+        error
+            .message
+            .to_ascii_lowercase()
+            .contains("division by zero")
     );
+    assert_eq!((error.span.line(), error.span.column()), (3, 21));
 }
 
 #[test]
-fn runtime_std_conversion_failure_has_code_column_and_help() {
-    use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
-
-    let err = compile_run_error(
-        "\
-  program T;
-  begin
-    var N: integer := Std.Conv.StrToInt('x')
-  end.",
-    );
-
-    assert_eq!(
-        err.code, RUNTIME_CONVERSION_FAILURE,
-        "wrong std runtime diagnostic code"
-    );
-    assert_eq!(err.span.line(), 3, "unexpected std runtime error line");
-    assert!(
-        err.span.column() > 0,
-        "std runtime column must be 1-based and non-zero"
-    );
-    assert!(
-        err.help.as_deref().is_some_and(|h| !h.trim().is_empty()),
-        "std runtime help text must be present"
-    );
-}
-
-fn compile_all_errs(source: &str) -> Vec<crate::CompileError> {
-    let (program, errors) = parse(source);
-    assert!(errors.is_empty(), "Parse errors: {errors:?}");
-    crate::compile_all(&program).expect_err("compilation should fail")
-}
-
-#[test]
-fn compile_all_returns_multiple_sema_errors() {
-    let errors = compile_all_errs(
-        "\
-program Multi;
-
+fn explicit_panic_preserves_diagnostic_contract() {
+    let source = "\
+program RegisterPanic;
 begin
-  var X: integer := 'nope';
-  var Y: string := 42
-end.",
-    );
-    assert!(
-        errors.len() >= 2,
-        "expected multiple semantic errors, got: {errors:?}"
-    );
-    assert!(
-        errors
-            .iter()
-            .all(|error| error.code == fpas_diagnostics::codes::SEMA_TYPE_MISMATCH),
-        "unexpected diagnostics: {errors:?}"
-    );
+  panic('expected failure')
+end.";
+    let error = run_program(source).expect_err("panic should fail");
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
+    assert!(error.message.contains("expected failure"));
+    assert_eq!((error.span.line(), error.span.column()), (3, 3));
 }

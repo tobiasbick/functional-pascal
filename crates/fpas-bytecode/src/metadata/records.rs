@@ -1,4 +1,4 @@
-//! Positional record layouts and field slots.
+//! Record layouts and field slots.
 
 use crate::StringId;
 

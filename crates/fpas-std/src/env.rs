@@ -43,7 +43,7 @@ mod tests {
     fn get_returns_none_when_variable_is_missing() {
         let mut stack = vec![Value::Str("__FPAS_ENV_TEST_MISSING_903B5CF4__".into())];
 
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Env(EnvIntrinsic::Get),
             &mut stack,
             test_location(),
@@ -57,7 +57,7 @@ mod tests {
     fn exists_returns_false_when_variable_is_missing() {
         let mut stack = vec![Value::Str("__FPAS_ENV_TEST_MISSING_48872D88__".into())];
 
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Env(EnvIntrinsic::Exists),
             &mut stack,
             test_location(),

@@ -3,7 +3,7 @@
 use fpas_bytecode::FunctionId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
-use crate::RegisterLinkError;
+use crate::LinkError;
 use crate::symbols::SymbolTable;
 
 pub(super) struct FunctionIds {
@@ -16,7 +16,7 @@ pub(super) fn assign(
     program_index: usize,
     entry: usize,
     symbols: &SymbolTable,
-) -> Result<FunctionIds, RegisterLinkError> {
+) -> Result<FunctionIds, LinkError> {
     let mut maps = objects
         .iter()
         .map(|object| vec![None; object.functions.len()])
@@ -37,8 +37,8 @@ pub(super) fn assign(
         order.extend(local.into_iter().map(|index| (object_index, index)));
     }
     for (index, (object, local)) in order.iter().copied().enumerate() {
-        let id = FunctionId::try_from_index(index)
-            .map_err(|_| RegisterLinkError::Overflow("function IDs"))?;
+        let id =
+            FunctionId::try_from_index(index).map_err(|_| LinkError::Overflow("function IDs"))?;
         maps[object][local] = Some(id);
     }
     Ok(FunctionIds { maps, order })

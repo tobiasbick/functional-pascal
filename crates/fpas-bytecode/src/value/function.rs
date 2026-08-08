@@ -8,10 +8,8 @@ use std::sync::Arc;
 /// Immutable runtime data for a first-class function value.
 #[derive(Debug, Clone)]
 pub struct FunctionValue {
-    /// Numeric register-executable target, when this value belongs to the register ABI.
-    ///
-    /// Legacy stack chunks retain `None` until their final cutover removes name lookup.
-    pub function: Option<FunctionId>,
+    /// Executable target.
+    pub function: FunctionId,
     /// Canonical runtime function name.
     pub name: String,
     /// Captured values appended to arguments when invoked.
@@ -26,24 +24,9 @@ pub struct SharedFunction(Arc<FunctionValue>);
 
 impl SharedFunction {
     /// Create a shared function value.
-    pub fn new(name: String, captures: Vec<Value>, task_bound: bool) -> Self {
+    pub fn new(function: FunctionId, name: String, captures: Vec<Value>, task_bound: bool) -> Self {
         Self(Arc::new(FunctionValue {
-            function: None,
-            name,
-            captures,
-            task_bound,
-        }))
-    }
-
-    /// Create a function value whose executable target is a dense numeric identifier.
-    pub fn numeric(
-        function: FunctionId,
-        name: String,
-        captures: Vec<Value>,
-        task_bound: bool,
-    ) -> Self {
-        Self(Arc::new(FunctionValue {
-            function: Some(function),
+            function,
             name,
             captures,
             task_bound,

@@ -7,7 +7,7 @@ use fpas_unit::object::{
 
 use crate::constants::ConstantIds;
 use crate::symbols::SymbolTable;
-use crate::{LinkIds, RegisterLinkError};
+use crate::{LinkError, LinkIds};
 
 #[expect(
     clippy::too_many_arguments,
@@ -23,23 +23,23 @@ pub(super) fn relocate(
     symbols: &SymbolTable,
     ids: &LinkIds,
     constants: &ConstantIds,
-) -> Result<Instruction, RegisterLinkError> {
+) -> Result<Instruction, LinkError> {
     let opcode = instruction
         .opcode()
-        .map_err(|error| RegisterLinkError::Instruction(error.to_string()))?;
+        .map_err(|error| LinkError::Instruction(error.to_string()))?;
     match &relocation.kind {
         RelocationKind::Constant(local) => {
             let mapped = constants
                 .maps
                 .get(object_index)
                 .and_then(|map| map.get(*local as usize))
-                .ok_or(RegisterLinkError::Overflow("constant reference"))?;
+                .ok_or(LinkError::Overflow("constant reference"))?;
             replace_abx(instruction, opcode, mapped.get())
         }
         RelocationKind::Global(reference) => {
             let resolved = symbols.resolve(object_index, *reference, SymbolKind::Global)?;
             let DefinitionTarget::Global(local) = resolved.target else {
-                return Err(RegisterLinkError::Overflow("global target"));
+                return Err(LinkError::Overflow("global target"));
             };
             let mapped = ids
                 .globals
@@ -47,19 +47,19 @@ pub(super) fn relocate(
                 .get(resolved.object)
                 .and_then(|map| map.get(local as usize))
                 .and_then(|id| *id)
-                .ok_or(RegisterLinkError::Overflow("global reference"))?;
+                .ok_or(LinkError::Overflow("global reference"))?;
             replace_abx(instruction, opcode, mapped.get())
         }
         RelocationKind::CodeAddress(local) => {
             let mapped = code_base
                 .checked_add(*local)
-                .ok_or(RegisterLinkError::Overflow("branch address"))?;
+                .ok_or(LinkError::Overflow("branch address"))?;
             replace_abx(instruction, opcode, mapped)
         }
         RelocationKind::Function(reference) => {
             let resolved = symbols.resolve(object_index, *reference, SymbolKind::Function)?;
             let DefinitionTarget::Function(local) = resolved.target else {
-                return Err(RegisterLinkError::Overflow("function target"));
+                return Err(LinkError::Overflow("function target"));
             };
             let mapped = ids
                 .functions
@@ -67,13 +67,13 @@ pub(super) fn relocate(
                 .get(resolved.object)
                 .and_then(|map| map.get(local as usize))
                 .and_then(|id| *id)
-                .ok_or(RegisterLinkError::Overflow("function reference"))?;
+                .ok_or(LinkError::Overflow("function reference"))?;
             replace_abc(instruction, opcode, mapped.get())
         }
         RelocationKind::Record(reference) => {
             let resolved = symbols.resolve(object_index, *reference, SymbolKind::Record)?;
             let DefinitionTarget::Record(local) = resolved.target else {
-                return Err(RegisterLinkError::Overflow("record target"));
+                return Err(LinkError::Overflow("record target"));
             };
             let mapped = ids
                 .layouts
@@ -81,7 +81,7 @@ pub(super) fn relocate(
                 .get(resolved.object)
                 .and_then(|map| map.get(local as usize))
                 .and_then(|id| *id)
-                .ok_or(RegisterLinkError::Overflow("record reference"))?;
+                .ok_or(LinkError::Overflow("record reference"))?;
             replace_abc(instruction, opcode, mapped.get())
         }
         RelocationKind::RecordField(field) => {
@@ -92,7 +92,7 @@ pub(super) fn relocate(
                 .max()
                 .unwrap_or(0);
             if usize::from(*field) >= maximum {
-                return Err(RegisterLinkError::InvalidField {
+                return Err(LinkError::InvalidField {
                     owner: objects[object_index].owner.clone(),
                     field: *field,
                     available: maximum,
@@ -106,22 +106,22 @@ pub(super) fn relocate(
         } => {
             let resolved = symbols.resolve(object_index, *enumeration, SymbolKind::Enum)?;
             let DefinitionTarget::Enum(local) = resolved.target else {
-                return Err(RegisterLinkError::Overflow("enum target"));
+                return Err(LinkError::Overflow("enum target"));
             };
             let layout = objects[resolved.object]
                 .enums
                 .get(local as usize)
-                .ok_or(RegisterLinkError::Overflow("enum layout reference"))?;
+                .ok_or(LinkError::Overflow("enum layout reference"))?;
             let variant_index = layout
                 .variants
                 .iter()
                 .position(|candidate| candidate.name.eq_ignore_ascii_case(variant))
-                .ok_or_else(|| RegisterLinkError::MissingVariant {
+                .ok_or_else(|| LinkError::MissingVariant {
                     enumeration: layout.name.clone(),
                     variant: variant.clone(),
                 })?;
             let mapped = ids.layouts.variants[resolved.object][local as usize][variant_index]
-                .ok_or(RegisterLinkError::Overflow("enum variant reference"))?;
+                .ok_or(LinkError::Overflow("enum variant reference"))?;
             replace_abc(instruction, opcode, mapped.get())
         }
         RelocationKind::EnumField(field) => {
@@ -133,7 +133,7 @@ pub(super) fn relocate(
                 .max()
                 .unwrap_or(0);
             if usize::from(*field) >= maximum {
-                return Err(RegisterLinkError::InvalidField {
+                return Err(LinkError::InvalidField {
                     owner: objects[object_index].owner.clone(),
                     field: *field,
                     available: maximum,
@@ -142,7 +142,7 @@ pub(super) fn relocate(
             replace_abc(instruction, opcode, *field)
         }
     }
-    .map_err(|detail| RegisterLinkError::InvalidRelocation {
+    .map_err(|detail| LinkError::InvalidRelocation {
         owner: objects[object_index].owner.clone(),
         function: u32::try_from(function_index).unwrap_or(u32::MAX),
         instruction: relocation.instruction,

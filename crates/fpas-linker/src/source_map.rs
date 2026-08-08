@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use fpas_bytecode::{InstructionAddress, SourceId, SourceMap, SourceRun};
 use fpas_unit::object::RelocatableObject;
 
-use crate::RegisterLinkError;
+use crate::LinkError;
 use crate::strings::StringInterner;
 
 pub(super) fn merge(
@@ -14,7 +14,7 @@ pub(super) fn merge(
     code_starts: &[u32],
     code_bases: &[u32],
     strings: &mut StringInterner,
-) -> Result<SourceMap, RegisterLinkError> {
+) -> Result<SourceMap, LinkError> {
     let mut source_paths = Vec::new();
     let mut source_ids = HashMap::<String, SourceId>::new();
     let mut runs = Vec::new();
@@ -26,7 +26,7 @@ pub(super) fn merge(
             let first = function
                 .source_runs
                 .first()
-                .ok_or(RegisterLinkError::Overflow("initializer source run"))?;
+                .ok_or(LinkError::Overflow("initializer source run"))?;
             let source = intern_source(
                 object,
                 first.source,
@@ -51,7 +51,7 @@ pub(super) fn merge(
             )?;
             let instruction_start = code_bases[final_index]
                 .checked_add(run.instruction_start)
-                .ok_or(RegisterLinkError::Overflow("source instruction address"))?;
+                .ok_or(LinkError::Overflow("source instruction address"))?;
             runs.push(SourceRun {
                 instruction_start: InstructionAddress::new(instruction_start),
                 source,
@@ -72,16 +72,16 @@ fn intern_source(
     source_paths: &mut Vec<fpas_bytecode::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
     strings: &mut StringInterner,
-) -> Result<SourceId, RegisterLinkError> {
+) -> Result<SourceId, LinkError> {
     let path = object
         .sources
         .get(local_source as usize)
-        .ok_or(RegisterLinkError::Overflow("source path reference"))?;
+        .ok_or(LinkError::Overflow("source path reference"))?;
     if let Some(id) = source_ids.get(path) {
         return Ok(*id);
     }
     let id = SourceId::try_from_index(source_paths.len())
-        .map_err(|_| RegisterLinkError::Overflow("source IDs"))?;
+        .map_err(|_| LinkError::Overflow("source IDs"))?;
     source_paths.push(strings.intern(path)?);
     source_ids.insert(path.clone(), id);
     Ok(id)

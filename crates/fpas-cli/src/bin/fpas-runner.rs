@@ -48,11 +48,8 @@ fn run() -> i32 {
         .map(PathBuf::from)
         .collect::<Vec<_>>();
     let args = env::args().skip(1).collect();
-    let mut vm = fpas_vm::RegisterVm::with_writer_and_args(
-        image.into_executable(),
-        Box::new(io::stdout()),
-        args,
-    );
+    let mut vm =
+        fpas_vm::Vm::with_writer_and_args(image.into_executable(), Box::new(io::stdout()), args);
     if let Err(diagnostic) = vm.run() {
         let path = source_paths
             .get(usize::try_from(diagnostic.span.source_id()).unwrap_or(usize::MAX))

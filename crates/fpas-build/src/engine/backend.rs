@@ -1,10 +1,10 @@
-//! Register unit-object compilation adapter for the incremental engine.
+//! Unit-object compilation adapter for the incremental engine.
 
 use std::path::Path;
 
 use fpas_unit::interface::UnitInterface;
 use fpas_unit::object::{RelocatableObject, encode_object};
-use fpas_unit::{Digest, ExpectedUnitIdentity, RegisterSidecarLoad, load_register_sidecar};
+use fpas_unit::{Digest, ExpectedUnitIdentity, SidecarLoad, load_sidecar};
 
 use super::BuildError;
 
@@ -34,28 +34,28 @@ pub(super) trait UnitBackend {
     fn normalize(object: &mut Self::Object, source_id: u32);
 }
 
-pub(super) struct RegisterBackend;
+pub(super) struct Backend;
 
-impl UnitBackend for RegisterBackend {
+impl UnitBackend for Backend {
     type Object = RelocatableObject;
 
     fn load(
         source_path: &Path,
         expected: &ExpectedUnitIdentity,
     ) -> Result<Option<ReusableObject<Self::Object>>, BuildError> {
-        let loaded = load_register_sidecar(source_path, expected)
+        let loaded = load_sidecar(source_path, expected)
             .map_err(|error| BuildError::new(error.to_string()))?;
         Ok(match loaded {
-            RegisterSidecarLoad::Reusable(loaded) => Some(ReusableObject {
+            SidecarLoad::Reusable(loaded) => Some(ReusableObject {
                 interface_hash: loaded.compiled.identity.interface_hash,
                 object_hash: loaded.compiled.identity.object_hash,
                 interface: loaded.interface,
                 object: loaded.object,
             }),
-            RegisterSidecarLoad::Missing
-            | RegisterSidecarLoad::Stale(_)
-            | RegisterSidecarLoad::Incompatible(_)
-            | RegisterSidecarLoad::Corrupt(_) => None,
+            SidecarLoad::Missing
+            | SidecarLoad::Stale(_)
+            | SidecarLoad::Incompatible(_)
+            | SidecarLoad::Corrupt(_) => None,
         })
     }
 
@@ -64,7 +64,7 @@ impl UnitBackend for RegisterBackend {
         direct_interfaces: &[UnitInterface],
         supporting_interfaces: &[UnitInterface],
     ) -> Result<(UnitInterface, Self::Object), Vec<fpas_compiler::CompileError>> {
-        fpas_compiler::compile_register_unit_object_with_support(
+        fpas_compiler::compile_unit_object_with_support(
             unit,
             direct_interfaces,
             supporting_interfaces,

@@ -34,7 +34,7 @@ pub enum MethodCallTarget {
 }
 
 impl MethodCallTarget {
-    /// Qualified callable name used for `Op::Call` (e.g. `Point.Create`).
+    /// Qualified callable name used for calls (for example, `Point.Create`).
     #[must_use]
     pub fn qualified_name(&self) -> &str {
         match self {

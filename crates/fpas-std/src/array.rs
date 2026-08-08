@@ -131,7 +131,7 @@ mod tests {
     }
 
     fn run_array(intrinsic: ArrayIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        crate::run_intrinsic(Intrinsic::Array(intrinsic), stack, loc()).map(|_| ())
+        crate::execute_test_intrinsic(Intrinsic::Array(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

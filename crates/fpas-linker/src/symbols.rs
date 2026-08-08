@@ -6,7 +6,7 @@ use fpas_unit::object::{
     DefinitionTarget, ImportShape, ObjectDefinition, RelocatableObject, SymbolKind, SymbolReference,
 };
 
-use crate::RegisterLinkError;
+use crate::LinkError;
 
 #[derive(Debug, Clone, Copy)]
 pub(super) struct ResolvedTarget {
@@ -20,7 +20,7 @@ pub(super) struct SymbolTable {
 }
 
 impl SymbolTable {
-    pub(super) fn build(objects: &[&RelocatableObject]) -> Result<Self, RegisterLinkError> {
+    pub(super) fn build(objects: &[&RelocatableObject]) -> Result<Self, LinkError> {
         let mut definitions = BTreeMap::new();
         for (object_index, object) in objects.iter().enumerate() {
             for (definition_index, definition) in object.definitions.iter().enumerate() {
@@ -32,9 +32,7 @@ impl SymbolTable {
                         (existing_object, existing_definition),
                         (object_index, definition_index),
                     ) {
-                        return Err(RegisterLinkError::DuplicateDefinition(
-                            definition.name.clone(),
-                        ));
+                        return Err(LinkError::DuplicateDefinition(definition.name.clone()));
                     }
                     let existing = &objects[existing_object].definitions[existing_definition];
                     if definition.public && !existing.public {
@@ -51,7 +49,7 @@ impl SymbolTable {
             let mut resolved = Vec::with_capacity(object.imports.len());
             for import in &object.imports {
                 let Some(&(owner_index, definition_index)) = definitions.get(&import.name) else {
-                    return Err(RegisterLinkError::UnresolvedImport {
+                    return Err(LinkError::UnresolvedImport {
                         owner: object.owner.clone(),
                         name: import.name.clone(),
                         kind: import.shape.kind(),
@@ -60,13 +58,13 @@ impl SymbolTable {
                 let owner = objects[owner_index];
                 let definition = &owner.definitions[definition_index];
                 if owner_index == object_index || !definition.public {
-                    return Err(RegisterLinkError::PrivateImport {
+                    return Err(LinkError::PrivateImport {
                         owner: object.owner.clone(),
                         name: import.name.clone(),
                     });
                 }
                 if definition.target.kind() != import.shape.kind() {
-                    return Err(RegisterLinkError::ImportKind {
+                    return Err(LinkError::ImportKind {
                         owner: object.owner.clone(),
                         name: import.name.clone(),
                         expected: import.shape.kind(),
@@ -74,7 +72,7 @@ impl SymbolTable {
                     });
                 }
                 validate_shape(owner, definition, &import.shape).map_err(|detail| {
-                    RegisterLinkError::IncompatibleImport {
+                    LinkError::IncompatibleImport {
                         owner: object.owner.clone(),
                         name: import.name.clone(),
                         detail,
@@ -98,7 +96,7 @@ impl SymbolTable {
         object: usize,
         reference: SymbolReference,
         kind: SymbolKind,
-    ) -> Result<ResolvedTarget, RegisterLinkError> {
+    ) -> Result<ResolvedTarget, LinkError> {
         let resolved = match reference {
             SymbolReference::Local(index) => ResolvedTarget {
                 object,
@@ -113,10 +111,10 @@ impl SymbolTable {
                 .imports
                 .get(object)
                 .and_then(|values| values.get(index as usize))
-                .ok_or(RegisterLinkError::Overflow("import index"))?,
+                .ok_or(LinkError::Overflow("import index"))?,
         };
         if resolved.target.kind() != kind {
-            return Err(RegisterLinkError::ImportKind {
+            return Err(LinkError::ImportKind {
                 owner: object.to_string(),
                 name: format!("reference {reference:?}"),
                 expected: kind,

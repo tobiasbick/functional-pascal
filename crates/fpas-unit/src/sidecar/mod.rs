@@ -9,27 +9,14 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::interface::UnitInterface;
-use crate::object::{ChunkObject, RelocatableObject};
+use crate::object::RelocatableObject;
 use crate::{CompiledUnit, ExpectedUnitIdentity, FormatError};
 
-pub use validation::{
-    IncompatibilityReason, InvalidationReason, RegisterSidecarLoad, SidecarLoad, SidecarStatus,
-};
+pub use validation::{IncompatibilityReason, InvalidationReason, SidecarLoad, SidecarStatus};
 
-/// A reusable compiled unit whose semantic payloads and owner identities are validated.
+/// A reusable compiled unit carrying a validated relocatable object payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadedUnit {
-    /// Original hashed compiled-unit envelope.
-    pub compiled: CompiledUnit,
-    /// Decoded canonical public interface.
-    pub interface: UnitInterface,
-    /// Decoded validated relocatable object.
-    pub object: ChunkObject,
-}
-
-/// A reusable compiled unit carrying the P8 register object payload.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct LoadedRegisterUnit {
     /// Original hashed compiled-unit envelope.
     pub compiled: CompiledUnit,
     /// Decoded canonical public semantic interface.
@@ -84,26 +71,13 @@ pub fn sidecar_path(source_path: &Path) -> PathBuf {
 ///
 /// # Errors
 ///
-/// Returns [`SidecarError`] when the coordination lock or filesystem cannot
-/// be accessed. Invalid artifact contents are classified in [`SidecarLoad`].
+/// Returns [`SidecarError`] when the coordination lock or filesystem cannot be accessed. Invalid
+/// artifact contents are classified in [`SidecarLoad`].
 pub fn load_sidecar(
     source_path: &Path,
     expected: &ExpectedUnitIdentity,
 ) -> Result<SidecarLoad, SidecarError> {
     load_sidecar_with(source_path, expected, payload::validate)
-}
-
-/// Loads and validates a source-adjacent P8 register-object compiled unit.
-///
-/// # Errors
-///
-/// Returns [`SidecarError`] when the coordination lock or filesystem cannot be accessed. Invalid
-/// artifact contents are classified in [`RegisterSidecarLoad`].
-pub fn load_register_sidecar(
-    source_path: &Path,
-    expected: &ExpectedUnitIdentity,
-) -> Result<RegisterSidecarLoad, SidecarError> {
-    load_sidecar_with(source_path, expected, payload::validate_register)
 }
 
 fn load_sidecar_with<T>(

@@ -1,7 +1,5 @@
 //! Deterministic relocatable register-bytecode unit objects.
 
-mod chunk;
-mod chunk_relocation;
 mod codec;
 mod conversion;
 mod error;
@@ -15,13 +13,6 @@ use std::collections::BTreeMap;
 
 use fpas_bytecode::{Instruction, VerifiedExecutable};
 
-pub use chunk::{
-    ChunkObject, DefinitionKind as ChunkDefinitionKind, ObjectConstant as ChunkConstant,
-    ObjectDefinition as ChunkDefinition, ObjectError as ChunkObjectError,
-    ObjectFunction as ChunkFunction, ObjectImport as ChunkImport, ObjectLocation as ChunkLocation,
-    Relocation as ChunkRelocation, RelocationKind as ChunkRelocationKind,
-    collect_relocations as collect_chunk_relocations, decode_chunk_object, encode_chunk_object,
-};
 pub use codec::{decode_object, encode_object};
 pub use error::ObjectError;
 pub use function::{ObjectFunction, ObjectReturn};
@@ -41,7 +32,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const REGISTER_OBJECT_VERSION: u16 = 1;
+pub const OBJECT_VERSION: u16 = 1;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -226,7 +217,7 @@ impl RelocatableObject {
         }
         let entry = Some(u32::from(executable.entry.get()));
         let mut object = Self {
-            version: REGISTER_OBJECT_VERSION,
+            version: OBJECT_VERSION,
             owner: canonical(&owner.into()),
             entry,
             initializer: None,
@@ -299,10 +290,10 @@ impl RelocatableObject {
     ///
     /// Returns a structured [`ObjectError`] for the first deterministic violation.
     pub fn validate(&self) -> Result<(), ObjectError> {
-        if self.version != REGISTER_OBJECT_VERSION {
+        if self.version != OBJECT_VERSION {
             return Err(ObjectError::Version {
                 actual: self.version,
-                expected: REGISTER_OBJECT_VERSION,
+                expected: OBJECT_VERSION,
             });
         }
         if self.owner.is_empty() || self.owner != canonical(&self.owner) {

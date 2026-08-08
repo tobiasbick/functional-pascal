@@ -1,260 +1,191 @@
+//! Relocatable register-object conversion, codec, and validation tests.
+
 #![allow(
     clippy::expect_used,
-    reason = "object fixtures use expect for compact round-trip assertions"
+    reason = "focused object fixtures use explicit expectations"
 )]
 
-use std::collections::BTreeMap;
-
-use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
+use fpas_bytecode::{
+    CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
+    FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
+    RecordField, RecordLayout, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
+    StringTable,
+};
 use fpas_unit::object::{
-    ChunkConstant as ObjectConstant, ChunkFunction as ObjectFunction,
-    ChunkLocation as ObjectLocation, ChunkObject as RelocatableObject,
-    ChunkObjectError as ObjectError, collect_chunk_relocations as collect_relocations,
-    decode_chunk_object as decode_object, encode_chunk_object as encode_object,
+    OBJECT_VERSION, ObjectError, RelocatableObject, RelocationKind, decode_object, encode_object,
 };
 
-fn object_with_all_relocation_shapes() -> RelocatableObject {
+fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
+    Instruction::abc(opcode, a, b, c, 0).expect("valid ABC fixture")
+}
+
+fn candidate() -> Executable {
     let code = vec![
-        Op::Constant(0),
-        Op::GetGlobal(1),
-        Op::SetGlobal(1),
-        Op::GlobalIndexSet(1, 2),
-        Op::Call(1, 0),
-        Op::MakeClosure(1, 0),
-        Op::MakeRecord(1, 0),
-        Op::FieldGet(1),
-        Op::FieldSet(1),
-        Op::MakeEnum(1, 2, 0),
-        Op::IsVariant(1, 2),
-        Op::Jump(12),
-        Op::Halt,
+        Instruction::abx(Opcode::LoadConstant, 0, 0).expect("constant"),
+        Instruction::abx(Opcode::StoreGlobal, 0, 0).expect("global"),
+        abc(Opcode::MakeRecord, 1, 0, 0),
+        abc(Opcode::LoadField, 2, 1, 0),
+        abc(Opcode::MakeEnum, 3, 0, 2),
+        abc(Opcode::TestVariant, 4, 3, 0),
+        abc(Opcode::LoadEnumField, 5, 3, 0),
+        Instruction::abc(Opcode::CallDirect, NO_REGISTER, 1, 0, 0).expect("direct call"),
+        abc(Opcode::Return, NO_REGISTER, 0, 0),
+        abc(Opcode::Return, NO_REGISTER, 0, 0),
     ];
-    RelocatableObject {
-        owner: "demo.unit".to_string(),
-        constants: vec![
-            ObjectConstant::Integer(42),
-            ObjectConstant::String("demo.unit.name".to_string()),
-            ObjectConstant::String("Variant".to_string()),
-        ],
-        locations: vec![
-            ObjectLocation {
-                line: 1,
-                column: 1,
-                source_id: 2,
-            };
-            code.len()
-        ],
-        functions: BTreeMap::from([(
-            "demo.unit.run".to_string(),
-            ObjectFunction {
-                code_start: 0,
-                arity: 0,
-            },
-        )]),
-        definitions: Vec::new(),
-        imports: Vec::new(),
-        relocations: collect_relocations(&code),
+    Executable {
         code,
-    }
-}
-
-#[test]
-fn relocatable_object_round_trip_preserves_operands_and_locations() {
-    let object = object_with_all_relocation_shapes();
-    let bytes = encode_object(&object).expect("object encoding");
-    assert_eq!(decode_object(&bytes).expect("object decoding"), object);
-}
-
-#[test]
-fn relocation_discovery_is_deterministic_and_covers_both_enum_constants() {
-    let object = object_with_all_relocation_shapes();
-    assert_eq!(object.relocations, collect_relocations(&object.code));
-    let enum_relocations = object
-        .relocations
-        .iter()
-        .filter(|relocation| relocation.instruction == 9)
-        .count();
-    assert_eq!(enum_relocations, 2);
-}
-
-#[test]
-fn validation_rejects_missing_or_extra_relocations() {
-    let mut object = object_with_all_relocation_shapes();
-    object.relocations.pop();
-    assert!(object.validate().is_err());
-}
-
-#[test]
-fn validation_rejects_out_of_range_constant_operands() {
-    let mut object = object_with_all_relocation_shapes();
-    object.code[0] = Op::Constant(99);
-    object.relocations = collect_relocations(&object.code);
-    assert!(object.validate().is_err());
-}
-
-#[test]
-fn object_from_chunk_preserves_constants_locations_and_functions() {
-    let mut chunk = Chunk::new();
-    let name = chunk
-        .add_constant(Value::Str(("demo.unit.run".to_string()).into()))
-        .expect("constant");
-    chunk.emit(Op::Constant(name), SourceLocation::new_with_source(4, 2, 7));
-    chunk.emit(Op::Halt, SourceLocation::new_with_source(5, 1, 7));
-    chunk.insert_function("demo.unit.run", 0, 2);
-
-    let object = RelocatableObject::from_chunk("demo.unit", &chunk, Vec::new(), Vec::new())
-        .expect("object conversion");
-
-    assert_eq!(
-        object.constants,
-        vec![ObjectConstant::String("demo.unit.run".to_string())]
-    );
-    assert_eq!(object.locations[0].source_id, 7);
-    assert_eq!(object.functions["demo.unit.run"].arity, 2);
-    assert_eq!(object.relocations, collect_relocations(chunk.code()));
-}
-
-#[test]
-fn validation_rejects_instruction_stream_without_final_halt() {
-    let mut object = object_with_all_relocation_shapes();
-    object.code.pop();
-    object.locations.pop();
-    object.relocations = collect_relocations(&object.code);
-
-    assert_eq!(object.validate(), Err(ObjectError::MissingHalt));
-}
-
-#[test]
-fn validation_rejects_multiple_trailing_halts() {
-    let mut object = object_with_all_relocation_shapes();
-    object.code.insert(object.code.len() - 1, Op::Halt);
-    object.locations.push(ObjectLocation {
-        line: 1,
-        column: 1,
-        source_id: 2,
-    });
-    object.relocations = collect_relocations(&object.code);
-
-    assert_eq!(
-        object.validate(),
-        Err(ObjectError::InternalHalt {
-            instruction: object.code.len() - 2,
-        })
-    );
-}
-
-#[test]
-fn validation_rejects_internal_halt_followed_by_code() {
-    let mut object = object_with_all_relocation_shapes();
-    object.code.insert(1, Op::Halt);
-    object.locations.push(ObjectLocation {
-        line: 1,
-        column: 1,
-        source_id: 2,
-    });
-    object.relocations = collect_relocations(&object.code);
-
-    assert_eq!(
-        object.validate(),
-        Err(ObjectError::InternalHalt { instruction: 1 })
-    );
-}
-
-#[test]
-fn validation_rejects_mismatched_location_count() {
-    let mut object = object_with_all_relocation_shapes();
-    object.locations.pop();
-
-    assert_eq!(
-        object.validate(),
-        Err(ObjectError::LocationCount {
-            code: object.code.len(),
-            locations: object.code.len() - 1,
-        })
-    );
-}
-
-#[test]
-fn validation_rejects_function_offset_outside_instruction_stream() {
-    let mut object = object_with_all_relocation_shapes();
-    object.functions.insert(
-        "demo.unit.invalid".to_string(),
-        ObjectFunction {
-            code_start: object.code.len() as u32,
-            arity: 0,
-        },
-    );
-
-    assert!(matches!(
-        object.validate(),
-        Err(ObjectError::FunctionOffset { name, .. }) if name == "demo.unit.invalid"
-    ));
-}
-
-#[test]
-fn validation_rejects_jump_target_outside_instruction_stream() {
-    let mut object = object_with_all_relocation_shapes();
-    object.code[11] = Op::Jump((object.code.len() + 1) as u32);
-    object.relocations = collect_relocations(&object.code);
-
-    assert!(matches!(
-        object.validate(),
-        Err(ObjectError::CodeTarget {
-            instruction: 11,
-            target,
-            code,
-        }) if target == code as u32 + 1
-    ));
-}
-
-#[test]
-fn object_from_chunk_preserves_every_persistent_constant_kind() {
-    let mut chunk = Chunk::new();
-    for value in [
-        Value::Integer(-7),
-        Value::Real(1.5),
-        Value::Boolean(true),
-        Value::Str(("name".to_string()).into()),
-        Value::Unit,
-        Value::function("demo.run".to_string(), Vec::new(), true),
-    ] {
-        chunk.add_constant(value).expect("constant");
-    }
-    chunk.emit(Op::Halt, SourceLocation::new(1, 1));
-
-    let object = RelocatableObject::from_chunk("demo", &chunk, Vec::new(), Vec::new())
-        .expect("object conversion");
-
-    assert_eq!(
-        object.constants,
-        vec![
-            ObjectConstant::Integer(-7),
-            ObjectConstant::Real(1.5_f64.to_bits()),
-            ObjectConstant::Boolean(true),
-            ObjectConstant::String("name".to_string()),
-            ObjectConstant::Unit,
-            ObjectConstant::Function {
-                name: "demo.run".to_string(),
-                task_bound: true,
+        functions: vec![
+            FunctionInfo {
+                name: StringId::new(0),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(9)),
+                arity: 0,
+                capture_count: 0,
+                register_count: 6,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
             },
-        ]
+            FunctionInfo {
+                name: StringId::new(1),
+                code: CodeRange::new(InstructionAddress::new(9), InstructionAddress::new(10)),
+                arity: 0,
+                capture_count: 0,
+                register_count: 0,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
+            },
+        ],
+        constants: vec![Constant::String(StringId::new(2))],
+        strings: StringTable::new(vec![
+            "demo.main".to_string(),
+            "demo.helper".to_string(),
+            "value".to_string(),
+            "demo.global".to_string(),
+            "demo.record".to_string(),
+            "field".to_string(),
+            "demo.enum".to_string(),
+            "item".to_string(),
+            "fixture.fpas".to_string(),
+        ]),
+        globals: vec![GlobalInfo {
+            name: StringId::new(3),
+            mutable: true,
+        }],
+        records: vec![RecordLayout {
+            name: StringId::new(4),
+            fields: vec![RecordField {
+                name: StringId::new(5),
+            }],
+        }],
+        enums: vec![EnumLayout {
+            name: StringId::new(6),
+        }],
+        enum_variants: vec![EnumVariant {
+            owner: EnumTypeId::new(0),
+            name: StringId::new(7),
+            fields: vec![StringId::new(5)],
+        }],
+        source_map: SourceMap {
+            sources: vec![StringId::new(8)],
+            runs: vec![
+                SourceRun {
+                    instruction_start: InstructionAddress::new(0),
+                    source: SourceId::new(0),
+                    line: 1,
+                    column: 1,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(9),
+                    source: SourceId::new(0),
+                    line: 4,
+                    column: 1,
+                },
+            ],
+        },
+        entry: FunctionId::new(0),
+    }
+}
+
+fn object() -> RelocatableObject {
+    RelocatableObject::from_executable(
+        "demo.program",
+        candidate().verify().expect("verified fixture"),
+    )
+    .expect("relocatable object")
+}
+
+#[test]
+fn conversion_covers_every_register_table_operand_and_is_deterministic() {
+    let first = object();
+    let second = object();
+    assert_eq!(first, second);
+    assert_eq!(first.version, OBJECT_VERSION);
+    assert_eq!(first.functions[1].source_runs[0].instruction_start, 0);
+    assert!(
+        first
+            .relocations
+            .iter()
+            .any(|relocation| matches!(relocation.kind, RelocationKind::Function(_)))
+    );
+    assert!(
+        first
+            .relocations
+            .iter()
+            .any(|relocation| matches!(relocation.kind, RelocationKind::EnumVariant { .. }))
+    );
+    let first_bytes = encode_object(&first).expect("first encoding");
+    let second_bytes = encode_object(&second).expect("second encoding");
+    assert_eq!(first_bytes, second_bytes);
+    assert_eq!(decode_object(&first_bytes).expect("round trip"), first);
+}
+
+#[test]
+fn incompatible_object_version_is_rejected_before_linking() {
+    let mut object = object();
+    object.version = OBJECT_VERSION - 1;
+    assert_eq!(
+        object.validate(),
+        Err(ObjectError::Version {
+            actual: OBJECT_VERSION - 1,
+            expected: OBJECT_VERSION,
+        })
     );
 }
 
 #[test]
-fn object_from_chunk_rejects_captured_function_constants() {
-    let mut chunk = Chunk::new();
-    chunk
-        .add_constant(Value::function(
-            "demo.closure".to_string(),
-            vec![Value::Integer(1)],
-            false,
-        ))
-        .expect("constant");
-    chunk.emit(Op::Halt, SourceLocation::new(1, 1));
+fn missing_and_wrong_relocation_coverage_is_rejected() {
+    let mut missing = object();
+    missing.relocations.remove(0);
+    assert!(matches!(
+        missing.validate(),
+        Err(ObjectError::RelocationCoverage { .. })
+    ));
 
-    assert_eq!(
-        RelocatableObject::from_chunk("demo", &chunk, Vec::new(), Vec::new()),
-        Err(ObjectError::UnsupportedConstant("function".to_string()))
-    );
+    let mut wrong = object();
+    wrong.relocations[0].kind = RelocationKind::CodeAddress(0);
+    assert!(matches!(
+        wrong.validate(),
+        Err(ObjectError::RelocationCoverage { .. })
+    ));
+}
+
+#[test]
+fn every_truncated_object_prefix_is_rejected_without_panic() {
+    let bytes = encode_object(&object()).expect("object encoding");
+    for length in 0..bytes.len() {
+        assert!(
+            decode_object(&bytes[..length]).is_err(),
+            "truncated prefix {length} must fail"
+        );
+    }
+}
+
+#[test]
+fn duplicate_case_insensitive_definition_is_rejected_by_canonical_contract() {
+    let mut object = object();
+    let duplicate = object.definitions[0].clone();
+    object.definitions.push(duplicate);
+    assert!(matches!(
+        object.validate(),
+        Err(ObjectError::DuplicateName(_))
+    ));
 }

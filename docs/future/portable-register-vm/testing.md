@@ -119,7 +119,7 @@ P8 evidence is recorded in `p8-unit-objects-linker.md`. Register-object tests co
 conversion/codec round trips, truncation, versions, relocation coverage, and canonical ordering.
 Register-linker tests cover dependency-first numeric assignment, imports and visibility, callable
 ABI and layout compatibility, all current register table operand families, source rebasing, exact
-constant identity, fixed-width overflow, final verifier admission, and execution in `RegisterVm`.
+constant identity, fixed-width overflow, final verifier admission, and execution in `Vm`.
 Compiler integration additionally covers source-defined cross-unit calls, globals, records, and data
 enums rather than relying only on handcrafted object fixtures.
 Register build integration tests cover transitive independently compiled units, dependency
@@ -160,10 +160,10 @@ Add register alias permutations (`dst == left`, `dst == right`, all distinct) fo
 
 ## Calls, closures, and frames
 
-P4 evidence lives in `fpas-compiler/src/tests/register_subset/{functions,closures}.rs`,
-`fpas-vm/src/vm/register/tests/{calls,callbacks}.rs`, and the register-bytecode verifier suite.
-Compiler cases retain differential coverage against the legacy stack VM; direct VM cases isolate
-frame, capture, callback, and limit behavior without compiler coupling.
+Current coverage lives in `fpas-compiler/src/tests/{functions,closures}.rs`,
+`fpas-vm/src/vm/tests/{calls,callbacks}.rs`, and the bytecode verifier suite. Compiler cases execute
+the production compiler and VM path; direct VM cases isolate frame, capture, callback, and limit
+behavior without compiler coupling.
 
 Preserve and extend:
 

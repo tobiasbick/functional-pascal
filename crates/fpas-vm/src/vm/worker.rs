@@ -1,235 +1,355 @@
-//! Per-thread worker that executes bytecode for one task at a time.
-//!
-//! **Documentation:** `docs/pascal/language/concurrency/README.md`,
-//! `docs/pascal/language/concurrency/scheduling.md`
+//! Register-window state and execution loop.
 
-use super::diagnostics::{STACK_OVERFLOW_CODE, VmError};
-use super::shared::{SharedState, TaskState};
-use super::{CallFrame, STACK_MAX, TIMESLICE};
-use fpas_bytecode::{SourceLocation, Value};
-use std::sync::Arc;
+use std::cell::Cell;
+use std::sync::{Arc, RwLock};
 
-/// A worker runs on a single OS thread and executes tasks pulled from the shared queue.
-///
-/// The main program (task 0) is executed by the main worker directly.
-/// Additional workers are spawned in a thread pool to handle `go`-spawned tasks.
-pub(crate) struct Worker {
-    pub shared: Arc<SharedState>,
+use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value, VerifiedExecutable};
+use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY};
+
+use super::dispatch::DispatchStep;
+use super::frame::CallFrame;
+use super::hosted::HostedState;
+use super::layouts::RuntimeLayouts;
+use super::tasks::{TaskScheduler, TaskState};
+use super::{Execution, VmError, diagnostics};
+
+pub(super) struct Worker {
+    pub executable: Arc<VerifiedExecutable>,
+    pub function: FunctionId,
     pub ip: usize,
-    pub current_location: SourceLocation,
-    pub stack: Vec<Value>,
+    pub base: usize,
+    pub registers: Vec<Value>,
+    pub globals: Arc<RwLock<Vec<Option<Value>>>>,
+    pub layouts: Arc<RuntimeLayouts>,
+    pub hosted: Arc<HostedState>,
     pub call_stack: Vec<CallFrame>,
-    /// Procedure entered after the image's module initialization halts.
-    pub pending_entry_ip: Option<usize>,
-    pub current_task_id: u64,
-    pub current_task_retain_result: bool,
+    pub instruction_count: u64,
+    callback_instruction_count: Cell<u64>,
+    pub current_address: InstructionAddress,
+    pub scheduler: Option<Arc<TaskScheduler>>,
+    pub task_id: u64,
+    pub retain_result: bool,
     pub instructions_until_yield: u32,
-    pub sync_call_depth: u32,
-    /// Set by cooperative waits so the run loop returns without completing the current task.
-    pub task_suspended: bool,
-    /// Allows specific synchronous cleanup callbacks to run during global shutdown.
-    pub allow_shutdown_during_sync_call: bool,
+    pub suspend_requested: bool,
 }
 
 impl Worker {
-    /// Create a new worker for the main task (task 0, starts at ip=0).
+    pub(crate) fn record_value(
+        &self,
+        type_name: &str,
+        values: Vec<Value>,
+        location: fpas_bytecode::SourceLocation,
+    ) -> Result<Value, VmError> {
+        fpas_std::AggregateFactory::record(self.layouts.as_ref(), type_name, values, location)
+    }
+
     #[cfg(test)]
-    pub fn new_main(shared: Arc<SharedState>) -> Self {
-        Self::new_main_with_entry(shared, None)
+    pub fn new(executable: Arc<VerifiedExecutable>) -> Result<Self, VmError> {
+        let entry = executable.executable().entry;
+        let globals = Arc::new(RwLock::new(vec![
+            None;
+            executable.executable().globals.len()
+        ]));
+        let layouts = Arc::new(RuntimeLayouts::build(
+            executable.executable(),
+            InstructionAddress::new(0),
+        )?);
+        let hosted = Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new()));
+        Self::for_function_with_state(executable, entry, Vec::new(), globals, layouts, hosted)
     }
 
-    /// Create the main worker with an optional post-initialization entry point.
-    pub fn new_main_with_entry(shared: Arc<SharedState>, entry_ip: Option<usize>) -> Self {
-        Self {
-            shared,
-            ip: 0,
-            current_location: SourceLocation::new(1, 1),
-            stack: Vec::with_capacity(256),
-            call_stack: Vec::new(),
-            pending_entry_ip: entry_ip,
-            current_task_id: 0,
-            current_task_retain_result: false,
-            instructions_until_yield: TIMESLICE,
-            sync_call_depth: 0,
-            task_suspended: false,
-            allow_shutdown_during_sync_call: false,
+    pub fn for_function_with_state(
+        executable: Arc<VerifiedExecutable>,
+        entry: FunctionId,
+        arguments: Vec<Value>,
+        globals: Arc<RwLock<Vec<Option<Value>>>>,
+        layouts: Arc<RuntimeLayouts>,
+        hosted: Arc<HostedState>,
+    ) -> Result<Self, VmError> {
+        Self::for_function_with_captures(
+            executable,
+            entry,
+            arguments,
+            Vec::new(),
+            globals,
+            layouts,
+            hosted,
+        )
+    }
+
+    fn for_function_with_captures(
+        executable: Arc<VerifiedExecutable>,
+        entry: FunctionId,
+        arguments: Vec<Value>,
+        captures: Vec<Value>,
+        globals: Arc<RwLock<Vec<Option<Value>>>>,
+        layouts: Arc<RuntimeLayouts>,
+        hosted: Arc<HostedState>,
+    ) -> Result<Self, VmError> {
+        let image = executable.executable();
+        let info = image
+            .functions
+            .get(usize::from(entry.get()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    image,
+                    InstructionAddress::new(0),
+                    "Root function metadata is missing",
+                )
+            })?;
+        let start = info.code.start;
+        if arguments.len() != usize::from(info.arity)
+            || captures.len() != usize::from(info.capture_count)
+        {
+            return Err(diagnostics::internal(
+                image,
+                start,
+                format!(
+                    "Callback entry signature mismatch: expected {} arguments and {} captures, got {} arguments and {} captures",
+                    info.arity,
+                    info.capture_count,
+                    arguments.len(),
+                    captures.len()
+                ),
+            ));
         }
-    }
-
-    /// Create a worker for the thread pool (starts idle, picks tasks from queue).
-    pub fn new_pool(shared: Arc<SharedState>) -> Self {
-        Self {
-            shared,
-            ip: 0,
-            current_location: SourceLocation::new(1, 1),
-            stack: Vec::new(),
-            call_stack: Vec::new(),
-            pending_entry_ip: None,
-            current_task_id: u64::MAX, // sentinel — no task loaded
-            current_task_retain_result: false,
-            instructions_until_yield: TIMESLICE,
-            sync_call_depth: 0,
-            task_suspended: false,
-            allow_shutdown_during_sync_call: false,
+        let register_count = info.register_count;
+        let ip = usize::try_from(start.get()).map_err(|_| {
+            diagnostics::internal(
+                image,
+                start,
+                "Root instruction address does not fit this host",
+            )
+        })?;
+        let mut registers = vec![Value::Unit; usize::from(register_count)];
+        for (index, value) in arguments.into_iter().chain(captures).enumerate() {
+            registers[index] = value;
         }
+        Ok(Self {
+            executable,
+            function: entry,
+            ip,
+            base: 0,
+            registers,
+            globals,
+            layouts,
+            hosted,
+            call_stack: Vec::new(),
+            instruction_count: 0,
+            callback_instruction_count: Cell::new(0),
+            current_address: start,
+            scheduler: None,
+            task_id: 0,
+            retain_result: false,
+            instructions_until_yield: super::TIMESLICE,
+            suspend_requested: false,
+        })
     }
 
-    /// Load a task's saved state into this worker.
-    pub fn load_task(&mut self, task: TaskState) {
-        self.current_task_id = task.id;
-        self.ip = task.ip;
-        self.stack = task.stack;
-        self.call_stack = task.call_stack;
-        self.current_task_retain_result = task.retain_result;
-        self.instructions_until_yield = TIMESLICE;
-        self.task_suspended = false;
+    pub(super) fn with_scheduler(mut self, scheduler: Option<Arc<TaskScheduler>>) -> Self {
+        self.scheduler = scheduler;
+        self
     }
 
-    /// Save the current task's state so it can be enqueued for later resumption.
-    pub fn save_task(&mut self) -> TaskState {
-        TaskState {
-            id: self.current_task_id,
+    pub(super) fn pool_template(&self) -> Self {
+        Self {
+            executable: Arc::clone(&self.executable),
+            function: self.function,
             ip: self.ip,
-            stack: std::mem::take(&mut self.stack),
-            call_stack: std::mem::take(&mut self.call_stack),
-            retain_result: self.current_task_retain_result,
+            base: 0,
+            registers: Vec::new(),
+            globals: Arc::clone(&self.globals),
+            layouts: Arc::clone(&self.layouts),
+            hosted: Arc::clone(&self.hosted),
+            call_stack: Vec::new(),
+            instruction_count: 0,
+            callback_instruction_count: Cell::new(0),
+            current_address: self.current_address,
+            scheduler: self.scheduler.clone(),
+            task_id: 0,
+            retain_result: false,
+            instructions_until_yield: super::TIMESLICE,
+            suspend_requested: false,
         }
     }
 
-    /// Push a value onto this worker's stack.
-    pub(crate) fn push(&mut self, value: Value) -> Result<(), VmError> {
-        if self.stack.len() >= STACK_MAX {
-            return Err(super::runtime_error(
-                STACK_OVERFLOW_CODE,
-                "Stack overflow",
-                "Reduce recursion depth or intermediate stack usage in this expression.",
-                self.current_location,
-            ));
-        }
-        self.stack.push(value);
-        Ok(())
-    }
-
-    /// Push a call frame while enforcing the VM recursion limit.
-    ///
-    /// **Documentation:** `docs/pascal/language/functions/README.md`.
-    pub(crate) fn push_call_frame(
-        &mut self,
-        frame: CallFrame,
-        location: SourceLocation,
-    ) -> Result<(), VmError> {
-        if self.call_stack.len() >= STACK_MAX {
-            return Err(super::runtime_error(
-                STACK_OVERFLOW_CODE,
-                "Call stack overflow",
-                "Reduce recursion depth or replace recursive processing with an iterative approach.",
-                location,
-            ));
-        }
-        self.call_stack.push(frame);
-        Ok(())
-    }
-
-    /// Pop a value from this worker's stack.
-    pub(crate) fn pop(&mut self, location: SourceLocation) -> Result<Value, VmError> {
-        self.stack.pop().ok_or_else(|| {
-            super::internal_error(
-                "Stack underflow",
-                "This indicates a compiler/runtime stack layout bug. Please report it.",
-                location,
-            )
-        })
-    }
-
-    /// Peek at the top of the stack without removing.
-    pub(crate) fn peek(&self, location: SourceLocation) -> Result<&Value, VmError> {
-        self.stack.last().ok_or_else(|| {
-            super::internal_error(
-                "Stack underflow on peek",
-                "This indicates a compiler/runtime bug. Please report it.",
-                location,
-            )
-        })
-    }
-
-    /// Whether a value is truthy for branch instructions.
-    pub(crate) fn is_truthy(&self, value: &Value) -> bool {
-        match value {
-            Value::Boolean(b) => *b,
-            Value::Integer(n) => *n != 0,
-            Value::Unit => false,
-            Value::OptionNone => false,
-            _ => true,
+    pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
+        Self {
+            executable: Arc::clone(&self.executable),
+            function: task.function,
+            ip: task.ip,
+            base: task.base,
+            registers: task.registers,
+            globals: Arc::clone(&self.globals),
+            layouts: Arc::clone(&self.layouts),
+            hosted: Arc::clone(&self.hosted),
+            call_stack: task.frames,
+            instruction_count: task.instruction_count,
+            callback_instruction_count: Cell::new(0),
+            current_address: self.current_address,
+            scheduler: self.scheduler.clone(),
+            task_id: task.id,
+            retain_result: task.retain_result,
+            instructions_until_yield: super::TIMESLICE,
+            suspend_requested: false,
         }
     }
 
-    /// Pool-worker main loop: pull tasks from the shared queue and execute them.
-    ///
-    /// Returns when shutdown is signalled and no tasks remain.
-    ///
-    /// **Documentation:** `docs/pascal/language/concurrency/README.md` (Phases 5 and 9).
-    pub fn pool_loop(&mut self) -> Result<(), VmError> {
+    pub(super) fn take_task_state(&mut self) -> TaskState {
+        TaskState {
+            id: self.task_id,
+            function: self.function,
+            ip: self.ip,
+            base: self.base,
+            registers: std::mem::take(&mut self.registers),
+            frames: std::mem::take(&mut self.call_stack),
+            retain_result: self.retain_result,
+            instruction_count: self.instruction_count,
+        }
+    }
+
+    pub(super) fn suspend_and_enqueue(&mut self) {
+        if let Some(scheduler) = self.scheduler.clone() {
+            let state = self.take_task_state();
+            scheduler.enqueue(state);
+            self.suspend_requested = true;
+        }
+    }
+
+    pub(super) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
         loop {
-            // Fast path without locking: matches the common case when work is already queued.
-            // If the queue is empty, we lock and wait below — a second `pop` after the lock
-            // avoids missing a task that arrived between the try and `wait`.
-            if let Some(task) = self.shared.try_dequeue_task() {
-                self.load_task(task);
-                self.run_current_task()?;
-            } else if self.shared.is_shutdown() {
-                // Between the empty fast-path dequeue and observing shutdown, the main worker may
-                // have enqueued work and then signalled shutdown. Re-fetch before exiting so we do
-                // not leave runnable tasks stranded.
-                if let Some(task) = self.shared.try_dequeue_task() {
-                    self.load_task(task);
-                    self.run_current_task()?;
-                    continue;
-                }
-                return Ok(());
-            } else {
-                // Wait for task or shutdown signal.
-                let mut queue = self
-                    .shared
-                    .task_queue
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner());
-                // Re-check after acquiring lock.
-                if let Some(task) = queue.pop_front() {
-                    drop(queue);
-                    self.load_task(task);
-                    self.run_current_task()?;
-                } else if self.shared.is_shutdown() {
-                    return Ok(());
-                } else {
-                    let _guard = self
-                        .shared
-                        .task_available
-                        .wait(queue)
-                        .unwrap_or_else(|e| e.into_inner());
+            if self
+                .scheduler
+                .as_ref()
+                .is_some_and(|scheduler| scheduler.is_aborted())
+            {
+                return Ok(None);
+            }
+            match self.dispatch_one()? {
+                DispatchStep::Continue => {}
+                DispatchStep::Suspend => return Ok(None),
+                DispatchStep::Return(value) => return Ok(Some(value)),
+            }
+            if self.task_id != 0 {
+                self.instructions_until_yield = self.instructions_until_yield.saturating_sub(1);
+                if self.instructions_until_yield == 0 {
+                    self.suspend_and_enqueue();
+                    return Ok(None);
                 }
             }
         }
     }
 
-    /// Execute the currently loaded task until it completes or yields.
-    ///
-    /// `run()` stores the task result internally when a non-main task's
-    /// top-level function returns. This method only needs to wake waiters.
-    fn run_current_task(&mut self) -> Result<(), VmError> {
-        match self.run() {
-            Ok(()) => {
-                // Wake workers that might be waiting for this task's result.
-                self.shared.task_available.notify_all();
-                Ok(())
+    /// Invoke a first-class function synchronously through its numeric register target.
+    pub(super) fn call_callback_sync(
+        &self,
+        callback: &Value,
+        arguments: Vec<Value>,
+    ) -> Result<Value, VmError> {
+        let Value::Function(function) = callback else {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+                format!("Expected function value, got `{}`", callback.type_name()),
+                "Pass a named function or function-typed variable as the callback argument.",
+            ));
+        };
+        self.call_numeric_function(function, arguments)
+    }
+
+    fn call_numeric_function(
+        &self,
+        function: &SharedFunction,
+        arguments: Vec<Value>,
+    ) -> Result<Value, VmError> {
+        let target = function.function;
+        let info = self
+            .executable
+            .executable()
+            .functions
+            .get(usize::from(target.get()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Callback target is outside the function table",
+                )
+            })?;
+        if arguments.len() != usize::from(info.arity) {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_WRONG_CALL_ARITY,
+                format!(
+                    "Function `{}` expects {} arguments, got {}",
+                    function.name,
+                    info.arity,
+                    arguments.len()
+                ),
+                "Check the callback signature and the intrinsic's callback contract.",
+            ));
+        }
+        let execution = Self::for_function_with_captures(
+            Arc::clone(&self.executable),
+            target,
+            arguments,
+            function.captures.clone(),
+            Arc::clone(&self.globals),
+            Arc::clone(&self.layouts),
+            Arc::clone(&self.hosted),
+        )?
+        .with_scheduler(self.scheduler.clone())
+        .run()?;
+        self.callback_instruction_count.set(
+            self.callback_instruction_count
+                .get()
+                .saturating_add(execution.instruction_count),
+        );
+        Ok(execution.value)
+    }
+
+    pub fn run(mut self) -> Result<Execution, VmError> {
+        loop {
+            if self
+                .scheduler
+                .as_ref()
+                .is_some_and(|scheduler| scheduler.is_aborted())
+            {
+                return Err(diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                    "Register VM execution was canceled",
+                    "Create a new VM instance to run the program again.",
+                ));
             }
-            Err(e) => {
-                if self.current_task_retain_result {
-                    self.shared
-                        .store_task_failure(self.current_task_id, e.clone());
+            match self.dispatch_one()? {
+                DispatchStep::Continue => {}
+                DispatchStep::Suspend => {
+                    return Err(diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        "Root register execution suspended unexpectedly",
+                    ));
                 }
-                self.shared.signal_runtime_failure();
-                Err(e)
+                DispatchStep::Return(value) => {
+                    return Ok(Execution {
+                        value,
+                        instruction_count: self
+                            .instruction_count
+                            .saturating_add(self.callback_instruction_count.get()),
+                    });
+                }
             }
         }
+    }
+
+    pub fn unavailable_opcode(&self, opcode: fpas_bytecode::Opcode) -> VmError {
+        diagnostics::internal(
+            self.executable.executable(),
+            self.current_address,
+            format!("Opcode {opcode:?} is reserved and cannot be executed"),
+        )
     }
 }

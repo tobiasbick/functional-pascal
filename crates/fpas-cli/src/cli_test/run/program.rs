@@ -139,7 +139,7 @@ fn prepare_test_program(
                 return Err(TestOutcome::CompileError);
             }
         };
-        let executable = match fpas_compiler::compile_register_subset(&program) {
+        let executable = match fpas_compiler::compile(&program) {
             Ok(executable) => executable,
             Err(diagnostics) => {
                 if output.emit_fail_banner() {
@@ -198,7 +198,7 @@ pub(in crate::cli_test) fn run_prepared_program(
         display,
         output,
     } = prepared;
-    let mut vm = fpas_vm::RegisterVm::new(executable);
+    let mut vm = fpas_vm::Vm::new(executable);
     let script_config = match apply_test_script(
         &test_path,
         script_override.as_deref(),
@@ -304,7 +304,7 @@ fn render_assertion_error(stderr: &mut dyn Write, display: &str, output: RunOutp
     let _ = writeln!(stderr, "        {message}");
 }
 
-fn execute_vm(mut vm: fpas_vm::RegisterVm, headless_graph: bool) -> VmExecution {
+fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
     fpas_std::reset_test_skip_state();
 
     let mut run = || {

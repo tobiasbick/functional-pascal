@@ -131,7 +131,7 @@ fn help_exits_successfully_and_lists_every_group() -> Result<(), Box<dyn Error>>
         (
             output.status.code(),
             stderr,
-            stdout.contains("--group register-p7|register-p6|register-p5|vm|concurrency|tui"),
+            stdout.contains("--group vm|concurrency|tui"),
             stdout.contains("Examples:")
         ),
         (Some(0), String::new(), true, true)
@@ -152,7 +152,8 @@ fn unknown_group_lists_every_configured_group() -> Result<(), Box<dyn Error>> {
         (
             Some(1),
             String::new(),
-            "error: no benchmarks in group `missing` (known groups: register-p7, register-p6, register-p5, vm, concurrency, tui)".to_owned()
+            "error: no benchmarks in group `missing` (known groups: vm, concurrency, tui)"
+                .to_owned()
         )
     );
     Ok(())

@@ -13,7 +13,7 @@ pub use parse::{ScriptConfig, ScriptFile, load_script, sidecar_path_for_test};
 pub use parse::parse_script_text;
 
 /// Parses a script file and pushes its events into VM input queues.
-pub fn apply_script_to_vm(vm: &mut fpas_vm::RegisterVm, script: &ScriptFile) -> Result<(), String> {
+pub fn apply_script_to_vm(vm: &mut fpas_vm::Vm, script: &ScriptFile) -> Result<(), String> {
     apply::apply_script(vm, script)
 }
 

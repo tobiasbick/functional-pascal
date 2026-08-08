@@ -322,7 +322,7 @@ mod tests {
     fn abs_reports_overflow_for_min_integer() {
         let mut stack = vec![Value::Integer(i64::MIN)];
 
-        let error = crate::run_intrinsic(
+        let error = crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Abs),
             &mut stack,
             test_location(),
@@ -336,7 +336,7 @@ mod tests {
     fn floor_rejects_non_finite_values() {
         let mut stack = vec![Value::Real(f64::INFINITY)];
 
-        let error = crate::run_intrinsic(
+        let error = crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Floor),
             &mut stack,
             test_location(),
@@ -350,7 +350,7 @@ mod tests {
     fn trunc_rejects_out_of_range_values() {
         let mut stack = vec![Value::Real(1.0e300)];
 
-        let error = crate::run_intrinsic(
+        let error = crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Trunc),
             &mut stack,
             test_location(),
@@ -363,7 +363,7 @@ mod tests {
     #[test]
     fn floor_ceil_and_trunc_keep_negative_finite_semantics() {
         let mut floor_stack = vec![Value::Real(-3.2)];
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Floor),
             &mut floor_stack,
             test_location(),
@@ -372,7 +372,7 @@ mod tests {
         assert_eq!(floor_stack, vec![Value::Integer(-4)]);
 
         let mut ceil_stack = vec![Value::Real(-3.2)];
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Ceil),
             &mut ceil_stack,
             test_location(),
@@ -381,7 +381,7 @@ mod tests {
         assert_eq!(ceil_stack, vec![Value::Integer(-3)]);
 
         let mut trunc_stack = vec![Value::Real(-3.7)];
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Trunc),
             &mut trunc_stack,
             test_location(),
@@ -394,7 +394,7 @@ mod tests {
     fn round_accepts_regular_finite_values() {
         let mut stack = vec![Value::Real(2.6)];
 
-        crate::run_intrinsic(
+        crate::execute_test_intrinsic(
             Intrinsic::Math(MathIntrinsic::Round),
             &mut stack,
             test_location(),

@@ -104,7 +104,7 @@ mod tests {
     }
 
     fn run_fs(intrinsic: FsIntrinsic, stack: &mut Vec<Value>) {
-        crate::run_intrinsic(Intrinsic::Fs(intrinsic), stack, test_location()).unwrap();
+        crate::execute_test_intrinsic(Intrinsic::Fs(intrinsic), stack, test_location()).unwrap();
     }
 
     fn unique_temp_path(name: &str) -> String {

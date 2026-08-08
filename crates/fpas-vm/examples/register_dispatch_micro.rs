@@ -8,7 +8,7 @@ use fpas_bytecode::{
     InstructionAddress, Opcode, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
     StringTable,
 };
-use fpas_vm::RegisterVm;
+use fpas_vm::Vm;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let iterations = match std::env::args().nth(1) {
@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("iteration count must be positive".into());
     }
 
-    let mut vm = RegisterVm::new(loop_executable(iterations)?);
+    let mut vm = Vm::new(loop_executable(iterations)?);
     let started = Instant::now();
     let execution = vm
         .run()

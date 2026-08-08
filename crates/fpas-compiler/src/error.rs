@@ -1,23 +1,7 @@
+use fpas_diagnostics::Diagnostic;
 use fpas_diagnostics::codes::INTERNAL_COMPILER_INVARIANT_FAILURE;
-use fpas_diagnostics::{Diagnostic, DiagnosticCode};
-use fpas_lexer::Span;
 
 pub type CompileError = Diagnostic;
-
-#[must_use]
-pub fn compile_error(
-    code: DiagnosticCode,
-    message: impl Into<String>,
-    hint: impl Into<String>,
-    span: Span,
-) -> CompileError {
-    Diagnostic::error(
-        code,
-        message,
-        Some(hint.into()),
-        span.diagnostic_span_or_synthetic(),
-    )
-}
 
 #[must_use]
 pub fn internal_compiler_error(

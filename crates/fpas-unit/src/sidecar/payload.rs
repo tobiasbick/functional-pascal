@@ -4,33 +4,17 @@ use std::collections::HashSet;
 
 use crate::CompiledUnit;
 use crate::interface::{UnitInterface, decode_interface};
-use crate::object::{decode_chunk_object, decode_object};
+use crate::object::decode_object;
 
-use super::{LoadedRegisterUnit, LoadedUnit, SidecarCorruption};
+use super::{LoadedUnit, SidecarCorruption};
 
 pub(super) fn validate(compiled: CompiledUnit) -> Result<LoadedUnit, SidecarCorruption> {
-    let interface =
-        decode_interface(&compiled.interface).map_err(|_| SidecarCorruption::InterfacePayload)?;
-    let object =
-        decode_chunk_object(&compiled.object).map_err(|_| SidecarCorruption::ObjectPayload)?;
-    validate_identity(&compiled, &interface, &object.owner)?;
-    validate_symbols(&interface)?;
-    Ok(LoadedUnit {
-        compiled,
-        interface,
-        object,
-    })
-}
-
-pub(super) fn validate_register(
-    compiled: CompiledUnit,
-) -> Result<LoadedRegisterUnit, SidecarCorruption> {
     let interface =
         decode_interface(&compiled.interface).map_err(|_| SidecarCorruption::InterfacePayload)?;
     let object = decode_object(&compiled.object).map_err(|_| SidecarCorruption::ObjectPayload)?;
     validate_identity(&compiled, &interface, &object.owner)?;
     validate_symbols(&interface)?;
-    Ok(LoadedRegisterUnit {
+    Ok(LoadedUnit {
         compiled,
         interface,
         object,

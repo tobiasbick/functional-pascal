@@ -134,7 +134,7 @@ mod tests {
     fn result_unwrap_or_rejects_non_result_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = crate::run_intrinsic(
+        let error = crate::execute_test_intrinsic(
             Intrinsic::Result(ResultIntrinsic::UnwrapOr),
             &mut stack,
             test_location(),
@@ -152,7 +152,7 @@ mod tests {
     fn option_unwrap_or_rejects_non_option_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = crate::run_intrinsic(
+        let error = crate::execute_test_intrinsic(
             Intrinsic::Option(OptionIntrinsic::UnwrapOr),
             &mut stack,
             test_location(),

@@ -1,6 +1,7 @@
-//! AST and semantic-metadata lowering for the register compiler.
+//! AST and semantic-metadata lowering to typed IR.
 
 mod aggregates;
+mod builtin_constants;
 mod calls;
 mod case;
 mod closures;
@@ -39,8 +40,8 @@ pub(crate) struct LoweredUnit {
 /// # Errors
 ///
 /// Returns all semantic diagnostics, or one structured compiler diagnostic when the source uses a
-/// construct assigned to a later register-VM phase.
-pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
+/// construct that cannot be lowered.
+pub fn lower(program: &AstProgram) -> Result<Program, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_with_types(program);
     if !metadata.errors.is_empty() {
         return Err(metadata.errors);
@@ -57,7 +58,7 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
     .map(|lowered| lowered.program)
 }
 
-pub(crate) fn lower_register_unit_subset(
+pub(crate) fn lower_unit(
     unit: &Unit,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
@@ -86,7 +87,7 @@ pub(crate) fn lower_register_unit_subset(
     )
 }
 
-pub(crate) fn lower_register_program_with_support(
+pub(crate) fn lower_program_with_support(
     program: &AstProgram,
     interfaces: &[fpas_unit::interface::UnitInterface],
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],

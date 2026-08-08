@@ -9,6 +9,31 @@ fn typed_scalar_aggregate_call_closure_intrinsic_and_task_operations_are_valid()
 }
 
 #[test]
+fn variadic_intrinsics_repeat_the_last_parameter_type() -> Result<(), String> {
+    let mut program = all_operations_program();
+    program.intrinsics[0].variadic = true;
+    let intrinsic = program.functions[0].blocks[0]
+        .instructions
+        .iter_mut()
+        .find(|instruction| matches!(instruction.operation, Operation::Intrinsic { .. }))
+        .ok_or_else(|| "intrinsic fixture is missing".to_owned())?;
+    let Operation::Intrinsic { arguments, .. } = &mut intrinsic.operation else {
+        unreachable!()
+    };
+    *arguments = vec![ValueId::new(1), ValueId::new(1), ValueId::new(1)];
+    assert!(program.validate().is_ok());
+    Ok(())
+}
+
+#[test]
+fn variadic_intrinsics_reject_fewer_than_the_fixed_prefix() {
+    let mut program = all_operations_program();
+    program.intrinsics[0].parameters = vec![INTEGER, INTEGER];
+    program.intrinsics[0].variadic = true;
+    assert!(program.validate().is_err());
+}
+
+#[test]
 fn p3_unary_operations_are_typed_and_valid() {
     let mut program = scalar_program();
     program.functions[0].blocks[0].instructions = vec![

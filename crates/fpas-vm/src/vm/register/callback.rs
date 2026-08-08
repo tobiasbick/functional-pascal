@@ -5,6 +5,7 @@ use std::sync::{Arc, RwLock};
 use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
+use super::hosted::HostedState;
 use super::layouts::RuntimeLayouts;
 use super::worker::RegisterWorker;
 use super::{RegisterExecution, VmError, diagnostics};
@@ -18,6 +19,7 @@ pub struct RegisterCallbackSession {
     stopped: bool,
     globals: Arc<RwLock<Vec<Option<Value>>>>,
     layouts: Result<Arc<RuntimeLayouts>, VmError>,
+    hosted: Arc<HostedState>,
 }
 
 impl RegisterCallbackSession {
@@ -44,6 +46,7 @@ impl RegisterCallbackSession {
             stopped: false,
             globals,
             layouts,
+            hosted: Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new())),
         }
     }
 
@@ -67,6 +70,7 @@ impl RegisterCallbackSession {
             arguments,
             Arc::clone(&self.globals),
             self.layouts.clone()?,
+            Arc::clone(&self.hosted),
         )?
         .run()
     }

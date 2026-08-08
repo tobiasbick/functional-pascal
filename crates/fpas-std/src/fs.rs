@@ -15,51 +15,51 @@ use std::path::Path;
 use fpas_bytecode::{FsIntrinsic, Intrinsic, SourceLocation, Value};
 
 use crate::error::StdError;
-use crate::intrinsic_args::{pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 
 /// Execute a `Std.Fs` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Fs(FsIntrinsic::ReadText) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_string(read::read_text_limited(&path)));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_string(read::read_text_limited(&path)));
         }
         Intrinsic::Fs(FsIntrinsic::WriteText) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_bool(fs::write(path, text)));
+            let text = pop_string(pop_value(call, location)?, location)?;
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::write(path, text)));
         }
         Intrinsic::Fs(FsIntrinsic::WriteTextAtomic) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_bool(publication::write_text_atomic(
+            let text = pop_string(pop_value(call, location)?, location)?;
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(publication::write_text_atomic(
                 Path::new(&path),
                 &text,
             )));
         }
         Intrinsic::Fs(FsIntrinsic::Exists) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Boolean(Path::new(&path).exists()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(Path::new(&path).exists()));
         }
         Intrinsic::Fs(FsIntrinsic::IsFile) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Boolean(Path::new(&path).is_file()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(Path::new(&path).is_file()));
         }
         Intrinsic::Fs(FsIntrinsic::IsDir) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Boolean(Path::new(&path).is_dir()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(Path::new(&path).is_dir()));
         }
         Intrinsic::Fs(FsIntrinsic::CreateDir) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_bool(fs::create_dir(path)));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_bool(fs::create_dir(path)));
         }
         Intrinsic::Fs(FsIntrinsic::Glob) => {
-            let pattern = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(result_string_array(glob::glob_paths(&pattern)));
+            let pattern = pop_string(pop_value(call, location)?, location)?;
+            call.push(result_string_array(glob::glob_paths(&pattern)));
         }
         _ => return Ok(None),
     }
@@ -104,7 +104,7 @@ mod tests {
     }
 
     fn run_fs(intrinsic: FsIntrinsic, stack: &mut Vec<Value>) {
-        run(Intrinsic::Fs(intrinsic), stack, test_location()).unwrap();
+        crate::run_intrinsic(Intrinsic::Fs(intrinsic), stack, test_location()).unwrap();
     }
 
     fn unique_temp_path(name: &str) -> String {

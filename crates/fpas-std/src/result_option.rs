@@ -3,20 +3,20 @@
 //! **Documentation:** `docs/pascal/std/result/result.md` and `docs/pascal/std/result/option.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::pop_value;
+use crate::intrinsic_args::{IntrinsicCall, pop_value};
 use fpas_bytecode::{Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_UNWRAP_FAILURE;
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Result(ResultIntrinsic::Unwrap) => {
-            let val = pop_value(stack, location)?;
+            let val = pop_value(call, location)?;
             match val {
-                Value::ResultOk(inner) => stack.push(*inner),
+                Value::ResultOk(inner) => call.push((**inner).clone()),
                 Value::ResultError(e) => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
@@ -39,11 +39,11 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Result(ResultIntrinsic::UnwrapOr) => {
-            let default = pop_value(stack, location)?;
-            let val = pop_value(stack, location)?;
+            let default = pop_value(call, location)?;
+            let val = pop_value(call, location)?;
             match val {
-                Value::ResultOk(inner) => stack.push(*inner),
-                Value::ResultError(_) => stack.push(default),
+                Value::ResultOk(inner) => call.push((**inner).clone()),
+                Value::ResultError(_) => call.push(default.clone()),
                 _ => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
@@ -58,17 +58,17 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Result(ResultIntrinsic::IsOk) => {
-            let val = pop_value(stack, location)?;
-            stack.push(Value::Boolean(matches!(val, Value::ResultOk(_))));
+            let val = pop_value(call, location)?;
+            call.push(Value::Boolean(matches!(val, Value::ResultOk(_))));
         }
         Intrinsic::Result(ResultIntrinsic::IsError) => {
-            let val = pop_value(stack, location)?;
-            stack.push(Value::Boolean(matches!(val, Value::ResultError(_))));
+            let val = pop_value(call, location)?;
+            call.push(Value::Boolean(matches!(val, Value::ResultError(_))));
         }
         Intrinsic::Option(OptionIntrinsic::Unwrap) => {
-            let val = pop_value(stack, location)?;
+            let val = pop_value(call, location)?;
             match val {
-                Value::OptionSome(inner) => stack.push(*inner),
+                Value::OptionSome(inner) => call.push((**inner).clone()),
                 Value::OptionNone => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
@@ -91,11 +91,11 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Option(OptionIntrinsic::UnwrapOr) => {
-            let default = pop_value(stack, location)?;
-            let val = pop_value(stack, location)?;
+            let default = pop_value(call, location)?;
+            let val = pop_value(call, location)?;
             match val {
-                Value::OptionSome(inner) => stack.push(*inner),
-                Value::OptionNone => stack.push(default),
+                Value::OptionSome(inner) => call.push((**inner).clone()),
+                Value::OptionNone => call.push(default.clone()),
                 _ => {
                     return Err(std_runtime_error(
                         RUNTIME_UNWRAP_FAILURE,
@@ -110,12 +110,12 @@ pub(crate) fn run(
             }
         }
         Intrinsic::Option(OptionIntrinsic::IsSome) => {
-            let val = pop_value(stack, location)?;
-            stack.push(Value::Boolean(matches!(val, Value::OptionSome(_))));
+            let val = pop_value(call, location)?;
+            call.push(Value::Boolean(matches!(val, Value::OptionSome(_))));
         }
         Intrinsic::Option(OptionIntrinsic::IsNone) => {
-            let val = pop_value(stack, location)?;
-            stack.push(Value::Boolean(matches!(val, Value::OptionNone)));
+            let val = pop_value(call, location)?;
+            call.push(Value::Boolean(matches!(val, Value::OptionNone)));
         }
         _ => return Ok(None),
     }
@@ -134,7 +134,7 @@ mod tests {
     fn result_unwrap_or_rejects_non_result_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(
+        let error = crate::run_intrinsic(
             Intrinsic::Result(ResultIntrinsic::UnwrapOr),
             &mut stack,
             test_location(),
@@ -152,7 +152,7 @@ mod tests {
     fn option_unwrap_or_rejects_non_option_values() {
         let mut stack = vec![Value::Integer(1), Value::Integer(99)];
 
-        let error = run(
+        let error = crate::run_intrinsic(
             Intrinsic::Option(OptionIntrinsic::UnwrapOr),
             &mut stack,
             test_location(),

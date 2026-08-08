@@ -414,7 +414,7 @@ impl TypeTable {
 
 fn type_error(construct: &str, span: fpas_lexer::Span) -> CompileError {
     internal_compiler_error(
-        format!("Type `{construct}` is outside the P5 register subset."),
+        format!("Type `{construct}` is outside the P6 register subset."),
         "Use a supported scalar, aggregate, function, or procedure type in this development path.",
         span.line,
         span.column,

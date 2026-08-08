@@ -3,7 +3,7 @@ mod closure;
 mod concurrency;
 mod control_calls;
 mod enums;
-mod io;
+pub(crate) mod io;
 mod numeric;
 mod result_option;
 mod stack_scope;

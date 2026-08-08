@@ -172,6 +172,24 @@ impl Worker {
     }
 }
 
+pub(crate) fn console_key_event_from_value(
+    value: &Value,
+    line: SourceLocation,
+) -> Result<ConsoleKeyEvent, VmError> {
+    const KEY: &str = "Std.Console.KeyEvent";
+    match value {
+        Value::Record(record) if record.type_name == KEY || record.type_name == "<record>" => {
+            Worker::console_key_event_from_fields(&record.fields, line)
+        }
+        other => Err(runtime_error(
+            TYPE_MISMATCH_CODE,
+            format!("Expected {KEY}, got {}", other.type_name()),
+            "Pass a `Std.Console.KeyEvent` value.",
+            line,
+        )),
+    }
+}
+
 fn key_event_char_value(ch: char) -> Value {
     if ch == '\0' {
         Value::Str(String::new().into())
@@ -187,4 +205,12 @@ fn key_event_char_from_string(value: &str) -> char {
         (Some(ch), None) => ch,
         (Some(ch), _) => ch,
     }
+}
+
+pub(crate) fn key_event_record(event: ConsoleKeyEvent) -> Value {
+    Worker::key_event_record(event)
+}
+
+pub(crate) fn console_event_record(event: fpas_std::ConsoleEvent) -> Value {
+    Worker::console_event_record(event)
 }

@@ -64,6 +64,19 @@ fn operation_width(program: &Program, operation: &Operation) -> Result<u32, Comp
             arguments.len().saturating_add(1 + usize::from(unit))
         }
         Operation::CallValue { arguments, .. } => arguments.len().saturating_add(1),
+        Operation::Intrinsic {
+            intrinsic,
+            arguments,
+        } => {
+            let signature = program.intrinsic(*intrinsic).ok_or_else(address_error)?;
+            let unit = matches!(
+                program
+                    .ty(signature.result)
+                    .map(|definition| &definition.kind),
+                Some(IrType::Unit)
+            );
+            arguments.len().saturating_add(1 + usize::from(unit))
+        }
         Operation::MakeClosure { captures, .. } => captures.len().saturating_add(1),
         Operation::MakeArray(values) => values.len().saturating_add(1),
         Operation::MakeDictionary(pairs) => pairs.len().saturating_mul(2).saturating_add(1),

@@ -7,13 +7,13 @@ use super::assert::{
     assert_false, assert_true, fail, skip,
 };
 use crate::error::{StdError, std_internal_error};
-use crate::intrinsic_args::{pop_bool, pop_int, pop_real, pop_string, pop_value};
-use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic, Value};
+use crate::intrinsic_args::{IntrinsicCall, pop_bool, pop_int, pop_real, pop_string, pop_value};
+use fpas_bytecode::{Intrinsic, SourceLocation, TestIntrinsic};
 
 /// Execute a `Std.Test` intrinsic; returns `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     let code = match intrinsic {
@@ -23,39 +23,39 @@ pub(crate) fn run(
 
     match code {
         TestIntrinsic::AssertTrue => {
-            let cond = pop_bool(pop_value(stack, location)?, location)?;
+            let cond = pop_bool(pop_value(call, location)?, location)?;
             assert_true(cond, location)?;
         }
         TestIntrinsic::AssertFalse => {
-            let cond = pop_bool(pop_value(stack, location)?, location)?;
+            let cond = pop_bool(pop_value(call, location)?, location)?;
             assert_false(cond, location)?;
         }
         TestIntrinsic::AssertEqualsInteger => {
-            let actual = pop_int(pop_value(stack, location)?, location)?;
-            let expected = pop_int(pop_value(stack, location)?, location)?;
+            let actual = pop_int(pop_value(call, location)?, location)?;
+            let expected = pop_int(pop_value(call, location)?, location)?;
             assert_equals_integer(expected, actual, location)?;
         }
         TestIntrinsic::AssertEqualsBoolean => {
-            let actual = pop_bool(pop_value(stack, location)?, location)?;
-            let expected = pop_bool(pop_value(stack, location)?, location)?;
+            let actual = pop_bool(pop_value(call, location)?, location)?;
+            let expected = pop_bool(pop_value(call, location)?, location)?;
             assert_equals_boolean(expected, actual, location)?;
         }
         TestIntrinsic::AssertEqualsString => {
-            let actual = pop_string(pop_value(stack, location)?, location)?;
-            let expected = pop_string(pop_value(stack, location)?, location)?;
+            let actual = pop_string(pop_value(call, location)?, location)?;
+            let expected = pop_string(pop_value(call, location)?, location)?;
             assert_equals_string(expected, actual, location)?;
         }
         TestIntrinsic::AssertEqualsReal => {
-            let actual = pop_real(pop_value(stack, location)?, location)?;
-            let expected = pop_real(pop_value(stack, location)?, location)?;
+            let actual = pop_real(pop_value(call, location)?, location)?;
+            let expected = pop_real(pop_value(call, location)?, location)?;
             assert_equals_real(expected, actual, location)?;
         }
         TestIntrinsic::Fail => {
-            let msg = pop_string(pop_value(stack, location)?, location)?;
+            let msg = pop_string(pop_value(call, location)?, location)?;
             fail(msg, location)?;
         }
         TestIntrinsic::Skip => {
-            let msg = pop_string(pop_value(stack, location)?, location)?;
+            let msg = pop_string(pop_value(call, location)?, location)?;
             skip(msg, location)?;
         }
         TestIntrinsic::AssertScreenLine

@@ -1,6 +1,7 @@
 //! Total active-subset IR instruction selection into checked packed instructions.
 
 mod aggregates;
+mod intrinsics;
 
 use std::collections::BTreeMap;
 
@@ -50,6 +51,9 @@ impl<'a> Selector<'a> {
     ) -> Result<Vec<Instruction>, CompileError> {
         let result = instruction.result.map(|value| value.id);
         if let Some(selected) = self.select_aggregate(&instruction.operation, result, metadata)? {
+            return Ok(selected);
+        }
+        if let Some(selected) = self.select_intrinsic(&instruction.operation, result)? {
             return Ok(selected);
         }
         let selected = match &instruction.operation {
@@ -197,7 +201,10 @@ impl<'a> Selector<'a> {
         Ok(instructions)
     }
 
-    fn prepare_window(&self, values: &[ValueId]) -> Result<Vec<Instruction>, CompileError> {
+    pub(super) fn prepare_window(
+        &self,
+        values: &[ValueId],
+    ) -> Result<Vec<Instruction>, CompileError> {
         let base = self.allocation.call_window().get();
         values
             .iter()
@@ -286,7 +293,7 @@ impl<'a> Selector<'a> {
         }
     }
 
-    fn result_register(&self, result: Option<ValueId>) -> Result<u16, CompileError> {
+    pub(super) fn result_register(&self, result: Option<ValueId>) -> Result<u16, CompileError> {
         result
             .ok_or_else(|| selection_error("value-producing IR operation has no result"))
             .and_then(|value| self.allocation.value(value).map(|register| register.get()))
@@ -324,7 +331,7 @@ pub(super) fn abc_aux(
         .map_err(|error| selection_error(&error.to_string()))
 }
 
-fn argument_count(values: &[ValueId]) -> Result<u8, CompileError> {
+pub(super) fn argument_count(values: &[ValueId]) -> Result<u8, CompileError> {
     u8::try_from(values.len()).map_err(|_| selection_error("call or capture count exceeds u8"))
 }
 
@@ -332,7 +339,7 @@ pub(super) fn abx(opcode: Opcode, a: u16, bx: u32) -> Result<Instruction, Compil
     Instruction::abx(opcode, a, bx).map_err(|error| selection_error(&error.to_string()))
 }
 
-fn selection_error(message: &str) -> CompileError {
+pub(super) fn selection_error(message: &str) -> CompileError {
     internal_compiler_error(
         format!("Register instruction selection failed: {message}."),
         "This is an internal compiler error. Re-run compilation and report the source program.",

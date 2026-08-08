@@ -11,6 +11,9 @@ use std::collections::{HashMap, HashSet};
 /// Maps expression identity (`Expr` as `*const Expr`) to its semantic type.
 pub type ExprTypeMap = HashMap<usize, Ty>;
 
+/// Maps a call expression or call-statement designator to its canonical `Std.*` dispatch name.
+pub type IntrinsicCallMap = HashMap<usize, String>;
+
 /// Canonical root type name to its fully resolved semantic type.
 pub type NamedTypeMap = BTreeMap<String, Ty>;
 
@@ -172,6 +175,8 @@ pub struct AnalysisMetadata {
     pub errors: Vec<SemaError>,
     /// Inferred expression types keyed by expression identity.
     pub expr_types: ExprTypeMap,
+    /// Canonical standard-library calls keyed by expression or designator identity.
+    pub intrinsic_calls: IntrinsicCallMap,
     /// Fully resolved named types used to construct deterministic runtime layouts.
     pub named_types: NamedTypeMap,
     /// Resolved record method calls keyed by expression or designator identity.
@@ -202,6 +207,8 @@ pub struct Checker {
     pub(crate) scopes: ScopeStack,
     pub(crate) errors: Vec<SemaError>,
     pub(crate) expr_types: ExprTypeMap,
+    /// Canonical standard-library calls keyed by expression or designator identity.
+    pub(crate) intrinsic_calls: IntrinsicCallMap,
     pub(crate) method_calls: MethodCallMap,
     /// Canonical std unit names from `uses` (e.g. `Std.Console`).
     pub(crate) loaded_std_units: HashSet<String>,
@@ -263,6 +270,7 @@ impl Checker {
             scopes: ScopeStack::new(),
             errors: Vec::new(),
             expr_types: ExprTypeMap::new(),
+            intrinsic_calls: IntrinsicCallMap::new(),
             method_calls: MethodCallMap::new(),
             loaded_std_units: HashSet::new(),
             ambiguous_imports: HashMap::new(),
@@ -289,6 +297,7 @@ impl Checker {
         AnalysisMetadata {
             errors: self.errors,
             expr_types: self.expr_types,
+            intrinsic_calls: self.intrinsic_calls,
             named_types,
             method_calls: self.method_calls,
             record_defaults: self.record_defaults,

@@ -21,8 +21,12 @@ impl Checker {
                 return;
             }
 
+            let dispatch = self.builtin_std_dispatch_name(&name);
+            if dispatch.starts_with("Std.") {
+                self.intrinsic_calls
+                    .insert(crate::designator_lookup_key(designator), dispatch.clone());
+            }
             if kind == SymbolKind::BuiltinStd {
-                let dispatch = self.builtin_std_dispatch_name(&name);
                 let _ = crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
                 return;
             }

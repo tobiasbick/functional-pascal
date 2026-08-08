@@ -3,27 +3,27 @@
 //! **Documentation:** `docs/pascal/std/text/parse.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::intrinsic_args::{pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{Intrinsic, ParseIntrinsic, SourceLocation, Value};
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Parse(ParseIntrinsic::TryInt) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(parse_int_result(&text));
+            let text = pop_string(pop_value(call, location)?, location)?;
+            call.push(parse_int_result(&text));
         }
         Intrinsic::Parse(ParseIntrinsic::TryReal) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(parse_real_result(&text));
+            let text = pop_string(pop_value(call, location)?, location)?;
+            call.push(parse_real_result(&text));
         }
         Intrinsic::Parse(ParseIntrinsic::TryBool) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(parse_bool_result(&text));
+            let text = pop_string(pop_value(call, location)?, location)?;
+            call.push(parse_bool_result(&text));
         }
         _ => return Ok(None),
     }
@@ -77,7 +77,7 @@ mod tests {
     fn try_int_returns_ok_for_pascal_integer_text() {
         let mut stack = vec![Value::Str(" +1_024 ".into())];
 
-        run(Intrinsic::Parse(ParseIntrinsic::TryInt), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Parse(ParseIntrinsic::TryInt), &mut stack, loc()).unwrap();
 
         assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Integer(1024)))]);
     }
@@ -86,7 +86,7 @@ mod tests {
     fn try_real_returns_error_for_non_pascal_real_text() {
         let mut stack = vec![Value::Str("1e3".into())];
 
-        run(Intrinsic::Parse(ParseIntrinsic::TryReal), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Parse(ParseIntrinsic::TryReal), &mut stack, loc()).unwrap();
 
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }
@@ -95,7 +95,7 @@ mod tests {
     fn try_bool_accepts_case_insensitive_true() {
         let mut stack = vec![Value::Str(" TRUE ".into())];
 
-        run(Intrinsic::Parse(ParseIntrinsic::TryBool), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Parse(ParseIntrinsic::TryBool), &mut stack, loc()).unwrap();
 
         assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
     }

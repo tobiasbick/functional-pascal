@@ -9,8 +9,9 @@ use crate::array;
 use crate::conv;
 use crate::dict;
 use crate::env;
-use crate::error::{StdError, std_internal_error};
+use crate::error::{StdError, std_internal_error, std_runtime_error};
 use crate::fs;
+use crate::intrinsic_args::IntrinsicCall;
 use crate::json;
 use crate::math;
 use crate::parse;
@@ -27,7 +28,7 @@ use fpas_bytecode::{
 };
 
 type StdUnitDispatch =
-    fn(Intrinsic, &mut Vec<Value>, SourceLocation) -> Result<Option<()>, StdError>;
+    fn(Intrinsic, &mut IntrinsicCall<'_>, SourceLocation) -> Result<Option<()>, StdError>;
 
 const STD_UNIT_DISPATCHERS: &[StdUnitDispatch] = &[
     env::run,
@@ -48,10 +49,9 @@ const STD_UNIT_DISPATCHERS: &[StdUnitDispatch] = &[
     crate::test::run,
 ];
 
-/// Execute a standard-library intrinsic; mutates `stack` (Pascal call order: args already pushed).
-pub fn run_intrinsic(
+fn dispatch_intrinsic(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<(), StdError> {
     if matches!(
@@ -126,6 +126,8 @@ pub fn run_intrinsic(
             | Intrinsic::Console(ConsoleIntrinsic::DisplayWidth)
             | Intrinsic::Console(ConsoleIntrinsic::GraphemeWidth)
             | Intrinsic::Console(ConsoleIntrinsic::SplitGraphemes)
+            | Intrinsic::Console(ConsoleIntrinsic::Write)
+            | Intrinsic::Console(ConsoleIntrinsic::WriteLn)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationOpen)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationClose)
             | Intrinsic::Graph(GraphIntrinsic::ApplicationSize)
@@ -199,7 +201,7 @@ pub fn run_intrinsic(
     }
 
     for dispatch in STD_UNIT_DISPATCHERS {
-        if dispatch(intrinsic, stack, location)?.is_some() {
+        if dispatch(intrinsic, call, location)?.is_some() {
             return Ok(());
         }
     }
@@ -211,11 +213,68 @@ pub fn run_intrinsic(
     ))
 }
 
+/// Execute a non-hosted standard-library intrinsic from a borrowed register argument window.
+///
+/// The returned value is `None` for procedures. The argument slice is never mutated; aggregate
+/// values retain copy-on-write value semantics when an implementation needs ownership.
+///
+/// # Errors
+///
+/// Returns a structured standard-runtime diagnostic for an unsupported hosted intrinsic, an
+/// argument count/type mismatch, or a unit-specific runtime failure.
+pub fn run_intrinsic_borrowed(
+    intrinsic: Intrinsic,
+    arguments: &[Value],
+    location: SourceLocation,
+) -> Result<Option<Value>, StdError> {
+    let mut call = IntrinsicCall::new(arguments);
+    dispatch_intrinsic(intrinsic, &mut call, location)?;
+    let (consumed, result) = call.finish();
+    if consumed != arguments.len() {
+        return Err(std_runtime_error(
+            fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            format!(
+                "Intrinsic argument count mismatch: decoded {consumed}, received {}",
+                arguments.len()
+            ),
+            "Check the compiler intrinsic signature and register argument count.",
+            location,
+        ));
+    }
+    Ok(result)
+}
+
+/// Execute a standard-library intrinsic on the legacy operand stack.
+///
+/// This compatibility adapter keeps the production stack VM active until cutover while sharing the
+/// borrowed decoder and standard-library implementation with the register VM.
+pub fn run_intrinsic(
+    intrinsic: Intrinsic,
+    stack: &mut Vec<Value>,
+    location: SourceLocation,
+) -> Result<(), StdError> {
+    let mut call = IntrinsicCall::new(stack);
+    dispatch_intrinsic(intrinsic, &mut call, location)?;
+    let (consumed, result) = call.finish();
+    let remaining = stack.len().checked_sub(consumed).ok_or_else(|| {
+        std_internal_error(
+            "Intrinsic consumed more arguments than the legacy stack contains",
+            "This indicates a compiler/runtime stack layout bug. Please report it.",
+            location,
+        )
+    })?;
+    stack.truncate(remaining);
+    if let Some(value) = result {
+        stack.push(value);
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod vm_only_guard_tests {
     #![allow(clippy::expect_used, clippy::unwrap_used)]
 
-    use super::run_intrinsic;
+    use super::{run_intrinsic, run_intrinsic_borrowed};
     use fpas_bytecode::{
         ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation,
         StrIntrinsic, TaskIntrinsic, Value,
@@ -297,5 +356,42 @@ mod vm_only_guard_tests {
         let mut stack = vec![Value::Str("ab".into())];
         run_intrinsic(Intrinsic::Str(StrIntrinsic::Length), &mut stack, loc()).unwrap();
         assert_eq!(stack, vec![Value::Integer(2)]);
+    }
+
+    #[test]
+    fn borrowed_arguments_are_not_consumed_or_mutated() {
+        let arguments = vec![Value::Array(
+            vec![Value::Integer(1), Value::Integer(2)].into(),
+        )];
+        let before = arguments.clone();
+        let result =
+            run_intrinsic_borrowed(Intrinsic::Array(ArrayIntrinsic::Reverse), &arguments, loc())
+                .unwrap();
+        assert_eq!(arguments, before);
+        assert_eq!(
+            result,
+            Some(Value::Array(
+                vec![Value::Integer(2), Value::Integer(1)].into()
+            ))
+        );
+    }
+
+    #[test]
+    fn borrowed_dispatch_rejects_extra_and_wrong_typed_arguments() {
+        let extra = run_intrinsic_borrowed(
+            Intrinsic::Str(StrIntrinsic::Length),
+            &[Value::Integer(99), Value::Str("text".into())],
+            loc(),
+        )
+        .expect_err("extra argument");
+        assert!(extra.message.contains("argument count mismatch"));
+
+        let wrong = run_intrinsic_borrowed(
+            Intrinsic::Str(StrIntrinsic::Length),
+            &[Value::Integer(99)],
+            loc(),
+        )
+        .expect_err("wrong type");
+        assert!(wrong.message.contains("Expected string"));
     }
 }

@@ -1,4 +1,4 @@
-//! AST and semantic-metadata lowering for the P5 register-development subset.
+//! AST and semantic-metadata lowering for the P6 register-development subset.
 
 mod aggregates;
 mod calls;
@@ -14,7 +14,9 @@ mod types;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use fpas_ir::{FunctionId, Global, GlobalId, Operation, Program};
+use fpas_ir::{
+    Function, FunctionId, Global, GlobalId, IntrinsicId, IntrinsicSignature, Operation, Program,
+};
 use fpas_parser::Program as AstProgram;
 
 use crate::CompileError;
@@ -31,9 +33,6 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
     let metadata = fpas_sema::analyze_with_types(program);
     if !metadata.errors.is_empty() {
         return Err(metadata.errors);
-    }
-    if !program.uses.is_empty() {
-        return Err(vec![context::unsupported(program.span, "program imports")]);
     }
     let mut routines = Vec::new();
     routines::collect(&program.declarations, &mut routines);
@@ -215,7 +214,7 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
         globals,
         record_layouts: type_table.record_layouts(),
         enum_layouts: type_table.enum_layouts(),
-        intrinsics: Vec::new(),
+        intrinsics: collect_intrinsic_signatures(&functions, &type_table),
         functions,
         entry: FunctionId::new(0),
     };
@@ -272,4 +271,43 @@ fn collect_enum_constants(program: &AstProgram) -> BTreeMap<String, i64> {
         }
     }
     constants
+}
+
+fn collect_intrinsic_signatures(
+    functions: &[Function],
+    _types: &types::TypeTable,
+) -> Vec<IntrinsicSignature> {
+    let mut arities = BTreeMap::<IntrinsicId, usize>::new();
+    for function in functions {
+        for instruction in function.blocks.iter().flat_map(|block| &block.instructions) {
+            if let Operation::Intrinsic {
+                intrinsic,
+                arguments,
+            } = &instruction.operation
+            {
+                arities.entry(*intrinsic).or_insert(arguments.len());
+            }
+        }
+    }
+    arities
+        .into_iter()
+        .map(|(id, arity)| {
+            let wire = u16::try_from(id.get()).ok();
+            let variadic = wire.and_then(fpas_bytecode::Intrinsic::from_u16)
+                == Some(fpas_bytecode::Intrinsic::Str(
+                    fpas_bytecode::StrIntrinsic::Format,
+                ));
+            let parameters = if variadic {
+                vec![types::DYNAMIC, types::DYNAMIC]
+            } else {
+                vec![types::DYNAMIC; arity]
+            };
+            IntrinsicSignature {
+                id,
+                parameters,
+                variadic,
+                result: types::DYNAMIC,
+            }
+        })
+        .collect()
 }

@@ -68,15 +68,17 @@ impl LoweringContext {
                     let _ = self.lower_event_raise(designator, args, &info, *span)?;
                     return Ok(());
                 }
-                let result = self
-                    .member_call_result(call_key)
-                    .or_else(|| {
+                let result = if self.intrinsic_calls.contains_key(&call_key) {
+                    Some(super::types::UNIT)
+                } else {
+                    self.member_call_result(call_key).or_else(|| {
                         let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
                             return None;
                         };
                         self.call_result_type(name)
                     })
-                    .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;
+                }
+                .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;
                 let _ = self.lower_call(designator, args, result, *span, call_key)?;
                 Ok(())
             }

@@ -22,17 +22,94 @@ fn validate_intrinsic(
             intrinsic.get(),
         )
     })?;
+    if intrinsic.variadic {
+        validate_variadic_arguments(
+            program,
+            function,
+            block,
+            instruction,
+            arguments,
+            &intrinsic.parameters,
+            all_values,
+            available,
+        )?;
+    } else {
+        validate_arguments(
+            program,
+            function,
+            block,
+            instruction,
+            arguments,
+            &intrinsic.parameters,
+            all_values,
+            available,
+        )?;
+    }
+    let result = result.ok_or_else(|| {
+        function_error(
+            function.id,
+            Some(block),
+            Some(instruction),
+            ValidationErrorKind::MissingResult,
+        )
+    })?;
+    if types_compatible(program, intrinsic.result, result.ty) {
+        Ok(())
+    } else {
+        require_exact(
+            function,
+            block,
+            instruction,
+            "result",
+            intrinsic.result,
+            result.ty,
+        )
+    }
+}
+
+#[expect(
+    clippy::too_many_arguments,
+    reason = "typed validation needs explicit operand scopes"
+)]
+fn validate_variadic_arguments(
+    program: &Program,
+    function: &Function,
+    block: BlockId,
+    instruction: usize,
+    arguments: &[ValueId],
+    parameters: &[TypeId],
+    all_values: &BTreeMap<ValueId, TypeId>,
+    available: &BTreeSet<ValueId>,
+) -> Result<(), ValidationError> {
+    if arguments.len() < parameters.len() || parameters.is_empty() {
+        return validate_arguments(
+            program,
+            function,
+            block,
+            instruction,
+            arguments,
+            parameters,
+            all_values,
+            available,
+        );
+    }
+    let repeated = parameters[parameters.len() - 1];
+    let expected = parameters
+        .iter()
+        .copied()
+        .chain(std::iter::repeat(repeated))
+        .take(arguments.len())
+        .collect::<Vec<_>>();
     validate_arguments(
         program,
         function,
         block,
         instruction,
         arguments,
-        &intrinsic.parameters,
+        &expected,
         all_values,
         available,
-    )?;
-    require_result_type(function, block, instruction, result, intrinsic.result)
+    )
 }
 
 #[expect(

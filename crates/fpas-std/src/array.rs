@@ -5,7 +5,7 @@
 //! `fpas-vm` (`ArrayPushLocal` / `ArrayPopLocal`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{expect_array, pop_array, pop_int, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_array, pop_int, pop_value};
 use crate::limits::checked_collection_len;
 use fpas_bytecode::{ArrayIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -36,18 +36,18 @@ fn value_to_sort_key(v: &Value) -> Result<String, String> {
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Array(ArrayIntrinsic::Length) => {
-            let arr = expect_array(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(arr.len() as i64));
+            let arr = expect_array(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(arr.len() as i64));
         }
         Intrinsic::Array(ArrayIntrinsic::Sort) => {
-            let arr = pop_array(pop_value(stack, location)?, location)?;
+            let arr = pop_array(pop_value(call, location)?, location)?;
             if arr.is_empty() {
-                stack.push(Value::Array(arr.into()));
+                call.push(Value::Array(arr.into()));
                 return Ok(Some(()));
             }
             let mut keys: Vec<String> = Vec::with_capacity(arr.len());
@@ -64,33 +64,33 @@ pub(crate) fn run(
             let mut idx: Vec<usize> = (0..arr.len()).collect();
             idx.sort_by(|&i, &j| keys[i].cmp(&keys[j]));
             let sorted: Vec<Value> = idx.into_iter().map(|i| arr[i].clone()).collect();
-            stack.push(Value::Array(sorted.into()));
+            call.push(Value::Array(sorted.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Reverse) => {
-            let mut arr = pop_array(pop_value(stack, location)?, location)?;
+            let mut arr = pop_array(pop_value(call, location)?, location)?;
             arr.reverse();
-            stack.push(Value::Array(arr.into()));
+            call.push(Value::Array(arr.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Contains) => {
-            let needle = pop_value(stack, location)?;
-            let arr = expect_array(pop_value(stack, location)?, location)?;
-            let found = arr.iter().any(|e| e == &needle);
-            stack.push(Value::Boolean(found));
+            let needle = pop_value(call, location)?;
+            let arr = expect_array(pop_value(call, location)?, location)?;
+            let found = arr.iter().any(|e| e == needle);
+            call.push(Value::Boolean(found));
         }
         Intrinsic::Array(ArrayIntrinsic::IndexOf) => {
-            let needle = pop_value(stack, location)?;
-            let arr = expect_array(pop_value(stack, location)?, location)?;
+            let needle = pop_value(call, location)?;
+            let arr = expect_array(pop_value(call, location)?, location)?;
             let idx = arr
                 .iter()
-                .position(|e| e == &needle)
+                .position(|e| e == needle)
                 .map(|i| i as i64)
                 .unwrap_or(-1);
-            stack.push(Value::Integer(idx));
+            call.push(Value::Integer(idx));
         }
         Intrinsic::Array(ArrayIntrinsic::Slice) => {
-            let len = pop_int(pop_value(stack, location)?, location)?;
-            let start = pop_int(pop_value(stack, location)?, location)?;
-            let arr = expect_array(pop_value(stack, location)?, location)?;
+            let len = pop_int(pop_value(call, location)?, location)?;
+            let start = pop_int(pop_value(call, location)?, location)?;
+            let arr = expect_array(pop_value(call, location)?, location)?;
             let n = arr.len() as i64;
             if start < 0 || len < 0 || start > n || start + len > n {
                 return Err(std_runtime_error(
@@ -101,20 +101,20 @@ pub(crate) fn run(
                 ));
             }
             let out: Vec<Value> = arr[start as usize..(start + len) as usize].to_vec();
-            stack.push(Value::Array(out.into()));
+            call.push(Value::Array(out.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Concat) => {
-            let b = pop_array(pop_value(stack, location)?, location)?;
-            let mut a = pop_array(pop_value(stack, location)?, location)?;
+            let b = pop_array(pop_value(call, location)?, location)?;
+            let mut a = pop_array(pop_value(call, location)?, location)?;
             a.extend(b);
-            stack.push(Value::Array(a.into()));
+            call.push(Value::Array(a.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Fill) => {
-            let count = pop_int(pop_value(stack, location)?, location)?;
-            let value = pop_value(stack, location)?;
+            let count = pop_int(pop_value(call, location)?, location)?;
+            let value = pop_value(call, location)?;
             let len = checked_collection_len(count, location, "Std.Array.Fill")?;
-            let arr: Vec<Value> = vec![value; len];
-            stack.push(Value::Array(arr.into()));
+            let arr: Vec<Value> = vec![value.clone(); len];
+            call.push(Value::Array(arr.into()));
         }
         _ => return Ok(None),
     }
@@ -131,7 +131,7 @@ mod tests {
     }
 
     fn run_array(intrinsic: ArrayIntrinsic, stack: &mut Vec<Value>) -> Result<(), StdError> {
-        run(Intrinsic::Array(intrinsic), stack, loc()).map(|_| ())
+        crate::run_intrinsic(Intrinsic::Array(intrinsic), stack, loc()).map(|_| ())
     }
 
     #[test]

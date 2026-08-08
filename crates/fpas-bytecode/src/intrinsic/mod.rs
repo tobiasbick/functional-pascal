@@ -97,6 +97,14 @@ macro_rules! intrinsic_wire_ops {
                 )*
                 None
             }
+
+            /// Iterate over every currently assigned intrinsic wire identifier.
+            ///
+            /// The iterator is derived from the authoritative decoder, so verifier, compiler, and
+            /// runtime coverage checks cannot silently diverge from newly assigned IDs.
+            pub fn all() -> impl Iterator<Item = Self> {
+                (u16::MIN..=u16::MAX).filter_map(Self::from_u16)
+            }
         }
     };
 }

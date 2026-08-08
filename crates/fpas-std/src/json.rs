@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/text/json.md`
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 use crate::limits::MAX_JSON_DEPTH;
 use crate::std_units::std_symbols as s;
 use fpas_bytecode::{Intrinsic, JsonIntrinsic, SourceLocation, Value};
@@ -228,28 +228,26 @@ fn fpas_to_json(value: Value, location: SourceLocation) -> Result<JsonValue, Std
 
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Json(JsonIntrinsic::Parse) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
+            let text = pop_string(pop_value(call, location)?, location)?;
             match serde_json::from_str::<JsonValue>(&text).map_err(|err| err.to_string()) {
                 Ok(value) => match json_to_fpas(value) {
-                    Ok(value) => stack.push(Value::ResultOk(Box::new(value))),
+                    Ok(value) => call.push(Value::ResultOk(Box::new(value))),
                     Err(message) => {
-                        stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                        call.push(Value::ResultError(Box::new(Value::Str(message.into()))))
                     }
                 },
-                Err(message) => {
-                    stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
-                }
+                Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
             }
         }
         Intrinsic::Json(JsonIntrinsic::Stringify) => {
-            let value = pop_value(stack, location)?;
-            let json = fpas_to_json(value, location)?;
-            stack.push(Value::Str(json.to_string().into()));
+            let value = pop_value(call, location)?;
+            let json = fpas_to_json(value.clone(), location)?;
+            call.push(Value::Str(json.to_string().into()));
         }
         _ => return Ok(None),
     }
@@ -276,7 +274,7 @@ mod tests {
     #[test]
     fn parse_accepts_shallow_json() {
         let mut stack = vec![Value::Str("null".into())];
-        run(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
         assert!(matches!(stack.as_slice(), [Value::ResultOk(_)]));
     }
 
@@ -295,7 +293,7 @@ mod tests {
     #[test]
     fn parse_rejects_json_above_max_depth() {
         let mut stack = vec![Value::Str(nested_array_json(MAX_JSON_DEPTH).into())];
-        run(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Json(JsonIntrinsic::Parse), &mut stack, loc()).unwrap();
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }
 

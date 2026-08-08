@@ -1,7 +1,23 @@
 # Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
 # Paths are relative to the repository root.
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling),
-# `tui` (headless Std.Tui), `register-p5` (inactive register-development path).
+# `tui` (headless Std.Tui), `register-p5` and `register-p6` (inactive register-development path).
+
+[[bench]]
+id = "register_string_length"
+group = "register-p6"
+engine = "register"
+path = "examples/pascal/vm/register/string_intrinsic_benchmark.fpas"
+args = []
+timeout_ms = 120000
+
+[[bench]]
+id = "register_array_callbacks"
+group = "register-p6"
+engine = "register"
+path = "examples/pascal/vm/register/array_callbacks_benchmark.fpas"
+args = []
+timeout_ms = 120000
 
 [[bench]]
 id = "register_global_access"

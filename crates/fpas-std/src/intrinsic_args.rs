@@ -1,66 +1,84 @@
-//! Shared stack pop helpers for intrinsic implementations.
+//! Borrowed argument decoding shared by stack and register intrinsic callers.
 
 use crate::error::{StdError, std_runtime_error};
-use fpas_bytecode::{SharedStr, SourceLocation, Value};
+use fpas_bytecode::{SharedArray, SharedStr, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
-pub(crate) fn pop_value(
-    stack: &mut Vec<Value>,
-    location: SourceLocation,
-) -> Result<Value, StdError> {
-    stack.pop().ok_or_else(|| {
-        std_runtime_error(
-            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
-            "Intrinsic argument stack underflow",
-            "Check intrinsic arity and ensure all required arguments are pushed before the call.",
-            location,
-        )
-    })
-}
-
-pub(crate) fn pop_string(v: Value, location: SourceLocation) -> Result<String, StdError> {
-    Ok(expect_str(v, location)?.into())
-}
-
-/// Takes ownership of a [`Value::Str`] without copying its UTF-8 buffer.
+/// One intrinsic invocation over arguments stored in Pascal evaluation order.
 ///
-/// Prefer this for read-only string intrinsics such as `Std.Str.Length`. Use [`pop_string`] when
-/// the callee needs an owned, mutable [`String`].
-pub(crate) fn expect_str(v: Value, location: SourceLocation) -> Result<SharedStr, StdError> {
+/// Arguments are decoded from right to left to preserve the established intrinsic convention
+/// without moving values out of register windows. Implementations clone only values they return or
+/// mutate.
+pub(crate) struct IntrinsicCall<'a> {
+    arguments: &'a [Value],
+    consumed: usize,
+    result: Option<Value>,
+}
+
+impl<'a> IntrinsicCall<'a> {
+    /// Start decoding one borrowed argument window.
+    pub(crate) fn new(arguments: &'a [Value]) -> Self {
+        Self {
+            arguments,
+            consumed: 0,
+            result: None,
+        }
+    }
+
+    /// Record the single value produced by an intrinsic function.
+    pub(crate) fn push(&mut self, value: Value) {
+        self.result = Some(value);
+    }
+
+    /// Finish the invocation and return consumed argument count plus its optional result.
+    pub(crate) fn finish(self) -> (usize, Option<Value>) {
+        (self.consumed, self.result)
+    }
+}
+
+pub(crate) fn pop_value<'a>(
+    call: &mut IntrinsicCall<'a>,
+    location: SourceLocation,
+) -> Result<&'a Value, StdError> {
+    let index = call.arguments.len().checked_sub(call.consumed + 1);
+    let value = index.and_then(|index| call.arguments.get(index));
+    let Some(value) = value else {
+        return Err(std_runtime_error(
+            RUNTIME_INTRINSIC_STACK_STATE_ERROR,
+            "Intrinsic argument window underflow",
+            "Check intrinsic arity and ensure the register argument count matches the call.",
+            location,
+        ));
+    };
+    call.consumed += 1;
+    Ok(value)
+}
+
+pub(crate) fn pop_string(v: &Value, location: SourceLocation) -> Result<String, StdError> {
+    Ok(expect_str(v, location)?.as_ref().to_owned())
+}
+
+/// Borrows a [`Value::Str`] without copying its UTF-8 buffer.
+pub(crate) fn expect_str(v: &Value, location: SourceLocation) -> Result<&SharedStr, StdError> {
     match v {
         Value::Str(s) => Ok(s),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected string argument, got {}", other.type_name()),
-            "Pass a string value to this Std.* call.",
-            location,
-        )),
+        other => Err(type_error("string", other, location)),
     }
 }
 
-pub(crate) fn pop_int(v: Value, location: SourceLocation) -> Result<i64, StdError> {
+pub(crate) fn pop_int(v: &Value, location: SourceLocation) -> Result<i64, StdError> {
     match v {
-        Value::Integer(n) => Ok(n),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected integer argument, got {}", other.type_name()),
-            "Pass an integer value to this Std.* call.",
-            location,
-        )),
+        Value::Integer(n) => Ok(*n),
+        other => Err(type_error("integer", other, location)),
     }
 }
 
-pub(crate) fn pop_real(v: Value, location: SourceLocation) -> Result<f64, StdError> {
+pub(crate) fn pop_real(v: &Value, location: SourceLocation) -> Result<f64, StdError> {
     match v {
-        Value::Real(n) => Ok(n),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected real argument, got {}", other.type_name()),
-            "Pass a real value to this Std.* call.",
-            location,
-        )),
+        Value::Real(n) => Ok(*n),
+        other => Err(type_error("real", other, location)),
     }
 }
 
@@ -84,10 +102,10 @@ pub(crate) fn single_char_from_string(s: &str, location: SourceLocation) -> Resu
     }
 }
 
-/// Pops a string argument and returns its sole character for APIs that accept one code point.
-pub(crate) fn pop_single_char(v: Value, location: SourceLocation) -> Result<char, StdError> {
-    let s = pop_string(v, location)?;
-    single_char_from_string(&s, location)
+/// Borrows a string argument and returns its sole character.
+pub(crate) fn pop_single_char(v: &Value, location: SourceLocation) -> Result<char, StdError> {
+    let s = expect_str(v, location)?;
+    single_char_from_string(s, location)
 }
 
 /// Returns the first character of a non-empty fill string for padding helpers.
@@ -102,53 +120,37 @@ pub(crate) fn pad_fill_char(s: &str, location: SourceLocation) -> Result<char, S
     })
 }
 
-pub(crate) fn pop_bool(v: Value, location: SourceLocation) -> Result<bool, StdError> {
+pub(crate) fn pop_bool(v: &Value, location: SourceLocation) -> Result<bool, StdError> {
     match v {
-        Value::Boolean(b) => Ok(b),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected boolean argument, got {}", other.type_name()),
-            "Pass a boolean value to this Std.* call.",
-            location,
-        )),
+        Value::Boolean(b) => Ok(*b),
+        other => Err(type_error("boolean", other, location)),
     }
 }
 
 pub(crate) fn pop_dict(
-    v: Value,
+    v: &Value,
     location: SourceLocation,
 ) -> Result<Vec<(Value, Value)>, StdError> {
     match v {
-        Value::Dict(pairs) => Ok(pairs.into()),
+        Value::Dict(pairs) => Ok(pairs.iter().cloned().collect()),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("expected dict, got {}", other.type_name()),
+            format!("Expected dictionary argument, got {}", other.type_name()),
             "Pass a `dict of K to V` value.",
             location,
         )),
     }
 }
 
-pub(crate) fn pop_array(v: Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
-    Ok(expect_array(v, location)?.into())
+pub(crate) fn pop_array(v: &Value, location: SourceLocation) -> Result<Vec<Value>, StdError> {
+    Ok(expect_array(v, location)?.iter().cloned().collect())
 }
 
-/// Takes ownership of a [`Value::Array`] without forcing a deep copy.
-///
-/// Prefer this for read-only array intrinsics (`Length`, `Contains`, …). Use
-/// [`pop_array`] when the callee needs a mutable owned [`Vec`].
-pub(crate) fn expect_array(
-    v: Value,
-    location: SourceLocation,
-) -> Result<fpas_bytecode::SharedArray, StdError> {
+/// Borrows a [`Value::Array`] without copying its elements.
+pub(crate) fn expect_array(v: &Value, location: SourceLocation) -> Result<&SharedArray, StdError> {
     match v {
         Value::Array(a) => Ok(a),
-        other => Err(std_runtime_error(
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!("Expected array argument, got {}", other.type_name()),
-            "Pass an array value to this Std.* call.",
-            location,
-        )),
+        other => Err(type_error("array", other, location)),
     }
 }
 
@@ -168,4 +170,13 @@ pub(crate) fn value_as_string_for_join(
             location,
         )),
     }
+}
+
+fn type_error(expected: &str, actual: &Value, location: SourceLocation) -> StdError {
+    std_runtime_error(
+        RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+        format!("Expected {expected} argument, got {}", actual.type_name()),
+        format!("Pass a {expected} value to this Std.* call."),
+        location,
+    )
 }

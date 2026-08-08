@@ -86,7 +86,14 @@ impl Checker {
         match self.resolve_call_target(call_expr, designator, args, span, false) {
             CallResolution::Symbol { kind, ty } => {
                 let name = Self::resolve_designator_name(designator);
-                self.check_known_call_symbol(&name, kind, ty, args, span)
+                self.check_known_call_symbol(
+                    Self::expr_lookup_key(call_expr),
+                    &name,
+                    kind,
+                    ty,
+                    args,
+                    span,
+                )
             }
             CallResolution::MethodResult(ty) => ty,
             CallResolution::Failed => Ty::Error,
@@ -95,14 +102,18 @@ impl Checker {
 
     fn check_known_call_symbol(
         &mut self,
+        call_key: usize,
         name: &str,
         symbol_kind: SymbolKind,
         symbol_ty: Ty,
         args: &[Expr],
         span: Span,
     ) -> Ty {
+        let dispatch = self.builtin_std_dispatch_name(name);
+        if dispatch.starts_with("Std.") {
+            self.intrinsic_calls.insert(call_key, dispatch.clone());
+        }
         if symbol_kind == SymbolKind::BuiltinStd {
-            let dispatch = self.builtin_std_dispatch_name(name);
             return crate::std_registry::check_builtin_std_call(self, &dispatch, args, span);
         }
 

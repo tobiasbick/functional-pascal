@@ -98,6 +98,7 @@ pub(super) struct LoweringContext {
     enum_constants: BTreeMap<String, i64>,
     type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
+    pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
     pub(super) scalar_case_bindings: ScalarCaseBindingMap,
     pub(super) record_defaults: fpas_sema::RecordDefaultsMap,
     pub(super) method_calls: fpas_sema::MethodCallMap,
@@ -212,6 +213,7 @@ impl LoweringContext {
             enum_constants,
             type_table,
             expr_types: metadata.expr_types.clone(),
+            intrinsic_calls: metadata.intrinsic_calls.clone(),
             scalar_case_bindings: metadata.scalar_case_bindings.clone(),
             record_defaults: metadata.record_defaults.clone(),
             method_calls: metadata.method_calls.clone(),
@@ -314,8 +316,8 @@ impl LoweringContext {
 
 pub(super) fn unsupported(span: Span, construct: &str) -> CompileError {
     internal_compiler_error(
-        format!("`{construct}` is outside the P5 register-development subset."),
-        "This development path accepts scalar control flow, routines, closures, globals, and aggregates without imports, intrinsics, tasks, or persistent artifacts.",
+        format!("`{construct}` is outside the P6 register-development subset."),
+        "This development path accepts scalar control flow, routines, closures, globals, aggregates, and standard intrinsics without tasks, user-unit linking, or persistent artifacts.",
         span.line,
         span.column,
     )

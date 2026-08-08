@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/text/toml.md`
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_string, pop_value};
 use crate::limits::MAX_TOML_DEPTH;
 use crate::std_units::std_symbols as s;
 use fpas_bytecode::{Intrinsic, SourceLocation, TomlIntrinsic, Value};
@@ -202,27 +202,25 @@ fn fpas_to_toml(value: Value, location: SourceLocation) -> Result<TomlValue, Std
 /// **Documentation:** `docs/pascal/std/text/toml.md`
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Toml(TomlIntrinsic::Parse) => {
-            let text = pop_string(pop_value(stack, location)?, location)?;
+            let text = pop_string(pop_value(call, location)?, location)?;
             match toml::from_str::<TomlValue>(&text).map_err(|error| error.to_string()) {
                 Ok(value) => match toml_to_fpas(value) {
-                    Ok(value) => stack.push(Value::ResultOk(Box::new(value))),
+                    Ok(value) => call.push(Value::ResultOk(Box::new(value))),
                     Err(message) => {
-                        stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
+                        call.push(Value::ResultError(Box::new(Value::Str(message.into()))))
                     }
                 },
-                Err(message) => {
-                    stack.push(Value::ResultError(Box::new(Value::Str(message.into()))))
-                }
+                Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
             }
         }
         Intrinsic::Toml(TomlIntrinsic::Stringify) => {
-            let value = pop_value(stack, location)?;
-            let toml = fpas_to_toml(value, location)?;
+            let value = pop_value(call, location)?;
+            let toml = fpas_to_toml(value.clone(), location)?;
             let text = toml::to_string(&toml).map_err(|error| {
                 std_runtime_error(
                     RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -231,7 +229,7 @@ pub(crate) fn run(
                     location,
                 )
             })?;
-            stack.push(Value::Str(text.into()));
+            call.push(Value::Str(text.into()));
         }
         _ => return Ok(None),
     }
@@ -260,7 +258,7 @@ value = "ok"
 "#;
         let mut stack = vec![Value::Str(text.into())];
 
-        run(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
 
         assert!(matches!(stack.as_slice(), [Value::ResultOk(_)]));
         let Value::ResultOk(value) = &stack[0] else {
@@ -276,7 +274,7 @@ value = "ok"
     fn parse_returns_error_for_invalid_toml() {
         let mut stack = vec![Value::Str("answer = [1,".into())];
 
-        run(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
 
         assert!(matches!(stack.as_slice(), [Value::ResultError(_)]));
     }
@@ -336,13 +334,13 @@ value = "ok"
         let mut stack = vec![Value::Str(
             "[[products]]\nname = \"Hammer\"\n[[products]]\nname = \"Nail\"\n".into(),
         )];
-        run(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
+        crate::run_intrinsic(Intrinsic::Toml(TomlIntrinsic::Parse), &mut stack, loc()).unwrap();
         let Value::ResultOk(value) = stack.pop().expect("parse result") else {
             panic!("expected a parsed TOML value");
         };
         let mut stringify_stack = vec![*value];
 
-        run(
+        crate::run_intrinsic(
             Intrinsic::Toml(TomlIntrinsic::Stringify),
             &mut stringify_stack,
             loc(),

@@ -5,7 +5,7 @@
 //! **Documentation:** `docs/pascal/std/host/time.md` (from the repository root).
 
 use crate::error::{StdError, std_runtime_error};
-use crate::intrinsic_args::{pop_int, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_int, pop_value};
 use fpas_bytecode::{Intrinsic, SourceLocation, TimeIntrinsic, Value};
 use fpas_diagnostics::codes::RUNTIME_NUMERIC_DOMAIN_ERROR;
 use std::sync::LazyLock;
@@ -17,22 +17,22 @@ static MONOTONIC_ORIGIN: LazyLock<Instant> = LazyLock::new(Instant::now);
 /// Execute a `Std.Time` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Time(TimeIntrinsic::TimestampMillis) => {
-            stack.push(Value::Integer(timestamp_millis()));
+            call.push(Value::Integer(timestamp_millis()));
         }
         Intrinsic::Time(TimeIntrinsic::MonotonicMillis) => {
-            stack.push(Value::Integer(monotonic_millis()));
+            call.push(Value::Integer(monotonic_millis()));
         }
         Intrinsic::Time(TimeIntrinsic::ElapsedMillis) => {
-            let start = pop_int(pop_value(stack, location)?, location)?;
-            stack.push(Value::Integer(elapsed_millis(start)));
+            let start = pop_int(pop_value(call, location)?, location)?;
+            call.push(Value::Integer(elapsed_millis(start)));
         }
         Intrinsic::Time(TimeIntrinsic::Sleep) => {
-            let milliseconds = pop_int(pop_value(stack, location)?, location)?;
+            let milliseconds = pop_int(pop_value(call, location)?, location)?;
             sleep_millis(milliseconds, location)?;
         }
         _ => return Ok(None),
@@ -77,7 +77,7 @@ mod tests {
     }
 
     fn run_time(intrinsic: TimeIntrinsic, stack: &mut Vec<Value>) {
-        run(Intrinsic::Time(intrinsic), stack, test_location()).unwrap();
+        crate::run_intrinsic(Intrinsic::Time(intrinsic), stack, test_location()).unwrap();
     }
 
     #[test]

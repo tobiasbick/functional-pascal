@@ -263,8 +263,8 @@ impl RegisterWorker {
             Opcode::MakeEnum => self.make_enum(self.abc(instruction)?)?,
             Opcode::TestVariant => self.test_variant(self.abc(instruction)?)?,
             Opcode::LoadEnumField => self.load_enum_field(self.abc(instruction)?)?,
-            Opcode::Intrinsic
-            | Opcode::SpawnTask
+            Opcode::Intrinsic => self.execute_intrinsic(self.abc(instruction)?)?,
+            Opcode::SpawnTask
             | Opcode::SpawnDetachedTask
             | Opcode::Yield
             | Opcode::ReservedMetadata => return Err(self.future_phase(opcode)),

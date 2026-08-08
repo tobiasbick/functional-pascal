@@ -34,6 +34,7 @@ pub use check::EventRaiseMap;
 pub use check::EventWriteInfo;
 pub use check::EventWriteMap;
 pub use check::ExprTypeMap;
+pub use check::IntrinsicCallMap;
 pub use check::MethodCallMap;
 pub use check::MethodCallTarget;
 pub use check::NamedTypeMap;

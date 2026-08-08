@@ -34,17 +34,19 @@ end.";
 }
 
 #[test]
-fn later_phase_constructs_fail_without_exposing_a_backend_flag() {
-    let program = parse_ok(
-        "\
+fn p7_concurrency_remains_unavailable_without_exposing_a_backend_flag() {
+    let source = "\
 program RegisterCall;
-uses Std.Console;
-begin
-  Std.Console.WriteLn('later')
-end.",
-    );
-    let error = crate::compile_register_subset(&program)
-        .expect_err("imports and intrinsics belong to a later phase");
 
-    assert!(error[0].message.contains("outside the P5"));
+procedure Work();
+begin
+end;
+
+begin
+  go Work()
+end.";
+    let program = parse_ok(source);
+    let error = crate::compile_register_subset(&program).expect_err("concurrency belongs to P7");
+
+    assert!(error[0].message.contains("outside the P6"));
 }

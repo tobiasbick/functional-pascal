@@ -25,6 +25,7 @@ pub use context::EventRaiseMap;
 pub use context::EventWriteInfo;
 pub use context::EventWriteMap;
 pub use context::ExprTypeMap;
+pub use context::IntrinsicCallMap;
 pub use context::MethodCallMap;
 pub use context::MethodCallTarget;
 pub use context::NamedTypeMap;

@@ -177,6 +177,7 @@ pub fn all_operations_program() -> Program {
     program.intrinsics = vec![IntrinsicSignature {
         id: IntrinsicId::new(0),
         parameters: vec![INTEGER],
+        variadic: false,
         result: INTEGER,
     }];
     program.functions.push(Function {

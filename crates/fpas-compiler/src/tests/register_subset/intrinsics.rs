@@ -1,0 +1,122 @@
+use super::*;
+
+#[test]
+fn borrowed_standard_intrinsics_match_the_stack_path() {
+    let execution = assert_both_succeed(
+        "\
+program RegisterIntrinsics;
+uses Std.Str, Std.Math, Std.Conv, Std.Test;
+begin
+  var Text: string := Std.Str.ToUpper('fpas');
+  var Root: real := Std.Math.Sqrt(81.0);
+  var Number: string := Std.Conv.IntToStr(42);
+  var Formatted: string := Std.Str.Format('n=%d %s', 42, 'ok');
+  Std.Test.AssertEquals('FPAS', Text);
+  Std.Test.AssertEquals(9.0, Root);
+  Std.Test.AssertEquals('42', Number);
+  Std.Test.AssertEquals('n=42 ok', Formatted)
+end.",
+    );
+    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+}
+
+#[test]
+fn intrinsic_selection_uses_one_verified_register_window_convention() {
+    let program = parse_ok(
+        "\
+program RegisterIntrinsicShape;
+uses Std.Str;
+begin
+  if Std.Str.Length('abc') <> 3 then panic('bad')
+end.",
+    );
+    let metadata = fpas_sema::analyze_with_types(&program);
+    assert!(
+        metadata.errors.is_empty(),
+        "sema errors: {:?}",
+        metadata.errors
+    );
+    assert!(
+        !metadata.intrinsic_calls.is_empty(),
+        "sema did not record intrinsic calls"
+    );
+    let executable = crate::compile_register_subset(&program)
+        .expect("register intrinsic compilation should succeed");
+    let instruction = executable
+        .executable()
+        .code
+        .iter()
+        .find(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::Intrinsic))
+        .expect("intrinsic opcode");
+    let operands = instruction.abc_operands().expect("ABC operands");
+    assert_ne!(operands.a, fpas_bytecode::NO_REGISTER);
+    assert_eq!(
+        fpas_bytecode::Intrinsic::from_u16(operands.b),
+        Some(fpas_bytecode::Intrinsic::Str(
+            fpas_bytecode::StrIntrinsic::Length,
+        ))
+    );
+    assert_eq!(operands.auxiliary, 1);
+}
+
+#[test]
+fn higher_order_intrinsics_invoke_numeric_callbacks() {
+    let execution = assert_both_succeed(
+        "\
+program RegisterCallbacks;
+uses Std.Array, Std.Test;
+
+function Double(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+begin
+  var Values: array of integer := Std.Array.Map([2, 3, 4], Double);
+  Std.Test.AssertEquals(3, Std.Array.Length(Values));
+  Std.Test.AssertEquals(6, Values[1])
+end.",
+    );
+    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+}
+
+#[test]
+fn intrinsic_temporaries_do_not_clobber_loop_state() {
+    assert_both_succeed(
+        "\
+program RegisterIntrinsicLoop;
+uses Std.Str, Std.Test;
+begin
+  mutable var Total: integer := 0;
+  for Index: integer := 1 to 3 do
+  begin
+    Total := Total + Std.Str.Length('abc')
+  end;
+  Std.Test.AssertEquals(9, Total)
+end.",
+    );
+}
+
+#[test]
+fn variadic_console_output_matches_stack_evaluation_order() {
+    let execution = assert_both_succeed(
+        "\
+program RegisterConsoleOutput;
+uses Std.Console, Std.Test;
+
+function SideEffect(): string;
+begin
+  Std.Console.Write('B');
+  return 'C'
+end;
+
+begin
+  Std.Console.Write('A', SideEffect());
+  Std.Console.WriteLn('D', 42, true);
+  Std.Console.WriteLn();
+  Std.Test.AssertScreenLine('ABCD42true', 1);
+  Std.Test.AssertScreenLine('', 2)
+end.",
+    );
+    assert_eq!(execution.value, fpas_bytecode::Value::Unit);
+}

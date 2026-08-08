@@ -5,7 +5,7 @@
 //! **Documentation:** `docs/pascal/std/host/proc.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::intrinsic_args::{pop_array, pop_string, pop_value};
+use crate::intrinsic_args::{IntrinsicCall, pop_array, pop_string, pop_value};
 use crate::std_symbols as s;
 use fpas_bytecode::{Intrinsic, ProcIntrinsic, SourceLocation, Value};
 use std::env;
@@ -14,32 +14,32 @@ use std::process::Command;
 /// Execute a `Std.Proc` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Proc(ProcIntrinsic::CurrentExecutable) => {
-            stack.push(current_executable());
+            call.push(current_executable());
         }
         Intrinsic::Proc(ProcIntrinsic::Run) => {
-            let args = pop_string_array(pop_value(stack, location)?, location)?;
-            let command = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(run_process(&command, &args));
+            let args = pop_string_array(pop_value(call, location)?, location)?;
+            let command = pop_string(pop_value(call, location)?, location)?;
+            call.push(run_process(&command, &args));
         }
         Intrinsic::Proc(ProcIntrinsic::RunCapture) => {
-            let args = pop_string_array(pop_value(stack, location)?, location)?;
-            let command = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(run_process_capture(&command, &args));
+            let args = pop_string_array(pop_value(call, location)?, location)?;
+            let command = pop_string(pop_value(call, location)?, location)?;
+            call.push(run_process_capture(&command, &args));
         }
         _ => return Ok(None),
     }
     Ok(Some(()))
 }
 
-fn pop_string_array(value: Value, location: SourceLocation) -> Result<Vec<String>, StdError> {
+fn pop_string_array(value: &Value, location: SourceLocation) -> Result<Vec<String>, StdError> {
     pop_array(value, location)?
         .into_iter()
-        .map(|value| pop_string(value, location))
+        .map(|value| pop_string(&value, location))
         .collect()
 }
 
@@ -98,11 +98,11 @@ mod tests {
     }
 
     fn run_proc(stack: &mut Vec<Value>) {
-        run(Intrinsic::Proc(ProcIntrinsic::Run), stack, test_location()).unwrap();
+        crate::run_intrinsic(Intrinsic::Proc(ProcIntrinsic::Run), stack, test_location()).unwrap();
     }
 
     fn run_capture(stack: &mut Vec<Value>) {
-        run(
+        crate::run_intrinsic(
             Intrinsic::Proc(ProcIntrinsic::RunCapture),
             stack,
             test_location(),

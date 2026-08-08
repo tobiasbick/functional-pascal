@@ -5,41 +5,43 @@
 //! **Documentation:** `docs/pascal/std/host/path.md` (from the repository root).
 
 use crate::error::StdError;
-use crate::intrinsic_args::{pop_array, pop_string, pop_value, value_as_string_for_join};
+use crate::intrinsic_args::{
+    IntrinsicCall, pop_array, pop_string, pop_value, value_as_string_for_join,
+};
 use fpas_bytecode::{Intrinsic, PathIntrinsic, SourceLocation, Value};
 use std::path::{Component, MAIN_SEPARATOR, Path, PathBuf};
 
 /// Execute a `Std.Path` intrinsic and return `None` when another unit should handle it.
 pub(crate) fn run(
     intrinsic: Intrinsic,
-    stack: &mut Vec<Value>,
+    call: &mut IntrinsicCall<'_>,
     location: SourceLocation,
 ) -> Result<Option<()>, StdError> {
     match intrinsic {
         Intrinsic::Path(PathIntrinsic::Join) => {
-            let segments = pop_array(pop_value(stack, location)?, location)?;
+            let segments = pop_array(pop_value(call, location)?, location)?;
             let mut buf = PathBuf::new();
             for value in segments {
                 let segment = value_as_string_for_join(&value, location)?;
                 buf.push(segment);
             }
-            stack.push(Value::Str(buf.to_string_lossy().into_owned().into()));
+            call.push(Value::Str(buf.to_string_lossy().into_owned().into()));
         }
         Intrinsic::Path(PathIntrinsic::BaseName) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(base_name(&path).into()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Str(base_name(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::DirName) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(dir_name(&path).into()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Str(dir_name(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Extension) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(extension(&path).into()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Str(extension(&path).into()));
         }
         Intrinsic::Path(PathIntrinsic::Normalize) => {
-            let path = pop_string(pop_value(stack, location)?, location)?;
-            stack.push(Value::Str(normalize_path(&path).into()));
+            let path = pop_string(pop_value(call, location)?, location)?;
+            call.push(Value::Str(normalize_path(&path).into()));
         }
         _ => return Ok(None),
     }
@@ -134,7 +136,7 @@ mod tests {
     }
 
     fn run_path(intrinsic: PathIntrinsic, stack: &mut Vec<Value>) {
-        run(Intrinsic::Path(intrinsic), stack, test_location()).unwrap();
+        crate::run_intrinsic(Intrinsic::Path(intrinsic), stack, test_location()).unwrap();
     }
 
     #[test]

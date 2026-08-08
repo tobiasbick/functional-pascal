@@ -182,6 +182,13 @@ Every intrinsic ID appears in an exhaustive test. For each intrinsic family test
 - filesystem scratch stays under `.temp-data/`;
 - OS-specific tests use platform conditions only where behavior is genuinely host-specific.
 
+P6 evidence is recorded in `p6-intrinsics-hosted-runtimes.md`. The bytecode inventory and compiler
+catalog each cover every stable ID independently. Borrowed-runtime tests cover unchanged input and
+wrong count/type diagnostics; compiler differential tests cover ordinary and higher-order calls;
+direct register-VM tests cover Args, shared Console/Test input and output, headless Graph lifecycle,
+and the explicit P7 task boundary. Source-defined TUI code remains a P8 unit-object/linker consumer,
+while its Console host surface and the existing production headless suite remain covered in P6.
+
 ## Concurrency
 
 Preserve all current task/pool/runtime tests and add:

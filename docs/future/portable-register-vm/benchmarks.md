@@ -47,6 +47,11 @@ All current rows in [`docs/bench/suite.toml`](../../bench/suite.toml) remain req
 
 Read every row after every comparison. A target win does not hide a regression elsewhere.
 
+The inactive development path additionally owns phase-local groups. P6 adds
+`register_string_length` and `register_array_callbacks` under `register-p6`; these use
+`engine = "register"` and report interpreter instruction throughput. They prove exercised-path
+coverage before cutover but must not be compared numerically with in-program-timed production rows.
+
 ## New isolating workloads
 
 Add these only if equivalent coverage does not already exist when implementation starts:

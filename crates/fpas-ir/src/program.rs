@@ -190,6 +190,8 @@ pub struct IntrinsicSignature {
     pub id: IntrinsicId,
     /// Ordered parameter types.
     pub parameters: Vec<TypeId>,
+    /// Whether the final parameter type repeats for additional arguments.
+    pub variadic: bool,
     /// Result type.
     pub result: TypeId,
 }

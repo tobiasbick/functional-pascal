@@ -163,6 +163,27 @@ fn equality_type_mismatch() {
 }
 
 #[test]
+fn analyze_with_types_records_canonical_standard_intrinsic_calls() {
+    let (program, parse_errors) = fpas_parser::parse(
+        "program T; uses Std.Str, Std.Console; begin Std.Console.WriteLn(Std.Str.Length('abc')) end.",
+    );
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
+    let calls = metadata.intrinsic_calls.values().collect::<Vec<_>>();
+    assert!(
+        calls.iter().any(|call| call.as_str() == "Std.Str.Length"),
+        "{calls:?}"
+    );
+    assert!(
+        calls
+            .iter()
+            .any(|call| call.as_str() == "Std.Console.WriteLn"),
+        "{calls:?}"
+    );
+}
+
+#[test]
 fn analysis_metadata_exposes_all_named_results() {
     let (program, parse_errors) = fpas_parser::parse("program T; begin end.");
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");
@@ -170,6 +191,7 @@ fn analysis_metadata_exposes_all_named_results() {
     let crate::AnalysisMetadata {
         errors,
         expr_types,
+        intrinsic_calls,
         named_types,
         method_calls,
         record_defaults,
@@ -189,6 +211,7 @@ fn analysis_metadata_exposes_all_named_results() {
         [
             errors.len(),
             expr_types.len(),
+            intrinsic_calls.len(),
             method_calls.len(),
             record_defaults.len(),
             scalar_case_bindings.len(),
@@ -201,7 +224,7 @@ fn analysis_metadata_exposes_all_named_results() {
             event_assigned.len(),
             event_raises.len(),
         ],
-        [0; 13]
+        [0; 14]
     );
 }
 

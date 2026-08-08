@@ -178,7 +178,10 @@ impl Worker {
     }
 }
 
-fn console_cell_from_value(value: &Value, line: SourceLocation) -> Result<ConsoleCell, VmError> {
+pub(crate) fn console_cell_from_value(
+    value: &Value,
+    line: SourceLocation,
+) -> Result<ConsoleCell, VmError> {
     let fields = record_fields(value, CELL_TYPE, line)?;
     let glyph = match field(fields, "glyph", CELL_TYPE, line)? {
         Value::Str(glyph) => glyph.to_string(),
@@ -218,7 +221,10 @@ fn console_color_from_value(value: &Value, line: SourceLocation) -> Result<Conso
     }
 }
 
-fn console_rect_from_value(value: &Value, line: SourceLocation) -> Result<ConsoleRect, VmError> {
+pub(crate) fn console_rect_from_value(
+    value: &Value,
+    line: SourceLocation,
+) -> Result<ConsoleRect, VmError> {
     let fields = record_fields(value, RECT_TYPE, line)?;
     Ok(ConsoleRect {
         x: positive_u16_field(fields, "x", RECT_TYPE, line)?,
@@ -353,4 +359,55 @@ fn validation_error(
     line: SourceLocation,
 ) -> VmError {
     runtime_error(RUNTIME_CONSOLE_STATE_ERROR, message, help, line)
+}
+
+pub(crate) fn console_color_record(color: ConsoleColor) -> Value {
+    Worker::console_color_record(color)
+}
+
+pub(crate) fn console_crt_color(index: i64, line: SourceLocation) -> Result<ConsoleColor, VmError> {
+    Worker::console_crt_color(index, line)
+}
+
+pub(crate) fn console_ansi256_color(
+    index: i64,
+    line: SourceLocation,
+) -> Result<ConsoleColor, VmError> {
+    Worker::console_ansi256_color(index, line)
+}
+
+pub(crate) fn console_rgb_color(
+    red: i64,
+    green: i64,
+    blue: i64,
+    line: SourceLocation,
+) -> Result<ConsoleColor, VmError> {
+    Worker::console_rgb_color(red, green, blue, line)
+}
+
+pub(crate) fn console_cell_record(cell: ConsoleCell) -> Value {
+    Worker::console_cell_record(cell)
+}
+
+pub(crate) fn saved_region_record(id: SavedRegionId) -> Value {
+    Worker::saved_region_record(id)
+}
+
+pub(crate) fn saved_region_from_value(
+    value: &Value,
+    line: SourceLocation,
+) -> Result<SavedRegionId, VmError> {
+    let fields = record_fields(value, SAVED_REGION_TYPE, line)?;
+    let id = integer_field(fields, HANDLE_FIELD, SAVED_REGION_TYPE, line)?;
+    let id = u64::try_from(id)
+        .ok()
+        .filter(|id| *id != 0)
+        .ok_or_else(|| {
+            validation_error(
+                "Std.Console.SavedRegion contains an invalid handle",
+                "Use the SavedRegion returned by SaveRegion.",
+                line,
+            )
+        })?;
+    Ok(SavedRegionId(id))
 }

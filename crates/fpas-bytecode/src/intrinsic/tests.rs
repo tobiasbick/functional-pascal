@@ -2,6 +2,8 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Console(ConsoleIntrinsic::Write),
+    Intrinsic::Console(ConsoleIntrinsic::WriteLn),
     Intrinsic::Args(ArgsIntrinsic::ParamCount),
     Intrinsic::Args(ArgsIntrinsic::ParamStr),
     Intrinsic::Env(EnvIntrinsic::Get),

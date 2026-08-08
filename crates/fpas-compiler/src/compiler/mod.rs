@@ -122,6 +122,7 @@ impl Compiler {
         let AnalysisMetadata {
             errors: _,
             expr_types,
+            intrinsic_calls: _,
             named_types: _,
             method_calls,
             record_defaults,

@@ -29,4 +29,5 @@ mod closures;
 mod control_flow;
 mod diagnostics;
 mod functions;
+mod intrinsics;
 mod structure;

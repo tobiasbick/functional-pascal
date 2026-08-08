@@ -26,7 +26,7 @@ exist.
 | PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler global differential test; direct dense/immutable register-global tests; `register_global_access` | complete through P5 development path |
 | PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | defaults/get/set/update/nested/shared-layout/COW tests; invalid-slot tests; `register_record_update` | complete through P5 development path |
 | PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | simple/data enum construction, case match, destructuring, associated-field, and invalid-slot tests | complete through P5 development path |
-| PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | exhaustive intrinsic inventory | planned |
+| PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | `Intrinsic::all()`, explicit ID/uniqueness tests, canonical compiler-catalog coverage, verifier rejection, and one ABC register-window convention | complete through P6 development path |
 | PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | P5 positional operations carry IDs/slots; names are shared once for diagnostics/display; equality/display tests cover legacy and positional values | complete through P5 development path |
 
 ## Semantic preservation requirements
@@ -40,7 +40,7 @@ exist.
 | PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | named/anonymous, immutable/mutable cell, nested, capture-order, and task-bound cases | complete through P4 subset |
 | PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | stack/register differential collection and record tests; direct shared-layout/COW tests; positional/legacy equality and display | complete through P5 subset |
 | PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | construction/equality, test, unwrap payload/error, pattern, and `try` success/early-return cases | complete through P5 subset |
-| PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | exhaustive intrinsic and headless tests | planned |
+| PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | borrowed stack/register shared decoder, compiler differential intrinsic/callback tests, direct Console/Test/headless Graph tests, existing Std and production FPAS suites | complete through P6 development path |
 | PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | stress, wait, sleep, shutdown, panic | planned |
 | PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | prior differential diagnostics plus P5 missing array/dictionary index codes, immutable globals, wrong unwrap variant, and malformed layout admission | complete through P5 subset |
 
@@ -214,9 +214,9 @@ final production migration and old-op deletion, not the inactive phase overlay a
 | `FieldGet` | `LoadField(dst, record, RecordFieldId)` | P5; record field tests and `record_field_access` | planned |
 | `FieldSet` | `StoreField(dst, record, RecordFieldId, value)` | P5; record field mutation tests | planned |
 | `UpdateRecord` | `UpdateRecord(dst, record, override_base, count)` | P5; record-update/COW tests and `record_update` | planned |
-| `Print` | `Intrinsic(dst, PrintId, arg_base, arg_count)` | P6; console output tests | planned |
-| `PrintLn` | `Intrinsic(dst, PrintLnId, arg_base, arg_count)` | P6; console output tests | planned |
-| `Intrinsic` | `Intrinsic(dst, IntrinsicId, arg_base, arg_count)` | P6; all-intrinsics inventory | planned |
+| `Print` | `Intrinsic(dst, PrintId, arg_base, arg_count)` | P6; Console output and shared hosted-state tests | complete through P6 development path |
+| `PrintLn` | `Intrinsic(dst, PrintLnId, arg_base, arg_count)` | P6; Console output and shared hosted-state tests | complete through P6 development path |
+| `Intrinsic` | `Intrinsic(dst, IntrinsicId, arg_base, arg_count)` | P6; exhaustive decoder/list/catalog inventory, verifier and register VM tests | complete through P6 development path |
 | `ArrayPushLocal` | local/capture array mutation plus write-back | P5; local array mutation tests | planned |
 | `ArrayPopLocal` | local/capture array mutation plus result | P5; local array mutation tests | planned |
 | `Halt` | root `Return(Unit)` terminator | P3/P9; entry completion tests | planned |

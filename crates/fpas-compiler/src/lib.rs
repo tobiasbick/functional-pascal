@@ -16,6 +16,7 @@
 mod bytecode;
 mod compiler;
 mod error;
+mod intrinsic_catalog;
 mod lowering;
 mod unit_object;
 

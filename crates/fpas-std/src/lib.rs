@@ -64,7 +64,7 @@ pub use graph::{
     last_headless_graph_frame_for_tests, pop_headless_graph_test_mode,
     push_headless_graph_test_mode, with_headless_graph_backend_for_tests,
 };
-pub use intrinsics::run_intrinsic;
+pub use intrinsics::{run_intrinsic, run_intrinsic_borrowed};
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,

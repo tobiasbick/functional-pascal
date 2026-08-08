@@ -117,4 +117,8 @@ pub enum ConsoleIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/console/events.md`
     ReleaseInteractiveTerminal = 397,
+    /// Writes one value through the hosted console.
+    Write = 398,
+    /// Writes one value followed by a newline through the hosted console.
+    WriteLn = 399,
 }

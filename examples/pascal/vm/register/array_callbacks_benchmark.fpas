@@ -1,0 +1,23 @@
+program RegisterArrayCallbacksBenchmark;
+
+uses Std.Array;
+
+function Double(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+begin
+  var Values: array of integer := [3, 5, 7, 11];
+  mutable var Checksum: integer := 0;
+  for Index: integer := 1 to 50 do
+  begin
+    var Mapped: array of integer := Std.Array.Map(Values, Double);
+    Checksum := Checksum + Mapped[2]
+  end;
+
+  if Checksum <> 700 then
+  begin
+    panic('register array-callback checksum mismatch')
+  end
+end.

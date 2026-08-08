@@ -53,6 +53,7 @@ impl Allocation {
         }
 
         let last_uses = last_uses(function);
+        let coalesced_writes = coalesced_local_writes(function);
         let mut active: Vec<(ValueId, usize, Register)> = Vec::new();
         let mut position = 0_usize;
         let mut high_water = next_fixed;
@@ -65,15 +66,25 @@ impl Allocation {
             for instruction in &block.instructions {
                 active.retain(|(_, last_use, _)| *last_use >= position);
                 if let Some(result) = instruction.result {
-                    let used: BTreeSet<u16> = active
-                        .iter()
-                        .map(|(_, _, register)| register.get())
-                        .chain(locals.values().map(|register| register.get()))
-                        .collect();
-                    let register = lowest_free(next_fixed, &used)?;
-                    high_water = high_water.max(usize::from(register.get()) + 1);
-                    let last_use = last_uses.get(&result.id).copied().unwrap_or(position);
-                    active.push((result.id, last_use, register));
+                    let register = if let Some(local) = coalesced_writes.get(&result.id) {
+                        locals.get(local).copied().ok_or_else(|| {
+                            limit_error(&format!(
+                                "coalesced local {} has no allocated register",
+                                local.get()
+                            ))
+                        })?
+                    } else {
+                        let used: BTreeSet<u16> = active
+                            .iter()
+                            .map(|(_, _, register)| register.get())
+                            .chain(locals.values().map(|register| register.get()))
+                            .collect();
+                        let register = lowest_free(next_fixed, &used)?;
+                        high_water = high_water.max(usize::from(register.get()) + 1);
+                        let last_use = last_uses.get(&result.id).copied().unwrap_or(position);
+                        active.push((result.id, last_use, register));
+                        register
+                    };
                     values.insert(result.id, register);
                 }
                 position = position.saturating_add(1);
@@ -112,15 +123,48 @@ impl Allocation {
     }
 }
 
+fn coalesced_local_writes(function: &Function) -> BTreeMap<ValueId, LocalId> {
+    let mut use_counts = BTreeMap::<ValueId, usize>::new();
+    for block in &function.blocks {
+        for instruction in &block.instructions {
+            for value in operation_values(&instruction.operation) {
+                *use_counts.entry(value).or_default() += 1;
+            }
+        }
+        if let Some(terminator) = block.terminators.first() {
+            for value in terminator_values(terminator) {
+                *use_counts.entry(value).or_default() += 1;
+            }
+        }
+    }
+
+    let mut writes = BTreeMap::new();
+    for block in &function.blocks {
+        for pair in block.instructions.windows(2) {
+            let Some(result) = pair[0].result else {
+                continue;
+            };
+            let Operation::WriteLocal { value, local } = &pair[1].operation else {
+                continue;
+            };
+            if result.id == *value && use_counts.get(value) == Some(&1) {
+                writes.insert(*value, *local);
+            }
+        }
+    }
+    writes
+}
+
 fn largest_window(function: &Function) -> usize {
     function
         .blocks
         .iter()
         .flat_map(|block| &block.instructions)
         .map(|instruction| match &instruction.operation {
-            Operation::CallDirect { arguments, .. }
-            | Operation::CallValue { arguments, .. }
-            | Operation::SpawnTask { arguments, .. }
+            Operation::CallDirect { arguments, .. } | Operation::CallValue { arguments, .. } => {
+                call_argument_width(arguments)
+            }
+            Operation::SpawnTask { arguments, .. }
             | Operation::SpawnDetachedTask { arguments, .. }
             | Operation::Intrinsic { arguments, .. } => arguments.len(),
             Operation::MakeClosure { captures, .. } => captures.len(),
@@ -134,6 +178,14 @@ fn largest_window(function: &Function) -> usize {
         })
         .max()
         .unwrap_or(0)
+}
+
+fn call_argument_width(arguments: &[ValueId]) -> usize {
+    if arguments.len() == 1 {
+        0
+    } else {
+        arguments.len()
+    }
 }
 
 fn lowest_free(first_temporary: usize, used: &BTreeSet<u16>) -> Result<Register, CompileError> {
@@ -187,6 +239,7 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
         | Operation::UnwrapError(value)
         | Operation::UnwrapSome(value) => vec![*value],
         Operation::MakeArray(values) => values.clone(),
+        Operation::ArrayPush { value, .. } => vec![*value],
         Operation::MakeDictionary(pairs) => pairs
             .iter()
             .flat_map(|(key, value)| [*key, *value])
@@ -254,4 +307,102 @@ fn limit_error(message: &str) -> CompileError {
         1,
         1,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use fpas_ir::{
+        BasicBlock, BlockId, Constant, Function, FunctionId, FunctionSignature, GlobalId,
+        Instruction, Local, LocalId, Operation, Terminator, TypeId, ValueDefinition, ValueId,
+    };
+
+    use super::{coalesced_local_writes, largest_window};
+
+    #[test]
+    fn one_argument_calls_need_no_copy_window() {
+        let one_argument = function_with(vec![Instruction {
+            source: None,
+            result: None,
+            operation: Operation::CallDirect {
+                function: FunctionId::new(1),
+                arguments: vec![ValueId::new(0)],
+            },
+        }]);
+        assert_eq!(largest_window(&one_argument), 0);
+
+        let two_arguments = function_with(vec![Instruction {
+            source: None,
+            result: None,
+            operation: Operation::CallDirect {
+                function: FunctionId::new(1),
+                arguments: vec![ValueId::new(0), ValueId::new(1)],
+            },
+        }]);
+        assert_eq!(largest_window(&two_arguments), 2);
+    }
+
+    #[test]
+    fn local_write_coalescing_requires_one_use_in_the_same_block() {
+        let value = ValueDefinition {
+            id: ValueId::new(0),
+            ty: TypeId::new(0),
+        };
+        let mut function = function_with(vec![
+            Instruction {
+                source: None,
+                result: Some(value),
+                operation: Operation::Const(Constant::Integer(1)),
+            },
+            Instruction {
+                source: None,
+                result: None,
+                operation: Operation::WriteLocal {
+                    value: value.id,
+                    local: LocalId::new(0),
+                },
+            },
+        ]);
+        assert_eq!(
+            coalesced_local_writes(&function).get(&value.id),
+            Some(&LocalId::new(0))
+        );
+
+        function.blocks[0].instructions.push(Instruction {
+            source: None,
+            result: None,
+            operation: Operation::StoreGlobal {
+                global: GlobalId::new(0),
+                value: value.id,
+            },
+        });
+        assert!(!coalesced_local_writes(&function).contains_key(&value.id));
+    }
+
+    fn function_with(instructions: Vec<Instruction>) -> Function {
+        Function {
+            id: FunctionId::new(0),
+            name: "coalescing".to_string(),
+            signature: FunctionSignature {
+                parameters: Vec::new(),
+                result: TypeId::new(1),
+            },
+            parameters: Vec::new(),
+            locals: vec![Local {
+                id: LocalId::new(0),
+                ty: TypeId::new(0),
+                mutable: true,
+                capture: None,
+            }],
+            captures: Vec::new(),
+            blocks: vec![BasicBlock {
+                id: BlockId::new(0),
+                parameters: Vec::new(),
+                instructions,
+                terminators: vec![Terminator::Return(None)],
+            }],
+            entry: BlockId::new(0),
+            max_call_arguments: 0,
+            can_spawn_tasks: false,
+        }
+    }
 }

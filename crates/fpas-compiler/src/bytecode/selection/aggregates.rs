@@ -36,6 +36,18 @@ impl Selector<'_> {
                 )?);
                 instructions
             }
+            Operation::ArrayPush { local, value } => {
+                let local = self.allocation.local(*local)?.get();
+                vec![
+                    abc(
+                        Opcode::ArrayPush,
+                        local,
+                        local,
+                        self.allocation.value(*value)?.get(),
+                    )?,
+                    abc(Opcode::LoadUnit, self.result_register(result)?, 0, 0)?,
+                ]
+            }
             Operation::MakeDictionary(pairs) => {
                 let values = pairs
                     .iter()

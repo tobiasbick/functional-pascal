@@ -2,6 +2,7 @@
 
 mod access;
 mod callback;
+mod callback_call;
 mod calls;
 mod diagnostics;
 mod dispatch;

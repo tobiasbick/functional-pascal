@@ -61,6 +61,16 @@ impl Worker {
         self.write(register(o.a)?, Value::Array(values.into()))
     }
 
+    pub fn array_push(&mut self, o: AbcOperands) -> Result<(), VmError> {
+        let value = self.read(register(o.c)?)?.clone();
+        let array = self.take(register(o.b)?)?;
+        let Value::Array(mut array) = array else {
+            return Err(self.type_mismatch("array", &array));
+        };
+        array.push(value);
+        self.write(register(o.a)?, Value::Array(array))
+    }
+
     pub fn make_dictionary(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let count = usize::from(o.c)
             .checked_mul(2)

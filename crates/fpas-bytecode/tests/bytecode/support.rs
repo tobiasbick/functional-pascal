@@ -58,10 +58,8 @@ pub fn replace_root_code(executable: &mut Executable, code: Vec<Instruction>) {
 pub fn all_opcodes_executable() -> Executable {
     let mut code = Vec::new();
     for opcode in Opcode::ALL {
-        if opcode != Opcode::ReservedMetadata {
-            let address = u32::try_from(code.len()).expect("test code length must fit u32");
-            code.push(valid_instruction(opcode, address.saturating_add(1)));
-        }
+        let address = u32::try_from(code.len()).expect("test code length must fit u32");
+        code.push(valid_instruction(opcode, address.saturating_add(1)));
     }
     let callee_start = u32::try_from(code.len()).expect("test code length must fit u32");
     code.push(return_unit());
@@ -203,9 +201,7 @@ fn valid_instruction(opcode: Opcode, next_address: u32) -> Instruction {
         Opcode::SpawnTask => abc(opcode, 0, 1, 0, 0),
         Opcode::SpawnDetachedTask => abc(opcode, 0, 0, 0, 0),
         Opcode::Yield => abc(opcode, 0, 0, 0, 0),
-        Opcode::ReservedMetadata => {
-            Instruction::ax(opcode, 0).expect("reserved opcode must use Ax")
-        }
+        Opcode::ArrayPush => abc(opcode, 0, 1, 2, 0),
         _ => abc(opcode, 0, 1, 2, 0),
     }
 }

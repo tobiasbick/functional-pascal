@@ -15,8 +15,7 @@ use super::{VmError, diagnostics};
 impl Worker {
     pub(super) fn call_direct(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
-        let arguments = self.clone_window(operands.c, operands.auxiliary)?;
-        self.enter_call(target, operands.a, arguments, Vec::new())
+        self.enter_call(target, operands.a, operands.c, operands.auxiliary, &[])
     }
 
     pub(super) fn call_value(&mut self, operands: AbcOperands) -> Result<(), VmError> {
@@ -25,8 +24,13 @@ impl Worker {
             return Err(self.operand_type_error("function", &callee));
         };
         let target = function.function;
-        let arguments = self.clone_window(operands.c, operands.auxiliary)?;
-        self.enter_call(target, operands.a, arguments, function.captures.clone())
+        self.enter_call(
+            target,
+            operands.a,
+            operands.c,
+            operands.auxiliary,
+            &function.captures,
+        )
     }
 
     pub(super) fn make_closure(&mut self, operands: AbcOperands) -> Result<(), VmError> {
@@ -118,8 +122,9 @@ impl Worker {
         &mut self,
         target: FunctionId,
         destination: u16,
-        arguments: Vec<Value>,
-        captures: Vec<Value>,
+        argument_base: u16,
+        argument_count: u8,
+        captures: &[Value],
     ) -> Result<(), VmError> {
         let image = self.executable.executable();
         let info = image
@@ -132,14 +137,13 @@ impl Worker {
                     "Call target is outside the function table",
                 )
             })?;
-        if arguments.len() != usize::from(info.arity) {
+        if usize::from(argument_count) != usize::from(info.arity) {
             return Err(diagnostics::internal(
                 image,
                 self.current_address,
                 format!(
                     "Call arity mismatch: expected {}, got {}",
-                    info.arity,
-                    arguments.len()
+                    info.arity, argument_count
                 ),
             ));
         }
@@ -190,6 +194,26 @@ impl Worker {
                 "Callee address does not fit this host",
             )
         })?;
+        let argument_start = self
+            .base
+            .checked_add(usize::from(argument_base))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    image,
+                    self.current_address,
+                    "Call argument window overflowed the active frame",
+                )
+            })?;
+        let argument_end = argument_start
+            .checked_add(usize::from(argument_count))
+            .filter(|end| *end <= self.registers.len())
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    image,
+                    self.current_address,
+                    "Call argument window left the active frame",
+                )
+            })?;
         self.call_stack.push(CallFrame {
             function: self.function,
             ip: self.ip,
@@ -198,8 +222,11 @@ impl Worker {
         });
         self.base = self.registers.len();
         self.registers.resize(new_len, Value::Unit);
-        for (index, value) in arguments.into_iter().chain(captures).enumerate() {
-            self.registers[self.base + index] = value;
+        for (index, source) in (argument_start..argument_end).enumerate() {
+            self.registers[self.base + index] = self.registers[source].clone();
+        }
+        for (index, value) in captures.iter().enumerate() {
+            self.registers[self.base + usize::from(argument_count) + index] = value.clone();
         }
         self.function = target;
         self.ip = start;

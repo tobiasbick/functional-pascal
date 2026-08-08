@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-08 — after portable register VM
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6899 | throughput: 7247427 iters/s |
+| global_access | 641 | throughput: 7800312 global updates/s |
+| record_field_access | 2152 | throughput: 5576208 field accesses/s |
+| closure_call | 616 | throughput: 4870129 closure calls/s |
+| branch_dispatch | 3445 | throughput: 5805515 branches/s |
+| dynamic_numeric | 1057 | throughput: 4730368 dynamic numeric ops/s |
+| array_push | 253 | throughput: 7905138 pushes/s |
+| array_length | 108 | throughput: 4629629 lengths/s |
+| string_concat | 2949 | throughput: 1695489 concats/s |
+| string_length | 82 | throughput: 6097560 lengths/s |
+| function_call | 862 | throughput: 6960556 calls/s |
+| array_callbacks | 1401 | throughput: 6852248 callbacks/s |
+| record_update | 593 | throughput: 1686340 updates/s |
+| unicode_char_at | 1770 | throughput: 1694915 chars/s |
+| task_spawn_wait | 945 | throughput: 105820 tasks/s |
+| tui_headless | 17079 | throughput: 29 frames/s |
+
 ## 2026-08-03 — after TUI surface bulk fills
 
 - Group: `all`

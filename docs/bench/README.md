@@ -119,4 +119,5 @@ On Windows use `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` 
 ## See also
 
 - [Benchmark history](history.md)
+- [Portable register VM acceptance](portable-register-vm.md)
 - [Examples README — Performance](../../examples/README.md#performance-benchmarks)

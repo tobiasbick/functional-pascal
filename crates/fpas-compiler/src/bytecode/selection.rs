@@ -2,6 +2,7 @@
 
 mod aggregates;
 mod intrinsics;
+mod local_moves;
 
 use std::collections::BTreeMap;
 
@@ -65,18 +66,10 @@ impl<'a> Selector<'a> {
                     abc(Opcode::LoadUnit, destination, 0, 0)
                 }
             }
-            Operation::ReadLocal(local) => abc(
-                Opcode::Move,
-                self.result_register(result)?,
-                self.allocation.local(*local)?.get(),
-                0,
-            ),
-            Operation::WriteLocal { value, local } => abc(
-                Opcode::Move,
-                self.allocation.local(*local)?.get(),
-                self.allocation.value(*value)?.get(),
-                0,
-            ),
+            Operation::ReadLocal(local) => return self.select_read_local(*local, result),
+            Operation::WriteLocal { value, local } => {
+                return self.select_write_local(*value, *local);
+            }
             Operation::Unary { operation, operand } => abc(
                 unary_opcode(*operation),
                 self.result_register(result)?,
@@ -174,7 +167,7 @@ impl<'a> Selector<'a> {
             .ok_or_else(|| selection_error("direct call target is missing"))?;
         let target_id = u16::try_from(function.get())
             .map_err(|_| selection_error("function identifier exceeds u16"))?;
-        let mut instructions = self.prepare_window(arguments)?;
+        let (mut instructions, argument_base) = self.prepare_call_window(arguments)?;
         let returns_unit = matches!(
             self.program
                 .ty(target.signature.result)
@@ -190,7 +183,7 @@ impl<'a> Selector<'a> {
             Opcode::CallDirect,
             destination,
             target_id,
-            self.allocation.call_window().get(),
+            argument_base,
             argument_count(arguments)?,
         )?);
         if returns_unit {
@@ -205,12 +198,12 @@ impl<'a> Selector<'a> {
         arguments: &[ValueId],
         result: Option<ValueId>,
     ) -> Result<Vec<Instruction>, CompileError> {
-        let mut instructions = self.prepare_window(arguments)?;
+        let (mut instructions, argument_base) = self.prepare_call_window(arguments)?;
         instructions.push(abc_aux(
             Opcode::CallValue,
             self.result_register(result)?,
             self.allocation.value(callee)?.get(),
-            self.allocation.call_window().get(),
+            argument_base,
             argument_count(arguments)?,
         )?);
         Ok(instructions)
@@ -258,6 +251,19 @@ impl<'a> Selector<'a> {
                 )
             })
             .collect()
+    }
+
+    fn prepare_call_window(
+        &self,
+        values: &[ValueId],
+    ) -> Result<(Vec<Instruction>, u16), CompileError> {
+        if let [value] = values {
+            return Ok((Vec::new(), self.allocation.value(*value)?.get()));
+        }
+        Ok((
+            self.prepare_window(values)?,
+            self.allocation.call_window().get(),
+        ))
     }
 
     fn binary_opcode(

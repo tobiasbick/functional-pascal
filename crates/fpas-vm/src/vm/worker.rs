@@ -1,10 +1,9 @@
 //! Register-window state and execution loop.
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::sync::{Arc, RwLock};
 
-use fpas_bytecode::{FunctionId, InstructionAddress, SharedFunction, Value, VerifiedExecutable};
-use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY};
+use fpas_bytecode::{FunctionId, InstructionAddress, Value, VerifiedExecutable};
 
 use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
@@ -24,7 +23,8 @@ pub(super) struct Worker {
     pub hosted: Arc<HostedState>,
     pub call_stack: Vec<CallFrame>,
     pub instruction_count: u64,
-    callback_instruction_count: Cell<u64>,
+    pub(super) callback_instruction_count: Cell<u64>,
+    pub(super) callback_worker: RefCell<Option<Box<Worker>>>,
     pub current_address: InstructionAddress,
     pub scheduler: Option<Arc<TaskScheduler>>,
     pub task_id: u64,
@@ -69,19 +69,19 @@ impl Worker {
         Self::for_function_with_captures(
             executable,
             entry,
-            arguments,
-            Vec::new(),
+            &arguments,
+            &[],
             globals,
             layouts,
             hosted,
         )
     }
 
-    fn for_function_with_captures(
+    pub(super) fn for_function_with_captures(
         executable: Arc<VerifiedExecutable>,
         entry: FunctionId,
-        arguments: Vec<Value>,
-        captures: Vec<Value>,
+        arguments: &[Value],
+        captures: &[Value],
         globals: Arc<RwLock<Vec<Option<Value>>>>,
         layouts: Arc<RuntimeLayouts>,
         hosted: Arc<HostedState>,
@@ -121,9 +121,10 @@ impl Worker {
                 "Root instruction address does not fit this host",
             )
         })?;
-        let mut registers = vec![Value::Unit; usize::from(register_count)];
-        for (index, value) in arguments.into_iter().chain(captures).enumerate() {
-            registers[index] = value;
+        let mut registers = Vec::new();
+        registers.resize(usize::from(register_count), Value::Unit);
+        for (index, value) in arguments.iter().chain(captures).enumerate() {
+            registers[index] = value.clone();
         }
         Ok(Self {
             executable,
@@ -137,6 +138,7 @@ impl Worker {
             call_stack: Vec::new(),
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
+            callback_worker: RefCell::new(None),
             current_address: start,
             scheduler: None,
             task_id: 0,
@@ -164,6 +166,7 @@ impl Worker {
             call_stack: Vec::new(),
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
+            callback_worker: RefCell::new(None),
             current_address: self.current_address,
             scheduler: self.scheduler.clone(),
             task_id: 0,
@@ -186,6 +189,7 @@ impl Worker {
             call_stack: task.frames,
             instruction_count: task.instruction_count,
             callback_instruction_count: Cell::new(0),
+            callback_worker: RefCell::new(None),
             current_address: self.current_address,
             scheduler: self.scheduler.clone(),
             task_id: task.id,
@@ -240,76 +244,11 @@ impl Worker {
         }
     }
 
-    /// Invoke a first-class function synchronously through its numeric register target.
-    pub(super) fn call_callback_sync(
-        &self,
-        callback: &Value,
-        arguments: Vec<Value>,
-    ) -> Result<Value, VmError> {
-        let Value::Function(function) = callback else {
-            return Err(diagnostics::at_address(
-                self.executable.executable(),
-                self.current_address,
-                RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-                format!("Expected function value, got `{}`", callback.type_name()),
-                "Pass a named function or function-typed variable as the callback argument.",
-            ));
-        };
-        self.call_numeric_function(function, arguments)
-    }
-
-    fn call_numeric_function(
-        &self,
-        function: &SharedFunction,
-        arguments: Vec<Value>,
-    ) -> Result<Value, VmError> {
-        let target = function.function;
-        let info = self
-            .executable
-            .executable()
-            .functions
-            .get(usize::from(target.get()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Callback target is outside the function table",
-                )
-            })?;
-        if arguments.len() != usize::from(info.arity) {
-            return Err(diagnostics::at_address(
-                self.executable.executable(),
-                self.current_address,
-                RUNTIME_WRONG_CALL_ARITY,
-                format!(
-                    "Function `{}` expects {} arguments, got {}",
-                    function.name,
-                    info.arity,
-                    arguments.len()
-                ),
-                "Check the callback signature and the intrinsic's callback contract.",
-            ));
-        }
-        let execution = Self::for_function_with_captures(
-            Arc::clone(&self.executable),
-            target,
-            arguments,
-            function.captures.clone(),
-            Arc::clone(&self.globals),
-            Arc::clone(&self.layouts),
-            Arc::clone(&self.hosted),
-        )?
-        .with_scheduler(self.scheduler.clone())
-        .run()?;
-        self.callback_instruction_count.set(
-            self.callback_instruction_count
-                .get()
-                .saturating_add(execution.instruction_count),
-        );
-        Ok(execution.value)
-    }
-
     pub fn run(mut self) -> Result<Execution, VmError> {
+        self.run_in_place()
+    }
+
+    pub(super) fn run_in_place(&mut self) -> Result<Execution, VmError> {
         loop {
             if self
                 .scheduler

@@ -47,14 +47,14 @@ impl Worker {
             Map => Value::Array(
                 values
                     .iter()
-                    .map(|value| self.call_callback_sync(callback, vec![value.clone()]))
+                    .map(|value| self.call_callback_sync(callback, std::slice::from_ref(value)))
                     .collect::<Result<Vec<_>, _>>()?
                     .into(),
             ),
             Filter => {
                 let mut filtered = Vec::new();
                 for value in values {
-                    if self.callback_is_true(callback, vec![value.clone()])? {
+                    if self.callback_is_true(callback, std::slice::from_ref(value))? {
                         filtered.push(value.clone());
                     }
                 }
@@ -66,15 +66,15 @@ impl Worker {
                     .ok_or_else(|| self.arity_error("Std.Array.Reduce"))?
                     .clone();
                 for value in values {
-                    accumulator =
-                        self.call_callback_sync(callback, vec![accumulator, value.clone()])?;
+                    let arguments = [accumulator, value.clone()];
+                    accumulator = self.call_callback_sync(callback, &arguments)?;
                 }
                 accumulator
             }
             Find => {
                 let mut found = Value::OptionNone;
                 for value in values {
-                    if self.callback_is_true(callback, vec![value.clone()])? {
+                    if self.callback_is_true(callback, std::slice::from_ref(value))? {
                         found = Value::OptionSome(Box::new(value.clone()));
                         break;
                     }
@@ -84,7 +84,7 @@ impl Worker {
             FindIndex => {
                 let mut found = -1;
                 for (index, value) in values.iter().enumerate() {
-                    if self.callback_is_true(callback, vec![value.clone()])? {
+                    if self.callback_is_true(callback, std::slice::from_ref(value))? {
                         found = index as i64;
                         break;
                     }
@@ -94,7 +94,7 @@ impl Worker {
             Any => {
                 let mut matched = false;
                 for value in values {
-                    if self.callback_is_true(callback, vec![value.clone()])? {
+                    if self.callback_is_true(callback, std::slice::from_ref(value))? {
                         matched = true;
                         break;
                     }
@@ -104,7 +104,7 @@ impl Worker {
             All => {
                 let mut matched = true;
                 for value in values {
-                    if !self.callback_is_true(callback, vec![value.clone()])? {
+                    if !self.callback_is_true(callback, std::slice::from_ref(value))? {
                         matched = false;
                         break;
                     }
@@ -114,7 +114,7 @@ impl Worker {
             FlatMap => {
                 let mut flattened = Vec::new();
                 for value in values {
-                    match self.call_callback_sync(callback, vec![value.clone()])? {
+                    match self.call_callback_sync(callback, std::slice::from_ref(value))? {
                         Value::Array(inner) => flattened.extend(inner.iter().cloned()),
                         other => flattened.push(other),
                     }
@@ -123,7 +123,7 @@ impl Worker {
             }
             ForEach => {
                 for value in values {
-                    self.call_callback_sync(callback, vec![value.clone()])?;
+                    self.call_callback_sync(callback, std::slice::from_ref(value))?;
                 }
                 Value::Unit
             }
@@ -157,7 +157,8 @@ impl Worker {
                     self.call_callback_sync(callback, vec![value.clone()])?,
                 )),
                 DictIntrinsic::Filter => {
-                    if self.callback_is_true(callback, vec![key.clone(), value.clone()])? {
+                    let arguments = [key.clone(), value.clone()];
+                    if self.callback_is_true(callback, &arguments)? {
                         result.push((key.clone(), value.clone()));
                     }
                 }
@@ -233,7 +234,7 @@ impl Worker {
         Ok(Some(result))
     }
 
-    fn callback_is_true(&self, callback: &Value, arguments: Vec<Value>) -> Result<bool, VmError> {
+    fn callback_is_true(&self, callback: &Value, arguments: &[Value]) -> Result<bool, VmError> {
         match self.call_callback_sync(callback, arguments)? {
             Value::Boolean(value) => Ok(value),
             other => Err(self.callback_type_error("boolean callback result", Some(&other))),

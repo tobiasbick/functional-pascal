@@ -7,6 +7,8 @@ use fpas_ir::{BlockId, Function, IrType, Operation, Program, Terminator};
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
+use super::allocation::Allocation;
+
 pub(super) struct BlockLayout {
     starts: BTreeMap<BlockId, u32>,
 }
@@ -15,6 +17,7 @@ impl BlockLayout {
     pub fn build_at(
         program: &Program,
         function: &Function,
+        allocation: &Allocation,
         code_offset: usize,
     ) -> Result<Self, CompileError> {
         let mut starts = BTreeMap::new();
@@ -27,7 +30,7 @@ impl BlockLayout {
                     .iter()
                     .try_fold(0_u32, |width, instruction| {
                         width
-                            .checked_add(operation_width(program, &instruction.operation)?)
+                            .checked_add(operation_width(program, allocation, instruction)?)
                             .ok_or_else(address_error)
                     })?;
             address = address
@@ -48,8 +51,23 @@ impl BlockLayout {
     }
 }
 
-fn operation_width(program: &Program, operation: &Operation) -> Result<u32, CompileError> {
-    let width = match operation {
+fn operation_width(
+    program: &Program,
+    allocation: &Allocation,
+    instruction: &fpas_ir::Instruction,
+) -> Result<u32, CompileError> {
+    let width = match &instruction.operation {
+        Operation::ReadLocal(local)
+            if allocation.value(instruction.result.ok_or_else(address_error)?.id)?
+                == allocation.local(*local)? =>
+        {
+            0
+        }
+        Operation::WriteLocal { value, local }
+            if allocation.value(*value)? == allocation.local(*local)? =>
+        {
+            0
+        }
         Operation::CallDirect {
             function,
             arguments,
@@ -61,9 +79,12 @@ fn operation_width(program: &Program, operation: &Operation) -> Result<u32, Comp
                     .map(|definition| &definition.kind),
                 Some(IrType::Unit)
             );
-            arguments.len().saturating_add(1 + usize::from(unit))
+            call_argument_width(arguments).saturating_add(1 + usize::from(unit))
         }
-        Operation::CallValue { arguments, .. } => arguments.len().saturating_add(1),
+        Operation::CallValue { arguments, .. } => call_argument_width(arguments).saturating_add(1),
+        Operation::SpawnTask { arguments, .. } | Operation::SpawnDetachedTask { arguments, .. } => {
+            arguments.len().saturating_add(1)
+        }
         Operation::Intrinsic {
             intrinsic,
             arguments,
@@ -84,10 +105,19 @@ fn operation_width(program: &Program, operation: &Operation) -> Result<u32, Comp
             fields.len().saturating_add(1)
         }
         Operation::IndexSet { .. } => 2,
+        Operation::ArrayPush { .. } => 2,
         Operation::UpdateRecord { fields, .. } => fields.len().saturating_mul(2).saturating_add(2),
         _ => 1,
     };
     u32::try_from(width).map_err(|_| address_error())
+}
+
+fn call_argument_width(arguments: &[fpas_ir::ValueId]) -> usize {
+    if arguments.len() == 1 {
+        0
+    } else {
+        arguments.len()
+    }
 }
 
 pub(super) fn terminator_width(terminator: &Terminator, next: Option<BlockId>) -> u32 {

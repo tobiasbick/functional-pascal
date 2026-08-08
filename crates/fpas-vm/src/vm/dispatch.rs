@@ -244,6 +244,7 @@ impl Worker {
             Opcode::LoadGlobal => self.load_global(self.abx(instruction)?)?,
             Opcode::StoreGlobal => self.store_global(self.abx(instruction)?)?,
             Opcode::MakeArray => self.make_array(self.abc(instruction)?)?,
+            Opcode::ArrayPush => self.array_push(self.abc(instruction)?)?,
             Opcode::IndexGet => self.index_get(self.abc(instruction)?)?,
             Opcode::IndexSet => self.index_set(self.abc(instruction)?)?,
             Opcode::Contains => self.contains(self.abc(instruction)?)?,
@@ -268,7 +269,6 @@ impl Worker {
             Opcode::SpawnTask => self.spawn_task(self.abc(instruction)?, false)?,
             Opcode::SpawnDetachedTask => self.spawn_task(self.abc(instruction)?, true)?,
             Opcode::Yield => self.yield_task(),
-            Opcode::ReservedMetadata => return Err(self.unavailable_opcode(opcode)),
         }
         if self.suspend_requested {
             return Ok(DispatchStep::Suspend);
@@ -277,23 +277,11 @@ impl Worker {
     }
 
     fn abc(&self, instruction: fpas_bytecode::Instruction) -> Result<AbcOperands, VmError> {
-        instruction.abc_operands().map_err(|error| {
-            diagnostics::internal(
-                self.executable.executable(),
-                self.current_address,
-                format!("Verified ABC operands failed decoding: {error}"),
-            )
-        })
+        Ok(instruction.abc_payload())
     }
 
     fn abx(&self, instruction: fpas_bytecode::Instruction) -> Result<AbxOperands, VmError> {
-        instruction.abx_operands().map_err(|error| {
-            diagnostics::internal(
-                self.executable.executable(),
-                self.current_address,
-                format!("Verified ABx operands failed decoding: {error}"),
-            )
-        })
+        Ok(instruction.abx_payload())
     }
 
     fn set_ip(&mut self, address: u32) -> Result<(), VmError> {

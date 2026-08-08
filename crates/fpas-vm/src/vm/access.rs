@@ -1,5 +1,7 @@
 //! Central checked register and persistent-constant access.
 
+use std::mem;
+
 use fpas_bytecode::{Constant, Register, SharedStr, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
@@ -8,6 +10,7 @@ use super::diagnostics;
 use super::worker::Worker;
 
 impl Worker {
+    #[inline(always)]
     pub fn read(&self, register: Register) -> Result<&Value, VmError> {
         self.registers
             .get(self.base + usize::from(register.get()))
@@ -23,6 +26,7 @@ impl Worker {
             })
     }
 
+    #[inline(always)]
     pub fn write(&mut self, register: Register, value: Value) -> Result<(), VmError> {
         let executable = self.executable.executable();
         let address = self.current_address;
@@ -43,6 +47,27 @@ impl Worker {
         Ok(())
     }
 
+    /// Remove a value from a register without cloning it.
+    pub(super) fn take(&mut self, register: Register) -> Result<Value, VmError> {
+        let executable = self.executable.executable();
+        let address = self.current_address;
+        let slot = self
+            .registers
+            .get_mut(self.base + usize::from(register.get()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    executable,
+                    address,
+                    format!(
+                        "Register {} is outside the initialized frame",
+                        register.get()
+                    ),
+                )
+            })?;
+        Ok(mem::replace(slot, Value::Unit))
+    }
+
+    #[inline(always)]
     pub fn integer(&self, register: Register) -> Result<i64, VmError> {
         match self.read(register)? {
             Value::Integer(value) => Ok(*value),
@@ -51,6 +76,7 @@ impl Worker {
         }
     }
 
+    #[inline(always)]
     pub fn real(&self, register: Register) -> Result<f64, VmError> {
         match self.read(register)? {
             Value::Real(value) => Ok(*value),
@@ -58,6 +84,7 @@ impl Worker {
         }
     }
 
+    #[inline(always)]
     pub fn boolean(&self, register: Register) -> Result<bool, VmError> {
         match self.read(register)? {
             Value::Boolean(value) => Ok(*value),

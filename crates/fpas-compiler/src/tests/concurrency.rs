@@ -1,6 +1,28 @@
 use super::*;
 
 #[test]
+fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
+    assert_succeeds(
+        "\
+program RegisterTaskArgumentLoop;
+uses Std.Array, Std.Task;
+function Worker(Value: integer): integer;
+begin
+  return Value + 1
+end;
+begin
+  mutable var Tasks: array of task := [];
+  for Index: integer := 1 to 8 do
+  begin
+    Push(Tasks, go Worker(Index))
+  end;
+  WaitAll(Tasks);
+  if Length(Tasks) <> 8 then panic('task loop count mismatch')
+end.",
+    );
+}
+
+#[test]
 fn retained_task_spawn_and_wait_execute() {
     let execution = assert_succeeds(
         "\

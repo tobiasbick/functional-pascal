@@ -176,6 +176,13 @@ pub enum Operation {
     },
     /// Constructs an array from elements in source order.
     MakeArray(Vec<ValueId>),
+    /// Appends one value directly to a local array while preserving copy-on-write value semantics.
+    ArrayPush {
+        /// Local array updated by the operation.
+        local: LocalId,
+        /// Value appended to the array.
+        value: ValueId,
+    },
     /// Constructs an insertion-ordered dictionary.
     MakeDictionary(Vec<(ValueId, ValueId)>),
     /// Reads an array element or dictionary value.
@@ -341,6 +348,7 @@ impl Operation {
                 | Self::CallValue { .. }
                 | Self::LoadGlobal(_)
                 | Self::MakeArray(_)
+                | Self::ArrayPush { .. }
                 | Self::MakeDictionary(_)
                 | Self::IndexGet { .. }
                 | Self::IndexSet { .. }

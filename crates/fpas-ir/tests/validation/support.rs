@@ -25,12 +25,20 @@ pub fn root(blocks: Vec<BasicBlock>) -> Function {
             result: UNIT,
         },
         parameters: Vec::new(),
-        locals: vec![Local {
-            id: LocalId::new(0),
-            ty: INTEGER,
-            mutable: true,
-            capture: None,
-        }],
+        locals: vec![
+            Local {
+                id: LocalId::new(0),
+                ty: INTEGER,
+                mutable: true,
+                capture: None,
+            },
+            Local {
+                id: LocalId::new(1),
+                ty: ARRAY,
+                mutable: true,
+                capture: None,
+            },
+        ],
         captures: Vec::new(),
         blocks,
         entry: BlockId::new(0),
@@ -467,6 +475,14 @@ pub fn all_operations_program() -> Program {
                 layout: EnumLayoutId::new(0),
                 variant: VariantId::new(0),
                 field: FieldId::new(0),
+            },
+        },
+        Instruction {
+            source: None,
+            result: Some(value(34, UNIT)),
+            operation: Operation::ArrayPush {
+                local: LocalId::new(1),
+                value: ValueId::new(1),
             },
         },
     ];

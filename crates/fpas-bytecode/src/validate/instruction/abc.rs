@@ -318,6 +318,25 @@ pub(super) fn validate_abc(
                 0,
             )
         }
+        Opcode::ArrayPush => {
+            validate_registers(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                &[("destination", a), ("array", b), ("value", c)],
+            )?;
+            canonical_u8(
+                executable,
+                function_id,
+                address,
+                opcode,
+                "auxiliary",
+                auxiliary,
+                0,
+            )
+        }
         Opcode::Intrinsic => {
             validate_optional_register(
                 executable,
@@ -365,8 +384,7 @@ pub(super) fn validate_abc(
         | Opcode::UpdateRecord
         | Opcode::MakeEnum
         | Opcode::TestVariant
-        | Opcode::LoadEnumField
-        | Opcode::ReservedMetadata => Err(ValidationError::instruction(
+        | Opcode::LoadEnumField => Err(ValidationError::instruction(
             executable,
             function_id,
             address,

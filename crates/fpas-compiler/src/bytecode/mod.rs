@@ -124,7 +124,7 @@ fn compile_function(
     metadata: &mut MetadataBuilder,
 ) -> Result<FunctionInfo, CompileError> {
     let allocation = Allocation::build(function)?;
-    let layout = BlockLayout::build_at(program, function, code.len())?;
+    let layout = BlockLayout::build_at(program, function, &allocation, code.len())?;
     let name = metadata.function_name(&function.name)?;
     metadata.begin_function();
     let code_start = InstructionAddress::try_from_index(code.len())

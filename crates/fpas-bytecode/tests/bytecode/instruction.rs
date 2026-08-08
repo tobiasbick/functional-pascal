@@ -15,22 +15,30 @@ fn every_opcode_round_trips_through_its_declared_form() {
         .expect("declared form must construct");
         assert_eq!(instruction.opcode(), Ok(opcode));
         match opcode.form() {
-            InstructionForm::Abc => assert_eq!(
-                instruction.abc_operands().expect("ABC must decode"),
-                fpas_bytecode::AbcOperands {
+            InstructionForm::Abc => {
+                let expected = fpas_bytecode::AbcOperands {
                     a: 0x1234,
                     b: 0x5678,
                     c: 0x9abc,
                     auxiliary: 0xde,
-                }
-            ),
-            InstructionForm::Abx => assert_eq!(
-                instruction.abx_operands().expect("ABx must decode"),
-                fpas_bytecode::AbxOperands {
+                };
+                assert_eq!(
+                    instruction.abc_operands().expect("ABC must decode"),
+                    expected
+                );
+                assert_eq!(instruction.abc_payload(), expected);
+            }
+            InstructionForm::Abx => {
+                let expected = fpas_bytecode::AbxOperands {
                     a: 0x1234,
                     bx: 0x9abcdef0,
-                }
-            ),
+                };
+                assert_eq!(
+                    instruction.abx_operands().expect("ABx must decode"),
+                    expected
+                );
+                assert_eq!(instruction.abx_payload(), expected);
+            }
             InstructionForm::Ax => assert_eq!(
                 instruction.ax_operand().expect("Ax must decode"),
                 0x1234_5678_9abc
@@ -55,8 +63,8 @@ fn malformed_instruction_forms_and_unknown_opcodes_are_rejected() {
         Err(InstructionError::FormMismatch { .. })
     ));
     assert!(matches!(
-        Instruction::ax(Opcode::ReservedMetadata, 1_u64 << 48),
-        Err(InstructionError::PayloadOutOfRange { .. })
+        Instruction::ax(Opcode::ArrayPush, 0),
+        Err(InstructionError::FormMismatch { .. })
     ));
     assert_eq!(
         Instruction::from_word(u64::from(u8::MAX)).opcode(),

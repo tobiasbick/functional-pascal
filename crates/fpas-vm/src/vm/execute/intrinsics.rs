@@ -1,6 +1,6 @@
 //! Borrowed register-window execution for non-hosted standard-library intrinsics.
 
-use fpas_bytecode::{AbcOperands, Intrinsic, NO_REGISTER, SourceLocation};
+use fpas_bytecode::{AbcOperands, Intrinsic, NO_REGISTER, SourceLocation, Value};
 
 use super::scalar::register;
 use crate::vm::hosted::HostedOutcome;
@@ -31,21 +31,17 @@ impl Worker {
             .get(start..end)
             .ok_or_else(|| self.intrinsic_window_error(operands))?;
         let location = self.intrinsic_location();
-        let task_arguments = arguments.to_vec();
-        if let Some(result) = self.task_intrinsic(intrinsic, &task_arguments)? {
-            if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
-                self.write(register(operands.a)?, value)?;
+        let result = if matches!(intrinsic, Intrinsic::Task(_) | Intrinsic::Time(_)) {
+            let owned_arguments = arguments.to_vec();
+            if let Some(result) = self.task_intrinsic(intrinsic, &owned_arguments)? {
+                if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
+                    self.write(register(operands.a)?, value)?;
+                }
+                return Ok(());
             }
-            return Ok(());
-        }
-        let result = match self.execute_hosted_intrinsic(intrinsic, &task_arguments, location)? {
-            HostedOutcome::Complete(result) => result,
-            HostedOutcome::Unhandled => fpas_std::run_intrinsic_borrowed(
-                intrinsic,
-                &task_arguments,
-                location,
-                self.layouts.as_ref(),
-            )?,
+            self.execute_borrowed_intrinsic(intrinsic, &owned_arguments, location)?
+        } else {
+            self.execute_borrowed_intrinsic(intrinsic, arguments, location)?
         };
         if operands.a == NO_REGISTER {
             return Ok(());
@@ -58,6 +54,24 @@ impl Worker {
             )
         })?;
         self.write(register(operands.a)?, value)
+    }
+
+    fn execute_borrowed_intrinsic(
+        &self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+        location: SourceLocation,
+    ) -> Result<Option<Value>, VmError> {
+        let result = match self.execute_hosted_intrinsic(intrinsic, arguments, location)? {
+            HostedOutcome::Complete(result) => result,
+            HostedOutcome::Unhandled => fpas_std::run_intrinsic_borrowed(
+                intrinsic,
+                arguments,
+                location,
+                self.layouts.as_ref(),
+            )?,
+        };
+        Ok(result)
     }
 
     fn intrinsic_location(&self) -> SourceLocation {

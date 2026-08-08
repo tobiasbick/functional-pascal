@@ -1,0 +1,13 @@
+program PushPreservesAliasTest;
+
+uses Std.Array, Std.Test;
+
+begin
+  mutable var Updated: array of integer := [1];
+  var Original: array of integer := Updated;
+  Push(Updated, 2);
+  AssertEquals(1, Length(Original));
+  AssertEquals(1, Original[0]);
+  AssertEquals(2, Length(Updated));
+  AssertEquals(2, Updated[1])
+end.

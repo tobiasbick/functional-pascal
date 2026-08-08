@@ -171,6 +171,7 @@ impl Worker {
     }
 }
 
+#[inline(always)]
 pub(in crate::vm) fn register(value: u16) -> Result<Register, VmError> {
     Register::new(value).map_err(|error| {
         fpas_diagnostics::Diagnostic::error(

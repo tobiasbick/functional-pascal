@@ -35,6 +35,56 @@ fn arrays_use_copy_on_write_for_index_updates() {
 }
 
 #[test]
+fn array_push_consumes_unique_storage_and_preserves_aliases() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abx(Opcode::LoadConstant, 2, 2),
+            abc(Opcode::MakeArray, 3, 1, 1),
+            abc(Opcode::Move, 4, 3, 0),
+            abc(Opcode::ArrayPush, 3, 3, 2),
+            abc(Opcode::IndexGet, 5, 4, 0),
+            abc(Opcode::IndexGet, 6, 3, 1),
+            return_unit(),
+        ],
+        vec![
+            Constant::Integer(0),
+            Constant::Integer(1),
+            Constant::Integer(2),
+        ],
+        vec!["root", "test.fpas"],
+        7,
+    );
+    let (_, registers, _) = execute(executable).expect("array push must run");
+    assert_eq!(registers[5], Value::Integer(1));
+    assert_eq!(registers[6], Value::Integer(2));
+    let (Value::Array(original), Value::Array(updated)) = (&registers[4], &registers[3]) else {
+        panic!("expected array values");
+    };
+    assert_eq!(original.len(), 1);
+    assert_eq!(updated.len(), 2);
+}
+
+#[test]
+fn array_push_rejects_non_array_operands() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::ArrayPush, 2, 0, 1),
+            return_unit(),
+        ],
+        vec![Constant::Integer(1), Constant::Integer(2)],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let error = execute(executable).expect_err("non-array push must fail");
+    assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
+    assert_eq!(error.message, "Expected array, got integer");
+}
+
+#[test]
 fn globals_are_dense_and_immutable_slots_initialize_once() {
     let mut image = unverified(
         vec![

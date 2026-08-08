@@ -169,6 +169,20 @@ impl LoweringContext {
             .any(|binding| binding.name.eq_ignore_ascii_case(name))
     }
 
+    /// Resolve a local whose value can be updated without capture-cell indirection.
+    pub(in crate::lowering) fn direct_local(&self, name: &str) -> Option<LocalId> {
+        if self.binding_is_cell(name) {
+            return None;
+        }
+        self.bindings
+            .iter()
+            .rev()
+            .find(|binding| binding.name.eq_ignore_ascii_case(name))
+            .map(|binding| match binding.storage {
+                BindingStorage::Local(local) => local,
+            })
+    }
+
     pub(in crate::lowering) fn binding_type(&self, name: &str) -> Option<TypeId> {
         self.bindings
             .iter()

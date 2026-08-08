@@ -36,6 +36,51 @@ fn validate_p5(
                 _ => invalid_p5_result(function, block, instruction, result.ty),
             }
         }
+        Operation::ArrayPush { local, value } => {
+            let local = function.local(*local).ok_or_else(|| {
+                unknown(
+                    function,
+                    block,
+                    instruction,
+                    EntityKind::Local,
+                    local.get(),
+                )
+            })?;
+            if !local.mutable {
+                return invalid_p5_result(function, block, instruction, local.ty);
+            }
+            let value_ty = value_type(
+                function,
+                block,
+                instruction,
+                *value,
+                all_values,
+                available,
+            )?;
+            let Some(IrType::Array(element)) =
+                program.ty(local.ty).map(|definition| &definition.kind)
+            else {
+                return invalid_p5_result(function, block, instruction, local.ty);
+            };
+            if !types_compatible(program, *element, value_ty) {
+                require_exact(
+                    function,
+                    block,
+                    instruction,
+                    "array element",
+                    *element,
+                    value_ty,
+                )?;
+            }
+            require_result_category(
+                program,
+                function,
+                block,
+                instruction,
+                Some(result),
+                TypeCategory::Unit,
+            )
+        }
         Operation::MakeDictionary(pairs) => {
             match program.ty(result.ty).map(|definition| &definition.kind) {
                 Some(IrType::Dictionary { key, value }) => {

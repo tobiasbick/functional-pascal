@@ -44,15 +44,6 @@ pub(super) fn validate_instruction(
             ValidationErrorKind::Instruction(error),
         )
     })?;
-    if opcode == Opcode::ReservedMetadata {
-        return Err(ValidationError::instruction(
-            executable,
-            function_id,
-            address,
-            Some(opcode),
-            ValidationErrorKind::ReservedOpcode,
-        ));
-    }
     match opcode.form() {
         InstructionForm::Abc => {
             let operands = instruction.abc_operands().map_err(|error| {

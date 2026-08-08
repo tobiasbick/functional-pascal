@@ -212,8 +212,8 @@ pub enum Opcode {
     SpawnDetachedTask = 91,
     /// Cooperatively yield the current task.
     Yield = 92,
-    /// Reserved Ax-form metadata reference for a future assigned operation.
-    ReservedMetadata = 93,
+    /// Append one value to an array using copy-on-write storage.
+    ArrayPush = 93,
 }
 
 impl Opcode {
@@ -312,7 +312,7 @@ impl Opcode {
         Self::SpawnTask,
         Self::SpawnDetachedTask,
         Self::Yield,
-        Self::ReservedMetadata,
+        Self::ArrayPush,
     ];
 
     /// Return the physical payload form assigned to this opcode.
@@ -325,7 +325,6 @@ impl Opcode {
             | Self::BranchIfTrue
             | Self::LoadGlobal
             | Self::StoreGlobal => InstructionForm::Abx,
-            Self::ReservedMetadata => InstructionForm::Ax,
             _ => InstructionForm::Abc,
         }
     }
@@ -422,6 +421,7 @@ impl Instruction {
     /// # Errors
     ///
     /// Returns [`InstructionError::UnknownOpcode`] when the low byte is unassigned.
+    #[inline(always)]
     pub fn opcode(self) -> Result<Opcode, InstructionError> {
         let encoded = self.0.to_le_bytes()[0];
         Opcode::try_from(encoded).map_err(|_| InstructionError::UnknownOpcode(encoded))
@@ -432,6 +432,7 @@ impl Instruction {
     /// # Errors
     ///
     /// Returns an opcode or form error for malformed input.
+    #[inline(always)]
     pub fn abc_operands(self) -> Result<AbcOperands, InstructionError> {
         let opcode = self.opcode()?;
         ensure_form(opcode, InstructionForm::Abc)?;
@@ -444,11 +445,27 @@ impl Instruction {
         })
     }
 
+    /// Decode the raw ABC payload without checking the opcode or declared form.
+    ///
+    /// This is intended for consumers that already hold a verified executable.
+    #[must_use]
+    #[inline(always)]
+    pub fn abc_payload(self) -> AbcOperands {
+        let bytes = self.0.to_le_bytes();
+        AbcOperands {
+            a: u16::from_le_bytes([bytes[1], bytes[2]]),
+            b: u16::from_le_bytes([bytes[3], bytes[4]]),
+            c: u16::from_le_bytes([bytes[5], bytes[6]]),
+            auxiliary: bytes[7],
+        }
+    }
+
     /// Decode ABx operands after confirming the opcode form.
     ///
     /// # Errors
     ///
     /// Returns an opcode or form error for malformed input.
+    #[inline(always)]
     pub fn abx_operands(self) -> Result<AbxOperands, InstructionError> {
         let opcode = self.opcode()?;
         ensure_form(opcode, InstructionForm::Abx)?;
@@ -457,6 +474,19 @@ impl Instruction {
             a: u16::from_le_bytes([bytes[1], bytes[2]]),
             bx: u32::from_le_bytes([bytes[3], bytes[4], bytes[5], bytes[6]]),
         })
+    }
+
+    /// Decode the raw ABx payload without checking the opcode or declared form.
+    ///
+    /// This is intended for consumers that already hold a verified executable.
+    #[must_use]
+    #[inline(always)]
+    pub fn abx_payload(self) -> AbxOperands {
+        let bytes = self.0.to_le_bytes();
+        AbxOperands {
+            a: u16::from_le_bytes([bytes[1], bytes[2]]),
+            bx: u32::from_le_bytes([bytes[3], bytes[4], bytes[5], bytes[6]]),
+        }
     }
 
     /// Decode an Ax payload after confirming the opcode form.
@@ -471,6 +501,7 @@ impl Instruction {
     }
 }
 
+#[inline(always)]
 fn ensure_form(opcode: Opcode, actual: InstructionForm) -> Result<(), InstructionError> {
     let expected = opcode.form();
     if expected == actual {

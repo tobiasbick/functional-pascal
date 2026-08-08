@@ -1,0 +1,32 @@
+program ArrayHigherOrderCallbacksTest;
+
+uses Std.Array, Std.Test;
+
+function Double(Value: integer): integer;
+begin
+  return Value * 2
+end;
+
+function IsAboveFour(Value: integer): boolean;
+begin
+  return Value > 4
+end;
+
+function Sum(Accumulator: integer; Value: integer): integer;
+begin
+  return Accumulator + Value
+end;
+
+begin
+  var Values: array of integer := [1, 2, 3, 4];
+  var Mapped: array of integer := Map(Values, Double);
+  var Filtered: array of integer := Filter(Mapped, IsAboveFour);
+  AssertEquals(4, Length(Mapped));
+  AssertEquals(2, Mapped[0]);
+  AssertEquals(8, Mapped[3]);
+  AssertEquals(2, Length(Filtered));
+  AssertEquals(6, Filtered[0]);
+  AssertEquals(8, Filtered[1]);
+  AssertEquals(14, Reduce(Filtered, 0, Sum));
+  AssertEquals(20, Reduce(Mapped, 0, Sum))
+end.

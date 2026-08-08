@@ -47,7 +47,21 @@ end.",
     let executable = crate::compile(&program).expect("compiler compilation should succeed");
     let image = executable.executable();
 
-    assert_eq!(image.code.len(), 9);
+    assert_eq!(image.code.len(), 6);
+    let add = image
+        .code
+        .iter()
+        .find(|instruction| instruction.opcode() == Ok(fpas_bytecode::Opcode::AddInteger))
+        .expect("assignment should contain integer addition")
+        .abc_operands()
+        .expect("integer addition uses ABC operands");
+    assert_eq!(add.a, 1, "addition should write directly into local B");
+    assert!(!image.code.iter().any(|instruction| {
+        instruction.opcode() == Ok(fpas_bytecode::Opcode::Move)
+            && instruction
+                .abc_operands()
+                .is_ok_and(|operands| operands.a == 1)
+    }));
     assert!(image.functions[0].register_count <= 5);
 }
 

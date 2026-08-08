@@ -1,0 +1,19 @@
+program TaskSpawnLoopWithArgumentTest;
+
+uses Std.Array, Std.Task, Std.Test;
+
+function Worker(Value: integer): integer;
+begin
+  return Value + 1
+end;
+
+begin
+  mutable var Tasks: array of task := [];
+  for Index: integer := 1 to 8 do
+  begin
+    Push(Tasks, go Worker(Index))
+  end;
+
+  WaitAll(Tasks);
+  AssertEquals(8, Length(Tasks))
+end.

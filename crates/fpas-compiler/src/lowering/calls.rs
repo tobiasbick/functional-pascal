@@ -169,6 +169,17 @@ impl LoweringContext {
             }
             _ => self.lower_expression(value)?,
         };
+        let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
+            return Err(unsupported(target.span, "mutable array target"));
+        };
+        if let Some(local) = self.direct_local(name) {
+            return self.emit_value(
+                Operation::ArrayPush { local, value },
+                super::types::UNIT,
+                span,
+            );
+        }
+
         let array = self.lower_designator_read(target)?;
         let appended = self.emit_value(Operation::MakeArray(vec![value]), array_ty, span)?;
         self.record_call_arguments(2, span)?;

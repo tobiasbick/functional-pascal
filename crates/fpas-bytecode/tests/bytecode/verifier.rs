@@ -23,7 +23,7 @@ fn opcode_index(executable: &fpas_bytecode::Executable, opcode: Opcode) -> usize
 }
 
 #[test]
-fn unknown_and_reserved_opcodes_are_rejected() {
+fn unknown_opcodes_are_rejected() {
     let mut unknown = minimal_executable();
     replace_root_code(
         &mut unknown,
@@ -33,13 +33,40 @@ fn unknown_and_reserved_opcodes_are_rejected() {
         error_kind(unknown),
         ValidationErrorKind::Instruction(fpas_bytecode::InstructionError::UnknownOpcode(_))
     ));
+}
 
-    let mut reserved = minimal_executable();
+#[test]
+fn array_push_registers_and_auxiliary_byte_are_checked() {
+    let mut register = minimal_executable();
+    register.functions[0].register_count = 2;
     replace_root_code(
-        &mut reserved,
-        vec![Instruction::ax(Opcode::ReservedMetadata, 0).expect("Ax fixture")],
+        &mut register,
+        vec![abc(Opcode::ArrayPush, 0, 1, 2, 0), return_unit()],
     );
-    assert_eq!(error_kind(reserved), ValidationErrorKind::ReservedOpcode);
+    assert!(matches!(
+        error_kind(register),
+        ValidationErrorKind::Register {
+            operand: "value",
+            actual: 2,
+            register_count: 2
+        }
+    ));
+
+    let mut auxiliary = minimal_executable();
+    auxiliary.functions[0].register_count = 3;
+    replace_root_code(
+        &mut auxiliary,
+        vec![abc(Opcode::ArrayPush, 0, 1, 2, 1), return_unit()],
+    );
+    assert!(matches!(
+        error_kind(auxiliary),
+        ValidationErrorKind::NonCanonicalOperand {
+            operand: "auxiliary",
+            actual: 1,
+            expected: 0,
+            ..
+        }
+    ));
 }
 
 #[test]

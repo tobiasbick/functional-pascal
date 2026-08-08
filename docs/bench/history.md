@@ -14,6 +14,54 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-08 — after reusable register frame storage
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5824 | throughput: 8585164 iters/s |
+| global_access | 470 | throughput: 10638297 global updates/s |
+| record_field_access | 1603 | throughput: 7485963 field accesses/s |
+| closure_call | 391 | throughput: 7672634 closure calls/s |
+| branch_dispatch | 2739 | throughput: 7301935 branches/s |
+| dynamic_numeric | 682 | throughput: 7331378 dynamic numeric ops/s |
+| array_push | 174 | throughput: 11494252 pushes/s |
+| array_length | 76 | throughput: 6578947 lengths/s |
+| string_concat | 2173 | throughput: 2300966 concats/s |
+| string_length | 69 | throughput: 7246376 lengths/s |
+| function_call | 557 | throughput: 10771992 calls/s |
+| array_callbacks | 734 | throughput: 13079019 callbacks/s |
+| record_update | 394 | throughput: 2538071 updates/s |
+| unicode_char_at | 1213 | throughput: 2473206 chars/s |
+| task_spawn_wait | 551 | throughput: 181488 tasks/s |
+| tui_headless | 3647 | throughput: 137 frames/s |
+
+## 2026-08-08 — after in-place global index path updates
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5707 | throughput: 8761170 iters/s |
+| global_access | 497 | throughput: 10060362 global updates/s |
+| record_field_access | 1650 | throughput: 7272727 field accesses/s |
+| closure_call | 449 | throughput: 6681514 closure calls/s |
+| branch_dispatch | 2684 | throughput: 7451564 branches/s |
+| dynamic_numeric | 839 | throughput: 5959475 dynamic numeric ops/s |
+| array_push | 177 | throughput: 11299435 pushes/s |
+| array_length | 74 | throughput: 6756756 lengths/s |
+| string_concat | 2233 | throughput: 2239140 concats/s |
+| string_length | 71 | throughput: 7042253 lengths/s |
+| function_call | 673 | throughput: 8915304 calls/s |
+| array_callbacks | 946 | throughput: 10147991 callbacks/s |
+| record_update | 416 | throughput: 2403846 updates/s |
+| unicode_char_at | 1229 | throughput: 2441008 chars/s |
+| task_spawn_wait | 580 | throughput: 172413 tasks/s |
+| tui_headless | 4251 | throughput: 117 frames/s |
+
 ## 2026-08-08 — after portable register VM
 
 - Group: `all`

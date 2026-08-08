@@ -214,11 +214,13 @@ pub enum Opcode {
     Yield = 92,
     /// Append one value to an array using copy-on-write storage.
     ArrayPush = 93,
+    /// Replace a value below an indexed global aggregate snapshot.
+    StoreGlobalIndexPath = 94,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 94] = [
+    pub const ALL: [Self; 95] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -313,6 +315,7 @@ impl Opcode {
         Self::SpawnDetachedTask,
         Self::Yield,
         Self::ArrayPush,
+        Self::StoreGlobalIndexPath,
     ];
 
     /// Return the physical payload form assigned to this opcode.

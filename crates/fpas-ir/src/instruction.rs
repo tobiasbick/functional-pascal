@@ -174,6 +174,17 @@ pub enum Operation {
         /// Value written into the global.
         value: ValueId,
     },
+    /// Replaces a value below an indexed global aggregate while preserving snapshot semantics.
+    StoreGlobalIndexPath {
+        /// Target global.
+        global: GlobalId,
+        /// Snapshot read before the index expressions were evaluated.
+        root: ValueId,
+        /// Array indices or dictionary keys in outer-to-inner order.
+        indexes: Vec<ValueId>,
+        /// Replacement value.
+        value: ValueId,
+    },
     /// Constructs an array from elements in source order.
     MakeArray(Vec<ValueId>),
     /// Appends one value directly to a local array while preserving copy-on-write value semantics.

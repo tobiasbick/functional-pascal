@@ -1,6 +1,7 @@
 //! Identifier, definition, type, call, closure, and layout validation.
 
 include!("operands/tables.rs");
+include!("operands/global_index_path.rs");
 include!("operands/operations.rs");
 include!("operands/scalar.rs");
 include!("operands/calls.rs");

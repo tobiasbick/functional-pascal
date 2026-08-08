@@ -479,3 +479,57 @@ end.";
             .any(|instruction| { instruction.opcode() == Ok(fpas_bytecode::Opcode::ArrayPush) })
     );
 }
+
+#[test]
+fn global_nested_index_write_uses_direct_path_and_preserves_value_aliases() {
+    let source = "\
+program RegisterGlobalIndexPath;
+mutable var Surface: array of array of integer := [[1, 2]];
+begin
+  var Original: array of array of integer := Surface;
+  Surface[0][1] := 9;
+  if Original[0][1] <> 2 then panic('global alias changed');
+  if Surface[0][1] <> 9 then panic('global path value mismatch')
+end.";
+    assert_succeeds(source);
+
+    let program = super::parse_ok(source);
+    let executable = crate::compile(&program).expect("compilation should succeed");
+    assert!(executable.executable().code.iter().any(|instruction| {
+        instruction.opcode() == Ok(fpas_bytecode::Opcode::StoreGlobalIndexPath)
+    }));
+}
+
+#[test]
+fn global_nested_index_write_preserves_index_side_effect_order() {
+    assert_succeeds(
+        "\
+program RegisterGlobalIndexOrder;
+mutable var Surface: array of array of integer := [[1, 2]];
+function ChangeSurface(): integer;
+begin
+  Surface := [[3, 4]];
+  return 1
+end;
+begin
+  Surface[0][ChangeSurface()] := 9;
+  if Surface[0][0] <> 1 then panic('snapshot order changed');
+  if Surface[0][1] <> 9 then panic('snapshot update missing')
+end.",
+    );
+}
+
+#[test]
+fn global_nested_dictionary_write_inserts_leaf_and_preserves_aliases() {
+    assert_succeeds(
+        "\
+program RegisterGlobalDictionaryPath;
+mutable var Lookup: dict of string to dict of string to integer := ['outer': ['old': 1]];
+begin
+  var Original: dict of string to dict of string to integer := Lookup;
+  Lookup['outer']['new'] := 2;
+  if 'new' in Original['outer'] then panic('dictionary alias changed');
+  if Lookup['outer']['new'] <> 2 then panic('dictionary path value mismatch')
+end.",
+    );
+}

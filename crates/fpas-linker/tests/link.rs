@@ -365,6 +365,9 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         Instruction::abx(Opcode::LoadGlobal, 0, 0)
             .expect("global")
             .word(),
+        Instruction::abc(Opcode::StoreGlobalIndexPath, 0, 0, 1, 0)
+            .expect("global index path")
+            .word(),
         Instruction::abc(Opcode::MakeRecord, 1, 0, 0, 0)
             .expect("record")
             .word(),
@@ -401,11 +404,16 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         Relocation {
             function: 0,
             instruction: 1,
-            kind: RelocationKind::Record(SymbolReference::Import(2)),
+            kind: RelocationKind::Global(SymbolReference::Import(1)),
         },
         Relocation {
             function: 0,
             instruction: 2,
+            kind: RelocationKind::Record(SymbolReference::Import(2)),
+        },
+        Relocation {
+            function: 0,
+            instruction: 3,
             kind: RelocationKind::EnumVariant {
                 enumeration: SymbolReference::Import(0),
                 variant: "some".to_string(),
@@ -427,12 +435,19 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     assert_eq!(
         linked.executable().code[1]
             .abc_operands()
-            .expect("record operands")
+            .expect("global index path operands")
             .b,
         0
     );
     assert_eq!(
         linked.executable().code[2]
+            .abc_operands()
+            .expect("record operands")
+            .b,
+        0
+    );
+    assert_eq!(
+        linked.executable().code[3]
             .abc_operands()
             .expect("enum operands")
             .b,

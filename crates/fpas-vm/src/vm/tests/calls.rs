@@ -10,20 +10,23 @@ use crate::vm::Vm;
 use super::support::{abx, execute};
 
 #[derive(Clone, Copy)]
-struct FunctionSpec {
-    start: u32,
-    end: u32,
-    arity: u8,
-    captures: u16,
-    registers: u16,
-    returns: ReturnConvention,
+/// Compact function metadata used by hand-authored call bytecode tests.
+pub(super) struct FunctionSpec {
+    pub(super) start: u32,
+    pub(super) end: u32,
+    pub(super) arity: u8,
+    pub(super) captures: u16,
+    pub(super) registers: u16,
+    pub(super) returns: ReturnConvention,
 }
 
-fn abc(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
+/// Encodes one ABC instruction for a hand-authored call test.
+pub(super) fn abc(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
     Instruction::abc(opcode, a, b, c, auxiliary).expect("test instruction must encode")
 }
 
-fn image(
+/// Builds and verifies an executable from compact call-test function specifications.
+pub(super) fn image(
     code: Vec<Instruction>,
     constants: Vec<Constant>,
     specs: &[FunctionSpec],

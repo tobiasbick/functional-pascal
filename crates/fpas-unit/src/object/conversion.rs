@@ -4,6 +4,7 @@ use fpas_bytecode::{Instruction, Opcode};
 
 use crate::object::{ObjectEnumLayout, ObjectError, RelocationKind, SymbolReference};
 
+/// Returns the object-local relocation required by one verified instruction.
 pub(super) fn relocation_for_instruction(
     instruction: Instruction,
     variants: &[fpas_bytecode::EnumVariant],
@@ -36,6 +37,9 @@ pub(super) fn relocation_for_instruction(
         .abc_operands()
         .map_err(|error| ObjectError::Instruction(error.to_string()))?;
     Ok(match opcode {
+        Opcode::StoreGlobalIndexPath => Some(RelocationKind::Global(SymbolReference::Local(
+            u32::from(operands.b),
+        ))),
         Opcode::CallDirect | Opcode::MakeClosure => Some(RelocationKind::Function(
             SymbolReference::Local(u32::from(operands.b)),
         )),

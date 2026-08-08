@@ -9,7 +9,7 @@ use fpas_diagnostics::codes::{
 use super::*;
 
 #[test]
-fn arrays_use_copy_on_write_for_index_updates() {
+fn array_index_updates_preserve_value_semantics() {
     let executable = verified(
         vec![
             abx(Opcode::LoadConstant, 0, 0),
@@ -32,6 +32,25 @@ fn arrays_use_copy_on_write_for_index_updates() {
     );
     let (_, registers, _) = execute(executable).expect("aggregate program must run");
     assert_eq!(registers[5], Value::Integer(0));
+    assert_eq!(registers[6], Value::Integer(9));
+}
+
+#[test]
+fn array_index_updates_reject_out_of_bounds_indexes() {
+    let executable = verified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abx(Opcode::LoadConstant, 1, 1),
+            abc(Opcode::MakeArray, 2, 0, 1),
+            abc(Opcode::IndexSet, 2, 1, 0),
+            return_unit(),
+        ],
+        vec![Constant::Integer(4), Constant::Integer(9)],
+        vec!["root", "test.fpas"],
+        3,
+    );
+    let error = execute(executable).expect_err("out-of-bounds array update must fail");
+    assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }
 
 #[test]

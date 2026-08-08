@@ -5,10 +5,11 @@ use fpas_ir::{Operation, ValueId};
 
 use crate::CompileError;
 
-use super::{Selector, abc, abx, narrow, selection_error};
+use super::{Selector, abc, abc_aux, abx, narrow, selection_error};
 use crate::bytecode::metadata::MetadataBuilder;
 
 impl Selector<'_> {
+    /// Selects register bytecode for aggregate operations handled by this module.
     pub(super) fn select_aggregate(
         &self,
         operation: &Operation,
@@ -26,6 +27,29 @@ impl Selector<'_> {
                 self.allocation.value(*value)?.get(),
                 global.get(),
             )?],
+            Operation::StoreGlobalIndexPath {
+                global,
+                root,
+                indexes,
+                value,
+            } => {
+                let values = indexes
+                    .iter()
+                    .copied()
+                    .chain(std::iter::once(*value))
+                    .collect::<Vec<_>>();
+                let mut instructions = self.prepare_window(&values)?;
+                let index_count = u8::try_from(indexes.len())
+                    .map_err(|_| selection_error("global index path exceeds u8"))?;
+                instructions.push(abc_aux(
+                    Opcode::StoreGlobalIndexPath,
+                    self.allocation.value(*root)?.get(),
+                    narrow(global.get(), "global")?,
+                    self.allocation.call_window().get(),
+                    index_count,
+                )?);
+                instructions
+            }
             Operation::MakeArray(values) => {
                 let mut instructions = self.prepare_window(values)?;
                 instructions.push(abc(

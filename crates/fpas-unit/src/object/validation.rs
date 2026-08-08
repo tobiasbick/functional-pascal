@@ -34,6 +34,7 @@ impl RelocationCategory {
     }
 }
 
+/// Returns the relocation category required by one object instruction.
 pub(super) fn relocation_category(
     instruction: Instruction,
 ) -> Result<Option<RelocationCategory>, ObjectError> {
@@ -46,7 +47,9 @@ pub(super) fn relocation_category(
             Some(RelocationCategory::CodeAddress)
         }
         Opcode::CallDirect | Opcode::MakeClosure => Some(RelocationCategory::Function),
-        Opcode::LoadGlobal | Opcode::StoreGlobal => Some(RelocationCategory::Global),
+        Opcode::LoadGlobal | Opcode::StoreGlobal | Opcode::StoreGlobalIndexPath => {
+            Some(RelocationCategory::Global)
+        }
         Opcode::MakeRecord => Some(RelocationCategory::Record),
         Opcode::LoadField | Opcode::StoreField => Some(RelocationCategory::RecordField),
         Opcode::MakeEnum | Opcode::TestVariant => Some(RelocationCategory::EnumVariant),

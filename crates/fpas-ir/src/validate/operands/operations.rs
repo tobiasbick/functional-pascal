@@ -187,6 +187,23 @@ fn validate_operation(
                 value_ty,
             )
         }
+        Operation::StoreGlobalIndexPath {
+            global,
+            root,
+            indexes,
+            value,
+        } => validate_store_global_index_path(
+            program,
+            function,
+            block,
+            instruction,
+            *global,
+            *root,
+            indexes,
+            *value,
+            all_values,
+            available,
+        ),
         Operation::MakeArray(_)
         | Operation::ArrayPush { .. }
         | Operation::MakeDictionary(_)

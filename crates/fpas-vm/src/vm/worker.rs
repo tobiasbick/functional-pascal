@@ -18,6 +18,8 @@ pub(super) struct Worker {
     pub ip: usize,
     pub base: usize,
     pub registers: Vec<Value>,
+    // Physical register storage retains a high-water mark; this is the live prefix.
+    pub(super) active_register_count: usize,
     pub globals: Arc<RwLock<Vec<Option<Value>>>>,
     pub layouts: Arc<RuntimeLayouts>,
     pub hosted: Arc<HostedState>,
@@ -132,6 +134,7 @@ impl Worker {
             ip,
             base: 0,
             registers,
+            active_register_count: usize::from(register_count),
             globals,
             layouts,
             hosted,
@@ -160,6 +163,7 @@ impl Worker {
             ip: self.ip,
             base: 0,
             registers: Vec::new(),
+            active_register_count: 0,
             globals: Arc::clone(&self.globals),
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
@@ -177,12 +181,14 @@ impl Worker {
     }
 
     pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
+        let active_register_count = task.registers.len();
         Self {
             executable: Arc::clone(&self.executable),
             function: task.function,
             ip: task.ip,
             base: task.base,
             registers: task.registers,
+            active_register_count,
             globals: Arc::clone(&self.globals),
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
@@ -200,6 +206,7 @@ impl Worker {
     }
 
     pub(super) fn take_task_state(&mut self) -> TaskState {
+        self.registers.truncate(self.active_register_count);
         TaskState {
             id: self.task_id,
             function: self.function,

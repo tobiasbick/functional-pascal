@@ -250,6 +250,45 @@ impl LoweringContext {
         )
     }
 
+    /// Emits one typed update of an index-only path below a global snapshot.
+    pub(in crate::lowering) fn write_global_index_path(
+        &mut self,
+        name: &str,
+        root: ValueId,
+        indexes: Vec<ValueId>,
+        value: ValueId,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let global = self
+            .globals
+            .get(&name.to_ascii_lowercase())
+            .copied()
+            .ok_or_else(|| {
+                internal_compiler_error(
+                    format!("Global `{name}` is missing from lowering metadata."),
+                    "Re-run compilation and report the source program.",
+                    span.line,
+                    span.column,
+                )
+            })?;
+        self.emit_effect(
+            Operation::StoreGlobalIndexPath {
+                global: global.id,
+                root,
+                indexes,
+                value,
+            },
+            span,
+        )
+    }
+
+    /// Returns whether the global slot fits the compact direct-path opcode.
+    pub(in crate::lowering) fn global_index_path_uses_u16_slot(&self, name: &str) -> bool {
+        self.globals
+            .get(&name.to_ascii_lowercase())
+            .is_some_and(|global| u16::try_from(global.id.get()).is_ok())
+    }
+
     pub(in crate::lowering) fn call_result_type(&self, name: &str) -> Option<TypeId> {
         self.bindings
             .iter()

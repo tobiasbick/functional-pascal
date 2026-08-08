@@ -173,6 +173,7 @@ fn largest_window(function: &Function) -> usize {
             }
             Operation::MakeArray(values) => values.len(),
             Operation::MakeDictionary(pairs) => pairs.len().saturating_mul(2),
+            Operation::StoreGlobalIndexPath { indexes, .. } => indexes.len().saturating_add(1),
             Operation::UpdateRecord { fields, .. } => fields.len().saturating_mul(2),
             _ => 0,
         })
@@ -250,6 +251,15 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
             index,
             value,
         } => vec![*collection, *index, *value],
+        Operation::StoreGlobalIndexPath {
+            root,
+            indexes,
+            value,
+            ..
+        } => std::iter::once(*root)
+            .chain(indexes.iter().copied())
+            .chain(std::iter::once(*value))
+            .collect(),
         Operation::Contains { value, collection } => vec![*value, *collection],
         Operation::Binary { left, right, .. } => vec![*left, *right],
         Operation::Unary { operand, .. } => vec![*operand],

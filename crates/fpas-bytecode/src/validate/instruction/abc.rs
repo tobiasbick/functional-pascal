@@ -12,6 +12,7 @@ use super::operands::{
     validate_registers,
 };
 
+/// Validates the semantic operands of one decoded ABC instruction.
 pub(super) fn validate_abc(
     executable: &crate::Executable,
     function_id: FunctionId,
@@ -335,6 +336,39 @@ pub(super) fn validate_abc(
                 "auxiliary",
                 auxiliary,
                 0,
+            )
+        }
+        Opcode::StoreGlobalIndexPath => {
+            validate_register(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                "global snapshot",
+                a,
+            )?;
+            if executable.globals.get(usize::from(b)).is_none() {
+                return Err(table_u16_error(
+                    executable,
+                    function_id,
+                    address,
+                    opcode,
+                    "globals",
+                    "global",
+                    b,
+                    executable.globals.len(),
+                ));
+            }
+            validate_window(
+                executable,
+                function_id,
+                function,
+                address,
+                opcode,
+                "global index path window",
+                c,
+                usize::from(auxiliary).saturating_add(1),
             )
         }
         Opcode::Intrinsic => {

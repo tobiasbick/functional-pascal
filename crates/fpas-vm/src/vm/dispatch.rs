@@ -243,6 +243,7 @@ impl Worker {
             Opcode::CellWrite => self.write_cell(self.abc(instruction)?)?,
             Opcode::LoadGlobal => self.load_global(self.abx(instruction)?)?,
             Opcode::StoreGlobal => self.store_global(self.abx(instruction)?)?,
+            Opcode::StoreGlobalIndexPath => self.store_global_index_path(self.abc(instruction)?)?,
             Opcode::MakeArray => self.make_array(self.abc(instruction)?)?,
             Opcode::ArrayPush => self.array_push(self.abc(instruction)?)?,
             Opcode::IndexGet => self.index_get(self.abc(instruction)?)?,

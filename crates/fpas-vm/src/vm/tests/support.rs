@@ -14,6 +14,11 @@ pub(super) fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
     Instruction::abc(opcode, a, b, c, 0).expect("test instruction must use ABC")
 }
 
+/// Builds an ABC test instruction with an explicit auxiliary operand.
+pub(super) fn abc_aux(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
+    Instruction::abc(opcode, a, b, c, auxiliary).expect("test instruction must use ABC")
+}
+
 pub(super) fn abx(opcode: Opcode, a: u16, bx: u32) -> Instruction {
     Instruction::abx(opcode, a, bx).expect("test instruction must use ABx")
 }

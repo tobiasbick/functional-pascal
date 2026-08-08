@@ -12,8 +12,10 @@ use super::worker::Worker;
 impl Worker {
     #[inline(always)]
     pub fn read(&self, register: Register) -> Result<&Value, VmError> {
+        let index = self.base + usize::from(register.get());
         self.registers
-            .get(self.base + usize::from(register.get()))
+            .get(..self.active_register_count)
+            .and_then(|registers| registers.get(index))
             .ok_or_else(|| {
                 diagnostics::internal(
                     self.executable.executable(),
@@ -30,9 +32,11 @@ impl Worker {
     pub fn write(&mut self, register: Register, value: Value) -> Result<(), VmError> {
         let executable = self.executable.executable();
         let address = self.current_address;
+        let index = self.base + usize::from(register.get());
         let slot = self
             .registers
-            .get_mut(self.base + usize::from(register.get()))
+            .get_mut(..self.active_register_count)
+            .and_then(|registers| registers.get_mut(index))
             .ok_or_else(|| {
                 diagnostics::internal(
                     executable,
@@ -51,9 +55,11 @@ impl Worker {
     pub(super) fn take(&mut self, register: Register) -> Result<Value, VmError> {
         let executable = self.executable.executable();
         let address = self.current_address;
+        let index = self.base + usize::from(register.get());
         let slot = self
             .registers
-            .get_mut(self.base + usize::from(register.get()))
+            .get_mut(..self.active_register_count)
+            .and_then(|registers| registers.get_mut(index))
             .ok_or_else(|| {
                 diagnostics::internal(
                     executable,

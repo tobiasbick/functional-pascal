@@ -9,6 +9,7 @@ use crate::constants::ConstantIds;
 use crate::symbols::SymbolTable;
 use crate::{LinkError, LinkIds};
 
+/// Relocates one object instruction into the final executable tables.
 #[expect(
     clippy::too_many_arguments,
     reason = "relocation needs all final table mappings"
@@ -48,7 +49,13 @@ pub(super) fn relocate(
                 .and_then(|map| map.get(local as usize))
                 .and_then(|id| *id)
                 .ok_or(LinkError::Overflow("global reference"))?;
-            replace_abx(instruction, opcode, mapped.get())
+            if opcode == Opcode::StoreGlobalIndexPath {
+                let mapped = u16::try_from(mapped.get())
+                    .map_err(|_| LinkError::Overflow("global reference"))?;
+                replace_abc(instruction, opcode, mapped)
+            } else {
+                replace_abx(instruction, opcode, mapped.get())
+            }
         }
         RelocationKind::CodeAddress(local) => {
             let mapped = code_base
@@ -169,6 +176,7 @@ fn replace_abc(
         Opcode::CallDirect | Opcode::MakeClosure | Opcode::MakeRecord | Opcode::MakeEnum => {
             (operands.a, mapped, operands.c)
         }
+        Opcode::StoreGlobalIndexPath => (operands.a, mapped, operands.c),
         Opcode::LoadField | Opcode::TestVariant | Opcode::LoadEnumField => {
             (operands.a, operands.b, mapped)
         }

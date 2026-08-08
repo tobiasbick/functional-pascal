@@ -99,20 +99,24 @@ impl Worker {
         let Some(frame) = self.call_stack.pop() else {
             return Ok(DispatchStep::Return(value));
         };
-        self.registers.truncate(self.base);
+        self.release_registers(self.base);
         self.function = frame.function;
         self.ip = frame.ip;
         self.base = frame.base;
         if let Some(destination) = frame.return_destination {
             let executable = self.executable.executable();
             let address = self.current_address;
-            let slot = self.registers.get_mut(destination).ok_or_else(|| {
-                diagnostics::internal(
-                    executable,
-                    address,
-                    "Return destination left the caller frame",
-                )
-            })?;
+            let slot = self
+                .registers
+                .get_mut(..self.active_register_count)
+                .and_then(|registers| registers.get_mut(destination))
+                .ok_or_else(|| {
+                    diagnostics::internal(
+                        executable,
+                        address,
+                        "Return destination left the caller frame",
+                    )
+                })?;
             *slot = value;
         }
         Ok(DispatchStep::Continue)
@@ -169,8 +173,7 @@ impl Worker {
         }
         let frame_size = usize::from(info.register_count);
         let new_len = self
-            .registers
-            .len()
+            .active_register_count
             .checked_add(frame_size)
             .filter(|len| *len <= MAX_REGISTER_SLOTS)
             .ok_or_else(|| {
@@ -206,7 +209,7 @@ impl Worker {
             })?;
         let argument_end = argument_start
             .checked_add(usize::from(argument_count))
-            .filter(|end| *end <= self.registers.len())
+            .filter(|end| *end <= self.active_register_count)
             .ok_or_else(|| {
                 diagnostics::internal(
                     image,
@@ -220,8 +223,8 @@ impl Worker {
             base: self.base,
             return_destination,
         });
-        self.base = self.registers.len();
-        self.registers.resize(new_len, Value::Unit);
+        self.base = self.active_register_count;
+        self.activate_registers(new_len);
         for (index, source) in (argument_start..argument_end).enumerate() {
             self.registers[self.base + index] = self.registers[source].clone();
         }
@@ -243,7 +246,8 @@ impl Worker {
             )
         })?;
         self.registers
-            .get(start..end)
+            .get(..self.active_register_count)
+            .and_then(|registers| registers.get(start..end))
             .map(<[Value]>::to_vec)
             .ok_or_else(|| {
                 diagnostics::internal(

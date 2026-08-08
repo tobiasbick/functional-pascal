@@ -126,10 +126,12 @@ impl Worker {
         self.write(register(o.a)?, value)
     }
 
+    /// Consumes and updates the collection held in the destination register.
     pub fn index_set(&mut self, o: AbcOperands) -> Result<(), VmError> {
+        let destination = register(o.a)?;
         let index = self.read(register(o.b)?)?.clone();
         let value = self.read(register(o.c)?)?.clone();
-        let collection = self.read(register(o.a)?)?.clone();
+        let collection = self.take(destination)?;
         let updated = match (collection, index) {
             (Value::Array(mut values), Value::Integer(index)) => {
                 let key = Value::Integer(index);
@@ -156,7 +158,7 @@ impl Worker {
             }
             (other, _) => return Err(self.type_mismatch("array or dictionary", &other)),
         };
-        self.write(register(o.a)?, updated)
+        self.write(destination, updated)
     }
 
     pub fn contains(&mut self, o: AbcOperands) -> Result<(), VmError> {
@@ -307,14 +309,16 @@ impl Worker {
         self.write(register(o.a)?, value)
     }
 
-    fn window(&self, base: u16, count: usize) -> Result<Vec<Value>, VmError> {
+    /// Clones one verified contiguous register window.
+    pub(super) fn window(&self, base: u16, count: usize) -> Result<Vec<Value>, VmError> {
         (0..count)
             .map(|offset| {
                 let slot = usize::from(base)
                     .checked_add(offset)
                     .ok_or_else(|| self.bad_slot("register window", u32::from(base)))?;
                 self.registers
-                    .get(self.base + slot)
+                    .get(..self.active_register_count)
+                    .and_then(|registers| registers.get(self.base + slot))
                     .cloned()
                     .ok_or_else(|| {
                         self.bad_slot("register window", u32::try_from(slot).unwrap_or(u32::MAX))
@@ -328,10 +332,16 @@ impl Worker {
             "Recompile the program and report this internal bytecode invariant failure.",
         )
     }
-    fn aggregate_error(&self, message: impl Into<String>, hint: impl Into<String>) -> VmError {
+    /// Creates an aggregate runtime diagnostic at the current instruction.
+    pub(super) fn aggregate_error(
+        &self,
+        message: impl Into<String>,
+        hint: impl Into<String>,
+    ) -> VmError {
         self.aggregate_error_code(RUNTIME_VM_OPERAND_TYPE_MISMATCH, message, hint)
     }
-    fn aggregate_error_code(
+    /// Creates an aggregate runtime diagnostic with an explicit stable code.
+    pub(super) fn aggregate_error_code(
         &self,
         code: DiagnosticCode,
         message: impl Into<String>,
@@ -345,13 +355,15 @@ impl Worker {
             hint,
         )
     }
-    fn type_mismatch(&self, expected: &str, actual: &Value) -> VmError {
+    /// Creates the standard aggregate operand type-mismatch diagnostic.
+    pub(super) fn type_mismatch(&self, expected: &str, actual: &Value) -> VmError {
         self.aggregate_error(
             format!("Expected {expected}, got {}", actual.type_name()),
             format!("Use {expected} operands for this operation."),
         )
     }
-    fn array_index(&self, key: &Value) -> Result<usize, VmError> {
+    /// Converts an FPAS array key to a checked host index.
+    pub(super) fn array_index(&self, key: &Value) -> Result<usize, VmError> {
         match key {
             Value::Integer(index) if *index >= 0 => usize::try_from(*index).map_err(|_| {
                 self.aggregate_error_code(

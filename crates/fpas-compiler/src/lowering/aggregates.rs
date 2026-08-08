@@ -1,5 +1,6 @@
 //! Collection, Result, Option, and positional designator lowering.
 
+mod global_index_path;
 mod records;
 
 use crate::CompileError;
@@ -25,6 +26,16 @@ impl LoweringContext {
             } else {
                 self.write_global(name, replacement, span)
             };
+        }
+        if !self.has_binding(name)
+            && self.lower_global_index_path_write(
+                name,
+                &designator.parts[1..],
+                replacement,
+                span,
+            )?
+        {
+            return Ok(());
         }
         let ty = self
             .root_type(name)

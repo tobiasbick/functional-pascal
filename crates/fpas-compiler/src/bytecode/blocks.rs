@@ -101,6 +101,7 @@ fn operation_width(
         Operation::MakeClosure { captures, .. } => captures.len().saturating_add(1),
         Operation::MakeArray(values) => values.len().saturating_add(1),
         Operation::MakeDictionary(pairs) => pairs.len().saturating_mul(2).saturating_add(1),
+        Operation::StoreGlobalIndexPath { indexes, .. } => indexes.len().saturating_add(2),
         Operation::MakeRecord { fields, .. } | Operation::MakeEnum { fields, .. } => {
             fields.len().saturating_add(1)
         }

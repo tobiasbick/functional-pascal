@@ -1,6 +1,6 @@
 use fpas_bytecode::{
-    CodeRange, Constant, EnumTypeId, FunctionId, Instruction, InstructionAddress, NO_REGISTER,
-    Opcode, ReturnConvention, SourceId, StringId, ValidationErrorKind,
+    CodeRange, Constant, EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress,
+    NO_REGISTER, Opcode, ReturnConvention, SourceId, StringId, ValidationErrorKind,
 };
 
 use super::support::{
@@ -66,6 +66,37 @@ fn array_push_registers_and_auxiliary_byte_are_checked() {
             expected: 0,
             ..
         }
+    ));
+}
+
+#[test]
+fn global_index_path_global_and_window_are_checked() {
+    let mut global = all_opcodes_executable();
+    let update = opcode_index(&global, Opcode::StoreGlobalIndexPath);
+    global.code[update] = abc(Opcode::StoreGlobalIndexPath, 0, 1, 0, 1);
+    assert!(matches!(
+        error_kind(global),
+        ValidationErrorKind::TableReference {
+            table: "globals",
+            operand: "global",
+            actual: 1,
+            ..
+        }
+    ));
+
+    let mut window = minimal_executable();
+    window.functions[0].register_count = 2;
+    window.globals = vec![GlobalInfo {
+        name: StringId::new(0),
+        mutable: true,
+    }];
+    replace_root_code(
+        &mut window,
+        vec![abc(Opcode::StoreGlobalIndexPath, 0, 0, 1, 1), return_unit()],
+    );
+    assert!(matches!(
+        error_kind(window),
+        ValidationErrorKind::RegisterWindow { .. }
     ));
 }
 

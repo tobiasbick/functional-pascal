@@ -10,6 +10,7 @@ mod execute;
 mod frame;
 mod hosted;
 mod layouts;
+mod register_stack;
 mod shared;
 mod tasks;
 mod worker;

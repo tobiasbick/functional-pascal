@@ -111,9 +111,7 @@ impl Worker {
             )
         })?;
         self.base = 0;
-        self.registers.clear();
-        self.registers
-            .resize(usize::from(register_count), Value::Unit);
+        self.reset_registers(usize::from(register_count));
         for (index, value) in arguments.iter().chain(captures).enumerate() {
             self.registers[index] = value.clone();
         }

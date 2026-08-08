@@ -18,10 +18,15 @@ mod compiler;
 mod error;
 mod intrinsic_catalog;
 mod lowering;
+mod register_object;
 mod unit_object;
 
 pub use error::CompileError;
 pub use lowering::lower_register_subset;
+pub use register_object::{
+    CompiledRegisterUnitObject, compile_register_program_object_with_support,
+    compile_register_unit_object, compile_register_unit_object_with_support,
+};
 pub use unit_object::{
     CompiledUnitObject, compile_program_object, compile_program_object_with_support,
     compile_unit_object, compile_unit_object_with_support,
@@ -41,6 +46,30 @@ pub fn compile_register_subset(
 ) -> Result<fpas_bytecode::VerifiedExecutable, Vec<CompileError>> {
     let ir = lower_register_subset(program)?;
     bytecode::compile_program(&ir).map_err(|error| vec![error])
+}
+
+/// Compile one root program into a relocatable P8 register object.
+///
+/// The object keeps functions independently encoded, converts numeric table references to
+/// object-local relocations, and remains outside the production CLI until the P9 artifact cutover.
+///
+/// # Errors
+///
+/// Returns semantic/lowering diagnostics or an internal object-construction diagnostic.
+pub fn compile_register_object(
+    program: &Program,
+) -> Result<fpas_unit::object::RelocatableObject, Vec<CompileError>> {
+    let executable = compile_register_subset(program)?;
+    fpas_unit::object::RelocatableObject::from_executable(&program.name, executable).map_err(
+        |error| {
+            vec![error::internal_compiler_error(
+                format!("Register object construction failed: {error}."),
+                "This is an internal compiler error. Re-run compilation and report the source program.",
+                program.span.line,
+                program.span.column,
+            )]
+        },
+    )
 }
 
 use compiler::Compiler;

@@ -4,17 +4,33 @@ use std::collections::HashSet;
 
 use crate::CompiledUnit;
 use crate::interface::{UnitInterface, decode_interface};
-use crate::object::{RelocatableObject, decode_object};
+use crate::object::{decode_chunk_object, decode_object};
 
-use super::{LoadedUnit, SidecarCorruption};
+use super::{LoadedRegisterUnit, LoadedUnit, SidecarCorruption};
 
 pub(super) fn validate(compiled: CompiledUnit) -> Result<LoadedUnit, SidecarCorruption> {
     let interface =
         decode_interface(&compiled.interface).map_err(|_| SidecarCorruption::InterfacePayload)?;
-    let object = decode_object(&compiled.object).map_err(|_| SidecarCorruption::ObjectPayload)?;
-    validate_identity(&compiled, &interface, &object)?;
+    let object =
+        decode_chunk_object(&compiled.object).map_err(|_| SidecarCorruption::ObjectPayload)?;
+    validate_identity(&compiled, &interface, &object.owner)?;
     validate_symbols(&interface)?;
     Ok(LoadedUnit {
+        compiled,
+        interface,
+        object,
+    })
+}
+
+pub(super) fn validate_register(
+    compiled: CompiledUnit,
+) -> Result<LoadedRegisterUnit, SidecarCorruption> {
+    let interface =
+        decode_interface(&compiled.interface).map_err(|_| SidecarCorruption::InterfacePayload)?;
+    let object = decode_object(&compiled.object).map_err(|_| SidecarCorruption::ObjectPayload)?;
+    validate_identity(&compiled, &interface, &object.owner)?;
+    validate_symbols(&interface)?;
+    Ok(LoadedRegisterUnit {
         compiled,
         interface,
         object,
@@ -24,7 +40,7 @@ pub(super) fn validate(compiled: CompiledUnit) -> Result<LoadedUnit, SidecarCorr
 fn validate_identity(
     compiled: &CompiledUnit,
     interface: &UnitInterface,
-    object: &RelocatableObject,
+    object_owner: &str,
 ) -> Result<(), SidecarCorruption> {
     let envelope = &compiled.identity.unit_name;
     if !envelope.eq_ignore_ascii_case(&interface.unit_name) {
@@ -33,10 +49,10 @@ fn validate_identity(
             payload: interface.unit_name.clone(),
         });
     }
-    if !envelope.eq_ignore_ascii_case(&object.owner) {
+    if !envelope.eq_ignore_ascii_case(object_owner) {
         return Err(SidecarCorruption::ObjectOwner {
             envelope: envelope.clone(),
-            payload: object.owner.clone(),
+            payload: object_owner.to_string(),
         });
     }
     Ok(())

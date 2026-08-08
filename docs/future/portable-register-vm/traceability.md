@@ -21,11 +21,11 @@ exist.
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler function differential tests and VM direct/wrong-ID tests | complete through P4 |
+| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler differential tests, P8 symbolic import relocation, and VM direct/wrong-ID tests | complete through P8 development path |
 | PVM-ID-002 | First-class functions retain numeric target | bytecode value + VM | named/anonymous closure, callback, task-bound, and capture tests | complete through P4 |
-| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler global differential test; direct dense/immutable register-global tests; `register_global_access` | complete through P5 development path |
-| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | defaults/get/set/update/nested/shared-layout/COW tests; invalid-slot tests; `register_record_update` | complete through P5 development path |
-| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | simple/data enum construction, case match, destructuring, associated-field, and invalid-slot tests | complete through P5 development path |
+| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler differential test, P8 cross-object relocation, dense/immutable runtime tests, and `register_global_access` | complete through P8 development path |
+| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | P8 layout import/compatibility and relocation plus defaults/get/set/update/nested/shared-layout/COW and invalid-slot tests | complete through P8 development path |
+| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | P8 enum/variant import and relocation plus construction, matching, destructuring, associated-field, and invalid-slot tests | complete through P8 development path |
 | PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | `Intrinsic::all()`, explicit ID/uniqueness tests, canonical compiler-catalog coverage, verifier rejection, and one ABC register-window convention | complete through P6 development path |
 | PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | P5 positional operations carry IDs/slots; names are shared once for diagnostics/display; equality/display tests cover legacy and positional values | complete through P5 development path |
 
@@ -49,12 +49,12 @@ exist.
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
 | PVM-FMT-001 | Explicit fixed-width little-endian codec | `fpas-program/format` | wire and endian tests | planned |
-| PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | schema review + 32/64-bit compile evidence | planned |
+| PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | P8 register objects persist fixed-width fields only; final program codec evidence remains P9 | complete for unit objects |
 | PVM-FMT-003 | Bounded section decoder | program format | truncation/mutation/limit tests | planned |
-| PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | canonical digest and producer digests | planned |
+| PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | P8 repeated object bytes and linked executable equality; canonical `.fpascp` evidence remains P9 | complete for unit objects |
 | PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 sparse-map validation plus P3 metadata run coalescing and diagnostic-only lookup; direct VM failures resolve line 41/column 7 while ordinary dispatch does not query metadata | complete through P3 |
 | PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | `compile_register_subset` returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler, call-window, function-range, closure, and direct VM admission tests pass | complete through P4 |
-| PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | direct error + project rebuild tests | planned |
+| PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | P8 old `.fpascu` minimum-rebuild/replacement test; old `.fpascp` diagnostic remains P9 | complete for unit sidecars |
 | PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | sources/manifests removed run test | planned |
 | PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows and Linux native tests | planned |
 | PVM-FMT-010 | Windows `.fpascp` runs on Linux | program/CLI | cross-host fixture output/exit match | planned |
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P5 adds responsibility-named aggregate lowering/selection/execution, layout, bound-method, wrapper-validation, and CFG-state modules; every changed/new Rust file is at or below 500 lines | complete through P5 |
-| PVM-QUAL-002 | Public Rust documentation complete | Public compiler, value-layout, benchmark-engine, and register VM APIs have `///` documentation | complete through P5 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P7 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, and resource failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P7 |
+| PVM-QUAL-001 | Focused module/file layout | P8 splits object codec/conversion/error/function/metadata/relocation/symbol/validation and linker assignment/merge/relocation concerns; changed/new Rust files stay below 500 lines | complete through P8 |
+| PVM-QUAL-002 | Public Rust documentation complete | P8 public object model, symbols, shapes, relocations, compiler object API, linker API, and errors have `///` documentation | complete through P8 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P8 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, object/import/relocation/initializer failures, and resource limits through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P8 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
-| PVM-QUAL-005 | Current user docs reconciled | no language or production behavior changed; `docs/pascal/` remains unchanged and P5 truth is recorded only under `docs/future/` | complete through P5 |
-| PVM-QUAL-006 | Full Rust verification | P5 targeted and full-gate results are recorded in `p5-globals-aggregates.md` | complete through P5 |
-| PVM-QUAL-007 | Full FPAS verification | FPAS formatting and regression gates retained; three new benchmark sources are formatter-checked | complete through P5 |
-| PVM-QUAL-008 | Privacy preserved | P5 docs, fixtures, metadata, and benchmark output contain no host-identifying metadata | complete through P5 |
+| PVM-QUAL-005 | Current user docs reconciled | no language or production CLI behavior changed; `docs/pascal/` remains unchanged and P8 truth is under `docs/future/` | complete through P8 |
+| PVM-QUAL-006 | Full Rust verification | P8 targeted and full-gate results are recorded in `p8-unit-objects-linker.md` | complete through P8 |
+| PVM-QUAL-007 | Full FPAS verification | P8 changes no FPAS source; formatter and full FPAS regression gates are retained | complete through P8 |
+| PVM-QUAL-008 | Privacy preserved | P8 docs, fixtures, symbols, source metadata, and test output contain no host-identifying metadata | complete through P8 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P3 opcode implementation overlay

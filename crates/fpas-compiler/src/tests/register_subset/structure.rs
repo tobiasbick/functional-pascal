@@ -21,6 +21,19 @@ end.";
 }
 
 #[test]
+fn register_object_compilation_is_deterministic_and_linkable() {
+    let program = parse_ok("program Demo; begin end.");
+    let first = crate::compile_register_object(&program).expect("first object");
+    let second = crate::compile_register_object(&program).expect("second object");
+    assert_eq!(
+        fpas_unit::object::encode_object(&first).expect("first bytes"),
+        fpas_unit::object::encode_object(&second).expect("second bytes")
+    );
+    let linked = fpas_linker::link_register_objects(&[], &first).expect("register link");
+    assert_eq!(linked.executable().entry, fpas_bytecode::FunctionId::new(0));
+}
+
+#[test]
 fn small_program_has_register_style_instruction_count() {
     let program = parse_ok(
         "\

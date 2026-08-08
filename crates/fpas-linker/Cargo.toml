@@ -10,5 +10,8 @@ repository.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-unit = { path = "../fpas-unit" }
 
+[dev-dependencies]
+fpas-vm = { path = "../fpas-vm" }
+
 [lints]
 workspace = true

@@ -7,7 +7,7 @@ mod object_fixture;
 
 use fpas_bytecode::Op;
 use fpas_linker::link_objects;
-use fpas_unit::object::{ObjectConstant, ObjectFunction};
+use fpas_unit::object::{ChunkConstant as ObjectConstant, ChunkFunction as ObjectFunction};
 
 use object_fixture::object;
 

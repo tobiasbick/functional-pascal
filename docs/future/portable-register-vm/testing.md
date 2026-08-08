@@ -115,6 +115,18 @@ Negative coverage:
 - every table/address overflow;
 - stale/corrupt/old `.fpascu` rebuild path.
 
+P8 evidence is recorded in `p8-unit-objects-linker.md`. Register-object tests cover deterministic
+conversion/codec round trips, truncation, versions, relocation coverage, and canonical ordering.
+Register-linker tests cover dependency-first numeric assignment, imports and visibility, callable
+ABI and layout compatibility, all current register table operand families, source rebasing, exact
+constant identity, fixed-width overflow, final verifier admission, and execution in `RegisterVm`.
+Compiler integration additionally covers source-defined cross-unit calls, globals, records, and data
+enums rather than relying only on handcrafted object fixtures.
+Register build integration tests cover transitive independently compiled units, dependency
+initializers, a workspace-resolved library project, cold/warm byte equality, and automatic minimum
+rebuild and replacement for missing, old-envelope, corrupt-payload, and incompatible `.fpascu`
+sidecars. Production CLI artifact selection remains the P9 boundary.
+
 ## Artifact codec
 
 Implement every positive/negative/edge test listed in
@@ -186,8 +198,8 @@ P6 evidence is recorded in `p6-intrinsics-hosted-runtimes.md`. The bytecode inve
 catalog each cover every stable ID independently. Borrowed-runtime tests cover unchanged input and
 wrong count/type diagnostics; compiler differential tests cover ordinary and higher-order calls;
 direct register-VM tests cover Args, shared Console/Test input and output, headless Graph lifecycle,
-and the explicit P7 task boundary. Source-defined TUI code remains a P8 unit-object/linker consumer,
-while its Console host surface and the existing production headless suite remain covered in P6.
+and the explicit P7 task boundary. The P8 register object/linker path consumes source-defined units;
+the Console/TUI host surface and the existing production headless suite remain covered in P6.
 
 ## Concurrency
 

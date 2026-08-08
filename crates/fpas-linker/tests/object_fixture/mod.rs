@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
 
 use fpas_bytecode::Op;
-use fpas_unit::object::{ObjectConstant, ObjectLocation, RelocatableObject, collect_relocations};
+use fpas_unit::object::{
+    ChunkConstant as ObjectConstant, ChunkLocation as ObjectLocation,
+    ChunkObject as RelocatableObject, collect_chunk_relocations as collect_relocations,
+};
 
 pub fn object(owner: &str, code: Vec<Op>, constants: Vec<ObjectConstant>) -> RelocatableObject {
     RelocatableObject {

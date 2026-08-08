@@ -2,7 +2,10 @@ mod object_fixture;
 
 use fpas_bytecode::{ExecutableError, Op};
 use fpas_linker::{LinkError, link_objects};
-use fpas_unit::object::{DefinitionKind, ObjectDefinition, ObjectFunction, ObjectImport};
+use fpas_unit::object::{
+    ChunkDefinition as ObjectDefinition, ChunkDefinitionKind as DefinitionKind,
+    ChunkFunction as ObjectFunction, ChunkImport as ObjectImport,
+};
 
 use object_fixture::object;
 

@@ -1,327 +1,486 @@
-//! Relocatable bytecode objects stored in compiled-unit artifacts.
+//! Deterministic relocatable register-bytecode unit objects.
 
+mod chunk;
+mod chunk_relocation;
+mod codec;
+mod conversion;
+mod error;
+mod function;
+mod metadata;
 mod relocation;
+mod symbol;
+mod validation;
 
 use std::collections::BTreeMap;
-use std::fmt;
 
-use fpas_bytecode::{Chunk, Op, PersistentValue};
+use fpas_bytecode::{Instruction, VerifiedExecutable};
 
-pub use relocation::{Relocation, RelocationKind, collect_relocations};
+pub use chunk::{
+    ChunkObject, DefinitionKind as ChunkDefinitionKind, ObjectConstant as ChunkConstant,
+    ObjectDefinition as ChunkDefinition, ObjectError as ChunkObjectError,
+    ObjectFunction as ChunkFunction, ObjectImport as ChunkImport, ObjectLocation as ChunkLocation,
+    Relocation as ChunkRelocation, RelocationKind as ChunkRelocationKind,
+    collect_relocations as collect_chunk_relocations, decode_chunk_object, encode_chunk_object,
+};
+pub use codec::{decode_object, encode_object};
+pub use error::ObjectError;
+pub use function::{ObjectFunction, ObjectReturn};
+pub use metadata::{
+    ObjectConstant, ObjectEnumLayout, ObjectEnumVariant, ObjectGlobal, ObjectRecordLayout,
+    ObjectSourceRun,
+};
+pub use relocation::{Relocation, RelocationKind};
+pub use symbol::{
+    DefinitionTarget, ImportShape, ObjectDefinition, ObjectImport, SymbolKind, SymbolReference,
+};
 
-/// Persistent constant-pool value used by relocatable unit objects.
-pub type ObjectConstant = PersistentValue;
+use conversion::{localize_branch, relocation_for_instruction};
+use validation::{
+    relocation_category, validate_import_shape, validate_name, validate_name_order,
+    validate_source_runs, validate_unique_names,
+};
 
-/// Source location independent of a process-local source-path table.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectLocation {
-    /// One-based line.
-    pub line: u32,
-    /// One-based column.
-    pub column: u32,
-    /// Source ID assigned by the owning build graph.
-    pub source_id: u32,
-}
+/// Schema version embedded in every encoded register object payload.
+pub const REGISTER_OBJECT_VERSION: u16 = 1;
 
-/// Callable entry in an object-local instruction stream.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectFunction {
-    /// Object-local instruction offset.
-    pub code_start: u32,
-    /// Positional argument count.
-    pub arity: u8,
-}
-
-/// Category of a named definition or import.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub enum DefinitionKind {
-    /// Module global or constant.
-    Global,
-    /// Function or procedure.
-    Callable,
-}
-
-/// One named definition emitted by an object.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectDefinition {
-    /// Canonical fully qualified definition name.
-    pub name: String,
-    /// Runtime definition category.
-    pub kind: DefinitionKind,
-    /// Whether another object may resolve an import to this definition.
-    pub public: bool,
-}
-
-/// One named definition required from another object.
-#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
-pub struct ObjectImport {
-    /// Canonical fully qualified definition name.
-    pub name: String,
-    /// Expected runtime definition category.
-    pub kind: DefinitionKind,
-}
-
-/// Independently compiled instruction stream with object-local indices.
+/// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct RelocatableObject {
-    /// Canonical owner unit, or the program name for the root object.
+    /// Object schema version.
+    pub version: u16,
+    /// Canonical owner unit, or root program name.
     pub owner: String,
-    /// Object-local instruction stream ending in one `Halt`.
-    pub code: Vec<Op>,
-    /// Object-local constant pool.
+    /// Root entry function for a program object; absent for unit objects.
+    pub entry: Option<u32>,
+    /// Unit initialization function; absent for root program objects.
+    pub initializer: Option<u32>,
+    /// Independently encoded functions.
+    pub functions: Vec<ObjectFunction>,
+    /// Persistent constants in object-local order.
     pub constants: Vec<ObjectConstant>,
-    /// Source location parallel to `code`.
-    pub locations: Vec<ObjectLocation>,
-    /// Callable names mapped to object-local entries.
-    pub functions: BTreeMap<String, ObjectFunction>,
-    /// Public and private definitions supplied by the object.
+    /// Dense object-local globals.
+    pub globals: Vec<ObjectGlobal>,
+    /// Object-local record layouts.
+    pub records: Vec<ObjectRecordLayout>,
+    /// Object-local enum layouts.
+    pub enums: Vec<ObjectEnumLayout>,
+    /// Object-local source paths.
+    pub sources: Vec<String>,
+    /// Ordered definitions supplied by this object.
     pub definitions: Vec<ObjectDefinition>,
-    /// External definitions referenced by the object.
+    /// Ordered definitions required from dependencies.
     pub imports: Vec<ObjectImport>,
-    /// Complete operand relocation table.
+    /// Complete instruction relocation table.
     pub relocations: Vec<Relocation>,
 }
 
 impl RelocatableObject {
-    /// Convert a compiler chunk whose indices are still object-local.
-    pub fn from_chunk(
+    /// Convert one verified executable into a self-contained relocatable program object.
+    ///
+    /// Numeric table references become object-local relocations and branch targets become
+    /// function-local. Callers may subsequently replace local references with imports before
+    /// validation and encoding.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ObjectError`] when verified metadata cannot be represented by the object schema.
+    pub fn from_executable(
         owner: impl Into<String>,
-        chunk: &Chunk,
-        definitions: Vec<ObjectDefinition>,
-        imports: Vec<ObjectImport>,
+        verified: VerifiedExecutable,
     ) -> Result<Self, ObjectError> {
-        let code = chunk.code().to_vec();
-        let constants = chunk
-            .constants()
+        let executable = verified.into_unverified();
+        let strings = |id: fpas_bytecode::StringId| {
+            executable
+                .strings
+                .get(id)
+                .map(str::to_owned)
+                .ok_or(ObjectError::InvalidTableReference("string"))
+        };
+        let sources = executable
+            .source_map
+            .sources
             .iter()
-            .map(|value| {
-                ObjectConstant::from_value(value).map_err(|error| match error {
-                    fpas_bytecode::PersistentValueError::UnsupportedRuntimeValue(value_type) => {
-                        ObjectError::UnsupportedConstant(value_type)
-                    }
-                })
+            .map(|id| strings(*id))
+            .collect::<Result<Vec<_>, _>>()?;
+        let constants = executable
+            .constants
+            .iter()
+            .map(|constant| match constant {
+                fpas_bytecode::Constant::Integer(value) => Ok(ObjectConstant::Integer(*value)),
+                fpas_bytecode::Constant::Real(bits) => Ok(ObjectConstant::Real(*bits)),
+                fpas_bytecode::Constant::Boolean(value) => Ok(ObjectConstant::Boolean(*value)),
+                fpas_bytecode::Constant::String(id) => strings(*id).map(ObjectConstant::String),
+                fpas_bytecode::Constant::Unit => Ok(ObjectConstant::Unit),
+                fpas_bytecode::Constant::Function {
+                    function,
+                    task_bound,
+                } => Ok(ObjectConstant::Function {
+                    function: SymbolReference::Local(u32::from(function.get())),
+                    task_bound: *task_bound,
+                }),
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let locations = chunk
-            .locations()
+        let globals = executable
+            .globals
             .iter()
-            .map(|location| ObjectLocation {
-                line: location.line(),
-                column: location.column(),
-                source_id: location.source_id(),
+            .map(|global| {
+                Ok(ObjectGlobal {
+                    name: strings(global.name)?,
+                    mutable: global.mutable,
+                })
             })
-            .collect();
-        let functions = chunk
-            .functions()
+            .collect::<Result<Vec<_>, ObjectError>>()?;
+        let records = executable
+            .records
             .iter()
-            .map(|(name, (offset, arity))| {
-                let code_start =
-                    u32::try_from(*offset).map_err(|_| ObjectError::CodeSize(chunk.len()))?;
-                Ok((
-                    name.clone(),
-                    ObjectFunction {
-                        code_start,
-                        arity: *arity,
-                    },
-                ))
+            .map(|record| {
+                Ok(ObjectRecordLayout {
+                    name: strings(record.name)?,
+                    fields: record
+                        .fields
+                        .iter()
+                        .map(|field| strings(field.name))
+                        .collect::<Result<Vec<_>, _>>()?,
+                })
             })
-            .collect::<Result<BTreeMap<_, _>, ObjectError>>()?;
-        let object = Self {
-            owner: owner.into(),
-            relocations: collect_relocations(&code),
-            code,
-            constants,
-            locations,
+            .collect::<Result<Vec<_>, ObjectError>>()?;
+        let mut variants_by_owner = vec![Vec::new(); executable.enums.len()];
+        for variant in &executable.enum_variants {
+            let fields = variant
+                .fields
+                .iter()
+                .map(|field| strings(*field))
+                .collect::<Result<Vec<_>, _>>()?;
+            let Some(owner) = variants_by_owner.get_mut(usize::from(variant.owner.get())) else {
+                return Err(ObjectError::InvalidTableReference("enum owner"));
+            };
+            owner.push(ObjectEnumVariant {
+                name: strings(variant.name)?,
+                fields,
+            });
+        }
+        let enums = executable
+            .enums
+            .iter()
+            .zip(variants_by_owner)
+            .map(|(layout, variants)| {
+                Ok(ObjectEnumLayout {
+                    name: strings(layout.name)?,
+                    variants,
+                })
+            })
+            .collect::<Result<Vec<_>, ObjectError>>()?;
+
+        let mut functions = Vec::with_capacity(executable.functions.len());
+        let mut relocations = Vec::new();
+        for (function_index, function) in executable.functions.iter().enumerate() {
+            let start = usize::try_from(function.code.start.get())
+                .map_err(|_| ObjectError::Overflow("function start"))?;
+            let end = usize::try_from(function.code.end.get())
+                .map_err(|_| ObjectError::Overflow("function end"))?;
+            let code = executable
+                .code
+                .get(start..end)
+                .ok_or(ObjectError::InvalidTableReference("function code"))?;
+            let mut local_code = Vec::with_capacity(code.len());
+            for (instruction_index, instruction) in code.iter().copied().enumerate() {
+                let local = localize_branch(instruction, function.code.start.get())?;
+                local_code.push(local.word());
+                if let Some(kind) =
+                    relocation_for_instruction(local, &executable.enum_variants, &enums)?
+                {
+                    relocations.push(Relocation {
+                        function: u32::try_from(function_index)
+                            .map_err(|_| ObjectError::Overflow("function index"))?,
+                        instruction: u32::try_from(instruction_index)
+                            .map_err(|_| ObjectError::Overflow("instruction index"))?,
+                        kind,
+                    });
+                }
+            }
+            let source_runs = executable
+                .source_map
+                .runs
+                .iter()
+                .filter(|run| function.code.contains(run.instruction_start))
+                .map(|run| ObjectSourceRun {
+                    instruction_start: run.instruction_start.get() - function.code.start.get(),
+                    source: run.source.get(),
+                    line: run.line,
+                    column: run.column,
+                })
+                .collect();
+            functions.push(ObjectFunction {
+                name: strings(function.name)?,
+                code: local_code,
+                arity: function.arity,
+                capture_count: function.capture_count,
+                register_count: function.register_count,
+                returns: match function.return_convention {
+                    fpas_bytecode::ReturnConvention::Unit => ObjectReturn::Unit,
+                    fpas_bytecode::ReturnConvention::Value => ObjectReturn::Value,
+                },
+                uses_spawn_tasks: function.flags.uses_spawn_tasks,
+                source_runs,
+            });
+        }
+        let entry = Some(u32::from(executable.entry.get()));
+        let mut object = Self {
+            version: REGISTER_OBJECT_VERSION,
+            owner: canonical(&owner.into()),
+            entry,
+            initializer: None,
             functions,
-            definitions,
-            imports,
+            constants,
+            globals,
+            records,
+            enums,
+            sources,
+            definitions: Vec::new(),
+            imports: Vec::new(),
+            relocations,
         };
+        object.define_all_private()?;
         object.validate()?;
         Ok(object)
     }
 
-    /// Validate local indices, relocation coverage, and structural invariants.
+    /// Add private definitions for every named local table entry.
     ///
     /// # Errors
     ///
-    /// Returns [`ObjectError`] when the object is not safe to encode or link.
-    pub fn validate(&self) -> Result<(), ObjectError> {
-        if self.code.len() > u32::MAX as usize {
-            return Err(ObjectError::CodeSize(self.code.len()));
-        }
-        if self.code.len() != self.locations.len() {
-            return Err(ObjectError::LocationCount {
-                code: self.code.len(),
-                locations: self.locations.len(),
+    /// Returns [`ObjectError`] when a table index is not representable.
+    pub fn define_all_private(&mut self) -> Result<(), ObjectError> {
+        self.definitions.clear();
+        for (index, function) in self.functions.iter().enumerate() {
+            self.definitions.push(ObjectDefinition {
+                name: canonical(&function.name),
+                target: DefinitionTarget::Function(
+                    u32::try_from(index).map_err(|_| ObjectError::Overflow("function index"))?,
+                ),
+                public: false,
             });
         }
-        if !matches!(self.code.last(), Some(Op::Halt)) {
-            return Err(ObjectError::MissingHalt);
+        for (index, global) in self.globals.iter().enumerate() {
+            self.definitions.push(ObjectDefinition {
+                name: canonical(&global.name),
+                target: DefinitionTarget::Global(
+                    u32::try_from(index).map_err(|_| ObjectError::Overflow("global index"))?,
+                ),
+                public: false,
+            });
         }
-        if let Some(instruction) = self.code[..self.code.len() - 1]
-            .iter()
-            .position(|op| matches!(op, Op::Halt))
+        for (index, record) in self.records.iter().enumerate() {
+            self.definitions.push(ObjectDefinition {
+                name: canonical(&record.name),
+                target: DefinitionTarget::Record(
+                    u32::try_from(index).map_err(|_| ObjectError::Overflow("record index"))?,
+                ),
+                public: false,
+            });
+        }
+        for (index, enumeration) in self.enums.iter().enumerate() {
+            self.definitions.push(ObjectDefinition {
+                name: canonical(&enumeration.name),
+                target: DefinitionTarget::Enum(
+                    u32::try_from(index).map_err(|_| ObjectError::Overflow("enum index"))?,
+                ),
+                public: false,
+            });
+        }
+        self.definitions
+            .sort_by(|left, right| left.name.cmp(&right.name));
+        Ok(())
+    }
+
+    /// Validate object-local tables, symbols, code, source runs, and relocation coverage.
+    ///
+    /// # Errors
+    ///
+    /// Returns a structured [`ObjectError`] for the first deterministic violation.
+    pub fn validate(&self) -> Result<(), ObjectError> {
+        if self.version != REGISTER_OBJECT_VERSION {
+            return Err(ObjectError::Version {
+                actual: self.version,
+                expected: REGISTER_OBJECT_VERSION,
+            });
+        }
+        if self.owner.is_empty() || self.owner != canonical(&self.owner) {
+            return Err(ObjectError::NonCanonicalName(self.owner.clone()));
+        }
+        if self
+            .entry
+            .is_some_and(|entry| entry as usize >= self.functions.len())
         {
-            return Err(ObjectError::InternalHalt { instruction });
+            return Err(ObjectError::InvalidTableReference("entry function"));
         }
-        for (name, function) in &self.functions {
-            if function.code_start as usize >= self.code.len() {
-                return Err(ObjectError::FunctionOffset {
-                    name: name.clone(),
-                    offset: function.code_start,
-                    code: self.code.len(),
-                });
+        if self
+            .initializer
+            .is_some_and(|initializer| initializer as usize >= self.functions.len())
+        {
+            return Err(ObjectError::InvalidTableReference("initializer function"));
+        }
+        if self.entry.is_some() && self.initializer.is_some() {
+            return Err(ObjectError::InvalidTableReference(
+                "entry and initializer are mutually exclusive",
+            ));
+        }
+        validate_unique_names(self.definitions.iter().map(|definition| &definition.name))?;
+        validate_unique_names(self.imports.iter().map(|import| &import.name))?;
+        validate_name_order(
+            self.definitions.iter().map(|definition| &definition.name),
+            "definitions",
+        )?;
+        validate_name_order(self.imports.iter().map(|import| &import.name), "imports")?;
+        for definition in &self.definitions {
+            validate_name(&definition.name)?;
+            self.validate_target(definition.target)?;
+        }
+        for import in &self.imports {
+            validate_name(&import.name)?;
+            validate_import_shape(&import.shape)?;
+        }
+        for constant in &self.constants {
+            if let ObjectConstant::Function { function, .. } = constant {
+                self.validate_reference(*function, SymbolKind::Function)?;
             }
         }
-        let expected = collect_relocations(&self.code);
-        if expected != self.relocations {
-            return Err(ObjectError::RelocationCoverage);
-        }
+        let mut actual = BTreeMap::new();
+        let mut previous_relocation = None;
         for relocation in &self.relocations {
-            match relocation.kind {
-                RelocationKind::Constant { index, .. }
-                    if index as usize >= self.constants.len() =>
-                {
-                    return Err(ObjectError::ConstantIndex {
-                        instruction: relocation.instruction,
-                        index,
-                        constants: self.constants.len(),
-                    });
+            let key = (relocation.function, relocation.instruction);
+            if previous_relocation.is_some_and(|previous| previous >= key) {
+                return Err(ObjectError::NonDeterministicOrder("relocations"));
+            }
+            previous_relocation = Some(key);
+            if actual.insert(key, relocation).is_some() {
+                return Err(ObjectError::DuplicateRelocation {
+                    function: relocation.function,
+                    instruction: relocation.instruction,
+                });
+            }
+            self.validate_relocation(relocation)?;
+        }
+        for (function_index, function) in self.functions.iter().enumerate() {
+            if function.code.is_empty() {
+                return Err(ObjectError::EmptyFunction {
+                    function: function.name.clone(),
+                });
+            }
+            validate_source_runs(function, self.sources.len())?;
+            for (instruction_index, word) in function.code.iter().copied().enumerate() {
+                let instruction = Instruction::from_word(word);
+                let expected = relocation_category(instruction)?;
+                let key = (
+                    u32::try_from(function_index)
+                        .map_err(|_| ObjectError::Overflow("function index"))?,
+                    u32::try_from(instruction_index)
+                        .map_err(|_| ObjectError::Overflow("instruction index"))?,
+                );
+                match (expected, actual.get(&key)) {
+                    (Some(category), Some(relocation)) if category.matches(&relocation.kind) => {}
+                    (None, None) => {}
+                    _ => {
+                        return Err(ObjectError::RelocationCoverage {
+                            function: key.0,
+                            instruction: key.1,
+                        });
+                    }
                 }
-                RelocationKind::CodeAddress { target } if target as usize > self.code.len() => {
-                    return Err(ObjectError::CodeTarget {
-                        instruction: relocation.instruction,
-                        target,
-                        code: self.code.len(),
-                    });
-                }
-                _ => {}
             }
         }
         Ok(())
     }
-}
 
-/// Invalid relocatable object.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ObjectError {
-    /// Instruction stream cannot be addressed with bytecode offsets.
-    CodeSize(usize),
-    /// Instruction and location streams differ in length.
-    LocationCount {
-        /// Instruction count.
-        code: usize,
-        /// Location count.
-        locations: usize,
-    },
-    /// Object does not end in `Halt`.
-    MissingHalt,
-    /// Object contains a `Halt` before the final instruction.
-    InternalHalt {
-        /// Zero-based instruction offset.
-        instruction: usize,
-    },
-    /// Callable entry points outside the local stream.
-    FunctionOffset {
-        /// Callable name.
-        name: String,
-        /// Invalid local offset.
-        offset: u32,
-        /// Instruction count.
-        code: usize,
-    },
-    /// Recorded relocations do not exactly match operands in the instruction stream.
-    RelocationCoverage,
-    /// Constant operand is outside the local pool.
-    ConstantIndex {
-        /// Instruction containing the operand.
-        instruction: u32,
-        /// Invalid constant index.
-        index: u16,
-        /// Constant count.
-        constants: usize,
-    },
-    /// Jump target is outside the local stream.
-    CodeTarget {
-        /// Instruction containing the target.
-        instruction: u32,
-        /// Invalid target.
-        target: u32,
-        /// Instruction count.
-        code: usize,
-    },
-    /// Object serialization failed.
-    Encode(String),
-    /// Object decoding failed.
-    Decode(String),
-    /// Encoded object exceeds the compiled-unit payload limit.
-    PayloadSize {
-        /// Encoded or requested size.
-        size: usize,
-        /// Largest accepted size.
-        maximum: usize,
-    },
-    /// Compiler emitted a runtime-only value into the persistent constant pool.
-    UnsupportedConstant(String),
-}
+    fn validate_target(&self, target: DefinitionTarget) -> Result<(), ObjectError> {
+        let valid = match target {
+            DefinitionTarget::Function(index) => (index as usize) < self.functions.len(),
+            DefinitionTarget::Global(index) => (index as usize) < self.globals.len(),
+            DefinitionTarget::Record(index) => (index as usize) < self.records.len(),
+            DefinitionTarget::Enum(index) => (index as usize) < self.enums.len(),
+        };
+        valid
+            .then_some(())
+            .ok_or(ObjectError::InvalidDefinitionTarget(target))
+    }
 
-impl fmt::Display for ObjectError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InternalHalt { instruction } => write!(
-                formatter,
-                "invalid relocatable object: internal Halt at instruction {instruction}; only the final instruction may halt"
-            ),
-            _ => write!(formatter, "invalid relocatable object: {self:?}"),
+    fn validate_reference(
+        &self,
+        reference: SymbolReference,
+        expected: SymbolKind,
+    ) -> Result<(), ObjectError> {
+        match reference {
+            SymbolReference::Local(index) => {
+                let valid = match expected {
+                    SymbolKind::Function => (index as usize) < self.functions.len(),
+                    SymbolKind::Global => (index as usize) < self.globals.len(),
+                    SymbolKind::Record => (index as usize) < self.records.len(),
+                    SymbolKind::Enum => (index as usize) < self.enums.len(),
+                };
+                valid
+                    .then_some(())
+                    .ok_or(ObjectError::InvalidLocalReference {
+                        kind: expected,
+                        index,
+                    })
+            }
+            SymbolReference::Import(index) => {
+                let import = self
+                    .imports
+                    .get(index as usize)
+                    .ok_or(ObjectError::InvalidTableReference("import"))?;
+                if import.shape.kind() == expected {
+                    Ok(())
+                } else {
+                    Err(ObjectError::ReferenceKind {
+                        expected,
+                        actual: import.shape.kind(),
+                    })
+                }
+            }
+        }
+    }
+
+    fn validate_relocation(&self, relocation: &Relocation) -> Result<(), ObjectError> {
+        let function = self
+            .functions
+            .get(relocation.function as usize)
+            .ok_or(ObjectError::InvalidTableReference("relocation function"))?;
+        if relocation.instruction as usize >= function.code.len() {
+            return Err(ObjectError::InvalidTableReference("relocation instruction"));
+        }
+        match &relocation.kind {
+            RelocationKind::Constant(index) if (*index as usize) < self.constants.len() => Ok(()),
+            RelocationKind::Function(reference) => {
+                self.validate_reference(*reference, SymbolKind::Function)
+            }
+            RelocationKind::Global(reference) => {
+                self.validate_reference(*reference, SymbolKind::Global)
+            }
+            RelocationKind::Record(reference) => {
+                self.validate_reference(*reference, SymbolKind::Record)
+            }
+            RelocationKind::RecordField(_) | RelocationKind::EnumField(_) => Ok(()),
+            RelocationKind::EnumVariant {
+                enumeration,
+                variant,
+            } => {
+                validate_name(variant)?;
+                self.validate_reference(*enumeration, SymbolKind::Enum)
+            }
+            RelocationKind::CodeAddress(target) if (*target as usize) < function.code.len() => {
+                Ok(())
+            }
+            RelocationKind::Constant(_) | RelocationKind::CodeAddress(_) => {
+                Err(ObjectError::InvalidRelocationTarget {
+                    function: relocation.function,
+                    instruction: relocation.instruction,
+                })
+            }
         }
     }
 }
 
-impl std::error::Error for ObjectError {}
-
-/// Encode and validate a relocatable object deterministically.
-///
-/// # Errors
-///
-/// Returns [`ObjectError`] when validation or serialization fails, or when
-/// the encoded object exceeds the compiled-unit payload limit.
-pub fn encode_object(object: &RelocatableObject) -> Result<Vec<u8>, ObjectError> {
-    object.validate()?;
-    let bytes =
-        serde_json::to_vec(object).map_err(|error| ObjectError::Encode(error.to_string()))?;
-    check_payload_size(bytes.len())?;
-    Ok(bytes)
-}
-
-/// Decode and validate a relocatable object.
-///
-/// # Errors
-///
-/// Returns [`ObjectError`] when the payload is oversized, malformed, or
-/// violates relocatable-object invariants.
-pub fn decode_object(bytes: &[u8]) -> Result<RelocatableObject, ObjectError> {
-    check_payload_size(bytes.len())?;
-    let object: RelocatableObject =
-        serde_json::from_slice(bytes).map_err(|error| ObjectError::Decode(error.to_string()))?;
-    object.validate()?;
-    Ok(object)
-}
-
-fn check_payload_size(size: usize) -> Result<(), ObjectError> {
-    crate::format::check_payload_size("object", size).map_err(|_| ObjectError::PayloadSize {
-        size,
-        maximum: crate::format::MAX_PAYLOAD_BYTES,
-    })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::check_payload_size;
-    use crate::format::MAX_PAYLOAD_BYTES;
-
-    #[test]
-    fn direct_object_codec_enforces_payload_limit() {
-        assert!(check_payload_size(MAX_PAYLOAD_BYTES).is_ok());
-        assert!(check_payload_size(MAX_PAYLOAD_BYTES + 1).is_err());
-    }
+fn canonical(name: &str) -> String {
+    name.to_ascii_lowercase()
 }

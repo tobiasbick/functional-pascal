@@ -671,6 +671,7 @@ version = "0.0.1"
 dependencies = [
  "fpas-bytecode",
  "fpas-unit",
+ "fpas-vm",
 ]
 
 [[package]]

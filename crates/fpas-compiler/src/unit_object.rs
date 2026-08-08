@@ -2,7 +2,10 @@
 
 use fpas_parser::{Decl, Program, RecordMethod, TypeBody, Unit, Visibility};
 use fpas_unit::interface::{InterfaceType, SymbolKind, UnitInterface};
-use fpas_unit::object::{DefinitionKind, ObjectDefinition, ObjectImport, RelocatableObject};
+use fpas_unit::object::{
+    ChunkDefinition as ObjectDefinition, ChunkDefinitionKind as DefinitionKind,
+    ChunkImport as ObjectImport, ChunkObject,
+};
 
 use crate::compiler::Compiler;
 use crate::error::{CompileError, internal_compiler_error};
@@ -12,7 +15,7 @@ pub struct CompiledUnitObject {
     /// Stable public semantic interface.
     pub interface: UnitInterface,
     /// Relocatable implementation and startup code.
-    pub object: RelocatableObject,
+    pub object: ChunkObject,
 }
 
 /// Analyze and compile one unit without loading dependency implementation ASTs.
@@ -68,7 +71,7 @@ pub fn compile_unit_object_with_support(
     let owner = unit.name.parts.join(".");
     let definitions = collect_definitions(unit);
     let imports = collect_imports(interfaces);
-    let object = RelocatableObject::from_chunk(&owner, &chunk, definitions, imports).map_err(
+    let object = ChunkObject::from_chunk(&owner, &chunk, definitions, imports).map_err(
         |error| {
             vec![internal_compiler_error(
                 error.to_string(),
@@ -85,7 +88,7 @@ pub fn compile_unit_object_with_support(
 pub fn compile_program_object(
     program: &Program,
     interfaces: &[UnitInterface],
-) -> Result<RelocatableObject, Vec<CompileError>> {
+) -> Result<ChunkObject, Vec<CompileError>> {
     compile_program_object_with_support(program, interfaces, interfaces)
 }
 
@@ -94,7 +97,7 @@ pub fn compile_program_object_with_support(
     program: &Program,
     interfaces: &[UnitInterface],
     supporting_interfaces: &[UnitInterface],
-) -> Result<RelocatableObject, Vec<CompileError>> {
+) -> Result<ChunkObject, Vec<CompileError>> {
     let metadata = fpas_sema::analyze_program_with_interface_support(
         program,
         interfaces,
@@ -118,7 +121,7 @@ pub fn compile_program_object_with_support(
     let chunk = compiler.finish();
     let definitions = collect_program_definitions(program);
     let imports = collect_imports(interfaces);
-    RelocatableObject::from_chunk(&program.name, &chunk, definitions, imports).map_err(|error| {
+    ChunkObject::from_chunk(&program.name, &chunk, definitions, imports).map_err(|error| {
         vec![internal_compiler_error(
             error.to_string(),
             "This is an internal compiler error. Re-run compilation and report the source program.",

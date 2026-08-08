@@ -9,10 +9,12 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::interface::UnitInterface;
-use crate::object::RelocatableObject;
+use crate::object::{ChunkObject, RelocatableObject};
 use crate::{CompiledUnit, ExpectedUnitIdentity, FormatError};
 
-pub use validation::{IncompatibilityReason, InvalidationReason, SidecarLoad};
+pub use validation::{
+    IncompatibilityReason, InvalidationReason, RegisterSidecarLoad, SidecarLoad, SidecarStatus,
+};
 
 /// A reusable compiled unit whose semantic payloads and owner identities are validated.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,6 +24,17 @@ pub struct LoadedUnit {
     /// Decoded canonical public interface.
     pub interface: UnitInterface,
     /// Decoded validated relocatable object.
+    pub object: ChunkObject,
+}
+
+/// A reusable compiled unit carrying the P8 register object payload.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadedRegisterUnit {
+    /// Original hashed compiled-unit envelope.
+    pub compiled: CompiledUnit,
+    /// Decoded canonical public semantic interface.
+    pub interface: UnitInterface,
+    /// Decoded and validated relocatable register object.
     pub object: RelocatableObject,
 }
 
@@ -77,11 +90,34 @@ pub fn load_sidecar(
     source_path: &Path,
     expected: &ExpectedUnitIdentity,
 ) -> Result<SidecarLoad, SidecarError> {
+    load_sidecar_with(source_path, expected, payload::validate)
+}
+
+/// Loads and validates a source-adjacent P8 register-object compiled unit.
+///
+/// # Errors
+///
+/// Returns [`SidecarError`] when the coordination lock or filesystem cannot be accessed. Invalid
+/// artifact contents are classified in [`RegisterSidecarLoad`].
+pub fn load_register_sidecar(
+    source_path: &Path,
+    expected: &ExpectedUnitIdentity,
+) -> Result<RegisterSidecarLoad, SidecarError> {
+    load_sidecar_with(source_path, expected, payload::validate_register)
+}
+
+fn load_sidecar_with<T>(
+    source_path: &Path,
+    expected: &ExpectedUnitIdentity,
+    validate_payload: fn(CompiledUnit) -> Result<T, SidecarCorruption>,
+) -> Result<SidecarStatus<T>, SidecarError> {
     let path = sidecar_path(source_path);
     let _lock = atomic::acquire_read_lock(&path)?;
     let metadata = match std::fs::metadata(&path) {
         Ok(metadata) => metadata,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(SidecarLoad::Missing),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            return Ok(SidecarStatus::Missing);
+        }
         Err(error) => {
             return Err(SidecarError::Io {
                 operation: "inspect",
@@ -92,11 +128,13 @@ pub fn load_sidecar(
     };
     let file_size = usize::try_from(metadata.len()).unwrap_or(usize::MAX);
     if let Err(error) = crate::format::check_sidecar_size(file_size) {
-        return Ok(SidecarLoad::Corrupt(SidecarCorruption::Format(error)));
+        return Ok(SidecarStatus::Corrupt(SidecarCorruption::Format(error)));
     }
     let bytes = match std::fs::read(&path) {
         Ok(bytes) => bytes,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(SidecarLoad::Missing),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {
+            return Ok(SidecarStatus::Missing);
+        }
         Err(error) => {
             return Err(SidecarError::Io {
                 operation: "read",
@@ -108,21 +146,21 @@ pub fn load_sidecar(
     let unit = match crate::decode(&bytes) {
         Ok(unit) => unit,
         Err(FormatError::UnsupportedVersion(version)) => {
-            return Ok(SidecarLoad::Incompatible(
+            return Ok(SidecarStatus::Incompatible(
                 IncompatibilityReason::FormatVersion(version),
             ));
         }
         Err(error) => {
-            return Ok(SidecarLoad::Corrupt(SidecarCorruption::Format(error)));
+            return Ok(SidecarStatus::Corrupt(SidecarCorruption::Format(error)));
         }
     };
     let unit = match validation::validate_identity(unit, expected) {
         Ok(unit) => unit,
         Err(load) => return Ok(load),
     };
-    Ok(match payload::validate(unit) {
-        Ok(unit) => SidecarLoad::Reusable(Box::new(unit)),
-        Err(error) => SidecarLoad::Corrupt(error),
+    Ok(match validate_payload(unit) {
+        Ok(unit) => SidecarStatus::Reusable(Box::new(unit)),
+        Err(error) => SidecarStatus::Corrupt(error),
     })
 }
 

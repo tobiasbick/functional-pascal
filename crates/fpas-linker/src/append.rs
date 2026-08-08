@@ -3,14 +3,12 @@
 use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::{Chunk, SourceLocation};
-use fpas_unit::object::{ObjectLocation, RelocatableObject, Relocation};
+use fpas_unit::object::{ChunkLocation, ChunkObject, ChunkRelocation};
 
 use crate::LinkError;
 use crate::operands::relocate_instruction;
 
-pub(super) fn validate_retained_function_entries(
-    object: &RelocatableObject,
-) -> Result<(), LinkError> {
+pub(super) fn validate_retained_function_entries(object: &ChunkObject) -> Result<(), LinkError> {
     let retained_code = object.code.len() - 1;
     for (name, function) in &object.functions {
         if function.code_start as usize >= retained_code {
@@ -27,7 +25,7 @@ pub(super) fn validate_retained_function_entries(
 
 pub(super) fn append_object(
     chunk: &mut Chunk,
-    object: &RelocatableObject,
+    object: &ChunkObject,
     retain_halt: bool,
 ) -> Result<(), LinkError> {
     let code_base = u32::try_from(chunk.len()).map_err(|_| LinkError::Overflow("code"))?;
@@ -75,7 +73,7 @@ pub(super) fn append_object(
     Ok(())
 }
 
-fn relocation_map(object: &RelocatableObject) -> HashMap<u32, Vec<Relocation>> {
+fn relocation_map(object: &ChunkObject) -> HashMap<u32, Vec<ChunkRelocation>> {
     let mut result = HashMap::<u32, Vec<_>>::new();
     for relocation in &object.relocations {
         result
@@ -86,6 +84,6 @@ fn relocation_map(object: &RelocatableObject) -> HashMap<u32, Vec<Relocation>> {
     result
 }
 
-fn source_location(location: ObjectLocation) -> SourceLocation {
+fn source_location(location: ChunkLocation) -> SourceLocation {
     SourceLocation::new_with_source(location.line, location.column, location.source_id)
 }

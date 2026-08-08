@@ -2,18 +2,20 @@
 
 use std::collections::HashMap;
 
-use fpas_unit::object::{DefinitionKind, ObjectDefinition, RelocatableObject};
+use fpas_unit::object::{
+    ChunkDefinition as ObjectDefinition, ChunkDefinitionKind as DefinitionKind, ChunkObject,
+};
 
 use crate::LinkError;
 
 struct DefinitionEntry<'a> {
     definition: &'a ObjectDefinition,
-    object: &'a RelocatableObject,
+    object: &'a ChunkObject,
 }
 
 pub(super) fn validate_definitions_and_imports(
-    units: &[RelocatableObject],
-    program: &RelocatableObject,
+    units: &[ChunkObject],
+    program: &ChunkObject,
 ) -> Result<(), LinkError> {
     let objects = units.iter().chain(std::iter::once(program));
     let mut definition_indices = HashMap::<String, usize>::new();
@@ -54,7 +56,7 @@ fn validate_callable_implementation(entry: &DefinitionEntry<'_>) -> Result<(), L
 }
 
 fn validate_imports(
-    object: &RelocatableObject,
+    object: &ChunkObject,
     definition_indices: &HashMap<String, usize>,
     definitions: &[DefinitionEntry<'_>],
 ) -> Result<(), LinkError> {
@@ -71,7 +73,7 @@ fn validate_imports(
     Ok(())
 }
 
-fn unresolved_import(object: &RelocatableObject, name: String, kind: DefinitionKind) -> LinkError {
+fn unresolved_import(object: &ChunkObject, name: String, kind: DefinitionKind) -> LinkError {
     LinkError::UnresolvedImport {
         owner: object.owner.clone(),
         name,

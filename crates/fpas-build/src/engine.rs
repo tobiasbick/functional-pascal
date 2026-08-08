@@ -1,19 +1,21 @@
 //! Dependency-first incremental build and final object linking.
 
+mod backend;
+mod interfaces;
+
 use std::collections::HashMap;
 use std::fmt;
 
-use fpas_bytecode::Chunk;
-use fpas_parser::{Program, QualifiedId};
+use fpas_bytecode::{Chunk, VerifiedExecutable};
+use fpas_parser::Program;
 use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
 use fpas_unit::interface::{UnitInterface, encode_interface};
-use fpas_unit::object::{RelocatableObject, encode_object};
-use fpas_unit::{
-    CompiledUnit, DependencyIdentity, Digest, ExpectedUnitIdentity, SidecarLoad, UnitIdentity,
-    load_sidecar, write_sidecar,
-};
+use fpas_unit::object::{ChunkObject, RelocatableObject};
+use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
+use self::backend::{ChunkBackend, RegisterBackend, UnitBackend};
+use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
 
@@ -42,13 +44,36 @@ impl std::error::Error for BuildError {}
 /// Dependency-first compiled units and their build activity.
 pub struct BuiltUnits {
     /// Objects in deterministic dependency order.
-    pub objects: Vec<RelocatableObject>,
+    pub objects: Vec<ChunkObject>,
     /// Interfaces indexed by canonical unit name.
     pub interfaces: HashMap<String, UnitInterface>,
     /// Structured activity stream.
     pub events: Vec<BuildEvent>,
     pub(crate) linked_units: Vec<LinkedUnitIdentity>,
     supporting_interfaces: Vec<UnitInterface>,
+}
+
+/// Dependency-first P8 register unit objects and their build activity.
+pub struct BuiltRegisterUnits {
+    /// Register objects in deterministic dependency order.
+    pub objects: Vec<RelocatableObject>,
+    /// Interfaces indexed by canonical unit name.
+    pub interfaces: HashMap<String, UnitInterface>,
+    /// Structured activity stream.
+    pub events: Vec<BuildEvent>,
+    supporting_interfaces: Vec<UnitInterface>,
+}
+
+impl BuiltRegisterUnits {
+    /// Aggregate activity counts.
+    #[must_use]
+    pub fn counters(&self) -> BuildCounters {
+        BuildCounters::from_events(&self.events)
+    }
+
+    fn supporting_interfaces(&self) -> &[UnitInterface] {
+        &self.supporting_interfaces
+    }
 }
 
 impl BuiltUnits {
@@ -69,6 +94,22 @@ pub struct BuiltProgram {
     pub chunk: Chunk,
     /// Structured unit and link activity.
     pub events: Vec<BuildEvent>,
+}
+
+/// Linked P8 register executable and incremental build activity.
+pub struct BuiltRegisterProgram {
+    /// Fully verified register executable.
+    pub executable: VerifiedExecutable,
+    /// Structured unit and link activity.
+    pub events: Vec<BuildEvent>,
+}
+
+impl BuiltRegisterProgram {
+    /// Aggregate activity counts.
+    #[must_use]
+    pub fn counters(&self) -> BuildCounters {
+        BuildCounters::from_events(&self.events)
+    }
 }
 
 impl BuiltProgram {
@@ -104,6 +145,35 @@ pub fn check_library_units(
     compile_library_units(graph, selection, options, SidecarPublication::Disabled)
 }
 
+/// Build or reuse every selected unit as a P8 relocatable register object.
+///
+/// This development API exercises the new object and linker path without changing production CLI
+/// backend selection.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a selected unit cannot be read, compiled, decoded, or published.
+pub fn build_register_library_units(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+) -> Result<BuiltRegisterUnits, BuildError> {
+    compile_register_library_units(graph, selection, options, SidecarPublication::Enabled)
+}
+
+/// Check every selected unit through the P8 register object path without publishing sidecars.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a selected unit cannot be read, compiled, or decoded.
+pub fn check_register_library_units(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+) -> Result<BuiltRegisterUnits, BuildError> {
+    compile_register_library_units(graph, selection, options, SidecarPublication::Disabled)
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SidecarPublication {
     Enabled,
@@ -116,6 +186,45 @@ fn compile_library_units(
     options: &BuildOptions,
     sidecar_publication: SidecarPublication,
 ) -> Result<BuiltUnits, BuildError> {
+    let units = compile_units::<ChunkBackend>(graph, selection, options, sidecar_publication)?;
+    Ok(BuiltUnits {
+        objects: units.objects,
+        interfaces: units.interfaces,
+        events: units.events,
+        linked_units: units.linked_units,
+        supporting_interfaces: units.supporting_interfaces,
+    })
+}
+
+fn compile_register_library_units(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+    sidecar_publication: SidecarPublication,
+) -> Result<BuiltRegisterUnits, BuildError> {
+    let units = compile_units::<RegisterBackend>(graph, selection, options, sidecar_publication)?;
+    Ok(BuiltRegisterUnits {
+        objects: units.objects,
+        interfaces: units.interfaces,
+        events: units.events,
+        supporting_interfaces: units.supporting_interfaces,
+    })
+}
+
+pub(super) struct CompiledUnits<Object> {
+    pub(super) objects: Vec<Object>,
+    pub(super) interfaces: HashMap<String, UnitInterface>,
+    pub(super) events: Vec<BuildEvent>,
+    pub(super) linked_units: Vec<LinkedUnitIdentity>,
+    pub(super) supporting_interfaces: Vec<UnitInterface>,
+}
+
+fn compile_units<Backend: UnitBackend>(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    options: &BuildOptions,
+    sidecar_publication: SidecarPublication,
+) -> Result<CompiledUnits<Backend::Object>, BuildError> {
     let mut interfaces = InterfaceRegistry::default();
     let mut objects = Vec::with_capacity(selection.len());
     let mut linked_units = Vec::with_capacity(selection.len());
@@ -139,82 +248,61 @@ fn compile_library_units(
             dependencies: dependencies.clone(),
         };
 
-        let reusable = match load_sidecar(node.path(), &expected)
-            .map_err(|error| BuildError::new(error.to_string()))?
+        let reusable = Backend::load(node.path(), &expected)?;
+        let (interface, mut object, interface_hash, object_hash) = if let Some(reusable) = reusable
         {
-            SidecarLoad::Reusable(loaded) => {
-                let interface_hash = loaded.compiled.identity.interface_hash;
-                let object_hash = loaded.compiled.identity.object_hash;
-                Some((
-                    (loaded.interface, loaded.object),
-                    interface_hash,
-                    object_hash,
-                ))
-            }
-            SidecarLoad::Missing
-            | SidecarLoad::Stale(_)
-            | SidecarLoad::Incompatible(_)
-            | SidecarLoad::Corrupt(_) => None,
-        };
-        let (interface, mut object, interface_hash, object_hash) =
-            if let Some((payloads, interface_hash, object_hash)) = reusable {
-                events.push(event(unit_name, BuildEventKind::SidecarReused));
-                (payloads.0, payloads.1, interface_hash, object_hash)
-            } else {
-                events.push(event(unit_name, BuildEventKind::Parsed));
-                let parsed = node
-                    .parse_source_snapshot(source.bytes())
-                    .map_err(BuildError::new)?;
-                let compiled = fpas_compiler::compile_unit_object_with_support(
-                    &parsed,
-                    &direct_interfaces,
-                    interfaces.all(),
-                )
-                .map_err(|diagnostics| {
-                    BuildError::new(format_diagnostics(Some(node.path()), &diagnostics))
-                })?;
-                events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
-                events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
-                events.push(event(unit_name, BuildEventKind::Compiled));
-                let interface_bytes = encode_interface(&compiled.interface)
-                    .map_err(|error| BuildError::new(error.to_string()))?;
-                let interface_hash = Digest::of(&interface_bytes);
-                let object_bytes = encode_object(&compiled.object)
-                    .map_err(|error| BuildError::new(error.to_string()))?;
-                let object_hash = Digest::of(&object_bytes);
-                let sidecar = CompiledUnit {
-                    identity: UnitIdentity {
-                        unit_name: unit_name.clone(),
-                        source_hash: expected.source_hash,
-                        interface_hash,
-                        object_hash,
-                        compiler_version: options.compiler_version.clone(),
-                        bytecode_version: options.bytecode_version,
-                        options_hash: options.options_hash,
-                        dependencies,
+            events.push(event(unit_name, BuildEventKind::SidecarReused));
+            (
+                reusable.interface,
+                reusable.object,
+                reusable.interface_hash,
+                reusable.object_hash,
+            )
+        } else {
+            events.push(event(unit_name, BuildEventKind::Parsed));
+            let parsed = node
+                .parse_source_snapshot(source.bytes())
+                .map_err(BuildError::new)?;
+            let (interface, object) =
+                Backend::compile(&parsed, &direct_interfaces, interfaces.all()).map_err(
+                    |diagnostics| {
+                        BuildError::new(format_diagnostics(Some(node.path()), &diagnostics))
                     },
-                    interface: interface_bytes,
-                    object: object_bytes,
-                };
-                if sidecar_publication == SidecarPublication::Enabled {
-                    source.ensure_current(node)?;
-                    write_sidecar(node.path(), &sidecar).map_err(|error| {
-                        BuildError::new(format!(
-                            "cannot publish compiled unit beside `{}`: {error}",
-                            node.path().display()
-                        ))
-                    })?;
-                }
-                (
-                    compiled.interface,
-                    compiled.object,
+                )?;
+            events.push(event(unit_name, BuildEventKind::InterfaceAnalyzed));
+            events.push(event(unit_name, BuildEventKind::ImplementationAnalyzed));
+            events.push(event(unit_name, BuildEventKind::Compiled));
+            let interface_bytes =
+                encode_interface(&interface).map_err(|error| BuildError::new(error.to_string()))?;
+            let interface_hash = Digest::of(&interface_bytes);
+            let object_bytes = Backend::encode(&object)?;
+            let object_hash = Digest::of(&object_bytes);
+            let sidecar = CompiledUnit {
+                identity: UnitIdentity {
+                    unit_name: unit_name.clone(),
+                    source_hash: expected.source_hash,
                     interface_hash,
                     object_hash,
-                )
+                    compiler_version: options.compiler_version.clone(),
+                    bytecode_version: options.bytecode_version,
+                    options_hash: options.options_hash,
+                    dependencies,
+                },
+                interface: interface_bytes,
+                object: object_bytes,
             };
-        for location in &mut object.locations {
-            location.source_id = node.source_id();
-        }
+            if sidecar_publication == SidecarPublication::Enabled {
+                source.ensure_current(node)?;
+                write_sidecar(node.path(), &sidecar).map_err(|error| {
+                    BuildError::new(format!(
+                        "cannot publish compiled unit beside `{}`: {error}",
+                        node.path().display()
+                    ))
+                })?;
+            }
+            (interface, object, interface_hash, object_hash)
+        };
+        Backend::normalize(&mut object, node.source_id());
         interfaces.insert(unit_name.clone(), interface, interface_hash);
         linked_units.push(LinkedUnitIdentity {
             unit_name: unit_name.clone(),
@@ -237,6 +325,21 @@ pub fn build_program(
     link_program(units, program)
 }
 
+/// Build reachable units and link the root program through the P8 register backend.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a unit or root program cannot be compiled, linked, or verified.
+pub fn build_register_program(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    program: &Program,
+    options: &BuildOptions,
+) -> Result<BuiltRegisterProgram, BuildError> {
+    let units = build_register_library_units(graph, selection, options)?;
+    link_register_program(units, program)
+}
+
 /// Compile and link a program without publishing newly compiled unit sidecars.
 ///
 /// This validates the complete program graph while leaving its source tree unchanged.
@@ -252,6 +355,21 @@ pub fn check_program(
 ) -> Result<BuiltProgram, BuildError> {
     let units = check_library_units(graph, selection, options)?;
     link_program(units, program)
+}
+
+/// Check and link a program through the P8 register backend without publishing new sidecars.
+///
+/// # Errors
+///
+/// Returns [`BuildError`] when a unit or root program cannot be compiled, linked, or verified.
+pub fn check_register_program(
+    graph: &UnitGraph,
+    selection: &ResolvedUnitGraph,
+    program: &Program,
+    options: &BuildOptions,
+) -> Result<BuiltRegisterProgram, BuildError> {
+    let units = check_register_library_units(graph, selection, options)?;
+    link_register_program(units, program)
 }
 
 pub(crate) fn link_program(
@@ -276,88 +394,26 @@ pub(crate) fn link_program(
     })
 }
 
-fn direct_interfaces_from_map(
-    uses: &[QualifiedId],
-    interfaces: &HashMap<String, UnitInterface>,
-) -> Vec<UnitInterface> {
-    uses.iter()
-        .filter_map(|used| {
-            interfaces
-                .get(&used.parts.join(".").to_ascii_lowercase())
-                .cloned()
-        })
-        .collect()
-}
-
-#[derive(Default)]
-struct InterfaceRegistry {
-    names: Vec<String>,
-    interfaces: Vec<UnitInterface>,
-    positions: HashMap<String, usize>,
-    hashes: HashMap<String, Digest>,
-}
-
-impl InterfaceRegistry {
-    fn all(&self) -> &[UnitInterface] {
-        &self.interfaces
-    }
-
-    fn direct_dependency_identities(&self, uses: &[QualifiedId]) -> Vec<DependencyIdentity> {
-        let mut dependencies = Vec::new();
-        for used in uses {
-            let name = canonical_unit_name(used);
-            let Some(interface_hash) = self.hashes.get(&name) else {
-                continue;
-            };
-            dependencies.push(DependencyIdentity {
-                unit_name: name,
-                interface_hash: *interface_hash,
-            });
-        }
-        dependencies
-    }
-
-    fn direct_interfaces(&self, uses: &[QualifiedId]) -> Vec<UnitInterface> {
-        uses.iter()
-            .filter_map(|used| {
-                self.positions
-                    .get(&canonical_unit_name(used))
-                    .map(|position| self.interfaces[*position].clone())
-            })
-            .collect()
-    }
-
-    fn insert(&mut self, name: String, interface: UnitInterface, hash: Digest) {
-        let position = self.interfaces.len();
-        self.names.push(name.clone());
-        self.interfaces.push(interface);
-        self.positions.insert(name.clone(), position);
-        self.hashes.insert(name, hash);
-    }
-
-    fn finish(
-        self,
-        objects: Vec<RelocatableObject>,
-        linked_units: Vec<LinkedUnitIdentity>,
-        events: Vec<BuildEvent>,
-    ) -> BuiltUnits {
-        let interfaces = self
-            .names
-            .into_iter()
-            .zip(self.interfaces.iter().cloned())
-            .collect();
-        BuiltUnits {
-            objects,
-            interfaces,
-            events,
-            linked_units,
-            supporting_interfaces: self.interfaces,
-        }
-    }
-}
-
-fn canonical_unit_name(used: &QualifiedId) -> String {
-    used.parts.join(".").to_ascii_lowercase()
+fn link_register_program(
+    mut units: BuiltRegisterUnits,
+    program: &Program,
+) -> Result<BuiltRegisterProgram, BuildError> {
+    let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
+    let program_object = fpas_compiler::compile_register_program_object_with_support(
+        program,
+        &root_interfaces,
+        units.supporting_interfaces(),
+    )
+    .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
+    let executable = fpas_linker::link_register_objects(&units.objects, &program_object)
+        .map_err(|error| BuildError::new(error.to_string()))?;
+    units
+        .events
+        .push(event(&program.name, BuildEventKind::Relinked));
+    Ok(BuiltRegisterProgram {
+        executable,
+        events: units.events,
+    })
 }
 
 fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {

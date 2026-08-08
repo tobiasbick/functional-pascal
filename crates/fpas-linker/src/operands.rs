@@ -1,7 +1,7 @@
 //! Centralized opcode operand relocation.
 
 use fpas_bytecode::Op;
-use fpas_unit::object::RelocationKind;
+use fpas_unit::object::ChunkRelocationKind as RelocationKind;
 
 pub(super) fn relocate_instruction(
     op: &mut Op,

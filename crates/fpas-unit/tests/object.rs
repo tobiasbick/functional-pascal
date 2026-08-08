@@ -7,8 +7,10 @@ use std::collections::BTreeMap;
 
 use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
 use fpas_unit::object::{
-    ObjectConstant, ObjectError, ObjectFunction, ObjectLocation, RelocatableObject,
-    collect_relocations, decode_object, encode_object,
+    ChunkConstant as ObjectConstant, ChunkFunction as ObjectFunction,
+    ChunkLocation as ObjectLocation, ChunkObject as RelocatableObject,
+    ChunkObjectError as ObjectError, collect_chunk_relocations as collect_relocations,
+    decode_chunk_object as decode_object, encode_chunk_object as encode_object,
 };
 
 fn object_with_all_relocation_shapes() -> RelocatableObject {

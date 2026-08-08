@@ -13,7 +13,7 @@ pub use write::encode;
 pub(super) const MAGIC: &[u8; 8] = b"FPASCU\0\0";
 
 /// Current `.fpascu` envelope format version.
-pub const FORMAT_VERSION: u16 = 2;
+pub const FORMAT_VERSION: u16 = 3;
 
 /// Largest accepted encoded `.fpascu` file.
 ///

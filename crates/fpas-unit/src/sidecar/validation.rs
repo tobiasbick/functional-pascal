@@ -2,7 +2,7 @@
 
 use crate::{CompiledUnit, DependencyIdentity, ExpectedUnitIdentity};
 
-use super::{LoadedUnit, SidecarCorruption};
+use super::SidecarCorruption;
 
 /// Why an otherwise readable sidecar must be rebuilt.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,11 +28,11 @@ pub enum IncompatibilityReason {
     Bytecode,
 }
 
-/// Result of loading and validating a source-adjacent sidecar.
+/// Result of loading and validating a source-adjacent sidecar payload.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum SidecarLoad {
+pub enum SidecarStatus<T> {
     /// Sidecar matches every current input and may be reused.
-    Reusable(Box<LoadedUnit>),
+    Reusable(Box<T>),
     /// No sidecar exists.
     Missing,
     /// Sidecar is readable but one of its compilation inputs changed.
@@ -43,16 +43,22 @@ pub enum SidecarLoad {
     Corrupt(SidecarCorruption),
 }
 
-pub(super) fn validate_identity(
+/// Stack-object sidecar load result used by the production backend until P9.
+pub type SidecarLoad = SidecarStatus<super::LoadedUnit>;
+
+/// Register-object sidecar load result used by the P8 development backend.
+pub type RegisterSidecarLoad = SidecarStatus<super::LoadedRegisterUnit>;
+
+pub(super) fn validate_identity<T>(
     unit: CompiledUnit,
     expected: &ExpectedUnitIdentity,
-) -> Result<CompiledUnit, SidecarLoad> {
+) -> Result<CompiledUnit, SidecarStatus<T>> {
     let identity = &unit.identity;
     if identity.compiler_version != expected.compiler_version {
-        return Err(SidecarLoad::Incompatible(IncompatibilityReason::Compiler));
+        return Err(SidecarStatus::Incompatible(IncompatibilityReason::Compiler));
     }
     if identity.bytecode_version != expected.bytecode_version {
-        return Err(SidecarLoad::Incompatible(IncompatibilityReason::Bytecode));
+        return Err(SidecarStatus::Incompatible(IncompatibilityReason::Bytecode));
     }
     let reason = if identity.unit_name != expected.unit_name {
         Some(InvalidationReason::UnitName)
@@ -66,7 +72,7 @@ pub(super) fn validate_identity(
         None
     };
     match reason {
-        Some(reason) => Err(SidecarLoad::Stale(reason)),
+        Some(reason) => Err(SidecarStatus::Stale(reason)),
         None => Ok(unit),
     }
 }

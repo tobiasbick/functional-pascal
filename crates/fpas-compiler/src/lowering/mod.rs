@@ -8,21 +8,30 @@ mod concurrency;
 mod context;
 mod control_flow;
 mod expr;
+mod imports;
 mod members;
 mod routines;
 mod stmt;
+mod type_names;
 mod types;
+
+pub(crate) use imports::ImportPlan;
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_ir::{
     Function, FunctionId, Global, GlobalId, IntrinsicId, IntrinsicSignature, Operation, Program,
 };
-use fpas_parser::Program as AstProgram;
+use fpas_parser::{Decl, Program as AstProgram, Stmt, Unit};
 
 use crate::CompileError;
 
 use self::context::{FunctionInput, LoweringContext};
+
+pub(crate) struct LoweredUnit {
+    pub program: Program,
+    pub imports: ImportPlan,
+}
 
 /// Lower a semantically valid scalar program with calls and closures to typed IR.
 ///
@@ -35,13 +44,95 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
     if !metadata.errors.is_empty() {
         return Err(metadata.errors);
     }
+    lower_analyzed_root(
+        &program.name,
+        &program.declarations,
+        &program.body,
+        program.span,
+        metadata,
+        &[],
+        &[],
+    )
+    .map(|lowered| lowered.program)
+}
+
+pub(crate) fn lower_register_unit_subset(
+    unit: &Unit,
+    interfaces: &[fpas_unit::interface::UnitInterface],
+    supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+) -> Result<LoweredUnit, Vec<CompileError>> {
+    let analysis =
+        fpas_sema::analyze_unit_with_interface_support(unit, interfaces, supporting_interfaces)
+            .map_err(|error| {
+                vec![crate::error::internal_compiler_error(
+                    error.to_string(),
+                    "Rebuild the dependency sidecar; its semantic interface is invalid.",
+                    unit.span.line,
+                    unit.span.column,
+                )]
+            })?;
+    if !analysis.metadata.errors.is_empty() {
+        return Err(analysis.metadata.errors);
+    }
+    lower_analyzed_root(
+        &unit.name.parts.join("."),
+        &unit.declarations,
+        &[],
+        unit.span,
+        analysis.metadata,
+        interfaces,
+        supporting_interfaces,
+    )
+}
+
+pub(crate) fn lower_register_program_with_support(
+    program: &AstProgram,
+    interfaces: &[fpas_unit::interface::UnitInterface],
+    supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+) -> Result<LoweredUnit, Vec<CompileError>> {
+    let metadata = fpas_sema::analyze_program_with_interface_support(
+        program,
+        interfaces,
+        supporting_interfaces,
+    )
+    .map_err(|error| {
+        vec![crate::error::internal_compiler_error(
+            error.to_string(),
+            "Rebuild the dependency sidecar; its semantic interface is invalid.",
+            program.span.line,
+            program.span.column,
+        )]
+    })?;
+    if !metadata.errors.is_empty() {
+        return Err(metadata.errors);
+    }
+    lower_analyzed_root(
+        &program.name,
+        &program.declarations,
+        &program.body,
+        program.span,
+        metadata,
+        interfaces,
+        supporting_interfaces,
+    )
+}
+
+fn lower_analyzed_root(
+    name: &str,
+    declarations: &[Decl],
+    body: &[Stmt],
+    span: fpas_lexer::Span,
+    metadata: fpas_sema::AnalysisMetadata,
+    interfaces: &[fpas_unit::interface::UnitInterface],
+    supporting_interfaces: &[fpas_unit::interface::UnitInterface],
+) -> Result<LoweredUnit, Vec<CompileError>> {
     let mut routines = Vec::new();
-    routines::collect(&program.declarations, &mut routines);
+    routines::collect(declarations, &mut routines);
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
-    let enum_constants = collect_enum_constants(program);
+    let enum_constants = collect_enum_constants(declarations);
     let mut globals = Vec::new();
     let mut global_bindings = BTreeMap::new();
-    for declaration in &program.declarations {
+    for declaration in declarations {
         let (name, type_expr, span, mutable) = match declaration {
             fpas_parser::Decl::Const(definition) => (
                 &definition.name,
@@ -76,36 +167,44 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
         });
         global_bindings.insert(name.to_ascii_lowercase(), context::GlobalBinding { id, ty });
     }
-    let callables = routines::callable_table(&routines, &mut type_table, &metadata)
+    let mut callables = routines::callable_table(&routines, &mut type_table, &metadata)
         .map_err(|error| vec![error])?;
-    let first_closure_id = u32::try_from(routines.len().saturating_add(1)).map_err(|_| {
-        vec![context::unsupported(
-            program.span,
-            "function identifier overflow",
-        )]
-    })?;
+    let first_import_id = u32::try_from(routines.len().saturating_add(1))
+        .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?;
+    let (imports, imported_stubs) = imports::install(
+        imports::InterfaceSet {
+            direct: interfaces,
+            supporting: supporting_interfaces,
+        },
+        &mut type_table,
+        &mut callables,
+        &mut globals,
+        &mut global_bindings,
+        first_import_id,
+        span,
+    )
+    .map_err(|error| vec![error])?;
+    let first_closure_id = first_import_id
+        .checked_add(
+            u32::try_from(imported_stubs.len())
+                .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
+        )
+        .ok_or_else(|| vec![context::unsupported(span, "function identifier overflow")])?;
     let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone());
     closures
-        .discover_statements(
-            &program.body,
-            FunctionId::new(0),
-            &metadata,
-            &mut type_table,
-        )
+        .discover_statements(body, FunctionId::new(0), &metadata, &mut type_table)
         .map_err(|error| vec![error])?;
     for (index, routine) in routines.iter().enumerate() {
-        let id = FunctionId::new(u32::try_from(index + 1).map_err(|_| {
-            vec![context::unsupported(
-                program.span,
-                "function identifier overflow",
-            )]
-        })?);
+        let id = FunctionId::new(
+            u32::try_from(index + 1)
+                .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
+        );
         closures
             .discover_statements(routine.statements(), id, &metadata, &mut type_table)
             .map_err(|error| vec![error])?;
     }
     let mut context = LoweringContext::new(FunctionInput {
-        name: &program.name,
+        name,
         id: FunctionId::new(0),
         result: types::UNIT,
         parameters: &[],
@@ -124,7 +223,7 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
         type_table: type_table.clone(),
     })
     .map_err(|error| vec![error])?;
-    for declaration in &program.declarations {
+    for declaration in declarations {
         let (name, value, span) = match declaration {
             fpas_parser::Decl::Const(definition) => {
                 (&definition.name, &definition.value, definition.span)
@@ -150,20 +249,18 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
             )
             .map_err(|error| vec![error])?;
     }
-    for statement in &program.body {
+    for statement in body {
         context
             .lower_statement(statement)
             .map_err(|error| vec![error])?;
     }
-    let root = context.finish(program.span).map_err(|error| vec![error])?;
+    let root = context.finish(span).map_err(|error| vec![error])?;
     let mut functions = vec![root];
     for (index, routine) in routines.iter().enumerate() {
-        let id = FunctionId::new(u32::try_from(index + 1).map_err(|_| {
-            vec![context::unsupported(
-                program.span,
-                "function identifier overflow",
-            )]
-        })?);
+        let id = FunctionId::new(
+            u32::try_from(index + 1)
+                .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
+        );
         functions.push(
             routines::lower(
                 routine,
@@ -182,6 +279,7 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
             .map_err(|error| vec![error])?,
         );
     }
+    functions.extend(imported_stubs);
     for routine in &closures.routines {
         functions.push(
             closures
@@ -223,17 +321,20 @@ pub fn lower_register_subset(program: &AstProgram) -> Result<Program, Vec<Compil
         vec![crate::error::internal_compiler_error(
             format!("Register IR failed validation: {error}"),
             "This is an internal compiler error. Re-run compilation and report the source program.",
-            program.span.line,
-            program.span.column,
+            span.line,
+            span.column,
         )]
     })?;
-    Ok(ir)
+    Ok(LoweredUnit {
+        program: ir,
+        imports,
+    })
 }
 
-fn collect_enum_constants(program: &AstProgram) -> BTreeMap<String, i64> {
+fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, i64> {
     let mut constants = BTreeMap::new();
     let mut ambiguous = BTreeSet::new();
-    for declaration in &program.declarations {
+    for declaration in declarations {
         let fpas_parser::Decl::TypeDef(definition) = declaration else {
             continue;
         };

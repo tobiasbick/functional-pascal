@@ -8,7 +8,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_build::{BuildOptions, build_library_units, build_program};
+use fpas_build::{BuildOptions, build_library_units, build_program, build_register_program};
 use fpas_project::{build_unit_graph, load_project, resolve_library_units, resolve_program_units};
 use fpas_unit::{Digest, decode, encode};
 
@@ -101,6 +101,21 @@ include = ["src/**/*.fpas"]
         build_program(&graph, &selection, &program, options)
     }
 
+    fn build_register_with_options(
+        &self,
+        options: &BuildOptions,
+    ) -> Result<fpas_build::BuiltRegisterProgram, fpas_build::BuildError> {
+        let project = load_project(&self.manifest).expect("project loading");
+        let graph =
+            build_unit_graph(&project.source_files, &project.link_meta).expect("unit graph");
+        let main = project.main.expect("program main");
+        let source = fs::read_to_string(main).expect("main source");
+        let (program, diagnostics) = fpas_parser::parse(&source);
+        assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+        let selection = resolve_program_units(&graph, &program.uses).expect("reachable units");
+        build_register_program(&graph, &selection, &program, options)
+    }
+
     fn build_library_with_options(
         &self,
         options: &BuildOptions,
@@ -116,6 +131,12 @@ include = ["src/**/*.fpas"]
 fn assert_output(program: fpas_build::BuiltProgram, expected: &str) {
     let mut vm = fpas_vm::Vm::new(program.chunk);
     vm.run().expect("linked execution");
+    assert_eq!(vm.output().lines, [expected]);
+}
+
+fn assert_register_output(program: fpas_build::BuiltRegisterProgram, expected: &str) {
+    let mut vm = fpas_vm::RegisterVm::new(program.executable);
+    vm.run().expect("linked register execution");
     assert_eq!(vm.output().lines, [expected]);
 }
 
@@ -148,6 +169,149 @@ fn cold_warm_and_interface_invalidation_rebuild_the_minimum_units() {
     assert_output(public_change, "43");
 
     fs::remove_dir_all(&fixture.root).ok();
+}
+
+#[test]
+fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
+    let fixture = Fixture::create();
+    let options = BuildOptions::default();
+
+    let cold = fixture
+        .build_register_with_options(&options)
+        .expect("cold register build");
+    assert_eq!(cold.counters().compiled, 2);
+    let cold_executable = cold.executable.executable().clone();
+    let base_sidecar = fixture.base.with_extension("fpascu");
+    let consumer_sidecar = fixture.root.join("src/consumer.fpascu");
+    let cold_object = decode(&fs::read(&base_sidecar).expect("cold base sidecar"))
+        .expect("cold base envelope")
+        .object;
+    assert_register_output(cold, "42");
+
+    let warm = fixture
+        .build_register_with_options(&options)
+        .expect("warm register build");
+    assert_eq!(warm.counters().compiled, 0);
+    assert_eq!(warm.counters().sidecar_reused, 2);
+    assert_eq!(warm.executable.executable(), &cold_executable);
+    assert_eq!(
+        decode(&fs::read(&base_sidecar).expect("warm base sidecar"))
+            .expect("warm base envelope")
+            .object,
+        cold_object,
+        "identical register builds must retain byte-identical object payloads"
+    );
+    assert_register_output(warm, "42");
+
+    fs::remove_file(&base_sidecar).expect("remove base sidecar");
+    let missing = fixture
+        .build_register_with_options(&options)
+        .expect("missing register sidecar rebuild");
+    assert_eq!(missing.counters().compiled, 1);
+    assert_eq!(missing.counters().sidecar_reused, 1);
+
+    let mut old = fs::read(&consumer_sidecar).expect("consumer sidecar");
+    old[8..10].copy_from_slice(&(fpas_unit::FORMAT_VERSION - 1).to_le_bytes());
+    fs::write(&consumer_sidecar, old).expect("old register sidecar fixture");
+    let old = fixture
+        .build_register_with_options(&options)
+        .expect("old register sidecar rebuild");
+    assert_eq!(old.counters().compiled, 1);
+    assert_eq!(old.counters().sidecar_reused, 1);
+
+    let mut corrupt =
+        decode(&fs::read(&base_sidecar).expect("base sidecar")).expect("base envelope");
+    corrupt.object = b"invalid register object".to_vec();
+    corrupt.identity.object_hash = Digest::of(&corrupt.object);
+    fs::write(&base_sidecar, encode(&corrupt).expect("corrupt envelope"))
+        .expect("corrupt register sidecar fixture");
+    let corrupt = fixture
+        .build_register_with_options(&options)
+        .expect("corrupt register sidecar rebuild");
+    assert_eq!(corrupt.counters().compiled, 1);
+    assert_eq!(corrupt.counters().sidecar_reused, 1);
+
+    let mut incompatible_options = options;
+    incompatible_options.bytecode_version = incompatible_options.bytecode_version.saturating_add(1);
+    let incompatible = fixture
+        .build_register_with_options(&incompatible_options)
+        .expect("incompatible register sidecar rebuild");
+    assert_eq!(incompatible.counters().compiled, 2);
+    assert_eq!(incompatible.counters().sidecar_reused, 0);
+    assert_register_output(incompatible, "42");
+
+    fs::remove_dir_all(&fixture.root).ok();
+}
+
+#[test]
+fn register_build_runs_a_workspace_library_dependency() {
+    let root = temp_dir();
+    write(
+        &root.join("suite.fpasworkspace"),
+        "[workspace]\nname = \"suite\"\nmembers = [\"app/app.fpasprj\", \"lib/lib.fpasprj\"]\n",
+    );
+    let app_manifest = root.join("app/app.fpasprj");
+    write(
+        &app_manifest,
+        r#"[project]
+name = "app"
+kind = "program"
+main = "main.fpas"
+
+[dependencies]
+workspace = ["core"]
+
+[sources]
+include = ["main.fpas"]
+"#,
+    );
+    write(
+        &root.join("app/main.fpas"),
+        "program Demo;
+         uses Demo.Consumer, Std.Console;
+         begin Std.Console.WriteLn(Run()) end.",
+    );
+    write(
+        &root.join("lib/lib.fpasprj"),
+        r#"[project]
+name = "core"
+kind = "library"
+
+[sources]
+include = ["*.fpas"]
+
+[exports]
+units = ["Demo.Base", "Demo.Consumer"]
+"#,
+    );
+    write(
+        &root.join("lib/base.fpas"),
+        "unit Demo.Base;
+         public function AddOne(Value: integer): integer;
+         begin return Value + 1 end;",
+    );
+    write(
+        &root.join("lib/consumer.fpas"),
+        "unit Demo.Consumer;
+         uses Demo.Base;
+         public function Run(): integer;
+         begin return AddOne(41) end;",
+    );
+
+    let project = load_project(&app_manifest).expect("workspace program project");
+    let graph =
+        build_unit_graph(&project.source_files, &project.link_meta).expect("workspace graph");
+    let main = project.main.expect("workspace program main");
+    let source = fs::read_to_string(main).expect("workspace program source");
+    let (program, diagnostics) = fpas_parser::parse(&source);
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let selection = resolve_program_units(&graph, &program.uses).expect("workspace selection");
+    let built = build_register_program(&graph, &selection, &program, &BuildOptions::default())
+        .expect("workspace register build");
+
+    assert_eq!(built.counters().compiled, 2);
+    assert_register_output(built, "42");
+    fs::remove_dir_all(root).ok();
 }
 
 #[test]
@@ -196,6 +360,28 @@ fn corrupt_payload_rebuilds_and_replaces_the_sidecar() {
     let warm = fixture.build().expect("recovered warm build");
     assert_eq!(warm.counters().compiled, 0);
     assert_eq!(warm.counters().sidecar_reused, 2);
+
+    fs::remove_dir_all(&fixture.root).ok();
+}
+
+#[test]
+fn old_sidecar_envelope_rebuilds_automatically_and_is_replaced() {
+    let fixture = Fixture::create();
+    fixture.build().expect("initial build");
+    let sidecar = fixture.base.with_extension("fpascu");
+    let mut old = fs::read(&sidecar).expect("current sidecar");
+    old[8..10].copy_from_slice(&(fpas_unit::FORMAT_VERSION - 1).to_le_bytes());
+    fs::write(&sidecar, old).expect("old sidecar fixture");
+
+    let rebuilt = fixture.build().expect("old format rebuild");
+    assert_eq!(rebuilt.counters().compiled, 1);
+    assert_eq!(rebuilt.counters().sidecar_reused, 1);
+    assert_output(rebuilt, "42");
+    let replacement = fs::read(&sidecar).expect("replacement sidecar");
+    assert_eq!(
+        u16::from_le_bytes([replacement[8], replacement[9]]),
+        fpas_unit::FORMAT_VERSION
+    );
 
     fs::remove_dir_all(&fixture.root).ok();
 }

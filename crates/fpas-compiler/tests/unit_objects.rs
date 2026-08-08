@@ -7,17 +7,114 @@
 use std::collections::BTreeMap;
 
 use fpas_bytecode::Op;
-use fpas_compiler::{compile_program_object, compile_unit_object};
-use fpas_linker::link_objects;
+use fpas_compiler::{
+    compile_program_object, compile_register_program_object_with_support,
+    compile_register_unit_object, compile_unit_object,
+};
+use fpas_linker::{link_objects, link_register_objects};
 use fpas_unit::interface::InterfaceType;
 use fpas_unit::object::{
-    DefinitionKind, ObjectConstant, ObjectImport, ObjectLocation, RelocatableObject,
-    collect_relocations,
+    ChunkConstant as ObjectConstant, ChunkDefinitionKind as DefinitionKind,
+    ChunkImport as ObjectImport, ChunkLocation as ObjectLocation, ChunkObject as RelocatableObject,
+    collect_chunk_relocations as collect_relocations,
 };
 
 mod common;
 
 use common::{parse_unit, run_zero_arity};
+
+#[test]
+fn register_unit_objects_link_transitive_calls_and_run_initializers() {
+    let dependency = parse_unit(
+        "unit Demo.Base;
+         public function AddOne(Value: integer): integer;
+         begin return Value + 1 end;",
+    );
+    let dependency =
+        compile_register_unit_object(&dependency, &[]).expect("register dependency compilation");
+    let consumer = parse_unit(
+        "unit Demo.Consumer;
+         uses Demo.Base;
+         public function Run(): integer;
+         begin return AddOne(41) end;",
+    );
+    let consumer =
+        compile_register_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
+            .expect("register consumer compilation");
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Demo.Consumer, Std.Console;
+         begin Std.Console.WriteLn(Run()) end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let interfaces = [dependency.interface.clone(), consumer.interface.clone()];
+    let program = compile_register_program_object_with_support(
+        &program,
+        std::slice::from_ref(&interfaces[1]),
+        &interfaces,
+    )
+    .expect("register program compilation");
+    let executable = link_register_objects(&[dependency.object, consumer.object], &program)
+        .expect("register object linking");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
+    vm.run().expect("register VM execution");
+
+    assert_eq!(vm.output().lines, ["42"]);
+}
+
+#[test]
+fn register_unit_objects_relocate_imported_globals_records_and_enums() {
+    let dependency = parse_unit(
+        "unit Demo.Model;
+         public mutable var Offset: integer := 1;
+         public type Point = record
+           public Value: integer;
+         end;
+         public type Choice = enum
+           Present(Value: integer);
+           Absent;
+         end;",
+    );
+    let dependency =
+        compile_register_unit_object(&dependency, &[]).expect("register model compilation");
+    let consumer = parse_unit(
+        "unit Demo.Consumer;
+         uses Demo.Model;
+         public function Run(): integer;
+         begin
+           var Item: Point := record Value := Offset + 40; end;
+           var Selected: Choice := Choice.Present(Item.Value + 1);
+           mutable var Number: integer := 0;
+           case Selected of
+             Choice.Present(Value): Number := Value;
+             Choice.Absent: Number := 0
+           end;
+           return Number
+         end;",
+    );
+    let consumer =
+        compile_register_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
+            .expect("register aggregate consumer compilation");
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Demo.Consumer, Std.Console;
+         begin Std.Console.WriteLn(Run()) end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let interfaces = [dependency.interface.clone(), consumer.interface.clone()];
+    let program = compile_register_program_object_with_support(
+        &program,
+        std::slice::from_ref(&interfaces[1]),
+        &interfaces,
+    )
+    .expect("register aggregate program compilation");
+    let executable = link_register_objects(&[dependency.object, consumer.object], &program)
+        .expect("register aggregate object linking");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
+    vm.run().expect("register aggregate VM execution");
+
+    assert_eq!(vm.output().lines, ["42"]);
+}
 
 #[test]
 fn independently_compiled_units_link_and_run_without_dependency_asts() {

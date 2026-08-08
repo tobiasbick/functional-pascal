@@ -12,6 +12,7 @@ mod sidecar;
 pub use format::{FORMAT_VERSION, FormatError, MAX_SIDECAR_BYTES, decode, encode};
 pub use identity::{CompiledUnit, DependencyIdentity, Digest, ExpectedUnitIdentity, UnitIdentity};
 pub use sidecar::{
-    IncompatibilityReason, InvalidationReason, LoadedUnit, SidecarCorruption, SidecarError,
-    SidecarLoad, load_sidecar, sidecar_path, write_sidecar,
+    IncompatibilityReason, InvalidationReason, LoadedRegisterUnit, LoadedUnit, RegisterSidecarLoad,
+    SidecarCorruption, SidecarError, SidecarLoad, SidecarStatus, load_register_sidecar,
+    load_sidecar, sidecar_path, write_sidecar,
 };

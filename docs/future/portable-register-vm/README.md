@@ -1,6 +1,6 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; P0 through P7 implemented, production cutover not started.
+Status: approved implementation direction; P0 through P8 implemented, production cutover not started.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -62,6 +62,8 @@ Borrowed intrinsic windows, exhaustive numeric dispatch, hosted Console/Graph/Te
 standard callbacks are recorded in [P6 intrinsics and hosted runtimes](p6-intrinsics-hosted-runtimes.md).
 Register task state, pool scheduling, waits, cooperative sleep, and shutdown are recorded in
 [P7 tasks and concurrency](p7-tasks-concurrency.md).
+Relocatable register unit objects, deterministic numeric linking, and old-sidecar rebuilding are
+recorded in [P8 unit objects and linker](p8-unit-objects-linker.md).
 
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
@@ -102,6 +104,14 @@ Revalidate these facts before implementation because file names can move:
 - [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) executes only a
   `VerifiedExecutable` through one exhaustive packed-opcode dispatch loop and an isolated hosted
   Console/Graph state; production still uses the stack VM.
+- [`fpas_unit::object::RelocatableObject`](../../../crates/fpas-unit/src/object/mod.rs) owns the P8
+  independently encoded register object, while `ChunkObject` temporarily isolates the production
+  stack sidecar path until P9.
+- [`link_register_objects`](../../../crates/fpas-linker/src/lib.rs) deterministically assigns numeric
+  IDs, relocates register objects, and returns only a fully verified register executable.
+- [`build_register_program`](../../../crates/fpas-build/src/engine.rs) shares incremental identity,
+  sidecar recovery, and workspace graph handling with the production builder while keeping backend
+  selection out of the CLI until P9.
 
 ## Desired pipeline
 

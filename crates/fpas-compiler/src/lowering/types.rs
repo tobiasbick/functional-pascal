@@ -239,18 +239,22 @@ impl TypeTable {
                         if let Some(layout) = self
                             .record_layouts
                             .iter()
-                            .find(|layout| layout.name.eq_ignore_ascii_case(&name))
+                            .find(|layout| super::type_names::matches(&layout.name, &name))
                         {
                             return self.intern_kind(IrType::Record(layout.id), *span);
                         }
                         if let Some(layout) = self
                             .enum_layouts
                             .iter()
-                            .find(|layout| layout.name.eq_ignore_ascii_case(&name))
+                            .find(|layout| super::type_names::matches(&layout.name, &name))
                         {
                             return self.intern_kind(IrType::Enum(layout.id), *span);
                         }
-                        if self.simple_enums.contains(&name.to_ascii_lowercase()) {
+                        if self
+                            .simple_enums
+                            .iter()
+                            .any(|enumeration| super::type_names::matches(enumeration, &name))
+                        {
                             return Ok(INTEGER);
                         }
                         Err(type_error("named callable type", *span))

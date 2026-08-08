@@ -17,7 +17,10 @@ use fpas_bytecode::Op;
 use fpas_unit::interface::{
     InterfaceSymbol, InterfaceType, SymbolKind, UnitInterface, encode_interface,
 };
-use fpas_unit::object::{ObjectConstant, ObjectLocation, RelocatableObject, encode_object};
+use fpas_unit::object::{
+    ChunkConstant as ObjectConstant, ChunkLocation as ObjectLocation,
+    ChunkObject as RelocatableObject, encode_chunk_object as encode_object,
+};
 use fpas_unit::{
     CompiledUnit, DependencyIdentity, Digest, ExpectedUnitIdentity, IncompatibilityReason,
     InvalidationReason, MAX_SIDECAR_BYTES, SidecarCorruption, SidecarLoad, UnitIdentity, encode,

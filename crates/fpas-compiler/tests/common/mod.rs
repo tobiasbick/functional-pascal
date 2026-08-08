@@ -10,8 +10,9 @@ use fpas_bytecode::Op;
 use fpas_linker::link_objects;
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_unit::object::{
-    DefinitionKind, ObjectConstant, ObjectImport, ObjectLocation, RelocatableObject,
-    collect_relocations,
+    ChunkConstant as ObjectConstant, ChunkDefinitionKind as DefinitionKind,
+    ChunkImport as ObjectImport, ChunkLocation as ObjectLocation, ChunkObject as RelocatableObject,
+    collect_chunk_relocations as collect_relocations,
 };
 
 pub(crate) fn parse_unit(source: &str) -> fpas_parser::Unit {

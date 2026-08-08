@@ -184,6 +184,19 @@ fn analyze_with_types_records_canonical_standard_intrinsic_calls() {
 }
 
 #[test]
+fn analyze_with_types_canonicalizes_short_standard_intrinsic_calls() {
+    let (program, parse_errors) =
+        fpas_parser::parse("program T; uses Std.Console; begin WriteLn('hello') end.");
+    assert!(parse_errors.is_empty(), "{parse_errors:#?}");
+    let metadata = analyze_with_types(&program);
+    assert!(metadata.errors.is_empty(), "{:?}", metadata.errors);
+    assert_eq!(
+        metadata.intrinsic_calls.values().collect::<Vec<_>>(),
+        vec!["Std.Console.WriteLn"]
+    );
+}
+
+#[test]
 fn analysis_metadata_exposes_all_named_results() {
     let (program, parse_errors) = fpas_parser::parse("program T; begin end.");
     assert!(parse_errors.is_empty(), "{parse_errors:#?}");

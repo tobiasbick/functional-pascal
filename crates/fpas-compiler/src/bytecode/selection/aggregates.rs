@@ -1,4 +1,4 @@
-//! P5 aggregate and dense-global instruction selection.
+//! Aggregate and dense-global instruction selection.
 
 use fpas_bytecode::{Instruction, Opcode};
 use fpas_ir::{Operation, ValueId};

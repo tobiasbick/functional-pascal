@@ -20,8 +20,8 @@ impl ClosureRegistry<'_> {
         metadata: &AnalysisMetadata,
         types: &mut types::TypeTable,
         globals: &BTreeMap<String, GlobalBinding>,
-        enum_constants: &BTreeMap<String, i64>,
-    ) -> Result<Function, CompileError> {
+        constants: &BTreeMap<String, fpas_ir::Constant>,
+    ) -> Result<(Function, types::TypeTable), CompileError> {
         let parameters = routine
             .parameters
             .iter()
@@ -41,7 +41,7 @@ impl ClosureRegistry<'_> {
             parameters: &parameters,
             captures: &captures,
             globals: globals.clone(),
-            enum_constants: enum_constants.clone(),
+            constants: constants.clone(),
             metadata,
             callables: self.callables.clone(),
             closure_targets: self.targets.clone(),

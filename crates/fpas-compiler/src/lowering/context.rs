@@ -29,7 +29,6 @@ struct Binding {
 #[derive(Debug, Clone, Copy)]
 enum BindingStorage {
     Local(LocalId),
-    Value(ValueId),
 }
 
 #[derive(Debug, Clone)]
@@ -75,7 +74,7 @@ pub(super) struct FunctionInput<'a> {
     pub parameters: &'a [(String, TypeId)],
     pub captures: &'a [CaptureInput],
     pub globals: BTreeMap<String, GlobalBinding>,
-    pub enum_constants: BTreeMap<String, i64>,
+    pub constants: BTreeMap<String, fpas_ir::Constant>,
     pub metadata: &'a AnalysisMetadata,
     pub callables: BTreeMap<String, Callable>,
     pub closure_targets: HashMap<usize, ClosureTarget>,
@@ -95,7 +94,7 @@ pub(super) struct LoweringContext {
     pub(super) bound_method_targets: HashMap<usize, BoundMethodTarget>,
     cell_names: BTreeSet<String>,
     globals: BTreeMap<String, GlobalBinding>,
-    enum_constants: BTreeMap<String, i64>,
+    constants: BTreeMap<String, fpas_ir::Constant>,
     type_table: types::TypeTable,
     pub(super) expr_types: ExprTypeMap,
     pub(super) intrinsic_calls: fpas_sema::IntrinsicCallMap,
@@ -134,7 +133,7 @@ impl LoweringContext {
             parameters: parameter_types,
             captures,
             globals,
-            enum_constants,
+            constants,
             metadata,
             callables,
             closure_targets,
@@ -158,28 +157,50 @@ impl LoweringContext {
                     })
             })
             .collect::<Result<Vec<_>, _>>()?;
-        let bindings: Vec<Binding> = parameter_types
-            .iter()
-            .zip(&parameters)
-            .map(|((name, ty), parameter)| Binding {
-                name: name.to_ascii_lowercase(),
-                storage: BindingStorage::Value(parameter.id),
-                ty: *ty,
-                depth: 0,
-                cell: false,
-            })
-            .collect();
-        let mut locals = Vec::with_capacity(captures.len());
-        let mut bindings = bindings;
-        for (index, capture) in captures.iter().enumerate() {
-            let local = LocalId::try_from_index(index).map_err(|error| {
+        let mut locals = Vec::with_capacity(parameter_types.len() + captures.len());
+        let mut bindings = Vec::with_capacity(parameter_types.len() + captures.len());
+        let mut entry = empty_block(BlockId::new(0));
+        for ((name, ty), parameter) in parameter_types.iter().zip(&parameters) {
+            let local = LocalId::try_from_index(locals.len()).map_err(|error| {
                 internal_compiler_error(
                     error.to_string(),
-                    "Reduce the number of captured values in this routine.",
+                    "Reduce the number of routine parameters.",
                     1,
                     1,
                 )
             })?;
+            locals.push(Local {
+                id: local,
+                ty: *ty,
+                mutable: true,
+                capture: None,
+            });
+            bindings.push(Binding {
+                name: name.to_ascii_lowercase(),
+                storage: BindingStorage::Local(local),
+                ty: *ty,
+                depth: 0,
+                cell: false,
+            });
+            entry.instructions.push(Instruction {
+                source: None,
+                result: None,
+                operation: Operation::WriteLocal {
+                    value: parameter.id,
+                    local,
+                },
+            });
+        }
+        for (index, capture) in captures.iter().enumerate() {
+            let local = LocalId::try_from_index(parameter_types.len().saturating_add(index))
+                .map_err(|error| {
+                    internal_compiler_error(
+                        error.to_string(),
+                        "Reduce the number of captured values in this routine.",
+                        1,
+                        1,
+                    )
+                })?;
             locals.push(Local {
                 id: local,
                 ty: capture.storage_ty,
@@ -211,7 +232,7 @@ impl LoweringContext {
             bound_method_targets,
             cell_names,
             globals,
-            enum_constants,
+            constants,
             type_table,
             expr_types: metadata.expr_types.clone(),
             intrinsic_calls: metadata.intrinsic_calls.clone(),
@@ -224,7 +245,7 @@ impl LoweringContext {
             event_writes: metadata.event_writes.clone(),
             event_assigned: metadata.event_assigned.clone(),
             event_raises: metadata.event_raises.clone(),
-            blocks: vec![empty_block(BlockId::new(0))],
+            blocks: vec![entry],
             current: BlockId::new(0),
             locals,
             bindings,
@@ -255,7 +276,9 @@ impl LoweringContext {
             .ok_or_else(|| {
                 let span = expression.span();
                 internal_compiler_error(
-                    "Expression type is missing after semantic analysis.",
+                    format!(
+                        "Expression type is missing after semantic analysis for `{expression:?}`."
+                    ),
                     "This is an internal compiler error. Re-run compilation and report the source program.",
                     span.line,
                     span.column,
@@ -268,6 +291,37 @@ impl LoweringContext {
         expression: &fpas_parser::Expr,
     ) -> Result<TypeId, CompileError> {
         let span = expression.span();
+        if let fpas_parser::Expr::Call { designator, .. } = expression {
+            let key = fpas_sema::expr_lookup_key(expression);
+            if !self.intrinsic_calls.contains_key(&key) {
+                if let Some(result) = self.member_call_result(key) {
+                    return Ok(result);
+                }
+                let qualified = designator
+                    .parts
+                    .iter()
+                    .map(|part| match part {
+                        fpas_parser::DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                        fpas_parser::DesignatorPart::Index(_, _) => None,
+                    })
+                    .collect::<Option<Vec<_>>>()
+                    .map(|parts| parts.join("."));
+                if let Some(result) = qualified
+                    .as_deref()
+                    .and_then(|name| self.call_result_type(name))
+                {
+                    return Ok(result);
+                }
+            }
+        }
+        if !self
+            .expr_types
+            .contains_key(&fpas_sema::expr_lookup_key(expression))
+            && let fpas_parser::Expr::Designator(designator) = expression
+            && let Some(ty) = self.designator_type(designator)
+        {
+            return Ok(ty);
+        }
         self.type_table
             .id(&self.expression_type(expression)?, span.line, span.column)
     }
@@ -289,6 +343,32 @@ impl LoweringContext {
 
     pub(super) fn function_result_type(&self, callable: TypeId) -> Option<TypeId> {
         self.type_table.function_result(callable)
+    }
+
+    pub(super) fn lowered_value_type(&self, value: ValueId) -> Option<TypeId> {
+        if let Some(ty) = self
+            .parameters
+            .iter()
+            .find(|definition| definition.id == value)
+            .map(|definition| definition.ty)
+        {
+            return Some(ty);
+        }
+        if let Some(ty) = self
+            .blocks
+            .iter()
+            .flat_map(|block| &block.parameters)
+            .find(|parameter| parameter.id == value)
+            .map(|parameter| parameter.ty)
+        {
+            return Some(ty);
+        }
+        self.blocks
+            .iter()
+            .flat_map(|block| &block.instructions)
+            .filter_map(|instruction| instruction.result.as_ref())
+            .find(|definition| definition.id == value)
+            .map(|definition| definition.ty)
     }
 
     pub(super) fn declared_type(
@@ -337,17 +417,8 @@ impl LoweringContext {
 
 pub(super) fn unsupported(span: Span, construct: &str) -> CompileError {
     internal_compiler_error(
-        format!("`{construct}` is outside the P7 register-development subset."),
-        "This development path accepts scalar control flow, routines, closures, globals, aggregates, and standard intrinsics without tasks, user-unit linking, or persistent artifacts.",
-        span.line,
-        span.column,
-    )
-}
-
-fn unsupported_parameter_assignment(name: &str, span: Span) -> CompileError {
-    internal_compiler_error(
-        format!("Assignment to parameter `{name}` is outside the current register subset."),
-        "Use a local mutable variable until mutable parameter lowering is added to this development path.",
+        format!("The register compiler could not lower `{construct}`."),
+        "This is an internal compiler error. Re-run compilation and report the source program.",
         span.line,
         span.column,
     )

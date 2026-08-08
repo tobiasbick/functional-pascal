@@ -107,7 +107,7 @@ fn main_task_yield_executes_without_a_pool() {
         vec!["root", "test.fpas"],
         1,
     ))
-    .expect("main-task yield must be executable in P7");
+    .expect("main-task yield must be executable");
     assert_eq!(value, Value::Unit);
     assert_eq!(count, 2);
 }

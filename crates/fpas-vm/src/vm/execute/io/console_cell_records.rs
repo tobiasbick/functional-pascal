@@ -162,8 +162,7 @@ impl Worker {
         line: SourceLocation,
     ) -> Result<SavedRegionId, VmError> {
         let value = self.pop(line)?;
-        let fields = record_fields(&value, SAVED_REGION_TYPE, line)?;
-        let id = integer_field(fields, HANDLE_FIELD, SAVED_REGION_TYPE, line)?;
+        let id = integer_field(&value, HANDLE_FIELD, SAVED_REGION_TYPE, line)?;
         let id = u64::try_from(id)
             .ok()
             .filter(|id| *id != 0)
@@ -182,15 +181,14 @@ pub(crate) fn console_cell_from_value(
     value: &Value,
     line: SourceLocation,
 ) -> Result<ConsoleCell, VmError> {
-    let fields = record_fields(value, CELL_TYPE, line)?;
-    let glyph = match field(fields, "glyph", CELL_TYPE, line)? {
+    let glyph = match field(value, "glyph", CELL_TYPE, line)? {
         Value::Str(glyph) => glyph.to_string(),
         other => {
             return Err(field_type_error(CELL_TYPE, "glyph", "string", other, line));
         }
     };
-    let foreground = console_color_from_value(field(fields, "foreground", CELL_TYPE, line)?, line)?;
-    let background = console_color_from_value(field(fields, "background", CELL_TYPE, line)?, line)?;
+    let foreground = console_color_from_value(field(value, "foreground", CELL_TYPE, line)?, line)?;
+    let background = console_color_from_value(field(value, "background", CELL_TYPE, line)?, line)?;
     Ok(ConsoleCell {
         glyph,
         foreground,
@@ -199,19 +197,18 @@ pub(crate) fn console_cell_from_value(
 }
 
 fn console_color_from_value(value: &Value, line: SourceLocation) -> Result<ConsoleColor, VmError> {
-    let fields = record_fields(value, COLOR_TYPE, line)?;
-    let kind = integer_field(fields, "kind", COLOR_TYPE, line)?;
+    let kind = integer_field(value, "kind", COLOR_TYPE, line)?;
     match kind {
         0 => Ok(ConsoleColor::Crt(integer_u8_field(
-            fields, "index", 15, COLOR_TYPE, line,
+            value, "index", 15, COLOR_TYPE, line,
         )?)),
         1 => Ok(ConsoleColor::Ansi256(integer_u8_field(
-            fields, "index", 255, COLOR_TYPE, line,
+            value, "index", 255, COLOR_TYPE, line,
         )?)),
         2 => Ok(ConsoleColor::Rgb {
-            red: integer_u8_field(fields, "red", 255, COLOR_TYPE, line)?,
-            green: integer_u8_field(fields, "green", 255, COLOR_TYPE, line)?,
-            blue: integer_u8_field(fields, "blue", 255, COLOR_TYPE, line)?,
+            red: integer_u8_field(value, "red", 255, COLOR_TYPE, line)?,
+            green: integer_u8_field(value, "green", 255, COLOR_TYPE, line)?,
+            blue: integer_u8_field(value, "blue", 255, COLOR_TYPE, line)?,
         }),
         _ => Err(validation_error(
             format!("Std.Console.Color.kind must be Crt, Ansi256, or Rgb, got {kind}"),
@@ -225,72 +222,71 @@ pub(crate) fn console_rect_from_value(
     value: &Value,
     line: SourceLocation,
 ) -> Result<ConsoleRect, VmError> {
-    let fields = record_fields(value, RECT_TYPE, line)?;
     Ok(ConsoleRect {
-        x: positive_u16_field(fields, "x", RECT_TYPE, line)?,
-        y: positive_u16_field(fields, "y", RECT_TYPE, line)?,
-        width: positive_u16_field(fields, "width", RECT_TYPE, line)?,
-        height: positive_u16_field(fields, "height", RECT_TYPE, line)?,
+        x: positive_u16_field(value, "x", RECT_TYPE, line)?,
+        y: positive_u16_field(value, "y", RECT_TYPE, line)?,
+        width: positive_u16_field(value, "width", RECT_TYPE, line)?,
+        height: positive_u16_field(value, "height", RECT_TYPE, line)?,
     })
 }
 
-fn record_fields<'a>(
-    value: &'a Value,
-    expected: &str,
-    line: SourceLocation,
-) -> Result<&'a [(String, Value)], VmError> {
-    match value {
-        Value::Record(record) if record.type_name == expected || record.type_name == "<record>" => {
-            Ok(&record.fields)
-        }
-        other => Err(runtime_error(
-            TYPE_MISMATCH_CODE,
-            format!("Expected {expected}, got {}", other.type_name()),
-            format!("Pass a `{expected}` value."),
-            line,
-        )),
-    }
-}
-
 fn field<'a>(
-    fields: &'a [(String, Value)],
+    value: &'a Value,
     name: &str,
     record: &str,
     line: SourceLocation,
 ) -> Result<&'a Value, VmError> {
-    fields
-        .iter()
-        .find(|(field_name, _)| field_name == name)
-        .map(|(_, value)| value)
-        .ok_or_else(|| {
-            internal_error(
-                format!("{record} is missing field `{name}`"),
-                "This indicates a compiler/runtime mismatch.",
+    match value {
+        Value::Record(value) if value.type_name == record || value.type_name == "<record>" => value
+            .fields
+            .iter()
+            .find(|(field_name, _)| field_name == name)
+            .map(|(_, value)| value),
+        Value::PositionalRecord(value) => value
+            .body()
+            .layout
+            .fields
+            .iter()
+            .position(|field_name| field_name == name)
+            .and_then(|index| value.body().values.get(index)),
+        other => {
+            return Err(runtime_error(
+                TYPE_MISMATCH_CODE,
+                format!("Expected {record}, got {}", other.type_name()),
+                format!("Pass a `{record}` value."),
                 line,
-            )
-        })
+            ));
+        }
+    }
+    .ok_or_else(|| {
+        internal_error(
+            format!("{record} is missing field `{name}`"),
+            "This indicates a compiler/runtime mismatch.",
+            line,
+        )
+    })
 }
 
 fn integer_field(
-    fields: &[(String, Value)],
+    value: &Value,
     name: &str,
     record: &str,
     line: SourceLocation,
 ) -> Result<i64, VmError> {
-    match field(fields, name, record, line)? {
+    match field(value, name, record, line)? {
         Value::Integer(value) => Ok(*value),
         other => Err(field_type_error(record, name, "integer", other, line)),
     }
 }
 
 fn integer_u8_field(
-    fields: &[(String, Value)],
+    record_value: &Value,
     name: &str,
     max: u8,
     record: &str,
     line: SourceLocation,
 ) -> Result<u8, VmError> {
-    let value = integer_field(fields, name, record, line)?;
+    let value = integer_field(record_value, name, record, line)?;
     u8::try_from(value)
         .ok()
         .filter(|value| *value <= max)
@@ -317,12 +313,12 @@ fn integer_to_u8(value: i64, max: u8, label: &str, line: SourceLocation) -> Resu
 }
 
 fn positive_u16_field(
-    fields: &[(String, Value)],
+    record_value: &Value,
     name: &str,
     record: &str,
     line: SourceLocation,
 ) -> Result<u16, VmError> {
-    let value = integer_field(fields, name, record, line)?;
+    let value = integer_field(record_value, name, record, line)?;
     u16::try_from(value)
         .ok()
         .filter(|value| *value > 0)
@@ -397,8 +393,7 @@ pub(crate) fn saved_region_from_value(
     value: &Value,
     line: SourceLocation,
 ) -> Result<SavedRegionId, VmError> {
-    let fields = record_fields(value, SAVED_REGION_TYPE, line)?;
-    let id = integer_field(fields, HANDLE_FIELD, SAVED_REGION_TYPE, line)?;
+    let id = integer_field(value, HANDLE_FIELD, SAVED_REGION_TYPE, line)?;
     let id = u64::try_from(id)
         .ok()
         .filter(|id| *id != 0)

@@ -12,7 +12,6 @@ use fpas_compiler::{
     compile_register_unit_object, compile_unit_object,
 };
 use fpas_linker::{link_objects, link_register_objects};
-use fpas_unit::interface::InterfaceType;
 use fpas_unit::object::{
     ChunkConstant as ObjectConstant, ChunkDefinitionKind as DefinitionKind,
     ChunkImport as ObjectImport, ChunkLocation as ObjectLocation, ChunkObject as RelocatableObject,
@@ -112,6 +111,125 @@ fn register_unit_objects_relocate_imported_globals_records_and_enums() {
         .expect("register aggregate object linking");
     let mut vm = fpas_vm::RegisterVm::new(executable);
     vm.run().expect("register aggregate VM execution");
+
+    assert_eq!(vm.output().lines, ["42"]);
+}
+
+#[test]
+fn register_units_do_not_redefine_imported_signature_only_layouts() {
+    let model = parse_unit(
+        "unit Demo.Model;
+         public type Choice = enum
+           Present(Value: integer);
+           Absent;
+         end;",
+    );
+    let model = compile_register_unit_object(&model, &[]).expect("register model compilation");
+    let consumer = parse_unit(
+        "unit Demo.Consumer;
+         uses Demo.Model;
+         public function Echo(Value: Choice): Choice;
+         begin return Value end;",
+    );
+    let consumer = compile_register_unit_object(&consumer, std::slice::from_ref(&model.interface))
+        .expect("register consumer compilation");
+
+    assert!(
+        consumer.object.enums.is_empty(),
+        "signature-only imported layouts must not become consumer definitions"
+    );
+
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Demo.Model, Demo.Consumer, Std.Console;
+         begin
+           case Echo(Choice.Present(42)) of
+             Choice.Present(Value): Std.Console.WriteLn(Value);
+             Choice.Absent: Std.Console.WriteLn(0)
+           end
+         end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let interfaces = [model.interface.clone(), consumer.interface.clone()];
+    let program = compile_register_program_object_with_support(&program, &interfaces, &interfaces)
+        .expect("register program compilation");
+    let executable = link_register_objects(&[model.object, consumer.object], &program)
+        .expect("register object linking");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
+    vm.run().expect("register VM execution");
+
+    assert_eq!(vm.output().lines, ["42"]);
+}
+
+#[test]
+fn register_program_retains_intrinsic_records_read_only_by_field() {
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Std.Proc;
+         begin
+           case RunCapture('fpas', ['--version']) of
+             Ok(Output): if Output.ExitCode = 0 then begin end;
+             Error(Message): if Message = '' then begin end
+           end
+         end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let program = compile_register_program_object_with_support(&program, &[], &[])
+        .expect("register program compilation");
+
+    assert!(
+        program
+            .records
+            .iter()
+            .any(|record| record.name.eq_ignore_ascii_case("Std.Proc.ProcessOutput")),
+        "field-only intrinsic records must remain available for relocation validation"
+    );
+    link_register_objects(&[], &program).expect("register program linking");
+}
+
+#[test]
+fn unit_callable_shadows_same_named_imported_enum_variant() {
+    let model = parse_unit(
+        "unit Demo.Model;
+         public type Choice = enum
+           Overlay(Text: string; Value: integer);
+           Empty;
+         end;",
+    );
+    let model = compile_register_unit_object(&model, &[]).expect("register model compilation");
+    let consumer = parse_unit(
+        "unit Demo.Consumer;
+         uses Demo.Model;
+         function Overlay(Value: integer): Choice;
+         begin return Choice.Overlay('callable', Value) end;
+         public function Run(): integer;
+         begin
+           case Overlay(42) of
+             Choice.Overlay(Text, Value):
+               if Text = 'callable' then return Value else return 0;
+             Choice.Empty: return 0
+           end
+         end;",
+    );
+    let consumer = compile_register_unit_object(&consumer, std::slice::from_ref(&model.interface))
+        .expect("register consumer compilation");
+    let (program, diagnostics) = fpas_parser::parse(
+        "program Demo;
+         uses Demo.Consumer, Std.Console;
+         begin Std.Console.WriteLn(Run()) end.",
+    );
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let interfaces = [model.interface.clone(), consumer.interface.clone()];
+    let program = compile_register_program_object_with_support(
+        &program,
+        std::slice::from_ref(&interfaces[1]),
+        &interfaces,
+    )
+    .expect("register program compilation");
+    let executable = link_register_objects(&[model.object, consumer.object], &program)
+        .expect("register object linking");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
+    vm.run().expect("register VM execution");
 
     assert_eq!(vm.output().lines, ["42"]);
 }
@@ -351,94 +469,4 @@ fn unit_object_rejects_implicit_enum_backing_value_after_i64_max() {
         error.code == fpas_diagnostics::codes::SEMA_ENUM_BACKING_VALUE_EXHAUSTED
             && error.message.contains("Limit.Overflow")
     }));
-}
-
-#[test]
-fn unit_interface_preserves_explicit_restart_after_i64_max() {
-    let unit = parse_unit(
-        "unit Demo.EnumRestart;
-         public type Limit = enum
-           Last = 9223372036854775807;
-           Restart = 0;
-           Next;
-         end;",
-    );
-    let compiled = compile_unit_object(&unit, &[]).expect("unit compilation");
-    let symbol = compiled
-        .interface
-        .symbols
-        .iter()
-        .find(|symbol| symbol.name == "Limit")
-        .expect("exported enum symbol");
-    let InterfaceType::Enum(enum_type) = &symbol.ty else {
-        panic!("Limit must be exported as an enum");
-    };
-    let backing_values: Vec<_> = enum_type
-        .variants
-        .iter()
-        .map(|variant| variant.backing_value)
-        .collect();
-
-    assert_eq!(backing_values, [Some(i64::MAX), Some(0), Some(1)]);
-}
-
-#[test]
-fn local_variables_shadow_imported_enum_variant_aliases_during_assignment() {
-    let dependency = parse_unit(
-        "unit Demo.Policy;
-         public type
-           Policy = enum
-             Preferred(Value: integer);
-           end;",
-    );
-    let dependency = compile_unit_object(&dependency, &[]).expect("dependency compilation");
-    let consumer = parse_unit(
-        "unit Demo.Consumer;
-         uses Demo.Policy, Std.Array;
-         public function Run(): integer;
-         begin
-           mutable var Preferred: array of integer := [];
-           Preferred := Std.Array.Concat(Preferred, [42]);
-           return Preferred[0]
-         end;",
-    );
-    let consumer = compile_unit_object(&consumer, std::slice::from_ref(&dependency.interface))
-        .expect("consumer compilation");
-
-    assert_eq!(
-        run_zero_arity(
-            vec![dependency.object, consumer.object],
-            "demo.consumer.run"
-        ),
-        ["42"]
-    );
-}
-
-#[test]
-fn unit_owned_data_enum_patterns_use_the_qualified_runtime_identity() {
-    let unit = parse_unit(
-        "unit Demo.Shape;
-         type
-           Shape = enum
-             Point(Value: integer);
-             Empty;
-           end;
-         public function Run(): integer;
-         begin
-           var Value: Shape := Shape.Point(42);
-           case Value of
-             Shape.Point(Number):
-             begin
-               return Number
-             end;
-             Shape.Empty:
-             begin
-               return 0
-             end
-           end
-         end;",
-    );
-    let unit = compile_unit_object(&unit, &[]).expect("unit compilation");
-
-    assert_eq!(run_zero_arity(vec![unit.object], "demo.shape.run"), ["42"]);
 }

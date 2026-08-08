@@ -1,7 +1,7 @@
 //! Unit tests for test script parsing and application.
 
 use super::{apply_script_to_vm, load_script, parse_script_text, sidecar_path_for_test};
-use fpas_compiler::compile_all;
+use fpas_compiler::compile_register_subset;
 use fpas_parser::parse;
 use std::path::Path;
 
@@ -64,8 +64,8 @@ begin
   AssertTrue(ReadLn() = 'Alice')
 end.";
     let (program, _) = parse(source);
-    let chunk = compile_all(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(chunk);
+    let executable = compile_register_subset(&program).expect("compile");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
 
     let script = parse_script_text(
         r#"
@@ -93,8 +93,8 @@ kind = "Escape"
     .expect("parse");
     let source = "program T; begin end.";
     let (program, _) = parse(source);
-    let chunk = compile_all(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(chunk);
+    let executable = compile_register_subset(&program).expect("compile");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
     let err = apply_script_to_vm(&mut vm, &script).unwrap_err();
     assert!(err.contains("headless_graph"));
 }
@@ -135,8 +135,8 @@ begin
   AssertTrue(QuitSeen)
 end.";
     let (program, _) = parse(source);
-    let chunk = compile_all(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(chunk);
+    let executable = compile_register_subset(&program).expect("compile");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
 
     let script = parse_script_text(
         r#"
@@ -165,8 +165,8 @@ begin
   AssertEquals(ReadLn(), 'third')
 end.";
     let (program, _) = parse(source);
-    let chunk = compile_all(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(chunk);
+    let executable = compile_register_subset(&program).expect("compile");
+    let mut vm = fpas_vm::RegisterVm::new(executable);
 
     let script = parse_script_text(
         r#"

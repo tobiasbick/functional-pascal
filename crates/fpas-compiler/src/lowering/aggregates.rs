@@ -1,12 +1,10 @@
-//! P5 collection, record, Result, Option, and positional designator lowering.
+//! Collection, Result, Option, and positional designator lowering.
 
-use std::collections::HashMap;
-
-use fpas_ir::{IrType, Operation, TypeId, ValueId};
-use fpas_parser::{Designator, DesignatorPart, Expr, FieldInit, PostfixOperation};
-use fpas_sema::Ty;
+mod records;
 
 use crate::CompileError;
+use fpas_ir::{IrType, Operation, TypeId, ValueId};
+use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
 
 use super::context::target;
 use super::context::{LoweringContext, unsupported};
@@ -243,6 +241,23 @@ impl LoweringContext {
         self.emit_value(Operation::MakeArray(values), ty, expression.span())
     }
 
+    pub(super) fn lower_array_literal_as(
+        &mut self,
+        values: &[Expr],
+        ty: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let element_ty = match self.type_kind(ty) {
+            Some(IrType::Array(element)) => element,
+            _ => return Err(unsupported(span, "expected array type")),
+        };
+        let values = values
+            .iter()
+            .map(|value| self.lower_expression_as(value, element_ty))
+            .collect::<Result<Vec<_>, _>>()?;
+        self.emit_value(Operation::MakeArray(values), ty, span)
+    }
+
     pub(super) fn lower_dictionary_literal(
         &mut self,
         pairs: &[(Expr, Expr)],
@@ -256,83 +271,6 @@ impl LoweringContext {
         self.emit_value(Operation::MakeDictionary(pairs), ty, expression.span())
     }
 
-    pub(super) fn lower_record_literal(
-        &mut self,
-        fields: &[FieldInit],
-        expression: &Expr,
-    ) -> Result<ValueId, CompileError> {
-        let Ty::Record(record) = self.expression_type(expression)? else {
-            return Err(unsupported(expression.span(), "record literal type"));
-        };
-        let ty = self.expression_ir_type(expression)?;
-        let layout = self
-            .record_layout_id(ty)
-            .ok_or_else(|| unsupported(expression.span(), "record layout"))?;
-        let provided = fields
-            .iter()
-            .map(|field| (field.name.to_ascii_lowercase(), &field.value))
-            .collect::<HashMap<_, _>>();
-        let defaults = self
-            .record_defaults
-            .get(&record.name)
-            .cloned()
-            .unwrap_or_else(|| {
-                record
-                    .fields
-                    .iter()
-                    .map(|(name, _)| (name.clone(), None))
-                    .collect()
-            });
-        let mut values = Vec::with_capacity(defaults.len());
-        for (name, default) in defaults {
-            let expression = provided
-                .get(&name.to_ascii_lowercase())
-                .copied()
-                .or(default.as_ref())
-                .ok_or_else(|| unsupported(expression.span(), "missing record field"))?;
-            values.push(self.lower_expression(expression)?);
-        }
-        self.emit_value(
-            Operation::MakeRecord {
-                layout,
-                fields: values,
-            },
-            ty,
-            expression.span(),
-        )
-    }
-
-    pub(super) fn lower_record_update(
-        &mut self,
-        base: &Expr,
-        fields: &[FieldInit],
-        expression: &Expr,
-    ) -> Result<ValueId, CompileError> {
-        let ty = self.expression_ir_type(expression)?;
-        let layout = self
-            .record_layout_id(ty)
-            .ok_or_else(|| unsupported(expression.span(), "record update layout"))?;
-        let record = self.lower_expression(base)?;
-        let fields = fields
-            .iter()
-            .map(|field| {
-                let (id, _) = self
-                    .record_field(layout, &field.name)
-                    .ok_or_else(|| unsupported(field.span, "record update field"))?;
-                Ok((id, self.lower_expression(&field.value)?))
-            })
-            .collect::<Result<Vec<_>, CompileError>>()?;
-        self.emit_value(
-            Operation::UpdateRecord {
-                record,
-                layout,
-                fields,
-            },
-            ty,
-            expression.span(),
-        )
-    }
-
     pub(super) fn lower_wrapper(
         &mut self,
         operand: Option<&Expr>,
@@ -340,14 +278,56 @@ impl LoweringContext {
         kind: u8,
     ) -> Result<ValueId, CompileError> {
         let ty = self.expression_ir_type(expression)?;
-        let operation = match (kind, operand) {
-            (0, Some(value)) => Operation::MakeOk(self.lower_expression(value)?),
-            (1, Some(value)) => Operation::MakeError(self.lower_expression(value)?),
-            (2, Some(value)) => Operation::MakeSome(self.lower_expression(value)?),
-            (3, None) => Operation::MakeNone,
-            _ => return Err(unsupported(expression.span(), "wrapper construction")),
+        self.lower_wrapper_as(operand, kind, ty, expression.span())
+    }
+
+    pub(super) fn lower_wrapper_as(
+        &mut self,
+        operand: Option<&Expr>,
+        kind: u8,
+        ty: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        let expected_payload = match (kind, self.type_kind(ty)) {
+            (0, Some(IrType::Result { ok, .. })) => Some(ok),
+            (1, Some(IrType::Result { error, .. })) => Some(error),
+            (2, Some(IrType::Option(value))) => Some(value),
+            _ => None,
         };
-        self.emit_value(operation, ty, expression.span())
+        let lower_operand = |context: &mut Self, value: &Expr| match expected_payload {
+            Some(expected) => context.lower_expression_as(value, expected),
+            None => context.lower_expression(value),
+        };
+        let operation = match (kind, operand) {
+            (0, Some(value)) => Operation::MakeOk(lower_operand(self, value)?),
+            (1, Some(value)) => Operation::MakeError(lower_operand(self, value)?),
+            (2, Some(value)) => Operation::MakeSome(lower_operand(self, value)?),
+            (3, None) => Operation::MakeNone,
+            _ => return Err(unsupported(span, "wrapper construction")),
+        };
+        self.emit_value(operation, ty, span)
+    }
+
+    pub(super) fn lower_expression_as(
+        &mut self,
+        expression: &Expr,
+        expected: TypeId,
+    ) -> Result<ValueId, CompileError> {
+        match expression {
+            Expr::RecordLiteral { fields, span } => {
+                self.lower_record_literal_as(fields, expected, *span)
+            }
+            Expr::ArrayLiteral(values, span) => {
+                self.lower_array_literal_as(values, expected, *span)
+            }
+            Expr::ResultOk(value, span) => self.lower_wrapper_as(Some(value), 0, expected, *span),
+            Expr::ResultError(value, span) => {
+                self.lower_wrapper_as(Some(value), 1, expected, *span)
+            }
+            Expr::OptionSome(value, span) => self.lower_wrapper_as(Some(value), 2, expected, *span),
+            Expr::OptionNone(span) => self.lower_wrapper_as(None, 3, expected, *span),
+            _ => self.lower_expression(expression),
+        }
     }
 
     pub(super) fn lower_try(
@@ -380,7 +360,26 @@ impl LoweringContext {
             wrapper_ty,
             expression.span(),
         )?;
-        self.terminate(fpas_ir::Terminator::Return(Some(failure_value)))?;
+        let function_result = self.current_result_type();
+        let propagated = match self.type_kind(wrapper_ty) {
+            Some(IrType::Result { error, .. }) => {
+                let error = self.emit_value(
+                    Operation::UnwrapError(failure_value),
+                    error,
+                    expression.span(),
+                )?;
+                self.emit_value(
+                    Operation::MakeError(error),
+                    function_result,
+                    expression.span(),
+                )?
+            }
+            Some(IrType::Option(_)) => {
+                self.emit_value(Operation::MakeNone, function_result, expression.span())?
+            }
+            _ => return Err(unsupported(expression.span(), "try operand")),
+        };
+        self.terminate(fpas_ir::Terminator::Return(Some(propagated)))?;
         self.switch_to(success);
         let success_wrapper = self.emit_value(
             Operation::ReadLocal(wrapper_local),

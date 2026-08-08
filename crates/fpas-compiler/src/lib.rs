@@ -32,10 +32,10 @@ pub use unit_object::{
     compile_unit_object, compile_unit_object_with_support,
 };
 
-/// Compile the P5 scalar, call, closure, global, and aggregate subset through the inactive register pipeline.
+/// Compile one program directly to a verified register executable.
 ///
-/// This development API keeps the production CLI and stack VM unchanged until the complete
-/// register runtime reaches its cutover phase.
+/// Production commands use the register object/linker path; this direct API remains available for
+/// focused compiler tests and callers that do not need separately compiled units.
 ///
 /// # Errors
 ///
@@ -48,10 +48,10 @@ pub fn compile_register_subset(
     bytecode::compile_program(&ir).map_err(|error| vec![error])
 }
 
-/// Compile one root program into a relocatable P8 register object.
+/// Compile one root program into a relocatable register object.
 ///
 /// The object keeps functions independently encoded, converts numeric table references to
-/// object-local relocations, and remains outside the production CLI until the P9 artifact cutover.
+/// object-local relocations, and is the production compiler input to the register linker.
 ///
 /// # Errors
 ///

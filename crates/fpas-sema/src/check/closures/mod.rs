@@ -13,7 +13,7 @@ pub use capture::{CaptureBinding, collect_captures};
 /// Semantic metadata for one closure expression (keyed by [`crate::expr_lookup_key`]).
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ClosureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,
@@ -29,7 +29,7 @@ pub type ClosureInfoMap = HashMap<usize, ClosureInfo>;
 /// Capture metadata for a named nested routine (keyed by canonical routine name).
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct NestedRoutineCaptureInfo {
     /// Free variables captured from enclosing scopes.
     pub captures: Vec<CaptureBinding>,

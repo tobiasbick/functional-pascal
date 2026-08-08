@@ -3,18 +3,17 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use fpas_bytecode::Chunk;
 use fpas_project::{LoadedProject, ResolvedUnitGraph, StandardLibrary, UnitGraph};
 
 pub(crate) struct ProjectProgram {
-    pub(crate) chunk: Chunk,
+    pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
 }
 
 pub(crate) struct ProgramArtifact {
     pub(crate) path: PathBuf,
     pub(crate) reused: bool,
-    pub(crate) chunk: Chunk,
+    pub(crate) executable: fpas_bytecode::VerifiedExecutable,
     pub(crate) source_paths: Vec<PathBuf>,
 }
 
@@ -36,7 +35,7 @@ pub(crate) fn build_program(
         )
     })?;
     Ok(ProjectProgram {
-        chunk: built.chunk,
+        executable: built.executable,
         source_paths: prepared.graph.source_paths().to_vec(),
     })
 }
@@ -74,7 +73,7 @@ pub(crate) fn build_program_artifact(
     Ok(ProgramArtifact {
         path: artifact_path,
         reused,
-        chunk: built.chunk,
+        executable: built.executable,
         source_paths: source_paths.into_iter().map(PathBuf::from).collect(),
     })
 }
@@ -96,7 +95,7 @@ pub(crate) fn build_test_program(
     )
     .map_err(|error| format!("Cannot build test program `{}`: {error}", main.display()))?;
     Ok(ProjectProgram {
-        chunk: built.chunk,
+        executable: built.executable,
         source_paths: graph.source_paths().to_vec(),
     })
 }

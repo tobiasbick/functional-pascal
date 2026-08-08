@@ -1,4 +1,4 @@
-//! Safe register interpreter lifecycle through P7 tasks and concurrency.
+//! Safe register interpreter lifecycle, tasks, and concurrency.
 
 mod access;
 mod callback;

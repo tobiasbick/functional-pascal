@@ -25,7 +25,7 @@ pub(super) struct LoweringInput<'a> {
     pub metadata: &'a AnalysisMetadata,
     pub callables: &'a BTreeMap<String, Callable>,
     pub globals: &'a BTreeMap<String, super::context::GlobalBinding>,
-    pub enum_constants: &'a BTreeMap<String, i64>,
+    pub constants: &'a BTreeMap<String, fpas_ir::Constant>,
     pub closure_targets: std::collections::HashMap<usize, super::context::ClosureTarget>,
     pub bound_method_targets: std::collections::HashMap<usize, super::context::BoundMethodTarget>,
     pub cell_names: std::collections::BTreeSet<String>,
@@ -153,13 +153,11 @@ pub(super) fn callable_table(
                 info.captures
                     .iter()
                     .map(|capture| {
-                        let ty = super::closures::find_capture_type(
-                            routine.body(),
-                            &capture.name,
-                            metadata,
-                        )
-                        .ok_or_else(|| unsupported(routine.span(), "untyped nested capture"))?;
-                        let ty = types.intern(&ty, routine.span().line, routine.span().column)?;
+                        let ty = types.intern(
+                            &capture.ty,
+                            routine.span().line,
+                            routine.span().column,
+                        )?;
                         let kind = if capture.mutable {
                             fpas_ir::CaptureKind::Cell
                         } else {
@@ -199,13 +197,13 @@ pub(super) fn lower(
     routine: &Routine<'_>,
     types: &mut types::TypeTable,
     input: LoweringInput<'_>,
-) -> Result<Function, CompileError> {
+) -> Result<(Function, types::TypeTable), CompileError> {
     let LoweringInput {
         id,
         metadata,
         callables,
         globals,
-        enum_constants,
+        constants,
         closure_targets,
         bound_method_targets,
         cell_names,
@@ -231,7 +229,7 @@ pub(super) fn lower(
         parameters: &parameters,
         captures: &captures,
         globals: globals.clone(),
-        enum_constants: enum_constants.clone(),
+        constants: constants.clone(),
         metadata,
         callables: callables.clone(),
         closure_targets,

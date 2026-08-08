@@ -246,8 +246,8 @@ pub fn run_intrinsic_borrowed(
 
 /// Execute a standard-library intrinsic on the legacy operand stack.
 ///
-/// This compatibility adapter keeps the production stack VM active until cutover while sharing the
-/// borrowed decoder and standard-library implementation with the register VM.
+/// This compatibility adapter is retained for P10 cleanup and legacy differential tests while
+/// sharing the borrowed decoder and standard-library implementation with the production register VM.
 pub fn run_intrinsic(
     intrinsic: Intrinsic,
     stack: &mut Vec<Value>,

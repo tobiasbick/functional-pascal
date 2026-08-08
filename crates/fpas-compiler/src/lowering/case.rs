@@ -20,14 +20,26 @@ impl LoweringContext {
         else_body: Option<&[Stmt]>,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        let case_ty = self.expression_type(expression)?;
-        let case_ir_ty = self.expression_ir_type(expression)?;
+        let mut case_ir_ty = self.expression_ir_type(expression)?;
+        let case_ty = self.expression_type(expression).ok();
+        if matches!(&case_ty, Some(Ty::Enum(enumeration)) if !enumeration.has_data()) {
+            case_ir_ty = types::INTEGER;
+        }
+        let exhaustive_enum = matches!(&case_ty, Some(Ty::Enum(_)))
+            || arms.iter().flat_map(|arm| &arm.labels).any(|label| {
+                let CaseLabel::Value { start, .. } = label else {
+                    return false;
+                };
+                matches!(self.expression_type(start), Ok(Ty::Enum(_)))
+            });
         let case_value = self.lower_expression(expression)?;
-        if matches!(case_ty, Ty::Result(..) | Ty::Option(..))
-            || matches!(&case_ty, Ty::Enum(enumeration) if enumeration.has_data())
+        if matches!(case_ty, Some(Ty::Result(..) | Ty::Option(..)))
+            || matches!(&case_ty, Some(Ty::Enum(enumeration)) if enumeration.has_data())
+            || matches!(self.type_kind(case_ir_ty), Some(fpas_ir::IrType::Enum(_)))
         {
             return self.lower_variant_case(case_value, case_ir_ty, arms, else_body, span);
         }
+        let case_ty = case_ty.ok_or_else(|| unsupported(span, "scalar case type"))?;
         self.begin_scope();
         let case_local = self.declare_hidden_local(case_ir_ty, span)?;
         self.write_local(case_local, case_value, span)?;
@@ -42,8 +54,8 @@ impl LoweringContext {
                 let next_test = self.new_block(arm.span)?;
                 let body_block = self.new_block(arm.span)?;
                 let is_binding = self.is_scalar_binding(label);
-                let matched =
-                    self.lower_case_match(label, case_local, &case_ty, is_binding, span)?;
+                let matched = self
+                    .lower_case_match(label, case_local, case_ir_ty, &case_ty, is_binding, span)?;
                 self.terminate(Terminator::Branch {
                     condition: matched,
                     then_target: target(body_block),
@@ -84,6 +96,15 @@ impl LoweringContext {
 
         if let Some(else_body) = else_body {
             self.lower_statements(else_body)?;
+        } else if exhaustive_enum && !self.is_terminated() {
+            let message = self.emit_value(
+                Operation::Const(Constant::String(
+                    "exhaustive case reached no enum member".to_string(),
+                )),
+                types::STRING,
+                span,
+            )?;
+            self.terminate(Terminator::Panic(message))?;
         }
         if !self.is_terminated() {
             self.jump(merge_block)?;
@@ -100,6 +121,7 @@ impl LoweringContext {
         &mut self,
         label: &CaseLabel,
         case_local: fpas_ir::LocalId,
+        case_ir_ty: fpas_ir::TypeId,
         case_ty: &Ty,
         binding: bool,
         span: fpas_lexer::Span,
@@ -114,20 +136,12 @@ impl LoweringContext {
         let CaseLabel::Value { start, end, .. } = label else {
             return Err(unsupported(span, "destructuring case label"));
         };
-        let left = self.emit_value(
-            Operation::ReadLocal(case_local),
-            types::lower(case_ty, span.line, span.column)?,
-            span,
-        )?;
+        let left = self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
         let start_value = self.lower_expression(start)?;
         if let Some(end) = end {
             let ge = self.case_ordering(case_ty, false);
             let lower = self.emit_binary(ge, left, start_value, types::BOOLEAN, span)?;
-            let upper_left = self.emit_value(
-                Operation::ReadLocal(case_local),
-                types::lower(case_ty, span.line, span.column)?,
-                span,
-            )?;
+            let upper_left = self.emit_value(Operation::ReadLocal(case_local), case_ir_ty, span)?;
             let end_value = self.lower_expression(end)?;
             let le = self.case_ordering(case_ty, true);
             let upper = self.emit_binary(le, upper_left, end_value, types::BOOLEAN, span)?;
@@ -226,10 +240,19 @@ impl LoweringContext {
         }
         if let Some(statements) = else_body {
             self.lower_statements(statements)?;
-        }
-        if !self.is_terminated() {
-            self.jump(merge)?;
-            has_merge = true;
+            if !self.is_terminated() {
+                self.jump(merge)?;
+                has_merge = true;
+            }
+        } else if !self.is_terminated() {
+            let message = self.emit_value(
+                Operation::Const(Constant::String(
+                    "exhaustive case reached no variant".to_string(),
+                )),
+                types::STRING,
+                span,
+            )?;
+            self.terminate(Terminator::Panic(message))?;
         }
         if has_merge {
             self.switch_to(merge);

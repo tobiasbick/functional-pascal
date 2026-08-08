@@ -32,7 +32,13 @@ impl RegisterWorker {
                 let width = integer(arguments, 0, 3, self)?;
                 let height = integer(arguments, 1, 3, self)?;
                 let title = string(arguments, 2, 3, self)?;
-                self.with_graph(|graph| graph.session.open(width, height, title, location))?;
+                self.with_graph(|graph| {
+                    graph.session.open(width, height, title, location)?;
+                    for event in std::mem::take(&mut graph.pending_test_events) {
+                        graph.session.push_event(event, location)?;
+                    }
+                    Ok(())
+                })?;
                 Some(records::application())
             }
             GraphIntrinsic::OpenForTest => {

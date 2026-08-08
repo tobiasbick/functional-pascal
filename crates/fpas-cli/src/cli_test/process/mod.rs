@@ -197,7 +197,7 @@ fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Resul
         options_hash: Digest::of(b"isolated-test-options"),
         units: Vec::new(),
     };
-    let image = ProgramImage::new(identity, source_paths, prepared.chunk.clone())
+    let image = ProgramImage::new(identity, source_paths, prepared.executable.clone())
         .map_err(|error| format!("Error preparing isolated test image: {error}"))?;
     let image_bytes = fpas_program::encode(&image)
         .map_err(|error| format!("Error encoding isolated test image: {error}"))?;
@@ -363,7 +363,7 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
         });
     let prepared = PreparedProgram {
         test_path: request.test_path,
-        chunk: image.into_chunk(),
+        executable: image.into_executable(),
         source_paths: request.source_paths.map(std::sync::Arc::new),
         script_override: request.script_override,
         manifest_override,

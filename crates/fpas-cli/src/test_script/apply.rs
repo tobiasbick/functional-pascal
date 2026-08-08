@@ -6,7 +6,7 @@ use super::graph;
 use super::parse::{ScriptEvent, ScriptFile};
 
 /// Pushes all script events into the VM input queues in order.
-pub fn apply_script(vm: &mut fpas_vm::Vm, script: &ScriptFile) -> Result<(), String> {
+pub fn apply_script(vm: &mut fpas_vm::RegisterVm, script: &ScriptFile) -> Result<(), String> {
     for (index, event) in script.events.iter().enumerate() {
         apply_one_event(vm, event, script.config.headless_graph)
             .map_err(|message| format!("script event #{index}: {message}"))?;
@@ -15,7 +15,7 @@ pub fn apply_script(vm: &mut fpas_vm::Vm, script: &ScriptFile) -> Result<(), Str
 }
 
 fn apply_one_event(
-    vm: &mut fpas_vm::Vm,
+    vm: &mut fpas_vm::RegisterVm,
     event: &ScriptEvent,
     headless_graph: bool,
 ) -> Result<(), String> {

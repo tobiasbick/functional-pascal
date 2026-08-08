@@ -101,7 +101,10 @@ impl LoweringContext {
         }
     }
 
-    pub(in crate::lowering) fn finish(mut self, span: Span) -> Result<Function, CompileError> {
+    pub(in crate::lowering) fn finish(
+        mut self,
+        span: Span,
+    ) -> Result<(Function, super::types::TypeTable), CompileError> {
         if !self.is_terminated() {
             self.terminate(Terminator::Return(None))?;
         }
@@ -114,7 +117,7 @@ impl LoweringContext {
                 span.column,
             ));
         }
-        Ok(Function {
+        let function = Function {
             id: self.function_id,
             name: self.program_name,
             signature: FunctionSignature {
@@ -132,7 +135,8 @@ impl LoweringContext {
             entry: BlockId::new(0),
             max_call_arguments: self.max_call_arguments,
             can_spawn_tasks: self.can_spawn_tasks,
-        })
+        };
+        Ok((function, self.type_table))
     }
 
     pub(super) fn current_block_mut(&mut self) -> Result<&mut BasicBlock, CompileError> {

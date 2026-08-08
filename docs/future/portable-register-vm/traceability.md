@@ -10,56 +10,56 @@ exist.
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive opcode match through P7; direct and compiler differential tests cover scalar operations through task scheduling | complete through P7 |
-| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit and aggregate-window cases plus compiler contiguous call-window selection | complete through P5 |
-| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves deterministic allocation; P5 reserves contiguous constructor, update, and call windows | complete through P5 |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive opcode match through P9; direct, compiler, CLI, and full FPAS tests cover production execution | complete through P9 |
+| PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit and aggregate-window cases plus production compiler contiguous call-window selection | complete through P9 |
+| PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | deterministic structure tests plus cold/warm artifact byte equality | complete through P9 |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3-P7 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P7 |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier, P3-P9 compiler/interpreter, and bounded P9 artifact codec use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input | complete through P9 |
 
 ## Runtime lookup requirements
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler differential tests, P8 symbolic import relocation, and VM direct/wrong-ID tests | complete through P8 development path |
+| PVM-ID-001 | Direct calls use `FunctionId` | compiler/linker/VM | compiler tests, P8 symbolic import relocation, VM direct/wrong-ID tests, and P9 production execution | complete through P9 |
 | PVM-ID-002 | First-class functions retain numeric target | bytecode value + VM | named/anonymous closure, callback, task-bound, and capture tests | complete through P4 |
-| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler differential test, P8 cross-object relocation, dense/immutable runtime tests, and `register_global_access` | complete through P8 development path |
-| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | P8 layout import/compatibility and relocation plus defaults/get/set/update/nested/shared-layout/COW and invalid-slot tests | complete through P8 development path |
-| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | P8 enum/variant import and relocation plus construction, matching, destructuring, associated-field, and invalid-slot tests | complete through P8 development path |
-| PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | `Intrinsic::all()`, explicit ID/uniqueness tests, canonical compiler-catalog coverage, verifier rejection, and one ABC register-window convention | complete through P6 development path |
-| PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | P5 positional operations carry IDs/slots; names are shared once for diagnostics/display; equality/display tests cover legacy and positional values | complete through P5 development path |
+| PVM-ID-003 | Globals use dense `GlobalId` slots | linker + shared runtime | compiler test, cross-object relocation, dense/immutable runtime tests, `register_global_access`, and P9 production execution | complete through P9 |
+| PVM-ID-004 | Record fields use layout slots | layouts + aggregate runtime | layout import/compatibility and relocation plus defaults/get/set/update/nested/shared-layout/COW, invalid-slot, and production tests | complete through P9 |
+| PVM-ID-005 | Enum type/variant tests use IDs | layouts + enum runtime | enum/variant import and relocation plus construction, matching, destructuring, associated-field, invalid-slot, and production tests | complete through P9 |
+| PVM-ID-006 | Intrinsics use validated IDs and register ABI | compiler/bytecode/VM | exhaustive IDs, compiler catalog, verifier rejection, ABC register windows, and P9 production FPAS suite | complete through P9 |
+| PVM-ID-007 | Names remain diagnostic metadata only | linker/runtime formatting | positional operations carry IDs/slots; names are shared only for diagnostics/display; production equality/display tests pass | complete through P9 |
 
 ## Semantic preservation requirements
 
 | ID | Requirement | Primary test families | Required evidence | State |
 |---|---|---|---|---|
-| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; existing syntax and semantic suites retained | complete through P5 |
+| PVM-SEM-001 | FPAS syntax accepted/rejected unchanged | parser/sema/compiler suites | no parser/lexer/grammar or `docs/pascal/language/` change; full workspace and FPAS suites retained | complete through P9 |
 | PVM-SEM-002 | Evaluation order unchanged | compiler + FPAS effect tests | stack/register differential tests include nested properties and receiver-before-value event/property effects | complete through P5 subset |
 | PVM-SEM-003 | Integer and real behavior unchanged | VM numeric tests | wrapping integer edges, mixed numeric conversion, typed/dynamic arithmetic, divide/modulo diagnostics, comparisons, and aliasing covered directly and differentially | complete through P3 subset |
 | PVM-SEM-004 | Functions/procedures/methods unchanged | compiler/VM function tests | P4 call coverage plus P5 instance/static/generic methods, properties, events, and bound-method values | complete through P5 subset |
 | PVM-SEM-005 | Closure/capture semantics unchanged | closure and nested routine tests | named/anonymous, immutable/mutable cell, nested, capture-order, and task-bound cases | complete through P4 subset |
 | PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | stack/register differential collection and record tests; direct shared-layout/COW tests; positional/legacy equality and display | complete through P5 subset |
 | PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | construction/equality, test, unwrap payload/error, pattern, and `try` success/early-return cases | complete through P5 subset |
-| PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | borrowed stack/register shared decoder, compiler differential intrinsic/callback tests, direct Console/Test/headless Graph tests, existing Std and production FPAS suites | complete through P6 development path |
-| PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | register differential retained/detached, Wait/WaitAll, cooperative sleep, nested-frame/live-aggregate timeslice, task-bound capture, cancellation tests; complete 218-test VM suite | complete through P7 development path |
+| PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | compiler intrinsic/callback tests, direct Console/Test/headless Graph tests, TUI regressions, and full production FPAS suite | complete through P9 |
+| PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | retained/detached, Wait/WaitAll, cooperative sleep, nested-frame/live-aggregate timeslice, task-bound capture, cancellation, VM, and production FPAS tests | complete through P9 |
 | PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | prior differential diagnostics plus P5 missing array/dictionary index codes, immutable globals, wrong unwrap variant, and malformed layout admission | complete through P5 subset |
 
 ## Artifact and portability requirements
 
 | ID | Requirement | Primary owner | Required evidence | State |
 |---|---|---|---|---|
-| PVM-FMT-001 | Explicit fixed-width little-endian codec | `fpas-program/format` | wire and endian tests | planned |
-| PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | P8 register objects persist fixed-width fields only; final program codec evidence remains P9 | complete for unit objects |
-| PVM-FMT-003 | Bounded section decoder | program format | truncation/mutation/limit tests | planned |
-| PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | P8 repeated object bytes and linked executable equality; canonical `.fpascp` evidence remains P9 | complete for unit objects |
+| PVM-FMT-001 | Explicit fixed-width little-endian codec | `fpas-program/format` | header/section wire tests and canonical byte digest | complete |
+| PVM-FMT-002 | No pointer-width/host metadata | object/program codecs | P8 objects and P9 ten-section program image persist fixed-width fields only | complete |
+| PVM-FMT-003 | Bounded section decoder | program format | exhaustive truncation, deterministic mutation, section topology, UTF-8/opcode/boolean, and configured-limit tests | complete |
+| PVM-FMT-004 | Deterministic bytes across hosts | compiler/linker/program | cold/warm build equality and canonical `.fpascp` digest; additional native hosts remain unverified | complete on Windows x86-64; cross-host unverified |
 | PVM-FMT-005 | Sparse source map | bytecode/program/VM diagnostics | P2 sparse-map validation plus P3 metadata run coalescing and diagnostic-only lookup; direct VM failures resolve line 41/column 7 while ordinary dispatch does not query metadata | complete through P3 |
-| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | `compile_register_subset` returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler, call-window, function-range, closure, and direct VM admission tests pass | complete through P4 |
-| PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | P8 old `.fpascu` minimum-rebuild/replacement test; old `.fpascp` diagnostic remains P9 | complete for unit sidecars |
-| PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | sources/manifests removed run test | planned |
-| PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows and Linux native tests | planned |
-| PVM-FMT-010 | Windows `.fpascp` runs on Linux | program/CLI | cross-host fixture output/exit match | planned |
-| PVM-FMT-011 | x86/ARM artifact interchange | program/CLI | native cross-architecture pair | planned |
-| PVM-FMT-012 | macOS/FreeBSD remain portable targets | workspace/runtime crates | native matrix or explicit unverified status | planned |
+| PVM-FMT-006 | Verifier before VM | bytecode/program/VM constructors | artifact decode returns `VerifiedExecutable`; `RegisterVm` accepts no unverified image; compiler and VM admission tests pass | complete |
+| PVM-FMT-007 | Old artifacts rejected/rebuilt | build/CLI | old `.fpascu` rebuild/replacement plus direct old `.fpascp` version and actionable rebuild-help tests | complete |
+| PVM-FMT-008 | Source-less `.fpascp` execution | CLI/runner | decoded-program and CLI source/manifest removal tests | complete |
+| PVM-FMT-009 | Native bundles remain host-specific | bundle/CLI | Windows x86-64 source-less native application tests; other hosts unverified | complete on Windows x86-64; other hosts unverified |
+| PVM-FMT-010 | Windows `.fpascp` runs on Linux | program/CLI | cross-host fixture output/exit match | unverified; no Linux host in P9 run |
+| PVM-FMT-011 | x86/ARM artifact interchange | program/CLI | native cross-architecture pair | unverified; no ARM host in P9 run |
+| PVM-FMT-012 | macOS/FreeBSD remain portable targets | workspace/runtime crates | native matrix or explicit unverified status | unverified; no macOS or FreeBSD host in P9 run |
 
 ## Performance requirements
 
@@ -78,14 +78,14 @@ exist.
 
 | ID | Requirement | Evidence | State |
 |---|---|---|---|
-| PVM-QUAL-001 | Focused module/file layout | P8 splits object codec/conversion/error/function/metadata/relocation/symbol/validation and linker assignment/merge/relocation concerns; changed/new Rust files stay below 500 lines | complete through P8 |
-| PVM-QUAL-002 | Public Rust documentation complete | P8 public object model, symbols, shapes, relocations, compiler object API, linker API, and errors have `///` documentation | complete through P8 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P8 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, object/import/relocation/initializer failures, and resource limits through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P8 |
+| PVM-QUAL-001 | Focused module/file layout | P9 splits program header/sections/executable codec, aggregate records, expression designators, type layouts, and register-object imports; changed/new production Rust files stay below 500 lines | complete through P9 |
+| PVM-QUAL-002 | Public Rust documentation complete | P9 public artifact, build, compiler, runner, and VM APIs retain complete `///` documentation | complete through P9 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P9 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, object/import/relocation/initializer failures, and artifact resource/format errors through diagnostics | complete through P9 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
-| PVM-QUAL-005 | Current user docs reconciled | no language or production CLI behavior changed; `docs/pascal/` remains unchanged and P8 truth is under `docs/future/` | complete through P8 |
-| PVM-QUAL-006 | Full Rust verification | P8 targeted and full-gate results are recorded in `p8-unit-objects-linker.md` | complete through P8 |
-| PVM-QUAL-007 | Full FPAS verification | P8 changes no FPAS source; formatter and full FPAS regression gates are retained | complete through P8 |
-| PVM-QUAL-008 | Privacy preserved | P8 docs, fixtures, symbols, source metadata, and test output contain no host-identifying metadata | complete through P8 |
+| PVM-QUAL-005 | Current user docs reconciled | `docs/pascal/program-structure/compiled-programs.md` describes the production register image, limits, version policy, and rebuild behavior; language/Std APIs unchanged | complete through P9 |
+| PVM-QUAL-006 | Full Rust verification | P9 targeted and full-gate results are recorded in `p9-artifact-cli-cutover.md` | complete through P9 |
+| PVM-QUAL-007 | Full FPAS verification | P9 changes no FPAS source; full FPAS regression result is recorded in `p9-artifact-cli-cutover.md` | complete through P9 |
+| PVM-QUAL-008 | Privacy preserved | P9 docs, fixtures, artifact metadata, and test output contain no host-identifying metadata | complete through P9 |
 | PVM-QUAL-009 | Future plan removed after completion | current docs/tests contain durable truth | planned |
 
 ## P3 opcode implementation overlay

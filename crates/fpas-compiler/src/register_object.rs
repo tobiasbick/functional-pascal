@@ -1,16 +1,21 @@
 //! Register-object compilation and symbolic import extraction.
 
+mod imports;
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_parser::{Program, Unit};
 use fpas_unit::interface::{SymbolKind as InterfaceSymbolKind, UnitInterface};
 use fpas_unit::object::{
-    DefinitionTarget, ObjectConstant, ObjectImport, RelocatableObject, RelocationKind,
-    SymbolReference,
+    DefinitionTarget, ObjectConstant, RelocatableObject, RelocationKind, SymbolReference,
 };
 
 use crate::error::{CompileError, internal_compiler_error};
 use crate::lowering::ImportPlan;
+
+use self::imports::{
+    imported_index, imported_layouts, planned_layouts, prune_unreferenced_layouts, retained_map,
+};
 
 /// Public interface and relocatable register implementation for one source unit.
 pub struct CompiledRegisterUnitObject {
@@ -73,7 +78,14 @@ pub fn compile_register_unit_object_with_support(
     object.entry = None;
     object.initializer = Some(0);
     apply_imports(&mut object, lowered.imports).map_err(|error| object_error(unit.span, error))?;
-    qualify_unit_definitions(&mut object, &owner, &interface)
+    let owned_layouts = owned_layouts(unit, &owner);
+    let retained_layouts = owned_layouts
+        .iter()
+        .flat_map(|(short, qualified)| [short.clone(), qualified.clone()])
+        .collect();
+    prune_unreferenced_layouts(&mut object, &retained_layouts)
+        .map_err(|error| object_error(unit.span, error))?;
+    qualify_unit_definitions(&mut object, &owner, &interface, &owned_layouts)
         .map_err(|error| object_error(unit.span, error))?;
     object
         .validate()
@@ -102,6 +114,8 @@ pub fn compile_register_program_object_with_support(
         .map_err(|error| object_error(program.span, error))?;
     apply_imports(&mut object, lowered.imports)
         .map_err(|error| object_error(program.span, error))?;
+    prune_unreferenced_layouts(&mut object, &BTreeSet::new())
+        .map_err(|error| object_error(program.span, error))?;
     object
         .validate()
         .map_err(|error| object_error(program.span, error))?;
@@ -112,12 +126,107 @@ fn apply_imports(
     object: &mut RelocatableObject,
     plan: ImportPlan,
 ) -> Result<(), fpas_unit::object::ObjectError> {
+    let planned_functions = plan
+        .functions
+        .iter()
+        .map(|(id, _)| id.get())
+        .collect::<BTreeSet<_>>();
+    let planned_globals = plan
+        .globals
+        .iter()
+        .map(|(id, _)| id.get())
+        .collect::<BTreeSet<_>>();
+    let planned_records = planned_layouts(
+        object.records.iter().map(|record| &record.name),
+        &plan.layouts,
+        |shape| matches!(shape, fpas_unit::object::ImportShape::Record { .. }),
+    )?;
+    let planned_enums = planned_layouts(
+        object.enums.iter().map(|enumeration| &enumeration.name),
+        &plan.layouts,
+        |shape| matches!(shape, fpas_unit::object::ImportShape::Enum { .. }),
+    )?;
+    let referenced_records = object
+        .relocations
+        .iter()
+        .filter_map(|relocation| match relocation.kind {
+            RelocationKind::Record(SymbolReference::Local(index)) => Some(index),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let referenced_enums = object
+        .relocations
+        .iter()
+        .filter_map(|relocation| match relocation.kind {
+            RelocationKind::EnumVariant {
+                enumeration: SymbolReference::Local(index),
+                ..
+            } => Some(index),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let referenced_functions = object
+        .relocations
+        .iter()
+        .filter_map(|relocation| match relocation.kind {
+            RelocationKind::Function(SymbolReference::Local(index)) => Some(index),
+            _ => None,
+        })
+        .chain(
+            object
+                .constants
+                .iter()
+                .filter_map(|constant| match constant {
+                    ObjectConstant::Function {
+                        function: SymbolReference::Local(index),
+                        ..
+                    } => Some(*index),
+                    _ => None,
+                }),
+        )
+        .collect::<BTreeSet<_>>();
+    let referenced_globals = object
+        .relocations
+        .iter()
+        .filter_map(|relocation| match relocation.kind {
+            RelocationKind::Global(SymbolReference::Local(index)) => Some(index),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let mut required_import_names = plan
+        .functions
+        .iter()
+        .filter(|(id, _)| referenced_functions.contains(&id.get()))
+        .map(|(_, import)| import.name.clone())
+        .chain(
+            plan.globals
+                .iter()
+                .filter(|(id, _)| referenced_globals.contains(&id.get()))
+                .map(|(_, import)| import.name.clone()),
+        )
+        .collect::<BTreeSet<_>>();
+    for (index, record) in object.records.iter().enumerate() {
+        let index = u32::try_from(index)
+            .map_err(|_| fpas_unit::object::ObjectError::Overflow("local record index"))?;
+        if planned_records.contains(&index) && referenced_records.contains(&index) {
+            required_import_names.insert(record.name.clone());
+        }
+    }
+    for (index, enumeration) in object.enums.iter().enumerate() {
+        let index = u32::try_from(index)
+            .map_err(|_| fpas_unit::object::ObjectError::Overflow("local enum index"))?;
+        if planned_enums.contains(&index) && referenced_enums.contains(&index) {
+            required_import_names.insert(enumeration.name.clone());
+        }
+    }
     let mut imports = plan
         .functions
         .iter()
-        .map(|(_, import)| import.clone())
-        .chain(plan.globals.iter().map(|(_, import)| import.clone()))
-        .chain(plan.layouts.iter().cloned())
+        .map(|(_, import)| import)
+        .chain(plan.globals.iter().map(|(_, import)| import))
+        .chain(plan.layouts.iter())
+        .filter(|import| required_import_names.contains(&import.name))
+        .cloned()
         .collect::<Vec<_>>();
     imports.sort_by(|left, right| left.name.cmp(&right.name));
     imports.dedup_by(|left, right| left.name == right.name);
@@ -134,36 +243,38 @@ fn apply_imports(
     let imported_functions = plan
         .functions
         .iter()
+        .filter(|(id, _)| referenced_functions.contains(&id.get()))
         .map(|(id, import)| imported_index(id.get(), import, &import_indices))
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     let imported_globals = plan
         .globals
         .iter()
+        .filter(|(id, _)| referenced_globals.contains(&id.get()))
         .map(|(id, import)| imported_index(id.get(), import, &import_indices))
         .collect::<Result<BTreeMap<_, _>, _>>()?;
     let imported_records = imported_layouts(
+        &planned_records,
+        &referenced_records,
         object.records.iter().map(|record| &record.name),
-        &plan.layouts,
         &import_indices,
-        |shape| matches!(shape, fpas_unit::object::ImportShape::Record { .. }),
     )?;
     let imported_enums = imported_layouts(
+        &planned_enums,
+        &referenced_enums,
         object.enums.iter().map(|enumeration| &enumeration.name),
-        &plan.layouts,
         &import_indices,
-        |shape| matches!(shape, fpas_unit::object::ImportShape::Enum { .. }),
     )?;
-    let function_map = retained_map(object.functions.len(), imported_functions.keys().copied())?;
-    let global_map = retained_map(object.globals.len(), imported_globals.keys().copied())?;
-    let record_map = retained_map(object.records.len(), imported_records.keys().copied())?;
-    let enum_map = retained_map(object.enums.len(), imported_enums.keys().copied())?;
+    let function_map = retained_map(object.functions.len(), planned_functions.iter().copied())?;
+    let global_map = retained_map(object.globals.len(), planned_globals.iter().copied())?;
+    let record_map = retained_map(object.records.len(), planned_records.iter().copied())?;
+    let enum_map = retained_map(object.enums.len(), planned_enums.iter().copied())?;
 
     object.functions = object
         .functions
         .iter()
         .enumerate()
         .filter(|(index, _)| {
-            !imported_functions.contains_key(&u32::try_from(*index).unwrap_or(u32::MAX))
+            !planned_functions.contains(&u32::try_from(*index).unwrap_or(u32::MAX))
         })
         .map(|(_, function)| function.clone())
         .collect();
@@ -171,27 +282,21 @@ fn apply_imports(
         .globals
         .iter()
         .enumerate()
-        .filter(|(index, _)| {
-            !imported_globals.contains_key(&u32::try_from(*index).unwrap_or(u32::MAX))
-        })
+        .filter(|(index, _)| !planned_globals.contains(&u32::try_from(*index).unwrap_or(u32::MAX)))
         .map(|(_, global)| global.clone())
         .collect();
     object.records = object
         .records
         .iter()
         .enumerate()
-        .filter(|(index, _)| {
-            !imported_records.contains_key(&u32::try_from(*index).unwrap_or(u32::MAX))
-        })
+        .filter(|(index, _)| !planned_records.contains(&u32::try_from(*index).unwrap_or(u32::MAX)))
         .map(|(_, record)| record.clone())
         .collect();
     object.enums = object
         .enums
         .iter()
         .enumerate()
-        .filter(|(index, _)| {
-            !imported_enums.contains_key(&u32::try_from(*index).unwrap_or(u32::MAX))
-        })
+        .filter(|(index, _)| !planned_enums.contains(&u32::try_from(*index).unwrap_or(u32::MAX)))
         .map(|(_, enumeration)| enumeration.clone())
         .collect();
     object
@@ -294,74 +399,11 @@ fn apply_imports(
     Ok(())
 }
 
-fn imported_layouts<'a>(
-    names: impl Iterator<Item = &'a String>,
-    planned: &[ObjectImport],
-    import_indices: &BTreeMap<String, u32>,
-    shape_matches: impl Fn(&fpas_unit::object::ImportShape) -> bool,
-) -> Result<BTreeMap<u32, u32>, fpas_unit::object::ObjectError> {
-    let planned = planned
-        .iter()
-        .filter(|import| shape_matches(&import.shape))
-        .map(|import| import.name.as_str())
-        .collect::<BTreeSet<_>>();
-    names
-        .enumerate()
-        .filter(|(_, name)| planned.contains(name.as_str()))
-        .map(|(index, name)| {
-            let local = u32::try_from(index)
-                .map_err(|_| fpas_unit::object::ObjectError::Overflow("local layout index"))?;
-            let import = import_indices.get(name).copied().ok_or(
-                fpas_unit::object::ObjectError::InvalidTableReference("planned layout import"),
-            )?;
-            Ok((local, import))
-        })
-        .collect()
-}
-
-fn imported_index(
-    id: u32,
-    import: &ObjectImport,
-    import_indices: &BTreeMap<String, u32>,
-) -> Result<(u32, u32), fpas_unit::object::ObjectError> {
-    import_indices
-        .get(&import.name)
-        .copied()
-        .map(|index| (id, index))
-        .ok_or(fpas_unit::object::ObjectError::InvalidTableReference(
-            "planned import",
-        ))
-}
-
-fn retained_map(
-    length: usize,
-    removed: impl Iterator<Item = u32>,
-) -> Result<Vec<Option<u32>>, fpas_unit::object::ObjectError> {
-    let removed = removed.collect::<BTreeSet<_>>();
-    let mut next = 0_u32;
-    (0..length)
-        .map(|index| {
-            let index = u32::try_from(index)
-                .map_err(|_| fpas_unit::object::ObjectError::Overflow("local table index"))?;
-            if removed.contains(&index) {
-                Ok(None)
-            } else {
-                let mapped = next;
-                next = next
-                    .checked_add(1)
-                    .ok_or(fpas_unit::object::ObjectError::Overflow(
-                        "local table index",
-                    ))?;
-                Ok(Some(mapped))
-            }
-        })
-        .collect()
-}
-
 fn qualify_unit_definitions(
     object: &mut RelocatableObject,
     owner: &str,
     interface: &UnitInterface,
+    owned_layouts: &BTreeMap<String, String>,
 ) -> Result<(), fpas_unit::object::ObjectError> {
     for (index, function) in object.functions.iter_mut().enumerate() {
         if object.initializer == u32::try_from(index).ok() {
@@ -376,35 +418,70 @@ fn qualify_unit_definitions(
         }
     }
     for record in &mut object.records {
-        if !record.name.starts_with(&format!("{owner}.")) {
+        if let Some(qualified) = owned_layouts.get(&record.name.to_ascii_lowercase()) {
+            record.name = qualified.clone();
+        } else if !record.name.contains('.') {
             record.name = format!("{owner}.{}", record.name);
         }
     }
     for enumeration in &mut object.enums {
-        if !enumeration.name.starts_with(&format!("{owner}.")) {
+        if let Some(qualified) = owned_layouts.get(&enumeration.name.to_ascii_lowercase()) {
+            enumeration.name = qualified.clone();
+        } else if !enumeration.name.contains('.') {
             enumeration.name = format!("{owner}.{}", enumeration.name);
         }
     }
     object.define_all_private()?;
-    let public = interface
-        .symbols
-        .iter()
-        .filter(|symbol| {
-            matches!(
-                symbol.kind,
-                InterfaceSymbolKind::Function
-                    | InterfaceSymbolKind::Procedure
-                    | InterfaceSymbolKind::Variable
-                    | InterfaceSymbolKind::MutableVariable
-                    | InterfaceSymbolKind::Type
-            )
-        })
-        .map(|symbol| symbol.qualified_name.to_ascii_lowercase())
-        .collect::<BTreeSet<_>>();
+    let mut public = BTreeSet::new();
+    for symbol in &interface.symbols {
+        if matches!(
+            symbol.kind,
+            InterfaceSymbolKind::Function
+                | InterfaceSymbolKind::Procedure
+                | InterfaceSymbolKind::Variable
+                | InterfaceSymbolKind::MutableVariable
+                | InterfaceSymbolKind::Type
+        ) {
+            public.insert(symbol.qualified_name.to_ascii_lowercase());
+        }
+        let fpas_unit::interface::InterfaceType::Record(record) = &symbol.ty else {
+            continue;
+        };
+        for method in record.methods.iter().chain(&record.static_routines) {
+            if record
+                .private_members
+                .iter()
+                .any(|private| private.eq_ignore_ascii_case(&method.name))
+            {
+                continue;
+            }
+            public.insert(format!("{}.{}", record.name, method.name).to_ascii_lowercase());
+        }
+    }
     for definition in &mut object.definitions {
         definition.public = public.contains(&definition.name);
     }
     Ok(())
+}
+
+fn owned_layouts(unit: &Unit, owner: &str) -> BTreeMap<String, String> {
+    unit.declarations
+        .iter()
+        .filter_map(|declaration| match declaration {
+            fpas_parser::Decl::TypeDef(definition)
+                if matches!(
+                    definition.body,
+                    fpas_parser::TypeBody::Record(_) | fpas_parser::TypeBody::Enum(_)
+                ) =>
+            {
+                Some((
+                    definition.name.to_ascii_lowercase(),
+                    format!("{owner}.{}", definition.name).to_ascii_lowercase(),
+                ))
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 fn object_error(

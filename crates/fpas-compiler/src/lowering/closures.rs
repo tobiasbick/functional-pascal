@@ -1,7 +1,6 @@
 //! Anonymous-closure discovery, capture typing, and body lowering.
 
 mod bound_methods;
-mod capture_types;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -16,8 +15,6 @@ use super::context::{
     unsupported,
 };
 use super::types;
-
-pub(super) use capture_types::find_capture_type;
 
 pub(super) struct ClosureRoutine<'a> {
     expression: &'a Expr,
@@ -79,8 +76,8 @@ impl<'a> ClosureRegistry<'a> {
         callables: &BTreeMap<String, Callable>,
         types: &mut types::TypeTable,
         globals: &BTreeMap<String, super::context::GlobalBinding>,
-        enum_constants: &BTreeMap<String, i64>,
-    ) -> Result<Function, CompileError> {
+        constants: &BTreeMap<String, fpas_ir::Constant>,
+    ) -> Result<(Function, types::TypeTable), CompileError> {
         let Expr::Closure(closure) = routine.expression else {
             return Err(unsupported(
                 routine.expression.span(),
@@ -109,7 +106,7 @@ impl<'a> ClosureRegistry<'a> {
             parameters: &parameters,
             captures: &routine.captures,
             globals: globals.clone(),
-            enum_constants: enum_constants.clone(),
+            constants: constants.clone(),
             metadata,
             callables: callables.clone(),
             closure_targets: self.targets.clone(),
@@ -253,9 +250,8 @@ impl<'a> ClosureRegistry<'a> {
                     .captures
                     .iter()
                     .map(|capture| {
-                        let ty = find_capture_type(&closure.body, &capture.name, metadata)
-                            .ok_or_else(|| unsupported(closure.span, "untyped closure capture"))?;
-                        let ty = types.intern(&ty, closure.span.line, closure.span.column)?;
+                        let ty =
+                            types.intern(&capture.ty, closure.span.line, closure.span.column)?;
                         let reuses_cell = self
                             .routines
                             .iter()

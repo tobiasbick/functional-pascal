@@ -575,6 +575,8 @@ version = "0.0.1"
 dependencies = [
  "atomic-write-file",
  "fpas-bytecode",
+ "fpas-compiler",
+ "fpas-parser",
  "fpas-program",
 ]
 
@@ -706,8 +708,6 @@ dependencies = [
  "blake3",
  "fpas-bytecode",
  "fpas-vm",
- "serde",
- "serde_json",
 ]
 
 [[package]]

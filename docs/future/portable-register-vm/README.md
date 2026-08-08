@@ -1,6 +1,7 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; P0 through P8 implemented, production cutover not started.
+Status: approved implementation direction; P0 through P9 implemented, production register cutover
+complete.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -64,6 +65,8 @@ Register task state, pool scheduling, waits, cooperative sleep, and shutdown are
 [P7 tasks and concurrency](p7-tasks-concurrency.md).
 Relocatable register unit objects, deterministic numeric linking, and old-sidecar rebuilding are
 recorded in [P8 unit objects and linker](p8-unit-objects-linker.md).
+The sectioned portable program image, source-less execution, bundle integration, and production CLI
+cutover are recorded in [P9 artifact and CLI cutover](p9-artifact-cli-cutover.md).
 
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
@@ -71,47 +74,26 @@ performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work
 
 ## Current implementation snapshot
 
-Revalidate these facts before implementation because file names can move:
+Revalidate these facts before P10 because file names can move:
 
-- [`fpas-bytecode::Chunk`](../../../crates/fpas-bytecode/src/chunk.rs) stores `Vec<Op>`, a `Value`
-  constant pool, one `SourceLocation` per instruction, and a name-keyed function `HashMap`.
-- [`Op`](../../../crates/fpas-bytecode/src/op.rs) is a stack instruction enum. Calls, globals, records,
-  enums, and closures carry constant-pool indices that resolve to strings.
-- [`Compiler`](../../../crates/fpas-compiler/src/compiler/mod.rs) lowers the analyzed AST directly to
-  stack bytecode and tracks locals as stack slots.
-- [`Worker::exec_one`](../../../crates/fpas-vm/src/vm/execute/mod.rs) performs a top-level opcode match,
-  then many category helpers match the opcode a second time.
-- [`Worker`](../../../crates/fpas-vm/src/vm/worker.rs) owns a value stack and a separate call stack.
-- [`SharedState`](../../../crates/fpas-vm/src/vm/shared.rs) stores globals in a name-keyed `HashMap`
-  behind an `RwLock`.
-- Record field access in
-  [`execute/aggregates/records.rs`](../../../crates/fpas-vm/src/vm/execute/aggregates/records.rs)
-  performs linear string search.
-- [`fpas-linker`](../../../crates/fpas-linker/src/lib.rs) rebases stack instruction addresses and
-  constant indices while retaining name-keyed callable metadata.
-- [`fpas-program`](../../../crates/fpas-program/src/image/payload.rs) wraps a strict JSON instruction
-  payload in a bounded binary `.fpascp` envelope.
-- `Value` is already constrained to at most 16 bytes and compound values already use shared or
-  copy-on-write storage. Preserve that useful baseline until a measurement disproves it.
-- [`fpas-ir`](../../../crates/fpas-ir/src/lib.rs) now owns the validated target-independent typed IR
-  introduced in P1.
-- [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and its verifier now
-  own the inactive register representation introduced in P2; production still uses `Chunk`.
-- [`compile_register_subset`](../../../crates/fpas-compiler/src/lib.rs) lowers the P7 scalar,
-  routine, closure, global, record, enum, array, and dictionary subset through typed IR,
-  deterministic allocation, bytecode selection, and verification without exposing a CLI backend
-  switch, including retained and detached tasks.
-- [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) executes only a
-  `VerifiedExecutable` through one exhaustive packed-opcode dispatch loop and an isolated hosted
-  Console/Graph state; production still uses the stack VM.
-- [`fpas_unit::object::RelocatableObject`](../../../crates/fpas-unit/src/object/mod.rs) owns the P8
-  independently encoded register object, while `ChunkObject` temporarily isolates the production
-  stack sidecar path until P9.
-- [`link_register_objects`](../../../crates/fpas-linker/src/lib.rs) deterministically assigns numeric
-  IDs, relocates register objects, and returns only a fully verified register executable.
-- [`build_register_program`](../../../crates/fpas-build/src/engine.rs) shares incremental identity,
-  sidecar recovery, and workspace graph handling with the production builder while keeping backend
-  selection out of the CLI until P9.
+- [`fpas-ir`](../../../crates/fpas-ir/src/lib.rs) owns the validated target-independent typed IR.
+- [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and
+  `VerifiedExecutable` own the production register representation and verifier boundary.
+- [`fpas-compiler`](../../../crates/fpas-compiler/src/lib.rs) lowers production programs and units
+  through typed IR, deterministic register allocation, and packed register-bytecode selection.
+- [`fpas_unit::object::RelocatableObject`](../../../crates/fpas-unit/src/object/mod.rs) is the
+  production `.fpascu` payload. The linker assigns deterministic numeric IDs and returns only a
+  verified register executable.
+- [`fpas-program`](../../../crates/fpas-program/src/format/mod.rs) encodes the verified executable in
+  ten bounded, explicitly little-endian sections without JSON or host ABI metadata.
+- [`fpas-build`](../../../crates/fpas-build/src/engine.rs), the CLI, test worker, bundle publisher, and
+  thin `fpas-runner` use one register artifact and execution path without a backend switch.
+- [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) accepts only a
+  `VerifiedExecutable` and executes it through one exhaustive packed-opcode dispatch path.
+- The old stack compiler, bytecode, VM, and compatibility types remain only for P10 deletion and
+  temporary regression coverage; they are no longer selected by production build or execution.
+- `Value` remains constrained to at most 16 bytes and compound values retain shared or copy-on-write
+  storage.
 
 ## Desired pipeline
 

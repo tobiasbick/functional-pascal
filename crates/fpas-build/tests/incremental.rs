@@ -8,7 +8,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use fpas_build::{BuildOptions, build_library_units, build_program, build_register_program};
+use fpas_build::{BuildOptions, build_library_units, build_program};
 use fpas_project::{build_unit_graph, load_project, resolve_library_units, resolve_program_units};
 use fpas_unit::{Digest, decode, encode};
 
@@ -101,21 +101,6 @@ include = ["src/**/*.fpas"]
         build_program(&graph, &selection, &program, options)
     }
 
-    fn build_register_with_options(
-        &self,
-        options: &BuildOptions,
-    ) -> Result<fpas_build::BuiltRegisterProgram, fpas_build::BuildError> {
-        let project = load_project(&self.manifest).expect("project loading");
-        let graph =
-            build_unit_graph(&project.source_files, &project.link_meta).expect("unit graph");
-        let main = project.main.expect("program main");
-        let source = fs::read_to_string(main).expect("main source");
-        let (program, diagnostics) = fpas_parser::parse(&source);
-        assert!(diagnostics.is_empty(), "{diagnostics:#?}");
-        let selection = resolve_program_units(&graph, &program.uses).expect("reachable units");
-        build_register_program(&graph, &selection, &program, options)
-    }
-
     fn build_library_with_options(
         &self,
         options: &BuildOptions,
@@ -129,14 +114,8 @@ include = ["src/**/*.fpas"]
 }
 
 fn assert_output(program: fpas_build::BuiltProgram, expected: &str) {
-    let mut vm = fpas_vm::Vm::new(program.chunk);
-    vm.run().expect("linked execution");
-    assert_eq!(vm.output().lines, [expected]);
-}
-
-fn assert_register_output(program: fpas_build::BuiltRegisterProgram, expected: &str) {
     let mut vm = fpas_vm::RegisterVm::new(program.executable);
-    vm.run().expect("linked register execution");
+    vm.run().expect("linked execution");
     assert_eq!(vm.output().lines, [expected]);
 }
 
@@ -177,7 +156,7 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
     let options = BuildOptions::default();
 
     let cold = fixture
-        .build_register_with_options(&options)
+        .build_with_options(&options)
         .expect("cold register build");
     assert_eq!(cold.counters().compiled, 2);
     let cold_executable = cold.executable.executable().clone();
@@ -186,10 +165,10 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
     let cold_object = decode(&fs::read(&base_sidecar).expect("cold base sidecar"))
         .expect("cold base envelope")
         .object;
-    assert_register_output(cold, "42");
+    assert_output(cold, "42");
 
     let warm = fixture
-        .build_register_with_options(&options)
+        .build_with_options(&options)
         .expect("warm register build");
     assert_eq!(warm.counters().compiled, 0);
     assert_eq!(warm.counters().sidecar_reused, 2);
@@ -201,11 +180,11 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
         cold_object,
         "identical register builds must retain byte-identical object payloads"
     );
-    assert_register_output(warm, "42");
+    assert_output(warm, "42");
 
     fs::remove_file(&base_sidecar).expect("remove base sidecar");
     let missing = fixture
-        .build_register_with_options(&options)
+        .build_with_options(&options)
         .expect("missing register sidecar rebuild");
     assert_eq!(missing.counters().compiled, 1);
     assert_eq!(missing.counters().sidecar_reused, 1);
@@ -214,7 +193,7 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
     old[8..10].copy_from_slice(&(fpas_unit::FORMAT_VERSION - 1).to_le_bytes());
     fs::write(&consumer_sidecar, old).expect("old register sidecar fixture");
     let old = fixture
-        .build_register_with_options(&options)
+        .build_with_options(&options)
         .expect("old register sidecar rebuild");
     assert_eq!(old.counters().compiled, 1);
     assert_eq!(old.counters().sidecar_reused, 1);
@@ -226,7 +205,7 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
     fs::write(&base_sidecar, encode(&corrupt).expect("corrupt envelope"))
         .expect("corrupt register sidecar fixture");
     let corrupt = fixture
-        .build_register_with_options(&options)
+        .build_with_options(&options)
         .expect("corrupt register sidecar rebuild");
     assert_eq!(corrupt.counters().compiled, 1);
     assert_eq!(corrupt.counters().sidecar_reused, 1);
@@ -234,11 +213,11 @@ fn register_build_is_deterministic_and_recovers_every_sidecar_class() {
     let mut incompatible_options = options;
     incompatible_options.bytecode_version = incompatible_options.bytecode_version.saturating_add(1);
     let incompatible = fixture
-        .build_register_with_options(&incompatible_options)
+        .build_with_options(&incompatible_options)
         .expect("incompatible register sidecar rebuild");
     assert_eq!(incompatible.counters().compiled, 2);
     assert_eq!(incompatible.counters().sidecar_reused, 0);
-    assert_register_output(incompatible, "42");
+    assert_output(incompatible, "42");
 
     fs::remove_dir_all(&fixture.root).ok();
 }
@@ -306,11 +285,11 @@ units = ["Demo.Base", "Demo.Consumer"]
     let (program, diagnostics) = fpas_parser::parse(&source);
     assert!(diagnostics.is_empty(), "{diagnostics:#?}");
     let selection = resolve_program_units(&graph, &program.uses).expect("workspace selection");
-    let built = build_register_program(&graph, &selection, &program, &BuildOptions::default())
+    let built = build_program(&graph, &selection, &program, &BuildOptions::default())
         .expect("workspace register build");
 
     assert_eq!(built.counters().compiled, 2);
-    assert_register_output(built, "42");
+    assert_output(built, "42");
     fs::remove_dir_all(root).ok();
 }
 

@@ -196,6 +196,9 @@ fn resolve_console(member: &str) -> Option<Intrinsic> {
 }
 
 fn resolve_str(member: &str) -> Option<Intrinsic> {
+    if member == "RepeatStr" {
+        return Some(Intrinsic::Str(StrIntrinsic::Repeat));
+    }
     family!(
         member,
         Str,
@@ -332,6 +335,7 @@ mod tests {
 
     fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
         match intrinsic {
+            Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
             Intrinsic::Graph(operation) => {
                 let member = format!("{operation:?}");
                 let member = member.strip_prefix("Application").unwrap_or(&member);

@@ -24,15 +24,15 @@ impl RegisterWorker {
                 application(arguments.first(), self)?;
                 let handlers =
                     record_fields(arguments.get(1), "Std.Graph.ApplicationHandlers", self)?;
-                let on_paint = required(handlers, "OnPaint", self)?.clone();
-                let on_key_pressed = optional(handlers, "OnKeyPressed", self)?;
-                let on_mouse = optional(handlers, "OnMouse", self)?;
-                let on_wheel = optional(handlers, "OnWheel", self)?;
-                let on_resize = optional(handlers, "OnResize", self)?;
-                let on_close_requested = optional(handlers, "OnCloseRequested", self)?;
-                let on_idle = optional(handlers, "OnIdle", self)?;
-                let on_exit = optional(handlers, "OnExit", self)?;
-                let idle_interval_ms = match required(handlers, "OnIdleMilliseconds", self)? {
+                let on_paint = required(&handlers, "OnPaint", self)?.clone();
+                let on_key_pressed = optional(&handlers, "OnKeyPressed", self)?;
+                let on_mouse = optional(&handlers, "OnMouse", self)?;
+                let on_wheel = optional(&handlers, "OnWheel", self)?;
+                let on_resize = optional(&handlers, "OnResize", self)?;
+                let on_close_requested = optional(&handlers, "OnCloseRequested", self)?;
+                let on_idle = optional(&handlers, "OnIdle", self)?;
+                let on_exit = optional(&handlers, "OnExit", self)?;
+                let idle_interval_ms = match required(&handlers, "OnIdleMilliseconds", self)? {
                     Value::Integer(value) => (*value).max(0),
                     actual => return Err(self.graph_host_type_error("integer", actual)),
                 };
@@ -326,13 +326,25 @@ fn record_fields<'a>(
     value: Option<&'a Value>,
     expected: &str,
     worker: &RegisterWorker,
-) -> Result<&'a [(String, Value)], VmError> {
+) -> Result<Vec<(&'a str, &'a Value)>, VmError> {
     match value {
         Some(Value::Record(record))
             if record.type_name == expected || record.type_name == "<record>" =>
         {
-            Ok(&record.fields)
+            Ok(record
+                .fields
+                .iter()
+                .map(|(name, value)| (name.as_str(), value))
+                .collect())
         }
+        Some(Value::PositionalRecord(record)) => Ok(record
+            .body()
+            .layout
+            .fields
+            .iter()
+            .map(String::as_str)
+            .zip(&record.body().values)
+            .collect()),
         actual => Err(worker.runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!(
@@ -345,14 +357,14 @@ fn record_fields<'a>(
 }
 
 fn required<'a>(
-    fields: &'a [(String, Value)],
+    fields: &'a [(&'a str, &'a Value)],
     name: &str,
     worker: &RegisterWorker,
 ) -> Result<&'a Value, VmError> {
     fields
         .iter()
         .find(|(field, _)| field.eq_ignore_ascii_case(name))
-        .map(|(_, value)| value)
+        .map(|(_, value)| *value)
         .ok_or_else(|| {
             worker.runtime_error(
                 RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -363,7 +375,7 @@ fn required<'a>(
 }
 
 fn optional(
-    fields: &[(String, Value)],
+    fields: &[(&str, &Value)],
     name: &str,
     worker: &RegisterWorker,
 ) -> Result<Option<Value>, VmError> {

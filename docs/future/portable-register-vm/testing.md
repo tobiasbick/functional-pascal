@@ -125,16 +125,21 @@ enums rather than relying only on handcrafted object fixtures.
 Register build integration tests cover transitive independently compiled units, dependency
 initializers, a workspace-resolved library project, cold/warm byte equality, and automatic minimum
 rebuild and replacement for missing, old-envelope, corrupt-payload, and incompatible `.fpascu`
-sidecars. Production CLI artifact selection remains the P9 boundary.
+sidecars. P9 moved production CLI artifact selection to this register object/linker path.
 
 ## Artifact codec
 
-Implement every positive/negative/edge test listed in
-[Bytecode and portability](bytecode-and-portability.md). Retain current bounded-decoder tests and expand
-them for sections and packed instructions.
+P9 implements the codec requirements from
+[Bytecode and portability](bytecode-and-portability.md). `fpas-program/tests/format.rs` covers complete
+table round trips, canonical target-independent bytes, every truncated prefix, old program and
+bytecode versions, payload digest and trailing-byte failures, duplicate/missing/unknown/out-of-order
+sections, overlap/gap/bounds failures, invalid UTF-8/opcodes/booleans, and deterministic mutation
+rejection without panic. `fpas-program/tests/roundtrip.rs` executes a decoded register program without
+sources and preserves exact real-number bits.
 
-Add a canonical digest test constructed entirely from fixed relative metadata. The test must produce
-the same digest on Windows, Linux, macOS, FreeBSD, x86-64, and ARM64.
+The canonical digest is constructed only from fixed relative metadata. Native verification on
+additional operating systems and architectures remains required before claiming that those hosts
+produced the same digest.
 
 ## VM scalar and control flow
 
@@ -157,8 +162,8 @@ Add register alias permutations (`dst == left`, `dst == right`, all distinct) fo
 
 P4 evidence lives in `fpas-compiler/src/tests/register_subset/{functions,closures}.rs`,
 `fpas-vm/src/vm/register/tests/{calls,callbacks}.rs`, and the register-bytecode verifier suite.
-Compiler cases are differential against the production stack VM; direct VM cases isolate frame,
-capture, callback, and limit behavior without compiler coupling.
+Compiler cases retain differential coverage against the legacy stack VM; direct VM cases isolate
+frame, capture, callback, and limit behavior without compiler coupling.
 
 Preserve and extend:
 
@@ -270,6 +275,19 @@ Portability is an evidence claim. Use native hosts where available:
 | macOS | ARM64 | same on Apple Silicon |
 | FreeBSD | x86-64 | same while toolchain/crates support it |
 | FreeBSD | ARM64 | same when a supported native environment exists |
+
+P9 native evidence:
+
+| OS | Architecture | P9 status |
+|---|---|---|
+| Windows | x86-64 | verified: full Rust and FPAS gates, canonical digest, direct source-less `.fpascp`, source-less native application |
+| Windows | ARM64 | unverified: native host unavailable |
+| Linux | x86-64 | unverified: native host unavailable |
+| Linux | ARM64 | unverified: native host unavailable |
+| macOS | x86-64 | unverified: native host unavailable |
+| macOS | ARM64 | unverified: native host unavailable |
+| FreeBSD | x86-64 | unverified: native host unavailable |
+| FreeBSD | ARM64 | unverified: native host unavailable |
 
 For unavailable hosts:
 

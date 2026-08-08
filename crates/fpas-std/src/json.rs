@@ -90,10 +90,18 @@ fn fpas_to_json_at_depth(
         ));
     }
 
-    let Value::Enum(value) = value else {
-        return Err(expected_json_value_error(&value, location));
+    let (type_name, variant, fields) = match value {
+        Value::Enum(value) => value.into_parts(),
+        Value::PositionalEnum(value) => {
+            let body = value.body();
+            (
+                body.layout.type_name.clone(),
+                body.layout.variant.clone(),
+                body.values.clone(),
+            )
+        }
+        value => return Err(expected_json_value_error(&value, location)),
     };
-    let (type_name, variant, fields) = value.into_parts();
 
     if !type_name.eq_ignore_ascii_case(s::STD_JSON_VALUE) {
         return Err(std_runtime_error(

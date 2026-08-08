@@ -1,6 +1,26 @@
 use super::*;
 
 #[test]
+fn for_in_array_and_dictionary_match_stack_execution() {
+    assert_both_succeed(
+        "\
+program RegisterForIn;
+uses Std.Console, Std.Conv, Std.Dict;
+begin
+  mutable var Sum: integer := 0;
+  for Value: integer in [1, 2, 3] do Sum := Sum + Value;
+  var Values: dict of string to integer := ['a': 4, 'b': 5];
+  for Key: string in Values do
+  begin
+    WriteLn(IntToStr(Values[Key]));
+    Sum := Sum + Values[Key]
+  end;
+  if Sum <> 15 then panic('for-in mismatch')
+end.",
+    );
+}
+
+#[test]
 fn scalar_locals_temporaries_and_operations_match_stack_execution() {
     let execution = assert_both_succeed(
         "\

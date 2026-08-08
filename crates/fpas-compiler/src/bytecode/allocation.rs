@@ -59,7 +59,7 @@ impl Allocation {
         for block in &function.blocks {
             if !block.parameters.is_empty() {
                 return Err(limit_error(
-                    "P3 register allocation does not accept block parameters",
+                    "register allocation received unsupported block parameters",
                 ));
             }
             for instruction in &block.instructions {

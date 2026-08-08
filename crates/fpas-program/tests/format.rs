@@ -1,164 +1,159 @@
 #![expect(
     clippy::expect_used,
-    reason = "binary format fixtures use expect for compact assertions"
+    clippy::unwrap_used,
+    reason = "program wire-format tests use exact fixture assertions"
 )]
 
-use fpas_bytecode::{Chunk, Op, SourceLocation, Value};
-use fpas_program::{
-    Digest, FormatError, LinkedUnitIdentity, ProgramIdentity, ProgramImage, decode, encode,
-};
+mod common;
 
-fn program_image() -> ProgramImage {
-    let mut chunk = Chunk::new();
-    let constant = chunk.add_constant(Value::Integer(42)).expect("constant");
-    chunk.emit(
-        Op::Constant(constant),
-        SourceLocation::new_with_source(3, 2, 0),
-    );
-    chunk.emit(Op::PrintLn, SourceLocation::new_with_source(3, 2, 0));
-    chunk.emit(Op::Halt, SourceLocation::new_with_source(4, 1, 0));
-    chunk.insert_function("demo.main", 0, 0);
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
-    ProgramImage::new(
-        ProgramIdentity {
-            compiler_version: "0.0.1-test".to_string(),
-            bytecode_version: fpas_bytecode::BYTECODE_VERSION,
-            source_hash: Digest::of(b"program Demo;"),
-            options_hash: Digest::of(b"default-options"),
-            units: vec![LinkedUnitIdentity {
-                unit_name: "std.console".to_string(),
-                object_hash: Digest::of(b"console-object"),
-            }],
-        },
-        vec!["src/main.fpas".to_string()],
-        chunk,
-    )
-    .expect("program image")
+use fpas_program::{FormatError, PROGRAM_FORMAT_VERSION, decode, encode};
+
+use common::{payload_start, program_image, refresh_payload_digest};
+
+fn decode_error(bytes: &[u8]) -> FormatError {
+    decode(bytes).unwrap_err()
 }
 
 #[test]
-fn format_round_trip_preserves_complete_program_image() {
+fn deterministic_round_trip_preserves_every_register_table() {
     let image = program_image();
-    let bytes = encode(&image).expect("encoding");
-    let decoded = decode(&bytes).expect("decoding");
+    let first = encode(&image).expect("first encoding");
+    let second = encode(&image).expect("second encoding");
+    let decoded = decode(&first).expect("decoded image");
 
+    assert_eq!(first, second);
     assert_eq!(decoded.identity(), image.identity());
     assert_eq!(decoded.source_paths(), image.source_paths());
-    assert_eq!(decoded.chunk().code(), image.chunk().code());
-    assert_eq!(decoded.chunk().constants(), image.chunk().constants());
-    assert_eq!(decoded.chunk().locations(), image.chunk().locations());
-    assert_eq!(decoded.chunk().functions(), image.chunk().functions());
+    assert_eq!(decoded.executable(), image.executable());
 }
 
 #[test]
-fn format_encoding_is_deterministic() {
-    let image = program_image();
+fn canonical_image_has_target_independent_digest() {
+    let bytes = encode(&program_image()).expect("encoded image");
 
     assert_eq!(
-        encode(&image).expect("first encoding"),
-        encode(&image).expect("second encoding")
+        format!("{:?}", fpas_program::Digest::of(bytes)),
+        "0fec4982d8611043f10e3507d8a9d766d367d4685ed9b39ffa7cea25726b42d9"
     );
 }
 
 #[test]
-fn unit_name_case_variants_produce_identical_canonical_images() {
-    let base = program_image();
-    let mut mixed_identity = base.identity().clone();
-    mixed_identity.units[0].unit_name = "Std.Console".to_string();
-    let mixed = ProgramImage::new(
-        mixed_identity,
-        base.source_paths().to_vec(),
-        base.chunk().clone(),
-    )
-    .expect("mixed-case image");
-    let canonical = program_image();
-
-    assert_eq!(mixed.identity().units[0].unit_name, "std.console");
-    assert_eq!(
-        encode(&mixed).expect("mixed-case encoding"),
-        encode(&canonical).expect("canonical encoding")
-    );
-}
-
-#[test]
-fn canonical_unit_names_preserve_case_insensitive_duplicate_detection() {
-    let base = program_image();
-    let mut identity = base.identity().clone();
-    identity.units[0].unit_name = "Std.Console".to_string();
-    identity.units.push(LinkedUnitIdentity {
-        unit_name: "STD.CONSOLE".to_string(),
-        object_hash: Digest::of(b"duplicate-console-object"),
-    });
-
-    assert_eq!(
-        ProgramImage::new(identity, base.source_paths().to_vec(), base.chunk().clone()).err(),
-        Some(fpas_program::ImageError::DuplicateUnit(
-            "std.console".to_string()
-        ))
-    );
-}
-
-#[test]
-fn decoder_rejects_invalid_magic() {
-    let mut bytes = encode(&program_image()).expect("encoding");
-    bytes[0] ^= 0xff;
-
-    assert_eq!(decode(&bytes).err(), Some(FormatError::InvalidMagic));
-}
-
-#[test]
-fn decoder_rejects_unsupported_format_version() {
-    let mut bytes = encode(&program_image()).expect("encoding");
-    bytes[8..10].copy_from_slice(&99_u16.to_le_bytes());
-
-    assert_eq!(
-        decode(&bytes).err(),
-        Some(FormatError::UnsupportedVersion(99))
-    );
-}
-
-#[test]
-fn decoder_rejects_every_truncated_prefix_without_panicking() {
-    let bytes = encode(&program_image()).expect("encoding");
+fn every_truncated_prefix_is_rejected_without_panic() {
+    let bytes = encode(&program_image()).expect("encoded image");
 
     for length in 0..bytes.len() {
+        let result = catch_unwind(AssertUnwindSafe(|| decode(&bytes[..length])));
+        assert!(result.is_ok(), "decoder panicked at prefix {length}");
         assert!(
-            decode(&bytes[..length]).is_err(),
-            "prefix of {length} bytes must fail"
+            result.expect("caught decoder").is_err(),
+            "prefix {length} decoded"
         );
     }
 }
 
 #[test]
-fn decoder_rejects_trailing_bytes() {
-    let mut bytes = encode(&program_image()).expect("encoding");
-    bytes.extend_from_slice(&[1, 2]);
+fn decoder_rejects_old_stack_format_with_versions() {
+    let mut bytes = encode(&program_image()).expect("encoded image");
+    bytes[8..10].copy_from_slice(&1_u16.to_le_bytes());
 
-    assert_eq!(decode(&bytes).err(), Some(FormatError::TrailingBytes(2)));
+    assert_eq!(
+        decode_error(&bytes),
+        FormatError::UnsupportedVersion {
+            image: 1,
+            runtime: PROGRAM_FORMAT_VERSION,
+        }
+    );
 }
 
 #[test]
-fn decoder_rejects_payload_hash_mismatch() {
-    let mut bytes = encode(&program_image()).expect("encoding");
-    let last = bytes.last_mut().expect("payload byte");
-    *last ^= 0xff;
+fn decoder_rejects_incompatible_bytecode_version() {
+    let mut bytes = encode(&program_image()).expect("encoded image");
+    bytes[10..14].copy_from_slice(&99_u32.to_le_bytes());
 
-    assert_eq!(decode(&bytes).err(), Some(FormatError::PayloadHashMismatch));
+    assert_eq!(
+        decode_error(&bytes),
+        FormatError::UnsupportedBytecodeVersion {
+            image: 99,
+            runtime: fpas_bytecode::BYTECODE_VERSION,
+        }
+    );
 }
 
 #[test]
-fn encoder_rejects_oversized_compiler_identity() {
-    let base = program_image();
-    let mut identity = base.identity().clone();
-    identity.compiler_version = "x".repeat(1024 * 1024 + 1);
-    let image = ProgramImage::new(identity, base.source_paths().to_vec(), base.chunk().clone())
-        .expect("oversized identity remains structurally valid");
+fn decoder_rejects_payload_digest_mismatch_and_trailing_bytes() {
+    let mut corrupt = encode(&program_image()).expect("encoded image");
+    *corrupt.last_mut().expect("payload byte") ^= 0x80;
+    assert_eq!(decode_error(&corrupt), FormatError::PayloadHashMismatch);
 
-    assert!(matches!(
-        encode(&image),
-        Err(FormatError::LimitExceeded {
-            field: "compiler_version",
-            ..
-        })
-    ));
+    let mut trailing = encode(&program_image()).expect("encoded image");
+    trailing.extend_from_slice(&[1, 2]);
+    assert_eq!(
+        decode_error(&trailing),
+        FormatError::TrailingBytes {
+            container: "envelope",
+            count: 2,
+        }
+    );
+}
+
+#[test]
+fn decoder_rejects_duplicate_missing_unknown_and_out_of_order_tags() {
+    for tag in [1_u16, 11, 3] {
+        let mut bytes = encode(&program_image()).expect("encoded image");
+        let directory = payload_start(&bytes);
+        bytes[directory + 4 + 16..directory + 6 + 16].copy_from_slice(&tag.to_le_bytes());
+        refresh_payload_digest(&mut bytes);
+        assert!(matches!(
+            decode_error(&bytes),
+            FormatError::SectionTag { .. }
+        ));
+    }
+}
+
+#[test]
+fn decoder_rejects_overlapping_out_of_bounds_and_gapped_sections() {
+    for offset in [0_u32, u32::MAX, 165] {
+        let mut bytes = encode(&program_image()).expect("encoded image");
+        let directory = payload_start(&bytes);
+        bytes[directory + 8..directory + 12].copy_from_slice(&offset.to_le_bytes());
+        refresh_payload_digest(&mut bytes);
+        assert!(matches!(
+            decode_error(&bytes),
+            FormatError::SectionRange { .. }
+        ));
+    }
+}
+
+#[test]
+fn decoder_rejects_invalid_utf8_unknown_opcode_and_noncanonical_boolean() {
+    let base = encode(&program_image()).expect("encoded image");
+    for (tag_index, within_section, value) in
+        [(0_usize, 4_usize, 0xff_u8), (7, 0, 0xff), (1, 59, 2)]
+    {
+        let mut bytes = base.clone();
+        let payload = payload_start(&bytes);
+        let entry = payload + 4 + tag_index * 16;
+        let section_offset = u32::from_le_bytes(
+            bytes[entry + 4..entry + 8]
+                .try_into()
+                .expect("section offset"),
+        ) as usize;
+        bytes[payload + section_offset + within_section] = value;
+        refresh_payload_digest(&mut bytes);
+        assert!(decode(&bytes).is_err());
+    }
+}
+
+#[test]
+fn deterministic_payload_mutations_never_panic() {
+    let base = encode(&program_image()).expect("encoded image");
+    let payload = payload_start(&base);
+    for index in (payload..base.len()).step_by(7) {
+        let mut bytes = base.clone();
+        bytes[index] ^= 0x5a;
+        refresh_payload_digest(&mut bytes);
+        assert!(catch_unwind(AssertUnwindSafe(|| decode(&bytes))).is_ok());
+    }
 }

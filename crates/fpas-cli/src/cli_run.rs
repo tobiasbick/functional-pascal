@@ -144,9 +144,9 @@ fn run_source_file(
             }
         };
         let path_text = path.to_string_lossy();
-        return run_chunk(
+        return run_executable(
             path_text.as_ref(),
-            built.chunk,
+            built.executable,
             Some(&built.source_paths),
             program_args,
             stdout,
@@ -189,9 +189,9 @@ fn run_project_file(
                 };
 
             let artifact_path = artifact.path.to_string_lossy();
-            run_chunk(
+            run_executable(
                 artifact_path.as_ref(),
-                artifact.chunk,
+                artifact.executable,
                 Some(&artifact.source_paths),
                 program_args,
                 stdout,
@@ -273,9 +273,9 @@ fn run_compiled_program_file(
         .map(PathBuf::from)
         .collect::<Vec<_>>();
     let path_text = path.to_string_lossy();
-    run_chunk(
+    run_executable(
         path_text.as_ref(),
-        image.into_chunk(),
+        image.into_executable(),
         Some(&source_paths),
         program_args,
         stdout,
@@ -324,8 +324,8 @@ fn run_compiled_program(
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let chunk = match fpas_compiler::compile_all(program) {
-        Ok(chunk) => chunk,
+    let executable = match fpas_compiler::compile_register_subset(program) {
+        Ok(executable) => executable,
         Err(diagnostics) => {
             for diagnostic in &diagnostics {
                 emit_diagnostic(path, source_paths, diagnostic, stderr);
@@ -334,18 +334,18 @@ fn run_compiled_program(
         }
     };
 
-    run_chunk(path, chunk, source_paths, program_args, stdout, stderr)
+    run_executable(path, executable, source_paths, program_args, stdout, stderr)
 }
 
-fn run_chunk(
+fn run_executable(
     path: &str,
-    chunk: fpas_bytecode::Chunk,
+    executable: fpas_bytecode::VerifiedExecutable,
     source_paths: Option<&[PathBuf]>,
     program_args: Vec<String>,
     stdout: Box<dyn Write + Send>,
     stderr: &mut dyn Write,
 ) -> i32 {
-    let mut vm = fpas_vm::Vm::with_writer_and_args(chunk, stdout, program_args);
+    let mut vm = fpas_vm::RegisterVm::with_writer_and_args(executable, stdout, program_args);
     if let Err(diagnostic) = vm.run() {
         emit_diagnostic(path, source_paths, &diagnostic, stderr);
         return 2;

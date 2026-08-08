@@ -20,6 +20,8 @@ mod expr;
 mod locals;
 mod program;
 mod std_aliases;
+
+pub(crate) use designator::builtin_const_value;
 mod std_calls;
 mod stmt;
 

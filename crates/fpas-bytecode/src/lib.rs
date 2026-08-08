@@ -43,8 +43,5 @@ pub use value::{
     SharedPositionalEnum, SharedPositionalRecord, SharedRecord, SharedStr, Value,
 };
 
-/// Persistent instruction-set version recorded in `.fpascu` identities.
-pub const BYTECODE_VERSION: u32 = 1;
-
-/// Inactive register instruction-set version, promoted at the production cutover.
-pub const REGISTER_BYTECODE_VERSION: u32 = 2;
+/// Persistent register instruction-set version recorded in compiled artifacts.
+pub const BYTECODE_VERSION: u32 = 10;

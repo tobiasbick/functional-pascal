@@ -103,6 +103,9 @@ impl Worker {
             Value::Record(record) if record.type_name == KEY || record.type_name == "<record>" => {
                 Self::console_key_event_from_fields(&record.fields, line)
             }
+            Value::PositionalRecord(record) => {
+                Self::console_key_event_from_fields(&positional_fields(&record), line)
+            }
             other => Err(runtime_error(
                 TYPE_MISMATCH_CODE,
                 format!("Expected {KEY}, got {}", other.type_name()),
@@ -181,6 +184,9 @@ pub(crate) fn console_key_event_from_value(
         Value::Record(record) if record.type_name == KEY || record.type_name == "<record>" => {
             Worker::console_key_event_from_fields(&record.fields, line)
         }
+        Value::PositionalRecord(record) => {
+            Worker::console_key_event_from_fields(&positional_fields(record), line)
+        }
         other => Err(runtime_error(
             TYPE_MISMATCH_CODE,
             format!("Expected {KEY}, got {}", other.type_name()),
@@ -188,6 +194,17 @@ pub(crate) fn console_key_event_from_value(
             line,
         )),
     }
+}
+
+fn positional_fields(record: &fpas_bytecode::SharedPositionalRecord) -> Vec<(String, Value)> {
+    record
+        .body()
+        .layout
+        .fields
+        .iter()
+        .cloned()
+        .zip(record.body().values.iter().cloned())
+        .collect()
 }
 
 fn key_event_char_value(ch: char) -> Value {

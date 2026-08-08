@@ -35,13 +35,30 @@ impl LoweringContext {
                 if let Some(info) = self.property_writes.get(&key).cloned() {
                     return self.lower_property_write(target, value, &info, *span);
                 }
-                let value = self.lower_expression(value)?;
+                let value = match self.designator_type(target) {
+                    Some(expected) => self.lower_expression_as(value, expected)?,
+                    None => self.lower_expression(value)?,
+                };
                 self.lower_designator_write(target, value, *span)
             }
             Stmt::Return(value, _span) => {
                 let value = value
                     .as_ref()
-                    .map(|value| self.lower_expression(value))
+                    .map(|value| match value {
+                        fpas_parser::Expr::ResultOk(inner, span) => {
+                            self.lower_wrapper_as(Some(inner), 0, self.current_result_type(), *span)
+                        }
+                        fpas_parser::Expr::ResultError(inner, span) => {
+                            self.lower_wrapper_as(Some(inner), 1, self.current_result_type(), *span)
+                        }
+                        fpas_parser::Expr::OptionSome(inner, span) => {
+                            self.lower_wrapper_as(Some(inner), 2, self.current_result_type(), *span)
+                        }
+                        fpas_parser::Expr::OptionNone(span) => {
+                            self.lower_wrapper_as(None, 3, self.current_result_type(), *span)
+                        }
+                        _ => self.lower_expression(value),
+                    })
                     .transpose()?;
                 self.terminate(Terminator::Return(value))
             }
@@ -54,10 +71,10 @@ impl LoweringContext {
             | Stmt::While { .. }
             | Stmt::Repeat { .. }
             | Stmt::For { .. }
+            | Stmt::ForIn { .. }
             | Stmt::Case { .. }
             | Stmt::Break(_)
             | Stmt::Continue(_) => self.lower_control_flow(statement),
-            Stmt::ForIn { span, .. } => Err(unsupported(*span, "for-in loop")),
             Stmt::Call {
                 designator,
                 args,
@@ -72,17 +89,27 @@ impl LoweringContext {
                     Some(super::types::UNIT)
                 } else {
                     self.member_call_result(call_key).or_else(|| {
-                        let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-                            return None;
-                        };
-                        self.call_result_type(name)
+                        let qualified = designator
+                            .parts
+                            .iter()
+                            .map(|part| match part {
+                                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                                DesignatorPart::Index(_, _) => None,
+                            })
+                            .collect::<Option<Vec<_>>>()?
+                            .join(".");
+                        self.call_result_type(&qualified).or_else(|| {
+                            let canonical = format!("Std.Graph.{qualified}");
+                            crate::intrinsic_catalog::resolve(&canonical, None)
+                                .map(|_| super::types::UNIT)
+                        })
                     })
                 }
                 .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;
                 let _ = self.lower_call(designator, args, result, *span, call_key)?;
                 Ok(())
             }
-            Stmt::Expression { span, .. } => Err(unsupported(*span, "effect expression")),
+            Stmt::Expression { expr, .. } => self.lower_expression(expr).map(|_| ()),
             Stmt::Go { expr, span } => self.lower_go(expr, *span, false).map(|_| ()),
         }
     }
@@ -96,7 +123,7 @@ impl LoweringContext {
 
     fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
         let ty = self.declared_type(&definition.type_expr)?;
-        let value = self.lower_expression(&definition.value)?;
+        let value = self.lower_expression_as(&definition.value, ty)?;
         if mutable && self.is_cell_backed(&definition.name) {
             let cell_ty = self.cell_type(ty, definition.span)?;
             let cell = self.emit_value(Operation::MakeCell(value), cell_ty, definition.span)?;

@@ -7,6 +7,8 @@ mod enum_consts;
 mod read;
 mod write;
 
+pub(crate) use builtin_consts::builtin_const_value;
+
 use fpas_parser::{Designator, DesignatorPart};
 
 use super::{Compiler, LocalRef, canonical_name};

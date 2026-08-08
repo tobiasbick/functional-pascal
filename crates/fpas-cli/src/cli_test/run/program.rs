@@ -22,7 +22,7 @@ use super::load::{apply_test_script, load_program};
 /// One test entry in a shared, memory-only bytecode image.
 #[derive(Clone)]
 pub(in crate::cli_test) struct CompiledTestProgram {
-    pub image: Arc<fpas_bytecode::Chunk>,
+    pub image: Arc<fpas_bytecode::VerifiedExecutable>,
     pub source_paths: Arc<Vec<PathBuf>>,
 }
 
@@ -65,7 +65,7 @@ pub(super) struct ProgramRunOptions<'a> {
 /// Fully compiled test input transferable to an isolated worker process.
 pub(in crate::cli_test) struct PreparedProgram {
     pub test_path: PathBuf,
-    pub chunk: fpas_bytecode::Chunk,
+    pub executable: fpas_bytecode::VerifiedExecutable,
     pub source_paths: Option<Arc<Vec<PathBuf>>>,
     pub script_override: Option<PathBuf>,
     pub manifest_override: Option<fpas_project::TestFileOverride>,
@@ -108,7 +108,7 @@ fn prepare_test_program(
         compiled,
     } = options;
     let path_text = path.to_string_lossy();
-    let (chunk, source_paths) = if let Some(compiled) = compiled {
+    let (executable, source_paths) = if let Some(compiled) = compiled {
         (
             (*compiled.image).clone(),
             Some(Arc::clone(&compiled.source_paths)),
@@ -130,7 +130,7 @@ fn prepare_test_program(
                 return Err(TestOutcome::CompileError);
             }
         };
-        (built.chunk, Some(Arc::new(built.source_paths)))
+        (built.executable, Some(Arc::new(built.source_paths)))
     } else {
         let (program, source_paths) = match load_program(path) {
             Ok(value) => value,
@@ -139,8 +139,8 @@ fn prepare_test_program(
                 return Err(TestOutcome::CompileError);
             }
         };
-        let chunk = match fpas_compiler::compile_all(&program) {
-            Ok(chunk) => chunk,
+        let executable = match fpas_compiler::compile_register_subset(&program) {
+            Ok(executable) => executable,
             Err(diagnostics) => {
                 if output.emit_fail_banner() {
                     let _ = writeln!(stderr, "  FAIL  {display}");
@@ -160,12 +160,12 @@ fn prepare_test_program(
                 return Err(TestOutcome::CompileError);
             }
         };
-        (chunk, source_paths.map(Arc::new))
+        (executable, source_paths.map(Arc::new))
     };
 
     Ok(PreparedProgram {
         test_path: path.to_path_buf(),
-        chunk,
+        executable,
         source_paths,
         script_override: script_override.map(Path::to_path_buf),
         manifest_override: link
@@ -191,14 +191,14 @@ pub(in crate::cli_test) fn run_prepared_program(
 ) -> Result<TestOutcome, String> {
     let PreparedProgram {
         test_path,
-        chunk,
+        executable,
         source_paths,
         script_override,
         manifest_override,
         display,
         output,
     } = prepared;
-    let mut vm = fpas_vm::Vm::new(chunk);
+    let mut vm = fpas_vm::RegisterVm::new(executable);
     let script_config = match apply_test_script(
         &test_path,
         script_override.as_deref(),
@@ -304,11 +304,11 @@ fn render_assertion_error(stderr: &mut dyn Write, display: &str, output: RunOutp
     let _ = writeln!(stderr, "        {message}");
 }
 
-fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
+fn execute_vm(mut vm: fpas_vm::RegisterVm, headless_graph: bool) -> VmExecution {
     fpas_std::reset_test_skip_state();
 
     let mut run = || {
-        let result = vm.run();
+        let result = vm.run().map(|_| ());
         VmExecution {
             result,
             stdout_lines: vm.output().lines,

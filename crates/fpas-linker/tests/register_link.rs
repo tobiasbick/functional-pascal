@@ -246,6 +246,48 @@ fn duplicate_definitions_are_case_insensitive_through_canonical_object_validatio
 }
 
 #[test]
+fn matching_private_layout_copies_share_one_canonical_type_id() {
+    let mut first = unit(true);
+    first.records.push(fpas_unit::object::ObjectRecordLayout {
+        name: "std.console.keyevent".to_string(),
+        fields: vec!["kind".to_string(), "character".to_string()],
+    });
+    first.definitions.push(ObjectDefinition {
+        name: "std.console.keyevent".to_string(),
+        target: DefinitionTarget::Record(0),
+        public: false,
+    });
+    first
+        .definitions
+        .sort_by(|left, right| left.name.cmp(&right.name));
+
+    let mut second = unit(false);
+    second.owner = "other.unit".to_string();
+    for function in &mut second.functions {
+        function.name = function.name.replacen("library.unit", "other.unit", 1);
+    }
+    for definition in &mut second.definitions {
+        definition.name = definition.name.replacen("library.unit", "other.unit", 1);
+    }
+    second.records.push(fpas_unit::object::ObjectRecordLayout {
+        name: "std.console.keyevent".to_string(),
+        fields: vec!["kind".to_string(), "character".to_string()],
+    });
+    second.definitions.push(ObjectDefinition {
+        name: "std.console.keyevent".to_string(),
+        target: DefinitionTarget::Record(0),
+        public: false,
+    });
+    second
+        .definitions
+        .sort_by(|left, right| left.name.cmp(&right.name));
+
+    let executable = link_register_objects(&[first, second], &program())
+        .expect("matching private layout copies must coalesce");
+    assert_eq!(executable.executable().records.len(), 1);
+}
+
+#[test]
 fn incompatible_record_layout_import_is_rejected_before_relocation() {
     let mut library = unit(true);
     library.records.push(fpas_unit::object::ObjectRecordLayout {

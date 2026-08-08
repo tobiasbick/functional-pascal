@@ -1,7 +1,9 @@
 //! Scalar expression lowering with source-order evaluation.
 
+mod designators;
+
 use fpas_ir::{BinaryOperation as IrBinary, Constant, Operation, UnaryOperation, ValueId};
-use fpas_parser::{BinaryOp, DesignatorPart, Expr, UnaryOp};
+use fpas_parser::{BinaryOp, Expr, UnaryOp};
 use fpas_sema::Ty;
 
 use crate::CompileError;
@@ -31,53 +33,7 @@ impl LoweringContext {
                 *span,
             ),
             Expr::Designator(designator) => {
-                let designator_key = fpas_sema::designator_lookup_key(designator);
-                if self.bound_method_targets.contains_key(&designator_key) {
-                    return self.lower_bound_method(designator, designator_key);
-                }
-                if let Some(reads) = self.property_reads.get(&designator_key).cloned() {
-                    return self.lower_property_read(designator, &reads);
-                }
-                let qualified = designator
-                    .parts
-                    .iter()
-                    .map(|part| match part {
-                        DesignatorPart::Ident(name, _) => Some(name.as_str()),
-                        DesignatorPart::Index(_, _) => None,
-                    })
-                    .collect::<Option<Vec<_>>>()
-                    .map(|parts| parts.join("."));
-                if let Some(value) = qualified.as_ref().and_then(|name| self.enum_constant(name)) {
-                    return self.emit_value(
-                        Operation::Const(Constant::Integer(value)),
-                        types::INTEGER,
-                        designator.span,
-                    );
-                }
-                let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
-                    return self.lower_designator_read(designator);
-                };
-                if self.has_binding(name) {
-                    self.read_named_local(name, designator.span)
-                } else if self.has_global(name) {
-                    self.read_global(name, designator.span)
-                } else if let Some(callable) = self.resolve_callable(name) {
-                    let captures = callable
-                        .captures
-                        .iter()
-                        .map(|capture| self.read_capture(&capture.name, designator.span))
-                        .collect::<Result<Vec<_>, _>>()?;
-                    self.emit_value(
-                        Operation::MakeClosure {
-                            function: callable.function,
-                            captures,
-                        },
-                        callable.value_type,
-                        designator.span,
-                    )
-                } else {
-                    Err(unsupported(designator.span, "unresolved designator"))
-                }
+                self.lower_designator_expression(designator, expression)
             }
             Expr::Call {
                 designator,
@@ -361,18 +317,53 @@ impl LoweringContext {
         result_ty: fpas_ir::TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
-        if matches!(left_ty, Ty::GenericParam(..)) || matches!(right_ty, Ty::GenericParam(..)) {
-            return self.lower_direct_binary(dynamic, left, right, result_ty, span);
+        let left_value = self.lower_expression(left)?;
+        let right_value = self.lower_expression(right)?;
+        let left_lowered = self
+            .lowered_value_type(left_value)
+            .ok_or_else(|| unsupported(span, "missing lowered left operand type"))?;
+        let right_lowered = self
+            .lowered_value_type(right_value)
+            .ok_or_else(|| unsupported(span, "missing lowered right operand type"))?;
+        if left_lowered == types::DYNAMIC || right_lowered == types::DYNAMIC {
+            let output = if result_ty == types::BOOLEAN {
+                types::BOOLEAN
+            } else {
+                types::DYNAMIC
+            };
+            return self.emit_binary(dynamic, left_value, right_value, output, span);
         }
         if matches!(left_ty, Ty::Real)
             || matches!(right_ty, Ty::Real)
             || integer == IrBinary::DivideReal
         {
-            let (left_value, right_value) =
-                self.lower_numeric_operands(left, right, left_ty, right_ty, span)?;
+            let left_value =
+                self.convert_lowered_integer_to_real(left_value, left_lowered, span)?;
+            let right_value =
+                self.convert_lowered_integer_to_real(right_value, right_lowered, span)?;
             return self.emit_binary(real, left_value, right_value, result_ty, span);
         }
-        self.lower_direct_binary(integer, left, right, result_ty, span)
+        self.emit_binary(integer, left_value, right_value, result_ty, span)
+    }
+
+    fn convert_lowered_integer_to_real(
+        &mut self,
+        value: ValueId,
+        ty: fpas_ir::TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<ValueId, CompileError> {
+        if ty == types::INTEGER {
+            self.emit_value(
+                Operation::Unary {
+                    operation: UnaryOperation::IntegerToReal,
+                    operand: value,
+                },
+                types::REAL,
+                span,
+            )
+        } else {
+            Ok(value)
+        }
     }
 
     fn lower_numeric_operands(

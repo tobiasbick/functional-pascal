@@ -1,24 +1,15 @@
-//! In-memory model and payload conversion for executable program images.
+//! In-memory model for portable verified register program images.
 
-mod payload;
-pub(crate) mod resources;
-#[cfg(test)]
-mod tests;
+mod limits;
 
 use std::collections::HashSet;
 use std::fmt;
 
-use fpas_bytecode::{
-    Chunk, ExecutableError, PersistentValue, PersistentValueError, validate_executable,
-};
+use fpas_bytecode::{StringId, StringTable, ValidationError, VerifiedExecutable};
 
 use crate::ProgramIdentity;
 
-pub(crate) use payload::{decode_payload, encode_payload};
-use resources::{
-    MAX_CONSTANTS, MAX_FUNCTIONS, MAX_INSTRUCTIONS, MAX_LOCATIONS, MAX_TOTAL_STRING_BYTES,
-    add_string_bytes, check_resource_size, persistent_string_bytes,
-};
+use self::limits::validate_identity_resources;
 
 /// Invalid in-memory program image.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -34,46 +25,22 @@ pub enum ImageError {
     },
     /// A reachable unit appears more than once.
     DuplicateUnit(String),
+    /// The portable source-path table has the wrong length.
+    SourcePathCount {
+        /// Number of paths supplied by the image.
+        paths: usize,
+        /// Number of source identifiers used by the executable.
+        sources: usize,
+    },
     /// A source path is empty.
     EmptySourcePath(usize),
+    /// A source path appears more than once.
+    DuplicateSourcePath(String),
     /// A source path contains machine-specific absolute metadata.
     AbsoluteSourcePath(String),
-    /// An instruction location refers outside the source-path table.
-    SourceId {
-        /// Instruction offset containing the location.
-        instruction: usize,
-        /// Referenced source identifier.
-        source_id: u32,
-        /// Number of source paths in the image.
-        source_paths: usize,
-    },
-    /// Executable bytecode structure is invalid.
-    Executable(ExecutableError),
-    /// A constant contains runtime-only state.
-    PersistentValue(PersistentValueError),
-    /// A decoded source location is not one-based.
-    InvalidLocation {
-        /// Instruction offset containing the location.
-        instruction: usize,
-        /// Encoded line.
-        line: u32,
-        /// Encoded column.
-        column: u32,
-    },
-    /// A decoded constant pool contains a duplicate that would change its indices.
-    DuplicateConstant {
-        /// Encoded constant-pool index.
-        index: usize,
-        /// Existing index returned by the chunk.
-        existing: u16,
-    },
-    /// A decoded constant pool exceeds bytecode limits.
-    ConstantPool(String),
-    /// The JSON payload could not be encoded.
-    PayloadEncode(String),
-    /// The JSON payload could not be decoded.
-    PayloadDecode(String),
-    /// An in-memory payload resource exceeds its safety limit.
+    /// Register executable verification failed.
+    Executable(ValidationError),
+    /// A program-image resource exceeds its configured limit.
     ResourceLimit {
         /// Logical resource name.
         field: &'static str,
@@ -86,74 +53,123 @@ pub enum ImageError {
 
 impl fmt::Display for ImageError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "invalid compiled program image: {self:?}")
+        match self {
+            Self::BytecodeVersion { image, runtime } => write!(
+                formatter,
+                "compiled program uses bytecode version {image}, but this runtime requires version {runtime}"
+            ),
+            Self::Executable(error) => write!(formatter, "invalid register executable: {error}"),
+            other => write!(formatter, "invalid compiled program image: {other:?}"),
+        }
     }
 }
 
 impl std::error::Error for ImageError {}
 
-/// Complete executable bytecode plus its build identity and diagnostic sources.
+/// Complete portable register executable plus its build identity and diagnostic paths.
+#[derive(Debug)]
 pub struct ProgramImage {
     identity: ProgramIdentity,
     source_paths: Vec<String>,
-    chunk: Chunk,
+    executable: VerifiedExecutable,
 }
 
 impl ProgramImage {
-    /// Construct, canonicalize, and validate a complete program image.
+    /// Construct and validate a complete program image.
+    ///
+    /// Portable source paths replace compiler-local source labels in the executable string table.
     ///
     /// # Errors
     ///
-    /// Returns [`ImageError`] when the identity, source table, executable, or
-    /// persistent resources are invalid.
+    /// Returns [`ImageError`] when identity, source paths, resources, or executable invariants fail.
     pub fn new(
         mut identity: ProgramIdentity,
         source_paths: Vec<String>,
-        chunk: Chunk,
+        executable: VerifiedExecutable,
     ) -> Result<Self, ImageError> {
-        for unit in &mut identity.units {
-            unit.unit_name.make_ascii_lowercase();
-        }
-        let image = Self {
+        canonicalize_units(&mut identity);
+        validate_identity(&identity)?;
+        validate_source_paths(&source_paths)?;
+        validate_identity_resources(&identity)?;
+        let (executable, source_paths) = install_source_paths(executable, &source_paths)?;
+        Ok(Self {
             identity,
             source_paths,
-            chunk,
-        };
-        image.validate()?;
-        Ok(image)
+            executable,
+        })
+    }
+
+    pub(crate) fn from_decoded(
+        mut identity: ProgramIdentity,
+        executable: VerifiedExecutable,
+    ) -> Result<Self, ImageError> {
+        canonicalize_units(&mut identity);
+        validate_identity(&identity)?;
+        validate_identity_resources(&identity)?;
+        let source_paths = executable
+            .executable()
+            .source_map
+            .sources
+            .iter()
+            .map(|id| {
+                executable
+                    .executable()
+                    .strings
+                    .get(*id)
+                    .unwrap_or_default()
+                    .to_string()
+            })
+            .collect::<Vec<_>>();
+        validate_source_paths(&source_paths)?;
+        Ok(Self {
+            identity,
+            source_paths,
+            executable,
+        })
     }
 
     /// Return the recorded build identity.
     #[must_use]
-    pub fn identity(&self) -> &ProgramIdentity {
+    pub const fn identity(&self) -> &ProgramIdentity {
         &self.identity
     }
 
-    /// Return the relative source-path table used by diagnostics.
+    /// Return portable relative source paths indexed by bytecode source identifiers.
     #[must_use]
     pub fn source_paths(&self) -> &[String] {
         &self.source_paths
     }
 
-    /// Return the executable bytecode.
+    /// Return the verified register executable.
     #[must_use]
-    pub fn chunk(&self) -> &Chunk {
-        &self.chunk
+    pub const fn executable(&self) -> &VerifiedExecutable {
+        &self.executable
     }
 
-    /// Consume the image and return its executable bytecode.
+    /// Consume the image and return its verified register executable.
     #[must_use]
-    pub fn into_chunk(self) -> Chunk {
-        self.chunk
+    pub fn into_executable(self) -> VerifiedExecutable {
+        self.executable
     }
 
     pub(crate) fn validate(&self) -> Result<(), ImageError> {
         validate_identity(&self.identity)?;
+        validate_identity_resources(&self.identity)?;
         validate_source_paths(&self.source_paths)?;
-        validate_resources(self)?;
-        validate_executable(&self.chunk).map_err(ImageError::Executable)?;
-        validate_locations(&self.chunk, self.source_paths.len())?;
+        let actual = self.executable.executable().source_map.sources.len();
+        if self.source_paths.len() != actual {
+            return Err(ImageError::SourcePathCount {
+                paths: self.source_paths.len(),
+                sources: actual,
+            });
+        }
         Ok(())
+    }
+}
+
+fn canonicalize_units(identity: &mut ProgramIdentity) {
+    for unit in &mut identity.units {
+        unit.unit_name.make_ascii_lowercase();
     }
 }
 
@@ -172,8 +188,7 @@ fn validate_identity(identity: &ProgramIdentity) -> Result<(), ImageError> {
         if unit.unit_name.trim().is_empty() {
             return Err(ImageError::EmptyIdentityField("unit_name"));
         }
-        let canonical = unit.unit_name.to_ascii_lowercase();
-        if !units.insert(canonical) {
+        if !units.insert(unit.unit_name.to_ascii_lowercase()) {
             return Err(ImageError::DuplicateUnit(unit.unit_name.clone()));
         }
     }
@@ -181,6 +196,7 @@ fn validate_identity(identity: &ProgramIdentity) -> Result<(), ImageError> {
 }
 
 fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
+    let mut unique = HashSet::with_capacity(source_paths.len());
     for (index, source_path) in source_paths.iter().enumerate() {
         if source_path.trim().is_empty() {
             return Err(ImageError::EmptySourcePath(index));
@@ -188,21 +204,70 @@ fn validate_source_paths(source_paths: &[String]) -> Result<(), ImageError> {
         if is_portably_absolute(source_path) {
             return Err(ImageError::AbsoluteSourcePath(source_path.clone()));
         }
+        if !unique.insert(source_path) {
+            return Err(ImageError::DuplicateSourcePath(source_path.clone()));
+        }
     }
     Ok(())
 }
 
-fn validate_locations(chunk: &Chunk, source_path_count: usize) -> Result<(), ImageError> {
-    for (instruction, location) in chunk.locations().iter().enumerate() {
-        if location.source_id() as usize >= source_path_count {
-            return Err(ImageError::SourceId {
-                instruction,
-                source_id: location.source_id(),
-                source_paths: source_path_count,
+fn install_source_paths(
+    verified: VerifiedExecutable,
+    source_paths: &[String],
+) -> Result<(VerifiedExecutable, Vec<String>), ImageError> {
+    let mut executable = verified.into_unverified();
+    let mut strings = executable
+        .strings
+        .iter()
+        .map(str::to_owned)
+        .collect::<Vec<_>>();
+    let selected_paths = executable
+        .source_map
+        .sources
+        .iter()
+        .enumerate()
+        .map(|(source_index, source)| {
+            let label = executable.strings.get(*source).unwrap_or_default();
+            source_path_for_label(label, source_index, source_paths).cloned()
+        })
+        .collect::<Option<Vec<_>>>()
+        .ok_or(ImageError::SourcePathCount {
+            paths: source_paths.len(),
+            sources: executable.source_map.sources.len(),
+        })?;
+    executable.source_map.sources.clear();
+    for path in &selected_paths {
+        let index = strings
+            .iter()
+            .position(|entry| entry == path)
+            .unwrap_or_else(|| {
+                let index = strings.len();
+                strings.push(path.clone());
+                index
             });
-        }
+        let id = StringId::try_from_index(index).map_err(|_| ImageError::ResourceLimit {
+            field: "strings",
+            size: strings.len(),
+            maximum: fpas_bytecode::limits::MAX_STRINGS,
+        })?;
+        executable.source_map.sources.push(id);
     }
-    Ok(())
+    executable.strings = StringTable::new(strings);
+    let executable = executable.verify().map_err(ImageError::Executable)?;
+    Ok((executable, selected_paths))
+}
+
+fn source_path_for_label<'a>(
+    label: &str,
+    source_index: usize,
+    source_paths: &'a [String],
+) -> Option<&'a String> {
+    label
+        .strip_prefix("source-")
+        .and_then(|suffix| suffix.strip_suffix(".fpas"))
+        .and_then(|index| index.parse::<usize>().ok())
+        .and_then(|index| source_paths.get(index))
+        .or_else(|| source_paths.get(source_index))
 }
 
 fn is_portably_absolute(path: &str) -> bool {
@@ -216,26 +281,5 @@ fn is_portably_absolute(path: &str) -> bool {
         )
 }
 
-fn validate_resources(image: &ProgramImage) -> Result<(), ImageError> {
-    check_resource_size("instructions", image.chunk.len(), MAX_INSTRUCTIONS)?;
-    check_resource_size("locations", image.chunk.locations().len(), MAX_LOCATIONS)?;
-    check_resource_size("functions", image.chunk.functions().len(), MAX_FUNCTIONS)?;
-    check_resource_size("constants", image.chunk.constants().len(), MAX_CONSTANTS)?;
-
-    let mut string_bytes = 0;
-    add_string_bytes(&mut string_bytes, image.identity.compiler_version.len())?;
-    for unit in &image.identity.units {
-        add_string_bytes(&mut string_bytes, unit.unit_name.len())?;
-    }
-    for path in &image.source_paths {
-        add_string_bytes(&mut string_bytes, path.len())?;
-    }
-    for name in image.chunk.functions().keys() {
-        add_string_bytes(&mut string_bytes, name.len())?;
-    }
-    for value in image.chunk.constants() {
-        let persistent = PersistentValue::from_value(value).map_err(ImageError::PersistentValue)?;
-        add_string_bytes(&mut string_bytes, persistent_string_bytes(&persistent))?;
-    }
-    check_resource_size("strings", string_bytes, MAX_TOTAL_STRING_BYTES)
-}
+#[cfg(test)]
+mod tests;

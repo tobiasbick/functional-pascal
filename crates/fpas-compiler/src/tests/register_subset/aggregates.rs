@@ -107,6 +107,42 @@ end.",
 }
 
 #[test]
+fn record_fields_survive_try_control_flow() {
+    assert_both_succeed(
+        "\
+program RegisterRecordTry;
+type
+  Triple = record
+    First: integer;
+    Second: integer;
+    Third: integer;
+  end;
+function Read(Value: Result of integer, string): Result of integer, string;
+begin
+  return Value
+end;
+function Build(Second: Result of integer, string): Result of Triple, string;
+begin
+  return Ok(record
+    First := 1;
+    Second := try Read(Second);
+    Third := try Read(Ok(3));
+  end)
+end;
+begin
+  case Build(Ok(2)) of
+    Ok(Value):
+      if (Value.First <> 1) or (Value.Second <> 2) or (Value.Third <> 3) then
+        panic('record values');
+    Error(Message): panic('unexpected record error')
+  end;
+  if Build(Error('expected')) <> Error('expected') then
+    panic('record try propagation')
+end.",
+    );
+}
+
+#[test]
 fn result_option_and_enum_patterns_bind_positional_fields() {
     assert_both_succeed(
         "\

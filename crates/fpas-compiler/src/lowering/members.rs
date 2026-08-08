@@ -1,4 +1,4 @@
-//! P5 lowering for semantically resolved record methods, properties, and events.
+//! Lowering for semantically resolved record methods, properties, and events.
 
 use fpas_ir::{IrType, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr, PostfixOperation};
@@ -227,6 +227,7 @@ impl LoweringContext {
         designator: &Designator,
         arguments: &[Expr],
         target: &MethodCallTarget,
+        result: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<ValueId, CompileError> {
         let callable = self.member_callable(target.qualified_name(), span, "record method")?;
@@ -245,7 +246,15 @@ impl LoweringContext {
                 .map(|argument| self.lower_expression(argument))
                 .collect::<Result<Vec<_>, _>>()?,
         );
-        self.emit_member_call(&callable, values, span)
+        self.record_call_arguments(values.len(), span)?;
+        self.emit_value(
+            Operation::CallDirect {
+                function: callable.function,
+                arguments: values,
+            },
+            result,
+            span,
+        )
     }
 
     fn lower_event_getter(

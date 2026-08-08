@@ -15,10 +15,10 @@ pub use runner::run_suite;
 #[derive(Debug, Clone, Copy, Default, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum BenchEngine {
-    /// Production CLI and stack VM.
+    /// Legacy stack baseline retained until the P11 benchmark migration.
     #[default]
     Stack,
-    /// Inactive register-development compiler and VM path.
+    /// Production register compiler and VM path.
     Register,
 }
 
@@ -29,7 +29,7 @@ pub struct BenchSpec {
     pub id: String,
     /// Filter group configured by the suite (`vm`, `concurrency`, or `tui`).
     pub group: String,
-    /// Execution engine; omitted rows retain the production stack path.
+    /// Execution engine; omitted rows retain the legacy P0 baseline selection.
     #[serde(default)]
     pub engine: BenchEngine,
     /// Path to the `.fpas` program, relative to the repository root.

@@ -1,4 +1,4 @@
-//! AST and semantic-metadata lowering for the P7 register-development subset.
+//! AST and semantic-metadata lowering for the register compiler.
 
 mod aggregates;
 mod calls;
@@ -14,6 +14,7 @@ mod routines;
 mod stmt;
 mod type_names;
 mod types;
+mod validation;
 
 pub(crate) use imports::ImportPlan;
 
@@ -129,7 +130,7 @@ fn lower_analyzed_root(
     let mut routines = Vec::new();
     routines::collect(declarations, &mut routines);
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
-    let enum_constants = collect_enum_constants(declarations);
+    let mut constants = collect_enum_constants(declarations);
     let mut globals = Vec::new();
     let mut global_bindings = BTreeMap::new();
     for declaration in declarations {
@@ -176,10 +177,13 @@ fn lower_analyzed_root(
             direct: interfaces,
             supporting: supporting_interfaces,
         },
-        &mut type_table,
-        &mut callables,
-        &mut globals,
-        &mut global_bindings,
+        imports::BindingTables {
+            types: &mut type_table,
+            callables: &mut callables,
+            globals: &mut globals,
+            global_bindings: &mut global_bindings,
+            constants: &mut constants,
+        },
         first_import_id,
         span,
     )
@@ -210,7 +214,7 @@ fn lower_analyzed_root(
         parameters: &[],
         captures: &[],
         globals: global_bindings.clone(),
-        enum_constants: enum_constants.clone(),
+        constants: constants.clone(),
         metadata: &metadata,
         callables: callables.clone(),
         closure_targets: closures.targets.clone(),
@@ -254,58 +258,59 @@ fn lower_analyzed_root(
             .lower_statement(statement)
             .map_err(|error| vec![error])?;
     }
-    let root = context.finish(span).map_err(|error| vec![error])?;
+    let (root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    type_table = updated_types;
     let mut functions = vec![root];
     for (index, routine) in routines.iter().enumerate() {
         let id = FunctionId::new(
             u32::try_from(index + 1)
                 .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
         );
-        functions.push(
-            routines::lower(
-                routine,
-                &mut type_table,
-                routines::LoweringInput {
-                    id,
-                    metadata: &metadata,
-                    callables: &callables,
-                    globals: &global_bindings,
-                    enum_constants: &enum_constants,
-                    closure_targets: closures.targets.clone(),
-                    bound_method_targets: closures.bound_targets.clone(),
-                    cell_names: closures.cell_names.get(&id).cloned().unwrap_or_default(),
-                },
-            )
-            .map_err(|error| vec![error])?,
-        );
+        let (function, updated_types) = routines::lower(
+            routine,
+            &mut type_table,
+            routines::LoweringInput {
+                id,
+                metadata: &metadata,
+                callables: &callables,
+                globals: &global_bindings,
+                constants: &constants,
+                closure_targets: closures.targets.clone(),
+                bound_method_targets: closures.bound_targets.clone(),
+                cell_names: closures.cell_names.get(&id).cloned().unwrap_or_default(),
+            },
+        )
+        .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
     }
     functions.extend(imported_stubs);
     for routine in &closures.routines {
-        functions.push(
-            closures
-                .lower(
-                    routine,
-                    &metadata,
-                    &callables,
-                    &mut type_table,
-                    &global_bindings,
-                    &enum_constants,
-                )
-                .map_err(|error| vec![error])?,
-        );
+        let (function, updated_types) = closures
+            .lower(
+                routine,
+                &metadata,
+                &callables,
+                &mut type_table,
+                &global_bindings,
+                &constants,
+            )
+            .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
     }
     for routine in &closures.bound_routines {
-        functions.push(
-            closures
-                .lower_bound(
-                    routine,
-                    &metadata,
-                    &mut type_table,
-                    &global_bindings,
-                    &enum_constants,
-                )
-                .map_err(|error| vec![error])?,
-        );
+        let (function, updated_types) = closures
+            .lower_bound(
+                routine,
+                &metadata,
+                &mut type_table,
+                &global_bindings,
+                &constants,
+            )
+            .map_err(|error| vec![error])?;
+        type_table = updated_types;
+        functions.push(function);
     }
     functions.sort_by_key(|function| function.id);
     let ir = Program {
@@ -318,11 +323,13 @@ fn lower_analyzed_root(
         entry: FunctionId::new(0),
     };
     ir.validate().map_err(|error| {
+        let context = validation::context(&ir, &error);
+        let source = validation::source(&ir, &error).unwrap_or(span);
         vec![crate::error::internal_compiler_error(
-            format!("Register IR failed validation: {error}"),
+            format!("Register IR failed validation: {error}{context}"),
             "This is an internal compiler error. Re-run compilation and report the source program.",
-            span.line,
-            span.column,
+            source.line,
+            source.column,
         )]
     })?;
     Ok(LoweredUnit {
@@ -331,7 +338,7 @@ fn lower_analyzed_root(
     })
 }
 
-fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, i64> {
+fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, fpas_ir::Constant> {
     let mut constants = BTreeMap::new();
     let mut ambiguous = BTreeSet::new();
     for declaration in declarations {
@@ -357,7 +364,7 @@ fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, i64> {
             let short = member.name.to_ascii_lowercase();
             constants.insert(
                 format!("{}.{}", definition.name, member.name).to_ascii_lowercase(),
-                value,
+                fpas_ir::Constant::Integer(value),
             );
             if ambiguous.contains(&short) {
                 continue;
@@ -367,7 +374,7 @@ fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, i64> {
                     ambiguous.insert(entry.remove_entry().0);
                 }
                 std::collections::btree_map::Entry::Vacant(entry) => {
-                    entry.insert(value);
+                    entry.insert(fpas_ir::Constant::Integer(value));
                 }
             }
         }
@@ -377,23 +384,26 @@ fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, i64> {
 
 fn collect_intrinsic_signatures(
     functions: &[Function],
-    _types: &types::TypeTable,
+    types: &types::TypeTable,
 ) -> Vec<IntrinsicSignature> {
-    let mut arities = BTreeMap::<IntrinsicId, usize>::new();
+    let mut shapes = BTreeMap::<IntrinsicId, (usize, fpas_ir::TypeId)>::new();
     for function in functions {
         for instruction in function.blocks.iter().flat_map(|block| &block.instructions) {
             if let Operation::Intrinsic {
                 intrinsic,
                 arguments,
             } = &instruction.operation
+                && let Some(result) = instruction.result
             {
-                arities.entry(*intrinsic).or_insert(arguments.len());
+                shapes
+                    .entry(*intrinsic)
+                    .or_insert((arguments.len(), result.ty));
             }
         }
     }
-    arities
+    shapes
         .into_iter()
-        .map(|(id, arity)| {
+        .map(|(id, (arity, result))| {
             let wire = u16::try_from(id.get()).ok();
             let variadic = wire.and_then(fpas_bytecode::Intrinsic::from_u16)
                 == Some(fpas_bytecode::Intrinsic::Str(
@@ -404,11 +414,16 @@ fn collect_intrinsic_signatures(
             } else {
                 vec![types::DYNAMIC; arity]
             };
+            let result = if matches!(types.kind(result), Some(fpas_ir::IrType::Unit)) {
+                types::UNIT
+            } else {
+                types::DYNAMIC
+            };
             IntrinsicSignature {
                 id,
                 parameters,
                 variadic,
-                result: types::DYNAMIC,
+                result,
             }
         })
         .collect()

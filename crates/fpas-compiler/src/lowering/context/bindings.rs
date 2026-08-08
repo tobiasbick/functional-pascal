@@ -6,10 +6,7 @@ use fpas_lexer::Span;
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
-use super::{
-    Binding, BindingStorage, Callable, ClosureTarget, LoweringContext,
-    unsupported_parameter_assignment,
-};
+use super::{Binding, BindingStorage, Callable, ClosureTarget, LoweringContext};
 
 impl LoweringContext {
     pub(in crate::lowering) fn declare_local(
@@ -85,7 +82,6 @@ impl LoweringContext {
                     Ok(value)
                 }
             }
-            BindingStorage::Value(value) => Ok(value),
         }
     }
 
@@ -101,7 +97,6 @@ impl LoweringContext {
                 let storage_ty = if cell { self.cell_type(ty, span)? } else { ty };
                 self.emit_value(Operation::ReadLocal(local), storage_ty, span)
             }
-            BindingStorage::Value(value) => Ok(value),
         }
     }
 
@@ -119,7 +114,6 @@ impl LoweringContext {
                 let cell = self.emit_value(Operation::ReadLocal(local), cell_ty, span)?;
                 self.emit_effect(Operation::CellWrite { cell, value }, span)
             }
-            (BindingStorage::Value(_), _) => Err(unsupported_parameter_assignment(name, span)),
         }
     }
 
@@ -156,6 +150,14 @@ impl LoweringContext {
         self.type_table.cell_type(ty, span)
     }
 
+    pub(in crate::lowering) fn array_type(
+        &mut self,
+        element: TypeId,
+        span: Span,
+    ) -> Result<TypeId, CompileError> {
+        self.type_table.array_type(element, span)
+    }
+
     pub(in crate::lowering) fn resolve_callable(&self, name: &str) -> Option<Callable> {
         self.callables.get(&name.to_ascii_lowercase()).cloned()
     }
@@ -179,8 +181,12 @@ impl LoweringContext {
         self.globals.contains_key(&name.to_ascii_lowercase())
     }
 
-    pub(in crate::lowering) fn enum_constant(&self, name: &str) -> Option<i64> {
-        self.enum_constants.get(&name.to_ascii_lowercase()).copied()
+    pub(in crate::lowering) fn constant(&self, name: &str) -> Option<fpas_ir::Constant> {
+        self.constants.get(&name.to_ascii_lowercase()).cloned()
+    }
+
+    pub(in crate::lowering) fn current_result_type(&self) -> TypeId {
+        self.result_type
     }
 
     pub(in crate::lowering) fn read_global(
@@ -252,6 +258,35 @@ impl LoweringContext {
             })
     }
 
+    pub(in crate::lowering) fn designator_type(
+        &self,
+        designator: &fpas_parser::Designator,
+    ) -> Option<TypeId> {
+        let fpas_parser::DesignatorPart::Ident(name, _) = designator.parts.first()? else {
+            return None;
+        };
+        let mut ty = self.root_type(name)?;
+        for part in &designator.parts[1..] {
+            ty = match (part, self.type_kind(ty)?) {
+                (fpas_parser::DesignatorPart::Ident(name, _), fpas_ir::IrType::Record(layout)) => {
+                    self.record_field(layout, name)?.1
+                }
+                (fpas_parser::DesignatorPart::Index(_, _), fpas_ir::IrType::Array(element)) => {
+                    element
+                }
+                (
+                    fpas_parser::DesignatorPart::Index(_, _),
+                    fpas_ir::IrType::Dictionary { value, .. },
+                ) => value,
+                (fpas_parser::DesignatorPart::Index(_, _), fpas_ir::IrType::String) => {
+                    super::types::STRING
+                }
+                _ => return None,
+            };
+        }
+        Some(ty)
+    }
+
     pub(in crate::lowering) fn type_kind(&self, ty: TypeId) -> Option<fpas_ir::IrType> {
         self.type_table.kind(ty).cloned()
     }
@@ -262,6 +297,20 @@ impl LoweringContext {
         name: &str,
     ) -> Option<(fpas_ir::FieldId, TypeId)> {
         self.type_table.record_field(layout, name)
+    }
+
+    pub(in crate::lowering) fn record_fields(
+        &self,
+        layout: fpas_ir::RecordLayoutId,
+    ) -> Option<Vec<(String, TypeId)>> {
+        self.type_table.record_fields(layout)
+    }
+
+    pub(in crate::lowering) fn record_layout_name(
+        &self,
+        layout: fpas_ir::RecordLayoutId,
+    ) -> Option<&str> {
+        self.type_table.record_layout_name(layout)
     }
 
     pub(in crate::lowering) fn record_layout_id(

@@ -1,6 +1,32 @@
 use super::*;
 
 #[test]
+fn interface_backed_program_keeps_short_standard_intrinsic_dispatch() {
+    let program = parse_ok(
+        "\
+program RegisterInterfaceIntrinsic;
+uses Std.Console;
+begin
+  WriteLn('hello')
+end.",
+    );
+    assert!(
+        !fpas_sema::analyze_with_types(&program)
+            .intrinsic_calls
+            .is_empty(),
+        "ordinary semantic analysis lost standard intrinsic metadata"
+    );
+    let metadata = fpas_sema::analyze_program_with_interface_support(&program, &[], &[])
+        .expect("interface-backed semantic analysis");
+    assert!(
+        !metadata.intrinsic_calls.is_empty(),
+        "interface-backed semantic analysis lost standard intrinsic metadata"
+    );
+    crate::compile_register_program_object_with_support(&program, &[], &[])
+        .expect("interface-backed compilation should retain standard intrinsic metadata");
+}
+
+#[test]
 fn borrowed_standard_intrinsics_match_the_stack_path() {
     let execution = assert_both_succeed(
         "\

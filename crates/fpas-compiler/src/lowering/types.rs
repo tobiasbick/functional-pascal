@@ -1,11 +1,14 @@
 //! Compact semantic-to-IR scalar type mapping.
 
+mod expressions;
+mod layouts;
+
 use fpas_ir::{
-    EnumLayout, EnumLayoutId, EnumVariant, FieldId, IrType, RecordField, RecordLayout,
-    RecordLayoutId, TypeDefinition, TypeId, VariantId,
+    EnumLayout, EnumLayoutId, FieldId, IrType, RecordLayout, RecordLayoutId, TypeDefinition,
+    TypeId, VariantId,
 };
 use fpas_sema::Ty;
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::CompileError;
 use crate::error::internal_compiler_error;
@@ -22,7 +25,10 @@ pub(super) struct TypeTable {
     definitions: Vec<TypeDefinition>,
     record_layouts: Vec<RecordLayout>,
     enum_layouts: Vec<EnumLayout>,
+    filled_record_layouts: BTreeSet<RecordLayoutId>,
+    filled_enum_layouts: BTreeSet<EnumLayoutId>,
     simple_enums: BTreeSet<String>,
+    named: BTreeMap<String, TypeId>,
 }
 
 impl TypeTable {
@@ -31,19 +37,54 @@ impl TypeTable {
             definitions: scalar_type_table(),
             record_layouts: Vec::new(),
             enum_layouts: Vec::new(),
+            filled_record_layouts: BTreeSet::new(),
+            filled_enum_layouts: BTreeSet::new(),
             simple_enums: BTreeSet::new(),
+            named: BTreeMap::new(),
         };
-        for ty in metadata.named_types.values() {
+        for (name, ty) in &metadata.named_types {
+            let id = match ty {
+                Ty::Record(record) => {
+                    let layout = table.reserve_record(record, 1, 1)?;
+                    table.intern_kind(IrType::Record(layout), synthetic_span(1, 1))?
+                }
+                Ty::Enum(enumeration) if enumeration.has_data() => {
+                    let layout = table.reserve_enum(enumeration, 1, 1)?;
+                    table.intern_kind(IrType::Enum(layout), synthetic_span(1, 1))?
+                }
+                Ty::Enum(enumeration) => {
+                    table
+                        .simple_enums
+                        .insert(enumeration.name.to_ascii_lowercase());
+                    INTEGER
+                }
+                _ => continue,
+            };
+            table.named.insert(name.to_ascii_lowercase(), id);
+        }
+        for (name, ty) in &metadata.named_types {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
             }
-            let _ = table.intern(ty, 1, 1)?;
+            let id = table.intern(ty, 1, 1)?;
+            table.named.insert(name.to_ascii_lowercase(), id);
         }
         for ty in metadata.expr_types.values() {
             if matches!(ty, Ty::Error | Ty::Named(_)) {
                 continue;
             }
             let _ = table.intern(ty, 1, 1)?;
+        }
+        let dictionary_keys = table
+            .definitions
+            .iter()
+            .filter_map(|definition| match definition.kind {
+                IrType::Dictionary { key, .. } => Some(key),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        for key in dictionary_keys {
+            let _ = table.intern_kind(IrType::Array(key), synthetic_span(1, 1))?;
         }
         if metadata
             .expr_types
@@ -89,7 +130,10 @@ impl TypeTable {
                     .insert(enumeration.name.to_ascii_lowercase());
                 return Ok(INTEGER);
             }
-            Ty::Error | Ty::Named(_) => return Ok(DYNAMIC),
+            Ty::Named(name) => {
+                return Ok(self.named_type(name).unwrap_or(DYNAMIC));
+            }
+            Ty::Error => return Ok(DYNAMIC),
             Ty::Function(function) => IrType::Function {
                 parameters: function
                     .params
@@ -156,6 +200,46 @@ impl TypeTable {
         }
     }
 
+    fn named_type(&self, name: &str) -> Option<TypeId> {
+        if let Some(id) = self.named.get(&name.to_ascii_lowercase()) {
+            return Some(*id);
+        }
+        let mut candidates = self
+            .named
+            .iter()
+            .filter(|(candidate, _)| super::type_names::matches(candidate, name))
+            .map(|(_, id)| *id)
+            .collect::<BTreeSet<_>>();
+        for layout in &self.record_layouts {
+            if super::type_names::matches(&layout.name, name)
+                && let Some(id) = self.definitions.iter().find_map(|definition| {
+                    (definition.kind == IrType::Record(layout.id)).then_some(definition.id)
+                })
+            {
+                candidates.insert(id);
+            }
+        }
+        for layout in &self.enum_layouts {
+            if super::type_names::matches(&layout.name, name)
+                && let Some(id) = self.definitions.iter().find_map(|definition| {
+                    (definition.kind == IrType::Enum(layout.id)).then_some(definition.id)
+                })
+            {
+                candidates.insert(id);
+            }
+        }
+        if self
+            .simple_enums
+            .iter()
+            .any(|enumeration| super::type_names::matches(enumeration, name))
+        {
+            candidates.insert(INTEGER);
+        }
+        let mut candidates = candidates.into_iter();
+        let id = candidates.next()?;
+        candidates.next().is_none().then_some(id)
+    }
+
     pub fn task_type(&self, inner: TypeId) -> Option<TypeId> {
         self.definitions
             .iter()
@@ -180,6 +264,25 @@ impl TypeTable {
             .map(|field| (field.id, field.ty))
     }
 
+    pub fn record_fields(&self, layout: RecordLayoutId) -> Option<Vec<(String, TypeId)>> {
+        self.record_layouts
+            .iter()
+            .find(|item| item.id == layout)
+            .map(|item| {
+                item.fields
+                    .iter()
+                    .map(|field| (field.name.clone(), field.ty))
+                    .collect()
+            })
+    }
+
+    pub fn record_layout_name(&self, layout: RecordLayoutId) -> Option<&str> {
+        self.record_layouts
+            .iter()
+            .find(|item| item.id == layout)
+            .map(|item| item.name.as_str())
+    }
+
     pub fn record_layout_id(&self, ty: TypeId) -> Option<RecordLayoutId> {
         match self.kind(ty) {
             Some(IrType::Record(layout)) => Some(*layout),
@@ -201,120 +304,6 @@ impl TypeTable {
             .map(|variant| (variant.id, variant.fields.clone()))
     }
 
-    pub fn type_expr(&mut self, type_expr: &fpas_parser::TypeExpr) -> Result<TypeId, CompileError> {
-        self.type_expr_with_generics(type_expr, &BTreeSet::new())
-    }
-
-    pub fn type_expr_with_params(
-        &mut self,
-        type_expr: &fpas_parser::TypeExpr,
-        type_params: &[fpas_parser::TypeParam],
-    ) -> Result<TypeId, CompileError> {
-        let generics = type_params
-            .iter()
-            .map(|parameter| parameter.name.to_ascii_lowercase())
-            .collect();
-        self.type_expr_with_generics(type_expr, &generics)
-    }
-
-    fn type_expr_with_generics(
-        &mut self,
-        type_expr: &fpas_parser::TypeExpr,
-        generics: &BTreeSet<String>,
-    ) -> Result<TypeId, CompileError> {
-        use fpas_parser::TypeExpr;
-        match type_expr {
-            TypeExpr::Named { id, span } => {
-                let name = id.parts.join(".");
-                if id.parts.len() == 1 && generics.contains(&name.to_ascii_lowercase()) {
-                    return Ok(DYNAMIC);
-                }
-                match name.to_ascii_lowercase().as_str() {
-                    "integer" => Ok(INTEGER),
-                    "real" => Ok(REAL),
-                    "boolean" => Ok(BOOLEAN),
-                    "string" => Ok(STRING),
-                    "task" => self.intern_kind(IrType::Task(DYNAMIC), *span),
-                    _ => {
-                        if let Some(layout) = self
-                            .record_layouts
-                            .iter()
-                            .find(|layout| super::type_names::matches(&layout.name, &name))
-                        {
-                            return self.intern_kind(IrType::Record(layout.id), *span);
-                        }
-                        if let Some(layout) = self
-                            .enum_layouts
-                            .iter()
-                            .find(|layout| super::type_names::matches(&layout.name, &name))
-                        {
-                            return self.intern_kind(IrType::Enum(layout.id), *span);
-                        }
-                        if self
-                            .simple_enums
-                            .iter()
-                            .any(|enumeration| super::type_names::matches(enumeration, &name))
-                        {
-                            return Ok(INTEGER);
-                        }
-                        Err(type_error("named callable type", *span))
-                    }
-                }
-            }
-            TypeExpr::Array(element, span) => {
-                let element = self.type_expr_with_generics(element, generics)?;
-                self.intern_kind(IrType::Array(element), *span)
-            }
-            TypeExpr::Dict {
-                key_type,
-                value_type,
-                span,
-            } => {
-                let key = self.type_expr_with_generics(key_type, generics)?;
-                let value = self.type_expr_with_generics(value_type, generics)?;
-                self.intern_kind(IrType::Dictionary { key, value }, *span)
-            }
-            TypeExpr::Result {
-                ok_type,
-                err_type,
-                span,
-            } => {
-                let ok = self.type_expr_with_generics(ok_type, generics)?;
-                let error = self.type_expr_with_generics(err_type, generics)?;
-                self.intern_kind(IrType::Result { ok, error }, *span)
-            }
-            TypeExpr::Option { inner_type, span } => {
-                let inner = self.type_expr_with_generics(inner_type, generics)?;
-                self.intern_kind(IrType::Option(inner), *span)
-            }
-            TypeExpr::FunctionType {
-                params,
-                return_type,
-                span,
-            } => {
-                let parameters = params
-                    .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let result = self.type_expr_with_generics(return_type, generics)?;
-                self.intern_kind(IrType::Function { parameters, result }, *span)
-            }
-            TypeExpr::ProcedureType { params, span } => {
-                let parameters = params
-                    .iter()
-                    .map(|parameter| self.type_expr_with_generics(&parameter.type_expr, generics))
-                    .collect::<Result<Vec<_>, _>>()?;
-                self.intern_kind(
-                    IrType::Function {
-                        parameters,
-                        result: UNIT,
-                    },
-                    *span,
-                )
-            }
-        }
-    }
-
     pub fn function_type(
         &mut self,
         parameters: Vec<TypeId>,
@@ -322,6 +311,14 @@ impl TypeTable {
         span: fpas_lexer::Span,
     ) -> Result<TypeId, CompileError> {
         self.intern_kind(IrType::Function { parameters, result }, span)
+    }
+
+    pub fn array_type(
+        &mut self,
+        element: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<TypeId, CompileError> {
+        self.intern_kind(IrType::Array(element), span)
     }
 
     pub fn cell_type(
@@ -349,100 +346,12 @@ impl TypeTable {
         self.definitions.push(TypeDefinition { id, kind });
         Ok(id)
     }
-
-    fn intern_record(
-        &mut self,
-        record: &fpas_sema::RecordTy,
-        line: u32,
-        column: u32,
-    ) -> Result<RecordLayoutId, CompileError> {
-        if let Some(layout) = self
-            .record_layouts
-            .iter()
-            .find(|layout| layout.name.eq_ignore_ascii_case(&record.name))
-        {
-            return Ok(layout.id);
-        }
-        let id = RecordLayoutId::try_from_index(self.record_layouts.len())
-            .map_err(|error| type_error(&error.to_string(), synthetic_span(line, column)))?;
-        self.record_layouts.push(RecordLayout {
-            id,
-            name: record.name.clone(),
-            fields: Vec::new(),
-        });
-        let fields = record
-            .fields
-            .iter()
-            .enumerate()
-            .map(|(index, (name, ty))| {
-                Ok(RecordField {
-                    id: FieldId::try_from_index(index).map_err(|error| {
-                        type_error(&error.to_string(), synthetic_span(line, column))
-                    })?,
-                    name: name.clone(),
-                    ty: self.intern(ty, line, column)?,
-                })
-            })
-            .collect::<Result<Vec<_>, CompileError>>()?;
-        self.record_layouts[usize::try_from(id.get())
-            .map_err(|_| type_error("record layout", synthetic_span(line, column)))?]
-        .fields = fields;
-        Ok(id)
-    }
-
-    fn intern_enum(
-        &mut self,
-        enumeration: &fpas_sema::EnumTy,
-        line: u32,
-        column: u32,
-    ) -> Result<EnumLayoutId, CompileError> {
-        if let Some(layout) = self
-            .enum_layouts
-            .iter()
-            .find(|layout| layout.name.eq_ignore_ascii_case(&enumeration.name))
-        {
-            return Ok(layout.id);
-        }
-        let id = EnumLayoutId::try_from_index(self.enum_layouts.len())
-            .map_err(|error| type_error(&error.to_string(), synthetic_span(line, column)))?;
-        self.enum_layouts.push(EnumLayout {
-            id,
-            name: enumeration.name.clone(),
-            variants: Vec::new(),
-        });
-        let variants = enumeration
-            .variants
-            .iter()
-            .enumerate()
-            .map(|(index, variant)| {
-                let (field_names, fields): (Vec<_>, Vec<_>) = variant
-                    .fields
-                    .iter()
-                    .map(|(name, ty)| Ok((name.clone(), self.intern(ty, line, column)?)))
-                    .collect::<Result<Vec<_>, CompileError>>()?
-                    .into_iter()
-                    .unzip();
-                Ok(EnumVariant {
-                    id: VariantId::try_from_index(index).map_err(|error| {
-                        type_error(&error.to_string(), synthetic_span(line, column))
-                    })?,
-                    name: variant.name.clone(),
-                    field_names,
-                    fields,
-                })
-            })
-            .collect::<Result<Vec<_>, CompileError>>()?;
-        self.enum_layouts[usize::try_from(id.get())
-            .map_err(|_| type_error("enum layout", synthetic_span(line, column)))?]
-        .variants = variants;
-        Ok(id)
-    }
 }
 
 fn type_error(construct: &str, span: fpas_lexer::Span) -> CompileError {
     internal_compiler_error(
-        format!("Type `{construct}` is outside the P7 register subset."),
-        "Use a supported scalar, aggregate, function, or procedure type in this development path.",
+        format!("The register compiler could not lower type `{construct}`."),
+        "This is an internal compiler error. Re-run compilation and report the source program.",
         span.line,
         span.column,
     )
@@ -470,8 +379,8 @@ pub(super) fn lower(ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileEr
         Ty::Enum(enumeration) if !enumeration.has_data() => Ok(INTEGER),
         Ty::Error | Ty::Named(_) => Ok(DYNAMIC),
         other => Err(internal_compiler_error(
-            format!("Type `{other}` is outside the P3 scalar register subset."),
-            "Use only integer, real, boolean, string, and Unit values in this development path.",
+            format!("The register compiler could not lower type `{other}`."),
+            "This is an internal compiler error. Re-run compilation and report the source program.",
             line,
             column,
         )),

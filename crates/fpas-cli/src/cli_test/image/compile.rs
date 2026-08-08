@@ -64,7 +64,7 @@ fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
             Some(ImageAssignment {
                 prepared_index: candidate.prepared_index,
                 compiled: CompiledTestProgram {
-                    image: Arc::new(built.chunk),
+                    image: Arc::new(built.executable),
                     source_paths: Arc::new(built.source_paths),
                 },
             })

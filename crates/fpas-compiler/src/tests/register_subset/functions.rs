@@ -115,3 +115,42 @@ end.
 "#,
     );
 }
+
+#[test]
+fn parameters_shadow_short_standard_constant_names() {
+    assert_both_succeed(
+        r#"
+program ParameterConstantShadowing;
+uses Std.Console;
+function Pack(Red: integer; Green: integer; Blue: integer): integer;
+begin
+  return Red * 10000 + Green * 100 + Blue;
+end;
+begin
+  if Pack(10, 20, 30) <> 102030 then
+    panic('parameters did not shadow standard constants');
+end.
+"#,
+    );
+}
+
+#[test]
+fn record_fields_shadow_short_standard_constant_names() {
+    assert_both_succeed(
+        r#"
+program FieldConstantShadowing;
+uses Std.Console;
+type
+  Channels = record
+    Red: integer;
+    Green: integer;
+    Blue: integer;
+  end;
+begin
+  var Value: Channels := record Red := 10; Green := 20; Blue := 30; end;
+  if Value.Red * 10000 + Value.Green * 100 + Value.Blue <> 102030 then
+    panic('record fields did not shadow standard constants');
+end.
+"#,
+    );
+}

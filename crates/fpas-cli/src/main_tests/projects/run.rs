@@ -104,6 +104,34 @@ fn run_cli_rejects_corrupt_compiled_program() {
 }
 
 #[test]
+fn run_cli_rejects_old_compiled_program_with_rebuild_help() {
+    let cwd = create_temp_dir("run-old-compiled-program");
+    let artifact_file = cwd.join("old.fpascp");
+    let mut bytes = b"FPASCP\0\0".to_vec();
+    bytes.extend_from_slice(
+        &fpas_program::PROGRAM_FORMAT_VERSION
+            .saturating_sub(1)
+            .to_le_bytes(),
+    );
+    fs::write(&artifact_file, bytes).expect("old-format fixture must be written");
+
+    let (exit_code, _, stderr_output) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("run"),
+            artifact_file.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(stderr_output.contains("unsupported `.fpascp` format version"));
+    assert!(stderr_output.contains("this runtime requires version"));
+    assert!(stderr_output.contains("Rebuild the `.fpascp`"));
+    assert!(stderr_output.contains("fpas build"));
+}
+
+#[test]
 fn run_cli_executes_multi_file_project_end_to_end() {
     let cwd = create_temp_dir("run-multifile-project");
     let project_file = cwd.join("app.fpasprj");

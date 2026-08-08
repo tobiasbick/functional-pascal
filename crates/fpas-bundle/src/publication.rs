@@ -67,7 +67,6 @@ mod tests {
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    use fpas_bytecode::{Chunk, Op, SourceLocation};
     use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 
     use super::publish_with;
@@ -82,8 +81,10 @@ mod tests {
     }
 
     fn bundle() -> Vec<u8> {
-        let mut chunk = Chunk::new();
-        chunk.emit(Op::Halt, SourceLocation::new_with_source(1, 1, 0));
+        let (program, diagnostics) = fpas_parser::parse("program BundleFixture; begin end.");
+        assert!(diagnostics.is_empty());
+        let executable =
+            fpas_compiler::compile_register_subset(&program).expect("fixture must compile");
         let image = ProgramImage::new(
             ProgramIdentity {
                 compiler_version: "publication-test".to_string(),
@@ -93,7 +94,7 @@ mod tests {
                 units: Vec::new(),
             },
             vec!["main.fpas".to_string()],
-            chunk,
+            executable,
         )
         .expect("valid image");
         let image = fpas_program::encode(&image).expect("encoded image");

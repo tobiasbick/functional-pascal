@@ -24,13 +24,25 @@ impl SymbolTable {
         let mut definitions = BTreeMap::new();
         for (object_index, object) in objects.iter().enumerate() {
             for (definition_index, definition) in object.definitions.iter().enumerate() {
-                if definitions
-                    .insert(definition.name.clone(), (object_index, definition_index))
-                    .is_some()
+                if let Some(&(existing_object, existing_definition)) =
+                    definitions.get(&definition.name)
                 {
-                    return Err(RegisterLinkError::DuplicateDefinition(
-                        definition.name.clone(),
-                    ));
+                    if !matching_layout_definition(
+                        objects,
+                        (existing_object, existing_definition),
+                        (object_index, definition_index),
+                    ) {
+                        return Err(RegisterLinkError::DuplicateDefinition(
+                            definition.name.clone(),
+                        ));
+                    }
+                    let existing = &objects[existing_object].definitions[existing_definition];
+                    if definition.public && !existing.public {
+                        definitions
+                            .insert(definition.name.clone(), (object_index, definition_index));
+                    }
+                } else {
+                    definitions.insert(definition.name.clone(), (object_index, definition_index));
                 }
             }
         }
@@ -134,6 +146,54 @@ impl SymbolTable {
     #[allow(dead_code, reason = "kept for deterministic symbol diagnostics")]
     pub(super) fn definition_count(&self) -> usize {
         self.definitions.len()
+    }
+}
+
+fn matching_layout_definition(
+    objects: &[&RelocatableObject],
+    left: (usize, usize),
+    right: (usize, usize),
+) -> bool {
+    let left_definition = &objects[left.0].definitions[left.1];
+    let right_definition = &objects[right.0].definitions[right.1];
+    match (left_definition.target, right_definition.target) {
+        (DefinitionTarget::Record(left_index), DefinitionTarget::Record(right_index)) => {
+            let Some(left_layout) = objects[left.0].records.get(left_index as usize) else {
+                return false;
+            };
+            let Some(right_layout) = objects[right.0].records.get(right_index as usize) else {
+                return false;
+            };
+            left_layout.fields.len() == right_layout.fields.len()
+                && left_layout
+                    .fields
+                    .iter()
+                    .zip(&right_layout.fields)
+                    .all(|(left, right)| left.eq_ignore_ascii_case(right))
+        }
+        (DefinitionTarget::Enum(left_index), DefinitionTarget::Enum(right_index)) => {
+            let Some(left_layout) = objects[left.0].enums.get(left_index as usize) else {
+                return false;
+            };
+            let Some(right_layout) = objects[right.0].enums.get(right_index as usize) else {
+                return false;
+            };
+            left_layout.variants.len() == right_layout.variants.len()
+                && left_layout
+                    .variants
+                    .iter()
+                    .zip(&right_layout.variants)
+                    .all(|(left, right)| {
+                        left.name.eq_ignore_ascii_case(&right.name)
+                            && left.fields.len() == right.fields.len()
+                            && left
+                                .fields
+                                .iter()
+                                .zip(&right.fields)
+                                .all(|(left, right)| left.eq_ignore_ascii_case(right))
+                    })
+        }
+        _ => false,
     }
 }
 

@@ -5,6 +5,7 @@
 use std::collections::HashSet;
 
 use crate::scope::{ScopeStack, SymbolKind, canonical_symbol_name};
+use crate::types::Ty;
 use fpas_parser::{
     CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt,
 };
@@ -14,10 +15,12 @@ use super::{ClosureInfoMap, NestedRoutineCaptureMap};
 /// A free variable captured by a closure from an enclosing scope.
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CaptureBinding {
     /// Source name of the captured binding.
     pub name: String,
+    /// Resolved semantic type at the capture boundary.
+    pub ty: Ty,
     /// `true` when the capture is mutable (cell-backed at runtime).
     pub mutable: bool,
     /// `true` when the captured binding already holds a task-bound value
@@ -92,6 +95,7 @@ impl CaptureCollector<'_> {
         }
         self.captures.push(CaptureBinding {
             name: name.to_string(),
+            ty: symbol.ty.clone(),
             mutable: symbol.mutable,
             task_bound: symbol.task_bound,
         });

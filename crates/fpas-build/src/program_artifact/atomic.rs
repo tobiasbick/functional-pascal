@@ -81,7 +81,6 @@ mod tests {
     use std::sync::{Arc, Barrier, mpsc};
     use std::time::Duration;
 
-    use fpas_bytecode::{Chunk, Op, SourceLocation};
     use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 
     use super::{PublicationLock, replace};
@@ -95,8 +94,10 @@ mod tests {
     }
 
     fn image_bytes(marker: u8) -> Vec<u8> {
-        let mut chunk = Chunk::new();
-        chunk.emit(Op::Halt, SourceLocation::new(1, 1));
+        let (program, diagnostics) = fpas_parser::parse("program AtomicFixture; begin end.");
+        assert!(diagnostics.is_empty());
+        let executable =
+            fpas_compiler::compile_register_subset(&program).expect("fixture must compile");
         let image = ProgramImage::new(
             ProgramIdentity {
                 compiler_version: "atomic-test".to_string(),
@@ -106,7 +107,7 @@ mod tests {
                 units: Vec::new(),
             },
             vec!["main.fpas".to_string()],
-            chunk,
+            executable,
         )
         .expect("valid program image");
         fpas_program::encode(&image).expect("program image encoding")

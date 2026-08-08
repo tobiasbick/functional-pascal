@@ -5,12 +5,13 @@
     reason = "bundle format tests use direct assertions for fixture construction and exact errors"
 )]
 
-use fpas_bytecode::{Chunk, Op, SourceLocation};
 use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 
 fn encoded_program() -> Vec<u8> {
-    let mut chunk = Chunk::new();
-    chunk.emit(Op::Halt, SourceLocation::new_with_source(1, 1, 0));
+    let (program, diagnostics) = fpas_parser::parse("program BundleFixture; begin end.");
+    assert!(diagnostics.is_empty());
+    let executable =
+        fpas_compiler::compile_register_subset(&program).expect("fixture must compile");
     let image = ProgramImage::new(
         ProgramIdentity {
             compiler_version: "test".to_string(),
@@ -20,7 +21,7 @@ fn encoded_program() -> Vec<u8> {
             units: Vec::new(),
         },
         vec!["main.fpas".to_string()],
-        chunk,
+        executable,
     )
     .expect("test image must be valid");
     fpas_program::encode(&image).expect("test image must encode")
@@ -158,12 +159,11 @@ fn decoder_rejects_footer_lengths_outside_the_executable() {
 }
 
 #[test]
-fn format_v1_matches_golden_bytes() {
+fn bundle_format_matches_golden_bytes() {
     let bundled = encoded_bundle("golden");
-    let actual = bundled
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect::<String>();
 
-    assert_eq!(actual, include_str!("fixtures/format_v1.hex").trim());
+    assert_eq!(
+        format!("{:?}", fpas_program::Digest::of(bundled)),
+        "db18d5a3d52741f4ab43ea2f62895ba1244afb5277afc159d956b6153ac83c94"
+    );
 }

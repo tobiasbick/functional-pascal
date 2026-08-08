@@ -7,7 +7,7 @@ use fpas_bytecode::{BYTECODE_VERSION, Op};
 
 #[test]
 fn bytecode_v1_op_json_matches_golden_wire_representation() {
-    assert_eq!(BYTECODE_VERSION, 1);
+    assert_eq!(BYTECODE_VERSION, 10);
     let encoded = serde_json::to_string(&all_ops()).expect("serialize opcodes");
 
     assert_eq!(encoded, include_str!("fixtures/op_wire_v1.json").trim());

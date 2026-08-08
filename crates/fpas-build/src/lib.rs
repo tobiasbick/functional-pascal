@@ -9,9 +9,8 @@ mod source_snapshot;
 
 pub use distribution::{DistributionError, stage_standard_library};
 pub use engine::{
-    BuildError, BuiltProgram, BuiltRegisterProgram, BuiltRegisterUnits, BuiltUnits,
-    build_library_units, build_program, build_register_library_units, build_register_program,
-    check_library_units, check_program, check_register_library_units, check_register_program,
+    BuildError, BuiltProgram, BuiltUnits, build_library_units, build_program, check_library_units,
+    check_program,
 };
 pub use events::{BuildCounters, BuildEvent, BuildEventKind};
 pub use options::BuildOptions;

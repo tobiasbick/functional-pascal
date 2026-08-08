@@ -6,15 +6,15 @@ mod interfaces;
 use std::collections::HashMap;
 use std::fmt;
 
-use fpas_bytecode::{Chunk, VerifiedExecutable};
+use fpas_bytecode::VerifiedExecutable;
 use fpas_parser::Program;
 use fpas_program::LinkedUnitIdentity;
 use fpas_project::{ResolvedUnitGraph, UnitGraph};
 use fpas_unit::interface::{UnitInterface, encode_interface};
-use fpas_unit::object::{ChunkObject, RelocatableObject};
+use fpas_unit::object::RelocatableObject;
 use fpas_unit::{CompiledUnit, Digest, ExpectedUnitIdentity, UnitIdentity, write_sidecar};
 
-use self::backend::{ChunkBackend, RegisterBackend, UnitBackend};
+use self::backend::{RegisterBackend, UnitBackend};
 use self::interfaces::{InterfaceRegistry, direct_interfaces_from_map};
 use crate::source_snapshot::UnitSourceSnapshot;
 use crate::{BuildCounters, BuildEvent, BuildEventKind, BuildOptions};
@@ -44,36 +44,13 @@ impl std::error::Error for BuildError {}
 /// Dependency-first compiled units and their build activity.
 pub struct BuiltUnits {
     /// Objects in deterministic dependency order.
-    pub objects: Vec<ChunkObject>,
+    pub objects: Vec<RelocatableObject>,
     /// Interfaces indexed by canonical unit name.
     pub interfaces: HashMap<String, UnitInterface>,
     /// Structured activity stream.
     pub events: Vec<BuildEvent>,
     pub(crate) linked_units: Vec<LinkedUnitIdentity>,
     supporting_interfaces: Vec<UnitInterface>,
-}
-
-/// Dependency-first P8 register unit objects and their build activity.
-pub struct BuiltRegisterUnits {
-    /// Register objects in deterministic dependency order.
-    pub objects: Vec<RelocatableObject>,
-    /// Interfaces indexed by canonical unit name.
-    pub interfaces: HashMap<String, UnitInterface>,
-    /// Structured activity stream.
-    pub events: Vec<BuildEvent>,
-    supporting_interfaces: Vec<UnitInterface>,
-}
-
-impl BuiltRegisterUnits {
-    /// Aggregate activity counts.
-    #[must_use]
-    pub fn counters(&self) -> BuildCounters {
-        BuildCounters::from_events(&self.events)
-    }
-
-    fn supporting_interfaces(&self) -> &[UnitInterface] {
-        &self.supporting_interfaces
-    }
 }
 
 impl BuiltUnits {
@@ -90,26 +67,10 @@ impl BuiltUnits {
 
 /// Linked executable program and incremental build activity.
 pub struct BuiltProgram {
-    /// Executable VM image.
-    pub chunk: Chunk,
-    /// Structured unit and link activity.
-    pub events: Vec<BuildEvent>,
-}
-
-/// Linked P8 register executable and incremental build activity.
-pub struct BuiltRegisterProgram {
     /// Fully verified register executable.
     pub executable: VerifiedExecutable,
     /// Structured unit and link activity.
     pub events: Vec<BuildEvent>,
-}
-
-impl BuiltRegisterProgram {
-    /// Aggregate activity counts.
-    #[must_use]
-    pub fn counters(&self) -> BuildCounters {
-        BuildCounters::from_events(&self.events)
-    }
 }
 
 impl BuiltProgram {
@@ -145,35 +106,6 @@ pub fn check_library_units(
     compile_library_units(graph, selection, options, SidecarPublication::Disabled)
 }
 
-/// Build or reuse every selected unit as a P8 relocatable register object.
-///
-/// This development API exercises the new object and linker path without changing production CLI
-/// backend selection.
-///
-/// # Errors
-///
-/// Returns [`BuildError`] when a selected unit cannot be read, compiled, decoded, or published.
-pub fn build_register_library_units(
-    graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    options: &BuildOptions,
-) -> Result<BuiltRegisterUnits, BuildError> {
-    compile_register_library_units(graph, selection, options, SidecarPublication::Enabled)
-}
-
-/// Check every selected unit through the P8 register object path without publishing sidecars.
-///
-/// # Errors
-///
-/// Returns [`BuildError`] when a selected unit cannot be read, compiled, or decoded.
-pub fn check_register_library_units(
-    graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    options: &BuildOptions,
-) -> Result<BuiltRegisterUnits, BuildError> {
-    compile_register_library_units(graph, selection, options, SidecarPublication::Disabled)
-}
-
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum SidecarPublication {
     Enabled,
@@ -186,27 +118,12 @@ fn compile_library_units(
     options: &BuildOptions,
     sidecar_publication: SidecarPublication,
 ) -> Result<BuiltUnits, BuildError> {
-    let units = compile_units::<ChunkBackend>(graph, selection, options, sidecar_publication)?;
+    let units = compile_units::<RegisterBackend>(graph, selection, options, sidecar_publication)?;
     Ok(BuiltUnits {
         objects: units.objects,
         interfaces: units.interfaces,
         events: units.events,
         linked_units: units.linked_units,
-        supporting_interfaces: units.supporting_interfaces,
-    })
-}
-
-fn compile_register_library_units(
-    graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    options: &BuildOptions,
-    sidecar_publication: SidecarPublication,
-) -> Result<BuiltRegisterUnits, BuildError> {
-    let units = compile_units::<RegisterBackend>(graph, selection, options, sidecar_publication)?;
-    Ok(BuiltRegisterUnits {
-        objects: units.objects,
-        interfaces: units.interfaces,
-        events: units.events,
         supporting_interfaces: units.supporting_interfaces,
     })
 }
@@ -314,7 +231,7 @@ fn compile_units<Backend: UnitBackend>(
     Ok(interfaces.finish(objects, linked_units, events))
 }
 
-/// Build reachable units, compile the root program from interfaces, and link one [`Chunk`].
+/// Build reachable units, compile the root program, and link one verified register executable.
 pub fn build_program(
     graph: &UnitGraph,
     selection: &ResolvedUnitGraph,
@@ -323,21 +240,6 @@ pub fn build_program(
 ) -> Result<BuiltProgram, BuildError> {
     let units = build_library_units(graph, selection, options)?;
     link_program(units, program)
-}
-
-/// Build reachable units and link the root program through the P8 register backend.
-///
-/// # Errors
-///
-/// Returns [`BuildError`] when a unit or root program cannot be compiled, linked, or verified.
-pub fn build_register_program(
-    graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    program: &Program,
-    options: &BuildOptions,
-) -> Result<BuiltRegisterProgram, BuildError> {
-    let units = build_register_library_units(graph, selection, options)?;
-    link_register_program(units, program)
 }
 
 /// Compile and link a program without publishing newly compiled unit sidecars.
@@ -357,63 +259,32 @@ pub fn check_program(
     link_program(units, program)
 }
 
-/// Check and link a program through the P8 register backend without publishing new sidecars.
-///
-/// # Errors
-///
-/// Returns [`BuildError`] when a unit or root program cannot be compiled, linked, or verified.
-pub fn check_register_program(
-    graph: &UnitGraph,
-    selection: &ResolvedUnitGraph,
-    program: &Program,
-    options: &BuildOptions,
-) -> Result<BuiltRegisterProgram, BuildError> {
-    let units = check_register_library_units(graph, selection, options)?;
-    link_register_program(units, program)
-}
-
 pub(crate) fn link_program(
     mut units: BuiltUnits,
     program: &Program,
 ) -> Result<BuiltProgram, BuildError> {
     let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
-    let program_object = fpas_compiler::compile_program_object_with_support(
+    let mut program_object = fpas_compiler::compile_register_program_object_with_support(
         program,
         &root_interfaces,
         units.supporting_interfaces(),
     )
     .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
-    let chunk = fpas_linker::link_objects(&units.objects, &program_object)
-        .map_err(|error| BuildError::new(error.to_string()))?;
-    units
-        .events
-        .push(event(&program.name, BuildEventKind::Relinked));
-    Ok(BuiltProgram {
-        chunk,
-        events: units.events,
-    })
-}
-
-fn link_register_program(
-    mut units: BuiltRegisterUnits,
-    program: &Program,
-) -> Result<BuiltRegisterProgram, BuildError> {
-    let root_interfaces = direct_interfaces_from_map(&program.uses, &units.interfaces);
-    let program_object = fpas_compiler::compile_register_program_object_with_support(
-        program,
-        &root_interfaces,
-        units.supporting_interfaces(),
-    )
-    .map_err(|diagnostics| BuildError::new(format_diagnostics(None, &diagnostics)))?;
+    normalize_sources(&mut program_object, 0);
     let executable = fpas_linker::link_register_objects(&units.objects, &program_object)
         .map_err(|error| BuildError::new(error.to_string()))?;
     units
         .events
         .push(event(&program.name, BuildEventKind::Relinked));
-    Ok(BuiltRegisterProgram {
+    Ok(BuiltProgram {
         executable,
         events: units.events,
     })
+}
+
+fn normalize_sources(object: &mut RelocatableObject, source_id: u32) {
+    let source = format!("source-{source_id}.fpas");
+    object.sources.fill(source);
 }
 
 fn event(owner: &str, kind: BuildEventKind) -> BuildEvent {

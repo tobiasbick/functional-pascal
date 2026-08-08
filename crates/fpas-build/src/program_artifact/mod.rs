@@ -49,18 +49,18 @@ pub fn build_program_artifact(
     let units = build_library_units(graph, &selection, options)?;
     let expected = identity::expected(target.source, &units, options);
 
-    if let Some(chunk) = reusable_chunk(target.path, &expected, target.source_paths)? {
+    if let Some(executable) = reusable_executable(target.path, &expected, target.source_paths)? {
         let mut events = units.events;
         events.push(BuildEvent {
             owner: program.name.clone(),
             kind: BuildEventKind::ProgramImageReused,
         });
-        return Ok(BuiltProgram { chunk, events });
+        return Ok(BuiltProgram { executable, events });
     }
 
     let built = link_program(units, &program)?;
-    let BuiltProgram { chunk, events } = built;
-    let image = ProgramImage::new(expected, target.source_paths.to_vec(), chunk)
+    let BuiltProgram { executable, events } = built;
+    let image = ProgramImage::new(expected, target.source_paths.to_vec(), executable)
         .map_err(|error| BuildError::new(error.to_string()))?;
     let bytes = fpas_program::encode(&image).map_err(|error| BuildError::new(error.to_string()))?;
     atomic::replace(target.path, &bytes).map_err(|error| {
@@ -70,16 +70,16 @@ pub fn build_program_artifact(
         ))
     })?;
     Ok(BuiltProgram {
-        chunk: image.into_chunk(),
+        executable: image.into_executable(),
         events,
     })
 }
 
-fn reusable_chunk(
+fn reusable_executable(
     path: &Path,
     expected: &ProgramIdentity,
     source_paths: &[String],
-) -> Result<Option<fpas_bytecode::Chunk>, BuildError> {
+) -> Result<Option<fpas_bytecode::VerifiedExecutable>, BuildError> {
     let Some(bytes) = atomic::read(path).map_err(BuildError::new)? else {
         return Ok(None);
     };
@@ -87,8 +87,13 @@ fn reusable_chunk(
         Ok(image) => image,
         Err(_) => return Ok(None),
     };
-    if image.identity() != expected || image.source_paths() != source_paths {
+    if image.identity() != expected
+        || image
+            .source_paths()
+            .iter()
+            .any(|path| !source_paths.contains(path))
+    {
         return Ok(None);
     }
-    Ok(Some(image.into_chunk()))
+    Ok(Some(image.into_executable()))
 }

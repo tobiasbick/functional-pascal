@@ -1,4 +1,4 @@
-//! Direct decoded-operand handlers for the P3 register subset.
+//! Direct decoded-operand handlers for register bytecode.
 
 pub(super) mod aggregates;
 mod comparisons;

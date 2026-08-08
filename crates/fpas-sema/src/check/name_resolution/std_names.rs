@@ -34,8 +34,21 @@ impl Checker {
                 .unwrap_or(name)
                 .to_string();
         }
-        if let Some(qualified) = self.short_builtin_redirect.get(&canonical) {
-            return qualified.clone();
+        let mut candidates = self
+            .loaded_std_units
+            .iter()
+            .flat_map(|unit| fpas_std::std_unit_symbols(unit))
+            .filter(|qualified| {
+                qualified
+                    .rsplit_once('.')
+                    .is_some_and(|(_, short)| short.eq_ignore_ascii_case(name))
+            })
+            .copied()
+            .collect::<Vec<_>>();
+        candidates.sort_unstable();
+        candidates.dedup();
+        if let [qualified] = candidates.as_slice() {
+            return (*qualified).to_string();
         }
         name.to_string()
     }

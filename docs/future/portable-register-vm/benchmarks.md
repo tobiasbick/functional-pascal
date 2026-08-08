@@ -51,6 +51,9 @@ The inactive development path additionally owns phase-local groups. P6 adds
 `register_string_length` and `register_array_callbacks` under `register-p6`; these use
 `engine = "register"` and report interpreter instruction throughput. They prove exercised-path
 coverage before cutover but must not be compared numerically with in-program-timed production rows.
+P7 adds `register_task_spawn_wait` under `register-p7`, a focused two-task retained-spawn/WaitAll
+smoke workload. It is phase-local exercised-path evidence, not a production speedup claim; the
+larger production `task_spawn_wait` row remains the cutover acceptance workload.
 
 ## New isolating workloads
 

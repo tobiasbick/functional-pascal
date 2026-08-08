@@ -121,11 +121,45 @@ impl<'a> Selector<'a> {
                 self.allocation.value(*value)?.get(),
                 0,
             ),
+            Operation::SpawnTask { callee, arguments } => {
+                return self.select_spawn(*callee, arguments, result, false);
+            }
+            Operation::SpawnDetachedTask { callee, arguments } => {
+                return self.select_spawn(*callee, arguments, result, true);
+            }
+            Operation::Yield => abc(Opcode::Yield, 0, 0, 0),
             other => Err(selection_error(&format!(
                 "IR operation {other:?} belongs to a later register-VM phase"
             ))),
         }?;
         Ok(vec![selected])
+    }
+
+    fn select_spawn(
+        &self,
+        callee: ValueId,
+        arguments: &[ValueId],
+        result: Option<ValueId>,
+        detached: bool,
+    ) -> Result<Vec<Instruction>, CompileError> {
+        let mut instructions = self.prepare_window(arguments)?;
+        let (opcode, a, b, c) = if detached {
+            (
+                Opcode::SpawnDetachedTask,
+                self.allocation.value(callee)?.get(),
+                self.allocation.call_window().get(),
+                0,
+            )
+        } else {
+            (
+                Opcode::SpawnTask,
+                self.result_register(result)?,
+                self.allocation.value(callee)?.get(),
+                self.allocation.call_window().get(),
+            )
+        };
+        instructions.push(abc_aux(opcode, a, b, c, argument_count(arguments)?)?);
+        Ok(instructions)
     }
 
     fn select_direct_call(

@@ -59,7 +59,7 @@ pub(crate) struct SharedState {
     pub task_available: Condvar,
 
     /// Spawned tasks suspended by cooperative `Std.Time.Sleep`.
-    pub task_timers: TaskTimers,
+    pub task_timers: TaskTimers<TaskState>,
     /// Cleared before teardown drains timers so no task can enter the timer queue afterward.
     pub accept_task_timers: AtomicBool,
 

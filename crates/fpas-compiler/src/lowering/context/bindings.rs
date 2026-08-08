@@ -167,6 +167,14 @@ impl LoweringContext {
             .any(|binding| binding.name.eq_ignore_ascii_case(name))
     }
 
+    pub(in crate::lowering) fn binding_type(&self, name: &str) -> Option<TypeId> {
+        self.bindings
+            .iter()
+            .rev()
+            .find(|binding| binding.name.eq_ignore_ascii_case(name))
+            .map(|binding| binding.ty)
+    }
+
     pub(in crate::lowering) fn has_global(&self, name: &str) -> bool {
         self.globals.contains_key(&name.to_ascii_lowercase())
     }

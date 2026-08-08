@@ -10,12 +10,12 @@ exist.
 |---|---|---|---|---|
 | PVM-ARCH-001 | Typed target-independent CFG IR | `crates/fpas-ir` | `crates/fpas-ir/tests/validation.rs`: 19 focused positive, negative, and boundary tests, including P3 unary typing, loop backedges, semantic source spans, and maximum IDs; `cargo test -p fpas-ir` passed | complete |
 | PVM-ARCH-002 | Exactly 8-byte packed instruction | `fpas-bytecode/instruction.rs` | `register_bytecode::instruction`: 94-opcode exhaustive inventory, ABC/ABx/Ax round trips, malformed forms, and `size_of::<Instruction>() == 8` | complete |
-| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive P5 opcode match; direct register-VM tests cover scalar/control-flow, calls, closures, callbacks, globals, layouts, aggregates, wrappers, limits, diagnostics, and lifecycle | complete through P5 |
+| PVM-ARCH-003 | One exhaustive opcode dispatch | `fpas-vm/vm/register/dispatch.rs` | exhaustive opcode match through P7; direct and compiler differential tests cover scalar operations through task scheduling | complete through P7 |
 | PVM-ARCH-004 | Per-function register windows | bytecode function metadata + VM frames | register VM direct/recursive/limit and aggregate-window cases plus compiler contiguous call-window selection | complete through P5 |
 | PVM-ARCH-005 | Deterministic linear-scan allocation | `fpas-compiler/bytecode/allocation.rs` | `register_subset::structure` proves deterministic allocation; P5 reserves contiguous constructor, update, and call windows | complete through P5 |
 | PVM-ARCH-006 | No final stack compiler/VM path | compiler/bytecode/VM crates | zero old-symbol search hits | planned |
 | PVM-ARCH-007 | Cranelift absent/deferred | workspace manifests | P0 `rg` found no Cranelift/JIT/AOT manifest or Rust-source reference; continued enforcement required | complete |
-| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3-P5 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P5 |
+| PVM-ARCH-008 | Safe Rust execution/codec | bytecode/program/VM | P2 model/verifier and P3-P7 compiler/interpreter use no `unsafe`, `transmute`, unchecked narrowing, or production panic for input; artifact codec proof remains in P9 | complete through P7 |
 
 ## Runtime lookup requirements
 
@@ -41,7 +41,7 @@ exist.
 | PVM-SEM-006 | Aggregate value/COW semantics unchanged | array/dict/record/enum tests | stack/register differential collection and record tests; direct shared-layout/COW tests; positional/legacy equality and display | complete through P5 subset |
 | PVM-SEM-007 | Result/Option behavior unchanged | compiler/VM/FPAS tests | construction/equality, test, unwrap payload/error, pattern, and `try` success/early-return cases | complete through P5 subset |
 | PVM-SEM-008 | Std and hosted APIs unchanged | intrinsic/Std/Graph/TUI suites | borrowed stack/register shared decoder, compiler differential intrinsic/callback tests, direct Console/Test/headless Graph tests, existing Std and production FPAS suites | complete through P6 development path |
-| PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | stress, wait, sleep, shutdown, panic | planned |
+| PVM-SEM-009 | Task scheduling/results unchanged | concurrency/pool/runtime suites | register differential retained/detached, Wait/WaitAll, cooperative sleep, nested-frame/live-aggregate timeslice, task-bound capture, cancellation tests; complete 218-test VM suite | complete through P7 development path |
 | PVM-SEM-010 | Diagnostic codes/locations/help preserved | compiler/VM/CLI negative tests | prior differential diagnostics plus P5 missing array/dictionary index codes, immutable globals, wrong unwrap variant, and malformed layout admission | complete through P5 subset |
 
 ## Artifact and portability requirements
@@ -80,7 +80,7 @@ exist.
 |---|---|---|---|
 | PVM-QUAL-001 | Focused module/file layout | P5 adds responsibility-named aggregate lowering/selection/execution, layout, bound-method, wrapper-validation, and CFG-state modules; every changed/new Rust file is at or below 500 lines | complete through P5 |
 | PVM-QUAL-002 | Public Rust documentation complete | Public compiler, value-layout, benchmark-engine, and register VM APIs have `///` documentation | complete through P5 |
-| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P5 reject unsupported constructs, malformed aggregate types/layouts, runtime bounds, and resource failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P5 |
+| PVM-QUAL-003 | Structured errors, no production panic for inputs | P3-P7 reject unsupported constructs, malformed operands/layouts, runtime bounds, task boundaries, and resource failures through diagnostics; no new production `unsafe`, `unwrap()`/`expect()`, `panic!`, `todo!`, `unimplemented!`, `transmute`, or unchecked narrowing | complete through P7 |
 | PVM-QUAL-004 | No dead compatibility path | dependency/symbol/file search | planned |
 | PVM-QUAL-005 | Current user docs reconciled | no language or production behavior changed; `docs/pascal/` remains unchanged and P5 truth is recorded only under `docs/future/` | complete through P5 |
 | PVM-QUAL-006 | Full Rust verification | P5 targeted and full-gate results are recorded in `p5-globals-aggregates.md` | complete through P5 |
@@ -233,9 +233,9 @@ final production migration and old-op deletion, not the inactive phase overlay a
 | `MakeEnum` | `MakeEnum(dst, EnumVariantId, value_base)` | P5; enum construction/match tests | planned |
 | `IsVariant` | `TestVariant(dst, value, EnumVariantId)` | P5; enum type/variant tests | planned |
 | `EnumField` | `LoadEnumField(dst, value, field)` | P5; enum associated-data tests | planned |
-| `SpawnTask` | `SpawnTask(dst, callee, arg_base, arg_count)` | P7; spawn/wait/scheduler tests | planned |
-| `SpawnDetachedTask` | `SpawnDetachedTask(callee, arg_base, arg_count)` | P7; detached task tests | planned |
-| `Yield` | `Yield` scheduler operation | P7; timeslice/yield tests | planned |
+| `SpawnTask` | `SpawnTask(dst, callee, arg_base, arg_count)` | retained spawn, Wait/WaitAll, sleep, timeslice, capture-boundary tests | complete through P7 development path |
+| `SpawnDetachedTask` | `SpawnDetachedTask(callee, arg_base, arg_count)` | compiler differential detached-pool test | complete through P7 development path |
+| `Yield` | `Yield` scheduler operation | main yield direct test and automatic spawned-task timeslice suspension | complete through P7 development path |
 
 ## Final sign-off
 

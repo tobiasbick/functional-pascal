@@ -45,6 +45,21 @@ impl TypeTable {
             }
             let _ = table.intern(ty, 1, 1)?;
         }
+        if metadata
+            .expr_types
+            .values()
+            .any(|ty| matches!(ty, Ty::Task(_)))
+        {
+            let outputs = table
+                .definitions
+                .iter()
+                .filter(|definition| !matches!(definition.kind, IrType::Task(_)))
+                .map(|definition| definition.id)
+                .collect::<Vec<_>>();
+            for output in outputs {
+                let _ = table.intern_kind(IrType::Task(output), synthetic_span(1, 1))?;
+            }
+        }
         Ok(table)
     }
 
@@ -141,6 +156,13 @@ impl TypeTable {
         }
     }
 
+    pub fn task_type(&self, inner: TypeId) -> Option<TypeId> {
+        self.definitions
+            .iter()
+            .find(|definition| definition.kind == IrType::Task(inner))
+            .map(|definition| definition.id)
+    }
+
     pub fn kind(&self, ty: TypeId) -> Option<&IrType> {
         self.definitions
             .iter()
@@ -212,6 +234,7 @@ impl TypeTable {
                     "real" => Ok(REAL),
                     "boolean" => Ok(BOOLEAN),
                     "string" => Ok(STRING),
+                    "task" => self.intern_kind(IrType::Task(DYNAMIC), *span),
                     _ => {
                         if let Some(layout) = self
                             .record_layouts
@@ -414,7 +437,7 @@ impl TypeTable {
 
 fn type_error(construct: &str, span: fpas_lexer::Span) -> CompileError {
     internal_compiler_error(
-        format!("Type `{construct}` is outside the P6 register subset."),
+        format!("Type `{construct}` is outside the P7 register subset."),
         "Use a supported scalar, aggregate, function, or procedure type in this development path.",
         span.line,
         span.column,

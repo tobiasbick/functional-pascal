@@ -212,7 +212,7 @@ impl RegisterWorker {
         Ok(())
     }
 
-    fn clone_window(&self, base: u16, count: u8) -> Result<Vec<Value>, VmError> {
+    pub(super) fn clone_window(&self, base: u16, count: u8) -> Result<Vec<Value>, VmError> {
         let start = self.base + usize::from(base);
         let end = start.checked_add(usize::from(count)).ok_or_else(|| {
             diagnostics::internal(

@@ -134,6 +134,7 @@ impl LoweringContext {
             Expr::OptionSome(value, _) => self.lower_wrapper(Some(value), expression, 2),
             Expr::OptionNone(_) => self.lower_wrapper(None, expression, 3),
             Expr::Try(value, _) => self.lower_try(value, expression),
+            Expr::Go(value, span) => self.lower_go(value, *span, true),
             Expr::Postfix {
                 base,
                 operations,

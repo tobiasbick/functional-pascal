@@ -116,6 +116,7 @@ pub(super) struct LoweringContext {
     scope_depth: u32,
     next_value: u32,
     max_call_arguments: u32,
+    pub(super) can_spawn_tasks: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -240,6 +241,7 @@ impl LoweringContext {
                 },
             )?,
             max_call_arguments: 0,
+            can_spawn_tasks: false,
         })
     }
 
@@ -268,6 +270,25 @@ impl LoweringContext {
         let span = expression.span();
         self.type_table
             .id(&self.expression_type(expression)?, span.line, span.column)
+    }
+
+    pub(super) fn task_type(
+        &self,
+        inner: TypeId,
+        span: fpas_lexer::Span,
+    ) -> Result<TypeId, CompileError> {
+        self.type_table.task_type(inner).ok_or_else(|| {
+            internal_compiler_error(
+                "Task result type is missing from the register type table.",
+                "This is an internal compiler error. Re-run compilation and report the source program.",
+                span.line,
+                span.column,
+            )
+        })
+    }
+
+    pub(super) fn function_result_type(&self, callable: TypeId) -> Option<TypeId> {
+        self.type_table.function_result(callable)
     }
 
     pub(super) fn declared_type(
@@ -316,7 +337,7 @@ impl LoweringContext {
 
 pub(super) fn unsupported(span: Span, construct: &str) -> CompileError {
     internal_compiler_error(
-        format!("`{construct}` is outside the P6 register-development subset."),
+        format!("`{construct}` is outside the P7 register-development subset."),
         "This development path accepts scalar control flow, routines, closures, globals, aggregates, and standard intrinsics without tasks, user-unit linking, or persistent artifacts.",
         span.line,
         span.column,

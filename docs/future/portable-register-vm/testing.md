@@ -202,6 +202,14 @@ Preserve all current task/pool/runtime tests and add:
 - high-contention repeated runs that assert completion and result correctness;
 - task save/load does not retain stale values from a previous task.
 
+P7 evidence is recorded in `p7-tasks-concurrency.md`. Register compiler differential tests cover
+retained/detached execution, Wait/WaitAll retention, cooperative sleep, mutable-capture rejection,
+and a timeslice taken inside a nested call while the caller retains an aggregate register. Direct
+register tests cover main Yield, invalid Wait operands, and cooperative shutdown. The unchanged
+218-test `fpas-vm` suite supplies repeated production concurrency, pool, timer, shutdown, panic, and
+stress regression coverage; the phase-local `register-p7` benchmark exercises the complete
+register spawn/wait path without claiming a production comparison.
+
 Do not weaken scheduler fairness or timeout bounds to improve a benchmark.
 
 ## Differential development testing

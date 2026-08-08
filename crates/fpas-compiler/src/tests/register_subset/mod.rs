@@ -26,6 +26,7 @@ fn assert_both_succeed(source: &str) -> fpas_vm::RegisterExecution {
 
 mod aggregates;
 mod closures;
+mod concurrency;
 mod control_flow;
 mod diagnostics;
 mod functions;

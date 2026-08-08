@@ -1,9 +1,10 @@
-//! AST and semantic-metadata lowering for the P6 register-development subset.
+//! AST and semantic-metadata lowering for the P7 register-development subset.
 
 mod aggregates;
 mod calls;
 mod case;
 mod closures;
+mod concurrency;
 mod context;
 mod control_flow;
 mod expr;

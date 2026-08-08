@@ -83,7 +83,7 @@ impl LoweringContext {
                 Ok(())
             }
             Stmt::Expression { span, .. } => Err(unsupported(*span, "effect expression")),
-            Stmt::Go { span, .. } => Err(unsupported(*span, "task statement")),
+            Stmt::Go { expr, span } => self.lower_go(expr, *span, false).map(|_| ()),
         }
     }
 

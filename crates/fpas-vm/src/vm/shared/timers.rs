@@ -2,20 +2,19 @@
 //!
 //! **Documentation:** `docs/pascal/language/concurrency/scheduling.md`.
 
-use super::TaskState;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Condvar, Mutex};
 use std::time::{Duration, Instant};
 
 /// Millisecond-bucketed task timer queue driven by one runtime thread.
-pub(crate) struct TaskTimers {
+pub(crate) struct TaskTimers<T> {
     origin: Instant,
-    sleeping: Mutex<BTreeMap<u64, Vec<TaskState>>>,
+    sleeping: Mutex<BTreeMap<u64, Vec<T>>>,
     changed: Condvar,
 }
 
-impl TaskTimers {
+impl<T> TaskTimers<T> {
     /// Create an empty timer queue anchored to the current monotonic instant.
     pub(crate) fn new() -> Self {
         Self {
@@ -28,10 +27,10 @@ impl TaskTimers {
     /// Suspend `task` until at least `milliseconds` have elapsed.
     pub(crate) fn schedule(
         &self,
-        task: TaskState,
+        task: T,
         milliseconds: u64,
         accepting_tasks: &AtomicBool,
-    ) -> Result<(), TaskState> {
+    ) -> Result<(), T> {
         let wake_millis = self.now_millis_ceil().saturating_add(milliseconds);
         let mut sleeping = self.sleeping.lock().unwrap_or_else(|e| e.into_inner());
         if !accepting_tasks.load(Ordering::Acquire) {
@@ -52,7 +51,7 @@ impl TaskTimers {
     pub(crate) fn dispatch_next_due(
         &self,
         shutdown: &AtomicBool,
-        dispatch: impl FnOnce(Vec<TaskState>),
+        dispatch: impl FnOnce(Vec<T>),
     ) -> bool {
         let mut sleeping = self.sleeping.lock().unwrap_or_else(|e| e.into_inner());
         loop {
@@ -88,7 +87,7 @@ impl TaskTimers {
     }
 
     /// Remove every sleeping task so shutdown policy can complete retained handles explicitly.
-    pub(crate) fn cancel_all(&self) -> Vec<TaskState> {
+    pub(crate) fn cancel_all(&self) -> Vec<T> {
         let mut sleeping = self.sleeping.lock().unwrap_or_else(|e| e.into_inner());
         std::mem::take(&mut *sleeping)
             .into_values()

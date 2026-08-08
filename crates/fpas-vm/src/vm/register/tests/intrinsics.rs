@@ -119,7 +119,7 @@ fn headless_graph_open_size_and_close_are_deterministic() {
 }
 
 #[test]
-fn task_intrinsics_remain_explicitly_reserved_for_p7() {
+fn task_wait_rejects_a_non_task_operand() {
     let executable = super::verified(
         vec![
             intrinsic(0, Intrinsic::Task(fpas_bytecode::TaskIntrinsic::Wait), 0, 0),
@@ -131,6 +131,6 @@ fn task_intrinsics_remain_explicitly_reserved_for_p7() {
     );
     let error = RegisterVm::new(executable)
         .run()
-        .expect_err("P7 task intrinsic must not execute during P6");
-    assert!(error.message.contains("Std.Task wait"), "{error:?}");
+        .expect_err("Wait must validate its operand");
+    assert!(error.message.contains("Expected task"), "{error:?}");
 }

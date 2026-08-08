@@ -31,10 +31,17 @@ impl RegisterWorker {
             .get(start..end)
             .ok_or_else(|| self.intrinsic_window_error(operands))?;
         let location = self.intrinsic_location();
-        let result = match self.execute_hosted_intrinsic(intrinsic, arguments, location)? {
+        let task_arguments = arguments.to_vec();
+        if let Some(result) = self.task_intrinsic(intrinsic, &task_arguments)? {
+            if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
+                self.write(register(operands.a)?, value)?;
+            }
+            return Ok(());
+        }
+        let result = match self.execute_hosted_intrinsic(intrinsic, &task_arguments, location)? {
             HostedOutcome::Complete(result) => result,
             HostedOutcome::Unhandled => {
-                fpas_std::run_intrinsic_borrowed(intrinsic, arguments, location)?
+                fpas_std::run_intrinsic_borrowed(intrinsic, &task_arguments, location)?
             }
         };
         if operands.a == NO_REGISTER {

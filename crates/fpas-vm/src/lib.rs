@@ -12,7 +12,8 @@ mod vm;
 
 pub use fpas_std::ScreenSnapshot;
 pub use vm::{
-    RegisterCallbackSession, RegisterExecution, RegisterVm, Vm, VmError, VmOutput, VmShutdownHandle,
+    RegisterCallbackSession, RegisterExecution, RegisterShutdownHandle, RegisterVm, Vm, VmError,
+    VmOutput, VmShutdownHandle,
 };
 
 #[cfg(test)]

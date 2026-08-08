@@ -131,7 +131,7 @@ impl LoweringContext {
             blocks,
             entry: BlockId::new(0),
             max_call_arguments: self.max_call_arguments,
-            can_spawn_tasks: false,
+            can_spawn_tasks: self.can_spawn_tasks,
         })
     }
 

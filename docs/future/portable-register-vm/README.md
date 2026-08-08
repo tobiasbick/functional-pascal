@@ -1,6 +1,6 @@
 # Portable register VM rewrite
 
-Status: approved implementation direction; P0 through P6 implemented, production cutover not started.
+Status: approved implementation direction; P0 through P7 implemented, production cutover not started.
 
 This directory is the implementation contract for replacing the current stack bytecode and stack
 interpreter with a portable register VM. It is deliberately prescriptive so another coding agent can
@@ -60,6 +60,8 @@ aggregate layouts, record members, and collection operations are recorded in
 [P5 globals and aggregates](p5-globals-aggregates.md).
 Borrowed intrinsic windows, exhaustive numeric dispatch, hosted Console/Graph/Test state, and numeric
 standard callbacks are recorded in [P6 intrinsics and hosted runtimes](p6-intrinsics-hosted-runtimes.md).
+Register task state, pool scheduling, waits, cooperative sleep, and shutdown are recorded in
+[P7 tasks and concurrency](p7-tasks-concurrency.md).
 
 The repository-level `AGENTS.md` and the relevant project skills remain mandatory. In particular,
 performance work follows `.agents/skills/fpas-bench/SKILL.md`, and behavior work follows
@@ -93,10 +95,10 @@ Revalidate these facts before implementation because file names can move:
   introduced in P1.
 - [`fpas-bytecode::Executable`](../../../crates/fpas-bytecode/src/executable.rs) and its verifier now
   own the inactive register representation introduced in P2; production still uses `Chunk`.
-- [`compile_register_subset`](../../../crates/fpas-compiler/src/lib.rs) lowers the P6 scalar,
+- [`compile_register_subset`](../../../crates/fpas-compiler/src/lib.rs) lowers the P7 scalar,
   routine, closure, global, record, enum, array, and dictionary subset through typed IR,
   deterministic allocation, bytecode selection, and verification without exposing a CLI backend
-  switch, including every existing standard intrinsic except P7 task execution.
+  switch, including retained and detached tasks.
 - [`RegisterVm`](../../../crates/fpas-vm/src/vm/register/mod.rs) executes only a
   `VerifiedExecutable` through one exhaustive packed-opcode dispatch loop and an isolated hosted
   Console/Graph state; production still uses the stack VM.

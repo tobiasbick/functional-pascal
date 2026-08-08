@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use fpas_bytecode::{Constant, Opcode, Value};
 use fpas_diagnostics::codes::{
-    INTERNAL_VM_INVARIANT_FAILURE, RUNTIME_DIVISION_BY_ZERO, RUNTIME_MODULO_BY_ZERO,
-    RUNTIME_NUMERIC_DOMAIN_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
+    RUNTIME_DIVISION_BY_ZERO, RUNTIME_MODULO_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR,
+    RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_VM_SHUTDOWN,
 };
 
 use super::*;
@@ -100,16 +100,32 @@ fn out_of_range_shift_is_a_numeric_domain_error() {
 }
 
 #[test]
-fn verified_p6_opcode_fails_as_internal_invariant() {
-    let error = execute(verified(
+fn main_task_yield_executes_without_a_pool() {
+    let (value, _, count) = execute(verified(
         vec![abc(Opcode::Yield, 0, 0, 0), return_unit()],
         Vec::new(),
         vec!["root", "test.fpas"],
         1,
     ))
-    .expect_err("P6 opcode must not execute in P5");
-    assert_eq!(error.code, INTERNAL_VM_INVARIANT_FAILURE);
-    assert!(error.message.contains("Yield"));
+    .expect("main-task yield must be executable in P7");
+    assert_eq!(value, Value::Unit);
+    assert_eq!(count, 2);
+}
+
+#[test]
+fn shutdown_handle_cancels_register_execution_before_dispatch() {
+    let executable = verified(
+        vec![return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        1,
+    );
+    let mut vm = super::super::RegisterVm::new(executable);
+    vm.shutdown_handle().shutdown();
+    let error = vm
+        .run()
+        .expect_err("pre-run cancellation must stop dispatch");
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN);
 }
 
 #[test]

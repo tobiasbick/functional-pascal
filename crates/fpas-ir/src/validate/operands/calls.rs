@@ -141,7 +141,9 @@ fn types_compatible(program: &Program, expected: TypeId, actual: TypeId) -> bool
     if expected == actual { return true; }
     match (program.ty(expected).map(|item| &item.kind), program.ty(actual).map(|item| &item.kind)) {
         (Some(IrType::Dynamic), _) | (_, Some(IrType::Dynamic)) => true,
-        (Some(IrType::Array(a)), Some(IrType::Array(b))) | (Some(IrType::Option(a)), Some(IrType::Option(b))) => types_compatible(program, *a, *b),
+        (Some(IrType::Array(a)), Some(IrType::Array(b)))
+        | (Some(IrType::Option(a)), Some(IrType::Option(b)))
+        | (Some(IrType::Task(a)), Some(IrType::Task(b))) => types_compatible(program, *a, *b),
         (Some(IrType::Dictionary { key: ak, value: av }), Some(IrType::Dictionary { key: bk, value: bv })) => types_compatible(program, *ak, *bk) && types_compatible(program, *av, *bv),
         (Some(IrType::Result { ok: ao, error: ae }), Some(IrType::Result { ok: bo, error: be })) => types_compatible(program, *ao, *bo) && types_compatible(program, *ae, *be),
         (Some(IrType::Function { parameters: ap, result: ar }), Some(IrType::Function { parameters: bp, result: br })) => ap.len() == bp.len() && ap.iter().zip(bp).all(|(a, b)| types_compatible(program, *a, *b)) && types_compatible(program, *ar, *br),

@@ -12,6 +12,7 @@ use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
 use super::hosted::HostedState;
 use super::layouts::RuntimeLayouts;
+use super::tasks::{RegisterTaskState, TaskScheduler};
 use super::{RegisterExecution, VmError, diagnostics};
 
 pub(super) struct RegisterWorker {
@@ -27,6 +28,11 @@ pub(super) struct RegisterWorker {
     pub instruction_count: u64,
     callback_instruction_count: Cell<u64>,
     pub current_address: InstructionAddress,
+    pub scheduler: Option<Arc<TaskScheduler>>,
+    pub task_id: u64,
+    pub retain_result: bool,
+    pub instructions_until_yield: u32,
+    pub suspend_requested: bool,
 }
 
 impl RegisterWorker {
@@ -125,7 +131,106 @@ impl RegisterWorker {
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
             current_address: start,
+            scheduler: None,
+            task_id: 0,
+            retain_result: false,
+            instructions_until_yield: super::super::TIMESLICE,
+            suspend_requested: false,
         })
+    }
+
+    pub(super) fn with_scheduler(mut self, scheduler: Option<Arc<TaskScheduler>>) -> Self {
+        self.scheduler = scheduler;
+        self
+    }
+
+    pub(super) fn pool_template(&self) -> Self {
+        Self {
+            executable: Arc::clone(&self.executable),
+            function: self.function,
+            ip: self.ip,
+            base: 0,
+            registers: Vec::new(),
+            globals: Arc::clone(&self.globals),
+            layouts: Arc::clone(&self.layouts),
+            hosted: Arc::clone(&self.hosted),
+            call_stack: Vec::new(),
+            instruction_count: 0,
+            callback_instruction_count: Cell::new(0),
+            current_address: self.current_address,
+            scheduler: self.scheduler.clone(),
+            task_id: 0,
+            retain_result: false,
+            instructions_until_yield: super::super::TIMESLICE,
+            suspend_requested: false,
+        }
+    }
+
+    pub(super) fn worker_for_task(&self, task: RegisterTaskState) -> Self {
+        Self {
+            executable: Arc::clone(&self.executable),
+            function: task.function,
+            ip: task.ip,
+            base: task.base,
+            registers: task.registers,
+            globals: Arc::clone(&self.globals),
+            layouts: Arc::clone(&self.layouts),
+            hosted: Arc::clone(&self.hosted),
+            call_stack: task.frames,
+            instruction_count: task.instruction_count,
+            callback_instruction_count: Cell::new(0),
+            current_address: self.current_address,
+            scheduler: self.scheduler.clone(),
+            task_id: task.id,
+            retain_result: task.retain_result,
+            instructions_until_yield: super::super::TIMESLICE,
+            suspend_requested: false,
+        }
+    }
+
+    pub(super) fn take_task_state(&mut self) -> RegisterTaskState {
+        RegisterTaskState {
+            id: self.task_id,
+            function: self.function,
+            ip: self.ip,
+            base: self.base,
+            registers: std::mem::take(&mut self.registers),
+            frames: std::mem::take(&mut self.call_stack),
+            retain_result: self.retain_result,
+            instruction_count: self.instruction_count,
+        }
+    }
+
+    pub(super) fn suspend_and_enqueue(&mut self) {
+        if let Some(scheduler) = self.scheduler.clone() {
+            let state = self.take_task_state();
+            scheduler.enqueue(state);
+            self.suspend_requested = true;
+        }
+    }
+
+    pub(super) fn run_task(&mut self) -> Result<Option<Value>, VmError> {
+        loop {
+            if self
+                .scheduler
+                .as_ref()
+                .is_some_and(|scheduler| scheduler.is_aborted())
+            {
+                return Ok(None);
+            }
+            match self.dispatch_one()? {
+                DispatchStep::Continue => {}
+                DispatchStep::Suspend => return Ok(None),
+                DispatchStep::Return(value) => return Ok(Some(value)),
+            }
+            if self.task_id != 0 {
+                self.instructions_until_yield = self.instructions_until_yield.saturating_sub(1);
+                if self.instructions_until_yield == 0 {
+                    self.suspend_and_enqueue();
+                    return Ok(None);
+                }
+            }
+        }
     }
 
     /// Invoke a first-class function synchronously through its numeric register target.
@@ -198,6 +303,7 @@ impl RegisterWorker {
             Arc::clone(&self.layouts),
             Arc::clone(&self.hosted),
         )?
+        .with_scheduler(self.scheduler.clone())
         .run()?;
         self.callback_instruction_count.set(
             self.callback_instruction_count
@@ -209,8 +315,28 @@ impl RegisterWorker {
 
     pub fn run(mut self) -> Result<RegisterExecution, VmError> {
         loop {
+            if self
+                .scheduler
+                .as_ref()
+                .is_some_and(|scheduler| scheduler.is_aborted())
+            {
+                return Err(diagnostics::at_address(
+                    self.executable.executable(),
+                    self.current_address,
+                    fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN,
+                    "Register VM execution was canceled",
+                    "Create a new VM instance to run the program again.",
+                ));
+            }
             match self.dispatch_one()? {
                 DispatchStep::Continue => {}
+                DispatchStep::Suspend => {
+                    return Err(diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        "Root register execution suspended unexpectedly",
+                    ));
+                }
                 DispatchStep::Return(value) => {
                     return Ok(RegisterExecution {
                         value,

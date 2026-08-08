@@ -1,4 +1,4 @@
-//! Safe register interpreter lifecycle through P5 globals and aggregates.
+//! Safe register interpreter lifecycle through P7 tasks and concurrency.
 
 mod access;
 mod callback;
@@ -9,6 +9,7 @@ mod execute;
 mod frame;
 mod hosted;
 mod layouts;
+mod tasks;
 mod worker;
 
 #[cfg(test)]
@@ -20,6 +21,7 @@ use fpas_bytecode::{FunctionId, Value, VerifiedExecutable};
 
 use self::hosted::HostedState;
 use self::layouts::RuntimeLayouts;
+use self::tasks::TaskScheduler;
 use self::worker::RegisterWorker;
 use super::VmError;
 
@@ -44,6 +46,8 @@ pub struct RegisterVm {
     globals: Arc<RwLock<Vec<Option<Value>>>>,
     layouts: Result<Arc<RuntimeLayouts>, VmError>,
     hosted: Arc<HostedState>,
+    pool_size: usize,
+    scheduler: Arc<TaskScheduler>,
 }
 
 impl RegisterVm {
@@ -106,12 +110,28 @@ impl RegisterVm {
             fpas_bytecode::InstructionAddress::new(0),
         )
         .map(Arc::new);
+        let pool_size = if executable
+            .executable()
+            .functions
+            .iter()
+            .any(|function| function.flags.uses_spawn_tasks)
+        {
+            std::thread::available_parallelism()
+                .map(|count| count.get())
+                .unwrap_or(1)
+                .saturating_sub(1)
+                .max(1)
+        } else {
+            0
+        };
         Self {
             executable,
             has_run: false,
             globals,
             layouts,
             hosted: Arc::new(HostedState::new(console, arguments)),
+            pool_size,
+            scheduler: Arc::new(TaskScheduler::new()),
         }
     }
 
@@ -188,6 +208,14 @@ impl RegisterVm {
             .screen_snapshot()
     }
 
+    /// Return a thread-safe handle that cooperatively cancels this VM at an instruction boundary.
+    #[must_use]
+    pub fn shutdown_handle(&self) -> RegisterShutdownHandle {
+        RegisterShutdownHandle {
+            scheduler: Arc::clone(&self.scheduler),
+        }
+    }
+
     /// Execute the verified root function once.
     ///
     /// # Errors
@@ -204,7 +232,8 @@ impl RegisterVm {
                 "Register VM instances are single-use. Construct a new instance for each run.",
             ));
         }
-        RegisterWorker::for_function_with_state(
+        let scheduler = Arc::clone(&self.scheduler);
+        let worker = RegisterWorker::for_function_with_state(
             Arc::clone(&self.executable),
             self.executable.executable().entry,
             Vec::new(),
@@ -212,7 +241,51 @@ impl RegisterVm {
             self.layouts.clone()?,
             Arc::clone(&self.hosted),
         )?
-        .run()
+        .with_scheduler(Some(Arc::clone(&scheduler)));
+        if self.pool_size == 0 {
+            return worker.run();
+        }
+        let pool_size = self.pool_size;
+        std::thread::scope(|scope| {
+            let mut handles = Vec::with_capacity(pool_size);
+            for _ in 0..pool_size {
+                let scheduler = Arc::clone(&scheduler);
+                let template = worker.pool_template();
+                handles.push(scope.spawn(move || tasks::pool::pool_loop(&template, scheduler)));
+            }
+            let timer_scheduler = Arc::clone(&scheduler);
+            let timer = scope.spawn(move || timer_scheduler.timer_loop());
+            let main = worker.run();
+            if let Err(error) = &main {
+                scheduler.fail(error.clone());
+            } else {
+                scheduler.finish_main();
+            }
+            let mut pool_error = None;
+            for handle in handles {
+                match handle.join() {
+                    Ok(Err(error)) if pool_error.is_none() => pool_error = Some(error),
+                    Err(_) if pool_error.is_none() => {
+                        pool_error = scheduler.first_error().or_else(|| {
+                            Some(diagnostics::internal(
+                                self.executable.executable(),
+                                fpas_bytecode::InstructionAddress::new(0),
+                                "Register task worker panicked",
+                            ))
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            if timer.join().is_err() && pool_error.is_none() {
+                pool_error = Some(diagnostics::internal(
+                    self.executable.executable(),
+                    fpas_bytecode::InstructionAddress::new(0),
+                    "Register task timer panicked",
+                ));
+            }
+            main.and_then(|value| pool_error.map_or(Ok(value), Err))
+        })
     }
 
     /// Execute one numeric function as a synchronous hosted callback.
@@ -244,5 +317,18 @@ impl RegisterVm {
             Arc::clone(&self.hosted),
         )?
         .run()
+    }
+}
+
+/// Cloneable cooperative-cancellation handle for a running [`RegisterVm`].
+#[derive(Clone)]
+pub struct RegisterShutdownHandle {
+    scheduler: Arc<TaskScheduler>,
+}
+
+impl RegisterShutdownHandle {
+    /// Request cancellation. The main and spawned tasks stop at their next instruction boundary.
+    pub fn shutdown(&self) {
+        self.scheduler.request_cancel();
     }
 }

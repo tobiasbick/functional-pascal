@@ -146,7 +146,9 @@ fn validate_spawn(
         )
     })?;
     match program.ty(result.ty).map(|definition| &definition.kind) {
-        Some(IrType::Task(inner)) if *inner == *output => Ok(()),
+        Some(IrType::Task(inner))
+            if *inner == *output
+                || matches!(program.ty(*inner).map(|definition| &definition.kind), Some(IrType::Dynamic)) => Ok(()),
         _ => Err(function_error(
             function.id,
             Some(block),

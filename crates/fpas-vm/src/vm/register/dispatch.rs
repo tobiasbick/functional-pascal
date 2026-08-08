@@ -10,6 +10,7 @@ use super::{VmError, diagnostics};
 
 pub(super) enum DispatchStep {
     Continue,
+    Suspend,
     Return(Value),
 }
 
@@ -264,10 +265,13 @@ impl RegisterWorker {
             Opcode::TestVariant => self.test_variant(self.abc(instruction)?)?,
             Opcode::LoadEnumField => self.load_enum_field(self.abc(instruction)?)?,
             Opcode::Intrinsic => self.execute_intrinsic(self.abc(instruction)?)?,
-            Opcode::SpawnTask
-            | Opcode::SpawnDetachedTask
-            | Opcode::Yield
-            | Opcode::ReservedMetadata => return Err(self.future_phase(opcode)),
+            Opcode::SpawnTask => self.spawn_task(self.abc(instruction)?, false)?,
+            Opcode::SpawnDetachedTask => self.spawn_task(self.abc(instruction)?, true)?,
+            Opcode::Yield => self.yield_task(),
+            Opcode::ReservedMetadata => return Err(self.future_phase(opcode)),
+        }
+        if self.suspend_requested {
+            return Ok(DispatchStep::Suspend);
         }
         Ok(DispatchStep::Continue)
     }

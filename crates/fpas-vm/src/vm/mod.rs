@@ -25,9 +25,11 @@ mod worker;
 
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::{internal_error, runtime_error};
-pub use register::{RegisterCallbackSession, RegisterExecution, RegisterVm};
+pub use register::{
+    RegisterCallbackSession, RegisterExecution, RegisterShutdownHandle, RegisterVm,
+};
 pub(crate) use shared::{
-    GraphState, SharedState, TaskBatchPoll, TaskResultPoll, TaskState, TaskTimers,
+    GraphState, SharedState, TaskBatchPoll, TaskResultPoll, TaskResultState, TaskState, TaskTimers,
 };
 pub use shutdown::VmShutdownHandle;
 pub(crate) use worker::Worker;

@@ -74,6 +74,7 @@ pub(super) fn execute(executable: VerifiedExecutable) -> Result<(Value, Vec<Valu
     loop {
         match worker.dispatch_one()? {
             DispatchStep::Continue => {}
+            DispatchStep::Suspend => panic!("test execution suspended without a scheduler"),
             DispatchStep::Return(value) => {
                 return Ok((value, worker.registers, worker.instruction_count));
             }

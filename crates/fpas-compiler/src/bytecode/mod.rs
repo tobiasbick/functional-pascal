@@ -175,7 +175,9 @@ fn compile_function(
         capture_count,
         register_count: allocation.register_count,
         return_convention,
-        flags: FunctionFlags::default(),
+        flags: FunctionFlags {
+            uses_spawn_tasks: function.can_spawn_tasks,
+        },
     })
 }
 

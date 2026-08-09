@@ -3,7 +3,7 @@ unit Std.Tui.Runtime.Cmd;
 uses Std.Array, Std.Option, Std.Tui.Cells.Palette;
 
 public type
-  /// Runtime command returned by an application's Update function.
+  // Runtime command returned by an application's Update function.
   TuiCmd = enum
     NoCommand;
     Quit;
@@ -20,25 +20,26 @@ begin
   begin
     panic('Tui command output handle is invalid')
   end;
+
   return Slot
 end;
 
 public type
-  /// Host-owned command output capability passed to Update.
+  // Host-owned command output capability passed to Update.
   TuiCmdOutput = record
     public Slot: integer;
 
-    /// Allocates one reusable command output.
-
+    // Allocates one reusable command output.
     public static function Create(): TuiCmdOutput;
     begin
       TuiCommandValues := Std.Array.Concat(TuiCommandValues, [TuiCmd.NoCommand]);
       TuiCommandPalettes := Std.Array.Concat(TuiCommandPalettes, [None]);
-      return record Slot := Std.Array.Length(TuiCommandValues); end
+      return record
+        Slot := Std.Array.Length(TuiCommandValues);
+      end
     end;
 
-    /// Resets the output before one Update call.
-
+    // Resets the output before one Update call.
     public procedure Reset(Self: TuiCmdOutput);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -46,8 +47,7 @@ public type
       TuiCommandPalettes[Slot - 1] := None
     end;
 
-    /// Sets the command returned by the current Update call.
-
+    // Sets the command returned by the current Update call.
     public procedure Set(Self: TuiCmdOutput; Value: TuiCmd);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -55,8 +55,7 @@ public type
       TuiCommandPalettes[Slot - 1] := None
     end;
 
-    /// Requests an immediate palette change after Update returns.
-
+    // Requests an immediate palette change after Update returns.
     public procedure SetPalette(Self: TuiCmdOutput; Palette: TuiPalette);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -64,16 +63,14 @@ public type
       TuiCommandPalettes[Slot - 1] := Some(Palette)
     end;
 
-    /// Reads the command after Update returns.
-
+    // Reads the command after Update returns.
     public function Read(Self: TuiCmdOutput): TuiCmd;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
       return TuiCommandValues[Slot - 1]
     end;
 
-    /// Returns the palette attached to a SetPalette command.
-
+    // Returns the palette attached to a SetPalette command.
     public function ReadPalette(Self: TuiCmdOutput): option of TuiPalette;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);

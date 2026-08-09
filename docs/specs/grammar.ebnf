@@ -67,18 +67,16 @@ char_code       = '#' decimal_digits ;
 
 (* ---- Comments (discarded by lexer) ----------------------------- *)
 
-brace_comment   = '{' { (* any char except '}' *) } '}' ;
-paren_comment   = '(*' { (* any char except closing '*)' *) } '*)' ;
-line_comment    = '//' { (* any char except newline *) } newline ;
-doc_line_comment = '//' '/' { (* any char except newline *) } newline ;
+line_comment    = '//' { (* any character except CR or LF *) } ;
 
-(* Comments do NOT nest.                                            *)
-(* { outer { inner } ← first } closes the comment.                 *)
-(* A `{` immediately followed by `$` (`{$...}`) is not a comment:   *)
-(* the lexer reports an error for that sequence. There are no       *)
+(* A line comment ends at LF, CRLF, bare CR, or end of input.        *)
+(* Brace and parenthesis-star forms are not comment syntax.          *)
+(* A `{` immediately followed by `$` (`{$...}`) is invalid too:     *)
+(* the lexer reports a compiler-directive error for that sequence.   *)
+(* There are no                                                       *)
 (* compiler directives or source-level include forms in the language. *)
-(* `///` is lexically a line comment; formatters treat it as a      *)
-(* preservable doc line (see docs/pascal/tools/fmt-style.md).             *)
+(* A contiguous standalone comment block immediately before a       *)
+(* declaration is Markdown documentation; this is a tooling rule.    *)
 
 (* ---- Keywords (56, case-insensitive) --------------------------- *)
 

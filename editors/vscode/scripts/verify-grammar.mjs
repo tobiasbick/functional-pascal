@@ -160,15 +160,7 @@ async function verifyPositiveScopes(grammar) {
   );
   assertScope(
     tokenAt(fixture, "Positive syntax-highlighting fixture", "Positive"),
-    "comment.line.documentation.fpas"
-  );
-  assertScope(
-    tokenAt(fixture, "{ Brace comment. }", "Brace"),
-    "comment.block.brace.fpas"
-  );
-  assertScope(
-    tokenAt(fixture, "(* Parenthesized comment. *)", "Parenthesized"),
-    "comment.block.parenthesized.fpas"
+    "comment.line.double-slash.fpas"
   );
   assertScope(
     tokenAt(fixture, "Point := record", ":="),
@@ -223,13 +215,13 @@ async function verifyNegativeScopes(grammar) {
   assertScope(lineCommentKeyword, "comment.line.double-slash.fpas");
   assertNoKeywordScope(lineCommentKeyword);
 
-  const blockCommentKeyword = tokenAt(
+  const secondLineCommentKeyword = tokenAt(
     fixture,
-    "{ while repeat until }",
+    "// while repeat until",
     "while"
   );
-  assertScope(blockCommentKeyword, "comment.block.brace.fpas");
-  assertNoKeywordScope(blockCommentKeyword);
+  assertScope(secondLineCommentKeyword, "comment.line.double-slash.fpas");
+  assertNoKeywordScope(secondLineCommentKeyword);
 }
 
 async function verifyEdgeScopes(grammar) {
@@ -248,24 +240,12 @@ async function verifyEdgeScopes(grammar) {
     "constant.numeric.hex.fpas"
   );
   assertScope(
-    tokenAt(fixture, "{ outer { inner }", "inner"),
-    "comment.block.brace.fpas"
-  );
-  assert.ok(
-    !tokenAt(fixture, "{ outer { inner }", "AfterBrace").scopes.includes(
-      "comment.block.brace.fpas"
-    ),
-    "the first closing brace ends a non-nesting brace comment"
+    tokenAt(fixture, "// outer { inner }", "AfterBrace"),
+    "comment.line.double-slash.fpas"
   );
   assertScope(
-    tokenAt(fixture, "(* outer (* inner *)", "inner"),
-    "comment.block.parenthesized.fpas"
-  );
-  assert.ok(
-    !tokenAt(fixture, "(* outer (* inner *)", "AfterParen").scopes.includes(
-      "comment.block.parenthesized.fpas"
-    ),
-    "the first closing delimiter ends a non-nesting parenthesized comment"
+    tokenAt(fixture, "// outer (* inner *)", "AfterParen"),
+    "comment.line.double-slash.fpas"
   );
   assertScope(
     tokenAt(fixture, "Text := 'unfinished", "unfinished"),

@@ -98,6 +98,7 @@ Do **not** assume Delphi/Free Pascal:
 | `uses Unit1, Unit2 in interface` | single `uses` clause; no Delphi `interface`/`implementation` split |
 | anonymous nested lambdas everywhere | pass **named** routines or variables with function types |
 | `begin`/`end.` optional on programs | formatter inserts them — match [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) |
+| `{...}`, `(*...*)`, or a separate doc-comment delimiter | `//` is the only comment syntax; an adjacent standalone block is Markdown documentation |
 
 Other habits:
 

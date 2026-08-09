@@ -3,7 +3,7 @@ unit Notes.Model;
 uses Std.Array, Std.Console, Std.Conv, Std.Str, Std.Tui;
 
 public type
-  /// One persisted `.note` document and its source path.
+  // One persisted `.note` document and its source path.
   Note = record
     public Id: string;
     public Title: string;
@@ -15,22 +15,22 @@ public type
     public Body: string;
     public Path: string;
   end;
-  /// One note file that could not be read or parsed.
+  // One note file that could not be read or parsed.
   NoteIssue = record
     public Path: string;
     public Message: string;
   end;
-  /// Complete result of loading one notes directory.
+  // Complete result of loading one notes directory.
   NotesLoad = record
     public Notes: array of Note;
     public Issues: array of NoteIssue;
   end;
-  /// Visible pane in a narrow terminal.
+  // Visible pane in a narrow terminal.
   NotesPane = enum
     List;
     Editor;
   end;
-  /// Active modal layer, if any.
+  // Active modal layer, if any.
   NotesOverlay = enum
     Closed;
     Commands;
@@ -38,7 +38,7 @@ public type
     QuitConfirmation;
     SaveFailure;
   end;
-  /// Complete immutable application state supplied to the MVU view.
+  // Complete immutable application state supplied to the MVU view.
   NotesModel = record
     public Directory: string;
     public Notes: array of Note;
@@ -61,8 +61,7 @@ public type
     public Height: integer;
   end;
 
-/// Creates a new unsaved note with stable identity and timestamps.
-
+// Creates a new unsaved note with stable identity and timestamps.
 public function NoteCreate(Id: string; TimestampMillis: integer): Note;
 begin
   return record
@@ -78,8 +77,7 @@ begin
   end
 end;
 
-/// Creates initial application state from a directory load result.
-
+// Creates initial application state from a directory load result.
 public function NotesModelCreate(Directory: string; Loaded: NotesLoad): NotesModel;
 begin
   mutable var Selected: integer := -1;
@@ -127,15 +125,13 @@ begin
   end
 end;
 
-/// Formats a note's tags for the controlled metadata input.
-
+// Formats a note's tags for the controlled metadata input.
 public function NoteTagsText(NoteValue: Note): string;
 begin
   return Std.Str.Join(NoteValue.Tags, ', ')
 end;
 
-/// Parses, trims, and deduplicates comma-separated tags.
-
+// Parses, trims, and deduplicates comma-separated tags.
 public function NoteTagsFromText(Text: string): array of string;
 begin
   mutable var Tags: array of string := [];
@@ -152,8 +148,7 @@ begin
   return Tags
 end;
 
-/// Reports whether an active note matches a case-insensitive query.
-
+// Reports whether an active note matches a case-insensitive query.
 public function NoteMatches(NoteValue: Note; Search: string): boolean;
 begin
   var Query: string := Std.Str.ToLower(Std.Str.Trim(Search));
@@ -171,8 +166,7 @@ begin
          Std.Str.Contains(Std.Str.ToLower(NoteTagsText(NoteValue)), Query)
 end;
 
-/// Returns source-array indices for all visible filtered notes.
-
+// Returns source-array indices for all visible filtered notes.
 public function NotesFilteredIndices(Notes: array of Note; Search: string): array of integer;
 begin
   mutable var Indices: array of integer := [];
@@ -221,8 +215,7 @@ begin
   return Clipped
 end;
 
-/// Builds width-bounded list labels for all visible filtered notes.
-
+// Builds width-bounded list labels for all visible filtered notes.
 public function NotesListItems(Notes: array of Note; Search: string; MaximumWidth: integer): array of string;
 begin
   mutable var Items: array of string := [];

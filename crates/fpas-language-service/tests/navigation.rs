@@ -63,6 +63,7 @@ fn hover_and_definition_follow_lexical_shadowing_and_ignore_non_identifiers() {
 
 var Value: integer := 1;
 
+// Reads a value with **local** shadowing.
 function Read(Value: integer): integer;
 begin
   var Other: integer := Value;
@@ -90,6 +91,10 @@ end.
         .value
         .expect("function hover");
     assert!(hover.contents.starts_with("function Read("), "{hover:?}");
+    assert_eq!(
+        hover.documentation.as_deref(),
+        Some("Reads a value with **local** shadowing.")
+    );
 
     for offset in [
         source.find("Value in a comment").expect("comment"),
@@ -117,6 +122,7 @@ public type Point = record
   Secret: integer;
 end;
 
+// Returns the project answer.
 public function Answer(): integer;
 begin
   return 42
@@ -172,6 +178,15 @@ end.
         );
         assert_eq!(definition.value[0].path, unit);
         assert_eq!(definition.value[0].symbol.name, "Answer");
+        let hover = service
+            .hover(&main, offset)
+            .expect("cross-unit hover")
+            .value
+            .expect("resolved cross-unit hover");
+        assert_eq!(
+            hover.documentation.as_deref(),
+            Some("Returns the project answer.")
+        );
     }
     let unit_definition = service
         .definitions(
@@ -206,9 +221,12 @@ end.
             .is_empty()
     );
 
+    let updated_unit_source = unit_source
+        .replace("Returns the project answer.", "Returns the unsaved answer.")
+        .replace("Answer", "Updated");
     service
         .documents_mut()
-        .open_document(&unit, 1, unit_source.replace("Answer", "Updated"))
+        .open_document(&unit, 1, updated_unit_source)
         .expect("unsaved unit");
     service
         .documents_mut()
@@ -227,6 +245,20 @@ end.
         )
         .expect("unsaved definition");
     assert_eq!(updated.value[0].symbol.name, "Updated");
+    let updated_hover = service
+        .hover(
+            &main,
+            updated_source
+                .find("Updated();")
+                .expect("updated hover use"),
+        )
+        .expect("unsaved hover")
+        .value
+        .expect("resolved unsaved hover");
+    assert_eq!(
+        updated_hover.documentation.as_deref(),
+        Some("Returns the unsaved answer.")
+    );
 }
 
 #[test]

@@ -25,10 +25,15 @@ pub(crate) fn hover(
     snapshot: &DocumentSnapshot,
     value: HoverInfo,
 ) -> Result<Hover, PositionConversionError> {
+    let mut markdown = format!("```pascal\n{}\n```", value.contents);
+    if let Some(documentation) = value.documentation {
+        markdown.push_str("\n\n");
+        markdown.push_str(&documentation);
+    }
     Ok(Hover {
         contents: HoverContents::Markup(MarkupContent {
             kind: MarkupKind::Markdown,
-            value: format!("```pascal\n{}\n```", value.contents),
+            value: markdown,
         }),
         range: Some(span_range(snapshot, value.range)?),
     })

@@ -6,13 +6,13 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`function_decl`, `
 
 ```text
 function Name [<T>] ( [ params ] ) : RetType ;
-  { nested function | nested procedure }
+  // nested function | nested procedure
 begin
   ...
 end;
 
 procedure Name [<T>] ( [ params ] ) ;
-  { nested function | nested procedure }
+  // nested function | nested procedure
 begin
   ...
 end;

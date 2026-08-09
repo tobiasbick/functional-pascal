@@ -28,7 +28,7 @@ pub fn format_compilation_unit(unit: &CompilationUnit) -> String {
     format_with_comments(unit, &CommentMap::default())
 }
 
-/// Formats `unit` using `source` to preserve every comment (`///`, `//`, `{ }`, `(* *)`).
+/// Formats `unit` using `source` to preserve every `//` comment.
 ///
 /// **Documentation:** `docs/pascal/tools/fmt-style.md#comments`
 ///
@@ -76,8 +76,7 @@ mod tests {
 
     #[test]
     fn format_source_preserves_all_comments() {
-        let source =
-            "/// Unit doc.\nunit Demo;\n\n{ field doc }\nmutable var Count: integer := 0;\n";
+        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
 
@@ -88,8 +87,8 @@ mod tests {
         );
 
         let with_source = format_source(source, &unit).expect("matching source and AST");
-        assert!(with_source.contains("/// Unit doc."));
-        assert!(with_source.contains("{ field doc }"));
+        assert!(with_source.contains("// Unit doc."));
+        assert!(with_source.contains("// field doc"));
     }
 
     #[test]
@@ -99,5 +98,24 @@ mod tests {
         assert!(errors.is_empty(), "{errors:?}");
         let formatted = format_source(source, &unit).expect("matching source and AST");
         assert!(formatted.contains("// trail"));
+    }
+
+    #[test]
+    fn format_source_preserves_documentation_attachment_and_detachment() {
+        for (source, expected) in [
+            (
+                "// attached\nprogram T; begin end.",
+                "// attached\nprogram T;",
+            ),
+            (
+                "// detached\n\nprogram T; begin end.",
+                "// detached\n\nprogram T;",
+            ),
+        ] {
+            let (unit, errors) = parse_compilation_unit(source);
+            assert!(errors.is_empty(), "{errors:?}");
+            let formatted = format_source(source, &unit).expect("matching source and AST");
+            assert!(formatted.starts_with(expected), "{formatted:?}");
+        }
     }
 }

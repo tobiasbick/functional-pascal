@@ -77,3 +77,17 @@ fn cli_reports_compiler_directive_syntax_as_lex_error() {
         "directive.fpas:2:1: error[F0010]: `{$...}` is not valid source syntax\n  help: Remove this sequence. Put shared declarations in another `.fpas` file and import the unit with `uses`.\n"
     );
 }
+
+#[test]
+fn cli_reports_invalid_comment_form_with_the_valid_syntax() {
+    let source = "program Fail;\n{ not a comment }\nbegin\nend.\n";
+    let (exit_code, stdout_output, stderr_output) =
+        support::run_source_and_capture_output("comment.fpas", source);
+
+    assert_eq!(exit_code, 1);
+    assert!(stdout_output.is_empty());
+    assert_eq!(
+        stderr_output,
+        "comment.fpas:2:1: error[F0013]: `{...}` is not valid comment syntax\n  help: Use `// comment`. For multiple lines, prefix each line with `//`.\n"
+    );
+}

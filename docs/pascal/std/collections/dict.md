@@ -141,7 +141,7 @@ Returns a new dict containing all entries from both `D1` and `D2`. When the same
 var Base: dict of string to integer := ['A': 1, 'B': 2];
 var Over: dict of string to integer := ['B': 9, 'C': 3];
 var M: dict of string to integer := Std.Dict.Merge(Base, Over);
-{ {A: 1, B: 9, C: 3} }
+// {A: 1, B: 9, C: 3}
 ```
 
 ---

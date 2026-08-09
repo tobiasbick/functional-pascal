@@ -3,7 +3,7 @@ program EventsExample;
 uses Std.Console, Std.Conv;
 
 mutable var
-  { In-memory handler slot standing in for a live registry. }
+  // In-memory handler slot standing in for a live registry.
   ClickSlot: option of procedure(Sender: integer) := None;
 
 type

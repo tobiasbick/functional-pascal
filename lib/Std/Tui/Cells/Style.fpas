@@ -3,7 +3,7 @@ unit Std.Tui.Cells.Style;
 uses Std.Tui.Cells.Color;
 
 public type
-  /// Concrete foreground/background colors and text attributes.
+  // Concrete foreground/background colors and text attributes.
   TuiStyle = record
     public Foreground: TuiColor;
     public Background: TuiColor;
@@ -12,8 +12,7 @@ public type
     public Underline: boolean;
     public Inverse: boolean;
 
-    /// Creates a style with colors and no text attributes.
-
+    // Creates a style with colors and no text attributes.
     public static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
     begin
       return record
@@ -26,8 +25,7 @@ public type
       end
     end;
 
-    /// Creates a style with colors and explicit text attributes.
-
+    // Creates a style with colors and explicit text attributes.
     public static function Create(
   Foreground: TuiColor;
   Background: TuiColor;

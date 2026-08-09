@@ -42,7 +42,7 @@ The loop variable type must match the dict's key type. Iterating an empty dict e
 This is separate from the `in` membership operator in expressions. In `for K: string in Ages`, `in` introduces iteration. In `'Alice' in Ages`, `in` returns whether the dictionary contains that key.
 
 ```pascal
-{ Print only keys whose value exceeds 10 }
+// Print only keys whose value exceeds 10
 for K: string in Ages do
 begin
   if Ages[K] <= 10 then continue;

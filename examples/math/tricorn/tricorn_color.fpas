@@ -1,4 +1,4 @@
-{ Built only via tricorn.fpasprj — not a standalone program. }
+// Built only via tricorn.fpasprj — not a standalone program.
 
 unit Tricorn.Color;
 

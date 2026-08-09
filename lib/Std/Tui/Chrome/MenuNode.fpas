@@ -3,57 +3,61 @@ unit Std.Tui.Chrome.MenuNode;
 uses Std.Option, Std.Tui.Chrome.KeyGesture, Std.Tui.Ids.Action;
 
 public type
-  /// Positive identity of one node in a flat menu definition.
+  // Positive identity of one node in a flat menu definition.
   TuiMenuNodeId = record
     public Value: integer;
 
-    /// Creates a validated menu-node identity.
-
+    // Creates a validated menu-node identity.
     public static function Create(Value: integer): TuiMenuNodeId;
     begin
       if Value <= 0 then
       begin
         panic('Tui menu node id must be positive')
       end;
-      return record Value := Value; end
+
+      return record
+        Value := Value;
+      end
     end;
   end;
-  /// One flat menu node. Parent ids form the hierarchy without recursive arrays.
+  // One flat menu node. Parent ids form the hierarchy without recursive arrays.
   TuiMenuNode = enum
     Command(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string; Action: TuiAction; Enabled: boolean; Shortcut: option of TuiKeyGesture);
     Submenu(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string; Enabled: boolean);
     Separator(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId);
   end;
-  /// Model-owned open and active state of a controlled menu.
+  // Model-owned open and active state of a controlled menu.
   TuiMenuState = record
     public Open: boolean;
     public Active: option of TuiMenuNodeId;
 
-    /// Creates a closed menu state.
-
+    // Creates a closed menu state.
     public static function Closed(): TuiMenuState;
     begin
-      return record Open := false; Active := None; end
+      return record
+        Open := false;
+        Active := None;
+      end
     end;
 
-    /// Creates an open menu state with one active node.
-
+    // Creates an open menu state with one active node.
     public static function OpenAt(Id: TuiMenuNodeId): TuiMenuState;
     begin
-      return record Open := true; Active := Some(Id); end
+      return record
+        Open := true;
+        Active := Some(Id);
+      end
     end;
   end;
-  /// Named constructors for flat menu nodes.
+  // Named constructors for flat menu nodes.
   TuiMenuNodeBuilders = record
-    /// Creates an enabled submenu.
-
+    // Creates an enabled submenu.
     public static function Submenu(Id: TuiMenuNodeId; Parent: option of TuiMenuNodeId; Text: string; Mnemonic: string): TuiMenuNode;
     begin
       return TuiMenuNode.Submenu(Id, Parent, Text, Mnemonic, true)
     end;
 
-    /// Creates an enabled command without a shortcut.
-
+    // Creates an enabled command without a shortcut.
     public static function Command(
   Id: TuiMenuNodeId;
   Parent: option of TuiMenuNodeId;
@@ -65,8 +69,7 @@ public type
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, None)
     end;
 
-    /// Creates an enabled command with a structural shortcut.
-
+    // Creates an enabled command with a structural shortcut.
     public static function CommandWithShortcut(
   Id: TuiMenuNodeId;
   Parent: option of TuiMenuNodeId;
@@ -79,8 +82,7 @@ public type
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, true, Some(Shortcut))
     end;
 
-    /// Creates a disabled command.
-
+    // Creates a disabled command.
     public static function DisabledCommand(
   Id: TuiMenuNodeId;
   Parent: option of TuiMenuNodeId;
@@ -92,8 +94,7 @@ public type
       return TuiMenuNode.Command(Id, Parent, Text, Mnemonic, Action, false, None)
     end;
 
-    /// Creates a separator under one submenu.
-
+    // Creates a separator under one submenu.
     public static function Separator(Id: TuiMenuNodeId; Parent: TuiMenuNodeId): TuiMenuNode;
     begin
       return TuiMenuNode.Separator(Id, Some(Parent))

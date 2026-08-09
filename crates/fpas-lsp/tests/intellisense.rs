@@ -37,7 +37,7 @@ end;
         "src/importable.fpas",
         r#"unit Demo.Importable;
 
-/// Returns a value from the importable unit.
+// Returns a value from the importable unit.
 public function UniqueValue(): integer;
 begin
   return 42

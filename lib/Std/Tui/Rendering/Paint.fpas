@@ -32,8 +32,7 @@ begin
   Canvas.Child(Bounds).WriteText(TuiPoint.Create(0, 0), Text, Role)
 end;
 
-/// Paints one arranged node and returns the next unused frame index.
-
+// Paints one arranged node and returns the next unused frame index.
 function TuiPaintArranged(
   Canvas: TuiCanvas;
   Frame: TuiArrangedFrame;
@@ -283,8 +282,7 @@ begin
   return Next
 end;
 
-/// Paints one complete frame using arranged geometry only (no measurement).
-
+// Paints one complete frame using arranged geometry only (no measurement).
 public procedure TuiPaintView(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;
@@ -306,8 +304,7 @@ begin
   end
 end;
 
-/// Overwrites the surface with a terminal-too-small notice when layout overflows.
-
+// Overwrites the surface with a terminal-too-small notice when layout overflows.
 public procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
 begin
   Surface.Clear();

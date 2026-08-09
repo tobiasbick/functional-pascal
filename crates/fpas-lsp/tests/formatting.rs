@@ -46,11 +46,11 @@ fn formatting_matches_the_canonical_fpas_formatter_for_the_unsaved_buffer() {
 fn formatting_preserves_comments_and_is_idempotent() {
     let uri = "file:///phase5/format-comments.fpas";
     let source =
-        "program Comments; // header\nbegin\n{ before }\nWriteLn('ok') (* tail *)\nend. // done\n";
+        "program Comments; // header\nbegin\n// before\nWriteLn('ok'); // tail\nend. // done\n";
     let (unit, diagnostics) = fpas_parser::parse_compilation_unit(source);
     assert!(diagnostics.is_empty(), "{diagnostics:?}");
     let canonical = fpas_fmt::format_source(source, &unit).expect("matching source and AST");
-    for comment in ["// header", "{ before }", "(* tail *)", "// done"] {
+    for comment in ["// header", "// before", "// tail", "// done"] {
         assert!(canonical.contains(comment), "{canonical}");
     }
     let transcript = run(&[

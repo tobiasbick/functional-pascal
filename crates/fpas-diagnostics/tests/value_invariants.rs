@@ -23,8 +23,8 @@ fn dynamic_diagnostic_codes_accept_the_full_range_and_reject_overflow() {
 #[test]
 fn stage_boundaries_are_derived_from_the_code() {
     for (value, expected) in [
-        (12, DiagnosticStage::Lex),
-        (13, DiagnosticStage::Internal),
+        (13, DiagnosticStage::Lex),
+        (14, DiagnosticStage::Internal),
         (1001, DiagnosticStage::Parse),
         (1999, DiagnosticStage::Parse),
         (2000, DiagnosticStage::Internal),

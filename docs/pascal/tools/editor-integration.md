@@ -167,7 +167,9 @@ and ranks exact short names before prefixes, substrings, and qualified-name
 matches. Results have stable ordering, retain equal short names from distinct
 owners, and are limited to 100 entries per query.
 
-Hover shows the resolved source declaration. **Go to Definition** works for
+Hover shows the resolved source declaration followed by its attached Markdown documentation, when
+present. The documentation comes from the resolved declaration's current source snapshot, including
+cross-unit and unsaved declarations. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct
 `uses` imports, public declarations and record members, qualified unit names,
@@ -212,7 +214,8 @@ members, and keywords appropriate to the recovered source context. Each item
 reports its declaration kind, qualified owner, type or callable signature,
 stable sorting, and the exact identifier range it replaces. This replacement
 keeps punctuation and surrounding Unicode strings or comments unchanged.
-Declaration documentation is loaded only after the editor resolves a selected
+Declaration documentation uses a contiguous standalone `//` block immediately before the
+declaration; a blank line detaches the comment. It is loaded only after the editor resolves a selected
 item. Resolve data identifies the exact source snapshot and qualified
 declaration; changed, deleted, or manipulated identities leave the completion
 item undocumented instead of attaching documentation from another symbol.

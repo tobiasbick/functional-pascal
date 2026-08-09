@@ -17,12 +17,12 @@ fn format_idempotently(source: &str) -> String {
 
 #[test]
 fn callable_body_comments_stay_with_each_begin() {
-    let source = "program T;\nprocedure First();\n{ first body }\nbegin\nend;\nprocedure Second();\n(* second body *)\nbegin\nend;\n{ main body }\nbegin\nend.";
+    let source = "program T;\nprocedure First();\n// first body\nbegin\nend;\nprocedure Second();\n// second body\nbegin\nend;\n// main body\nbegin\nend.";
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("procedure First();\n{ first body }\nbegin"));
-    assert!(formatted.contains("procedure Second();\n(* second body *)\nbegin"));
-    assert!(formatted.contains("end;\n\n{ main body }\nbegin"));
+    assert!(formatted.contains("procedure First();\n// first body\nbegin"));
+    assert!(formatted.contains("procedure Second();\n// second body\nbegin"));
+    assert!(formatted.contains("end;\n\n// main body\nbegin"));
 }
 
 #[test]
@@ -36,10 +36,10 @@ fn nested_routine_body_comments_use_structural_owners() {
 
 #[test]
 fn closure_comments_survive_expression_emission() {
-    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  { closure body }\n  begin\n    // setup\n    WriteLn('ok') // closure trail\n  end;\n  Handler()\nend.";
+    let source = "program T;\nbegin\n  var Handler: procedure() := procedure()\n  // closure body\n  begin\n    // setup\n    WriteLn('ok') // closure trail\n  end;\n  Handler()\nend.";
     let formatted = format_idempotently(source);
 
-    for comment in ["{ closure body }", "// setup", "// closure trail"] {
+    for comment in ["// closure body", "// setup", "// closure trail"] {
         assert!(
             formatted.contains(comment),
             "missing {comment}:\n{formatted}"
@@ -111,9 +111,9 @@ fn compilation_and_routine_header_comments_stay_on_header_lines() {
 }
 
 #[test]
-fn multiple_eol_block_comments_share_one_code_line() {
-    let source = "program T; begin var A: integer := 1; { first } (* second *)\nWriteLn(A) end.";
+fn eol_comment_stays_on_its_code_line() {
+    let source = "program T; begin var A: integer := 1; // value\nWriteLn(A) end.";
     let formatted = format_idempotently(source);
 
-    assert!(formatted.contains("var A: integer := 1; { first } (* second *)\n"));
+    assert!(formatted.contains("var A: integer := 1; // value\n"));
 }

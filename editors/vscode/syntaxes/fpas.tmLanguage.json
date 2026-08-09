@@ -141,22 +141,8 @@
     "comments": {
       "patterns": [
         {
-          "name": "comment.line.documentation.fpas",
-          "match": "///.*$"
-        },
-        {
           "name": "comment.line.double-slash.fpas",
           "match": "//.*$"
-        },
-        {
-          "name": "comment.block.brace.fpas",
-          "begin": "\\{",
-          "end": "\\}"
-        },
-        {
-          "name": "comment.block.parenthesized.fpas",
-          "begin": "\\(\\*",
-          "end": "\\*\\)"
         }
       ]
     },

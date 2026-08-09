@@ -3,7 +3,7 @@ program GuardsExample;
 uses Std.Console, Std.Conv;
 
 type
-  { The arm matches only when both the label and the guard are true. }
+  // The arm matches only when both the label and the guard are true.
   Shape = enum
     Circle(Radius: real);
     Rectangle(Width: real; Height: real);

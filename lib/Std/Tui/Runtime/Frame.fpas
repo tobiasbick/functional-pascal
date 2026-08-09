@@ -5,8 +5,7 @@ uses
   Std.Tui.Geometry.Size, Std.Tui.Ids.ControlId, Std.Tui.Layout.Arrange, Std.Tui.Layout.Frame,
   Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
 
-/// Validates, arranges, and paints one complete frame into the host-owned arranged frame.
-
+// Validates, arranges, and paints one complete frame into the host-owned arranged frame.
 public procedure TuiRenderFrame(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;

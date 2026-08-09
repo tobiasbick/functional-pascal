@@ -82,8 +82,7 @@ begin
   return Next
 end;
 
-/// Persists the selected dirty note and returns the resulting UI state.
-
+// Persists the selected dirty note and returns the resulting UI state.
 public function NotesPersistCurrent(State: NotesModel): NotesModel;
 begin
   if (not State.Dirty) or (not SelectedExists(State)) then
@@ -381,8 +380,7 @@ begin
   return State
 end;
 
-/// Applies one routed TUI message to the Notes application model.
-
+// Applies one routed TUI message to the Notes application model.
 public function NotesUpdate(State: NotesModel; Msg: TuiMsg; Cmd: TuiCmdOutput): NotesModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
@@ -511,8 +509,7 @@ begin
   end
 end;
 
-/// Maps the source note selection to its position in the filtered list.
-
+// Maps the source note selection to its position in the filtered list.
 public function NotesSelectedFilteredPosition(State: NotesModel): integer;
 begin
   return SelectedFilteredPosition(State)

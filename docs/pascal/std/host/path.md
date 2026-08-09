@@ -50,7 +50,7 @@ Joins path segments in order using the platform separator.
 An absolute segment replaces earlier segments (host `PathBuf::push` semantics):
 
 ```pascal
-{ Unix example: result is '/etc/hosts', not 'home/etc/hosts' }
+// Unix example: result is '/etc/hosts', not 'home/etc/hosts'
 WriteLn(Join(['home', '/etc/hosts']))
 ```
 

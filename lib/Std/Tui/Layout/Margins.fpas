@@ -6,19 +6,19 @@ begin
   begin
     panic(('Tui layout margin ' + Name) + ' must not be negative')
   end;
+
   return Value
 end;
 
 public type
-  /// Non-negative outer margins around a laid-out child.
+  // Non-negative outer margins around a laid-out child.
   TuiMargins = record
     public Left: integer;
     public Top: integer;
     public Right: integer;
     public Bottom: integer;
 
-    /// Creates validated margins.
-
+    // Creates validated margins.
     public static function Create(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiMargins;
     begin
       return record
@@ -29,29 +29,25 @@ public type
       end
     end;
 
-    /// Creates equal margins on every side.
-
+    // Creates equal margins on every side.
     public static function Uniform(Value: integer): TuiMargins;
     begin
       return TuiMargins.Create(Value, Value, Value, Value)
     end;
 
-    /// Creates symmetric horizontal and vertical margins.
-
+    // Creates symmetric horizontal and vertical margins.
     public static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
     begin
       return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical)
     end;
 
-    /// Returns left plus right.
-
+    // Returns left plus right.
     public function Horizontal(Self: TuiMargins): integer;
     begin
       return Self.Left + Self.Right
     end;
 
-    /// Returns top plus bottom.
-
+    // Returns top plus bottom.
     public function Vertical(Self: TuiMargins): integer;
     begin
       return Self.Top + Self.Bottom

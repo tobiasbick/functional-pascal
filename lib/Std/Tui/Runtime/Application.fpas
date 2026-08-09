@@ -24,6 +24,7 @@ begin
   begin
     panic('Tui application handle is stale')
   end;
+
   return ApplicationId
 end;
 
@@ -34,6 +35,7 @@ begin
   begin
     panic('Tui application is closed')
   end;
+
   return ApplicationId
 end;
 
@@ -131,6 +133,7 @@ begin
           panic('Tui SetPalette command requires a palette')
         end
       end;
+
       TuiSurfaceInvalidateTerminal(TuiAppSurfaces[ApplicationId - 1]);
       return false
     end
@@ -138,19 +141,17 @@ begin
 end;
 
 public type
-  /// Headless Tui application host and deterministic message loop.
+  // Headless Tui application host and deterministic message loop.
   TuiApplication = record
     public Id: integer;
 
-    /// Opens a headless application with a fixed terminal size.
-
+    // Opens a headless application with a fixed terminal size.
     public static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
       return TuiApplication.OpenForTestWithPalette(Size, TuiPalette.Default())
     end;
 
-    /// Opens a headless application with a caller-defined palette.
-
+    // Opens a headless application with a caller-defined palette.
     public static function OpenForTestWithPalette(Size: TuiSize; Palette: TuiPalette): TuiApplication;
     begin
       TuiAppOpen := Std.Array.Concat(TuiAppOpen, [true]);
@@ -163,21 +164,24 @@ public type
       TuiAppInteractive := Std.Array.Concat(TuiAppInteractive, [false]);
       TuiAppPalettes := Std.Array.Concat(TuiAppPalettes, [Palette]);
       Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
-      return record Id := Std.Array.Length(TuiAppOpen); end
+      return record
+        Id := Std.Array.Length(TuiAppOpen);
+      end
     end;
 
-    /// Closes the host and discards all pending input and messages.
-
+    // Closes the host and discards all pending input and messages.
     public procedure Close(Self: TuiApplication);
     begin
       if (Self.Id < 1) or (Self.Id > Std.Array.Length(TuiAppOpen)) then
       begin
         return
       end;
+
       if not TuiAppOpen[Self.Id - 1] then
       begin
         return
       end;
+
       TuiAppOpen[Self.Id - 1] := false;
       TuiAppInputs[Self.Id - 1] := [];
       TuiAppMessages[Self.Id - 1] := [];
@@ -189,56 +193,49 @@ public type
       end
     end;
 
-    /// Injects an already constructed framework message in FIFO order.
-
+    // Injects an already constructed framework message in FIFO order.
     public procedure Inject(Self: TuiApplication; Msg: TuiMsg);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Message(Msg))
     end;
 
-    /// Injects a key that will be routed through focus and controlled elements.
-
+    // Injects a key that will be routed through focus and controlled elements.
     public procedure InjectKeyForTest(Self: TuiApplication; Key: Std.Console.KeyEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Key(Key))
     end;
 
-    /// Injects a pointer event in zero-based application coordinates.
-
+    // Injects a pointer event in zero-based application coordinates.
     public procedure InjectPointerForTest(Self: TuiApplication; Pointer: TuiPointerEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Pointer(Pointer))
     end;
 
-    /// Injects a resize that updates host size before the Resize message reaches Update.
-
+    // Injects a resize that updates host size before the Resize message reaches Update.
     public procedure InjectResizeForTest(Self: TuiApplication; Size: TuiSize);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
       TuiAppPushInput(ApplicationId, TuiHostInput.Resize(Size))
     end;
 
-    /// Returns an explicit immutable copy of the last painted surface.
-
+    // Returns an explicit immutable copy of the last painted surface.
     public function SurfaceSnapshot(Self: TuiApplication): TuiSurfaceSnapshot;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
       return TuiAppSurfaces[ApplicationId - 1].Snapshot()
     end;
 
-    /// Returns the application's current palette.
-
+    // Returns the application's current palette.
     public function Palette(Self: TuiApplication): TuiPalette;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
       return TuiAppPalettes[ApplicationId - 1]
     end;
 
-    /// Runs a deterministic number of message-processing iterations.
-
+    // Runs a deterministic number of message-processing iterations.
     public function RunIterations<TModel>(
   Self: TuiApplication;
   InitialModel: TModel;
@@ -253,6 +250,7 @@ public type
       begin
         panic('Tui iteration count must not be negative')
       end;
+
       if DeltaMilliseconds < 0 then
       begin
         panic('Tui tick delta must not be negative')
@@ -268,6 +266,7 @@ public type
         begin
           return Model
         end;
+
         if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
         begin
           if Std.Array.Length(TuiAppInputs[ApplicationId - 1]) > 0 then
@@ -279,12 +278,14 @@ public type
             end
           end
         end;
+
         Remaining := Remaining - 1;
         mutable var Msg: TuiMsg := TuiMsg.Tick(DeltaMilliseconds);
         if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) > 0 then
         begin
           Msg := TuiAppPopMessage(ApplicationId)
         end;
+
         TuiAppApplyResizeIfNeeded(ApplicationId, Msg);
         var Cmd: TuiCmdOutput := TuiAppCommands[ApplicationId - 1];
         Cmd.Reset();
@@ -299,11 +300,11 @@ public type
         TuiAppTrees[ApplicationId - 1] := NextTree;
         Tree := NextTree
       end;
+
       return Model
     end;
 
-    /// Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
-
+    // Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
     public static function Run<TModel>(
   InitialModel: TModel;
   Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
@@ -313,8 +314,7 @@ public type
       return TuiApplication.RunWithPalette(InitialModel, Update, View, TuiPalette.Default())
     end;
 
-    /// Runs one interactive Tui application with a caller-defined initial palette.
-
+    // Runs one interactive Tui application with a caller-defined initial palette.
     public static function RunWithPalette<TModel>(
   InitialModel: TModel;
   Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
@@ -329,6 +329,7 @@ public type
       begin
         Width := 1
       end;
+
       if Height < 1 then
       begin
         Height := 1
@@ -344,7 +345,9 @@ public type
       TuiAppInteractive := Std.Array.Concat(TuiAppInteractive, [true]);
       TuiAppPalettes := Std.Array.Concat(TuiAppPalettes, [Palette]);
       Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingOpen();
-      var App: TuiApplication := record Id := Std.Array.Length(TuiAppOpen); end;
+      var App: TuiApplication := record
+        Id := Std.Array.Length(TuiAppOpen);
+      end;
       var ApplicationId: integer := App.Id;
       mutable var Model: TModel := InitialModel;
       mutable var Tree: TuiElement := View(Model);
@@ -365,6 +368,7 @@ public type
             end
           end
         end;
+
         if Std.Array.Length(TuiAppMessages[ApplicationId - 1]) = 0 then
         begin
           continue
@@ -384,6 +388,7 @@ public type
         TuiAppTrees[ApplicationId - 1] := NextTree;
         TuiFlushSurface(TuiAppSurfaces[ApplicationId - 1], TuiAppPalettes[ApplicationId - 1])
       end;
+
       return Model
     end;
   end;

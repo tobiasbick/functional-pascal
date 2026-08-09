@@ -9,7 +9,7 @@ begin
   var beginValue: string := 'if then begin end';
   // function return record
   var gifted: boolean := true;
-  { while repeat until }
+  // while repeat until
   var endif: integer := 0;
   if gifted and (endif = 0) then
   begin

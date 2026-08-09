@@ -1,4 +1,4 @@
-{ Built only via mandelbrot.fpasprj — not a standalone program. }
+// Built only via mandelbrot.fpasprj — not a standalone program.
 
 unit Mandelbrot.Render;
 
@@ -119,8 +119,7 @@ begin
   return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background))
 end;
 
-/// Computes a flat row-major truecolor Mandelbrot cell grid.
-
+// Computes a flat row-major truecolor Mandelbrot cell grid.
 public function RenderGrid(
   XMin: real;
   XMax: real;

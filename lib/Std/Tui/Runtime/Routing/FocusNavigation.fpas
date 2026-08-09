@@ -111,8 +111,7 @@ begin
   end
 end;
 
-/// Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
-
+// Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
 public function TuiRouteButtonFocusNavigation(
   Root: TuiElement;
   Previous: option of TuiControlId;

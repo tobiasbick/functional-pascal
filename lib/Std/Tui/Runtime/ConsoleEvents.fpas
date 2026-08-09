@@ -10,19 +10,21 @@ begin
   begin
     return TuiPointerButton.Left
   end;
+
   if Button = Std.Console.MouseButton.Right then
   begin
     return TuiPointerButton.Right
   end;
+
   if Button = Std.Console.MouseButton.Middle then
   begin
     return TuiPointerButton.Middle
   end;
+
   return TuiPointerButton.NoButton
 end;
 
-/// Converts one Console event to Tui host input, discarding unsupported event kinds.
-
+// Converts one Console event to Tui host input, discarding unsupported event kinds.
 public function TuiConsoleEventToHostInput(Event: Std.Console.Event): option of TuiHostInput;
 begin
   case Event.kind of
@@ -42,6 +44,7 @@ begin
       begin
         return None
       end;
+
       return Some(TuiHostInput.Resize(TuiSize.Create(Event.width, Event.height)))
     end;
     Std.Console.EventKind.Paste, Std.Console.EventKind.FocusGained, Std.Console.EventKind.FocusLost:
@@ -51,8 +54,7 @@ begin
   end
 end;
 
-/// Blocks for one Console event and maps it to supported Tui host input.
-
+// Blocks for one Console event and maps it to supported Tui host input.
 public function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
   return TuiConsoleEventToHostInput(ReadEvent())

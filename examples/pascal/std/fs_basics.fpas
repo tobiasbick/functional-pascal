@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/host/fs.md — writes under .temp-data/ (gitignored scratch). }
+// Spec: docs/pascal/std/host/fs.md — writes under .temp-data/ (gitignored scratch).
 
 program FsBasics;
 

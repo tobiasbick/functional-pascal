@@ -3,7 +3,7 @@ unit Std.Tui.Runtime.Routing.ButtonCapture;
 uses Std.Array, Std.Tui.Chrome.Button, Std.Tui.Ids.ControlId;
 
 public type
-  /// Host-owned pointer capture for one button press.
+  // Host-owned pointer capture for one button press.
   TuiButtonPressState = enum
     Idle;
     Captured(Button: TuiButtonSpec; Inside: boolean);
@@ -12,43 +12,37 @@ public type
 mutable var
   TuiButtonPressStates: array of TuiButtonPressState := [];
 
-/// Allocates idle button-capture state for one application.
-
+// Allocates idle button-capture state for one application.
 public procedure TuiButtonCaptureOpen();
 begin
   TuiButtonPressStates := Std.Array.Concat(TuiButtonPressStates, [TuiButtonPressState.Idle])
 end;
 
-/// Clears button-capture state for one application.
-
+// Clears button-capture state for one application.
 public procedure TuiButtonCaptureClose(ApplicationId: integer);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle
 end;
 
-/// Returns the current button-capture state for one application.
-
+// Returns the current button-capture state for one application.
 public function TuiButtonCaptureGet(ApplicationId: integer): TuiButtonPressState;
 begin
   return TuiButtonPressStates[ApplicationId - 1]
 end;
 
-/// Releases button capture for one application.
-
+// Releases button capture for one application.
 public procedure TuiButtonCaptureRelease(ApplicationId: integer);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Idle
 end;
 
-/// Captures one button and records whether the pointer remains inside it.
-
+// Captures one button and records whether the pointer remains inside it.
 public procedure TuiButtonCaptureSet(ApplicationId: integer; Button: TuiButtonSpec; Inside: boolean);
 begin
   TuiButtonPressStates[ApplicationId - 1] := TuiButtonPressState.Captured(Button, Inside)
 end;
 
-/// Returns the button painted pressed while capture remains inside it.
-
+// Returns the button painted pressed while capture remains inside it.
 public function TuiButtonCapturePressed(ApplicationId: integer): option of TuiControlId;
 begin
   case TuiButtonPressStates[ApplicationId - 1] of

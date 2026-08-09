@@ -8,18 +8,18 @@ begin
   begin
     return Minimum - Available
   end;
+
   return 0
 end;
 
 public type
-  /// Reports whether allocated bounds satisfy a measured minimum.
+  // Reports whether allocated bounds satisfy a measured minimum.
   TuiLayoutFit = record
     public Minimum: TuiSize;
     public Available: TuiSize;
     public Overflow: TuiSize;
 
-    /// Creates a fit report from minimum and available sizes.
-
+    // Creates a fit report from minimum and available sizes.
     public static function Create(Minimum: TuiSize; Available: TuiSize): TuiLayoutFit;
     begin
       return record
@@ -29,8 +29,7 @@ public type
       end
     end;
 
-    /// Returns whether neither axis overflows.
-
+    // Returns whether neither axis overflows.
     public function Fits(Self: TuiLayoutFit): boolean;
     begin
       return (Self.Overflow.Width = 0) and (Self.Overflow.Height = 0)

@@ -5,24 +5,23 @@ uses Std.Console;
 mutable var
   TuiTerminalSessionOpen: boolean := false;
 
-/// Acquires the process terminal for one interactive Tui host.
-///
-/// `Std.Console` performs transactional mode acquisition and reverse-order rollback.
-
+// Acquires the process terminal for one interactive Tui host.
+//
+// `Std.Console` performs transactional mode acquisition and reverse-order rollback.
 public procedure TuiTerminalSessionAcquire();
 begin
   AcquireInteractiveTerminal();
   TuiTerminalSessionOpen := true
 end;
 
-/// Releases the process terminal when this Tui host owns it.
-
+// Releases the process terminal when this Tui host owns it.
 public procedure TuiTerminalSessionRelease();
 begin
   if not TuiTerminalSessionOpen then
   begin
     return
   end;
+
   TuiTerminalSessionOpen := false;
   ReleaseInteractiveTerminal()
 end;

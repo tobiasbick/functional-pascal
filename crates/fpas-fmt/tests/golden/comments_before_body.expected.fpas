@@ -1,7 +1,7 @@
 program T;
 
-(* before begin *)
+// before begin
 begin
-  { in body }
+  // in body
   WriteLn('ok')
 end.

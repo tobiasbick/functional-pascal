@@ -1,6 +1,6 @@
-{ Build first: cargo build --release -p fpas-cli }
-{ Baseline: target/release/fpas run this-file.fpas -- 50000000 }
-{ Guard: target/release/fpas run this-file.fpas -- 50000000 MAX_MILLIS }
+// Build first: cargo build --release -p fpas-cli
+// Baseline: target/release/fpas run this-file.fpas -- 50000000
+// Guard: target/release/fpas run this-file.fpas -- 50000000 MAX_MILLIS
 
 program VmIntegerLoopBenchmark;
 

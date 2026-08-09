@@ -1,4 +1,4 @@
-{ Run as `fpas run julia.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+// Run as `fpas run julia.fpasprj` (multi-unit project). Interactive; see examples/README.md.
 
 program JuliaShowcase;
 

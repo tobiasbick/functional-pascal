@@ -94,7 +94,7 @@ end;
 
 var R: Result of integer, string := Ok(21);
 var M: Result of string, string := Map(R, DoubleToString);
-{ M = Ok('42') }
+// M = Ok('42')
 ```
 
 ---
@@ -112,7 +112,7 @@ end;
 
 var R: Result of integer, string := Ok(10);
 var M: Result of string, string := AndThen(R, PositiveToResult);
-{ M = Ok('10') }
+// M = Ok('10')
 ```
 
 ---
@@ -129,7 +129,7 @@ end;
 
 var R: Result of integer, string := Error('oops');
 var M: Result of integer, string := OrElse(R, RecoverToZero);
-{ M = Ok(0) }
+// M = Ok(0)
 ```
 
 ---

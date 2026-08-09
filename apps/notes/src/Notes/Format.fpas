@@ -150,8 +150,7 @@ begin
   end)
 end;
 
-/// Parses one UTF-8 `.note` document with TOML frontmatter.
-
+// Parses one UTF-8 `.note` document with TOML frontmatter.
 public function NoteParse(Text: string): result of Note, string;
 begin
   var NewLine: string := Std.Str.Chr(10);
@@ -193,8 +192,7 @@ begin
   end
 end;
 
-/// Encodes one note as deterministic TOML frontmatter and Markdown body text.
-
+// Encodes one note as deterministic TOML frontmatter and Markdown body text.
 public function NoteStringify(NoteValue: Note): string;
 begin
   mutable var TagValues: array of TomlValue := [];

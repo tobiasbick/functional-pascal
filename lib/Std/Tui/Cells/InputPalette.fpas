@@ -3,7 +3,7 @@ unit Std.Tui.Cells.InputPalette;
 uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 
 public type
-  /// Concrete styles for every one-line input state.
+  // Concrete styles for every one-line input state.
   TuiInputPalette = record
     public Normal: TuiStyle;
     public Focused: TuiStyle;
@@ -11,8 +11,7 @@ public type
     public Cursor: TuiStyle;
     public Scroll: TuiStyle;
 
-    /// Creates a complete one-line input palette.
-
+    // Creates a complete one-line input palette.
     public static function Create(
   Normal: TuiStyle;
   Focused: TuiStyle;
@@ -30,8 +29,7 @@ public type
       end
     end;
 
-    /// Resolves one input role.
-
+    // Resolves one input role.
     public function ForRole(Self: TuiInputPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
@@ -62,8 +60,7 @@ public type
       end
     end;
 
-    /// Returns a copy with one input role replaced.
-
+    // Returns a copy with one input role replaced.
     public function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
     begin
       mutable var Updated: TuiInputPalette := Self;
@@ -93,6 +90,7 @@ public type
           panic('Tui input palette requires an input style role')
         end
       end;
+
       return Updated
     end;
   end;

@@ -18,6 +18,37 @@ use support::{
 const ANALYSIS_WAIT: Duration = Duration::from_millis(260);
 
 #[test]
+fn invalid_comment_form_publishes_one_actionable_lexer_diagnostic() {
+    let uri = "file:///comments/invalid.fpas";
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize(1)),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(
+            uri,
+            1,
+            "program Invalid;\n{ not a comment }\nbegin\nend.\n",
+        )),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(shutdown(2)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert_success(&transcript);
+    let published = notifications(&transcript.messages, "textDocument/publishDiagnostics");
+    let diagnostics = publication(&published, 1)["params"]["diagnostics"]
+        .as_array()
+        .expect("diagnostic array");
+    assert_eq!(diagnostics.len(), 1, "{diagnostics:?}");
+    assert_eq!(diagnostics[0]["code"], json!("F0013"));
+    assert!(
+        diagnostics[0]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("Use `// comment`")),
+        "{diagnostics:?}"
+    );
+}
+
+#[test]
 fn parser_and_semantic_errors_publish_and_a_fixed_version_clears_them() {
     let uri = "file:///phase5/diagnostics.fpas";
     let transcript = run_script(&[

@@ -5,7 +5,7 @@ uses
   Std.Tui.Cells.StyleRole, Std.Tui.Cells.Style;
 
 public type
-  /// Maps every semantic `TuiStyleRole` to a concrete terminal style.
+  // Maps every semantic `TuiStyleRole` to a concrete terminal style.
   TuiPalette = record
     public Normal: TuiStyle;
     public Disabled: TuiStyle;
@@ -32,8 +32,7 @@ public type
     public Warning: TuiStyle;
     public Accent: TuiStyle;
 
-    /// Returns the modern dark default palette.
-
+    // Returns the modern dark default palette.
     public static function Default(): TuiPalette;
     begin
       var Background: TuiColor := TuiColor.FromRgb(13, 17, 23);
@@ -79,8 +78,7 @@ public type
       end
     end;
 
-    /// Resolves the concrete style for one semantic role.
-
+    // Resolves the concrete style for one semantic role.
     public function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
@@ -183,8 +181,7 @@ public type
       end
     end;
 
-    /// Returns a copy with one semantic role replaced.
-
+    // Returns a copy with one semantic role replaced.
     public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
     begin
       mutable var Updated: TuiPalette := Self;
@@ -286,6 +283,7 @@ public type
           Updated.Accent := Style
         end
       end;
+
       return Updated
     end;
   end;

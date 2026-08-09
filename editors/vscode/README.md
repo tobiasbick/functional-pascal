@@ -62,7 +62,9 @@ diagnostic for the unsaved buffer. Run **Format Document** and confirm the
 result matches `fpas fmt`. The editor's standard `editor.formatOnSave` setting
 uses the same formatter without an FPAS-specific setting.
 
-Open the Outline view to inspect FPAS declarations. Hover a declaration or
+Open the Outline view to inspect FPAS declarations. A contiguous standalone `//` block immediately
+before a declaration is Markdown documentation; hover and resolved completion items display it.
+Hover a declaration or
 reference, use **Go to Definition** or **Go to Type Definition**, search all
 project declarations with **Go to Symbol in Workspace** (`Ctrl+T`), and invoke
 completion in a routine body or after a unit/record `.`. Resolved identifiers

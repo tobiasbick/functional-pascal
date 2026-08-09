@@ -1,5 +1,4 @@
-/// Status-line painting with semantic shortcut and selection roles.
-
+// Status-line painting with semantic shortcut and selection roles.
 unit Std.Tui.Rendering.StatusLine;
 
 uses
@@ -26,8 +25,7 @@ begin
   return X + Std.Console.DisplayWidth(Text)
 end;
 
-/// Paints one complete status row, including its unused background cells.
-
+// Paints one complete status row, including its unused background cells.
 public procedure TuiPaintStatusLine(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
@@ -43,6 +41,7 @@ begin
     begin
       X := TuiStatusWrite(Canvas, X, Bounds.Y, ' ', TuiStyleRole.StatusNormal)
     end;
+
     case Items[Index] of
       TuiStatusItem.Hint(Text):
       begin
@@ -65,6 +64,7 @@ begin
         begin
           Role := TuiStyleRole.StatusSelected
         end;
+
         X := TuiStatusWrite(Canvas, X, Bounds.Y, Text, Role)
       end
     end

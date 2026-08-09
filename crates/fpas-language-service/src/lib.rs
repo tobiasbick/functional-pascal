@@ -10,6 +10,7 @@ mod analysis;
 mod cancellation;
 mod diagnostics;
 mod document;
+mod documentation;
 mod error;
 mod formatting;
 mod intellisense;

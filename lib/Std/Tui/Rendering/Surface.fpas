@@ -14,7 +14,7 @@ mutable var
   TuiSurfacePresentedReady: array of boolean := [];
 
 public type
-  /// One changed horizontal range prepared for the internal terminal renderer.
+  // One changed horizontal range prepared for the internal terminal renderer.
   TuiSurfaceDamage = record
     public Y: integer;
     public FirstX: integer;
@@ -42,6 +42,7 @@ begin
   begin
     panic('Tui working surface handle is invalid')
   end;
+
   return Slot
 end;
 
@@ -58,6 +59,7 @@ begin
     TuiSurfaceCells[RowIndex][X + 1] := Blank;
     TuiSurfaceContinuations[RowIndex][X + 1] := false
   end;
+
   TuiSurfaceCells[RowIndex][X] := Blank
 end;
 
@@ -78,8 +80,10 @@ begin
     begin
       return
     end;
+
     TuiSurfaceClearGlyphAt(RowIndex, X + 1)
   end;
+
   TuiSurfaceCells[RowIndex][X] := Cell;
   if CellWidth = 2 then
   begin
@@ -138,10 +142,12 @@ begin
   begin
     return true
   end;
+
   if TuiSurfaceContinuations[RowIndex][X] then
   begin
     return false
   end;
+
   return ((TuiSurfaceCells[RowIndex][X].Glyph <> TuiSurfacePresentedCells[RowIndex][X].Glyph) or (TuiSurfaceCells[RowIndex][X].Role <> TuiSurfacePresentedCells[RowIndex][X].Role)) or
          not TuiSurfaceConcreteStyleEqual(TuiSurfaceCells[RowIndex][X].ConcreteStyle, TuiSurfacePresentedCells[RowIndex][X].ConcreteStyle)
 end;
@@ -156,29 +162,33 @@ begin
       Std.Array.Push(Cells, TuiSurfaceCells[RowIndex][X])
     end
   end;
-  return record Y := Y; FirstX := FirstX; Cells := Cells; end
+
+  return record
+    Y := Y;
+    FirstX := FirstX;
+    Cells := Cells;
+  end
 end;
 
 public type
-  /// Explicit immutable copy of the most recently painted headless surface.
+  // Explicit immutable copy of the most recently painted headless surface.
   TuiSurfaceSnapshot = record
     public Width: integer;
     public Height: integer;
     public Cells: array of TuiCell;
 
-    /// Returns one leading cell at a zero-based position.
-
+    // Returns one leading cell at a zero-based position.
     public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
     begin
       if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
       begin
         panic('Tui snapshot position is outside the surface')
       end;
+
       return Self.Cells[(Y * Self.Width) + X]
     end;
 
-    /// Returns one complete row as text.
-
+    // Returns one complete row as text.
     public function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
     begin
       if (Y < 0) or (Y >= Self.Height) then
@@ -190,21 +200,20 @@ public type
       begin
         Line := Line + Self.CellAt(X, Y).Glyph
       end;
+
       return Line
     end;
   end;
-  /// Host-owned mutable working surface handle.
+  // Host-owned mutable working surface handle.
   TuiWorkingSurface = record
     public Slot: integer;
 
-    /// Allocates one working grid for a headless application.
-
+    // Allocates one working grid for a headless application.
     public static function Create(Size: TuiSize): TuiWorkingSurface;
     begin
       TuiSurfaceSizes := Std.Array.Concat(TuiSurfaceSizes, [Size]);
       TuiSurfaceRowOffsets := Std.Array.Concat(TuiSurfaceRowOffsets, [
                                                                        Std.Array.Length(TuiSurfaceCells)
-
                                                                      ]);
       mutable var Rows: array of array of TuiCell := [];
       mutable var ContinuationRows: array of array of boolean := [];
@@ -213,24 +222,25 @@ public type
         Std.Array.Push(Rows, TuiSurfaceBlankRow(Size.Width));
         Std.Array.Push(ContinuationRows, TuiSurfaceBlankContinuationRow(Size.Width))
       end;
+
       TuiSurfaceCells := Std.Array.Concat(TuiSurfaceCells, Rows);
       TuiSurfaceContinuations := Std.Array.Concat(TuiSurfaceContinuations, ContinuationRows);
       TuiSurfacePresentedCells := Std.Array.Concat(TuiSurfacePresentedCells, Rows);
       TuiSurfacePresentedContinuations := Std.Array.Concat(TuiSurfacePresentedContinuations, ContinuationRows);
       TuiSurfacePresentedReady := Std.Array.Concat(TuiSurfacePresentedReady, [false]);
-      return record Slot := Std.Array.Length(TuiSurfaceSizes); end
+      return record
+        Slot := Std.Array.Length(TuiSurfaceSizes);
+      end
     end;
 
-    /// Returns the current surface size.
-
+    // Returns the current surface size.
     public function Size(Self: TuiWorkingSurface): TuiSize;
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
       return TuiSurfaceSizes[Slot - 1]
     end;
 
-    /// Returns whether the zero-based position lies inside the surface.
-
+    // Returns whether the zero-based position lies inside the surface.
     public function Contains(Self: TuiWorkingSurface; Position: TuiPoint): boolean;
     begin
       var Size: TuiSize := Self.Size();
@@ -238,8 +248,7 @@ public type
              (Position.Y < Size.Height)
     end;
 
-    /// Returns the leading cell at a position, or `None` outside the grid or on a continuation.
-
+    // Returns the leading cell at a position, or `None` outside the grid or on a continuation.
     public function TryCellAt(Self: TuiWorkingSurface; Position: TuiPoint): option of TuiCell;
     begin
       if not Self.Contains(Position) then
@@ -252,11 +261,11 @@ public type
       begin
         return None
       end;
+
       return Some(TuiSurfaceCells[RowIndex][Position.X])
     end;
 
-    /// Clears the surface by sharing one blank row across every line.
-
+    // Clears the surface by sharing one blank row across every line.
     public procedure Clear(Self: TuiWorkingSurface);
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
@@ -271,8 +280,7 @@ public type
       end
     end;
 
-    /// Paints one validated cell; out-of-bounds writes are ignored.
-
+    // Paints one validated cell; out-of-bounds writes are ignored.
     public procedure PutCell(Self: TuiWorkingSurface; Position: TuiPoint; Cell: TuiCell);
     begin
       if not Self.Contains(Position) then
@@ -283,15 +291,13 @@ public type
       TuiSurfacePutCellAt(TuiSurfaceRowOffsets[Slot - 1], Self.Size(), Position.X, Position.Y, Cell)
     end;
 
-    /// Paints one glyph with the normal style role; out-of-bounds writes are ignored.
-
+    // Paints one glyph with the normal style role; out-of-bounds writes are ignored.
     public procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
     end;
 
-    /// Copies the current leading glyphs for explicit test inspection.
-
+    // Copies the current leading glyphs for explicit test inspection.
     public function Snapshot(Self: TuiWorkingSurface): TuiSurfaceSnapshot;
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
@@ -312,12 +318,16 @@ public type
           end
         end
       end;
-      return record Width := Size.Width; Height := Size.Height; Cells := Cells; end
+
+      return record
+        Width := Size.Width;
+        Height := Size.Height;
+        Cells := Cells;
+      end
     end;
   end;
 
-/// Fills one clipped surface rectangle with a one-column cell.
-
+// Fills one clipped surface rectangle with a one-column cell.
 public procedure TuiSurfaceFillRect(Surface: TuiWorkingSurface; Bounds: TuiRect; Cell: TuiCell);
 begin
   if Cell.Width() <> 1 then
@@ -337,8 +347,10 @@ begin
       TuiSurfaceCells[RowOffset + Y] := FilledRow;
       TuiSurfaceContinuations[RowOffset + Y] := FilledContinuations
     end;
+
     return
   end;
+
   for Y: integer := Visible.Y to Visible.Bottom() - 1 do
   begin
     for X: integer := Visible.X to Visible.Right() - 1 do
@@ -348,8 +360,7 @@ begin
   end
 end;
 
-/// Returns changed terminal-cell runs and commits the current surface as the presented baseline.
-
+// Returns changed terminal-cell runs and commits the current surface as the presented baseline.
 public function TuiSurfaceTakeTerminalDamage(Surface: TuiWorkingSurface): array of TuiSurfaceDamage;
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);
@@ -370,6 +381,7 @@ begin
         begin
           FirstX := X
         end;
+
         TuiSurfacePresentedCells[RowIndex][X] := TuiSurfaceCells[RowIndex][X];
         TuiSurfacePresentedContinuations[RowIndex][X] := TuiSurfaceContinuations[RowIndex][X]
       end
@@ -379,17 +391,18 @@ begin
         FirstX := -1
       end
     end;
+
     if FirstX >= 0 then
     begin
       Std.Array.Push(Damage, TuiSurfaceDamageForRange(RowIndex, Y, FirstX, Size.Width - 1))
     end
   end;
+
   TuiSurfacePresentedReady[Slot - 1] := true;
   return Damage
 end;
 
-/// Marks every terminal cell as damaged without changing the surface contents.
-
+// Marks every terminal cell as damaged without changing the surface contents.
 public procedure TuiSurfaceInvalidateTerminal(Surface: TuiWorkingSurface);
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);

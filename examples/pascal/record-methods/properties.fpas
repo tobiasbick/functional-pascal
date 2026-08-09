@@ -25,7 +25,7 @@ begin
   end;
 
   WriteLn('Stored value: ' + IntToStr(C.Value));
-  { The setter receives Self by value, so this records the request but does not mutate C. }
+  // The setter receives Self by value, so this records the request but does not mutate C.
   C.Value := 20;
   WriteLn('Stored value after setter: ' + IntToStr(C.Value))
 end.

@@ -10,7 +10,7 @@ use super::{
 };
 use crate::{
     CancellationToken, DocumentSnapshot, DocumentSymbol, DocumentSymbols, LanguageService,
-    LanguageServiceError, SymbolLocation, WorkspaceKind,
+    LanguageServiceError, SymbolLocation, WorkspaceKind, documentation::preceding_documentation,
 };
 
 pub(crate) struct NavigationContext {
@@ -43,10 +43,16 @@ impl LanguageService {
     ) -> Result<NavigationResult<Option<HoverInfo>>, LanguageServiceError> {
         let context = self.navigation_context(path)?;
         let value = context.target_index.and_then(|target_index| {
-            resolve(&context.documents, target_index, offset).map(|(_, symbol, range)| HoverInfo {
-                contents: symbol.detail,
-                range,
-            })
+            resolve(&context.documents, target_index, offset).map(
+                |(document_index, symbol, range)| HoverInfo {
+                    documentation: preceding_documentation(
+                        context.documents[document_index].snapshot.source(),
+                        symbol.full_span.offset(),
+                    ),
+                    contents: symbol.detail,
+                    range,
+                },
+            )
         });
         Ok(NavigationResult {
             snapshot: context.snapshot,

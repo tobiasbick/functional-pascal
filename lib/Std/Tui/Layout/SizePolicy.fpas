@@ -1,7 +1,7 @@
 unit Std.Tui.Layout.SizePolicy;
 
 public type
-  /// Per-axis growth and shrink policy for layout.
+  // Per-axis growth and shrink policy for layout.
   TuiSizePolicyKind = enum
     Fixed;
     Minimum;
@@ -9,48 +9,45 @@ public type
     Preferred;
     Expanding;
   end;
-  /// Independent horizontal and vertical size policies.
+  // Independent horizontal and vertical size policies.
   TuiSizePolicy = record
     public Horizontal: TuiSizePolicyKind;
     public Vertical: TuiSizePolicyKind;
 
-    /// Creates a mixed-axis size policy.
-
+    // Creates a mixed-axis size policy.
     public static function Create(Horizontal: TuiSizePolicyKind; Vertical: TuiSizePolicyKind): TuiSizePolicy;
     begin
-      return record Horizontal := Horizontal; Vertical := Vertical; end
+      return record
+        Horizontal := Horizontal;
+        Vertical := Vertical;
+      end
     end;
 
-    /// Both axes fixed to preferred size.
-
+    // Both axes fixed to preferred size.
     public static function Fixed(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Fixed, TuiSizePolicyKind.Fixed)
     end;
 
-    /// Both axes use preferred as the minimum.
-
+    // Both axes use preferred as the minimum.
     public static function Minimum(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Minimum, TuiSizePolicyKind.Minimum)
     end;
 
-    /// Both axes use preferred as the maximum.
-
+    // Both axes use preferred as the maximum.
     public static function Maximum(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Maximum, TuiSizePolicyKind.Maximum)
     end;
 
-    /// Both axes treat preferred as ideal with grow and shrink.
-
+    // Both axes treat preferred as ideal with grow and shrink.
     public static function Preferred(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Preferred, TuiSizePolicyKind.Preferred)
     end;
 
-    /// Both axes request additional space beyond preferred.
-
+    // Both axes request additional space beyond preferred.
     public static function Expanding(): TuiSizePolicy;
     begin
       return TuiSizePolicy.Create(TuiSizePolicyKind.Expanding, TuiSizePolicyKind.Expanding)

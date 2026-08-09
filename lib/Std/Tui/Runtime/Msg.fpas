@@ -5,7 +5,7 @@ uses
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.PointerEvent;
 
 public type
-  /// Framework messages delivered to an application's Update function.
+  // Framework messages delivered to an application's Update function.
   TuiMsg = enum
     Key(Key: Std.Console.KeyEvent);
     Pointer(Pointer: TuiPointerEvent);
@@ -22,22 +22,19 @@ public type
     QuitRequested;
   end;
 
-/// Creates a source-aware action message.
-
+// Creates a source-aware action message.
 public function TuiMsgAction(Source: TuiControlId; Action: TuiAction): TuiMsg;
 begin
   return TuiMsg.Action(Source, Action)
 end;
 
-/// Creates a source-aware controlled-input change message.
-
+// Creates a source-aware controlled-input change message.
 public function TuiMsgTextChanged(Source: TuiControlId; Action: TuiAction; Text: string; Caret: integer): TuiMsg;
 begin
   return TuiMsg.TextChanged(Source, Action, Text, Caret)
 end;
 
-/// Creates a source-aware controlled multiline text-area change message.
-
+// Creates a source-aware controlled multiline text-area change message.
 public function TuiMsgTextAreaChanged(
   Source: TuiControlId;
   Action: TuiAction;
@@ -49,22 +46,19 @@ begin
   return TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset)
 end;
 
-/// Creates a source-aware controlled check-box change message.
-
+// Creates a source-aware controlled check-box change message.
 public function TuiMsgCheckChanged(Source: TuiControlId; Action: TuiAction; Checked: boolean): TuiMsg;
 begin
   return TuiMsg.CheckChanged(Source, Action, Checked)
 end;
 
-/// Creates a source-aware controlled list selection-change message.
-
+// Creates a source-aware controlled list selection-change message.
 public function TuiMsgSelectionChanged(Source: TuiControlId; Action: TuiAction; Selected: integer): TuiMsg;
 begin
   return TuiMsg.SelectionChanged(Source, Action, Selected)
 end;
 
-/// Creates a source-aware controlled scroll-offset change message.
-
+// Creates a source-aware controlled scroll-offset change message.
 public function TuiMsgScrollChanged(Source: TuiControlId; Action: TuiAction; Offset: TuiPoint): TuiMsg;
 begin
   return TuiMsg.ScrollChanged(Source, Action, Offset)

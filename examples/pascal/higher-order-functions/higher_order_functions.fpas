@@ -2,7 +2,7 @@ program HigherOrderFunctionsExample;
 
 uses Std.Console, Std.Array;
 
-{ First-class named functions }
+// First-class named functions
 
 function Square(X: integer): integer;
 begin
@@ -29,7 +29,7 @@ begin
   return Acc + V
 end;
 
-{ Higher-order: accepts any integer->integer function }
+// Higher-order: accepts any integer->integer function
 
 function Apply(F: function(X: integer): integer; Value: integer): integer;
 begin

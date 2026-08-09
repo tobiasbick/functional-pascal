@@ -4,24 +4,9 @@
 
 use crate::Span;
 
-/// Comment lexical style.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CommentStyle {
-    /// Line comment whose text begins with `///` (doc line).
-    DocLine,
-    /// Brace comment `{ ... }`.
-    Brace,
-    /// Parenthesis comment `(* ... *)`.
-    Paren,
-    /// Ordinary line comment `//` (not doc).
-    Line,
-}
-
 /// A comment occurrence in source, with its exact span.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceComment {
-    /// Lexical delimiter style used by this comment.
-    pub style: CommentStyle,
     /// Exact byte range and start position in the source passed to the lexer.
     pub span: Span,
 }

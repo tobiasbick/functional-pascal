@@ -22,7 +22,7 @@ begin
 end;
 
 var Output: array of integer := FlatMap([1, 2, 3], ExpandPair);
-{ [1, 10, 2, 20, 3, 30] }
+// [1, 10, 2, 20, 3, 30]
 ```
 
 ---

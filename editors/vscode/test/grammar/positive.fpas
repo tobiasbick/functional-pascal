@@ -1,5 +1,4 @@
-/// Positive syntax-highlighting fixture.
-
+// Positive syntax-highlighting fixture.
 program HighlightingShowcase;
 
 uses Std.Console;
@@ -16,9 +15,9 @@ begin
 end;
 
 begin
-  { Brace comment. }
+  // Origin value.
   var Origin: Point := record X := 42; Y := 3.5; end;
-  (* Parenthesized comment. *)
+  // Mask value.
   var Mask: integer := 42;
   if Mask >= 1 then
   begin

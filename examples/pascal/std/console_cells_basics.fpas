@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/console/cells-frames.md (from repository root). }
+// Spec: docs/pascal/std/console/cells-frames.md (from repository root).
 
 program ConsoleCellsBasics;
 

@@ -34,6 +34,7 @@ begin
     begin
     end
   end;
+
   return record
     glyph := Cell.Glyph;
     foreground := TuiColorToConsole(Style.Foreground);
@@ -48,14 +49,14 @@ begin
   begin
     Std.Array.Push(Row, TuiCellToConsole(Cell, Palette))
   end;
+
   return Row
 end;
 
-/// Flushes the current working surface through the Console frame API.
-///
-/// The Console cell format carries glyph and colors. Tui style attributes are intentionally
-/// resolved here as color-only output because the existing Console frame API has no attributes.
-
+// Flushes the current working surface through the Console frame API.
+//
+// The Console cell format carries glyph and colors. Tui style attributes are intentionally
+// resolved here as color-only output because the existing Console frame API has no attributes.
 public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);
@@ -63,6 +64,7 @@ begin
   begin
     return
   end;
+
   BeginFrame();
   for Item: TuiSurfaceDamage in Damage do
   begin
@@ -72,5 +74,6 @@ begin
       WriteCells(Item.FirstX + 1, Item.Y + 1, Row)
     end
   end;
+
   Present()
 end;

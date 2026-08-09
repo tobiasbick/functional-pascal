@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/numeric/random.md (from repository root). }
+// Spec: docs/pascal/std/numeric/random.md (from repository root).
 
 program RandomBasics;
 

@@ -1,5 +1,4 @@
-/// Flat modern button painting.
-
+// Flat modern button painting.
 unit Std.Tui.Rendering.Button;
 
 uses
@@ -23,6 +22,7 @@ begin
     begin
       GlyphRole := ShortcutRole
     end;
+
     Canvas.WriteText(TuiPoint.Create(X, Position.Y), Glyph, GlyphRole);
     X := X + Std.Console.DisplayWidth(Glyph)
   end
@@ -34,14 +34,17 @@ begin
   begin
     return TuiStyleRole.ButtonDisabled
   end;
+
   if Focused then
   begin
     return TuiStyleRole.ButtonSelected
   end;
+
   if Button.Default then
   begin
     return TuiStyleRole.ButtonDefault
   end;
+
   return TuiStyleRole.ButtonNormal
 end;
 
@@ -51,19 +54,21 @@ begin
   begin
     return TuiStyleRole.ButtonDisabled
   end;
+
   if Focused then
   begin
     return TuiStyleRole.ButtonSelectedShortcut
   end;
+
   if Button.Default then
   begin
     return TuiStyleRole.ButtonDefaultShortcut
   end;
+
   return TuiStyleRole.ButtonShortcut
 end;
 
-/// Paints a compact one-row button.
-
+// Paints a compact one-row button.
 public procedure TuiPaintButton(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
@@ -85,11 +90,13 @@ begin
   begin
     TextX := Bounds.X + 1
   end;
+
   if Pressed and Button.Enabled then
   begin
     Role := TuiStyleRole.ButtonSelected;
     ShortcutRole := TuiStyleRole.ButtonSelectedShortcut
   end;
+
   Canvas.FillRect(Bounds, TuiCell.Create(' ', Role));
   TuiPaintButtonText(Canvas, TuiPoint.Create(TextX, Bounds.Y), Button, Role, ShortcutRole);
   if ((Button.Enabled and Button.Default) and not Focused) and not Pressed then

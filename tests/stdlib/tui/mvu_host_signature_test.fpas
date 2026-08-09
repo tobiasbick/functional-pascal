@@ -1,6 +1,6 @@
 program MvuHostSignatureTest;
 
-{ Phase 0: prove the exact generic RunIterations / Update / View callable pattern. }
+// Phase 0: prove the exact generic RunIterations / Update / View callable pattern.
 uses Std.Tui, Std.Test;
 
 type

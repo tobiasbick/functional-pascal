@@ -4,8 +4,7 @@ uses
   Notes.Format, Notes.Model, Std.Array, Std.Conv, Std.Fs, Std.Path, Std.Random, Std.Result, Std.Str,
   Std.Time;
 
-/// Creates the notes directory or validates that it already exists.
-
+// Creates the notes directory or validates that it already exists.
 public function NotesEnsureDirectory(Directory: string): result of boolean, string;
 begin
   if Std.Fs.Exists(Directory) then
@@ -21,8 +20,7 @@ begin
   return Std.Fs.CreateDir(Directory)
 end;
 
-/// Resolves a note's existing or identity-derived `.note` path.
-
+// Resolves a note's existing or identity-derived `.note` path.
 public function NoteFilePath(Directory: string; NoteValue: Note): string;
 begin
   if NoteValue.Path <> '' then
@@ -43,8 +41,7 @@ begin
   return Left.UpdatedMillis > Right.UpdatedMillis
 end;
 
-/// Sorts pinned notes first and then by descending update timestamp.
-
+// Sorts pinned notes first and then by descending update timestamp.
 public function NotesSort(Notes: array of Note): array of Note;
 begin
   mutable var Sorted: array of Note := Notes;
@@ -64,8 +61,7 @@ begin
   return Sorted
 end;
 
-/// Loads valid notes and preserves invalid files as visible issues.
-
+// Loads valid notes and preserves invalid files as visible issues.
 public function NotesLoadDirectory(Directory: string): result of NotesLoad, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
@@ -110,16 +106,14 @@ begin
   end)
 end;
 
-/// Atomically writes one note to its stable file path.
-
+// Atomically writes one note to its stable file path.
 public function NotesSave(Directory: string; NoteValue: Note): result of boolean, string;
 begin
   var DirectoryReady: boolean := try NotesEnsureDirectory(Directory);
   return Std.Fs.WriteTextAtomic(NoteFilePath(Directory, NoteValue), NoteStringify(NoteValue))
 end;
 
-/// Generates an unused timestamp-and-random identity in one directory.
-
+// Generates an unused timestamp-and-random identity in one directory.
 public function NotesCreateId(Directory: string; TimestampMillis: integer): string;
 begin
   mutable var Candidate: string := '';
@@ -129,8 +123,7 @@ begin
   return Candidate
 end;
 
-/// Creates an in-memory draft with a new identity and current timestamp.
-
+// Creates an in-memory draft with a new identity and current timestamp.
 public function NotesCreateDraft(Directory: string): Note;
 begin
   var Now: integer := Std.Time.TimestampMillis();

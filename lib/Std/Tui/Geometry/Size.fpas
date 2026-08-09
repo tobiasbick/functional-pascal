@@ -6,26 +6,28 @@ begin
   begin
     panic(('Tui ' + Name) + ' must not be negative')
   end;
+
   return Value
 end;
 
 public type
-  /// Non-negative terminal-cell extent.
+  // Non-negative terminal-cell extent.
   TuiSize = record
     public Width: integer;
     public Height: integer;
 
-    /// Creates a validated extent.
-
+    // Creates a validated extent.
     public static function Create(Width: integer; Height: integer): TuiSize;
     begin
       TuiSizeRequireNonNegative(Width, 'width');
       TuiSizeRequireNonNegative(Height, 'height');
-      return record Width := Width; Height := Height; end
+      return record
+        Width := Width;
+        Height := Height;
+      end
     end;
 
-    /// Returns whether either extent is zero.
-
+    // Returns whether either extent is zero.
     public function IsEmpty(Self: TuiSize): boolean;
     begin
       return (Self.Width = 0) or (Self.Height = 0)

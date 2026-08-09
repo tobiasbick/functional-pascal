@@ -3,37 +3,33 @@ unit Std.Tui.Chrome.StatusItem;
 uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 
 public type
-  /// Immutable display or action item in a status line.
+  // Immutable display or action item in a status line.
   TuiStatusItem = enum
     Hint(Text: string);
     KeyHint(KeyText: string; Text: string);
     Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
   end;
-  /// Constructors for immutable status-line items.
+  // Constructors for immutable status-line items.
   TuiStatusItemBuilders = record
-    /// Creates a display-only status hint.
-
+    // Creates a display-only status hint.
     public static function MakeHint(Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.Hint(Text)
     end;
 
-    /// Creates a display-only shortcut and description pair.
-
+    // Creates a display-only shortcut and description pair.
     public static function MakeKeyHint(KeyText: string; Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.KeyHint(KeyText, Text)
     end;
 
-    /// Creates an enabled status-line command.
-
+    // Creates an enabled status-line command.
     public static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, true)
     end;
 
-    /// Creates a disabled status-line command.
-
+    // Creates a disabled status-line command.
     public static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, false)

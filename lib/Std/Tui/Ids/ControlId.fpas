@@ -6,18 +6,20 @@ begin
   begin
     panic('Tui control id must be positive')
   end;
+
   return Value
 end;
 
 public type
-  /// Unique positive interactive-node identity within one rendered tree.
+  // Unique positive interactive-node identity within one rendered tree.
   TuiControlId = record
     public Value: integer;
 
-    /// Creates a validated positive identity.
-
+    // Creates a validated positive identity.
     public static function Create(Value: integer): TuiControlId;
     begin
-      return record Value := TuiControlIdRequirePositive(Value); end
+      return record
+        Value := TuiControlIdRequirePositive(Value);
+      end
     end;
   end;

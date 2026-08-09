@@ -39,6 +39,8 @@ pub struct NavigationResult<T> {
 pub struct HoverInfo {
     /// Compact Functional Pascal declaration text.
     pub contents: String,
+    /// Markdown documentation attached to the resolved declaration.
+    pub documentation: Option<String>,
     /// Identifier range under the cursor.
     pub range: fpas_diagnostics::SourceSpan,
 }

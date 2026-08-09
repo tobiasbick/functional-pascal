@@ -6,7 +6,7 @@ uses
   Std.Tui.Ids.ControlId, Std.Tui.Layout.Frame;
 
 public type
-  /// Hit result for pointer routing against arranged geometry.
+  // Hit result for pointer routing against arranged geometry.
   TuiPointerHit = enum
     Miss;
     ElementButton(Button: TuiButtonSpec);
@@ -219,8 +219,7 @@ begin
   return Next
 end;
 
-/// Returns the deepest eligible hit at a point.
-
+// Returns the deepest eligible hit at a point.
 public function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
 begin
   TuiPointerBestHit := TuiPointerHit.Miss;

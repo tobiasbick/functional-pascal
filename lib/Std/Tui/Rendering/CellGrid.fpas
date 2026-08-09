@@ -1,12 +1,10 @@
-/// Cell-grid painting.
-
+// Cell-grid painting.
 unit Std.Tui.Rendering.CellGrid;
 
 uses
   Std.Tui.Chrome.CellGrid, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
-/// Paints the visible part of a row-major terminal cell grid.
-
+// Paints the visible part of a row-major terminal cell grid.
 public procedure TuiPaintCellGrid(Canvas: TuiCanvas; Bounds: TuiRect; Grid: TuiCellGrid);
 begin
   mutable var Width: integer := Grid.Width;
@@ -15,10 +13,12 @@ begin
   begin
     Width := Bounds.Width
   end;
+
   if Height > Bounds.Height then
   begin
     Height := Bounds.Height
   end;
+
   for Y: integer := 0 to Height - 1 do
   begin
     for X: integer := 0 to Width - 1 do

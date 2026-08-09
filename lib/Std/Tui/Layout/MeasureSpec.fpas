@@ -3,27 +3,27 @@ unit Std.Tui.Layout.MeasureSpec;
 uses Std.Tui.Geometry.Size, Std.Tui.Layout.MeasureConstraint;
 
 public type
-  /// Width and height measurement constraints for one element.
+  // Width and height measurement constraints for one element.
   TuiMeasureSpec = record
     public Width: TuiMeasureConstraint;
     public Height: TuiMeasureConstraint;
 
-    /// Creates a two-axis measure specification.
-
+    // Creates a two-axis measure specification.
     public static function Create(Width: TuiMeasureConstraint; Height: TuiMeasureConstraint): TuiMeasureSpec;
     begin
-      return record Width := Width; Height := Height; end
+      return record
+        Width := Width;
+        Height := Height;
+      end
     end;
 
-    /// Both axes unbounded.
-
+    // Both axes unbounded.
     public static function Unbounded(): TuiMeasureSpec;
     begin
       return TuiMeasureSpec.Create(TuiMeasureConstraint.Unbounded(), TuiMeasureConstraint.Unbounded())
     end;
 
-    /// Both axes capped by the given size.
-
+    // Both axes capped by the given size.
     public static function AtMost(Size: TuiSize): TuiMeasureSpec;
     begin
       return TuiMeasureSpec.Create(TuiMeasureConstraint.AtMost(Size.Width), TuiMeasureConstraint.AtMost(Size.Height))

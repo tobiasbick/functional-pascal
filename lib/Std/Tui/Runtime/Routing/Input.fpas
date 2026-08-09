@@ -17,6 +17,7 @@ begin
       break
     end
   end;
+
   while Index > 0 do
   begin
     if Std.Str.CharAt(Text, Index - 1) <> ' ' then
@@ -28,6 +29,7 @@ begin
       break
     end
   end;
+
   return Index
 end;
 
@@ -45,6 +47,7 @@ begin
       break
     end
   end;
+
   while Index < Std.Str.Length(Text) do
   begin
     if Std.Str.CharAt(Text, Index) = ' ' then
@@ -56,6 +59,7 @@ begin
       break
     end
   end;
+
   return Index
 end;
 
@@ -65,6 +69,7 @@ begin
   begin
     return -1
   end;
+
   for Index: integer := Std.Array.Length(Input.History) - 1 downto 0 do
   begin
     if Input.History[Index] = Input.Text then
@@ -72,6 +77,7 @@ begin
       return Index
     end
   end;
+
   return -1
 end;
 
@@ -89,48 +95,56 @@ begin
       var Text: string := Input.History[Std.Array.Length(Input.History) - 1];
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)))
     end;
+
     if Index > 0 then
     begin
       var Text: string := Input.History[Index - 1];
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)))
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret))
   end;
+
   if Key.kind = Std.Console.KeyKind.Down then
   begin
     if Index < 0 then
     begin
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Input.Caret))
     end;
+
     if Index < Std.Array.Length(Input.History) - 1 then
     begin
       var Text: string := Input.History[Index + 1];
       return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Text, Std.Str.Length(Text)))
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.HistoryDraft, Std.Str.Length(Input.HistoryDraft)))
   end;
+
   return None
 end;
 
-/// Routes one key when the supplied input owns focus.
-
+// Routes one key when the supplied input owns focus.
 public function TuiRouteInputKey(Input: TuiInputSpec; Target: TuiControlId; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
   if Input.Id.Value <> Target.Value then
   begin
     return None
   end;
+
   if ((Key.kind = Std.Console.KeyKind.Character) and not Key.ctrl) and
      (not Key.alt and not Key.meta) then
   begin
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Insert(Input.Text, Input.Caret, Key.ch), Input.Caret +
                                                                                                                   Std.Str.Length(Key.ch)))
   end;
+
   if ((Key.kind = Std.Console.KeyKind.Space) and not Key.ctrl) and (not Key.alt and not Key.meta) then
   begin
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Insert(Input.Text, Input.Caret, ' '), Input.Caret +
                                                                                                                1))
   end;
+
   if (Key.kind = Std.Console.KeyKind.Backspace) and (Input.Caret > 0) then
   begin
     mutable var Start: integer := Input.Caret - 1;
@@ -138,9 +152,11 @@ begin
     begin
       Start := TuiInputPreviousWord(Input.Text, Input.Caret)
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Delete(Input.Text, Start, Input.Caret -
                                                                                                    Start), Start))
   end;
+
   if (Key.kind = Std.Console.KeyKind.Delete) and (Input.Caret < Std.Str.Length(Input.Text)) then
   begin
     mutable var EndIndex: integer := Input.Caret + 1;
@@ -148,9 +164,11 @@ begin
     begin
       EndIndex := TuiInputNextWord(Input.Text, Input.Caret)
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Std.Str.Delete(Input.Text, Input.Caret, EndIndex -
                                                                                                          Input.Caret), Input.Caret))
   end;
+
   if (Key.kind = Std.Console.KeyKind.Left) and (Input.Caret > 0) then
   begin
     mutable var Caret: integer := Input.Caret - 1;
@@ -158,8 +176,10 @@ begin
     begin
       Caret := TuiInputPreviousWord(Input.Text, Input.Caret)
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret))
   end;
+
   if (Key.kind = Std.Console.KeyKind.Right) and (Input.Caret < Std.Str.Length(Input.Text)) then
   begin
     mutable var Caret: integer := Input.Caret + 1;
@@ -167,19 +187,24 @@ begin
     begin
       Caret := TuiInputNextWord(Input.Text, Input.Caret)
     end;
+
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Caret))
   end;
+
   if Key.kind = Std.Console.KeyKind.Home then
   begin
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, 0))
   end;
+
   if Key.kind = Std.Console.KeyKind.EndKey then
   begin
     return Some(TuiMsg.TextChanged(Input.Id, Input.ChangeAction, Input.Text, Std.Str.Length(Input.Text)))
   end;
+
   if (Key.kind = Std.Console.KeyKind.Up) or (Key.kind = Std.Console.KeyKind.Down) then
   begin
     return TuiInputHistoryKey(Input, Key)
   end;
+
   return None
 end;

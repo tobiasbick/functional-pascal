@@ -80,7 +80,7 @@ fn wrapped_parenthesized_comparisons_preserve_full_expression() {
 fn comments_unit_declaration_docs() {
     common::assert_golden(
         "comments_unit",
-        "/// Unit doc.\nunit Demo;\n\n{ field doc }\nmutable var Count: integer := 0;\n",
+        "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n",
         include_str!("golden/comments_unit.expected.fpas"),
     );
 }
@@ -89,17 +89,17 @@ fn comments_unit_declaration_docs() {
 fn comments_program_uses_begin_body_and_trailing() {
     common::assert_golden(
         "comments_program",
-        "program T;\n{ before uses }\nuses Std.Console;\n\n{ before begin }\nbegin\n  // setup\n  WriteLn('ok') // trail\nend. // tail",
+        "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  // setup\n  WriteLn('ok') // trail\nend. // tail",
         include_str!("golden/comments_program.expected.fpas"),
     );
 }
 
 #[test]
-fn comments_brace_and_paren_star_blocks() {
+fn comments_before_begin_and_statement() {
     common::assert_golden(
-        "comments_block_styles",
-        "program T;\n(* before begin *)\nbegin\n  { in body }\n  WriteLn('ok')\nend.",
-        include_str!("golden/comments_block_styles.expected.fpas"),
+        "comments_before_body",
+        "program T;\n// before begin\nbegin\n  // in body\n  WriteLn('ok')\nend.",
+        include_str!("golden/comments_before_body.expected.fpas"),
     );
 }
 

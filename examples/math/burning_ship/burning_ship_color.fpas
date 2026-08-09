@@ -1,4 +1,4 @@
-{ Built only via burning_ship.fpasprj — not a standalone program. }
+// Built only via burning_ship.fpasprj — not a standalone program.
 
 unit BurningShip.Color;
 

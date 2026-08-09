@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/language/types/generics.md (from repository root). }
+// Spec: docs/pascal/language/types/generics.md (from repository root).
 
 program GenericRecordMethods;
 

@@ -70,7 +70,7 @@ When two or more imported units export the same short name, the short name becom
 program Demo;
 uses Std.Str, Std.Array;           { OK — no error at import }
 begin
-  { Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Array }
+  // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Array
   var L1: integer := Std.Str.Length('hi');       { OK }
   var L2: integer := Std.Array.Length([1, 2]);   { OK }
 end.

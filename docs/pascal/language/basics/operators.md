@@ -76,7 +76,7 @@ var
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
 
 ```pascal
-{ iterate over characters }
+// iterate over characters
 mutable var I: integer := 0;
 while I < Std.Str.Length(S) do begin
   WriteLn(S[I]);

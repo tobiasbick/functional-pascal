@@ -157,7 +157,7 @@ include = ["src/*.fpas"]
 program Main;
 uses App.Lib;
 begin
-  var P: SecretPoint := SecretPoint { X: 1; Y: 2 };
+  var P: SecretPoint := record X := 1; Y := 2; end;
 end.
 ",
     );
@@ -205,7 +205,7 @@ include = ["src/*.fpas"]
 program Main;
 uses App.Lib;
 begin
-  var P: App.Lib.SecretPoint := App.Lib.SecretPoint { X: 1; Y: 2 };
+  var P: App.Lib.SecretPoint := record X := 1; Y := 2; end;
 end.
 ",
     );

@@ -1,7 +1,7 @@
-{ Reproduces https://pkolaczk.github.io/memory-consumption-of-async/ }
-{ Build first: cargo build --release -p fpas-cli }
-{ Linux: /usr/bin/time -v target/release/fpas run this-file.fpas -- 10000 }
-{ PowerShell: use Start-Process -PassThru and inspect PeakWorkingSet64 after WaitForExit(). }
+// Reproduces https://pkolaczk.github.io/memory-consumption-of-async/
+// Build first: cargo build --release -p fpas-cli
+// Linux: /usr/bin/time -v target/release/fpas run this-file.fpas -- 10000
+// PowerShell: use Start-Process -PassThru and inspect PeakWorkingSet64 after WaitForExit().
 
 program TaskMemoryBenchmark;
 

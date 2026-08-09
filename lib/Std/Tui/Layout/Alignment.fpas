@@ -1,48 +1,46 @@
 unit Std.Tui.Layout.Alignment;
 
 public type
-  /// Alignment of content inside an allocated layout slot.
+  // Alignment of content inside an allocated layout slot.
   TuiAlignmentKind = enum
     Leading;
     Center;
     Trailing;
     Fill;
   end;
-  /// Independent horizontal and vertical alignment.
+  // Independent horizontal and vertical alignment.
   TuiAlignment = record
     public Horizontal: TuiAlignmentKind;
     public Vertical: TuiAlignmentKind;
 
-    /// Creates a mixed-axis alignment.
-
+    // Creates a mixed-axis alignment.
     public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
     begin
-      return record Horizontal := Horizontal; Vertical := Vertical; end
+      return record
+        Horizontal := Horizontal;
+        Vertical := Vertical;
+      end
     end;
 
-    /// Leading on both axes.
-
+    // Leading on both axes.
     public static function Leading(): TuiAlignment;
     begin
       return TuiAlignment.Create(TuiAlignmentKind.Leading, TuiAlignmentKind.Leading)
     end;
 
-    /// Centered on both axes.
-
+    // Centered on both axes.
     public static function Center(): TuiAlignment;
     begin
       return TuiAlignment.Create(TuiAlignmentKind.Center, TuiAlignmentKind.Center)
     end;
 
-    /// Trailing on both axes.
-
+    // Trailing on both axes.
     public static function Trailing(): TuiAlignment;
     begin
       return TuiAlignment.Create(TuiAlignmentKind.Trailing, TuiAlignmentKind.Trailing)
     end;
 
-    /// Fill on both axes.
-
+    // Fill on both axes.
     public static function Fill(): TuiAlignment;
     begin
       return TuiAlignment.Create(TuiAlignmentKind.Fill, TuiAlignmentKind.Fill)

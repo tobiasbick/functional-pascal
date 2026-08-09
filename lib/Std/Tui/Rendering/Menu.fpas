@@ -46,8 +46,7 @@ begin
   end
 end;
 
-/// Paints the one-line root menu bar.
-
+// Paints the one-line root menu bar.
 public procedure TuiPaintMenuBar(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
@@ -195,8 +194,7 @@ begin
   end
 end;
 
-/// Paints all open menu popups over the completed desktop frame.
-
+// Paints all open menu popups over the completed desktop frame.
 public procedure TuiPaintMenuPopups(
   Canvas: TuiCanvas;
   BarBounds: TuiRect;

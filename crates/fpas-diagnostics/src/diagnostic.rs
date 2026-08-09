@@ -42,7 +42,7 @@ impl DiagnosticCode {
     #[must_use]
     pub const fn stage(self) -> DiagnosticStage {
         match self.value() {
-            1..=12 => DiagnosticStage::Lex,
+            1..=13 => DiagnosticStage::Lex,
             1001..=1999 => DiagnosticStage::Parse,
             2001..=2999 => DiagnosticStage::Sema,
             3001..=3999 => DiagnosticStage::Compile,
@@ -125,8 +125,8 @@ mod tests {
     #[test]
     fn diagnostic_code_stage_respects_every_range_boundary() {
         for (code, stage) in [
-            (12, DiagnosticStage::Lex),
-            (13, DiagnosticStage::Internal),
+            (13, DiagnosticStage::Lex),
+            (14, DiagnosticStage::Internal),
             (1001, DiagnosticStage::Parse),
             (1999, DiagnosticStage::Parse),
             (2000, DiagnosticStage::Internal),

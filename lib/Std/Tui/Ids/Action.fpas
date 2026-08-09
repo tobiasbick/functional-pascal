@@ -6,18 +6,20 @@ begin
   begin
     panic('Tui action id must be positive')
   end;
+
   return Value
 end;
 
 public type
-  /// Positive application-intent identity; duplicates across controls are allowed.
+  // Positive application-intent identity; duplicates across controls are allowed.
   TuiAction = record
     public Value: integer;
 
-    /// Creates a validated positive action identity.
-
+    // Creates a validated positive action identity.
     public static function Create(Value: integer): TuiAction;
     begin
-      return record Value := TuiActionRequirePositive(Value); end
+      return record
+        Value := TuiActionRequirePositive(Value);
+      end
     end;
   end;

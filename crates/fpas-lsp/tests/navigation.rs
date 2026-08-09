@@ -13,7 +13,7 @@ use support::{exit, initialize, initialized, response, run, shutdown};
 #[test]
 fn navigation_capabilities_and_requests_use_utf16_ranges() {
     let uri = "file:///phase6/navigation.fpas";
-    let source = "program Nav;\n\nfunction Add(Value: integer): integer;\nbegin\n  return Value\nend;\n\nbegin\n  var Music: string := '𝄞';\n  var Total: integer := Add(1)\nend.\n";
+    let source = "program Nav;\n\n// Adds one **integer** value.\nfunction Add(Value: integer): integer;\nbegin\n  return Value\nend;\n\nbegin\n  var Music: string := '𝄞';\n  var Total: integer := Add(1)\nend.\n";
     let add_use = source.rfind("Add(1)").expect("function use");
     let string_value = source.find("𝄞").expect("Unicode string");
     let transcript = run(&[
@@ -62,7 +62,8 @@ fn navigation_capabilities_and_requests_use_utf16_ranges() {
     assert!(
         response(&transcript.messages, 3)["result"]["contents"]["value"]
             .as_str()
-            .is_some_and(|value| value.contains("function Add(Value: integer): integer"))
+            .is_some_and(|value| value
+                == "```pascal\nfunction Add(Value: integer): integer\n```\n\nAdds one **integer** value.")
     );
     let definitions = response(&transcript.messages, 4)["result"]
         .as_array()
@@ -75,7 +76,7 @@ fn navigation_capabilities_and_requests_use_utf16_ranges() {
     );
     assert_eq!(
         definitions[0]["range"]["start"],
-        json!({"line": 2, "character": 9})
+        json!({"line": 3, "character": 9})
     );
 
     let completions = response(&transcript.messages, 5)["result"]

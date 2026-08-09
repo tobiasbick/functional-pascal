@@ -18,10 +18,16 @@ pub(crate) fn emit_leading_comments(
         return;
     }
 
-    for text in attached {
-        emit_comment_line(emitter, text);
+    for comment in attached {
+        if comment.blank_before {
+            emitter.blank_line();
+        }
+        emit_comment_line(emitter, &comment.text);
     }
-    if blank_after {
+    if comments
+        .leading_needs_blank_after(anchor_offset)
+        .unwrap_or(blank_after)
+    {
         emitter.blank_line();
     }
 }

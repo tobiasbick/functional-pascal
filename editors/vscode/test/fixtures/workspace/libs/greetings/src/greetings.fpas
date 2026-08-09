@@ -1,4 +1,4 @@
-{ Public library unit used by the editor workspace fixture. }
+// Public library unit used by the editor workspace fixture.
 
 unit Editor.Greetings;
 

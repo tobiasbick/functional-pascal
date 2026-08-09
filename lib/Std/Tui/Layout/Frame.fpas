@@ -3,7 +3,7 @@ unit Std.Tui.Layout.Frame;
 uses Std.Array, Std.Tui.Geometry.Rect;
 
 public type
-  /// One private arranged-frame entry for a preorder element visit.
+  // One private arranged-frame entry for a preorder element visit.
   TuiArrangedEntry = record
     public ParentIndex: integer;
     public Bounds: TuiRect;
@@ -19,25 +19,26 @@ begin
   begin
     panic('Tui arranged frame handle is invalid')
   end;
+
   return Slot
 end;
 
 public type
-  /// Host-owned arranged-frame index for one painted tree.
+  // Host-owned arranged-frame index for one painted tree.
   TuiArrangedFrame = record
     public Slot: integer;
 
-    /// Allocates an empty arranged frame.
-
+    // Allocates an empty arranged frame.
     public static function Create(): TuiArrangedFrame;
     begin
       mutable var Empty: array of TuiArrangedEntry := [];
       TuiFrameEntries := Std.Array.Concat(TuiFrameEntries, [Empty]);
-      return record Slot := Std.Array.Length(TuiFrameEntries); end
+      return record
+        Slot := Std.Array.Length(TuiFrameEntries);
+      end
     end;
 
-    /// Clears all entries before a fresh arrange pass.
-
+    // Clears all entries before a fresh arrange pass.
     public procedure Clear(Self: TuiArrangedFrame);
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -45,38 +46,38 @@ public type
       TuiFrameEntries[Slot - 1] := Empty
     end;
 
-    /// Appends one preorder entry and returns its index.
-
+    // Appends one preorder entry and returns its index.
     public function Push(Self: TuiArrangedFrame; ParentIndex: integer; Bounds: TuiRect; Clip: TuiRect): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       mutable var Entries: array of TuiArrangedEntry := TuiFrameEntries[Slot - 1];
       var Index: integer := Std.Array.Length(Entries);
       TuiFrameEntries[Slot - 1] := [];
-      Std.Array.Push(Entries, record ParentIndex := ParentIndex; Bounds := Bounds; Clip := Clip; end);
+      Std.Array.Push(Entries, record
+        ParentIndex := ParentIndex;
+        Bounds := Bounds;
+        Clip := Clip;
+      end);
       TuiFrameEntries[Slot - 1] := Entries;
       return Index
     end;
 
     // Drop the shared slot handle before Push so copy-on-write stays unique.
-    /// Replaces every entry atomically after a successful arrange pass.
-
+    // Replaces every entry atomically after a successful arrange pass.
     public procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of TuiArrangedEntry);
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       TuiFrameEntries[Slot - 1] := Entries
     end;
 
-    /// Returns the number of arranged entries.
-
+    // Returns the number of arranged entries.
     public function Count(Self: TuiArrangedFrame): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
       return Std.Array.Length(TuiFrameEntries[Slot - 1])
     end;
 
-    /// Returns one arranged entry by preorder index.
-
+    // Returns one arranged entry by preorder index.
     public function EntryAt(Self: TuiArrangedFrame; Index: integer): TuiArrangedEntry;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -85,6 +86,7 @@ public type
       begin
         panic('Tui arranged frame index is out of range')
       end;
+
       return Entries[Index]
     end;
   end;

@@ -6,7 +6,7 @@ uses
   Std.Tui.Runtime.Routing.Focus;
 
 public type
-  /// One controlled menu found in the active routing subtree.
+  // One controlled menu found in the active routing subtree.
   TuiRouteMenu = record
     public Id: TuiControlId;
     public Nodes: array of TuiMenuNode;
@@ -423,8 +423,7 @@ begin
   return None
 end;
 
-/// Routes menu shortcuts, F10, mnemonics, and open-menu navigation.
-
+// Routes menu shortcuts, F10, mnemonics, and open-menu navigation.
 public function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   case TuiFindRouteMenu(Root) of

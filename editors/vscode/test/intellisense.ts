@@ -64,7 +64,7 @@ export async function verifyIntelliSense(extensionPath: string): Promise<void> {
       [
         "unit Intellisense.Importable;",
         "",
-        "/// Returns the stable IntelliSense fixture value.",
+        "// Returns the stable IntelliSense fixture value.",
         "public function UniqueHostValue(): integer;",
         "begin",
         "  return 42",

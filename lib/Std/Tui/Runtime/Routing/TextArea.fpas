@@ -15,11 +15,11 @@ begin
   begin
     return Last
   end;
+
   return Line
 end;
 
-/// Routes one key into a complete controlled text-area state proposal.
-
+// Routes one key into a complete controlled text-area state proposal.
 public function TuiRouteTextAreaKey(
   Id: TuiControlId;
   Text: string;
@@ -114,6 +114,7 @@ begin
   begin
     Handled := false
   end;
+
   if not Handled then
   begin
     return None
@@ -124,11 +125,11 @@ begin
   begin
     return None
   end;
+
   return Some(TuiMsg.TextAreaChanged(Id, ChangeAction, NextText, NextCaret, NextOffset))
 end;
 
-/// Routes a pointer position into a complete controlled text-area state proposal.
-
+// Routes a pointer position into a complete controlled text-area state proposal.
 public function TuiRouteTextAreaPointer(
   Id: TuiControlId;
   Text: string;

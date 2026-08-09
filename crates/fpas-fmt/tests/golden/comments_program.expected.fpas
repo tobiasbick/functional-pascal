@@ -1,9 +1,9 @@
 program T;
 
-{ before uses }
+// before uses
 uses Std.Console;
 
-{ before begin }
+// before begin
 begin
   // setup
   WriteLn('ok') // trail

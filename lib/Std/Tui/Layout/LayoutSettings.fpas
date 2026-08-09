@@ -8,11 +8,12 @@ begin
   begin
     panic('Tui layout stretch must not be negative')
   end;
+
   return Value
 end;
 
 public type
-  /// Immutable layout inputs attached to a single-child layout wrapper.
+  // Immutable layout inputs attached to a single-child layout wrapper.
   TuiLayoutSettings = record
     public Margins: TuiMargins;
     public SizePolicy: TuiSizePolicy;
@@ -21,8 +22,7 @@ public type
     public Width: option of integer;
     public Height: option of integer;
 
-    /// Creates validated layout settings.
-
+    // Creates validated layout settings.
     public static function Create(
   Margins: TuiMargins;
   SizePolicy: TuiSizePolicy;
@@ -40,14 +40,14 @@ public type
       end
     end;
 
-    /// Returns a copy constrained to one total width; negative widths panic.
-
+    // Returns a copy constrained to one total width; negative widths panic.
     public function WithFixedWidth(Self: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
     begin
       if Width < 0 then
       begin
         panic('Tui fixed layout width must not be negative')
       end;
+
       return record
         Margins := Self.Margins;
         SizePolicy := Self.SizePolicy;
@@ -58,14 +58,14 @@ public type
       end
     end;
 
-    /// Returns a copy constrained to one total height; negative heights panic.
-
+    // Returns a copy constrained to one total height; negative heights panic.
     public function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
     begin
       if Height < 0 then
       begin
         panic('Tui fixed layout height must not be negative')
       end;
+
       return record
         Margins := Self.Margins;
         SizePolicy := Self.SizePolicy;
@@ -76,8 +76,7 @@ public type
       end
     end;
 
-    /// Zero margins, preferred policy, fill alignment, and stretch zero.
-
+    // Zero margins, preferred policy, fill alignment, and stretch zero.
     public static function Default(): TuiLayoutSettings;
     begin
       return TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Preferred(), TuiAlignment.Fill(), 0)

@@ -305,8 +305,7 @@ begin
   end
 end;
 
-/// Builds the responsive Notes element tree for one model state.
-
+// Builds the responsive Notes element tree for one model state.
 public function NotesView(State: NotesModel): TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then

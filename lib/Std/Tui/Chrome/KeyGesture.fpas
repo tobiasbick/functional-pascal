@@ -3,7 +3,7 @@ unit Std.Tui.Chrome.KeyGesture;
 uses Std.Console, Std.Str;
 
 public type
-  /// Structural keyboard gesture used by menu commands.
+  // Structural keyboard gesture used by menu commands.
   TuiKeyGesture = record
     public Kind: Std.Console.KeyKind;
     public Character: string;
@@ -13,8 +13,7 @@ public type
     public Meta: boolean;
     public Display: string;
 
-    /// Creates a keyboard gesture and its menu display label.
-
+    // Creates a keyboard gesture and its menu display label.
     public static function Create(
   Kind: Std.Console.KeyKind;
   Character: string;
@@ -36,8 +35,7 @@ public type
       end
     end;
 
-    /// Reports whether a console key event matches this gesture.
-
+    // Reports whether a console key event matches this gesture.
     public function Matches(Self: TuiKeyGesture; Key: Std.Console.KeyEvent): boolean;
     begin
       if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or
@@ -45,10 +43,12 @@ public type
       begin
         return false
       end;
+
       if Self.Kind = Std.Console.KeyKind.Character then
       begin
         return Std.Str.ToLower(Self.Character) = Std.Str.ToLower(Key.ch)
       end;
+
       return true
     end;
   end;

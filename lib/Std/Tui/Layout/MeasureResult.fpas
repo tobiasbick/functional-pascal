@@ -8,6 +8,7 @@ begin
   begin
     panic('Tui measure result minimum size must not exceed preferred size')
   end;
+
   if (Preferred.Width > Maximum.Width) or (Preferred.Height > Maximum.Height) then
   begin
     panic('Tui measure result preferred size must not exceed maximum size')
@@ -15,22 +16,24 @@ begin
 end;
 
 public type
-  /// Minimum, preferred, and maximum extents for one element.
+  // Minimum, preferred, and maximum extents for one element.
   TuiMeasureResult = record
     public Minimum: TuiSize;
     public Preferred: TuiSize;
     public Maximum: TuiSize;
 
-    /// Creates an ordered measure result.
-
+    // Creates an ordered measure result.
     public static function Create(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize): TuiMeasureResult;
     begin
       TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
-      return record Minimum := Minimum; Preferred := Preferred; Maximum := Maximum; end
+      return record
+        Minimum := Minimum;
+        Preferred := Preferred;
+        Maximum := Maximum;
+      end
     end;
 
-    /// Creates a fixed measure where all three sizes match.
-
+    // Creates a fixed measure where all three sizes match.
     public static function Fixed(Size: TuiSize): TuiMeasureResult;
     begin
       return TuiMeasureResult.Create(Size, Size, Size)

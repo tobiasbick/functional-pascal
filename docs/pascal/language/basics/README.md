@@ -11,7 +11,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (Part 1 — lexical
 | [Constants](constants.md) | `const` declarations |
 | [Number literals](number-literals.md) | Decimal, hex, reals, underscores |
 | [Operators](operators.md) | Arithmetic, comparison, logical, precedence, strings |
-| [Comments](comments.md) | `{ }`, `(* *)`, `//`, `///` |
+| [Comments](comments.md) | `//` comments and Markdown declaration documentation |
 | [Local variables](local-variables.md) | Inline `var` in blocks |
 | [Arrays intro](arrays-intro.md) | Literals and indexing syntax |
 

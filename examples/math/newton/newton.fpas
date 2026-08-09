@@ -1,4 +1,4 @@
-{ Run as `fpas run newton.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+// Run as `fpas run newton.fpasprj` (multi-unit project). Interactive; see examples/README.md.
 
 program NewtonShowcase;
 

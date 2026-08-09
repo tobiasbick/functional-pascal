@@ -1,4 +1,4 @@
-{ Built only via julia.fpasprj — not a standalone program. }
+// Built only via julia.fpasprj — not a standalone program.
 
 unit Julia.Render;
 

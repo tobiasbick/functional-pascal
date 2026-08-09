@@ -462,7 +462,7 @@ type
 
 ## Comments
 
-**All comments are preserved** when formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs) / `fpas fmt`). That includes `///` doc lines, `//` line comments, and `{ }` / `(* *)` block comments — whether they appear before declarations, before `uses` / `begin`, between statements, or at end of line after code.
+**All `//` comments are preserved** when formatting with source text ([`format_source`](../../../crates/fpas-fmt/src/lib.rs) / `fpas fmt`), whether they appear before declarations, before `uses` / `begin`, between statements, or at end of line after code.
 
 The formatter may **normalize** comment text (for example `CRLF` or bare `CR` → `LF`, trim trailing spaces on a comment line) but must not delete any comment.
 
@@ -471,12 +471,14 @@ lines before the nearest following construct, including each program, routine, o
 End-of-line comments stay on the same line after the compilation-unit/routine header, statement,
 declaration, record/enum member, routine body, or final `end.` they trailed in source. A comment
 after a control-flow clause such as `then` or `do` attaches to the following body and is emitted as
-a leading body comment. One blank line follows a leading doc/block group before a top-level
-declaration or unit/program header (see [Blank lines](#blank-lines)).
+a leading body comment. A contiguous standalone comment block directly before a declaration stays
+adjacent because it is Markdown documentation. When the source contains a blank line between a
+comment and a declaration, formatting retains one blank line so the comment remains detached (see
+[Comments and declaration documentation](../language/basics/comments.md)).
 
 [`format_compilation_unit`](../../../crates/fpas-fmt/src/lib.rs) without source cannot recover comments from the AST alone — use [`format_source`](../../../crates/fpas-fmt/src/lib.rs) when comments must be kept. `format_source` is fallible and rejects a compilation unit that was not parsed from the exact source snapshot, including invalid or out-of-range UTF-8 spans.
 
-**Tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_block_styles.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_block_styles.expected.fpas), and the focused comment/API/layout regressions under [`crates/fpas-fmt/tests/`](../../../crates/fpas-fmt/tests/).
+**Tests:** [`comments_unit.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_unit.expected.fpas), [`comments_program.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_program.expected.fpas), [`comments_before_body.expected.fpas`](../../../crates/fpas-fmt/tests/golden/comments_before_body.expected.fpas), and the focused comment/API/layout regressions under [`crates/fpas-fmt/tests/`](../../../crates/fpas-fmt/tests/).
 
 ## Intentional diffs from source
 
@@ -484,7 +486,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 
 | Source may have | Formatted output |
 |-----------------|------------------|
-| Any comment (`///`, `//`, `{ }`, `(* *)`) with [`format_source`](../../../crates/fpas-fmt/src/lib.rs) | Preserved (text may be normalized; placement follows anchor rules in [Comments](#comments)) |
+| Any `//` comment with [`format_source`](../../../crates/fpas-fmt/src/lib.rs) | Preserved (text may be normalized; placement follows anchor rules in [Comments](#comments)) |
 | Keyword casing (`PROGRAM`, `Begin`, `WRITELN`) | Lowercase keywords; identifiers keep source spelling |
 | Hex integers (`$FF`) or digit separators (`1_000`) | Decimal literals only |
 | Optional single-statement branches (`if x then return y`) | Always `begin` … `end` around branch bodies |

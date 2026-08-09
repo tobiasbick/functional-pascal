@@ -5,8 +5,7 @@ uses
   Std.Tui.Layout.LayoutFit, Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureResult,
   Std.Tui.Layout.MeasureSpec, Std.Tui.Runtime.Routing.Focus;
 
-/// Returns the first focusable control in the active modal or full tree, or `None`.
-
+// Returns the first focusable control in the active modal or full tree, or `None`.
 public function TuiFocusFirst(Root: TuiElement): option of TuiControlId;
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
@@ -14,11 +13,11 @@ begin
   begin
     return None
   end;
+
   return Some(Controls[0])
 end;
 
-/// Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
-
+// Returns `Preferred` when it is focusable in the active tree; otherwise the first focusable id.
 public function TuiFocusResolve(Root: TuiElement; Preferred: option of TuiControlId): option of TuiControlId;
 begin
   var Controls: array of TuiControlId := TuiFocusableControls(Root);
@@ -26,6 +25,7 @@ begin
   begin
     return None
   end;
+
   case Preferred of
     Some(Id):
     begin
@@ -38,11 +38,11 @@ begin
     begin
     end
   end;
+
   return Some(Controls[0])
 end;
 
-/// Reports whether the root's unconstrained minimum fits the available terminal size.
-
+// Reports whether the root's unconstrained minimum fits the available terminal size.
 public function TuiLayoutFitFor(Root: TuiElement; Available: TuiSize): TuiLayoutFit;
 begin
   var Measured: TuiMeasureResult := TuiMeasure(Root, TuiMeasureSpec.Unbounded());

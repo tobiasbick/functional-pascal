@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** [`docs/pascal/tools/fmt-style.md#comments`](../../../../docs/pascal/tools/fmt-style.md#comments)
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::SourceComment;
 use fpas_parser::CompilationUnit;
@@ -14,7 +14,8 @@ use crate::FormatError;
 /// Comments grouped by where they are emitted during formatting.
 #[derive(Debug, Default, Clone)]
 pub struct CommentMap {
-    leading: BTreeMap<usize, Vec<String>>,
+    leading: BTreeMap<usize, Vec<LeadingComment>>,
+    leading_blank_after: BTreeMap<usize, bool>,
     trailing: BTreeMap<usize, Vec<String>>,
     /// Leading comments with no following anchor (e.g. after `end.`).
     trailing_end: Vec<String>,
@@ -23,13 +24,32 @@ pub struct CommentMap {
     header_anchors: BTreeMap<usize, usize>,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct LeadingComment {
+    pub(crate) text: String,
+    pub(crate) blank_before: bool,
+}
+
+#[derive(Debug)]
+struct PendingLeadingComment {
+    start: usize,
+    end: usize,
+    text: String,
+}
+
 impl CommentMap {
     /// Builds a map from `source` and a parsed compilation unit.
     pub fn build(source: &str, unit: &CompilationUnit) -> Result<Self, FormatError> {
         let comments = fpas_lexer::collect_comments(source);
         let anchors = traversal::collect(unit, source);
         validate_anchors(source, &anchors)?;
-        let mut map = Self::attach(source, &comments, &anchors.leading, &anchors.emission)?;
+        let mut map = Self::attach(
+            source,
+            &comments,
+            &anchors.leading,
+            &anchors.emission,
+            &anchors.declarations,
+        )?;
         map.uses_anchor = uses_keyword_offset(source);
         map.body_anchors = anchors.bodies;
         map.header_anchors = anchors.headers;
@@ -38,8 +58,14 @@ impl CommentMap {
 
     /// Returns leading comment texts for `anchor_offset`, in source order.
     #[must_use]
-    pub fn leading_at(&self, anchor_offset: usize) -> &[String] {
+    pub(crate) fn leading_at(&self, anchor_offset: usize) -> &[LeadingComment] {
         self.leading.get(&anchor_offset).map_or(&[], Vec::as_slice)
+    }
+
+    /// Returns whether the source separated a leading comment group from its declaration.
+    #[must_use]
+    pub(crate) fn leading_needs_blank_after(&self, anchor_offset: usize) -> Option<bool> {
+        self.leading_blank_after.get(&anchor_offset).copied()
     }
 
     /// Returns same-line trailing comment texts keyed by construct start offset.
@@ -77,8 +103,9 @@ impl CommentMap {
         comments: &[SourceComment],
         leading_anchors: &[usize],
         emission_anchors: &[super::anchors::EmissionAnchor],
+        declaration_anchors: &BTreeSet<usize>,
     ) -> Result<Self, FormatError> {
-        let mut leading: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
+        let mut leading: BTreeMap<usize, Vec<PendingLeadingComment>> = BTreeMap::new();
         let mut trailing: BTreeMap<usize, Vec<(usize, String)>> = BTreeMap::new();
         let mut trailing_end: Vec<(usize, String)> = Vec::new();
         let mut previous_trailing: Option<(usize, usize)> = None;
@@ -110,7 +137,11 @@ impl CommentMap {
                     leading
                         .entry(anchor)
                         .or_default()
-                        .push((comment.span.offset, text));
+                        .push(PendingLeadingComment {
+                            start: comment.span.offset,
+                            end: end_offset,
+                            text,
+                        });
                     previous_trailing = None;
                 } else {
                     trailing_end.push((comment.span.offset, text));
@@ -130,14 +161,20 @@ impl CommentMap {
                 leading
                     .entry(anchor)
                     .or_default()
-                    .push((comment.span.offset, text));
+                    .push(PendingLeadingComment {
+                        start: comment.span.offset,
+                        end: end_offset,
+                        text,
+                    });
             } else {
                 trailing_end.push((comment.span.offset, text));
             }
         }
 
+        let (leading, leading_blank_after) = prepare_leading(source, leading, declaration_anchors);
         Ok(Self {
-            leading: sort_grouped(leading),
+            leading,
+            leading_blank_after,
             trailing: sort_grouped(trailing),
             trailing_end: sort_entries(trailing_end),
             uses_anchor: None,
@@ -145,6 +182,59 @@ impl CommentMap {
             header_anchors: BTreeMap::new(),
         })
     }
+}
+
+fn prepare_leading(
+    source: &str,
+    grouped: BTreeMap<usize, Vec<PendingLeadingComment>>,
+    declaration_anchors: &BTreeSet<usize>,
+) -> (BTreeMap<usize, Vec<LeadingComment>>, BTreeMap<usize, bool>) {
+    let mut leading = BTreeMap::new();
+    let mut blank_after = BTreeMap::new();
+    for (anchor, mut entries) in grouped {
+        entries.sort_by_key(|entry| entry.start);
+        let mut previous_end = None;
+        let prepared = entries
+            .iter()
+            .map(|entry| {
+                let blank_before = previous_end.is_some_and(|end| {
+                    logical_line_breaks(source.get(end..entry.start).unwrap_or_default()) > 1
+                });
+                previous_end = Some(entry.end);
+                LeadingComment {
+                    text: entry.text.clone(),
+                    blank_before,
+                }
+            })
+            .collect();
+        if declaration_anchors.contains(&anchor) {
+            let last_end = entries.last().map_or(anchor, |entry| entry.end);
+            blank_after.insert(
+                anchor,
+                logical_line_breaks(source.get(last_end..anchor).unwrap_or_default()) != 1,
+            );
+        }
+        leading.insert(anchor, prepared);
+    }
+    (leading, blank_after)
+}
+
+fn logical_line_breaks(text: &str) -> usize {
+    let mut count = 0;
+    let mut chars = text.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\r' => {
+                count += 1;
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                }
+            }
+            '\n' => count += 1,
+            _ => {}
+        }
+    }
+    count
 }
 
 fn next_leading_anchor(leading_anchors: &[usize], comment_end: usize) -> Option<usize> {
@@ -236,9 +326,8 @@ mod tests {
     use fpas_parser::parse_compilation_unit;
 
     #[test]
-    fn attaches_doc_and_block_comments_to_following_decl() -> Result<(), String> {
-        let source =
-            "/// Unit doc.\nunit Demo;\n\n{ field doc }\nmutable var Count: integer := 0;\n";
+    fn attaches_line_comments_to_following_declarations() -> Result<(), String> {
+        let source = "// Unit doc.\nunit Demo;\n\n// field doc\nmutable var Count: integer := 0;\n";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
@@ -246,25 +335,25 @@ mod tests {
             fpas_parser::CompilationUnit::Unit(unit) => unit.span.offset,
             _ => return Err("expected unit".to_string()),
         };
-        assert_eq!(map.leading_at(unit_anchor), ["/// Unit doc."]);
+        assert_eq!(map.leading_at(unit_anchor)[0].text, "// Unit doc.");
         let decl_anchor = crate::span::decl_span(match &unit {
             fpas_parser::CompilationUnit::Unit(unit) => &unit.declarations[0],
             _ => return Err("expected unit".to_string()),
         });
-        assert_eq!(map.leading_at(decl_anchor), ["{ field doc }"]);
+        assert_eq!(map.leading_at(decl_anchor)[0].text, "// field doc");
         Ok(())
     }
 
     #[test]
     fn preserves_comments_before_uses_begin_and_end_of_line() -> Result<(), String> {
-        let source = "program T;\n{ before uses }\nuses Std.Console;\n\n{ before begin }\nbegin\n  WriteLn('ok') // trail\nend. // tail";
+        let source = "program T;\n// before uses\nuses Std.Console;\n\n// before begin\nbegin\n  WriteLn('ok') // trail\nend. // tail";
         let (unit, errors) = parse_compilation_unit(source);
         assert!(errors.is_empty(), "{errors:?}");
         let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
         let Some(uses_anchor) = map.uses_anchor() else {
             return Err("expected uses anchor".to_string());
         };
-        assert_eq!(map.leading_at(uses_anchor), ["{ before uses }"]);
+        assert_eq!(map.leading_at(uses_anchor)[0].text, "// before uses");
         let program_anchor = match &unit {
             fpas_parser::CompilationUnit::Program(program) => program.span.offset,
             _ => return Err("expected program".to_string()),
@@ -272,11 +361,11 @@ mod tests {
         let Some(begin_anchor) = map.body_anchor(program_anchor) else {
             return Err("expected begin anchor".to_string());
         };
-        assert_eq!(map.leading_at(begin_anchor), ["{ before begin }"]);
+        assert_eq!(map.leading_at(begin_anchor)[0].text, "// before begin");
 
         let formatted = crate::format_source(source, &unit).map_err(|error| error.to_string())?;
-        assert!(formatted.contains("{ before uses }"));
-        assert!(formatted.contains("{ before begin }"));
+        assert!(formatted.contains("// before uses"));
+        assert!(formatted.contains("// before begin"));
         assert!(formatted.contains("// trail"));
         Ok(())
     }

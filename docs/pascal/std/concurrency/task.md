@@ -54,7 +54,7 @@ Blocks until every task in the array has finished. This is a **barrier only**; i
 var Ta: task := go Work(1);
 var Tb: task := go Work(2);
 WaitAll([Ta, Tb]);
-{ still valid: }
+// still valid:
 Wait(Ta);
 Wait(Tb)
 ```

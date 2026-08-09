@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Chrome.MenuQuery, Std.Tui.Geometry.Rect;
 
 public type
-  /// Bounds of one open popup and the submenu whose children it displays.
+  // Bounds of one open popup and the submenu whose children it displays.
   TuiMenuPopup = record
     public Parent: TuiMenuNodeId;
     public Bounds: TuiRect;
@@ -25,10 +25,12 @@ begin
         begin
           return X
         end;
+
         X := (X + Std.Console.DisplayWidth(TuiMenuNodeText(Nodes[Index]))) + 2
       end
     end
   end;
+
   return BarBounds.X
 end;
 
@@ -43,9 +45,11 @@ begin
       begin
         return Row
       end;
+
       Row := Row + 1
     end
   end;
+
   return 0
 end;
 
@@ -68,16 +72,19 @@ begin
         begin
         end
       end;
+
       if TuiMenuNodeIsSubmenu(Nodes[Index]) then
       begin
         ContentWidth := ContentWidth + 2
       end;
+
       if ContentWidth + 4 > Width then
       begin
         Width := ContentWidth + 4
       end
     end
   end;
+
   return TuiRect.Create(0, 0, Width, Height)
 end;
 
@@ -89,6 +96,7 @@ begin
   begin
     return []
   end;
+
   case State.Active of
     Some(Active):
     begin
@@ -134,11 +142,11 @@ begin
     Std.Array.Push(Opened, Reversed[Index]);
     Index := Index - 1
   end;
+
   return Opened
 end;
 
-/// Computes popup rectangles while reserving their right and bottom terminal shadow.
-
+// Computes popup rectangles while reserving their right and bottom terminal shadow.
 public function TuiMenuPopupGeometry(
   Nodes: array of TuiMenuNode;
   State: TuiMenuState;
@@ -151,6 +159,7 @@ begin
   begin
     PopupBounds.Width := PopupBounds.Width - 2
   end;
+
   if PopupBounds.Height > 1 then
   begin
     PopupBounds.Height := PopupBounds.Height - 1
@@ -168,6 +177,7 @@ begin
       X := Previous.Bounds.X + Previous.Bounds.Width;
       Y := (Previous.Bounds.Y + 1) + TuiMenuChildRow(Nodes, Previous.Parent, Parents[Index])
     end;
+
     if X + Size.Width > PopupBounds.X + PopupBounds.Width then
     begin
       if Index > 0 then
@@ -179,22 +189,27 @@ begin
         X := (PopupBounds.X + PopupBounds.Width) - Size.Width
       end
     end;
+
     if X < PopupBounds.X then
     begin
       X := PopupBounds.X
     end;
+
     if Y + Size.Height > PopupBounds.Y + PopupBounds.Height then
     begin
       Y := (PopupBounds.Y + PopupBounds.Height) - Size.Height
     end;
+
     if Y < PopupBounds.Y then
     begin
       Y := PopupBounds.Y
     end;
+
     Std.Array.Push(Popups, record
       Parent := Parents[Index];
       Bounds := TuiRect.Create(X, Y, Size.Width, Size.Height);
     end)
   end;
+
   return Popups
 end;

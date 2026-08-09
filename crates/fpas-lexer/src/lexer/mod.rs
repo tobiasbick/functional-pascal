@@ -4,6 +4,7 @@
 
 mod directive;
 mod identifiers;
+mod invalid_comments;
 mod navigation;
 mod numbers;
 mod strings;
@@ -64,6 +65,8 @@ impl<'a> Lexer<'a> {
     fn scan_token(&mut self) {
         match self.current() {
             b'{' if self.is_directive_after_brace() => self.scan_directive(),
+            b'{' => self.scan_invalid_brace_comment(),
+            b'(' if self.peek_at(1) == Some(b'*') => self.scan_invalid_paren_comment(),
             b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.scan_ident_or_keyword(),
             b'0'..=b'9' => self.scan_number(),
             b'$' => self.scan_hex_integer(),

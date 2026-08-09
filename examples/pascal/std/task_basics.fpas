@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/concurrency/task.md (from repository root); see also docs/pascal/language/concurrency/README.md. }
+// Spec: docs/pascal/std/concurrency/task.md (from repository root); see also docs/pascal/language/concurrency/README.md.
 
 program TaskBasics;
 

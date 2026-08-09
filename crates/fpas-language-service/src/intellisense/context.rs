@@ -100,8 +100,6 @@ enum SourceState {
     Code,
     String,
     LineComment,
-    BraceComment,
-    ParenComment,
 }
 
 fn is_code_offset(source: &str, offset: usize) -> bool {
@@ -118,11 +116,6 @@ fn is_code_offset(source: &str, offset: usize) -> bool {
                     state = SourceState::LineComment;
                     index += 1;
                 }
-                (b'{', _) => state = SourceState::BraceComment,
-                (b'(', Some(b'*')) => {
-                    state = SourceState::ParenComment;
-                    index += 1;
-                }
                 _ => {}
             },
             SourceState::String => {
@@ -135,19 +128,8 @@ fn is_code_offset(source: &str, offset: usize) -> bool {
                 }
             }
             SourceState::LineComment => {
-                if current == b'\n' {
+                if matches!(current, b'\n' | b'\r') {
                     state = SourceState::Code;
-                }
-            }
-            SourceState::BraceComment => {
-                if current == b'}' {
-                    state = SourceState::Code;
-                }
-            }
-            SourceState::ParenComment => {
-                if current == b'*' && next == Some(b')') {
-                    state = SourceState::Code;
-                    index += 1;
                 }
             }
         }

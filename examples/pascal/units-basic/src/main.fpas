@@ -1,4 +1,4 @@
-{ Run as `fpas run units-basic.fpasprj` — loads App.* units. See examples/README.md. }
+// Run as `fpas run units-basic.fpasprj` — loads App.* units. See examples/README.md.
 
 program UnitsBasic;
 

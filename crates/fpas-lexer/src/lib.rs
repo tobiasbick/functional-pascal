@@ -35,7 +35,7 @@ mod lexer;
 mod span;
 mod token;
 
-pub use comments::{CommentStyle, SourceComment};
+pub use comments::SourceComment;
 pub use error::LexError;
 pub use span::{SourcePosition, Span};
 pub use token::Token;

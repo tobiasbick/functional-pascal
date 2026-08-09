@@ -60,7 +60,7 @@ end;
 
 var Nums: array of integer := [1, 2, 3, 4, 5];
 var First: Option of integer := Find(Nums, IsAboveThree);
-{ Some(4) }
+// Some(4)
 ```
 
 ---

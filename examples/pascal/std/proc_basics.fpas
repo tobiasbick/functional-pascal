@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/host/proc.md — requires `fpas` on PATH. }
+// Spec: docs/pascal/std/host/proc.md — requires `fpas` on PATH.
 
 program ProcBasics;
 

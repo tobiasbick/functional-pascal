@@ -1,18 +1,17 @@
-/// Separator-rule painting.
-
+// Separator-rule painting.
 unit Std.Tui.Rendering.Rule;
 
 uses
   Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
-/// Paints a thin horizontal separator with optional left-aligned text.
-
+// Paints a thin horizontal separator with optional left-aligned text.
 public procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
 begin
   if Bounds.IsEmpty() then
   begin
     return
   end;
+
   Canvas.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, TuiStyleRole.Rule);
   if (Text <> '') and (Bounds.Width > 4) then
   begin

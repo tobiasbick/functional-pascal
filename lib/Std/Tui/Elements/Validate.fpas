@@ -274,8 +274,7 @@ begin
   return Seen
 end;
 
-/// Validates one complete Tui view tree before layout or routing.
-
+// Validates one complete Tui view tree before layout or routing.
 public procedure TuiElementValidate(Root: TuiElement);
 begin
   TuiElementValidateAndCollect(Root)

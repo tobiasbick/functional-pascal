@@ -1,4 +1,4 @@
-{ Run as `fpas run tricorn.fpasprj` (multi-unit project). Interactive; see examples/README.md. }
+// Run as `fpas run tricorn.fpasprj` (multi-unit project). Interactive; see examples/README.md.
 
 program TricornShowcase;
 
@@ -68,7 +68,7 @@ begin
   return Max(ScreenHeight() - 3, 1)
 end;
 
-{ 1-based cell in the render viewport → complex plane (same mapping as row iteration) }
+// 1-based cell in the render viewport → complex plane (same mapping as row iteration)
 
 function ViewportCX(State: ExplorerState; W: integer; H: integer; CellX: integer): real;
 begin

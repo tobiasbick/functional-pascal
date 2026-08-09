@@ -321,8 +321,7 @@ begin
   return None
 end;
 
-/// Routes one key against the previous rendered tree into ordered framework messages.
-
+// Routes one key against the previous rendered tree into ordered framework messages.
 public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);

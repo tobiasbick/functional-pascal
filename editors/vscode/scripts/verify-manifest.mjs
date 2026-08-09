@@ -91,7 +91,17 @@ export async function verifyManifest() {
     )
   );
   assert.equal(languageConfiguration.comments.lineComment, "//");
-  assert.deepEqual(languageConfiguration.comments.blockComment, ["{", "}"]);
+  assert.equal(languageConfiguration.comments.blockComment, undefined);
+  assert.ok(
+    !languageConfiguration.autoClosingPairs.some(
+      (pair) => pair.open === "{" || pair.open === "(*"
+    )
+  );
+  assert.ok(
+    !languageConfiguration.surroundingPairs.some(
+      (pair) => pair[0] === "{" || pair[0] === "(*"
+    )
+  );
   assert.ok(languageConfiguration.brackets.length > 0);
   assert.ok(languageConfiguration.autoClosingPairs.length > 0);
   assert.ok(languageConfiguration.surroundingPairs.length > 0);

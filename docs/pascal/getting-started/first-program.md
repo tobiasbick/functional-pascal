@@ -29,21 +29,21 @@ program MyApp;
 uses
   Std.Console;
 
-{ constant declarations }
+// constant declarations
 const
   MaxItems: integer := 100;
 
-{ variable declarations }
+// variable declarations
 var
   Counter: integer := 0;
 
-{ function declarations }
+// function declarations
 function Add(A: integer; B: integer): integer;
 begin
   return A + B;
 end;
 
-{ main block }
+// main block
 begin
   WriteLn(Add(3, 4));
 end.

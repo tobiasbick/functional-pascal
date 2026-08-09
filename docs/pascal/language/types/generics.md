@@ -98,7 +98,7 @@ Constraint violations at call sites are compile-time errors:
 ```pascal
 var
   M: integer := Max(3, 7);    { OK — integer is Comparable }
-{ var Bad := Max([1], [2]);   ← compile error: array is not Comparable }
+// var Bad := Max([1], [2]);   ← compile error: array is not Comparable
 ```
 
 ## See also

@@ -1,5 +1,4 @@
-/// Representative valid editor fixture.
-
+// Representative valid editor fixture.
 program EditorFeatures;
 
 uses Std.Console;
@@ -16,9 +15,9 @@ begin
 end;
 
 begin
-  { Unicode text is valid inside a UTF-8 string. }
+  // Unicode text is valid inside a UTF-8 string.
   var Message: Greeting := record Text := 'Grüße aus 東京 🙂'; Count := 1; end;
-  (* The record and function are intentionally used by the fixture. *)
+  // The record and function are intentionally used by the fixture.
   // Keep a line-comment token in the positive fixture.
   WriteLn(RenderGreeting(Message))
 end.

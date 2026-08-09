@@ -162,15 +162,13 @@ begin
   end
 end;
 
-/// Returns the first enabled default button in the active modal or full tree.
-
+// Returns the first enabled default button in the active modal or full tree.
 public function TuiFindDefaultButton(Root: TuiElement): option of TuiButtonSpec;
 begin
   return TuiButtonFind(Root, true, '')
 end;
 
-/// Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
-
+// Returns the first enabled button matching an Alt mnemonic in the active modal or full tree.
 public function TuiFindMnemonicButton(Root: TuiElement; Mnemonic: string): option of TuiButtonSpec;
 begin
   if Mnemonic = '' then
@@ -181,8 +179,7 @@ begin
   return TuiButtonFind(Root, false, Mnemonic)
 end;
 
-/// Routes one Alt mnemonic to an enabled button action.
-
+// Routes one Alt mnemonic to an enabled button action.
 public function TuiRouteButtonMnemonicKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   if (Key.kind <> Std.Console.KeyKind.Character) or not Key.alt then
@@ -202,8 +199,7 @@ begin
   end
 end;
 
-/// Routes Enter or Space when an enabled button owns keyboard focus.
-
+// Routes Enter or Space when an enabled button owns keyboard focus.
 public function TuiRouteFocusedButtonKey(
   Button: TuiButtonSpec;
   Target: TuiControlId;
@@ -224,8 +220,7 @@ begin
   return None
 end;
 
-/// Returns the enabled default button action for Enter.
-
+// Returns the enabled default button action for Enter.
 public function TuiRouteDefaultButtonEnter(Root: TuiElement): option of TuiMsg;
 begin
   case TuiFindDefaultButton(Root) of

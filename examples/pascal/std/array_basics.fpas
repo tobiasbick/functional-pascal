@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/std/collections/array/README.md (from repository root). }
+// Spec: docs/pascal/std/collections/array/README.md (from repository root).
 
 program ArrayBasics;
 

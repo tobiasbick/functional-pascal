@@ -7,7 +7,7 @@ uses
   Std.Tui.Runtime.Routing.Focus;
 
 public type
-  /// Controlled menu and arranged bar bounds used by pointer routing.
+  // Controlled menu and arranged bar bounds used by pointer routing.
   TuiPointerMenu = record
     public Id: TuiControlId;
     public Nodes: array of TuiMenuNode;
@@ -176,7 +176,6 @@ begin
 
           return Some(Std.Array.Concat(TuiPointerMenuFocus(Root, Menu), [
                                                                           TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
-
                                                                         ]))
         end;
 
@@ -226,7 +225,6 @@ begin
 
               return Some([
                             TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.OpenAt(TuiMenuNodeIdOf(Menu.Nodes[Index])))
-
                           ])
             end;
 
@@ -241,7 +239,6 @@ begin
                 return Some([
                               TuiMsg.MenuChanged(Menu.Id, Menu.ChangeAction, TuiMenuState.Closed()),
                               TuiMsg.Action(Menu.Id, Action)
-
                             ])
               end;
               None:
@@ -262,8 +259,7 @@ begin
   return None
 end;
 
-/// Routes a left-button press or movement over one active hierarchical menu.
-
+// Routes a left-button press or movement over one active hierarchical menu.
 public function TuiRouteMenuPointer(
   Root: TuiElement;
   Frame: TuiArrangedFrame;

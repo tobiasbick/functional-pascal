@@ -12,7 +12,7 @@ type
     Green;
   end;
 
-{ ERROR: non-exhaustive match — missing Light.Yellow }
+// ERROR: non-exhaustive match — missing Light.Yellow
 case L of
   Light.Red:   WriteLn('Stop');
   Light.Green: WriteLn('Go');
@@ -44,12 +44,12 @@ end;
 `Result` requires both `Ok` and `Error`. `Option` requires both `Some` and `None`:
 
 ```pascal
-{ ERROR: non-exhaustive — missing Error }
+// ERROR: non-exhaustive — missing Error
 case R of
   Ok(V): WriteLn(IntToStr(V));
 end;
 
-{ OK: both variants covered }
+// OK: both variants covered
 case R of
   Ok(V):  WriteLn(IntToStr(V));
   Error(E): WriteLn('Error: ' + E);

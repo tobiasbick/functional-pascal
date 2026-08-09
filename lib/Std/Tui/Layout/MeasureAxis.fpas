@@ -6,48 +6,47 @@ public const
   TuiMeasureAxisIntegerMax: integer := 9223372036854775807;
 
 public type
-  /// Preferred and maximum extents after applying one axis constraint.
+  // Preferred and maximum extents after applying one axis constraint.
   TuiMeasureAxisResult = record
     public Preferred: integer;
     public Maximum: integer;
   end;
-  /// Integer helpers for layout measurement.
+  // Integer helpers for layout measurement.
   TuiMeasureAxis = record
-    /// Returns the lesser of two extents.
-
+    // Returns the lesser of two extents.
     public static function Min(Left: integer; Right: integer): integer;
     begin
       if Left < Right then
       begin
         return Left
       end;
+
       return Right
     end;
 
-    /// Returns the greater of two extents.
-
+    // Returns the greater of two extents.
     public static function Max(Left: integer; Right: integer): integer;
     begin
       if Left > Right then
       begin
         return Left
       end;
+
       return Right
     end;
 
-    /// Adds two extents and rejects overflow.
-
+    // Adds two extents and rejects overflow.
     public static function Add(Left: integer; Right: integer): integer;
     begin
       if Left > TuiMeasureAxisIntegerMax - Right then
       begin
         panic('Tui layout measurement overflows integer extents')
       end;
+
       return Left + Right
     end;
 
-    /// Constrains preferred and maximum extents by an axis constraint.
-
+    // Constrains preferred and maximum extents by an axis constraint.
     public static function Apply(
   Minimum: integer;
   Preferred: integer;
@@ -57,10 +56,16 @@ public type
     begin
       if not Constraint.IsBounded() then
       begin
-        return record Preferred := Preferred; Maximum := Maximum; end
+        return record
+          Preferred := Preferred;
+          Maximum := Maximum;
+        end
       end;
       var ConstrainedPreferred: integer := TuiMeasureAxis.Max(Minimum, TuiMeasureAxis.Min(Preferred, Constraint.Limit));
       var ConstrainedMaximum: integer := TuiMeasureAxis.Max(ConstrainedPreferred, TuiMeasureAxis.Min(Maximum, Constraint.Limit));
-      return record Preferred := ConstrainedPreferred; Maximum := ConstrainedMaximum; end
+      return record
+        Preferred := ConstrainedPreferred;
+        Maximum := ConstrainedMaximum;
+      end
     end;
   end;

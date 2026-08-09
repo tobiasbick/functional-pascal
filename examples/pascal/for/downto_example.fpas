@@ -1,4 +1,4 @@
-{ Spec: docs/pascal/language/control-flow/README.md (from repository root). }
+// Spec: docs/pascal/language/control-flow/README.md (from repository root).
 
 program DowntoExample;
 

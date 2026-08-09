@@ -197,8 +197,7 @@ begin
   end
 end;
 
-/// Measures one element under the given constraints.
-
+// Measures one element under the given constraints.
 public function TuiMeasure(Node: TuiElement; Spec: TuiMeasureSpec): TuiMeasureResult;
 begin
   case Node of
@@ -433,8 +432,7 @@ begin
   end
 end;
 
-/// Returns the unconstrained preferred size of an element subtree.
-
+// Returns the unconstrained preferred size of an element subtree.
 public function TuiMeasureElement(Node: TuiElement): TuiSize;
 begin
   return TuiMeasure(Node, TuiMeasureSpec.Unbounded()).Preferred

@@ -2,7 +2,7 @@
 
 mod expressions;
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use fpas_lexer::{Span, Token, lex_with_comments};
 use fpas_parser::{
@@ -20,6 +20,7 @@ pub(crate) struct CollectedAnchors {
     pub emission: Vec<EmissionAnchor>,
     pub bodies: BTreeMap<usize, usize>,
     pub headers: BTreeMap<usize, usize>,
+    pub declarations: BTreeSet<usize>,
     semicolons: Vec<EmissionAnchor>,
 }
 
@@ -58,6 +59,7 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
 
 fn collect_program(program: &Program, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(program.span.offset);
+    out.declarations.insert(program.span.offset);
     push_span(program.span, out);
     out.leading
         .extend(program.uses.iter().map(|name| name.span.offset));
@@ -83,6 +85,7 @@ fn collect_program(program: &Program, begins: &[usize], out: &mut CollectedAncho
 
 fn collect_unit(unit: &Unit, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(unit.span.offset);
+    out.declarations.insert(unit.span.offset);
     out.leading
         .extend(unit.uses.iter().map(|name| name.span.offset));
     collect_decls(&unit.declarations, begins, out);
@@ -99,6 +102,7 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
     for decl in decls {
         let start = crate::span::decl_span(decl);
         out.leading.push(start);
+        out.declarations.insert(start);
         match decl {
             Decl::Const(def) => {
                 push_span(def.span, out);
@@ -114,6 +118,7 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
                     TypeBody::Record(record) => {
                         for field in &record.fields {
                             out.leading.push(field.span.offset);
+                            out.declarations.insert(field.span.offset);
                             push_span(field.span, out);
                             if let Some(value) = &field.default_value {
                                 collect_expr(value, begins, out);
@@ -133,16 +138,19 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
                         }
                         for property in &record.properties {
                             out.leading.push(property.span.offset);
+                            out.declarations.insert(property.span.offset);
                             push_span(property.span, out);
                         }
                         for event in &record.events {
                             out.leading.push(event.span.offset);
+                            out.declarations.insert(event.span.offset);
                             push_span(event.span, out);
                         }
                     }
                     TypeBody::Enum(enum_type) => {
                         for member in &enum_type.members {
                             out.leading.push(member.span.offset);
+                            out.declarations.insert(member.span.offset);
                             push_span(member.span, out);
                         }
                     }
@@ -158,6 +166,8 @@ fn collect_decls(decls: &[Decl], begins: &[usize], out: &mut CollectedAnchors) {
 }
 
 fn collect_routine(span: Span, body: &FuncBody, begins: &[usize], out: &mut CollectedAnchors) {
+    out.leading.push(span.offset);
+    out.declarations.insert(span.offset);
     push_span(span, out);
     let FuncBody::Block { nested, stmts } = body;
     collect_decls(nested, begins, out);
@@ -213,6 +223,9 @@ fn collect_stmts(stmts: &[Stmt], begins: &[usize], out: &mut CollectedAnchors) {
 
 fn collect_nested_stmt(stmt: &Stmt, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(stmt_start(stmt));
+    if matches!(stmt, Stmt::Var(_) | Stmt::MutableVar(_)) {
+        out.declarations.insert(stmt_start(stmt));
+    }
     out.emission.push(EmissionAnchor {
         start: stmt_start(stmt),
         end: stmt_end(stmt),

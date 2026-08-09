@@ -1,4 +1,4 @@
-{ Public unit for workspace hello app via [dependencies].workspace. }
+// Public unit for workspace hello app via [dependencies].workspace.
 
 unit Demo.Greet;
 

@@ -3,7 +3,7 @@ unit Std.Tui.Text.Input;
 uses Std.Console, Std.Str;
 
 public type
-  /// Derived horizontal viewport for a one-line input.
+  // Derived horizontal viewport for a one-line input.
   TuiInputViewport = record
     public Start: integer;
     public EndIndex: integer;
@@ -18,11 +18,11 @@ begin
   begin
     return 0
   end;
+
   return Std.Console.DisplayWidth(Std.Str.Substring(Text, Start, EndIndex - Start))
 end;
 
-/// Derives the smallest viewport that keeps the controlled caret visible.
-
+// Derives the smallest viewport that keeps the controlled caret visible.
 public function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
 begin
   mutable var Start: integer := 0;
@@ -36,6 +36,7 @@ begin
       CaretColumn := 0;
     end
   end;
+
   while Start < Caret do
   begin
     if TuiInputWidth(Text, Start, Caret) >= Width then
@@ -59,6 +60,7 @@ begin
       break
     end
   end;
+
   return record
     Start := Start;
     EndIndex := EndIndex;
@@ -68,8 +70,7 @@ begin
   end
 end;
 
-/// Maps one content-relative terminal column to a text caret.
-
+// Maps one content-relative terminal column to a text caret.
 public function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
 begin
   if Column <= 0 then
@@ -84,7 +85,9 @@ begin
     begin
       return Index
     end;
+
     Width := Width + GlyphWidth
   end;
+
   return Viewport.EndIndex
 end;

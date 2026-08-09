@@ -4,8 +4,7 @@ uses
   Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
   Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
 
-/// Paints clipped text-area lines and a focused visible caret.
-
+// Paints clipped text-area lines and a focused visible caret.
 public procedure TuiPaintTextArea(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
@@ -31,6 +30,7 @@ begin
       Area.WriteText(TuiPoint.Create(- Offset.X, Row), TuiTextAreaLineText(Text, Line), NormalRole)
     end
   end;
+
   if Focused then
   begin
     var Position: TuiTextAreaPosition := TuiTextAreaLocate(Text, Caret);

@@ -12,7 +12,7 @@ end;
 
 var R: Result of integer, string := Ok(21);
 var M: Result of string, string := Map(R, DoubleToString);
-{ M = Ok('42') }
+// M = Ok('42')
 ```
 
 ```pascal
@@ -26,7 +26,7 @@ end;
 
 var O: Option of integer := Some(5);
 var M: Option of string := AndThen(O, PositiveToString);
-{ M = Some('5') }
+// M = Some('5')
 ```
 
 | Combinator | Result | Option |

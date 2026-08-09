@@ -34,8 +34,7 @@ begin
   end
 end;
 
-/// Validates identities, parents, cycles, mnemonics, shortcuts, and controlled state.
-
+// Validates identities, parents, cycles, mnemonics, shortcuts, and controlled state.
 public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
 begin
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -53,6 +52,7 @@ begin
     begin
       panic('Tui menu mnemonic must be empty or one character')
     end;
+
     case TuiMenuNodeParent(Nodes[Index]) of
       Some(Parent):
       begin
@@ -61,6 +61,7 @@ begin
         begin
           panic('Tui menu parent id must exist')
         end;
+
         if not TuiMenuNodeIsSubmenu(Nodes[ParentIndex]) then
         begin
           panic('Tui menu parent must be a submenu')
@@ -87,6 +88,7 @@ begin
           begin
             panic('Tui menu parent links must not contain a cycle')
           end;
+
           Current := Parent
         end;
         None:
@@ -95,6 +97,7 @@ begin
         end
       end
     end;
+
     for Other: integer := 0 to Index - 1 do
     begin
       if (TuiMenuSameOptionalId(TuiMenuNodeParent(Nodes[Other]), TuiMenuNodeParent(Nodes[Index])) and (Mnemonic <> '')) and
@@ -104,6 +107,7 @@ begin
       end
     end
   end;
+
   if State.Open then
   begin
     case State.Active of

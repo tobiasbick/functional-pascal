@@ -94,7 +94,7 @@ end;
 
 var O: Option of integer := Some(7);
 var M: Option of string := Map(O, TripleToString);
-{ M = Some('21') }
+// M = Some('21')
 ```
 
 ---
@@ -112,7 +112,7 @@ end;
 
 var O: Option of integer := Some(5);
 var M: Option of string := AndThen(O, PositiveToOptionString);
-{ M = Some('5') }
+// M = Some('5')
 ```
 
 ---
@@ -129,7 +129,7 @@ end;
 
 var O: Option of integer := None;
 var M: Option of integer := OrElse(O, Fallback99);
-{ M = Some(99) }
+// M = Some(99)
 ```
 
 ---

@@ -4,7 +4,8 @@ use crate::Token;
 #[test]
 fn mutable_var_with_comments() {
     let src = "\
-mutable var { counter } Count: integer := 0; // start at zero";
+// counter
+mutable var Count: integer := 0; // start at zero";
     assert_eq!(
         toks(src),
         vec![

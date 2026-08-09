@@ -97,7 +97,7 @@ another task, or returned through a task result. Capturing another task-bound ca
 also makes the outer closure task-bound (the mutable cells are still reachable).
 
 ```pascal
-{ Accepted: immutable capture }
+// Accepted: immutable capture
 var N: integer := 3;
 var Work: function(): integer :=
   function(): integer
@@ -106,7 +106,7 @@ var Work: function(): integer :=
   end;
 var Handle: task := go Work();
 
-{ Rejected: mutable capture }
+// Rejected: mutable capture
 mutable var Count: integer := 0;
 var Inc: procedure() :=
   procedure()
@@ -115,7 +115,7 @@ var Inc: procedure() :=
   end;
 go Inc();  { compile-time error }
 
-{ Rejected: nested task-bound capture }
+// Rejected: nested task-bound capture
 var Outer: procedure() :=
   procedure()
   begin

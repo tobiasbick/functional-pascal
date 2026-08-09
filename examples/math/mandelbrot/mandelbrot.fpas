@@ -1,4 +1,4 @@
-{ Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see README.md. }
+// Run as `fpas run mandelbrot.fpasprj` (multi-unit project). Interactive; see README.md.
 
 program MandelbrotShowcase;
 

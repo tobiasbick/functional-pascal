@@ -204,7 +204,7 @@ fn auto_import_is_offered_only_for_one_public_declaration_and_preserves_formatti
     );
     temp.write(
         "src/importable.fpas",
-        "unit Demo.Importable;\n\n/// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3\nend;\n",
+        "unit Demo.Importable;\n\n// Returns the unique imported value.\npublic function UniqueValue(): integer;\nbegin\n  return 2\nend;\n\nfunction HiddenValue(): integer;\nbegin\n  return 3\nend;\n",
     );
     temp.write(
         "src/first.fpas",

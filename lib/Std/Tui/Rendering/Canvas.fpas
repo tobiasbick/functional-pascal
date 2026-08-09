@@ -5,14 +5,13 @@ uses
   Std.Tui.Geometry.Rect, Std.Tui.Geometry.Size, Std.Tui.Rendering.Surface;
 
 public type
-  /// Private frame-scoped drawing capability over one working surface.
+  // Private frame-scoped drawing capability over one working surface.
   TuiCanvas = record
     public Surface: TuiWorkingSurface;
     public Clip: TuiRect;
     public Origin: TuiPoint;
 
-    /// Creates a canvas clipped to `Bounds` intersected with the surface.
-
+    // Creates a canvas clipped to `Bounds` intersected with the surface.
     public static function Create(Surface: TuiWorkingSurface; Bounds: TuiRect): TuiCanvas;
     begin
       var Size: TuiSize := Surface.Size();
@@ -24,15 +23,17 @@ public type
       end
     end;
 
-    /// Creates a canvas with an explicit surface origin and local clip rectangle.
-
+    // Creates a canvas with an explicit surface origin and local clip rectangle.
     public static function CreateLocal(Surface: TuiWorkingSurface; Origin: TuiPoint; Clip: TuiRect): TuiCanvas;
     begin
-      return record Surface := Surface; Clip := Clip; Origin := Origin; end
+      return record
+        Surface := Surface;
+        Clip := Clip;
+        Origin := Origin;
+      end
     end;
 
-    /// Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
-
+    // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
     public function Child(Self: TuiCanvas; LocalBounds: TuiRect): TuiCanvas;
     begin
       var Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
@@ -41,8 +42,7 @@ public type
                                                                                                 LocalBounds.Y), ChildClip)
     end;
 
-    /// Paints one cell in local coordinates; clipped and wide-glyph aware.
-
+    // Paints one cell in local coordinates; clipped and wide-glyph aware.
     public procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
     begin
       if not Self.Clip.Contains(Position) then
@@ -55,18 +55,17 @@ public type
         Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), TuiCell.Create(' ', TuiStyleRole.Normal));
         return
       end;
+
       Self.Surface.PutCell(TuiPoint.Create(Self.Origin.X + Position.X, Self.Origin.Y + Position.Y), Cell)
     end;
 
-    /// Paints one glyph with the normal role.
-
+    // Paints one glyph with the normal role.
     public procedure PutGlyph(Self: TuiCanvas; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
     end;
 
-    /// Fills the visible intersection with a one-column cell.
-
+    // Fills the visible intersection with a one-column cell.
     public procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
     begin
       var CellWidth: integer := Cell.Width();
@@ -79,8 +78,7 @@ public type
                                                                                  Visible.Y, Visible.Width, Visible.Height), Cell)
     end;
 
-    /// Draws one logical line of text; stops before a newline.
-
+    // Draws one logical line of text; stops before a newline.
     public procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
     begin
       mutable var X: integer := Position.X;
@@ -94,6 +92,7 @@ public type
           AsciiOnly := false
         end
       end;
+
       if AsciiOnly then
       begin
         for Index: integer := 0 to TextLength - 1 do
@@ -103,24 +102,27 @@ public type
           begin
             return
           end;
+
           Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
           X := X + 1
         end;
+
         return
       end;
+
       for Glyph: string in Std.Console.SplitGraphemes(Text) do
       begin
         if Glyph = Std.Str.Chr(10) then
         begin
           return
         end;
+
         Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
         X := X + Std.Console.DisplayWidth(Glyph)
       end
     end;
 
-    /// Draws a horizontal box-drawing line.
-
+    // Draws a horizontal box-drawing line.
     public procedure DrawHorizontalLine(
   Self: TuiCanvas;
   X: integer;
@@ -136,8 +138,7 @@ public type
       end
     end;
 
-    /// Draws a vertical box-drawing line.
-
+    // Draws a vertical box-drawing line.
     public procedure DrawVerticalLine(
   Self: TuiCanvas;
   X: integer;
@@ -153,14 +154,14 @@ public type
       end
     end;
 
-    /// Draws a box frame using Unicode box-drawing glyphs.
-
+    // Draws a box frame using Unicode box-drawing glyphs.
     public procedure DrawFrame(Self: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
     begin
       if Bounds.IsEmpty() then
       begin
         return
       end;
+
       if Bounds.Width = 1 then
       begin
         Self.DrawVerticalLine(Bounds.X, Bounds.Y, Bounds.Height, Role);
@@ -169,8 +170,10 @@ public type
         begin
           Self.PutCell(TuiPoint.Create(Bounds.X, Bounds.Bottom() - 1), TuiCell.Create('╰', Role))
         end;
+
         return
       end;
+
       if Bounds.Height = 1 then
       begin
         Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
@@ -178,6 +181,7 @@ public type
         Self.PutCell(TuiPoint.Create(Bounds.Right() - 1, Bounds.Y), TuiCell.Create('╮', Role));
         return
       end;
+
       Self.DrawHorizontalLine(Bounds.X, Bounds.Y, Bounds.Width, Role);
       Self.DrawHorizontalLine(Bounds.X, Bounds.Bottom() - 1, Bounds.Width, Role);
       Self.DrawVerticalLine(Bounds.X, Bounds.Y + 1, Bounds.Height - 2, Role);

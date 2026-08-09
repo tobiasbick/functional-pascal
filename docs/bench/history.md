@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-09 — quiet portable register VM acceptance
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5302 | throughput: 9430403 iters/s |
+| global_access | 468 | throughput: 10683760 global updates/s |
+| record_field_access | 1580 | throughput: 7594936 field accesses/s |
+| closure_call | 382 | throughput: 7853403 closure calls/s |
+| branch_dispatch | 2703 | throughput: 7399186 branches/s |
+| dynamic_numeric | 666 | throughput: 7507507 dynamic numeric ops/s |
+| array_push | 172 | throughput: 11627906 pushes/s |
+| array_length | 74 | throughput: 6756756 lengths/s |
+| string_concat | 2165 | throughput: 2309468 concats/s |
+| string_length | 68 | throughput: 7352941 lengths/s |
+| function_call | 537 | throughput: 11173184 calls/s |
+| array_callbacks | 732 | throughput: 13114754 callbacks/s |
+| record_update | 392 | throughput: 2551020 updates/s |
+| unicode_char_at | 1203 | throughput: 2493765 chars/s |
+| task_spawn_wait | 585 | throughput: 170940 tasks/s |
+| tui_headless | 3455 | throughput: 144 frames/s |
+
 ## 2026-08-08 — after reusable register frame storage
 
 - Group: `all`

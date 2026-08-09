@@ -27,8 +27,14 @@ remaining hot paths:
   local register;
 - local `Std.Array.Push` lowering uses a verified internal `ArrayPush` operation that takes unique
   storage when available and otherwise preserves array copy-on-write aliases;
+- index-only designator writes into global aggregates use a verified global-index-path instruction
+  and mutate a uniquely owned root in place while preserving aliases, bounds checks, and error
+  diagnostics;
 - non-task intrinsics borrow their argument window, and hosted higher-order array operations reuse a
   callback worker and its register allocation across callback invocations;
+- each worker retains its physical register allocation between calls and callbacks while clearing
+  the active prefix at frame boundaries, so live values are released without repeatedly growing the
+  register vector;
 - task-spawn block widths account for the complete argument window, preserving branch addresses in
   loops.
 
@@ -53,56 +59,84 @@ For the integer loop, 8,319 main-thread samples showed:
 | integer comparison | 7.09% | 7.46% | loop control remains visible |
 | `Value::clone` | 5.61% | below top inclusive rows | value movement is still measurable |
 
-For the call workload, 10,367 main-thread samples showed:
+For the call workload, 10,367 main-thread samples taken before reusable register storage showed:
 
 | stack | self | inclusive | interpretation |
 |---|---:|---:|---|
 | `Worker::dispatch_one` | 32.60% | 94.55% | call and callee instructions share the dispatch cost |
 | `Value::clone` | 14.19% | below top inclusive rows | argument and result values still require value semantics |
-| `Vec<Value>::extend_with` | 11.10% | 16.18% | callee frame growth remains a future optimization target |
+| `Vec<Value>::extend_with` | 11.10% | 16.18% | repeated callee frame growth was still material |
 | `Worker::execute_binary_integer` | 10.08% | below top inclusive rows | the called function performs integer work |
 | `Worker::enter_call` | 2.36% | 23.79% | frame preparation is the dominant call-specific stack |
-| `Vec<Value>::resize` | 3.30% | 19.52% | frame initialization remains visible after removing temporary argument vectors |
+| `Vec<Value>::resize` | 3.30% | 19.52% | frame initialization remained visible after removing temporary argument vectors |
 
 The profiles supported the accepted decode, register-move, argument-window, callback reuse, and
-copy-on-write changes. They also show that further call-frame storage work would need a separate
-measured change rather than being hidden in P11 acceptance.
+copy-on-write changes. The later reusable-register-storage change addressed the observed frame-growth
+cost as a separately measured follow-up.
 
-The one final profile-driven change removed the unused copy-window register from one-argument call
-frames. Three loaded-host spot checks moved the `function_call` median from 930 ms to 851 ms, an
-8.5% reduction. Those spot checks decide the implementation step only; the three full-suite medians
-below remain the recorded P11 evidence.
+The one final P11 profile-driven change removed the unused copy-window register from one-argument
+call frames. Three loaded-host spot checks moved the `function_call` median from 930 ms to 851 ms, an
+8.5% reduction. Those spot checks decided that implementation step only. The quiet full-suite
+medians below supersede the earlier contaminated P11 acceptance numbers.
+
+### TUI follow-up profile
+
+The current `tui_headless` workload was sampled again after the global-index-path and reusable
+register-storage changes. A process-scoped, main-thread release profile executed the unchanged
+`headless_render_benchmark.fpas -- 500` workload in 3,458 ms, or 144 frames/s. Its most useful stacks
+were:
+
+| stack | self | inclusive | interpretation |
+|---|---:|---:|---|
+| `Worker::dispatch_one` | 28.22% | 93.65% | bytecode dispatch remains the broad runtime cost |
+| `Value` drop glue | 14.27% | 14.30% | releasing aggregate-rich temporary values is now a primary cost |
+| numeric hosted calls | 5.13% | 16.24% | TUI geometry and layout execute many numeric calls |
+| synchronous callback calls | 4.55% | 5.27% | higher-order array operations retain visible callback overhead |
+| aggregate-window iteration | 4.05% | below top inclusive rows | aggregate traversal remains material |
+| aggregate-window collection | 2.93% | 8.81% | building result aggregates remains material |
+
+Optimized symbol ranges merge some neighboring functions, so smaller symbol-labelled rows are not
+used as exact source attribution. The important negative result is reliable: neither
+`Vec<Value>::resize` nor `Vec<Value>::extend_with` remains in the leading stacks, whereas they were
+19.52% and 16.18% inclusive in the earlier call profile. Reusable register storage removed that
+identified bottleneck.
+
+A separate public-API microbenchmark rebuilt the same 43-element view tree 500 times after 50
+warm-up iterations. Three runs took 12 ms, 12 ms, and 11 ms. View construction is therefore below
+0.4% of the complete 3,458 ms render workload and is not the remaining TUI bottleneck. Validation,
+arrangement, and paint are internal `Std.Tui` units and are intentionally not exported for direct
+source-level timing. The native profile instead points to dispatch, value destruction, numeric and
+callback calls, and aggregate traversal as the next areas to investigate; this record makes no new
+optimization claim for them.
 
 ## Benchmark method
 
 The committed suite and workload arguments were unchanged. The baseline is the complete
 `.temp-data/bench/register-vm-before.json` snapshot recorded before the register rewrite. After the
 settled release build, the complete suite was compared against that baseline three times on the same
-Windows host. The user explicitly directed P11 to continue while a game was using several CPU cores.
-The final runs therefore capture concurrent desktop/game load that was not synchronized with the
-earlier baseline. They prove workload correctness and preserve the requested measurement record, but
-their absolute deltas mix VM changes with host contention and must not be presented as quiet-machine
-throughput. Each row reports the median of the three elapsed times. Speedup is `baseline / median`;
-positive change is the throughput-equivalent improvement `(speedup - 1) * 100`.
+Windows host. Five pre-run processor probes reported 0% to 7% total utilization, with no sustained
+competing workload. Each row reports the median of the three elapsed times. Speedup is
+`baseline / median`; positive change is the throughput-equivalent improvement
+`(speedup - 1) * 100`.
 
 | group | benchmark | baseline ms | run 1 ms | run 2 ms | run 3 ms | median ms | speedup | change |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| vm | `integer_loop` | 12,143 | 10,132 | 10,928 | 10,091 | 10,132 | 1.199x | +19.8% |
-| vm | `global_access` | 1,011 | 703 | 714 | 685 | 703 | 1.438x | +43.8% |
-| vm | `record_field_access` | 2,807 | 2,308 | 2,534 | 2,428 | 2,428 | 1.156x | +15.6% |
-| vm | `closure_call` | 631 | 640 | 651 | 676 | 651 | 0.969x | -3.1% |
-| vm | `branch_dispatch` | 4,559 | 4,127 | 5,336 | 4,213 | 4,213 | 1.082x | +8.2% |
-| vm | `dynamic_numeric` | 1,199 | 1,184 | 1,236 | 1,141 | 1,184 | 1.013x | +1.3% |
-| vm | `array_push` | 209 | 253 | 290 | 261 | 261 | 0.801x | -19.9% |
-| vm | `array_length` | 79 | 115 | 137 | 113 | 115 | 0.687x | -31.3% |
-| vm | `string_concat` | 3,612 | 3,441 | 4,933 | 3,577 | 3,577 | 1.010x | +1.0% |
-| vm | `string_length` | 77 | 105 | 103 | 118 | 105 | 0.733x | -26.7% |
-| vm | `function_call` | 1,095 | 941 | 1,066 | 936 | 941 | 1.164x | +16.4% |
-| vm | `array_callbacks` | 1,249 | 1,296 | 1,542 | 1,552 | 1,542 | 0.810x | -19.0% |
-| vm | `record_update` | 715 | 520 | 691 | 645 | 645 | 1.109x | +10.9% |
-| vm | `unicode_char_at` | 1,303 | 1,692 | 2,145 | 1,949 | 1,949 | 0.669x | -33.1% |
-| concurrency | `task_spawn_wait` | 1,005 | 1,038 | 955 | 1,016 | 1,016 | 0.989x | -1.1% |
-| tui | `tui_headless` | 10,182 | 14,199 | 15,800 | 13,266 | 14,199 | 0.717x | -28.3% |
+| vm | `integer_loop` | 12,143 | 5,361 | 5,292 | 5,156 | 5,292 | 2.295x | +129.5% |
+| vm | `global_access` | 1,011 | 473 | 475 | 469 | 473 | 2.137x | +113.7% |
+| vm | `record_field_access` | 2,807 | 1,611 | 1,568 | 1,582 | 1,582 | 1.774x | +77.4% |
+| vm | `closure_call` | 631 | 377 | 372 | 391 | 377 | 1.674x | +67.4% |
+| vm | `branch_dispatch` | 4,559 | 2,729 | 2,633 | 2,687 | 2,687 | 1.697x | +69.7% |
+| vm | `dynamic_numeric` | 1,199 | 667 | 678 | 666 | 667 | 1.798x | +79.8% |
+| vm | `array_push` | 209 | 174 | 173 | 186 | 174 | 1.201x | +20.1% |
+| vm | `array_length` | 79 | 80 | 76 | 74 | 76 | 1.039x | +3.9% |
+| vm | `string_concat` | 3,612 | 2,178 | 2,170 | 2,147 | 2,170 | 1.665x | +66.5% |
+| vm | `string_length` | 77 | 69 | 68 | 68 | 68 | 1.132x | +13.2% |
+| vm | `function_call` | 1,095 | 540 | 546 | 545 | 545 | 2.009x | +100.9% |
+| vm | `array_callbacks` | 1,249 | 751 | 731 | 722 | 731 | 1.709x | +70.9% |
+| vm | `record_update` | 715 | 405 | 402 | 388 | 402 | 1.779x | +77.9% |
+| vm | `unicode_char_at` | 1,303 | 1,247 | 1,217 | 1,225 | 1,225 | 1.064x | +6.4% |
+| concurrency | `task_spawn_wait` | 1,005 | 584 | 566 | 579 | 579 | 1.736x | +73.6% |
+| tui | `tui_headless` | 10,182 | 3,442 | 3,439 | 3,499 | 3,442 | 2.958x | +195.8% |
 
 The VM geometric mean uses the fourteen `vm` group rows only. Concurrency and TUI remain full-suite
 regression gates but are not included in that geometric mean.
@@ -111,23 +145,20 @@ regression gates but are not included in that geometric mean.
 
 | gate | required | measured | outcome |
 |---|---:|---:|---|
-| VM geometric-mean throughput | at least 1.5x | 0.964x | measured exception accepted for concurrent game load |
-| `integer_loop` | at least 1.5x | 1.199x | measured exception accepted for concurrent game load |
-| `function_call` | at least 1.5x | 1.164x | measured exception accepted for concurrent game load |
-| `record_update` | at least 1.25x | 1.109x | measured exception accepted for concurrent game load |
-| worst full-suite regression | no worse than -10% | `unicode_char_at` -33.1% | measured exception accepted for concurrent game load |
+| VM geometric-mean throughput | at least 1.5x | 1.593x | passed |
+| `integer_loop` | at least 1.5x | 2.295x | passed |
+| `function_call` | at least 1.5x | 2.009x | passed |
+| `record_update` | at least 1.25x | 1.779x | passed |
+| worst full-suite regression | no worse than -10% | no median regression | passed |
 | unchanged workloads and checks | required | unchanged and all completed | passed |
 
-All three threshold-enabled comparisons returned exit code 2 because at least one row exceeded the
-10% regression threshold. The mandatory numerical gates are therefore not claimed as passing. The
-user explicitly instructed P11 to ignore the concurrently running game and continue to completion;
-this is the user-accepted measured exception permitted by the P11 contract, not a silent threshold
-reduction. A later quiet-machine comparison may replace these contaminated numbers, but it is not a
-claim made by this acceptance record.
+An additional `compare register-vm-before --fail-on-regression --threshold-pct 10` run returned exit
+code 0. The quiet three-run medians pass every mandatory numerical gate without an exception or a
+reduced threshold.
 
 No benchmark source, iteration count, correctness check, or suite argument was weakened to obtain a
 gain. The settled snapshot is also recorded in [Benchmark history](history.md) with the title
-`after portable register VM`.
+`quiet portable register VM acceptance`.
 
 ## Rejected experiments
 

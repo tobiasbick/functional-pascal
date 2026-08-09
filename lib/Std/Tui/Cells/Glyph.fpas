@@ -3,6 +3,9 @@ unit Std.Tui.Cells.Glyph;
 uses Std.Console;
 
 // Returns the display width of one validated renderable grapheme (`1` or `2`).
+//
+// Parameters:
+// - `Glyph`: Single renderable grapheme.
 public function TuiGlyphWidth(Glyph: string): integer;
 begin
   return Std.Console.GraphemeWidth(Glyph)

@@ -8,13 +8,53 @@ uses
 public type
   // Hit result for pointer routing against arranged geometry.
   TuiPointerHit = enum
+    // Represents the `Miss` variant of `TuiPointerHit`.
     Miss;
+    // Represents the `ElementButton` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Button`: Button specification carried by the variant.
     ElementButton(Button: TuiButtonSpec);
+    // Represents the `ImmediateButton` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
+    // - `Action`: Application action carried by the variant.
     ImmediateButton(Id: TuiControlId; Action: TuiAction);
+    // Represents the `Input` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Value`: Typed value wrapped by the variant.
+    // - `Bounds`: Arranged bounds associated with the hit or control.
     Input(Value: TuiInputSpec; Bounds: TuiRect);
+    // Represents the `TextArea` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
+    // - `Action`: Application action carried by the variant.
+    // - `Text`: Text carried or displayed by the variant.
+    // - `Offset`: Scroll offset carried by the variant.
+    // - `Bounds`: Arranged bounds associated with the hit or control.
     TextArea(Id: TuiControlId; Action: TuiAction; Text: string; Offset: TuiPoint; Bounds: TuiRect);
+    // Represents the `CheckBox` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
+    // - `Action`: Application action carried by the variant.
+    // - `Checked`: Checked state carried by the variant.
     CheckBox(Id: TuiControlId; Action: TuiAction; Checked: boolean);
+    // Represents the `List` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
+    // - `Action`: Application action carried by the variant.
+    // - `CurrentSelected`: Current selected item index.
+    // - `Proposed`: Proposed selected item index.
     List(Id: TuiControlId; Action: TuiAction; CurrentSelected: integer; Proposed: integer);
+    // Represents the `Scroll` variant of `TuiPointerHit`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
     Scroll(Id: TuiControlId);
   end;
 
@@ -220,6 +260,11 @@ begin
 end;
 
 // Returns the deepest eligible hit at a point.
+//
+// Parameters:
+// - `Frame`: Arranged frame containing element geometry.
+// - `Root`: Root of the element tree.
+// - `Point`: Point tested by the operation.
 public function TuiPointerHitAt(Frame: TuiArrangedFrame; Root: TuiElement; Point: TuiPoint): TuiPointerHit;
 begin
   TuiPointerBestHit := TuiPointerHit.Miss;

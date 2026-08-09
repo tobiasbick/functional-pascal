@@ -5,8 +5,11 @@ uses Std.Array, Std.Option, Std.Tui.Cells.Palette;
 public type
   // Runtime command returned by an application's Update function.
   TuiCmd = enum
+    // Represents the `NoCommand` variant of `TuiCmd`.
     NoCommand;
+    // Represents the `Quit` variant of `TuiCmd`.
     Quit;
+    // Represents the `SetPalette` variant of `TuiCmd`.
     SetPalette;
   end;
 
@@ -27,6 +30,7 @@ end;
 public type
   // Host-owned command output capability passed to Update.
   TuiCmdOutput = record
+    // Opaque backing-storage slot.
     public Slot: integer;
 
     // Allocates one reusable command output.
@@ -40,6 +44,9 @@ public type
     end;
 
     // Resets the output before one Update call.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public procedure Reset(Self: TuiCmdOutput);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -48,6 +55,10 @@ public type
     end;
 
     // Sets the command returned by the current Update call.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Value`: Value used to create or update the result.
     public procedure Set(Self: TuiCmdOutput; Value: TuiCmd);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -56,6 +67,10 @@ public type
     end;
 
     // Requests an immediate palette change after Update returns.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Palette`: Palette used to resolve semantic style roles.
     public procedure SetPalette(Self: TuiCmdOutput; Palette: TuiPalette);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -64,6 +79,9 @@ public type
     end;
 
     // Reads the command after Update returns.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Read(Self: TuiCmdOutput): TuiCmd;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -71,6 +89,9 @@ public type
     end;
 
     // Returns the palette attached to a SetPalette command.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function ReadPalette(Self: TuiCmdOutput): option of TuiPalette;
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);

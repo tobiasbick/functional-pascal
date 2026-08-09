@@ -5,14 +5,24 @@ uses Std.Tui.Cells.Color;
 public type
   // Concrete foreground/background colors and text attributes.
   TuiStyle = record
+    // Foreground color.
     public Foreground: TuiColor;
+    // Background color.
     public Background: TuiColor;
+    // Whether bold rendering is enabled.
     public Bold: boolean;
+    // Whether dim rendering is enabled.
     public Dim: boolean;
+    // Whether underlined rendering is enabled.
     public Underline: boolean;
+    // Whether inverse rendering is enabled.
     public Inverse: boolean;
 
     // Creates a style with colors and no text attributes.
+    //
+    // Parameters:
+    // - `Foreground`: Foreground color.
+    // - `Background`: Background color.
     public static function FromColors(Foreground: TuiColor; Background: TuiColor): TuiStyle;
     begin
       return record
@@ -26,6 +36,14 @@ public type
     end;
 
     // Creates a style with colors and explicit text attributes.
+    //
+    // Parameters:
+    // - `Foreground`: Foreground color.
+    // - `Background`: Background color.
+    // - `Bold`: Whether bold text rendering is enabled.
+    // - `Dim`: Whether dim text rendering is enabled.
+    // - `Underline`: Whether underlined text rendering is enabled.
+    // - `Inverse`: Whether inverse text rendering is enabled.
     public static function Create(
   Foreground: TuiColor;
   Background: TuiColor;

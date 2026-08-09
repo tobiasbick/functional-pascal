@@ -283,6 +283,12 @@ begin
 end;
 
 // Paints one complete frame using arranged geometry only (no measurement).
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Root`: Root of the element tree.
+// - `Pressed`: Whether the control is displayed as pressed.
 public procedure TuiPaintView(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;
@@ -305,6 +311,9 @@ begin
 end;
 
 // Overwrites the surface with a terminal-too-small notice when layout overflows.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
 public procedure TuiPaintTooSmallOverlay(Surface: TuiWorkingSurface);
 begin
   Surface.Clear();

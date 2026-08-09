@@ -17,8 +17,8 @@ Returns `S` concatenated `Count` times. `Count` ≤ 0 yields an empty string.
 > **Note:** After `uses Std.Str`, call this routine as `RepeatStr` (the name `Repeat` is reserved for the `repeat … until` loop).
 
 ```pascal
-WriteLn(RepeatStr('ab', 3))  { ababab }
-WriteLn(RepeatStr('─', 40)) { ────────────────────────────────────────}
+WriteLn(RepeatStr('ab', 3))  // ababab
+WriteLn(RepeatStr('─', 40)) // ────────────────────────────────────────
 ```
 
 `Count` must be at most **1_000_000** when positive. Larger counts raise a runtime error instead of allocating unbounded memory.
@@ -30,7 +30,7 @@ WriteLn(RepeatStr('─', 40)) { ────────────────
 If `Length(S) < Width`, prepends `Fill` characters until length equals `Width`. Otherwise returns `S` unchanged.
 
 ```pascal
-WriteLn(PadLeft('42', 5, '0'))  { 00042 }
+WriteLn(PadLeft('42', 5, '0'))  // 00042
 ```
 
 ---
@@ -40,7 +40,7 @@ WriteLn(PadLeft('42', 5, '0'))  { 00042 }
 Like `PadLeft` but appends `Fill` on the right.
 
 ```pascal
-WriteLn(PadRight('Hi', 6, '.'))  { Hi.... }
+WriteLn(PadRight('Hi', 6, '.'))  // Hi....
 ```
 
 ---
@@ -50,7 +50,7 @@ WriteLn(PadRight('Hi', 6, '.'))  { Hi.... }
 Centers `S` within `Width` characters of `Fill`. When the remaining space is odd, the extra character goes on the right.
 
 ```pascal
-WriteLn(PadCenter('Hi', 6, '-'))  { --Hi-- }
+WriteLn(PadCenter('Hi', 6, '-'))  // --Hi--
 ```
 
 ---
@@ -71,7 +71,7 @@ Returns the character at the 0-based `Index`. **Runtime error** if out of bounds
 
 ```pascal
 var C: string := CharAt('Hello', 0);
-WriteLn(C)  { H }
+WriteLn(C)  // H
 ```
 
 ---
@@ -81,7 +81,7 @@ WriteLn(C)  { H }
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
 
 ```pascal
-WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
+WriteLn(SetCharAt('Hello', 0, 'J'))  // Jello
 ```
 
 ---
@@ -91,7 +91,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-WriteLn(Ord('A'))  { 65 }
+WriteLn(Ord('A'))  // 65
 ```
 
 ---
@@ -101,7 +101,7 @@ WriteLn(Ord('A'))  { 65 }
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-WriteLn(Chr(65))  { A }
+WriteLn(Chr(65))  // A
 ```
 
 ---
@@ -111,7 +111,7 @@ WriteLn(Chr(65))  { A }
 Returns a new string with `Sub` inserted at position `Index`. **Runtime error** if `Index` is out of range `[0..Length(S)]`.
 
 ```pascal
-WriteLn(Insert('Hllo', 1, 'e'))  { Hello }
+WriteLn(Insert('Hllo', 1, 'e'))  // Hello
 ```
 
 ---
@@ -121,7 +121,7 @@ WriteLn(Insert('Hllo', 1, 'e'))  { Hello }
 Returns a new string with `Len` characters removed starting at `Start`. **Runtime error** if the range is out of bounds.
 
 ```pascal
-WriteLn(Delete('Hello', 1, 3))  { Ho }
+WriteLn(Delete('Hello', 1, 3))  // Ho
 ```
 
 ---
@@ -131,7 +131,7 @@ WriteLn(Delete('Hello', 1, 3))  { Ho }
 Returns a new string with characters in reverse order.
 
 ```pascal
-WriteLn(Reverse('abc'))  { cba }
+WriteLn(Reverse('abc'))  // cba
 ```
 
 ## See also

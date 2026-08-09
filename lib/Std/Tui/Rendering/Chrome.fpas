@@ -6,6 +6,11 @@ uses
   Std.Tui.Rendering.Canvas;
 
 // Paints an opaque panel with a thin rounded frame and left-aligned title.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Title`: Title displayed by the panel.
 public procedure TuiPaintPanel(Canvas: TuiCanvas; Bounds: TuiRect; Title: string);
 begin
   if Bounds.IsEmpty() then

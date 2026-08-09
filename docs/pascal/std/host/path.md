@@ -66,7 +66,7 @@ WriteLn(BaseName(Join(Parts)))
 Returns the final component of `Path`.
 
 ```pascal
-WriteLn(BaseName('dir/nested/file.txt'))  { file.txt }
+WriteLn(BaseName('dir/nested/file.txt'))  // file.txt
 ```
 
 Trailing separators follow host `std::path::Path` rules and may differ between Windows and Unix.
@@ -78,8 +78,8 @@ Trailing separators follow host `std::path::Path` rules and may differ between W
 Returns the parent path without the final component.
 
 ```pascal
-WriteLn(DirName('dir/nested/file.txt'))  { dir/nested }
-WriteLn(DirName('file.txt'))             { '' }
+WriteLn(DirName('dir/nested/file.txt'))  // dir/nested
+WriteLn(DirName('file.txt'))             // ''
 ```
 
 ---
@@ -89,8 +89,8 @@ WriteLn(DirName('file.txt'))             { '' }
 Returns the final extension without a leading dot.
 
 ```pascal
-WriteLn(Extension('archive.tar.gz'))  { gz }
-WriteLn(Extension('README'))            { '' }
+WriteLn(Extension('archive.tar.gz'))  // gz
+WriteLn(Extension('README'))            // ''
 ```
 
 ---

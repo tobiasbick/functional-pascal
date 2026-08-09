@@ -6,7 +6,7 @@ Returns a **new** array containing all elements of `A` followed by all elements 
 
 ```pascal
 var C: array of integer := Concat([1, 2], [3, 4]);
-WriteLn(Length(C))  { 4 }
+WriteLn(Length(C))  // 4
 ```
 
 ---
@@ -33,7 +33,7 @@ Creates a new array containing `Count` copies of `Value`.
 
 ```pascal
 var Zeros: array of integer := Fill(0, 5);
-WriteLn(Length(Zeros))  { 5 }
+WriteLn(Length(Zeros))  // 5
 ```
 
 `Count` must be non-negative and at most **1_000_000**. Larger counts raise a runtime error instead of allocating unbounded memory.

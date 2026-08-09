@@ -5,15 +5,31 @@ uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 public type
   // Concrete styles for every flat button state.
   TuiButtonPalette = record
+    // Style used for normal content.
     public Normal: TuiStyle;
+    // Style used for the default state.
     public Default: TuiStyle;
+    // Selected item index or style.
     public Selected: TuiStyle;
+    // Style used for disabled content.
     public Disabled: TuiStyle;
+    // Shortcut text, gesture, or style.
     public Shortcut: TuiStyle;
+    // Shortcut style used by a default button.
     public DefaultShortcut: TuiStyle;
+    // Shortcut style used by a selected button.
     public SelectedShortcut: TuiStyle;
 
     // Creates a complete button palette.
+    //
+    // Parameters:
+    // - `Normal`: Normal-state style.
+    // - `Default`: Fallback value used when no value is available.
+    // - `Selected`: Selected item index.
+    // - `Disabled`: Whether the control is disabled.
+    // - `Shortcut`: Shortcut gesture or display text.
+    // - `DefaultShortcut`: Fallback shortcut displayed for the item.
+    // - `SelectedShortcut`: Shortcut displayed for the selected item.
     public static function Create(
   Normal: TuiStyle;
   Default: TuiStyle;
@@ -36,6 +52,10 @@ public type
     end;
 
     // Resolves one button role.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
     public function ForRole(Self: TuiButtonPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
@@ -75,6 +95,11 @@ public type
     end;
 
     // Returns a copy with one button role replaced.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
+    // - `Style`: Concrete terminal style.
     public function WithRole(Self: TuiButtonPalette; Role: TuiStyleRole; Style: TuiStyle): TuiButtonPalette;
     begin
       mutable var Updated: TuiButtonPalette := Self;

@@ -16,8 +16,11 @@ mutable var
 public type
   // One changed horizontal range prepared for the internal terminal renderer.
   TuiSurfaceDamage = record
+    // Zero-based vertical terminal-cell coordinate.
     public Y: integer;
+    // First changed horizontal cell coordinate.
     public FirstX: integer;
+    // Row-major terminal cells.
     public Cells: array of TuiCell;
   end;
 
@@ -173,11 +176,19 @@ end;
 public type
   // Explicit immutable copy of the most recently painted headless surface.
   TuiSurfaceSnapshot = record
+    // Width in terminal cells.
     public Width: integer;
+    // Height in terminal cells.
     public Height: integer;
+    // Row-major terminal cells.
     public Cells: array of TuiCell;
 
     // Returns one leading cell at a zero-based position.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
     public function CellAt(Self: TuiSurfaceSnapshot; X: integer; Y: integer): TuiCell;
     begin
       if (((X < 0) or (X >= Self.Width)) or (Y < 0)) or (Y >= Self.Height) then
@@ -189,6 +200,10 @@ public type
     end;
 
     // Returns one complete row as text.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
     public function LineAt(Self: TuiSurfaceSnapshot; Y: integer): string;
     begin
       if (Y < 0) or (Y >= Self.Height) then
@@ -206,9 +221,13 @@ public type
   end;
   // Host-owned mutable working surface handle.
   TuiWorkingSurface = record
+    // Opaque backing-storage slot.
     public Slot: integer;
 
     // Allocates one working grid for a headless application.
+    //
+    // Parameters:
+    // - `Size`: Size in terminal cells.
     public static function Create(Size: TuiSize): TuiWorkingSurface;
     begin
       TuiSurfaceSizes := Std.Array.Concat(TuiSurfaceSizes, [Size]);
@@ -234,6 +253,9 @@ public type
     end;
 
     // Returns the current surface size.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Size(Self: TuiWorkingSurface): TuiSize;
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
@@ -241,6 +263,10 @@ public type
     end;
 
     // Returns whether the zero-based position lies inside the surface.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Position`: Position in terminal-cell coordinates.
     public function Contains(Self: TuiWorkingSurface; Position: TuiPoint): boolean;
     begin
       var Size: TuiSize := Self.Size();
@@ -249,6 +275,10 @@ public type
     end;
 
     // Returns the leading cell at a position, or `None` outside the grid or on a continuation.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Position`: Position in terminal-cell coordinates.
     public function TryCellAt(Self: TuiWorkingSurface; Position: TuiPoint): option of TuiCell;
     begin
       if not Self.Contains(Position) then
@@ -266,6 +296,9 @@ public type
     end;
 
     // Clears the surface by sharing one blank row across every line.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public procedure Clear(Self: TuiWorkingSurface);
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
@@ -281,6 +314,11 @@ public type
     end;
 
     // Paints one validated cell; out-of-bounds writes are ignored.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Position`: Position in terminal-cell coordinates.
+    // - `Cell`: Terminal cell written by the operation.
     public procedure PutCell(Self: TuiWorkingSurface; Position: TuiPoint; Cell: TuiCell);
     begin
       if not Self.Contains(Position) then
@@ -292,12 +330,21 @@ public type
     end;
 
     // Paints one glyph with the normal style role; out-of-bounds writes are ignored.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    // - `Glyph`: Single renderable grapheme.
     public procedure PutGlyph(Self: TuiWorkingSurface; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
     end;
 
     // Copies the current leading glyphs for explicit test inspection.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Snapshot(Self: TuiWorkingSurface): TuiSurfaceSnapshot;
     begin
       var Slot: integer := TuiSurfaceRequire(Self.Slot);
@@ -328,6 +375,11 @@ public type
   end;
 
 // Fills one clipped surface rectangle with a one-column cell.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Cell`: Terminal cell written by the operation.
 public procedure TuiSurfaceFillRect(Surface: TuiWorkingSurface; Bounds: TuiRect; Cell: TuiCell);
 begin
   if Cell.Width() <> 1 then
@@ -361,6 +413,9 @@ begin
 end;
 
 // Returns changed terminal-cell runs and commits the current surface as the presented baseline.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
 public function TuiSurfaceTakeTerminalDamage(Surface: TuiWorkingSurface): array of TuiSurfaceDamage;
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);
@@ -403,6 +458,9 @@ begin
 end;
 
 // Marks every terminal cell as damaged without changing the surface contents.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
 public procedure TuiSurfaceInvalidateTerminal(Surface: TuiWorkingSurface);
 begin
   var Slot: integer := TuiSurfaceRequire(Surface.Slot);

@@ -121,6 +121,10 @@ public type
   TuiKeyKind = Std.Console.KeyKind;
 
 // Creates a source-aware action message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
 public function TuiMsgAction(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction
@@ -130,6 +134,10 @@ begin
 end;
 
 // Measures one element under the given constraints.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
+// - `Spec`: Measurement constraints for width and height.
 public function TuiMeasure(
   Node: Std.Tui.Elements.Element.TuiElement;
   Spec: Std.Tui.Layout.MeasureSpec.TuiMeasureSpec
@@ -139,6 +147,12 @@ begin
 end;
 
 // Creates a source-aware controlled-input change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
 public function TuiMsgTextChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
@@ -150,6 +164,13 @@ begin
 end;
 
 // Creates a source-aware controlled multiline text-area change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Offset`: Scroll offset or position applied by the operation.
 public function TuiMsgTextAreaChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
@@ -162,6 +183,11 @@ begin
 end;
 
 // Creates a source-aware controlled check-box change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Checked`: Proposed checked state.
 public function TuiMsgCheckChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
@@ -172,6 +198,11 @@ begin
 end;
 
 // Creates a source-aware controlled list selection-change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Selected`: Selected item index.
 public function TuiMsgSelectionChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
@@ -182,6 +213,11 @@ begin
 end;
 
 // Creates a source-aware controlled scroll-offset change message.
+//
+// Parameters:
+// - `Source`: Identifier of the control that produced the message.
+// - `Action`: Application action associated with the control or emitted message.
+// - `Offset`: Scroll offset or position applied by the operation.
 public function TuiMsgScrollChanged(
   Source: Std.Tui.Ids.ControlId.TuiControlId;
   Action: Std.Tui.Ids.Action.TuiAction;
@@ -192,12 +228,19 @@ begin
 end;
 
 // Returns the first focusable control in the active modal or full tree.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
 public function TuiFocusFirst(Root: Std.Tui.Elements.Element.TuiElement): option of Std.Tui.Ids.ControlId.TuiControlId;
 begin
   return Std.Tui.Runtime.Helpers.TuiFocusFirst(Root)
 end;
 
 // Keeps a preferred focus id when still valid; otherwise selects the first focusable id.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Preferred`: Preferred size or focus identifier.
 public function TuiFocusResolve(
   Root: Std.Tui.Elements.Element.TuiElement;
   Preferred: option of Std.Tui.Ids.ControlId.TuiControlId
@@ -207,6 +250,10 @@ begin
 end;
 
 // Reports whether a root's unconstrained minimum fits an available terminal size.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Available`: Available terminal size.
 public function TuiLayoutFitFor(
   Root: Std.Tui.Elements.Element.TuiElement;
   Available: Std.Tui.Geometry.Size.TuiSize
@@ -216,6 +263,9 @@ begin
 end;
 
 // Clears a working surface and paints the terminal-too-small notice.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
 public procedure TuiPaintTooSmallOverlay(Surface: Std.Tui.Rendering.Surface.TuiWorkingSurface);
 begin
   Std.Tui.Rendering.Paint.TuiPaintTooSmallOverlay(Surface)

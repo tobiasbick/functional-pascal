@@ -25,6 +25,9 @@ begin
 end;
 
 // Converts one Console event to Tui host input, discarding unsupported event kinds.
+//
+// Parameters:
+// - `Event`: Console event to translate.
 public function TuiConsoleEventToHostInput(Event: Std.Console.Event): option of TuiHostInput;
 begin
   case Event.kind of

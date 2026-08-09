@@ -3,10 +3,16 @@ unit Std.Tui.Geometry.Point;
 public type
   // Zero-based terminal-cell coordinate.
   TuiPoint = record
+    // Zero-based horizontal terminal-cell coordinate.
     public X: integer;
+    // Zero-based vertical terminal-cell coordinate.
     public Y: integer;
 
     // Creates a point. All integer coordinates are accepted.
+    //
+    // Parameters:
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
     public static function Create(X: integer; Y: integer): TuiPoint;
     begin
       return record

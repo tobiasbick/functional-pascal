@@ -3,8 +3,11 @@ unit Std.Tui.Cells.Color;
 public type
   // Color representation kind for terminal painting.
   TuiColorKind = enum
+    // Represents the `Crt` variant of `TuiColorKind`.
     Crt;
+    // Represents the `Ansi256` variant of `TuiColorKind`.
     Ansi256;
+    // Represents the `Rgb` variant of `TuiColorKind`.
     Rgb;
   end;
 
@@ -21,13 +24,21 @@ end;
 public type
   // Validated CRT, ANSI-256, or RGB color value.
   TuiColor = record
+    // Variant kind represented by the value.
     public Kind: TuiColorKind;
+    // Palette or collection index.
     public Index: integer;
+    // Red RGB channel.
     public Red: integer;
+    // Green RGB channel.
     public Green: integer;
+    // Blue RGB channel.
     public Blue: integer;
 
     // Creates a CRT color (`0..15`).
+    //
+    // Parameters:
+    // - `Index`: Zero-based index used by the operation.
     public static function FromCrt(Index: integer): TuiColor;
     begin
       TuiColorRequireRange(Index, 0, 15, 'CRT color index');
@@ -41,6 +52,9 @@ public type
     end;
 
     // Creates an ANSI-256 color (`0..255`).
+    //
+    // Parameters:
+    // - `Index`: Zero-based index used by the operation.
     public static function FromAnsi256(Index: integer): TuiColor;
     begin
       TuiColorRequireRange(Index, 0, 255, 'ANSI-256 color index');
@@ -54,6 +68,11 @@ public type
     end;
 
     // Creates an RGB color; each channel is `0..255`.
+    //
+    // Parameters:
+    // - `Red`: Red RGB channel in the range `0..255`.
+    // - `Green`: Green RGB channel in the range `0..255`.
+    // - `Blue`: Blue RGB channel in the range `0..255`.
     public static function FromRgb(Red: integer; Green: integer; Blue: integer): TuiColor;
     begin
       TuiColorRequireRange(Red, 0, 255, 'red channel');

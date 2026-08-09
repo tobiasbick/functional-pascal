@@ -173,7 +173,7 @@ WriteLn(Tan(0.0))
 Inverse sine (arc sine). **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-WriteLn(ArcSin(1.0))  { Pi/2 }
+WriteLn(ArcSin(1.0))  // Pi/2
 ```
 
 ---
@@ -183,7 +183,7 @@ WriteLn(ArcSin(1.0))  { Pi/2 }
 Inverse cosine. **Runtime error** if `R` is outside `[-1, 1]`.
 
 ```pascal
-WriteLn(ArcCos(1.0))  { 0.0 }
+WriteLn(ArcCos(1.0))  // 0.0
 ```
 
 ---
@@ -193,7 +193,7 @@ WriteLn(ArcCos(1.0))  { 0.0 }
 Inverse tangent (classic Pascal `ArcTan`).
 
 ```pascal
-WriteLn(ArcTan(1.0))  { Pi/4 }
+WriteLn(ArcTan(1.0))  // Pi/4
 ```
 
 ---
@@ -203,7 +203,7 @@ WriteLn(ArcTan(1.0))  { Pi/4 }
 Two-argument arctangent — angle of the vector `(X, Y)` in the correct quadrant. Result in `(-Pi, Pi]`.
 
 ```pascal
-WriteLn(ArcTan2(1.0, 1.0))  { Pi/4 }
+WriteLn(ArcTan2(1.0, 1.0))  // Pi/4
 ```
 
 ---
@@ -213,7 +213,7 @@ WriteLn(ArcTan2(1.0, 1.0))  { Pi/4 }
 Returns e^R. Inverse of `Log`.
 
 ```pascal
-WriteLn(Exp(1.0))  { ~2.718 }
+WriteLn(Exp(1.0))  // ~2.718
 ```
 
 ---
@@ -223,7 +223,7 @@ WriteLn(Exp(1.0))  { ~2.718 }
 Base-10 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-WriteLn(Log10(100.0))  { 2.0 }
+WriteLn(Log10(100.0))  // 2.0
 ```
 
 ---
@@ -233,7 +233,7 @@ WriteLn(Log10(100.0))  { 2.0 }
 Base-2 logarithm. **Runtime error** if `R ≤ 0`.
 
 ```pascal
-WriteLn(Log2(8.0))  { 3.0 }
+WriteLn(Log2(8.0))  // 3.0
 ```
 
 ---
@@ -243,8 +243,8 @@ WriteLn(Log2(8.0))  { 3.0 }
 Truncates toward zero (classic Pascal `Trunc`). Unlike `Floor`, `Trunc(-3.7)` yields `-3`, not `-4`.
 
 ```pascal
-WriteLn(Trunc(3.9));    { 3 }
-WriteLn(Trunc(-3.7))    { -3 }
+WriteLn(Trunc(3.9));    // 3
+WriteLn(Trunc(-3.7))    // -3
 ```
 
 ---
@@ -254,8 +254,8 @@ WriteLn(Trunc(-3.7))    { -3 }
 Fractional part: `Frac(R) = R - Trunc(R)`.
 
 ```pascal
-WriteLn(Frac(3.14))   { 0.14 }
-WriteLn(Frac(-3.14))  { -0.14 }
+WriteLn(Frac(3.14))   // 0.14
+WriteLn(Frac(-3.14))  // -0.14
 ```
 
 ---
@@ -265,9 +265,9 @@ WriteLn(Frac(-3.14))  { -0.14 }
 Returns `-1`, `0`, or `1` depending on the sign of `N`. `N` may be `integer` or `real`; result is always `integer`.
 
 ```pascal
-WriteLn(Sign(-42));   { -1 }
-WriteLn(Sign(0));     { 0 }
-WriteLn(Sign(3.14))   { 1 }
+WriteLn(Sign(-42));   // -1
+WriteLn(Sign(0));     // 0
+WriteLn(Sign(3.14))   // 1
 ```
 
 ---
@@ -277,9 +277,9 @@ WriteLn(Sign(3.14))   { 1 }
 Returns `V` constrained to `[Lo, Hi]`. All three arguments must be the same numeric kind. Result matches the input kind.
 
 ```pascal
-WriteLn(Clamp(150, 0, 100));     { 100 }
-WriteLn(Clamp(-5, 0, 100));      { 0 }
-WriteLn(Clamp(1.5, 0.0, 1.0))   { 1.0 }
+WriteLn(Clamp(150, 0, 100));     // 100
+WriteLn(Clamp(-5, 0, 100));      // 0
+WriteLn(Clamp(1.5, 0.0, 1.0))   // 1.0
 ```
 
 ---

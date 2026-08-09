@@ -6,6 +6,11 @@ uses
   Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
 // Paints a label, bounded bar, and percentage on one row.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Gauge`: Gauge specification to paint.
 public procedure TuiPaintGauge(Canvas: TuiCanvas; Bounds: TuiRect; Gauge: TuiGauge);
 begin
   if Bounds.IsEmpty() then

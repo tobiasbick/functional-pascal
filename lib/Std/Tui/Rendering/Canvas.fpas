@@ -7,11 +7,18 @@ uses
 public type
   // Private frame-scoped drawing capability over one working surface.
   TuiCanvas = record
+    // Working surface targeted by the canvas.
     public Surface: TuiWorkingSurface;
+    // Clipping rectangle in surface coordinates.
     public Clip: TuiRect;
+    // Canvas origin in surface coordinates.
     public Origin: TuiPoint;
 
     // Creates a canvas clipped to `Bounds` intersected with the surface.
+    //
+    // Parameters:
+    // - `Surface`: Working surface affected by the operation.
+    // - `Bounds`: Rectangle affected by the operation.
     public static function Create(Surface: TuiWorkingSurface; Bounds: TuiRect): TuiCanvas;
     begin
       var Size: TuiSize := Surface.Size();
@@ -24,6 +31,11 @@ public type
     end;
 
     // Creates a canvas with an explicit surface origin and local clip rectangle.
+    //
+    // Parameters:
+    // - `Surface`: Working surface affected by the operation.
+    // - `Origin`: Canvas origin in surface coordinates.
+    // - `Clip`: Clipping rectangle for drawing.
     public static function CreateLocal(Surface: TuiWorkingSurface; Origin: TuiPoint; Clip: TuiRect): TuiCanvas;
     begin
       return record
@@ -34,6 +46,10 @@ public type
     end;
 
     // Returns a nested canvas for `LocalBounds` in this canvas's local coordinates.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `LocalBounds`: Bounds expressed in the parent canvas coordinate system.
     public function Child(Self: TuiCanvas; LocalBounds: TuiRect): TuiCanvas;
     begin
       var Visible: TuiRect := LocalBounds.Intersect(Self.Clip);
@@ -43,6 +59,11 @@ public type
     end;
 
     // Paints one cell in local coordinates; clipped and wide-glyph aware.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Position`: Position in terminal-cell coordinates.
+    // - `Cell`: Terminal cell written by the operation.
     public procedure PutCell(Self: TuiCanvas; Position: TuiPoint; Cell: TuiCell);
     begin
       if not Self.Clip.Contains(Position) then
@@ -60,12 +81,23 @@ public type
     end;
 
     // Paints one glyph with the normal role.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    // - `Glyph`: Single renderable grapheme.
     public procedure PutGlyph(Self: TuiCanvas; X: integer; Y: integer; Glyph: string);
     begin
       Self.PutCell(TuiPoint.Create(X, Y), TuiCell.Create(Glyph, TuiStyleRole.Normal))
     end;
 
     // Fills the visible intersection with a one-column cell.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Bounds`: Rectangle affected by the operation.
+    // - `Cell`: Terminal cell written by the operation.
     public procedure FillRect(Self: TuiCanvas; Bounds: TuiRect; Cell: TuiCell);
     begin
       var CellWidth: integer := Cell.Width();
@@ -79,6 +111,12 @@ public type
     end;
 
     // Draws one logical line of text; stops before a newline.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Position`: Position in terminal-cell coordinates.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Role`: Semantic style role used by the operation.
     public procedure WriteText(Self: TuiCanvas; Position: TuiPoint; Text: string; Role: TuiStyleRole);
     begin
       mutable var X: integer := Position.X;
@@ -123,6 +161,13 @@ public type
     end;
 
     // Draws a horizontal box-drawing line.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    // - `Width`: Width in terminal cells.
+    // - `Role`: Semantic style role used by the operation.
     public procedure DrawHorizontalLine(
   Self: TuiCanvas;
   X: integer;
@@ -139,6 +184,13 @@ public type
     end;
 
     // Draws a vertical box-drawing line.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `X`: Zero-based horizontal terminal-cell coordinate.
+    // - `Y`: Zero-based vertical terminal-cell coordinate.
+    // - `Height`: Height in terminal cells.
+    // - `Role`: Semantic style role used by the operation.
     public procedure DrawVerticalLine(
   Self: TuiCanvas;
   X: integer;
@@ -155,6 +207,11 @@ public type
     end;
 
     // Draws a box frame using Unicode box-drawing glyphs.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Bounds`: Rectangle affected by the operation.
+    // - `Role`: Semantic style role used by the operation.
     public procedure DrawFrame(Self: TuiCanvas; Bounds: TuiRect; Role: TuiStyleRole);
     begin
       if Bounds.IsEmpty() then

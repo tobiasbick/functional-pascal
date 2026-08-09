@@ -5,12 +5,20 @@ uses Std.Tui.Cells.Glyph, Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 public type
   // One validated renderable grapheme with a semantic or concrete style.
   TuiCell = record
+    // Single renderable grapheme.
     public Glyph: string;
+    // Semantic style role of the cell.
     public Role: TuiStyleRole;
+    // Optional concrete style overriding semantic role resolution.
     public ConcreteStyle: option of TuiStyle;
+    // Display width of the glyph in terminal cells.
     public Columns: integer;
 
     // Creates a theme-resolved cell; the glyph must be one non-zero-width grapheme cluster.
+    //
+    // Parameters:
+    // - `Glyph`: Single renderable grapheme.
+    // - `Role`: Semantic style role used by the operation.
     public static function Create(Glyph: string; Role: TuiStyleRole): TuiCell;
     begin
       return record
@@ -22,6 +30,10 @@ public type
     end;
 
     // Creates a cell with a concrete style that bypasses theme lookup.
+    //
+    // Parameters:
+    // - `Glyph`: Single renderable grapheme.
+    // - `Style`: Concrete terminal style.
     public static function Styled(Glyph: string; Style: TuiStyle): TuiCell;
     begin
       return record
@@ -33,6 +45,9 @@ public type
     end;
 
     // Returns the terminal-column width of the cell glyph (`1` or `2`).
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Width(Self: TuiCell): integer;
     begin
       return Self.Columns

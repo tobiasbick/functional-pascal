@@ -112,6 +112,11 @@ begin
 end;
 
 // Routes an unmodified arrow key between enabled buttons in the active modal or full tree.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Previous`: Previously focused control identifier.
+// - `Key`: Console key event to route or match.
 public function TuiRouteButtonFocusNavigation(
   Root: TuiElement;
   Previous: option of TuiControlId;

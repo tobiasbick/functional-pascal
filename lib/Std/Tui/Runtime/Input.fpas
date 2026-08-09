@@ -5,8 +5,24 @@ uses Std.Console, Std.Tui.Geometry.Size, Std.Tui.Runtime.Msg, Std.Tui.Runtime.Po
 public type
   // One externally injected headless event, kept in arrival order.
   TuiHostInput = enum
+    // Represents the `Message` variant of `TuiHostInput`.
+    //
+    // Parameters:
+    // - `Msg`: Framework message carried by the host input.
     Message(Msg: TuiMsg);
+    // Represents the `Key` variant of `TuiHostInput`.
+    //
+    // Parameters:
+    // - `Key`: Console key event carried by the variant.
     Key(Key: Std.Console.KeyEvent);
+    // Represents the `Pointer` variant of `TuiHostInput`.
+    //
+    // Parameters:
+    // - `Pointer`: Normalized pointer event carried by the variant.
     Pointer(Pointer: TuiPointerEvent);
+    // Represents the `Resize` variant of `TuiHostInput`.
+    //
+    // Parameters:
+    // - `Size`: Size in terminal cells.
     Resize(Size: TuiSize);
   end;

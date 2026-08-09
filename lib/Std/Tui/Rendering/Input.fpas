@@ -6,6 +6,12 @@ uses
   Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Text.Input;
 
 // Paints one input with hint text, horizontal scroll markers, and a block cursor.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Input`: Controlled input specification.
+// - `Focused`: Whether the control currently owns focus.
 public procedure TuiPaintInput(Canvas: TuiCanvas; Bounds: TuiRect; Input: TuiInputSpec; Focused: boolean);
 begin
   if Bounds.IsEmpty() then

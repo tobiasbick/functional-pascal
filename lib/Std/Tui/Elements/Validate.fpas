@@ -275,6 +275,9 @@ begin
 end;
 
 // Validates one complete Tui view tree before layout or routing.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
 public procedure TuiElementValidate(Root: TuiElement);
 begin
   TuiElementValidateAndCollect(Root)

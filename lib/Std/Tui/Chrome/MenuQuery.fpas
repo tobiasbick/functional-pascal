@@ -3,6 +3,9 @@ unit Std.Tui.Chrome.MenuQuery;
 uses Std.Array, Std.Option, Std.Tui.Chrome.KeyGesture, Std.Tui.Chrome.MenuNode, Std.Tui.Ids.Action;
 
 // Returns a menu node's identity.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeIdOf(Node: TuiMenuNode): TuiMenuNodeId;
 begin
   case Node of
@@ -22,6 +25,9 @@ begin
 end;
 
 // Returns a menu node's parent.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeParent(Node: TuiMenuNode): option of TuiMenuNodeId;
 begin
   case Node of
@@ -41,6 +47,9 @@ begin
 end;
 
 // Returns a menu node's label, or an empty string for a separator.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeText(Node: TuiMenuNode): string;
 begin
   case Node of
@@ -60,6 +69,9 @@ begin
 end;
 
 // Returns a menu node's mnemonic, or an empty string for a separator.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeMnemonic(Node: TuiMenuNode): string;
 begin
   case Node of
@@ -79,6 +91,9 @@ begin
 end;
 
 // Reports whether a node can be selected.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeSelectable(Node: TuiMenuNode): boolean;
 begin
   case Node of
@@ -98,6 +113,9 @@ begin
 end;
 
 // Reports whether a node opens a child menu.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeIsSubmenu(Node: TuiMenuNode): boolean;
 begin
   case Node of
@@ -117,6 +135,9 @@ begin
 end;
 
 // Returns a command action when the node is a command.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeAction(Node: TuiMenuNode): option of TuiAction;
 begin
   case Node of
@@ -136,6 +157,9 @@ begin
 end;
 
 // Returns a command shortcut when present.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMenuNodeShortcut(Node: TuiMenuNode): option of TuiKeyGesture;
 begin
   case Node of
@@ -155,6 +179,10 @@ begin
 end;
 
 // Finds a node index by identity, or returns `-1`.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `Id`: Identifier assigned to the created or selected value.
 public function TuiMenuFind(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): integer;
 begin
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -169,6 +197,10 @@ begin
 end;
 
 // Reports whether a node has the supplied parent.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
+// - `Parent`: Optional parent menu-node identifier.
 public function TuiMenuHasParent(Node: TuiMenuNode; Parent: option of TuiMenuNodeId): boolean;
 begin
   case TuiMenuNodeParent(Node) of
@@ -202,6 +234,10 @@ begin
 end;
 
 // Returns the first selectable child of a parent.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `Parent`: Optional parent menu-node identifier.
 public function TuiMenuFirstSelectable(Nodes: array of TuiMenuNode; Parent: option of TuiMenuNodeId): option of TuiMenuNodeId;
 begin
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do
@@ -216,6 +252,11 @@ begin
 end;
 
 // Returns the next selectable sibling, wrapping in the requested direction.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `Current`: Current extent used by the calculation.
+// - `Direction`: Direction of the requested movement.
 public function TuiMenuNextSelectable(
   Nodes: array of TuiMenuNode;
   Current: TuiMenuNodeId;
@@ -264,6 +305,10 @@ begin
 end;
 
 // Returns the root ancestor of one node.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `Id`: Identifier assigned to the created or selected value.
 public function TuiMenuRootOf(Nodes: array of TuiMenuNode; Id: TuiMenuNodeId): option of TuiMenuNodeId;
 begin
   mutable var Current: TuiMenuNodeId := Id;

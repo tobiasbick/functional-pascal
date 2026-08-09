@@ -60,6 +60,10 @@ begin
 end;
 
 // Panics when the arranged frame does not match the previous painted tree.
+//
+// Parameters:
+// - `Frame`: Arranged frame containing element geometry.
+// - `Root`: Root of the element tree.
 public procedure TuiRouteRequireMatchingFrame(Frame: TuiArrangedFrame; Root: TuiElement);
 begin
   if Frame.Count() = 0 then
@@ -74,6 +78,9 @@ begin
 end;
 
 // Returns focusable control ids in the active modal or full tree order.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiFocusableControls(Node: TuiElement): array of TuiControlId;
 begin
   mutable var Descendants: array of TuiElement := [];
@@ -219,6 +226,9 @@ begin
 end;
 
 // Reads the desktop focus id, or `None` when the root is not a desktop.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
 public function TuiRootFocus(Root: TuiElement): option of TuiControlId;
 begin
   case Root of
@@ -234,6 +244,10 @@ begin
 end;
 
 // Returns the focusable-list index of a control id, or `-1` when absent.
+//
+// Parameters:
+// - `Controls`: Ordered control identifiers to search.
+// - `Id`: Identifier assigned to the created or selected value.
 public function TuiControlIndex(Controls: array of TuiControlId; Id: TuiControlId): integer;
 begin
   for Index: integer := 0 to Std.Array.Length(Controls) - 1 do
@@ -248,12 +262,20 @@ begin
 end;
 
 // Returns whether two control ids refer to the same identity.
+//
+// Parameters:
+// - `Left`: Left input value or edge.
+// - `Right`: Right input value or edge.
 public function TuiSameControlId(Left: TuiControlId; Right: TuiControlId): boolean;
 begin
   return Left.Value = Right.Value
 end;
 
 // Returns whether the option id matches the target control.
+//
+// Parameters:
+// - `Focused`: Whether the control currently owns focus.
+// - `Target`: Target control identifier.
 public function TuiFocusMatches(Focused: option of TuiControlId; Target: TuiControlId): boolean;
 begin
   case Focused of

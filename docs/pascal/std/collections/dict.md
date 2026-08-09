@@ -51,8 +51,8 @@ Returns the number of key-value pairs in the dict.
 
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2];
-WriteLn(Std.Dict.Length(D));  { 2 }
-WriteLn(Std.Dict.Length([:]))  { 0 }
+WriteLn(Std.Dict.Length(D));  // 2
+WriteLn(Std.Dict.Length([:]))  // 0
 ```
 
 ### `ContainsKey`
@@ -65,8 +65,8 @@ Returns `true` if the dict contains the given key, `false` otherwise.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30];
-WriteLn(Std.Dict.ContainsKey(D, 'Alice'));    { true }
-WriteLn(Std.Dict.ContainsKey(D, 'Bob'))       { false }
+WriteLn(Std.Dict.ContainsKey(D, 'Alice'));    // true
+WriteLn(Std.Dict.ContainsKey(D, 'Bob'))       // false
 ```
 
 ### `Keys`
@@ -79,7 +79,7 @@ Returns an array of all keys in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dict.Keys(D))  { [Alice, Bob] }
+WriteLn(Std.Dict.Keys(D))  // [Alice, Bob]
 ```
 
 ### `Values`
@@ -92,7 +92,7 @@ Returns an array of all values in insertion order.
 
 ```pascal
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-WriteLn(Std.Dict.Values(D))  { [30, 25] }
+WriteLn(Std.Dict.Values(D))  // [30, 25]
 ```
 
 ### `Remove`
@@ -106,7 +106,7 @@ Returns a new dict without the given key. If the key does not exist, the origina
 ```pascal
 var D: dict of string to integer := ['A': 1, 'B': 2, 'C': 3];
 var D2: dict of string to integer := Std.Dict.Remove(D, 'B');
-WriteLn(D2)  { {A: 1, C: 3} }
+WriteLn(D2)  // {A: 1, C: 3}
 ```
 
 ---
@@ -123,8 +123,8 @@ Safe lookup. Returns `Some(value)` if the key exists, `None` otherwise. Requires
 uses Std.Dict, Std.Option;
 
 var D: dict of string to integer := ['Alice': 30, 'Bob': 25];
-var Age: Option of integer := Std.Dict.Get(D, 'Alice');    { Some(30) }
-var Missing: Option of integer := Std.Dict.Get(D, 'Eve');  { None }
+var Age: Option of integer := Std.Dict.Get(D, 'Alice');    // Some(30)
+var Missing: Option of integer := Std.Dict.Get(D, 'Eve');  // None
 ```
 
 ---
@@ -162,7 +162,7 @@ end;
 
 var Prices: dict of string to real := ['Apple': 1.0, 'Banana': 0.5];
 var Doubled: dict of string to real := Std.Dict.Map(Prices, DoublePrice);
-WriteLn(Doubled)  { {Apple: 2.0, Banana: 1.0} }
+WriteLn(Doubled)  // {Apple: 2.0, Banana: 1.0}
 ```
 
 ---
@@ -183,7 +183,7 @@ end;
 
 var Scores: dict of string to integer := ['Alice': 90, 'Bob': 55, 'Carol': 80];
 var Passing: dict of string to integer := Std.Dict.Filter(Scores, IsPassingScore);
-WriteLn(Passing)  { {Alice: 90, Carol: 80} }
+WriteLn(Passing)  // {Alice: 90, Carol: 80}
 ```
 
 ---
@@ -200,10 +200,10 @@ var Empty: dict of string to integer := [:];
 Indexing uses bracket syntax (same as arrays):
 
 ```pascal
-var Age: integer := D['Alice'];       { read }
+var Age: integer := D['Alice'];       // read
 mutable var M: dict of string to integer := ['A': 1];
-M['A'] := 2;                          { update existing key }
-M['B'] := 3                           { insert new key }
+M['A'] := 2;                          // update existing key
+M['B'] := 3                           // insert new key
 ```
 
 Accessing a non-existent key raises a runtime error. Use `Std.Dict.ContainsKey` to check first.

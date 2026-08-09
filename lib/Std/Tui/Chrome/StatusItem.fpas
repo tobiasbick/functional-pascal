@@ -5,31 +5,64 @@ uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 public type
   // Immutable display or action item in a status line.
   TuiStatusItem = enum
+    // Represents the `Hint` variant of `TuiStatusItem`.
+    //
+    // Parameters:
+    // - `Text`: Text carried or displayed by the variant.
     Hint(Text: string);
+    // Represents the `KeyHint` variant of `TuiStatusItem`.
+    //
+    // Parameters:
+    // - `KeyText`: Human-readable key label.
+    // - `Text`: Text carried or displayed by the variant.
     KeyHint(KeyText: string; Text: string);
+    // Represents the `Command` variant of `TuiStatusItem`.
+    //
+    // Parameters:
+    // - `Id`: Identifier carried by the variant.
+    // - `Text`: Text carried or displayed by the variant.
+    // - `Action`: Application action carried by the variant.
+    // - `Enabled`: Whether the represented item is enabled.
     Command(Id: TuiControlId; Text: string; Action: TuiAction; Enabled: boolean);
   end;
   // Constructors for immutable status-line items.
   TuiStatusItemBuilders = record
     // Creates a display-only status hint.
+    //
+    // Parameters:
+    // - `Text`: Text processed or displayed by the operation.
     public static function MakeHint(Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.Hint(Text)
     end;
 
     // Creates a display-only shortcut and description pair.
+    //
+    // Parameters:
+    // - `KeyText`: Human-readable key label.
+    // - `Text`: Text processed or displayed by the operation.
     public static function MakeKeyHint(KeyText: string; Text: string): TuiStatusItem;
     begin
       return TuiStatusItem.KeyHint(KeyText, Text)
     end;
 
     // Creates an enabled status-line command.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Action`: Application action associated with the control or emitted message.
     public static function MakeCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, true)
     end;
 
     // Creates a disabled status-line command.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Action`: Application action associated with the control or emitted message.
     public static function MakeDisabledCommand(Id: TuiControlId; Text: string; Action: TuiAction): TuiStatusItem;
     begin
       return TuiStatusItem.Command(Id, Text, Action, false)

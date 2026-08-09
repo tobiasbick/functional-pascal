@@ -13,12 +13,22 @@ end;
 public type
   // Non-negative outer margins around a laid-out child.
   TuiMargins = record
+    // Left margin in terminal cells.
     public Left: integer;
+    // Top margin in terminal cells.
     public Top: integer;
+    // Right margin in terminal cells.
     public Right: integer;
+    // Bottom margin in terminal cells.
     public Bottom: integer;
 
     // Creates validated margins.
+    //
+    // Parameters:
+    // - `Left`: Left input value or edge.
+    // - `Top`: Top edge or margin.
+    // - `Right`: Right input value or edge.
+    // - `Bottom`: Bottom edge or margin.
     public static function Create(Left: integer; Top: integer; Right: integer; Bottom: integer): TuiMargins;
     begin
       return record
@@ -30,24 +40,37 @@ public type
     end;
 
     // Creates equal margins on every side.
+    //
+    // Parameters:
+    // - `Value`: Value used to create or update the result.
     public static function Uniform(Value: integer): TuiMargins;
     begin
       return TuiMargins.Create(Value, Value, Value, Value)
     end;
 
     // Creates symmetric horizontal and vertical margins.
+    //
+    // Parameters:
+    // - `Horizontal`: Horizontal policy, alignment, or extent.
+    // - `Vertical`: Vertical policy, alignment, or extent.
     public static function Symmetric(Horizontal: integer; Vertical: integer): TuiMargins;
     begin
       return TuiMargins.Create(Horizontal, Vertical, Horizontal, Vertical)
     end;
 
     // Returns left plus right.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Horizontal(Self: TuiMargins): integer;
     begin
       return Self.Left + Self.Right
     end;
 
     // Returns top plus bottom.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Vertical(Self: TuiMargins): integer;
     begin
       return Self.Top + Self.Bottom

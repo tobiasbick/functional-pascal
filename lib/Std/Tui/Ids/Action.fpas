@@ -13,9 +13,13 @@ end;
 public type
   // Positive application-intent identity; duplicates across controls are allowed.
   TuiAction = record
+    // Validated scalar value represented by the record.
     public Value: integer;
 
     // Creates a validated positive action identity.
+    //
+    // Parameters:
+    // - `Value`: Value used to create or update the result.
     public static function Create(Value: integer): TuiAction;
     begin
       return record

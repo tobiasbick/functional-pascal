@@ -6,7 +6,9 @@ uses
 public type
   // Bounds of one open popup and the submenu whose children it displays.
   TuiMenuPopup = record
+    // Parent menu-node identifier.
     public Parent: TuiMenuNodeId;
+    // Rectangle occupied by the value.
     public Bounds: TuiRect;
   end;
 
@@ -147,6 +149,12 @@ begin
 end;
 
 // Computes popup rectangles while reserving their right and bottom terminal shadow.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
+// - `BarBounds`: Arranged bounds of the menu bar.
+// - `TerminalBounds`: Bounds of the terminal viewport.
 public function TuiMenuPopupGeometry(
   Nodes: array of TuiMenuNode;
   State: TuiMenuState;

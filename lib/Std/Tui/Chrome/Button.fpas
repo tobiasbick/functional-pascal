@@ -5,14 +5,26 @@ uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 public type
   // Immutable description of one flat terminal button.
   TuiButtonSpec = record
+    // Stable identifier of the value.
     public Id: TuiControlId;
+    // Text stored or displayed by the value.
     public Text: string;
+    // Keyboard mnemonic used to activate the item.
     public Mnemonic: string;
+    // Application action associated with the value.
     public Action: TuiAction;
+    // Style used for the default state.
     public Default: boolean;
+    // Whether the item can be activated.
     public Enabled: boolean;
 
     // Creates an enabled normal button.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Mnemonic`: Keyboard mnemonic used to activate the item.
+    // - `Action`: Application action associated with the control or emitted message.
     public static function Normal(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
     begin
       return record
@@ -26,6 +38,12 @@ public type
     end;
 
     // Creates an enabled default button.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Mnemonic`: Keyboard mnemonic used to activate the item.
+    // - `Action`: Application action associated with the control or emitted message.
     public static function DefaultButton(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
     begin
       return record
@@ -39,6 +57,12 @@ public type
     end;
 
     // Creates a disabled normal button.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Mnemonic`: Keyboard mnemonic used to activate the item.
+    // - `Action`: Application action associated with the control or emitted message.
     public static function Disabled(Id: TuiControlId; Text: string; Mnemonic: string; Action: TuiAction): TuiButtonSpec;
     begin
       return record

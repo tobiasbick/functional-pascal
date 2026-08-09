@@ -322,6 +322,11 @@ begin
 end;
 
 // Routes one key against the previous rendered tree into ordered framework messages.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Key`: Console key event to route or match.
 public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   TuiRouteRequireMatchingFrame(Frame, Root);

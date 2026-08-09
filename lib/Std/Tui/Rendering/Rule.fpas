@@ -5,6 +5,11 @@ uses
   Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas;
 
 // Paints a thin horizontal separator with optional left-aligned text.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Text`: Text processed or displayed by the operation.
 public procedure TuiPaintRule(Canvas: TuiCanvas; Bounds: TuiRect; Text: string);
 begin
   if Bounds.IsEmpty() then

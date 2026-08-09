@@ -190,6 +190,11 @@ begin
 end;
 
 // Builds a preorder arranged-frame index for one element tree.
+//
+// Parameters:
+// - `Frame`: Arranged frame containing element geometry.
+// - `Root`: Root of the element tree.
+// - `Bounds`: Rectangle affected by the operation.
 public procedure TuiArrange(Frame: TuiArrangedFrame; Root: TuiElement; Bounds: TuiRect);
 procedure ArrangeNode(
   Node: TuiElement;

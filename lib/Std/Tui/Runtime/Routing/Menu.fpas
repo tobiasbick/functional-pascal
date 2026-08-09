@@ -8,9 +8,13 @@ uses
 public type
   // One controlled menu found in the active routing subtree.
   TuiRouteMenu = record
+    // Stable identifier of the value.
     public Id: TuiControlId;
+    // Flat ordered menu-node collection.
     public Nodes: array of TuiMenuNode;
+    // Controlled menu state.
     public State: TuiMenuState;
+    // Action emitted when the controlled value changes.
     public ChangeAction: TuiAction;
   end;
 
@@ -424,6 +428,10 @@ begin
 end;
 
 // Routes menu shortcuts, F10, mnemonics, and open-menu navigation.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Key`: Console key event to route or match.
 public function TuiRouteMenuKey(Root: TuiElement; Key: Std.Console.KeyEvent): option of array of TuiMsg;
 begin
   case TuiFindRouteMenu(Root) of

@@ -44,7 +44,7 @@ Extracts the value from `Some(value)`. **Runtime error** if `O` is `None`.
 
 ```pascal
 var O: Option of integer := Some(7);
-WriteLn(Unwrap(O))                             { 7 }
+WriteLn(Unwrap(O))                             // 7
 ```
 
 ---
@@ -55,7 +55,7 @@ Extracts the value from `Some(value)`, or returns `Default` if `O` is `None`.
 
 ```pascal
 var O: Option of integer := None;
-WriteLn(UnwrapOr(O, -1))                      { -1 }
+WriteLn(UnwrapOr(O, -1))                      // -1
 ```
 
 ---
@@ -66,7 +66,7 @@ Returns `true` if `O` is a `Some` variant.
 
 ```pascal
 var O: Option of integer := Some(7);
-WriteLn(IsSome(O))                             { true }
+WriteLn(IsSome(O))                             // true
 ```
 
 ---
@@ -77,7 +77,7 @@ Returns `true` if `O` is `None`.
 
 ```pascal
 var O: Option of integer := None;
-WriteLn(IsNone(O))                             { true }
+WriteLn(IsNone(O))                             // true
 ```
 
 ---

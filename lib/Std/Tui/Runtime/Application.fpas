@@ -143,15 +143,23 @@ end;
 public type
   // Headless Tui application host and deterministic message loop.
   TuiApplication = record
+    // Stable identifier of the value.
     public Id: integer;
 
     // Opens a headless application with a fixed terminal size.
+    //
+    // Parameters:
+    // - `Size`: Size in terminal cells.
     public static function OpenForTest(Size: TuiSize): TuiApplication;
     begin
       return TuiApplication.OpenForTestWithPalette(Size, TuiPalette.Default())
     end;
 
     // Opens a headless application with a caller-defined palette.
+    //
+    // Parameters:
+    // - `Size`: Size in terminal cells.
+    // - `Palette`: Palette used to resolve semantic style roles.
     public static function OpenForTestWithPalette(Size: TuiSize; Palette: TuiPalette): TuiApplication;
     begin
       TuiAppOpen := Std.Array.Concat(TuiAppOpen, [true]);
@@ -170,6 +178,9 @@ public type
     end;
 
     // Closes the host and discards all pending input and messages.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public procedure Close(Self: TuiApplication);
     begin
       if (Self.Id < 1) or (Self.Id > Std.Array.Length(TuiAppOpen)) then
@@ -194,6 +205,10 @@ public type
     end;
 
     // Injects an already constructed framework message in FIFO order.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Msg`: Framework message injected into the application.
     public procedure Inject(Self: TuiApplication; Msg: TuiMsg);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
@@ -201,6 +216,10 @@ public type
     end;
 
     // Injects a key that will be routed through focus and controlled elements.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Key`: Console key event to route or match.
     public procedure InjectKeyForTest(Self: TuiApplication; Key: Std.Console.KeyEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
@@ -208,6 +227,10 @@ public type
     end;
 
     // Injects a pointer event in zero-based application coordinates.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Pointer`: Normalized pointer event to route.
     public procedure InjectPointerForTest(Self: TuiApplication; Pointer: TuiPointerEvent);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
@@ -215,6 +238,10 @@ public type
     end;
 
     // Injects a resize that updates host size before the Resize message reaches Update.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Size`: Size in terminal cells.
     public procedure InjectResizeForTest(Self: TuiApplication; Size: TuiSize);
     begin
       var ApplicationId: integer := TuiAppRequireOpen(Self.Id);
@@ -222,6 +249,9 @@ public type
     end;
 
     // Returns an explicit immutable copy of the last painted surface.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function SurfaceSnapshot(Self: TuiApplication): TuiSurfaceSnapshot;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
@@ -229,6 +259,9 @@ public type
     end;
 
     // Returns the application's current palette.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Palette(Self: TuiApplication): TuiPalette;
     begin
       var ApplicationId: integer := TuiAppRequireHandle(Self.Id);
@@ -236,6 +269,17 @@ public type
     end;
 
     // Runs a deterministic number of message-processing iterations.
+    //
+    // Type parameters:
+    // - `TModel`: Application model type managed by the runtime.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `InitialModel`: Initial application model.
+    // - `Update`: Callback that updates the application model and command output.
+    // - `View`: Callback that renders the current application model.
+    // - `IterationCount`: Number of application iterations to execute.
+    // - `DeltaMilliseconds`: Elapsed time in milliseconds.
     public function RunIterations<TModel>(
   Self: TuiApplication;
   InitialModel: TModel;
@@ -305,6 +349,14 @@ public type
     end;
 
     // Runs one interactive Tui application until Update returns `TuiCmd.Quit`.
+    //
+    // Type parameters:
+    // - `TModel`: Application model type managed by the runtime.
+    //
+    // Parameters:
+    // - `InitialModel`: Initial application model.
+    // - `Update`: Callback that updates the application model and command output.
+    // - `View`: Callback that renders the current application model.
     public static function Run<TModel>(
   InitialModel: TModel;
   Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;
@@ -315,6 +367,15 @@ public type
     end;
 
     // Runs one interactive Tui application with a caller-defined initial palette.
+    //
+    // Type parameters:
+    // - `TModel`: Application model type managed by the runtime.
+    //
+    // Parameters:
+    // - `InitialModel`: Initial application model.
+    // - `Update`: Callback that updates the application model and command output.
+    // - `View`: Callback that renders the current application model.
+    // - `Palette`: Palette used to resolve semantic style roles.
     public static function RunWithPalette<TModel>(
   InitialModel: TModel;
   Update: function(State: TModel; Msg: TuiMsg; Cmd: TuiCmdOutput): TModel;

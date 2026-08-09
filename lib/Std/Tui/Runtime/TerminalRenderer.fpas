@@ -57,6 +57,10 @@ end;
 //
 // The Console cell format carries glyph and colors. Tui style attributes are intentionally
 // resolved here as color-only output because the existing Console frame API has no attributes.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+// - `Palette`: Palette used to resolve semantic style roles.
 public procedure TuiFlushSurface(Surface: TuiWorkingSurface; Palette: TuiPalette);
 begin
   var Damage: array of TuiSurfaceDamage := TuiSurfaceTakeTerminalDamage(Surface);

@@ -5,10 +5,15 @@ uses Std.Console, Std.Str;
 public type
   // Derived horizontal viewport for a one-line input.
   TuiInputViewport = record
+    // Zero-based character index at which the viewport starts.
     public Start: integer;
+    // Exclusive zero-based character index of the viewport.
     public EndIndex: integer;
+    // Whether text is clipped on the left.
     public LeftClipped: boolean;
+    // Whether text is clipped on the right.
     public RightClipped: boolean;
+    // Zero-based terminal column of the caret.
     public CaretColumn: integer;
   end;
 
@@ -23,6 +28,11 @@ begin
 end;
 
 // Derives the smallest viewport that keeps the controlled caret visible.
+//
+// Parameters:
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Width`: Width in terminal cells.
 public function TuiInputViewportFor(Text: string; Caret: integer; Width: integer): TuiInputViewport;
 begin
   mutable var Start: integer := 0;
@@ -71,6 +81,11 @@ begin
 end;
 
 // Maps one content-relative terminal column to a text caret.
+//
+// Parameters:
+// - `Text`: Text processed or displayed by the operation.
+// - `Viewport`: Visible input or text-area viewport.
+// - `Column`: Zero-based terminal display column.
 public function TuiInputCaretAtColumn(Text: string; Viewport: TuiInputViewport; Column: integer): integer;
 begin
   if Column <= 0 then

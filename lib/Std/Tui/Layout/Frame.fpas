@@ -5,8 +5,11 @@ uses Std.Array, Std.Tui.Geometry.Rect;
 public type
   // One private arranged-frame entry for a preorder element visit.
   TuiArrangedEntry = record
+    // Index of the parent arranged entry.
     public ParentIndex: integer;
+    // Rectangle occupied by the value.
     public Bounds: TuiRect;
+    // Clipping rectangle in surface coordinates.
     public Clip: TuiRect;
   end;
 
@@ -26,6 +29,7 @@ end;
 public type
   // Host-owned arranged-frame index for one painted tree.
   TuiArrangedFrame = record
+    // Opaque backing-storage slot.
     public Slot: integer;
 
     // Allocates an empty arranged frame.
@@ -39,6 +43,9 @@ public type
     end;
 
     // Clears all entries before a fresh arrange pass.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public procedure Clear(Self: TuiArrangedFrame);
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -47,6 +54,12 @@ public type
     end;
 
     // Appends one preorder entry and returns its index.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `ParentIndex`: Index of the parent arranged entry.
+    // - `Bounds`: Rectangle affected by the operation.
+    // - `Clip`: Clipping rectangle for drawing.
     public function Push(Self: TuiArrangedFrame; ParentIndex: integer; Bounds: TuiRect; Clip: TuiRect): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -64,6 +77,10 @@ public type
 
     // Drop the shared slot handle before Push so copy-on-write stays unique.
     // Replaces every entry atomically after a successful arrange pass.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Entries`: Arranged entries replacing the current frame contents.
     public procedure ReplaceEntries(Self: TuiArrangedFrame; Entries: array of TuiArrangedEntry);
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -71,6 +88,9 @@ public type
     end;
 
     // Returns the number of arranged entries.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function Count(Self: TuiArrangedFrame): integer;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);
@@ -78,6 +98,10 @@ public type
     end;
 
     // Returns one arranged entry by preorder index.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Index`: Zero-based index used by the operation.
     public function EntryAt(Self: TuiArrangedFrame; Index: integer): TuiArrangedEntry;
     begin
       var Slot: integer := TuiFrameRequire(Self.Slot);

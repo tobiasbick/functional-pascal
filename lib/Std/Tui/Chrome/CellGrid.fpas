@@ -5,11 +5,19 @@ uses Std.Array, Std.Tui.Cells.Cell;
 public type
   // Immutable rectangular grid of concrete or theme-resolved terminal cells.
   TuiCellGrid = record
+    // Width in terminal cells.
     public Width: integer;
+    // Height in terminal cells.
     public Height: integer;
+    // Row-major terminal cells.
     public Cells: array of TuiCell;
 
     // Creates a row-major cell grid.
+    //
+    // Parameters:
+    // - `Width`: Width in terminal cells.
+    // - `Height`: Height in terminal cells.
+    // - `Cells`: Row-major terminal cells used to populate the grid.
     public static function Create(Width: integer; Height: integer; Cells: array of TuiCell): TuiCellGrid;
     begin
       if (Width < 0) or (Height < 0) then

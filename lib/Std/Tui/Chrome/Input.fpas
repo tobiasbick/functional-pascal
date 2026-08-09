@@ -5,15 +5,28 @@ uses Std.Tui.Ids.Action, Std.Tui.Ids.ControlId;
 public type
   // Immutable controlled one-line input state and optional history.
   TuiInputSpec = record
+    // Stable identifier of the value.
     public Id: TuiControlId;
+    // Text stored or displayed by the value.
     public Text: string;
+    // Zero-based character index of the caret.
     public Caret: integer;
+    // Hint text or style for an empty input.
     public Hint: string;
+    // Ordered input-history entries.
     public History: array of string;
+    // Editable text retained while browsing input history.
     public HistoryDraft: string;
+    // Action emitted when the controlled value changes.
     public ChangeAction: TuiAction;
 
     // Creates an input without a hint or history.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Caret`: Zero-based character index of the caret.
+    // - `ChangeAction`: Application action emitted when the value changes.
     public static function Create(Id: TuiControlId; Text: string; Caret: integer; ChangeAction: TuiAction): TuiInputSpec;
     begin
       return record
@@ -28,6 +41,13 @@ public type
     end;
 
     // Creates an input that paints a hint while its text is empty.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Caret`: Zero-based character index of the caret.
+    // - `Hint`: Hint text displayed for an empty input.
+    // - `ChangeAction`: Application action emitted when the value changes.
     public static function WithHint(
   Id: TuiControlId;
   Text: string;
@@ -48,6 +68,15 @@ public type
     end;
 
     // Creates an input with oldest-to-newest Up/Down history and a restorable draft.
+    //
+    // Parameters:
+    // - `Id`: Identifier assigned to the created or selected value.
+    // - `Text`: Text processed or displayed by the operation.
+    // - `Caret`: Zero-based character index of the caret.
+    // - `Hint`: Hint text displayed for an empty input.
+    // - `History`: Ordered input-history entries.
+    // - `HistoryDraft`: Current editable text retained while browsing history.
+    // - `ChangeAction`: Application action emitted when the value changes.
     public static function WithHistory(
   Id: TuiControlId;
   Text: string;

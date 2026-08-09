@@ -101,8 +101,8 @@ Additional CRT compatibility constants:
 ```pascal
 uses Std.Console;
 
-TextColorRGB(255, 128, 0);       { orange foreground }
-TextBackgroundRGB(0, 0, 64);     { dark-blue background }
+TextColorRGB(255, 128, 0);       // orange foreground
+TextBackgroundRGB(0, 0, 64);     // dark-blue background
 WriteLn('truecolor text');
 ```
 
@@ -119,7 +119,7 @@ WriteLn('truecolor text');
 ```pascal
 uses Std.Console;
 
-TextColor256(196);        { bright red in xterm-256color }
+TextColor256(196);        // bright red in xterm-256color
 WriteLn('256-color text');
 ```
 

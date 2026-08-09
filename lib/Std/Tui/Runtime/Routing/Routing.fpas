@@ -6,6 +6,11 @@ uses
   Std.Tui.Runtime.Routing.Pointer;
 
 // Routes one key against the previous rendered tree into ordered framework messages.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Key`: Console key event to route or match.
 public function TuiRouteKey(Root: TuiElement; Frame: TuiArrangedFrame; Key: Std.Console.KeyEvent): array of TuiMsg;
 begin
   return Std.Tui.Runtime.Routing.Key.TuiRouteKey(Root, Frame, Key)
@@ -19,12 +24,18 @@ begin
 end;
 
 // Clears pointer-button state for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
 public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingClose(ApplicationId)
 end;
 
 // Returns the button painted pressed for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
 public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
 begin
   return Std.Tui.Runtime.Routing.Pointer.TuiPointerRoutingPressed(ApplicationId)

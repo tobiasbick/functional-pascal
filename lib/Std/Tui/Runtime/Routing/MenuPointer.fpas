@@ -9,10 +9,15 @@ uses
 public type
   // Controlled menu and arranged bar bounds used by pointer routing.
   TuiPointerMenu = record
+    // Stable identifier of the value.
     public Id: TuiControlId;
+    // Flat ordered menu-node collection.
     public Nodes: array of TuiMenuNode;
+    // Controlled menu state.
     public State: TuiMenuState;
+    // Action emitted when the controlled value changes.
     public ChangeAction: TuiAction;
+    // Rectangle occupied by the value.
     public Bounds: TuiRect;
   end;
 
@@ -260,6 +265,12 @@ begin
 end;
 
 // Routes a left-button press or movement over one active hierarchical menu.
+//
+// Parameters:
+// - `Root`: Root of the element tree.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Point`: Point tested by the operation.
+// - `Activate`: Whether the control is activated by the operation.
 public function TuiRouteMenuPointer(
   Root: TuiElement;
   Frame: TuiArrangedFrame;

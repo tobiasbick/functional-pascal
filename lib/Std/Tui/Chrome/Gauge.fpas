@@ -3,11 +3,19 @@ unit Std.Tui.Chrome.Gauge;
 public type
   // Immutable bounded value displayed as a compact dashboard gauge.
   TuiGauge = record
+    // Text displayed by the gauge label.
     public LabelText: string;
+    // Validated scalar value represented by the record.
     public Value: integer;
+    // Maximum value or size.
     public Maximum: integer;
 
     // Creates a gauge; validation rejects invalid ranges during rendering.
+    //
+    // Parameters:
+    // - `LabelText`: Text displayed as the label.
+    // - `Value`: Value used to create or update the result.
+    // - `Maximum`: Maximum accepted value or extent.
     public static function Create(LabelText: string; Value: integer; Maximum: integer): TuiGauge;
     begin
       return record

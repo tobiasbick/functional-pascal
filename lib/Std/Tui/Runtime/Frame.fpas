@@ -6,6 +6,12 @@ uses
   Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface;
 
 // Validates, arranges, and paints one complete frame into the host-owned arranged frame.
+//
+// Parameters:
+// - `Surface`: Working surface affected by the operation.
+// - `Frame`: Arranged frame containing element geometry.
+// - `Root`: Root of the element tree.
+// - `Pressed`: Whether the control is displayed as pressed.
 public procedure TuiRenderFrame(
   Surface: TuiWorkingSurface;
   Frame: TuiArrangedFrame;

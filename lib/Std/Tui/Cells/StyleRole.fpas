@@ -3,38 +3,72 @@ unit Std.Tui.Cells.StyleRole;
 public type
   // Semantic style role resolved through `TuiPalette`.
   TuiStyleRole = enum
+    // Represents the `Normal` variant of `TuiStyleRole`.
     Normal;
+    // Represents the `Disabled` variant of `TuiStyleRole`.
     Disabled;
+    // Represents the `Focused` variant of `TuiStyleRole`.
     Focused;
+    // Represents the `Selected` variant of `TuiStyleRole`.
     Selected;
+    // Represents the `Shortcut` variant of `TuiStyleRole`.
     Shortcut;
+    // Represents the `Frame` variant of `TuiStyleRole`.
     Frame;
+    // Represents the `Title` variant of `TuiStyleRole`.
     Title;
+    // Represents the `MenuNormal` variant of `TuiStyleRole`.
     MenuNormal;
+    // Represents the `MenuDisabled` variant of `TuiStyleRole`.
     MenuDisabled;
+    // Represents the `MenuShortcut` variant of `TuiStyleRole`.
     MenuShortcut;
+    // Represents the `MenuSelected` variant of `TuiStyleRole`.
     MenuSelected;
+    // Represents the `MenuSelectedShortcut` variant of `TuiStyleRole`.
     MenuSelectedShortcut;
+    // Represents the `StatusNormal` variant of `TuiStyleRole`.
     StatusNormal;
+    // Represents the `StatusDisabled` variant of `TuiStyleRole`.
     StatusDisabled;
+    // Represents the `StatusShortcut` variant of `TuiStyleRole`.
     StatusShortcut;
+    // Represents the `StatusSelected` variant of `TuiStyleRole`.
     StatusSelected;
+    // Represents the `ButtonNormal` variant of `TuiStyleRole`.
     ButtonNormal;
+    // Represents the `ButtonDefault` variant of `TuiStyleRole`.
     ButtonDefault;
+    // Represents the `ButtonSelected` variant of `TuiStyleRole`.
     ButtonSelected;
+    // Represents the `ButtonDisabled` variant of `TuiStyleRole`.
     ButtonDisabled;
+    // Represents the `ButtonShortcut` variant of `TuiStyleRole`.
     ButtonShortcut;
+    // Represents the `ButtonDefaultShortcut` variant of `TuiStyleRole`.
     ButtonDefaultShortcut;
+    // Represents the `ButtonSelectedShortcut` variant of `TuiStyleRole`.
     ButtonSelectedShortcut;
+    // Represents the `InputNormal` variant of `TuiStyleRole`.
     InputNormal;
+    // Represents the `InputFocused` variant of `TuiStyleRole`.
     InputFocused;
+    // Represents the `InputHint` variant of `TuiStyleRole`.
     InputHint;
+    // Represents the `InputCursor` variant of `TuiStyleRole`.
     InputCursor;
+    // Represents the `InputScroll` variant of `TuiStyleRole`.
     InputScroll;
+    // Represents the `Rule` variant of `TuiStyleRole`.
     Rule;
+    // Represents the `GaugeTrack` variant of `TuiStyleRole`.
     GaugeTrack;
+    // Represents the `GaugeFill` variant of `TuiStyleRole`.
     GaugeFill;
+    // Represents the `Failure` variant of `TuiStyleRole`.
     Failure;
+    // Represents the `Warning` variant of `TuiStyleRole`.
     Warning;
+    // Represents the `Accent` variant of `TuiStyleRole`.
     Accent;
   end;

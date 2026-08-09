@@ -3,7 +3,9 @@ unit Std.Tui.Layout.MeasureConstraint;
 public type
   // Whether a measure axis is unbounded or capped.
   TuiMeasureConstraintKind = enum
+    // Represents the `Unbounded` variant of `TuiMeasureConstraintKind`.
     Unbounded;
+    // Represents the `AtMost` variant of `TuiMeasureConstraintKind`.
     AtMost;
   end;
 
@@ -20,7 +22,9 @@ end;
 public type
   // One-axis measurement constraint.
   TuiMeasureConstraint = record
+    // Variant kind represented by the value.
     public Kind: TuiMeasureConstraintKind;
+    // Maximum extent of a bounded constraint.
     public Limit: integer;
 
     // Creates an unbounded axis constraint.
@@ -33,6 +37,9 @@ public type
     end;
 
     // Creates a non-negative upper bound.
+    //
+    // Parameters:
+    // - `Limit`: Upper bound applied by the constraint.
     public static function AtMost(Limit: integer): TuiMeasureConstraint;
     begin
       return record
@@ -42,6 +49,9 @@ public type
     end;
 
     // Returns whether the constraint has an upper bound.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
     public function IsBounded(Self: TuiMeasureConstraint): boolean;
     begin
       return Self.Kind = TuiMeasureConstraintKind.AtMost

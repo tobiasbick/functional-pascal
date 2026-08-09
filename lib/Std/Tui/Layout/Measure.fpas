@@ -8,6 +8,7 @@ uses
   Std.Tui.Text.TextArea;
 
 public const
+  // Sentinel maximum extent used by expanding layout measurements.
   TuiMeasureExpandingMaximum: integer := 9223372036854775807;
 
 function TuiMeasureLeafLabel(Text: string): TuiMeasureResult;
@@ -198,6 +199,10 @@ begin
 end;
 
 // Measures one element under the given constraints.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
+// - `Spec`: Measurement constraints for width and height.
 public function TuiMeasure(Node: TuiElement; Spec: TuiMeasureSpec): TuiMeasureResult;
 begin
   case Node of
@@ -433,6 +438,9 @@ begin
 end;
 
 // Returns the unconstrained preferred size of an element subtree.
+//
+// Parameters:
+// - `Node`: Element or menu node processed by the operation.
 public function TuiMeasureElement(Node: TuiElement): TuiSize;
 begin
   return TuiMeasure(Node, TuiMeasureSpec.Unbounded()).Preferred

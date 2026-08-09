@@ -44,7 +44,7 @@ Extracts the value from `Ok(value)`. **Runtime error** if `R` is `Error`.
 
 ```pascal
 var R: Result of integer, string := Ok(42);
-WriteLn(Unwrap(R))                             { 42 }
+WriteLn(Unwrap(R))                             // 42
 ```
 
 ---
@@ -55,7 +55,7 @@ Extracts the value from `Ok(value)`, or returns `Default` if `R` is `Error`.
 
 ```pascal
 var R: Result of integer, string := Error('oops');
-WriteLn(UnwrapOr(R, 0))                       { 0 }
+WriteLn(UnwrapOr(R, 0))                       // 0
 ```
 
 ---
@@ -66,7 +66,7 @@ Returns `true` if `R` is an `Ok` variant.
 
 ```pascal
 var R: Result of integer, string := Ok(42);
-WriteLn(IsOk(R))                               { true }
+WriteLn(IsOk(R))                               // true
 ```
 
 ---
@@ -77,7 +77,7 @@ Returns `true` if `R` is an `Error` variant.
 
 ```pascal
 var R: Result of integer, string := Error('fail');
-WriteLn(IsError(R))                              { true }
+WriteLn(IsError(R))                              // true
 ```
 
 ---

@@ -5,6 +5,16 @@ uses
   Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
 
 // Paints clipped text-area lines and a focused visible caret.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `Focused`: Whether the control currently owns focus.
+// - `NormalRole`: Style role used in the normal state.
+// - `FocusedRole`: Style role used while the control owns focus.
 public procedure TuiPaintTextArea(
   Canvas: TuiCanvas;
   Bounds: TuiRect;

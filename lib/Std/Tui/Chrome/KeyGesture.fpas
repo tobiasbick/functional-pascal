@@ -5,15 +5,31 @@ uses Std.Console, Std.Str;
 public type
   // Structural keyboard gesture used by menu commands.
   TuiKeyGesture = record
+    // Variant kind represented by the value.
     public Kind: Std.Console.KeyKind;
+    // Character component of the key gesture.
     public Character: string;
+    // Whether the Shift modifier is active.
     public Shift: boolean;
+    // Whether the Ctrl modifier is active.
     public Ctrl: boolean;
+    // Whether the Alt modifier is active.
     public Alt: boolean;
+    // Whether the Meta modifier is active.
     public Meta: boolean;
+    // Human-readable representation of the gesture.
     public Display: string;
 
     // Creates a keyboard gesture and its menu display label.
+    //
+    // Parameters:
+    // - `Kind`: Variant kind assigned to the value.
+    // - `Character`: Character used by the drawing operation.
+    // - `Shift`: Whether the Shift modifier is active.
+    // - `Ctrl`: Whether the Ctrl modifier is active.
+    // - `Alt`: Whether the Alt modifier is active.
+    // - `Meta`: Whether the Meta modifier is active.
+    // - `Display`: Text displayed by the element.
     public static function Create(
   Kind: Std.Console.KeyKind;
   Character: string;
@@ -36,6 +52,10 @@ public type
     end;
 
     // Reports whether a console key event matches this gesture.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Key`: Console key event to route or match.
     public function Matches(Self: TuiKeyGesture; Key: Std.Console.KeyEvent): boolean;
     begin
       if ((((Self.Kind <> Key.kind) or (Self.Shift <> Key.shift)) or (Self.Ctrl <> Key.ctrl)) or (Self.Alt <> Key.alt)) or

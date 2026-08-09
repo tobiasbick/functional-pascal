@@ -47,6 +47,13 @@ begin
 end;
 
 // Paints the one-line root menu bar.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
+// - `Focused`: Whether the control currently owns focus.
 public procedure TuiPaintMenuBar(
   Canvas: TuiCanvas;
   Bounds: TuiRect;
@@ -195,6 +202,12 @@ begin
 end;
 
 // Paints all open menu popups over the completed desktop frame.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `BarBounds`: Arranged bounds of the menu bar.
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
 public procedure TuiPaintMenuPopups(
   Canvas: TuiCanvas;
   BarBounds: TuiRect;

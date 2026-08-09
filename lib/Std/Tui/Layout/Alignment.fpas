@@ -3,17 +3,27 @@ unit Std.Tui.Layout.Alignment;
 public type
   // Alignment of content inside an allocated layout slot.
   TuiAlignmentKind = enum
+    // Represents the `Leading` variant of `TuiAlignmentKind`.
     Leading;
+    // Represents the `Center` variant of `TuiAlignmentKind`.
     Center;
+    // Represents the `Trailing` variant of `TuiAlignmentKind`.
     Trailing;
+    // Represents the `Fill` variant of `TuiAlignmentKind`.
     Fill;
   end;
   // Independent horizontal and vertical alignment.
   TuiAlignment = record
+    // Horizontal policy, alignment, or extent.
     public Horizontal: TuiAlignmentKind;
+    // Vertical policy, alignment, or extent.
     public Vertical: TuiAlignmentKind;
 
     // Creates a mixed-axis alignment.
+    //
+    // Parameters:
+    // - `Horizontal`: Horizontal policy, alignment, or extent.
+    // - `Vertical`: Vertical policy, alignment, or extent.
     public static function Create(Horizontal: TuiAlignmentKind; Vertical: TuiAlignmentKind): TuiAlignment;
     begin
       return record

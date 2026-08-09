@@ -125,6 +125,11 @@ begin
 end;
 
 // Routes one key when the supplied input owns focus.
+//
+// Parameters:
+// - `Input`: Controlled input specification.
+// - `Target`: Target control identifier.
+// - `Key`: Console key event to route or match.
 public function TuiRouteInputKey(Input: TuiInputSpec; Target: TuiControlId; Key: Std.Console.KeyEvent): option of TuiMsg;
 begin
   if Input.Id.Value <> Target.Value then

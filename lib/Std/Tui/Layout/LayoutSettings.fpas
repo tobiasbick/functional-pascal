@@ -15,14 +15,26 @@ end;
 public type
   // Immutable layout inputs attached to a single-child layout wrapper.
   TuiLayoutSettings = record
+    // Outer margins applied during layout.
     public Margins: TuiMargins;
+    // Horizontal and vertical size policy.
     public SizePolicy: TuiSizePolicy;
+    // Alignment applied within the allocated area.
     public Alignment: TuiAlignment;
+    // Whether the item stretches across the available extent.
     public Stretch: integer;
+    // Width in terminal cells.
     public Width: option of integer;
+    // Height in terminal cells.
     public Height: option of integer;
 
     // Creates validated layout settings.
+    //
+    // Parameters:
+    // - `Margins`: Outer margins applied during layout.
+    // - `SizePolicy`: Horizontal and vertical size policy.
+    // - `Alignment`: Alignment applied within the available area.
+    // - `Stretch`: Whether the element stretches across the available extent.
     public static function Create(
   Margins: TuiMargins;
   SizePolicy: TuiSizePolicy;
@@ -41,6 +53,10 @@ public type
     end;
 
     // Returns a copy constrained to one total width; negative widths panic.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Width`: Width in terminal cells.
     public function WithFixedWidth(Self: TuiLayoutSettings; Width: integer): TuiLayoutSettings;
     begin
       if Width < 0 then
@@ -59,6 +75,10 @@ public type
     end;
 
     // Returns a copy constrained to one total height; negative heights panic.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Height`: Height in terminal cells.
     public function WithFixedHeight(Self: TuiLayoutSettings; Height: integer): TuiLayoutSettings;
     begin
       if Height < 0 then

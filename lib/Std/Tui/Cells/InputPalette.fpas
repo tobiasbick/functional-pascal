@@ -5,13 +5,25 @@ uses Std.Tui.Cells.Style, Std.Tui.Cells.StyleRole;
 public type
   // Concrete styles for every one-line input state.
   TuiInputPalette = record
+    // Style used for normal content.
     public Normal: TuiStyle;
+    // Style or identifier used for focused content.
     public Focused: TuiStyle;
+    // Hint text or style for an empty input.
     public Hint: TuiStyle;
+    // Style used for the input cursor.
     public Cursor: TuiStyle;
+    // Style used for input scroll indicators.
     public Scroll: TuiStyle;
 
     // Creates a complete one-line input palette.
+    //
+    // Parameters:
+    // - `Normal`: Normal-state style.
+    // - `Focused`: Whether the control currently owns focus.
+    // - `Hint`: Hint text displayed for an empty input.
+    // - `Cursor`: Current layout or drawing cursor.
+    // - `Scroll`: Whether scrolling behavior is enabled.
     public static function Create(
   Normal: TuiStyle;
   Focused: TuiStyle;
@@ -30,6 +42,10 @@ public type
     end;
 
     // Resolves one input role.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
     public function ForRole(Self: TuiInputPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
@@ -61,6 +77,11 @@ public type
     end;
 
     // Returns a copy with one input role replaced.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
+    // - `Style`: Concrete terminal style.
     public function WithRole(Self: TuiInputPalette; Role: TuiStyleRole; Style: TuiStyle): TuiInputPalette;
     begin
       mutable var Updated: TuiInputPalette := Self;

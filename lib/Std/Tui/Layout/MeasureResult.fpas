@@ -18,11 +18,19 @@ end;
 public type
   // Minimum, preferred, and maximum extents for one element.
   TuiMeasureResult = record
+    // Minimum value or size.
     public Minimum: TuiSize;
+    // Preferred size.
     public Preferred: TuiSize;
+    // Maximum value or size.
     public Maximum: TuiSize;
 
     // Creates an ordered measure result.
+    //
+    // Parameters:
+    // - `Minimum`: Minimum accepted value or extent.
+    // - `Preferred`: Preferred size or focus identifier.
+    // - `Maximum`: Maximum accepted value or extent.
     public static function Create(Minimum: TuiSize; Preferred: TuiSize; Maximum: TuiSize): TuiMeasureResult;
     begin
       TuiMeasureResultRequireOrdered(Minimum, Preferred, Maximum);
@@ -34,6 +42,9 @@ public type
     end;
 
     // Creates a fixed measure where all three sizes match.
+    //
+    // Parameters:
+    // - `Size`: Size in terminal cells.
     public static function Fixed(Size: TuiSize): TuiMeasureResult;
     begin
       return TuiMeasureResult.Create(Size, Size, Size)

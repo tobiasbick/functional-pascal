@@ -7,29 +7,53 @@ uses
 public type
   // Maps every semantic `TuiStyleRole` to a concrete terminal style.
   TuiPalette = record
+    // Style used for normal content.
     public Normal: TuiStyle;
+    // Style used for disabled content.
     public Disabled: TuiStyle;
+    // Style or identifier used for focused content.
     public Focused: TuiStyle;
+    // Selected item index or style.
     public Selected: TuiStyle;
+    // Shortcut text, gesture, or style.
     public Shortcut: TuiStyle;
+    // Style used for borders and frames.
     public Frame: TuiStyle;
+    // Style used for titles.
     public Title: TuiStyle;
+    // Style used for normal menu items.
     public MenuNormal: TuiStyle;
+    // Style used for disabled menu items.
     public MenuDisabled: TuiStyle;
+    // Style used for menu shortcuts.
     public MenuShortcut: TuiStyle;
+    // Style used for the selected menu item.
     public MenuSelected: TuiStyle;
+    // Shortcut style used for the selected menu item.
     public MenuSelectedShortcut: TuiStyle;
+    // Style used for normal status-line items.
     public StatusNormal: TuiStyle;
+    // Style used for disabled status-line items.
     public StatusDisabled: TuiStyle;
+    // Style used for status-line shortcuts.
     public StatusShortcut: TuiStyle;
+    // Style used for selected status-line items.
     public StatusSelected: TuiStyle;
+    // Styles used by button controls.
     public Buttons: TuiButtonPalette;
+    // Styles used by input controls.
     public Inputs: TuiInputPalette;
+    // Style used for horizontal rules.
     public Rule: TuiStyle;
+    // Style used for the unfilled gauge track.
     public GaugeTrack: TuiStyle;
+    // Style used for the filled gauge region.
     public GaugeFill: TuiStyle;
+    // Style used for failure content.
     public Failure: TuiStyle;
+    // Style used for warning content.
     public Warning: TuiStyle;
+    // Style used for accent content.
     public Accent: TuiStyle;
 
     // Returns the modern dark default palette.
@@ -79,6 +103,10 @@ public type
     end;
 
     // Resolves the concrete style for one semantic role.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
     public function ForRole(Self: TuiPalette; Role: TuiStyleRole): TuiStyle;
     begin
       case Role of
@@ -182,6 +210,11 @@ public type
     end;
 
     // Returns a copy with one semantic role replaced.
+    //
+    // Parameters:
+    // - `Self`: Receiver value operated on by the method.
+    // - `Role`: Semantic style role used by the operation.
+    // - `Style`: Concrete terminal style.
     public function WithRole(Self: TuiPalette; Role: TuiStyleRole; Style: TuiStyle): TuiPalette;
     begin
       mutable var Updated: TuiPalette := Self;

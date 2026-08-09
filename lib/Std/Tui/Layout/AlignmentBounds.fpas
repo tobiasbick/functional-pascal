@@ -73,6 +73,11 @@ public type
   // Resolves one measured element into an aligned rectangle within an allocated area.
   TuiAlignmentBounds = record
     // Applies independent alignment and size limits on both axes.
+    //
+    // Parameters:
+    // - `Measured`: Measured minimum, preferred, and maximum sizes.
+    // - `Alignment`: Alignment applied within the available area.
+    // - `Area`: Available layout rectangle.
     public static function Resolve(Measured: TuiMeasureResult; Alignment: TuiAlignment; Area: TuiRect): TuiRect;
     begin
       var Width: integer := TuiAlignmentBoundsExtent(Measured.Minimum.Width, Measured.Preferred.Width, Measured.Maximum.Width, Area.Width, Alignment.Horizontal);

@@ -35,6 +35,10 @@ begin
 end;
 
 // Validates identities, parents, cycles, mnemonics, shortcuts, and controlled state.
+//
+// Parameters:
+// - `Nodes`: Flat ordered menu-node collection.
+// - `State`: Controlled state used by the operation.
 public procedure TuiMenuValidate(Nodes: array of TuiMenuNode; State: TuiMenuState);
 begin
   for Index: integer := 0 to Std.Array.Length(Nodes) - 1 do

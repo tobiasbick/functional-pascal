@@ -69,6 +69,13 @@ begin
 end;
 
 // Paints a compact one-row button.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Button`: Button specification used by the operation.
+// - `Focused`: Whether the control currently owns focus.
+// - `Pressed`: Whether the control is displayed as pressed.
 public procedure TuiPaintButton(
   Canvas: TuiCanvas;
   Bounds: TuiRect;

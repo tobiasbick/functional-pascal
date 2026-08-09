@@ -20,6 +20,15 @@ begin
 end;
 
 // Routes one key into a complete controlled text-area state proposal.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Caret`: Zero-based character index of the caret.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+// - `Viewport`: Visible input or text-area viewport.
+// - `Key`: Console key event to route or match.
 public function TuiRouteTextAreaKey(
   Id: TuiControlId;
   Text: string;
@@ -130,6 +139,14 @@ begin
 end;
 
 // Routes a pointer position into a complete controlled text-area state proposal.
+//
+// Parameters:
+// - `Id`: Identifier assigned to the created or selected value.
+// - `Text`: Text processed or displayed by the operation.
+// - `Offset`: Scroll offset or position applied by the operation.
+// - `ChangeAction`: Application action emitted when the value changes.
+// - `Viewport`: Visible input or text-area viewport.
+// - `Point`: Point tested by the operation.
 public function TuiRouteTextAreaPointer(
   Id: TuiControlId;
   Text: string;

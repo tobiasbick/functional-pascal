@@ -3,18 +3,29 @@ unit Std.Tui.Layout.SizePolicy;
 public type
   // Per-axis growth and shrink policy for layout.
   TuiSizePolicyKind = enum
+    // Represents the `Fixed` variant of `TuiSizePolicyKind`.
     Fixed;
+    // Represents the `Minimum` variant of `TuiSizePolicyKind`.
     Minimum;
+    // Represents the `Maximum` variant of `TuiSizePolicyKind`.
     Maximum;
+    // Represents the `Preferred` variant of `TuiSizePolicyKind`.
     Preferred;
+    // Represents the `Expanding` variant of `TuiSizePolicyKind`.
     Expanding;
   end;
   // Independent horizontal and vertical size policies.
   TuiSizePolicy = record
+    // Horizontal policy, alignment, or extent.
     public Horizontal: TuiSizePolicyKind;
+    // Vertical policy, alignment, or extent.
     public Vertical: TuiSizePolicyKind;
 
     // Creates a mixed-axis size policy.
+    //
+    // Parameters:
+    // - `Horizontal`: Horizontal policy, alignment, or extent.
+    // - `Vertical`: Vertical policy, alignment, or extent.
     public static function Create(Horizontal: TuiSizePolicyKind; Vertical: TuiSizePolicyKind): TuiSizePolicy;
     begin
       return record

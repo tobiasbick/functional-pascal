@@ -57,8 +57,8 @@ WriteLn(IndexOf('aba', 'z'))
 Returns the **last** character index of `Sub` in `S`, or **`-1`** if not found.
 
 ```pascal
-WriteLn(LastIndexOf('abcabc', 'abc'))  { 3 }
-WriteLn(LastIndexOf('abc', 'z'))       { -1 }
+WriteLn(LastIndexOf('abcabc', 'abc'))  // 3
+WriteLn(LastIndexOf('abc', 'z'))       // -1
 ```
 
 ## See also

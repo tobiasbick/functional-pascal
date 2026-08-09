@@ -1,5 +1,7 @@
 unit Std.Version;
 
 public const
+  // Version of the Functional Pascal compiler that provides this standard library.
   CompilerVersion: string := '0.0.1';
+  // Version of the Functional Pascal standard library.
   LibraryVersion: string := '0.0.1';

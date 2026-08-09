@@ -76,7 +76,7 @@ begin
 end;
 
 var Idx: integer := FindIndex([10, 20, 30], IsAboveFifteen);
-WriteLn(Idx)  { 1 }
+WriteLn(Idx)  // 1
 ```
 
 ---
@@ -92,7 +92,7 @@ begin
 end;
 
 var HasNeg: boolean := Any([1, -2, 3], IsNegative);
-WriteLn(HasNeg)  { true }
+WriteLn(HasNeg)  // true
 ```
 
 ---
@@ -108,7 +108,7 @@ begin
 end;
 
 var AllPos: boolean := All([1, 2, 3], IsPositive);
-WriteLn(AllPos)  { true }
+WriteLn(AllPos)  // true
 ```
 
 ## See also

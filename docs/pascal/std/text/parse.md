@@ -34,7 +34,7 @@ Parses Pascal integer text. Returns `Ok(Value)` on success or `Error(Message)` o
 
 ```pascal
 var R: Result of integer, string := TryInt(' +1_024 ');
-WriteLn(UnwrapOr(R, 0))                       { 1024 }
+WriteLn(UnwrapOr(R, 0))                       // 1024
 ```
 
 ---
@@ -45,7 +45,7 @@ Parses Pascal real text. The text must include a fractional part; `1.0`, `-2.5`,
 
 ```pascal
 var R: Result of real, string := TryReal('1_024.0e-2');
-WriteLn(UnwrapOr(R, 0.0))                     { 10.24 }
+WriteLn(UnwrapOr(R, 0.0))                     // 10.24
 ```
 
 ---
@@ -56,7 +56,7 @@ Parses boolean text. Leading and trailing whitespace is ignored; casing does not
 
 ```pascal
 var R: Result of boolean, string := TryBool(' FALSE ');
-WriteLn(UnwrapOr(R, true))                    { false }
+WriteLn(UnwrapOr(R, true))                    // false
 ```
 
 ---

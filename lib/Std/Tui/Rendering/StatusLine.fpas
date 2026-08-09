@@ -26,6 +26,12 @@ begin
 end;
 
 // Paints one complete status row, including its unused background cells.
+//
+// Parameters:
+// - `Canvas`: Canvas that receives the drawing operation.
+// - `Bounds`: Rectangle affected by the operation.
+// - `Items`: Ordered child or menu items.
+// - `Focused`: Whether the control currently owns focus.
 public procedure TuiPaintStatusLine(
   Canvas: TuiCanvas;
   Bounds: TuiRect;

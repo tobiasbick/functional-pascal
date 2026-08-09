@@ -3,15 +3,22 @@ unit Std.Tui.Layout.Spacer;
 public type
   // Whether a spacer has a fixed extent or expands.
   TuiSpacerKind = enum
+    // Represents the `Fixed` variant of `TuiSpacerKind`.
     Fixed;
+    // Represents the `Expanding` variant of `TuiSpacerKind`.
     Expanding;
   end;
   // Empty layout extent used between siblings.
   TuiSpacer = record
+    // Variant kind represented by the value.
     public Kind: TuiSpacerKind;
+    // Minimum extent retained while expanding.
     public MinimumExtent: integer;
 
     // Creates a fixed spacer with a non-negative extent.
+    //
+    // Parameters:
+    // - `Extent`: Fixed extent of the spacer.
     public static function Fixed(Extent: integer): TuiSpacer;
     begin
       if Extent < 0 then
@@ -26,6 +33,9 @@ public type
     end;
 
     // Creates an expanding spacer with a non-negative minimum extent.
+    //
+    // Parameters:
+    // - `MinimumExtent`: Minimum extent retained by an expanding spacer.
     public static function Expanding(MinimumExtent: integer): TuiSpacer;
     begin
       if MinimumExtent < 0 then

@@ -91,8 +91,8 @@ WriteLn(StrToReal('2.25'))
 Returns `'true'` or `'false'`.
 
 ```pascal
-WriteLn(BoolToStr(true))   { true }
-WriteLn(BoolToStr(false))  { false }
+WriteLn(BoolToStr(true))   // true
+WriteLn(BoolToStr(false))  // false
 ```
 
 ---
@@ -102,8 +102,8 @@ WriteLn(BoolToStr(false))  { false }
 Parses `'true'` or `'false'` (case-insensitive). **Runtime error** if `S` is neither.
 
 ```pascal
-WriteLn(StrToBool('True'));    { true }
-WriteLn(StrToBool('FALSE'))    { false }
+WriteLn(StrToBool('True'));    // true
+WriteLn(StrToBool('FALSE'))    // false
 ```
 
 ---
@@ -113,8 +113,8 @@ WriteLn(StrToBool('FALSE'))    { false }
 Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits` characters.
 
 ```pascal
-WriteLn(IntToHex(255, 2));    { FF }
-WriteLn(IntToHex(255, 4))     { 00FF }
+WriteLn(IntToHex(255, 2));    // FF
+WriteLn(IntToHex(255, 4))     // 00FF
 ```
 
 ---
@@ -124,9 +124,9 @@ WriteLn(IntToHex(255, 4))     { 00FF }
 Parses a hexadecimal string. Accepts optional `$` or `0x` prefix. **Runtime error** if the string is not valid hex.
 
 ```pascal
-WriteLn(HexToInt('FF'));     { 255 }
-WriteLn(HexToInt('$FF'));    { 255 }
-WriteLn(HexToInt('0xFF'))    { 255 }
+WriteLn(HexToInt('FF'));     // 255
+WriteLn(HexToInt('$FF'));    // 255
+WriteLn(HexToInt('0xFF'))    // 255
 ```
 
 ---

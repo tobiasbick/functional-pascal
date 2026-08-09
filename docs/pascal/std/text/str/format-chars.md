@@ -27,7 +27,7 @@ Returns the character at the 0-based `Index`. **Runtime error** if out of bounds
 
 ```pascal
 var C: string := CharAt('Hello', 0);
-WriteLn(C)  { H }
+WriteLn(C)  // H
 ```
 
 ---
@@ -37,7 +37,7 @@ WriteLn(C)  { H }
 Returns a **new** string that is identical to `S` except the character at `Index` is replaced with `C`. `C` must contain exactly one Unicode scalar value. **Runtime error** if `Index` is out of bounds or `C` is empty or contains multiple characters.
 
 ```pascal
-WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
+WriteLn(SetCharAt('Hello', 0, 'J'))  // Jello
 ```
 
 ---
@@ -47,7 +47,7 @@ WriteLn(SetCharAt('Hello', 0, 'J'))  { Jello }
 Returns the Unicode codepoint (integer value) of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors.
 
 ```pascal
-WriteLn(Ord('A'))  { 65 }
+WriteLn(Ord('A'))  // 65
 ```
 
 ---
@@ -57,7 +57,7 @@ WriteLn(Ord('A'))  { 65 }
 Returns the character with Unicode codepoint `N`. **Runtime error** if `N` is not a valid Unicode scalar value.
 
 ```pascal
-WriteLn(Chr(65))  { A }
+WriteLn(Chr(65))  // A
 ```
 
 ---
@@ -71,7 +71,7 @@ Returns a new string by substituting format specifiers in `Template` with the su
 ```pascal
 var Status: string := Format('Zoom: %fx Center: (%f, %f)', Zoom, CX, CY);
 var Msg: string    := Format('Item %d: %s', Index, Name);
-var Pct: string    := Format('100%%');  { '100%' }
+var Pct: string    := Format('100%%');  // '100%'
 ```
 
 ### Specifiers

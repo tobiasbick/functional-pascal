@@ -60,18 +60,30 @@ begin
 end;
 
 // Clears pointer-button state for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
 public procedure TuiPointerRoutingClose(ApplicationId: integer);
 begin
   TuiButtonCaptureClose(ApplicationId)
 end;
 
 // Returns the button painted pressed for one application.
+//
+// Parameters:
+// - `ApplicationId`: Identifier of the application-owned routing state.
 public function TuiPointerRoutingPressed(ApplicationId: integer): option of TuiControlId;
 begin
   return TuiButtonCapturePressed(ApplicationId)
 end;
 
 // Routes one pointer event and advances application-owned button capture.
+//
+// Parameters:
+// - `Pointer`: Normalized pointer event to route.
+// - `ApplicationId`: Identifier of the application-owned routing state.
+// - `Root`: Root of the element tree.
+// - `Frame`: Arranged frame containing element geometry.
 public function TuiRouteApplicationPointer(
   Pointer: TuiPointerEvent;
   ApplicationId: integer;

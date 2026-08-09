@@ -46,7 +46,7 @@ WriteLn(Trim('  x  '))
 Strips leading whitespace only.
 
 ```pascal
-WriteLn(TrimLeft('  hi  '))  { 'hi  ' }
+WriteLn(TrimLeft('  hi  '))  // 'hi  '
 ```
 
 ---
@@ -56,7 +56,7 @@ WriteLn(TrimLeft('  hi  '))  { 'hi  ' }
 Strips trailing whitespace only.
 
 ```pascal
-WriteLn(TrimRight('  hi  '))  { '  hi' }
+WriteLn(TrimRight('  hi  '))  // '  hi'
 ```
 
 ## See also

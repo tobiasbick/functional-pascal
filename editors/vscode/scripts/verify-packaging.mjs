@@ -38,12 +38,17 @@ export async function verifyPackaging() {
     await writeFile(sourcePath, "native-server-fixture");
     await writeFile(cliSourcePath, "native-cli-fixture");
     await mkdir(path.join(sourceLibrary, "Std"), { recursive: true });
+    await mkdir(path.join(sourceLibrary, "api", "Std"), { recursive: true });
     await writeFile(
       path.join(sourceLibrary, "stdlib.fpasprj"),
       "[project]\nname = \"test\"\nkind = \"library\"\n"
     );
     await writeFile(path.join(sourceLibrary, "Std", "Sample.fpas"), "unit Std.Sample;\n");
     await writeFile(path.join(sourceLibrary, "Std", "Sample.fpascu"), "derived");
+    await writeFile(
+      path.join(sourceLibrary, "api", "Std", "Intrinsic.fpas"),
+      "unit Std.Intrinsic;\n"
+    );
     await mkdir(staleDirectory, { recursive: true });
     await writeFile(path.join(staleDirectory, "stale.test"), "stale");
 
@@ -88,11 +93,16 @@ export async function verifyPackaging() {
     });
     assert.deepEqual(stagedSources, [
       "stdlib.fpasprj",
+      path.join("api", "Std", "Intrinsic.fpas"),
       path.join("Std", "Sample.fpas")
     ]);
     assert.deepEqual(
       await readdir(path.join(extensionRoot, "standard-library", "Std")),
       ["Sample.fpas"]
+    );
+    assert.deepEqual(
+      await readdir(path.join(extensionRoot, "standard-library", "api", "Std")),
+      ["Intrinsic.fpas"]
     );
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });

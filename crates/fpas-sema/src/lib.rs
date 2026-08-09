@@ -52,7 +52,10 @@ pub use interface::{
     analyze_program_with_interfaces, analyze_unit, analyze_unit_with_interface_support,
     interface_type_to_ty, ty_to_interface_type,
 };
-pub use types::{EnumTy, RecordTy, Ty};
+pub use std_registry::{
+    IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
+};
+pub use types::{EnumTy, FunctionTy, ParamTy, ProcedureTy, RecordTy, Ty};
 
 use fpas_parser::Program;
 

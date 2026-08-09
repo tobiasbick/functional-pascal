@@ -27,6 +27,11 @@ public type Counter = record
   public Amount: integer;
 end;
 
+// Adds two integers.
+//
+// Parameters:
+// - `Left`: First addend.
+// - `Right`: Second addend.
 public function Add(Left: integer; Right: integer): integer;
 begin
   return Left + Right
@@ -150,6 +155,14 @@ end.
     assert_eq!(
         signature["signatures"][0]["label"],
         "function Add(Left: integer; Right: integer): integer"
+    );
+    assert_eq!(
+        signature["signatures"][0]["documentation"]["value"],
+        "Adds two integers.\n\nParameters:\n- `Left`: First addend.\n- `Right`: Second addend."
+    );
+    assert_eq!(
+        signature["signatures"][0]["parameters"][1]["documentation"]["value"],
+        "Second addend."
     );
     assert_eq!(
         signature["signatures"][0]["parameters"][1]["label"],

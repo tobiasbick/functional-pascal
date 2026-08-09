@@ -5,10 +5,14 @@
 //! Markdown file and in runtime/compiler/bytecode code (`fpas-std`, `fpas-bytecode`, `fpas-compiler`).
 
 mod aliases;
+mod api;
 mod builtins;
 mod loaded;
 
 pub use aliases::register_short_aliases;
+pub use api::{
+    IntrinsicStdSymbol, IntrinsicStdSymbolKind, intrinsic_std_symbols, intrinsic_std_units,
+};
 pub use builtins::check_builtin_std_call;
 pub use loaded::{register_loaded_std, register_single_std_unit};
 

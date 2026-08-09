@@ -2,12 +2,10 @@
 
 use std::path::PathBuf;
 
-use fpas_diagnostics::SourceSpan;
-use fpas_lexer::Token;
-
-use super::{NavigationDocument, resolve};
+use super::{NavigationDocument, resolve, token_name};
 use crate::DocumentSymbol;
 use crate::{CancellationToken, LanguageServiceError};
+use fpas_diagnostics::SourceSpan;
 
 /// One declaration or usage location for a resolved symbol.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,9 +63,9 @@ pub(crate) fn find_references(
         .unwrap_or(&target.symbol.name);
     for (document_index, document) in documents.iter().enumerate() {
         cancellation.check()?;
-        for token in &document.tokens {
+        for (token_index, token) in document.tokens.iter().enumerate() {
             cancellation.check()?;
-            let Token::Ident(name) = &token.token else {
+            let Some(name) = token_name(document, token_index) else {
                 continue;
             };
             if !name.eq_ignore_ascii_case(candidate_name) {

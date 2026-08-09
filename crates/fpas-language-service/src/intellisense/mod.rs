@@ -87,6 +87,10 @@ pub struct CompletionCandidate {
 pub struct SignatureHelp {
     /// Resolved callable declaration shape.
     pub signature: CallableSignature,
+    /// Markdown attached to the callable declaration.
+    pub documentation: Option<String>,
+    /// Markdown attached to each explicit parameter in declaration order.
+    pub parameter_documentation: Vec<Option<String>>,
     /// Zero-based explicit argument selected by the cursor.
     pub active_parameter: Option<usize>,
 }

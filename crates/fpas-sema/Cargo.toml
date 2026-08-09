@@ -13,6 +13,9 @@ fpas-parser = { path = "../fpas-parser" }
 fpas-std = { path = "../fpas-std" }
 fpas-unit = { path = "../fpas-unit" }
 
+[dev-dependencies]
+fpas-fmt = { path = "../fpas-fmt" }
+
 [lints]
 workspace = true
 

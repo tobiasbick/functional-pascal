@@ -225,6 +225,18 @@ impl ScopeStack {
         }
         names
     }
+
+    pub(crate) fn root_symbols_with_prefix(&self, prefix: &str) -> Vec<(String, Symbol)> {
+        let canonical_prefix = canonical_symbol_name(prefix);
+        let mut symbols = self.scopes[0]
+            .symbols
+            .iter()
+            .filter(|(name, _)| name.starts_with(&canonical_prefix))
+            .map(|(_, entry)| (entry.original_name.clone(), entry.symbol.clone()))
+            .collect::<Vec<_>>();
+        symbols.sort_by(|left, right| left.0.cmp(&right.0));
+        symbols
+    }
 }
 
 impl Default for ScopeStack {

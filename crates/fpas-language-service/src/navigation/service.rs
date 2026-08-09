@@ -28,7 +28,13 @@ impl LanguageService {
         self.ensure_source_context(path)?;
         let snapshot = self.snapshot(path)?;
         let value = if self.navigation_allowed(path) {
-            DocumentSymbols::from_snapshot(&snapshot).entries().to_vec()
+            if self.is_editor_api_source(path) {
+                DocumentSymbols::from_editor_snapshot(&snapshot)
+                    .entries()
+                    .to_vec()
+            } else {
+                DocumentSymbols::from_snapshot(&snapshot).entries().to_vec()
+            }
         } else {
             Vec::new()
         };
@@ -200,13 +206,21 @@ impl LanguageService {
             });
         }
         let project = self.analysis_project_for(path, target.compilation_unit());
-        let paths = project
+        let mut paths = project
             .as_ref()
             .map(|project| project.all_source_paths())
             .unwrap_or_else(|| vec![path.to_path_buf()]);
+        paths.extend(self.editor_api_source_paths());
+        paths.sort();
+        paths.dedup();
         let mut documents = Vec::with_capacity(paths.len());
         for source_path in paths {
-            let document = NavigationDocument::new(self.snapshot(&source_path)?);
+            let snapshot = self.snapshot(&source_path)?;
+            let document = if self.is_editor_api_source(&source_path) {
+                NavigationDocument::new_editor_api(snapshot)
+            } else {
+                NavigationDocument::new(snapshot)
+            };
             if project.as_ref().is_none_or(|project| {
                 source_path == path
                     || project.source_visible_from(path, &source_path, &document.owner)
@@ -274,7 +288,12 @@ impl LanguageService {
         let mut documents = Vec::with_capacity(paths.len());
         for source_path in paths {
             cancellation.check()?;
-            documents.push(NavigationDocument::new(self.snapshot(&source_path)?));
+            let snapshot = self.snapshot(&source_path)?;
+            documents.push(if self.is_editor_api_source(&source_path) {
+                NavigationDocument::new_editor_api(snapshot)
+            } else {
+                NavigationDocument::new(snapshot)
+            });
         }
         let target_index = documents
             .iter()
@@ -287,9 +306,11 @@ impl LanguageService {
     }
 
     fn navigation_allowed(&self, path: &Path) -> bool {
-        matches!(
-            self.workspace().kind(),
-            WorkspaceKind::Loose | WorkspaceKind::Folder
-        ) || self.workspace().project_for_source(path).is_some()
+        self.is_editor_api_source(path)
+            || matches!(
+                self.workspace().kind(),
+                WorkspaceKind::Loose | WorkspaceKind::Folder
+            )
+            || self.workspace().project_for_source(path).is_some()
     }
 }

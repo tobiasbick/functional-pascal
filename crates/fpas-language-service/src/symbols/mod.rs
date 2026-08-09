@@ -3,6 +3,7 @@
 mod document;
 mod extract;
 mod index;
+mod intrinsic_api;
 
 pub use document::{
     CallableSignature, DocumentSymbol, DocumentSymbols, SymbolKind, SymbolVisibility,

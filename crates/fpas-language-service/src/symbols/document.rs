@@ -105,6 +105,12 @@ impl DocumentSymbols {
         Self { owner, entries }
     }
 
+    pub(crate) fn from_editor_snapshot(snapshot: &DocumentSnapshot) -> Self {
+        let mut symbols = Self::from_snapshot(snapshot);
+        super::intrinsic_api::add_registry_symbols(snapshot, &mut symbols);
+        symbols
+    }
+
     /// Returns the program or unit owner name.
     #[must_use]
     pub fn owner(&self) -> &str {
@@ -115,5 +121,9 @@ impl DocumentSymbols {
     #[must_use]
     pub fn entries(&self) -> &[DocumentSymbol] {
         &self.entries
+    }
+
+    pub(super) fn entries_mut(&mut self) -> &mut Vec<DocumentSymbol> {
+        &mut self.entries
     }
 }

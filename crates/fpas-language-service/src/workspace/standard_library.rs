@@ -1,6 +1,6 @@
 //! Source-standard-library composition for editor analysis.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use fpas_project::{
     LibraryExportPolicy, LoadedProject, ProjectKind, ProjectLinkMeta, SourceOrigin, TestManifest,
@@ -13,14 +13,23 @@ use crate::document::normalized_path;
 #[derive(Debug, Clone)]
 pub(crate) struct StandardLibraryContext {
     project: ProjectContext,
+    editor_api_sources: Vec<PathBuf>,
 }
 
 impl StandardLibraryContext {
     pub(crate) fn load(root: &Path) -> Result<Self, String> {
         let project = load_standard_library_project(root)?;
+        let mut editor_api_sources = Vec::new();
+        collect_editor_api_sources(&root.join("api/Std"), &mut editor_api_sources)?;
+        editor_api_sources.sort();
         Ok(Self {
             project: ProjectContext::new(&root.join("stdlib.fpasprj"), project),
+            editor_api_sources,
         })
+    }
+
+    pub(crate) fn editor_api_sources(&self) -> &[PathBuf] {
+        &self.editor_api_sources
     }
 
     pub(crate) fn compose(&self, project: &ProjectContext) -> ProjectContext {
@@ -69,6 +78,33 @@ impl StandardLibraryContext {
         );
         ProjectContext::new(&path, loaded)
     }
+}
+
+fn collect_editor_api_sources(directory: &Path, output: &mut Vec<PathBuf>) -> Result<(), String> {
+    let entries = match std::fs::read_dir(directory) {
+        Ok(entries) => entries,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => {
+            return Err(format!(
+                "Cannot read intrinsic standard-library API directory `{}`: {error}",
+                directory.display()
+            ));
+        }
+    };
+    for entry in entries {
+        let path = entry
+            .map_err(|error| format!("Cannot read intrinsic API entry: {error}"))?
+            .path();
+        if path.is_dir() {
+            collect_editor_api_sources(&path, output)?;
+        } else if path
+            .extension()
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("fpas"))
+        {
+            output.push(normalized_path(&path));
+        }
+    }
+    Ok(())
 }
 
 fn merge_standard_library(

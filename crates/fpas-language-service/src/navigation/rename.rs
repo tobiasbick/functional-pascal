@@ -41,6 +41,8 @@ pub enum RenameError {
     NoSymbol,
     /// Programs and units require file or manifest changes and are not text-only renames.
     CompilationUnit,
+    /// Generated intrinsic API declarations are read-only editor metadata.
+    EditorApi,
     /// The declaration is outside the opened editor root.
     OutsideWorkspace {
         /// Declaration source that would otherwise be edited.
@@ -67,6 +69,9 @@ impl fmt::Display for RenameError {
             ),
             Self::CompilationUnit => formatter.write_str(
                 "Program and unit names cannot be renamed because that also requires file or manifest changes.",
+            ),
+            Self::EditorApi => formatter.write_str(
+                "Intrinsic standard-library API declarations are generated editor metadata and cannot be renamed.",
             ),
             Self::OutsideWorkspace { path } => write!(
                 formatter,
@@ -161,6 +166,9 @@ fn renameable_target(
 ) -> Result<(), RenameError> {
     if matches!(target.symbol.kind, SymbolKind::Program | SymbolKind::Unit) {
         return Err(RenameError::CompilationUnit);
+    }
+    if documents[target.document_index].is_editor_api {
+        return Err(RenameError::EditorApi);
     }
     let declaration_path = &documents[target.document_index].path;
     if !declaration_path.starts_with(workspace_root) {

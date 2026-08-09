@@ -100,6 +100,23 @@ pub struct LanguageService {
 }
 
 impl LanguageService {
+    pub(crate) fn editor_api_source_paths(&self) -> Vec<std::path::PathBuf> {
+        self.standard_library
+            .as_ref()
+            .map(|library| library.editor_api_sources().to_vec())
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn is_editor_api_source(&self, path: &Path) -> bool {
+        let path = crate::document::normalized_path(path);
+        self.standard_library.as_ref().is_some_and(|library| {
+            library
+                .editor_api_sources()
+                .iter()
+                .any(|source| source == &path)
+        })
+    }
+
     /// Creates a service for an already loaded workspace context.
     #[must_use]
     pub fn new(workspace: WorkspaceContext) -> Self {
@@ -219,6 +236,9 @@ impl LanguageService {
     ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
         self.ensure_source_context(path)?;
         let target = self.documents.snapshot(path)?;
+        if self.is_editor_api_source(path) {
+            return self.cached_syntax_only(target);
+        }
         if target.has_parse_errors() {
             return self.cached_syntax_only(target);
         }
@@ -263,13 +283,21 @@ impl LanguageService {
                 .into_iter()
                 .map(|snapshot| snapshot.path().to_path_buf()),
         );
+        if let Some(standard_library) = &self.standard_library {
+            paths.extend(standard_library.editor_api_sources().iter().cloned());
+        }
         paths.sort();
         paths.dedup();
         let documents = paths
             .into_iter()
             .map(|path| {
                 let snapshot = self.snapshot(&path)?;
-                Ok((path, DocumentSymbols::from_snapshot(&snapshot)))
+                let symbols = if self.is_editor_api_source(&path) {
+                    DocumentSymbols::from_editor_snapshot(&snapshot)
+                } else {
+                    DocumentSymbols::from_snapshot(&snapshot)
+                };
+                Ok((path, symbols))
             })
             .collect::<Result<Vec<_>, LanguageServiceError>>()?;
         index.replace_documents(documents);
@@ -291,6 +319,9 @@ impl LanguageService {
         &mut self,
         path: &Path,
     ) -> Result<(), LanguageServiceError> {
+        if self.is_editor_api_source(path) {
+            return Ok(());
+        }
         self.workspace
             .discover_project_for_source(path)
             .map_err(|issue| {

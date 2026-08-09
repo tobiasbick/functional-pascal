@@ -82,6 +82,31 @@ pub(crate) fn preceding_documentation(source: &str, declaration_offset: usize) -
         .map(|lines| lines.join("\n"))
 }
 
+/// Matches Markdown parameter bullets to source-level callable parameter labels.
+pub(crate) fn parameter_documentation(
+    documentation: &str,
+    parameter_labels: &[String],
+) -> Vec<Option<String>> {
+    parameter_labels
+        .iter()
+        .map(|label| {
+            let name = parameter_name(label)?;
+            documentation.lines().find_map(|line| {
+                let line = line.trim();
+                let rest = line.strip_prefix("- `")?;
+                let (documented_name, description) = rest.split_once("`: ")?;
+                documented_name
+                    .eq_ignore_ascii_case(name)
+                    .then(|| description.trim().to_owned())
+            })
+        })
+        .collect()
+}
+
+fn parameter_name(label: &str) -> Option<&str> {
+    label.split_once(':')?.0.split_whitespace().next_back()
+}
+
 fn documentation_line(comment: &SourceComment, source: &str) -> Option<String> {
     let text = comment.text(source)?.strip_prefix("//")?;
     Some(text.strip_prefix(' ').unwrap_or(text).to_owned())
@@ -112,7 +137,7 @@ fn is_adjacent_line(source: &str, left: usize, right: usize) -> bool {
 #[cfg(test)]
 #[allow(clippy::expect_used)]
 mod tests {
-    use super::preceding_documentation;
+    use super::{parameter_documentation, preceding_documentation};
 
     #[test]
     fn extracts_markdown_from_the_single_comment_syntax() {
@@ -147,5 +172,21 @@ mod tests {
             let declaration = source.find("type").expect("declaration");
             assert_eq!(preceding_documentation(source, declaration), None);
         }
+    }
+
+    #[test]
+    fn matches_parameter_bullets_by_name() {
+        let documentation =
+            "Writes text.\n\nParameters:\n- `Path`: Destination path.\n- `Text`: UTF-8 content.";
+        assert_eq!(
+            parameter_documentation(
+                documentation,
+                &["Path: string".to_owned(), "mutable Text: string".to_owned()]
+            ),
+            [
+                Some("Destination path.".to_owned()),
+                Some("UTF-8 content.".to_owned())
+            ]
+        );
     }
 }

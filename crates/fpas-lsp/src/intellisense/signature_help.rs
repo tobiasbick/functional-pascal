@@ -2,7 +2,8 @@
 
 use fpas_language_service::SignatureHelp as ServiceSignatureHelp;
 use tower_lsp_server::ls_types::{
-    ParameterInformation, ParameterLabel, SignatureHelp, SignatureInformation,
+    Documentation, MarkupContent, MarkupKind, ParameterInformation, ParameterLabel, SignatureHelp,
+    SignatureInformation,
 };
 
 pub(crate) fn signature_help(value: ServiceSignatureHelp) -> SignatureHelp {
@@ -10,18 +11,19 @@ pub(crate) fn signature_help(value: ServiceSignatureHelp) -> SignatureHelp {
         .signature
         .parameters
         .iter()
-        .map(|parameter| ParameterInformation {
+        .zip(value.parameter_documentation)
+        .map(|(parameter, documentation)| ParameterInformation {
             label: parameter_offsets(&value.signature.label, parameter).map_or_else(
                 || ParameterLabel::Simple(parameter.clone()),
                 ParameterLabel::LabelOffsets,
             ),
-            documentation: None,
+            documentation: documentation.map(markdown),
         })
         .collect();
     SignatureHelp {
         signatures: vec![SignatureInformation {
             label: value.signature.label,
-            documentation: None,
+            documentation: value.documentation.map(markdown),
             parameters: Some(parameters),
             active_parameter: value
                 .active_parameter
@@ -32,6 +34,13 @@ pub(crate) fn signature_help(value: ServiceSignatureHelp) -> SignatureHelp {
             .active_parameter
             .and_then(|value| u32::try_from(value).ok()),
     }
+}
+
+fn markdown(value: String) -> Documentation {
+    Documentation::MarkupContent(MarkupContent {
+        kind: MarkupKind::Markdown,
+        value,
+    })
 }
 
 fn parameter_offsets(label: &str, parameter: &str) -> Option<[u32; 2]> {

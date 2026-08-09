@@ -16,11 +16,25 @@ pub(crate) struct NavigationDocument {
     pub(crate) uses: Vec<String>,
     pub(crate) roots: Vec<DocumentSymbol>,
     pub(crate) tokens: Vec<SpannedToken>,
+    pub(crate) is_editor_api: bool,
 }
 
 impl NavigationDocument {
     pub(crate) fn new(snapshot: Arc<DocumentSnapshot>) -> Self {
         let symbols = DocumentSymbols::from_snapshot(&snapshot);
+        Self::with_symbols(snapshot, symbols, false)
+    }
+
+    pub(crate) fn new_editor_api(snapshot: Arc<DocumentSnapshot>) -> Self {
+        let symbols = DocumentSymbols::from_editor_snapshot(&snapshot);
+        Self::with_symbols(snapshot, symbols, true)
+    }
+
+    fn with_symbols(
+        snapshot: Arc<DocumentSnapshot>,
+        symbols: DocumentSymbols,
+        is_editor_api: bool,
+    ) -> Self {
         let uses = match snapshot.compilation_unit() {
             CompilationUnit::Program(program) => &program.uses,
             CompilationUnit::Unit(unit) => &unit.uses,
@@ -36,6 +50,7 @@ impl NavigationDocument {
             snapshot,
             uses,
             tokens,
+            is_editor_api,
         }
     }
 

@@ -183,6 +183,7 @@ impl EnumTy {
     }
 }
 
+/// Resolved function signature used by semantic analysis and editor tooling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionTy {
     pub type_params: Vec<GenericParamDef>,
@@ -192,6 +193,7 @@ pub struct FunctionTy {
     pub variadic: bool,
 }
 
+/// Resolved procedure signature used by semantic analysis and editor tooling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProcedureTy {
     pub type_params: Vec<GenericParamDef>,
@@ -200,6 +202,7 @@ pub struct ProcedureTy {
     pub variadic: bool,
 }
 
+/// One resolved callable parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParamTy {
     pub mutable: bool,

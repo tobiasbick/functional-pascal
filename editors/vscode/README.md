@@ -64,6 +64,9 @@ uses the same formatter without an FPAS-specific setting.
 
 Open the Outline view to inspect FPAS declarations. A contiguous standalone `//` block immediately
 before a declaration is Markdown documentation; hover and resolved completion items display it.
+The packaged standard library also contains editor-only declarations for Rust-backed intrinsic
+`Std.*` units. They provide the same hover, completion, signature, and definition experience and
+open as ordinary read-only `.fpas` files without becoming part of program compilation.
 Hover a declaration or
 reference, use **Go to Definition** or **Go to Type Definition**, search all
 project declarations with **Go to Symbol in Workspace** (`Ctrl+T`), and invoke

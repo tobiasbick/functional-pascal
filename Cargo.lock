@@ -726,6 +726,7 @@ name = "fpas-sema"
 version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
+ "fpas-fmt",
  "fpas-lexer",
  "fpas-parser",
  "fpas-std",

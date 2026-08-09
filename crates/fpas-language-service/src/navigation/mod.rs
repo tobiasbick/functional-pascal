@@ -22,7 +22,7 @@ pub use references::ReferenceLocation;
 pub(crate) use references::{find_references, resolve_target};
 pub use rename::{RenameEdit, RenameError, RenameTarget};
 pub(crate) use rename::{prepare_rename, rename_symbol};
-pub(crate) use resolve::{find_type, resolve, resolve_qualified, resolve_unqualified};
+pub(crate) use resolve::{find_type, resolve, resolve_qualified, resolve_unqualified, token_name};
 pub use selection::SelectionRange;
 
 /// A query result tied to the exact immutable source snapshot used for positions.

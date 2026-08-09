@@ -169,7 +169,9 @@ owners, and are limited to 100 entries per query.
 
 Hover shows the resolved source declaration followed by its attached Markdown documentation, when
 present. The documentation comes from the resolved declaration's current source snapshot, including
-cross-unit and unsaved declarations. **Go to Definition** works for
+cross-unit and unsaved declarations. Intrinsic `Std.*` units use generated editor-only declarations
+under `lib/api/Std/`; these declarations expose the Rust-registered signatures and normal `//`
+Markdown blocks without participating in compilation or runtime dispatch. **Go to Definition** works for
 declarations and references in the same file and across units in the loaded
 project. Project navigation follows FPAS rules for lexical shadowing, direct
 `uses` imports, public declarations and record members, qualified unit names,
@@ -180,8 +182,9 @@ qualified identity resolves unambiguously.
 **Go to Type Definition** follows the named source type of variables,
 parameters, record fields and properties, function results, and aliases. It
 uses the same import, qualification, visibility, and record-member resolution
-as definition navigation. Built-in, unknown, or inaccessible types have no
-source target and therefore return no result.
+as definition navigation. Intrinsic `Std.*` types navigate to their editor-only
+declarations. Primitive, unknown, or inaccessible types have no source target
+and therefore return no result.
 
 Selecting a resolved identifier highlights its declaration, reads, and direct
 assignment writes in the current document. Lexically shadowed declarations,
@@ -207,7 +210,9 @@ applied through an unsafe fallback.
 Program and unit names are excluded because a correct rename would also have to
 rename source files or manifests. A declaration outside the opened editor
 folder, including a standard library bundled with an installed VSIX, is never
-modified.
+modified. Generated intrinsic declarations under `lib/api/Std/` are also
+read-only rename targets, even when the Functional Pascal repository itself is
+open.
 
 Completion lists parameters, locals, visible unit declarations, record and enum
 members, and keywords appropriate to the recovered source context. Each item
@@ -219,6 +224,8 @@ declaration; a blank line detaches the comment. It is loaded only after the edit
 item. Resolve data identifies the exact source snapshot and qualified
 declaration; changed, deleted, or manipulated identities leave the completion
 item undocumented instead of attaching documentation from another symbol.
+The same rule applies to generated intrinsic declarations, including their
+`Parameters:` lists.
 Equal candidates imported from different units remain distinct so the editor
 can present their qualified owners. Private, shadowed, and non-exported
 declarations are excluded.
@@ -231,7 +238,8 @@ the existing clause cannot be edited conservatively.
 
 Signature help covers functions, procedures, record methods, nested routines,
 function values, enum constructors with associated values, and generic calls.
-It tracks the active argument through nested and multiline expressions. The
+It tracks the active argument through nested and multiline expressions and
+shows the callable Markdown plus the matching `Parameters:` entry. The
 extension also contributes parser- and formatter-checked snippets for programs,
 units, routine and record declarations, variables, branches, and common loops.
 Type a snippet prefix such as `function`, `record`, `if`, or `for` and select

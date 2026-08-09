@@ -41,17 +41,10 @@ fn identifier_at(
         .iter()
         .enumerate()
         .find_map(|(index, token)| {
-            let Token::Ident(name) = &token.token else {
-                return None;
-            };
+            let name = token_name(document, index)?;
             let end = token.span.offset.saturating_add(token.span.length);
-            (token.span.offset <= offset && offset < end).then(|| {
-                (
-                    index,
-                    name.clone(),
-                    token.span.diagnostic_span_or_synthetic(),
-                )
-            })
+            (token.span.offset <= offset && offset < end)
+                .then(|| (index, name, token.span.diagnostic_span_or_synthetic()))
         })
 }
 
@@ -59,27 +52,42 @@ fn qualified_parts(document: &NavigationDocument, selected: usize) -> (Vec<Strin
     let mut start = selected;
     while start >= 2
         && matches!(document.tokens[start - 1].token, Token::Dot)
-        && matches!(document.tokens[start - 2].token, Token::Ident(_))
+        && token_name(document, start - 2).is_some()
     {
         start -= 2;
     }
     let mut parts = Vec::new();
     let mut selected_part = 0;
     let mut index = start;
-    while let Token::Ident(name) = &document.tokens[index].token {
+    while let Some(name) = token_name(document, index) {
         if index == selected {
             selected_part = parts.len();
         }
-        parts.push(name.clone());
+        parts.push(name);
         if index + 2 >= document.tokens.len()
             || !matches!(document.tokens[index + 1].token, Token::Dot)
-            || !matches!(document.tokens[index + 2].token, Token::Ident(_))
+            || token_name(document, index + 2).is_none()
         {
             break;
         }
         index += 2;
     }
     (parts, selected_part)
+}
+
+pub(crate) fn token_name(document: &NavigationDocument, index: usize) -> Option<String> {
+    let token = document.tokens.get(index)?;
+    if let Token::Ident(name) = &token.token {
+        return Some(name.clone());
+    }
+    let end = token.span.offset.checked_add(token.span.length)?;
+    let value = document.snapshot.source().get(token.span.offset..end)?;
+    let mut chars = value.chars();
+    let first = chars.next()?;
+    (first.is_ascii_alphabetic() || first == '_')
+        .then_some(())
+        .filter(|()| chars.all(|ch| ch.is_ascii_alphanumeric() || ch == '_'))
+        .map(|()| value.to_owned())
 }
 
 pub(crate) fn resolve_unqualified(

@@ -31,6 +31,15 @@ invocation.
 
 Each unit page is a **self-contained handbook**: importing and short vs qualified names, a **quick reference** table, then routines and types with parameters, behavior, edge cases, and examples.
 
+Intrinsic units implemented by the compiler, VM, or Rust runtime also expose
+generated editor declarations under [`lib/api/Std/`](../../../lib/api/Std/).
+They use the same `//` Markdown documentation as ordinary FPAS source and give
+the language server concrete targets for hover, completion, signature help,
+**Go to Definition**, and **Go to Type Definition**. These declarations are
+not compiled and do not implement runtime behavior. Regenerate them after an
+intrinsic API or handbook change with
+`cargo run -p fpas-sema --example export_intrinsic_std_api`.
+
 ## Areas
 
 | Area | Hub | Units / topics |
@@ -81,6 +90,7 @@ When changing a `Std.*` API, update docs and:
 - Intrinsic opcodes: [`crates/fpas-bytecode/src/intrinsic/mod.rs`](../../../crates/fpas-bytecode/src/intrinsic/mod.rs)
 - Intrinsic dispatch: [`crates/fpas-std/src/intrinsics.rs`](../../../crates/fpas-std/src/intrinsics.rs)
 - Types and `uses` registration: [`crates/fpas-sema/src/std_registry/`](../../../crates/fpas-sema/src/std_registry/mod.rs)
+- Generated intrinsic editor declarations: [`lib/api/Std/`](../../../lib/api/Std/)
 
 ## See also
 

@@ -93,6 +93,7 @@ mod tests {
                 units: Vec::new(),
             },
             vec!["main.fpas".to_string()],
+            vec![Digest::of(b"source")],
             executable,
         )
         .expect("valid image");

@@ -240,15 +240,19 @@ pub fn link_objects(
             flags: FunctionFlags {
                 uses_spawn_tasks: function.uses_spawn_tasks,
             },
+            debug: fpas_bytecode::FunctionDebugInfo::default(),
         });
     }
-    let source_map = source_map::merge(
+    let (source_map, function_debug) = source_map::merge(
         &objects,
         &ids.functions.order,
         &code_starts,
         &code_bases,
         &mut strings,
     )?;
+    for (function, debug) in linked_functions.iter_mut().zip(function_debug) {
+        function.debug = debug;
+    }
     let executable = Executable {
         code,
         functions: linked_functions,

@@ -34,6 +34,7 @@ fn function(name: &str) -> ObjectFunction {
             line: 1,
             column: 1,
         }],
+        debug: fpas_unit::object::ObjectFunctionDebugInfo::default(),
     }
 }
 
@@ -93,6 +94,7 @@ fn program() -> RelocatableObject {
                 line: 1,
                 column: 1,
             }],
+            debug: fpas_unit::object::ObjectFunctionDebugInfo::default(),
         }],
         constants: vec![
             fpas_unit::object::ObjectConstant::Integer(7),
@@ -125,7 +127,23 @@ fn program() -> RelocatableObject {
 
 #[test]
 fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
-    let unit = unit(true);
+    let mut unit = unit(true);
+    unit.functions[0].debug = fpas_unit::object::ObjectFunctionDebugInfo {
+        scopes: vec![fpas_unit::object::ObjectDebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: Vec::new(),
+        sequence_points: vec![fpas_unit::object::ObjectSequencePoint {
+            instruction_start: 0,
+            location: fpas_unit::object::ObjectDebugLocation {
+                source: 0,
+                line: 1,
+                column: 1,
+            },
+            scope: 0,
+        }],
+    };
     let first =
         link_objects(std::slice::from_ref(&unit), &program()).expect("first deterministic link");
     let second = link_objects(&[unit], &program()).expect("second deterministic link");
@@ -156,6 +174,13 @@ fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
             .get(),
         2,
         "unit source runs are rebased after the root function"
+    );
+    assert_eq!(
+        first.executable().functions[2].debug.sequence_points[0]
+            .instruction
+            .get(),
+        first.executable().functions[2].code.start.get(),
+        "unit debugger sequence points are rebased with linked code"
     );
     let execution = Vm::new(first).run().expect("linked VM execution");
     assert_eq!(execution.value, Value::Unit);

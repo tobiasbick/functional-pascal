@@ -9,10 +9,15 @@ const FLAGS: u16 = 0;
 
 pub(super) struct DecodedHeader<'a> {
     pub(super) identity: ProgramIdentity,
+    pub(super) source_hashes: Vec<Digest>,
     pub(super) payload: &'a [u8],
 }
 
-pub(super) fn encode(identity: &ProgramIdentity, payload: &[u8]) -> Result<Vec<u8>, FormatError> {
+pub(super) fn encode(
+    identity: &ProgramIdentity,
+    source_hashes: &[Digest],
+    payload: &[u8],
+) -> Result<Vec<u8>, FormatError> {
     check_limit(
         "payload",
         payload.len(),
@@ -38,6 +43,13 @@ pub(super) fn encode(identity: &ProgramIdentity, payload: &[u8]) -> Result<Vec<u
     for unit in &identity.units {
         write_string(&mut output, "unit_name", &unit.unit_name)?;
         write_digest(&mut output, unit.object_hash);
+    }
+    write_u32(
+        &mut output,
+        checked_u32("source_hashes", source_hashes.len())?,
+    );
+    for hash in source_hashes {
+        write_digest(&mut output, *hash);
     }
     write_u32(&mut output, checked_u32("payload", payload.len())?);
     write_digest(&mut output, Digest::of(payload));
@@ -87,6 +99,16 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
             object_hash: reader.digest("unit_object_hash")?,
         });
     }
+    let source_hash_count = reader.u32("source_hash_count")? as usize;
+    check_limit(
+        "source_hashes",
+        source_hash_count,
+        fpas_bytecode::limits::MAX_SOURCE_PATHS,
+    )?;
+    let mut source_hashes = Vec::with_capacity(source_hash_count);
+    for _ in 0..source_hash_count {
+        source_hashes.push(reader.digest("source_hash")?);
+    }
     let payload_len = reader.u32("payload_len")? as usize;
     check_limit(
         "payload",
@@ -112,6 +134,7 @@ pub(super) fn decode(bytes: &[u8]) -> Result<DecodedHeader<'_>, FormatError> {
             options_hash,
             units,
         },
+        source_hashes,
         payload,
     })
 }

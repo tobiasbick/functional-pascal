@@ -26,6 +26,12 @@ pub const MAX_FUNCTION_INSTRUCTIONS: usize = 4_000_000;
 pub const MAX_SOURCE_RUNS: usize = 4_000_000;
 /// Maximum source paths in one executable.
 pub const MAX_SOURCE_PATHS: usize = 1_000_000;
+/// Maximum debugger sequence points in one executable.
+pub const MAX_DEBUG_SEQUENCE_POINTS: usize = 4_000_000;
+/// Maximum source-visible debugger bindings in one executable.
+pub const MAX_DEBUG_BINDINGS: usize = 1_000_000;
+/// Maximum lexical debugger scopes in one executable.
+pub const MAX_DEBUG_SCOPES: usize = 1_000_000;
 /// Maximum addressable registers in one function; the final `u16` value is a sentinel.
 pub const MAX_REGISTERS_PER_FUNCTION: usize = 65_535;
 /// Maximum arguments in an instruction's auxiliary count field.

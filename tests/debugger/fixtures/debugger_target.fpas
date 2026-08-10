@@ -1,0 +1,36 @@
+program DebuggerTarget;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+
+function Factorial(Value: integer): integer;
+begin
+  if Value <= 1 then
+    return 1;
+  return Value * Factorial(Value - 1)
+end;
+
+function MakeCounter(Start: integer): function(): integer;
+begin
+  mutable var Current: integer := Start;
+  return function(): integer begin
+    Current := Current + 1;
+    return Current
+  end
+end;
+
+begin
+  var Origin: Point := record
+    X := 3;
+    Y := 4;
+  end;
+  var Counter: function(): integer := MakeCounter(10);
+  var Values: array of integer := [Origin.X, Origin.Y, Factorial(4)];
+  WriteLn(Values);
+  WriteLn(Counter())
+end.

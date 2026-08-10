@@ -2,6 +2,7 @@
 
 mod allocation;
 mod blocks;
+mod debug;
 mod metadata;
 mod selection;
 
@@ -16,6 +17,7 @@ use crate::error::internal_compiler_error;
 
 use self::allocation::Allocation;
 use self::blocks::BlockLayout;
+use self::debug::compile_debug_info;
 use self::metadata::MetadataBuilder;
 use self::selection::{Selector, abc, abx};
 
@@ -130,12 +132,28 @@ fn compile_function(
     let code_start = InstructionAddress::try_from_index(code.len())
         .map_err(|error| compile_error(&error.to_string()))?;
     let selector = Selector::new(program, function, &allocation);
+    let mut debug_points = Vec::new();
     for (index, block) in function.blocks.iter().enumerate() {
         let mut source = None;
-        for instruction in &block.instructions {
+        for (instruction_index, instruction) in block.instructions.iter().enumerate() {
             source = instruction.source.or(source);
+            let selected_start = code.len();
             for selected in selector.select(instruction, metadata)? {
                 emit(code, metadata, instruction.source, selected)?;
+            }
+            if code.len() > selected_start
+                && function
+                    .debug
+                    .sequence_points
+                    .iter()
+                    .any(|point| point.block == block.id && point.instruction == instruction_index)
+            {
+                debug_points.push((
+                    block.id,
+                    instruction_index,
+                    InstructionAddress::try_from_index(selected_start)
+                        .map_err(|error| compile_error(&error.to_string()))?,
+                ));
             }
         }
         let terminator = block
@@ -168,6 +186,7 @@ fn compile_function(
     } else {
         ReturnConvention::Value
     };
+    let debug = compile_debug_info(program, function, &allocation, &debug_points, metadata)?;
     Ok(FunctionInfo {
         name,
         code: CodeRange::new(code_start, code_end),
@@ -178,6 +197,7 @@ fn compile_function(
         flags: FunctionFlags {
             uses_spawn_tasks: function.can_spawn_tasks,
         },
+        debug,
     })
 }
 

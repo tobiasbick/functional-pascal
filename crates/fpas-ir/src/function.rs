@@ -1,6 +1,6 @@
 //! Function, local, capture, and basic-block IR structures.
 
-use crate::{BlockId, FunctionId, LocalId, TypeId, ValueId};
+use crate::{BlockId, FunctionDebugInfo, FunctionId, LocalId, TypeId, ValueId};
 
 /// A typed IR function in deterministic basic-block order.
 #[derive(Debug, Clone, PartialEq)]
@@ -17,6 +17,8 @@ pub struct Function {
     pub locals: Vec<Local>,
     /// Ordered closure capture declarations.
     pub captures: Vec<CaptureDeclaration>,
+    /// Source-level debugger metadata kept outside operational instructions.
+    pub debug: FunctionDebugInfo,
     /// Basic blocks in deterministic reverse-postorder.
     pub blocks: Vec<BasicBlock>,
     /// Function-local entry block.

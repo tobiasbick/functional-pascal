@@ -2,8 +2,11 @@
 
 use std::collections::HashMap;
 
-use fpas_bytecode::{InstructionAddress, SourceId, SourceMap, SourceRun};
-use fpas_unit::object::RelocatableObject;
+use fpas_bytecode::{
+    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
+    InstructionAddress, Register, SequencePoint, SourceId, SourceMap, SourceRun,
+};
+use fpas_unit::object::{ObjectDebugBindingKind, ObjectDebugLocation, RelocatableObject};
 
 use crate::LinkError;
 use crate::strings::StringInterner;
@@ -14,10 +17,11 @@ pub(super) fn merge(
     code_starts: &[u32],
     code_bases: &[u32],
     strings: &mut StringInterner,
-) -> Result<SourceMap, LinkError> {
+) -> Result<(SourceMap, Vec<FunctionDebugInfo>), LinkError> {
     let mut source_paths = Vec::new();
     let mut source_ids = HashMap::<String, SourceId>::new();
     let mut runs = Vec::new();
+    let mut function_debug = Vec::with_capacity(function_order.len());
     for (final_index, (object_index, function_index)) in function_order.iter().copied().enumerate()
     {
         let object = objects[object_index];
@@ -59,10 +63,109 @@ pub(super) fn merge(
                 column: run.column,
             });
         }
+        function_debug.push(merge_debug(
+            object,
+            function,
+            code_bases[final_index],
+            &mut source_paths,
+            &mut source_ids,
+            strings,
+        )?);
     }
-    Ok(SourceMap {
-        sources: source_paths,
-        runs,
+    Ok((
+        SourceMap {
+            sources: source_paths,
+            runs,
+        },
+        function_debug,
+    ))
+}
+
+fn merge_debug(
+    object: &RelocatableObject,
+    function: &fpas_unit::object::ObjectFunction,
+    code_base: u32,
+    source_paths: &mut Vec<fpas_bytecode::StringId>,
+    source_ids: &mut HashMap<String, SourceId>,
+    strings: &mut StringInterner,
+) -> Result<FunctionDebugInfo, LinkError> {
+    let scopes = function
+        .debug
+        .scopes
+        .iter()
+        .map(|scope| DebugScope {
+            id: scope.id,
+            parent: scope.parent,
+        })
+        .collect();
+    let bindings = function
+        .debug
+        .bindings
+        .iter()
+        .map(|binding| {
+            Ok(DebugBinding {
+                name: strings.intern(&binding.name)?,
+                type_name: strings.intern(&binding.type_name)?,
+                register: Register::new(binding.register)
+                    .map_err(|_| LinkError::Overflow("debug binding register"))?,
+                kind: match binding.kind {
+                    ObjectDebugBindingKind::Parameter => DebugBindingKind::Parameter,
+                    ObjectDebugBindingKind::Local => DebugBindingKind::Local,
+                    ObjectDebugBindingKind::Capture => DebugBindingKind::Capture,
+                },
+                mutable: binding.mutable,
+                scope: binding.scope,
+                declaration: binding
+                    .declaration
+                    .map(|location| {
+                        merge_location(object, location, source_paths, source_ids, strings)
+                    })
+                    .transpose()?,
+                hidden: binding.hidden,
+                cell_backed: binding.cell_backed,
+            })
+        })
+        .collect::<Result<Vec<_>, LinkError>>()?;
+    let sequence_points = function
+        .debug
+        .sequence_points
+        .iter()
+        .map(|point| {
+            Ok(SequencePoint {
+                instruction: InstructionAddress::new(
+                    code_base
+                        .checked_add(point.instruction_start)
+                        .ok_or(LinkError::Overflow("debug sequence point address"))?,
+                ),
+                location: merge_location(
+                    object,
+                    point.location,
+                    source_paths,
+                    source_ids,
+                    strings,
+                )?,
+                scope: point.scope,
+            })
+        })
+        .collect::<Result<Vec<_>, LinkError>>()?;
+    Ok(FunctionDebugInfo {
+        scopes,
+        bindings,
+        sequence_points,
+    })
+}
+
+fn merge_location(
+    object: &RelocatableObject,
+    location: ObjectDebugLocation,
+    source_paths: &mut Vec<fpas_bytecode::StringId>,
+    source_ids: &mut HashMap<String, SourceId>,
+    strings: &mut StringInterner,
+) -> Result<DebugSourceLocation, LinkError> {
+    Ok(DebugSourceLocation {
+        source: intern_source(object, location.source, source_paths, source_ids, strings)?,
+        line: location.line,
+        column: location.column,
     })
 }
 

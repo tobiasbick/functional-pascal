@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { LanguageClientController } from "./languageClient";
+import { registerDebugger } from "./debugger/adapter";
 import { WorkflowController, WORKFLOW_COMMANDS } from "./workflow/controller";
 import type { WorkflowTestStatus } from "./workflow/model";
 import type { ParsedWorkflowDiagnostic } from "./workflow/model";
@@ -58,6 +59,7 @@ export async function activate(
   outputChannel.appendLine(ACTIVATION_MESSAGE);
   languageClient = new LanguageClientController(context, outputChannel);
   const workflow = new WorkflowController(context, outputChannel);
+  registerDebugger(context);
   const workflowApi = {
     commands: Object.values(WORKFLOW_COMMANDS),
     cliPath: () => workflow.cliPath(),

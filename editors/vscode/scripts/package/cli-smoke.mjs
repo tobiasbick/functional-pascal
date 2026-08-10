@@ -73,10 +73,24 @@ export function smokePackagedCli({
     );
     assert.equal(tested.status, 0, tested.stderr);
     assert.equal(JSON.parse(tested.stdout).tests[0].status, "pass");
+
+    const commands = path.join(projectRoot, "debug.jsonl");
+    writeFileSync(
+      commands,
+      '{"type":"request","id":1,"command":"initialize","arguments":{}}\n{"type":"request","id":2,"command":"launch","arguments":{"stop_on_entry":false}}\n'
+    );
+    const debugged = invoke(
+      cli,
+      ["debug", manifest, "--protocol", "jsonl", "--commands", commands, "--report", "jsonl", "--std-lib", standardLibrary],
+      projectRoot
+    );
+    assert.equal(debugged.status, 0, debugged.stderr);
+    const debugRecords = debugged.stdout.trim().split(/\r?\n/u).map(JSON.parse);
+    assert.ok(debugRecords.some((record) => record.event === "terminated"));
   } finally {
     rmSync(temporaryRoot, { recursive: true, force: true });
   }
-  console.log("Packaged CLI check and test verification passed.");
+  console.log("Packaged CLI check, test, and debugger verification passed.");
 }
 
 function invoke(executable, args, cwd) {

@@ -20,6 +20,7 @@ mod aggregates;
 mod closures;
 mod concurrency;
 mod control_flow;
+mod debug;
 mod diagnostics;
 mod functions;
 mod intrinsics;

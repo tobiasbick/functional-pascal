@@ -7,7 +7,7 @@ use std::fmt;
 
 use fpas_bytecode::{StringId, StringTable, ValidationError, VerifiedExecutable};
 
-use crate::ProgramIdentity;
+use crate::{Digest, ProgramIdentity};
 
 use self::limits::validate_identity_resources;
 
@@ -29,6 +29,13 @@ pub enum ImageError {
     SourcePathCount {
         /// Number of paths supplied by the image.
         paths: usize,
+        /// Number of source identifiers used by the executable.
+        sources: usize,
+    },
+    /// The source digest table has the wrong length.
+    SourceHashCount {
+        /// Number of digests supplied by the image.
+        hashes: usize,
         /// Number of source identifiers used by the executable.
         sources: usize,
     },
@@ -71,6 +78,7 @@ impl std::error::Error for ImageError {}
 pub struct ProgramImage {
     identity: ProgramIdentity,
     source_paths: Vec<String>,
+    source_hashes: Vec<Digest>,
     executable: VerifiedExecutable,
 }
 
@@ -85,22 +93,39 @@ impl ProgramImage {
     pub fn new(
         mut identity: ProgramIdentity,
         source_paths: Vec<String>,
+        source_hashes: Vec<Digest>,
         executable: VerifiedExecutable,
     ) -> Result<Self, ImageError> {
         canonicalize_units(&mut identity);
         validate_identity(&identity)?;
         validate_source_paths(&source_paths)?;
+        validate_source_hash_count(source_hashes.len(), source_paths.len())?;
         validate_identity_resources(&identity)?;
-        let (executable, source_paths) = install_source_paths(executable, &source_paths)?;
+        let (executable, selected_paths) = install_source_paths(executable, &source_paths)?;
+        let selected_hashes = selected_paths
+            .iter()
+            .map(|path| {
+                source_paths
+                    .iter()
+                    .position(|candidate| candidate == path)
+                    .map(|index| source_hashes[index])
+                    .ok_or(ImageError::SourcePathCount {
+                        paths: source_paths.len(),
+                        sources: selected_paths.len(),
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         Ok(Self {
             identity,
-            source_paths,
+            source_paths: selected_paths,
+            source_hashes: selected_hashes,
             executable,
         })
     }
 
     pub(crate) fn from_decoded(
         mut identity: ProgramIdentity,
+        source_hashes: Vec<Digest>,
         executable: VerifiedExecutable,
     ) -> Result<Self, ImageError> {
         canonicalize_units(&mut identity);
@@ -121,9 +146,11 @@ impl ProgramImage {
             })
             .collect::<Vec<_>>();
         validate_source_paths(&source_paths)?;
+        validate_source_hash_count(source_hashes.len(), source_paths.len())?;
         Ok(Self {
             identity,
             source_paths,
+            source_hashes,
             executable,
         })
     }
@@ -138,6 +165,12 @@ impl ProgramImage {
     #[must_use]
     pub fn source_paths(&self) -> &[String] {
         &self.source_paths
+    }
+
+    /// Return source-content digests indexed by bytecode source identifiers.
+    #[must_use]
+    pub fn source_hashes(&self) -> &[Digest] {
+        &self.source_hashes
     }
 
     /// Return the verified register executable.
@@ -163,8 +196,16 @@ impl ProgramImage {
                 sources: actual,
             });
         }
+        validate_source_hash_count(self.source_hashes.len(), actual)?;
         Ok(())
     }
+}
+
+fn validate_source_hash_count(hashes: usize, sources: usize) -> Result<(), ImageError> {
+    if hashes != sources {
+        return Err(ImageError::SourceHashCount { hashes, sources });
+    }
+    Ok(())
 }
 
 fn canonicalize_units(identity: &mut ProgramIdentity) {

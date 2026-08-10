@@ -1,3 +1,4 @@
+mod debug;
 mod executable;
 mod function;
 mod instruction;
@@ -8,6 +9,10 @@ mod operand;
 mod validate;
 mod value;
 
+pub use debug::{
+    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
+    SequencePoint,
+};
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
 pub use function::{CodeRange, FunctionFlags, FunctionInfo, ReturnConvention};
@@ -35,4 +40,4 @@ pub use value::{
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 10;
+pub const BYTECODE_VERSION: u32 = 11;

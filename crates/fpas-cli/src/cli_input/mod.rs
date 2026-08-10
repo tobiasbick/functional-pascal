@@ -9,12 +9,13 @@ mod options;
 mod types;
 
 use std::path::Path;
+use std::time::Duration;
 
 pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
 pub(crate) use types::{
-    BuildCliConfig, CliConfig, CliInput, FmtCliConfig, HelpTopic, ResolvedCli, TestCliConfig,
-    TestReportFormat,
+    BuildCliConfig, CliConfig, CliInput, DebugCliConfig, DebugProtocol, FmtCliConfig, HelpTopic,
+    ResolvedCli, TestCliConfig, TestReportFormat,
 };
 
 use mode::{
@@ -32,6 +33,7 @@ pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput,
     match resolve_cli_config(args, cwd)? {
         ResolvedCli::Build(config) => Ok(config.input),
         ResolvedCli::Run(config) | ResolvedCli::Check(config) => Ok(config.input),
+        ResolvedCli::Debug(config) => Ok(config.input),
         ResolvedCli::Fmt(_) => {
             Err("resolve_cli_input: use resolve_cli_config for `fpas fmt`".to_string())
         }
@@ -61,13 +63,14 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let (mode, cli_args) = parse_cli_mode(cli_args)?;
 
-    if mode != CliMode::Run && !program_args.is_empty() {
+    if !matches!(mode, CliMode::Run | CliMode::Debug) && !program_args.is_empty() {
         let cmd = match mode {
             CliMode::Build => "fpas build",
             CliMode::Check => "fpas check",
             CliMode::Fmt => "fpas fmt",
             CliMode::Test => "fpas test",
             CliMode::Run => unreachable!(),
+            CliMode::Debug => unreachable!(),
         };
         return Err(format!(
             "`{cmd}` does not accept program arguments after `--`.\n  help: Omit `--` and trailing program arguments."
@@ -139,6 +142,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                     "Pass a project or workspace path after `fpas build`, or use `fpas build --help`."
                 }
                 CliMode::Run => "Pass a source or project path after `fpas run`, or `fpas --help`.",
+                CliMode::Debug => {
+                    "Pass a debug target after `fpas debug`, or use `fpas debug --help`."
+                }
                 CliMode::Check => {
                     "Pass a source or project path after `fpas check`, or `fpas --help`."
                 }
@@ -176,6 +182,21 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             input,
             program_args,
             standard_library: options.standard_library,
+        }),
+        CliMode::Debug => ResolvedCli::Debug(DebugCliConfig {
+            cwd: cwd.to_path_buf(),
+            input,
+            program_args,
+            standard_library: options.standard_library,
+            protocol: options.debug_protocol.ok_or_else(|| {
+                "Missing `--protocol`.\n  help: Use `fpas debug <target> --protocol jsonl`."
+                    .to_string()
+            })?,
+            commands: options.commands,
+            source_root: options.source_root,
+            timeout: options.timeout.unwrap_or(Duration::from_secs(300)),
+            instruction_limit: options.instruction_limit.unwrap_or(100_000_000),
+            output_limit: options.output_limit.unwrap_or(1_048_576),
         }),
         CliMode::Check => ResolvedCli::Check(CliConfig {
             input,

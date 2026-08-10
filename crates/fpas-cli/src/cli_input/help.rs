@@ -8,6 +8,7 @@ fpas — Functional Pascal compiler
 Usage:
     fpas build [<path>]                   Build project artifacts
     fpas run [<path>] [-- <args>...]     Run a source, project, workspace, or image
+    fpas debug [<path>] --protocol <p>   Debug through JSONL or DAP
     fpas check [<path>]                  Type-check without running
     fpas test [<path>]                   Run `*_test.fpas` programs
     fpas fmt [<path>...]                 Format sources in place
@@ -21,6 +22,7 @@ Run `fpas <command> --help` for command-specific options and examples.
 Examples:
   fpas build my-app.fpasprj
   fpas run hello.fpas
+  fpas debug hello.fpas --protocol jsonl
   fpas check my-app.fpasprj
   fpas test --report json tests/
   fpas fmt --check --list
@@ -98,6 +100,33 @@ Examples:
 
 ";
 
+const DEBUG_HELP: &str = "\
+Debug a Functional Pascal source, project, workspace, or compiled program.
+
+Usage:
+  fpas debug [<target>] --protocol <jsonl | dap> [options] [-- <args>...]
+
+JSONL live mode reads requests from stdin. `--commands` reads the same protocol
+from a file. Direct `.fpascp` input requires `--source-root` so embedded source
+identities can be verified before launch.
+
+Options:
+  --protocol <jsonl | dap>       Select the external debugger protocol
+  --commands <path>              Read deterministic JSONL commands from a file
+  --source-root <dir>            Root containing sources for a compiled image
+  --timeout <secs>               Resume timeout (default: 300)
+  --instruction-limit <count>    Session instruction limit (default: 100000000)
+  --output-limit <bytes>         Captured output limit (default: 1048576)
+  --std-lib <dir>                Replace the complete source standard library
+  -h, --help                     Print this help
+
+Examples:
+  fpas debug hello.fpas --protocol jsonl
+  fpas debug app.fpasprj --protocol jsonl --commands session.jsonl --report jsonl
+  fpas debug app.fpascp --source-root . --protocol jsonl
+
+";
+
 const FMT_HELP: &str = "\
 Format Functional Pascal sources.
 
@@ -156,6 +185,7 @@ pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
         HelpTopic::General => GENERAL_HELP,
         HelpTopic::Build => BUILD_HELP,
         HelpTopic::Run => RUN_HELP,
+        HelpTopic::Debug => DEBUG_HELP,
         HelpTopic::Check => CHECK_HELP,
         HelpTopic::Fmt => FMT_HELP,
         HelpTopic::Test => TEST_HELP,

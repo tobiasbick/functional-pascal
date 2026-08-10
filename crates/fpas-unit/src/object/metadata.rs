@@ -72,3 +72,79 @@ pub struct ObjectSourceRun {
     /// One-based column.
     pub column: u32,
 }
+
+/// Complete relocatable debugger metadata for one object function.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectFunctionDebugInfo {
+    /// Dense lexical scope tree.
+    pub scopes: Vec<ObjectDebugScope>,
+    /// Source-visible register bindings.
+    pub bindings: Vec<ObjectDebugBinding>,
+    /// Ordered function-local sequence points.
+    pub sequence_points: Vec<ObjectSequencePoint>,
+}
+
+/// One function-local lexical scope.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectDebugScope {
+    /// Dense scope identifier.
+    pub id: u32,
+    /// Parent scope, absent only for the root.
+    pub parent: Option<u32>,
+}
+
+/// Source-level role of an object debug binding.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ObjectDebugBindingKind {
+    /// Explicit routine parameter.
+    Parameter,
+    /// Lexically declared local variable.
+    Local,
+    /// Captured value.
+    Capture,
+}
+
+/// Relocatable source location using an object-local source ID.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectDebugLocation {
+    /// Object-local source path index.
+    pub source: u32,
+    /// One-based line.
+    pub line: u32,
+    /// One-based column.
+    pub column: u32,
+}
+
+/// Source-visible object binding backed by a function-local register.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectDebugBinding {
+    /// Source name.
+    pub name: String,
+    /// Portable display type.
+    pub type_name: String,
+    /// Function-local register.
+    pub register: u16,
+    /// Source-level role.
+    pub kind: ObjectDebugBindingKind,
+    /// Whether source semantics permit reassignment.
+    pub mutable: bool,
+    /// Lexical scope identifier.
+    pub scope: u32,
+    /// Declaration location when available.
+    pub declaration: Option<ObjectDebugLocation>,
+    /// Whether compiler-generated storage is hidden from normal scopes.
+    pub hidden: bool,
+    /// Whether the register stores a mutable capture cell.
+    pub cell_backed: bool,
+}
+
+/// A function-local debugger sequence point.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectSequencePoint {
+    /// Function-local instruction index.
+    pub instruction_start: u32,
+    /// Source location represented by the point.
+    pub location: ObjectDebugLocation,
+    /// Innermost active lexical scope.
+    pub scope: u32,
+}

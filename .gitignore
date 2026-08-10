@@ -6,7 +6,7 @@ target/
 *.fpascp.lock
 # Alternate CARGO_TARGET_DIR worktrees (e.g. CI/agent local runs)
 /target-*/
-debug/
+/debug/
 **/*.rs.bk
 *.pdb
 

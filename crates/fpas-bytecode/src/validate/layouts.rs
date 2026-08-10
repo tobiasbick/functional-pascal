@@ -60,6 +60,10 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
     }
     for function in &executable.functions {
         validate_string(executable, function.name, "function name")?;
+        for binding in &function.debug.bindings {
+            validate_string(executable, binding.name, "debug binding name")?;
+            validate_string(executable, binding.type_name, "debug binding type")?;
+        }
     }
     for record in &executable.records {
         validate_string(executable, record.name, "record name")?;

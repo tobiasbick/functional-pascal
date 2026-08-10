@@ -40,6 +40,7 @@ pub fn root(blocks: Vec<BasicBlock>) -> Function {
             },
         ],
         captures: Vec::new(),
+        debug: fpas_ir::FunctionDebugInfo::default(),
         blocks,
         entry: BlockId::new(0),
         max_call_arguments: 1,
@@ -198,6 +199,7 @@ pub fn all_operations_program() -> Program {
         parameters: vec![value(100, INTEGER)],
         locals: Vec::new(),
         captures: Vec::new(),
+        debug: fpas_ir::FunctionDebugInfo::default(),
         blocks: vec![BasicBlock {
             id: BlockId::new(10),
             parameters: Vec::new(),

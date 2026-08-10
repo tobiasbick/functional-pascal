@@ -7,6 +7,7 @@ use fpas_bytecode::{
     VerifiedExecutable,
 };
 
+use super::debug::{self, DebugCounts};
 use super::sections::{
     DecodedSection, EncodedSection, SectionReader, TAGS, write_i64, write_u8, write_u16, write_u32,
     write_u64,
@@ -440,6 +441,7 @@ fn encode_functions(executable: &Executable) -> Result<EncodedSection, FormatErr
             0
         };
         write_u16(&mut bytes, flags);
+        debug::encode(&mut bytes, &function.debug)?;
     }
     Ok(EncodedSection {
         tag: TAGS[6],
@@ -456,6 +458,7 @@ fn decode_functions(section: DecodedSection<'_>) -> Result<Vec<FunctionInfo>, Fo
     )?;
     let mut reader = SectionReader::new(section.bytes, "function section");
     let mut functions = Vec::with_capacity(section.item_count);
+    let mut debug_counts = DebugCounts::default();
     for _ in 0..section.item_count {
         let name = StringId::new(reader.u32("function_name")?);
         let start = InstructionAddress::new(reader.u32("function_code_start")?);
@@ -490,6 +493,7 @@ fn decode_functions(section: DecodedSection<'_>) -> Result<Vec<FunctionInfo>, Fo
             flags: FunctionFlags {
                 uses_spawn_tasks: flags & FUNCTION_USES_SPAWN_TASKS != 0,
             },
+            debug: debug::decode(&mut reader, &mut debug_counts)?,
         });
     }
     reader.finish()?;

@@ -11,6 +11,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
+| Debugging | [Deferred debugger scope](debugger/README.md) | Explicitly postponed debugger capabilities and their re-entry gates |
 
 ## Architecture records and development intake
 

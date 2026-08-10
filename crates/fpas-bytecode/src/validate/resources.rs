@@ -47,6 +47,28 @@ pub(super) fn validate_resources(executable: &crate::Executable) -> Result<(), V
         executable.source_map.runs.len(),
         limits::MAX_SOURCE_RUNS,
     )?;
+    let debug_scopes = executable
+        .functions
+        .iter()
+        .map(|function| function.debug.scopes.len())
+        .sum();
+    limit("debug scopes", debug_scopes, limits::MAX_DEBUG_SCOPES)?;
+    let debug_bindings = executable
+        .functions
+        .iter()
+        .map(|function| function.debug.bindings.len())
+        .sum();
+    limit("debug bindings", debug_bindings, limits::MAX_DEBUG_BINDINGS)?;
+    let debug_points = executable
+        .functions
+        .iter()
+        .map(|function| function.debug.sequence_points.len())
+        .sum();
+    limit(
+        "debug sequence points",
+        debug_points,
+        limits::MAX_DEBUG_SEQUENCE_POINTS,
+    )?;
 
     let mut string_bytes = 0_usize;
     for value in executable.strings.iter() {

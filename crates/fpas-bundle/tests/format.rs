@@ -20,6 +20,7 @@ fn encoded_program() -> Vec<u8> {
             units: Vec::new(),
         },
         vec!["main.fpas".to_string()],
+        vec![Digest::of(b"source")],
         executable,
     )
     .expect("test image must be valid");
@@ -163,6 +164,6 @@ fn bundle_format_matches_golden_bytes() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bundled)),
-        "db18d5a3d52741f4ab43ea2f62895ba1244afb5277afc159d956b6153ac83c94"
+        "f2a30d185e888e158486907ef7bfa02fb1aacf89eeb1480f16c5065330b3d8bd"
     );
 }

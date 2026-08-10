@@ -14,6 +14,28 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-10 — after debugger metadata and controlled session
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 5189 | throughput: 9635767 iters/s |
+| global_access | 459 | throughput: 10893246 global updates/s |
+| record_field_access | 1537 | throughput: 7807417 field accesses/s |
+| closure_call | 378 | throughput: 7936507 closure calls/s |
+| branch_dispatch | 2677 | throughput: 7471049 branches/s |
+| dynamic_numeric | 690 | throughput: 7246376 dynamic numeric ops/s |
+| array_push | 171 | throughput: 11695906 pushes/s |
+| array_length | 75 | throughput: 6666666 lengths/s |
+| string_concat | 2142 | throughput: 2334267 concats/s |
+| string_length | 68 | throughput: 7352941 lengths/s |
+| function_call | 550 | throughput: 10909090 calls/s |
+| array_callbacks | 717 | throughput: 13389121 callbacks/s |
+| record_update | 396 | throughput: 2525252 updates/s |
+| unicode_char_at | 1184 | throughput: 2533783 chars/s |
+
 ## 2026-08-09 — quiet portable register VM acceptance
 
 - Group: `all`

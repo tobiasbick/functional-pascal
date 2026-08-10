@@ -2,6 +2,7 @@
 
 mod calls;
 mod control_flow;
+mod debug;
 mod instruction;
 mod layouts;
 mod resources;
@@ -280,6 +281,36 @@ pub enum ValidationErrorKind {
         /// Whether a spawn operation was emitted.
         emitted: bool,
     },
+    /// A debugger scope identifier or parent is invalid.
+    DebugScope {
+        /// Invalid scope identifier.
+        actual: u32,
+        /// Number of available scopes.
+        scopes: usize,
+    },
+    /// A debugger binding register is outside its function frame.
+    DebugBindingRegister {
+        /// Invalid register.
+        actual: u16,
+        /// Exclusive valid register count.
+        registers: u16,
+    },
+    /// Debugger sequence points are unordered or duplicated.
+    DebugSequenceOrder {
+        /// Previous instruction address.
+        previous: u32,
+        /// Current instruction address.
+        actual: u32,
+    },
+    /// A debugger sequence point is outside its function code range.
+    DebugSequenceAddress {
+        /// Invalid instruction address.
+        actual: u32,
+        /// Inclusive function start.
+        start: u32,
+        /// Exclusive function end.
+        end: u32,
+    },
 }
 
 impl fmt::Display for ValidationError {
@@ -308,6 +339,7 @@ pub(super) fn validate(executable: &crate::Executable) -> Result<(), ValidationE
     layouts::validate_tables(executable)?;
     control_flow::validate_functions(executable)?;
     source_map::validate_source_map(executable)?;
+    debug::validate_debug_info(executable)?;
     Ok(())
 }
 

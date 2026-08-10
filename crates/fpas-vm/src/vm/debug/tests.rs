@@ -1,0 +1,439 @@
+//! Focused controlled-execution tests independent from protocol adapters.
+
+use fpas_bytecode::{
+    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
+    Executable, FunctionDebugInfo, FunctionFlags, FunctionId, FunctionInfo, GlobalInfo,
+    Instruction, InstructionAddress, Intrinsic, NO_REGISTER, Opcode, Register, ReturnConvention,
+    SequencePoint, SourceId, SourceMap, SourceRun, StringId, StringTable, TimeIntrinsic,
+    VerifiedExecutable,
+};
+
+use super::{
+    DebugErrorKind, DebugInspectionLimits, DebugRunResult, DebugSession, DebugSessionState,
+    DebugStopReason, SourceBreakpoint,
+};
+
+fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
+    Instruction::abc(opcode, a, b, c, 0).expect("ABC instruction")
+}
+
+fn abc_aux(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
+    Instruction::abc(opcode, a, b, c, auxiliary).expect("ABC instruction")
+}
+
+fn point(instruction: u32, line: u32) -> SequencePoint {
+    point_at(instruction, line, 3)
+}
+
+fn point_at(instruction: u32, line: u32, column: u32) -> SequencePoint {
+    SequencePoint {
+        instruction: InstructionAddress::new(instruction),
+        location: DebugSourceLocation {
+            source: SourceId::new(0),
+            line,
+            column,
+        },
+        scope: 0,
+    }
+}
+
+fn same_line_executable() -> VerifiedExecutable {
+    let mut metadata = debug(&[]);
+    metadata.sequence_points = vec![point_at(0, 1, 3), point_at(1, 1, 20)];
+    executable(
+        vec![
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![function("root", 0, 3, 1, metadata)],
+        Vec::new(),
+        vec![(0, 1)],
+    )
+}
+
+fn loop_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            Instruction::abx(Opcode::Jump, 0, 0).expect("jump"),
+        ],
+        vec![function("root", 0, 2, 1, debug(&[(0, 1)]))],
+        Vec::new(),
+        vec![(0, 1)],
+    )
+}
+
+fn blocking_intrinsic_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("sleep duration"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                NO_REGISTER,
+                u16::from(Intrinsic::Time(TimeIntrinsic::Sleep)),
+                0,
+                1,
+            )
+            .expect("sleep intrinsic"),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![function("root", 0, 4, 1, debug(&[(0, 1), (2, 2)]))],
+        vec![Constant::Integer(30)],
+        vec![(0, 1), (2, 2)],
+    )
+}
+
+fn recursive_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            abc(Opcode::CallDirect, NO_REGISTER, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![function("root", 0, 2, 0, debug(&[(0, 1)]))],
+        Vec::new(),
+        vec![(0, 1)],
+    )
+}
+
+fn debug(points: &[(u32, u32)]) -> FunctionDebugInfo {
+    FunctionDebugInfo {
+        scopes: vec![DebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: Vec::new(),
+        sequence_points: points
+            .iter()
+            .map(|(instruction, line)| point(*instruction, *line))
+            .collect(),
+    }
+}
+
+fn call_executable() -> VerifiedExecutable {
+    let code = vec![
+        abc(Opcode::LoadUnit, 0, 0, 0),
+        abc(Opcode::CallDirect, NO_REGISTER, 1, 0),
+        abc(Opcode::LoadUnit, 0, 0, 0),
+        abc(Opcode::Return, NO_REGISTER, 0, 0),
+        abc(Opcode::LoadUnit, 0, 0, 0),
+        abc(Opcode::Return, NO_REGISTER, 0, 0),
+    ];
+    executable(
+        code,
+        vec![
+            function("root", 0, 4, 1, debug(&[(0, 1), (1, 2), (2, 3)])),
+            function("helper", 4, 6, 1, debug(&[(4, 10), (5, 11)])),
+        ],
+        Vec::new(),
+        vec![(0, 1), (4, 10)],
+    )
+}
+
+fn panic_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("constant"),
+            abc(Opcode::Panic, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![function("root", 0, 3, 1, debug(&[(0, 1), (1, 2)]))],
+        vec![Constant::String(StringId::new(3))],
+        vec![(0, 1)],
+    )
+}
+
+fn panic_without_sequence_point_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("constant"),
+            abc(Opcode::Panic, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![function("root", 0, 3, 1, FunctionDebugInfo::default())],
+        vec![Constant::String(StringId::new(3))],
+        vec![(0, 1)],
+    )
+}
+
+fn task_executable() -> VerifiedExecutable {
+    let mut root = function("root", 0, 3, 1, debug(&[(0, 1)]));
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
+            abc(Opcode::SpawnDetachedTask, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![root, function("task", 3, 4, 0, debug(&[(3, 10)]))],
+        vec![Constant::Function {
+            function: FunctionId::new(1),
+            task_bound: false,
+        }],
+        vec![(0, 1), (3, 10)],
+    )
+}
+
+fn unreachable_task_executable() -> VerifiedExecutable {
+    let mut spawner = function("spawner", 1, 4, 1, debug(&[(1, 10)]));
+    spawner.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
+            abc(Opcode::SpawnDetachedTask, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![
+            function("root", 0, 1, 0, debug(&[(0, 1)])),
+            spawner,
+            function("task", 4, 5, 0, debug(&[(4, 20)])),
+        ],
+        vec![Constant::Function {
+            function: FunctionId::new(2),
+            task_bound: false,
+        }],
+        vec![(0, 1), (1, 10), (4, 20)],
+    )
+}
+
+fn inspection_executable() -> VerifiedExecutable {
+    let strings = StringTable::new(
+        [
+            "root",
+            "helper",
+            "test.fpas",
+            "boom",
+            "Answer",
+            "Inner",
+            "Outside",
+            "$hidden",
+            "Integer",
+            "Text",
+            "G",
+            "Value",
+            "Items",
+            "array of Integer",
+        ]
+        .into_iter()
+        .map(str::to_string)
+        .collect(),
+    );
+    let location = |line| DebugSourceLocation {
+        source: SourceId::new(0),
+        line,
+        column: 3,
+    };
+    let binding = |name, register, scope, hidden| DebugBinding {
+        name: StringId::new(name),
+        type_name: StringId::new(8),
+        register: Register::new(register).expect("register"),
+        kind: DebugBindingKind::Local,
+        mutable: false,
+        scope,
+        declaration: Some(location(1)),
+        hidden,
+        cell_backed: false,
+    };
+    let root_debug = FunctionDebugInfo {
+        scopes: vec![
+            DebugScope {
+                id: 0,
+                parent: None,
+            },
+            DebugScope {
+                id: 1,
+                parent: Some(0),
+            },
+            DebugScope {
+                id: 2,
+                parent: Some(0),
+            },
+        ],
+        bindings: vec![
+            binding(4, 0, 0, false),
+            DebugBinding {
+                type_name: StringId::new(9),
+                ..binding(5, 1, 1, false)
+            },
+            binding(4, 1, 1, false),
+            binding(6, 4, 2, false),
+            binding(7, 4, 1, true),
+            DebugBinding {
+                name: StringId::new(12),
+                type_name: StringId::new(13),
+                register: Register::new(2).expect("register"),
+                kind: DebugBindingKind::Local,
+                mutable: false,
+                scope: 1,
+                declaration: Some(location(3)),
+                hidden: false,
+                cell_backed: false,
+            },
+        ],
+        sequence_points: vec![
+            point(0, 1),
+            SequencePoint {
+                instruction: InstructionAddress::new(6),
+                location: location(4),
+                scope: 1,
+            },
+        ],
+    };
+    let helper_debug = FunctionDebugInfo {
+        scopes: vec![DebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: vec![DebugBinding {
+            name: StringId::new(11),
+            type_name: StringId::new(8),
+            register: Register::new(0).expect("register"),
+            kind: DebugBindingKind::Parameter,
+            mutable: false,
+            scope: 0,
+            declaration: Some(location(10)),
+            hidden: false,
+            cell_backed: false,
+        }],
+        sequence_points: vec![point(8, 10)],
+    };
+    Executable {
+        code: vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("integer constant"),
+            Instruction::abx(Opcode::StoreGlobal, 0, 0).expect("global store"),
+            Instruction::abx(Opcode::LoadConstant, 1, 1).expect("string constant"),
+            Instruction::abx(Opcode::LoadConstant, 3, 2).expect("array value"),
+            Instruction::abx(Opcode::LoadConstant, 4, 3).expect("array value"),
+            abc(Opcode::MakeArray, 2, 3, 2),
+            abc_aux(Opcode::CallDirect, NO_REGISTER, 1, 0, 1),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        functions: vec![
+            FunctionInfo {
+                name: StringId::new(0),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(8)),
+                arity: 0,
+                capture_count: 0,
+                register_count: 5,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
+                debug: root_debug,
+            },
+            FunctionInfo {
+                name: StringId::new(1),
+                code: CodeRange::new(InstructionAddress::new(8), InstructionAddress::new(9)),
+                arity: 1,
+                capture_count: 0,
+                register_count: 1,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
+                debug: helper_debug,
+            },
+        ],
+        constants: vec![
+            Constant::Integer(42),
+            Constant::String(StringId::new(3)),
+            Constant::Integer(1),
+            Constant::Integer(2),
+        ],
+        strings,
+        globals: vec![GlobalInfo {
+            name: StringId::new(10),
+            mutable: true,
+        }],
+        records: Vec::new(),
+        enums: Vec::new(),
+        enum_variants: Vec::new(),
+        source_map: SourceMap {
+            sources: vec![StringId::new(2)],
+            runs: vec![
+                SourceRun {
+                    instruction_start: InstructionAddress::new(0),
+                    source: SourceId::new(0),
+                    line: 1,
+                    column: 3,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(8),
+                    source: SourceId::new(0),
+                    line: 10,
+                    column: 3,
+                },
+            ],
+        },
+        entry: FunctionId::new(0),
+    }
+    .verify()
+    .expect("inspection executable")
+}
+
+fn function(
+    name: &str,
+    start: u32,
+    end: u32,
+    registers: u16,
+    debug: FunctionDebugInfo,
+) -> FunctionInfo {
+    FunctionInfo {
+        name: StringId::new(if name == "root" { 0 } else { 1 }),
+        code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),
+        arity: 0,
+        capture_count: 0,
+        register_count: registers,
+        return_convention: ReturnConvention::Unit,
+        flags: FunctionFlags::default(),
+        debug,
+    }
+}
+
+fn executable(
+    code: Vec<Instruction>,
+    functions: Vec<FunctionInfo>,
+    constants: Vec<Constant>,
+    runs: Vec<(u32, u32)>,
+) -> VerifiedExecutable {
+    Executable {
+        code,
+        functions,
+        constants,
+        strings: StringTable::new(vec![
+            "root".to_string(),
+            "helper".to_string(),
+            "test.fpas".to_string(),
+            "boom".to_string(),
+        ]),
+        globals: Vec::new(),
+        records: Vec::new(),
+        enums: Vec::new(),
+        enum_variants: Vec::new(),
+        source_map: SourceMap {
+            sources: vec![StringId::new(2)],
+            runs: runs
+                .into_iter()
+                .map(|(instruction, line)| SourceRun {
+                    instruction_start: InstructionAddress::new(instruction),
+                    source: SourceId::new(0),
+                    line,
+                    column: 3,
+                })
+                .collect(),
+        },
+        entry: FunctionId::new(0),
+    }
+    .verify()
+    .expect("debug fixture executable")
+}
+
+fn stopped(result: DebugRunResult) -> super::DebugStop {
+    let DebugRunResult::Stopped(stop) = result else {
+        panic!("expected stopped debug result")
+    };
+    stop
+}
+
+mod behavior;

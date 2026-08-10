@@ -1,6 +1,7 @@
 use fpas_bytecode::{
-    CodeRange, Constant, EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress,
-    NO_REGISTER, Opcode, ReturnConvention, SourceId, StringId, ValidationErrorKind,
+    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
+    EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
+    Register, ReturnConvention, SequencePoint, SourceId, StringId, ValidationErrorKind,
 };
 
 use super::support::{
@@ -20,6 +21,77 @@ fn opcode_index(executable: &fpas_bytecode::Executable, opcode: Opcode) -> usize
         .iter()
         .position(|instruction| instruction.opcode() == Ok(opcode))
         .expect("fixture must contain opcode")
+}
+
+#[test]
+fn debugger_metadata_references_ranges_and_order_are_checked() {
+    let location = DebugSourceLocation {
+        source: SourceId::new(0),
+        line: 1,
+        column: 1,
+    };
+    let mut valid = minimal_executable();
+    valid.functions[0].register_count = 1;
+    valid.functions[0].debug.scopes = vec![DebugScope {
+        id: 0,
+        parent: None,
+    }];
+    valid.functions[0].debug.bindings = vec![DebugBinding {
+        name: StringId::new(0),
+        type_name: StringId::new(0),
+        register: Register::new(0).expect("register"),
+        kind: DebugBindingKind::Local,
+        mutable: false,
+        scope: 0,
+        declaration: Some(location),
+        hidden: false,
+        cell_backed: false,
+    }];
+    valid.functions[0].debug.sequence_points = vec![SequencePoint {
+        instruction: InstructionAddress::new(0),
+        location,
+        scope: 0,
+    }];
+    valid.clone().verify().expect("valid debugger metadata");
+
+    let mut source = valid.clone();
+    source.functions[0].debug.sequence_points[0].location.source = SourceId::new(1);
+    assert!(matches!(
+        error_kind(source),
+        ValidationErrorKind::SourceReference { .. }
+    ));
+
+    let mut register = valid.clone();
+    register.functions[0].debug.bindings[0].register = Register::new(1).expect("register");
+    assert!(matches!(
+        error_kind(register),
+        ValidationErrorKind::DebugBindingRegister { .. }
+    ));
+
+    let mut scope = valid.clone();
+    scope.functions[0].debug.bindings[0].scope = 1;
+    assert!(matches!(
+        error_kind(scope),
+        ValidationErrorKind::DebugScope { .. }
+    ));
+
+    let mut address = valid.clone();
+    address.functions[0].debug.sequence_points[0].instruction = InstructionAddress::new(1);
+    assert!(matches!(
+        error_kind(address),
+        ValidationErrorKind::DebugSequenceAddress { .. }
+    ));
+
+    let mut duplicate = valid;
+    let duplicate_point = duplicate.functions[0].debug.sequence_points[0];
+    duplicate.functions[0]
+        .debug
+        .sequence_points
+        .push(duplicate_point);
+    assert!(matches!(
+        error_kind(duplicate),
+        ValidationErrorKind::DebugSequenceOrder { .. }
+    ));
 }
 
 #[test]

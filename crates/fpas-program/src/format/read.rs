@@ -12,5 +12,6 @@ use super::{FormatError, executable, header};
 pub fn decode(bytes: &[u8]) -> Result<ProgramImage, FormatError> {
     let decoded = header::decode(bytes)?;
     let executable = executable::decode(decoded.payload)?;
-    ProgramImage::from_decoded(decoded.identity, executable).map_err(FormatError::Image)
+    ProgramImage::from_decoded(decoded.identity, decoded.source_hashes, executable)
+        .map_err(FormatError::Image)
 }

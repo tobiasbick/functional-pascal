@@ -17,8 +17,9 @@ pub use codec::{decode_object, encode_object};
 pub use error::ObjectError;
 pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
-    ObjectConstant, ObjectEnumLayout, ObjectEnumVariant, ObjectGlobal, ObjectRecordLayout,
-    ObjectSourceRun,
+    ObjectConstant, ObjectDebugBinding, ObjectDebugBindingKind, ObjectDebugLocation,
+    ObjectDebugScope, ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal,
+    ObjectRecordLayout, ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -32,7 +33,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 1;
+pub const OBJECT_VERSION: u16 = 2;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -201,6 +202,63 @@ impl RelocatableObject {
                     column: run.column,
                 })
                 .collect();
+            let debug = ObjectFunctionDebugInfo {
+                scopes: function
+                    .debug
+                    .scopes
+                    .iter()
+                    .map(|scope| ObjectDebugScope {
+                        id: scope.id,
+                        parent: scope.parent,
+                    })
+                    .collect(),
+                bindings: function
+                    .debug
+                    .bindings
+                    .iter()
+                    .map(|binding| {
+                        Ok(ObjectDebugBinding {
+                            name: strings(binding.name)?,
+                            type_name: strings(binding.type_name)?,
+                            register: binding.register.get(),
+                            kind: match binding.kind {
+                                fpas_bytecode::DebugBindingKind::Parameter => {
+                                    ObjectDebugBindingKind::Parameter
+                                }
+                                fpas_bytecode::DebugBindingKind::Local => {
+                                    ObjectDebugBindingKind::Local
+                                }
+                                fpas_bytecode::DebugBindingKind::Capture => {
+                                    ObjectDebugBindingKind::Capture
+                                }
+                            },
+                            mutable: binding.mutable,
+                            scope: binding.scope,
+                            declaration: binding.declaration.map(|location| ObjectDebugLocation {
+                                source: location.source.get(),
+                                line: location.line,
+                                column: location.column,
+                            }),
+                            hidden: binding.hidden,
+                            cell_backed: binding.cell_backed,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, ObjectError>>()?,
+                sequence_points: function
+                    .debug
+                    .sequence_points
+                    .iter()
+                    .map(|point| ObjectSequencePoint {
+                        instruction_start: point.instruction.get() - function.code.start.get(),
+                        location: ObjectDebugLocation {
+                            source: point.location.source.get(),
+                            line: point.location.line,
+                            column: point.location.column,
+                        },
+                        scope: point.scope,
+                    })
+                    .collect(),
+            };
             functions.push(ObjectFunction {
                 name: strings(function.name)?,
                 code: local_code,
@@ -213,6 +271,7 @@ impl RelocatableObject {
                 },
                 uses_spawn_tasks: function.flags.uses_spawn_tasks,
                 source_runs,
+                debug,
             });
         }
         let entry = Some(u32::from(executable.entry.get()));
@@ -359,6 +418,7 @@ impl RelocatableObject {
                 });
             }
             validate_source_runs(function, self.sources.len())?;
+            validation::validate_debug_info(function, self.sources.len())?;
             for (instruction_index, word) in function.code.iter().copied().enumerate() {
                 let instruction = Instruction::from_word(word);
                 let expected = relocation_category(instruction)?;

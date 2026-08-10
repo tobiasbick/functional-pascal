@@ -21,6 +21,7 @@
 )]
 mod cli_build;
 mod cli_check;
+mod cli_debug;
 mod cli_fmt;
 mod cli_input;
 mod cli_output;
@@ -36,7 +37,9 @@ use std::process;
 
 #[cfg(test)]
 pub(crate) use cli_input::{CliConfig, TestCliConfig, TestReportFormat};
-pub(crate) use cli_input::{CliInput, ResolvedCli, resolve_cli_config};
+pub(crate) use cli_input::{
+    CliInput, DebugCliConfig, DebugProtocol, ResolvedCli, resolve_cli_config,
+};
 pub(crate) use cli_run::run_cli;
 #[cfg(test)]
 pub(crate) use cli_run::{render_cli_diagnostic, run_source};

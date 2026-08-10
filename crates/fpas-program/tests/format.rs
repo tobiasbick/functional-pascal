@@ -26,6 +26,7 @@ fn deterministic_round_trip_preserves_every_register_table() {
     assert_eq!(first, second);
     assert_eq!(decoded.identity(), image.identity());
     assert_eq!(decoded.source_paths(), image.source_paths());
+    assert_eq!(decoded.source_hashes(), image.source_hashes());
     assert_eq!(decoded.executable(), image.executable());
 }
 
@@ -35,7 +36,7 @@ fn canonical_image_has_target_independent_digest() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "0fec4982d8611043f10e3507d8a9d766d367d4685ed9b39ffa7cea25726b42d9"
+        "9b8a25f936e3311a7e3dd670ac67a903a12969abd4290640554c5a2d0d4041c8"
     );
 }
 

@@ -10,4 +10,10 @@
 mod vm;
 
 pub use fpas_std::ScreenSnapshot;
-pub use vm::{CallbackSession, Execution, ShutdownHandle, Vm, VmError, VmOutput};
+pub use vm::{
+    BoundBreakpoint, CallbackSession, DebugErrorKind, DebugExecutionLimits, DebugFrame,
+    DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind,
+    DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
+    DebugTermination, DebugVariable, Execution, Paginated, ShutdownHandle, SourceBreakpoint,
+    SourceLocation, Vm, VmError, VmOutput,
+};

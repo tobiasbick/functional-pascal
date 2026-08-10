@@ -30,6 +30,9 @@ type-checks, runs programs, and executes test bundles.
 - `fpas run` with more than one positional path argument — usage error.
 - `fpas check [<path>]` — type-check a `.fpas`, directory of `.fpas` files, `.fpasprj`, or `.fpasworkspace` without running. With no path, discovers `.fpasworkspace` or `.fpasprj` in the current directory.
 - `fpas test [<path>]` — run `*_test.fpas` programs and print a pass/fail/skip summary. With no path, discovers a workspace or `.fpasprj` like `fpas check`. Flags: `--list`, `--fail-fast`, `--strict` (exit `1` when any test called `Skip`), `--filter <pattern>`, `--report json`, `--timeout <secs>`, `--jobs <n>` (`0` = available CPU parallelism), `--script <path>`. Sidecars beside each test file (all optional): `<test>.script.toml` (project overrides), `<test>.expect.stdout`, `<test>.expect.screen` (TUI), `<test>.expect.pixels` (headless graph). See [`Std.Test`](../std/testing/test.md). `--list` and `--report json` write results to stdout; progress lines stay on stderr. A write failure on contracted stdout or summary output returns nonzero instead of reporting success. Timed tests run in a terminable process tree, so blocking VM or host calls cannot extend the requested runtime indefinitely.
+- `fpas debug [<path>] --protocol <jsonl | dap>` — run a source, program
+  project, workspace, or verified compiled image under the source debugger;
+  see [Source debugger](../tools/debugger.md).
 - `fpas fmt [<path> ...]` — format source files, directories, projects, or
   workspaces. A program project includes its `project.main` source as well as
   unit sources. `--check` reports formatting drift without changing files;
@@ -38,7 +41,7 @@ type-checks, runs programs, and executes test bundles.
   `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
 - `fpas build --help`, `fpas run --help`, `fpas check --help`,
-  `fpas test --help`, and `fpas fmt --help` — print focused command help with
+  `fpas test --help`, `fpas debug --help`, and `fpas fmt --help` — print focused command help with
   valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
 - `fpas build --std-lib <directory> …`, `fpas run --std-lib <directory> …`,
@@ -48,7 +51,8 @@ type-checks, runs programs, and executes test bundles.
   directory must contain `stdlib.fpasprj`. Without this option, `fpas` loads
   `lib` beside its executable.
 
-Program arguments after `--` require `fpas run` and are visible through `Std.Args` when running programs.
+Program arguments after `--` require `fpas run` or `fpas debug` and are visible
+through `Std.Args` when running programs.
 
 ## Command help
 

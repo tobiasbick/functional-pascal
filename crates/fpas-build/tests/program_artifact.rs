@@ -150,7 +150,16 @@ fn unchanged_program_artifact_is_reused_without_relinking() {
     assert_output(warm, "42");
 
     let bytes = fs::read(&fixture.artifact).expect("compiled program");
-    fpas_program::decode(&bytes).expect("valid compiled program");
+    let image = fpas_program::decode(&bytes).expect("valid compiled program");
+    for (path, hash) in image.source_paths().iter().zip(image.source_hashes()) {
+        assert_eq!(
+            *hash,
+            fpas_program::Digest::of(
+                fs::read(fixture.root.join(path)).expect("recorded source snapshot")
+            ),
+            "program image must bind `{path}` to its authoritative source bytes"
+        );
+    }
     fs::remove_dir_all(&fixture.root).ok();
 }
 

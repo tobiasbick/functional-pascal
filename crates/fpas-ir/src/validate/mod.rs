@@ -1,6 +1,7 @@
 //! Structured validation for typed IR programs.
 
 mod control_flow;
+mod debug;
 mod operands;
 
 use std::fmt;
@@ -32,6 +33,8 @@ pub enum EntityKind {
     Variant,
     /// An intrinsic identifier.
     Intrinsic,
+    /// Function-local lexical debugger scope.
+    DebugScope,
 }
 
 /// Identifies where a validation error occurred.
@@ -206,6 +209,7 @@ impl Program {
         for function in &self.functions {
             control_flow::validate_function(function)?;
             operands::validate_function(self, function)?;
+            debug::validate_function(self, function)?;
         }
         if self.function(self.entry).is_none() {
             return Err(program_error(ValidationErrorKind::UnknownId {

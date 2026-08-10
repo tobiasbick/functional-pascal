@@ -30,6 +30,18 @@ impl LoweringContext {
             mutable,
             capture: None,
         });
+        let hidden = name.starts_with("$p4_");
+        self.debug.bindings.push(fpas_ir::DebugBinding {
+            local,
+            name: name.to_string(),
+            kind: fpas_ir::DebugBindingKind::Local,
+            ty,
+            mutable,
+            scope: self.debug_scope,
+            declaration: Some(span.diagnostic_span_or_synthetic()),
+            hidden,
+            cell_backed: false,
+        });
         self.bindings.push(Binding {
             name: name.to_ascii_lowercase(),
             storage: BindingStorage::Local(local),
@@ -139,6 +151,16 @@ impl LoweringContext {
         {
             binding.ty = logical_ty;
             binding.cell = true;
+            let BindingStorage::Local(local) = binding.storage;
+            if let Some(debug) = self
+                .debug
+                .bindings
+                .iter_mut()
+                .find(|candidate| candidate.local == local)
+            {
+                debug.ty = logical_ty;
+                debug.cell_backed = true;
+            }
         }
     }
 
@@ -409,11 +431,13 @@ impl LoweringContext {
 
     pub(in crate::lowering) fn begin_scope(&mut self) {
         self.scope_depth = self.scope_depth.saturating_add(1);
+        self.begin_debug_scope();
     }
 
     pub(in crate::lowering) fn end_scope(&mut self) {
         let depth = self.scope_depth;
         self.bindings.retain(|binding| binding.depth < depth);
         self.scope_depth = self.scope_depth.saturating_sub(1);
+        self.end_debug_scope();
     }
 }

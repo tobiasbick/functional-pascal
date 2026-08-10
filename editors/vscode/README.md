@@ -16,6 +16,12 @@ accessible unit provides the missing type or callable.
 The same VSIX bundles the host-native `fpas` CLI for project check, build, run,
 test, format, and format-check commands, Problems integration, and the Testing
 view.
+The extension also contributes the `fpas` debugger. Use **Run and Debug** with
+the generated **Debug Functional Pascal** configuration, or set `program` to a
+`.fpas`, program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
+images additionally require `sourceRoot`. Breakpoints, stepping, stack frames,
+scopes, variables, and program output use the bundled CLI's DAP adapter; the
+language server remains responsible only for static editor features.
 
 ## Build
 

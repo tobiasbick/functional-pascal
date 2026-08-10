@@ -197,8 +197,16 @@ fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Resul
         options_hash: Digest::of(b"isolated-test-options"),
         units: Vec::new(),
     };
-    let image = ProgramImage::new(identity, source_paths, prepared.executable.clone())
-        .map_err(|error| format!("Error preparing isolated test image: {error}"))?;
+    let source_hashes = (0..source_count)
+        .map(|index| Digest::of(format!("isolated-test-source-{index}")))
+        .collect();
+    let image = ProgramImage::new(
+        identity,
+        source_paths,
+        source_hashes,
+        prepared.executable.clone(),
+    )
+    .map_err(|error| format!("Error preparing isolated test image: {error}"))?;
     let image_bytes = fpas_program::encode(&image)
         .map_err(|error| format!("Error encoding isolated test image: {error}"))?;
     fs::write(files.image(), image_bytes)

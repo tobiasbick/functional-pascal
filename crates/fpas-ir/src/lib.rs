@@ -6,6 +6,7 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+mod debug;
 mod function;
 mod id;
 mod instruction;
@@ -13,6 +14,7 @@ mod program;
 mod terminator;
 pub mod validate;
 
+pub use debug::{DebugBinding, DebugBindingKind, DebugScope, FunctionDebugInfo, SequencePoint};
 pub use fpas_diagnostics::SourceSpan;
 pub use function::{
     BasicBlock, BlockParameter, CaptureDeclaration, CaptureKind, Function, FunctionSignature,

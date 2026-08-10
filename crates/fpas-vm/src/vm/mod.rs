@@ -4,6 +4,7 @@ mod access;
 mod callback;
 mod callback_call;
 mod calls;
+mod debug;
 mod diagnostics;
 mod dispatch;
 mod execute;
@@ -28,6 +29,12 @@ use self::tasks::TaskScheduler;
 use self::worker::Worker;
 
 pub use callback::CallbackSession;
+pub use debug::{
+    BoundBreakpoint, DebugErrorKind, DebugExecutionLimits, DebugFrame, DebugInspectionLimits,
+    DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind, DebugSession, DebugSessionError,
+    DebugSessionState, DebugStop, DebugStopReason, DebugTermination, DebugVariable, Paginated,
+    SourceBreakpoint, SourceLocation,
+};
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;
 

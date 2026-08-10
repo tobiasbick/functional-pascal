@@ -12,5 +12,5 @@ use super::{FormatError, executable, header};
 pub fn encode(image: &ProgramImage) -> Result<Vec<u8>, FormatError> {
     image.validate()?;
     let payload = executable::encode(image.executable().executable())?;
-    header::encode(image.identity(), &payload)
+    header::encode(image.identity(), image.source_hashes(), &payload)
 }

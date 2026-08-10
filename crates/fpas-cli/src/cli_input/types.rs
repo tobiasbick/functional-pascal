@@ -19,6 +19,26 @@ pub(crate) struct CliConfig {
     pub standard_library: Option<PathBuf>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum DebugProtocol {
+    Jsonl,
+    Dap,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct DebugCliConfig {
+    pub cwd: PathBuf,
+    pub input: CliInput,
+    pub program_args: Vec<String>,
+    pub standard_library: Option<PathBuf>,
+    pub protocol: DebugProtocol,
+    pub commands: Option<PathBuf>,
+    pub source_root: Option<PathBuf>,
+    pub timeout: Duration,
+    pub instruction_limit: u64,
+    pub output_limit: usize,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct BuildCliConfig {
     pub input: CliInput,
@@ -38,6 +58,7 @@ pub(crate) enum HelpTopic {
     General,
     Build,
     Run,
+    Debug,
     Check,
     Fmt,
     Test,
@@ -72,6 +93,7 @@ pub(crate) struct TestCliConfig {
 pub(crate) enum ResolvedCli {
     Build(BuildCliConfig),
     Run(CliConfig),
+    Debug(DebugCliConfig),
     Check(CliConfig),
     Fmt(FmtCliConfig),
     Test(TestCliConfig),

@@ -6,6 +6,7 @@ use super::types::HelpTopic;
 pub(super) enum CliMode {
     Build,
     Run,
+    Debug,
     Check,
     Fmt,
     Test,
@@ -16,6 +17,7 @@ impl CliMode {
         match self {
             Self::Build => HelpTopic::Build,
             Self::Run => HelpTopic::Run,
+            Self::Debug => HelpTopic::Debug,
             Self::Check => HelpTopic::Check,
             Self::Fmt => HelpTopic::Fmt,
             Self::Test => HelpTopic::Test,
@@ -23,7 +25,7 @@ impl CliMode {
     }
 }
 
-const SUBCOMMANDS: &str = "`build`, `run`, `check`, `test`, or `fmt`";
+const SUBCOMMANDS: &str = "`build`, `run`, `debug`, `check`, `test`, or `fmt`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -36,6 +38,7 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
         "fmt" => Ok((CliMode::Fmt, &cli_args[1..])),
         "test" => Ok((CliMode::Test, &cli_args[1..])),
         "run" => Ok((CliMode::Run, &cli_args[1..])),
+        "debug" => Ok((CliMode::Debug, &cli_args[1..])),
         _ => Err(unexpected_cli_token_error(first)),
     }
 }
@@ -48,6 +51,10 @@ pub(super) fn usage_error(mode: CliMode) -> String {
         }
         CliMode::Run => {
             "Usage: fpas run [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] [-- <args>...]\n  help: `fpas run --help` shows options and examples."
+                .to_string()
+        }
+        CliMode::Debug => {
+            "Usage: fpas debug [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] --protocol <jsonl | dap> [-- <args>...]\n  help: `fpas debug --help` shows options and examples."
                 .to_string()
         }
         CliMode::Check => {
@@ -70,7 +77,7 @@ pub(super) fn missing_subcommand_error() -> String {
 }
 
 pub(super) fn program_args_require_run_error() -> String {
-    "Program arguments after `--` require `fpas run`.\n  help: `fpas run [<file.fpas | file.fpasprj | file.fpasworkspace | file.fpascp>] -- <args>...`"
+    "Program arguments after `--` require `fpas run` or `fpas debug`.\n  help: `fpas debug hello.fpas --protocol jsonl -- <args>...`"
         .to_string()
 }
 

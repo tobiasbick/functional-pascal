@@ -60,8 +60,14 @@ pub fn build_program_artifact(
 
     let built = link_program(units, &program)?;
     let BuiltProgram { executable, events } = built;
-    let image = ProgramImage::new(expected, target.source_paths.to_vec(), executable)
-        .map_err(|error| BuildError::new(error.to_string()))?;
+    let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;
+    let image = ProgramImage::new(
+        expected,
+        target.source_paths.to_vec(),
+        source_hashes,
+        executable,
+    )
+    .map_err(|error| BuildError::new(error.to_string()))?;
     let bytes = fpas_program::encode(&image).map_err(|error| BuildError::new(error.to_string()))?;
     atomic::replace(target.path, &bytes).map_err(|error| {
         BuildError::new(format!(
@@ -73,6 +79,43 @@ pub fn build_program_artifact(
         executable: image.into_executable(),
         events,
     })
+}
+
+fn source_hashes(
+    graph: &UnitGraph,
+    program_source: &[u8],
+    source_count: usize,
+) -> Result<Vec<fpas_program::Digest>, BuildError> {
+    let mut hashes = vec![None; source_count];
+    let Some(main) = hashes.first_mut() else {
+        return Err(BuildError::new(
+            "cannot publish a program image without its main source identity",
+        ));
+    };
+    *main = Some(fpas_program::Digest::of(program_source));
+    for (_, node) in graph.iter() {
+        let index = node.source_id() as usize;
+        let slot = hashes.get_mut(index).ok_or_else(|| {
+            BuildError::new(format!(
+                "source identity {} is outside the program source table",
+                node.source_id()
+            ))
+        })?;
+        *slot = node
+            .source_hash()
+            .map(|hash| fpas_program::Digest::from_bytes(*hash.as_bytes()));
+    }
+    hashes
+        .into_iter()
+        .enumerate()
+        .map(|(index, hash)| {
+            hash.ok_or_else(|| {
+                BuildError::new(format!(
+                    "program source identity {index} is unavailable from the build snapshot"
+                ))
+            })
+        })
+        .collect()
 }
 
 fn reusable_executable(

@@ -1,6 +1,6 @@
 //! Independently encoded register functions.
 
-use crate::object::ObjectSourceRun;
+use crate::object::{ObjectFunctionDebugInfo, ObjectSourceRun};
 
 /// Return operand convention stored without process-local Rust layout assumptions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -30,4 +30,6 @@ pub struct ObjectFunction {
     pub uses_spawn_tasks: bool,
     /// Sparse source runs using function-local instruction addresses.
     pub source_runs: Vec<ObjectSourceRun>,
+    /// Relocatable source-level debugger metadata.
+    pub debug: ObjectFunctionDebugInfo,
 }

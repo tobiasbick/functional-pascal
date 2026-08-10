@@ -54,6 +54,7 @@ pub(super) fn unverified(
             register_count,
             return_convention: ReturnConvention::Unit,
             flags: FunctionFlags::default(),
+            debug: fpas_bytecode::FunctionDebugInfo::default(),
         }],
         constants,
         strings: StringTable::new(strings.into_iter().map(str::to_owned).collect()),

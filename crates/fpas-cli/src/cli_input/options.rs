@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use super::mode::CliMode;
-use super::types::TestReportFormat;
+use super::types::{DebugProtocol, TestReportFormat};
 
 pub(super) struct ParsedOptions {
     pub(super) check_only: bool,
@@ -21,6 +21,11 @@ pub(super) struct ParsedOptions {
     pub(super) standard_library: Option<PathBuf>,
     pub(super) executable: bool,
     pub(super) application_name: Option<String>,
+    pub(super) debug_protocol: Option<DebugProtocol>,
+    pub(super) commands: Option<PathBuf>,
+    pub(super) source_root: Option<PathBuf>,
+    pub(super) instruction_limit: Option<u64>,
+    pub(super) output_limit: Option<usize>,
     pub(super) positional: Vec<String>,
 }
 
@@ -41,6 +46,11 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
         standard_library: None,
         executable: false,
         application_name: None,
+        debug_protocol: None,
+        commands: None,
+        source_root: None,
+        instruction_limit: None,
+        output_limit: None,
         positional: Vec::new(),
     };
 
@@ -50,12 +60,13 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
             "--std-lib"
                 if matches!(
                     mode,
-                    CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Test
+                    CliMode::Build | CliMode::Run | CliMode::Debug | CliMode::Check | CliMode::Test
                 ) =>
             {
                 let example = match mode {
                     CliMode::Build => "fpas build --std-lib ./lib my-app.fpasprj",
                     CliMode::Run => "fpas run --std-lib ./lib hello.fpas",
+                    CliMode::Debug => "fpas debug --std-lib ./lib hello.fpas --protocol jsonl",
                     CliMode::Check => "fpas check --std-lib ./lib my-app.fpasprj",
                     CliMode::Test => "fpas test --std-lib ./lib tests/",
                     CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
@@ -167,6 +178,80 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     return Err("Duplicate `--timeout` option.".to_string());
                 }
             }
+            "--protocol" if mode == CliMode::Debug => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--protocol",
+                    "Missing protocol after `--protocol`.\n  help: Use `--protocol jsonl` or `--protocol dap`.",
+                )?;
+                let protocol = match value {
+                    "jsonl" => DebugProtocol::Jsonl,
+                    "dap" => DebugProtocol::Dap,
+                    _ => {
+                        return Err(format!(
+                            "Unsupported debugger protocol `{value}`.\n  help: Use `--protocol jsonl` or `--protocol dap`."
+                        ));
+                    }
+                };
+                if options.debug_protocol.replace(protocol).is_some() {
+                    return Err("Duplicate `--protocol` option.".to_string());
+                }
+            }
+            "--commands" if mode == CliMode::Debug => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--commands",
+                    "Missing path after `--commands`.\n  help: `fpas debug hello.fpas --protocol jsonl --commands session.jsonl`.",
+                )?;
+                if options.commands.replace(PathBuf::from(value)).is_some() {
+                    return Err("Duplicate `--commands` option.".to_string());
+                }
+            }
+            "--source-root" if mode == CliMode::Debug => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--source-root",
+                    "Missing directory after `--source-root`.\n  help: Compiled images require their verified source root.",
+                )?;
+                if options.source_root.replace(PathBuf::from(value)).is_some() {
+                    return Err("Duplicate `--source-root` option.".to_string());
+                }
+            }
+            "--timeout" if mode == CliMode::Debug => {
+                let value = positive_u64(cli_args, &mut index, "--timeout", "seconds")?;
+                options.timeout = Some(Duration::from_secs(value));
+            }
+            "--instruction-limit" if mode == CliMode::Debug => {
+                options.instruction_limit = Some(positive_u64(
+                    cli_args,
+                    &mut index,
+                    "--instruction-limit",
+                    "instructions",
+                )?);
+            }
+            "--output-limit" if mode == CliMode::Debug => {
+                let value = positive_u64(cli_args, &mut index, "--output-limit", "bytes")?;
+                options.output_limit = Some(
+                    usize::try_from(value)
+                        .map_err(|_| "`--output-limit` is too large for this host.".to_string())?,
+                );
+            }
+            "--report" if mode == CliMode::Debug => {
+                let value = take_option_value(
+                    cli_args,
+                    &mut index,
+                    "--report",
+                    "Missing format after `--report`.\n  help: Script mode supports `--report jsonl`.",
+                )?;
+                if value != "jsonl" {
+                    return Err(format!(
+                        "Unsupported debugger report `{value}`.\n  help: Use `--report jsonl`."
+                    ));
+                }
+            }
             "--jobs" if mode == CliMode::Test => {
                 let count = take_option_value(
                     cli_args,
@@ -225,9 +310,29 @@ fn is_known_option(value: &str) -> bool {
             | "--report"
             | "--timeout"
             | "--jobs"
+            | "--protocol"
+            | "--commands"
+            | "--source-root"
+            | "--instruction-limit"
+            | "--output-limit"
             | "-h"
             | "--help"
             | "-V"
             | "--version"
     )
+}
+
+fn positive_u64(
+    args: &[String],
+    index: &mut usize,
+    option: &str,
+    unit: &str,
+) -> Result<u64, String> {
+    let value = take_option_value(
+        args,
+        index,
+        option,
+        &format!("Missing value after `{option}`."),
+    )?;
+    value.parse::<u64>().ok().filter(|value| *value > 0).ok_or_else(|| format!("Invalid `{option}` value `{value}`.\n  help: Pass a positive integer number of {unit}."))
 }

@@ -2,6 +2,7 @@
 
 mod bindings;
 mod blocks;
+mod debug;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -113,6 +114,9 @@ pub(super) struct LoweringContext {
     bindings: Vec<Binding>,
     loops: Vec<LoopTargets>,
     scope_depth: u32,
+    debug: fpas_ir::FunctionDebugInfo,
+    debug_scope: u32,
+    debug_scope_stack: Vec<u32>,
     next_value: u32,
     max_call_arguments: u32,
     pub(super) can_spawn_tasks: bool,
@@ -159,6 +163,13 @@ impl LoweringContext {
             .collect::<Result<Vec<_>, _>>()?;
         let mut locals = Vec::with_capacity(parameter_types.len() + captures.len());
         let mut bindings = Vec::with_capacity(parameter_types.len() + captures.len());
+        let mut debug = fpas_ir::FunctionDebugInfo {
+            scopes: vec![fpas_ir::DebugScope {
+                id: 0,
+                parent: None,
+            }],
+            ..fpas_ir::FunctionDebugInfo::default()
+        };
         let mut entry = empty_block(BlockId::new(0));
         for ((name, ty), parameter) in parameter_types.iter().zip(&parameters) {
             let local = LocalId::try_from_index(locals.len()).map_err(|error| {
@@ -174,6 +185,17 @@ impl LoweringContext {
                 ty: *ty,
                 mutable: true,
                 capture: None,
+            });
+            debug.bindings.push(fpas_ir::DebugBinding {
+                local,
+                name: name.clone(),
+                kind: fpas_ir::DebugBindingKind::Parameter,
+                ty: *ty,
+                mutable: true,
+                scope: 0,
+                declaration: None,
+                hidden: false,
+                cell_backed: false,
             });
             bindings.push(Binding {
                 name: name.to_ascii_lowercase(),
@@ -206,6 +228,17 @@ impl LoweringContext {
                 ty: capture.storage_ty,
                 mutable: capture.kind != fpas_ir::CaptureKind::Value,
                 capture: Some(capture.kind),
+            });
+            debug.bindings.push(fpas_ir::DebugBinding {
+                local,
+                name: capture.name.clone(),
+                kind: fpas_ir::DebugBindingKind::Capture,
+                ty: capture.ty,
+                mutable: capture.kind != fpas_ir::CaptureKind::Value,
+                scope: 0,
+                declaration: None,
+                hidden: false,
+                cell_backed: capture.kind != fpas_ir::CaptureKind::Value,
             });
             bindings.push(Binding {
                 name: capture.name.to_ascii_lowercase(),
@@ -251,6 +284,9 @@ impl LoweringContext {
             bindings,
             loops: Vec::new(),
             scope_depth: 0,
+            debug,
+            debug_scope: 0,
+            debug_scope_stack: Vec::new(),
             next_value: fpas_ir::checked_count("parameter count", parameter_types.len()).map_err(
                 |error| {
                     internal_compiler_error(
@@ -393,11 +429,14 @@ impl LoweringContext {
                 span.column,
             )
         })?;
+        let source = span.diagnostic_span_or_synthetic();
+        let instruction = self.current_block_mut()?.instructions.len();
         self.current_block_mut()?.instructions.push(Instruction {
-            source: Some(span.diagnostic_span_or_synthetic()),
+            source: Some(source),
             result: Some(ValueDefinition { id: value, ty }),
             operation,
         });
+        self.record_sequence_point(instruction, source);
         Ok(value)
     }
 
@@ -406,11 +445,14 @@ impl LoweringContext {
         operation: Operation,
         span: Span,
     ) -> Result<(), CompileError> {
+        let source = span.diagnostic_span_or_synthetic();
+        let instruction = self.current_block_mut()?.instructions.len();
         self.current_block_mut()?.instructions.push(Instruction {
-            source: Some(span.diagnostic_span_or_synthetic()),
+            source: Some(source),
             result: None,
             operation,
         });
+        self.record_sequence_point(instruction, source);
         Ok(())
     }
 }

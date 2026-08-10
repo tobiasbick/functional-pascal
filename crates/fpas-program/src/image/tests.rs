@@ -34,6 +34,7 @@ fn executable() -> VerifiedExecutable {
             register_count: 0,
             return_convention: ReturnConvention::Unit,
             flags: FunctionFlags::default(),
+            debug: fpas_bytecode::FunctionDebugInfo::default(),
         }],
         constants: Vec::new(),
         strings: StringTable::new(vec!["main".to_string(), "<memory>".to_string()]),
@@ -58,8 +59,13 @@ fn executable() -> VerifiedExecutable {
 
 #[test]
 fn constructor_installs_portable_source_paths() {
-    let image = ProgramImage::new(identity(), vec!["src/main.fpas".to_string()], executable())
-        .expect("portable image");
+    let image = ProgramImage::new(
+        identity(),
+        vec!["src/main.fpas".to_string()],
+        vec![Digest::of(b"source")],
+        executable(),
+    )
+    .expect("portable image");
     let source = image.executable().executable().source_map.sources[0];
 
     assert_eq!(
@@ -73,6 +79,7 @@ fn constructor_rejects_windows_absolute_source_path_on_every_host() {
     let error = ProgramImage::new(
         identity(),
         vec!["C:\\src\\main.fpas".to_string()],
+        vec![Digest::of(b"source")],
         executable(),
     )
     .err();
@@ -87,13 +94,32 @@ fn constructor_rejects_windows_absolute_source_path_on_every_host() {
 
 #[test]
 fn constructor_rejects_wrong_source_path_count() {
-    let error = ProgramImage::new(identity(), Vec::new(), executable()).err();
+    let error = ProgramImage::new(identity(), Vec::new(), Vec::new(), executable()).err();
 
     assert_eq!(
         error,
         Some(ImageError::SourcePathCount {
             paths: 0,
             sources: 1
+        })
+    );
+}
+
+#[test]
+fn constructor_rejects_wrong_source_hash_count() {
+    let error = ProgramImage::new(
+        identity(),
+        vec!["src/main.fpas".to_string()],
+        Vec::new(),
+        executable(),
+    )
+    .err();
+
+    assert_eq!(
+        error,
+        Some(ImageError::SourceHashCount {
+            hashes: 0,
+            sources: 1,
         })
     );
 }

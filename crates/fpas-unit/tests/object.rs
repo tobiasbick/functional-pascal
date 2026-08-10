@@ -6,10 +6,11 @@
 )]
 
 use fpas_bytecode::{
-    CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
-    FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
-    RecordField, RecordLayout, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
-    StringTable,
+    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
+    EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
+    FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
+    RecordLayout, Register, ReturnConvention, SequencePoint, SourceId, SourceMap, SourceRun,
+    StringId, StringTable,
 };
 use fpas_unit::object::{
     OBJECT_VERSION, ObjectError, RelocatableObject, RelocationKind, decode_object, encode_object,
@@ -43,6 +44,36 @@ fn candidate() -> Executable {
                 register_count: 6,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
+                debug: FunctionDebugInfo {
+                    scopes: vec![DebugScope {
+                        id: 0,
+                        parent: None,
+                    }],
+                    bindings: vec![DebugBinding {
+                        name: StringId::new(2),
+                        type_name: StringId::new(2),
+                        register: Register::new(0).expect("register"),
+                        kind: DebugBindingKind::Local,
+                        mutable: true,
+                        scope: 0,
+                        declaration: Some(DebugSourceLocation {
+                            source: SourceId::new(0),
+                            line: 1,
+                            column: 1,
+                        }),
+                        hidden: false,
+                        cell_backed: false,
+                    }],
+                    sequence_points: vec![SequencePoint {
+                        instruction: InstructionAddress::new(0),
+                        location: DebugSourceLocation {
+                            source: SourceId::new(0),
+                            line: 1,
+                            column: 1,
+                        },
+                        scope: 0,
+                    }],
+                },
             },
             FunctionInfo {
                 name: StringId::new(1),
@@ -52,6 +83,7 @@ fn candidate() -> Executable {
                 register_count: 0,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
         ],
         constants: vec![Constant::String(StringId::new(2))],

@@ -408,6 +408,7 @@ fn imported_stub(
         parameters,
         locals: Vec::new(),
         captures: Vec::new(),
+        debug: fpas_ir::FunctionDebugInfo::default(),
         blocks: vec![BasicBlock {
             id: BlockId::new(0),
             parameters: Vec::new(),

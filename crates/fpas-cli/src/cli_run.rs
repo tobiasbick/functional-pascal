@@ -73,6 +73,7 @@ pub(crate) fn run_cli(
         }
         ResolvedCli::Fmt(config) => crate::cli_fmt::format_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Test(config) => crate::cli_test::test_cli(config, stdout.as_mut(), stderr),
+        ResolvedCli::Debug(config) => crate::cli_debug::debug_cli(config, stdout, stderr),
         ResolvedCli::Run(config) => {
             let input = match config.input {
                 CliInput::CompiledProgramFile(path) => {

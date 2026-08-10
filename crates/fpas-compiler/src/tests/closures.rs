@@ -136,6 +136,7 @@ fn root_function() -> Function {
         parameters: Vec::new(),
         locals: Vec::new(),
         captures: Vec::new(),
+        debug: fpas_ir::FunctionDebugInfo::default(),
         blocks: vec![
             BasicBlock {
                 id: BlockId::new(0),
@@ -226,6 +227,7 @@ fn increment_function() -> Function {
             ty: INTEGER,
             kind: CaptureKind::Cell,
         }],
+        debug: fpas_ir::FunctionDebugInfo::default(),
         blocks: vec![BasicBlock {
             id: BlockId::new(0),
             parameters: Vec::new(),

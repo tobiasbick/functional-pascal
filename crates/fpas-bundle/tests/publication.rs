@@ -31,6 +31,7 @@ fn encoded_bundle(runner: &[u8]) -> Vec<u8> {
             units: Vec::new(),
         },
         vec!["main.fpas".to_string()],
+        vec![Digest::of(b"source")],
         executable,
     )
     .expect("valid image");

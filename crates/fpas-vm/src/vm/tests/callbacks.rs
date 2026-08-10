@@ -26,6 +26,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 register_count: 0,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
             FunctionInfo {
                 name: StringId::new(1),
@@ -35,6 +36,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 register_count: 2,
                 return_convention: ReturnConvention::Value,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
             FunctionInfo {
                 name: StringId::new(2),
@@ -44,6 +46,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
                 register_count: 1,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
         ],
         constants: vec![Constant::String(StringId::new(3))],

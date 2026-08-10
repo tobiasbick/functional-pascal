@@ -51,6 +51,7 @@ pub(super) fn image(
                 register_count: spec.registers,
                 return_convention: spec.returns,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             })
             .collect(),
         constants,

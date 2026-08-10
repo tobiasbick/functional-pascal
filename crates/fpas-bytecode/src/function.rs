@@ -1,6 +1,6 @@
 //! Register function metadata and code ranges.
 
-use crate::{InstructionAddress, StringId};
+use crate::{FunctionDebugInfo, InstructionAddress, StringId};
 
 /// Half-open instruction range owned by one function.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -70,4 +70,6 @@ pub struct FunctionInfo {
     pub return_convention: ReturnConvention,
     /// Validated behavioral flags.
     pub flags: FunctionFlags,
+    /// Source-level debugger metadata for this function.
+    pub debug: FunctionDebugInfo,
 }

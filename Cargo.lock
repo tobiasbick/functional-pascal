@@ -594,6 +594,7 @@ dependencies = [
  "fpas-bundle",
  "fpas-bytecode",
  "fpas-compiler",
+ "fpas-debug",
  "fpas-diagnostics",
  "fpas-fmt",
  "fpas-parser",
@@ -621,6 +622,19 @@ dependencies = [
  "fpas-std",
  "fpas-unit",
  "fpas-vm",
+]
+
+[[package]]
+name = "fpas-debug"
+version = "0.0.1"
+dependencies = [
+ "fpas-bytecode",
+ "fpas-compiler",
+ "fpas-diagnostics",
+ "fpas-parser",
+ "fpas-vm",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

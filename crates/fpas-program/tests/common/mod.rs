@@ -8,10 +8,11 @@
 )]
 
 use fpas_bytecode::{
-    CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
-    FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
-    RecordField, RecordLayout, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
-    StringTable,
+    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
+    EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
+    FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
+    RecordLayout, Register, ReturnConvention, SequencePoint, SourceId, SourceMap, SourceRun,
+    StringId, StringTable,
 };
 use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
@@ -25,6 +26,8 @@ pub fn program_image() -> ProgramImage {
         "field",
         "enum",
         "variant",
+        "local",
+        "Integer",
     ]
     .into_iter()
     .map(str::to_string)
@@ -36,9 +39,39 @@ pub fn program_image() -> ProgramImage {
             code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
             arity: 0,
             capture_count: 0,
-            register_count: 0,
+            register_count: 1,
             return_convention: ReturnConvention::Unit,
             flags: FunctionFlags::default(),
+            debug: FunctionDebugInfo {
+                scopes: vec![DebugScope {
+                    id: 0,
+                    parent: None,
+                }],
+                bindings: vec![DebugBinding {
+                    name: StringId::new(8),
+                    type_name: StringId::new(9),
+                    register: Register::new(0).expect("register"),
+                    kind: DebugBindingKind::Local,
+                    mutable: true,
+                    scope: 0,
+                    declaration: Some(DebugSourceLocation {
+                        source: SourceId::new(0),
+                        line: 3,
+                        column: 1,
+                    }),
+                    hidden: false,
+                    cell_backed: false,
+                }],
+                sequence_points: vec![SequencePoint {
+                    instruction: InstructionAddress::new(0),
+                    location: DebugSourceLocation {
+                        source: SourceId::new(0),
+                        line: 3,
+                        column: 5,
+                    },
+                    scope: 0,
+                }],
+            },
         }],
         constants: vec![
             Constant::Integer(i64::MIN),
@@ -99,6 +132,7 @@ pub fn program_image() -> ProgramImage {
             }],
         },
         vec!["test.fpas".to_string()],
+        vec![Digest::of(b"source")],
         executable,
     )
     .expect("fixture image")
@@ -121,6 +155,12 @@ pub fn payload_start(bytes: &[u8]) -> usize {
         ) as usize;
         offset += 4 + name_len + 32;
     }
+    let source_hash_count = u32::from_le_bytes(
+        bytes[offset..offset + 4]
+            .try_into()
+            .expect("source hash count"),
+    ) as usize;
+    offset += 4 + source_hash_count * Digest::LENGTH;
     offset + 4 + 32
 }
 

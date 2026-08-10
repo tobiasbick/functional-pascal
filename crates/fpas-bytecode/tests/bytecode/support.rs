@@ -28,6 +28,7 @@ pub fn minimal_executable() -> Executable {
             register_count: 0,
             return_convention: ReturnConvention::Unit,
             flags: FunctionFlags::default(),
+            debug: fpas_bytecode::FunctionDebugInfo::default(),
         }],
         constants: Vec::new(),
         strings: StringTable::new(vec!["root".to_string(), "test.fpas".to_string()]),
@@ -94,6 +95,7 @@ pub fn all_opcodes_executable() -> Executable {
                 flags: FunctionFlags {
                     uses_spawn_tasks: true,
                 },
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
             FunctionInfo {
                 name: StringId::new(1),
@@ -106,6 +108,7 @@ pub fn all_opcodes_executable() -> Executable {
                 register_count: 0,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
+                debug: fpas_bytecode::FunctionDebugInfo::default(),
             },
         ],
         constants: vec![

@@ -1,0 +1,13 @@
+program UnsupportedDebuggerTasks;
+
+uses Std.Task;
+
+function Work(): integer;
+begin
+  return 42
+end;
+
+begin
+  var Pending: task := go Work();
+  Wait(Pending)
+end.

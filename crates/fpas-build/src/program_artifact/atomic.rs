@@ -106,6 +106,7 @@ mod tests {
                 units: Vec::new(),
             },
             vec!["main.fpas".to_string()],
+            vec![Digest::of([marker])],
             executable,
         )
         .expect("valid program image");

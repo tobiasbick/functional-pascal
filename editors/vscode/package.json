@@ -2,7 +2,7 @@
   "name": "functional-pascal",
   "displayName": "Functional Pascal",
   "description": "Local Functional Pascal editor integration",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "publisher": "functional-pascal",
   "license": "BSD-3-Clause",
   "repository": {
@@ -44,6 +44,35 @@
       {
         "language": "fpas",
         "path": "./snippets/fpas.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "fpas",
+        "label": "Functional Pascal",
+        "languages": ["fpas"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": { "type": "string", "description": "FPAS source, program project, workspace, or compiled image." },
+              "cwd": { "type": "string", "description": "Debugger working directory." },
+              "args": { "type": "array", "items": { "type": "string" }, "default": [] },
+              "stopOnEntry": { "type": "boolean", "default": false },
+              "sourceRoot": { "type": "string", "description": "Required source root for .fpascp targets." }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "fpas",
+            "request": "launch",
+            "name": "Debug Functional Pascal",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+          }
+        ]
       }
     ],
     "commands": [

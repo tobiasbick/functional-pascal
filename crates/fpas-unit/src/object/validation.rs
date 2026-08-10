@@ -80,6 +80,65 @@ pub(super) fn validate_source_runs(
     Ok(())
 }
 
+pub(super) fn validate_debug_info(
+    function: &ObjectFunction,
+    source_count: usize,
+) -> Result<(), ObjectError> {
+    for (index, scope) in function.debug.scopes.iter().enumerate() {
+        let valid = usize::try_from(scope.id).ok() == Some(index)
+            && match (scope.id, scope.parent) {
+                (0, None) => true,
+                (_, Some(parent)) => parent < scope.id,
+                _ => false,
+            };
+        if !valid {
+            return Err(ObjectError::InvalidTableReference("debug scope"));
+        }
+    }
+    let valid_scope = |scope: u32| {
+        usize::try_from(scope)
+            .ok()
+            .is_some_and(|scope| scope < function.debug.scopes.len())
+    };
+    for binding in &function.debug.bindings {
+        if binding.name.is_empty()
+            || binding.type_name.is_empty()
+            || binding.register >= function.register_count
+            || !valid_scope(binding.scope)
+        {
+            return Err(ObjectError::InvalidTableReference("debug binding"));
+        }
+        if let Some(location) = binding.declaration {
+            validate_debug_location(location, source_count)?;
+        }
+    }
+    let mut previous = None;
+    for point in &function.debug.sequence_points {
+        if previous.is_some_and(|address| address >= point.instruction_start)
+            || point.instruction_start as usize >= function.code.len()
+            || !valid_scope(point.scope)
+        {
+            return Err(ObjectError::InvalidSourceRun {
+                function: function.name.clone(),
+                instruction: point.instruction_start,
+            });
+        }
+        validate_debug_location(point.location, source_count)?;
+        previous = Some(point.instruction_start);
+    }
+    Ok(())
+}
+
+fn validate_debug_location(
+    location: crate::object::ObjectDebugLocation,
+    source_count: usize,
+) -> Result<(), ObjectError> {
+    if location.source as usize >= source_count || location.line == 0 || location.column == 0 {
+        return Err(ObjectError::InvalidTableReference("debug source location"));
+    }
+    Ok(())
+}
+
 pub(super) fn validate_import_shape(shape: &ImportShape) -> Result<(), ObjectError> {
     match shape {
         ImportShape::Record { fields } => validate_unique_names(fields.iter()),

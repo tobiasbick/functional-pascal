@@ -131,6 +131,7 @@ impl LoweringContext {
             parameters: self.parameters,
             locals: self.locals,
             captures: self.captures,
+            debug: self.debug,
             blocks,
             entry: BlockId::new(0),
             max_call_arguments: self.max_call_arguments,

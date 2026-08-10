@@ -1,0 +1,21 @@
+[package]
+name = "fpas-debug"
+description = "Source debugger protocols for Functional Pascal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+fpas-bytecode = { path = "../fpas-bytecode" }
+fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-vm = { path = "../fpas-vm" }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+fpas-compiler = { path = "../fpas-compiler" }
+fpas-parser = { path = "../fpas-parser" }

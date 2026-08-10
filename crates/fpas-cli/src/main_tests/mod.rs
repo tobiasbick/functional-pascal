@@ -9,6 +9,7 @@ use fpas_diagnostics::{Diagnostic, SourceSpan};
 use std::fs;
 use std::path::Path;
 
+mod debugger;
 mod diagnostics;
 mod examples;
 mod fmt;

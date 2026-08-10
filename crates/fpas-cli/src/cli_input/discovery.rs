@@ -45,18 +45,26 @@ pub(super) fn resolve_explicit_input(
     }
     if matches!(
         mode,
-        CliMode::Build | CliMode::Run | CliMode::Check | CliMode::Fmt | CliMode::Test
+        CliMode::Build
+            | CliMode::Run
+            | CliMode::Debug
+            | CliMode::Check
+            | CliMode::Fmt
+            | CliMode::Test
     ) && has_extension(&path, WORKSPACE_FILE_EXTENSION)
     {
         return Ok(CliInput::WorkspaceFile(path));
     }
-    if mode == CliMode::Run && has_extension(&path, COMPILED_PROGRAM_FILE_EXTENSION) {
+    if matches!(mode, CliMode::Run | CliMode::Debug)
+        && has_extension(&path, COMPILED_PROGRAM_FILE_EXTENSION)
+    {
         return Ok(CliInput::CompiledProgramFile(path));
     }
 
     let expected = match mode {
         CliMode::Build => "a `.fpasprj` or `.fpasworkspace` file",
         CliMode::Run => "a `.fpas`, `.fpasprj`, `.fpasworkspace`, or `.fpascp` file",
+        CliMode::Debug => "a `.fpas`, `.fpasprj`, `.fpasworkspace`, or `.fpascp` file",
         CliMode::Check => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
         CliMode::Fmt => "a `.fpas`, `.fpasprj`, or `.fpasworkspace` file",
         CliMode::Test => "a `.fpas` file, directory, `.fpasprj`, or `.fpasworkspace` file",
@@ -70,7 +78,7 @@ pub(super) fn resolve_explicit_input(
 pub(super) fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     match mode {
         CliMode::Build | CliMode::Check | CliMode::Fmt | CliMode::Test => discover_check_input(cwd),
-        CliMode::Run => discover_run_input(cwd),
+        CliMode::Run | CliMode::Debug => discover_run_input(cwd),
     }
 }
 

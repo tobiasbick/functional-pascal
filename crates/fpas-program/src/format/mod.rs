@@ -1,5 +1,6 @@
 //! Deterministic bounded binary encoding for portable register `.fpascp` files.
 
+mod debug;
 mod executable;
 mod header;
 mod read;
@@ -14,7 +15,7 @@ pub use read::decode;
 pub use write::encode;
 
 /// Current sectioned register `.fpascp` envelope format version.
-pub const PROGRAM_FORMAT_VERSION: u16 = 10;
+pub const PROGRAM_FORMAT_VERSION: u16 = 11;
 
 /// Invalid or unsupported `.fpascp` binary data.
 #[derive(Debug, Clone, PartialEq, Eq)]

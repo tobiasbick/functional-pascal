@@ -143,6 +143,7 @@ pub fn scalar_program() -> Program {
                 name: "x".to_string(),
                 ty: INTEGER,
             }],
+            properties: Vec::new(),
         }],
         enum_layouts: vec![EnumLayout {
             id: EnumLayoutId::new(0),

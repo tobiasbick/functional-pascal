@@ -12,9 +12,9 @@ mod vm;
 pub use fpas_std::ScreenSnapshot;
 pub use vm::{
     BoundBreakpoint, CallbackSession, DebugBinaryOperation, DebugErrorKind, DebugEvaluateResult,
-    DebugEvaluationLimits, DebugExecutionLimits, DebugExpression, DebugFrame,
-    DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind,
-    DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
+    DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
+    DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
+    DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
     DebugTermination, DebugUnaryOperation, DebugVariable, Execution, Paginated, ShutdownHandle,
     SourceBreakpoint, SourceLocation, Vm, VmError, VmOutput,
 };

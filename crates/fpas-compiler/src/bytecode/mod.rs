@@ -74,7 +74,21 @@ pub(super) fn compile_program(
                         .map(|name| fpas_bytecode::RecordField { name })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-            Ok(fpas_bytecode::RecordLayout { name, fields })
+            let properties = layout
+                .properties
+                .iter()
+                .map(|property| {
+                    Ok(fpas_bytecode::RecordProperty {
+                        name: metadata.intern_string(&property.name)?,
+                        getter: metadata.intern_string(&property.getter)?,
+                    })
+                })
+                .collect::<Result<Vec<_>, CompileError>>()?;
+            Ok(fpas_bytecode::RecordLayout {
+                name,
+                fields,
+                properties,
+            })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;
     let mut enums = Vec::new();

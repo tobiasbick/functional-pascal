@@ -32,7 +32,12 @@ parameters, globals, and expandable aggregate values. Evaluated aggregates are
 also expandable until execution resumes. Program output, logpoint text, and
 structured runtime failures appear in the Debug Console. Log messages use
 `{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
-calls, variable mutation, attach, and task debugging remain unsupported.
+calls may invoke deterministic functions, procedures, record methods,
+constructors, readable properties, visible closures, and pure `Std.*`
+intrinsics. They run against a detached copy of stopped state; writes are
+discarded, and calls involving output, files, processes, environment, time,
+randomness, blocking, tasks, or unknown dynamic effects are rejected.
+Variable mutation, attach, and task debugging remain unsupported.
 
 ## Build
 
@@ -156,7 +161,8 @@ hover, cross-unit definition and type definition, workspace symbols, document
 highlights, references, rename, rich completion, signature help, snippets, and
 a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
 commands, Problems, cancellation, Testing API outcomes, read-only evaluation
-in every supported DAP context, conditional and exact-hit stops, and
+and controlled calls in every supported DAP context, detached-state recovery,
+conditional and exact-hit stops, and
 non-stopping logpoints,
 restarts it once, and shuts it down with the extension:
 

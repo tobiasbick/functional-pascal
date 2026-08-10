@@ -38,7 +38,7 @@ pub fn link_objects(
     use fpas_bytecode::{
         CodeRange, EnumLayout, EnumVariant, Executable, FunctionFlags, FunctionInfo, GlobalInfo,
         Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField, RecordLayout,
-        ReturnConvention,
+        RecordProperty, ReturnConvention,
     };
     use fpas_unit::object::ObjectReturn;
 
@@ -118,6 +118,16 @@ pub fn link_objects(
                     .iter()
                     .map(|field| strings.intern(field).map(|name| RecordField { name }))
                     .collect::<Result<Vec<_>, _>>()?,
+                properties: record
+                    .properties
+                    .iter()
+                    .map(|property| {
+                        Ok(RecordProperty {
+                            name: strings.intern(&property.name)?,
+                            getter: strings.intern(&property.getter)?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, LinkError>>()?,
             })
         })
         .collect::<Result<Vec<_>, LinkError>>()?;

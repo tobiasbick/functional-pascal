@@ -34,7 +34,7 @@ compatibility mode. A response precedes events caused by that request.
 | `stack` | stopped | optional `start`, `count` | bounded frames |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
-| `evaluate` | stopped | `expression`; optional `frame_id` | rendered read-only value and child reference |
+| `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -42,7 +42,15 @@ variable references belong to the current stop and expire on resume. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
-Conditions and log expressions use the read-only subset documented in
+`evaluate` may call exact executable routines, record methods and readable
+properties, visible first-class functions, and deterministic `Std.*`
+intrinsics. Calls use a detached copy of globals, arguments, receivers,
+captures, cells, and aggregates, so accepted writes never change the stopped
+program. Host I/O, nondeterminism, blocking, task operations, opaque resources,
+and unknown dynamic effects are denied. The accepted expression forms and
+effect policy are documented in [Source debugger](debugger.md).
+
+Conditions and log expressions use the same detached subset documented in
 [Source debugger](debugger.md). Invalid syntax or unsupported constructs make
 the breakpoint unverified. Hit conditions accept only a positive decimal `N`
 and match exactly the Nth physical hit. Each logical breakpoint has an
@@ -58,7 +66,8 @@ both the first `breakpoint_id` and ordered `breakpoint_ids` for all logical
 breakpoints at that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
-aggregate expansion, structured output, evaluation, conditional breakpoints,
+aggregate expansion, structured output, evaluation, controlled calls,
+conditional breakpoints,
 hit conditions, and logpoints. Attach, task threads, set-variable, and reverse
 execution remain false.
 
@@ -72,6 +81,9 @@ execution remain false.
 | Expression bytes / depth | 4,096 / 64 |
 | Expression operations / traversals | 1,024 / 16 |
 | Rendered evaluation bytes | 65,536 |
+| Calls / nested call depth | 64 / 32 |
+| Call instructions / detached values | 1,000,000 / 65,536 |
+| Call timeout | 2 seconds |
 | Log template bytes / interpolations | 16,384 / 64 |
 | Cumulative log output bytes | 1,048,576 |
 | Captured program output bytes | 1,048,576 |
@@ -81,6 +93,9 @@ Stable errors include `invalid_request`, `invalid_state`,
 `unsupported_protocol_version`, `unsupported_capability`, `unknown_breakpoint`,
 `unknown_frame`, `unknown_variables_reference`, `unknown_name`,
 `uninitialized_value`, `evaluation_type`, `evaluation_domain`,
-`evaluation_limit`, `unavailable_value`, `limit_exceeded`, `tasks_unsupported`,
+`evaluation_limit`, `unavailable_value`, `call_target_unknown`,
+`call_ambiguous`, `call_arity`, `call_effect_forbidden`, `call_limit`,
+`call_timeout`, `call_cancelled`, `call_runtime`, `limit_exceeded`,
+`tasks_unsupported`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.

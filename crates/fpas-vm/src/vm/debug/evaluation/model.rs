@@ -1,5 +1,7 @@
 //! Protocol-neutral expression IR, limits, and result records.
 
+use std::time::Duration;
+
 /// Maximum resources consumed by one stopped-state expression evaluation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DebugEvaluationLimits {
@@ -13,6 +15,16 @@ pub struct DebugEvaluationLimits {
     pub max_traversals: usize,
     /// Largest rendered result in UTF-8 bytes.
     pub max_output_bytes: usize,
+    /// Largest number of controlled calls in one expression.
+    pub max_calls: usize,
+    /// Largest nested controlled-call depth.
+    pub max_call_depth: usize,
+    /// Largest instruction count dispatched by one expression's sandbox calls.
+    pub max_call_instructions: u64,
+    /// Largest number of values copied into the detached sandbox graph.
+    pub max_detached_values: usize,
+    /// Wall-clock limit shared by all sandbox calls in one expression.
+    pub call_timeout: Duration,
 }
 
 impl Default for DebugEvaluationLimits {
@@ -23,6 +35,11 @@ impl Default for DebugEvaluationLimits {
             max_operations: 1_024,
             max_traversals: 16,
             max_output_bytes: 65_536,
+            max_calls: 64,
+            max_call_depth: 32,
+            max_call_instructions: 1_000_000,
+            max_detached_values: 65_536,
+            call_timeout: Duration::from_secs(2),
         }
     }
 }
@@ -40,6 +57,8 @@ pub enum DebugExpression {
     String(String),
     /// Visible source binding resolved case-insensitively.
     Name(String),
+    /// Exact compiler-visible callable name, resolved only at invocation.
+    Callable(String),
     /// Unary runtime-value operation.
     Unary {
         /// Requested operator.
@@ -69,6 +88,73 @@ pub enum DebugExpression {
         base: Box<Self>,
         /// Index or dictionary key expression.
         index: Box<Self>,
+    },
+    /// Controlled invocation of a named or first-class callable expression.
+    Call {
+        /// Named callable or expression yielding a function value.
+        callee: Box<Self>,
+        /// Arguments in source order.
+        arguments: Vec<Self>,
+    },
+    /// Controlled instance method invocation.
+    MethodCall {
+        /// Receiver value.
+        receiver: Box<Self>,
+        /// Exact source member name.
+        name: String,
+        /// Explicit arguments in source order.
+        arguments: Vec<Self>,
+    },
+    /// Side-effect-free array construction.
+    Array(Vec<Self>),
+    /// Side-effect-free dictionary construction.
+    Dictionary(Vec<(Self, Self)>),
+    /// Record construction inferred from an exact executable layout field set.
+    Record(Vec<(String, Self)>),
+    /// Copy-on-write record update in the detached result graph.
+    RecordUpdate {
+        /// Existing record expression.
+        base: Box<Self>,
+        /// Replacement fields.
+        fields: Vec<(String, Self)>,
+    },
+    /// Construct `Result.Ok`.
+    ResultOk(Box<Self>),
+    /// Construct `Result.Error`.
+    ResultError(Box<Self>),
+    /// Construct `Option.Some`.
+    OptionSome(Box<Self>),
+    /// Construct `Option.None`.
+    OptionNone,
+    /// Unwrap `Result.Ok` or `Option.Some` without propagation outside the expression.
+    Try(Box<Self>),
+}
+
+/// Runtime-resolved controlled call target supplied to the sandbox boundary.
+#[derive(Debug, Clone)]
+pub(in crate::vm::debug) enum DebugCallTarget {
+    /// Exact executable or intrinsic name.
+    Named(String),
+    /// First-class callable value.
+    Value(fpas_bytecode::Value),
+    /// Exact member on a runtime record receiver.
+    Method {
+        /// Receiver passed as the implicit first argument.
+        receiver: fpas_bytecode::Value,
+        /// Source member name.
+        name: String,
+    },
+    /// Property getter fallback after no stored field matched.
+    Property {
+        /// Receiver passed to the getter.
+        receiver: fpas_bytecode::Value,
+        /// Source property name.
+        name: String,
+    },
+    /// Construct a record whose layout exactly matches these field names.
+    Record {
+        /// Field names in source order.
+        fields: Vec<String>,
     },
 }
 

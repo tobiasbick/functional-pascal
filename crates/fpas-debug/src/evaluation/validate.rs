@@ -59,61 +59,100 @@ fn lower(
                         base: Box::new(lowered),
                         index: Box::new(lower(index, depth + 1, limits, budget)?),
                     },
-                    PostfixOperation::MethodCall { .. } => {
-                        return Err(unsupported(
-                            expression,
-                            "method calls",
-                            "Read a stored field, for example `Point.X`.",
-                        ));
+                    PostfixOperation::MethodCall { name, args, .. } => {
+                        DebugExpression::MethodCall {
+                            receiver: Box::new(lowered),
+                            name: name.clone(),
+                            arguments: args
+                                .iter()
+                                .map(|argument| lower(argument, depth + 1, limits, budget))
+                                .collect::<Result<Vec<_>, _>>()?,
+                        }
                     }
                 };
             }
             Ok(lowered)
         }
-        Expr::Call { .. } => Err(unsupported(
-            expression,
-            "function and procedure calls",
-            "Use visible values and operators only, for example `Counter + 1`.",
+        Expr::Call {
+            designator, args, ..
+        } => Ok(DebugExpression::Call {
+            callee: Box::new(lower_call_designator(designator, depth, limits, budget)?),
+            arguments: args
+                .iter()
+                .map(|argument| lower(argument, depth + 1, limits, budget))
+                .collect::<Result<Vec<_>, _>>()?,
+        }),
+        Expr::ArrayLiteral(elements, _) => Ok(DebugExpression::Array(
+            elements
+                .iter()
+                .map(|element| lower(element, depth + 1, limits, budget))
+                .collect::<Result<Vec<_>, _>>()?,
         )),
-        Expr::ArrayLiteral(_, _) => Err(unsupported(
-            expression,
-            "array construction",
-            "Read an existing array element, for example `Items[0]`.",
+        Expr::DictLiteral(entries, _) => Ok(DebugExpression::Dictionary(
+            entries
+                .iter()
+                .map(|(key, value)| {
+                    Ok((
+                        lower(key, depth + 1, limits, budget)?,
+                        lower(value, depth + 1, limits, budget)?,
+                    ))
+                })
+                .collect::<Result<Vec<_>, EvaluationParseError>>()?,
         )),
-        Expr::DictLiteral(_, _) => Err(unsupported(
-            expression,
-            "dictionary construction",
-            "Read an existing dictionary entry, for example `Items['key']`.",
+        Expr::RecordLiteral { fields, .. } => Ok(DebugExpression::Record(
+            fields
+                .iter()
+                .map(|field| {
+                    lower(&field.value, depth + 1, limits, budget)
+                        .map(|value| (field.name.clone(), value))
+                })
+                .collect::<Result<Vec<_>, _>>()?,
         )),
-        Expr::RecordLiteral { .. } => Err(unsupported(
+        Expr::ResultOk(value, _) => Ok(DebugExpression::ResultOk(Box::new(lower(
+            value,
+            depth + 1,
+            limits,
+            budget,
+        )?))),
+        Expr::ResultError(value, _) => Ok(DebugExpression::ResultError(Box::new(lower(
+            value,
+            depth + 1,
+            limits,
+            budget,
+        )?))),
+        Expr::OptionSome(value, _) => Ok(DebugExpression::OptionSome(Box::new(lower(
+            value,
+            depth + 1,
+            limits,
+            budget,
+        )?))),
+        Expr::OptionNone(_) => Ok(DebugExpression::OptionNone),
+        Expr::Nil(_) => Err(unsupported(
             expression,
-            "record construction",
-            "Read an existing stored field, for example `Point.X`.",
+            "event-handler `nil`",
+            "Use `None` for an Option value; debugger evaluation cannot assign event handlers.",
         )),
-        Expr::ResultOk(_, _)
-        | Expr::ResultError(_, _)
-        | Expr::OptionSome(_, _)
-        | Expr::OptionNone(_)
-        | Expr::Nil(_) => Err(unsupported(
-            expression,
-            "wrapper construction",
-            "Use a visible scalar or aggregate value.",
-        )),
-        Expr::Try(_, _) => Err(unsupported(
-            expression,
-            "`try` evaluation",
-            "Inspect the Result or Option value without unwrapping it.",
-        )),
+        Expr::Try(value, _) => Ok(DebugExpression::Try(Box::new(lower(
+            value,
+            depth + 1,
+            limits,
+            budget,
+        )?))),
         Expr::Go(_, _) => Err(unsupported(
             expression,
             "task spawning with `go`",
             "Use a read-only expression without task operations.",
         )),
-        Expr::RecordUpdate { .. } => Err(unsupported(
-            expression,
-            "record updates",
-            "Read an existing stored field without creating a new record.",
-        )),
+        Expr::RecordUpdate { base, fields, .. } => Ok(DebugExpression::RecordUpdate {
+            base: Box::new(lower(base, depth + 1, limits, budget)?),
+            fields: fields
+                .iter()
+                .map(|field| {
+                    lower(&field.value, depth + 1, limits, budget)
+                        .map(|value| (field.name.clone(), value))
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+        }),
         Expr::Closure(_) => Err(unsupported(
             expression,
             "closure construction",
@@ -125,6 +164,33 @@ fn lower(
             "Fix the expression syntax before evaluating it.",
         )),
     }
+}
+
+fn lower_call_designator(
+    designator: &Designator,
+    depth: usize,
+    limits: DebugEvaluationLimits,
+    budget: &mut ValidationBudget,
+) -> Result<DebugExpression, EvaluationParseError> {
+    if designator
+        .parts
+        .iter()
+        .all(|part| matches!(part, DesignatorPart::Ident(_, _)))
+    {
+        let names = designator
+            .parts
+            .iter()
+            .filter_map(|part| match part {
+                DesignatorPart::Ident(name, _) => Some(name.as_str()),
+                DesignatorPart::Index(_, _) => None,
+            })
+            .collect::<Vec<_>>();
+        if names.len() == 1 {
+            return Ok(DebugExpression::Name(names[0].to_string()));
+        }
+        return Ok(DebugExpression::Callable(names.join(".")));
+    }
+    lower_designator(designator, depth, limits, budget)
 }
 
 fn lower_designator(

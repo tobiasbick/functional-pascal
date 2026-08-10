@@ -40,6 +40,17 @@ pub struct ObjectRecordLayout {
     pub name: String,
     /// Canonical field names in declaration order.
     pub fields: Vec<String>,
+    /// Readable properties and canonical getter routine names.
+    pub properties: Vec<ObjectRecordProperty>,
+}
+
+/// Relocatable property-to-getter mapping.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectRecordProperty {
+    /// Public source property name.
+    pub name: String,
+    /// Canonical qualified getter routine name.
+    pub getter: String,
 }
 
 /// One enum variant and its associated fields.

@@ -7,7 +7,6 @@ import * as vscode from "vscode";
 import {
   closeAndRemoveSource,
   type DapMessage,
-  eventCount,
   startSession,
   waitFor,
   waitForStoppedReady,
@@ -112,13 +111,17 @@ export async function verifyDebuggerLifecycle(
     await waitForStoppedReady(() => sent.slice(marker.sent), 3, "step-over stop");
 
     await vscode.commands.executeCommand("workbench.action.debug.continue");
-    await waitFor(
-      () =>
-        sent.slice(marker.sent).some(
-          (message) =>
-            message.event === "stopped" && message.body?.reason === "breakpoint"
-        ),
+    await waitForStoppedReady(
+      () => sent.slice(marker.sent),
+      4,
       "source breakpoint stop"
+    );
+    assert.ok(
+      sent.slice(marker.sent).some(
+        (message) =>
+          message.event === "stopped" && message.body?.reason === "breakpoint"
+      ),
+      "source breakpoint reports its stop reason"
     );
     const stackAtBreakpoint = await session.customRequest("stackTrace", {
       threadId: 1,
@@ -133,10 +136,10 @@ export async function verifyDebuggerLifecycle(
 
     vscode.debug.removeBreakpoints([breakpoint]);
     breakpoint = undefined;
-    const stopsBeforeStepOut = eventCount(sent.slice(marker.sent), "stopped");
     await vscode.commands.executeCommand("workbench.action.debug.stepOut");
-    await waitFor(
-      () => eventCount(sent.slice(marker.sent), "stopped") > stopsBeforeStepOut,
+    await waitForStoppedReady(
+      () => sent.slice(marker.sent),
+      5,
       "step-out stop"
     );
 
@@ -232,12 +235,10 @@ function verifyLifecycleTranscript(
     sent.some((message) => message.event === "output"),
     "program output reaches VS Code"
   );
-  assert.ok(
-    sent
-      .filter((message) => message.type === "response")
-      .every((message) => message.success !== false),
-    "supported lifecycle requests succeed"
+  const failed = sent.filter(
+    (message) => message.type === "response" && message.success === false
   );
+  assert.deepEqual(failed, [], "supported lifecycle requests succeed");
 }
 
 function isSourceBreakpoint(

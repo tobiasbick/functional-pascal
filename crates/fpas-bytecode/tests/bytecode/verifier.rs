@@ -448,6 +448,16 @@ fn string_constant_and_layout_metadata_references_are_rejected() {
             ..
         }
     ));
+
+    let mut property = all_opcodes_executable();
+    property.records[0].properties[0].getter = StringId::new(99);
+    assert!(matches!(
+        error_kind(property),
+        ValidationErrorKind::StringReference {
+            owner: "record property getter",
+            ..
+        }
+    ));
 }
 
 #[test]

@@ -32,9 +32,9 @@ use self::worker::Worker;
 pub use callback::CallbackSession;
 pub use debug::{
     BoundBreakpoint, DebugBinaryOperation, DebugErrorKind, DebugEvaluateResult,
-    DebugEvaluationLimits, DebugExecutionLimits, DebugExpression, DebugFrame,
-    DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind,
-    DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
+    DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
+    DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
+    DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
     DebugTermination, DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint,
     SourceLocation,
 };

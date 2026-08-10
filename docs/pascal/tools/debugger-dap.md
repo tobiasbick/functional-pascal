@@ -8,14 +8,14 @@ work to the same protocol-neutral session as JSONL V2.
 The adapter advertises configuration-done, pause, source breakpoints,
 conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
 step-in/next/step-out, stack and variable pagination, delayed stack loading,
-and terminate-on-disconnect for an owned launch. It does not advertise attach,
+cancel, and terminate-on-disconnect for an owned launch. It does not advertise attach,
 completions, set-variable/set-expression, data/function/instruction
 breakpoints, restart, reverse execution, hot reload, multiple task threads, or
 raw register/disassembly access.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
-`evaluate`, `continue`, `pause`, `next`, `stepIn`, `stepOut`, `source`, and
+`evaluate`, `cancel`, `continue`, `pause`, `next`, `stepIn`, `stepOut`, `source`, and
 `disconnect`. Unsupported requests fail explicitly.
 
 `evaluate` accepts contexts `watch`, `repl`, `hover`, and `variables`. A
@@ -24,7 +24,11 @@ evaluates globals only. Successful responses include `result`, `type`,
 `variablesReference`, `namedVariables`, and `indexedVariables`. Evaluated
 aggregates expand through `variables`; all references expire when execution
 resumes. The accepted expression subset and limits are documented in
-[Source debugger](debugger.md).
+[Source debugger](debugger.md). Controlled calls execute asynchronously in a
+detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
+an active evaluation. Cancellation returns an evaluation failure and preserves
+the current stop; disconnect cancels, waits for bounded cleanup, and terminates
+without an orphan worker. `supportsSetVariable` remains false.
 
 `setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
 unchanged to the shared breakpoint policy. A condition stops only on Boolean

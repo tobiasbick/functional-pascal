@@ -36,6 +36,14 @@ fn jsonl_request(id: u64, command: &str, arguments: Value) -> String {
     json!({"type":"request","id":id,"command":command,"arguments":arguments}).to_string()
 }
 
+fn handle_and_wait(adapter: &mut DapServer, request: Value) -> Vec<Value> {
+    let mut messages = adapter.handle(request);
+    if messages.is_empty() {
+        messages.extend(adapter.wait());
+    }
+    messages
+}
+
 #[test]
 fn framing_uses_utf8_byte_lengths_and_rejects_truncation() {
     let message = json!({"text":"Grüße"});
@@ -348,8 +356,10 @@ fn runtime_failure_is_inspectable_then_continue_terminates() {
 }
 
 #[test]
-fn evaluate_contexts_share_frame_results_and_reject_calls() {
-    let mut adapter = server("program Main; begin var X: integer := 1 end.");
+fn evaluate_contexts_share_frame_results_and_controlled_calls() {
+    let mut adapter = server(
+        "program Main; function Double(X: integer): integer; begin return X * 2 end; begin var X: integer := 1 end.",
+    );
     let initialized = adapter.handle(request(1, "initialize", json!({})));
     assert_eq!(initialized[0]["body"]["supportsEvaluateForHovers"], true);
     let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":true})));
@@ -363,33 +373,115 @@ fn evaluate_contexts_share_frame_results_and_reject_calls() {
         .into_iter()
         .enumerate()
     {
-        let response = adapter.handle(request(
-            10 + index as u64,
-            "evaluate",
-            json!({"expression":"1 + 2", "frameId":frame, "context":context}),
-        ));
+        let response = handle_and_wait(
+            &mut adapter,
+            request(
+                10 + index as u64,
+                "evaluate",
+                json!({"expression":"1 + 2", "frameId":frame, "context":context}),
+            ),
+        );
         assert_eq!(response[0]["success"], true, "{context}: {response:?}");
         assert_eq!(response[0]["body"]["result"], "3");
     }
 
-    let rejected = adapter.handle(request(
-        20,
+    let called = handle_and_wait(
+        &mut adapter,
+        request(
+            20,
+            "evaluate",
+            json!({"expression":"Double(4)", "frameId":frame, "context":"watch"}),
+        ),
+    );
+    assert_eq!(called[0]["success"], true, "{called:?}");
+    assert_eq!(called[0]["body"]["result"], "8");
+
+    let globals_only = handle_and_wait(
+        &mut adapter,
+        request(21, "evaluate", json!({"expression":"X", "context":"watch"})),
+    );
+    assert_eq!(globals_only[0]["success"], false);
+
+    let evaluating = adapter.handle(request(
+        22,
         "evaluate",
-        json!({"expression":"Call()", "frameId":frame, "context":"watch"}),
+        json!({"expression":"Double(5)", "frameId":frame, "context":"watch"}),
     ));
-    assert_eq!(rejected[0]["success"], false);
+    assert!(evaluating.is_empty());
+    let continued = adapter.handle(request(23, "continue", json!({"threadId":1})));
+    assert!(continued.iter().any(|message| {
+        message["command"] == "evaluate"
+            && message["success"] == true
+            && message["body"]["result"] == "10"
+    }));
     assert!(
-        rejected[0]["message"]
-            .as_str()
-            .is_some_and(|message| message.contains("function and procedure calls"))
+        continued
+            .iter()
+            .any(|message| { message["command"] == "continue" && message["success"] == true })
+    );
+}
+
+#[test]
+fn cancel_and_disconnect_reach_active_call_evaluation() {
+    let source = "program Main; function Loop(X: integer): integer; begin mutable var I: integer := X; while I < 1000000000 do I := I + 1; return I end; begin var X: integer := 1 end.";
+    let mut adapter = server(source);
+    let initialized = adapter.handle(request(1, "initialize", json!({})));
+    assert_eq!(initialized[0]["body"]["supportsCancelRequest"], true);
+    let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":true})));
+    let _ = adapter.handle(request(3, "configurationDone", json!({})));
+
+    let evaluating = adapter.handle(request(
+        4,
+        "evaluate",
+        json!({"expression":"Loop(0)", "context":"watch"}),
+    ));
+    assert!(evaluating.is_empty(), "call should run asynchronously");
+    let mut cancelled = adapter.handle(request(5, "cancel", json!({"requestId":4})));
+    if !cancelled
+        .iter()
+        .any(|message| message["command"] == "evaluate")
+    {
+        cancelled.extend(adapter.wait());
+    }
+    assert!(
+        cancelled
+            .iter()
+            .any(|message| { message["command"] == "cancel" && message["success"] == true })
+    );
+    assert!(cancelled.iter().any(|message| {
+        message["command"] == "evaluate"
+            && message["success"] == false
+            && message["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("cancelled"))
+    }));
+    assert_eq!(
+        adapter.handle(request(6, "stackTrace", json!({"threadId":1})))[0]["success"],
+        true
     );
 
-    let globals_only = adapter.handle(request(
-        21,
+    let evaluating = adapter.handle(request(
+        7,
         "evaluate",
-        json!({"expression":"X", "context":"watch"}),
+        json!({"expression":"Loop(0)", "context":"watch"}),
     ));
-    assert_eq!(globals_only[0]["success"], false);
+    assert!(evaluating.is_empty());
+    let disconnected = adapter.handle(request(8, "disconnect", json!({})));
+    assert!(
+        disconnected
+            .iter()
+            .any(|message| { message["command"] == "evaluate" && message["success"] == false })
+    );
+    assert!(
+        disconnected
+            .iter()
+            .any(|message| { message["command"] == "disconnect" && message["success"] == true })
+    );
+    assert!(
+        disconnected
+            .iter()
+            .any(|message| message["event"] == "terminated")
+    );
 }
 
 #[test]

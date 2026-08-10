@@ -122,6 +122,7 @@ fn headless_graph_open_size_and_close_are_deterministic() {
     executable.records.push(fpas_bytecode::RecordLayout {
         name: fpas_bytecode::StringId::new(2),
         fields: Vec::new(),
+        properties: Vec::new(),
     });
     executable.records.push(fpas_bytecode::RecordLayout {
         name: fpas_bytecode::StringId::new(3),
@@ -133,6 +134,7 @@ fn headless_graph_open_size_and_close_are_deterministic() {
                 name: fpas_bytecode::StringId::new(5),
             },
         ],
+        properties: Vec::new(),
     });
     let executable = executable.verify().expect("graph layout must verify");
     let execution = Vm::new(executable).run().expect("headless graph lifecycle");

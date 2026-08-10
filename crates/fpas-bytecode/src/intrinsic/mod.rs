@@ -85,7 +85,33 @@ macro_rules! intrinsic_wire_ops {
             }
         }
 
-        impl Intrinsic {
+impl Intrinsic {
+    /// Return the canonical FPAS source name used by debugger call binding.
+    #[must_use]
+    pub fn debugger_name(self) -> String {
+        match self {
+            Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
+            Self::Graph(operation) => {
+                let member = format!("{operation:?}");
+                let member = member.strip_prefix("Application").unwrap_or(&member);
+                format!("Std.Graph.Application.{member}")
+            }
+            Self::Test(
+                TestIntrinsic::AssertEqualsInteger
+                | TestIntrinsic::AssertEqualsBoolean
+                | TestIntrinsic::AssertEqualsString
+                | TestIntrinsic::AssertEqualsReal,
+            ) => "Std.Test.AssertEquals".to_string(),
+            intrinsic => {
+                let debug = format!("{intrinsic:?}");
+                let (family, member) = debug
+                    .split_once('(')
+                    .expect("intrinsic debug representation has family and member");
+                format!("Std.{family}.{}", member.trim_end_matches(')'))
+            }
+        }
+    }
+
             /// Decode a raw `u16` discriminant back to an `Intrinsic` variant.
             ///
             /// Returns `None` for unrecognised values.

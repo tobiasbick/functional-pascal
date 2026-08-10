@@ -67,6 +67,19 @@ impl TypeTable {
             id,
             name: record.name.clone(),
             fields: Vec::new(),
+            properties: record
+                .properties
+                .iter()
+                .filter_map(|(name, property)| {
+                    property
+                        .getter
+                        .as_ref()
+                        .map(|getter| fpas_ir::RecordProperty {
+                            name: name.clone(),
+                            getter: getter.clone(),
+                        })
+                })
+                .collect(),
         });
         Ok(id)
     }

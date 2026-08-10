@@ -56,6 +56,39 @@ impl Worker {
         self.write(register(operands.a)?, value)
     }
 
+    pub(in crate::vm) fn execute_debug_intrinsic(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+    ) -> Result<Value, VmError> {
+        let base = 1_usize;
+        let required = base.saturating_add(arguments.len());
+        self.registers.resize(required.max(1), Value::Unit);
+        self.active_register_count = self.registers.len();
+        self.registers[base..required].clone_from_slice(arguments);
+        self.execute_intrinsic(AbcOperands {
+            a: 0,
+            b: intrinsic.into(),
+            c: u16::try_from(base).map_err(|_| {
+                self.intrinsic_window_error(AbcOperands {
+                    a: 0,
+                    b: intrinsic.into(),
+                    c: u16::MAX,
+                    auxiliary: 0,
+                })
+            })?,
+            auxiliary: u8::try_from(arguments.len()).map_err(|_| {
+                self.intrinsic_window_error(AbcOperands {
+                    a: 0,
+                    b: intrinsic.into(),
+                    c: 1,
+                    auxiliary: u8::MAX,
+                })
+            })?,
+        })?;
+        Ok(self.registers[0].clone())
+    }
+
     fn execute_borrowed_intrinsic(
         &self,
         intrinsic: Intrinsic,

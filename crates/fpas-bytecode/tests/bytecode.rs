@@ -6,6 +6,7 @@
 )]
 
 mod bytecode {
+    mod effects;
     mod executable;
     mod instruction;
     mod support;

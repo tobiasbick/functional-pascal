@@ -11,8 +11,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
-    RecordLayout, Register, ReturnConvention, SequencePoint, SourceId, SourceMap, SourceRun,
-    StringId, StringTable,
+    RecordLayout, RecordProperty, Register, ReturnConvention, SequencePoint, SourceId, SourceMap,
+    SourceRun, StringId, StringTable,
 };
 use fpas_program::{Digest, LinkedUnitIdentity, ProgramIdentity, ProgramImage};
 
@@ -28,6 +28,7 @@ pub fn program_image() -> ProgramImage {
         "variant",
         "local",
         "Integer",
+        "property",
     ]
     .into_iter()
     .map(str::to_string)
@@ -97,6 +98,10 @@ pub fn program_image() -> ProgramImage {
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),
+            }],
+            properties: vec![RecordProperty {
+                name: StringId::new(10),
+                getter: StringId::new(0),
             }],
         }],
         enums: vec![EnumLayout {

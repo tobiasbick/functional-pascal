@@ -32,6 +32,19 @@ export async function verifyDebuggerEvaluation(
     "  Point = record",
     "    X: integer;",
     "    Y: integer;",
+    "    static function Create(X: integer; Y: integer): Point;",
+    "    begin",
+    "      return record X := X; Y := Y; end",
+    "    end;",
+    "    function Sum(Self: Point): integer;",
+    "    begin",
+    "      return Self.X + Self.Y",
+    "    end;",
+    "    function ReadFirst(Self: Point): integer;",
+    "    begin",
+    "      return Self.X",
+    "    end;",
+    "    property First: integer read ReadFirst;",
     "  end;",
     "",
     "begin",
@@ -72,7 +85,7 @@ export async function verifyDebuggerEvaluation(
     assert.ok(frameId, "evaluation stop exposes a frame");
     for (const context of ["watch", "repl", "hover", "variables"]) {
       const result = await session.customRequest("evaluate", {
-        expression: "Offset + Origin.X",
+        expression: "Point.Create(Offset, Origin.X).Sum()",
         frameId,
         context
       }) as EvaluateResult;
@@ -92,6 +105,12 @@ export async function verifyDebuggerEvaluation(
       ["X", "3"],
       ["Y", "4"]
     ]);
+    const property = await session.customRequest("evaluate", {
+      expression: "Point.Create(6, 7).First",
+      frameId,
+      context: "hover"
+    }) as EvaluateResult;
+    assert.equal(property.result, "6", "compiler property metadata resolves the exact getter");
     const activeSession = session;
     await assert.rejects(
       async () => activeSession.customRequest("evaluate", {
@@ -99,7 +118,7 @@ export async function verifyDebuggerEvaluation(
         frameId,
         context: "repl"
       }),
-      /not supported|calls/i
+      /forbidden|effect|host/i
     );
     const initialize = sent.slice(marker.sent).find(
       (message) => message.type === "response" && message.command === "initialize"

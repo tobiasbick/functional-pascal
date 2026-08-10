@@ -5,27 +5,12 @@ release. Protocol adapters must advertise them as unsupported and must not
 silently approximate them. Deferral keeps the initial engine deterministic,
 read-only, and testable; it does not reject these features permanently.
 
-Read-only expression evaluation, watches, conditional breakpoints, exact-hit
-conditions, and non-stopping logpoints are implemented. The following work
+Read-only expression evaluation, detached controlled calls, watches,
+conditional breakpoints, exact-hit conditions, and non-stopping logpoints are
+implemented. Calls with host I/O, nondeterminism, blocking, tasks, opaque
+resources, or unresolved dynamic effects are deliberately rejected by the
+implemented safety policy and are not a deferred promise. The following work
 remains intentionally deferred.
-
-## Evaluation with debugger-side calls
-
-Deferred:
-
-- invoking FPAS functions, procedures, methods, properties, constructors, or
-  intrinsics from a watch, hover, condition, logpoint, or Debug Console;
-- expressions outside the implemented read-only subset;
-- any evaluation that may mutate state, perform I/O, block, or spawn work.
-
-Reason: a stopped-frame call needs controlled execution, not only inspection.
-It may change registers or globals, enter hosted code, wait indefinitely, or
-create concurrent work while the debugger assumes a stable snapshot.
-
-Re-entry gate: first complete the read-only evaluator, then define an explicit
-side-effect policy, call timeout and cancellation behavior, nested-stop rules,
-hosted-operation restrictions, and deterministic tests that prove recovery
-after success, failure, timeout, and disconnect.
 
 ## Variable mutation
 

@@ -155,7 +155,7 @@ export async function verifyWorkflowUnits(): Promise<void> {
     process.cwd(),
     cancellation.token
   );
-  setTimeout(() => cancellation.cancel(), 100);
+  setTimeout(() => cancellation.cancel(), 500);
   const cancelled = await pending;
   cancellation.dispose();
   assert.equal(cancelled.cancelled, true);

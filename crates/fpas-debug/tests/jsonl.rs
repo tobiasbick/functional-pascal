@@ -129,9 +129,16 @@ fn initialize_reports_the_configured_execution_limits() {
     let records = server.handle_line(&request(1, "initialize", json!({})));
     let reported = &records[0]["body"]["limits"];
 
+    assert_eq!(records[0]["body"]["capabilities"]["evaluate_calls"], true);
+
     assert_eq!(reported["instructions"], 123);
     assert_eq!(reported["timeout_milliseconds"], 456);
     assert_eq!(reported["captured_output_bytes"], 789);
+    assert_eq!(reported["evaluation_calls"], 64);
+    assert_eq!(reported["evaluation_call_depth"], 32);
+    assert_eq!(reported["evaluation_call_instructions"], 1_000_000);
+    assert_eq!(reported["evaluation_detached_values"], 65_536);
+    assert_eq!(reported["evaluation_call_timeout_milliseconds"], 2_000);
 }
 
 #[test]
@@ -162,21 +169,22 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
 
 #[test]
 fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
-    let mut server = server("program Main; begin var X: integer := 1 end.");
+    let mut server = server(
+        "program Main; function Double(X: integer): integer; begin return X * 2 end; begin var X: integer := 1 end.",
+    );
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
 
     let result = server.handle_line(&request(3, "evaluate", json!({"expression":"1 + 2 * 3"})));
     assert_eq!(result[0]["body"]["result"], "7");
 
-    let unsupported = server.handle_line(&request(
-        4,
-        "evaluate",
-        json!({"expression":"Factorial(4)"}),
-    ));
-    assert_eq!(unsupported[0]["error"]["code"], "unsupported_expression");
+    let called = server.handle_line(&request(4, "evaluate", json!({"expression":"Double(4)"})));
+    assert_eq!(called[0]["body"]["result"], "8", "{called:?}");
 
-    let trailing = server.handle_line(&request(5, "evaluate", json!({"expression":"1 extra"})));
+    let unknown = server.handle_line(&request(5, "evaluate", json!({"expression":"Missing(4)"})));
+    assert_eq!(unknown[0]["error"]["code"], "call_target_unknown");
+
+    let trailing = server.handle_line(&request(6, "evaluate", json!({"expression":"1 extra"})));
     assert_eq!(trailing[0]["error"]["code"], "expression_parse");
 }
 
@@ -290,9 +298,68 @@ fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop()
 }
 
 #[test]
+fn conditions_and_logpoints_use_detached_controlled_calls() {
+    let source = "program Main;\n\
+                  mutable var Probe: integer := 0;\n\
+                  function Matches(Value: integer): boolean;\n\
+                  begin\n\
+                    Probe := Probe + 1;\n\
+                    return Value = 2\n\
+                  end;\n\
+                  function Render(Value: integer): integer;\n\
+                  begin\n\
+                    return Value + 10\n\
+                  end;\n\
+                  begin\n\
+                    mutable var I: integer := 0;\n\
+                    while I < 3 do\n\
+                    begin\n\
+                      I := I + 1\n\
+                    end\n\
+                  end.";
+    let line = source
+        .lines()
+        .position(|line| line.trim() == "I := I + 1")
+        .map(|line| line + 1)
+        .expect("loop line");
+
+    let mut conditional = server(source);
+    let _ = conditional.handle_line(&request(1, "initialize", json!({"version":2})));
+    let set = conditional.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":line,"condition":"Matches(I)"}),
+    ));
+    assert_eq!(set[0]["body"]["verified"], true, "{set:?}");
+    let _ = conditional.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut conditional);
+    assert_eq!(conditional.status(), ServerStatus::Stopped, "{events:?}");
+    let probe = conditional.handle_line(&request(4, "evaluate", json!({"expression":"Probe"})));
+    assert_eq!(probe[0]["body"]["result"], "0", "{probe:?}");
+
+    let mut logpoint = server(source);
+    let _ = logpoint.handle_line(&request(1, "initialize", json!({"version":2})));
+    let set = logpoint.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":line,"log_message":"value={Render(I)}"}),
+    ));
+    assert_eq!(set[0]["body"]["verified"], true, "{set:?}");
+    let _ = logpoint.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut logpoint);
+    let output = events
+        .iter()
+        .filter(|event| event["event"] == "output")
+        .filter_map(|event| event["body"]["text"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "value=10\nvalue=11\nvalue=12\n");
+    assert_eq!(logpoint.status(), ServerStatus::Terminated);
+}
+
+#[test]
 fn invalid_breakpoint_expressions_and_templates_are_unverified() {
     let cases = [
-        json!({"condition":"Call()"}),
+        json!({"condition":"go Work()"}),
         json!({"hit_condition":">= 3"}),
         json!({"log_message":"value={}"}),
         json!({"log_message":"value={I"}),

@@ -3,8 +3,8 @@
 use fpas_bytecode::{
     CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
     FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, RecordField,
-    RecordLayout, ReturnConvention, SourceId, SourceMap, SourceRun, StringId, StringTable,
-    VerifiedExecutable,
+    RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
+    StringTable, VerifiedExecutable,
 };
 
 use super::debug::{self, DebugCounts};
@@ -295,6 +295,14 @@ fn encode_records(executable: &Executable) -> Result<EncodedSection, FormatError
         for field in &record.fields {
             write_u32(&mut bytes, field.name.get());
         }
+        write_u32(
+            &mut bytes,
+            checked_u32("record_properties", record.properties.len())?,
+        );
+        for property in &record.properties {
+            write_u32(&mut bytes, property.name.get());
+            write_u32(&mut bytes, property.getter.get());
+        }
     }
     Ok(EncodedSection {
         tag: TAGS[4],
@@ -321,7 +329,24 @@ fn decode_records(section: DecodedSection<'_>) -> Result<Vec<RecordLayout>, Form
                 name: StringId::new(reader.u32("record_field_name")?),
             });
         }
-        records.push(RecordLayout { name, fields });
+        let property_count = reader.u32("record_property_count")? as usize;
+        check_count(
+            section.tag,
+            property_count,
+            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
+        )?;
+        let mut properties = Vec::with_capacity(property_count);
+        for _ in 0..property_count {
+            properties.push(RecordProperty {
+                name: StringId::new(reader.u32("record_property_name")?),
+                getter: StringId::new(reader.u32("record_property_getter")?),
+            });
+        }
+        records.push(RecordLayout {
+            name,
+            fields,
+            properties,
+        });
     }
     reader.finish()?;
     Ok(records)

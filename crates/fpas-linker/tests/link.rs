@@ -272,6 +272,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
     first.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
+        properties: Vec::new(),
     });
     first.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -293,6 +294,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
     second.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
+        properties: Vec::new(),
     });
     second.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -314,6 +316,7 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
     library.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string(), "y".to_string()],
+        properties: Vec::new(),
     });
     library.definitions.push(ObjectDefinition {
         name: "library.unit.point".to_string(),
@@ -356,6 +359,7 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     library.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string()],
+        properties: Vec::new(),
     });
     library.enums.push(fpas_unit::object::ObjectEnumLayout {
         name: "library.unit.choice".to_string(),

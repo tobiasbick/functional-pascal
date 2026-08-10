@@ -7,7 +7,7 @@ or sensitive data before sharing it.
 ```text
 Title: <short observable problem>
 
-Extension version: <for example 0.2.0>
+Extension version: <for example 0.3.0>
 Editor and version: <VS Code, Cursor, or compatible editor>
 Host target: <for example win32-x64 or linux-x64>
 FPAS context: <loose file, .fpasprj, or .fpasworkspace>
@@ -33,6 +33,11 @@ Functional Pascal output:
 Do not include usernames, hostnames, absolute home-directory paths, secrets,
 or unrelated output. Replace absolute project roots with `<workspace>` and
 extension installation roots with `<extension>`.
+
+For debugger evaluation failures, include the expression context (Watch,
+Hover, Variables, or Debug Console), the complete actionable error, whether a
+call was cancelled, and whether the stopped frame remained inspectable. Do not
+include secrets returned from program variables.
 
 Before recording a new problem, run **Developer: Reload Window**, reproduce it
 once with the current locally built VSIX, and check whether **Functional

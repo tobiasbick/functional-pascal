@@ -27,6 +27,6 @@ pub use id::{
 pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
 pub use program::{
     EnumLayout, EnumVariant, Global, IntrinsicSignature, IrType, Program, RecordField,
-    RecordLayout, TypeDefinition,
+    RecordLayout, RecordProperty, TypeDefinition,
 };
 pub use terminator::{BlockTarget, Terminator};

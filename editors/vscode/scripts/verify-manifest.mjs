@@ -15,7 +15,7 @@ export async function verifyManifest() {
     `${manifest.publisher}.${manifest.name}`,
     "functional-pascal.functional-pascal"
   );
-  assert.equal(manifest.version, "0.2.0");
+  assert.equal(manifest.version, "0.3.0");
   assert.equal(manifest.main, "./out/src/extension.js");
   assert.equal(manifest.engines?.vscode, "^1.91.0");
   assert.equal(manifest.scripts?.package, "node scripts/package.mjs");

@@ -5,7 +5,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 
 use super::breakpoints::{self, BoundBreakpoint, SourceBreakpoint};
-use super::evaluation::{DebugEvaluateResult, DebugEvaluationLimits, DebugExpression};
+use super::calls::CallSandbox;
+use super::evaluation::{
+    DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value,
+};
 use super::inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugVariable, InspectionSnapshot, Paginated,
 };
@@ -25,6 +28,19 @@ pub struct DebugPauseHandle {
     requested: Arc<AtomicBool>,
 }
 
+/// Thread-safe cooperative cancellation handle for active debugger call evaluation.
+#[derive(Clone)]
+pub struct DebugEvaluationCancelHandle {
+    cancelled: Arc<AtomicBool>,
+}
+
+impl DebugEvaluationCancelHandle {
+    /// Cancel the active or next debugger call evaluation at an instruction boundary.
+    pub fn cancel(&self) {
+        self.cancelled.store(true, Ordering::Release);
+    }
+}
+
 impl DebugPauseHandle {
     /// Request a pause at the next source sequence point after an instruction boundary.
     pub fn request_pause(&self) {
@@ -40,6 +56,7 @@ pub struct DebugSession {
     breakpoints: Vec<BoundBreakpoint>,
     next_breakpoint_id: u64,
     pause_requested: Arc<AtomicBool>,
+    evaluation_cancelled: Arc<AtomicBool>,
     last_stop: DebugStop,
     inspection_generation: u32,
     inspection: InspectionSnapshot,
@@ -145,6 +162,7 @@ impl DebugSession {
         )
         .map_err(runtime_initialization_error)?;
         let pause_requested = Arc::new(AtomicBool::new(false));
+        let evaluation_cancelled = Arc::new(AtomicBool::new(false));
         let last_stop = stop_at_worker(
             &executable,
             &worker,
@@ -162,6 +180,7 @@ impl DebugSession {
             breakpoints: Vec::new(),
             next_breakpoint_id: 1,
             pause_requested,
+            evaluation_cancelled,
             last_stop,
             inspection_generation,
             inspection,
@@ -199,6 +218,14 @@ impl DebugSession {
     pub fn pause_handle(&self) -> DebugPauseHandle {
         DebugPauseHandle {
             requested: Arc::clone(&self.pause_requested),
+        }
+    }
+
+    /// Create a handle that can cancel controlled call evaluation.
+    #[must_use]
+    pub fn evaluation_cancel_handle(&self) -> DebugEvaluationCancelHandle {
+        DebugEvaluationCancelHandle {
+            cancelled: Arc::clone(&self.evaluation_cancelled),
         }
     }
 
@@ -269,7 +296,11 @@ impl DebugSession {
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
         self.require_inspectable("evaluate")?;
-        self.inspection.evaluate(expression, frame_id, limits)
+        let result = self
+            .evaluate_runtime_value(expression, frame_id, limits)
+            .and_then(|value| self.inspection.retain_evaluation_result(value, limits));
+        self.evaluation_cancelled.store(false, Ordering::Release);
+        result
     }
 
     /// Evaluate one validated breakpoint condition as a strict Boolean value.
@@ -283,8 +314,44 @@ impl DebugSession {
         frame_id: Option<u64>,
     ) -> Result<bool, DebugSessionError> {
         self.require_inspectable("evaluate.condition")?;
-        self.inspection
-            .evaluate_boolean(expression, frame_id, DebugEvaluationLimits::default())
+        let result = self
+            .evaluate_runtime_value(expression, frame_id, DebugEvaluationLimits::default())
+            .and_then(|value| match value {
+                fpas_bytecode::Value::Boolean(value) => Ok(value),
+                other => Err(DebugSessionError {
+                    kind: DebugErrorKind::EvaluationType,
+                    message: format!(
+                        "debug breakpoint condition must be Boolean, got {}",
+                        other.type_name()
+                    ),
+                    hint: "Use a comparison or another expression that returns Boolean."
+                        .to_string(),
+                }),
+            });
+        self.evaluation_cancelled.store(false, Ordering::Release);
+        result
+    }
+
+    fn evaluate_runtime_value(
+        &self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
+        self.inspection.validate_evaluation_frame(frame_id)?;
+        let mut sandbox = CallSandbox::new(
+            Arc::clone(&self.executable),
+            Arc::clone(&self.worker.layouts),
+            &self.worker.globals,
+            limits,
+            Arc::clone(&self.evaluation_cancelled),
+        )?;
+        evaluate_value(
+            expression,
+            limits,
+            |name| self.inspection.resolve_evaluation_name(frame_id, name),
+            |target, arguments| sandbox.invoke(target, arguments),
+        )
     }
 
     /// Add one source breakpoint and return its verified or unverified binding.

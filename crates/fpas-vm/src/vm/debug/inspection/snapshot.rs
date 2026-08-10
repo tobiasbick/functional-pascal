@@ -4,9 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value};
 
-use super::super::evaluation::{
-    DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value,
-};
+use super::super::evaluation::{DebugEvaluateResult, DebugEvaluationLimits};
 use super::model::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
@@ -43,6 +41,26 @@ struct CapturedFrame {
 }
 
 impl InspectionSnapshot {
+    pub(in crate::vm::debug) fn validate_evaluation_frame(
+        &self,
+        frame_id: Option<u64>,
+    ) -> Result<(), DebugSessionError> {
+        if frame_id.is_none()
+            || self
+                .frames
+                .iter()
+                .any(|frame| Some(frame.frame.id) == frame_id)
+        {
+            return Ok(());
+        }
+        let frame_id = frame_id.unwrap_or_default();
+        Err(DebugSessionError {
+            kind: DebugErrorKind::UnknownFrame,
+            message: format!("debug frame {frame_id} is unknown or expired"),
+            hint: "Request stack frames again for the current stop.".to_string(),
+        })
+    }
+
     pub(in crate::vm::debug) fn capture(
         worker: &Worker,
         generation: u32,
@@ -183,13 +201,33 @@ impl InspectionSnapshot {
         Ok(Paginated { items, total })
     }
 
-    pub(in crate::vm::debug) fn evaluate(
-        &mut self,
-        expression: &DebugExpression,
+    pub(in crate::vm::debug) fn resolve_evaluation_name(
+        &self,
         frame_id: Option<u64>,
+        name: &str,
+    ) -> Result<Value, DebugSessionError> {
+        let frame_values = match frame_id {
+            Some(frame_id) => Some(
+                self.frames
+                    .iter()
+                    .find(|frame| frame.frame.id == frame_id)
+                    .map(|frame| frame.evaluation_values.as_slice())
+                    .ok_or_else(|| DebugSessionError {
+                        kind: DebugErrorKind::UnknownFrame,
+                        message: format!("debug frame {frame_id} is unknown or expired"),
+                        hint: "Request stack frames again for the current stop.".to_string(),
+                    })?,
+            ),
+            None => None,
+        };
+        resolve_name(frame_values, &self.globals, name)
+    }
+
+    pub(in crate::vm::debug) fn retain_evaluation_result(
+        &mut self,
+        value: Value,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
-        let value = self.evaluate_runtime_value(expression, frame_id, limits)?;
         let retained = RetainedValue {
             name: "$result".to_string(),
             type_name: value.type_name().to_string(),
@@ -224,50 +262,6 @@ impl InspectionSnapshot {
             variables_reference,
             named_variables: rendered.named_children,
             indexed_variables: rendered.indexed_children,
-        })
-    }
-
-    pub(in crate::vm::debug) fn evaluate_boolean(
-        &self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<bool, DebugSessionError> {
-        match self.evaluate_runtime_value(expression, frame_id, limits)? {
-            Value::Boolean(value) => Ok(value),
-            other => Err(DebugSessionError {
-                kind: DebugErrorKind::EvaluationType,
-                message: format!(
-                    "debug breakpoint condition must be Boolean, got {}",
-                    other.type_name()
-                ),
-                hint: "Use a comparison or another expression that returns Boolean.".to_string(),
-            }),
-        }
-    }
-
-    fn evaluate_runtime_value(
-        &self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<Value, DebugSessionError> {
-        let frame_values = match frame_id {
-            Some(frame_id) => Some(
-                self.frames
-                    .iter()
-                    .find(|frame| frame.frame.id == frame_id)
-                    .map(|frame| frame.evaluation_values.as_slice())
-                    .ok_or_else(|| DebugSessionError {
-                        kind: DebugErrorKind::UnknownFrame,
-                        message: format!("debug frame {frame_id} is unknown or expired"),
-                        hint: "Request stack frames again for the current stop.".to_string(),
-                    })?,
-            ),
-            None => None,
-        };
-        evaluate_value(expression, limits, |name| {
-            resolve_name(frame_values, &self.globals, name)
         })
     }
 

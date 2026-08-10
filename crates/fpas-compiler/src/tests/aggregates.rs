@@ -261,6 +261,43 @@ end.",
 }
 
 #[test]
+fn readable_record_properties_keep_exact_getter_metadata() {
+    let program = parse_ok(
+        "\
+program RecordPropertyMetadata;
+type
+  Counter = record
+    Value: integer;
+    function ReadNumber(Self: Counter): integer;
+    begin
+      return Self.Value
+    end;
+    property Number: integer read ReadNumber;
+  end;
+begin
+  var C: Counter := record Value := 1; end;
+  if C.Number <> 1 then panic('property metadata fixture')
+end.",
+    );
+    let executable = crate::compile(&program).expect("property metadata source should compile");
+    let executable = executable.executable();
+    let record = executable
+        .records
+        .iter()
+        .find(|record| executable.strings.get(record.name) == Some("Counter"))
+        .expect("Counter record layout");
+    let property = record
+        .properties
+        .first()
+        .expect("readable property metadata");
+    assert_eq!(executable.strings.get(property.name), Some("Number"));
+    assert_eq!(
+        executable.strings.get(property.getter),
+        Some("Counter.ReadNumber")
+    );
+}
+
+#[test]
 fn string_indexing_and_membership_execute() {
     assert_succeeds(
         "\

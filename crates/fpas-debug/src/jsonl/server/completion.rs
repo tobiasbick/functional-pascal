@@ -4,13 +4,20 @@ use serde_json::{Value, json};
 
 use super::{JsonlServer, ServerStatus};
 use crate::breakpoints::BreakpointOutcome;
-use crate::jsonl::actor::{Completion, ResumeCommand};
+use crate::jsonl::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
 use crate::jsonl::encode::{diagnostic_body, error_body, error_code, output_events, stopped_event};
 use crate::jsonl::protocol::event;
 
 impl JsonlServer {
-    pub(super) fn complete(&mut self, completion: Completion) -> Vec<Value> {
-        let Completion {
+    pub(super) fn complete_actor(&mut self, completion: ActorCompletion) -> Vec<Value> {
+        match completion {
+            ActorCompletion::Resume(completion) => self.complete_resume(completion),
+            ActorCompletion::Evaluation(completion) => self.complete_evaluation(completion),
+        }
+    }
+
+    fn complete_resume(&mut self, completion: ResumeCompletion) -> Vec<Value> {
+        let ResumeCompletion {
             mut session,
             result,
         } = completion;
@@ -130,5 +137,29 @@ impl JsonlServer {
             }
         }
         records
+    }
+
+    fn complete_evaluation(&mut self, completion: EvaluationCompletion) -> Vec<Value> {
+        let EvaluationCompletion { session, result } = completion;
+        self.actor.restore(session);
+        let Some((request_id, command)) = self.pending_evaluation.take() else {
+            return Vec::new();
+        };
+        match result {
+            Ok(result) => vec![crate::jsonl::protocol::success(
+                request_id,
+                &command,
+                json!({
+                    "result": result.value,
+                    "type_name": result.type_name,
+                    "variables_reference": result.variables_reference,
+                    "named_variables": result.named_variables,
+                    "indexed_variables": result.indexed_variables
+                }),
+            )],
+            Err(error) => vec![crate::jsonl::protocol::session_error(
+                request_id, &command, error,
+            )],
+        }
     }
 }

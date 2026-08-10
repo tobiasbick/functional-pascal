@@ -1,8 +1,8 @@
 use fpas_bytecode::{
     CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
     FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, Intrinsic, NO_REGISTER,
-    Opcode, RecordField, RecordLayout, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
-    StringTable, intrinsic::ConsoleIntrinsic,
+    Opcode, RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap,
+    SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
 };
 
 pub fn abc(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
@@ -128,6 +128,10 @@ pub fn all_opcodes_executable() -> Executable {
             name: StringId::new(3),
             fields: vec![RecordField {
                 name: StringId::new(4),
+            }],
+            properties: vec![RecordProperty {
+                name: StringId::new(4),
+                getter: StringId::new(1),
             }],
         }],
         enums: vec![EnumLayout {

@@ -1,4 +1,4 @@
-//! Portable source-level debugger metadata.
+//! Source bindings, scopes, and sequence points used by debugger adapters.
 
 use crate::{InstructionAddress, Register, SourceId, StringId};
 

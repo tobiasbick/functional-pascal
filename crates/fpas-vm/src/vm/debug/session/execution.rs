@@ -45,6 +45,7 @@ impl DebugSession {
 
     /// Terminate this owned session without executing more program instructions.
     pub fn disconnect(&mut self) {
+        self.evaluation_cancelled.store(true, Ordering::Release);
         self.state = DebugSessionState::Terminated;
         self.pause_requested.store(false, Ordering::Release);
         self.invalidate_inspection();

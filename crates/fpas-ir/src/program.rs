@@ -146,6 +146,17 @@ pub struct RecordLayout {
     pub name: String,
     /// Field declarations in declaration order.
     pub fields: Vec<RecordField>,
+    /// Readable properties and their exact compiler-resolved getter names.
+    pub properties: Vec<RecordProperty>,
+}
+
+/// Readable property mapping retained for debugger-side exact binding.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordProperty {
+    /// Public source property name.
+    pub name: String,
+    /// Canonical qualified getter routine name.
+    pub getter: String,
 }
 
 /// A field inside a record layout.

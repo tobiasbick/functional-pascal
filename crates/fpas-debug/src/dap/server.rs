@@ -16,6 +16,7 @@ pub struct DapServer {
     source_paths: Vec<String>,
     sources: HashMap<String, String>,
     runtime_failed: bool,
+    pending_core_requests: HashMap<u64, (u64, String)>,
 }
 
 impl DapServer {
@@ -39,6 +40,7 @@ impl DapServer {
             source_paths,
             sources,
             runtime_failed: false,
+            pending_core_requests: HashMap::new(),
         })
     }
 
@@ -64,7 +66,13 @@ impl DapServer {
             .get("arguments")
             .cloned()
             .unwrap_or_else(|| json!({}));
-        match command {
+        let mut output = if self.core.is_evaluating() && !matches!(command, "cancel" | "disconnect")
+        {
+            self.wait()
+        } else {
+            Vec::new()
+        };
+        let mut response = match command {
             "initialize" => self.initialize(request_seq),
             "launch" => { self.stop_on_entry = arguments.get("stopOnEntry").and_then(Value::as_bool).unwrap_or(false); vec![self.success(request_seq, command, json!({}))] }
             "setBreakpoints" => self.set_breakpoints(request_seq, &arguments),
@@ -74,6 +82,12 @@ impl DapServer {
             "scopes" => self.core_request(request_seq, command, "scopes", json!({"frame_id":arguments.get("frameId").cloned().unwrap_or(Value::Null)})),
             "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
             "evaluate" => self.evaluate(request_seq, command, &arguments),
+            "cancel" => self.core_request(
+                request_seq,
+                command,
+                "evaluate.cancel",
+                json!({"request_id": arguments.get("requestId")}),
+            ),
             "continue" if self.runtime_failed => {
                 self.runtime_failed = false;
                 self.core_request(request_seq, command, "disconnect", json!({}))
@@ -86,21 +100,23 @@ impl DapServer {
             "disconnect" => self.core_request(request_seq, command, "disconnect", json!({})),
             "source" => self.source(request_seq, command, &arguments),
             _ => vec![self.failure(request_seq, command, &format!("DAP request `{command}` is unsupported by the FPAS debugger."))],
-        }
+        };
+        output.append(&mut response);
+        output
     }
 
     /// Wait for an active resume and translate resulting events.
     #[must_use]
     pub fn wait(&mut self) -> Vec<Value> {
         let records = self.core.wait();
-        self.translate_events(records)
+        self.translate_core(records)
     }
 
     /// Poll an active resume without blocking.
     #[must_use]
     pub fn poll(&mut self) -> Vec<Value> {
         let records = self.core.poll();
-        self.translate_events(records)
+        self.translate_core(records)
     }
 
     /// Whether execution is active.
@@ -130,6 +146,7 @@ impl DapServer {
                 "supportsTerminateRequest":false,"supportsEvaluateForHovers":true,
                 "supportsConditionalBreakpoints":true,"supportsHitConditionalBreakpoints":true,
                 "supportsLogPoints":true,
+                "supportsCancelRequest":true,
                 "supportsSetVariable":false,"supportsStepBack":false
             }),
         )];
@@ -242,7 +259,8 @@ impl DapServer {
             "evaluate",
             json!({
                 "expression": arguments.get("expression").cloned().unwrap_or(Value::Null),
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null)
+                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
+                "async": true
             }),
         )
     }
@@ -255,20 +273,29 @@ impl DapServer {
         arguments: Value,
     ) -> Vec<Value> {
         let id = self.next_core_id();
+        self.pending_core_requests
+            .insert(id, (request_seq, dap_command.to_string()));
         let records = self.core.handle_line(&core_request(id, command, arguments));
-        self.translate(request_seq, dap_command, records)
+        self.translate_core(records)
     }
 
-    fn translate(&mut self, request_seq: u64, command: &str, records: Vec<Value>) -> Vec<Value> {
+    fn translate_core(&mut self, records: Vec<Value>) -> Vec<Value> {
         let mut output = Vec::new();
         for record in records {
             if record.get("type").and_then(Value::as_str) == Some("response") {
+                let Some(core_id) = record.get("request_id").and_then(Value::as_u64) else {
+                    continue;
+                };
+                let Some((request_seq, command)) = self.pending_core_requests.remove(&core_id)
+                else {
+                    continue;
+                };
                 if record.get("success").and_then(Value::as_bool) == Some(true) {
                     output.push(self.success(
                         request_seq,
-                        command,
+                        &command,
                         dap_body(
-                            command,
+                            &command,
                             record.get("body").cloned().unwrap_or_else(|| json!({})),
                         ),
                     ));
@@ -276,7 +303,7 @@ impl DapServer {
                     output.push(
                         self.failure(
                             request_seq,
-                            command,
+                            &command,
                             record
                                 .pointer("/error/message")
                                 .and_then(Value::as_str)

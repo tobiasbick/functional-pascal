@@ -35,6 +35,17 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Items[0]",
         "Dictionary['key']",
         "Text[0]",
+        "Call()",
+        "Value.Method()",
+        "[]",
+        "[: ]",
+        "record X := 1; end",
+        "Ok(1)",
+        "Error('x')",
+        "Some(1)",
+        "None",
+        "try Work()",
+        "Point with X := 2; end",
     ];
     for source in expressions {
         assert!(
@@ -46,22 +57,7 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
 
 #[test]
 fn validator_rejects_every_effectful_or_constructing_category() {
-    let expressions = [
-        "Call()",
-        "Value.Method()",
-        "[]",
-        "[: ]",
-        "record X := 1; end",
-        "Ok(1)",
-        "Error('x')",
-        "Some(1)",
-        "None",
-        "nil",
-        "go Work()",
-        "try Work()",
-        "Point with X := 2; end",
-        "function(): integer begin return 1 end",
-    ];
+    let expressions = ["nil", "go Work()", "function(): integer begin return 1 end"];
     for source in expressions {
         let error = parse_debug_expression(source, DebugEvaluationLimits::default())
             .expect_err("unsupported expression category");
@@ -93,7 +89,7 @@ fn log_templates_escape_braces_and_preparse_bounded_expressions() {
     assert_eq!(message.segments().len(), 3);
     assert!(matches!(message.segments()[1], LogSegment::Expression(_)));
 
-    for source in ["{}", "{Counter", "Counter}", "{Counter{Other}}", "{Call()}"] {
+    for source in ["{}", "{Counter", "Counter}", "{Counter{Other}}"] {
         assert!(
             LogMessage::parse(
                 source,

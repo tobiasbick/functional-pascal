@@ -146,6 +146,7 @@ fn record_and_enum_slots_are_positional() {
         fields: vec![RecordField {
             name: StringId::new(3),
         }],
+        properties: Vec::new(),
     }];
     image.enums = vec![EnumLayout {
         name: StringId::new(4),
@@ -279,6 +280,7 @@ fn positional_record_clones_share_layout_and_detach_values() {
         fields: vec![RecordField {
             name: StringId::new(3),
         }],
+        properties: Vec::new(),
     }];
     let (_, registers, _) = execute(image.verify().expect("record image must verify"))
         .expect("record program must run");

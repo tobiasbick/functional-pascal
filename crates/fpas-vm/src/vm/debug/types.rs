@@ -127,6 +127,22 @@ pub enum DebugErrorKind {
     EvaluationLimit,
     /// A mutable or opaque runtime value cannot be read safely without blocking.
     UnavailableValue,
+    /// No exact executable callable matches the requested name or member.
+    UnknownCallable,
+    /// More than one exact callable candidate matches the request.
+    AmbiguousCallable,
+    /// A controlled call supplied the wrong number of arguments.
+    CallArity,
+    /// A controlled call has a denied transitive effect.
+    ForbiddenCallEffect,
+    /// Controlled call count, depth, detached-value, or instruction bounds were exceeded.
+    CallLimit,
+    /// Controlled call execution exceeded its wall-clock deadline.
+    CallTimeout,
+    /// Controlled call execution was cooperatively cancelled.
+    CallCancelled,
+    /// The detached worker reported a runtime failure.
+    CallRuntime,
     /// One resume operation exceeded its wall-clock deadline.
     ExecutionTimeout,
     /// The session exhausted its instruction budget.

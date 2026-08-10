@@ -38,6 +38,7 @@ pub struct JsonlServer {
     output_cursor: usize,
     breakpoint_policies: HashMap<u64, BreakpointPolicy>,
     log_output_bytes: usize,
+    pending_evaluation: Option<(u64, String)>,
 }
 
 impl JsonlServer {
@@ -56,6 +57,7 @@ impl JsonlServer {
             output_cursor: 0,
             breakpoint_policies: HashMap::new(),
             log_output_bytes: 0,
+            pending_evaluation: None,
         })
     }
 
@@ -63,6 +65,12 @@ impl JsonlServer {
     #[must_use]
     pub const fn status(&self) -> ServerStatus {
         self.status
+    }
+
+    /// Whether a detached call evaluation currently owns the session actor.
+    #[must_use]
+    pub fn is_evaluating(&self) -> bool {
+        self.actor.is_evaluating()
     }
 
     /// Parse and handle one complete UTF-8 JSON object line.
@@ -146,7 +154,7 @@ impl JsonlServer {
     pub fn poll(&mut self) -> Vec<Value> {
         self.actor
             .poll()
-            .map_or_else(Vec::new, |completion| self.complete(completion))
+            .map_or_else(Vec::new, |completion| self.complete_actor(completion))
     }
 
     /// Wait for the active resume operation and return its terminal or stopped events.
@@ -154,7 +162,7 @@ impl JsonlServer {
     pub fn wait(&mut self) -> Vec<Value> {
         self.actor
             .wait()
-            .map_or_else(Vec::new, |completion| self.complete(completion))
+            .map_or_else(Vec::new, |completion| self.complete_actor(completion))
     }
 
     fn handle_request(
@@ -177,6 +185,7 @@ impl JsonlServer {
             "scopes" => self.scopes(request_id, command, arguments),
             "variables" => self.variables(request_id, command, arguments),
             "evaluate" => self.evaluate(request_id, command, arguments),
+            "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(
                 request_id,
@@ -245,6 +254,9 @@ impl JsonlServer {
 
     fn resume(&mut self, request_id: u64, command: &str, resume: ResumeCommand) -> Vec<Value> {
         if self.status != ServerStatus::Stopped {
+            return vec![invalid_state(request_id, command, self.status)];
+        }
+        if self.actor.session().is_none() {
             return vec![invalid_state(request_id, command, self.status)];
         }
         match self.actor.resume(resume) {
@@ -347,6 +359,17 @@ impl JsonlServer {
     }
 
     fn disconnect(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+        if self.actor.is_evaluating() {
+            self.actor.cancel_evaluation();
+            let mut records = self.wait();
+            records.push(success(request_id, command, json!({"terminated": true})));
+            self.status = ServerStatus::Terminated;
+            records.push(event(
+                "terminated",
+                json!({"reason": "disconnect", "exit_code": 0}),
+            ));
+            return records;
+        }
         if self.status == ServerStatus::Running {
             self.actor.pause();
             let mut records = vec![success(request_id, command, json!({"terminated": true}))];
@@ -369,6 +392,15 @@ impl JsonlServer {
                 json!({"reason": "disconnect", "exit_code": 0}),
             ),
         ]
+    }
+
+    fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+        let cancelled = self.actor.cancel_evaluation();
+        vec![success(
+            request_id,
+            command,
+            json!({"cancelled": cancelled}),
+        )]
     }
 
     fn fatal_request(&mut self, message: impl Into<String>) -> Vec<Value> {

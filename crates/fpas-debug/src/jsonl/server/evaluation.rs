@@ -43,6 +43,16 @@ impl JsonlServer {
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
+        if arguments
+            .get("async")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            let _ = session;
+            self.pending_evaluation = Some((request_id, command.to_string()));
+            self.actor.evaluate(expression, frame_id, limits);
+            return Vec::new();
+        }
         match session.evaluate_with_limits(&expression, frame_id, limits) {
             Ok(result) => vec![success(
                 request_id,

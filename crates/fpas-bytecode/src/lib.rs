@@ -10,8 +10,9 @@ mod validate;
 mod value;
 
 pub use debug::{
-    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
-    SequencePoint,
+    DebugBinding, DebugBindingKind, DebugEffectSet, DebugScope, DebugSourceLocation,
+    FunctionDebugInfo, FunctionEffectSummary, SequencePoint, analyze_debug_effects,
+    intrinsic_debug_effects,
 };
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
@@ -26,8 +27,8 @@ pub use intrinsic::{
     TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
-    Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, SourceMap, SourceRun,
-    StringTable,
+    Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, RecordProperty,
+    SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
     ConstantId, EnumTypeId, EnumVariantId, FunctionId, GlobalId, InstructionAddress, IntrinsicId,
@@ -40,4 +41,4 @@ pub use value::{
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 11;
+pub const BYTECODE_VERSION: u32 = 12;

@@ -51,10 +51,11 @@ export function smokePackagedCli({
       manifest,
       '[project]\nname = "smoke"\nkind = "program"\nmain = "src/main.fpas"\n\n[sources]\ninclude = ["src/**/*.fpas"]\n'
     );
-    writeFileSync(
-      path.join(projectRoot, "src", "main.fpas"),
-      "program Smoke;\n\nuses Std.Console;\n\nbegin\n  var Value: integer := 1;\n  WriteLn(Value)\nend.\n"
-    );
+    const mainSource = "program Smoke;\n\nuses Std.Console;\n\nfunction Double(Value: integer): integer;\nbegin\n  return Value * 2\nend;\n\nbegin\n  var Value: integer := 1;\n  WriteLn(Value)\nend.\n";
+    const breakpointLine = mainSource
+      .split(/\r?\n/u)
+      .findIndex((line) => line.includes("WriteLn")) + 1;
+    writeFileSync(path.join(projectRoot, "src", "main.fpas"), mainSource);
     const checked = invoke(
       cli,
       ["check", "--std-lib", standardLibrary, manifest],
@@ -87,7 +88,7 @@ export function smokePackagedCli({
     const commands = path.join(projectRoot, "debug.jsonl");
     writeFileSync(
       commands,
-      '{"type":"request","id":1,"command":"initialize","arguments":{"version":2}}\n{"type":"request","id":2,"command":"launch","arguments":{"stop_on_entry":true}}\n{"type":"request","id":3,"command":"evaluate","arguments":{"expression":"1 + 2"}}\n{"type":"request","id":4,"command":"disconnect","arguments":{}}\n'
+      '{"type":"request","id":1,"command":"initialize","arguments":{"version":2}}\n{"type":"request","id":2,"command":"launch","arguments":{"stop_on_entry":true}}\n{"type":"request","id":3,"command":"evaluate","arguments":{"expression":"Double(4)"}}\n{"type":"request","id":4,"command":"disconnect","arguments":{}}\n'
     );
     const debugged = invoke(
       cli,
@@ -96,7 +97,7 @@ export function smokePackagedCli({
     );
     assert.equal(debugged.status, 0, debugged.stderr);
     const debugRecords = debugged.stdout.trim().split(/\r?\n/u).map(JSON.parse);
-    assert.ok(debugRecords.some((record) => record.command === "evaluate" && record.body?.result === "3"));
+    assert.ok(debugRecords.some((record) => record.command === "evaluate" && record.body?.result === "8"));
     assert.ok(debugRecords.some((record) => record.event === "terminated"));
 
     const dap = invoke(
@@ -118,15 +119,15 @@ export function smokePackagedCli({
         dapRequest(3, "setBreakpoints", {
           source: { path: path.join(projectRoot, "src", "main.fpas") },
           breakpoints: [
-            { line: 7, condition: "true", hitCondition: "1" },
-            { line: 7, logMessage: "packaged value={Value}" }
+            { line: breakpointLine, condition: "Double(Value) = 2", hitCondition: "1" },
+            { line: breakpointLine, logMessage: "packaged value={Double(Value)}" }
           ]
         }),
         dapRequest(4, "configurationDone", {}),
         dapRequest(5, "threads", {}),
         dapRequest(6, "stackTrace", { threadId: 1 }),
         dapRequest(7, "evaluate", {
-          expression: "1 + 2",
+          expression: "Double(4)",
           context: "hover"
         }),
         dapRequest(8, "source", {
@@ -163,15 +164,15 @@ export function smokePackagedCli({
       dapMessages.some(
         (message) =>
           message.command === "evaluate" &&
-          message.body?.result === "3"
+          message.body?.result === "8"
       ),
-      "packaged DAP evaluates read-only expressions"
+      "packaged DAP evaluates controlled calls"
     );
     assert.ok(
       dapMessages.some(
         (message) =>
           message.event === "output" &&
-          message.body?.output?.includes("packaged value=1")
+          message.body?.output?.includes("packaged value=2")
       ),
       "packaged DAP evaluates a non-stopping logpoint before the normal stop"
     );

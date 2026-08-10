@@ -1,4 +1,4 @@
-/** Runtime-failure inspection and unsupported-evaluation host coverage. */
+/** Runtime-failure inspection and stopped-state evaluation coverage. */
 
 import assert from "node:assert/strict";
 
@@ -36,7 +36,7 @@ export async function verifyRuntimeFailure(
     session = await startSession({
       type: "fpas",
       request: "launch",
-      name: "FPAS debugger V1 runtime failure",
+      name: "FPAS debugger runtime failure",
       program: sourcePath,
       cwd: workspaceRoot,
       stopOnEntry: false
@@ -55,6 +55,12 @@ export async function verifyRuntimeFailure(
       levels: 64
     }) as { stackFrames: DapStackFrame[] };
     assert.ok(stack.stackFrames.length > 0, "runtime failure keeps stack inspection");
+    const zero = await session.customRequest("evaluate", {
+      expression: "Zero",
+      frameId: stack.stackFrames[0].id,
+      context: "watch"
+    }) as { result: string };
+    assert.equal(zero.result, "0", "initialized values remain evaluable after failure");
     await assert.rejects(
       async () =>
         session?.customRequest("evaluate", {
@@ -62,7 +68,7 @@ export async function verifyRuntimeFailure(
           frameId: stack.stackFrames[0].id,
           context: "watch"
         }),
-      /unsupported by FPAS debugger V1/u
+      /uninitialized/i
     );
     await vscode.commands.executeCommand("workbench.action.debug.continue");
     await waitFor(

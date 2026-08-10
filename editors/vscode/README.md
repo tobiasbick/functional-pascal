@@ -20,16 +20,19 @@ The extension also contributes the `fpas` debugger. Use **Run and Debug** with
 the generated **Debug Functional Pascal** configuration, or set `program` to a
 `.fpas`, program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
 images additionally require `sourceRoot`. Set source breakpoints in an `.fpas`
-editor gutter or with **F9**. Breakpoints, stepping, stack frames,
-scopes, variables, and program output use the bundled CLI's DAP adapter; the
+editor gutter or with **F9**. Breakpoints, stepping, stack frames, scopes,
+variables, read-only watches/hover/Debug Console evaluation, conditional
+breakpoints, exact positive-integer hit conditions, non-stopping logpoints,
+and program output use the bundled CLI's DAP adapter; the
 adapter supplies the bundled source standard library automatically. The
 language server remains responsible only for static editor features.
 Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
 Stop. The Run and Debug sidebar exposes the call stack, lexical scopes, locals,
-parameters, globals, and expandable aggregate values; program output and
-structured runtime failures appear in the Debug Console. Expression watches,
-variable mutation, attach, conditional breakpoints, and logpoints remain
-intentionally outside debugger V1.
+parameters, globals, and expandable aggregate values. Evaluated aggregates are
+also expandable until execution resumes. Program output, logpoint text, and
+structured runtime failures appear in the Debug Console. Log messages use
+`{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
+calls, variable mutation, attach, and task debugging remain unsupported.
 
 ## Build
 
@@ -152,7 +155,9 @@ VS Code Extension Host, verifies diagnostics, formatting, document symbols,
 hover, cross-unit definition and type definition, workspace symbols, document
 highlights, references, rename, rich completion, signature help, snippets, and
 a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
-commands, Problems, cancellation, and Testing API outcomes,
+commands, Problems, cancellation, Testing API outcomes, read-only evaluation
+in every supported DAP context, conditional and exact-hit stops, and
+non-stopping logpoints,
 restarts it once, and shuts it down with the extension:
 
 ```text

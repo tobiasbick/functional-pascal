@@ -1,4 +1,4 @@
-//! DAP request translation onto the frozen JSONL debugger core.
+//! DAP request translation onto the JSONL debugger core.
 
 use std::collections::HashMap;
 
@@ -7,7 +7,7 @@ use serde_json::{Value, json};
 use crate::PreparedDebugTarget;
 use crate::jsonl::{JsonlServer, ServerStatus};
 
-/// Stateful V1 DAP adapter for one prepared target.
+/// Stateful DAP adapter for one prepared target.
 pub struct DapServer {
     core: JsonlServer,
     sequence: u64,
@@ -73,6 +73,7 @@ impl DapServer {
             "stackTrace" => self.core_request(request_seq, command, "stack", json!({"start":arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),"count":arguments.get("levels").and_then(Value::as_u64).unwrap_or(64)})),
             "scopes" => self.core_request(request_seq, command, "scopes", json!({"frame_id":arguments.get("frameId").cloned().unwrap_or(Value::Null)})),
             "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
+            "evaluate" => self.evaluate(request_seq, command, &arguments),
             "continue" if self.runtime_failed => {
                 self.runtime_failed = false;
                 self.core_request(request_seq, command, "disconnect", json!({}))
@@ -84,7 +85,7 @@ impl DapServer {
             "stepOut" => self.core_request(request_seq, command, "step_out", json!({})),
             "disconnect" => self.core_request(request_seq, command, "disconnect", json!({})),
             "source" => self.source(request_seq, command, &arguments),
-            _ => vec![self.failure(request_seq, command, &format!("DAP request `{command}` is unsupported by FPAS debugger V1."))],
+            _ => vec![self.failure(request_seq, command, &format!("DAP request `{command}` is unsupported by the FPAS debugger."))],
         }
     }
 
@@ -118,7 +119,7 @@ impl DapServer {
         let records = self.core.handle_line(&core_request(
             request_seq,
             "initialize",
-            json!({"version":1}),
+            json!({"version":2}),
         ));
         let mut output = vec![self.success(
             request_seq,
@@ -126,7 +127,9 @@ impl DapServer {
             json!({
                 "supportsConfigurationDoneRequest":true,"supportsDelayedStackTraceLoading":true,
                 "supportsVariablePaging":true,
-                "supportsTerminateRequest":false,"supportsEvaluateForHovers":false,
+                "supportsTerminateRequest":false,"supportsEvaluateForHovers":true,
+                "supportsConditionalBreakpoints":true,"supportsHitConditionalBreakpoints":true,
+                "supportsLogPoints":true,
                 "supportsSetVariable":false,"supportsStepBack":false
             }),
         )];
@@ -165,7 +168,18 @@ impl DapServer {
             .unwrap_or_default()
         {
             let core_id = self.next_core_id();
-            let records = self.core.handle_line(&core_request(core_id, "breakpoint.set", json!({"source":source,"line":requested.get("line"),"column":requested.get("column")})));
+            let records = self.core.handle_line(&core_request(
+                core_id,
+                "breakpoint.set",
+                json!({
+                    "source":source,
+                    "line":requested.get("line"),
+                    "column":requested.get("column"),
+                    "condition":requested.get("condition"),
+                    "hit_condition":requested.get("hitCondition"),
+                    "log_message":requested.get("logMessage")
+                }),
+            ));
             if let Some(body) = records.first().and_then(|record| record.get("body")) {
                 if let Some(id) = body.get("breakpoint_id").and_then(Value::as_u64) {
                     ids.push(id);
@@ -208,6 +222,29 @@ impl DapServer {
                 "Verified source content is unavailable for this path. Open the workspace file directly or rebuild the target with source identities.",
             )],
         }
+    }
+
+    fn evaluate(&mut self, request_seq: u64, command: &str, arguments: &Value) -> Vec<Value> {
+        let context = arguments
+            .get("context")
+            .and_then(Value::as_str)
+            .unwrap_or("repl");
+        if !matches!(context, "watch" | "repl" | "hover" | "variables") {
+            return vec![self.failure(
+                request_seq,
+                command,
+                &format!("DAP evaluate context `{context}` is unsupported; use watch, repl, hover, or variables."),
+            )];
+        }
+        self.core_request(
+            request_seq,
+            command,
+            "evaluate",
+            json!({
+                "expression": arguments.get("expression").cloned().unwrap_or(Value::Null),
+                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null)
+            }),
+        )
     }
 
     fn core_request(
@@ -267,7 +304,13 @@ impl DapServer {
                     self.runtime_failed = body.get("reason").and_then(Value::as_str) == Some("runtime_error");
                     translated.push(self.event("stopped", json!({"reason":dap_stop_reason(body.get("reason").and_then(Value::as_str)),"threadId":1,"allThreadsStopped":true})));
                 }
-                "output" => translated.push(self.event("output", json!({"category":body.get("category"),"output":body.get("text")}))),
+                "output" => translated.push(self.event("output", json!({
+                    "category":body.get("category"),
+                    "output":body.get("text"),
+                    "source":body.pointer("/location/source").map(|path| json!({"path":path})),
+                    "line":body.pointer("/location/line"),
+                    "column":body.pointer("/location/column")
+                }))),
                 "terminated" => {
                     translated.push(self.event("exited", json!({"exitCode":body.get("exit_code").and_then(Value::as_i64).unwrap_or(0)})));
                     translated.push(self.event("terminated", json!({})));
@@ -327,6 +370,15 @@ fn dap_body(command: &str, body: Value) -> Value {
         }
         "variables" => {
             json!({"variables":body.get("variables").and_then(Value::as_array).into_iter().flatten().map(|variable| json!({"name":variable.get("name"),"value":variable.get("value"),"type":variable.get("type_name"),"variablesReference":variable.get("variables_reference"),"namedVariables":variable.get("named_variables"),"indexedVariables":variable.get("indexed_variables")})).collect::<Vec<_>>() })
+        }
+        "evaluate" => {
+            json!({
+                "result": body.get("result"),
+                "type": body.get("type_name"),
+                "variablesReference": body.get("variables_reference"),
+                "namedVariables": body.get("named_variables"),
+                "indexedVariables": body.get("indexed_variables")
+            })
         }
         "continue" => json!({"allThreadsContinued":true}),
         _ => body,

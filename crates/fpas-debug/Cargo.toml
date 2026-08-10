@@ -9,6 +9,7 @@ repository.workspace = true
 [dependencies]
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
+fpas-parser = { path = "../fpas-parser" }
 fpas-vm = { path = "../fpas-vm" }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
@@ -18,4 +19,3 @@ workspace = true
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }
-fpas-parser = { path = "../fpas-parser" }

@@ -2,8 +2,11 @@
 
 use std::collections::{HashMap, HashSet};
 
-use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress};
+use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value};
 
+use super::super::evaluation::{
+    DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value,
+};
 use super::model::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
@@ -15,6 +18,7 @@ use crate::vm::worker::Worker;
 pub(crate) struct InspectionSnapshot {
     generation: u32,
     frames: Vec<FrameSnapshot>,
+    globals: Vec<RetainedValue>,
     total_frames: usize,
     handles: Vec<HandleEntry>,
     child_handles: HashMap<(u64, usize), u64>,
@@ -24,6 +28,7 @@ pub(crate) struct InspectionSnapshot {
 struct FrameSnapshot {
     frame: DebugFrame,
     scopes: Vec<DebugScope>,
+    evaluation_values: Vec<RetainedValue>,
 }
 
 struct HandleEntry {
@@ -46,6 +51,7 @@ impl InspectionSnapshot {
         let mut snapshot = Self {
             generation,
             frames: Vec::new(),
+            globals: capture_globals(worker),
             total_frames: worker.call_stack.len().saturating_add(1),
             handles: Vec::new(),
             child_handles: HashMap::new(),
@@ -76,6 +82,7 @@ impl InspectionSnapshot {
         Self {
             generation,
             frames: Vec::new(),
+            globals: Vec::new(),
             total_frames: 0,
             handles: Vec::new(),
             child_handles: HashMap::new(),
@@ -176,6 +183,94 @@ impl InspectionSnapshot {
         Ok(Paginated { items, total })
     }
 
+    pub(in crate::vm::debug) fn evaluate(
+        &mut self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+    ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let value = self.evaluate_runtime_value(expression, frame_id, limits)?;
+        let retained = RetainedValue {
+            name: "$result".to_string(),
+            type_name: value.type_name().to_string(),
+            value: Some(value),
+            presentation_hint: None,
+            depth: 0,
+            visited_cells: HashSet::new(),
+        };
+        let rendered = render::render(&retained, self.limits);
+        let output_bytes = rendered
+            .summary
+            .len()
+            .saturating_add(rendered.type_name.len());
+        if output_bytes > limits.max_output_bytes {
+            return Err(DebugSessionError {
+                kind: DebugErrorKind::EvaluationLimit,
+                message: format!(
+                    "debug expression result uses {output_bytes} bytes, exceeding limit {}",
+                    limits.max_output_bytes
+                ),
+                hint: "Evaluate a smaller value or expand it through Variables.".to_string(),
+            });
+        }
+        let variables_reference = if rendered.children.is_empty() {
+            0
+        } else {
+            self.allocate_handle(rendered.children)?
+        };
+        Ok(DebugEvaluateResult {
+            value: rendered.summary,
+            type_name: rendered.type_name,
+            variables_reference,
+            named_variables: rendered.named_children,
+            indexed_variables: rendered.indexed_children,
+        })
+    }
+
+    pub(in crate::vm::debug) fn evaluate_boolean(
+        &self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+    ) -> Result<bool, DebugSessionError> {
+        match self.evaluate_runtime_value(expression, frame_id, limits)? {
+            Value::Boolean(value) => Ok(value),
+            other => Err(DebugSessionError {
+                kind: DebugErrorKind::EvaluationType,
+                message: format!(
+                    "debug breakpoint condition must be Boolean, got {}",
+                    other.type_name()
+                ),
+                hint: "Use a comparison or another expression that returns Boolean.".to_string(),
+            }),
+        }
+    }
+
+    fn evaluate_runtime_value(
+        &self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+    ) -> Result<Value, DebugSessionError> {
+        let frame_values = match frame_id {
+            Some(frame_id) => Some(
+                self.frames
+                    .iter()
+                    .find(|frame| frame.frame.id == frame_id)
+                    .map(|frame| frame.evaluation_values.as_slice())
+                    .ok_or_else(|| DebugSessionError {
+                        kind: DebugErrorKind::UnknownFrame,
+                        message: format!("debug frame {frame_id} is unknown or expired"),
+                        hint: "Request stack frames again for the current stop.".to_string(),
+                    })?,
+            ),
+            None => None,
+        };
+        evaluate_value(expression, limits, |name| {
+            resolve_name(frame_values, &self.globals, name)
+        })
+    }
+
     fn capture_frame(&mut self, worker: &Worker, frame: CapturedFrame, depth: usize) {
         let image = worker.executable.executable();
         let Some(function) = image.functions.get(usize::from(frame.function.get())) else {
@@ -183,12 +278,14 @@ impl InspectionSnapshot {
         };
         let point = breakpoints::point_at(&worker.executable, frame.function, frame.instruction);
         let active_scope = point.map_or(0, |point| point.scope);
-        let visible_scopes = visible_scope_ids(function, active_scope);
+        let visible_scopes = visible_scope_chain(function, active_scope);
+        let visible_scope_set = visible_scopes.iter().copied().collect::<HashSet<_>>();
         let mut parameters = Vec::new();
         let mut locals = Vec::new();
         let mut captures = Vec::new();
+        let mut retained_bindings = Vec::new();
         for binding in &function.debug.bindings {
-            if binding.hidden || !visible_scopes.contains(&binding.scope) {
+            if binding.hidden || !visible_scope_set.contains(&binding.scope) {
                 continue;
             }
             let name = image.strings.get(binding.name).unwrap_or("<binding>");
@@ -200,7 +297,8 @@ impl InspectionSnapshot {
                         .base
                         .saturating_add(usize::from(binding.register.get())),
                 )
-                .cloned();
+                .cloned()
+                .and_then(|value| (!matches!(value, Value::Unit)).then_some(value));
             let retained = RetainedValue {
                 name: name.to_string(),
                 value,
@@ -209,35 +307,19 @@ impl InspectionSnapshot {
                 depth: 0,
                 visited_cells: HashSet::new(),
             };
+            retained_bindings.push((binding.scope, retained.clone()));
             match binding.kind {
                 DebugBindingKind::Parameter => parameters.push(retained),
                 DebugBindingKind::Local => locals.push(retained),
                 DebugBindingKind::Capture => captures.push(retained),
             }
         }
-        let globals = image
-            .globals
+        let globals = self.globals.clone();
+        let evaluation_values = visible_scopes
             .iter()
-            .enumerate()
-            .map(|(index, global)| RetainedValue {
-                name: image
-                    .strings
-                    .get(global.name)
-                    .unwrap_or("<global>")
-                    .to_string(),
-                value: worker
-                    .globals
-                    .read()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .get(index)
-                    .cloned()
-                    .flatten(),
-                type_name: "dynamic".to_string(),
-                presentation_hint: None,
-                depth: 0,
-                visited_cells: HashSet::new(),
-            })
-            .collect::<Vec<_>>();
+            .flat_map(|scope| retained_bindings.iter().filter(move |(id, _)| id == scope))
+            .map(|(_, value)| value.clone())
+            .collect();
         let scopes = [
             ("Parameters", DebugScopeKind::Parameters, parameters, false),
             ("Locals", DebugScopeKind::Locals, locals, false),
@@ -273,6 +355,7 @@ impl InspectionSnapshot {
                 depth,
             },
             scopes,
+            evaluation_values,
         });
     }
 
@@ -307,12 +390,13 @@ impl InspectionSnapshot {
     }
 }
 
-fn visible_scope_ids(function: &fpas_bytecode::FunctionInfo, mut scope: u32) -> HashSet<u32> {
-    let mut visible = HashSet::new();
+fn visible_scope_chain(function: &fpas_bytecode::FunctionInfo, mut scope: u32) -> Vec<u32> {
+    let mut visible = Vec::new();
     loop {
-        if !visible.insert(scope) {
+        if visible.contains(&scope) {
             break;
         }
+        visible.push(scope);
         let Some(parent) = function
             .debug
             .scopes
@@ -324,6 +408,54 @@ fn visible_scope_ids(function: &fpas_bytecode::FunctionInfo, mut scope: u32) -> 
         scope = parent;
     }
     visible
+}
+
+fn capture_globals(worker: &Worker) -> Vec<RetainedValue> {
+    let image = worker.executable.executable();
+    let globals = worker
+        .globals
+        .read()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    image
+        .globals
+        .iter()
+        .enumerate()
+        .map(|(index, global)| RetainedValue {
+            name: image
+                .strings
+                .get(global.name)
+                .unwrap_or("<global>")
+                .to_string(),
+            value: globals.get(index).cloned().flatten(),
+            type_name: "dynamic".to_string(),
+            presentation_hint: None,
+            depth: 0,
+            visited_cells: HashSet::new(),
+        })
+        .collect()
+}
+
+fn resolve_name(
+    frame_values: Option<&[RetainedValue]>,
+    globals: &[RetainedValue],
+    name: &str,
+) -> Result<Value, DebugSessionError> {
+    let retained = frame_values
+        .into_iter()
+        .flatten()
+        .chain(globals)
+        .find(|value| value.name.eq_ignore_ascii_case(name))
+        .ok_or_else(|| DebugSessionError {
+            kind: DebugErrorKind::UnknownName,
+            message: format!("debug expression name `{name}` is not visible"),
+            hint: "Use a parameter, local, capture, or global visible at the selected frame."
+                .to_string(),
+        })?;
+    retained.value.clone().ok_or_else(|| DebugSessionError {
+        kind: DebugErrorKind::UninitializedValue,
+        message: format!("debug expression name `{name}` is uninitialized"),
+        hint: "Stop after the binding has received a value.".to_string(),
+    })
 }
 
 fn diagnostic_location(worker: &Worker, instruction: InstructionAddress) -> Option<SourceLocation> {

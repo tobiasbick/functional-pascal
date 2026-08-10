@@ -3,8 +3,8 @@
 use fpas_bytecode::{AbcOperands, AbxOperands, InstructionAddress, Opcode, Register, Value};
 use fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC;
 
-use super::execute::dynamic::DynamicArithmetic;
 use super::execute::scalar::register;
+use super::value_ops::{BinaryOperation, UnaryOperation};
 use super::worker::Worker;
 use super::{VmError, diagnostics};
 
@@ -73,132 +73,92 @@ impl Worker {
                 let value = self.read(register(operands.b)?)?.clone();
                 self.write(register(operands.a)?, value)?;
             }
-            Opcode::AddInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, i64::wrapping_add)?
+            Opcode::AddInteger | Opcode::AddReal | Opcode::AddDynamic | Opcode::ConcatString => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Add)?
             }
-            Opcode::SubtractInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, i64::wrapping_sub)?
+            Opcode::SubtractInteger | Opcode::SubtractReal | Opcode::SubtractDynamic => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Subtract)?
             }
-            Opcode::MultiplyInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, i64::wrapping_mul)?
+            Opcode::MultiplyInteger | Opcode::MultiplyReal | Opcode::MultiplyDynamic => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Multiply)?
             }
-            Opcode::DivideInteger => self.execute_divide_integer(self.abc(instruction)?)?,
-            Opcode::RemainderInteger => self.execute_remainder_integer(self.abc(instruction)?)?,
-            Opcode::AddReal => {
-                self.execute_binary_real(self.abc(instruction)?, |left, right| left + right)?
+            Opcode::DivideInteger => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::IntegerDivide)?
             }
-            Opcode::SubtractReal => {
-                self.execute_binary_real(self.abc(instruction)?, |left, right| left - right)?
+            Opcode::RemainderInteger => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Modulo)?
             }
-            Opcode::MultiplyReal => {
-                self.execute_binary_real(self.abc(instruction)?, |left, right| left * right)?
+            Opcode::DivideReal | Opcode::DivideDynamic => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::RealDivide)?
             }
-            Opcode::DivideReal => self.execute_divide_real(self.abc(instruction)?)?,
-            Opcode::NegateInteger => self.execute_negate_integer(self.abc(instruction)?)?,
-            Opcode::NegateReal => self.execute_negate_real(self.abc(instruction)?)?,
-            Opcode::AddDynamic => {
-                self.execute_dynamic_arithmetic(self.abc(instruction)?, DynamicArithmetic::Add)?
+            Opcode::NegateInteger | Opcode::NegateReal | Opcode::NegateDynamic => {
+                self.execute_value_unary(self.abc(instruction)?, UnaryOperation::Negate)?
             }
-            Opcode::SubtractDynamic => self
-                .execute_dynamic_arithmetic(self.abc(instruction)?, DynamicArithmetic::Subtract)?,
-            Opcode::MultiplyDynamic => self
-                .execute_dynamic_arithmetic(self.abc(instruction)?, DynamicArithmetic::Multiply)?,
-            Opcode::DivideDynamic => self.execute_divide_dynamic(self.abc(instruction)?)?,
-            Opcode::NegateDynamic => self.execute_negate_dynamic(self.abc(instruction)?)?,
-            Opcode::EqualDynamic => self.execute_equal_dynamic(self.abc(instruction)?, true)?,
-            Opcode::NotEqualDynamic => self.execute_equal_dynamic(self.abc(instruction)?, false)?,
+            Opcode::EqualDynamic => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Equal)?
+            }
+            Opcode::NotEqualDynamic => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::NotEqual)?
+            }
             Opcode::LessDynamic => {
-                self.execute_order_dynamic(self.abc(instruction)?, |ordering| ordering.is_lt())?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Less)?
             }
             Opcode::GreaterDynamic => {
-                self.execute_order_dynamic(self.abc(instruction)?, |ordering| ordering.is_gt())?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Greater)?
             }
             Opcode::LessEqualDynamic => {
-                self.execute_order_dynamic(self.abc(instruction)?, |ordering| ordering.is_le())?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::LessEqual)?
             }
             Opcode::GreaterEqualDynamic => {
-                self.execute_order_dynamic(self.abc(instruction)?, |ordering| ordering.is_ge())?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::GreaterEqual)?
             }
-            Opcode::ConcatString => self.execute_concat_string(self.abc(instruction)?)?,
-            Opcode::ShiftLeftInteger => self.execute_shift_integer(self.abc(instruction)?, true)?,
+            Opcode::ShiftLeftInteger => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::ShiftLeft)?
+            }
             Opcode::ShiftRightInteger => {
-                self.execute_shift_integer(self.abc(instruction)?, false)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::ShiftRight)?
             }
             Opcode::BitAndInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, |left, right| left & right)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::And)?
             }
             Opcode::BitOrInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, |left, right| left | right)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Or)?
             }
             Opcode::BitXorInteger => {
-                self.execute_binary_integer(self.abc(instruction)?, |left, right| left ^ right)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Xor)?
             }
-            Opcode::EqualInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left == right)?
+            Opcode::EqualInteger
+            | Opcode::EqualReal
+            | Opcode::EqualString
+            | Opcode::EqualBoolean => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Equal)?
             }
-            Opcode::NotEqualInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left != right)?
+            Opcode::NotEqualInteger
+            | Opcode::NotEqualReal
+            | Opcode::NotEqualString
+            | Opcode::NotEqualBoolean => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::NotEqual)?
             }
-            Opcode::LessInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left < right)?
+            Opcode::LessInteger | Opcode::LessReal | Opcode::LessString => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Less)?
             }
-            Opcode::GreaterInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left > right)?
+            Opcode::GreaterInteger | Opcode::GreaterReal | Opcode::GreaterString => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Greater)?
             }
-            Opcode::LessEqualInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left <= right)?
+            Opcode::LessEqualInteger | Opcode::LessEqualReal | Opcode::LessEqualString => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::LessEqual)?
             }
-            Opcode::GreaterEqualInteger => {
-                self.execute_compare_integer(self.abc(instruction)?, |left, right| left >= right)?
+            Opcode::GreaterEqualInteger | Opcode::GreaterEqualReal | Opcode::GreaterEqualString => {
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::GreaterEqual)?
             }
-            Opcode::EqualReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left == right)?
+            Opcode::NotBoolean => {
+                self.execute_value_unary(self.abc(instruction)?, UnaryOperation::Not)?
             }
-            Opcode::NotEqualReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left != right)?
-            }
-            Opcode::LessReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left < right)?
-            }
-            Opcode::GreaterReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left > right)?
-            }
-            Opcode::LessEqualReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left <= right)?
-            }
-            Opcode::GreaterEqualReal => {
-                self.execute_compare_real(self.abc(instruction)?, |left, right| left >= right)?
-            }
-            Opcode::EqualString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| ordering.is_eq())?
-            }
-            Opcode::NotEqualString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| !ordering.is_eq())?
-            }
-            Opcode::LessString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| ordering.is_lt())?
-            }
-            Opcode::GreaterString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| ordering.is_gt())?
-            }
-            Opcode::LessEqualString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| ordering.is_le())?
-            }
-            Opcode::GreaterEqualString => {
-                self.execute_compare_string(self.abc(instruction)?, |ordering| ordering.is_ge())?
-            }
-            Opcode::EqualBoolean => {
-                self.execute_compare_boolean(self.abc(instruction)?, |left, right| left == right)?
-            }
-            Opcode::NotEqualBoolean => {
-                self.execute_compare_boolean(self.abc(instruction)?, |left, right| left != right)?
-            }
-            Opcode::NotBoolean => self.execute_not_boolean(self.abc(instruction)?)?,
             Opcode::AndBoolean => {
-                self.execute_binary_boolean(self.abc(instruction)?, |left, right| left && right)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::And)?
             }
             Opcode::OrBoolean => {
-                self.execute_binary_boolean(self.abc(instruction)?, |left, right| left || right)?
+                self.execute_value_binary(self.abc(instruction)?, BinaryOperation::Or)?
             }
             Opcode::IntegerToReal => self.execute_integer_to_real(self.abc(instruction)?)?,
             Opcode::Jump => {

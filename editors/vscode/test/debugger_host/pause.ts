@@ -33,7 +33,7 @@ export async function verifyPauseAndDisconnect(
     session = await startSession({
       type: "fpas",
       request: "launch",
-      name: "FPAS debugger V1 pause",
+      name: "FPAS debugger pause",
       program: sourcePath,
       cwd: workspaceRoot,
       stopOnEntry: false
@@ -42,10 +42,14 @@ export async function verifyPauseAndDisconnect(
       () =>
         received
           .slice(marker.received)
-          .some((message) => message.command === "configurationDone"),
+          .some((message) => message.command === "configurationDone") &&
+        sent.slice(marker.sent).some(
+          (message) =>
+            message.type === "response" && message.command === "configurationDone"
+        ),
       "running debuggee"
     );
-    await vscode.commands.executeCommand("workbench.action.debug.pause");
+    await session.customRequest("pause", { threadId: 1 });
     await waitFor(
       () =>
         sent.slice(marker.sent).some(

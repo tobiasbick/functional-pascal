@@ -11,6 +11,7 @@ export interface DapMessage {
   readonly command?: string;
   readonly event?: string;
   readonly success?: boolean;
+  readonly arguments?: Record<string, unknown>;
   readonly body?: Record<string, unknown>;
 }
 

@@ -101,11 +101,18 @@ fn supported_lifecycle_and_unsupported_request_are_explicit() {
             .iter()
             .any(|message| message["command"] == "threads" && message["success"] == true)
     );
-    assert!(
-        messages
-            .iter()
-            .any(|message| message["command"] == "evaluate" && message["success"] == false)
-    );
+    assert!(messages.iter().any(|message| {
+        message["command"] == "evaluate"
+            && message["success"] == true
+            && message["body"]["result"] == "1"
+    }));
+    assert!(messages.iter().any(|message| {
+        message["command"] == "initialize"
+            && message["body"]["supportsEvaluateForHovers"] == true
+            && message["body"]["supportsConditionalBreakpoints"] == true
+            && message["body"]["supportsHitConditionalBreakpoints"] == true
+            && message["body"]["supportsLogPoints"] == true
+    }));
     assert!(
         messages
             .windows(2)
@@ -338,4 +345,112 @@ fn runtime_failure_is_inspectable_then_continue_terminates() {
             .iter()
             .any(|message| message["event"] == "terminated")
     );
+}
+
+#[test]
+fn evaluate_contexts_share_frame_results_and_reject_calls() {
+    let mut adapter = server("program Main; begin var X: integer := 1 end.");
+    let initialized = adapter.handle(request(1, "initialize", json!({})));
+    assert_eq!(initialized[0]["body"]["supportsEvaluateForHovers"], true);
+    let _ = adapter.handle(request(2, "launch", json!({"stopOnEntry":true})));
+    let _ = adapter.handle(request(3, "configurationDone", json!({})));
+    let stack = adapter.handle(request(4, "stackTrace", json!({"threadId":1})));
+    let frame = stack[0]["body"]["stackFrames"][0]["id"]
+        .as_u64()
+        .expect("frame");
+
+    for (index, context) in ["watch", "repl", "hover", "variables"]
+        .into_iter()
+        .enumerate()
+    {
+        let response = adapter.handle(request(
+            10 + index as u64,
+            "evaluate",
+            json!({"expression":"1 + 2", "frameId":frame, "context":context}),
+        ));
+        assert_eq!(response[0]["success"], true, "{context}: {response:?}");
+        assert_eq!(response[0]["body"]["result"], "3");
+    }
+
+    let rejected = adapter.handle(request(
+        20,
+        "evaluate",
+        json!({"expression":"Call()", "frameId":frame, "context":"watch"}),
+    ));
+    assert_eq!(rejected[0]["success"], false);
+    assert!(
+        rejected[0]["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("function and procedure calls"))
+    );
+
+    let globals_only = adapter.handle(request(
+        21,
+        "evaluate",
+        json!({"expression":"X", "context":"watch"}),
+    ));
+    assert_eq!(globals_only[0]["success"], false);
+}
+
+#[test]
+fn dap_hit_conditions_and_logpoints_match_jsonl_policy() {
+    let source = "program Main;\n\
+                  begin\n\
+                    mutable var I: integer := 0;\n\
+                    while I < 5 do\n\
+                    begin\n\
+                      I := I + 1\n\
+                    end\n\
+                  end.";
+    let mut hit_adapter = server(source);
+    let _ = hit_adapter.handle(request(1, "initialize", json!({})));
+    let _ = hit_adapter.handle(request(2, "launch", json!({})));
+    let breakpoints = hit_adapter.handle(request(
+        3,
+        "setBreakpoints",
+        json!({
+            "source":{"path":"<memory>"},
+            "breakpoints":[{"line":6,"condition":"I >= 0","hitCondition":"3"}]
+        }),
+    ));
+    assert_eq!(breakpoints[0]["body"]["breakpoints"][0]["verified"], true);
+    let _ = hit_adapter.handle(request(4, "configurationDone", json!({})));
+    let events = wait_dap_until_stable(&mut hit_adapter);
+    assert!(events.iter().any(|message| {
+        message["event"] == "stopped" && message["body"]["reason"] == "breakpoint"
+    }));
+
+    let mut log_adapter = server(source);
+    let _ = log_adapter.handle(request(1, "initialize", json!({})));
+    let _ = log_adapter.handle(request(2, "launch", json!({})));
+    let _ = log_adapter.handle(request(
+        3,
+        "setBreakpoints",
+        json!({
+            "source":{"path":"<memory>"},
+            "breakpoints":[{"line":6,"logMessage":"I={I}"}]
+        }),
+    ));
+    let _ = log_adapter.handle(request(4, "configurationDone", json!({})));
+    let events = wait_dap_until_stable(&mut log_adapter);
+    let output = events
+        .iter()
+        .filter(|message| message["event"] == "output")
+        .filter_map(|message| message["body"]["output"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "I=0\nI=1\nI=2\nI=3\nI=4\n");
+    assert!(!events.iter().any(|message| message["event"] == "stopped"));
+    assert!(
+        events
+            .iter()
+            .any(|message| message["event"] == "terminated")
+    );
+}
+
+fn wait_dap_until_stable(adapter: &mut DapServer) -> Vec<Value> {
+    let mut messages = Vec::new();
+    while adapter.is_running() {
+        messages.extend(adapter.wait());
+    }
+    messages
 }

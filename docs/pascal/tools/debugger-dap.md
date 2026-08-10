@@ -1,59 +1,44 @@
-# FPAS Debug Adapter Protocol contract V1
+# FPAS Debug Adapter Protocol contract
 
-The adapter uses standard DAP framing over stdin/stdout and delegates all
-runtime behavior to the same debugger session used by the JSONL protocol.
+The adapter uses standard DAP `Content-Length` framing and delegates runtime
+work to the same protocol-neutral session as JSONL V2.
 
-## Advertised capabilities
+## Capabilities and requests
 
-V1 advertises:
+The adapter advertises configuration-done, pause, source breakpoints,
+conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
+step-in/next/step-out, stack and variable pagination, delayed stack loading,
+and terminate-on-disconnect for an owned launch. It does not advertise attach,
+completions, set-variable/set-expression, data/function/instruction
+breakpoints, restart, reverse execution, hot reload, multiple task threads, or
+raw register/disassembly access.
 
-- configuration done requests;
-- pause;
-- source breakpoints for `.fpas`;
-- step into, next, and step out;
-- stack-frame and variable pagination;
-- delayed stack loading;
-- terminate-on-disconnect for an adapter-owned launch.
+Supported requests are `initialize`, `launch`, `setBreakpoints`,
+`configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
+`evaluate`, `continue`, `pause`, `next`, `stepIn`, `stepOut`, `source`, and
+`disconnect`. Unsupported requests fail explicitly.
 
-V1 does not advertise:
+`evaluate` accepts contexts `watch`, `repl`, `hover`, and `variables`. A
+supplied `frameId` must belong to the current stop; omitting it deliberately
+evaluates globals only. Successful responses include `result`, `type`,
+`variablesReference`, `namedVariables`, and `indexedVariables`. Evaluated
+aggregates expand through `variables`; all references expire when execution
+resumes. The accepted expression subset and limits are documented in
+[Source debugger](debugger.md).
 
-- attach;
-- conditional breakpoints, hit conditions, or logpoints;
-- function, instruction, data, or exception breakpoints;
-- evaluate, completions, or set-variable;
-- restart, terminate request, goto, step back, reverse continue, or hot reload;
-- multiple FPAS task threads;
-- disassembly or raw register inspection.
+`setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
+unchanged to the shared breakpoint policy. A condition stops only on Boolean
+`true`. A hit condition is one positive decimal `N` and matches exactly the Nth
+physical hit. Log messages use `{expression}`, with `{{` and `}}` for literal
+braces, and never cause a user-visible stop. Invalid expressions, hit syntax,
+or templates return an unverified DAP breakpoint with an actionable message.
 
-Unsupported requests receive a failed response with an actionable message. They
-are never accepted and ignored.
+Runtime condition errors emit a debugger diagnostic and fail closed by
+stopping. Runtime log interpolation errors emit a rate-limited stderr output
+event and continue. When normal breakpoints and logpoints share a sequence
+point, log output is emitted in request order before the combined stop.
 
-## Supported request mapping
-
-| DAP request | Debugger operation |
-|---|---|
-| `initialize` | negotiate V1 capabilities |
-| `launch` | load the target and create the session |
-| `setBreakpoints` | replace breakpoints for one canonical source path |
-| `configurationDone` | stop at entry or begin execution |
-| `threads` | return logical thread `1` |
-| `stackTrace` | return bounded logical FPAS frames |
-| `scopes` | return parameters, locals, captures, and globals |
-| `variables` | return bounded values or aggregate children |
-| `continue` | continue to breakpoint, failure, pause, or exit |
-| `pause` | cooperatively request a stop |
-| `next` | step over |
-| `stepIn` | step into |
-| `stepOut` | step out |
-| `source` | return verified source content when available |
-| `disconnect` | terminate owned execution and release session state |
-
-The adapter emits standard `initialized`, `output`, `stopped`, `exited`, and
-`terminated` events. Runtime failures first emit `stopped` with
-reason `exception`, remain inspectable, and terminate after the next continue
-or disconnect.
-
-## Launch configuration
+## Launch and stepping
 
 ```json
 {
@@ -67,29 +52,16 @@ or disconnect.
 }
 ```
 
-`program` is required unless the extension can resolve one unambiguous selected
-program project or workspace. `cwd`, when omitted, is the target's owning
-directory. `args` is a JSON string array. Direct `.fpascp` launch additionally
-requires `sourceRoot`.
+`program` accepts `.fpas`, a program project/workspace, or `.fpascp`.
+Compiled images additionally require `sourceRoot`. The adapter emits standard
+`initialized`, `output`, `stopped`, `exited`, and `terminated` events. Runtime
+failures stop with reason `exception`, remain inspectable, and terminate on the
+next continue or disconnect.
 
-## Breakpoint and stepping rules
-
-- A source breakpoint binds to the first sequence point at or after the
-  requested line within the same source declaration region.
-- A line with no reachable sequence point remains unverified; it never binds to
-  an unrelated later function.
-- Multiple requested breakpoints that resolve to the same sequence point share
-  execution behavior but retain their DAP breakpoint IDs.
-- A breakpoint at the current stopped sequence point is ignored once when
-  continuing, preventing an immediate no-progress stop.
-- `stepIn` stops at the next sequence point regardless of call depth.
-- `next` stops at the next sequence point whose call depth is not deeper than
-  the starting depth.
-- `stepOut` stops after returning below the starting depth.
-- Instructions emitted for compiler prologues or diagnostic-only locations are
-  not step targets.
-
-For two source statements on one line, distinct columns may produce distinct
-sequence points. A line-only breakpoint binds to the first. Repeated loop
-execution may stop at the same sequence point again after at least one
-instruction has executed.
+A source breakpoint binds to the first reachable sequence point at or after
+the requested line within the same declaration region. Unreachable lines stay
+unverified. Multiple logical breakpoints may share a sequence point while
+retaining independent IDs and counters. Continue ignores the current point
+once to prevent a no-progress loop. `stepIn` stops at the next sequence point;
+`next` does not enter deeper frames; `stepOut` stops after returning below the
+starting depth. Distinct columns on one line may identify distinct points.

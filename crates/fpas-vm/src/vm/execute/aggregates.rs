@@ -3,10 +3,11 @@
 use fpas_bytecode::{AbcOperands, AbxOperands, SharedEnum, SharedRecord, Value};
 use fpas_diagnostics::DiagnosticCode;
 use fpas_diagnostics::codes::{
-    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 use super::super::execute::scalar::register;
+use super::super::value_ops::{self, BinaryOperation};
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
 
@@ -84,45 +85,10 @@ impl Worker {
     }
 
     pub fn index_get(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let collection = self.read(register(o.b)?)?;
-        let index = self.read(register(o.c)?)?;
-        let value = match (collection, index) {
-            (Value::Array(values), key) => {
-                let index = self.array_index(key)?;
-                values.get(index).cloned().ok_or_else(|| {
-                    self.aggregate_error_code(
-                        RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
-                        format!("Array index {index} out of bounds (len {})", values.len()),
-                        "Check index bounds before array access.",
-                    )
-                })?
-            }
-            (Value::Dict(pairs), key) => pairs
-                .iter()
-                .find(|(candidate, _)| candidate == key)
-                .map(|(_, value)| value.clone())
-                .ok_or_else(|| {
-                    self.aggregate_error_code(
-                        RUNTIME_DICT_KEY_NOT_FOUND,
-                        format!("Key `{key}` not found in dict"),
-                        "Use Std.Dict.ContainsKey to check before access.",
-                    )
-                })?,
-            (Value::Str(text), key) => {
-                let index = self.array_index(key)?;
-                if index >= text.len() {
-                    return Err(self.string_index_error(index));
-                }
-                let character = text
-                    .chars()
-                    .nth(index)
-                    .ok_or_else(|| self.string_index_error(index))?;
-                Value::Str(character.to_string().into())
-            }
-            _ => {
-                return Err(self.type_mismatch("an array, dictionary, or string", collection));
-            }
-        };
+        let collection = self.read(register(o.b)?)?.clone();
+        let index = self.read(register(o.c)?)?.clone();
+        let value = value_ops::index(&collection, &index)
+            .map_err(|error| self.aggregate_error_code(error.code, error.message, error.hint))?;
         self.write(register(o.a)?, value)
     }
 
@@ -162,15 +128,11 @@ impl Worker {
     }
 
     pub fn contains(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let needle = self.read(register(o.b)?)?;
-        let aggregate = self.read(register(o.c)?)?;
-        let found = match aggregate {
-            Value::Array(values) => values.iter().any(|value| value == needle),
-            Value::Dict(pairs) => pairs.iter().any(|(key, _)| key == needle),
-            Value::Str(text) => self.string_contains(text, needle)?,
-            other => return Err(self.type_mismatch("array, dictionary, or string", other)),
-        };
-        self.write(register(o.a)?, Value::Boolean(found))
+        let needle = self.read(register(o.b)?)?.clone();
+        let aggregate = self.read(register(o.c)?)?.clone();
+        let found = value_ops::binary(BinaryOperation::In, &needle, &aggregate)
+            .map_err(|error| self.aggregate_error_code(error.code, error.message, error.hint))?;
+        self.write(register(o.a)?, found)
     }
 
     pub fn make_record(&mut self, o: AbcOperands) -> Result<(), VmError> {
@@ -379,25 +341,5 @@ impl Worker {
             )),
             other => Err(self.type_mismatch("an integer array index", other)),
         }
-    }
-    fn string_index_error(&self, index: usize) -> VmError {
-        self.aggregate_error_code(
-            RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
-            format!("String index {index} out of bounds"),
-            "Check the index is in the range 0 .. Length(S) - 1.",
-        )
-    }
-    fn string_contains(&self, text: &str, needle: &Value) -> Result<bool, VmError> {
-        let Value::Str(value) = needle else {
-            return Err(self.aggregate_error(
-                "String membership requires a string value",
-                "Use `Substring in Text` for string membership.",
-            ));
-        };
-        let mut characters = value.chars();
-        Ok(match (characters.next(), characters.next()) {
-            (Some(character), None) => text.chars().any(|candidate| candidate == character),
-            _ => text.contains(value.as_ref()),
-        })
     }
 }

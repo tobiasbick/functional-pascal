@@ -33,7 +33,7 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 #[test]
 fn lifecycle_is_machine_readable_and_deterministic() {
     let script = [
-        request(1, "initialize", json!({"version":1})),
+        request(1, "initialize", json!({"version":2})),
         request(2, "launch", json!({"stop_on_entry":true})),
         request(3, "stack", json!({})),
         request(4, "stack", json!({})),
@@ -81,7 +81,7 @@ fn invalid_state_and_unsupported_commands_are_explicit() {
     let _ = server.handle_line(&request(1, "initialize", json!({})));
     let invalid = server.handle_line(&request(2, "continue", json!({})));
     assert_eq!(invalid[0]["error"]["code"], "invalid_state");
-    let unsupported = server.handle_line(&request(3, "evaluate", json!({})));
+    let unsupported = server.handle_line(&request(3, "completions", json!({})));
     assert_eq!(unsupported[0]["error"]["code"], "unsupported_capability");
 }
 
@@ -158,4 +158,178 @@ fn broken_protocol_writer_is_returned_as_transport_failure() {
     )
     .expect_err("broken writer must fail transport");
     assert_eq!(error.kind(), std::io::ErrorKind::BrokenPipe);
+}
+
+#[test]
+fn evaluate_parses_one_read_only_expression_and_reports_stable_errors() {
+    let mut server = server("program Main; begin var X: integer := 1 end.");
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+
+    let result = server.handle_line(&request(3, "evaluate", json!({"expression":"1 + 2 * 3"})));
+    assert_eq!(result[0]["body"]["result"], "7");
+
+    let unsupported = server.handle_line(&request(
+        4,
+        "evaluate",
+        json!({"expression":"Factorial(4)"}),
+    ));
+    assert_eq!(unsupported[0]["error"]["code"], "unsupported_expression");
+
+    let trailing = server.handle_line(&request(5, "evaluate", json!({"expression":"1 extra"})));
+    assert_eq!(trailing[0]["error"]["code"], "expression_parse");
+}
+
+#[test]
+fn exact_hit_condition_stops_once_and_expires_after_the_nth_hit() {
+    let mut server = loop_server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let set = server.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6,"hit_condition":"3"}),
+    ));
+    assert_eq!(set[0]["body"]["verified"], true, "{set:?}");
+    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+
+    let events = wait_until_stable(&mut server);
+    assert_eq!(server.status(), ServerStatus::Stopped, "{events:?}");
+    let stack = server.handle_line(&request(4, "stack", json!({})));
+    let frame = stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("frame");
+    let evaluated = server.handle_line(&request(
+        5,
+        "evaluate",
+        json!({"expression":"I","frame_id":frame}),
+    ));
+    assert_eq!(evaluated[0]["body"]["result"], "2");
+
+    let _ = server.handle_line(&request(6, "continue", json!({})));
+    let events = wait_until_stable(&mut server);
+    assert_eq!(server.status(), ServerStatus::Terminated, "{events:?}");
+}
+
+#[test]
+fn false_conditions_auto_continue_and_condition_errors_stop_closed() {
+    let mut false_server = loop_server();
+    let _ = false_server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = false_server.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6,"condition":"I < 0"}),
+    ));
+    let _ = false_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut false_server);
+    assert_eq!(
+        false_server.status(),
+        ServerStatus::Terminated,
+        "{events:?}"
+    );
+    assert!(!events.iter().any(|event| event["event"] == "stopped"));
+
+    let mut error_server = loop_server();
+    let _ = error_server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = error_server.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6,"condition":"I + 1"}),
+    ));
+    let _ = error_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut error_server);
+    assert_eq!(error_server.status(), ServerStatus::Stopped, "{events:?}");
+    assert!(
+        events
+            .iter()
+            .any(|event| event["event"] == "protocol_error")
+    );
+}
+
+#[test]
+fn logpoints_interpolate_without_stopping_and_shared_locations_log_before_stop() {
+    let mut log_server = loop_server();
+    let _ = log_server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = log_server.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6,"log_message":"I={I}"}),
+    ));
+    let _ = log_server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut log_server);
+    let output = events
+        .iter()
+        .filter(|event| event["event"] == "output")
+        .filter_map(|event| event["body"]["text"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "I=0\nI=1\nI=2\nI=3\nI=4\n");
+    assert_eq!(log_server.status(), ServerStatus::Terminated);
+
+    let mut mixed = loop_server();
+    let _ = mixed.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = mixed.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6,"log_message":"before {I}"}),
+    ));
+    let _ = mixed.handle_line(&request(
+        3,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":6}),
+    ));
+    let _ = mixed.handle_line(&request(4, "launch", json!({"stop_on_entry":false})));
+    let events = wait_until_stable(&mut mixed);
+    let output_index = events
+        .iter()
+        .position(|event| event["event"] == "output")
+        .expect("log output");
+    let stop_index = events
+        .iter()
+        .position(|event| event["event"] == "stopped")
+        .expect("stop event");
+    assert!(output_index < stop_index, "{events:?}");
+}
+
+#[test]
+fn invalid_breakpoint_expressions_and_templates_are_unverified() {
+    let cases = [
+        json!({"condition":"Call()"}),
+        json!({"hit_condition":">= 3"}),
+        json!({"log_message":"value={}"}),
+        json!({"log_message":"value={I"}),
+    ];
+    for (index, fields) in cases.into_iter().enumerate() {
+        let mut server = loop_server();
+        let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+        let mut arguments = json!({"source":"<memory>","line":6});
+        arguments
+            .as_object_mut()
+            .expect("arguments")
+            .extend(fields.as_object().expect("fields").clone());
+        let response = server.handle_line(&request(2, "breakpoint.set", arguments));
+        assert_eq!(
+            response[0]["body"]["verified"], false,
+            "case {index}: {response:?}"
+        );
+    }
+}
+
+fn loop_server() -> JsonlServer {
+    server(
+        "program Main;\n\
+         begin\n\
+           mutable var I: integer := 0;\n\
+           while I < 5 do\n\
+           begin\n\
+             I := I + 1\n\
+           end\n\
+         end.",
+    )
+}
+
+fn wait_until_stable(server: &mut JsonlServer) -> Vec<Value> {
+    let mut records = Vec::new();
+    while server.status() == ServerStatus::Running {
+        records.extend(server.wait());
+    }
+    records
 }

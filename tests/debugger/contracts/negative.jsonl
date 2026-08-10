@@ -1,4 +1,4 @@
-{"type":"request","id":1,"command":"initialize","arguments":{"version":1}}
+{"type":"request","id":1,"command":"initialize","arguments":{"version":2}}
 {"type":"request","id":2,"command":"continue","arguments":{}}
 {"type":"request","id":3,"command":"evaluate","arguments":{"expression":"Factorial(4)"}}
 {"type":"request","id":4,"command":"disconnect","arguments":{"terminate":true}}

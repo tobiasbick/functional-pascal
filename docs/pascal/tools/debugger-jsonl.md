@@ -1,136 +1,86 @@
-# FPAS debugger JSONL protocol V1
+# FPAS debugger JSONL protocol V2
 
-The external debugger protocol is UTF-8 JSON Lines. Each physical line is one
-complete JSON object. Protocol stdout contains no banners, progress text, ANSI
-sequences, or raw program output.
+The external debugger protocol is UTF-8 JSON Lines: one complete JSON object
+per physical line. Protocol stdout contains only responses and events; program
+and logpoint output is carried by structured `output` events.
 
-## Invocation
+## Invocation and envelopes
 
 ```text
 fpas debug <target> --protocol jsonl
 fpas debug <target> --protocol jsonl --commands <path> --report jsonl
 ```
 
-`<target>` accepts the same source, program-project, and workspace forms as
-`fpas run`. Direct `.fpascp` input additionally requires `--source-root` and
-verified source identities. Program arguments follow `--`.
-
-Live mode reads requests from stdin and writes responses and events to stdout.
-Script mode reads the same requests from `--commands`, reaches a terminal state,
-and exits without prompting.
-
-## Envelopes
-
-Request:
-
 ```json
-{"type":"request","id":1,"command":"initialize","arguments":{}}
+{"type":"request","id":1,"command":"initialize","arguments":{"version":2}}
+{"type":"response","request_id":1,"command":"initialize","success":true,"body":{"protocol":"fpas-debug-jsonl","version":2}}
 ```
 
-Successful response:
-
-```json
-{"type":"response","request_id":1,"command":"initialize","success":true,"body":{"protocol":"fpas-debug-jsonl","version":1}}
-```
-
-Failed response:
-
-```json
-{"type":"response","request_id":1,"command":"continue","success":false,"error":{"code":"invalid_state","message":"The session is not stopped.","help":"Wait for a stopped event before continuing execution."}}
-```
-
-Event:
-
-```json
-{"type":"event","event":"stopped","body":{"reason":"breakpoint","thread_id":1,"location":{"source":"src/main.fpas","line":12,"column":3}}}
-```
-
-Rules:
-
-- Request IDs are positive JSON integers and are echoed unchanged.
-- Unknown top-level fields are ignored for forward compatibility.
-- Missing required fields, duplicate request IDs, invalid UTF-8, malformed JSON,
-  and non-object lines produce stable errors when a request ID can be recovered;
-  otherwise the session emits a protocol error event and terminates.
-- Protocol version is negotiated by `initialize`. V1 accepts only version `1`.
-- A response precedes events caused by the accepted request, except fatal
-  transport errors for which no response can be written.
+Request IDs are unique positive integers. Malformed JSON, non-object records,
+invalid envelopes, duplicate IDs, and missing arguments produce stable errors.
+`initialize` accepts only version `2`; V1 is obsolete and is rejected without a
+compatibility mode. A response precedes events caused by that request.
 
 ## Commands
 
-| Command | Allowed state | Required arguments | Result |
+| Command | State | Arguments | Result |
 |---|---|---|---|
-| `initialize` | created | optional `version` (default `1`) | protocol version, capabilities, limits |
-| `breakpoint.set` | initialized or stopped | `source`, `line`; optional `column` | stable breakpoint ID and verified location |
-| `breakpoint.clear` | initialized or stopped | `breakpoint_id` | removal confirmation |
-| `launch` | initialized | optional `stop_on_entry` | accepts launch; later emits stopped/terminated |
-| `continue` | stopped | none | accepts execution; later emits stopped/terminated |
-| `pause` | running | none | requests cooperative pause |
-| `step_into` | stopped | none | accepts execution; later emits stopped/terminated |
-| `step_over` | stopped | none | accepts execution; later emits stopped/terminated |
-| `step_out` | stopped | none | accepts execution; later emits stopped/terminated |
-| `stack` | stopped | optional `start`, `count` | bounded frames and total frame count |
-| `scopes` | stopped | `frame_id` | parameters, locals, captures, globals references |
-| `variables` | stopped | `variables_reference`; optional `start`, `count` | bounded variables and child counts |
-| `disconnect` | any non-terminal state | optional `terminate` (default `true`) | cleanup confirmation |
+| `initialize` | created | optional `version` (default `2`) | capabilities and limits |
+| `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message` | logical breakpoint and verification |
+| `breakpoint.clear` | initialized/stopped | `breakpoint_id` | removal confirmation |
+| `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
+| `continue`, `step_into`, `step_over`, `step_out` | stopped | none | resumes execution |
+| `pause` | running | none | cooperative pause request |
+| `stack` | stopped | optional `start`, `count` | bounded frames |
+| `scopes` | stopped | `frame_id` | lexical scopes |
+| `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
+| `evaluate` | stopped | `expression`; optional `frame_id` | rendered read-only value and child reference |
+| `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
-Read-only `stack`, `scopes`, and `variables` requests are deterministic and safe
-to retry while the session remains at the same stop. Continuing invalidates all
-frame and variable references.
+An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
+variable references belong to the current stop and expire on resume. Evaluation
+returns `result`, `type_name`, `variables_reference`, `named_variables`, and
+`indexed_variables`.
 
-## Events
+Conditions and log expressions use the read-only subset documented in
+[Source debugger](debugger.md). Invalid syntax or unsupported constructs make
+the breakpoint unverified. Hit conditions accept only a positive decimal `N`
+and match exactly the Nth physical hit. Each logical breakpoint has an
+independent saturating counter, including breakpoints sharing one sequence
+point. Policy order is condition, hit test, then log-or-stop. Log templates use
+`{expression}`, `{{`, and `}}`.
 
-| Event | Body |
-|---|---|
-| `initialized` | empty object |
-| `breakpoint` | breakpoint ID, verified flag, requested and bound locations, optional message |
-| `output` | `category = stdout`, text, monotonically increasing output sequence |
-| `stopped` | reason, thread ID `1`, location, instruction, call depth, optional breakpoint ID |
-| `runtime_error` | structured FPAS diagnostic and location |
-| `terminated` | exit reason, exit code, instruction count |
-| `protocol_error` | stable error object when no request response is possible |
+## Events and capabilities
 
-V1 stop reasons are `entry`, `breakpoint`, `pause`, `step`, and
-`runtime_error`. V1 has one logical thread with ID `1`.
+Events are `initialized`, `breakpoint`, `output`, `stopped`, `runtime_error`,
+`terminated`, and fatal `protocol_error`. A stopped breakpoint event includes
+both the first `breakpoint_id` and ordered `breakpoint_ids` for all logical
+breakpoints at that sequence point.
 
-## Capabilities
-
-`initialize` reports booleans for source breakpoints, pause, continue, step
-into, step over, step out, stack pagination, scope inspection, variable
-pagination, aggregate expansion, and structured output. It explicitly reports
-false for attach, task threads, evaluate, set-variable, conditional
-breakpoints, hit conditions, logpoints, data breakpoints, function breakpoints,
-restart, reverse execution, and hot reload.
+V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
+aggregate expansion, structured output, evaluation, conditional breakpoints,
+hit conditions, and logpoints. Attach, task threads, set-variable, and reverse
+execution remain false.
 
 ## Default limits
 
 | Limit | Default |
 |---|---:|
-| Stack frames per response | 256 |
-| Variables per response | 256 |
-| Value nesting depth | 16 |
-| String characters | 4,096 |
-| Retained variable handles | 16,384 |
-| Rendered bytes per variables response | 1,048,576 |
+| Frames / variables per response | 256 / 256 |
+| Value depth / retained handles | 16 / 16,384 |
+| String characters / rendered variables bytes | 4,096 / 1,048,576 |
+| Expression bytes / depth | 4,096 / 64 |
+| Expression operations / traversals | 1,024 / 16 |
+| Rendered evaluation bytes | 65,536 |
+| Log template bytes / interpolations | 16,384 / 64 |
+| Cumulative log output bytes | 1,048,576 |
 | Captured program output bytes | 1,048,576 |
-| Instructions per session | 100,000,000 |
-| Resume timeout | 300 seconds |
+| Instructions / resume timeout | 100,000,000 / 300 seconds |
 
-The CLI exposes `--timeout`, `--instruction-limit`, and `--output-limit` for execution limits. Inspection limits are fixed in V1. Truncation is explicit in response metadata.
-
-## Stable V1 error codes
-
-```text
-invalid_request
-invalid_state
-unsupported_protocol_version
-unsupported_capability
-unknown_breakpoint
-unknown_frame
-unknown_variables_reference
-limit_exceeded
-tasks_unsupported
-timeout
-instruction_limit
-output_limit
-```
+Stable errors include `invalid_request`, `invalid_state`,
+`unsupported_protocol_version`, `unsupported_capability`, `unknown_breakpoint`,
+`unknown_frame`, `unknown_variables_reference`, `unknown_name`,
+`uninitialized_value`, `evaluation_type`, `evaluation_domain`,
+`evaluation_limit`, `unavailable_value`, `limit_exceeded`, `tasks_unsupported`,
+`timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
+also include a stable code, UTF-8 byte offset and length, message, and help.

@@ -5,9 +5,31 @@ mod primary;
 
 use super::Parser;
 use crate::ast::*;
+use crate::error::ParseError;
+use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::Token;
 
 impl Parser {
+    pub(crate) fn parse_standalone_expression(mut self) -> (Expr, Vec<ParseError>) {
+        let expression = self.parse_expression();
+        if !self.at_end() {
+            let span = self.current_span();
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                &format!(
+                    "Expected end of expression, found `{}`",
+                    super::token_display(self.current_token())
+                ),
+                "Remove trailing tokens so the debugger receives exactly one expression.",
+                span,
+            );
+            while !self.at_end() {
+                self.advance();
+            }
+        }
+        (expression, self.errors)
+    }
+
     pub(crate) fn parse_expression(&mut self) -> Expr {
         self.parse_comparison()
     }

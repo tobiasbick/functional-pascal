@@ -14,6 +14,7 @@ mod layouts;
 mod register_stack;
 mod shared;
 mod tasks;
+mod value_ops;
 mod worker;
 
 #[cfg(test)]
@@ -30,10 +31,12 @@ use self::worker::Worker;
 
 pub use callback::CallbackSession;
 pub use debug::{
-    BoundBreakpoint, DebugErrorKind, DebugExecutionLimits, DebugFrame, DebugInspectionLimits,
-    DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind, DebugSession, DebugSessionError,
-    DebugSessionState, DebugStop, DebugStopReason, DebugTermination, DebugVariable, Paginated,
-    SourceBreakpoint, SourceLocation,
+    BoundBreakpoint, DebugBinaryOperation, DebugErrorKind, DebugEvaluateResult,
+    DebugEvaluationLimits, DebugExecutionLimits, DebugExpression, DebugFrame,
+    DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind,
+    DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
+    DebugTermination, DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint,
+    SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

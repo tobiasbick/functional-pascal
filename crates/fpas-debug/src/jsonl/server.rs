@@ -1,13 +1,18 @@
 //! Stateful JSONL request handling and asynchronous execution event delivery.
 
-use std::collections::HashSet;
+mod breakpoints;
+mod completion;
+mod evaluation;
+
+use std::collections::{HashMap, HashSet};
 
 use serde_json::{Map, Value, json};
 
-use super::actor::{Completion, ResumeCommand, SessionActor};
+use super::actor::{ResumeCommand, SessionActor};
 use super::encode::*;
 use super::protocol::{event, failure, session_error, success};
 use crate::PreparedDebugTarget;
+use crate::breakpoints::BreakpointPolicy;
 
 /// Coarse server lifecycle visible to transport drivers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -24,13 +29,15 @@ pub enum ServerStatus {
     Terminated,
 }
 
-/// One protocol V1 server independent from stdin/stdout ownership.
+/// One protocol V2 server independent from stdin/stdout ownership.
 pub struct JsonlServer {
     status: ServerStatus,
     actor: SessionActor,
     execution_limits: fpas_vm::DebugExecutionLimits,
     request_ids: HashSet<u64>,
     output_cursor: usize,
+    breakpoint_policies: HashMap<u64, BreakpointPolicy>,
+    log_output_bytes: usize,
 }
 
 impl JsonlServer {
@@ -47,6 +54,8 @@ impl JsonlServer {
             execution_limits,
             request_ids: HashSet::new(),
             output_cursor: 0,
+            breakpoint_policies: HashMap::new(),
+            log_output_bytes: 0,
         })
     }
 
@@ -167,12 +176,13 @@ impl JsonlServer {
             "stack" => self.stack(request_id, command, arguments),
             "scopes" => self.scopes(request_id, command, arguments),
             "variables" => self.variables(request_id, command, arguments),
+            "evaluate" => self.evaluate(request_id, command, arguments),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(
                 request_id,
                 command,
                 "unsupported_capability",
-                format!("Debugger command `{command}` is not supported by protocol V1."),
+                format!("Debugger command `{command}` is not supported by protocol V2."),
                 "Use a command advertised by `initialize`.",
             )],
         }
@@ -190,14 +200,14 @@ impl JsonlServer {
         let version = arguments
             .get("version")
             .and_then(Value::as_u64)
-            .unwrap_or(1);
-        if version != 1 {
+            .unwrap_or(2);
+        if version != 2 {
             return vec![failure(
                 request_id,
                 command,
                 "unsupported_protocol_version",
                 format!("Protocol version {version} is unsupported."),
-                "Request version 1.",
+                "Request version 2.",
             )];
         }
         self.status = ServerStatus::Initialized;
@@ -231,77 +241,6 @@ impl JsonlServer {
             }
         }
         records
-    }
-
-    fn set_breakpoint(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let Some(source) = arguments.get("source").and_then(Value::as_str) else {
-            return vec![missing_argument(request_id, command, "source")];
-        };
-        let Some(line) = arguments
-            .get("line")
-            .and_then(Value::as_u64)
-            .and_then(|line| u32::try_from(line).ok())
-            .filter(|line| *line > 0)
-        else {
-            return vec![missing_argument(request_id, command, "line")];
-        };
-        let column = arguments
-            .get("column")
-            .and_then(Value::as_u64)
-            .and_then(|column| u32::try_from(column).ok());
-        let breakpoint = match self.actor.session_mut().map(|session| {
-            session.set_breakpoint(fpas_vm::SourceBreakpoint {
-                source: source.to_string(),
-                line,
-                column,
-            })
-        }) {
-            Some(Ok(breakpoint)) => breakpoint,
-            Some(Err(error)) => return vec![session_error(request_id, command, error)],
-            None => return vec![invalid_state(request_id, command, self.status)],
-        };
-        let body = breakpoint_body(&breakpoint);
-        vec![
-            success(request_id, command, body.clone()),
-            event("breakpoint", body),
-        ]
-    }
-
-    fn clear_breakpoint(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let Some(id) = arguments.get("breakpoint_id").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "breakpoint_id")];
-        };
-        match self
-            .actor
-            .session_mut()
-            .map(|session| session.clear_breakpoint(id))
-        {
-            Some(Ok(())) => vec![success(request_id, command, json!({"breakpoint_id": id}))],
-            Some(Err(error)) => vec![session_error(request_id, command, error)],
-            None => vec![invalid_state(request_id, command, self.status)],
-        }
     }
 
     fn resume(&mut self, request_id: u64, command: &str, resume: ResumeCommand) -> Vec<Value> {
@@ -430,47 +369,6 @@ impl JsonlServer {
                 json!({"reason": "disconnect", "exit_code": 0}),
             ),
         ]
-    }
-
-    fn complete(&mut self, completion: Completion) -> Vec<Value> {
-        let Completion { session, result } = completion;
-        let mut records = output_events(&session, &mut self.output_cursor);
-        match result {
-            Ok(fpas_vm::DebugRunResult::Stopped(stop)) => {
-                self.status = ServerStatus::Stopped;
-                if stop.reason == fpas_vm::DebugStopReason::RuntimeError
-                    && let Some(diagnostic) = &stop.diagnostic
-                {
-                    records.push(event("runtime_error", diagnostic_body(diagnostic)));
-                }
-                records.push(stopped_event(&stop));
-                self.actor.restore(session);
-            }
-            Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
-                self.status = ServerStatus::Terminated;
-                records.push(event(
-                    "terminated",
-                    json!({
-                        "reason": "completed",
-                        "exit_code": 0,
-                        "instruction_count": termination.instruction_count
-                    }),
-                ));
-            }
-            Err(error) => {
-                self.status = ServerStatus::Stopped;
-                records.push(event(
-                    "protocol_error",
-                    error_body(
-                        error_code(error.kind),
-                        error.message.clone(),
-                        error.hint.clone(),
-                    ),
-                ));
-                self.actor.restore(session);
-            }
-        }
-        records
     }
 
     fn fatal_request(&mut self, message: impl Into<String>) -> Vec<Value> {

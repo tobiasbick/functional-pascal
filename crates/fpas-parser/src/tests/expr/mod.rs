@@ -9,6 +9,7 @@ mod operators;
 mod postfix;
 mod precedence;
 mod primitives;
+mod standalone;
 
 fn parse_expr(expr_src: &str) -> Expr {
     let src = format!("program T; begin return {expr_src} end.");

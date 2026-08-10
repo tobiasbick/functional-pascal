@@ -3,6 +3,8 @@
 pub mod dap;
 pub mod jsonl;
 
+mod breakpoints;
+mod evaluation;
 mod target;
 
 pub use target::{DebugSourceContent, PreparedDebugTarget};

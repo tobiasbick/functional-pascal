@@ -1,26 +1,31 @@
-# Debugger scope deferred beyond V1
+# Deferred debugger scope
 
 The following capabilities are intentionally excluded from the first debugger
 release. Protocol adapters must advertise them as unsupported and must not
 silently approximate them. Deferral keeps the initial engine deterministic,
 read-only, and testable; it does not reject these features permanently.
 
-## Expression evaluation and watches
+Read-only expression evaluation, watches, conditional breakpoints, exact-hit
+conditions, and non-stopping logpoints are implemented. The following work
+remains intentionally deferred.
+
+## Evaluation with debugger-side calls
 
 Deferred:
 
-- arbitrary FPAS expressions;
-- function calls from the debugger;
-- watch expressions with side effects;
-- hover evaluation during a stopped session.
+- invoking FPAS functions, procedures, methods, properties, constructors, or
+  intrinsics from a watch, hover, condition, logpoint, or Debug Console;
+- expressions outside the implemented read-only subset;
+- any evaluation that may mutate state, perform I/O, block, or spawn work.
 
-Reason: the compiler currently compiles complete programs rather than isolated
-expressions against a suspended register frame. Function calls may mutate
-state, perform I/O, block, or spawn tasks.
+Reason: a stopped-frame call needs controlled execution, not only inspection.
+It may change registers or globals, enter hosted code, wait indefinitely, or
+create concurrent work while the debugger assumes a stable snapshot.
 
-Re-entry gate: define a read-only expression subset and prove name resolution,
-type checking, resource limits, and side-effect rejection against real stopped
-frames. Full evaluation requires an explicit side-effect and timeout policy.
+Re-entry gate: first complete the read-only evaluator, then define an explicit
+side-effect policy, call timeout and cancellation behavior, nested-stop rules,
+hosted-operation restrictions, and deterministic tests that prove recovery
+after success, failure, timeout, and disconnect.
 
 ## Variable mutation
 
@@ -36,14 +41,6 @@ sharing, and value ownership invariants.
 Re-entry gate: specify which mutable source bindings may be changed and add VM
 validation that constructs only type-correct values without bypassing language
 semantics.
-
-## Conditional breakpoints and logpoints
-
-Reason: both depend on safe expression evaluation. A textual condition must not
-be treated as host code or evaluated with unbounded side effects.
-
-Re-entry gate: complete the read-only evaluator, then specify evaluation-error,
-hit-count, output-limit, and timeout behavior.
 
 ## Task and concurrent debugging
 

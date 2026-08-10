@@ -1,0 +1,134 @@
+//! Completion handling between physical VM stops and logical debugger events.
+
+use serde_json::{Value, json};
+
+use super::{JsonlServer, ServerStatus};
+use crate::breakpoints::BreakpointOutcome;
+use crate::jsonl::actor::{Completion, ResumeCommand};
+use crate::jsonl::encode::{diagnostic_body, error_body, error_code, output_events, stopped_event};
+use crate::jsonl::protocol::event;
+
+impl JsonlServer {
+    pub(super) fn complete(&mut self, completion: Completion) -> Vec<Value> {
+        let Completion {
+            mut session,
+            result,
+        } = completion;
+        let mut records = output_events(&session, &mut self.output_cursor);
+        match result {
+            Ok(fpas_vm::DebugRunResult::Stopped(stop)) => {
+                self.status = ServerStatus::Stopped;
+                if stop.reason == fpas_vm::DebugStopReason::RuntimeError
+                    && let Some(diagnostic) = &stop.diagnostic
+                {
+                    records.push(event("runtime_error", diagnostic_body(diagnostic)));
+                }
+                if stop.reason == fpas_vm::DebugStopReason::Breakpoint
+                    && !stop.breakpoint_ids.is_empty()
+                {
+                    let frame_id = session
+                        .stack(0, 1)
+                        .ok()
+                        .and_then(|frames| frames.items.first().map(|frame| frame.id));
+                    if let Some(frame_id) = frame_id {
+                        let mut should_stop = false;
+                        for breakpoint_id in &stop.breakpoint_ids {
+                            let Some(mut policy) = self.breakpoint_policies.remove(breakpoint_id)
+                            else {
+                                should_stop = true;
+                                continue;
+                            };
+                            let remaining = crate::evaluation::LogMessageLimits::default()
+                                .max_session_output_bytes
+                                .saturating_sub(self.log_output_bytes);
+                            let outcome = policy.apply(&mut session, frame_id, remaining);
+                            self.breakpoint_policies.insert(*breakpoint_id, policy);
+                            match outcome {
+                                BreakpointOutcome::Stop => should_stop = true,
+                                BreakpointOutcome::StopWithDiagnostic(diagnostic) => {
+                                    should_stop = true;
+                                    if let Some(diagnostic) = diagnostic {
+                                        records.push(event(
+                                            "protocol_error",
+                                            error_body(
+                                                error_code(diagnostic.kind),
+                                                diagnostic.message,
+                                                diagnostic.hint,
+                                            ),
+                                        ));
+                                    }
+                                }
+                                BreakpointOutcome::Continue => {}
+                                BreakpointOutcome::Log(output) => {
+                                    self.log_output_bytes =
+                                        self.log_output_bytes.saturating_add(output.len());
+                                    records.push(event("output", json!({
+                                        "category": "console",
+                                        "text": output,
+                                        "breakpoint_id": breakpoint_id,
+                                        "location": stop.location.as_ref().map(|location| json!({
+                                            "source": location.source,
+                                            "line": location.line,
+                                            "column": location.column
+                                        }))
+                                    })));
+                                }
+                                BreakpointOutcome::LogDiagnostic(diagnostic) => {
+                                    if let Some(diagnostic) = diagnostic {
+                                        records.push(event(
+                                            "output",
+                                            json!({
+                                                "category": "stderr",
+                                                "text": format!(
+                                                    "Logpoint evaluation failed: {} Help: {}\n",
+                                                    diagnostic.message, diagnostic.hint
+                                                )
+                                            }),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                        if !should_stop {
+                            self.actor.restore(session);
+                            self.status = ServerStatus::Running;
+                            if let Err(error) = self.actor.resume(ResumeCommand::Continue) {
+                                self.status = ServerStatus::Stopped;
+                                records.push(event(
+                                    "protocol_error",
+                                    error_body(error_code(error.kind), error.message, error.hint),
+                                ));
+                            }
+                            return records;
+                        }
+                    }
+                }
+                records.push(stopped_event(&stop));
+                self.actor.restore(session);
+            }
+            Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
+                self.status = ServerStatus::Terminated;
+                records.push(event(
+                    "terminated",
+                    json!({
+                        "reason": "completed", "exit_code": 0,
+                        "instruction_count": termination.instruction_count
+                    }),
+                ));
+            }
+            Err(error) => {
+                self.status = ServerStatus::Stopped;
+                records.push(event(
+                    "protocol_error",
+                    error_body(
+                        error_code(error.kind),
+                        error.message.clone(),
+                        error.hint.clone(),
+                    ),
+                ));
+                self.actor.restore(session);
+            }
+        }
+        records
+    }
+}

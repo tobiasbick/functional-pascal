@@ -44,7 +44,7 @@ where
             Ok(Err(error)) => return Err(error),
             Err(RecvTimeoutError::Timeout) => write_records(&mut writer, server.poll())?,
             Err(RecvTimeoutError::Disconnected) => {
-                if server.status() == ServerStatus::Running {
+                while server.status() == ServerStatus::Running {
                     write_records(&mut writer, server.wait())?;
                 }
                 return Ok(());
@@ -68,14 +68,14 @@ pub fn serve_script<R: Read, W: Write>(
 ) -> io::Result<()> {
     for line in BufReader::new(reader).lines() {
         write_records(&mut writer, server.handle_line(&line?))?;
-        if server.status() == ServerStatus::Running {
+        while server.status() == ServerStatus::Running {
             write_records(&mut writer, server.wait())?;
         }
         if server.status() == ServerStatus::Terminated {
             return Ok(());
         }
     }
-    if server.status() == ServerStatus::Running {
+    while server.status() == ServerStatus::Running {
         write_records(&mut writer, server.wait())?;
     }
     Ok(())

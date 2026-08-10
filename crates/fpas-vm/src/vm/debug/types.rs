@@ -76,6 +76,8 @@ pub struct DebugStop {
     pub call_depth: usize,
     /// Breakpoint identifier when `reason` is [`DebugStopReason::Breakpoint`].
     pub breakpoint_id: Option<u64>,
+    /// All logical breakpoint identifiers bound to the reached sequence point.
+    pub breakpoint_ids: Vec<u64>,
     /// Runtime diagnostic when `reason` is [`DebugStopReason::RuntimeError`].
     pub diagnostic: Option<fpas_diagnostics::Diagnostic>,
 }
@@ -113,6 +115,18 @@ pub enum DebugErrorKind {
     UnknownVariablesReference,
     /// A requested inspection page exceeds configured limits.
     InspectionLimit,
+    /// An expression references no visible binding with the requested name.
+    UnknownName,
+    /// An expression references a visible binding that has no initialized value.
+    UninitializedValue,
+    /// Runtime values do not support the requested read-only expression operation.
+    EvaluationType,
+    /// Runtime values have valid types but violate an expression operation domain.
+    EvaluationDomain,
+    /// An expression exceeded a configured parser, evaluator, traversal, or output limit.
+    EvaluationLimit,
+    /// A mutable or opaque runtime value cannot be read safely without blocking.
+    UnavailableValue,
     /// One resume operation exceeded its wall-clock deadline.
     ExecutionTimeout,
     /// The session exhausted its instruction budget.

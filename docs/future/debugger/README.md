@@ -1,11 +1,13 @@
-# Deferred source-debugger work
+# Source-debugger roadmap
 
-The V1 source debugger is implemented. Its current user and protocol
-documentation lives under [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
+The source debugger, including read-only expression evaluation, watches,
+conditional breakpoints, exact-hit conditions, and non-stopping logpoints, is
+implemented. Its current user and protocol documentation lives under
+[`docs/pascal/tools/`](../../pascal/tools/debugger.md).
 
-This directory retains only capabilities that are consciously postponed. See
-[deferred.md](deferred.md) for their rationale, required safety properties, and
-explicit re-entry gates. None of those entries describe current behavior.
+[deferred.md](deferred.md) retains the capabilities that remain consciously
+postponed, together with their rationale, required safety properties, and
+explicit re-entry gates.
 
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

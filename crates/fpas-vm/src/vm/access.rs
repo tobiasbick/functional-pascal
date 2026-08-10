@@ -82,22 +82,6 @@ impl Worker {
         }
     }
 
-    #[inline(always)]
-    pub fn real(&self, register: Register) -> Result<f64, VmError> {
-        match self.read(register)? {
-            Value::Real(value) => Ok(*value),
-            other => Err(self.type_error("real", other)),
-        }
-    }
-
-    #[inline(always)]
-    pub fn boolean(&self, register: Register) -> Result<bool, VmError> {
-        match self.read(register)? {
-            Value::Boolean(value) => Ok(*value),
-            other => Err(self.type_error("boolean", other)),
-        }
-    }
-
     pub fn load_constant(&self, index: u32) -> Result<Value, VmError> {
         let executable = self.executable.executable();
         let constant = usize::try_from(index)

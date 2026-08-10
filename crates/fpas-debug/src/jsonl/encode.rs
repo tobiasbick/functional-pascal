@@ -11,13 +11,14 @@ pub(super) fn initialize_records(
     execution: fpas_vm::DebugExecutionLimits,
 ) -> Vec<Value> {
     let inspection = fpas_vm::DebugInspectionLimits::default();
+    let evaluation = fpas_vm::DebugEvaluationLimits::default();
     vec![
         success(
             request_id,
             command,
             json!({
                 "protocol": "fpas-debug-jsonl",
-                "version": 1,
+                "version": 2,
                 "capabilities": {
                     "source_breakpoints": true,
                     "pause": true,
@@ -32,10 +33,11 @@ pub(super) fn initialize_records(
                     "structured_output": true,
                     "attach": false,
                     "task_threads": false,
-                    "evaluate": false,
+                    "evaluate": true,
                     "set_variable": false,
-                    "conditional_breakpoints": false,
-                    "logpoints": false,
+                    "conditional_breakpoints": true,
+                    "hit_conditions": true,
+                    "logpoints": true,
                     "reverse_execution": false
                 },
                 "limits": {
@@ -44,6 +46,11 @@ pub(super) fn initialize_records(
                     "value_depth": inspection.max_depth,
                     "string_characters": inspection.max_string_chars,
                     "retained_handles": inspection.max_handles,
+                    "expression_bytes": evaluation.max_expression_bytes,
+                    "expression_depth": evaluation.max_depth,
+                    "expression_operations": evaluation.max_operations,
+                    "expression_traversals": evaluation.max_traversals,
+                    "expression_output_bytes": evaluation.max_output_bytes,
                     "captured_output_bytes": execution.max_output_bytes,
                     "instructions": execution.max_instructions,
                     "timeout_milliseconds": execution.timeout.as_millis()
@@ -89,7 +96,7 @@ pub(super) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
 pub(super) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
     event(
         "stopped",
-        json!({"reason":stop_reason(stop.reason),"thread_id":1,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id}),
+        json!({"reason":stop_reason(stop.reason),"thread_id":1,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id,"breakpoint_ids":stop.breakpoint_ids}),
     )
 }
 
@@ -142,6 +149,12 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",
         fpas_vm::DebugErrorKind::InspectionLimit => "limit_exceeded",
+        fpas_vm::DebugErrorKind::UnknownName => "unknown_name",
+        fpas_vm::DebugErrorKind::UninitializedValue => "uninitialized_value",
+        fpas_vm::DebugErrorKind::EvaluationType => "evaluation_type",
+        fpas_vm::DebugErrorKind::EvaluationDomain => "evaluation_domain",
+        fpas_vm::DebugErrorKind::EvaluationLimit => "evaluation_limit",
+        fpas_vm::DebugErrorKind::UnavailableValue => "unavailable_value",
         fpas_vm::DebugErrorKind::ExecutionTimeout => "timeout",
         fpas_vm::DebugErrorKind::InstructionLimit => "instruction_limit",
         fpas_vm::DebugErrorKind::OutputLimit => "output_limit",

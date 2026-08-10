@@ -5,6 +5,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 
 use super::breakpoints::{self, BoundBreakpoint, SourceBreakpoint};
+use super::evaluation::{DebugEvaluateResult, DebugEvaluationLimits, DebugExpression};
 use super::inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugVariable, InspectionSnapshot, Paginated,
 };
@@ -144,7 +145,13 @@ impl DebugSession {
         )
         .map_err(runtime_initialization_error)?;
         let pause_requested = Arc::new(AtomicBool::new(false));
-        let last_stop = stop_at_worker(&executable, &worker, DebugStopReason::Entry, None, None);
+        let last_stop = stop_at_worker(
+            &executable,
+            &worker,
+            DebugStopReason::Entry,
+            Vec::new(),
+            None,
+        );
         let inspection_generation = 1;
         let inspection =
             InspectionSnapshot::capture(&worker, inspection_generation, inspection_limits);
@@ -232,6 +239,52 @@ impl DebugSession {
     ) -> Result<Paginated<DebugVariable>, DebugSessionError> {
         self.require_inspectable("variables")?;
         self.inspection.variables(reference, start, count)
+    }
+
+    /// Evaluate one validated read-only expression against the current stop snapshot.
+    ///
+    /// A missing frame selects globals only. Supplied frame identifiers and returned aggregate
+    /// handles are valid only for the current stop.
+    ///
+    /// # Errors
+    ///
+    /// Returns an invalid-state, frame, name, type, domain, unavailable-value, or limit error.
+    pub fn evaluate(
+        &mut self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+    ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        self.evaluate_with_limits(expression, frame_id, DebugEvaluationLimits::default())
+    }
+
+    /// Evaluate one validated read-only expression with explicit resource limits.
+    ///
+    /// # Errors
+    ///
+    /// Returns an invalid-state, frame, name, type, domain, unavailable-value, or limit error.
+    pub fn evaluate_with_limits(
+        &mut self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+    ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        self.require_inspectable("evaluate")?;
+        self.inspection.evaluate(expression, frame_id, limits)
+    }
+
+    /// Evaluate one validated breakpoint condition as a strict Boolean value.
+    ///
+    /// # Errors
+    ///
+    /// Returns the normal evaluation failures or a type error for a non-Boolean result.
+    pub fn evaluate_boolean(
+        &self,
+        expression: &DebugExpression,
+        frame_id: Option<u64>,
+    ) -> Result<bool, DebugSessionError> {
+        self.require_inspectable("evaluate.condition")?;
+        self.inspection
+            .evaluate_boolean(expression, frame_id, DebugEvaluationLimits::default())
     }
 
     /// Add one source breakpoint and return its verified or unverified binding.
@@ -330,7 +383,7 @@ fn stop_at_worker(
     executable: &VerifiedExecutable,
     worker: &Worker,
     reason: DebugStopReason,
-    breakpoint_id: Option<u64>,
+    breakpoint_ids: Vec<u64>,
     diagnostic: Option<fpas_diagnostics::Diagnostic>,
 ) -> DebugStop {
     let instruction = if reason == DebugStopReason::RuntimeError {
@@ -344,7 +397,8 @@ fn stop_at_worker(
         location: point.and_then(|point| breakpoints::source_location(executable, point)),
         instruction: instruction.get(),
         call_depth: worker.call_stack.len(),
-        breakpoint_id,
+        breakpoint_id: breakpoint_ids.first().copied(),
+        breakpoint_ids,
         diagnostic,
     }
 }

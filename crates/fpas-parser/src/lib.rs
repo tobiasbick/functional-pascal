@@ -140,6 +140,19 @@ pub fn parse_compilation_unit(source: &str) -> (CompilationUnit, Vec<ParseDiagno
     (unit, append_parser_errors(errors, parse_errors))
 }
 
+/// Parses exactly one Functional Pascal expression.
+///
+/// Lexer diagnostics precede parser diagnostics. Unsupported callers can inspect the returned
+/// [`Expr`] even when recovery produced [`Expr::Error`], but debugger evaluation must reject any
+/// non-empty diagnostics before using the tree. Trailing non-trivia tokens produce a focused
+/// diagnostic instead of being ignored.
+#[must_use]
+pub fn parse_expression(source: &str) -> (Expr, Vec<ParseDiagnostic>) {
+    let (tokens, errors) = tokenize(source);
+    let (expression, parse_errors) = parser::Parser::new(tokens).parse_standalone_expression();
+    (expression, append_parser_errors(errors, parse_errors))
+}
+
 /// Parses a compilation unit from a pre-lexed token stream.
 ///
 /// Prefer a stream that ends with [`fpas_lexer::Token::Eof`] (as produced by [`fpas_lexer::lex`] or

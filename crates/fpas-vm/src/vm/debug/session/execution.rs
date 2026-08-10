@@ -70,7 +70,7 @@ impl DebugSession {
                         &self.executable,
                         &self.worker,
                         DebugStopReason::RuntimeError,
-                        None,
+                        Vec::new(),
                         Some(diagnostic),
                     );
                     self.refresh_inspection();
@@ -97,17 +97,19 @@ impl DebugSession {
             let Some((instruction, point)) = self.next_sequence_point() else {
                 continue;
             };
-            if let Some(breakpoint) = self
+            let breakpoint_ids = self
                 .breakpoints
                 .iter()
-                .find(|breakpoint| breakpoint.instruction == Some(instruction.get()))
-            {
+                .filter(|breakpoint| breakpoint.instruction == Some(instruction.get()))
+                .map(|breakpoint| breakpoint.id)
+                .collect::<Vec<_>>();
+            if !breakpoint_ids.is_empty() {
                 self.state = DebugSessionState::Stopped;
                 self.last_stop = stop_at_worker(
                     &self.executable,
                     &self.worker,
                     DebugStopReason::Breakpoint,
-                    Some(breakpoint.id),
+                    breakpoint_ids,
                     None,
                 );
                 self.refresh_inspection();
@@ -119,7 +121,7 @@ impl DebugSession {
                     &self.executable,
                     &self.worker,
                     DebugStopReason::Pause,
-                    None,
+                    Vec::new(),
                     None,
                 );
                 self.refresh_inspection();
@@ -139,7 +141,7 @@ impl DebugSession {
                     &self.executable,
                     &self.worker,
                     DebugStopReason::Step,
-                    None,
+                    Vec::new(),
                     None,
                 );
                 self.refresh_inspection();

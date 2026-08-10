@@ -15,7 +15,7 @@ export async function verifyManifest() {
     `${manifest.publisher}.${manifest.name}`,
     "functional-pascal.functional-pascal"
   );
-  assert.equal(manifest.version, "0.1.0");
+  assert.equal(manifest.version, "0.1.1");
   assert.equal(manifest.main, "./out/src/extension.js");
   assert.equal(manifest.engines?.vscode, "^1.91.0");
   assert.equal(manifest.scripts?.package, "node scripts/package.mjs");
@@ -76,6 +76,53 @@ export async function verifyManifest() {
     {
       language: "fpas",
       path: "./snippets/fpas.json"
+    }
+  ]);
+  assert.deepEqual(manifest.contributes?.breakpoints, [
+    {
+      language: "fpas"
+    }
+  ]);
+  assert.deepEqual(manifest.contributes?.debuggers, [
+    {
+      type: "fpas",
+      label: "Functional Pascal",
+      languages: ["fpas"],
+      configurationAttributes: {
+        launch: {
+          required: ["program"],
+          properties: {
+            program: {
+              type: "string",
+              description: "FPAS source, program project, workspace, or compiled image."
+            },
+            cwd: {
+              type: "string",
+              description: "Debugger working directory."
+            },
+            args: {
+              type: "array",
+              items: { type: "string" },
+              default: []
+            },
+            stopOnEntry: { type: "boolean", default: false },
+            sourceRoot: {
+              type: "string",
+              description: "Required source root for .fpascp targets."
+            }
+          }
+        }
+      },
+      initialConfigurations: [
+        {
+          type: "fpas",
+          request: "launch",
+          name: "Debug Functional Pascal",
+          program: "${file}",
+          cwd: "${workspaceFolder}",
+          stopOnEntry: false
+        }
+      ]
     }
   ]);
 

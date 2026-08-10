@@ -127,6 +127,17 @@ export function verifyPackage(vsixPath = defaultVsixPath, options = {}) {
   assert.deepEqual(packagedManifest.contributes.snippets, [
     { language: "fpas", path: "./snippets/fpas.json" }
   ]);
+  assert.deepEqual(packagedManifest.contributes.breakpoints, [
+    { language: "fpas" }
+  ]);
+  assert.equal(packagedManifest.contributes.debuggers[0].type, "fpas");
+  assert.deepEqual(packagedManifest.contributes.debuggers[0].languages, [
+    "fpas"
+  ]);
+  assert.equal(
+    packagedManifest.contributes.debuggers[0].initialConfigurations[0].program,
+    "${file}"
+  );
   assert.equal(
     packagedManifest.contributes.configuration.properties[
       "functionalPascal.testTimeoutSeconds"

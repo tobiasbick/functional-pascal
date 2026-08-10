@@ -19,9 +19,17 @@ view.
 The extension also contributes the `fpas` debugger. Use **Run and Debug** with
 the generated **Debug Functional Pascal** configuration, or set `program` to a
 `.fpas`, program `.fpasprj`, `.fpasworkspace`, or `.fpascp` target. Compiled
-images additionally require `sourceRoot`. Breakpoints, stepping, stack frames,
+images additionally require `sourceRoot`. Set source breakpoints in an `.fpas`
+editor gutter or with **F9**. Breakpoints, stepping, stack frames,
 scopes, variables, and program output use the bundled CLI's DAP adapter; the
+adapter supplies the bundled source standard library automatically. The
 language server remains responsible only for static editor features.
+Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
+Stop. The Run and Debug sidebar exposes the call stack, lexical scopes, locals,
+parameters, globals, and expandable aggregate values; program output and
+structured runtime failures appear in the Debug Console. Expression watches,
+variable mutation, attach, conditional breakpoints, and logpoints remain
+intentionally outside debugger V1.
 
 ## Build
 

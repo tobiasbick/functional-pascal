@@ -2,7 +2,7 @@
   "name": "functional-pascal",
   "displayName": "Functional Pascal",
   "description": "Local Functional Pascal editor integration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "functional-pascal",
   "license": "BSD-3-Clause",
   "repository": {
@@ -44,6 +44,11 @@
       {
         "language": "fpas",
         "path": "./snippets/fpas.json"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "fpas"
       }
     ],
     "debuggers": [

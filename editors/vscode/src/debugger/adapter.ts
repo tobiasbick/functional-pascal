@@ -5,6 +5,7 @@ import path from "node:path";
 import * as vscode from "vscode";
 
 import { resolveCliPath } from "../cliPath";
+import { resolveStandardLibraryPath } from "../standardLibraryPath";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
 export function registerDebugger(context: vscode.ExtensionContext): void {
@@ -61,17 +62,28 @@ class FunctionalPascalDebugAdapterFactory
     session: vscode.DebugSession
   ): vscode.ProviderResult<vscode.DebugAdapterDescriptor> {
     const executable = resolveCliPath(this.context);
+    const standardLibrary = resolveStandardLibraryPath(this.context);
     return new vscode.DebugAdapterExecutable(
       executable,
-      debugAdapterArguments(session.configuration),
+      debugAdapterArguments(session.configuration, standardLibrary),
       { cwd: session.configuration.cwd }
     );
   }
 }
 
 /** Build deterministic CLI arguments for one VS Code launch configuration. */
-export function debugAdapterArguments(configuration: vscode.DebugConfiguration): string[] {
-  const args = ["debug", String(configuration.program), "--protocol", "dap"];
+export function debugAdapterArguments(
+  configuration: vscode.DebugConfiguration,
+  standardLibrary: string
+): string[] {
+  const args = [
+    "debug",
+    "--std-lib",
+    standardLibrary,
+    String(configuration.program),
+    "--protocol",
+    "dap"
+  ];
   if (typeof configuration.sourceRoot === "string" && configuration.sourceRoot.length > 0) {
     args.push("--source-root", configuration.sourceRoot);
   }

@@ -5,16 +5,21 @@ import { debugAdapterArguments } from "../src/debugger/adapter";
 
 test("debug adapter arguments preserve target, source root, and program args", () => {
   assert.deepEqual(
-    debugAdapterArguments({
-      type: "fpas",
-      request: "launch",
-      name: "test",
-      program: "app.fpascp",
-      sourceRoot: "sources",
-      args: ["input.txt", "verbose"]
-    }),
+    debugAdapterArguments(
+      {
+        type: "fpas",
+        request: "launch",
+        name: "test",
+        program: "app.fpascp",
+        sourceRoot: "sources",
+        args: ["input.txt", "verbose"]
+      },
+      "standard-library"
+    ),
     [
       "debug",
+      "--std-lib",
+      "standard-library",
       "app.fpascp",
       "--protocol",
       "dap",

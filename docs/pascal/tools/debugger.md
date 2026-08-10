@@ -47,3 +47,7 @@ VS Code-compatible editors use the contributed `fpas` debug type. A minimal
   "stopOnEntry": false
 }
 ```
+
+The Functional Pascal VS Code extension supplies its bundled source standard
+library to the debugger automatically. Source and project targets using
+`Std.*` units therefore do not need a machine-wide FPAS installation.

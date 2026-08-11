@@ -4,6 +4,7 @@ mod breakpoints;
 mod completion;
 mod evaluation;
 mod mutation;
+mod tasks;
 
 use std::collections::{HashMap, HashSet};
 
@@ -47,7 +48,7 @@ impl JsonlServer {
     ///
     /// # Errors
     ///
-    /// Returns a debugger initialization error, including the V1 task-spawning rejection.
+    /// Returns a debugger initialization error for invalid runtime state.
     pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
         let execution_limits = target.execution_limits();
         Ok(Self {
@@ -178,10 +179,15 @@ impl JsonlServer {
             "breakpoint.set" => self.set_breakpoint(request_id, command, arguments),
             "breakpoint.clear" => self.clear_breakpoint(request_id, command, arguments),
             "continue" => self.resume(request_id, command, ResumeCommand::Continue),
-            "step_into" => self.resume(request_id, command, ResumeCommand::StepInto),
-            "step_over" => self.resume(request_id, command, ResumeCommand::StepOver),
-            "step_out" => self.resume(request_id, command, ResumeCommand::StepOut),
+            "step_into" => {
+                self.task_resume(request_id, command, arguments, ResumeCommand::StepInto)
+            }
+            "step_over" => {
+                self.task_resume(request_id, command, arguments, ResumeCommand::StepOver)
+            }
+            "step_out" => self.task_resume(request_id, command, arguments, ResumeCommand::StepOut),
             "pause" => self.pause(request_id, command),
+            "tasks" => self.tasks(request_id, command, arguments),
             "stack" => self.stack(request_id, command, arguments),
             "scopes" => self.scopes(request_id, command, arguments),
             "variables" => self.variables(request_id, command, arguments),
@@ -261,12 +267,31 @@ impl JsonlServer {
         if self.actor.session().is_none() {
             return vec![invalid_state(request_id, command, self.status)];
         }
+        if let Some(task_id) = resume.task_id()
+            && let Some(session) = self.actor.session_mut()
+            && let Err(error) = session.select_task(task_id)
+        {
+            return vec![session_error(request_id, command, error)];
+        }
         match self.actor.resume(resume) {
             Ok(()) => {
                 self.status = ServerStatus::Running;
                 vec![success(request_id, command, json!({"accepted": true}))]
             }
             Err(error) => vec![session_error(request_id, command, error)],
+        }
+    }
+
+    fn task_resume(
+        &mut self,
+        request_id: u64,
+        command: &str,
+        arguments: &Map<String, Value>,
+        resume: fn(Option<u64>) -> ResumeCommand,
+    ) -> Vec<Value> {
+        match optional_u64_argument(request_id, command, arguments, "task_id") {
+            Ok(task_id) => self.resume(request_id, command, resume(task_id)),
+            Err(error) => vec![error],
         }
     }
 
@@ -289,16 +314,21 @@ impl JsonlServer {
         }
         let start = index_argument(arguments, "start", 0);
         let count = index_argument(arguments, "count", 64);
-        let Some(session) = self.actor.session() else {
+        let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
-        match session.stack(start, count) {
+        let task_id = match optional_u64_argument(request_id, command, arguments, "task_id") {
+            Ok(task_id) => task_id.unwrap_or_else(|| session.last_stop().task_id),
+            Err(error) => return vec![error],
+        };
+        match session.stack_for_task(task_id, start, count) {
             Ok(frames) => vec![success(
                 request_id,
                 command,
                 json!({
                     "frames": frames.items.iter().map(frame_body).collect::<Vec<_>>(),
-                    "total": frames.total
+                    "total": frames.total,
+                    "task_id": task_id
                 }),
             )],
             Err(error) => vec![session_error(request_id, command, error)],
@@ -364,6 +394,7 @@ impl JsonlServer {
         if self.actor.is_evaluating() {
             self.actor.cancel_evaluation();
             let mut records = self.wait();
+            records.extend(self.disconnect_session_events());
             records.push(success(request_id, command, json!({"terminated": true})));
             self.status = ServerStatus::Terminated;
             records.push(event(
@@ -376,6 +407,7 @@ impl JsonlServer {
             self.actor.pause();
             let mut records = vec![success(request_id, command, json!({"terminated": true}))];
             records.extend(self.wait());
+            records.extend(self.disconnect_session_events());
             self.status = ServerStatus::Terminated;
             records.push(event(
                 "terminated",
@@ -383,17 +415,26 @@ impl JsonlServer {
             ));
             return records;
         }
-        if let Some(session) = self.actor.session_mut() {
-            session.disconnect();
-        }
+        let mut records = vec![success(request_id, command, json!({"terminated": true}))];
+        records.extend(self.disconnect_session_events());
         self.status = ServerStatus::Terminated;
-        vec![
-            success(request_id, command, json!({"terminated": true})),
-            event(
-                "terminated",
-                json!({"reason": "disconnect", "exit_code": 0}),
-            ),
-        ]
+        records.push(event(
+            "terminated",
+            json!({"reason": "disconnect", "exit_code": 0}),
+        ));
+        records
+    }
+
+    fn disconnect_session_events(&mut self) -> Vec<Value> {
+        let Some(session) = self.actor.session_mut() else {
+            return Vec::new();
+        };
+        session.disconnect();
+        session
+            .take_task_events()
+            .into_iter()
+            .map(task_event)
+            .collect()
     }
 
     fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<Value> {

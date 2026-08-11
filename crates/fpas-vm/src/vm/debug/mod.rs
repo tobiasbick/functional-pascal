@@ -23,5 +23,6 @@ pub use inspection::{
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
-    DebugStop, DebugStopReason, DebugTermination, SourceLocation,
+    DebugStop, DebugStopReason, DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState,
+    DebugTermination, SourceLocation,
 };

@@ -10,13 +10,21 @@ conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
 step-in/next/step-out, stack and variable pagination, delayed stack loading,
 cancel, set-variable, and terminate-on-disconnect for an owned launch. It does
 not advertise attach, completions, set-expression, data/function/instruction
-breakpoints, restart, reverse execution, hot reload, multiple task threads, or
-raw register/disassembly access.
+breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
+register/disassembly access. It explicitly advertises
+`supportsSingleThreadExecutionRequests: false` because every stop freezes all
+FPAS tasks.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `cancel`, `continue`, `pause`, `next`, `stepIn`,
 `stepOut`, `source`, and `disconnect`. Unsupported requests fail explicitly.
+
+`threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
+IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
+`stepOut` select that task. Unknown or expired DAP thread IDs fail explicitly
+instead of falling back to main. Continue and pause remain whole-session
+operations; a continue response reports `allThreadsContinued: true`.
 
 `evaluate` accepts contexts `watch`, `repl`, `hover`, and `variables`. A
 supplied `frameId` must belong to the current stop; omitting it deliberately
@@ -73,9 +81,11 @@ point, log output is emitted in request order before the combined stop.
 
 `program` accepts `.fpas`, a program project/workspace, or `.fpascp`.
 Compiled images additionally require `sourceRoot`. The adapter emits standard
-`initialized`, `output`, `stopped`, `exited`, and `terminated` events. Runtime
-failures stop with reason `exception`, remain inspectable, and terminate on the
-next continue or disconnect.
+`initialized`, `thread`, `output`, `stopped`, `exited`, and `terminated`
+events. Spawned tasks emit one ordered thread-start and thread-exit event.
+Stopped events identify the responsible thread and report
+`allThreadsStopped: true`. Runtime failures stop with reason `exception`,
+remain inspectable, and terminate on the next continue or disconnect.
 
 A source breakpoint binds to the first reachable sequence point at or after
 the requested line within the same declaration region. Unreachable lines stay
@@ -83,4 +93,6 @@ unverified. Multiple logical breakpoints may share a sequence point while
 retaining independent IDs and counters. Continue ignores the current point
 once to prevent a no-progress loop. `stepIn` stops at the next sequence point;
 `next` does not enter deeper frames; `stepOut` stops after returning below the
-starting depth. Distinct columns on one line may identify distinct points.
+starting depth. If the selected task waits, the deterministic debug scheduler
+may progress its dependencies; a breakpoint or failure in any progressed task
+wins the stop. Distinct columns on one line may identify distinct points.

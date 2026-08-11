@@ -57,26 +57,24 @@ export function eventCount(
   return messages.filter((message) => message.event === event).length;
 }
 
-function responseCount(
-  messages: readonly DapMessage[],
-  command: string
-): number {
-  return messages.filter(
-    (message) => message.type === "response" && message.command === command
-  ).length;
-}
-
 export async function waitForStoppedReady(
   messages: () => readonly DapMessage[],
   expectedStops: number,
   label: string
 ): Promise<void> {
-  await waitFor(
-    () =>
-      eventCount(messages(), "stopped") >= expectedStops &&
-      responseCount(messages(), "stackTrace") >= expectedStops,
-    label
-  );
+  await waitFor(() => {
+    const transcript = messages();
+    const stoppedIndexes = transcript.flatMap((message, index) =>
+      message.event === "stopped" ? [index] : []
+    );
+    const stoppedIndex = stoppedIndexes[expectedStops - 1];
+    return stoppedIndex !== undefined && transcript.slice(stoppedIndex + 1).some(
+      (message) =>
+        message.type === "response" &&
+        message.command === "stackTrace" &&
+        message.success !== false
+    );
+  }, label);
 }
 
 export async function waitFor(

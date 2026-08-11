@@ -122,12 +122,41 @@ fn cooperative_pause_and_runtime_failure_leave_stable_states() {
 }
 
 #[test]
-fn task_spawning_is_rejected_before_debug_execution() {
-    let error = DebugSession::new(task_executable())
-        .err()
-        .expect("task rejection");
-    assert_eq!(error.kind, DebugErrorKind::UnsupportedTasks);
-    assert!(error.message.contains("root"));
+fn reachable_task_spawning_stops_at_a_child_breakpoint() {
+    let mut session = DebugSession::new(task_executable()).expect("task debug session");
+    let initial = session.tasks(0, 10).expect("initial task catalog");
+    assert_eq!(initial.items.len(), 1);
+    let breakpoint = session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 10,
+            column: None,
+        })
+        .expect("child breakpoint");
+
+    let stop = stopped(session.continue_execution().expect("continue into child"));
+    assert_eq!(stop.reason, DebugStopReason::Breakpoint);
+    assert_eq!(stop.task_id, 1);
+    assert_eq!(stop.breakpoint_id, Some(breakpoint.id));
+    let tasks = session.tasks(0, 10).expect("spawned task catalog");
+    assert_eq!(tasks.items.len(), 2);
+
+    let completed = stopped(session.step_into_task(1).expect("complete selected child"));
+    assert_eq!(completed.reason, DebugStopReason::Step);
+    assert_eq!(completed.task_id, 1);
+    assert!(completed.location.is_none());
+    assert_eq!(
+        session
+            .stack_for_task(1, 0, 10)
+            .expect_err("completed child has no fabricated stack")
+            .kind,
+        DebugErrorKind::UnknownTask
+    );
+
+    assert!(matches!(
+        session.continue_execution().expect("root termination"),
+        DebugRunResult::Terminated(_)
+    ));
 
     let mut allowed =
         DebugSession::new(unreachable_task_executable()).expect("unreachable task is allowed");
@@ -135,6 +164,150 @@ fn task_spawning_is_rejected_before_debug_execution() {
         allowed.continue_execution().expect("root termination"),
         DebugRunResult::Terminated(_)
     ));
+}
+
+#[test]
+fn manual_clock_wakes_same_deadline_tasks_in_task_id_order() {
+    for _ in 0..3 {
+        let mut session = DebugSession::with_manual_clock(same_deadline_tasks_executable())
+            .expect("manual-clock debug session");
+        session
+            .set_breakpoint(SourceBreakpoint {
+                source: "test.fpas".to_string(),
+                line: 11,
+                column: None,
+            })
+            .expect("post-sleep breakpoint");
+
+        let first = stopped(session.continue_execution().expect("first timer wake"));
+        let second = stopped(session.continue_execution().expect("second timer wake"));
+
+        assert_eq!((first.task_id, second.task_id), (1, 2));
+        assert_eq!(first.location.map(|location| location.line), Some(11));
+        assert_eq!(second.location.map(|location| location.line), Some(11));
+        assert!(matches!(
+            session.continue_execution().expect("root termination"),
+            DebugRunResult::Terminated(_)
+        ));
+    }
+}
+
+#[test]
+fn instruction_limit_aggregates_dispatch_across_tasks() {
+    let mut session = DebugSession::with_limits(
+        same_deadline_tasks_executable(),
+        Vec::new(),
+        DebugInspectionLimits::default(),
+        DebugExecutionLimits {
+            max_instructions: 10,
+            ..DebugExecutionLimits::default()
+        },
+    )
+    .expect("limited task debug session");
+
+    let error = session
+        .continue_execution()
+        .expect_err("combined task instructions exceed the session limit");
+
+    assert_eq!(error.kind, DebugErrorKind::InstructionLimit);
+    assert_eq!(session.state(), DebugSessionState::Failed);
+    assert!(
+        session
+            .tasks(0, 10)
+            .expect("failed session task catalog")
+            .items
+            .len()
+            >= 3
+    );
+}
+
+#[test]
+fn task_catalog_freezes_waiting_sleeping_and_runnable_states() {
+    let mut session =
+        DebugSession::with_manual_clock(task_state_executable()).expect("task-state debug session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 21,
+            column: None,
+        })
+        .expect("stopper breakpoint");
+
+    let stop = stopped(session.continue_execution().expect("task-state stop"));
+    let tasks = session.tasks(0, 10).expect("frozen task catalog");
+
+    assert_eq!(stop.task_id, 2);
+    assert_eq!(
+        tasks
+            .items
+            .iter()
+            .map(|task| (task.id, task.state))
+            .collect::<Vec<_>>(),
+        vec![
+            (0, DebugTaskState::Waiting),
+            (1, DebugTaskState::Sleeping),
+            (2, DebugTaskState::Runnable),
+        ]
+    );
+    session.disconnect();
+}
+
+#[test]
+fn yielded_task_requeues_before_another_task_breakpoint() {
+    let mut session = DebugSession::new(yield_precedence_executable()).expect("yield session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 10,
+            column: None,
+        })
+        .expect("selected task entry breakpoint");
+    let selected = stopped(session.continue_execution().expect("selected task stop"));
+    assert_eq!(selected.task_id, 1);
+
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 20,
+            column: None,
+        })
+        .expect("other task breakpoint");
+    let other = stopped(session.continue_execution().expect("resume yielding task"));
+
+    assert_eq!(other.reason, DebugStopReason::Breakpoint);
+    assert_eq!(other.task_id, 2);
+    assert_eq!(other.location.map(|location| location.line), Some(20));
+}
+
+#[test]
+fn dependency_breakpoint_wins_while_selected_task_waits() {
+    let mut session =
+        DebugSession::with_manual_clock(task_state_executable()).expect("waiting-step session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 2,
+            column: None,
+        })
+        .expect("main wait breakpoint");
+    let main = stopped(session.continue_execution().expect("main wait stop"));
+    assert_eq!(
+        (main.task_id, main.location.map(|location| location.line)),
+        (0, Some(2))
+    );
+
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 21,
+            column: None,
+        })
+        .expect("dependency breakpoint");
+    let dependency = stopped(session.step_into_task(0).expect("step waiting main task"));
+
+    assert_eq!(dependency.reason, DebugStopReason::Breakpoint);
+    assert_eq!(dependency.task_id, 2);
+    assert_eq!(dependency.location.map(|location| location.line), Some(21));
 }
 
 #[test]

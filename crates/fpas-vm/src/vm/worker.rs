@@ -9,7 +9,7 @@ use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
 use super::hosted::HostedState;
 use super::layouts::RuntimeLayouts;
-use super::tasks::{TaskScheduler, TaskState};
+use super::tasks::{DebugClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
 use super::{Execution, VmError, diagnostics};
 
 pub(super) struct Worker {
@@ -33,6 +33,9 @@ pub(super) struct Worker {
     pub retain_result: bool,
     pub instructions_until_yield: u32,
     pub suspend_requested: bool,
+    pub(in crate::vm) debug_tasks: bool,
+    pub(in crate::vm) task_suspension: Option<TaskSuspension>,
+    pub(in crate::vm) debug_clock: Option<Arc<DebugClock>>,
 }
 
 impl Worker {
@@ -148,11 +151,21 @@ impl Worker {
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
+            debug_tasks: false,
+            task_suspension: None,
+            debug_clock: None,
         })
     }
 
     pub(super) fn with_scheduler(mut self, scheduler: Option<Arc<TaskScheduler>>) -> Self {
         self.scheduler = scheduler;
+        self
+    }
+
+    /// Enable cooperative task suspension for debugger-owned execution.
+    pub(in crate::vm) fn with_debug_tasks(mut self, clock: Arc<DebugClock>) -> Self {
+        self.debug_tasks = true;
+        self.debug_clock = Some(clock);
         self
     }
 
@@ -177,6 +190,9 @@ impl Worker {
             retain_result: false,
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
+            debug_tasks: self.debug_tasks,
+            task_suspension: None,
+            debug_clock: self.debug_clock.clone(),
         }
     }
 
@@ -202,6 +218,9 @@ impl Worker {
             retain_result: task.retain_result,
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
+            debug_tasks: self.debug_tasks,
+            task_suspension: None,
+            debug_clock: self.debug_clock.clone(),
         }
     }
 
@@ -225,6 +244,16 @@ impl Worker {
             scheduler.enqueue(state);
             self.suspend_requested = true;
         }
+    }
+
+    /// Return the current cooperative suspension kind, when this task is blocked.
+    pub(in crate::vm) fn debug_suspension_state(&self) -> Option<TaskSuspensionState> {
+        self.task_suspension.as_ref().map(|suspension| {
+            let Some(clock) = self.debug_clock.as_deref() else {
+                unreachable!("debug task suspension requires a debugger clock")
+            };
+            suspension.state(clock)
+        })
     }
 
     pub(super) fn run_task(&mut self) -> Result<Option<Value>, VmError> {

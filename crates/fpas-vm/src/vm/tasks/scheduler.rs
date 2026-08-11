@@ -206,6 +206,18 @@ impl TaskScheduler {
         self.available.notify_all();
         self.results_available.notify_all();
     }
+    /// Complete one retained task with the standard runtime-shutdown diagnostic.
+    pub(in crate::vm) fn cancel_result(&self, task_id: u64) {
+        self.store_failure(
+            task_id,
+            runtime_error(
+                RUNTIME_VM_SHUTDOWN,
+                format!("Task {task_id} was canceled because the runtime shut down"),
+                "Wait for retained tasks before the main task finishes.",
+                SourceLocation::new(1, 1),
+            ),
+        );
+    }
     pub fn fail(&self, error: VmError) {
         *self.first_error.lock().unwrap_or_else(|e| e.into_inner()) = Some(error);
         self.abort.store(true, Ordering::Release);
@@ -229,18 +241,7 @@ impl TaskScheduler {
     }
     fn cancel(&self, task: TaskState) {
         if task.retain_result {
-            self.store_failure(
-                task.id,
-                runtime_error(
-                    RUNTIME_VM_SHUTDOWN,
-                    format!(
-                        "Task {} was canceled because the runtime shut down",
-                        task.id
-                    ),
-                    "Wait for retained tasks before the main task finishes.",
-                    SourceLocation::new(1, 1),
-                ),
-            );
+            self.cancel_result(task.id);
         }
     }
 }

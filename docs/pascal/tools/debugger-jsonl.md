@@ -29,9 +29,11 @@ compatibility mode. A response precedes events caused by that request.
 | `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message` | logical breakpoint and verification |
 | `breakpoint.clear` | initialized/stopped | `breakpoint_id` | removal confirmation |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
-| `continue`, `step_into`, `step_over`, `step_out` | stopped | none | resumes execution |
+| `continue` | stopped | none | resumes all tasks |
+| `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
 | `pause` | running | none | cooperative pause request |
-| `stack` | stopped | optional `start`, `count` | bounded frames |
+| `tasks` | stopped | optional `start`, `count` | bounded task catalog |
+| `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
@@ -42,6 +44,14 @@ An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
 variable references belong to the current stop and expire on resume. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
+
+The task catalog returns stable `task_id`, `name`, `state`, and `inspectable`
+fields. States are `runnable`, `running`, `waiting`, `sleeping`, `completed`,
+`failed`, or `cancelled`. Omitted task selection resolves to the task that
+caused the current stop, or main task `0` at entry. Frame and variable IDs are
+qualified by their task snapshot and cannot alias across tasks. Completed or
+cancelled tasks are catalog-visible for lifecycle reporting but reject stack
+inspection.
 
 `variable.set` addresses one child returned by `variables`. The reference and
 child name must belong to the current stop. Mutable locals, parameters,
@@ -70,15 +80,18 @@ point. Policy order is condition, hit test, then log-or-stop. Log templates use
 
 ## Events and capabilities
 
-Events are `initialized`, `breakpoint`, `output`, `stopped`, `runtime_error`,
-`terminated`, and fatal `protocol_error`. A stopped breakpoint event includes
-both the first `breakpoint_id` and ordered `breakpoint_ids` for all logical
-breakpoints at that sequence point.
+Events are `initialized`, `breakpoint`, `output`, `task`, `stopped`,
+`runtime_error`, `terminated`, and fatal `protocol_error`. Task events report
+`started` or `exited` with a stable `task_id`. Every stopped event reports the
+responsible `task_id` and `all_tasks_stopped: true`; runtime errors also carry
+the responsible task. A stopped breakpoint event includes both the first
+`breakpoint_id` and ordered `breakpoint_ids` for all logical breakpoints at
+that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, conditional breakpoints, hit conditions, and logpoints. Attach,
-task threads and reverse execution remain false.
+non-stop execution and reverse execution remain false; `task_threads` is true.
 
 ## Default limits
 
@@ -107,6 +120,6 @@ Stable errors include `invalid_request`, `invalid_state`,
 `call_timeout`, `call_cancelled`, `call_runtime`, `limit_exceeded`,
 `variable_target_unknown`, `variable_target_expired`, `variable_not_mutable`,
 `variable_path_unsupported`, `variable_uninitialized`, `variable_value_type`,
-`variable_unavailable`, `tasks_unsupported`,
+`variable_unavailable`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.

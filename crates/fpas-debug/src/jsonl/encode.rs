@@ -32,7 +32,7 @@ pub(super) fn initialize_records(
                     "aggregate_expansion": true,
                     "structured_output": true,
                     "attach": false,
-                    "task_threads": false,
+                    "task_threads": true,
                     "evaluate": true,
                     "evaluate_calls": true,
                     "set_variable": true,
@@ -102,8 +102,46 @@ pub(super) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
 pub(super) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
     event(
         "stopped",
-        json!({"reason":stop_reason(stop.reason),"thread_id":1,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id,"breakpoint_ids":stop.breakpoint_ids}),
+        json!({"reason":stop_reason(stop.reason),"task_id":stop.task_id,"all_tasks_stopped":true,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id,"breakpoint_ids":stop.breakpoint_ids}),
     )
+}
+
+/// Parses an optional non-negative integer request argument.
+pub(super) fn optional_u64_argument(
+    request_id: u64,
+    command: &str,
+    arguments: &Map<String, Value>,
+    name: &str,
+) -> Result<Option<u64>, Value> {
+    match arguments.get(name) {
+        None | Some(Value::Null) => Ok(None),
+        Some(value) => value.as_u64().map(Some).ok_or_else(|| {
+            failure(
+                request_id,
+                command,
+                "invalid_request",
+                format!("Command `{command}` argument `{name}` must be a non-negative integer."),
+                format!("Pass a task ID returned by `tasks` as `{name}`."),
+            )
+        }),
+    }
+}
+
+pub(super) fn task_body(task: &fpas_vm::DebugTask) -> Value {
+    json!({
+        "task_id": task.id,
+        "name": task.name,
+        "state": task.state.as_str(),
+        "inspectable": task.inspectable
+    })
+}
+
+pub(super) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
+    let reason = match change.kind {
+        fpas_vm::DebugTaskEventKind::Started => "started",
+        fpas_vm::DebugTaskEventKind::Exited => "exited",
+    };
+    event("task", json!({"reason": reason, "task_id": change.task_id}))
 }
 
 fn stop_reason(reason: fpas_vm::DebugStopReason) -> &'static str {
@@ -139,8 +177,8 @@ pub(super) fn output_events(session: &fpas_vm::DebugSession, cursor: &mut usize)
     records
 }
 
-pub(super) fn diagnostic_body(diagnostic: &fpas_diagnostics::Diagnostic) -> Value {
-    json!({"code":format!("F{:04}",diagnostic.code.value()),"message":diagnostic.message,"help":diagnostic.help,"line":diagnostic.span.line(),"column":diagnostic.span.column(),"source_id":diagnostic.span.source_id()})
+pub(super) fn diagnostic_body(diagnostic: &fpas_diagnostics::Diagnostic, task_id: u64) -> Value {
+    json!({"code":format!("F{:04}",diagnostic.code.value()),"message":diagnostic.message,"help":diagnostic.help,"line":diagnostic.span.line(),"column":diagnostic.span.column(),"source_id":diagnostic.span.source_id(),"task_id":task_id})
 }
 
 pub(super) fn error_body(code: &str, message: impl Into<String>, help: impl Into<String>) -> Value {
@@ -150,7 +188,7 @@ pub(super) fn error_body(code: &str, message: impl Into<String>, help: impl Into
 pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
     match kind {
         fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
-        fpas_vm::DebugErrorKind::UnsupportedTasks => "tasks_unsupported",
+        fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
         fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",

@@ -34,25 +34,33 @@ Re-entry gate: define the chosen operation independently, including its source
 visibility, mutability, ownership, lifetime, type, cleanup, and stop semantics,
 then add focused atomicity and continuation tests before advertising it.
 
-## Task and concurrent debugging
+## Advanced task-debugging control and history
 
-Deferred:
+Deterministic launch-owned all-stop debugging of current FPAS tasks is
+implemented. The following broader task facilities remain deferred:
 
-- programs with reachable task spawning;
-- DAP threads representing FPAS tasks;
-- per-task pause and stepping;
-- deterministic inspection while another task runs.
+- non-stop or parallel debug execution where one task runs while another stays
+  inspectable;
+- per-task continue or pause;
+- debugger commands that create, cancel, restart, reprioritize, or detach a
+  task, replace its result, failure, dependency, or timer, or force it runnable;
+- assigning task handles through `setVariable`;
+- spawn-to-child, waiter-to-dependency, scheduler-history, task-name, or
+  task-group stepping shortcuts;
+- persistent completed-task stacks, variables, timelines, or ancestry; and
+- custom VS Code task panels, filters, scheduler visualizations, or exported
+  execution traces.
 
-Reason: the VM scheduler can execute workers concurrently and moves frame and
-register state between queued task states. A debugger must not expose torn or
-nondeterministic snapshots.
+Reason: all-stop current-state debugging does not define the memory consistency,
+rollback, lifetime, retention, and scheduling semantics required by these
+operations. The implemented debugger deliberately keeps one deterministic host
+execution lane and exposes no live values while another task advances.
 
-V1 behavior: reject the launch before program execution with an actionable,
-stable diagnostic when reachable function metadata reports task spawning.
-
-Re-entry gate: implement a deterministic debug scheduler, a stop-the-world
-snapshot protocol, stable task IDs, and tests for spawn, await, timeout,
-cancellation, failure propagation, and retained tasks.
+Re-entry gate: specify one bounded operation independently, including shared
+state visibility, task ownership, identity, cancellation propagation, cleanup,
+and protocol-equivalent stop behavior. Non-stop work additionally requires a
+quiescence protocol that proves inspection never sees torn frames or values;
+history work requires explicit retention and privacy limits.
 
 ## Interactive terminal, TUI, and graph applications
 

@@ -3,7 +3,7 @@
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
-use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value, VerifiedExecutable};
+use fpas_bytecode::{DebugBindingKind, FunctionId, InstructionAddress, Value};
 
 use super::model::{DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind};
 use super::render::RetainedValue;
@@ -54,23 +54,6 @@ impl InspectionSnapshot {
             snapshot.capture_frame(worker, frame, depth);
         }
         snapshot
-    }
-
-    pub(in crate::vm::debug) fn empty(
-        executable: Arc<VerifiedExecutable>,
-        generation: u32,
-        limits: DebugInspectionLimits,
-    ) -> Self {
-        Self {
-            generation,
-            executable,
-            frames: Vec::new(),
-            globals: Vec::new(),
-            total_frames: 0,
-            handles: Vec::new(),
-            child_handles: HashMap::new(),
-            limits,
-        }
     }
 
     fn capture_frame(&mut self, worker: &Worker, frame: CapturedFrame, depth: usize) {

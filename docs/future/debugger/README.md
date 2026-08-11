@@ -7,9 +7,10 @@ Its current user and protocol documentation lives under
 [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
 
 [deferred.md](deferred.md) lists all consciously postponed debugger work
-together with its rationale and re-entry gates. Task and concurrent debugging
-is the next remaining implementation-sized slice; no implementation plan has
-been selected for it yet.
+together with its rationale and re-entry gates. Deterministic, launch-owned,
+all-stop task debugging is implemented; non-stop execution, task-control
+mutation, cross-task stepping shortcuts, and persistent task history remain
+consciously deferred there.
 
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

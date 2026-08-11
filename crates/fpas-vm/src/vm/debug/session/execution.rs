@@ -1,104 +1,213 @@
-//! Resume, stepping, pause, termination, and execution-limit control.
+//! Resume, task-aware stepping, pause, termination, and execution-limit control.
 
 use std::time::Instant;
 
-use crate::vm::dispatch::DispatchStep;
-
 use super::*;
+use crate::vm::debug::tasks::{DebugDispatch, DebugSchedule};
 
 impl DebugSession {
-    /// Continue until a breakpoint, pause, runtime failure, or termination.
+    /// Continue all tasks until a breakpoint, pause, runtime failure, or termination.
     ///
     /// # Errors
     ///
-    /// Returns an invalid-state command error.
+    /// Returns an invalid-state or execution-limit command error.
     pub fn continue_execution(&mut self) -> Result<DebugRunResult, DebugSessionError> {
-        self.resume(ResumeMode::Continue)
+        self.resume(ResumeMode::Continue, None)
     }
 
-    /// Stop at the next sequence point, including one inside a callee.
+    /// Stop at the next sequence point in the task responsible for the current stop.
     ///
     /// # Errors
     ///
-    /// Returns an invalid-state command error.
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
     pub fn step_into(&mut self) -> Result<DebugRunResult, DebugSessionError> {
-        self.resume(ResumeMode::StepInto)
+        self.step_into_task(self.last_stop.task_id)
     }
 
-    /// Stop at the next sequence point at the same or a lower call depth.
+    /// Stop at the next sequence point in `task_id`, including one inside a callee.
     ///
     /// # Errors
     ///
-    /// Returns an invalid-state command error.
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
+    pub fn step_into_task(&mut self, task_id: u64) -> Result<DebugRunResult, DebugSessionError> {
+        self.resume(ResumeMode::StepInto, Some(task_id))
+    }
+
+    /// Stop at the next sequence point at the same or a lower call depth in the current task.
+    ///
+    /// # Errors
+    ///
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
     pub fn step_over(&mut self) -> Result<DebugRunResult, DebugSessionError> {
-        self.resume(ResumeMode::StepOver)
+        self.step_over_task(self.last_stop.task_id)
     }
 
-    /// Stop at the first sequence point below the current call depth.
+    /// Stop over the current source expression in `task_id`.
     ///
     /// # Errors
     ///
-    /// Returns an invalid-state command error.
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
+    pub fn step_over_task(&mut self, task_id: u64) -> Result<DebugRunResult, DebugSessionError> {
+        self.resume(ResumeMode::StepOver, Some(task_id))
+    }
+
+    /// Stop after returning below the current call depth in the current task.
+    ///
+    /// # Errors
+    ///
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
     pub fn step_out(&mut self) -> Result<DebugRunResult, DebugSessionError> {
-        self.resume(ResumeMode::StepOut)
+        self.step_out_task(self.last_stop.task_id)
+    }
+
+    /// Stop after `task_id` returns below its current call depth.
+    ///
+    /// # Errors
+    ///
+    /// Returns an invalid-state, unknown-task, or execution-limit command error.
+    pub fn step_out_task(&mut self, task_id: u64) -> Result<DebugRunResult, DebugSessionError> {
+        self.resume(ResumeMode::StepOut, Some(task_id))
     }
 
     /// Terminate this owned session without executing more program instructions.
     pub fn disconnect(&mut self) {
         self.evaluation_cancelled.store(true, Ordering::Release);
+        self.runtime.cancel();
         self.state = DebugSessionState::Terminated;
         self.pause_requested.store(false, Ordering::Release);
         self.invalidate_inspection();
     }
 
-    fn resume(&mut self, mode: ResumeMode) -> Result<DebugRunResult, DebugSessionError> {
+    fn resume(
+        &mut self,
+        mode: ResumeMode,
+        selected_task: Option<u64>,
+    ) -> Result<DebugRunResult, DebugSessionError> {
         self.require_stopped(mode.command())?;
-        let starting_depth = self.worker.call_stack.len();
+        let selected_task = selected_task.unwrap_or(self.last_stop.task_id);
+        let starting_depth = if mode == ResumeMode::Continue {
+            0
+        } else {
+            self.runtime
+                .worker(selected_task)
+                .filter(|_| self.runtime.task_is_inspectable(selected_task))
+                .map(|worker| worker.call_stack.len())
+                .ok_or_else(|| unknown_task(selected_task))?
+        };
         self.state = DebugSessionState::Running;
         self.invalidate_inspection();
         let mut pause_pending = false;
         let started = Instant::now();
         loop {
+            if let Some(value) = self.runtime.take_finished_root_result() {
+                let instruction_count = self.runtime.instruction_count();
+                self.state = DebugSessionState::Terminated;
+                self.inspections.clear();
+                return Ok(DebugRunResult::Terminated(DebugTermination {
+                    value,
+                    instruction_count,
+                }));
+            }
             self.enforce_execution_limits(started)?;
             if self.pause_requested.swap(false, Ordering::AcqRel) {
                 pause_pending = true;
             }
-            let dispatch = match self.worker.dispatch_one() {
+            let preferred = (mode != ResumeMode::Continue).then_some(selected_task);
+            let schedule = match self.runtime.schedule(preferred) {
+                Ok(schedule) => schedule,
+                Err((task_id, diagnostic)) => {
+                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+                }
+            };
+            let (task_id, resumed_at_boundary) = match schedule {
+                DebugSchedule::Runnable {
+                    task_id,
+                    resumed_at_boundary,
+                } => (task_id, resumed_at_boundary),
+                DebugSchedule::Idle(wait) => {
+                    if pause_pending {
+                        return Ok(self.stop_for_reason(
+                            selected_task,
+                            DebugStopReason::Pause,
+                            Vec::new(),
+                        ));
+                    }
+                    self.runtime.wait(wait);
+                    continue;
+                }
+            };
+            if resumed_at_boundary
+                && let Some(result) = self.stop_at_boundary(
+                    task_id,
+                    mode,
+                    selected_task,
+                    starting_depth,
+                    pause_pending,
+                )
+            {
+                return Ok(result);
+            }
+            let dispatch = match self.runtime.dispatch(task_id) {
                 Ok(dispatch) => dispatch,
-                Err(diagnostic) => {
-                    self.state = DebugSessionState::Failed;
-                    self.last_stop = stop_at_worker(
-                        &self.executable,
-                        &self.worker,
-                        DebugStopReason::RuntimeError,
-                        Vec::new(),
-                        Some(diagnostic),
-                    );
-                    self.refresh_inspection();
-                    return Ok(DebugRunResult::Stopped(self.last_stop.clone()));
+                Err((task_id, diagnostic)) => {
+                    return Ok(self.stop_for_runtime_error(task_id, diagnostic));
                 }
             };
             match dispatch {
-                DispatchStep::Continue => {}
-                DispatchStep::Suspend => {
-                    unreachable!("task-spawning executables are rejected before debug execution")
+                DebugDispatch::Completed {
+                    task_id,
+                    main: true,
+                } => {
+                    debug_assert_eq!(task_id, 0);
+                    self.runtime.finish_main();
+                    continue;
                 }
-                DispatchStep::Return(value) => {
-                    self.state = DebugSessionState::Terminated;
-                    self.inspection = InspectionSnapshot::empty(
-                        Arc::clone(&self.executable),
-                        self.inspection_generation,
-                        self.inspection_limits,
-                    );
-                    return Ok(DebugRunResult::Terminated(DebugTermination {
-                        value,
-                        instruction_count: self.worker.instruction_count,
-                    }));
+                DebugDispatch::Completed {
+                    task_id,
+                    main: false,
+                    ..
+                } if mode != ResumeMode::Continue && task_id == selected_task => {
+                    return Ok(self.stop_for_completed_task(task_id));
+                }
+                DebugDispatch::Completed { .. } => continue,
+                DebugDispatch::Suspended(task_id)
+                    if self.runtime.task_state(task_id)
+                        != Some(super::super::types::DebugTaskState::Runnable) =>
+                {
+                    if pause_pending {
+                        return Ok(self.stop_for_reason(
+                            task_id,
+                            DebugStopReason::Pause,
+                            Vec::new(),
+                        ));
+                    }
+                    continue;
+                }
+                DebugDispatch::Instruction(task_id) | DebugDispatch::Suspended(task_id) => {
+                    if let Some(result) = self.stop_at_boundary(
+                        task_id,
+                        mode,
+                        selected_task,
+                        starting_depth,
+                        pause_pending,
+                    ) {
+                        return Ok(result);
+                    }
                 }
             }
-            let Some((instruction, point)) = self.next_sequence_point() else {
-                continue;
-            };
+        }
+    }
+
+    fn stop_at_boundary(
+        &mut self,
+        task_id: u64,
+        mode: ResumeMode,
+        selected_task: u64,
+        starting_depth: usize,
+        pause_pending: bool,
+    ) -> Option<DebugRunResult> {
+        let sequence = self.next_sequence_point(task_id);
+        if let Some((instruction, _)) = sequence {
             let breakpoint_ids = self
                 .breakpoints
                 .iter()
@@ -106,56 +215,98 @@ impl DebugSession {
                 .map(|breakpoint| breakpoint.id)
                 .collect::<Vec<_>>();
             if !breakpoint_ids.is_empty() {
-                self.state = DebugSessionState::Stopped;
-                self.last_stop = stop_at_worker(
-                    &self.executable,
-                    &self.worker,
+                return Some(self.stop_for_reason(
+                    task_id,
                     DebugStopReason::Breakpoint,
                     breakpoint_ids,
-                    None,
-                );
-                self.refresh_inspection();
-                return Ok(DebugRunResult::Stopped(self.last_stop.clone()));
-            }
-            if pause_pending {
-                self.state = DebugSessionState::Stopped;
-                self.last_stop = stop_at_worker(
-                    &self.executable,
-                    &self.worker,
-                    DebugStopReason::Pause,
-                    Vec::new(),
-                    None,
-                );
-                self.refresh_inspection();
-                return Ok(DebugRunResult::Stopped(self.last_stop.clone()));
-            }
-            let depth = self.worker.call_stack.len();
-            let should_step = match mode {
-                ResumeMode::Continue => false,
-                ResumeMode::StepInto => true,
-                ResumeMode::StepOver => depth <= starting_depth,
-                ResumeMode::StepOut => depth < starting_depth,
-            };
-            if should_step {
-                debug_assert_eq!(point.instruction, instruction);
-                self.state = DebugSessionState::Stopped;
-                self.last_stop = stop_at_worker(
-                    &self.executable,
-                    &self.worker,
-                    DebugStopReason::Step,
-                    Vec::new(),
-                    None,
-                );
-                self.refresh_inspection();
-                return Ok(DebugRunResult::Stopped(self.last_stop.clone()));
+                ));
             }
         }
+        if pause_pending && sequence.is_some() {
+            return Some(self.stop_for_reason(task_id, DebugStopReason::Pause, Vec::new()));
+        }
+        let _ = sequence?;
+        if task_id != selected_task {
+            return None;
+        }
+        let depth = self.runtime.worker(task_id)?.call_stack.len();
+        let should_step = match mode {
+            ResumeMode::Continue => false,
+            ResumeMode::StepInto => true,
+            ResumeMode::StepOver => depth <= starting_depth,
+            ResumeMode::StepOut => depth < starting_depth,
+        };
+        should_step.then(|| self.stop_for_reason(task_id, DebugStopReason::Step, Vec::new()))
+    }
+
+    fn stop_for_reason(
+        &mut self,
+        task_id: u64,
+        reason: DebugStopReason,
+        breakpoint_ids: Vec<u64>,
+    ) -> DebugRunResult {
+        self.state = DebugSessionState::Stopped;
+        let Some(worker) = self
+            .runtime
+            .worker(task_id)
+            .or_else(|| self.runtime.worker(0))
+        else {
+            unreachable!("debug runtime always retains the main task")
+        };
+        self.last_stop = stop_at_worker(&self.executable, worker, reason, breakpoint_ids, None);
+        self.last_stop.task_id = task_id;
+        self.refresh_inspection();
+        DebugRunResult::Stopped(self.last_stop.clone())
+    }
+
+    fn stop_for_runtime_error(
+        &mut self,
+        task_id: u64,
+        diagnostic: fpas_diagnostics::Diagnostic,
+    ) -> DebugRunResult {
+        self.state = DebugSessionState::Failed;
+        let Some(worker) = self
+            .runtime
+            .worker(task_id)
+            .or_else(|| self.runtime.worker(0))
+        else {
+            unreachable!("debug runtime always retains the main task")
+        };
+        self.last_stop = stop_at_worker(
+            &self.executable,
+            worker,
+            DebugStopReason::RuntimeError,
+            Vec::new(),
+            Some(diagnostic),
+        );
+        self.last_stop.task_id = task_id;
+        self.refresh_inspection();
+        DebugRunResult::Stopped(self.last_stop.clone())
+    }
+
+    fn stop_for_completed_task(&mut self, task_id: u64) -> DebugRunResult {
+        self.state = DebugSessionState::Stopped;
+        let instruction = self
+            .runtime
+            .worker(task_id)
+            .map_or(0, |worker| worker.current_address.get());
+        self.last_stop = DebugStop {
+            reason: DebugStopReason::Step,
+            task_id,
+            location: None,
+            instruction,
+            call_depth: 0,
+            breakpoint_id: None,
+            breakpoint_ids: Vec::new(),
+            diagnostic: None,
+        };
+        self.refresh_inspection();
+        DebugRunResult::Stopped(self.last_stop.clone())
     }
 
     fn enforce_execution_limits(&mut self, started: Instant) -> Result<(), DebugSessionError> {
-        let (kind, message, hint) = if self.worker.instruction_count
-            >= self.execution_limits.max_instructions
-        {
+        let instruction_count = self.runtime.instruction_count();
+        let (kind, message, hint) = if instruction_count >= self.execution_limits.max_instructions {
             (
                 DebugErrorKind::InstructionLimit,
                 format!(
@@ -195,8 +346,10 @@ impl DebugSession {
     }
 
     fn output_byte_count(&self) -> usize {
-        let output = self
-            .worker
+        let Some(worker) = self.runtime.worker(0) else {
+            return 0;
+        };
+        let output = worker
             .hosted
             .console
             .lock()
@@ -206,9 +359,13 @@ impl DebugSession {
         })
     }
 
-    fn next_sequence_point(&self) -> Option<(InstructionAddress, &fpas_bytecode::SequencePoint)> {
-        let instruction = InstructionAddress::try_from_index(self.worker.ip).ok()?;
-        let point = breakpoints::point_at(&self.executable, self.worker.function, instruction)?;
+    fn next_sequence_point(
+        &self,
+        task_id: u64,
+    ) -> Option<(InstructionAddress, &fpas_bytecode::SequencePoint)> {
+        let worker = self.runtime.worker(task_id)?;
+        let instruction = InstructionAddress::try_from_index(worker.ip).ok()?;
+        let point = breakpoints::point_at(&self.executable, worker.function, instruction)?;
         Some((instruction, point))
     }
 }

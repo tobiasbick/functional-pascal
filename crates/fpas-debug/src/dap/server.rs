@@ -1,6 +1,7 @@
 //! DAP request translation onto the JSONL debugger core.
 
 mod mutation;
+mod tasks;
 
 use std::collections::HashMap;
 
@@ -8,6 +9,7 @@ use serde_json::{Value, json};
 
 use crate::PreparedDebugTarget;
 use crate::jsonl::{JsonlServer, ServerStatus};
+use tasks::ThreadMap;
 
 /// Stateful DAP adapter for one prepared target.
 pub struct DapServer {
@@ -20,6 +22,7 @@ pub struct DapServer {
     runtime_failed: bool,
     pending_core_requests: HashMap<u64, (u64, String)>,
     supports_invalidated_event: bool,
+    threads: ThreadMap,
 }
 
 impl DapServer {
@@ -27,7 +30,7 @@ impl DapServer {
     ///
     /// # Errors
     ///
-    /// Returns debugger initialization failures such as unsupported task spawning.
+    /// Returns debugger initialization failures for invalid runtime state.
     pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
         let source_paths = target.source_paths();
         let sources = target
@@ -45,6 +48,7 @@ impl DapServer {
             runtime_failed: false,
             pending_core_requests: HashMap::new(),
             supports_invalidated_event: false,
+            threads: ThreadMap::new(),
         })
     }
 
@@ -81,8 +85,15 @@ impl DapServer {
             "launch" => { self.stop_on_entry = arguments.get("stopOnEntry").and_then(Value::as_bool).unwrap_or(false); vec![self.success(request_seq, command, json!({}))] }
             "setBreakpoints" => self.set_breakpoints(request_seq, &arguments),
             "configurationDone" => self.core_request(request_seq, command, "launch", json!({"stop_on_entry":self.stop_on_entry})),
-            "threads" => vec![self.success(request_seq, command, json!({"threads":[{"id":1,"name":"FPAS main"}]}))],
-            "stackTrace" => self.core_request(request_seq, command, "stack", json!({"start":arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),"count":arguments.get("levels").and_then(Value::as_u64).unwrap_or(64)})),
+            "threads" if self.core.status() == ServerStatus::Running => {
+                let body = self.threads.active_threads();
+                vec![self.success(request_seq, command, body)]
+            }
+            "threads" => self.core_request(request_seq, command, "tasks", json!({})),
+            "stackTrace" => match self.task_id(&arguments, "threadId") {
+                Ok(task_id) => self.core_request(request_seq, command, "stack", json!({"task_id":task_id,"start":arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),"count":arguments.get("levels").and_then(Value::as_u64).unwrap_or(64)})),
+                Err(message) => vec![self.failure(request_seq, command, &message)],
+            },
             "scopes" => self.core_request(request_seq, command, "scopes", json!({"frame_id":arguments.get("frameId").cloned().unwrap_or(Value::Null)})),
             "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
             "evaluate" => self.evaluate(request_seq, command, &arguments),
@@ -99,9 +110,9 @@ impl DapServer {
             }
             "continue" => self.core_request(request_seq, command, "continue", json!({})),
             "pause" => self.core_request(request_seq, command, "pause", json!({})),
-            "next" => self.core_request(request_seq, command, "step_over", json!({})),
-            "stepIn" => self.core_request(request_seq, command, "step_into", json!({})),
-            "stepOut" => self.core_request(request_seq, command, "step_out", json!({})),
+            "next" => self.step_request(request_seq, command, "step_over", &arguments),
+            "stepIn" => self.step_request(request_seq, command, "step_into", &arguments),
+            "stepOut" => self.step_request(request_seq, command, "step_out", &arguments),
             "disconnect" => self.core_request(request_seq, command, "disconnect", json!({})),
             "source" => self.source(request_seq, command, &arguments),
             _ => vec![self.failure(request_seq, command, &format!("DAP request `{command}` is unsupported by the FPAS debugger."))],
@@ -157,6 +168,7 @@ impl DapServer {
                 "supportsLogPoints":true,
                 "supportsCancelRequest":true,
                 "supportsSetVariable":true,"supportsSetExpression":false,
+                "supportsSingleThreadExecutionRequests":false,
                 "supportsStepBack":false
             }),
         )];
@@ -289,6 +301,36 @@ impl DapServer {
         self.translate_core(records)
     }
 
+    fn step_request(
+        &mut self,
+        request_seq: u64,
+        command: &str,
+        core_command: &str,
+        arguments: &Value,
+    ) -> Vec<Value> {
+        match self.task_id(arguments, "threadId") {
+            Ok(task_id) => self.core_request(
+                request_seq,
+                command,
+                core_command,
+                json!({"task_id": task_id}),
+            ),
+            Err(message) => vec![self.failure(request_seq, command, &message)],
+        }
+    }
+
+    fn task_id(&self, arguments: &Value, field: &str) -> Result<u64, String> {
+        let thread_id = arguments
+            .get(field)
+            .and_then(Value::as_u64)
+            .ok_or_else(|| format!("DAP request requires a known `{field}`."))?;
+        self.threads.task_id(thread_id).ok_or_else(|| {
+            format!(
+                "DAP thread {thread_id} is unknown or expired; request `threads` and select a current FPAS task."
+            )
+        })
+    }
+
     fn translate_core(&mut self, records: Vec<Value>) -> Vec<Value> {
         let mut output = Vec::new();
         for record in records {
@@ -301,14 +343,11 @@ impl DapServer {
                     continue;
                 };
                 if record.get("success").and_then(Value::as_bool) == Some(true) {
-                    output.push(self.success(
-                        request_seq,
+                    let response_body = self.dap_response_body(
                         &command,
-                        dap_body(
-                            &command,
-                            record.get("body").cloned().unwrap_or_else(|| json!({})),
-                        ),
-                    ));
+                        record.get("body").cloned().unwrap_or_else(|| json!({})),
+                    );
+                    output.push(self.success(request_seq, &command, response_body));
                 } else {
                     output.push(
                         self.failure(
@@ -339,7 +378,18 @@ impl DapServer {
                 "initialized" => translated.push(self.event("initialized", json!({}))),
                 "stopped" => {
                     self.runtime_failed = body.get("reason").and_then(Value::as_str) == Some("runtime_error");
-                    translated.push(self.event("stopped", json!({"reason":dap_stop_reason(body.get("reason").and_then(Value::as_str)),"threadId":1,"allThreadsStopped":true})));
+                    let task_id = body.get("task_id").and_then(Value::as_u64).unwrap_or(0);
+                    let thread_id = self.threads.thread_id(task_id);
+                    translated.push(self.event("stopped", json!({"reason":dap_stop_reason(body.get("reason").and_then(Value::as_str)),"threadId":thread_id,"allThreadsStopped":true})));
+                }
+                "task" => {
+                    let task_id = body.get("task_id").and_then(Value::as_u64).unwrap_or(0);
+                    let thread_id = self.threads.thread_id(task_id);
+                    let reason = body.get("reason").and_then(Value::as_str).unwrap_or("started");
+                    if reason == "exited" {
+                        self.threads.mark_exited(task_id);
+                    }
+                    translated.push(self.event("thread", json!({"reason":reason,"threadId":thread_id})));
                 }
                 "output" => translated.push(self.event("output", json!({
                     "category":body.get("category"),
@@ -379,6 +429,20 @@ impl DapServer {
     }
     fn next_core_id(&mut self) -> u64 {
         1_000_000_000u64.saturating_add(self.take_seq())
+    }
+
+    fn dap_response_body(&mut self, command: &str, body: Value) -> Value {
+        if command == "threads" {
+            let tasks = body
+                .get("tasks")
+                .and_then(Value::as_array)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            self.threads.synchronize(tasks);
+            self.threads.active_threads()
+        } else {
+            dap_body(command, body)
+        }
     }
 }
 

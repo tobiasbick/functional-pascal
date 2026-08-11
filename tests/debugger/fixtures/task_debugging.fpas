@@ -1,6 +1,6 @@
-program UnsupportedDebuggerTasks;
+program DebuggerTasks;
 
-uses Std.Task;
+uses Std.Console, Std.Task;
 
 function Work(): integer;
 begin
@@ -9,5 +9,5 @@ end;
 
 begin
   var Pending: task := go Work();
-  Wait(Pending)
+  WriteLn(Wait(Pending))
 end.

@@ -4,13 +4,13 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugScope, DebugSourceLocation, Executable, FunctionDebugInfo,
     FunctionFlags, FunctionId, FunctionInfo, Instruction, InstructionAddress, Intrinsic,
     NO_REGISTER, Opcode, ReturnConvention, SequencePoint, SourceId, SourceMap, SourceRun, StringId,
-    StringTable, TimeIntrinsic, VerifiedExecutable,
+    StringTable, TaskIntrinsic, TimeIntrinsic, VerifiedExecutable,
 };
 
 use super::{
-    DebugBinaryOperation, DebugErrorKind, DebugEvaluationLimits, DebugExpression,
-    DebugInspectionLimits, DebugRunResult, DebugSession, DebugSessionState, DebugStopReason,
-    SourceBreakpoint,
+    DebugBinaryOperation, DebugErrorKind, DebugEvaluationLimits, DebugExecutionLimits,
+    DebugExpression, DebugInspectionLimits, DebugRunResult, DebugSession, DebugSessionState,
+    DebugStopReason, DebugTaskState, SourceBreakpoint,
 };
 
 fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
@@ -173,6 +173,166 @@ fn task_executable() -> VerifiedExecutable {
             task_bound: false,
         }],
         vec![(0, 1), (3, 10)],
+    )
+}
+
+fn same_deadline_tasks_executable() -> VerifiedExecutable {
+    let mut root = function("root", 0, 6, 4, debug(&[(0, 1), (3, 2), (4, 3)]));
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("function constant"),
+            abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
+            abc_aux(Opcode::SpawnTask, 2, 0, 0, 0),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                3,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                1,
+                1,
+            )
+            .expect("first task wait"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                3,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                2,
+                1,
+            )
+            .expect("second task wait"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 1).expect("sleep duration"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                NO_REGISTER,
+                u16::from(Intrinsic::Time(TimeIntrinsic::Sleep)),
+                0,
+                1,
+            )
+            .expect("task sleep"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![root, function("task", 6, 9, 1, debug(&[(6, 10), (8, 11)]))],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Integer(100),
+        ],
+        vec![(0, 1), (3, 2), (4, 3), (6, 10), (8, 11)],
+    )
+}
+
+fn task_state_executable() -> VerifiedExecutable {
+    let mut root = function("root", 0, 7, 5, debug(&[(0, 1), (4, 2), (5, 3)]));
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("sleeper function"),
+            abc_aux(Opcode::SpawnTask, 2, 0, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 1).expect("stopper function"),
+            abc_aux(Opcode::SpawnTask, 3, 1, 0, 0),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                4,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                2,
+                1,
+            )
+            .expect("sleeper wait"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                4,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                3,
+                1,
+            )
+            .expect("stopper wait"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 2).expect("sleep duration"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                NO_REGISTER,
+                u16::from(Intrinsic::Time(TimeIntrinsic::Sleep)),
+                0,
+                1,
+            )
+            .expect("task sleep"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![
+            root,
+            function("sleeper", 7, 10, 1, debug(&[(7, 10), (9, 11)])),
+            function("stopper", 10, 14, 1, debug(&[(10, 20), (12, 21)])),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Function {
+                function: FunctionId::new(2),
+                task_bound: false,
+            },
+            Constant::Integer(100),
+        ],
+        vec![(0, 1), (4, 2), (5, 3), (7, 10), (9, 11), (10, 20), (12, 21)],
+    )
+}
+
+fn yield_precedence_executable() -> VerifiedExecutable {
+    let mut root = function("root", 0, 7, 5, debug(&[(0, 1), (4, 2), (5, 3)]));
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("yielding function"),
+            abc_aux(Opcode::SpawnTask, 2, 0, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 1).expect("breakpoint function"),
+            abc_aux(Opcode::SpawnTask, 3, 1, 0, 0),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                4,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                2,
+                1,
+            )
+            .expect("yielding task wait"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                4,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                3,
+                1,
+            )
+            .expect("breakpoint task wait"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::Yield, 0, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![
+            root,
+            function("yielding", 7, 10, 1, debug(&[(7, 10), (8, 11)])),
+            function("breakpoint", 10, 12, 1, debug(&[(10, 20)])),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Function {
+                function: FunctionId::new(2),
+                task_bound: false,
+            },
+        ],
+        vec![(0, 1), (4, 2), (5, 3), (7, 10), (8, 11), (10, 20)],
     )
 }
 

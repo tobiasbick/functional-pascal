@@ -8,11 +8,27 @@ use fpas_vm::{
     DebugPauseHandle, DebugRunResult, DebugSession, DebugSessionError,
 };
 
+#[derive(Clone, Copy)]
+/// Resume operation transferred to the owned session thread.
 pub(super) enum ResumeCommand {
+    /// Resume the complete session without a selected-task step target.
     Continue,
-    StepInto,
-    StepOver,
-    StepOut,
+    /// Step into the optional explicitly selected task.
+    StepInto(Option<u64>),
+    /// Step over in the optional explicitly selected task.
+    StepOver(Option<u64>),
+    /// Step out of the optional explicitly selected task.
+    StepOut(Option<u64>),
+}
+
+impl ResumeCommand {
+    /// Return the explicit selected task, when this is a task-specific step.
+    pub(super) const fn task_id(self) -> Option<u64> {
+        match self {
+            Self::Continue => None,
+            Self::StepInto(task_id) | Self::StepOver(task_id) | Self::StepOut(task_id) => task_id,
+        }
+    }
 }
 
 pub(super) struct ResumeCompletion {
@@ -81,9 +97,12 @@ impl SessionActor {
             let mut session = *session;
             let result = match command {
                 ResumeCommand::Continue => session.continue_execution(),
-                ResumeCommand::StepInto => session.step_into(),
-                ResumeCommand::StepOver => session.step_over(),
-                ResumeCommand::StepOut => session.step_out(),
+                ResumeCommand::StepInto(Some(task_id)) => session.step_into_task(task_id),
+                ResumeCommand::StepInto(None) => session.step_into(),
+                ResumeCommand::StepOver(Some(task_id)) => session.step_over_task(task_id),
+                ResumeCommand::StepOver(None) => session.step_over(),
+                ResumeCommand::StepOut(Some(task_id)) => session.step_out_task(task_id),
+                ResumeCommand::StepOut(None) => session.step_out(),
             };
             let _ = sender.send(ActorCompletion::Resume(ResumeCompletion {
                 session,

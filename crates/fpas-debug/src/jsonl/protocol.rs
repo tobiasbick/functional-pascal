@@ -43,7 +43,7 @@ pub(super) fn session_error(
 ) -> Value {
     let code = match error.kind {
         fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
-        fpas_vm::DebugErrorKind::UnsupportedTasks => "tasks_unsupported",
+        fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
         fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",

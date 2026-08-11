@@ -1,26 +1,25 @@
 //! Debug session construction, state transitions, and controlled dispatch.
 
-use fpas_bytecode::{InstructionAddress, VerifiedExecutable};
+use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 
+use fpas_bytecode::{InstructionAddress, VerifiedExecutable};
+
 use super::breakpoints::{self, BoundBreakpoint, SourceBreakpoint};
-use super::calls::CallSandbox;
-use super::evaluation::{
-    DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value,
-};
-use super::inspection::{
-    DebugFrame, DebugInspectionLimits, DebugScope, DebugVariable, InspectionSnapshot, Paginated,
-};
+use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
+use super::tasks::DebugTaskRuntime;
 use super::types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
     DebugStop, DebugStopReason, DebugTermination,
 };
 use crate::vm::hosted::HostedState;
 use crate::vm::layouts::RuntimeLayouts;
+use crate::vm::tasks::{DebugClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
 mod execution;
+mod inspection;
 mod mutation;
 
 /// Thread-safe cooperative pause request handle.
@@ -52,7 +51,7 @@ impl DebugPauseHandle {
 /// Single-use controlled execution session for one verified executable.
 pub struct DebugSession {
     executable: Arc<VerifiedExecutable>,
-    worker: Worker,
+    runtime: DebugTaskRuntime,
     state: DebugSessionState,
     breakpoints: Vec<BoundBreakpoint>,
     next_breakpoint_id: u64,
@@ -60,7 +59,8 @@ pub struct DebugSession {
     evaluation_cancelled: Arc<AtomicBool>,
     last_stop: DebugStop,
     inspection_generation: u32,
-    inspection: InspectionSnapshot,
+    inspection_task_id: u64,
+    inspections: BTreeMap<u64, InspectionSnapshot>,
     inspection_limits: DebugInspectionLimits,
     execution_limits: DebugExecutionLimits,
 }
@@ -70,8 +70,7 @@ impl DebugSession {
     ///
     /// # Errors
     ///
-    /// Returns an actionable error when the executable uses task spawning or runtime state cannot
-    /// be initialized.
+    /// Returns an actionable error when runtime state cannot be initialized.
     pub fn new(executable: VerifiedExecutable) -> Result<Self, DebugSessionError> {
         Self::with_limits(
             executable,
@@ -85,8 +84,7 @@ impl DebugSession {
     ///
     /// # Errors
     ///
-    /// Returns an actionable error when the executable uses task spawning or runtime state cannot
-    /// be initialized.
+    /// Returns an actionable error when runtime state cannot be initialized.
     pub fn with_args(
         executable: VerifiedExecutable,
         arguments: Vec<String>,
@@ -103,7 +101,7 @@ impl DebugSession {
     ///
     /// # Errors
     ///
-    /// Returns an actionable error for unsupported task execution or invalid runtime state.
+    /// Returns an actionable error for invalid runtime state.
     pub fn with_args_and_limits(
         executable: VerifiedExecutable,
         arguments: Vec<String>,
@@ -121,30 +119,44 @@ impl DebugSession {
     ///
     /// # Errors
     ///
-    /// Returns an actionable error for unsupported task execution or invalid runtime state.
+    /// Returns an actionable error for invalid runtime state.
     pub fn with_limits(
         executable: VerifiedExecutable,
         arguments: Vec<String>,
         inspection_limits: DebugInspectionLimits,
         execution_limits: DebugExecutionLimits,
     ) -> Result<Self, DebugSessionError> {
+        Self::with_debug_clock(
+            executable,
+            arguments,
+            inspection_limits,
+            execution_limits,
+            Arc::new(DebugClock::realtime()),
+        )
+    }
+
+    #[cfg(test)]
+    /// Construct a session whose timer waits advance a deterministic manual clock.
+    pub(in crate::vm::debug) fn with_manual_clock(
+        executable: VerifiedExecutable,
+    ) -> Result<Self, DebugSessionError> {
+        Self::with_debug_clock(
+            executable,
+            Vec::new(),
+            DebugInspectionLimits::default(),
+            DebugExecutionLimits::default(),
+            Arc::new(DebugClock::manual()),
+        )
+    }
+
+    fn with_debug_clock(
+        executable: VerifiedExecutable,
+        arguments: Vec<String>,
+        inspection_limits: DebugInspectionLimits,
+        execution_limits: DebugExecutionLimits,
+        debug_clock: Arc<DebugClock>,
+    ) -> Result<Self, DebugSessionError> {
         let executable = Arc::new(executable);
-        if let Some(function_id) = super::tasks::first_reachable_spawner(&executable) {
-            let function = &executable.executable().functions[usize::from(function_id.get())];
-            let name = executable
-                .executable()
-                .strings
-                .get(function.name)
-                .unwrap_or("<unknown>");
-            return Err(DebugSessionError {
-                kind: DebugErrorKind::UnsupportedTasks,
-                message: format!(
-                    "cannot debug executable because reachable function `{name}` can spawn tasks"
-                ),
-                hint: "Remove task spawning for this debug run; debugger task threads are intentionally deferred from V1."
-                    .to_string(),
-            });
-        }
         let globals = Arc::new(RwLock::new(vec![
             None;
             executable.executable().globals.len()
@@ -153,6 +165,7 @@ impl DebugSession {
             .map(Arc::new)
             .map_err(runtime_initialization_error)?;
         let hosted = Arc::new(HostedState::new(fpas_std::Console::new(), arguments));
+        let scheduler = Arc::new(TaskScheduler::new());
         let worker = Worker::for_function_with_state(
             Arc::clone(&executable),
             executable.executable().entry,
@@ -161,7 +174,9 @@ impl DebugSession {
             layouts,
             hosted,
         )
-        .map_err(runtime_initialization_error)?;
+        .map_err(runtime_initialization_error)?
+        .with_scheduler(Some(Arc::clone(&scheduler)))
+        .with_debug_tasks(Arc::clone(&debug_clock));
         let pause_requested = Arc::new(AtomicBool::new(false));
         let evaluation_cancelled = Arc::new(AtomicBool::new(false));
         let last_stop = stop_at_worker(
@@ -174,9 +189,11 @@ impl DebugSession {
         let inspection_generation = 1;
         let inspection =
             InspectionSnapshot::capture(&worker, inspection_generation, inspection_limits);
+        let inspections = BTreeMap::from([(0, inspection)]);
+        let runtime = DebugTaskRuntime::new(worker, scheduler, debug_clock);
         Ok(Self {
             executable,
-            worker,
+            runtime,
             state: DebugSessionState::Stopped,
             breakpoints: Vec::new(),
             next_breakpoint_id: 1,
@@ -184,7 +201,8 @@ impl DebugSession {
             evaluation_cancelled,
             last_stop,
             inspection_generation,
-            inspection,
+            inspection_task_id: 0,
+            inspections,
             inspection_limits,
             execution_limits,
         })
@@ -205,7 +223,10 @@ impl DebugSession {
     /// Return captured program output accumulated by the session.
     #[must_use]
     pub fn output(&self) -> super::super::VmOutput {
-        self.worker
+        let Some(worker) = self.runtime.worker(0) else {
+            unreachable!("debug runtime always retains the main task")
+        };
+        worker
             .hosted
             .console
             .lock()
@@ -228,131 +249,6 @@ impl DebugSession {
         DebugEvaluationCancelHandle {
             cancelled: Arc::clone(&self.evaluation_cancelled),
         }
-    }
-
-    /// Return a bounded page of logical frames for the current stop.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state or inspection-limit error.
-    pub fn stack(
-        &self,
-        start: usize,
-        count: usize,
-    ) -> Result<Paginated<DebugFrame>, DebugSessionError> {
-        self.require_inspectable("stack")?;
-        self.inspection.stack(start, count)
-    }
-
-    /// Return source scopes for one frame in the current stop snapshot.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state or expired-frame error.
-    pub fn scopes(&self, frame_id: u64) -> Result<Vec<DebugScope>, DebugSessionError> {
-        self.require_inspectable("scopes")?;
-        self.inspection.scopes(frame_id)
-    }
-
-    /// Return one bounded page of variables or aggregate children.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state, expired-reference, or inspection-limit error.
-    pub fn variables(
-        &mut self,
-        reference: u64,
-        start: usize,
-        count: usize,
-    ) -> Result<Paginated<DebugVariable>, DebugSessionError> {
-        self.require_inspectable("variables")?;
-        self.inspection.variables(reference, start, count)
-    }
-
-    /// Evaluate one validated read-only expression against the current stop snapshot.
-    ///
-    /// A missing frame selects globals only. Supplied frame identifiers and returned aggregate
-    /// handles are valid only for the current stop.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state, frame, name, type, domain, unavailable-value, or limit error.
-    pub fn evaluate(
-        &mut self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-    ) -> Result<DebugEvaluateResult, DebugSessionError> {
-        self.evaluate_with_limits(expression, frame_id, DebugEvaluationLimits::default())
-    }
-
-    /// Evaluate one validated read-only expression with explicit resource limits.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state, frame, name, type, domain, unavailable-value, or limit error.
-    pub fn evaluate_with_limits(
-        &mut self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<DebugEvaluateResult, DebugSessionError> {
-        self.require_inspectable("evaluate")?;
-        let result = self
-            .evaluate_runtime_value(expression, frame_id, limits)
-            .and_then(|value| self.inspection.retain_evaluation_result(value, limits));
-        self.evaluation_cancelled.store(false, Ordering::Release);
-        result
-    }
-
-    /// Evaluate one validated breakpoint condition as a strict Boolean value.
-    ///
-    /// # Errors
-    ///
-    /// Returns the normal evaluation failures or a type error for a non-Boolean result.
-    pub fn evaluate_boolean(
-        &self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-    ) -> Result<bool, DebugSessionError> {
-        self.require_inspectable("evaluate.condition")?;
-        let result = self
-            .evaluate_runtime_value(expression, frame_id, DebugEvaluationLimits::default())
-            .and_then(|value| match value {
-                fpas_bytecode::Value::Boolean(value) => Ok(value),
-                other => Err(DebugSessionError {
-                    kind: DebugErrorKind::EvaluationType,
-                    message: format!(
-                        "debug breakpoint condition must be Boolean, got {}",
-                        other.type_name()
-                    ),
-                    hint: "Use a comparison or another expression that returns Boolean."
-                        .to_string(),
-                }),
-            });
-        self.evaluation_cancelled.store(false, Ordering::Release);
-        result
-    }
-
-    fn evaluate_runtime_value(
-        &self,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        self.inspection.validate_evaluation_frame(frame_id)?;
-        let mut sandbox = CallSandbox::new(
-            Arc::clone(&self.executable),
-            Arc::clone(&self.worker.layouts),
-            &self.worker.globals,
-            limits,
-            Arc::clone(&self.evaluation_cancelled),
-        )?;
-        evaluate_value(
-            expression,
-            limits,
-            |name| self.inspection.resolve_evaluation_name(frame_id, name),
-            |target, arguments| sandbox.invoke(target, arguments),
-        )
     }
 
     /// Add one source breakpoint and return its verified or unverified binding.
@@ -415,23 +311,93 @@ impl DebugSession {
 
     fn invalidate_inspection(&mut self) {
         self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);
-        self.inspection = InspectionSnapshot::empty(
-            Arc::clone(&self.executable),
-            self.inspection_generation,
-            self.inspection_limits,
-        );
+        self.inspections.clear();
     }
 
     fn refresh_inspection(&mut self) {
-        self.inspection = InspectionSnapshot::capture(
-            &self.worker,
-            self.inspection_generation,
-            self.inspection_limits,
-        );
+        let task_id = self.last_stop.task_id;
+        self.inspections.clear();
+        for inspectable_task_id in self.runtime.inspectable_task_ids() {
+            let Some(worker) = self.runtime.worker(inspectable_task_id) else {
+                continue;
+            };
+            self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);
+            self.inspections.insert(
+                inspectable_task_id,
+                InspectionSnapshot::capture(
+                    worker,
+                    self.inspection_generation,
+                    self.inspection_limits,
+                ),
+            );
+        }
+        self.inspection_task_id = if self.inspections.contains_key(&task_id) {
+            task_id
+        } else {
+            self.inspections.keys().next().copied().unwrap_or(task_id)
+        };
+    }
+
+    fn select_inspection_task(&mut self, task_id: u64) -> Result<(), DebugSessionError> {
+        if !self.inspections.contains_key(&task_id) {
+            return Err(unknown_task(task_id));
+        }
+        self.inspection_task_id = task_id;
+        Ok(())
+    }
+
+    fn current_inspection(&self) -> Result<&InspectionSnapshot, DebugSessionError> {
+        self.inspections
+            .get(&self.inspection_task_id)
+            .ok_or_else(|| unknown_task(self.inspection_task_id))
+    }
+
+    fn inspection_for_item(&self, id: u64) -> Result<&InspectionSnapshot, DebugSessionError> {
+        let generation = (id >> 32) as u32;
+        self.inspections
+            .values()
+            .find(|inspection| inspection.generation() == generation)
+            .ok_or_else(|| DebugSessionError {
+                kind: DebugErrorKind::UnknownFrame,
+                message: format!("debug frame {id} is unknown or expired"),
+                hint: "Request stack frames again for the current stop.".to_string(),
+            })
+    }
+
+    fn inspection_for_item_mut(
+        &mut self,
+        id: u64,
+    ) -> Result<&mut InspectionSnapshot, DebugSessionError> {
+        let generation = (id >> 32) as u32;
+        self.inspections
+            .values_mut()
+            .find(|inspection| inspection.generation() == generation)
+            .ok_or_else(|| DebugSessionError {
+                kind: DebugErrorKind::UnknownVariablesReference,
+                message: format!("debug variables reference {id} is unknown or expired"),
+                hint: "Request scopes or parent variables again for the current stop.".to_string(),
+            })
+    }
+
+    fn task_for_frame(&self, frame_id: Option<u64>) -> Result<u64, DebugSessionError> {
+        let Some(frame_id) = frame_id else {
+            return Ok(self.inspection_task_id);
+        };
+        let generation = (frame_id >> 32) as u32;
+        self.inspections
+            .iter()
+            .find_map(|(&task_id, inspection)| {
+                (inspection.generation() == generation).then_some(task_id)
+            })
+            .ok_or_else(|| DebugSessionError {
+                kind: DebugErrorKind::UnknownFrame,
+                message: format!("debug frame {frame_id} is unknown or expired"),
+                hint: "Request stack frames again for the current stop.".to_string(),
+            })
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum ResumeMode {
     Continue,
     StepInto,
@@ -465,6 +431,7 @@ fn stop_at_worker(
     let point = breakpoints::point_at(executable, worker.function, instruction);
     DebugStop {
         reason,
+        task_id: worker.task_id,
         location: point.and_then(|point| breakpoints::source_location(executable, point)),
         instruction: instruction.get(),
         call_depth: worker.call_stack.len(),
@@ -479,5 +446,13 @@ fn runtime_initialization_error(diagnostic: fpas_diagnostics::Diagnostic) -> Deb
         kind: DebugErrorKind::InvalidState,
         message: format!("cannot initialize debug runtime: {}", diagnostic.message),
         hint: "Rebuild the executable with the current compiler and retry.".to_string(),
+    }
+}
+
+fn unknown_task(task_id: u64) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::UnknownTask,
+        message: format!("debug task {task_id} is unknown or no longer inspectable"),
+        hint: "Request the current task list and select an inspectable task.".to_string(),
     }
 }

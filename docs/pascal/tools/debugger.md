@@ -27,8 +27,25 @@ stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping logpoints, stopped-state variable mutation, output, and structured
 runtime failures. Execution is bounded by `--timeout`, `--instruction-limit`,
-and `--output-limit`. Reachable task spawning is rejected. Attach, multiple task
-threads, control-flow manipulation, and reverse execution remain unsupported.
+and `--output-limit`. Programs may spawn retained and detached tasks. Attach,
+non-stop task execution, control-flow manipulation, and reverse execution
+remain unsupported.
+
+Task debugging is deterministic and all-stop. The debug session runs the main
+program and spawned FPAS tasks on one host execution lane, while normal
+non-debug execution keeps using the concurrent worker pool. Each stop freezes
+all live tasks at complete bytecode instruction boundaries. Task IDs are stable
+for the session, and current runnable, waiting, sleeping, failed, and completed
+states are available through the JSONL task catalog or DAP threads.
+
+Continue and pause apply to the whole session. Step in, over, and out target the
+selected task; when it is waiting, the driver may run dependencies in stable
+task-ID order until the selected task becomes runnable. A breakpoint, runtime
+failure, pause, or resource limit reached by any task takes precedence and
+identifies that task. Instruction, output, and resume-time limits cover the
+combined work of the entire session. Completed and cancelled tasks remain
+briefly visible for lifecycle reporting but have no fabricated inspectable
+stack.
 
 Evaluation is available only at a stable stop. It accepts FPAS literals,
 visible names, parentheses, unary `-` and `not`, arithmetic, Boolean/bitwise,

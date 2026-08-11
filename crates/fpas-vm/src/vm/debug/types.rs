@@ -68,6 +68,8 @@ pub enum DebugStopReason {
 pub struct DebugStop {
     /// Stop reason.
     pub reason: DebugStopReason,
+    /// Runtime identity of the task responsible for this stop.
+    pub task_id: u64,
     /// Source position when the stop has a debugger sequence point.
     pub location: Option<SourceLocation>,
     /// Global bytecode instruction address for deterministic protocol mapping.
@@ -80,6 +82,77 @@ pub struct DebugStop {
     pub breakpoint_ids: Vec<u64>,
     /// Runtime diagnostic when `reason` is [`DebugStopReason::RuntimeError`].
     pub diagnostic: Option<fpas_diagnostics::Diagnostic>,
+}
+
+/// Stable lifecycle state for one FPAS task in a stopped debug session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DebugTaskState {
+    /// Ready to execute when the session resumes.
+    Runnable,
+    /// Currently executing one instruction inside the debugger driver.
+    Running,
+    /// Waiting for one or more retained task results.
+    Waiting,
+    /// Waiting for a task-local timer.
+    Sleeping,
+    /// Returned normally and no longer has an inspectable stack.
+    Completed,
+    /// Raised the runtime failure that stopped the session.
+    Failed,
+    /// Was cancelled by root termination or debugger disconnect.
+    Cancelled,
+}
+
+impl DebugTaskState {
+    /// Return the stable lowercase protocol spelling.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Runnable => "runnable",
+            Self::Running => "running",
+            Self::Waiting => "waiting",
+            Self::Sleeping => "sleeping",
+            Self::Completed => "completed",
+            Self::Failed => "failed",
+            Self::Cancelled => "cancelled",
+        }
+    }
+
+    /// Whether this state retains a stable worker snapshot for inspection.
+    pub(super) const fn is_inspectable(self) -> bool {
+        !matches!(self, Self::Completed | Self::Cancelled)
+    }
+}
+
+/// Bounded protocol-neutral description of one FPAS task.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebugTask {
+    /// Runtime task identity; the main task is `0`.
+    pub id: u64,
+    /// Stable human-readable task name for editor thread views.
+    pub name: String,
+    /// Lifecycle state captured at the current all-stop generation.
+    pub state: DebugTaskState,
+    /// Whether stack and frame inspection is valid at this stop.
+    pub inspectable: bool,
+}
+
+/// Stable kind of task-lifecycle event emitted between debugger stops.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DebugTaskEventKind {
+    /// A spawned task became known to the debugger.
+    Started,
+    /// A spawned task completed or was cancelled.
+    Exited,
+}
+
+/// Task-lifecycle change accumulated during one resume operation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DebugTaskEvent {
+    /// Runtime identity of the changed task.
+    pub task_id: u64,
+    /// Lifecycle transition exposed to protocol adapters.
+    pub kind: DebugTaskEventKind,
 }
 
 /// Successful root termination information.
@@ -105,8 +178,8 @@ pub enum DebugRunResult {
 pub enum DebugErrorKind {
     /// The command is not permitted in the current session state.
     InvalidState,
-    /// The executable can spawn tasks, which V1 debugging does not support.
-    UnsupportedTasks,
+    /// The selected task is unknown or has no inspectable stopped state.
+    UnknownTask,
     /// A breakpoint identifier is unknown.
     UnknownBreakpoint,
     /// A frame identifier belongs to an expired or different stop snapshot.

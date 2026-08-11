@@ -18,8 +18,8 @@ desktop editors. The implemented editor features are:
 - deterministic import quick fixes for eligible `F2001` and `F2003` diagnostics
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
-- source debugging with breakpoints, stepping, inspection, evaluation, and
-  stopped-state editing of supported mutable values
+- source debugging with breakpoints, task threads, stepping, inspection,
+  evaluation, and stopped-state editing of supported mutable values
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -35,6 +35,14 @@ Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
 Run and Debug exposes stack frames, lexical scopes, expandable aggregates,
 watches, hover and Debug Console evaluation, conditional breakpoints, exact
 positive hit conditions, logpoints, and structured program output.
+
+Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
+as stable entries in VS Code's Threads view. Selecting a task selects its call
+stack and therefore the context used by Variables, Watch, hover, evaluation,
+and supported variable edits. Stops are all-thread stops: Continue and Pause
+apply to the complete session, while Step Into, Step Over, and Step Out target
+the selected task. A breakpoint or runtime failure in another task interrupts
+a pending step and selects the responsible task.
 
 At a stable stop, the Variables view can replace mutable locals, mutable
 parameters, mutable globals, mutable closure captures, record fields, array

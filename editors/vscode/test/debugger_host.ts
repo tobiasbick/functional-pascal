@@ -7,6 +7,7 @@ import { verifyBreakpointPolicies } from "./debugger_host/breakpoint_policies";
 import { verifyDebuggerEvaluation } from "./debugger_host/evaluation";
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
+import { verifyTaskDebugging } from "./debugger_host/task_debugging";
 import { verifyVariableMutation } from "./debugger_host/variable_mutation";
 import type { DapMessage } from "./debugger_host/support";
 
@@ -31,6 +32,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyDebuggerEvaluation(workspaceRoot, received, sent);
     await verifyVariableMutation(workspaceRoot, received, sent);
     await verifyBreakpointPolicies(workspaceRoot, received, sent);
+    await verifyTaskDebugging(workspaceRoot, received, sent);
   } finally {
     await vscode.debug.stopDebugging();
     tracker.dispose();

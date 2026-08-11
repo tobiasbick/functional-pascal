@@ -35,8 +35,8 @@ pub use debug::{
     DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
     DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
     DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
-    DebugTermination, DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint,
-    SourceLocation,
+    DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState, DebugTermination,
+    DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

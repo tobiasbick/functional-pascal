@@ -33,7 +33,10 @@ impl Worker {
         let location = self.intrinsic_location();
         let result = if matches!(intrinsic, Intrinsic::Task(_) | Intrinsic::Time(_)) {
             let owned_arguments = arguments.to_vec();
-            if let Some(result) = self.task_intrinsic(intrinsic, &owned_arguments)? {
+            let destination = (operands.a != NO_REGISTER)
+                .then(|| register(operands.a))
+                .transpose()?;
+            if let Some(result) = self.task_intrinsic(intrinsic, &owned_arguments, destination)? {
                 if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
                     self.write(register(operands.a)?, value)?;
                 }

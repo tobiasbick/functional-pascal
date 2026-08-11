@@ -6,9 +6,11 @@
 pub(super) mod pool;
 mod scheduler;
 mod state;
+mod suspension;
 
 pub(super) use scheduler::TaskScheduler;
 pub(super) use state::TaskState;
+pub(in crate::vm) use suspension::{DebugClock, TaskSuspension, TaskSuspensionState};
 
 use std::sync::Arc;
 
@@ -137,7 +139,10 @@ impl Worker {
     }
 
     pub(super) fn yield_task(&mut self) {
-        if self.task_id == 0 {
+        if self.debug_tasks {
+            self.task_suspension = Some(TaskSuspension::Yield);
+            self.suspend_requested = true;
+        } else if self.task_id == 0 {
             std::thread::yield_now();
         } else {
             self.suspend_and_enqueue();
@@ -148,7 +153,11 @@ impl Worker {
         &mut self,
         intrinsic: Intrinsic,
         arguments: &[Value],
+        destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        if self.debug_tasks {
+            return self.debug_task_intrinsic(intrinsic, arguments, destination);
+        }
         match intrinsic {
             Intrinsic::Task(TaskIntrinsic::Wait) => {
                 let [Value::Task(id)] = arguments else {
@@ -208,6 +217,129 @@ impl Worker {
         }
     }
 
+    fn debug_task_intrinsic(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+        destination: Option<Register>,
+    ) -> Result<Option<Option<Value>>, VmError> {
+        match intrinsic {
+            Intrinsic::Task(TaskIntrinsic::Wait) => {
+                let [Value::Task(id)] = arguments else {
+                    return Err(
+                        self.task_type_error("task", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                match self.scheduler_ref()?.poll_result(*id) {
+                    TaskResultPoll::Available(value) => Ok(Some(Some(value))),
+                    TaskResultPoll::Failed(error) => Err(error),
+                    TaskResultPoll::Consumed | TaskResultPoll::Unknown => {
+                        Err(self.invalid_task(*id))
+                    }
+                    TaskResultPoll::Pending => {
+                        self.task_suspension = Some(TaskSuspension::Wait {
+                            id: *id,
+                            destination,
+                        });
+                        self.suspend_requested = true;
+                        Ok(Some(None))
+                    }
+                }
+            }
+            Intrinsic::Task(TaskIntrinsic::WaitAll) => {
+                let [Value::Array(values)] = arguments else {
+                    return Err(
+                        self.task_type_error("array", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                let mut ids = values
+                    .iter()
+                    .map(|value| match value {
+                        Value::Task(id) => Ok(*id),
+                        other => Err(self.task_type_error("task", other)),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                ids.sort_unstable();
+                ids.dedup();
+                match self.scheduler_ref()?.poll_batch(&ids) {
+                    TaskBatchPoll::Complete => Ok(Some(None)),
+                    TaskBatchPoll::Failed(error) => Err(error),
+                    TaskBatchPoll::Unknown(id) => Err(self.invalid_task(id)),
+                    TaskBatchPoll::Pending => {
+                        self.task_suspension = Some(TaskSuspension::WaitAll { ids });
+                        self.suspend_requested = true;
+                        Ok(Some(None))
+                    }
+                }
+            }
+            Intrinsic::Time(TimeIntrinsic::Sleep) if self.task_id != 0 => {
+                let [Value::Integer(milliseconds)] = arguments else {
+                    return Err(
+                        self.task_type_error("integer", arguments.first().unwrap_or(&Value::Unit))
+                    );
+                };
+                let milliseconds = u64::try_from(*milliseconds).map_err(|_| {
+                    self.task_type_error("non-negative integer", &Value::Integer(*milliseconds))
+                })?;
+                self.task_suspension =
+                    Some(TaskSuspension::sleep(milliseconds, self.debug_clock_ref()));
+                self.suspend_requested = true;
+                Ok(Some(None))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    pub(in crate::vm) fn poll_debug_suspension(&mut self) -> Result<bool, VmError> {
+        let Some(suspension) = self.task_suspension.take() else {
+            self.suspend_requested = false;
+            return Ok(true);
+        };
+        let ready = match suspension {
+            TaskSuspension::Yield => Ok(true),
+            TaskSuspension::Wait { id, destination } => {
+                match self.scheduler_ref()?.poll_result(id) {
+                    TaskResultPoll::Available(value) => {
+                        if let Some(destination) = destination {
+                            self.write(destination, value)?;
+                        }
+                        Ok(true)
+                    }
+                    TaskResultPoll::Failed(error) => Err(error),
+                    TaskResultPoll::Consumed | TaskResultPoll::Unknown => {
+                        Err(self.invalid_task(id))
+                    }
+                    TaskResultPoll::Pending => {
+                        self.task_suspension = Some(TaskSuspension::Wait { id, destination });
+                        Ok(false)
+                    }
+                }
+            }
+            TaskSuspension::WaitAll { ids } => match self.scheduler_ref()?.poll_batch(&ids) {
+                TaskBatchPoll::Complete => Ok(true),
+                TaskBatchPoll::Failed(error) => Err(error),
+                TaskBatchPoll::Unknown(id) => Err(self.invalid_task(id)),
+                TaskBatchPoll::Pending => {
+                    self.task_suspension = Some(TaskSuspension::WaitAll { ids });
+                    Ok(false)
+                }
+            },
+            TaskSuspension::Sleep { deadline_millis }
+                if self.debug_clock_ref().now_millis() >= deadline_millis =>
+            {
+                Ok(true)
+            }
+            TaskSuspension::Sleep { deadline_millis } => {
+                self.task_suspension = Some(TaskSuspension::Sleep { deadline_millis });
+                Ok(false)
+            }
+        }?;
+        if ready {
+            self.suspend_requested = false;
+        }
+        Ok(ready)
+    }
+
     fn help_or_wait_result(&mut self, id: u64) -> Result<(), VmError> {
         let scheduler = Arc::clone(self.scheduler_ref()?);
         if let Some(task) = scheduler.try_dequeue() {
@@ -234,6 +366,12 @@ impl Worker {
                 "Task intrinsic ran without a scheduler",
             )
         })
+    }
+    fn debug_clock_ref(&self) -> &DebugClock {
+        let Some(clock) = self.debug_clock.as_deref() else {
+            unreachable!("debug task suspension requires a debugger clock")
+        };
+        clock
     }
     fn task_type_error(&self, expected: &str, actual: &Value) -> VmError {
         diagnostics::at_address(

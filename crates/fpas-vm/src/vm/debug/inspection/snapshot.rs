@@ -33,3 +33,10 @@ pub(super) struct HandleEntry {
 pub(super) fn item_id(generation: u32, index: usize) -> u64 {
     (u64::from(generation) << 32) | u64::try_from(index.saturating_add(1)).unwrap_or(u64::MAX)
 }
+
+impl InspectionSnapshot {
+    /// Return the stop-local generation encoded into frames and variable references.
+    pub(in crate::vm::debug) const fn generation(&self) -> u32 {
+        self.generation
+    }
+}

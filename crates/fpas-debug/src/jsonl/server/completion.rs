@@ -5,7 +5,9 @@ use serde_json::{Value, json};
 use super::{JsonlServer, ServerStatus};
 use crate::breakpoints::BreakpointOutcome;
 use crate::jsonl::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
-use crate::jsonl::encode::{diagnostic_body, error_body, error_code, output_events, stopped_event};
+use crate::jsonl::encode::{
+    diagnostic_body, error_body, error_code, output_events, stopped_event, task_event,
+};
 use crate::jsonl::protocol::event;
 
 impl JsonlServer {
@@ -22,13 +24,17 @@ impl JsonlServer {
             result,
         } = completion;
         let mut records = output_events(&session, &mut self.output_cursor);
+        records.extend(session.take_task_events().into_iter().map(task_event));
         match result {
             Ok(fpas_vm::DebugRunResult::Stopped(stop)) => {
                 self.status = ServerStatus::Stopped;
                 if stop.reason == fpas_vm::DebugStopReason::RuntimeError
                     && let Some(diagnostic) = &stop.diagnostic
                 {
-                    records.push(event("runtime_error", diagnostic_body(diagnostic)));
+                    records.push(event(
+                        "runtime_error",
+                        diagnostic_body(diagnostic, stop.task_id),
+                    ));
                 }
                 if stop.reason == fpas_vm::DebugStopReason::Breakpoint
                     && !stop.breakpoint_ids.is_empty()

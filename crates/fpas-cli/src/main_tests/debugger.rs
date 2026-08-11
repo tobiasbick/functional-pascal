@@ -110,20 +110,38 @@ fn debug_accepts_program_projects_and_workspaces() {
 }
 
 #[test]
-fn debug_rejects_reachable_task_spawning_with_a_hint() {
+fn debug_runs_reachable_task_spawning_and_emits_lifecycle_events() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let source = root.join("tests/debugger/fixtures/unsupported_tasks.fpas");
+    let source = root.join("tests/debugger/fixtures/task_debugging.fpas");
     let cwd = create_temp_dir("debug-tasks");
     let commands = cwd.join("commands.jsonl");
     write_text(
         &commands,
-        "{\"type\":\"request\",\"id\":1,\"command\":\"initialize\",\"arguments\":{}}\n",
+        "{\"type\":\"request\",\"id\":1,\"command\":\"initialize\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":2,\"command\":\"launch\",\"arguments\":{\"stop_on_entry\":false}}\n",
     );
     let (exit, stdout, stderr) =
         support::run_cli_args_and_capture_output(&debug_args(&source, &commands), &root);
     fs::remove_dir_all(&cwd).expect("remove debugger temp directory");
-    assert_eq!(exit, 1);
-    assert!(stdout.is_empty());
-    assert!(stderr.contains("spawn tasks"));
-    assert!(stderr.contains("intentionally deferred from V1"));
+    assert_eq!(exit, 0, "stderr: {stderr}");
+    assert!(stderr.is_empty());
+    let records = stdout
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).expect("debugger JSONL"))
+        .collect::<Vec<_>>();
+    assert!(
+        records
+            .iter()
+            .any(|record| { record["event"] == "task" && record["body"]["reason"] == "started" })
+    );
+    assert!(
+        records
+            .iter()
+            .any(|record| { record["event"] == "task" && record["body"]["reason"] == "exited" })
+    );
+    assert!(
+        records
+            .iter()
+            .any(|record| { record["event"] == "output" && record["body"]["text"] == "42\n" })
+    );
+    assert!(records.iter().any(|record| record["event"] == "terminated"));
 }

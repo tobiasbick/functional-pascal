@@ -3,6 +3,43 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
+/// Scaffold kind selected by `fpas init`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum InitKind {
+    Project,
+    Library,
+    Workspace,
+}
+
+impl InitKind {
+    /// Returns the stable CLI spelling for this scaffold kind.
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Self::Project => "project",
+            Self::Library => "library",
+            Self::Workspace => "workspace",
+        }
+    }
+}
+
+/// Machine-readable output format selected for `fpas init`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum InitReportFormat {
+    Json,
+}
+
+/// Fully resolved configuration for an `fpas init` invocation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct InitCliConfig {
+    pub cwd: PathBuf,
+    pub kind: InitKind,
+    pub name: String,
+    pub root: PathBuf,
+    pub library_unit: Option<String>,
+    pub dry_run: bool,
+    pub report: Option<InitReportFormat>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::enum_variant_names)]
 pub(crate) enum CliInput {
@@ -56,6 +93,10 @@ pub(crate) enum TestReportFormat {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum HelpTopic {
     General,
+    Init,
+    InitProject,
+    InitLibrary,
+    InitWorkspace,
     Build,
     Run,
     Debug,
@@ -91,6 +132,7 @@ pub(crate) struct TestCliConfig {
 /// Result of parsing CLI arguments before loading sources.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ResolvedCli {
+    Init(InitCliConfig),
     Build(BuildCliConfig),
     Run(CliConfig),
     Debug(DebugCliConfig),

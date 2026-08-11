@@ -69,6 +69,7 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                     CliMode::Debug => "fpas debug --std-lib ./lib hello.fpas --protocol jsonl",
                     CliMode::Check => "fpas check --std-lib ./lib my-app.fpasprj",
                     CliMode::Test => "fpas test --std-lib ./lib tests/",
+                    CliMode::Init => unreachable!("init has its own option parser"),
                     CliMode::Fmt => unreachable!("fmt does not accept --std-lib"),
                 };
                 let path = take_option_value(

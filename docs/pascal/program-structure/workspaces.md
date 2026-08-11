@@ -2,6 +2,9 @@
 
 A workspace groups multiple projects, similar to a Visual Studio solution. The `acme-suite` / `apps/portal` member paths in the sample below reuse the same **illustrative** monorepo from [Projects — library dependency example](projects.md#example-program-with-a-library-dependency); see [`examples/pascal/monorepo/`](../../../examples/pascal/monorepo/) for a checked-in workspace.
 
+`fpas init workspace <name>` creates a complete workspace with one program and
+one library member. See [Initializing projects and workspaces](initializing.md).
+
 Define a `.fpasworkspace` file in TOML format:
 
 ```toml
@@ -46,5 +49,6 @@ that output name. Zero or multiple program members are errors.
 
 ## See also
 
+- [Initializing projects and workspaces](initializing.md)
 - [Projects](projects.md)
 - [CLI](cli.md)

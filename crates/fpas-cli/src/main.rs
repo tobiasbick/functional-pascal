@@ -23,6 +23,7 @@ mod cli_build;
 mod cli_check;
 mod cli_debug;
 mod cli_fmt;
+mod cli_init;
 mod cli_input;
 mod cli_output;
 mod cli_paths;

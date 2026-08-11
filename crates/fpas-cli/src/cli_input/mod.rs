@@ -4,6 +4,7 @@
 
 mod discovery;
 mod help;
+mod init;
 mod mode;
 mod options;
 mod types;
@@ -15,9 +16,10 @@ pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
 pub(crate) use types::{
     BuildCliConfig, CliConfig, CliInput, DebugCliConfig, DebugProtocol, FmtCliConfig, HelpTopic,
-    ResolvedCli, TestCliConfig, TestReportFormat,
+    InitCliConfig, InitKind, InitReportFormat, ResolvedCli, TestCliConfig, TestReportFormat,
 };
 
+use init::resolve_init_cli;
 use mode::{
     CliMode, parse_cli_mode, program_args_require_run_error, split_program_args, usage_error,
 };
@@ -31,6 +33,9 @@ use discovery::{discover_input, resolve_explicit_input};
 #[cfg(test)]
 pub(crate) fn resolve_cli_input(args: &[String], cwd: &Path) -> Result<CliInput, String> {
     match resolve_cli_config(args, cwd)? {
+        ResolvedCli::Init(_) => {
+            Err("resolve_cli_input: use resolve_cli_config for `fpas init`".to_string())
+        }
         ResolvedCli::Build(config) => Ok(config.input),
         ResolvedCli::Run(config) | ResolvedCli::Check(config) => Ok(config.input),
         ResolvedCli::Debug(config) => Ok(config.input),
@@ -63,8 +68,19 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
     let (mode, cli_args) = parse_cli_mode(cli_args)?;
 
+    if mode == CliMode::Init {
+        if !program_args.is_empty() {
+            return Err(
+                "`fpas init` does not accept arguments after `--`.\n  help: `fpas init --help` shows valid scaffold commands."
+                    .to_string(),
+            );
+        }
+        return resolve_init_cli(cli_args, cwd);
+    }
+
     if !matches!(mode, CliMode::Run | CliMode::Debug) && !program_args.is_empty() {
         let cmd = match mode {
+            CliMode::Init => unreachable!("init handled before shared option parsing"),
             CliMode::Build => "fpas build",
             CliMode::Check => "fpas check",
             CliMode::Fmt => "fpas fmt",
@@ -138,6 +154,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
 
         if arg.starts_with('-') {
             let hint = match mode {
+                CliMode::Init => unreachable!("init handled before shared option parsing"),
                 CliMode::Build => {
                     "Pass a project or workspace path after `fpas build`, or use `fpas build --help`."
                 }
@@ -172,6 +189,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
     }
 
     Ok(match mode {
+        CliMode::Init => unreachable!("init handled before shared option parsing"),
         CliMode::Build => ResolvedCli::Build(BuildCliConfig {
             input,
             standard_library: options.standard_library,

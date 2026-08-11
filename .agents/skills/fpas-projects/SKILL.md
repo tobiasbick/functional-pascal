@@ -3,7 +3,7 @@ name: fpas-projects
 description: >
   Guides Functional Pascal project manifests, workspaces, CLI workflows, and test bundles. Use when
   creating or editing `.fpasprj`, `.fpasworkspace`, dependencies, exports, `suite.fpasprj`, or running
-  `fpas build`, `fpas run`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
+  `fpas init`, `fpas build`, `fpas run`, `fpas check`, `fpas test`, `fpas fmt`. Also use when the user asks about project discovery,
   library linking, workspace members, or how to run/check tests.
 ---
 
@@ -106,6 +106,9 @@ Workspace lists members; **each consumer still declares its own** `[dependencies
 | Command | Purpose |
 |---------|---------|
 | `fpas` | Print usage |
+| `fpas init project <name>` | Create a formatted runnable project scaffold |
+| `fpas init library <name> [--unit <name>]` | Create an exported library scaffold |
+| `fpas init workspace <name>` | Create a workspace with a program and consumed library |
 | `fpas build [<path>]` | Build project or workspace artifacts |
 | `fpas build --executable [--name <name>] <path>` | Bundle exactly one program for the current host |
 | `fpas run` | Discover and run program in cwd (workspace or single `.fpasprj`) |
@@ -127,11 +130,15 @@ Full CLI spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/pro
 ## Typical workflows
 
 ```text
-fpas check my-app.fpasprj          # type-check project
-fpas build my-app.fpasprj          # produce or reuse my-app.fpascp
-fpas build --executable my-app.fpasprj # produce native app / app.exe
-fpas run my-app.fpasprj            # produce/reuse and run my-app.fpascp
-fpas run my-app.fpascp             # run image without project sources
+fpas init project my-app             # create project + formatted program source
+fpas init library greet --unit Demo.Greet
+fpas init workspace my-suite         # create linked program + library members
+fpas init project my-app --dry-run --report json
+fpas check my-app/my-app.fpasprj   # type-check initialized project
+fpas build my-app/my-app.fpasprj   # produce or reuse my-app.fpascp
+fpas build --executable my-app/my-app.fpasprj # produce native app / app.exe
+fpas run my-app/my-app.fpasprj     # produce/reuse and run my-app.fpascp
+fpas run my-app/my-app.fpascp      # run image without project sources
 fpas test tests/                   # full regression tree
 fpas test tests/suite.fpasprj      # bundled manifest
 fpas test tests/stdlib/tui/mvu_host_signature_test.fpas

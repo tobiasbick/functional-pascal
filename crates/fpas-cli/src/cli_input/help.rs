@@ -6,6 +6,7 @@ const GENERAL_HELP: &str = "\
 fpas — Functional Pascal compiler
 
 Usage:
+    fpas init <kind> <name>              Create a project, library, or workspace
     fpas build [<path>]                   Build project artifacts
     fpas run [<path>] [-- <args>...]     Run a source, project, workspace, or image
     fpas debug [<path>] --protocol <p>   Debug through JSONL or DAP
@@ -20,12 +21,92 @@ Options:
 Run `fpas <command> --help` for command-specific options and examples.
 
 Examples:
+  fpas init project hello
   fpas build my-app.fpasprj
   fpas run hello.fpas
   fpas debug hello.fpas --protocol jsonl
   fpas check my-app.fpasprj
   fpas test --report json tests/
   fpas fmt --check --list
+
+";
+
+const INIT_HELP: &str = "\
+Create a Functional Pascal scaffold without interactive prompts.
+
+Usage:
+  fpas init project <name> [options]
+  fpas init library <name> [options]
+  fpas init workspace <name> [options]
+
+Each scaffold is immediately usable by `fpas check`. Existing files are never
+overwritten. Repeating an unchanged invocation succeeds with status `unchanged`.
+
+Run `fpas init <kind> --help` for focused options and examples.
+
+Examples:
+  fpas init project hello
+  fpas init library greet --unit Demo.Greet
+  fpas init workspace acme-suite
+  fpas init workspace acme-suite --dry-run --report json
+
+";
+
+const INIT_PROJECT_HELP: &str = "\
+Create a runnable Functional Pascal program project.
+
+Usage:
+  fpas init project <name> [--path <dir>] [--dry-run] [--report json]
+
+Options:
+  --path <dir>   Target directory (default: <name>)
+  --dry-run      Print the file plan without writing
+  --report json  Write a machine-readable report to stdout
+  -h, --help     Print this help
+
+Examples:
+  fpas init project hello
+  fpas init project portal --path apps/portal
+  fpas init project hello --dry-run --report json
+
+";
+
+const INIT_LIBRARY_HELP: &str = "\
+Create a reusable Functional Pascal library project.
+
+Usage:
+  fpas init library <name> [--path <dir>] [--unit <name>] [--dry-run] [--report json]
+
+Options:
+  --path <dir>   Target directory (default: <name>)
+  --unit <name>  Exported qualified unit name (default: derived from <name>)
+  --dry-run      Print the file plan without writing
+  --report json  Write a machine-readable report to stdout
+  -h, --help     Print this help
+
+Examples:
+  fpas init library greet
+  fpas init library greet --path libs/greet --unit Demo.Greet
+  fpas init library greet --dry-run --report json
+
+";
+
+const INIT_WORKSPACE_HELP: &str = "\
+Create a Functional Pascal workspace with a program and a consumed library.
+
+Usage:
+  fpas init workspace <name> [--path <dir>] [--dry-run] [--report json]
+
+Options:
+  --path <dir>   Target directory (default: <name>)
+  --dry-run      Print the file plan without writing
+  --report json  Write a machine-readable report to stdout
+  -h, --help     Print this help
+
+Examples:
+  fpas init workspace acme-suite
+  fpas init workspace acme-suite --path work/acme-suite
+  fpas init workspace acme-suite --dry-run --report json
 
 ";
 
@@ -183,6 +264,10 @@ Examples:
 pub(crate) const fn help_text(topic: HelpTopic) -> &'static str {
     match topic {
         HelpTopic::General => GENERAL_HELP,
+        HelpTopic::Init => INIT_HELP,
+        HelpTopic::InitProject => INIT_PROJECT_HELP,
+        HelpTopic::InitLibrary => INIT_LIBRARY_HELP,
+        HelpTopic::InitWorkspace => INIT_WORKSPACE_HELP,
         HelpTopic::Build => BUILD_HELP,
         HelpTopic::Run => RUN_HELP,
         HelpTopic::Debug => DEBUG_HELP,

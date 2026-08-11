@@ -13,6 +13,7 @@ mod debugger;
 mod diagnostics;
 mod examples;
 mod fmt;
+mod init;
 mod input;
 mod output;
 mod projects;

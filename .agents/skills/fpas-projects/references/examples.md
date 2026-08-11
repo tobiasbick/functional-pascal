@@ -12,6 +12,8 @@ create a program project for my-cli app
 
 Expected behavior:
 
+- Prefer `fpas init project my-cli` for a new standalone scaffold, then edit the generated sources
+  when the requested shape differs from the minimal template.
 - Add `my-cli.fpasprj` with `kind = "program"`, `main` pointing at the `program` file.
 - `[sources].include` covers all `src/**/*.fpas`.
 - `fpas check my-cli.fpasprj` before claiming success.
@@ -42,6 +44,8 @@ wire hello, greet, and tests into one workspace
 
 Expected behavior:
 
+- `fpas init workspace <name>` is the direct path when a new linked program + library workspace is
+  wanted; use explicit manifest edits when wiring pre-existing projects.
 - Create `.fpasworkspace` listing each member `.fpasprj` path.
 - Do **not** move dependency declarations into the workspace file.
 - `fpas check` from workspace root checks all members.

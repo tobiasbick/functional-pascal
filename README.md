@@ -223,9 +223,12 @@ Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib
 Larger programs use a `.fpasprj` project file. Each imported unit is built independently into a source-adjacent `.fpascu` sidecar and linked into the final program automatically. Sources and manifests remain authoritative; sidecars are derived, Git-ignored build outputs. Reference library projects from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).
 
 ```sh
-fpas run my-app.fpasprj
-fpas check my-lib.fpasprj
-fpas check my-suite.fpasworkspace   # check every workspace member
+fpas init project my-app
+fpas init library my-lib --unit MyLib
+fpas init workspace my-suite
+fpas run my-app/my-app.fpasprj
+fpas check my-lib/my-lib.fpasprj
+fpas check my-suite/my-suite.fpasworkspace   # check every workspace member
 cd my-suite && fpas check           # discover .fpasworkspace in cwd
 cd my-suite && fpas run             # run the sole program member
 ```

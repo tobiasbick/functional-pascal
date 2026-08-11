@@ -1,11 +1,15 @@
 # CLI
 
-The `fpas` command-line interface builds artifacts, discovers projects,
-type-checks, runs programs, and executes test bundles.
+The `fpas` command-line interface creates scaffolds, builds artifacts, discovers
+projects, type-checks, runs programs, and executes test bundles.
 
 ## Usage
 
 - `fpas` (no arguments) — prints usage to stdout and exits successfully.
+- `fpas init <project | library | workspace> <name>` — create a formatted,
+  immediately checkable scaffold without interactive prompts. `--path <dir>`
+  selects the target, `--dry-run` previews without writing, and `--report json`
+  produces machine-readable stdout. Libraries also accept `--unit <name>`.
 - `fpas build [<path>]` — build a `.fpasprj` or `.fpasworkspace`. With no path,
   discovers a workspace first and otherwise a single project in the current
   directory. Program projects produce or reuse `<project.name>.fpascp`;
@@ -40,7 +44,8 @@ type-checks, runs programs, and executes test bundles.
   one source file to stdout without modifying it and cannot be combined with
   `--check`.
 - `fpas -h` / `fpas --help` — prints the short command overview to stdout and exits successfully.
-- `fpas build --help`, `fpas run --help`, `fpas check --help`,
+- `fpas init --help`, `fpas init <kind> --help`, `fpas build --help`,
+  `fpas run --help`, `fpas check --help`,
   `fpas test --help`, `fpas debug --help`, and `fpas fmt --help` — print focused command help with
   valid examples and exit successfully.
 - `fpas -V` / `fpas --version` — prints the compiler version to stdout and exits successfully.
@@ -61,12 +66,29 @@ help for its options and examples. This keeps terminal output concise and makes
 copy-pasteable invocations available where they are needed:
 
 ```sh
+fpas init --help
+fpas init library --help
 fpas build --help
 fpas run --help
 fpas check --help
 fpas test --help
 fpas fmt --help
 ```
+
+## Initializing a scaffold
+
+```sh
+fpas init project hello
+fpas init library greet --unit Demo.Greet
+fpas init workspace acme-suite
+fpas init workspace acme-suite --dry-run --report json
+```
+
+The default target is a new `<name>` directory. Existing files are never
+overwritten; an identical retry succeeds with `status: unchanged`, while a
+content conflict fails before missing scaffold files are written. Workspace
+scaffolds contain a program and a library connected through
+`[dependencies].workspace`. See [Initializing projects and workspaces](initializing.md).
 
 ## Building artifacts
 
@@ -190,4 +212,5 @@ use `--check --list` to list formatting drift instead.
 
 - [Projects](projects.md)
 - [Workspaces](workspaces.md)
+- [Initializing projects and workspaces](initializing.md)
 - [`Std.Test`](../std/testing/test.md)

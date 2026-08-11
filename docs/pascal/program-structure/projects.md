@@ -2,6 +2,10 @@
 
 A project groups source files into a buildable unit. Projects are defined by a `.fpasprj` file using TOML format.
 
+Create a runnable project or reusable library from the command line with
+`fpas init project <name>` or `fpas init library <name>`. See
+[Initializing projects and workspaces](initializing.md).
+
 Multi-file programs compose source lists in the project file with `unit` declarations and `uses` imports.
 
 ## Project file format
@@ -267,6 +271,7 @@ A library outside the monorepo uses the same `[dependencies].projects` field wit
 
 ## See also
 
+- [Initializing projects and workspaces](initializing.md)
 - [Units](units.md)
 - [CLI](cli.md)
 - [Workspaces](workspaces.md)

@@ -18,6 +18,7 @@ path = "src/bin/fpas-runner.rs"
 [dependencies]
 fpas-project = { path = "../fpas-project" }
 fpas-fmt = { path = "../fpas-fmt" }
+fpas-lexer = { path = "../fpas-lexer" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-bytecode = { path = "../fpas-bytecode" }

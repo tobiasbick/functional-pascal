@@ -4,6 +4,7 @@ use super::types::HelpTopic;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum CliMode {
+    Init,
     Build,
     Run,
     Debug,
@@ -15,6 +16,7 @@ pub(super) enum CliMode {
 impl CliMode {
     pub(super) const fn help_topic(self) -> HelpTopic {
         match self {
+            Self::Init => HelpTopic::Init,
             Self::Build => HelpTopic::Build,
             Self::Run => HelpTopic::Run,
             Self::Debug => HelpTopic::Debug,
@@ -25,7 +27,7 @@ impl CliMode {
     }
 }
 
-const SUBCOMMANDS: &str = "`build`, `run`, `debug`, `check`, `test`, or `fmt`";
+const SUBCOMMANDS: &str = "`init`, `build`, `run`, `debug`, `check`, `test`, or `fmt`";
 
 pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String]), String> {
     let Some(first) = cli_args.first() else {
@@ -33,6 +35,7 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
     };
 
     match first.as_str() {
+        "init" => Ok((CliMode::Init, &cli_args[1..])),
         "build" => Ok((CliMode::Build, &cli_args[1..])),
         "check" => Ok((CliMode::Check, &cli_args[1..])),
         "fmt" => Ok((CliMode::Fmt, &cli_args[1..])),
@@ -45,6 +48,10 @@ pub(super) fn parse_cli_mode(cli_args: &[String]) -> Result<(CliMode, &[String])
 
 pub(super) fn usage_error(mode: CliMode) -> String {
     match mode {
+        CliMode::Init => {
+            "Usage: fpas init <project | library | workspace> <name> [options]\n  help: `fpas init --help` shows scaffold kinds and examples."
+                .to_string()
+        }
         CliMode::Build => {
             "Usage: fpas build [--std-lib <dir>] [--executable [--name <name>]] [<file.fpasprj | file.fpasworkspace>]\n  help: `fpas build --help` shows options and examples."
                 .to_string()

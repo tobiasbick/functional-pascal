@@ -62,6 +62,7 @@ pub(super) fn resolve_explicit_input(
     }
 
     let expected = match mode {
+        CliMode::Init => unreachable!("init does not resolve compiler input"),
         CliMode::Build => "a `.fpasprj` or `.fpasworkspace` file",
         CliMode::Run => "a `.fpas`, `.fpasprj`, `.fpasworkspace`, or `.fpascp` file",
         CliMode::Debug => "a `.fpas`, `.fpasprj`, `.fpasworkspace`, or `.fpascp` file",
@@ -77,6 +78,7 @@ pub(super) fn resolve_explicit_input(
 
 pub(super) fn discover_input(cwd: &Path, mode: CliMode) -> Result<CliInput, String> {
     match mode {
+        CliMode::Init => unreachable!("init does not discover compiler input"),
         CliMode::Build | CliMode::Check | CliMode::Fmt | CliMode::Test => discover_check_input(cwd),
         CliMode::Run | CliMode::Debug => discover_run_input(cwd),
     }

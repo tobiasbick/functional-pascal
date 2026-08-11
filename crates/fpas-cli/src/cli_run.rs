@@ -25,6 +25,7 @@ pub(crate) fn run_cli(
     };
 
     match resolved {
+        ResolvedCli::Init(config) => crate::cli_init::init_cli(config, stdout.as_mut(), stderr),
         ResolvedCli::Help(topic) => {
             match crate::cli_output::write_stdout(
                 stdout.as_mut(),

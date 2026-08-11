@@ -39,9 +39,10 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
     let binding = |name, register, scope, hidden| DebugBinding {
         name: StringId::new(name),
         type_name: StringId::new(8),
+        ty: fpas_bytecode::DebugTypeId::new(0),
         register: Register::new(register).expect("register"),
         kind: DebugBindingKind::Local,
-        mutable: false,
+        mutable: true,
         scope,
         declaration: Some(location(1)),
         hidden,
@@ -66,6 +67,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             binding(4, 0, 0, false),
             DebugBinding {
                 type_name: StringId::new(9),
+                ty: fpas_bytecode::DebugTypeId::new(1),
                 ..binding(5, 1, 1, false)
             },
             binding(4, 1, 1, false),
@@ -74,9 +76,10 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             DebugBinding {
                 name: StringId::new(12),
                 type_name: StringId::new(13),
+                ty: fpas_bytecode::DebugTypeId::new(2),
                 register: Register::new(2).expect("register"),
                 kind: DebugBindingKind::Local,
-                mutable: false,
+                mutable: true,
                 scope: 1,
                 declaration: Some(location(3)),
                 hidden: false,
@@ -100,6 +103,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         bindings: vec![DebugBinding {
             name: StringId::new(11),
             type_name: StringId::new(8),
+            ty: fpas_bytecode::DebugTypeId::new(0),
             register: Register::new(0).expect("register"),
             kind: DebugBindingKind::Parameter,
             mutable: false,
@@ -153,11 +157,17 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         strings,
         globals: vec![GlobalInfo {
             name: StringId::new(10),
+            ty: fpas_bytecode::DebugTypeId::new(0),
             mutable: true,
         }],
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
+        debug_types: vec![
+            fpas_bytecode::DebugType::Integer,
+            fpas_bytecode::DebugType::String,
+            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(0)),
+        ],
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![

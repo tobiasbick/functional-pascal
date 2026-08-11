@@ -1,6 +1,7 @@
 //! Links relocatable Functional Pascal objects into a verified executable.
 
 mod constants;
+mod debug_types;
 mod error;
 mod functions;
 mod globals;
@@ -76,6 +77,7 @@ pub fn link_objects(
         globals,
         layouts,
     };
+    let (debug_type_ids, linked_debug_types) = debug_types::merge(&objects, &ids, &symbols)?;
     let initializer_targets = units
         .iter()
         .enumerate()
@@ -101,6 +103,7 @@ pub fn link_objects(
             let global = &objects[*object].globals[*local];
             Ok(GlobalInfo {
                 name: strings.intern(&global.name)?,
+                ty: debug_type_ids.translate(*object, global.ty)?,
                 mutable: global.mutable,
             })
         })
@@ -116,7 +119,13 @@ pub fn link_objects(
                 fields: record
                     .fields
                     .iter()
-                    .map(|field| strings.intern(field).map(|name| RecordField { name }))
+                    .zip(&record.field_types)
+                    .map(|(field, ty)| {
+                        Ok(RecordField {
+                            name: strings.intern(field)?,
+                            ty: debug_type_ids.translate(*object, *ty)?,
+                        })
+                    })
                     .collect::<Result<Vec<_>, _>>()?,
                 properties: record
                     .properties
@@ -147,6 +156,11 @@ pub fn link_objects(
                     .fields
                     .iter()
                     .map(|field| strings.intern(field))
+                    .collect::<Result<Vec<_>, _>>()?,
+                field_types: variant
+                    .field_types
+                    .iter()
+                    .map(|ty| debug_type_ids.translate(*object, *ty))
                     .collect::<Result<Vec<_>, _>>()?,
             });
         }
@@ -258,6 +272,7 @@ pub fn link_objects(
         &ids.functions.order,
         &code_starts,
         &code_bases,
+        &debug_type_ids,
         &mut strings,
     )?;
     for (function, debug) in linked_functions.iter_mut().zip(function_debug) {
@@ -272,6 +287,7 @@ pub fn link_objects(
         records: linked_records,
         enums: linked_enums,
         enum_variants: linked_variants,
+        debug_types: linked_debug_types,
         source_map,
         entry: fpas_bytecode::FunctionId::new(0),
     };

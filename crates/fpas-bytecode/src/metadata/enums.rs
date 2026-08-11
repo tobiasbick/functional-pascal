@@ -1,6 +1,6 @@
 //! Enum type layouts and executable-wide variant slots.
 
-use crate::{EnumTypeId, StringId};
+use crate::{DebugTypeId, EnumTypeId, StringId};
 
 /// Metadata for one enum type.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,4 +18,6 @@ pub struct EnumVariant {
     pub name: StringId,
     /// Canonical associated-field names in positional order.
     pub fields: Vec<StringId>,
+    /// Associated field types in positional order.
+    pub field_types: Vec<DebugTypeId>,
 }

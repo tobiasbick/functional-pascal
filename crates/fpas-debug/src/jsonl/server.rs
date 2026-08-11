@@ -3,6 +3,7 @@
 mod breakpoints;
 mod completion;
 mod evaluation;
+mod mutation;
 
 use std::collections::{HashMap, HashSet};
 
@@ -185,6 +186,7 @@ impl JsonlServer {
             "scopes" => self.scopes(request_id, command, arguments),
             "variables" => self.variables(request_id, command, arguments),
             "evaluate" => self.evaluate(request_id, command, arguments),
+            "variable.set" => self.set_variable(request_id, command, arguments),
             "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(

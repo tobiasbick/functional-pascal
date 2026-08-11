@@ -36,6 +36,7 @@ fn global_index_path_updates_nested_arrays_and_preserves_aliases() {
     );
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
+        ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: true,
     }];
     let (_, registers, _) = execute(image.verify().expect("global path image must verify"))
@@ -64,6 +65,7 @@ fn global_index_path_rejects_out_of_bounds_indexes() {
     );
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
+        ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: true,
     }];
     let error = execute(image.verify().expect("global path image must verify"))

@@ -1,7 +1,8 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
-    EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode,
-    Register, ReturnConvention, SequencePoint, SourceId, StringId, ValidationErrorKind,
+    DebugType, DebugTypeId, EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress,
+    NO_REGISTER, Opcode, RecordTypeId, Register, ReturnConvention, SequencePoint, SourceId,
+    StringId, ValidationErrorKind,
 };
 
 use super::support::{
@@ -39,6 +40,7 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
     valid.functions[0].debug.bindings = vec![DebugBinding {
         name: StringId::new(0),
         type_name: StringId::new(0),
+        ty: DebugTypeId::new(0),
         register: Register::new(0).expect("register"),
         kind: DebugBindingKind::Local,
         mutable: false,
@@ -91,6 +93,62 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
     assert!(matches!(
         error_kind(duplicate),
         ValidationErrorKind::DebugSequenceOrder { .. }
+    ));
+}
+
+#[test]
+fn portable_debug_type_ids_layouts_cycles_depth_and_shapes_are_checked() {
+    let mut child = minimal_executable();
+    child.debug_types = vec![DebugType::Array(DebugTypeId::new(1))];
+    assert!(matches!(
+        error_kind(child),
+        ValidationErrorKind::TableReference {
+            table: "debug types",
+            operand: "debug type child",
+            ..
+        }
+    ));
+
+    let mut cycle = minimal_executable();
+    cycle.debug_types = vec![DebugType::Array(DebugTypeId::new(0))];
+    assert!(matches!(
+        error_kind(cycle),
+        ValidationErrorKind::DebugTypeCycle { actual: 0 }
+    ));
+
+    let mut deep = minimal_executable();
+    deep.debug_types = (0..65)
+        .map(|index| DebugType::Array(DebugTypeId::new(index + 1)))
+        .chain(std::iter::once(DebugType::Integer))
+        .collect();
+    assert!(matches!(
+        error_kind(deep),
+        ValidationErrorKind::DebugTypeDepth {
+            actual: 65,
+            maximum: 64
+        }
+    ));
+
+    let mut layout = minimal_executable();
+    layout.debug_types = vec![DebugType::Record(RecordTypeId::new(0))];
+    assert!(matches!(
+        error_kind(layout),
+        ValidationErrorKind::TableReference {
+            table: "record layouts",
+            operand: "debug record type",
+            ..
+        }
+    ));
+
+    let mut shape = all_opcodes_executable();
+    shape.enum_variants[0].field_types.clear();
+    assert!(matches!(
+        error_kind(shape),
+        ValidationErrorKind::DebugTypeShape {
+            owner: "enum variant fields",
+            names: 1,
+            types: 0
+        }
     ));
 }
 
@@ -160,6 +218,7 @@ fn global_index_path_global_and_window_are_checked() {
     window.functions[0].register_count = 2;
     window.globals = vec![GlobalInfo {
         name: StringId::new(0),
+        ty: DebugTypeId::new(0),
         mutable: true,
     }];
     replace_root_code(

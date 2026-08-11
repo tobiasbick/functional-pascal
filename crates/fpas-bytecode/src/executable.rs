@@ -1,8 +1,8 @@
 //! Untrusted and verified register executable aggregates.
 
 use crate::{
-    Constant, EnumLayout, EnumVariant, FunctionId, FunctionInfo, GlobalInfo, Instruction,
-    RecordLayout, SourceMap, StringTable, ValidationError,
+    Constant, DebugType, EnumLayout, EnumVariant, FunctionId, FunctionInfo, GlobalInfo,
+    Instruction, RecordLayout, SourceMap, StringTable, ValidationError,
 };
 
 /// Complete untrusted register-bytecode candidate produced by a compiler or decoder.
@@ -24,6 +24,8 @@ pub struct Executable {
     pub enums: Vec<EnumLayout>,
     /// Executable-wide enum variant table.
     pub enum_variants: Vec<EnumVariant>,
+    /// Portable type graph used only by debugger tooling.
+    pub debug_types: Vec<DebugType>,
     /// Sparse diagnostic source locations.
     pub source_map: SourceMap,
     /// Root initializer and entry function, required to be function zero.

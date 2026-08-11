@@ -35,12 +35,22 @@ compatibility mode. A response precedes events caused by that request.
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
+| `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
 variable references belong to the current stop and expire on resume. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
+
+`variable.set` addresses one child returned by `variables`. The reference and
+child name must belong to the current stop. Mutable locals, parameters,
+globals, closure cells, record fields, array elements, and existing dictionary
+values are supported. Replacement expressions use the same parser, detached
+controlled-call policy, and resource limits as `evaluate`. A successful result
+has the same five rendered fields as `evaluate`, refreshes inspection state,
+and expires all earlier variable references. Any failure is atomic and leaves
+the old references usable.
 
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
@@ -67,9 +77,8 @@ breakpoints at that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
-conditional breakpoints,
-hit conditions, and logpoints. Attach, task threads, set-variable, and reverse
-execution remain false.
+set-variable, conditional breakpoints, hit conditions, and logpoints. Attach,
+task threads and reverse execution remain false.
 
 ## Default limits
 
@@ -96,6 +105,8 @@ Stable errors include `invalid_request`, `invalid_state`,
 `evaluation_limit`, `unavailable_value`, `call_target_unknown`,
 `call_ambiguous`, `call_arity`, `call_effect_forbidden`, `call_limit`,
 `call_timeout`, `call_cancelled`, `call_runtime`, `limit_exceeded`,
-`tasks_unsupported`,
+`variable_target_unknown`, `variable_target_expired`, `variable_not_mutable`,
+`variable_path_unsupported`, `variable_uninitialized`, `variable_value_type`,
+`variable_unavailable`, `tasks_unsupported`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.

@@ -1,4 +1,4 @@
-use fpas_bytecode::DebugBindingKind;
+use fpas_bytecode::{DebugBindingKind, DebugType};
 
 use super::parse_ok;
 
@@ -44,6 +44,10 @@ end.
     assert_eq!(binding("Value").kind, DebugBindingKind::Parameter);
     assert_eq!(binding("Offset").kind, DebugBindingKind::Local);
     assert_eq!(binding("Nested").kind, DebugBindingKind::Local);
+    assert_eq!(
+        image.debug_types.get(binding("Value").ty.get() as usize),
+        Some(&DebugType::Integer)
+    );
     assert_ne!(binding("Nested").scope, binding("Offset").scope);
     assert!(
         !add.debug.sequence_points.is_empty(),
@@ -92,12 +96,76 @@ end.
         })
         .expect("captured Value binding");
     assert!(capture.cell_backed);
+    assert_eq!(
+        image.debug_types.get(capture.ty.get() as usize),
+        Some(&DebugType::Integer),
+        "mutable captures expose their assignable inner type"
+    );
     assert!(
         image
             .functions
             .iter()
             .any(|function| { function.debug.bindings.iter().any(|binding| binding.hidden) })
     );
+}
+
+#[test]
+fn compiler_retains_structured_debug_types_for_roots_and_aggregate_children() {
+    let program = parse_ok(
+        r#"
+program DebugStructuredTypes;
+
+type
+  Box = record
+    Value: integer;
+  end;
+
+mutable var
+  Scores: dict of string to integer := ['Ada': 1];
+
+begin
+  mutable var Item: Box := record
+    Value := 2;
+  end;
+  mutable var Items: array of integer := [3];
+  var Maybe: option of integer := Some(4)
+end.
+"#,
+    );
+    let executable = crate::compile(&program).expect("structured debug types should compile");
+    let image = executable.executable();
+    assert!(
+        image
+            .debug_types
+            .iter()
+            .any(|ty| matches!(ty, DebugType::Dictionary { .. }))
+    );
+    assert!(
+        image
+            .debug_types
+            .iter()
+            .any(|ty| matches!(ty, DebugType::Array(_)))
+    );
+    assert!(
+        image
+            .debug_types
+            .iter()
+            .any(|ty| matches!(ty, DebugType::Option(_)))
+    );
+    let record = &image.records[0];
+    assert_eq!(
+        image.debug_types.get(record.fields[0].ty.get() as usize),
+        Some(&DebugType::Integer)
+    );
+    let global = image
+        .globals
+        .iter()
+        .find(|global| image.strings.get(global.name) == Some("Scores"))
+        .expect("global metadata");
+    assert!(matches!(
+        image.debug_types.get(global.ty.get() as usize),
+        Some(DebugType::Dictionary { .. })
+    ));
 }
 
 #[test]

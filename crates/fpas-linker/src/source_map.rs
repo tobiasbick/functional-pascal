@@ -9,6 +9,7 @@ use fpas_bytecode::{
 use fpas_unit::object::{ObjectDebugBindingKind, ObjectDebugLocation, RelocatableObject};
 
 use crate::LinkError;
+use crate::debug_types::DebugTypeIds;
 use crate::strings::StringInterner;
 
 pub(super) fn merge(
@@ -16,6 +17,7 @@ pub(super) fn merge(
     function_order: &[(usize, usize)],
     code_starts: &[u32],
     code_bases: &[u32],
+    debug_types: &DebugTypeIds,
     strings: &mut StringInterner,
 ) -> Result<(SourceMap, Vec<FunctionDebugInfo>), LinkError> {
     let mut source_paths = Vec::new();
@@ -66,9 +68,11 @@ pub(super) fn merge(
         function_debug.push(merge_debug(
             object,
             function,
+            object_index,
             code_bases[final_index],
             &mut source_paths,
             &mut source_ids,
+            debug_types,
             strings,
         )?);
     }
@@ -84,9 +88,11 @@ pub(super) fn merge(
 fn merge_debug(
     object: &RelocatableObject,
     function: &fpas_unit::object::ObjectFunction,
+    object_index: usize,
     code_base: u32,
     source_paths: &mut Vec<fpas_bytecode::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
+    debug_types: &DebugTypeIds,
     strings: &mut StringInterner,
 ) -> Result<FunctionDebugInfo, LinkError> {
     let scopes = function
@@ -106,6 +112,7 @@ fn merge_debug(
             Ok(DebugBinding {
                 name: strings.intern(&binding.name)?,
                 type_name: strings.intern(&binding.type_name)?,
+                ty: debug_types.translate(object_index, binding.ty)?,
                 register: Register::new(binding.register)
                     .map_err(|_| LinkError::Overflow("debug binding register"))?,
                 kind: match binding.kind {

@@ -63,6 +63,40 @@ end.",
 }
 
 #[test]
+fn object_retains_layouts_referenced_by_portable_debug_types() {
+    let program = parse_ok(
+        r#"
+program DebugLayout;
+
+type
+  Point = record
+    X: integer;
+  end;
+
+begin
+  var Origin: Point := record
+    X := 1;
+  end;
+  var Marker: integer := Origin.X
+end.
+"#,
+    );
+    let object = crate::compile_program_object_with_support(&program, &[], &[])
+        .expect("debug type layouts must survive object pruning");
+
+    assert!(
+        object
+            .records
+            .iter()
+            .any(|layout| layout.name.eq_ignore_ascii_case("Point"))
+    );
+    assert!(object.debug_types.iter().any(|ty| matches!(
+        ty,
+        fpas_unit::object::ObjectDebugType::Record(name) if name.eq_ignore_ascii_case("Point")
+    )));
+}
+
+#[test]
 fn borrowed_standard_intrinsics_execute() {
     let execution = assert_succeeds(
         "\

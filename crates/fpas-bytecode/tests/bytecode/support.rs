@@ -1,8 +1,8 @@
 use fpas_bytecode::{
-    CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
-    FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, Intrinsic, NO_REGISTER,
-    Opcode, RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap,
-    SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
+    CodeRange, Constant, DebugType, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, Executable,
+    FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
+    Intrinsic, NO_REGISTER, Opcode, RecordField, RecordLayout, RecordProperty, ReturnConvention,
+    SourceId, SourceMap, SourceRun, StringId, StringTable, intrinsic::ConsoleIntrinsic,
 };
 
 pub fn abc(opcode: Opcode, a: u16, b: u16, c: u16, auxiliary: u8) -> Instruction {
@@ -36,6 +36,7 @@ pub fn minimal_executable() -> Executable {
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
+        debug_types: vec![DebugType::Dynamic],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![SourceRun {
@@ -122,12 +123,14 @@ pub fn all_opcodes_executable() -> Executable {
         strings: StringTable::new(strings),
         globals: vec![GlobalInfo {
             name: StringId::new(7),
+            ty: DebugTypeId::new(0),
             mutable: true,
         }],
         records: vec![RecordLayout {
             name: StringId::new(3),
             fields: vec![RecordField {
                 name: StringId::new(4),
+                ty: DebugTypeId::new(0),
             }],
             properties: vec![RecordProperty {
                 name: StringId::new(4),
@@ -141,7 +144,9 @@ pub fn all_opcodes_executable() -> Executable {
             owner: EnumTypeId::new(0),
             name: StringId::new(6),
             fields: vec![StringId::new(4)],
+            field_types: vec![DebugTypeId::new(0)],
         }],
+        debug_types: vec![DebugType::Dynamic],
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: vec![

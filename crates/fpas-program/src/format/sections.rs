@@ -2,7 +2,7 @@
 
 use super::{FormatError, check_limit, checked_u32};
 
-pub(super) const TAGS: [u16; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+pub(super) const TAGS: [u16; 11] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const DIRECTORY_PREFIX_BYTES: usize = 4;
 const DIRECTORY_ENTRY_BYTES: usize = 16;
 

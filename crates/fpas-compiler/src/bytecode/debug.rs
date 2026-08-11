@@ -1,8 +1,8 @@
 //! Debug binding register assignment and portable type display names.
 
 use fpas_bytecode::{
-    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
-    InstructionAddress, SequencePoint, SourceId,
+    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, DebugType, DebugTypeId,
+    EnumTypeId, FunctionDebugInfo, InstructionAddress, RecordTypeId, SequencePoint, SourceId,
 };
 use fpas_ir::{BlockId, Function, IrType, Program, TypeId};
 
@@ -35,6 +35,7 @@ pub(super) fn compile_debug_info(
             Ok(DebugBinding {
                 name: metadata.intern_string(&binding.name)?,
                 type_name: metadata.intern_string(&type_name(program, binding.ty, 0))?,
+                ty: debug_binding_type(program, binding.ty, binding.cell_backed),
                 register: allocation.local(binding.local)?,
                 kind: match binding.kind {
                     fpas_ir::DebugBindingKind::Parameter => DebugBindingKind::Parameter,
@@ -69,6 +70,70 @@ pub(super) fn compile_debug_info(
         bindings,
         sequence_points,
     })
+}
+
+pub(super) fn compile_debug_types(program: &Program) -> Result<Vec<DebugType>, CompileError> {
+    program
+        .types
+        .iter()
+        .enumerate()
+        .map(|(index, definition)| {
+            if usize::try_from(definition.id.get()).ok() != Some(index) {
+                return Err(super::compile_error(
+                    "debug type identifiers must be dense and ordered",
+                ));
+            }
+            lower_type(&definition.kind)
+        })
+        .collect()
+}
+
+fn lower_type(ty: &IrType) -> Result<DebugType, CompileError> {
+    let id = |ty: TypeId| DebugTypeId::new(ty.get());
+    Ok(match ty {
+        IrType::Unit => DebugType::Unit,
+        IrType::Boolean => DebugType::Boolean,
+        IrType::Integer => DebugType::Integer,
+        IrType::Real => DebugType::Real,
+        IrType::String => DebugType::String,
+        IrType::Dynamic => DebugType::Dynamic,
+        IrType::Array(element) => DebugType::Array(id(*element)),
+        IrType::Dictionary { key, value } => DebugType::Dictionary {
+            key: id(*key),
+            value: id(*value),
+        },
+        IrType::Result { ok, error } => DebugType::Result {
+            ok: id(*ok),
+            error: id(*error),
+        },
+        IrType::Option(inner) => DebugType::Option(id(*inner)),
+        IrType::Function { parameters, result } => DebugType::Function {
+            parameters: parameters.iter().copied().map(id).collect(),
+            result: id(*result),
+        },
+        IrType::Record(layout) => DebugType::Record(RecordTypeId::new(
+            u16::try_from(layout.get())
+                .map_err(|_| super::compile_error("record debug type exceeds u16"))?,
+        )),
+        IrType::Enum(layout) => DebugType::Enum(EnumTypeId::new(
+            u16::try_from(layout.get())
+                .map_err(|_| super::compile_error("enum debug type exceeds u16"))?,
+        )),
+        IrType::Cell(inner) => DebugType::Cell(id(*inner)),
+        IrType::Task(inner) => DebugType::Task(id(*inner)),
+    })
+}
+
+fn debug_binding_type(program: &Program, ty: TypeId, cell_backed: bool) -> DebugTypeId {
+    if cell_backed
+        && let Some(fpas_ir::TypeDefinition {
+            kind: IrType::Cell(inner),
+            ..
+        }) = program.ty(ty)
+    {
+        return DebugTypeId::new(inner.get());
+    }
+    DebugTypeId::new(ty.get())
 }
 
 fn location(span: fpas_ir::SourceSpan) -> DebugSourceLocation {

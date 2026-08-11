@@ -91,6 +91,12 @@ pub(super) fn prune_unreferenced_layouts(
     object: &mut RelocatableObject,
     retained_names: &BTreeSet<String>,
 ) -> Result<(), fpas_unit::object::ObjectError> {
+    let mut retained_names = retained_names.clone();
+    retained_names.extend(object.debug_types.iter().filter_map(|ty| match ty {
+        fpas_unit::object::ObjectDebugType::Record(name)
+        | fpas_unit::object::ObjectDebugType::Enum(name) => Some(name.to_ascii_lowercase()),
+        _ => None,
+    }));
     let referenced_records = object
         .relocations
         .iter()
@@ -134,13 +140,13 @@ pub(super) fn prune_unreferenced_layouts(
         &object.records,
         &referenced_records,
         &record_witnesses,
-        retained_names,
+        &retained_names,
     )?;
     let removed_enums = removed_layouts(
         &object.enums,
         &referenced_enums,
         &enum_witnesses,
-        retained_names,
+        &retained_names,
     )?;
     let record_map = retained_map(object.records.len(), removed_records.iter().copied())?;
     let enum_map = retained_map(object.enums.len(), removed_enums.iter().copied())?;
@@ -235,9 +241,12 @@ where
         .enumerate()
         .filter_map(|(index, layout)| {
             let index = u32::try_from(index).ok()?;
+            let name = layout.layout_name().to_ascii_lowercase();
+            let short_name = name.rsplit('.').next().unwrap_or(&name);
             (!referenced.contains(&index)
                 && !witnesses.contains(&index)
-                && !retained_names.contains(&layout.layout_name().to_ascii_lowercase()))
+                && !retained_names.contains(&name)
+                && !retained_names.contains(short_name))
             .then_some(Ok(index))
         })
         .collect()

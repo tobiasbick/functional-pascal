@@ -37,7 +37,13 @@ constructors, readable properties, visible closures, and pure `Std.*`
 intrinsics. They run against a detached copy of stopped state; writes are
 discarded, and calls involving output, files, processes, environment, time,
 randomness, blocking, tasks, or unknown dynamic effects are rejected.
-Variable mutation, attach, and task debugging remain unsupported.
+While stopped, the Variables view can edit mutable locals, parameters, globals,
+closure captures, record fields, array elements, and existing dictionary
+values. Rejected edits leave the session stopped and unchanged. A successful
+edit refreshes the Variables view; continuing execution observes the committed
+value. Dictionary keys, immutable or uninitialized bindings, evaluation-only
+results, function/enum/wrapper payload descendants, task values, and opaque
+host values are not editable. Attach and task debugging remain unsupported.
 
 ## Build
 
@@ -162,8 +168,9 @@ highlights, references, rename, rich completion, signature help, snippets, and
 a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
 commands, Problems, cancellation, Testing API outcomes, read-only evaluation
 and controlled calls in every supported DAP context, detached-state recovery,
-conditional and exact-hit stops, and
-non-stopping logpoints,
+mutable scalar and aggregate Variables-view edits with invalidation and
+continued-execution checks, conditional and exact-hit stops, and non-stopping
+logpoints,
 restarts it once, and shuts it down with the extension:
 
 ```text

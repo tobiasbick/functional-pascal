@@ -3,9 +3,10 @@
 use std::collections::HashSet;
 use std::sync::{Arc, TryLockError};
 
-use fpas_bytecode::Value;
+use fpas_bytecode::{DebugType, Executable, Value};
 
 use super::model::DebugInspectionLimits;
+use super::targets::{MutationAccess, MutationPath};
 
 #[derive(Clone)]
 pub(super) struct RetainedValue {
@@ -15,6 +16,8 @@ pub(super) struct RetainedValue {
     pub presentation_hint: Option<String>,
     pub depth: usize,
     pub visited_cells: HashSet<usize>,
+    pub debug_type: Option<fpas_bytecode::DebugTypeId>,
+    pub mutation: MutationAccess,
 }
 
 pub(super) struct RenderedValue {
@@ -26,7 +29,16 @@ pub(super) struct RenderedValue {
     pub presentation_hint: Option<String>,
 }
 
+#[cfg(test)]
 pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> RenderedValue {
+    render_with_executable(value, limits, None)
+}
+
+pub(super) fn render_with_executable(
+    value: &RetainedValue,
+    limits: DebugInspectionLimits,
+    executable: Option<&Executable>,
+) -> RenderedValue {
     let Some(runtime) = &value.value else {
         return RenderedValue {
             summary: "<uninitialized>".to_string(),
@@ -67,7 +79,18 @@ pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> Re
             values
                 .iter()
                 .enumerate()
-                .map(|(index, child)| child_value(format!("[{index}]"), child, value))
+                .map(|(index, child)| {
+                    let ty = child_type(value, executable, |ty| match ty {
+                        DebugType::Array(inner) => Some(*inner),
+                        _ => None,
+                    });
+                    child_value(
+                        format!("[{index}]"),
+                        child,
+                        value,
+                        ty.map(|ty| (MutationPath::ArrayIndex(index), ty)),
+                    )
+                })
                 .collect(),
             0,
             values.len(),
@@ -80,8 +103,17 @@ pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> Re
                 .enumerate()
                 .flat_map(|(index, (key, item))| {
                     [
-                        child_value(format!("[{index}].key"), key, value),
-                        child_value(format!("[{index}].value"), item, value),
+                        child_value(format!("[{index}].key"), key, value, None),
+                        child_value(
+                            format!("[{index}].value"),
+                            item,
+                            value,
+                            child_type(value, executable, |ty| match ty {
+                                DebugType::Dictionary { value, .. } => Some(*value),
+                                _ => None,
+                            })
+                            .map(|ty| (MutationPath::DictionaryValue(key.clone()), ty)),
+                        ),
                     ]
                 })
                 .collect();
@@ -102,7 +134,22 @@ pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> Re
                 .fields
                 .iter()
                 .zip(&body.values)
-                .map(|(name, child)| child_value(name.clone(), child, value))
+                .enumerate()
+                .map(|(index, (name, child))| {
+                    let ty = executable.and_then(|executable| {
+                        executable
+                            .records
+                            .get(usize::from(body.layout.record.get()))
+                            .and_then(|layout| layout.fields.get(index))
+                            .map(|field| field.ty)
+                    });
+                    child_value(
+                        name.clone(),
+                        child,
+                        value,
+                        ty.map(|ty| (MutationPath::RecordField(index), ty)),
+                    )
+                })
                 .collect();
             aggregate(
                 format!("{} {{...}}", body.layout.type_name),
@@ -121,7 +168,7 @@ pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> Re
                 .fields
                 .iter()
                 .zip(&body.values)
-                .map(|(name, child)| child_value(name.clone(), child, value))
+                .map(|(name, child)| child_value(name.clone(), child, value, None))
                 .collect();
             aggregate(
                 format!("{}.{}", body.layout.type_name, body.layout.variant),
@@ -143,14 +190,14 @@ pub(super) fn render(value: &RetainedValue, limits: DebugInspectionLimits) -> Re
                 .captures
                 .iter()
                 .enumerate()
-                .map(|(index, child)| child_value(format!("capture[{index}]"), child, value))
+                .map(|(index, child)| child_value(format!("capture[{index}]"), child, value, None))
                 .collect(),
             function.captures.len(),
             0,
             value.presentation_hint.clone(),
             limits,
         ),
-        Value::Cell(cell) => render_cell(cell, value, limits),
+        Value::Cell(cell) => render_cell(cell, value, limits, executable),
     }
 }
 
@@ -158,6 +205,7 @@ fn render_cell(
     cell: &Arc<std::sync::Mutex<Value>>,
     parent: &RetainedValue,
     limits: DebugInspectionLimits,
+    executable: Option<&Executable>,
 ) -> RenderedValue {
     let identity = Arc::as_ptr(cell) as usize;
     if parent.visited_cells.contains(&identity) {
@@ -178,7 +226,8 @@ fn render_cell(
             );
         }
     };
-    let mut child = child_value("value".to_string(), &inner, parent);
+    let mut child = child_value("value".to_string(), &inner, parent, None);
+    child.mutation = parent.mutation.clone();
     child.visited_cells.insert(identity);
     let visited_cells = child.visited_cells.clone();
     let mut rendered = aggregate(
@@ -202,8 +251,10 @@ fn render_cell(
             presentation_hint: parent.presentation_hint.clone(),
             depth: parent.depth,
             visited_cells,
+            debug_type: parent.debug_type,
+            mutation: parent.mutation.clone(),
         };
-        let transparent = render(&inner_value, limits);
+        let transparent = render_with_executable(&inner_value, limits, executable);
         rendered.summary = transparent.summary;
     }
     rendered
@@ -218,7 +269,7 @@ fn wrapper(
     aggregate(
         format!("{name}(...)"),
         parent.type_name.clone(),
-        vec![child_value("value".to_string(), inner, parent)],
+        vec![child_value("value".to_string(), inner, parent, None)],
         1,
         0,
         parent.presentation_hint.clone(),
@@ -226,7 +277,12 @@ fn wrapper(
     )
 }
 
-fn child_value(name: String, value: &Value, parent: &RetainedValue) -> RetainedValue {
+fn child_value(
+    name: String,
+    value: &Value,
+    parent: &RetainedValue,
+    writable: Option<(MutationPath, fpas_bytecode::DebugTypeId)>,
+) -> RetainedValue {
     RetainedValue {
         name,
         value: Some(value.clone()),
@@ -234,7 +290,23 @@ fn child_value(name: String, value: &Value, parent: &RetainedValue) -> RetainedV
         presentation_hint: None,
         depth: parent.depth.saturating_add(1),
         visited_cells: parent.visited_cells.clone(),
+        debug_type: writable.as_ref().map(|(_, ty)| *ty),
+        mutation: writable.map_or(MutationAccess::Unsupported, |(component, ty)| {
+            parent.mutation.descendant(component, ty)
+        }),
     }
+}
+
+fn child_type(
+    value: &RetainedValue,
+    executable: Option<&Executable>,
+    select: impl FnOnce(&DebugType) -> Option<fpas_bytecode::DebugTypeId>,
+) -> Option<fpas_bytecode::DebugTypeId> {
+    let ty = value.debug_type?;
+    executable?
+        .debug_types
+        .get(ty.get() as usize)
+        .and_then(select)
 }
 
 fn aggregate(

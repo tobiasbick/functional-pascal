@@ -51,6 +51,7 @@ pub fn program_image() -> ProgramImage {
                 bindings: vec![DebugBinding {
                     name: StringId::new(8),
                     type_name: StringId::new(9),
+                    ty: fpas_bytecode::DebugTypeId::new(2),
                     register: Register::new(0).expect("register"),
                     kind: DebugBindingKind::Local,
                     mutable: true,
@@ -92,12 +93,14 @@ pub fn program_image() -> ProgramImage {
         strings: StringTable::new(strings),
         globals: vec![GlobalInfo {
             name: StringId::new(3),
+            ty: fpas_bytecode::DebugTypeId::new(2),
             mutable: true,
         }],
         records: vec![RecordLayout {
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),
+                ty: fpas_bytecode::DebugTypeId::new(2),
             }],
             properties: vec![RecordProperty {
                 name: StringId::new(10),
@@ -111,7 +114,34 @@ pub fn program_image() -> ProgramImage {
             owner: EnumTypeId::new(0),
             name: StringId::new(7),
             fields: vec![StringId::new(5)],
+            field_types: vec![fpas_bytecode::DebugTypeId::new(4)],
         }],
+        debug_types: vec![
+            fpas_bytecode::DebugType::Unit,
+            fpas_bytecode::DebugType::Boolean,
+            fpas_bytecode::DebugType::Integer,
+            fpas_bytecode::DebugType::Real,
+            fpas_bytecode::DebugType::String,
+            fpas_bytecode::DebugType::Dynamic,
+            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(2)),
+            fpas_bytecode::DebugType::Dictionary {
+                key: fpas_bytecode::DebugTypeId::new(4),
+                value: fpas_bytecode::DebugTypeId::new(2),
+            },
+            fpas_bytecode::DebugType::Result {
+                ok: fpas_bytecode::DebugTypeId::new(2),
+                error: fpas_bytecode::DebugTypeId::new(4),
+            },
+            fpas_bytecode::DebugType::Option(fpas_bytecode::DebugTypeId::new(2)),
+            fpas_bytecode::DebugType::Function {
+                parameters: vec![fpas_bytecode::DebugTypeId::new(2)],
+                result: fpas_bytecode::DebugTypeId::new(1),
+            },
+            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
+            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
+            fpas_bytecode::DebugType::Cell(fpas_bytecode::DebugTypeId::new(2)),
+            fpas_bytecode::DebugType::Task(fpas_bytecode::DebugTypeId::new(2)),
+        ],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![SourceRun {

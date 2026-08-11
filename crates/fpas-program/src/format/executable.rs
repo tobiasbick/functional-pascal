@@ -1,13 +1,14 @@
 //! Explicit little-endian register executable section conversion.
 
 use fpas_bytecode::{
-    CodeRange, Constant, EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionFlags,
-    FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress, RecordField,
-    RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
-    StringTable, VerifiedExecutable,
+    CodeRange, Constant, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, Executable,
+    FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
+    RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap, SourceRun,
+    StringId, StringTable, VerifiedExecutable,
 };
 
 use super::debug::{self, DebugCounts};
+use super::debug_types;
 use super::sections::{
     DecodedSection, EncodedSection, SectionReader, TAGS, write_i64, write_u8, write_u16, write_u32,
     write_u64,
@@ -36,6 +37,7 @@ pub(super) fn encode(executable: &Executable) -> Result<Vec<u8>, FormatError> {
         encode_instructions(executable)?,
         encode_source_runs(executable)?,
         encode_entry(executable),
+        debug_types::encode(&executable.debug_types, TAGS[10])?,
     ];
     sections::encode(sections)
 }
@@ -52,6 +54,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<VerifiedExecutable, FormatError> 
     let code = decode_instructions(section(&sections, 7))?;
     let runs = decode_source_runs(section(&sections, 8))?;
     let entry = decode_entry(section(&sections, 9))?;
+    let debug_types = debug_types::decode(section(&sections, 10))?;
     Executable {
         code,
         functions,
@@ -61,6 +64,7 @@ pub(super) fn decode(payload: &[u8]) -> Result<VerifiedExecutable, FormatError> 
         records,
         enums,
         enum_variants,
+        debug_types,
         source_map: SourceMap { sources, runs },
         entry,
     }
@@ -247,6 +251,7 @@ fn encode_globals(executable: &Executable) -> Result<EncodedSection, FormatError
     let mut bytes = Vec::new();
     for global in &executable.globals {
         write_u32(&mut bytes, global.name.get());
+        write_u32(&mut bytes, global.ty.get());
         write_u8(&mut bytes, u8::from(global.mutable));
     }
     Ok(EncodedSection {
@@ -267,6 +272,7 @@ fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalInfo>, Format
     for _ in 0..section.item_count {
         globals.push(GlobalInfo {
             name: StringId::new(reader.u32("global_name")?),
+            ty: DebugTypeId::new(reader.u32("global_type")?),
             mutable: read_bool(&mut reader, "global_mutable")?,
         });
     }
@@ -294,6 +300,7 @@ fn encode_records(executable: &Executable) -> Result<EncodedSection, FormatError
         );
         for field in &record.fields {
             write_u32(&mut bytes, field.name.get());
+            write_u32(&mut bytes, field.ty.get());
         }
         write_u32(
             &mut bytes,
@@ -327,6 +334,7 @@ fn decode_records(section: DecodedSection<'_>) -> Result<Vec<RecordLayout>, Form
         for _ in 0..count {
             fields.push(RecordField {
                 name: StringId::new(reader.u32("record_field_name")?),
+                ty: DebugTypeId::new(reader.u32("record_field_type")?),
             });
         }
         let property_count = reader.u32("record_property_count")? as usize;
@@ -386,6 +394,9 @@ fn encode_enums(executable: &Executable) -> Result<EncodedSection, FormatError> 
         for field in &variant.fields {
             write_u32(&mut bytes, field.get());
         }
+        for ty in &variant.field_types {
+            write_u32(&mut bytes, ty.get());
+        }
     }
     Ok(EncodedSection {
         tag: TAGS[5],
@@ -429,10 +440,15 @@ fn decode_enums(
         for _ in 0..field_count {
             fields.push(StringId::new(reader.u32("enum_variant_field_name")?));
         }
+        let mut field_types = Vec::with_capacity(field_count);
+        for _ in 0..field_count {
+            field_types.push(DebugTypeId::new(reader.u32("enum_variant_field_type")?));
+        }
         variants.push(EnumVariant {
             owner,
             name,
             fields,
+            field_types,
         });
     }
     reader.finish()?;

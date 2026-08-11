@@ -118,6 +118,7 @@ fn globals_are_dense_and_immutable_slots_initialize_once() {
     );
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
+        ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: false,
     }];
     let (_, registers, _) = execute(image.verify().expect("global image must verify"))
@@ -145,6 +146,7 @@ fn record_and_enum_slots_are_positional() {
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),
+            ty: fpas_bytecode::DebugTypeId::new(0),
         }],
         properties: Vec::new(),
     }];
@@ -155,6 +157,7 @@ fn record_and_enum_slots_are_positional() {
         owner: EnumTypeId::new(0),
         name: StringId::new(5),
         fields: vec![StringId::new(6)],
+        field_types: vec![fpas_bytecode::DebugTypeId::new(0)],
     }];
     let (_, registers, _) = execute(image.verify().expect("layout image must verify"))
         .expect("layout program must run");
@@ -214,6 +217,7 @@ fn immutable_global_rejects_a_second_store() {
     );
     image.globals = vec![GlobalInfo {
         name: StringId::new(2),
+        ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: false,
     }];
     let error = execute(image.verify().expect("global image must verify"))
@@ -279,6 +283,7 @@ fn positional_record_clones_share_layout_and_detach_values() {
         name: StringId::new(2),
         fields: vec![RecordField {
             name: StringId::new(3),
+            ty: fpas_bytecode::DebugTypeId::new(0),
         }],
         properties: Vec::new(),
     }];

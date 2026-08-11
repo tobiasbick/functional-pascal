@@ -113,6 +113,20 @@ pub enum DebugErrorKind {
     UnknownFrame,
     /// A variables reference belongs to an expired or different stop snapshot.
     UnknownVariablesReference,
+    /// The requested writable child does not exist in the current container.
+    VariableTargetUnknown,
+    /// The requested writable reference belongs to a previous stop generation.
+    VariableTargetExpired,
+    /// The selected source root is immutable.
+    VariableNotMutable,
+    /// The selected synthetic or aggregate path is deliberately not assignable.
+    VariablePathUnsupported,
+    /// The selected source binding has no initialized live value.
+    VariableUninitialized,
+    /// The replacement value does not match the declared portable type.
+    VariableValueType,
+    /// Live mutation storage cannot be accessed safely.
+    VariableUnavailable,
     /// A requested inspection page exceeds configured limits.
     InspectionLimit,
     /// An expression references no visible binding with the requested name.

@@ -129,9 +129,11 @@ fn headless_graph_open_size_and_close_are_deterministic() {
         fields: vec![
             fpas_bytecode::RecordField {
                 name: fpas_bytecode::StringId::new(4),
+                ty: fpas_bytecode::DebugTypeId::new(0),
             },
             fpas_bytecode::RecordField {
                 name: fpas_bytecode::StringId::new(5),
+                ty: fpas_bytecode::DebugTypeId::new(0),
             },
         ],
         properties: Vec::new(),

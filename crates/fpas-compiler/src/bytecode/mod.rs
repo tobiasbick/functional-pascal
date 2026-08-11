@@ -17,7 +17,7 @@ use crate::error::internal_compiler_error;
 
 use self::allocation::Allocation;
 use self::blocks::BlockLayout;
-use self::debug::compile_debug_info;
+use self::debug::{compile_debug_info, compile_debug_types};
 use self::metadata::MetadataBuilder;
 use self::selection::{Selector, abc, abx};
 
@@ -56,6 +56,7 @@ pub(super) fn compile_program(
                 .intern_string(&global.name)
                 .map(|name| fpas_bytecode::GlobalInfo {
                     name,
+                    ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
                     mutable: global.mutable,
                 })
         })
@@ -71,7 +72,10 @@ pub(super) fn compile_program(
                 .map(|field| {
                     metadata
                         .intern_string(&field.name)
-                        .map(|name| fpas_bytecode::RecordField { name })
+                        .map(|name| fpas_bytecode::RecordField {
+                            name,
+                            ty: fpas_bytecode::DebugTypeId::new(field.ty.get()),
+                        })
                 })
                 .collect::<Result<Vec<_>, _>>()?;
             let properties = layout
@@ -110,10 +114,16 @@ pub(super) fn compile_program(
                 ),
                 name: metadata.intern_string(&variant.name)?,
                 fields,
+                field_types: variant
+                    .fields
+                    .iter()
+                    .map(|ty| fpas_bytecode::DebugTypeId::new(ty.get()))
+                    .collect(),
             });
         }
     }
     let (constants, strings, source_map) = metadata.finish();
+    let debug_types = compile_debug_types(program)?;
     let executable = Executable {
         code,
         functions,
@@ -123,6 +133,7 @@ pub(super) fn compile_program(
         records,
         enums,
         enum_variants,
+        debug_types,
         source_map,
         entry: FunctionId::new(0),
     };

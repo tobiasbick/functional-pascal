@@ -23,6 +23,11 @@ pub(super) fn validate_resources(executable: &crate::Executable) -> Result<(), V
     )?;
     limit("globals", executable.globals.len(), limits::MAX_GLOBALS)?;
     limit(
+        "debug types",
+        executable.debug_types.len(),
+        limits::MAX_DEBUG_TYPES,
+    )?;
+    limit(
         "record layouts",
         executable.records.len(),
         limits::MAX_RECORD_LAYOUTS,

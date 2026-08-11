@@ -1,8 +1,10 @@
 //! Conversion of verified executable operands to object-local relocations.
 
-use fpas_bytecode::{Instruction, Opcode};
+use fpas_bytecode::{DebugType, Instruction, Opcode};
 
-use crate::object::{ObjectEnumLayout, ObjectError, RelocationKind, SymbolReference};
+use crate::object::{
+    ObjectDebugType, ObjectEnumLayout, ObjectError, RelocationKind, SymbolReference,
+};
 
 /// Returns the object-local relocation required by one verified instruction.
 pub(super) fn relocation_for_instruction(
@@ -107,4 +109,56 @@ pub(super) fn localize_branch(
             })?;
     Instruction::abx(opcode, operands.a, target)
         .map_err(|error| ObjectError::Instruction(error.to_string()))
+}
+
+pub(super) fn object_debug_type(
+    ty: &DebugType,
+    executable: &fpas_bytecode::Executable,
+) -> Result<ObjectDebugType, ObjectError> {
+    let id = |id: fpas_bytecode::DebugTypeId| id.get();
+    let layout_name = |name: fpas_bytecode::StringId| {
+        executable
+            .strings
+            .get(name)
+            .map(str::to_owned)
+            .ok_or(ObjectError::InvalidTableReference("debug type layout name"))
+    };
+    Ok(match ty {
+        DebugType::Unit => ObjectDebugType::Unit,
+        DebugType::Boolean => ObjectDebugType::Boolean,
+        DebugType::Integer => ObjectDebugType::Integer,
+        DebugType::Real => ObjectDebugType::Real,
+        DebugType::String => ObjectDebugType::String,
+        DebugType::Dynamic => ObjectDebugType::Dynamic,
+        DebugType::Array(inner) => ObjectDebugType::Array(id(*inner)),
+        DebugType::Dictionary { key, value } => ObjectDebugType::Dictionary {
+            key: id(*key),
+            value: id(*value),
+        },
+        DebugType::Result { ok, error } => ObjectDebugType::Result {
+            ok: id(*ok),
+            error: id(*error),
+        },
+        DebugType::Option(inner) => ObjectDebugType::Option(id(*inner)),
+        DebugType::Function { parameters, result } => ObjectDebugType::Function {
+            parameters: parameters.iter().copied().map(id).collect(),
+            result: id(*result),
+        },
+        DebugType::Record(layout) => {
+            let record = executable
+                .records
+                .get(usize::from(layout.get()))
+                .ok_or(ObjectError::InvalidTableReference("debug record layout"))?;
+            ObjectDebugType::Record(super::canonical(&layout_name(record.name)?))
+        }
+        DebugType::Enum(layout) => {
+            let enumeration = executable
+                .enums
+                .get(usize::from(layout.get()))
+                .ok_or(ObjectError::InvalidTableReference("debug enum layout"))?;
+            ObjectDebugType::Enum(super::canonical(&layout_name(enumeration.name)?))
+        }
+        DebugType::Cell(inner) => ObjectDebugType::Cell(id(*inner)),
+        DebugType::Task(inner) => ObjectDebugType::Task(id(*inner)),
+    })
 }

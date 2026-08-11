@@ -52,6 +52,7 @@ fn candidate() -> Executable {
                     bindings: vec![DebugBinding {
                         name: StringId::new(2),
                         type_name: StringId::new(2),
+                        ty: fpas_bytecode::DebugTypeId::new(0),
                         register: Register::new(0).expect("register"),
                         kind: DebugBindingKind::Local,
                         mutable: true,
@@ -100,12 +101,14 @@ fn candidate() -> Executable {
         ]),
         globals: vec![GlobalInfo {
             name: StringId::new(3),
+            ty: fpas_bytecode::DebugTypeId::new(0),
             mutable: true,
         }],
         records: vec![RecordLayout {
             name: StringId::new(4),
             fields: vec![RecordField {
                 name: StringId::new(5),
+                ty: fpas_bytecode::DebugTypeId::new(0),
             }],
             properties: vec![RecordProperty {
                 name: StringId::new(5),
@@ -119,7 +122,14 @@ fn candidate() -> Executable {
             owner: EnumTypeId::new(0),
             name: StringId::new(7),
             fields: vec![StringId::new(5)],
+            field_types: vec![fpas_bytecode::DebugTypeId::new(0)],
         }],
+        debug_types: vec![
+            fpas_bytecode::DebugType::Dynamic,
+            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
+            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
+            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(0)),
+        ],
         source_map: SourceMap {
             sources: vec![StringId::new(8)],
             runs: vec![
@@ -157,6 +167,14 @@ fn conversion_covers_every_register_table_operand_and_is_deterministic() {
     assert_eq!(first.version, OBJECT_VERSION);
     assert_eq!(first.records[0].properties[0].name, "field");
     assert_eq!(first.records[0].properties[0].getter, "demo.helper");
+    assert_eq!(
+        first.debug_types[1],
+        fpas_unit::object::ObjectDebugType::Record("demo.record".to_string())
+    );
+    assert_eq!(
+        first.debug_types[2],
+        fpas_unit::object::ObjectDebugType::Enum("demo.enum".to_string())
+    );
     assert_eq!(first.functions[1].source_runs[0].instruction_start, 0);
     assert!(
         first
@@ -186,6 +204,32 @@ fn incompatible_object_version_is_rejected_before_linking() {
             actual: OBJECT_VERSION - 1,
             expected: OBJECT_VERSION,
         })
+    );
+}
+
+#[test]
+fn object_debug_type_ids_cycles_and_field_shapes_are_rejected() {
+    let mut child = object();
+    child.debug_types = vec![fpas_unit::object::ObjectDebugType::Array(1)];
+    assert_eq!(
+        child.validate(),
+        Err(ObjectError::InvalidTableReference("debug type child"))
+    );
+
+    let mut cycle = object();
+    cycle.debug_types = vec![fpas_unit::object::ObjectDebugType::Array(0)];
+    assert_eq!(
+        cycle.validate(),
+        Err(ObjectError::InvalidTableReference("debug type graph"))
+    );
+
+    let mut shape = object();
+    shape.records[0].field_types.clear();
+    assert_eq!(
+        shape.validate(),
+        Err(ObjectError::InvalidTableReference(
+            "record debug field type shape"
+        ))
     );
 }
 

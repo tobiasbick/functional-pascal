@@ -30,6 +30,8 @@ pub const MAX_SOURCE_PATHS: usize = 1_000_000;
 pub const MAX_DEBUG_SEQUENCE_POINTS: usize = 4_000_000;
 /// Maximum source-visible debugger bindings in one executable.
 pub const MAX_DEBUG_BINDINGS: usize = 1_000_000;
+/// Maximum portable debugger types in one executable.
+pub const MAX_DEBUG_TYPES: usize = 1_000_000;
 /// Maximum lexical debugger scopes in one executable.
 pub const MAX_DEBUG_SCOPES: usize = 1_000_000;
 /// Maximum addressable registers in one function; the final `u16` value is a sentinel.

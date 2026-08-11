@@ -4,6 +4,7 @@ mod breakpoints;
 mod calls;
 mod evaluation;
 mod inspection;
+mod mutation;
 mod session;
 mod tasks;
 mod types;

@@ -3,6 +3,7 @@
 mod calls;
 mod control_flow;
 mod debug;
+mod debug_types;
 mod instruction;
 mod layouts;
 mod resources;
@@ -311,6 +312,27 @@ pub enum ValidationErrorKind {
         /// Exclusive function end.
         end: u32,
     },
+    /// A portable debug type graph contains an unsupported direct cycle.
+    DebugTypeCycle {
+        /// Type identifier that closed the cycle.
+        actual: u32,
+    },
+    /// A portable debug type graph exceeds the bounded validation depth.
+    DebugTypeDepth {
+        /// Observed graph depth.
+        actual: usize,
+        /// Largest accepted graph depth.
+        maximum: usize,
+    },
+    /// Parallel metadata names and type vectors disagree.
+    DebugTypeShape {
+        /// Metadata relationship with inconsistent vectors.
+        owner: &'static str,
+        /// Number of field names.
+        names: usize,
+        /// Number of field types.
+        types: usize,
+    },
 }
 
 impl fmt::Display for ValidationError {
@@ -337,6 +359,7 @@ impl std::error::Error for ValidationError {}
 pub(super) fn validate(executable: &crate::Executable) -> Result<(), ValidationError> {
     resources::validate_resources(executable)?;
     layouts::validate_tables(executable)?;
+    debug_types::validate_debug_types(executable)?;
     control_flow::validate_functions(executable)?;
     source_map::validate_source_map(executable)?;
     debug::validate_debug_info(executable)?;

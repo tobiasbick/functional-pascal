@@ -16,6 +16,8 @@ fn retained(value: Value) -> RetainedValue {
         presentation_hint: None,
         depth: 0,
         visited_cells: HashSet::new(),
+        debug_type: None,
+        mutation: super::MutationAccess::NotMutable,
     }
 }
 

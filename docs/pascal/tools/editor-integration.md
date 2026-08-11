@@ -18,6 +18,8 @@ desktop editors. The implemented editor features are:
 - deterministic import quick fixes for eligible `F2001` and `F2003` diagnostics
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
+- source debugging with breakpoints, stepping, inspection, evaluation, and
+  stopped-state editing of supported mutable values
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -25,6 +27,27 @@ The extension and native language server live under
 [`crates/fpas-lsp/`](../../../crates/fpas-lsp/). They use standard VS Code
 extension and Language Server Protocol APIs; no compiler behavior is
 reimplemented in TypeScript.
+
+## Source debugging and variable editing
+
+The contributed `fpas` debug type launches the bundled CLI's DAP adapter.
+Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
+Run and Debug exposes stack frames, lexical scopes, expandable aggregates,
+watches, hover and Debug Console evaluation, conditional breakpoints, exact
+positive hit conditions, logpoints, and structured program output.
+
+At a stable stop, the Variables view can replace mutable locals, mutable
+parameters, mutable globals, mutable closure captures, record fields, array
+elements, and existing dictionary values. Nested combinations use the same
+operation. The entered value is an FPAS debugger expression and can include a
+controlled deterministic call. Successful edits refresh the Variables view;
+continuing the program observes the new value.
+
+Immutable, hidden, uninitialized, or evaluation-only values are read-only.
+Dictionary keys, function captures, enum and `Result`/`Option` payload
+descendants, task values, function values, and opaque hosted resources are not
+editable. A rejected edit reports an actionable debugger error and keeps the
+session stopped without changing the live value.
 
 ## Build and installation
 

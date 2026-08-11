@@ -10,7 +10,7 @@ mod validate;
 mod value;
 
 pub use debug::{
-    DebugBinding, DebugBindingKind, DebugEffectSet, DebugScope, DebugSourceLocation,
+    DebugBinding, DebugBindingKind, DebugEffectSet, DebugScope, DebugSourceLocation, DebugType,
     FunctionDebugInfo, FunctionEffectSummary, SequencePoint, analyze_debug_effects,
     intrinsic_debug_effects,
 };
@@ -31,8 +31,9 @@ pub use metadata::{
     SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
-    ConstantId, EnumTypeId, EnumVariantId, FunctionId, GlobalId, InstructionAddress, IntrinsicId,
-    NO_REGISTER, OperandError, RecordFieldId, RecordTypeId, Register, SourceId, StringId,
+    ConstantId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId, InstructionAddress,
+    IntrinsicId, NO_REGISTER, OperandError, RecordFieldId, RecordTypeId, Register, SourceId,
+    StringId,
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{
@@ -41,4 +42,4 @@ pub use value::{
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 12;
+pub const BYTECODE_VERSION: u32 = 13;

@@ -61,6 +61,7 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
+        debug_types: vec![fpas_bytecode::DebugType::Dynamic],
         source_map: SourceMap {
             sources: vec![StringId::new(4)],
             runs: vec![0_u32, 1, 3]

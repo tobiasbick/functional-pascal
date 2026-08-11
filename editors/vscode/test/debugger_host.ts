@@ -7,6 +7,7 @@ import { verifyBreakpointPolicies } from "./debugger_host/breakpoint_policies";
 import { verifyDebuggerEvaluation } from "./debugger_host/evaluation";
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
+import { verifyVariableMutation } from "./debugger_host/variable_mutation";
 import type { DapMessage } from "./debugger_host/support";
 
 /** Exercise every user-visible VS Code debugger capability promised for V1. */
@@ -28,6 +29,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyPauseAndDisconnect(workspaceRoot, received, sent);
     await verifyRuntimeFailure(workspaceRoot, received, sent);
     await verifyDebuggerEvaluation(workspaceRoot, received, sent);
+    await verifyVariableMutation(workspaceRoot, received, sent);
     await verifyBreakpointPolicies(workspaceRoot, received, sent);
   } finally {
     await vscode.debug.stopDebugging();

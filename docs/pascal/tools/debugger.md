@@ -25,10 +25,10 @@ or escaping sources are rejected before execution.
 The debugger supports source breakpoints, pause, continue, step in/over/out,
 stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
-non-stopping logpoints, output, and structured runtime failures. Execution is
-bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Reachable
-task spawning is rejected. Live-state mutation, attach, multiple task threads,
-and reverse execution remain unsupported.
+non-stopping logpoints, stopped-state variable mutation, output, and structured
+runtime failures. Execution is bounded by `--timeout`, `--instruction-limit`,
+and `--output-limit`. Reachable task spawning is rejected. Attach, multiple task
+threads, control-flow manipulation, and reverse execution remain unsupported.
 
 Evaluation is available only at a stable stop. It accepts FPAS literals,
 visible names, parentheses, unary `-` and `not`, arithmetic, Boolean/bitwise,
@@ -40,7 +40,28 @@ case-insensitive; the innermost parameter/local/capture wins, then globals.
 Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
-statements, declarations, and live-state mutation remain rejected.
+statements, declarations, and assignments inside `evaluate` remain rejected.
+
+`setVariable` and JSONL `variable.set` are separate stopped-state operations.
+They accept mutable source locals, mutable parameters, mutable globals, and
+mutable captures backed by an existing closure cell. Record fields, array
+elements, and existing dictionary values below those roots can be replaced,
+including nested combinations. The replacement is an ordinary debugger
+expression and may use the same controlled detached calls as `evaluate`.
+
+The debugger validates the complete replacement against portable FPAS type
+metadata before committing one live root. A failed parse, evaluation, call,
+type check, path check, resource check, or storage access leaves the stopped
+program and its variable references unchanged. A successful update rebuilds
+aggregate roots with normal copy-on-write value semantics, preserves closure
+cell identity, refreshes the variable snapshot, and expires previous variable
+references. Clients must request scopes and variables again after success.
+
+Immutable or uninitialized bindings, compiler-hidden storage, dictionary keys,
+evaluation-only results, function captures, enum or `Result`/`Option` payload
+descendants, task values, function values, and opaque hosted values are not
+writable. Mutation cannot insert dictionary entries, resize arrays, change
+control flow, or initialize a binding before normal execution does so.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

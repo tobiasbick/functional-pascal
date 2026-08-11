@@ -2,6 +2,7 @@
 
 mod callable;
 mod effects;
+mod types;
 
 pub use callable::{
     DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
@@ -10,3 +11,4 @@ pub use callable::{
 pub use effects::{
     DebugEffectSet, FunctionEffectSummary, analyze_debug_effects, intrinsic_debug_effects,
 };
+pub use types::DebugType;

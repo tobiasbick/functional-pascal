@@ -53,6 +53,7 @@ fn unit(public: bool) -> RelocatableObject {
         globals: Vec::new(),
         records: Vec::new(),
         enums: Vec::new(),
+        debug_types: vec![fpas_unit::object::ObjectDebugType::Dynamic],
         sources: vec!["library.fpas".to_string()],
         definitions: vec![
             ObjectDefinition {
@@ -103,6 +104,7 @@ fn program() -> RelocatableObject {
         globals: Vec::new(),
         records: Vec::new(),
         enums: Vec::new(),
+        debug_types: vec![fpas_unit::object::ObjectDebugType::Dynamic],
         sources: vec!["program.fpas".to_string()],
         definitions: vec![ObjectDefinition {
             name: "demo".to_string(),
@@ -272,6 +274,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
     first.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
+        field_types: vec![0, 0],
         properties: Vec::new(),
     });
     first.definitions.push(ObjectDefinition {
@@ -294,6 +297,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
     second.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "std.console.keyevent".to_string(),
         fields: vec!["kind".to_string(), "character".to_string()],
+        field_types: vec![0, 0],
         properties: Vec::new(),
     });
     second.definitions.push(ObjectDefinition {
@@ -316,6 +320,7 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
     library.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string(), "y".to_string()],
+        field_types: vec![0, 0],
         properties: Vec::new(),
     });
     library.definitions.push(ObjectDefinition {
@@ -354,11 +359,13 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     let mut library = unit(true);
     library.globals.push(fpas_unit::object::ObjectGlobal {
         name: "library.unit.counter".to_string(),
+        ty: 0,
         mutable: true,
     });
     library.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "library.unit.point".to_string(),
         fields: vec!["x".to_string()],
+        field_types: vec![0],
         properties: Vec::new(),
     });
     library.enums.push(fpas_unit::object::ObjectEnumLayout {
@@ -366,8 +373,15 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         variants: vec![fpas_unit::object::ObjectEnumVariant {
             name: "some".to_string(),
             fields: vec!["value".to_string()],
+            field_types: vec![0],
         }],
     });
+    library.debug_types = vec![
+        fpas_unit::object::ObjectDebugType::Integer,
+        fpas_unit::object::ObjectDebugType::Record("library.unit.point".to_string()),
+        fpas_unit::object::ObjectDebugType::Enum("library.unit.choice".to_string()),
+        fpas_unit::object::ObjectDebugType::Array(0),
+    ];
     library.definitions.extend([
         ObjectDefinition {
             name: "library.unit.choice".to_string(),
@@ -454,6 +468,18 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     assert_eq!(linked.executable().records.len(), 1);
     assert_eq!(linked.executable().enums.len(), 1);
     assert_eq!(linked.executable().enum_variants.len(), 1);
+    assert_eq!(
+        linked.executable().debug_types[..4],
+        [
+            fpas_bytecode::DebugType::Integer,
+            fpas_bytecode::DebugType::Record(fpas_bytecode::RecordTypeId::new(0)),
+            fpas_bytecode::DebugType::Enum(fpas_bytecode::EnumTypeId::new(0)),
+            fpas_bytecode::DebugType::Array(fpas_bytecode::DebugTypeId::new(0)),
+        ]
+    );
+    assert_eq!(linked.executable().globals[0].ty.get(), 0);
+    assert_eq!(linked.executable().records[0].fields[0].ty.get(), 0);
+    assert_eq!(linked.executable().enum_variants[0].field_types[0].get(), 0);
     assert_eq!(
         linked.executable().code[0]
             .abx_operands()

@@ -1,5 +1,7 @@
 //! DAP request translation onto the JSONL debugger core.
 
+mod mutation;
+
 use std::collections::HashMap;
 
 use serde_json::{Value, json};
@@ -17,6 +19,7 @@ pub struct DapServer {
     sources: HashMap<String, String>,
     runtime_failed: bool,
     pending_core_requests: HashMap<u64, (u64, String)>,
+    supports_invalidated_event: bool,
 }
 
 impl DapServer {
@@ -41,6 +44,7 @@ impl DapServer {
             sources,
             runtime_failed: false,
             pending_core_requests: HashMap::new(),
+            supports_invalidated_event: false,
         })
     }
 
@@ -73,7 +77,7 @@ impl DapServer {
             Vec::new()
         };
         let mut response = match command {
-            "initialize" => self.initialize(request_seq),
+            "initialize" => self.initialize(request_seq, &arguments),
             "launch" => { self.stop_on_entry = arguments.get("stopOnEntry").and_then(Value::as_bool).unwrap_or(false); vec![self.success(request_seq, command, json!({}))] }
             "setBreakpoints" => self.set_breakpoints(request_seq, &arguments),
             "configurationDone" => self.core_request(request_seq, command, "launch", json!({"stop_on_entry":self.stop_on_entry})),
@@ -82,6 +86,7 @@ impl DapServer {
             "scopes" => self.core_request(request_seq, command, "scopes", json!({"frame_id":arguments.get("frameId").cloned().unwrap_or(Value::Null)})),
             "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
             "evaluate" => self.evaluate(request_seq, command, &arguments),
+            "setVariable" => self.set_variable(request_seq, command, &arguments),
             "cancel" => self.core_request(
                 request_seq,
                 command,
@@ -131,7 +136,11 @@ impl DapServer {
         self.core.status() == ServerStatus::Terminated
     }
 
-    fn initialize(&mut self, request_seq: u64) -> Vec<Value> {
+    fn initialize(&mut self, request_seq: u64, arguments: &Value) -> Vec<Value> {
+        self.supports_invalidated_event = arguments
+            .get("supportsInvalidatedEvent")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
         let records = self.core.handle_line(&core_request(
             request_seq,
             "initialize",
@@ -147,7 +156,8 @@ impl DapServer {
                 "supportsConditionalBreakpoints":true,"supportsHitConditionalBreakpoints":true,
                 "supportsLogPoints":true,
                 "supportsCancelRequest":true,
-                "supportsSetVariable":false,"supportsStepBack":false
+                "supportsSetVariable":true,"supportsSetExpression":false,
+                "supportsStepBack":false
             }),
         )];
         output.extend(self.translate_events(records));
@@ -401,6 +411,15 @@ fn dap_body(command: &str, body: Value) -> Value {
         "evaluate" => {
             json!({
                 "result": body.get("result"),
+                "type": body.get("type_name"),
+                "variablesReference": body.get("variables_reference"),
+                "namedVariables": body.get("named_variables"),
+                "indexedVariables": body.get("indexed_variables")
+            })
+        }
+        "setVariable" => {
+            json!({
+                "value": body.get("result"),
                 "type": body.get("type_name"),
                 "variablesReference": body.get("variables_reference"),
                 "namedVariables": body.get("named_variables"),

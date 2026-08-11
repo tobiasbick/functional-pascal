@@ -6,26 +6,33 @@ silently approximate them. Deferral keeps the initial engine deterministic,
 read-only, and testable; it does not reject these features permanently.
 
 Read-only expression evaluation, detached controlled calls, watches,
-conditional breakpoints, exact-hit conditions, and non-stopping logpoints are
-implemented. Calls with host I/O, nondeterminism, blocking, tasks, opaque
-resources, or unresolved dynamic effects are deliberately rejected by the
-implemented safety policy and are not a deferred promise. The following work
-remains intentionally deferred.
+conditional breakpoints, exact-hit conditions, non-stopping logpoints, and
+stopped-state `setVariable` for supported mutable values are implemented. Calls
+with host I/O, nondeterminism, blocking, tasks, opaque resources, or unresolved
+dynamic effects are deliberately rejected by the implemented safety policy and
+are not a deferred promise. The following work remains intentionally deferred.
 
-## Variable mutation
+## Additional state and control-flow mutation
 
 Deferred:
 
-- DAP `setVariable`;
-- changing locals, globals, fields, or collection entries;
-- forcing return values or changing the instruction pointer.
+- DAP `setExpression` and arbitrary textual lvalue targets;
+- inserting or removing dictionary entries and changing dictionary keys;
+- resizing arrays or editing strings by character index;
+- editing enum, `Result`, or `Option` payload descendants;
+- assigning function values, task handles, or opaque hosted resources;
+- initializing a source binding before normal execution initializes it;
+- forcing or replacing return values;
+- changing the instruction pointer or restarting a frame; and
+- data breakpoints or breakpoint actions that modify state.
 
-Reason: mutation must preserve FPAS immutability, runtime layouts, closure-cell
-sharing, and value ownership invariants.
+Reason: these operations need additional lvalue, source-assignment,
+control-flow, lifetime, or runtime-identity semantics beyond atomic replacement
+of an existing typed value.
 
-Re-entry gate: specify which mutable source bindings may be changed and add VM
-validation that constructs only type-correct values without bypassing language
-semantics.
+Re-entry gate: define the chosen operation independently, including its source
+visibility, mutability, ownership, lifetime, type, cleanup, and stop semantics,
+then add focused atomicity and continuation tests before advertising it.
 
 ## Task and concurrent debugging
 

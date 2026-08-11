@@ -18,22 +18,23 @@ pub use error::ObjectError;
 pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
     ObjectConstant, ObjectDebugBinding, ObjectDebugBindingKind, ObjectDebugLocation,
-    ObjectDebugScope, ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal,
-    ObjectRecordLayout, ObjectRecordProperty, ObjectSequencePoint, ObjectSourceRun,
+    ObjectDebugScope, ObjectDebugType, ObjectEnumLayout, ObjectEnumVariant,
+    ObjectFunctionDebugInfo, ObjectGlobal, ObjectRecordLayout, ObjectRecordProperty,
+    ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
     DefinitionTarget, ImportShape, ObjectDefinition, ObjectImport, SymbolKind, SymbolReference,
 };
 
-use conversion::{localize_branch, relocation_for_instruction};
+use conversion::{localize_branch, object_debug_type, relocation_for_instruction};
 use validation::{
     relocation_category, validate_import_shape, validate_name, validate_name_order,
     validate_source_runs, validate_unique_names,
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 3;
+pub const OBJECT_VERSION: u16 = 4;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -56,6 +57,8 @@ pub struct RelocatableObject {
     pub records: Vec<ObjectRecordLayout>,
     /// Object-local enum layouts.
     pub enums: Vec<ObjectEnumLayout>,
+    /// Object-local portable debugger type graph.
+    pub debug_types: Vec<ObjectDebugType>,
     /// Object-local source paths.
     pub sources: Vec<String>,
     /// Ordered definitions supplied by this object.
@@ -118,6 +121,7 @@ impl RelocatableObject {
             .map(|global| {
                 Ok(ObjectGlobal {
                     name: strings(global.name)?,
+                    ty: global.ty.get(),
                     mutable: global.mutable,
                 })
             })
@@ -133,6 +137,7 @@ impl RelocatableObject {
                         .iter()
                         .map(|field| strings(field.name))
                         .collect::<Result<Vec<_>, _>>()?,
+                    field_types: record.fields.iter().map(|field| field.ty.get()).collect(),
                     properties: record
                         .properties
                         .iter()
@@ -159,6 +164,7 @@ impl RelocatableObject {
             owner.push(ObjectEnumVariant {
                 name: strings(variant.name)?,
                 fields,
+                field_types: variant.field_types.iter().map(|ty| ty.get()).collect(),
             });
         }
         let enums = executable
@@ -230,6 +236,7 @@ impl RelocatableObject {
                         Ok(ObjectDebugBinding {
                             name: strings(binding.name)?,
                             type_name: strings(binding.type_name)?,
+                            ty: binding.ty.get(),
                             register: binding.register.get(),
                             kind: match binding.kind {
                                 fpas_bytecode::DebugBindingKind::Parameter => {
@@ -285,6 +292,11 @@ impl RelocatableObject {
             });
         }
         let entry = Some(u32::from(executable.entry.get()));
+        let debug_types = executable
+            .debug_types
+            .iter()
+            .map(|ty| object_debug_type(ty, &executable))
+            .collect::<Result<Vec<_>, ObjectError>>()?;
         let mut object = Self {
             version: OBJECT_VERSION,
             owner: canonical(&owner.into()),
@@ -295,6 +307,7 @@ impl RelocatableObject {
             globals,
             records,
             enums,
+            debug_types,
             sources,
             definitions: Vec::new(),
             imports: Vec::new(),
@@ -385,6 +398,12 @@ impl RelocatableObject {
                 "entry and initializer are mutually exclusive",
             ));
         }
+        validation::validate_debug_types(
+            &self.debug_types,
+            &self.globals,
+            &self.records,
+            &self.enums,
+        )?;
         validate_unique_names(self.definitions.iter().map(|definition| &definition.name))?;
         validate_unique_names(self.imports.iter().map(|import| &import.name))?;
         validate_name_order(
@@ -428,7 +447,7 @@ impl RelocatableObject {
                 });
             }
             validate_source_runs(function, self.sources.len())?;
-            validation::validate_debug_info(function, self.sources.len())?;
+            validation::validate_debug_info(function, self.sources.len(), self.debug_types.len())?;
             for (instruction_index, word) in function.code.iter().copied().enumerate() {
                 let instruction = Instruction::from_word(word);
                 let expected = relocation_category(instruction)?;

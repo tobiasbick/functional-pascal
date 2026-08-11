@@ -86,6 +86,7 @@ impl DebugSession {
                 DispatchStep::Return(value) => {
                     self.state = DebugSessionState::Terminated;
                     self.inspection = InspectionSnapshot::empty(
+                        Arc::clone(&self.executable),
                         self.inspection_generation,
                         self.inspection_limits,
                     );

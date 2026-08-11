@@ -62,6 +62,7 @@ pub(super) fn unverified(
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
+        debug_types: vec![fpas_bytecode::DebugType::Dynamic],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
             runs: vec![SourceRun {

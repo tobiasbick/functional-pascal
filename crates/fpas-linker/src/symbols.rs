@@ -124,6 +124,17 @@ impl SymbolTable {
         Ok(resolved)
     }
 
+    pub(super) fn resolve_name(
+        &self,
+        objects: &[&RelocatableObject],
+        name: &str,
+        kind: SymbolKind,
+    ) -> Option<ResolvedTarget> {
+        let &(object, definition) = self.definitions.get(&name.to_ascii_lowercase())?;
+        let target = objects.get(object)?.definitions.get(definition)?.target;
+        (target.kind() == kind).then_some(ResolvedTarget { object, target })
+    }
+
     pub(super) fn canonical_target_name(
         &self,
         objects: &[&RelocatableObject],

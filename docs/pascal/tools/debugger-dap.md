@@ -8,15 +8,15 @@ work to the same protocol-neutral session as JSONL V2.
 The adapter advertises configuration-done, pause, source breakpoints,
 conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
 step-in/next/step-out, stack and variable pagination, delayed stack loading,
-cancel, and terminate-on-disconnect for an owned launch. It does not advertise attach,
-completions, set-variable/set-expression, data/function/instruction
+cancel, set-variable, and terminate-on-disconnect for an owned launch. It does
+not advertise attach, completions, set-expression, data/function/instruction
 breakpoints, restart, reverse execution, hot reload, multiple task threads, or
 raw register/disassembly access.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
-`evaluate`, `cancel`, `continue`, `pause`, `next`, `stepIn`, `stepOut`, `source`, and
-`disconnect`. Unsupported requests fail explicitly.
+`evaluate`, `setVariable`, `cancel`, `continue`, `pause`, `next`, `stepIn`,
+`stepOut`, `source`, and `disconnect`. Unsupported requests fail explicitly.
 
 `evaluate` accepts contexts `watch`, `repl`, `hover`, and `variables`. A
 supplied `frameId` must belong to the current stop; omitting it deliberately
@@ -28,7 +28,22 @@ resumes. The accepted expression subset and limits are documented in
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves
 the current stop; disconnect cancels, waits for bounded cleanup, and terminates
-without an orphan worker. `supportsSetVariable` remains false.
+without an orphan worker.
+
+`setVariable` accepts a current-stop `variablesReference`, the exact returned
+child `name`, and an FPAS expression in `value`. It supports mutable source
+locals, parameters, globals, closure cells, record fields, array elements, and
+existing dictionary values. The response contains the rendered `value`,
+`type`, a fresh `variablesReference`, and exact named/indexed child counts.
+Non-default `format` options are rejected because value-formatting negotiation
+is not implemented. The adapter advertises `supportsSetVariable: true` and
+keeps `supportsSetExpression: false`.
+
+After a successful mutation, clients that initialized with
+`supportsInvalidatedEvent: true` receive an `invalidated` event for the
+`variables` area after the response. No invalidation event is sent after a
+failure or to clients that did not negotiate it. Successful mutation expires
+earlier scope and variable references, so clients must refetch them.
 
 `setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
 unchanged to the shared breakpoint policy. A condition stops only on Boolean

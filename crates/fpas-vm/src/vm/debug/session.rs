@@ -21,6 +21,7 @@ use crate::vm::layouts::RuntimeLayouts;
 use crate::vm::worker::Worker;
 
 mod execution;
+mod mutation;
 
 /// Thread-safe cooperative pause request handle.
 #[derive(Clone)]
@@ -414,8 +415,11 @@ impl DebugSession {
 
     fn invalidate_inspection(&mut self) {
         self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);
-        self.inspection =
-            InspectionSnapshot::empty(self.inspection_generation, self.inspection_limits);
+        self.inspection = InspectionSnapshot::empty(
+            Arc::clone(&self.executable),
+            self.inspection_generation,
+            self.inspection_limits,
+        );
     }
 
     fn refresh_inspection(&mut self) {

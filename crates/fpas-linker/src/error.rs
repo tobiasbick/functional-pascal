@@ -63,6 +63,15 @@ pub enum LinkError {
     },
     /// Fixed-width table ID or address overflowed.
     Overflow(&'static str),
+    /// Portable debugger metadata names a layout unavailable to the linker.
+    MissingDebugLayout {
+        /// Object whose debugger metadata contains the reference.
+        owner: String,
+        /// Referenced canonical layout name.
+        name: String,
+        /// Required layout category.
+        kind: fpas_unit::object::SymbolKind,
+    },
     /// Packed instruction decoding failed.
     Instruction(String),
     /// A relocation record does not match the packed opcode operand.
@@ -145,6 +154,10 @@ impl fmt::Display for LinkError {
             Self::Overflow(resource) => write!(
                 formatter,
                 "linked register {resource} exceeds its fixed-width limit"
+            ),
+            Self::MissingDebugLayout { owner, name, kind } => write!(
+                formatter,
+                "object `{owner}` has debugger metadata for missing {kind:?} layout `{name}`"
             ),
             Self::Instruction(detail) => {
                 write!(formatter, "cannot decode relocatable instruction: {detail}")

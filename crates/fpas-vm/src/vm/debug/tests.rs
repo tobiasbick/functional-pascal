@@ -239,6 +239,7 @@ fn executable(
         records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
+        debug_types: vec![fpas_bytecode::DebugType::Dynamic],
         source_map: SourceMap {
             sources: vec![StringId::new(2)],
             runs: runs
@@ -267,5 +268,6 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 mod behavior;
 mod evaluation;
 mod inspection_fixture;
+mod mutation;
 
 use inspection_fixture::inspection_executable;

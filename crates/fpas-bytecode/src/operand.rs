@@ -99,6 +99,7 @@ fixed_operand!(EnumVariantId, u16, "enum variant");
 fixed_operand!(IntrinsicId, u16, "intrinsic");
 fixed_operand!(InstructionAddress, u32, "instruction address");
 fixed_operand!(SourceId, u32, "source");
+fixed_operand!(DebugTypeId, u32, "debug type");
 
 /// A fixed-width operand cannot represent the requested value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

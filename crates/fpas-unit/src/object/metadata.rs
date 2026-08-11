@@ -29,6 +29,8 @@ pub enum ObjectConstant {
 pub struct ObjectGlobal {
     /// Canonical diagnostic name.
     pub name: String,
+    /// Object-local portable debugger type identifier.
+    pub ty: u32,
     /// Whether stores are allowed after initialization.
     pub mutable: bool,
 }
@@ -40,6 +42,8 @@ pub struct ObjectRecordLayout {
     pub name: String,
     /// Canonical field names in declaration order.
     pub fields: Vec<String>,
+    /// Object-local debugger types for fields in declaration order.
+    pub field_types: Vec<u32>,
     /// Readable properties and canonical getter routine names.
     pub properties: Vec<ObjectRecordProperty>,
 }
@@ -60,6 +64,58 @@ pub struct ObjectEnumVariant {
     pub name: String,
     /// Canonical associated-field names in declaration order.
     pub fields: Vec<String>,
+    /// Object-local debugger types for associated fields.
+    pub field_types: Vec<u32>,
+}
+
+/// Portable object-local debugger type graph.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+pub enum ObjectDebugType {
+    /// Procedure result type.
+    Unit,
+    /// Boolean value.
+    Boolean,
+    /// Signed integer value.
+    Integer,
+    /// IEEE-754 real value.
+    Real,
+    /// UTF-8 string value.
+    String,
+    /// Dynamically checked value.
+    Dynamic,
+    /// Ordered array element type.
+    Array(u32),
+    /// Dictionary key and value types.
+    Dictionary {
+        /// Key type.
+        key: u32,
+        /// Value type.
+        value: u32,
+    },
+    /// Result success and error types.
+    Result {
+        /// Success type.
+        ok: u32,
+        /// Error type.
+        error: u32,
+    },
+    /// Optional inner type.
+    Option(u32),
+    /// First-class function signature.
+    Function {
+        /// Parameter types.
+        parameters: Vec<u32>,
+        /// Result type.
+        result: u32,
+    },
+    /// Record layout by canonical name.
+    Record(String),
+    /// Enum layout by canonical name.
+    Enum(String),
+    /// Mutable cell inner type.
+    Cell(u32),
+    /// Task result type.
+    Task(u32),
 }
 
 /// Ordered enum layout.
@@ -133,6 +189,8 @@ pub struct ObjectDebugBinding {
     pub name: String,
     /// Portable display type.
     pub type_name: String,
+    /// Object-local portable debugger type identifier.
+    pub ty: u32,
     /// Function-local register.
     pub register: u16,
     /// Source-level role.

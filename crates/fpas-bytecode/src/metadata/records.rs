@@ -1,12 +1,14 @@
 //! Record layouts and field slots.
 
-use crate::StringId;
+use crate::{DebugTypeId, StringId};
 
 /// Metadata for a record-local positional field.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RecordField {
     /// Canonical field name in the string table.
     pub name: StringId,
+    /// Machine-readable stored field type.
+    pub ty: DebugTypeId,
 }
 
 /// Ordered field layout for one record type.

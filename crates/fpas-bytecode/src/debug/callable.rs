@@ -1,6 +1,6 @@
 //! Source bindings, scopes, and sequence points used by debugger adapters.
 
-use crate::{InstructionAddress, Register, SourceId, StringId};
+use crate::{DebugTypeId, InstructionAddress, Register, SourceId, StringId};
 
 /// Complete debugger metadata for one executable function.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -51,6 +51,8 @@ pub struct DebugBinding {
     pub name: StringId,
     /// Display type in the executable string table.
     pub type_name: StringId,
+    /// Machine-readable type in the executable debug-type table.
+    pub ty: DebugTypeId,
     /// Register relative to the owning frame base.
     pub register: Register,
     /// Source-level role.

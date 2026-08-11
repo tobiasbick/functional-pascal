@@ -4,7 +4,10 @@ use std::collections::BTreeSet;
 
 use fpas_bytecode::{Instruction, Opcode};
 
-use crate::object::{ImportShape, ObjectError, ObjectFunction, RelocationKind};
+use crate::object::{
+    ImportShape, ObjectDebugType, ObjectError, ObjectFunction, ObjectGlobal, ObjectRecordLayout,
+    RelocationKind,
+};
 
 #[derive(Clone, Copy)]
 pub(super) enum RelocationCategory {
@@ -83,6 +86,7 @@ pub(super) fn validate_source_runs(
 pub(super) fn validate_debug_info(
     function: &ObjectFunction,
     source_count: usize,
+    debug_type_count: usize,
 ) -> Result<(), ObjectError> {
     for (index, scope) in function.debug.scopes.iter().enumerate() {
         let valid = usize::try_from(scope.id).ok() == Some(index)
@@ -103,6 +107,7 @@ pub(super) fn validate_debug_info(
     for binding in &function.debug.bindings {
         if binding.name.is_empty()
             || binding.type_name.is_empty()
+            || binding.ty as usize >= debug_type_count
             || binding.register >= function.register_count
             || !valid_scope(binding.scope)
         {
@@ -127,6 +132,117 @@ pub(super) fn validate_debug_info(
         previous = Some(point.instruction_start);
     }
     Ok(())
+}
+
+pub(super) fn validate_debug_types(
+    types: &[ObjectDebugType],
+    globals: &[ObjectGlobal],
+    records: &[ObjectRecordLayout],
+    enums: &[crate::object::ObjectEnumLayout],
+) -> Result<(), ObjectError> {
+    if types.len() > fpas_bytecode::limits::MAX_DEBUG_TYPES {
+        return Err(ObjectError::InvalidTableReference("debug type count"));
+    }
+    for ty in types {
+        for child in debug_type_children(ty) {
+            if child as usize >= types.len() {
+                return Err(ObjectError::InvalidTableReference("debug type child"));
+            }
+        }
+        match ty {
+            ObjectDebugType::Function { parameters, .. }
+                if parameters.len() > fpas_bytecode::limits::MAX_CALL_ARGUMENTS =>
+            {
+                return Err(ObjectError::InvalidTableReference(
+                    "debug function parameter count",
+                ));
+            }
+            ObjectDebugType::Record(name) | ObjectDebugType::Enum(name) => validate_name(name)?,
+            _ => {}
+        }
+    }
+    for root in 0..types.len() {
+        validate_debug_type_depth(types, root, &mut Vec::new(), 0)?;
+    }
+    for global in globals {
+        validate_debug_type_id(global.ty, types.len())?;
+    }
+    for record in records {
+        if record.fields.len() != record.field_types.len() {
+            return Err(ObjectError::InvalidTableReference(
+                "record debug field type shape",
+            ));
+        }
+        for ty in &record.field_types {
+            validate_debug_type_id(*ty, types.len())?;
+        }
+    }
+    for enumeration in enums {
+        for variant in &enumeration.variants {
+            if variant.fields.len() != variant.field_types.len() {
+                return Err(ObjectError::InvalidTableReference(
+                    "enum debug field type shape",
+                ));
+            }
+            for ty in &variant.field_types {
+                validate_debug_type_id(*ty, types.len())?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn validate_debug_type_id(id: u32, type_count: usize) -> Result<(), ObjectError> {
+    if id as usize >= type_count {
+        Err(ObjectError::InvalidTableReference("debug type"))
+    } else {
+        Ok(())
+    }
+}
+
+fn validate_debug_type_depth(
+    types: &[ObjectDebugType],
+    current: usize,
+    path: &mut Vec<usize>,
+    depth: usize,
+) -> Result<(), ObjectError> {
+    const MAX_DEPTH: usize = 64;
+    if depth > MAX_DEPTH || path.contains(&current) {
+        return Err(ObjectError::InvalidTableReference("debug type graph"));
+    }
+    path.push(current);
+    for child in debug_type_children(&types[current]) {
+        validate_debug_type_depth(types, child as usize, path, depth + 1)?;
+    }
+    path.pop();
+    Ok(())
+}
+
+fn debug_type_children(ty: &ObjectDebugType) -> Vec<u32> {
+    match ty {
+        ObjectDebugType::Array(inner)
+        | ObjectDebugType::Option(inner)
+        | ObjectDebugType::Cell(inner)
+        | ObjectDebugType::Task(inner) => vec![*inner],
+        ObjectDebugType::Dictionary { key, value }
+        | ObjectDebugType::Result {
+            ok: key,
+            error: value,
+        } => vec![*key, *value],
+        ObjectDebugType::Function { parameters, result } => {
+            let mut children = parameters.clone();
+            children.push(*result);
+            children
+        }
+        ObjectDebugType::Unit
+        | ObjectDebugType::Boolean
+        | ObjectDebugType::Integer
+        | ObjectDebugType::Real
+        | ObjectDebugType::String
+        | ObjectDebugType::Dynamic
+        | ObjectDebugType::Record(_)
+        | ObjectDebugType::Enum(_) => Vec::new(),
+    }
 }
 
 fn validate_debug_location(

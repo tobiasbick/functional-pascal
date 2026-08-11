@@ -1,8 +1,8 @@
 //! Bounded binary conversion for function debugger metadata.
 
 use fpas_bytecode::{
-    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
-    InstructionAddress, Register, SequencePoint, SourceId, StringId,
+    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, DebugTypeId,
+    FunctionDebugInfo, InstructionAddress, Register, SequencePoint, SourceId, StringId,
 };
 
 use super::sections::{SectionReader, write_u8, write_u16, write_u32};
@@ -47,6 +47,7 @@ pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<
     for binding in &debug.bindings {
         write_u32(output, binding.name.get());
         write_u32(output, binding.type_name.get());
+        write_u32(output, binding.ty.get());
         write_u16(output, binding.register.get());
         write_u8(
             output,
@@ -113,6 +114,7 @@ pub(super) fn decode(
     for _ in 0..binding_count {
         let name = StringId::new(reader.u32("debug_binding_name")?);
         let type_name = StringId::new(reader.u32("debug_binding_type_name")?);
+        let ty = DebugTypeId::new(reader.u32("debug_binding_type")?);
         let register_value = reader.u16("debug_binding_register")?;
         let register = Register::new(register_value).map_err(|_| FormatError::InvalidValue {
             field: "debug_binding_register",
@@ -141,6 +143,7 @@ pub(super) fn decode(
         bindings.push(DebugBinding {
             name,
             type_name,
+            ty,
             register,
             kind,
             mutable,

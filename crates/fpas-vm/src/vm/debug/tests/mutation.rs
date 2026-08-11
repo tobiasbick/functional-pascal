@@ -144,3 +144,112 @@ fn failed_sessions_and_evaluation_only_children_are_not_mutable() {
         DebugErrorKind::VariablePathUnsupported
     );
 }
+
+#[test]
+fn textual_local_and_array_targets_follow_lexical_lookup_without_variable_handles() {
+    let mut session = DebugSession::new(inspection_executable()).expect("debug session");
+    stopped(session.step_into().expect("initialize values"));
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+
+    let local = DebugAssignmentTarget {
+        root: "Answer".to_string(),
+        selectors: Vec::new(),
+    };
+    let updated = session
+        .set_expression(&local, &DebugExpression::Integer(77), Some(frame))
+        .expect("textual local mutation");
+    assert_eq!(updated.value, "77");
+    assert_eq!(
+        session
+            .evaluate(
+                &DebugExpression::Name("Answer".to_string()),
+                Some(session.stack(0, 1).expect("fresh stack").items[0].id,)
+            )
+            .expect("updated local")
+            .value,
+        "77"
+    );
+
+    let frame = session.stack(0, 1).expect("fresh stack").items[0].id;
+    let array = DebugAssignmentTarget {
+        root: "Items".to_string(),
+        selectors: vec![DebugAssignmentSelector::Index(DebugExpression::Integer(1))],
+    };
+    session
+        .set_expression(&array, &DebugExpression::Integer(9), Some(frame))
+        .expect("textual array mutation");
+    let frame = session.stack(0, 1).expect("post-array stack").items[0].id;
+    assert_eq!(
+        session
+            .evaluate(&DebugExpression::Name("Answer".to_string()), Some(frame))
+            .expect("preserved local")
+            .value,
+        "77"
+    );
+    let items = session
+        .evaluate(&DebugExpression::Name("Items".to_string()), Some(frame))
+        .expect("updated array");
+    assert_ne!(items.variables_reference, 0);
+    assert_eq!(
+        session
+            .variables(items.variables_reference, 0, 10)
+            .expect("updated array elements")
+            .items
+            .iter()
+            .map(|item| item.value.as_str())
+            .collect::<Vec<_>>(),
+        ["1", "9"]
+    );
+
+    stopped(session.step_into().expect("enter helper"));
+    let parameters = scope_reference(&mut session, "Parameters");
+    assert_eq!(
+        session
+            .variables(parameters, 0, 1)
+            .expect("helper parameter")
+            .items[0]
+            .value,
+        "42"
+    );
+}
+
+#[test]
+fn textual_target_failure_keeps_frame_and_global_only_lookup_is_explicit() {
+    let mut session = DebugSession::new(inspection_executable()).expect("debug session");
+    stopped(session.step_into().expect("initialize values"));
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let local = DebugAssignmentTarget {
+        root: "Answer".to_string(),
+        selectors: Vec::new(),
+    };
+    assert_eq!(
+        session
+            .set_expression(&local, &DebugExpression::Integer(1), None)
+            .expect_err("local requires frame")
+            .kind,
+        DebugErrorKind::VariableTargetUnknown
+    );
+    assert!(
+        session.scopes(frame).is_ok(),
+        "failure preserves frame handles"
+    );
+
+    let global = DebugAssignmentTarget {
+        root: "G".to_string(),
+        selectors: Vec::new(),
+    };
+    assert_eq!(
+        session
+            .set_expression(&global, &DebugExpression::Integer(88), None)
+            .expect("global-only textual mutation")
+            .value,
+        "88"
+    );
+    assert_eq!(
+        session
+            .scopes(frame)
+            .expect_err("success expires frame")
+            .kind,
+        DebugErrorKind::UnknownFrame
+    );
+}

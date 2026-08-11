@@ -1,6 +1,128 @@
-use fpas_vm::DebugEvaluationLimits;
+use fpas_vm::{DebugAssignmentSelector, DebugEvaluationLimits};
 
-use super::{LogMessage, LogMessageLimits, LogSegment, parse_debug_expression};
+use super::{
+    LogMessage, LogMessageLimits, LogSegment, parse_debug_assignment_target, parse_debug_expression,
+};
+
+#[test]
+fn assignment_target_parser_preserves_named_stored_selector_order() {
+    let target = parse_debug_assignment_target(
+        "State.Items[Selected + 1].Value",
+        DebugEvaluationLimits::default(),
+    )
+    .expect("valid assignment target");
+    assert_eq!(target.root, "State");
+    assert!(matches!(
+        target.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Field(items),
+            DebugAssignmentSelector::Index(_),
+            DebugAssignmentSelector::Field(value)
+        ] if items == "Items" && value == "Value"
+    ));
+
+    for source in [
+        "Counter",
+        "Origin.X",
+        "Items[Index + 1]",
+        "Scores['blue']",
+        "sTaTe.iTeMs[Selected].vAlUe",
+    ] {
+        parse_debug_assignment_target(source, DebugEvaluationLimits::default())
+            .unwrap_or_else(|error| panic!("valid target {source}: {error:?}"));
+    }
+
+    let mixed_case = parse_debug_assignment_target(
+        "sTaTe.iTeMs[Selected].vAlUe",
+        DebugEvaluationLimits::default(),
+    )
+    .expect("mixed-case target");
+    assert_eq!(mixed_case.root, "sTaTe");
+    assert!(matches!(
+        mixed_case.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Field(items),
+            DebugAssignmentSelector::Index(_),
+            DebugAssignmentSelector::Field(value)
+        ] if items == "iTeMs" && value == "vAlUe"
+    ));
+}
+
+#[test]
+fn assignment_target_parser_rejects_computed_and_malformed_targets() {
+    for source in [
+        "(Items)[0]",
+        "Build()[0]",
+        "Value.Method()",
+        "1 + Counter",
+        "'text'",
+    ] {
+        let error = parse_debug_assignment_target(source, DebugEvaluationLimits::default())
+            .expect_err("unsupported assignment target");
+        assert_eq!(error.code, "expression_target_unsupported", "{source}");
+    }
+
+    for source in ["", "Items[", "Counter := 1"] {
+        let error = parse_debug_assignment_target(source, DebugEvaluationLimits::default())
+            .expect_err("malformed assignment target");
+        assert_eq!(error.code, "expression_target_parse", "{source}");
+        assert!(!error.hint.is_empty(), "{source}");
+    }
+
+    let unicode = "Ätems['unterminated]";
+    let error = parse_debug_assignment_target(unicode, DebugEvaluationLimits::default())
+        .expect_err("unterminated UTF-8 target");
+    assert_eq!(error.code, "expression_target_parse");
+    assert!(error.offset <= unicode.len());
+    assert!(error.length <= unicode.len().saturating_sub(error.offset));
+}
+
+#[test]
+fn assignment_target_parser_reuses_expression_limits() {
+    let byte_limited = DebugEvaluationLimits {
+        max_expression_bytes: 4,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        parse_debug_assignment_target("Items[0]", byte_limited)
+            .expect_err("target byte limit")
+            .code,
+        "evaluation_limit"
+    );
+
+    let depth_limited = DebugEvaluationLimits {
+        max_depth: 1,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        parse_debug_assignment_target("Items[Other[0]]", depth_limited)
+            .expect_err("target depth limit")
+            .code,
+        "evaluation_limit"
+    );
+
+    let operation_limited = DebugEvaluationLimits {
+        max_operations: 1,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        parse_debug_assignment_target("Items[Index + 1]", operation_limited)
+            .expect_err("target operation limit")
+            .code,
+        "evaluation_limit"
+    );
+
+    let traversal_limited = DebugEvaluationLimits {
+        max_traversals: 0,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        parse_debug_assignment_target("Items[Other[0]]", traversal_limited)
+            .expect_err("target traversal limit")
+            .code,
+        "evaluation_limit"
+    );
+}
 
 #[test]
 fn validator_accepts_the_complete_read_only_category_matrix() {

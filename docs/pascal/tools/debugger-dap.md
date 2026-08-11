@@ -8,8 +8,8 @@ work to the same protocol-neutral session as JSONL V2.
 The adapter advertises configuration-done, pause, source breakpoints,
 conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
 step-in/next/step-out, stack and variable pagination, delayed stack loading,
-cancel, set-variable, and terminate-on-disconnect for an owned launch. It does
-not advertise attach, completions, set-expression, data/function/instruction
+cancel, set-variable, set-expression, and terminate-on-disconnect for an owned
+launch. It does not advertise attach, completions, data/function/instruction
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
 register/disassembly access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
@@ -17,8 +17,9 @@ FPAS tasks.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
-`evaluate`, `setVariable`, `cancel`, `continue`, `pause`, `next`, `stepIn`,
-`stepOut`, `source`, and `disconnect`. Unsupported requests fail explicitly.
+`evaluate`, `setVariable`, `setExpression`, `cancel`, `continue`, `pause`,
+`next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported requests
+fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
@@ -44,14 +45,25 @@ locals, parameters, globals, closure cells, record fields, array elements, and
 existing dictionary values. The response contains the rendered `value`,
 `type`, a fresh `variablesReference`, and exact named/indexed child counts.
 Non-default `format` options are rejected because value-formatting negotiation
-is not implemented. The adapter advertises `supportsSetVariable: true` and
-keeps `supportsSetExpression: false`.
+is not implemented. The adapter advertises both `supportsSetVariable: true`
+and `supportsSetExpression: true`.
+
+`setExpression` maps standard DAP `expression`, `value`, and optional
+`frameId` fields to the shared textual mutation operation. Its target is one
+visible binding followed by stored record fields or array/existing-dictionary
+indexes. Omitting `frameId` searches globals only. A supplied frame selects its
+exact FPAS task and lexical scope; stale or foreign frames fail without falling
+back to main. The response has the same rendered value, type, fresh aggregate
+reference, and exact child counts as `setVariable`. Non-default `format` is
+rejected consistently.
 
 After a successful mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the
 `variables` area after the response. No invalidation event is sent after a
 failure or to clients that did not negotiate it. Successful mutation expires
-earlier scope and variable references, so clients must refetch them.
+earlier frames, scopes, and variable references for every stopped task, so
+clients must refetch them. Failure preserves the current stop and all
+references.
 
 `setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
 unchanged to the shared breakpoint policy. A condition stops only on Boolean

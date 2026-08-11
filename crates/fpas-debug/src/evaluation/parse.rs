@@ -17,6 +17,15 @@ pub(crate) fn parse_debug_expression(
     source: &str,
     limits: DebugEvaluationLimits,
 ) -> Result<DebugExpression, EvaluationParseError> {
+    let expression = parse_bounded_ast(source, limits)?;
+    validate_expression(&expression, limits)
+}
+
+/// Parses one bounded FPAS expression into its source AST.
+pub(super) fn parse_bounded_ast(
+    source: &str,
+    limits: DebugEvaluationLimits,
+) -> Result<fpas_parser::Expr, EvaluationParseError> {
     if source.len() > limits.max_expression_bytes {
         return Err(EvaluationParseError {
             code: "evaluation_limit",
@@ -45,7 +54,7 @@ pub(crate) fn parse_debug_expression(
             length: diagnostic.span.length(),
         });
     }
-    validate_expression(&expression, limits)
+    Ok(expression)
 }
 
 fn preflight_delimiter_depth(source: &str, maximum: usize) -> Result<(), EvaluationParseError> {

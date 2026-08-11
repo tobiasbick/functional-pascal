@@ -186,8 +186,8 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
 
     let mutation = server.handle_line(&request(
         8,
-        "variable.set",
-        json!({"variables_reference":locals,"name":"Value","expression":"41"}),
+        "expression.set",
+        json!({"frame_id":child_frame,"target":"Value","expression":"41"}),
     ));
     assert_eq!(mutation[0]["body"]["result"], "41", "{mutation:?}");
 
@@ -203,8 +203,10 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
     assert_eq!(evaluated[0]["body"]["result"], "41", "{evaluated:?}");
     let expired = server.handle_line(&request(11, "scopes", json!({"frame_id":child_frame})));
     assert_eq!(expired[0]["error"]["code"], "unknown_frame");
+    let expired_main = server.handle_line(&request(12, "scopes", json!({"frame_id":main_frame})));
+    assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
 
-    let _ = server.handle_line(&request(12, "continue", json!({})));
+    let _ = server.handle_line(&request(13, "continue", json!({})));
     let terminated = server.wait();
     assert!(
         terminated

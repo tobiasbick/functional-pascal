@@ -7,7 +7,7 @@ use fpas_bytecode::Value;
 use super::model::{DebugFrame, DebugScope, DebugVariable, Paginated};
 use super::render::{self, RetainedValue};
 use super::snapshot::{HandleEntry, InspectionSnapshot, item_id};
-use super::targets::{MutationAccess, MutationTarget};
+use super::targets::MutationAccess;
 use crate::vm::debug::evaluation::{DebugEvaluateResult, DebugEvaluationLimits};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 
@@ -149,65 +149,6 @@ impl InspectionSnapshot {
             None => None,
         };
         resolve_name(frame_values, &self.globals, name)
-    }
-
-    pub(in crate::vm::debug) fn resolve_mutation_target(
-        &self,
-        reference: u64,
-        name: &str,
-    ) -> Result<MutationTarget, DebugSessionError> {
-        if (reference >> 32) as u32 != self.generation {
-            return Err(DebugSessionError {
-                kind: DebugErrorKind::VariableTargetExpired,
-                message: format!(
-                    "debug variable target `{name}` belongs to an expired stop snapshot"
-                ),
-                hint: "Request scopes and variables again for the current stop.".to_string(),
-            });
-        }
-        let retained = self
-            .handles
-            .iter()
-            .find(|entry| entry.id == reference)
-            .and_then(|entry| {
-                entry
-                    .values
-                    .iter()
-                    .find(|value| value.name.eq_ignore_ascii_case(name))
-            })
-            .ok_or_else(|| DebugSessionError {
-                kind: DebugErrorKind::VariableTargetUnknown,
-                message: format!("debug variable target `{name}` does not exist"),
-                hint: "Request the container variables again and use a returned child name."
-                    .to_string(),
-            })?;
-        if retained.value.is_none() {
-            return Err(DebugSessionError {
-                kind: DebugErrorKind::VariableUninitialized,
-                message: format!("debug variable target `{name}` is uninitialized"),
-                hint: "Stop after the binding has received a value.".to_string(),
-            });
-        }
-        match &retained.mutation {
-            MutationAccess::Writable(target) => Ok(target.clone()),
-            MutationAccess::NotMutable => Err(DebugSessionError {
-                kind: DebugErrorKind::VariableNotMutable,
-                message: format!("debug variable target `{name}` is not mutable"),
-                hint: "Select a source-declared mutable binding or descendant.".to_string(),
-            }),
-            MutationAccess::Unsupported => Err(DebugSessionError {
-                kind: DebugErrorKind::VariablePathUnsupported,
-                message: format!("debug variable target `{name}` is not assignable"),
-                hint: "Only records, array elements, and existing dictionary values below a mutable root are assignable."
-                    .to_string(),
-            }),
-            MutationAccess::Unavailable => Err(DebugSessionError {
-                kind: DebugErrorKind::VariableUnavailable,
-                message: format!("debug variable target `{name}` is unavailable"),
-                hint: "Retry at a stable stop after the live storage becomes available."
-                    .to_string(),
-            }),
-        }
     }
 
     pub(in crate::vm::debug) fn retain_evaluation_result(

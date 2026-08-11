@@ -51,8 +51,16 @@ operation. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
 continuing the program observes the new value.
 
+The adapter also implements standard DAP `setExpression` for editor clients
+that edit a textual expression rather than a Variables child. Targets such as
+`Counter`, `Origin.X`, `Items[Index]`, and `Scores['blue']` use the selected
+stack frame; omitting a frame is global-only. Stored-field and index selectors
+are evaluated against the stopped pre-edit state. Successful edits refresh all
+task snapshots; rejected edits leave the current frames and values usable.
+
 Immutable, hidden, uninitialized, or evaluation-only values are read-only.
-Dictionary keys, function captures, enum and `Result`/`Option` payload
+Dictionary keys, missing dictionary entries, string characters, function
+captures, enum and `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted resources are not
 editable. A rejected edit reports an actionable debugger error and keeps the
 session stopped without changing the live value.

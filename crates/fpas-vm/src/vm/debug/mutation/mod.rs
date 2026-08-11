@@ -1,6 +1,8 @@
 //! Atomic live-root mutation after detached expression evaluation.
 
+mod model;
 mod replace;
+mod resolve;
 mod validate;
 
 use std::sync::TryLockError;
@@ -10,6 +12,9 @@ use fpas_bytecode::{Value, VerifiedExecutable};
 use super::inspection::{MutationRoot, MutationTarget};
 use super::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::worker::Worker;
+
+pub use model::{DebugAssignmentSelector, DebugAssignmentTarget};
+pub(in crate::vm::debug) use resolve::target as resolve_target;
 
 pub(super) fn validate_replacement(
     executable: &VerifiedExecutable,

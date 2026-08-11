@@ -35,6 +35,33 @@ pub(in crate::vm::debug) fn evaluate_value(
     )
 }
 
+/// Evaluates multiple expressions in order under one shared resource budget.
+pub(in crate::vm::debug) fn evaluate_values(
+    expressions: &[DebugExpression],
+    limits: DebugEvaluationLimits,
+    mut resolve: impl FnMut(&str) -> Result<Value, DebugSessionError>,
+    mut invoke: impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
+) -> Result<Vec<Value>, DebugSessionError> {
+    let mut budget = EvaluationBudget {
+        operations: 0,
+        traversals: 0,
+        visited_cells: HashSet::new(),
+    };
+    expressions
+        .iter()
+        .map(|expression| {
+            evaluate(
+                expression,
+                0,
+                limits,
+                &mut budget,
+                &mut resolve,
+                &mut invoke,
+            )
+        })
+        .collect()
+}
+
 fn evaluate(
     expression: &DebugExpression,
     depth: usize,

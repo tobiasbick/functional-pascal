@@ -3,6 +3,7 @@
 mod capture;
 mod handles;
 mod model;
+mod mutation_targets;
 mod render;
 mod snapshot;
 mod targets;

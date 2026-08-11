@@ -36,6 +36,7 @@ pub(super) fn initialize_records(
                     "evaluate": true,
                     "evaluate_calls": true,
                     "set_variable": true,
+                    "set_expression": true,
                     "conditional_breakpoints": true,
                     "hit_conditions": true,
                     "logpoints": true,
@@ -116,12 +117,19 @@ pub(super) fn optional_u64_argument(
     match arguments.get(name) {
         None | Some(Value::Null) => Ok(None),
         Some(value) => value.as_u64().map(Some).ok_or_else(|| {
+            let help = if name == "task_id" {
+                "Pass a task ID returned by `tasks` as `task_id`.".to_string()
+            } else {
+                format!(
+                    "Pass a non-negative ID returned by the matching inspection request as `{name}`."
+                )
+            };
             failure(
                 request_id,
                 command,
                 "invalid_request",
                 format!("Command `{command}` argument `{name}` must be a non-negative integer."),
-                format!("Pass a task ID returned by `tasks` as `{name}`."),
+                help,
             )
         }),
     }

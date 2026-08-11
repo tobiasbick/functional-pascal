@@ -12,5 +12,9 @@ all-stop task debugging is implemented; non-stop execution, task-control
 mutation, cross-task stepping shortcuts, and persistent task history remain
 consciously deferred there.
 
+Textual debugger expression mutation is implemented through DAP
+`setExpression` and JSONL `expression.set` for the existing bounded mutation
+domain. Later mutation forms remain recorded in [deferred.md](deferred.md).
+
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

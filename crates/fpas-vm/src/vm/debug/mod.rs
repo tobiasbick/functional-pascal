@@ -20,6 +20,7 @@ pub use evaluation::{
 pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
+pub use mutation::{DebugAssignmentSelector, DebugAssignmentTarget};
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,

@@ -31,12 +31,13 @@ use self::worker::Worker;
 
 pub use callback::CallbackSession;
 pub use debug::{
-    BoundBreakpoint, DebugBinaryOperation, DebugErrorKind, DebugEvaluateResult,
-    DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
-    DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
-    DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
-    DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState, DebugTermination,
-    DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint, SourceLocation,
+    BoundBreakpoint, DebugAssignmentSelector, DebugAssignmentTarget, DebugBinaryOperation,
+    DebugErrorKind, DebugEvaluateResult, DebugEvaluationCancelHandle, DebugEvaluationLimits,
+    DebugExecutionLimits, DebugExpression, DebugFrame, DebugInspectionLimits, DebugPauseHandle,
+    DebugRunResult, DebugScope, DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState,
+    DebugStop, DebugStopReason, DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState,
+    DebugTermination, DebugUnaryOperation, DebugVariable, Paginated, SourceBreakpoint,
+    SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

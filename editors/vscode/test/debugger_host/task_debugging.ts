@@ -127,9 +127,9 @@ export async function verifyTaskDebugging(
       context: "watch"
     }) as { result: string };
     assert.equal(evaluated.result, "10");
-    const mutated = await session.customRequest("setVariable", {
-      variablesReference: locals.variablesReference,
-      name: "Value",
+    const mutated = await session.customRequest("setExpression", {
+      frameId: taskFrame.id,
+      expression: "Value",
       value: "15"
     }) as { value: string };
     assert.equal(mutated.value, "15");

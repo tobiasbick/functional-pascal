@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { verifyDebuggerLifecycle } from "./debugger_host/lifecycle";
 import { verifyBreakpointPolicies } from "./debugger_host/breakpoint_policies";
 import { verifyDebuggerEvaluation } from "./debugger_host/evaluation";
+import { verifyExpressionMutation } from "./debugger_host/expression_mutation";
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
 import { verifyTaskDebugging } from "./debugger_host/task_debugging";
@@ -30,6 +31,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyPauseAndDisconnect(workspaceRoot, received, sent);
     await verifyRuntimeFailure(workspaceRoot, received, sent);
     await verifyDebuggerEvaluation(workspaceRoot, received, sent);
+    await verifyExpressionMutation(workspaceRoot, received, sent);
     await verifyVariableMutation(workspaceRoot, received, sent);
     await verifyBreakpointPolicies(workspaceRoot, received, sent);
     await verifyTaskDebugging(workspaceRoot, received, sent);

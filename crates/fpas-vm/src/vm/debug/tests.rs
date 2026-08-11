@@ -8,9 +8,10 @@ use fpas_bytecode::{
 };
 
 use super::{
-    DebugBinaryOperation, DebugErrorKind, DebugEvaluationLimits, DebugExecutionLimits,
-    DebugExpression, DebugInspectionLimits, DebugRunResult, DebugSession, DebugSessionState,
-    DebugStopReason, DebugTaskState, SourceBreakpoint,
+    DebugAssignmentSelector, DebugAssignmentTarget, DebugBinaryOperation, DebugErrorKind,
+    DebugEvaluationLimits, DebugExecutionLimits, DebugExpression, DebugInspectionLimits,
+    DebugRunResult, DebugSession, DebugSessionState, DebugStopReason, DebugTaskState,
+    SourceBreakpoint,
 };
 
 fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {

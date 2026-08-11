@@ -3,7 +3,7 @@
 mod execute;
 mod model;
 
-pub(super) use execute::evaluate_value;
+pub(super) use execute::{evaluate_value, evaluate_values};
 pub(super) use model::DebugCallTarget;
 pub use model::{
     DebugBinaryOperation, DebugEvaluateResult, DebugEvaluationLimits, DebugExpression,

@@ -98,6 +98,7 @@ impl DapServer {
             "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
             "evaluate" => self.evaluate(request_seq, command, &arguments),
             "setVariable" => self.set_variable(request_seq, command, &arguments),
+            "setExpression" => self.set_expression(request_seq, command, &arguments),
             "cancel" => self.core_request(
                 request_seq,
                 command,
@@ -167,7 +168,7 @@ impl DapServer {
                 "supportsConditionalBreakpoints":true,"supportsHitConditionalBreakpoints":true,
                 "supportsLogPoints":true,
                 "supportsCancelRequest":true,
-                "supportsSetVariable":true,"supportsSetExpression":false,
+                "supportsSetVariable":true,"supportsSetExpression":true,
                 "supportsSingleThreadExecutionRequests":false,
                 "supportsStepBack":false
             }),
@@ -481,7 +482,7 @@ fn dap_body(command: &str, body: Value) -> Value {
                 "indexedVariables": body.get("indexed_variables")
             })
         }
-        "setVariable" => {
+        "setVariable" | "setExpression" => {
             json!({
                 "value": body.get("result"),
                 "type": body.get("type_name"),

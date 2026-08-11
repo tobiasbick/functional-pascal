@@ -59,26 +59,41 @@ captures can be detached safely. Aggregate results can be expanded like
 ordinary variables and expire on resume. `go`, newly entered closure syntax,
 statements, declarations, and assignments inside `evaluate` remain rejected.
 
-`setVariable` and JSONL `variable.set` are separate stopped-state operations.
-They accept mutable source locals, mutable parameters, mutable globals, and
-mutable captures backed by an existing closure cell. Record fields, array
+`setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
+`expression.set` are separate stopped-state operations. Handle-based mutation
+addresses a child previously returned by `variables`. Textual mutation starts
+with one visible binding and accepts stored record fields and array or
+dictionary indexes, for example `Counter`, `Origin.X`,
+`State.Items[Selected].Value`, or `Scores['blue']`. Root and field lookup is
+ASCII case-insensitive. Omitting a frame deliberately searches globals only;
+a local, parameter, or capture requires a current frame and is resolved with
+normal lexical shadowing.
+
+Both forms accept mutable source locals, mutable parameters, mutable globals,
+and mutable captures backed by an existing closure cell. Record fields, array
 elements, and existing dictionary values below those roots can be replaced,
-including nested combinations. The replacement is an ordinary debugger
-expression and may use the same controlled detached calls as `evaluate`.
+including nested combinations. Index selectors and the replacement are
+ordinary debugger expressions and may use the same controlled detached calls
+as `evaluate`. All selectors are evaluated once from left to right against the
+unchanged pre-commit snapshot, followed by the replacement, under one shared
+evaluation and call budget.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
 type check, path check, resource check, or storage access leaves the stopped
 program and its variable references unchanged. A successful update rebuilds
 aggregate roots with normal copy-on-write value semantics, preserves closure
-cell identity, refreshes the variable snapshot, and expires previous variable
-references. Clients must request scopes and variables again after success.
+cell identity, refreshes every stopped task snapshot, and expires previous
+frames and variable references. Clients must request stack, scopes, and
+variables again after success. Failed mutation preserves every old reference.
 
 Immutable or uninitialized bindings, compiler-hidden storage, dictionary keys,
 evaluation-only results, function captures, enum or `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted values are not
-writable. Mutation cannot insert dictionary entries, resize arrays, change
-control flow, or initialize a binding before normal execution does so.
+writable. Mutation cannot insert or remove dictionary entries, change
+dictionary keys, resize arrays, edit a string character, invoke a property
+setter, change control flow, or initialize a binding before normal execution
+does so.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

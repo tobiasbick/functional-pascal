@@ -7,7 +7,8 @@ read-only, and testable; it does not reject these features permanently.
 
 Read-only expression evaluation, detached controlled calls, watches,
 conditional breakpoints, exact-hit conditions, non-stopping logpoints, and
-stopped-state `setVariable` for supported mutable values are implemented. Calls
+stopped-state `setVariable` and textual `setExpression` for supported mutable
+values are implemented. Calls
 with host I/O, nondeterminism, blocking, tasks, opaque resources, or unresolved
 dynamic effects are deliberately rejected by the implemented safety policy and
 are not a deferred promise. The following work remains intentionally deferred.
@@ -16,7 +17,6 @@ are not a deferred promise. The following work remains intentionally deferred.
 
 Deferred:
 
-- DAP `setExpression` and arbitrary textual lvalue targets;
 - inserting or removing dictionary entries and changing dictionary keys;
 - resizing arrays or editing strings by character index;
 - editing enum, `Result`, or `Option` payload descendants;
@@ -44,7 +44,7 @@ implemented. The following broader task facilities remain deferred:
 - per-task continue or pause;
 - debugger commands that create, cancel, restart, reprioritize, or detach a
   task, replace its result, failure, dependency, or timer, or force it runnable;
-- assigning task handles through `setVariable`;
+- assigning task handles through debugger mutation;
 - spawn-to-child, waiter-to-dependency, scheduler-history, task-name, or
   task-group stepping shortcuts;
 - persistent completed-task stacks, variables, timelines, or ancestry; and

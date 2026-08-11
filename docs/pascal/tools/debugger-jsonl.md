@@ -38,6 +38,7 @@ compatibility mode. A response precedes events caused by that request.
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
+| `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -61,6 +62,30 @@ controlled-call policy, and resource limits as `evaluate`. A successful result
 has the same five rendered fields as `evaluate`, refreshes inspection state,
 and expires all earlier variable references. Any failure is atomic and leaves
 the old references usable.
+
+`expression.set` addresses a target without first requesting variable handles:
+
+```json
+{"type":"request","id":8,"command":"expression.set","arguments":{"frame_id":4294967296,"target":"State.Items[Selected].Value","expression":"Counter + 1"}}
+{"type":"response","request_id":8,"command":"expression.set","success":true,"body":{"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0}}
+```
+
+The bounded target grammar is one visible name followed only by stored-field
+selectors (`.Field`) and index selectors (`[expression]`). Parenthesized or
+computed bases, calls as the root/path, properties, assignments, declarations,
+and statements are rejected. A supplied current `frame_id` selects that
+frame's task and lexical scope. An omitted frame searches globals only and
+never falls back to the selected or main frame. Array indexes must be in range;
+dictionary keys must already exist. Text indexes and dictionary insertion are
+unsupported.
+
+Selectors run once from left to right and the replacement runs last, all
+against the unchanged stopped snapshot and under one expression/call budget.
+Only after target resolution, evaluation, portable type validation, and live
+storage checks succeed does the debugger commit one root. Success refreshes all
+task snapshots and expires old frame and variable IDs. Any failure performs no
+write and preserves those IDs. The result uses the same five rendered fields
+as `evaluate` and `variable.set`.
 
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
@@ -90,8 +115,9 @@ that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
-set-variable, conditional breakpoints, hit conditions, and logpoints. Attach,
-non-stop execution and reverse execution remain false; `task_threads` is true.
+set-variable, set-expression, conditional breakpoints, hit conditions, and
+logpoints. Attach, non-stop execution and reverse execution remain false;
+`task_threads` is true.
 
 ## Default limits
 
@@ -123,3 +149,5 @@ Stable errors include `invalid_request`, `invalid_state`,
 `variable_unavailable`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
+Textual target failures use `expression_target_parse` or
+`expression_target_unsupported` before runtime target errors are considered.

@@ -6,7 +6,10 @@
 )]
 
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
-use fpas_vm::{DebugExpression, DebugRunResult, DebugSession};
+use fpas_vm::{
+    DebugAssignmentSelector, DebugAssignmentTarget, DebugErrorKind, DebugEvaluationLimits,
+    DebugExpression, DebugRunResult, DebugSession,
+};
 use serde_json::{Value, json};
 
 fn server() -> JsonlServer {
@@ -327,15 +330,22 @@ begin
 end.
 "#,
     );
-    let parameters = loop {
-        if let Some(parameters) = session_scope(&mut session, "Parameters") {
-            break parameters;
+    let frame = loop {
+        if session_scope(&mut session, "Parameters").is_some() {
+            break session.stack(0, 1).expect("parameter stack").items[0].id;
         }
         step(&mut session);
     };
     session
-        .set_variable(parameters, "Value", &DebugExpression::Integer(77))
-        .expect("mutable parameter mutation");
+        .set_expression(
+            &DebugAssignmentTarget {
+                root: "Value".to_string(),
+                selectors: Vec::new(),
+            },
+            &DebugExpression::Integer(77),
+            Some(frame),
+        )
+        .expect("textual mutable parameter mutation");
     assert!(matches!(
         session.step_out().expect("return to caller"),
         DebugRunResult::Stopped(_)
@@ -375,9 +385,12 @@ begin
 end.
 "#,
     );
-    let captures = loop {
+    let (frame, captures) = loop {
         if let Some(captures) = session_scope(&mut session, "Captures") {
-            break captures;
+            break (
+                session.stack(0, 1).expect("capture stack").items[0].id,
+                captures,
+            );
         }
         step(&mut session);
     };
@@ -386,8 +399,15 @@ end.
         "0"
     );
     session
-        .set_variable(captures, "Value", &DebugExpression::Integer(40))
-        .expect("capture mutation");
+        .set_expression(
+            &DebugAssignmentTarget {
+                root: "Value".to_string(),
+                selectors: Vec::new(),
+            },
+            &DebugExpression::Integer(40),
+            Some(frame),
+        )
+        .expect("textual capture mutation");
 
     assert!(matches!(
         session.step_out().expect("return from closure"),
@@ -403,5 +423,109 @@ end.
             .expect("closure result")
             .value,
         "41"
+    );
+}
+
+#[test]
+fn textual_selectors_share_one_call_and_limit_budget_before_commit() {
+    let mut session = session(
+        r#"
+program SelectorMutation;
+
+uses Std.Console;
+
+function ChooseIndex(): integer;
+begin
+  return 1
+end;
+
+procedure Emit();
+begin
+  WriteLn('not live')
+end;
+
+begin
+  mutable var Items: array of integer := [1, 2];
+  var Marker: integer := Items[0]
+end.
+"#,
+    );
+    let frame = loop {
+        if let Some(locals) = session_scope(&mut session, "Locals") {
+            let ready = session
+                .variables(locals, 0, 10)
+                .expect("selector locals")
+                .items
+                .iter()
+                .any(|value| value.name == "Items" && value.value != "<uninitialized>");
+            if ready {
+                break session.stack(0, 1).expect("selector stack").items[0].id;
+            }
+        }
+        step(&mut session);
+    };
+    let called_target = DebugAssignmentTarget {
+        root: "Items".to_string(),
+        selectors: vec![DebugAssignmentSelector::Index(DebugExpression::Call {
+            callee: Box::new(DebugExpression::Callable("ChooseIndex".to_string())),
+            arguments: Vec::new(),
+        })],
+    };
+    let once = DebugEvaluationLimits {
+        max_calls: 1,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        session
+            .set_expression_with_limits(
+                &called_target,
+                &DebugExpression::Integer(9),
+                Some(frame),
+                once,
+            )
+            .expect("one selector call")
+            .value,
+        "9"
+    );
+
+    let frame = session.stack(0, 1).expect("fresh selector stack").items[0].id;
+    let first = DebugAssignmentTarget {
+        root: "Items".to_string(),
+        selectors: vec![DebugAssignmentSelector::Index(DebugExpression::Integer(0))],
+    };
+    let limited = DebugEvaluationLimits {
+        max_operations: 1,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        session
+            .set_expression_with_limits(&first, &DebugExpression::Integer(8), Some(frame), limited,)
+            .expect_err("combined selector/replacement budget")
+            .kind,
+        DebugErrorKind::EvaluationLimit
+    );
+    assert!(
+        session.scopes(frame).is_ok(),
+        "limit failure preserves frame"
+    );
+
+    let forbidden = DebugExpression::Call {
+        callee: Box::new(DebugExpression::Callable("Emit".to_string())),
+        arguments: Vec::new(),
+    };
+    assert_eq!(
+        session
+            .set_expression(&first, &forbidden, Some(frame))
+            .expect_err("effectful replacement")
+            .kind,
+        DebugErrorKind::ForbiddenCallEffect
+    );
+    assert!(
+        session.scopes(frame).is_ok(),
+        "effect failure preserves frame"
+    );
+    assert!(
+        session.output().lines.is_empty(),
+        "sandbox call produced no output"
     );
 }

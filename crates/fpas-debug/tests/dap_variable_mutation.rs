@@ -53,7 +53,7 @@ fn dap_set_variable_returns_before_client_negotiated_invalidation() {
         json!({"supportsInvalidatedEvent":true}),
     ));
     assert_eq!(initialized[0]["body"]["supportsSetVariable"], true);
-    assert_eq!(initialized[0]["body"]["supportsSetExpression"], false);
+    assert_eq!(initialized[0]["body"]["supportsSetExpression"], true);
     stop_after_initialization(&mut adapter);
 
     let mut seq = 4;

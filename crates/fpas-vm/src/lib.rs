@@ -11,12 +11,12 @@ mod vm;
 
 pub use fpas_std::ScreenSnapshot;
 pub use vm::{
-    BoundBreakpoint, CallbackSession, DebugAssignmentSelector, DebugAssignmentTarget,
-    DebugBinaryOperation, DebugDictionaryMutationResult, DebugErrorKind, DebugEvaluateResult,
-    DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
-    DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
-    DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
-    DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState, DebugTermination,
-    DebugUnaryOperation, DebugVariable, Execution, Paginated, ShutdownHandle, SourceBreakpoint,
-    SourceLocation, Vm, VmError, VmOutput,
+    BoundBreakpoint, CallbackSession, DebugArrayMutationResult, DebugAssignmentSelector,
+    DebugAssignmentTarget, DebugBinaryOperation, DebugDictionaryMutationResult, DebugErrorKind,
+    DebugEvaluateResult, DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits,
+    DebugExpression, DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult,
+    DebugScope, DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop,
+    DebugStopReason, DebugStringMutationResult, DebugTask, DebugTaskEvent, DebugTaskEventKind,
+    DebugTaskState, DebugTermination, DebugUnaryOperation, DebugVariable, Execution, Paginated,
+    ShutdownHandle, SourceBreakpoint, SourceLocation, Vm, VmError, VmOutput,
 };

@@ -17,7 +17,6 @@ are not a deferred promise. The following work remains intentionally deferred.
 
 Deferred:
 
-- resizing arrays or editing strings by character index;
 - editing enum, `Result`, or `Option` payload descendants;
 - assigning function values, task handles, or opaque hosted resources;
 - initializing a source binding before normal execution initializes it;
@@ -25,7 +24,8 @@ Deferred:
 - changing the instruction pointer or restarting a frame; and
 - data breakpoints or breakpoint actions that modify state.
 
-Reason: these operations need additional lvalue, source-assignment,
+Bounded array insertion/removal and Unicode-scalar string character replacement
+are implemented. The remaining operations need additional lvalue, source-assignment,
 control-flow, lifetime, or runtime-identity semantics beyond atomic replacement
 of an existing typed value.
 

@@ -68,9 +68,18 @@ replacement preserves the value and iteration position. Successful commands
 refresh variables, while cancellation or any rejected input sends no partial
 mutation.
 
+Three further Command Palette actions provide bounded sequence changes:
+**Debug: Insert Array Element**, **Debug: Remove Array Element**, and **Debug:
+Replace String Character**. Array indexes are zero-based, insertion accepts the
+current length, and string indexes count Unicode scalars rather than UTF-8
+bytes. Character replacement requires exactly one different character. The
+commands share the stopped frame, atomic commit, error, and refresh behavior of
+dictionary commands.
+
 Immutable, hidden, uninitialized, or evaluation-only values are read-only.
-Dictionary entry values remain editable through standard variable mutation;
-structure changes use the explicit commands. String characters, function
+Dictionary entry values and existing array elements remain editable through
+standard variable mutation; structure changes and string characters use the
+explicit commands. Function
 captures, enum and `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted resources are not
 editable. A rejected edit reports an actionable debugger error and keeps the

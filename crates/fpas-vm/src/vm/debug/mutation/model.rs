@@ -32,3 +32,27 @@ pub struct DebugDictionaryMutationResult {
     /// Bounded summary of the new key, when a key was replaced.
     pub new_key: Option<String>,
 }
+
+/// Rendered result and operation metadata for one array structure mutation.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebugArrayMutationResult {
+    /// Fresh retained summary of the committed array.
+    pub array: DebugEvaluateResult,
+    /// Zero-based element index affected by the operation.
+    pub index: usize,
+    /// Bounded summary of the removed value, when an element was removed.
+    pub removed: Option<String>,
+}
+
+/// Rendered result and operation metadata for one string character replacement.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DebugStringMutationResult {
+    /// Fresh retained summary of the committed string.
+    pub string: DebugEvaluateResult,
+    /// Zero-based Unicode scalar index affected by the operation.
+    pub index: usize,
+    /// Bounded summary of the replaced character.
+    pub old_character: String,
+    /// Bounded summary of the replacement character.
+    pub new_character: String,
+}

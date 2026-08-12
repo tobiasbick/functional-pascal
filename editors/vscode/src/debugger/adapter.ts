@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 import { resolveCliPath } from "../cliPath";
 import { resolveStandardLibraryPath } from "../standardLibraryPath";
 import { registerDictionaryCommands } from "./dictionaryCommands";
+import { registerSequenceCommands } from "./sequenceCommands";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
 export function registerDebugger(context: vscode.ExtensionContext): void {
@@ -19,6 +20,7 @@ export function registerDebugger(context: vscode.ExtensionContext): void {
     new FunctionalPascalDebugAdapterFactory(context)
   );
   registerDictionaryCommands(context);
+  registerSequenceCommands(context);
   context.subscriptions.push(provider, factory);
 }
 

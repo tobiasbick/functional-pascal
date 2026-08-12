@@ -22,6 +22,7 @@ mod dictionary;
 mod execution;
 mod inspection;
 mod mutation;
+mod sequence;
 
 /// Thread-safe cooperative pause request handle.
 #[derive(Clone)]

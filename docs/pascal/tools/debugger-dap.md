@@ -18,7 +18,8 @@ FPAS tasks.
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
-`fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `cancel`, `continue`,
+`fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
+`fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
 requests fail explicitly.
 
@@ -70,7 +71,16 @@ different new key. Successful bodies contain the committed dictionary as
 `newKey`. The custom requests map directly to the shared JSONL operations and
 do not define separate mutation behavior or capability flags.
 
-After any successful value or dictionary mutation, clients that initialized with
+The sequence custom requests use `frameId`, `target`, and an FPAS `index`
+expression. `fpas/arrayInsert` and `fpas/stringReplaceCharacter` additionally
+use `value`. Array insertion accepts zero through the current length; removal
+requires an existing zero-based element index. String indexes count Unicode
+scalars and `value` must evaluate to exactly one different scalar. Successful
+bodies use the standard mutation fields and add `index`; removal adds
+`removed`, and string replacement adds `oldCharacter` and `newCharacter`.
+They map directly to the corresponding JSONL operations.
+
+After any successful value, dictionary, or sequence mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the
 `variables` area after the response. No invalidation event is sent after a
 failure or to clients that did not negotiate it. Successful mutation expires

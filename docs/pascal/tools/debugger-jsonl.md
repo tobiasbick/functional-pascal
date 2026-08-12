@@ -42,6 +42,9 @@ compatibility mode. A response precedes events caused by that request.
 | `dictionary.insert` | stopped | `target`, `key`, `expression`; optional `frame_id` | committed dictionary and fresh child reference |
 | `dictionary.remove` | stopped | `target`, `key`; optional `frame_id` | committed dictionary, removed value, and fresh child reference |
 | `dictionary.replace_key` | stopped | `target`, `key`, `new_key`; optional `frame_id` | committed dictionary, old/new keys, and fresh child reference |
+| `array.insert` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed array, affected index, and fresh child reference |
+| `array.remove` | stopped | `target`, `index`; optional `frame_id` | committed array, affected index, removed value, and fresh child reference |
+| `string.replace_character` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed string, affected index, and old/new characters |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -79,9 +82,9 @@ computed bases, calls as the root/path, properties, assignments, declarations,
 and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
-dictionary keys must already exist. Text indexes and dictionary structure
-changes are unsupported by `expression.set`; use the explicit dictionary
-commands below for insertion, removal, or key replacement.
+dictionary keys must already exist. Text indexes and aggregate structure
+changes are unsupported by `expression.set`; use the explicit dictionary and
+sequence commands below.
 
 Selectors run once from left to right and the replacement runs last, all
 against the unchanged stopped snapshot and under one expression/call budget.
@@ -115,6 +118,22 @@ type, target, collision, missing-key, no-op, limit, cancellation, and storage
 failures write nothing and preserve old IDs. `initialize` advertises
 `dictionary_insert`, `dictionary_remove`, and `dictionary_replace_key`.
 
+Sequence commands target a complete array or string container:
+
+```json
+{"type":"request","id":23,"command":"array.insert","arguments":{"frame_id":17179869184,"target":"State.Items","index":"Selected","expression":"42"}}
+{"type":"request","id":24,"command":"array.remove","arguments":{"frame_id":21474836480,"target":"State.Items","index":"0"}}
+{"type":"request","id":25,"command":"string.replace_character","arguments":{"frame_id":25769803776,"target":"State.Label","index":"1","expression":"'é'"}}
+```
+
+Array insertion permits `0..=length`; removal permits `0..<length`. String
+indexes count Unicode scalars, not UTF-8 bytes, and the replacement expression
+must produce a one-scalar string different from the current character. Success
+uses the normal five rendered fields and adds `index`; removal also adds
+`removed`, while string replacement adds `old_character` and `new_character`.
+All inputs run once under one shared budget before an atomic commit. Initialize
+advertises `array_insert`, `array_remove`, and `string_replace_character`.
+
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
 intrinsics. Calls use a detached copy of globals, arguments, receivers,
@@ -143,7 +162,8 @@ that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
-set-variable, set-expression, all three dictionary structure operations,
+set-variable, set-expression, all three dictionary structure operations, all
+three sequence structure operations,
 conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
 execution and reverse execution remain false;
 `task_threads` is true.
@@ -176,7 +196,8 @@ Stable errors include `invalid_request`, `invalid_state`,
 `variable_target_unknown`, `variable_target_expired`, `variable_not_mutable`,
 `variable_path_unsupported`, `variable_uninitialized`, `variable_value_type`,
 `variable_unavailable`, `dictionary_key_exists`, `dictionary_key_missing`,
-`dictionary_key_unchanged`, `unknown_task`,
+`dictionary_key_unchanged`, `sequence_index_out_of_bounds`,
+`string_character_required`, `string_character_unchanged`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

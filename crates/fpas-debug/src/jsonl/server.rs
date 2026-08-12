@@ -5,6 +5,7 @@ mod completion;
 mod dictionary;
 mod evaluation;
 mod mutation;
+mod sequence;
 mod tasks;
 
 use std::collections::{HashMap, HashSet};
@@ -198,6 +199,11 @@ impl JsonlServer {
             "dictionary.insert" => self.insert_dictionary(request_id, command, arguments),
             "dictionary.remove" => self.remove_dictionary(request_id, command, arguments),
             "dictionary.replace_key" => self.replace_dictionary_key(request_id, command, arguments),
+            "array.insert" => self.insert_array(request_id, command, arguments),
+            "array.remove" => self.remove_array(request_id, command, arguments),
+            "string.replace_character" => {
+                self.replace_string_character(request_id, command, arguments)
+            }
             "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(

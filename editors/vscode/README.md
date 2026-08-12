@@ -55,6 +55,13 @@ pair, remove deletes an existing pair, and key replacement preserves the
 associated value and iteration position. Failures and cancelled prompts leave
 the stopped program unchanged.
 
+Use **Functional Pascal: Debug: Insert Array Element**, **Debug: Remove Array
+Element**, or **Debug: Replace String Character** for bounded sequence changes.
+Array insertion accepts indexes from zero through the current length; removal
+uses an existing zero-based index. String indexes count Unicode characters and
+the replacement must be a one-character FPAS string. Successful commands
+refresh debugger variables; failures and cancelled prompts send no mutation.
+
 ## Build
 
 Node.js 22 or newer and a stable Rust toolchain are required. From the

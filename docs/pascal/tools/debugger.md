@@ -99,14 +99,24 @@ The operations support locals, mutable parameters, globals, closure captures,
 nested aggregate paths, and stopped task frames. Success expires all inspection
 references; every failure preserves both live state and existing references.
 
+Sequence structure mutation uses the same atomic target and evaluation model.
+Explicit array insertion accepts indexes from zero through the current length;
+array removal accepts an existing zero-based element index and returns the
+removed value. String character replacement addresses zero-based Unicode
+scalar indexes, requires an expression producing exactly one scalar, and
+returns the old and new characters. These operations are available through
+JSONL, matching DAP custom requests, and three Functional Pascal VS Code
+commands. An unchanged character is rejected without writing.
+
 Immutable or uninitialized bindings, compiler-hidden storage,
 evaluation-only results, function captures, enum or `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted values are not
 writable. Existing `setVariable` and `setExpression` operations still cannot
 insert/remove entries or change keys; clients use the explicit dictionary
-operations instead. Mutation cannot resize arrays, edit a string character,
-invoke a property setter, change control flow, or initialize a binding before
-normal execution does so.
+operations instead. Standard `setVariable` and `setExpression` still cannot
+resize arrays or address string characters; clients use the explicit sequence
+operations instead. Mutation cannot invoke a property setter, change control
+flow, or initialize a binding before normal execution does so.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

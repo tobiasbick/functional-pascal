@@ -2,6 +2,7 @@
 
 mod dictionary;
 mod mutation;
+mod sequence;
 mod tasks;
 
 use std::collections::HashMap;
@@ -108,6 +109,11 @@ impl DapServer {
             }
             "fpas/dictionaryReplaceKey" => {
                 self.replace_dictionary_key(request_seq, command, &arguments)
+            }
+            "fpas/arrayInsert" => self.insert_array(request_seq, command, &arguments),
+            "fpas/arrayRemove" => self.remove_array(request_seq, command, &arguments),
+            "fpas/stringReplaceCharacter" => {
+                self.replace_string_character(request_seq, command, &arguments)
             }
             "cancel" => self.core_request(
                 request_seq,
@@ -473,6 +479,9 @@ fn dap_stop_reason(reason: Option<&str>) -> &'static str {
 }
 
 fn dap_body(command: &str, body: Value) -> Value {
+    if let Some(result) = mutation::custom_response_body(command, &body) {
+        return result;
+    }
     match command {
         "stackTrace" => {
             json!({"stackFrames":body.get("frames").and_then(Value::as_array).into_iter().flatten().map(|frame| json!({"id":frame.get("frame_id"),"name":frame.get("name"),"source":{"path":frame.pointer("/location/source")},"line":frame.pointer("/location/line").unwrap_or(&json!(1)),"column":frame.pointer("/location/column").unwrap_or(&json!(1))})).collect::<Vec<_>>(),"totalFrames":body.get("total")})
@@ -500,44 +509,6 @@ fn dap_body(command: &str, body: Value) -> Value {
                 "namedVariables": body.get("named_variables"),
                 "indexedVariables": body.get("indexed_variables")
             })
-        }
-        "fpas/dictionaryInsert" | "fpas/dictionaryRemove" | "fpas/dictionaryReplaceKey" => {
-            let mut result = serde_json::Map::from_iter([
-                (
-                    "value".to_string(),
-                    body.get("result").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "type".to_string(),
-                    body.get("type_name").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "variablesReference".to_string(),
-                    body.get("variables_reference")
-                        .cloned()
-                        .unwrap_or(Value::Null),
-                ),
-                (
-                    "namedVariables".to_string(),
-                    body.get("named_variables").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "indexedVariables".to_string(),
-                    body.get("indexed_variables")
-                        .cloned()
-                        .unwrap_or(Value::Null),
-                ),
-            ]);
-            for (source, destination) in [
-                ("removed", "removed"),
-                ("old_key", "oldKey"),
-                ("new_key", "newKey"),
-            ] {
-                if let Some(value) = body.get(source) {
-                    result.insert(destination.to_string(), value.clone());
-                }
-            }
-            Value::Object(result)
         }
         "continue" => json!({"allThreadsContinued":true}),
         _ => body,

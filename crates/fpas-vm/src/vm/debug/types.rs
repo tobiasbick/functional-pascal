@@ -206,6 +206,12 @@ pub enum DebugErrorKind {
     DictionaryKeyMissing,
     /// A dictionary key replacement supplied an equal old and new key.
     DictionaryKeyUnchanged,
+    /// An array insertion or removal index is outside the permitted sequence range.
+    SequenceIndexOutOfBounds,
+    /// A string character replacement expression did not produce exactly one Unicode scalar.
+    StringCharacterRequired,
+    /// A string character replacement supplied the character already stored at the index.
+    StringCharacterUnchanged,
     /// A requested inspection page exceeds configured limits.
     InspectionLimit,
     /// An expression references no visible binding with the requested name.

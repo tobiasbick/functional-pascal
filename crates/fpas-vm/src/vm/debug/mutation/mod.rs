@@ -4,6 +4,7 @@ mod dictionary;
 mod model;
 mod replace;
 mod resolve;
+mod sequence;
 mod validate;
 
 use std::sync::TryLockError;
@@ -15,8 +16,12 @@ use super::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::worker::Worker;
 
 pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remove, replace_key};
-pub use model::{DebugAssignmentSelector, DebugAssignmentTarget, DebugDictionaryMutationResult};
+pub use model::{
+    DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
+    DebugDictionaryMutationResult, DebugStringMutationResult,
+};
 pub(in crate::vm::debug) use resolve::{target as resolve_target, target_with_value};
+pub(in crate::vm::debug) use sequence::{insert_array, remove_array, replace_string_character};
 
 pub(super) fn validate_replacement(
     executable: &VerifiedExecutable,

@@ -225,3 +225,41 @@ fn debug_jsonl_dictionary_mutations_commit_before_continuation() {
     assert_eq!(output, "2\n3\n");
     assert!(records.iter().any(|record| record["event"] == "terminated"));
 }
+
+#[test]
+fn debug_jsonl_sequence_mutations_commit_before_continuation() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let source = root.join("tests/debugger/fixtures/sequence_mutation.fpas");
+    let cwd = create_temp_dir("debug-sequence-mutation");
+    let commands = cwd.join("commands.jsonl");
+    write_text(
+        &commands,
+        "{\"type\":\"request\",\"id\":1,\"command\":\"initialize\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":2,\"command\":\"launch\",\"arguments\":{\"stop_on_entry\":true}}\n{\"type\":\"request\",\"id\":3,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":4,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":5,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":6,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":7,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":8,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":9,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":10,\"command\":\"step_into\",\"arguments\":{}}\n{\"type\":\"request\",\"id\":11,\"command\":\"array.insert\",\"arguments\":{\"target\":\"Numbers\",\"index\":\"1\",\"expression\":\"9\"}}\n{\"type\":\"request\",\"id\":12,\"command\":\"array.remove\",\"arguments\":{\"target\":\"Numbers\",\"index\":\"2\"}}\n{\"type\":\"request\",\"id\":13,\"command\":\"string.replace_character\",\"arguments\":{\"target\":\"Text\",\"index\":\"1\",\"expression\":\"'é'\"}}\n{\"type\":\"request\",\"id\":14,\"command\":\"continue\",\"arguments\":{}}\n",
+    );
+
+    let (exit, stdout, stderr) =
+        support::run_cli_args_and_capture_output(&debug_args(&source, &commands), &root);
+    fs::remove_dir_all(&cwd).expect("remove debugger temp directory");
+
+    assert_eq!(exit, 0, "stderr: {stderr}");
+    assert!(stderr.is_empty());
+    let records = stdout
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).expect("debugger JSONL"))
+        .collect::<Vec<_>>();
+    for command in ["array.insert", "array.remove", "string.replace_character"] {
+        assert!(
+            records
+                .iter()
+                .any(|record| { record["command"] == command && record["success"] == true }),
+            "missing successful {command}: {records:?}"
+        );
+    }
+    let output = records
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["text"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "1\n9\n3\nAéB\n");
+    assert!(records.iter().any(|record| record["event"] == "terminated"));
+}

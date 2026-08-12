@@ -17,8 +17,10 @@ Textual debugger expression mutation is implemented through DAP
 domain.
 
 Explicit dictionary insertion, removal, and key replacement are implemented
-through JSONL, DAP custom requests, and VS Code commands. Later mutation forms
-remain recorded in [deferred.md](deferred.md).
+through JSONL, DAP custom requests, and VS Code commands. Bounded array
+insertion/removal and Unicode-scalar string character replacement are also
+implemented through all three surfaces. Later mutation forms remain recorded
+in [deferred.md](deferred.md).
 
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

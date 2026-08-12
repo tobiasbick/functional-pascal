@@ -150,6 +150,21 @@
         "command": "functionalPascal.debug.replaceDictionaryKey",
         "title": "Debug: Replace Dictionary Key",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.insertArrayElement",
+        "title": "Debug: Insert Array Element",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.removeArrayElement",
+        "title": "Debug: Remove Array Element",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.replaceStringCharacter",
+        "title": "Debug: Replace String Character",
+        "category": "Functional Pascal"
       }
     ],
     "configuration": {

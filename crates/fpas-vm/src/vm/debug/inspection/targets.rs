@@ -23,6 +23,8 @@ pub(in crate::vm::debug) struct MutationTarget {
     pub expected_type: DebugTypeId,
     pub generation: u32,
     pub frame_id: Option<u64>,
+    /// Whether live storage already holds a value at capture time.
+    pub initialized: bool,
 }
 
 #[derive(Clone)]

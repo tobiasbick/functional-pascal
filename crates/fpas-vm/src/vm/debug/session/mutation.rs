@@ -104,13 +104,16 @@ impl DebugSession {
                 .get(&task_id)
                 .ok_or_else(|| unknown_task(task_id))?
                 .resolve_named_mutation_target(frame_id, &assignment.root)?;
+            if current.is_none() && !assignment.selectors.is_empty() {
+                return Err(uninitialized_root_path(&assignment.root));
+            }
             let (indexes, replacement) =
                 self.evaluate_assignment_inputs(assignment, expression, frame_id, limits)?;
             let target = super::super::mutation::resolve_target(
                 self.executable.executable(),
                 assignment,
                 target,
-                current,
+                current.unwrap_or(fpas_bytecode::Value::Unit),
                 &indexes,
             )?;
             self.commit_mutation(task_id, &target, replacement, limits)
@@ -174,5 +177,16 @@ impl DebugSession {
             .get_mut(&task_id)
             .ok_or_else(|| unknown_task(task_id))?
             .retain_evaluation_result(committed, limits)
+    }
+}
+
+fn uninitialized_root_path(name: &str) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariablePathUnsupported,
+        message: format!(
+            "debug variable target `{name}` has no writable descendants before initialization"
+        ),
+        hint: "Initialize the complete binding before editing fields, indexes, or payload descendants."
+            .to_string(),
     }
 }

@@ -59,3 +59,34 @@ fn reused_call_frame_registers_do_not_expose_previous_values() {
         .expect("reused call frame should return successfully");
     assert_eq!(result.value, Value::Unit);
 }
+
+#[test]
+fn released_and_reused_register_slots_are_explicitly_uninitialized() {
+    let executable = super::verified(
+        vec![super::return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        4,
+    );
+    let mut worker =
+        crate::vm::worker::Worker::new(std::sync::Arc::new(executable)).expect("worker");
+    assert!(
+        (0..4).all(|index| !worker.register_is_initialized(index)),
+        "fresh slots start uninitialized"
+    );
+
+    worker
+        .store_register(2, Value::Integer(9))
+        .expect("initialize a live slot");
+    assert!(worker.register_is_initialized(2));
+
+    worker.release_registers(1);
+    assert!(!worker.register_is_initialized(2));
+    assert_eq!(worker.registers[2], Value::Unit);
+
+    worker.activate_registers(4);
+    assert!(
+        (1..4).all(|index| !worker.register_is_initialized(index)),
+        "reused high-water slots stay uninitialized"
+    );
+}

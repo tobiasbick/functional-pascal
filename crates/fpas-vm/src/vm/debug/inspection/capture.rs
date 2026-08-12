@@ -79,13 +79,18 @@ impl InspectionSnapshot {
             let register = frame
                 .base
                 .saturating_add(usize::from(binding.register.get()));
-            let value = worker
-                .registers
-                .get(register)
-                .cloned()
-                .and_then(|value| (!matches!(value, Value::Unit)).then_some(value));
-            let mutation =
-                binding_mutation(binding, value.as_ref(), register, self.generation, frame_id);
+            let initialized = worker.register_is_initialized(register);
+            let value = initialized
+                .then(|| worker.registers.get(register).cloned())
+                .flatten();
+            let mutation = binding_mutation(
+                binding,
+                value.as_ref(),
+                initialized,
+                register,
+                self.generation,
+                frame_id,
+            );
             let retained = RetainedValue {
                 name: name.to_string(),
                 value,
@@ -152,6 +157,7 @@ impl InspectionSnapshot {
 fn binding_mutation(
     binding: &fpas_bytecode::DebugBinding,
     value: Option<&Value>,
+    initialized: bool,
     register: usize,
     generation: u32,
     frame_id: u64,
@@ -159,11 +165,17 @@ fn binding_mutation(
     if !binding.mutable {
         return MutationAccess::NotMutable;
     }
+    if matches!(
+        binding.kind,
+        DebugBindingKind::Parameter | DebugBindingKind::Capture
+    ) && !initialized
+    {
+        return MutationAccess::Unavailable;
+    }
     let root = if binding.cell_backed {
         match value {
             Some(Value::Cell(cell)) => MutationRoot::ClosureCell(Arc::clone(cell)),
-            Some(_) => return MutationAccess::Unavailable,
-            None => MutationRoot::FrameRegister(register),
+            _ => return MutationAccess::Unavailable,
         }
     } else {
         MutationRoot::FrameRegister(register)
@@ -174,6 +186,7 @@ fn binding_mutation(
         expected_type: binding.ty,
         generation,
         frame_id: Some(frame_id),
+        initialized,
     })
 }
 
@@ -207,29 +220,33 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
         .globals
         .iter()
         .enumerate()
-        .map(|(index, global)| RetainedValue {
-            name: image
-                .strings
-                .get(global.name)
-                .unwrap_or("<global>")
-                .to_string(),
-            value: globals.get(index).cloned().flatten(),
-            type_name: "dynamic".to_string(),
-            presentation_hint: None,
-            depth: 0,
-            visited_cells: HashSet::new(),
-            debug_type: Some(global.ty),
-            mutation: if global.mutable {
-                MutationAccess::Writable(MutationTarget {
-                    root: MutationRoot::Global(index),
-                    path: Vec::new(),
-                    expected_type: global.ty,
-                    generation,
-                    frame_id: None,
-                })
-            } else {
-                MutationAccess::NotMutable
-            },
+        .map(|(index, global)| {
+            let value = globals.get(index).cloned().flatten();
+            RetainedValue {
+                name: image
+                    .strings
+                    .get(global.name)
+                    .unwrap_or("<global>")
+                    .to_string(),
+                value: value.clone(),
+                type_name: "dynamic".to_string(),
+                presentation_hint: None,
+                depth: 0,
+                visited_cells: HashSet::new(),
+                debug_type: Some(global.ty),
+                mutation: if global.mutable {
+                    MutationAccess::Writable(MutationTarget {
+                        root: MutationRoot::Global(index),
+                        path: Vec::new(),
+                        expected_type: global.ty,
+                        generation,
+                        frame_id: None,
+                        initialized: value.is_some(),
+                    })
+                } else {
+                    MutationAccess::NotMutable
+                },
+            }
         })
         .collect()
 }

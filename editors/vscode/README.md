@@ -41,13 +41,16 @@ While stopped, the Variables view can edit mutable locals, parameters, globals,
 closure captures, record fields, array elements, existing dictionary
 values, active enum payload fields, `Result`/`Option` `.value` children, and
 complete mutable enum, `Result`, and `Option` values using constructor
-expressions such as `Choice.Pair(1, 2)` or `None`.
+expressions such as `Choice.Pair(1, 2)` or `None`. Uninitialized mutable
+locals and globals can be assigned one complete value through the same
+Variables and Debug Console edits.
 Rejected edits leave the session stopped and unchanged. A successful
 edit refreshes the Variables view; continuing execution observes the committed
-value. Dictionary keys are not edited through the standard Variables request;
-immutable or uninitialized bindings, evaluation-only
+value unless a later source initializer overwrites it. Dictionary keys are not edited through the standard Variables request;
+immutable bindings, evaluation-only
 results, inactive enum or wrapper variants, task values, and opaque
-host values are not editable. A write to an old payload child never selects a
+host values are not editable. Uninitialized bindings have no writable
+descendants. A write to an old payload child never selects a
 different variant. Task debugging is deterministic and all-stop;
 attach remains unsupported.
 

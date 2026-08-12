@@ -431,6 +431,7 @@ mod evaluation;
 mod inspection_fixture;
 mod mutation;
 mod payload_mutation;
+mod uninitialized_assignment;
 mod variant_replacement;
 
 use inspection_fixture::inspection_executable;

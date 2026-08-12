@@ -49,11 +49,13 @@ parameters, mutable globals, mutable closure captures, record fields, array
 elements, existing dictionary values, named fields of the currently active
 data-carrying enum variant, the `value` child of `Result.Ok`,
 `Result.Error`, and `Option.Some`, and complete mutable enum, `Result`, and
-`Option` values. Nested combinations use the same
+`Option` values. Visible uninitialized mutable locals and globals can be
+assigned one complete value. Nested combinations use the same
 operation. Complete-value replacements use constructor expressions such as
 `Choice.Pair(1, 2)`, `Ok(3)`, or `None`. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
-continuing the program observes the new value.
+continuing the program observes the new value. If execution later reaches the
+source initializer, that store overwrites the debugger-provided value.
 
 The adapter also implements standard DAP `setExpression` for editor clients
 that edit a textual expression rather than a Variables child. Targets such as
@@ -81,7 +83,8 @@ bytes. Character replacement requires exactly one different character. The
 commands share the stopped frame, atomic commit, error, and refresh behavior of
 dictionary commands.
 
-Immutable, hidden, uninitialized, or evaluation-only values are read-only.
+Immutable, hidden, or evaluation-only values are read-only. Uninitialized
+mutable locals and globals accept only a complete root assignment.
 Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. Function

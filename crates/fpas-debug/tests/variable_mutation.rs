@@ -147,7 +147,7 @@ fn jsonl_sets_variables_with_stable_errors_and_fresh_handles() {
         "variable.set",
         json!({"variables_reference":locals,"name":"Fixed","expression":"3"}),
     ));
-    assert_eq!(fixed[0]["error"]["code"], "variable_uninitialized");
+    assert_eq!(fixed[0]["error"]["code"], "variable_not_mutable");
 
     let variables = server.handle_line(&request(
         {

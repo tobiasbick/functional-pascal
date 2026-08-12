@@ -97,14 +97,12 @@ impl Worker {
         let register_count = info.register_count;
         let task_start = info.code.start;
         let arguments = self.clone_window(argument_base, operands.auxiliary)?;
-        let mut registers = vec![Value::Unit; usize::from(register_count)];
-        for (slot, value) in arguments
-            .into_iter()
-            .chain(function.captures.iter().cloned())
-            .enumerate()
-        {
-            registers[slot] = value;
-        }
+        let (registers, register_initialized) = Self::register_window(
+            usize::from(register_count),
+            arguments
+                .into_iter()
+                .chain(function.captures.iter().cloned()),
+        );
         let id = scheduler.alloc_id();
         if !detached {
             scheduler.register_result(id);
@@ -131,6 +129,7 @@ impl Worker {
             })?,
             base: 0,
             registers,
+            register_initialized,
             frames: Vec::new(),
             retain_result: !detached,
             instruction_count: 0,

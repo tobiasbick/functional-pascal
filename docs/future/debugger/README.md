@@ -19,6 +19,14 @@ The completed implementation record, decisions, regressions, and restart
 instructions live in
 [`variant-replacement/`](variant-replacement/README.md).
 
+Debugger initialization of a visible, source-declared mutable local or global
+before normal execution initializes that binding is implemented through the
+same mutation surfaces. Descendant writes on empty storage, skipping the later
+source initializer, and treating parameters or captures as uninitialized
+targets remain deferred. The implementation record, verification mapping, and
+restart instructions live in
+[`uninitialized-binding-assignment/`](uninitialized-binding-assignment/README.md).
+
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation
 domain.

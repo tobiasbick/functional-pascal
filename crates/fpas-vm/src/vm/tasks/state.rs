@@ -11,6 +11,8 @@ pub(in crate::vm) struct TaskState {
     pub ip: usize,
     pub base: usize,
     pub registers: Vec<Value>,
+    /// Parallel initialized/uninitialized bits for `registers`.
+    pub register_initialized: Vec<bool>,
     pub frames: Vec<CallFrame>,
     pub retain_result: bool,
     pub instruction_count: u64,

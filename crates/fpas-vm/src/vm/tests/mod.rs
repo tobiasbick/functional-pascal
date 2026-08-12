@@ -5,6 +5,7 @@ mod callbacks;
 mod calls;
 mod global_index_path;
 mod intrinsics;
+mod register_initialization;
 mod register_stack;
 mod runtime;
 mod scalar;

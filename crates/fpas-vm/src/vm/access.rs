@@ -1,7 +1,5 @@
 //! Central checked register and persistent-constant access.
 
-use std::mem;
-
 use fpas_bytecode::{Constant, Register, SharedStr, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
@@ -30,47 +28,12 @@ impl Worker {
 
     #[inline(always)]
     pub fn write(&mut self, register: Register, value: Value) -> Result<(), VmError> {
-        let executable = self.executable.executable();
-        let address = self.current_address;
-        let index = self.base + usize::from(register.get());
-        let slot = self
-            .registers
-            .get_mut(..self.active_register_count)
-            .and_then(|registers| registers.get_mut(index))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    executable,
-                    address,
-                    format!(
-                        "Register {} is outside the initialized frame",
-                        register.get()
-                    ),
-                )
-            })?;
-        *slot = value;
-        Ok(())
+        self.store_register(self.base + usize::from(register.get()), value)
     }
 
     /// Remove a value from a register without cloning it.
     pub(super) fn take(&mut self, register: Register) -> Result<Value, VmError> {
-        let executable = self.executable.executable();
-        let address = self.current_address;
-        let index = self.base + usize::from(register.get());
-        let slot = self
-            .registers
-            .get_mut(..self.active_register_count)
-            .and_then(|registers| registers.get_mut(index))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    executable,
-                    address,
-                    format!(
-                        "Register {} is outside the initialized frame",
-                        register.get()
-                    ),
-                )
-            })?;
-        Ok(mem::replace(slot, Value::Unit))
+        self.take_register(self.base + usize::from(register.get()))
     }
 
     #[inline(always)]

@@ -56,29 +56,41 @@ pub(super) fn commit(
     if target.generation != generation {
         return Err(expired());
     }
+    if !target.path.is_empty() && !target.initialized {
+        return Err(uninitialized_path());
+    }
     match &target.root {
         MutationRoot::FrameRegister(register) => {
+            if target.path.is_empty() {
+                worker
+                    .store_register(*register, replacement.clone())
+                    .map_err(|_| unavailable())?;
+                return Ok(replacement);
+            }
+            if !worker.register_is_initialized(*register) {
+                return Err(uninitialized_path());
+            }
             let root = worker
                 .registers
                 .get(*register)
                 .cloned()
                 .ok_or_else(unavailable)?;
             let updated = replace::descendant(root, &target.path, replacement)?;
-            let slot = worker
-                .registers
-                .get_mut(*register)
-                .ok_or_else(unavailable)?;
-            *slot = updated.clone();
+            worker
+                .store_register(*register, updated.clone())
+                .map_err(|_| unavailable())?;
             Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
         }
         MutationRoot::Global(global) => {
             let mut globals = worker.globals.write().map_err(|_| unavailable())?;
-            let slot = globals
-                .get_mut(*global)
-                .and_then(Option::as_mut)
-                .ok_or_else(uninitialized)?;
-            let updated = replace::descendant(slot.clone(), &target.path, replacement)?;
-            *slot = updated.clone();
+            let slot = globals.get_mut(*global).ok_or_else(unavailable)?;
+            if target.path.is_empty() {
+                *slot = Some(replacement.clone());
+                return Ok(replacement);
+            }
+            let current = slot.as_mut().ok_or_else(uninitialized_path)?;
+            let updated = replace::descendant(current.clone(), &target.path, replacement)?;
+            *current = updated.clone();
             Ok(replaced_value(&updated, &target.path).unwrap_or(updated))
         }
         MutationRoot::ClosureCell(cell) => {
@@ -115,10 +127,11 @@ fn unavailable() -> DebugSessionError {
     }
 }
 
-fn uninitialized() -> DebugSessionError {
+fn uninitialized_path() -> DebugSessionError {
     DebugSessionError {
-        kind: DebugErrorKind::VariableUninitialized,
-        message: "debug variable live storage is uninitialized".to_string(),
-        hint: "Stop after the binding has received a value.".to_string(),
+        kind: DebugErrorKind::VariablePathUnsupported,
+        message: "debug variable target path is unsupported on uninitialized storage".to_string(),
+        hint: "Initialize the complete binding before editing fields, indexes, or payload descendants."
+            .to_string(),
     }
 }

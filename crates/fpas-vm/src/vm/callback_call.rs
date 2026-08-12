@@ -113,7 +113,7 @@ impl Worker {
         self.base = 0;
         self.reset_registers(usize::from(register_count));
         for (index, value) in arguments.iter().chain(captures).enumerate() {
-            self.registers[index] = value.clone();
+            self.store_register(index, value.clone())?;
         }
         self.call_stack.clear();
         self.instruction_count = 0;

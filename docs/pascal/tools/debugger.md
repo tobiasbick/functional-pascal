@@ -71,7 +71,9 @@ a local, parameter, or capture requires a current frame and is resolved with
 normal lexical shadowing.
 
 Both forms accept mutable source locals, mutable parameters, mutable globals,
-and mutable captures backed by an existing closure cell. Complete mutable enum,
+and mutable captures backed by an existing closure cell. A visible
+source-declared mutable local or global that has not yet received a value can
+be assigned one complete replacement through the same operations. Complete mutable enum,
 `Result`, and `Option` values can be replaced with one constructor expression
 such as `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`,
 `Some(4)`, or `None`. Enum constructors must be fully qualified `Type.Variant`
@@ -117,18 +119,20 @@ returns the old and new characters. These operations are available through
 JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
-Immutable or uninitialized bindings, compiler-hidden storage,
+Immutable bindings, compiler-hidden storage,
 evaluation-only results, function captures, inactive enum or wrapper variants,
 task values, function values, and opaque hosted values are not
-writable. A write to an old payload child never selects a different variant;
+writable. Uninitialized mutable locals and globals accept only a complete root
+value; they have no writable fields, indexes, dictionary entries, or payload
+descendants. A write to an old payload child never selects a different variant;
 after a complete-value replacement the previous child handles are unavailable
 and clients must request variables again. Existing `setVariable` and
 `setExpression` operations still cannot insert/remove entries or change keys;
 clients use the explicit dictionary operations instead. Standard `setVariable`
 and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
-property setter, change control flow, or initialize a binding before normal
-execution does so.
+property setter or change control flow. If execution later reaches the source
+initializer, that store overwrites the debugger-provided value.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

@@ -296,10 +296,10 @@ fn constructor_and_replacement_failures_are_atomic() {
     );
     assert_eq!(
         session
-            .set_expression(&root("Uninit"), &pair(1, 2), Some(frame))
-            .expect_err("uninitialized")
+            .set_expression(&field("Uninit", "Left"), &pair(1, 2), Some(frame))
+            .expect_err("uninitialized descendant")
             .kind,
-        DebugErrorKind::VariableUninitialized
+        DebugErrorKind::VariablePathUnsupported
     );
     assert_eq!(
         session

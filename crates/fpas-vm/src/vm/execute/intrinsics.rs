@@ -66,9 +66,11 @@ impl Worker {
     ) -> Result<Value, VmError> {
         let base = 1_usize;
         let required = base.saturating_add(arguments.len());
-        self.registers.resize(required.max(1), Value::Unit);
-        self.active_register_count = self.registers.len();
-        self.registers[base..required].clone_from_slice(arguments);
+        self.base = 0;
+        self.reset_registers(required.max(1));
+        for (offset, value) in arguments.iter().enumerate() {
+            self.store_register(base + offset, value.clone())?;
+        }
         self.execute_intrinsic(AbcOperands {
             a: 0,
             b: intrinsic.into(),

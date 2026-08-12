@@ -23,6 +23,7 @@ impl DebugSession {
             .get(&task_id)
             .ok_or_else(|| unknown_task(task_id))?
             .resolve_named_mutation_target(frame_id, &assignment.root)?;
+        let current = current.ok_or_else(|| uninitialized_sequence(&assignment.root))?;
         let selector_count = assignment
             .selectors
             .iter()
@@ -111,4 +112,16 @@ struct PreparedSequenceMutation {
     target: super::super::inspection::MutationTarget,
     sequence: Value,
     operands: Vec<Value>,
+}
+
+fn uninitialized_sequence(name: &str) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariablePathUnsupported,
+        message: format!(
+            "debug variable target `{name}` has no writable descendants before initialization"
+        ),
+        hint:
+            "Initialize the complete binding before inserting, removing, or replacing characters."
+                .to_string(),
+    }
 }

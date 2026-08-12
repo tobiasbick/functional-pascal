@@ -104,20 +104,7 @@ impl Worker {
         self.ip = frame.ip;
         self.base = frame.base;
         if let Some(destination) = frame.return_destination {
-            let executable = self.executable.executable();
-            let address = self.current_address;
-            let slot = self
-                .registers
-                .get_mut(..self.active_register_count)
-                .and_then(|registers| registers.get_mut(destination))
-                .ok_or_else(|| {
-                    diagnostics::internal(
-                        executable,
-                        address,
-                        "Return destination left the caller frame",
-                    )
-                })?;
-            *slot = value;
+            self.store_register(destination, value)?;
         }
         Ok(DispatchStep::Continue)
     }
@@ -226,10 +213,13 @@ impl Worker {
         self.base = self.active_register_count;
         self.activate_registers(new_len);
         for (index, source) in (argument_start..argument_end).enumerate() {
-            self.registers[self.base + index] = self.registers[source].clone();
+            self.store_register(self.base + index, self.registers[source].clone())?;
         }
         for (index, value) in captures.iter().enumerate() {
-            self.registers[self.base + usize::from(argument_count) + index] = value.clone();
+            self.store_register(
+                self.base + usize::from(argument_count) + index,
+                value.clone(),
+            )?;
         }
         self.function = target;
         self.ip = start;

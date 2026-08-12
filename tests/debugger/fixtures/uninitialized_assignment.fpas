@@ -1,0 +1,35 @@
+program UninitializedAssignment;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+
+mutable var
+  GlobalCount: integer := 99;
+
+begin
+  mutable var Count: integer := 1;
+  mutable var Flag: boolean := false;
+  mutable var Origin: Point := record
+    X := 3;
+    Y := 4;
+  end;
+  var Frozen: integer := 2;
+  WriteLn(Count);
+  WriteLn(GlobalCount);
+  if Flag then
+  begin
+    WriteLn(1)
+  end
+  else
+  begin
+    WriteLn(0)
+  end;
+
+  WriteLn(Origin.X);
+  WriteLn(Frozen)
+end.

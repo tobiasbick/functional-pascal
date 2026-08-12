@@ -20,6 +20,7 @@ pub(super) struct Worker {
     pub registers: Vec<Value>,
     // Physical register storage retains a high-water mark; this is the live prefix.
     pub(super) active_register_count: usize,
+    pub(super) register_initialized: Vec<bool>,
     pub globals: Arc<RwLock<Vec<Option<Value>>>>,
     pub layouts: Arc<RuntimeLayouts>,
     pub hosted: Arc<HostedState>,
@@ -126,11 +127,10 @@ impl Worker {
                 "Root instruction address does not fit this host",
             )
         })?;
-        let mut registers = Vec::new();
-        registers.resize(usize::from(register_count), Value::Unit);
-        for (index, value) in arguments.iter().chain(captures).enumerate() {
-            registers[index] = value.clone();
-        }
+        let (registers, register_initialized) = Self::register_window(
+            usize::from(register_count),
+            arguments.iter().chain(captures).cloned(),
+        );
         Ok(Self {
             executable,
             function: entry,
@@ -138,6 +138,7 @@ impl Worker {
             base: 0,
             registers,
             active_register_count: usize::from(register_count),
+            register_initialized,
             globals,
             layouts,
             hosted,
@@ -177,6 +178,7 @@ impl Worker {
             base: 0,
             registers: Vec::new(),
             active_register_count: 0,
+            register_initialized: Vec::new(),
             globals: Arc::clone(&self.globals),
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
@@ -198,6 +200,11 @@ impl Worker {
 
     pub(super) fn worker_for_task(&self, task: TaskState) -> Self {
         let active_register_count = task.registers.len();
+        debug_assert_eq!(
+            task.register_initialized.len(),
+            active_register_count,
+            "task register initialization bits must match saved register values"
+        );
         Self {
             executable: Arc::clone(&self.executable),
             function: task.function,
@@ -205,6 +212,7 @@ impl Worker {
             base: task.base,
             registers: task.registers,
             active_register_count,
+            register_initialized: task.register_initialized,
             globals: Arc::clone(&self.globals),
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
@@ -226,12 +234,15 @@ impl Worker {
 
     pub(super) fn take_task_state(&mut self) -> TaskState {
         self.registers.truncate(self.active_register_count);
+        self.register_initialized
+            .truncate(self.active_register_count);
         TaskState {
             id: self.task_id,
             function: self.function,
             ip: self.ip,
             base: self.base,
             registers: std::mem::take(&mut self.registers),
+            register_initialized: std::mem::take(&mut self.register_initialized),
             frames: std::mem::take(&mut self.call_stack),
             retain_result: self.retain_result,
             instruction_count: self.instruction_count,

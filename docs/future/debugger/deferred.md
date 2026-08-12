@@ -18,17 +18,25 @@ are not a deferred promise. The following work remains intentionally deferred.
 Complete-value replacement of a mutable enum, `Result`, or `Option` is
 implemented through the existing mutation surfaces. Implicitly switching the
 live variant through an old payload-child handle, rebinding stale handles, or
-partially constructing a new payload remains deferred.
+partially constructing a new payload remains deferred. Debugger initialization
+of a visible mutable local or global root is implemented; descendant writes on
+empty storage and skipping the later source initializer remain deferred.
 
 Deferred:
 
 - implicitly switching a data-carrying enum variant or a `Result`/`Option`
   wrapper through a descendant write or stale payload handle;
 - assigning function values, task handles, or opaque hosted resources;
-- initializing a source binding before normal execution initializes it;
+- filling uninitialized storage through field, index, or payload descendants;
+- creating a missing capture cell or treating an absent parameter as
+  user-initializable;
 - forcing or replacing return values;
 - changing the instruction pointer or restarting a frame; and
 - data breakpoints or breakpoint actions that modify state.
+
+The exact boundary and prerequisites for the uninitialized-binding slice are
+recorded in
+[`uninitialized-binding-assignment/consciously-deferred.md`](uninitialized-binding-assignment/consciously-deferred.md).
 
 Bounded array insertion/removal and Unicode-scalar string character replacement
 are implemented. The remaining operations need additional lvalue, source-assignment,

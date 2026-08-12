@@ -65,7 +65,9 @@ child name must belong to the current stop. Mutable locals, parameters,
 globals, closure cells, record fields, array elements, existing dictionary
 values, named fields of the active data-carrying enum variant, and the `value`
 child of `Result.Ok`, `Result.Error`, and `Option.Some` are supported.
-`Option.None` has no payload child. Replacement expressions use the same parser, detached
+Visible uninitialized mutable locals and globals accept one complete root
+value through the same request; descendant selectors on empty storage are
+rejected. `Option.None` has no payload child. Replacement expressions use the same parser, detached
 controlled-call policy, and resource limits as `evaluate`. Complete mutable enum,
 `Result`, and `Option` values accept constructor expressions such as
 `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
@@ -90,7 +92,9 @@ and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
 dictionary keys must already exist. `Option.None` has no `.value` child.
-Text indexes and aggregate structure
+An uninitialized mutable local or global accepts only the complete root name;
+field and index selectors on empty storage fail with
+`variable_path_unsupported`. Text indexes and aggregate structure
 changes are unsupported by `expression.set`; use the explicit dictionary and
 sequence commands below. Complete enum, `Result`, and `Option` values are
 replaced by assigning a constructor expression to the complete target, not by

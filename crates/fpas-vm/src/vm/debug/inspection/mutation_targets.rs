@@ -50,7 +50,7 @@ impl InspectionSnapshot {
         &self,
         frame_id: Option<u64>,
         name: &str,
-    ) -> Result<(MutationTarget, Value), DebugSessionError> {
+    ) -> Result<(MutationTarget, Option<Value>), DebugSessionError> {
         let frame_values = match frame_id {
             Some(frame_id) => Some(
                 self.frames
@@ -77,8 +77,8 @@ impl InspectionSnapshot {
                 )
             })?;
         let target = writable_target(retained, name)?;
-        let value = retained.value.clone().ok_or_else(|| uninitialized(name))?;
-        Ok((target, materialize(value)?))
+        let value = retained.value.clone().map(materialize).transpose()?;
+        Ok((target, value))
     }
 }
 
@@ -86,9 +86,6 @@ fn writable_target(
     retained: &RetainedValue,
     name: &str,
 ) -> Result<MutationTarget, DebugSessionError> {
-    if retained.value.is_none() {
-        return Err(uninitialized(name));
-    }
     match &retained.mutation {
         MutationAccess::Writable(target) => Ok(target.clone()),
         MutationAccess::NotMutable => Err(DebugSessionError {
@@ -129,14 +126,6 @@ fn unknown_target(name: &str, hint: &str) -> DebugSessionError {
         kind: DebugErrorKind::VariableTargetUnknown,
         message: format!("debug variable target `{name}` does not exist"),
         hint: hint.to_string(),
-    }
-}
-
-fn uninitialized(name: &str) -> DebugSessionError {
-    DebugSessionError {
-        kind: DebugErrorKind::VariableUninitialized,
-        message: format!("debug variable target `{name}` is uninitialized"),
-        hint: "Stop after the binding has received a value.".to_string(),
     }
 }
 

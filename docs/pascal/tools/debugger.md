@@ -51,8 +51,8 @@ Evaluation is available only at a stable stop. It accepts FPAS literals,
 visible names, parentheses, unary `-` and `not`, arithmetic, Boolean/bitwise,
 shift, comparison and `in` operators, stored record/enum fields, and read-only
 array, dictionary, or string indexes. It also accepts controlled calls,
-readable properties, instance and static record methods, array/dictionary/
-record/Result/Option construction, record updates, and `try`. Names are ASCII
+readable properties, instance and static record methods, array/dictionary/record/Result/Option construction, fully qualified enum
+constructors, record updates, and `try`. Names are ASCII
 case-insensitive; the innermost parameter/local/capture wins, then globals.
 Visible first-class function values and closures may be called when their
 captures can be detached safely. Aggregate results can be expanded like
@@ -71,12 +71,16 @@ a local, parameter, or capture requires a current frame and is resolved with
 normal lexical shadowing.
 
 Both forms accept mutable source locals, mutable parameters, mutable globals,
-and mutable captures backed by an existing closure cell. Record fields, array
-elements, existing dictionary values, named fields of the currently active
-data-carrying enum variant, and the `value` child of `Result.Ok`,
-`Result.Error`, and `Option.Some` below those roots can be replaced, including
-nested combinations such as `result.value.items[1].name` or
-`optional.value`. Index selectors and the replacement are
+and mutable captures backed by an existing closure cell. Complete mutable enum,
+`Result`, and `Option` values can be replaced with one constructor expression
+such as `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`,
+`Some(4)`, or `None`. Enum constructors must be fully qualified `Type.Variant`
+names; short variant names are rejected. Record fields, array elements,
+existing dictionary values, named fields of the currently active data-carrying
+enum variant, and the `value` child of `Result.Ok`, `Result.Error`, and
+`Option.Some` below those roots can be replaced, including nested combinations
+such as `result.value.items[1].name` or `optional.value`. Index selectors and
+the replacement are
 ordinary debugger expressions and may use the same controlled detached calls
 as `evaluate`. All selectors are evaluated once from left to right against the
 unchanged pre-commit snapshot, followed by the replacement, under one shared
@@ -116,13 +120,15 @@ commands. An unchanged character is rejected without writing.
 Immutable or uninitialized bindings, compiler-hidden storage,
 evaluation-only results, function captures, inactive enum or wrapper variants,
 task values, function values, and opaque hosted values are not
-writable. Existing `setVariable` and `setExpression` operations still cannot
-switch enum variants or change `Ok`/`Error` or `Some`/`None`. They still cannot
-insert/remove entries or change keys; clients use the explicit dictionary
-operations instead. Standard `setVariable` and `setExpression` still cannot
-resize arrays or address string characters; clients use the explicit sequence
-operations instead. Mutation cannot invoke a property setter, change control
-flow, or initialize a binding before normal execution does so.
+writable. A write to an old payload child never selects a different variant;
+after a complete-value replacement the previous child handles are unavailable
+and clients must request variables again. Existing `setVariable` and
+`setExpression` operations still cannot insert/remove entries or change keys;
+clients use the explicit dictionary operations instead. Standard `setVariable`
+and `setExpression` still cannot resize arrays or address string characters;
+clients use the explicit sequence operations instead. Mutation cannot invoke a
+property setter, change control flow, or initialize a binding before normal
+execution does so.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

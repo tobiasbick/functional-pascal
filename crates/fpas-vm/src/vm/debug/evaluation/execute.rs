@@ -9,6 +9,7 @@ use super::model::{
     DebugBinaryOperation, DebugCallTarget, DebugEvaluationLimits, DebugExpression,
     DebugUnaryOperation,
 };
+use super::qualified;
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::value_ops::{
     self, BinaryOperation, UnaryOperation, ValueOperationError, ValueOperationErrorKind,
@@ -70,6 +71,18 @@ fn evaluate(
     resolve: &mut impl FnMut(&str) -> Result<Value, DebugSessionError>,
     invoke: &mut impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
 ) -> Result<Value, DebugSessionError> {
+    evaluate_with_qualified_fallback(expression, depth, limits, budget, resolve, invoke, true)
+}
+
+fn evaluate_with_qualified_fallback(
+    expression: &DebugExpression,
+    depth: usize,
+    limits: DebugEvaluationLimits,
+    budget: &mut EvaluationBudget,
+    resolve: &mut impl FnMut(&str) -> Result<Value, DebugSessionError>,
+    invoke: &mut impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
+    allow_qualified_fallback: bool,
+) -> Result<Value, DebugSessionError> {
     if depth > limits.max_depth {
         return Err(limit_error(
             format!("debug expression depth exceeds limit {}", limits.max_depth),
@@ -110,7 +123,25 @@ fn evaluate(
         }
         DebugExpression::Field { base, name } => {
             count_traversal(budget, limits)?;
-            let base = evaluate(base, depth + 1, limits, budget, resolve, invoke)?;
+            let base = match evaluate_with_qualified_fallback(
+                base,
+                depth + 1,
+                limits,
+                budget,
+                resolve,
+                invoke,
+                false,
+            ) {
+                Ok(value) => value,
+                Err(error)
+                    if error.kind == DebugErrorKind::UnknownName
+                        && allow_qualified_fallback
+                        && let Some(constructor) = qualified::field_name(base, name) =>
+                {
+                    return invoke(DebugCallTarget::Named(constructor), Vec::new());
+                }
+                Err(error) => return Err(error),
+            };
             match value_ops::field(&base, name) {
                 Ok(value) => value,
                 Err(_error) if matches!(base, Value::Record(_)) => invoke(

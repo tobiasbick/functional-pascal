@@ -39,13 +39,16 @@ discarded, and calls involving output, files, processes, environment, time,
 randomness, blocking, tasks, or unknown dynamic effects are rejected.
 While stopped, the Variables view can edit mutable locals, parameters, globals,
 closure captures, record fields, array elements, existing dictionary
-values, active enum payload fields, and `Result`/`Option` `.value` children.
+values, active enum payload fields, `Result`/`Option` `.value` children, and
+complete mutable enum, `Result`, and `Option` values using constructor
+expressions such as `Choice.Pair(1, 2)` or `None`.
 Rejected edits leave the session stopped and unchanged. A successful
 edit refreshes the Variables view; continuing execution observes the committed
 value. Dictionary keys are not edited through the standard Variables request;
 immutable or uninitialized bindings, evaluation-only
 results, inactive enum or wrapper variants, task values, and opaque
-host values are not editable. Task debugging is deterministic and all-stop;
+host values are not editable. A write to an old payload child never selects a
+different variant. Task debugging is deterministic and all-stop;
 attach remains unsupported.
 
 Use **Functional Pascal: Debug: Insert Dictionary Entry**, **Debug: Remove

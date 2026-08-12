@@ -15,10 +15,15 @@ are not a deferred promise. The following work remains intentionally deferred.
 
 ## Additional state and control-flow mutation
 
+Complete-value replacement of a mutable enum, `Result`, or `Option` is
+implemented through the existing mutation surfaces. Implicitly switching the
+live variant through an old payload-child handle, rebinding stale handles, or
+partially constructing a new payload remains deferred.
+
 Deferred:
 
-- switching a data-carrying enum variant or a `Result`/`Option` wrapper through
-  a descendant write;
+- implicitly switching a data-carrying enum variant or a `Result`/`Option`
+  wrapper through a descendant write or stale payload handle;
 - assigning function values, task handles, or opaque hosted resources;
 - initializing a source binding before normal execution initializes it;
 - forcing or replacing return values;

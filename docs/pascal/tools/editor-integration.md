@@ -47,16 +47,18 @@ a pending step and selects the responsible task.
 At a stable stop, the Variables view can replace mutable locals, mutable
 parameters, mutable globals, mutable closure captures, record fields, array
 elements, existing dictionary values, named fields of the currently active
-data-carrying enum variant, and the `value` child of `Result.Ok`,
-`Result.Error`, and `Option.Some`. Nested combinations use the same
-operation. The entered value is an FPAS debugger expression and can include a
+data-carrying enum variant, the `value` child of `Result.Ok`,
+`Result.Error`, and `Option.Some`, and complete mutable enum, `Result`, and
+`Option` values. Nested combinations use the same
+operation. Complete-value replacements use constructor expressions such as
+`Choice.Pair(1, 2)`, `Ok(3)`, or `None`. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
 continuing the program observes the new value.
 
 The adapter also implements standard DAP `setExpression` for editor clients
 that edit a textual expression rather than a Variables child. Targets such as
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,
-`Items[Index]`, and `Scores['blue']` use the selected
+`Selected`, `Items[Index]`, and `Scores['blue']` use the selected
 stack frame; omitting a frame is global-only. Stored-field and index selectors
 are evaluated against the stopped pre-edit state. Successful edits refresh all
 task snapshots; rejected edits leave the current frames and values usable.
@@ -84,7 +86,8 @@ Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. Function
 captures, inactive enum or wrapper variants, task values, function values, and opaque hosted resources are not
-editable. A rejected edit reports an actionable debugger error and keeps the
+editable. A write to an old payload child never selects a different variant.
+A rejected edit reports an actionable debugger error and keeps the
 session stopped without changing the live value.
 
 ## Build and installation

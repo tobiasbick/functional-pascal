@@ -10,6 +10,8 @@ use fpas_bytecode::{
 };
 
 use super::detach::{ValueDetacher, error};
+use super::enum_constructor;
+use super::resolution::{NamedTarget, resolve_named};
 use crate::vm::debug::evaluation::{DebugCallTarget, DebugEvaluationLimits};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::dispatch::DispatchStep;
@@ -144,57 +146,25 @@ impl CallSandbox {
         name: &str,
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
-        let functions = self
-            .executable
-            .executable()
-            .functions
-            .iter()
-            .enumerate()
-            .filter(|(_, function)| {
-                self.executable
-                    .executable()
-                    .strings
-                    .get(function.name)
-                    .is_some_and(|candidate| callable_name_matches(candidate, name))
-            })
-            .map(|(index, _)| FunctionId::new(u16::try_from(index).unwrap_or(u16::MAX)))
-            .collect::<Vec<_>>();
-        match functions.as_slice() {
-            [function] => self.invoke_function(*function, &[], arguments, name),
-            [] => self.invoke_named_intrinsic(name, arguments),
-            _ => Err(error(
-                DebugErrorKind::AmbiguousCallable,
-                format!("debug callable `{name}` has multiple exact executable targets"),
-                "Use a fully qualified callable name.",
-            )),
+        match resolve_named(&self.executable, &self.layouts, name)? {
+            NamedTarget::Function(function) => self.invoke_function(function, &[], arguments, name),
+            NamedTarget::EnumConstructor(layout) => enum_constructor::construct(
+                &self.executable,
+                layout,
+                arguments,
+                &mut self.detacher,
+                self.limits.max_depth,
+            ),
+            NamedTarget::Intrinsic(intrinsic) => self.invoke_intrinsic(name, intrinsic, arguments),
         }
     }
 
-    fn invoke_named_intrinsic(
+    fn invoke_intrinsic(
         &mut self,
         name: &str,
+        intrinsic: Intrinsic,
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
-        let candidates = Intrinsic::all()
-            .filter(|intrinsic| callable_name_matches(&intrinsic.debugger_name(), name))
-            .collect::<Vec<_>>();
-        let intrinsic = match candidates.as_slice() {
-            [intrinsic] => *intrinsic,
-            [] => {
-                return Err(error(
-                    DebugErrorKind::UnknownCallable,
-                    format!("debug callable `{name}` is not present in the executable catalog"),
-                    "Use an exact named routine, fully qualified Std intrinsic, or visible function value.",
-                ));
-            }
-            _ => {
-                return Err(error(
-                    DebugErrorKind::AmbiguousCallable,
-                    format!("debug intrinsic `{name}` requires a statically known overload"),
-                    "Use a non-overloaded intrinsic in debugger evaluation.",
-                ));
-            }
-        };
         let effects = intrinsic_debug_effects(intrinsic);
         self.require_safe(name, effects)?;
         let arguments = self.detach_values(&arguments)?;
@@ -426,14 +396,6 @@ impl CallSandbox {
             ordered,
         )))
     }
-}
-
-fn callable_name_matches(candidate: &str, requested: &str) -> bool {
-    candidate.eq_ignore_ascii_case(requested)
-        || (!requested.contains('.')
-            && candidate
-                .rsplit_once('.')
-                .is_some_and(|(_, short)| short.eq_ignore_ascii_case(requested)))
 }
 
 fn runtime_error(diagnostic: fpas_diagnostics::Diagnostic) -> DebugSessionError {

@@ -2,6 +2,7 @@
 
 mod execute;
 mod model;
+mod qualified;
 
 pub(super) use execute::{evaluate_value, evaluate_values};
 pub(super) use model::DebugCallTarget;

@@ -70,12 +70,64 @@ fn validate(
         (DebugType::Enum(enumeration), Value::Enum(runtime))
             if runtime.body().layout.enumeration == *enumeration =>
         {
+            let body = runtime.body();
             let variant = executable
                 .enum_variants
-                .get(runtime.body().layout.variant_id.get() as usize)
+                .get(body.layout.variant_id.get() as usize)
                 .ok_or_else(|| type_error(expected, value, "enum variant is unavailable"))?;
-            for (field_type, field_value) in variant.field_types.iter().zip(&runtime.body().values)
+            if variant.owner != *enumeration {
+                return Err(type_error(
+                    expected,
+                    value,
+                    "enum variant owner does not match the declared type",
+                ));
+            }
+            let owner_name = executable
+                .enums
+                .get(usize::from(enumeration.get()))
+                .and_then(|layout| executable.strings.get(layout.name));
+            let variant_name = executable.strings.get(variant.name);
+            if owner_name.is_some_and(|name| !name.eq_ignore_ascii_case(&body.layout.type_name))
+                || variant_name.is_some_and(|name| !name.eq_ignore_ascii_case(&body.layout.variant))
             {
+                return Err(type_error(
+                    expected,
+                    value,
+                    "enum runtime layout names do not match executable metadata",
+                ));
+            }
+            if variant.fields.len() != variant.field_types.len()
+                || variant.fields.len() != body.layout.fields.len()
+                || variant.fields.len() != body.values.len()
+            {
+                return Err(type_error(
+                    expected,
+                    value,
+                    "enum variant field count does not match",
+                ));
+            }
+            for (index, field_id) in variant.fields.iter().enumerate() {
+                let Some(expected_name) = executable.strings.get(*field_id) else {
+                    return Err(type_error(
+                        expected,
+                        value,
+                        "enum variant field name is unavailable",
+                    ));
+                };
+                if !body
+                    .layout
+                    .fields
+                    .get(index)
+                    .is_some_and(|name| name.eq_ignore_ascii_case(expected_name))
+                {
+                    return Err(type_error(
+                        expected,
+                        value,
+                        "enum variant field layout does not match",
+                    ));
+                }
+            }
+            for (field_type, field_value) in variant.field_types.iter().zip(&body.values) {
                 validate(executable, *field_type, field_value, max_depth, depth + 1)?;
             }
             Ok(())

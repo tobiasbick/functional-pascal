@@ -66,7 +66,10 @@ globals, closure cells, record fields, array elements, existing dictionary
 values, named fields of the active data-carrying enum variant, and the `value`
 child of `Result.Ok`, `Result.Error`, and `Option.Some` are supported.
 `Option.None` has no payload child. Replacement expressions use the same parser, detached
-controlled-call policy, and resource limits as `evaluate`. A successful result
+controlled-call policy, and resource limits as `evaluate`. Complete mutable enum,
+`Result`, and `Option` values accept constructor expressions such as
+`Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
+`None`. A successful result
 has the same five rendered fields as `evaluate`, refreshes inspection state,
 and expires all earlier variable references. Any failure is atomic and leaves
 the old references usable.
@@ -89,7 +92,9 @@ never falls back to the selected or main frame. Array indexes must be in range;
 dictionary keys must already exist. `Option.None` has no `.value` child.
 Text indexes and aggregate structure
 changes are unsupported by `expression.set`; use the explicit dictionary and
-sequence commands below. Variant switching is also unsupported.
+sequence commands below. Complete enum, `Result`, and `Option` values are
+replaced by assigning a constructor expression to the complete target, not by
+editing an old payload child.
 
 Selectors run once from left to right and the replacement runs last, all
 against the unchanged stopped snapshot and under one expression/call budget.

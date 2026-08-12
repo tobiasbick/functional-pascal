@@ -1,4 +1,4 @@
-use fpas_vm::{DebugAssignmentSelector, DebugEvaluationLimits};
+use fpas_vm::{DebugAssignmentSelector, DebugEvaluationLimits, DebugExpression};
 
 use super::{
     LogMessage, LogMessageLimits, LogSegment, parse_debug_assignment_target, parse_debug_expression,
@@ -166,6 +166,9 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
         "Error('x')",
         "Some(1)",
         "None",
+        "Choice.Empty",
+        "Choice.Pair(1, 2)",
+        "cHoIcE.pAiR(1, 2)",
         "try Work()",
         "Point with X := 2; end",
     ];
@@ -175,6 +178,31 @@ fn validator_accepts_the_complete_read_only_category_matrix() {
             "expected supported expression: {source}"
         );
     }
+}
+
+#[test]
+fn validator_lowers_qualified_enum_constructors_to_call_and_field_forms() {
+    let empty = parse_debug_expression("Choice.Empty", DebugEvaluationLimits::default())
+        .expect("fieldless constructor");
+    assert!(
+        matches!(
+            empty,
+            DebugExpression::Field { ref name, .. } if name == "Empty"
+        ),
+        "{empty:?}"
+    );
+
+    let pair = parse_debug_expression("Choice.Pair(1, 2)", DebugEvaluationLimits::default())
+        .expect("data-carrying constructor");
+    assert!(
+        matches!(
+            pair,
+            DebugExpression::Call { ref callee, ref arguments }
+                if matches!(callee.as_ref(), DebugExpression::Callable(name) if name == "Choice.Pair")
+                    && arguments.len() == 2
+        ),
+        "{pair:?}"
+    );
 }
 
 #[test]

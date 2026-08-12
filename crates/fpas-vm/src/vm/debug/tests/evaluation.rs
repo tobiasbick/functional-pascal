@@ -1,4 +1,5 @@
 use super::*;
+use fpas_bytecode::Value;
 
 #[test]
 fn evaluation_resolves_shadowed_frame_values_and_globals() {
@@ -91,4 +92,44 @@ fn evaluation_enforces_operation_limits_without_mutating_execution() {
 
     assert_eq!(error.kind, DebugErrorKind::EvaluationLimit);
     assert_eq!(session.output().lines, before);
+}
+
+#[test]
+fn evaluation_resolves_a_qualified_fieldless_constructor_once() {
+    let expression = DebugExpression::Field {
+        base: Box::new(DebugExpression::Field {
+            base: Box::new(DebugExpression::Field {
+                base: Box::new(DebugExpression::Name("Library".to_string())),
+                name: "Unit".to_string(),
+            }),
+            name: "Choice".to_string(),
+        }),
+        name: "Empty".to_string(),
+    };
+    let mut calls = 0;
+
+    let value = crate::vm::debug::evaluation::evaluate_value(
+        &expression,
+        DebugEvaluationLimits::default(),
+        |name| {
+            Err(crate::DebugSessionError {
+                kind: DebugErrorKind::UnknownName,
+                message: format!("unknown name `{name}`"),
+                hint: "Use a visible binding.".to_string(),
+            })
+        },
+        |target, arguments| {
+            calls += 1;
+            assert!(arguments.is_empty());
+            let crate::vm::debug::evaluation::DebugCallTarget::Named(target) = target else {
+                panic!("expected named constructor target")
+            };
+            assert_eq!(target, "Library.Unit.Choice.Empty");
+            Ok(Value::Unit)
+        },
+    )
+    .expect("qualified fieldless constructor");
+
+    assert!(matches!(value, Value::Unit));
+    assert_eq!(calls, 1);
 }

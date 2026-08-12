@@ -19,7 +19,10 @@ domain.
 Explicit dictionary insertion, removal, and key replacement are implemented
 through JSONL, DAP custom requests, and VS Code commands. Bounded array
 insertion/removal and Unicode-scalar string character replacement are also
-implemented through all three surfaces. Later mutation forms remain recorded
+implemented through all three surfaces. Writable descendants of the currently
+active data-carrying enum, `Result`, and `Option` payload are implemented
+through standard `setVariable`/`setExpression` and their JSONL counterparts.
+Later mutation forms remain recorded
 in [deferred.md](deferred.md).
 
 The implemented debugger does not change FPAS syntax, semantics, or the

@@ -62,8 +62,9 @@ statements, declarations, and assignments inside `evaluate` remain rejected.
 `setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
 `expression.set` are separate stopped-state operations. Handle-based mutation
 addresses a child previously returned by `variables`. Textual mutation starts
-with one visible binding and accepts stored record fields and array or
-dictionary indexes, for example `Counter`, `Origin.X`,
+with one visible binding and accepts stored record fields, active enum payload
+fields, wrapper `.value`, and array or dictionary indexes, for example
+`Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,
 `State.Items[Selected].Value`, or `Scores['blue']`. Root and field lookup is
 ASCII case-insensitive. Omitting a frame deliberately searches globals only;
 a local, parameter, or capture requires a current frame and is resolved with
@@ -71,12 +72,16 @@ normal lexical shadowing.
 
 Both forms accept mutable source locals, mutable parameters, mutable globals,
 and mutable captures backed by an existing closure cell. Record fields, array
-elements, and existing dictionary values below those roots can be replaced,
-including nested combinations. Index selectors and the replacement are
+elements, existing dictionary values, named fields of the currently active
+data-carrying enum variant, and the `value` child of `Result.Ok`,
+`Result.Error`, and `Option.Some` below those roots can be replaced, including
+nested combinations such as `result.value.items[1].name` or
+`optional.value`. Index selectors and the replacement are
 ordinary debugger expressions and may use the same controlled detached calls
 as `evaluate`. All selectors are evaluated once from left to right against the
 unchanged pre-commit snapshot, followed by the replacement, under one shared
-evaluation and call budget.
+evaluation and call budget. Wrapper payloads accept only `.value`.
+`Option.None` has no payload child.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
@@ -109,9 +114,10 @@ JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
 Immutable or uninitialized bindings, compiler-hidden storage,
-evaluation-only results, function captures, enum or `Result`/`Option` payload
-descendants, task values, function values, and opaque hosted values are not
+evaluation-only results, function captures, inactive enum or wrapper variants,
+task values, function values, and opaque hosted values are not
 writable. Existing `setVariable` and `setExpression` operations still cannot
+switch enum variants or change `Ok`/`Error` or `Some`/`None`. They still cannot
 insert/remove entries or change keys; clients use the explicit dictionary
 operations instead. Standard `setVariable` and `setExpression` still cannot
 resize arrays or address string characters; clients use the explicit sequence

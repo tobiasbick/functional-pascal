@@ -99,7 +99,7 @@ fn writable_target(
         MutationAccess::Unsupported => Err(DebugSessionError {
             kind: DebugErrorKind::VariablePathUnsupported,
             message: format!("debug variable target `{name}` is not assignable"),
-            hint: "Use a mutable binding, stored record field, array element, or existing dictionary value."
+            hint: "Use a mutable binding, stored record field, array element, existing dictionary value, enum payload field, or wrapper `.value`."
                 .to_string(),
         }),
         MutationAccess::Unavailable => Err(unavailable()),

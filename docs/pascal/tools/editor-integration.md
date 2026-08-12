@@ -46,14 +46,17 @@ a pending step and selects the responsible task.
 
 At a stable stop, the Variables view can replace mutable locals, mutable
 parameters, mutable globals, mutable closure captures, record fields, array
-elements, and existing dictionary values. Nested combinations use the same
+elements, existing dictionary values, named fields of the currently active
+data-carrying enum variant, and the `value` child of `Result.Ok`,
+`Result.Error`, and `Option.Some`. Nested combinations use the same
 operation. The entered value is an FPAS debugger expression and can include a
 controlled deterministic call. Successful edits refresh the Variables view;
 continuing the program observes the new value.
 
 The adapter also implements standard DAP `setExpression` for editor clients
 that edit a textual expression rather than a Variables child. Targets such as
-`Counter`, `Origin.X`, `Items[Index]`, and `Scores['blue']` use the selected
+`Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,
+`Items[Index]`, and `Scores['blue']` use the selected
 stack frame; omitting a frame is global-only. Stored-field and index selectors
 are evaluated against the stopped pre-edit state. Successful edits refresh all
 task snapshots; rejected edits leave the current frames and values usable.
@@ -80,8 +83,7 @@ Immutable, hidden, uninitialized, or evaluation-only values are read-only.
 Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. Function
-captures, enum and `Result`/`Option` payload
-descendants, task values, function values, and opaque hosted resources are not
+captures, inactive enum or wrapper variants, task values, function values, and opaque hosted resources are not
 editable. A rejected edit reports an actionable debugger error and keeps the
 session stopped without changing the live value.
 

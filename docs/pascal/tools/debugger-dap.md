@@ -43,8 +43,10 @@ without an orphan worker.
 
 `setVariable` accepts a current-stop `variablesReference`, the exact returned
 child `name`, and an FPAS expression in `value`. It supports mutable source
-locals, parameters, globals, closure cells, record fields, array elements, and
-existing dictionary values. The response contains the rendered `value`,
+locals, parameters, globals, closure cells, record fields, array elements,
+existing dictionary values, named fields of the active data-carrying enum
+variant, and the `value` child of `Result.Ok`, `Result.Error`, and
+`Option.Some`. The response contains the rendered `value`,
 `type`, a fresh `variablesReference`, and exact named/indexed child counts.
 Non-default `format` options are rejected because value-formatting negotiation
 is not implemented. The adapter advertises both `supportsSetVariable: true`
@@ -52,7 +54,8 @@ and `supportsSetExpression: true`.
 
 `setExpression` maps standard DAP `expression`, `value`, and optional
 `frameId` fields to the shared textual mutation operation. Its target is one
-visible binding followed by stored record fields or array/existing-dictionary
+visible binding followed by stored record fields, active enum payload fields,
+wrapper `.value`, or array/existing-dictionary
 indexes. Omitting `frameId` searches globals only. A supplied frame selects its
 exact FPAS task and lexical scope; stale or foreign frames fail without falling
 back to main. The response has the same rendered value, type, fresh aggregate

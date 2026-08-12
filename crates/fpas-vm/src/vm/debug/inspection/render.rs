@@ -6,7 +6,7 @@ use std::sync::{Arc, TryLockError};
 use fpas_bytecode::{DebugType, Executable, Value};
 
 use super::model::DebugInspectionLimits;
-use super::targets::{MutationAccess, MutationPath};
+use super::targets::{MutationAccess, MutationPath, resolve_payload};
 
 #[derive(Clone)]
 pub(super) struct RetainedValue {
@@ -168,7 +168,14 @@ pub(super) fn render_with_executable(
                 .fields
                 .iter()
                 .zip(&body.values)
-                .map(|(name, child)| child_value(name.clone(), child, value, None))
+                .map(|(name, child)| {
+                    child_value(
+                        name.clone(),
+                        child,
+                        value,
+                        payload_child(value, executable, runtime, name),
+                    )
+                })
                 .collect();
             aggregate(
                 format!("{}.{}", body.layout.type_name, body.layout.variant),
@@ -180,9 +187,9 @@ pub(super) fn render_with_executable(
                 limits,
             )
         }
-        Value::ResultOk(inner) => wrapper("Ok", inner, value, limits),
-        Value::ResultError(inner) => wrapper("Error", inner, value, limits),
-        Value::OptionSome(inner) => wrapper("Some", inner, value, limits),
+        Value::ResultOk(inner) => wrapper("Ok", inner, value, limits, executable, runtime),
+        Value::ResultError(inner) => wrapper("Error", inner, value, limits, executable, runtime),
+        Value::OptionSome(inner) => wrapper("Some", inner, value, limits, executable, runtime),
         Value::Function(function) => aggregate(
             format!("<function {}>", function.name),
             value.type_name.clone(),
@@ -265,16 +272,33 @@ fn wrapper(
     inner: &Value,
     parent: &RetainedValue,
     limits: DebugInspectionLimits,
+    executable: Option<&Executable>,
+    runtime: &Value,
 ) -> RenderedValue {
     aggregate(
         format!("{name}(...)"),
         parent.type_name.clone(),
-        vec![child_value("value".to_string(), inner, parent, None)],
+        vec![child_value(
+            "value".to_string(),
+            inner,
+            parent,
+            payload_child(parent, executable, runtime, "value"),
+        )],
         1,
         0,
         parent.presentation_hint.clone(),
         limits,
     )
+}
+
+fn payload_child(
+    parent: &RetainedValue,
+    executable: Option<&Executable>,
+    runtime: &Value,
+    name: &str,
+) -> Option<(MutationPath, fpas_bytecode::DebugTypeId)> {
+    let ty = parent.debug_type?;
+    resolve_payload(executable?, ty, runtime, name).ok()
 }
 
 fn child_value(

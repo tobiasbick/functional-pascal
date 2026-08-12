@@ -62,8 +62,10 @@ inspection.
 
 `variable.set` addresses one child returned by `variables`. The reference and
 child name must belong to the current stop. Mutable locals, parameters,
-globals, closure cells, record fields, array elements, and existing dictionary
-values are supported. Replacement expressions use the same parser, detached
+globals, closure cells, record fields, array elements, existing dictionary
+values, named fields of the active data-carrying enum variant, and the `value`
+child of `Result.Ok`, `Result.Error`, and `Option.Some` are supported.
+`Option.None` has no payload child. Replacement expressions use the same parser, detached
 controlled-call policy, and resource limits as `evaluate`. A successful result
 has the same five rendered fields as `evaluate`, refreshes inspection state,
 and expires all earlier variable references. Any failure is atomic and leaves
@@ -77,14 +79,17 @@ the old references usable.
 ```
 
 The bounded target grammar is one visible name followed only by stored-field
-selectors (`.Field`) and index selectors (`[expression]`). Parenthesized or
+selectors (`.Field`) and index selectors (`[expression]`). Field selectors
+address record fields, active enum payload fields, and wrapper `.value`.
+Parenthesized or
 computed bases, calls as the root/path, properties, assignments, declarations,
 and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
-dictionary keys must already exist. Text indexes and aggregate structure
+dictionary keys must already exist. `Option.None` has no `.value` child.
+Text indexes and aggregate structure
 changes are unsupported by `expression.set`; use the explicit dictionary and
-sequence commands below.
+sequence commands below. Variant switching is also unsupported.
 
 Selectors run once from left to right and the replacement runs last, all
 against the unchanged stopped snapshot and under one expression/call budget.

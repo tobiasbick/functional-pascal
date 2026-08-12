@@ -17,7 +17,8 @@ are not a deferred promise. The following work remains intentionally deferred.
 
 Deferred:
 
-- editing enum, `Result`, or `Option` payload descendants;
+- switching a data-carrying enum variant or a `Result`/`Option` wrapper through
+  a descendant write;
 - assigning function values, task handles, or opaque hosted resources;
 - initializing a source binding before normal execution initializes it;
 - forcing or replacing return values;

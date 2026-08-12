@@ -1,8 +1,12 @@
 //! Stop-local writable origins retained alongside immutable presentation values.
 
+mod payload;
+
 use std::sync::{Arc, Mutex};
 
-use fpas_bytecode::{DebugTypeId, Value};
+use fpas_bytecode::{DebugTypeId, EnumVariantId, Value};
+
+pub(in crate::vm::debug) use payload::{PayloadError, active_label, resolve as resolve_payload};
 
 #[derive(Clone)]
 pub(in crate::vm::debug) enum MutationAccess {
@@ -28,11 +32,18 @@ pub(in crate::vm::debug) enum MutationRoot {
     ClosureCell(Arc<Mutex<Value>>),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub(in crate::vm::debug) enum MutationPath {
     RecordField(usize),
     ArrayIndex(usize),
     DictionaryValue(Value),
+    EnumField {
+        variant: EnumVariantId,
+        index: usize,
+    },
+    ResultOk,
+    ResultError,
+    OptionSome,
 }
 
 impl MutationAccess {

@@ -12,4 +12,6 @@ pub use model::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
 pub(super) use snapshot::InspectionSnapshot;
-pub(super) use targets::{MutationPath, MutationRoot, MutationTarget};
+pub(super) use targets::{
+    MutationPath, MutationRoot, MutationTarget, PayloadError, active_label, resolve_payload,
+};

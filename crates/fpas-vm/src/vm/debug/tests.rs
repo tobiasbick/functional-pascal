@@ -430,5 +430,6 @@ mod behavior;
 mod evaluation;
 mod inspection_fixture;
 mod mutation;
+mod payload_mutation;
 
 use inspection_fixture::inspection_executable;

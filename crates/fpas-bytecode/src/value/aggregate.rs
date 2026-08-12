@@ -89,6 +89,11 @@ impl SharedEnum {
     pub fn body(&self) -> &EnumValue {
         &self.0
     }
+
+    /// Mutably borrow values, detaching only when the body is shared.
+    pub fn values_mut(&mut self) -> &mut Vec<Value> {
+        &mut Arc::make_mut(&mut self.0).values
+    }
 }
 
 /// Copy-on-write storage for ordered dictionary pairs.
@@ -160,6 +165,22 @@ mod tests {
             fields: vec!["x".to_string()],
         });
         let original = SharedRecord::new(layout, vec![Value::Integer(1)]);
+        let mut updated = original.clone();
+        updated.values_mut()[0] = Value::Integer(2);
+        assert_eq!(original.body().values[0], Value::Integer(1));
+        assert_eq!(updated.body().values[0], Value::Integer(2));
+    }
+
+    #[test]
+    fn cloned_enum_detaches_on_mutation() {
+        let layout = Arc::new(RuntimeEnumLayout {
+            enumeration: EnumTypeId::new(0),
+            variant_id: EnumVariantId::new(0),
+            type_name: "Choice".to_string(),
+            variant: "Count".to_string(),
+            fields: vec!["Value".to_string()],
+        });
+        let original = SharedEnum::new(layout, vec![Value::Integer(1)]);
         let mut updated = original.clone();
         updated.values_mut()[0] = Value::Integer(2);
         assert_eq!(original.body().values[0], Value::Integer(1));

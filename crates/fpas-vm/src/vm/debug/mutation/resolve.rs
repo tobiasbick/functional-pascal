@@ -2,7 +2,7 @@
 
 use fpas_bytecode::{DebugType, Executable, Value};
 
-use super::super::inspection::{MutationPath, MutationTarget};
+use super::super::inspection::{MutationPath, MutationTarget, PayloadError, resolve_payload};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 use super::model::{DebugAssignmentSelector, DebugAssignmentTarget};
 
@@ -30,34 +30,58 @@ pub(in crate::vm::debug) fn target_with_value(
     for selector in &assignment.selectors {
         match selector {
             DebugAssignmentSelector::Field(name) => {
-                let Value::Record(record) = &current else {
-                    return Err(unsupported_path(
-                        format!("debug variable target field `{name}` requires a stored record"),
-                        "Use a stored record field below a mutable binding.",
-                    ));
-                };
-                let Some(index) = record
-                    .body()
-                    .layout
-                    .fields
-                    .iter()
-                    .position(|field| field.eq_ignore_ascii_case(name))
-                else {
-                    return Err(unknown_component(name));
-                };
-                let expected = record_field_type(
+                if let Value::Record(record) = &current {
+                    let Some(index) = record
+                        .body()
+                        .layout
+                        .fields
+                        .iter()
+                        .position(|field| field.eq_ignore_ascii_case(name))
+                    else {
+                        return Err(unknown_component(name));
+                    };
+                    let expected = record_field_type(
+                        executable,
+                        target.expected_type,
+                        record.body().layout.record,
+                        index,
+                    )?;
+                    current = record
+                        .body()
+                        .values
+                        .get(index)
+                        .cloned()
+                        .ok_or_else(path_unavailable)?;
+                    target.path.push(MutationPath::RecordField(index));
+                    target.expected_type = expected;
+                    continue;
+                }
+                let (component, expected) = match resolve_payload(
                     executable,
                     target.expected_type,
-                    record.body().layout.record,
-                    index,
-                )?;
-                current = record
-                    .body()
-                    .values
-                    .get(index)
+                    &current,
+                    name,
+                ) {
+                    Ok(resolved) => resolved,
+                    Err(PayloadError::UnknownField { active }) => {
+                        return Err(unknown_payload_field(name, &active));
+                    }
+                    Err(PayloadError::UnsupportedActive { active }) => {
+                        return Err(unsupported_payload(name, &active));
+                    }
+                    Err(PayloadError::UnavailableMetadata { detail }) => {
+                        return Err(unsupported_path(
+                            format!(
+                                "debug variable target field `{name}` lacks assignable portable type metadata: {detail}"
+                            ),
+                            "Select a payload child already returned as writable by Variables.",
+                        ));
+                    }
+                };
+                current = super::replace::resolve(&current, std::slice::from_ref(&component))
                     .cloned()
                     .ok_or_else(path_unavailable)?;
-                target.path.push(MutationPath::RecordField(index));
+                target.path.push(component);
                 target.expected_type = expected;
             }
             DebugAssignmentSelector::Index(_) => {
@@ -158,6 +182,35 @@ fn unknown_component(name: &str) -> DebugSessionError {
         kind: DebugErrorKind::VariableTargetUnknown,
         message: format!("debug variable target field `{name}` does not exist"),
         hint: "Use a stored field returned by Variables for the current record.".to_string(),
+    }
+}
+
+fn unknown_payload_field(name: &str, active: &str) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableTargetUnknown,
+        message: format!(
+            "debug variable target field `{name}` does not exist on active `{active}`"
+        ),
+        hint: format!(
+            "Use a payload field returned by Variables for `{active}`, such as a declared enum field or `.value`."
+        ),
+    }
+}
+
+fn unsupported_payload(name: &str, active: &str) -> DebugSessionError {
+    let hint = if active == "Option.None" {
+        "Wait until the value is `Option.Some` and edit `.value`, or replace the whole Option binding."
+            .to_string()
+    } else {
+        "Use a stored record field, an active enum payload field, or `.value` on Result.Ok, Result.Error, or Option.Some."
+            .to_string()
+    };
+    DebugSessionError {
+        kind: DebugErrorKind::VariablePathUnsupported,
+        message: format!(
+            "debug variable target field `{name}` is not a writable payload of `{active}`"
+        ),
+        hint,
     }
 }
 

@@ -21,16 +21,75 @@ fn assignment_target_parser_preserves_named_stored_selector_order() {
         ] if items == "Items" && value == "Value"
     ));
 
+    let qualified =
+        parse_debug_assignment_target("Optional.Some.value", DebugEvaluationLimits::default())
+            .expect("qualified option target");
+    assert_eq!(qualified.root, "Optional");
+    assert!(matches!(
+        qualified.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Field(variant),
+            DebugAssignmentSelector::Field(payload)
+        ] if variant == "Some" && payload == "value"
+    ));
+
+    let nested =
+        parse_debug_assignment_target("Holder.Item.Count.Value", DebugEvaluationLimits::default())
+            .expect("nested qualified enum target");
+    assert_eq!(nested.root, "Holder");
+    assert!(matches!(
+        nested.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Field(item),
+            DebugAssignmentSelector::Field(variant),
+            DebugAssignmentSelector::Field(payload)
+        ] if item == "Item" && variant == "Count" && payload == "Value"
+    ));
+
+    let indexed =
+        parse_debug_assignment_target("Items[0].Some.value", DebugEvaluationLimits::default())
+            .expect("indexed qualified option target");
+    assert_eq!(indexed.root, "Items");
+    assert!(matches!(
+        indexed.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Index(_),
+            DebugAssignmentSelector::Field(variant),
+            DebugAssignmentSelector::Field(payload)
+        ] if variant == "Some" && payload == "value"
+    ));
+
+    let mixed_variant =
+        parse_debug_assignment_target("sElEcTeD.cOuNt.vAlUe", DebugEvaluationLimits::default())
+            .expect("mixed-case qualified variant target");
+    assert_eq!(mixed_variant.root, "sElEcTeD");
+    assert!(matches!(
+        mixed_variant.selectors.as_slice(),
+        [
+            DebugAssignmentSelector::Field(variant),
+            DebugAssignmentSelector::Field(payload)
+        ] if variant == "cOuNt" && payload == "vAlUe"
+    ));
+
     for source in [
         "Counter",
         "Origin.X",
         "Items[Index + 1]",
         "Scores['blue']",
         "sTaTe.iTeMs[Selected].vAlUe",
+        "Outcome.Ok.value",
+        "Outcome.Error.value",
     ] {
         parse_debug_assignment_target(source, DebugEvaluationLimits::default())
             .unwrap_or_else(|error| panic!("valid target {source}: {error:?}"));
     }
+
+    let nested_reserved = parse_debug_assignment_target(
+        "Items[Optional.Some.value]",
+        DebugEvaluationLimits::default(),
+    )
+    .expect_err("reserved words inside index expressions remain reserved");
+    assert_eq!(nested_reserved.code, "expression_target_parse");
 
     let mixed_case = parse_debug_assignment_target(
         "sTaTe.iTeMs[Selected].vAlUe",

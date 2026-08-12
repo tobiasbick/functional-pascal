@@ -433,5 +433,6 @@ mod mutation;
 mod payload_mutation;
 mod uninitialized_assignment;
 mod variant_replacement;
+mod variant_transition;
 
 use inspection_fixture::inspection_executable;

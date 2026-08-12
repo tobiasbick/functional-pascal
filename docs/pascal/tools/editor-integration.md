@@ -64,6 +64,8 @@ that edit a textual expression rather than a Variables child. Targets such as
 stack frame; omitting a frame is global-only. Stored-field and index selectors
 are evaluated against the stopped pre-edit state. Successful edits refresh all
 task snapshots; rejected edits leave the current frames and values usable.
+In VS Code, this request is exposed by the **Set Value** action on a Watch
+expression; Debug Console input remains read-only evaluation.
 
 Three Command Palette actions provide explicit dictionary structure changes:
 **Debug: Insert Dictionary Entry**, **Debug: Remove Dictionary Entry**, and
@@ -88,8 +90,11 @@ mutable locals and globals accept only a complete root assignment.
 Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. Function
-captures, inactive enum or wrapper variants, task values, function values, and opaque hosted resources are not
-editable. A write to an old payload child never selects a different variant.
+captures, task values, function values, and opaque hosted resources are not
+editable. Textual `setExpression` may assign an explicit inactive
+single-payload variant such as `Optional.Some.value`; Variables does not
+advertise inactive variants as children. A write to an old payload-child
+handle never selects a different variant.
 A rejected edit reports an actionable debugger error and keeps the
 session stopped without changing the live value.
 

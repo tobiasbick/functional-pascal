@@ -350,7 +350,7 @@ fn constructor_and_replacement_failures_are_atomic() {
             )
             .expect_err("stale field name")
             .kind,
-        DebugErrorKind::VariableTargetUnknown
+        DebugErrorKind::VariablePathUnsupported
     );
 }
 

@@ -153,6 +153,17 @@ pub fn parse_expression(source: &str) -> (Expr, Vec<ParseDiagnostic>) {
     (expression, append_parser_errors(errors, parse_errors))
 }
 
+/// Parses exactly one Functional Pascal expression from a pre-lexed token stream.
+///
+/// Prefer a stream ending in [`fpas_lexer::Token::Eof`]. If `Eof` is missing, the parser appends
+/// a synthetic token at the end of the last available token. Lexer diagnostics are not included;
+/// callers that transform tokens must retain and merge the original lexer diagnostics separately.
+#[must_use]
+pub fn parse_tokens_expression(tokens: Vec<SpannedToken>) -> (Expr, Vec<ParseDiagnostic>) {
+    let (expression, parse_errors) = parser::Parser::new(tokens).parse_standalone_expression();
+    (expression, parser_diagnostics(parse_errors))
+}
+
 /// Parses a compilation unit from a pre-lexed token stream.
 ///
 /// Prefer a stream that ends with [`fpas_lexer::Token::Eof`] (as produced by [`fpas_lexer::lex`] or

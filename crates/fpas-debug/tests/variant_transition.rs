@@ -1,4 +1,4 @@
-//! JSONL complete enum, Result, and Option replacement coverage.
+//! JSONL qualified variant-transition assignment coverage.
 
 #![allow(
     clippy::expect_used,
@@ -10,12 +10,12 @@ use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use fpas_vm::{DebugAssignmentTarget, DebugExpression, DebugRunResult, DebugSession};
 use serde_json::{Value, json};
 
-const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/variant_replacement.fpas");
+const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/variant_transition.fpas");
 
 fn server() -> JsonlServer {
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile variant fixture");
+    let executable = fpas_compiler::compile(&program).expect("compile variant transition fixture");
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
 }
 
@@ -49,7 +49,7 @@ fn stop_with_initialized_locals(server: &mut JsonlServer, id: &mut u64) -> u64 {
         let _ = send(server, id, "step_into", json!({}));
         let _ = server.wait();
     }
-    panic!("variant fixture locals never became initialized")
+    panic!("variant transition fixture locals never became initialized")
 }
 
 fn locals_reference(server: &mut JsonlServer, id: &mut u64, frame_id: u64) -> u64 {
@@ -63,7 +63,7 @@ fn locals_reference(server: &mut JsonlServer, id: &mut u64, frame_id: u64) -> u6
 }
 
 #[test]
-fn jsonl_variant_replacements_commit_atomically_and_continue() {
+fn jsonl_variant_transitions_commit_atomically_and_continue() {
     let mut server = server();
     let mut id = 0;
     let initialized = send(&mut server, &mut id, "initialize", json!({"version":2}));
@@ -92,22 +92,11 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":initial_frame,"target":"Selected","expression":"Choice.Pair(10, 20)"}),
-    );
-    assert_eq!(selected[0]["body"]["result"], "Choice.Pair", "{selected:?}");
-    assert_eq!(selected[0]["body"]["named_variables"], 2);
-
-    let current = frame(&mut server, &mut id);
-    let locals = locals_reference(&mut server, &mut id, current);
-    let pair_value = send(
-        &mut server,
-        &mut id,
-        "variable.set",
-        json!({"variables_reference":locals,"name":"PairValue","expression":"Choice.Empty"}),
+        json!({"frame_id":initial_frame,"target":"Selected.Count.Value","expression":"10"}),
     );
     assert_eq!(
-        pair_value[0]["body"]["result"], "Choice.Empty",
-        "{pair_value:?}"
+        selected[0]["body"]["result"], "Choice.Count",
+        "{selected:?}"
     );
 
     let current = frame(&mut server, &mut id);
@@ -115,16 +104,25 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"eMpTyVaLuE","expression":"cHoIcE.cOuNt(4)"}),
+        json!({"frame_id":current,"target":"eMpTyVaLuE.cOuNt.vAlUe","expression":"4"}),
     );
     assert_eq!(empty[0]["body"]["result"], "Choice.Count", "{empty:?}");
+
+    let current = frame(&mut server, &mut id);
+    let nested = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"NestedValue.Count.Value","expression":"9"}),
+    );
+    assert_eq!(nested[0]["body"]["result"], "Choice.Count", "{nested:?}");
 
     let current = frame(&mut server, &mut id);
     let outcome = send(
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Outcome","expression":"Error('fail')"}),
+        json!({"frame_id":current,"target":"Outcome.Error.value","expression":"'fail'"}),
     );
     assert_eq!(outcome[0]["body"]["result"], "Error(...)", "{outcome:?}");
 
@@ -133,7 +131,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Failed","expression":"Ok(9)"}),
+        json!({"frame_id":current,"target":"Failed.Ok.value","expression":"9"}),
     );
     assert_eq!(failed[0]["body"]["result"], "Ok(...)", "{failed:?}");
 
@@ -142,16 +140,16 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Optional","expression":"None"}),
+        json!({"frame_id":current,"target":"Optional.Some.value","expression":"8"}),
     );
-    assert_eq!(optional[0]["body"]["result"], "None", "{optional:?}");
+    assert_eq!(optional[0]["body"]["result"], "8", "{optional:?}");
 
     let current = frame(&mut server, &mut id);
     let missing = send(
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Missing","expression":"Some(8)"}),
+        json!({"frame_id":current,"target":"Missing.Some.value","expression":"8"}),
     );
     assert_eq!(missing[0]["body"]["result"], "Some(...)", "{missing:?}");
 
@@ -160,7 +158,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Packed","expression":"Error('pack')"}),
+        json!({"frame_id":current,"target":"Packed.Error.value","expression":"'pack'"}),
     );
     assert_eq!(packed[0]["body"]["result"], "Error(...)", "{packed:?}");
 
@@ -169,10 +167,14 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"NestedResult","expression":"None"}),
+        json!({
+            "frame_id":current,
+            "target":"NestedResult.Some.value.Error.value",
+            "expression":"'inner'"
+        }),
     );
     assert_eq!(
-        nested_result[0]["body"]["result"], "None",
+        nested_result[0]["body"]["result"], "Error(...)",
         "{nested_result:?}"
     );
 
@@ -181,18 +183,22 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"PackedHolder.Item","expression":"Choice.Pair(1, 2)"}),
+        json!({
+            "frame_id":current,
+            "target":"PackedHolder.Item.Count.Value",
+            "expression":"3"
+        }),
     );
-    assert_eq!(holder[0]["body"]["result"], "Choice.Pair", "{holder:?}");
+    assert_eq!(holder[0]["body"]["result"], "Choice.Count", "{holder:?}");
 
     let current = frame(&mut server, &mut id);
     let items = send(
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":current,"target":"Items[0]","expression":"Choice.Empty"}),
+        json!({"frame_id":current,"target":"Items[0].Count.Value","expression":"0"}),
     );
-    assert_eq!(items[0]["body"]["result"], "Choice.Empty", "{items:?}");
+    assert_eq!(items[0]["body"]["result"], "Choice.Count", "{items:?}");
 
     let current = frame(&mut server, &mut id);
     let scores = send(
@@ -201,8 +207,8 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         "expression.set",
         json!({
             "frame_id":current,
-            "target":"Scores['blue']",
-            "expression":"Choice.Count(16)"
+            "target":"Scores['blue'].Count.Value",
+            "expression":"16"
         }),
     );
     assert_eq!(scores[0]["body"]["result"], "Choice.Count", "{scores:?}");
@@ -211,19 +217,35 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         &mut server,
         &mut id,
         "expression.set",
-        json!({"target":"GlobalChoice","expression":"Choice.Pair(7, 8)"}),
+        json!({"target":"GlobalChoice.Count.Value","expression":"15"}),
     );
-    assert_eq!(global[0]["body"]["result"], "Choice.Pair", "{global:?}");
+    assert_eq!(global[0]["body"]["result"], "Choice.Count", "{global:?}");
+
+    let current = frame(&mut server, &mut id);
+    let locals = locals_reference(&mut server, &mut id, current);
+    let refreshed = send(
+        &mut server,
+        &mut id,
+        "variables",
+        json!({"variables_reference":locals,"start":0,"count":20}),
+    );
+    let selected_value = refreshed[0]["body"]["variables"]
+        .as_array()
+        .expect("locals")
+        .iter()
+        .find(|item| item["name"] == "Selected")
+        .expect("Selected");
+    assert_eq!(selected_value["value"], "Choice.Count");
 
     let current = frame(&mut server, &mut id);
     for (target, expression, code) in [
-        ("Selected", "Pair(1, 2)", "call_target_unknown"),
-        ("Selected", "Choice.Missing", "call_target_unknown"),
-        ("Selected", "Choice.Pair(1)", "call_arity"),
-        ("Selected", "Choice.Count('wrong')", "evaluation_type"),
-        ("Selected", "1", "variable_value_type"),
-        ("Fixed", "Choice.Empty", "variable_not_mutable"),
-        ("Selected.Value", "1", "variable_path_unsupported"),
+        ("PairValue.Value", "1", "variable_path_unsupported"),
+        ("PairValue.Pair.Left", "1", "variable_path_unsupported"),
+        ("PairValue.Empty", "1", "variable_path_unsupported"),
+        ("Selected.Missing.Value", "1", "variable_target_unknown"),
+        ("EmptyValue.Count.Nope", "1", "variable_target_unknown"),
+        ("PairValue.Count.Value", "'wrong'", "variable_value_type"),
+        ("Fixed.Count.Value", "1", "variable_not_mutable"),
     ] {
         let failed = send(
             &mut server,
@@ -235,6 +257,12 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
             failed[0]["error"]["code"], code,
             "{target} {expression}: {failed:?}"
         );
+        assert!(
+            failed[0]["error"]["help"]
+                .as_str()
+                .is_some_and(|hint| !hint.is_empty()),
+            "{target} missing hint: {failed:?}"
+        );
         let preserved = send(
             &mut server,
             &mut id,
@@ -242,7 +270,7 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
             json!({"frame_id":current,"expression":"Selected"}),
         );
         assert_eq!(preserved[0]["success"], true, "{preserved:?}");
-        assert_eq!(preserved[0]["body"]["result"], "Choice.Pair");
+        assert_eq!(preserved[0]["body"]["result"], "Choice.Count");
     }
 
     let _ = send(&mut server, &mut id, "continue", json!({}));
@@ -254,19 +282,19 @@ fn jsonl_variant_replacements_commit_atomically_and_continue() {
         .collect::<String>();
     assert_eq!(
         output,
-        "30\n0\n4\n9\nfail\n9\n0\n8\npack\n0\n3\n0\n16\n15\n99\n"
+        "10\n5\n4\n9\nfail\n9\n8\n8\npack\ninner\n3\n0\n16\n15\n99\n"
     );
 }
 
 #[test]
-fn jsonl_variant_replacement_stays_bound_to_the_selected_child_task() {
-    const TASK_SOURCE: &str = r#"program TaskVariantReplacement;
+fn jsonl_variant_transition_stays_bound_to_the_selected_child_task() {
+    const TASK_SOURCE: &str = r#"program TaskVariantTransition;
 
 uses Std.Console, Std.Task;
 
 function Work(): integer;
 begin
-  mutable var Optional: Option of integer := Some(1);
+  mutable var Optional: Option of integer := None;
   var Marker: integer := 0;
   case Optional of
     Some(Value):
@@ -287,7 +315,7 @@ end.
 "#;
     let (program, diagnostics) = fpas_parser::parse(TASK_SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile task variant fixture");
+    let executable = fpas_compiler::compile(&program).expect("compile task transition fixture");
     let mut server =
         JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server");
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
@@ -317,9 +345,9 @@ end.
     let updated = server.handle_line(&request(
         6,
         "expression.set",
-        json!({"frame_id":child_frame,"target":"Optional","expression":"None"}),
+        json!({"frame_id":child_frame,"target":"Optional.Some.value","expression":"4"}),
     ));
-    assert_eq!(updated[0]["body"]["result"], "None", "{updated:?}");
+    assert_eq!(updated[0]["body"]["result"], "Some(...)", "{updated:?}");
     let expired_main = server.handle_line(&request(7, "scopes", json!({"frame_id":main_frame})));
     assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
 
@@ -328,14 +356,14 @@ end.
     assert!(
         terminated
             .iter()
-            .any(|record| { record["event"] == "output" && record["body"]["text"] == "0\n" })
+            .any(|record| { record["event"] == "output" && record["body"]["text"] == "4\n" })
     );
 }
 
 fn session(source: &str) -> DebugSession {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile variant session fixture");
+    let executable = fpas_compiler::compile(&program).expect("compile transition session fixture");
     DebugSession::new(executable).expect("debug session")
 }
 
@@ -356,42 +384,45 @@ fn step(session: &mut DebugSession) {
     ));
 }
 
-fn root(name: &str) -> DebugAssignmentTarget {
+fn qualified(root: &str, fields: &[&str]) -> DebugAssignmentTarget {
     DebugAssignmentTarget {
-        root: name.to_string(),
-        selectors: Vec::new(),
+        root: root.to_string(),
+        selectors: fields
+            .iter()
+            .map(|name| fpas_vm::DebugAssignmentSelector::Field((*name).to_string()))
+            .collect(),
     }
 }
 
 #[test]
-fn variant_replacement_supports_mutable_parameters_and_capture_cells() {
+fn variant_transition_supports_mutable_parameters_and_capture_cells() {
     let mut parameter = session(
         r#"
-program VariantParameter;
+program TransitionParameter;
 
 type
   Choice = enum
+    Empty;
     Count(Value: integer);
-    Pair(Left: integer; Right: integer);
   end;
 
 function ReadChoice(mutable Item: Choice): integer;
 begin
   var Marker: integer := 0;
   case Item of
+    Choice.Empty:
+    begin
+      return 0
+    end;
     Choice.Count(Value):
     begin
       return Value
-    end;
-    Choice.Pair(Left, Right):
-    begin
-      return Left + Right
     end
   end
 end;
 
 begin
-  var OutputValue: integer := ReadChoice(Choice.Count(1));
+  var OutputValue: integer := ReadChoice(Choice.Empty);
   var Marker: integer := OutputValue
 end.
 "#,
@@ -404,14 +435,11 @@ end.
     };
     parameter
         .set_expression(
-            &root("Item"),
-            &DebugExpression::Call {
-                callee: Box::new(DebugExpression::Callable("Choice.Pair".to_string())),
-                arguments: vec![DebugExpression::Integer(2), DebugExpression::Integer(3)],
-            },
+            &qualified("Item", &["Count", "Value"]),
+            &DebugExpression::Integer(5),
             Some(parameter_frame),
         )
-        .expect("replace mutable enum parameter");
+        .expect("transition mutable enum parameter");
     assert!(matches!(
         parameter
             .step_out()
@@ -432,26 +460,26 @@ end.
 
     let mut capture = session(
         r#"
-program VariantCapture;
+program TransitionCapture;
 
 type
   Choice = enum
+    Empty;
     Count(Value: integer);
-    Pair(Left: integer; Right: integer);
   end;
 
 function NextChoice(): function(): integer;
 begin
-  mutable var Selected: Choice := Choice.Count(1);
+  mutable var Selected: Choice := Choice.Empty;
   return function(): integer begin
     case Selected of
+      Choice.Empty:
+      begin
+        return 0
+      end;
       Choice.Count(Value):
       begin
         return Value
-      end;
-      Choice.Pair(Left, Right):
-      begin
-        return Left + Right
       end
     end
   end
@@ -475,14 +503,11 @@ end.
     };
     capture
         .set_expression(
-            &root("Selected"),
-            &DebugExpression::Call {
-                callee: Box::new(DebugExpression::Callable("Choice.Pair".to_string())),
-                arguments: vec![DebugExpression::Integer(20), DebugExpression::Integer(21)],
-            },
+            &qualified("Selected", &["Count", "Value"]),
+            &DebugExpression::Integer(41),
             Some(frame),
         )
-        .expect("replace captured enum");
+        .expect("transition captured enum");
     assert!(matches!(
         capture.step_out().expect("return from closure"),
         DebugRunResult::Stopped(_)
@@ -497,5 +522,64 @@ end.
             .expect("closure result")
             .value,
         "41"
+    );
+}
+
+#[test]
+fn explicit_variant_name_wins_over_an_active_payload_field_collision() {
+    let mut session = session(
+        r#"
+program TransitionCollision;
+
+type
+  Payload = record
+    Value: integer;
+  end;
+  Choice = enum
+    Holder(Count: Payload);
+    Count(Value: integer);
+  end;
+
+begin
+  var Initial: Payload := record
+    Value := 1;
+  end;
+  mutable var Selected: Choice := Choice.Holder(Initial);
+  var Marker: integer := 0
+end.
+"#,
+    );
+    let frame = loop {
+        if let Some(locals) = session_scope(&mut session, "Locals") {
+            let values = session.variables(locals, 0, 10).expect("collision locals");
+            if values
+                .items
+                .iter()
+                .any(|value| value.name == "Selected" && value.value == "Choice.Holder")
+            {
+                break session.stack(0, 1).expect("collision stack").items[0].id;
+            }
+        }
+        step(&mut session);
+    };
+
+    session
+        .set_expression(
+            &qualified("Selected", &["Count", "Value"]),
+            &DebugExpression::Integer(9),
+            Some(frame),
+        )
+        .expect("explicit colliding variant transition");
+
+    let locals = session_scope(&mut session, "Locals").expect("refreshed collision locals");
+    let values = session.variables(locals, 0, 10).expect("collision values");
+    assert_eq!(
+        values
+            .items
+            .iter()
+            .find(|value| value.name == "Selected")
+            .expect("Selected after collision transition")
+            .value,
+        "Choice.Count"
     );
 }

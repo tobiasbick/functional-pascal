@@ -1,11 +1,12 @@
 //! Bounded parsing and lowering of textual debugger assignment targets.
 
-use fpas_parser::Expr;
+use fpas_lexer::Token;
+use fpas_parser::{Expr, ParseDiagnostic};
 use fpas_vm::{
     DebugAssignmentSelector, DebugAssignmentTarget, DebugEvaluationLimits, DebugExpression,
 };
 
-use super::parse::{EvaluationParseError, parse_bounded_ast};
+use super::parse::{EvaluationParseError, check_bounded_source, reject_diagnostics};
 use super::validate::validate_expression;
 
 /// Parses one bounded textual assignment target for debugger mutation.
@@ -13,7 +14,7 @@ pub(crate) fn parse_debug_assignment_target(
     source: &str,
     limits: DebugEvaluationLimits,
 ) -> Result<DebugAssignmentTarget, EvaluationParseError> {
-    let expression = parse_bounded_ast(source, limits).map_err(|mut error| {
+    let expression = parse_target_ast(source, limits).map_err(|mut error| {
         if error.code == "expression_parse" {
             error.code = "expression_target_parse";
             error.hint =
@@ -47,6 +48,52 @@ pub(crate) fn parse_debug_assignment_target(
         }
     })?;
     Ok(DebugAssignmentTarget { root, selectors })
+}
+
+fn parse_target_ast(
+    source: &str,
+    limits: DebugEvaluationLimits,
+) -> Result<Expr, EvaluationParseError> {
+    check_bounded_source(source, limits)?;
+    let (mut tokens, lexer_diagnostics) = fpas_lexer::lex(source);
+    let mut after_dot = false;
+    let mut delimiter_depth = 0_usize;
+    for token in &mut tokens {
+        if after_dot {
+            let constructor = match token.token {
+                Token::Ok => Some("Ok"),
+                Token::Error => Some("Error"),
+                Token::Some => Some("Some"),
+                Token::None => Some("None"),
+                _ => None,
+            };
+            if let Some(constructor) = constructor {
+                let spelling = token
+                    .span
+                    .text(source)
+                    .map(str::to_owned)
+                    .unwrap_or_else(|| constructor.to_string());
+                token.token = Token::Ident(spelling);
+            }
+        }
+        match token.token {
+            Token::LParen | Token::LBracket => {
+                delimiter_depth = delimiter_depth.saturating_add(1);
+            }
+            Token::RParen | Token::RBracket => {
+                delimiter_depth = delimiter_depth.saturating_sub(1);
+            }
+            _ => {}
+        }
+        after_dot = delimiter_depth == 0 && matches!(token.token, Token::Dot);
+    }
+    let (expression, parser_diagnostics) = fpas_parser::parse_tokens_expression(tokens);
+    let diagnostics = lexer_diagnostics
+        .into_iter()
+        .map(ParseDiagnostic::Lexer)
+        .chain(parser_diagnostics)
+        .collect();
+    reject_diagnostics(expression, diagnostics)
 }
 
 fn collect_target(

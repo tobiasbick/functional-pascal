@@ -26,6 +26,15 @@ pub(super) fn parse_bounded_ast(
     source: &str,
     limits: DebugEvaluationLimits,
 ) -> Result<fpas_parser::Expr, EvaluationParseError> {
+    check_bounded_source(source, limits)?;
+    let (expression, diagnostics) = fpas_parser::parse_expression(source);
+    reject_diagnostics(expression, diagnostics)
+}
+
+pub(super) fn check_bounded_source(
+    source: &str,
+    limits: DebugEvaluationLimits,
+) -> Result<(), EvaluationParseError> {
     if source.len() > limits.max_expression_bytes {
         return Err(EvaluationParseError {
             code: "evaluation_limit",
@@ -40,7 +49,13 @@ pub(super) fn parse_bounded_ast(
         });
     }
     preflight_delimiter_depth(source, limits.max_depth)?;
-    let (expression, diagnostics) = fpas_parser::parse_expression(source);
+    Ok(())
+}
+
+pub(super) fn reject_diagnostics(
+    expression: fpas_parser::Expr,
+    diagnostics: Vec<fpas_parser::ParseDiagnostic>,
+) -> Result<fpas_parser::Expr, EvaluationParseError> {
     if let Some(diagnostic) = diagnostics.first() {
         let diagnostic = diagnostic.as_diagnostic();
         return Err(EvaluationParseError {

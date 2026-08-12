@@ -10,6 +10,7 @@ import { verifyDictionaryMutation } from "./debugger_host/dictionary_mutation";
 import { verifySequenceMutation } from "./debugger_host/sequence_mutation";
 import { verifyPayloadMutation } from "./debugger_host/payload_mutation";
 import { verifyVariantReplacement } from "./debugger_host/variant_replacement";
+import { verifyVariantTransition } from "./debugger_host/variant_transition";
 import { verifyUninitializedAssignment } from "./debugger_host/uninitialized_assignment";
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
@@ -41,6 +42,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifySequenceMutation(workspaceRoot, received, sent);
     await verifyPayloadMutation(workspaceRoot, received, sent);
     await verifyVariantReplacement(workspaceRoot, received, sent);
+    await verifyVariantTransition(workspaceRoot, received, sent);
     await verifyUninitializedAssignment(workspaceRoot, received, sent);
     await verifyVariableMutation(workspaceRoot, received, sent);
     await verifyBreakpointPolicies(workspaceRoot, received, sent);

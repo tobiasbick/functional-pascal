@@ -418,7 +418,7 @@ fn payload_failures_are_atomic_and_preserve_existing_handles() {
             )
             .expect_err("unknown enum field")
             .kind,
-        DebugErrorKind::VariableTargetUnknown
+        DebugErrorKind::VariablePathUnsupported
     );
     assert_eq!(
         session

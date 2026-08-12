@@ -1,0 +1,152 @@
+program VariantTransition;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+  Choice = enum
+    Empty;
+    Count(Value: integer);
+    Pair(Left: integer; Right: integer);
+    Nested(Item: Point);
+  end;
+  Holder = record
+    Item: Choice;
+  end;
+
+mutable var
+  GlobalChoice: Choice := Choice.Empty;
+
+function ChoiceValue(Item: Choice): integer;
+begin
+  case Item of
+    Choice.Empty:
+    begin
+      return 0
+    end;
+    Choice.Count(Value):
+    begin
+      return Value
+    end;
+    Choice.Pair(Left, Right):
+    begin
+      return Left + Right
+    end;
+    Choice.Nested(Item):
+    begin
+      return Item.X + Item.Y
+    end
+  end
+end;
+
+begin
+  mutable var Origin: Point := record
+    X := 4;
+    Y := 5;
+  end;
+  mutable var Selected: Choice := Choice.Empty;
+  mutable var PairValue: Choice := Choice.Pair(2, 3);
+  mutable var EmptyValue: Choice := Choice.Empty;
+  mutable var NestedValue: Choice := Choice.Nested(Origin);
+  mutable var Outcome: result of integer, string := Ok(6);
+  mutable var Failed: result of integer, string := Error('old');
+  mutable var Optional: option of integer := Some(7);
+  mutable var Missing: option of integer := None;
+  mutable var Packed: result of array of integer, string := Ok([8, 9]);
+  mutable var NestedOk: result of integer, string := Ok(11);
+  mutable var NestedResult: option of result of integer, string := Some(NestedOk);
+  mutable var PackedHolder: Holder := record
+    Item := Choice.Empty;
+  end;
+  mutable var Items: array of Choice := [Choice.Empty];
+  mutable var Scores: dict of string to Choice := ['blue': Choice.Empty];
+  var Fixed: Choice := Choice.Count(99);
+  var StopMarker: integer := 0;
+  WriteLn(ChoiceValue(Selected));
+  WriteLn(ChoiceValue(PairValue));
+  WriteLn(ChoiceValue(EmptyValue));
+  WriteLn(ChoiceValue(NestedValue));
+  case Outcome of
+    Ok(Value):
+    begin
+      WriteLn(Value)
+    end;
+    Error(Message):
+    begin
+      WriteLn(Message)
+    end
+  end;
+
+  case Failed of
+    Ok(Value):
+    begin
+      WriteLn(Value)
+    end;
+    Error(Message):
+    begin
+      WriteLn(Message)
+    end
+  end;
+
+  case Optional of
+    Some(Value):
+    begin
+      WriteLn(Value)
+    end;
+    None:
+    begin
+      WriteLn(0)
+    end
+  end;
+
+  case Missing of
+    Some(Value):
+    begin
+      WriteLn(Value)
+    end;
+    None:
+    begin
+      WriteLn(0)
+    end
+  end;
+
+  case Packed of
+    Ok(Value):
+    begin
+      WriteLn(Value[1])
+    end;
+    Error(Message):
+    begin
+      WriteLn(Message)
+    end
+  end;
+
+  case NestedResult of
+    Some(Inner):
+    begin
+      case Inner of
+        Ok(Value):
+        begin
+          WriteLn(Value)
+        end;
+        Error(Message):
+        begin
+          WriteLn(Message)
+        end
+      end
+    end;
+    None:
+    begin
+      WriteLn(0)
+    end
+  end;
+
+  WriteLn(ChoiceValue(PackedHolder.Item));
+  WriteLn(ChoiceValue(Items[0]));
+  WriteLn(ChoiceValue(Scores['blue']));
+  WriteLn(ChoiceValue(GlobalChoice));
+  WriteLn(ChoiceValue(Fixed))
+end.

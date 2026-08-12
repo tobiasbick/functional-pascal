@@ -43,3 +43,16 @@ fn chained_access() {
         _ => panic!("expected Designator"),
     }
 }
+
+#[test]
+fn constructor_keywords_remain_reserved_after_dot() {
+    for source in [
+        "Optional.Some.value",
+        "Outcome.Ok.value",
+        "Outcome.Error.value",
+        "Optional.None",
+    ] {
+        let (_, diagnostics) = crate::parse_expression(source);
+        assert!(!diagnostics.is_empty(), "reserved segment parsed: {source}");
+    }
+}

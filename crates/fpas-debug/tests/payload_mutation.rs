@@ -193,7 +193,7 @@ fn jsonl_payload_mutations_commit_atomically_and_continue() {
     let current = frame(&mut server, &mut id);
     for (target, expression, code) in [
         ("Missing.value", "1", "variable_path_unsupported"),
-        ("Selected.Left", "1", "variable_target_unknown"),
+        ("Selected.Left", "1", "variable_path_unsupported"),
         ("Outcome.count", "1", "variable_target_unknown"),
         ("Selected.Value", "'wrong'", "variable_value_type"),
         ("Fixed.Value", "1", "variable_not_mutable"),

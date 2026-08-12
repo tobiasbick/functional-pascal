@@ -1,4 +1,4 @@
-/** Real Extension Host coverage for editing enum, Result, and Option payloads. */
+/** Real Extension Host coverage for qualified single-payload variant transitions. */
 
 import assert from "node:assert/strict";
 
@@ -19,18 +19,19 @@ interface DapVariable {
   readonly variablesReference: number;
 }
 
-export async function verifyPayloadMutation(
+export async function verifyVariantTransition(
   workspaceRoot: string,
   received: DapMessage[],
   sent: DapMessage[]
 ): Promise<void> {
   const lines = [
-    "program DebuggerPayloadMutation;",
+    "program DebuggerVariantTransition;",
     "",
     "uses Std.Console;",
     "",
     "type",
     "  Choice = enum",
+    "    Empty;",
     "    Count(Value: integer);",
     "    Pair(Left: integer; Right: integer);",
     "  end;",
@@ -38,6 +39,10 @@ export async function verifyPayloadMutation(
     "function ChoiceValue(Item: Choice): integer;",
     "begin",
     "  case Item of",
+    "    Choice.Empty:",
+    "    begin",
+    "      return 0",
+    "    end;",
     "    Choice.Count(Value):",
     "    begin",
     "      return Value",
@@ -50,11 +55,9 @@ export async function verifyPayloadMutation(
     "end;",
     "",
     "begin",
-    "  mutable var Selected: Choice := Choice.Count(1);",
+    "  mutable var Selected: Choice := Choice.Empty;",
     "  mutable var Outcome: Result of integer, string := Ok(2);",
-    "  mutable var Optional: Option of integer := Some(3);",
-    "  mutable var Missing: Option of integer := None;",
-    "  mutable var Packed: Result of array of integer, string := Ok([4, 5]);",
+    "  mutable var Optional: Option of integer := None;",
     "  var Fixed: Choice := Choice.Count(9);",
     "  var StopMarker: integer := 0;",
     "  WriteLn(ChoiceValue(Selected));",
@@ -65,7 +68,7 @@ export async function verifyPayloadMutation(
     "    end;",
     "    Error(Message):",
     "    begin",
-    "      WriteLn(0)",
+    "      WriteLn(Message)",
     "    end",
     "  end;",
     "  case Optional of",
@@ -78,21 +81,11 @@ export async function verifyPayloadMutation(
     "      WriteLn(0)",
     "    end",
     "  end;",
-    "  case Packed of",
-    "    Ok(Value):",
-    "    begin",
-    "      WriteLn(Value[1])",
-    "    end;",
-    "    Error(Message):",
-    "    begin",
-    "      WriteLn(0)",
-    "    end",
-    "  end;",
     "  WriteLn(ChoiceValue(Fixed))",
     "end.",
     ""
   ];
-  const sourcePath = await writeSource(workspaceRoot, "payload-mutation", lines);
+  const sourcePath = await writeSource(workspaceRoot, "variant-transition", lines);
   const stopLine = lines.indexOf("  var StopMarker: integer := 0;");
   const breakpoint = new vscode.SourceBreakpoint(
     new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 2))
@@ -104,22 +97,22 @@ export async function verifyPayloadMutation(
     session = await startSession({
       type: "fpas",
       request: "launch",
-      name: "FPAS debugger payload mutation",
+      name: "FPAS debugger variant transition",
       program: sourcePath,
       cwd: workspaceRoot,
       stopOnEntry: false
     });
     await waitFor(
       () => sent.slice(marker.sent).some((message) => message.event === "stopped"),
-      "payload-mutation breakpoint"
+      "variant-transition breakpoint"
     );
 
-    await setChild(session, "Locals", "Selected", "Value", "10");
-    await setChild(session, "Locals", "Outcome", "value", "20");
-    await setExpression(session, "Optional.value", "30");
-    await setExpression(session, "Packed.value[1]", "40");
+    await setExpression(session, "Selected.Count.Value", "10", "Choice.Count");
+    await setExpression(session, "Outcome.Error.value", "'fail'", "Error(...)");
+    await setExpression(session, "Optional.Some.value", "8", "Some(...)");
 
     const selected = await namedVariable(session, "Locals", "Selected");
+    assert.equal(selected.value, "Choice.Count");
     const selectedFields = await session.customRequest("variables", {
       variablesReference: selected.variablesReference,
       start: 0,
@@ -130,28 +123,28 @@ export async function verifyPayloadMutation(
       "10"
     );
     await waitFor(
-      () => eventCount(sent.slice(marker.sent), "invalidated") >= 4,
-      "payload mutation invalidation events"
+      () => eventCount(sent.slice(marker.sent), "invalidated") >= 3,
+      "variant transition invalidation events"
     );
     const invalidations = eventCount(sent.slice(marker.sent), "invalidated");
     await assert.rejects(
-      async () => setExpression(session as vscode.DebugSession, "Missing.value", "1"),
-      /none|payload|unsupported|inactive/i
+      async () => setExpression(session as vscode.DebugSession, "Selected.Pair.Left", "1", "1"),
+      /unsupported|path|constructor|Pair/i
     );
     await assert.rejects(
-      async () => setChild(session as vscode.DebugSession, "Locals", "Fixed", "Value", "1"),
+      async () => setExpression(session as vscode.DebugSession, "Fixed.Count.Value", "1", "1"),
       /not mutable/i
     );
     assert.equal(
       eventCount(sent.slice(marker.sent), "invalidated"),
       invalidations,
-      "rejected payload edits emit no invalidation"
+      "rejected variant transitions emit no invalidation"
     );
 
     await session.customRequest("continue", { threadId: 1 });
     await waitFor(
       () => sent.slice(marker.sent).some((message) => message.event === "terminated"),
-      "payload-mutation termination"
+      "variant-transition termination"
     );
     const output = sent
       .slice(marker.sent)
@@ -160,18 +153,14 @@ export async function verifyPayloadMutation(
       .join("");
     assert.equal(
       output,
-      "10\n20\n30\n40\n9\n",
-      `continued debuggee observes payload writes: ${JSON.stringify(
+      "10\nfail\n8\n9\n",
+      `continued debuggee observes variant transitions: ${JSON.stringify(
         sent.slice(marker.sent).filter((message) => message.event === "output")
       )}`
     );
     assert.ok(
-      received.slice(marker.received).some((message) => message.command === "setVariable"),
-      "Extension Host forwards handle-based payload edits"
-    );
-    assert.ok(
       received.slice(marker.received).some((message) => message.command === "setExpression"),
-      "Extension Host forwards textual payload edits"
+      "Extension Host forwards textual variant transitions"
     );
   } finally {
     vscode.debug.removeBreakpoints([breakpoint]);
@@ -183,7 +172,8 @@ export async function verifyPayloadMutation(
 async function setExpression(
   session: vscode.DebugSession,
   expression: string,
-  value: string
+  value: string,
+  expected: string
 ): Promise<void> {
   const stack = await session.customRequest("stackTrace", {
     threadId: 1,
@@ -195,31 +185,13 @@ async function setExpression(
     expression,
     value
   }) as { value: string };
-  assert.equal(result.value, value);
+  assert.equal(result.value, expected);
 }
 
-async function setChild(
+async function scopeReference(
   session: vscode.DebugSession,
-  scope: string,
-  parent: string,
-  name: string,
-  value: string
-): Promise<void> {
-  const variable = await namedVariable(session, scope, parent);
-  assert.ok(variable.variablesReference > 0, `${parent} is expandable`);
-  const result = await session.customRequest("setVariable", {
-    variablesReference: variable.variablesReference,
-    name,
-    value
-  }) as { value: string };
-  assert.equal(result.value, value);
-}
-
-async function namedVariable(
-  session: vscode.DebugSession,
-  scopeName: string,
-  name: string
-): Promise<DapVariable> {
+  scopeName: string
+): Promise<number> {
   const stack = await session.customRequest("stackTrace", {
     threadId: 1,
     startFrame: 0,
@@ -232,8 +204,17 @@ async function namedVariable(
   };
   const scope = scopes.scopes.find((candidate) => candidate.name === scopeName);
   assert.ok(scope, `stopped session exposes ${scopeName}`);
+  return scope.variablesReference;
+}
+
+async function namedVariable(
+  session: vscode.DebugSession,
+  scopeName: string,
+  name: string
+): Promise<DapVariable> {
+  const reference = await scopeReference(session, scopeName);
   const result = await session.customRequest("variables", {
-    variablesReference: scope.variablesReference,
+    variablesReference: reference,
     start: 0,
     count: 100
   }) as { variables: DapVariable[] };

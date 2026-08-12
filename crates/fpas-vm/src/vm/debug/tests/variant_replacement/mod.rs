@@ -124,7 +124,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             abc(Opcode::MakeEnum, 21, 1, 20),
             abc(Opcode::MakeRecord, 7, 0, 21),
             Instruction::abx(Opcode::LoadConstant, 20, 7).expect("13"),
-            abc(Opcode::MakeEnum, 21, 1, 20),
+            abc(Opcode::MakeEnum, 21, 0, 20),
             abc(Opcode::MakeArray, 8, 21, 1),
             abc(Opcode::Move, 9, 0, 0),
             Instruction::abx(Opcode::LoadConstant, 20, 8).expect("99"),

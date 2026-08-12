@@ -16,11 +16,13 @@ are not a deferred promise. The following work remains intentionally deferred.
 ## Additional state and control-flow mutation
 
 Complete-value replacement of a mutable enum, `Result`, or `Option` is
-implemented through the existing mutation surfaces. Implicitly switching the
-live variant through an old payload-child handle, rebinding stale handles, or
-partially constructing a new payload remains deferred. Debugger initialization
-of a visible mutable local or global root is implemented; descendant writes on
-empty storage and skipping the later source initializer remain deferred.
+implemented through the existing mutation surfaces. Explicit qualified
+single-payload variant transition through textual assignment is also
+implemented. Implicitly switching the live variant through an old payload-child
+handle, rebinding stale handles, or partially constructing a new payload
+remains deferred. Debugger initialization of a visible mutable local or global
+root is implemented; descendant writes on empty storage and skipping the later
+source initializer remain deferred.
 
 Deferred:
 
@@ -37,6 +39,10 @@ Deferred:
 The exact boundary and prerequisites for the uninitialized-binding slice are
 recorded in
 [`uninitialized-binding-assignment/consciously-deferred.md`](uninitialized-binding-assignment/consciously-deferred.md).
+Qualified single-payload variant transition is implemented; remaining
+exclusions for stale-handle rebinding, unqualified guessing, multi-field
+incremental construction, and virtual Variables children are recorded in
+[`variant-transition-assignment/consciously-deferred.md`](variant-transition-assignment/consciously-deferred.md).
 
 Bounded array insertion/removal and Unicode-scalar string character replacement
 are implemented. The remaining operations need additional lvalue, source-assignment,

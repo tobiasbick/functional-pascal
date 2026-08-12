@@ -632,6 +632,7 @@ dependencies = [
  "fpas-bytecode",
  "fpas-compiler",
  "fpas-diagnostics",
+ "fpas-lexer",
  "fpas-parser",
  "fpas-vm",
  "serde",

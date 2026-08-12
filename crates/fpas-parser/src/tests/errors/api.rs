@@ -1,5 +1,7 @@
 use super::{parse_compilation_unit_with_errors, parse_with_errors};
-use crate::{CompilationUnit, ParseDiagnostic, parse_tokens_compilation_unit};
+use crate::{
+    CompilationUnit, Expr, ParseDiagnostic, parse_tokens_compilation_unit, parse_tokens_expression,
+};
 use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
 use fpas_lexer::{lex, lex_with_source_id};
 
@@ -37,6 +39,22 @@ fn parse_tokens_compilation_unit_matches_source_api() {
     assert!(token_errors.is_empty());
     assert!(source_errors.is_empty());
     assert_eq!(unit_from_tokens, unit_from_source);
+}
+
+#[test]
+fn parse_tokens_expression_parses_caller_adjusted_identifier_tokens() {
+    let source = "Optional.Some.value";
+    let (mut tokens, errors) = lex(source);
+    assert!(errors.is_empty());
+    tokens[2].token = fpas_lexer::Token::Ident("Some".to_string());
+
+    let (expression, errors) = parse_tokens_expression(tokens);
+
+    assert!(
+        errors.is_empty(),
+        "unexpected parser diagnostics: {errors:#?}"
+    );
+    assert!(matches!(expression, Expr::Designator(_)));
 }
 
 #[test]

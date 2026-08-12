@@ -107,44 +107,63 @@ impl DebugSession {
             if current.is_none() && !assignment.selectors.is_empty() {
                 return Err(uninitialized_root_path(&assignment.root));
             }
-            let (indexes, replacement) =
-                self.evaluate_assignment_inputs(assignment, expression, frame_id, limits)?;
-            let target = super::super::mutation::resolve_target(
-                self.executable.executable(),
-                assignment,
-                target,
-                current.unwrap_or(fpas_bytecode::Value::Unit),
-                &indexes,
-            )?;
+            let current = current.unwrap_or(fpas_bytecode::Value::Unit);
+            let index_expressions = assignment
+                .selectors
+                .iter()
+                .filter_map(|selector| match selector {
+                    DebugAssignmentSelector::Field(_) => None,
+                    DebugAssignmentSelector::Index(expression) => Some(expression.clone()),
+                })
+                .collect::<Vec<_>>();
+            let (resolved, replacement) = if index_expressions.is_empty() {
+                let resolved = super::super::mutation::resolve_assignment(
+                    self.executable.executable(),
+                    assignment,
+                    target,
+                    current,
+                    &[],
+                )?;
+                let replacement = self.evaluate_runtime_value(expression, frame_id, limits)?;
+                (resolved, replacement)
+            } else {
+                let executable = Arc::clone(&self.executable);
+                let (resolved, mut replacements) = self.evaluate_runtime_values_with_checkpoint(
+                    &index_expressions,
+                    std::slice::from_ref(expression),
+                    frame_id,
+                    limits,
+                    move |indexes| {
+                        super::super::mutation::resolve_assignment(
+                            executable.executable(),
+                            assignment,
+                            target,
+                            current,
+                            indexes,
+                        )
+                    },
+                )?;
+                let replacement = replacements.pop().ok_or_else(replacement_unavailable)?;
+                (resolved, replacement)
+            };
+            let (target, replacement) = match resolved {
+                super::super::mutation::ResolvedAssignment::Existing { target, .. } => {
+                    (target, replacement)
+                }
+                super::super::mutation::ResolvedAssignment::Transition { target, spec, .. } => {
+                    let replacement = super::super::mutation::construct_transition(
+                        &self.executable,
+                        spec,
+                        replacement,
+                        limits,
+                    )?;
+                    (target, replacement)
+                }
+            };
             self.commit_mutation(task_id, &target, replacement, limits)
         })();
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
-    }
-
-    fn evaluate_assignment_inputs(
-        &self,
-        assignment: &DebugAssignmentTarget,
-        replacement: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<(Vec<fpas_bytecode::Value>, fpas_bytecode::Value), DebugSessionError> {
-        let mut expressions = assignment
-            .selectors
-            .iter()
-            .filter_map(|selector| match selector {
-                DebugAssignmentSelector::Field(_) => None,
-                DebugAssignmentSelector::Index(expression) => Some(expression.clone()),
-            })
-            .collect::<Vec<_>>();
-        expressions.push(replacement.clone());
-        let mut values = self.evaluate_runtime_values(&expressions, frame_id, limits)?;
-        let replacement = values.pop().ok_or_else(|| DebugSessionError {
-            kind: DebugErrorKind::VariableUnavailable,
-            message: "debug assignment replacement value is unavailable".to_string(),
-            hint: "Retry the mutation with one complete replacement expression.".to_string(),
-        })?;
-        Ok((values, replacement))
     }
 
     fn commit_mutation(
@@ -177,6 +196,14 @@ impl DebugSession {
             .get_mut(&task_id)
             .ok_or_else(|| unknown_task(task_id))?
             .retain_evaluation_result(committed, limits)
+    }
+}
+
+fn replacement_unavailable() -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::VariableUnavailable,
+        message: "debug assignment replacement value is unavailable".to_string(),
+        hint: "Retry the mutation with one complete replacement expression.".to_string(),
     }
 }
 

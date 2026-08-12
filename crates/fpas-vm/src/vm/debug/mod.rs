@@ -9,6 +9,8 @@ mod session;
 mod tasks;
 mod types;
 
+pub(in crate::vm::debug) use calls::construct_enum_payload;
+
 #[cfg(test)]
 mod tests;
 

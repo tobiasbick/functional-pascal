@@ -5,6 +5,7 @@ mod model;
 mod replace;
 mod resolve;
 mod sequence;
+mod transition;
 mod validate;
 
 use std::sync::TryLockError;
@@ -20,8 +21,9 @@ pub use model::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
     DebugDictionaryMutationResult, DebugStringMutationResult,
 };
-pub(in crate::vm::debug) use resolve::{target as resolve_target, target_with_value};
+pub(in crate::vm::debug) use resolve::{ResolvedAssignment, resolve_assignment, target_with_value};
 pub(in crate::vm::debug) use sequence::{insert_array, remove_array, replace_string_character};
+pub(in crate::vm::debug) use transition::construct as construct_transition;
 
 pub(super) fn validate_replacement(
     executable: &VerifiedExecutable,

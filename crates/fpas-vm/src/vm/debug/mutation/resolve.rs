@@ -5,33 +5,58 @@ use fpas_bytecode::{DebugType, Executable, Value};
 use super::super::inspection::{MutationPath, MutationTarget, PayloadError, resolve_payload};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 use super::model::{DebugAssignmentSelector, DebugAssignmentTarget};
+use super::transition::{self, QualifiedSuffix, SuffixResolution, TransitionSpec};
+
+/// Concretized textual assignment: an existing path or a complete variant switch.
+pub(in crate::vm::debug) enum ResolvedAssignment {
+    /// Ordinary writable descendant of the live value.
+    Existing {
+        /// Concretized mutation target.
+        target: MutationTarget,
+        /// Current materialized value at that path.
+        current: Value,
+    },
+    /// Inactive single-payload variant that replaces the nearest wrapper.
+    Transition {
+        /// Writable path of the wrapper to replace.
+        target: MutationTarget,
+        /// Complete variant to construct from the evaluated payload.
+        spec: TransitionSpec,
+    },
+}
 
 /// Concretizes evaluated textual selectors as the existing writable path model.
-pub(in crate::vm::debug) fn target(
+pub(in crate::vm::debug) fn target_with_value(
     executable: &Executable,
     assignment: &DebugAssignmentTarget,
     target: MutationTarget,
     current: Value,
     evaluated_indexes: &[Value],
-) -> Result<MutationTarget, DebugSessionError> {
-    target_with_value(executable, assignment, target, current, evaluated_indexes)
-        .map(|(target, _)| target)
+) -> Result<(MutationTarget, Value), DebugSessionError> {
+    match resolve_assignment(executable, assignment, target, current, evaluated_indexes)? {
+        ResolvedAssignment::Existing { target, current } => Ok((target, current)),
+        ResolvedAssignment::Transition { .. } => Err(unsupported_path(
+            "debug variable target uses a variant transition that this operation does not support",
+            "Use expression.set or setExpression with a qualified single-payload target such as `Some.value`.",
+        )),
+    }
 }
 
-/// Concretizes a textual target and returns its current materialized value.
-pub(in crate::vm::debug) fn target_with_value(
+/// Concretizes a textual target, including qualified inactive-variant suffixes.
+pub(in crate::vm::debug) fn resolve_assignment(
     executable: &Executable,
     assignment: &DebugAssignmentTarget,
     mut target: MutationTarget,
     mut current: Value,
     evaluated_indexes: &[Value],
-) -> Result<(MutationTarget, Value), DebugSessionError> {
+) -> Result<ResolvedAssignment, DebugSessionError> {
     let mut indexes = evaluated_indexes.iter();
-    for selector in &assignment.selectors {
-        match selector {
+    let mut index = 0;
+    while index < assignment.selectors.len() {
+        match &assignment.selectors[index] {
             DebugAssignmentSelector::Field(name) => {
                 if let Value::Record(record) = &current {
-                    let Some(index) = record
+                    let Some(field_index) = record
                         .body()
                         .layout
                         .fields
@@ -44,75 +69,100 @@ pub(in crate::vm::debug) fn target_with_value(
                         executable,
                         target.expected_type,
                         record.body().layout.record,
-                        index,
+                        field_index,
                     )?;
                     current = record
                         .body()
                         .values
-                        .get(index)
+                        .get(field_index)
                         .cloned()
                         .ok_or_else(path_unavailable)?;
-                    target.path.push(MutationPath::RecordField(index));
+                    target.path.push(MutationPath::RecordField(field_index));
                     target.expected_type = expected;
+                    index += 1;
                     continue;
                 }
-                let (component, expected) = match resolve_payload(
+                let suffix = transition::resolve_suffix(
                     executable,
-                    target.expected_type,
                     &current,
-                    name,
-                ) {
-                    Ok(resolved) => resolved,
-                    Err(PayloadError::UnknownField { active }) => {
-                        return Err(unknown_payload_field(name, &active));
-                    }
-                    Err(PayloadError::UnsupportedActive { active }) => {
-                        return Err(unsupported_payload(name, &active));
-                    }
-                    Err(PayloadError::UnavailableMetadata { detail }) => {
-                        return Err(unsupported_path(
-                            format!(
-                                "debug variable target field `{name}` lacks assignable portable type metadata: {detail}"
-                            ),
-                            "Select a payload child already returned as writable by Variables.",
-                        ));
-                    }
+                    target.expected_type,
+                    &assignment.selectors[index..],
+                )?;
+                let unmatched = match suffix {
+                    Some(SuffixResolution::Exact(qualified)) => match qualified {
+                        QualifiedSuffix::ActivePayload {
+                            component,
+                            expected,
+                            consumed,
+                        } => {
+                            current =
+                                super::replace::resolve(&current, std::slice::from_ref(&component))
+                                    .cloned()
+                                    .ok_or_else(path_unavailable)?;
+                            target.path.push(component);
+                            target.expected_type = expected;
+                            index += consumed;
+                            continue;
+                        }
+                        QualifiedSuffix::Switch(spec) => {
+                            if indexes.next().is_some() {
+                                return Err(path_unavailable());
+                            }
+                            return Ok(ResolvedAssignment::Transition { target, spec });
+                        }
+                    },
+                    Some(SuffixResolution::Unmatched(error)) => Some(error),
+                    None => None,
                 };
-                current = super::replace::resolve(&current, std::slice::from_ref(&component))
-                    .cloned()
-                    .ok_or_else(path_unavailable)?;
-                target.path.push(component);
-                target.expected_type = expected;
+                match resolve_payload(executable, target.expected_type, &current, name) {
+                    Ok((component, expected)) => {
+                        current =
+                            super::replace::resolve(&current, std::slice::from_ref(&component))
+                                .cloned()
+                                .ok_or_else(path_unavailable)?;
+                        target.path.push(component);
+                        target.expected_type = expected;
+                        index += 1;
+                    }
+                    Err(payload_error) => {
+                        return Err(
+                            unmatched.unwrap_or_else(|| map_payload_error(name, payload_error))
+                        );
+                    }
+                }
             }
             DebugAssignmentSelector::Index(_) => {
-                let index = indexes.next().ok_or_else(path_unavailable)?;
+                let evaluated = indexes.next().ok_or_else(path_unavailable)?;
                 match &current {
                     Value::Array(values) => {
-                        let Value::Integer(index) = index else {
+                        let Value::Integer(evaluated) = evaluated else {
                             return Err(unsupported_path(
                                 "debug variable array target requires an Integer index",
                                 "Use an Integer expression inside the array brackets.",
                             ));
                         };
-                        let index = usize::try_from(*index).map_err(|_| {
-                            unknown_index(index.to_string(), "array index is negative or too large")
+                        let array_index = usize::try_from(*evaluated).map_err(|_| {
+                            unknown_index(
+                                evaluated.to_string(),
+                                "array index is negative or too large",
+                            )
                         })?;
                         let expected = array_element_type(executable, target.expected_type)?;
-                        current = values.get(index).cloned().ok_or_else(|| {
-                            unknown_index(index.to_string(), "array index is out of bounds")
+                        current = values.get(array_index).cloned().ok_or_else(|| {
+                            unknown_index(array_index.to_string(), "array index is out of bounds")
                         })?;
-                        target.path.push(MutationPath::ArrayIndex(index));
+                        target.path.push(MutationPath::ArrayIndex(array_index));
                         target.expected_type = expected;
                     }
                     Value::Dict(entries) => {
                         let expected = dictionary_value_type(executable, target.expected_type)?;
                         let Some((key, value)) = entries
                             .iter()
-                            .find(|(candidate, _)| candidate == index)
+                            .find(|(candidate, _)| candidate == evaluated)
                             .map(|(key, value)| (key.clone(), value.clone()))
                         else {
                             return Err(unknown_index(
-                                index.to_string(),
+                                evaluated.to_string(),
                                 "dictionary key does not already exist",
                             ));
                         };
@@ -127,13 +177,14 @@ pub(in crate::vm::debug) fn target_with_value(
                         ));
                     }
                 }
+                index += 1;
             }
         }
     }
     if indexes.next().is_some() {
         return Err(path_unavailable());
     }
-    Ok((target, current))
+    Ok(ResolvedAssignment::Existing { target, current })
 }
 
 fn record_field_type(
@@ -177,6 +228,19 @@ fn dictionary_value_type(
     }
 }
 
+fn map_payload_error(name: &str, error: PayloadError) -> DebugSessionError {
+    match error {
+        PayloadError::UnknownField { active } => unknown_payload_field(name, &active),
+        PayloadError::UnsupportedActive { active } => unsupported_payload(name, &active),
+        PayloadError::UnavailableMetadata { detail } => unsupported_path(
+            format!(
+                "debug variable target field `{name}` lacks assignable portable type metadata: {detail}"
+            ),
+            "Select a payload child already returned as writable by Variables, or replace the complete binding with a constructor.",
+        ),
+    }
+}
+
 fn unknown_component(name: &str) -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::VariableTargetUnknown,
@@ -192,17 +256,17 @@ fn unknown_payload_field(name: &str, active: &str) -> DebugSessionError {
             "debug variable target field `{name}` does not exist on active `{active}`"
         ),
         hint: format!(
-            "Use a payload field returned by Variables for `{active}`, such as a declared enum field or `.value`."
+            "Use a payload field returned by Variables for `{active}`, such as a declared enum field or `.value`, or a qualified variant such as `Count.Value`."
         ),
     }
 }
 
 fn unsupported_payload(name: &str, active: &str) -> DebugSessionError {
     let hint = if active == "Option.None" {
-        "Wait until the value is `Option.Some` and edit `.value`, or replace the whole Option binding."
+        "Assign `Some.value` to construct `Option.Some`, or replace the complete binding with `Some(...)` or `None`."
             .to_string()
     } else {
-        "Use a stored record field, an active enum payload field, or `.value` on Result.Ok, Result.Error, or Option.Some."
+        "Use a stored record field, an active enum payload field, `.value` on Result.Ok, Result.Error, or Option.Some, or a qualified single-payload variant such as `Some.value`."
             .to_string()
     };
     DebugSessionError {

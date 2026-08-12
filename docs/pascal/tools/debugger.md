@@ -81,13 +81,19 @@ names; short variant names are rejected. Record fields, array elements,
 existing dictionary values, named fields of the currently active data-carrying
 enum variant, and the `value` child of `Result.Ok`, `Result.Error`, and
 `Option.Some` below those roots can be replaced, including nested combinations
-such as `result.value.items[1].name` or `optional.value`. Index selectors and
+such as `result.value.items[1].name` or `optional.value`. A textual target may
+also name an inactive single-payload variant explicitly and supply that
+payload, for example `Optional.Some.value`, `Outcome.Error.value`, or
+`Selected.Count.Value`. The variant name is required and matched
+case-insensitively against executable metadata; an unqualified inactive field
+never selects a variant. Fieldless variants and multi-field payloads still use
+a complete constructor on the binding. Index selectors and
 the replacement are
 ordinary debugger expressions and may use the same controlled detached calls
 as `evaluate`. All selectors are evaluated once from left to right against the
 unchanged pre-commit snapshot, followed by the replacement, under one shared
 evaluation and call budget. Wrapper payloads accept only `.value`.
-`Option.None` has no payload child.
+Handle-based `setVariable` does not advertise inactive variants as children.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
@@ -120,12 +126,13 @@ JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
 Immutable bindings, compiler-hidden storage,
-evaluation-only results, function captures, inactive enum or wrapper variants,
+evaluation-only results, function captures,
 task values, function values, and opaque hosted values are not
 writable. Uninitialized mutable locals and globals accept only a complete root
 value; they have no writable fields, indexes, dictionary entries, or payload
-descendants. A write to an old payload child never selects a different variant;
-after a complete-value replacement the previous child handles are unavailable
+descendants, and a qualified variant transition cannot synthesize that outer
+storage. A write to an old payload-child handle never selects a different
+variant; after a successful write the previous child handles are unavailable
 and clients must request variables again. Existing `setVariable` and
 `setExpression` operations still cannot insert/remove entries or change keys;
 clients use the explicit dictionary operations instead. Standard `setVariable`

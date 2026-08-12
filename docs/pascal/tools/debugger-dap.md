@@ -47,7 +47,8 @@ locals, parameters, globals, closure cells, record fields, array elements,
 existing dictionary values, named fields of the active data-carrying enum
 variant, the `value` child of `Result.Ok`, `Result.Error`, and
 `Option.Some`, and complete mutable enum, `Result`, and `Option` values.
-Visible uninitialized mutable locals and globals accept one complete root
+It does not advertise inactive variants as virtual children. Visible
+uninitialized mutable locals and globals accept one complete root
 value. Complete-value replacements use constructor expressions such as
 `Choice.Pair(1, 2)`, `Ok(3)`, `Error('failed')`, `Some(4)`, and `None`.
 The response contains the rendered `value`,
@@ -59,8 +60,9 @@ and `supportsSetExpression: true`.
 `setExpression` maps standard DAP `expression`, `value`, and optional
 `frameId` fields to the shared textual mutation operation. Its target is one
 visible binding followed by stored record fields, active enum payload fields,
-wrapper `.value`, or array/existing-dictionary
-indexes. Complete enum, `Result`, and `Option` targets accept a constructor
+wrapper `.value`, an explicit inactive single-payload variant suffix such as
+`Some.value` or `Count.Value`, or array/existing-dictionary
+indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
 expression as `value`. Uninitialized mutable roots accept the complete binding
 name only. Omitting `frameId` searches globals only. A supplied frame selects its
 exact FPAS task and lexical scope; stale or foreign frames fail without falling

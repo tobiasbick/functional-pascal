@@ -27,6 +27,13 @@ targets remain deferred. The implementation record, verification mapping, and
 restart instructions live in
 [`uninitialized-binding-assignment/`](uninitialized-binding-assignment/README.md).
 
+Explicit, variant-qualified descendant assignment that constructs one complete
+single-payload enum, `Result`, or `Option` variant is implemented through
+textual `setExpression` / JSONL `expression.set`. Stale-handle switching,
+unqualified variant guessing, multi-field incremental construction, and
+virtual Variables children remain deferred. The implementation record lives in
+[`variant-transition-assignment/`](variant-transition-assignment/README.md).
+
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation
 domain.
@@ -38,8 +45,9 @@ implemented through all three surfaces. Writable descendants of the currently
 active data-carrying enum, `Result`, and `Option` payload are implemented
 through standard `setVariable`/`setExpression` and their JSONL counterparts.
 Complete-value replacement of those same enum, `Result`, and `Option` roots is
-also implemented. Later mutation forms remain recorded
-in [deferred.md](deferred.md).
+also implemented. Textual qualified single-payload variant transition is
+implemented through `setExpression` / `expression.set`. Later mutation forms
+remain recorded in [deferred.md](deferred.md).
 
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

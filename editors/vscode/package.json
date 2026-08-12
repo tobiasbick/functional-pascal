@@ -135,6 +135,21 @@
         "command": "functionalPascal.refreshTests",
         "title": "Refresh Tests",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.insertDictionaryEntry",
+        "title": "Debug: Insert Dictionary Entry",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.removeDictionaryEntry",
+        "title": "Debug: Remove Dictionary Entry",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.replaceDictionaryKey",
+        "title": "Debug: Replace Dictionary Key",
+        "category": "Functional Pascal"
       }
     ],
     "configuration": {

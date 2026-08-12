@@ -2,6 +2,7 @@
 
 mod breakpoints;
 mod completion;
+mod dictionary;
 mod evaluation;
 mod mutation;
 mod tasks;
@@ -194,6 +195,9 @@ impl JsonlServer {
             "evaluate" => self.evaluate(request_id, command, arguments),
             "variable.set" => self.set_variable(request_id, command, arguments),
             "expression.set" => self.set_expression(request_id, command, arguments),
+            "dictionary.insert" => self.insert_dictionary(request_id, command, arguments),
+            "dictionary.remove" => self.remove_dictionary(request_id, command, arguments),
+            "dictionary.replace_key" => self.replace_dictionary_key(request_id, command, arguments),
             "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(

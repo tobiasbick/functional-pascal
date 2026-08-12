@@ -1,5 +1,6 @@
 //! DAP request translation onto the JSONL debugger core.
 
+mod dictionary;
 mod mutation;
 mod tasks;
 
@@ -99,6 +100,15 @@ impl DapServer {
             "evaluate" => self.evaluate(request_seq, command, &arguments),
             "setVariable" => self.set_variable(request_seq, command, &arguments),
             "setExpression" => self.set_expression(request_seq, command, &arguments),
+            "fpas/dictionaryInsert" => {
+                self.insert_dictionary(request_seq, command, &arguments)
+            }
+            "fpas/dictionaryRemove" => {
+                self.remove_dictionary(request_seq, command, &arguments)
+            }
+            "fpas/dictionaryReplaceKey" => {
+                self.replace_dictionary_key(request_seq, command, &arguments)
+            }
             "cancel" => self.core_request(
                 request_seq,
                 command,
@@ -490,6 +500,44 @@ fn dap_body(command: &str, body: Value) -> Value {
                 "namedVariables": body.get("named_variables"),
                 "indexedVariables": body.get("indexed_variables")
             })
+        }
+        "fpas/dictionaryInsert" | "fpas/dictionaryRemove" | "fpas/dictionaryReplaceKey" => {
+            let mut result = serde_json::Map::from_iter([
+                (
+                    "value".to_string(),
+                    body.get("result").cloned().unwrap_or(Value::Null),
+                ),
+                (
+                    "type".to_string(),
+                    body.get("type_name").cloned().unwrap_or(Value::Null),
+                ),
+                (
+                    "variablesReference".to_string(),
+                    body.get("variables_reference")
+                        .cloned()
+                        .unwrap_or(Value::Null),
+                ),
+                (
+                    "namedVariables".to_string(),
+                    body.get("named_variables").cloned().unwrap_or(Value::Null),
+                ),
+                (
+                    "indexedVariables".to_string(),
+                    body.get("indexed_variables")
+                        .cloned()
+                        .unwrap_or(Value::Null),
+                ),
+            ]);
+            for (source, destination) in [
+                ("removed", "removed"),
+                ("old_key", "oldKey"),
+                ("new_key", "newKey"),
+            ] {
+                if let Some(value) = body.get(source) {
+                    result.insert(destination.to_string(), value.clone());
+                }
+            }
+            Value::Object(result)
         }
         "continue" => json!({"allThreadsContinued":true}),
         _ => body,

@@ -17,7 +17,6 @@ are not a deferred promise. The following work remains intentionally deferred.
 
 Deferred:
 
-- inserting or removing dictionary entries and changing dictionary keys;
 - resizing arrays or editing strings by character index;
 - editing enum, `Result`, or `Option` payload descendants;
 - assigning function values, task handles, or opaque hosted resources;

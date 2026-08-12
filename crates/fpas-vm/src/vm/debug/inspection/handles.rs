@@ -156,10 +156,40 @@ impl InspectionSnapshot {
         value: Value,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
+        let rendered = self.render_evaluation_value(&value, limits)?;
+        let variables_reference = if rendered.children.is_empty() {
+            0
+        } else {
+            self.allocate_handle(rendered.children)?
+        };
+        Ok(DebugEvaluateResult {
+            value: rendered.summary,
+            type_name: rendered.type_name,
+            variables_reference,
+            named_variables: rendered.named_children,
+            indexed_variables: rendered.indexed_children,
+        })
+    }
+
+    /// Renders a bounded summary without allocating an inspection handle.
+    pub(in crate::vm::debug) fn evaluation_summary(
+        &self,
+        value: &Value,
+        limits: DebugEvaluationLimits,
+    ) -> Result<String, DebugSessionError> {
+        self.render_evaluation_value(value, limits)
+            .map(|rendered| rendered.summary)
+    }
+
+    fn render_evaluation_value(
+        &self,
+        value: &Value,
+        limits: DebugEvaluationLimits,
+    ) -> Result<render::RenderedValue, DebugSessionError> {
         let retained = RetainedValue {
             name: "$result".to_string(),
             type_name: value.type_name().to_string(),
-            value: Some(value),
+            value: Some(value.clone()),
             presentation_hint: None,
             depth: 0,
             visited_cells: HashSet::new(),
@@ -185,18 +215,7 @@ impl InspectionSnapshot {
                 hint: "Evaluate a smaller value or expand it through Variables.".to_string(),
             });
         }
-        let variables_reference = if rendered.children.is_empty() {
-            0
-        } else {
-            self.allocate_handle(rendered.children)?
-        };
-        Ok(DebugEvaluateResult {
-            value: rendered.summary,
-            type_name: rendered.type_name,
-            variables_reference,
-            named_variables: rendered.named_children,
-            indexed_variables: rendered.indexed_children,
-        })
+        Ok(rendered)
     }
 
     pub(super) fn allocate_handle(

@@ -10,10 +10,22 @@ use super::model::{DebugAssignmentSelector, DebugAssignmentTarget};
 pub(in crate::vm::debug) fn target(
     executable: &Executable,
     assignment: &DebugAssignmentTarget,
+    target: MutationTarget,
+    current: Value,
+    evaluated_indexes: &[Value],
+) -> Result<MutationTarget, DebugSessionError> {
+    target_with_value(executable, assignment, target, current, evaluated_indexes)
+        .map(|(target, _)| target)
+}
+
+/// Concretizes a textual target and returns its current materialized value.
+pub(in crate::vm::debug) fn target_with_value(
+    executable: &Executable,
+    assignment: &DebugAssignmentTarget,
     mut target: MutationTarget,
     mut current: Value,
     evaluated_indexes: &[Value],
-) -> Result<MutationTarget, DebugSessionError> {
+) -> Result<(MutationTarget, Value), DebugSessionError> {
     let mut indexes = evaluated_indexes.iter();
     for selector in &assignment.selectors {
         match selector {
@@ -97,7 +109,7 @@ pub(in crate::vm::debug) fn target(
     if indexes.next().is_some() {
         return Err(path_unavailable());
     }
-    Ok(target)
+    Ok((target, current))
 }
 
 fn record_field_type(

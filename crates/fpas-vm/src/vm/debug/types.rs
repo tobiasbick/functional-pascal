@@ -200,6 +200,12 @@ pub enum DebugErrorKind {
     VariableValueType,
     /// Live mutation storage cannot be accessed safely.
     VariableUnavailable,
+    /// A dictionary insertion or replacement selected an existing key.
+    DictionaryKeyExists,
+    /// A dictionary removal or key replacement selected no existing key.
+    DictionaryKeyMissing,
+    /// A dictionary key replacement supplied an equal old and new key.
+    DictionaryKeyUnchanged,
     /// A requested inspection page exceeds configured limits.
     InspectionLimit,
     /// An expression references no visible binding with the requested name.

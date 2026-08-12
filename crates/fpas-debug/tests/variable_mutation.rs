@@ -5,6 +5,8 @@
     reason = "protocol tests keep fixture failures local"
 )]
 
+use std::{thread, time::Duration};
+
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use fpas_vm::{
     DebugAssignmentSelector, DebugAssignmentTarget, DebugErrorKind, DebugEvaluationLimits,
@@ -424,6 +426,240 @@ end.
             .value,
         "41"
     );
+}
+
+#[test]
+fn dictionary_structure_mutation_supports_parameters_and_capture_cells() {
+    let mut parameter_session = session(
+        r#"
+program DictionaryParameterMutation;
+
+function ReadAdded(mutable Scores: dict of string to integer): integer;
+begin
+  var Marker: integer := Scores['Seed'];
+  return Scores['Added'] + Marker
+end;
+
+begin
+  var OutputValue: integer := ReadAdded(['Seed': 1]);
+  var Marker: integer := OutputValue
+end.
+"#,
+    );
+    let parameter_frame = loop {
+        if session_scope(&mut parameter_session, "Parameters").is_some() {
+            break parameter_session
+                .stack(0, 1)
+                .expect("parameter dictionary stack")
+                .items[0]
+                .id;
+        }
+        step(&mut parameter_session);
+    };
+    parameter_session
+        .insert_dictionary_entry(
+            &DebugAssignmentTarget {
+                root: "Scores".to_string(),
+                selectors: Vec::new(),
+            },
+            &DebugExpression::String("Added".to_string()),
+            &DebugExpression::Integer(8),
+            Some(parameter_frame),
+        )
+        .expect("insert into mutable dictionary parameter");
+    assert!(matches!(
+        parameter_session
+            .step_out()
+            .expect("return from parameter function"),
+        DebugRunResult::Stopped(_)
+    ));
+    let locals = session_scope(&mut parameter_session, "Locals").expect("caller locals");
+    let values = parameter_session
+        .variables(locals, 0, 10)
+        .expect("caller values");
+    assert_eq!(
+        values
+            .items
+            .iter()
+            .find(|value| value.name == "OutputValue")
+            .expect("parameter function result")
+            .value,
+        "9"
+    );
+
+    let mut capture_session = session(
+        r#"
+program DictionaryCaptureMutation;
+
+function Reader(): function(): integer;
+begin
+  mutable var Scores: dict of string to integer := ['Seed': 1];
+  return function(): integer begin
+    var Marker: integer := Scores['Seed'];
+    return Scores['Added'] + Marker
+  end
+end;
+
+begin
+  var ReadValue: function(): integer := Reader();
+  var OutputValue: integer := ReadValue();
+  var Marker: integer := OutputValue
+end.
+"#,
+    );
+    let capture_frame = loop {
+        if session_scope(&mut capture_session, "Captures").is_some() {
+            break capture_session
+                .stack(0, 1)
+                .expect("capture dictionary stack")
+                .items[0]
+                .id;
+        }
+        step(&mut capture_session);
+    };
+    capture_session
+        .insert_dictionary_entry(
+            &DebugAssignmentTarget {
+                root: "Scores".to_string(),
+                selectors: Vec::new(),
+            },
+            &DebugExpression::String("Added".to_string()),
+            &DebugExpression::Integer(8),
+            Some(capture_frame),
+        )
+        .expect("insert into captured dictionary");
+    assert!(matches!(
+        capture_session
+            .step_out()
+            .expect("return from dictionary closure"),
+        DebugRunResult::Stopped(_)
+    ));
+    let locals = session_scope(&mut capture_session, "Locals").expect("capture caller locals");
+    let values = capture_session
+        .variables(locals, 0, 10)
+        .expect("capture caller values");
+    assert_eq!(
+        values
+            .items
+            .iter()
+            .find(|value| value.name == "OutputValue")
+            .expect("capture function result")
+            .value,
+        "9"
+    );
+}
+
+#[test]
+fn dictionary_structure_mutation_obeys_shared_limits_effect_policy_and_cancellation() {
+    let mut session = session(
+        r#"
+program DictionaryMutationLimits;
+
+uses Std.Console;
+
+function Forever(): integer;
+begin
+  while true do begin end;
+  return 0
+end;
+
+procedure Emit();
+begin
+  WriteLn('not live')
+end;
+
+begin
+  mutable var Scores: dict of string to integer := ['Seed': 1];
+  var Marker: integer := Scores['Seed']
+end.
+"#,
+    );
+    let frame = loop {
+        if let Some(locals) = session_scope(&mut session, "Locals") {
+            let ready = session
+                .variables(locals, 0, 10)
+                .expect("dictionary locals")
+                .items
+                .iter()
+                .any(|value| value.name == "Scores" && value.value == "{1 entries}");
+            if ready {
+                break session.stack(0, 1).expect("dictionary stack").items[0].id;
+            }
+        }
+        step(&mut session);
+    };
+    let target = DebugAssignmentTarget {
+        root: "Scores".to_string(),
+        selectors: Vec::new(),
+    };
+
+    let limited = DebugEvaluationLimits {
+        max_operations: 1,
+        ..DebugEvaluationLimits::default()
+    };
+    assert_eq!(
+        session
+            .insert_dictionary_entry_with_limits(
+                &target,
+                &DebugExpression::String("Limited".to_string()),
+                &DebugExpression::Integer(2),
+                Some(frame),
+                limited,
+            )
+            .expect_err("shared key and value operation limit")
+            .kind,
+        DebugErrorKind::EvaluationLimit
+    );
+
+    let forbidden = DebugExpression::Call {
+        callee: Box::new(DebugExpression::Callable("Emit".to_string())),
+        arguments: Vec::new(),
+    };
+    assert_eq!(
+        session
+            .insert_dictionary_entry(
+                &target,
+                &DebugExpression::String("Effect".to_string()),
+                &forbidden,
+                Some(frame),
+            )
+            .expect_err("effectful dictionary value")
+            .kind,
+        DebugErrorKind::ForbiddenCallEffect
+    );
+    assert!(session.output().lines.is_empty(), "sandbox emitted output");
+
+    let handle = session.evaluation_cancel_handle();
+    let cancellation = thread::spawn(move || {
+        thread::sleep(Duration::from_millis(10));
+        handle.cancel();
+    });
+    let forever = DebugExpression::Call {
+        callee: Box::new(DebugExpression::Callable("Forever".to_string())),
+        arguments: Vec::new(),
+    };
+    let cancelled = session
+        .insert_dictionary_entry_with_limits(
+            &target,
+            &DebugExpression::String("Cancelled".to_string()),
+            &forever,
+            Some(frame),
+            DebugEvaluationLimits {
+                call_timeout: Duration::from_secs(1),
+                ..DebugEvaluationLimits::default()
+            },
+        )
+        .expect_err("cancelled dictionary value");
+    cancellation.join().expect("cancellation thread");
+    assert_eq!(cancelled.kind, DebugErrorKind::CallCancelled);
+    assert_eq!(
+        session
+            .evaluate(&DebugExpression::Name("Scores".to_string()), Some(frame))
+            .expect("dictionary after failed mutations")
+            .value,
+        "{1 entries}"
+    );
+    assert!(session.scopes(frame).is_ok(), "failures preserve frame");
 }
 
 #[test]

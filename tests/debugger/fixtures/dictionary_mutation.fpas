@@ -1,0 +1,11 @@
+program DictionaryMutation;
+
+uses Std.Console;
+
+mutable var
+  Scores: dict of string to integer := ['Ada': 1, 'Grace': 2];
+
+begin
+  WriteLn(Scores['Hopper']);
+  WriteLn(Scores['Bob'])
+end.

@@ -35,7 +35,10 @@ export async function verifyManifest() {
       "functionalPascal.formatProject",
       "functionalPascal.checkProjectFormatting",
       "functionalPascal.cancelOperation",
-      "functionalPascal.refreshTests"
+      "functionalPascal.refreshTests",
+      "functionalPascal.debug.insertDictionaryEntry",
+      "functionalPascal.debug.removeDictionaryEntry",
+      "functionalPascal.debug.replaceDictionaryKey"
     ]
   );
   assert.ok(

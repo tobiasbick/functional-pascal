@@ -39,6 +39,9 @@ compatibility mode. A response precedes events caused by that request.
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
+| `dictionary.insert` | stopped | `target`, `key`, `expression`; optional `frame_id` | committed dictionary and fresh child reference |
+| `dictionary.remove` | stopped | `target`, `key`; optional `frame_id` | committed dictionary, removed value, and fresh child reference |
+| `dictionary.replace_key` | stopped | `target`, `key`, `new_key`; optional `frame_id` | committed dictionary, old/new keys, and fresh child reference |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -76,8 +79,9 @@ computed bases, calls as the root/path, properties, assignments, declarations,
 and statements are rejected. A supplied current `frame_id` selects that
 frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
-dictionary keys must already exist. Text indexes and dictionary insertion are
-unsupported.
+dictionary keys must already exist. Text indexes and dictionary structure
+changes are unsupported by `expression.set`; use the explicit dictionary
+commands below for insertion, removal, or key replacement.
 
 Selectors run once from left to right and the replacement runs last, all
 against the unchanged stopped snapshot and under one expression/call budget.
@@ -86,6 +90,30 @@ storage checks succeed does the debugger commit one root. Success refreshes all
 task snapshots and expires old frame and variable IDs. Any failure performs no
 write and preserves those IDs. The result uses the same five rendered fields
 as `evaluate` and `variable.set`.
+
+Dictionary structure commands target the dictionary container rather than one
+entry value:
+
+```json
+{"type":"request","id":20,"command":"dictionary.insert","arguments":{"frame_id":4294967296,"target":"State.Scores","key":"'Ada'","expression":"42"}}
+{"type":"request","id":21,"command":"dictionary.remove","arguments":{"frame_id":8589934592,"target":"State.Scores","key":"'Ada'"}}
+{"type":"request","id":22,"command":"dictionary.replace_key","arguments":{"frame_id":12884901888,"target":"State.Scores","key":"'Grace'","new_key":"'Hopper'"}}
+```
+
+`target` uses the same bounded root/selector grammar as `expression.set`, but
+must resolve to a mutable `dict of K to V`. Insert evaluates and validates a
+missing `key` and `expression`, then appends the pair. Remove requires an
+existing key and adds `removed` to the normal committed dictionary result. Key
+replacement requires an existing old key plus a missing, different `new_key`,
+preserves the value and pair position, and adds `old_key` and `new_key` to the
+result. All selectors and operation expressions run left-to-right against one
+unchanged snapshot and one shared budget before the single-root commit.
+
+Success returns the committed dictionary in the normal five rendered fields,
+refreshes every stopped task snapshot, and expires old IDs. Parse, evaluation,
+type, target, collision, missing-key, no-op, limit, cancellation, and storage
+failures write nothing and preserve old IDs. `initialize` advertises
+`dictionary_insert`, `dictionary_remove`, and `dictionary_replace_key`.
 
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
@@ -115,8 +143,9 @@ that sequence point.
 
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
-set-variable, set-expression, conditional breakpoints, hit conditions, and
-logpoints. Attach, non-stop execution and reverse execution remain false;
+set-variable, set-expression, all three dictionary structure operations,
+conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
+execution and reverse execution remain false;
 `task_threads` is true.
 
 ## Default limits
@@ -146,7 +175,8 @@ Stable errors include `invalid_request`, `invalid_state`,
 `call_timeout`, `call_cancelled`, `call_runtime`, `limit_exceeded`,
 `variable_target_unknown`, `variable_target_expired`, `variable_not_mutable`,
 `variable_path_unsupported`, `variable_uninitialized`, `variable_value_type`,
-`variable_unavailable`, `unknown_task`,
+`variable_unavailable`, `dictionary_key_exists`, `dictionary_key_missing`,
+`dictionary_key_unchanged`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

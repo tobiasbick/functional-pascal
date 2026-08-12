@@ -18,6 +18,7 @@ use crate::vm::layouts::RuntimeLayouts;
 use crate::vm::tasks::{DebugClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
+mod dictionary;
 mod execution;
 mod inspection;
 mod mutation;

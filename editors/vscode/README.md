@@ -41,9 +41,19 @@ While stopped, the Variables view can edit mutable locals, parameters, globals,
 closure captures, record fields, array elements, and existing dictionary
 values. Rejected edits leave the session stopped and unchanged. A successful
 edit refreshes the Variables view; continuing execution observes the committed
-value. Dictionary keys, immutable or uninitialized bindings, evaluation-only
+value. Dictionary keys are not edited through the standard Variables request;
+immutable or uninitialized bindings, evaluation-only
 results, function/enum/wrapper payload descendants, task values, and opaque
-host values are not editable. Attach and task debugging remain unsupported.
+host values are not editable. Task debugging is deterministic and all-stop;
+attach remains unsupported.
+
+Use **Functional Pascal: Debug: Insert Dictionary Entry**, **Debug: Remove
+Dictionary Entry**, or **Debug: Replace Dictionary Key** while stopped to
+change dictionary structure. The commands prompt for a complete mutable
+dictionary target and FPAS key/value expressions. Insert appends a missing
+pair, remove deletes an existing pair, and key replacement preserves the
+associated value and iteration position. Failures and cancelled prompts leave
+the stopped program unchanged.
 
 ## Build
 

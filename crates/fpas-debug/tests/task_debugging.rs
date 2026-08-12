@@ -216,6 +216,62 @@ fn task_snapshots_and_mutation_remain_bound_to_their_task() {
 }
 
 #[test]
+fn dictionary_structure_mutation_remains_bound_to_the_child_task() {
+    const DICTIONARY_TASK: &str = r#"program TaskDictionaryMutation;
+
+uses Std.Console, Std.Task;
+
+function Work(): integer;
+begin
+  mutable var Scores: dict of string to integer := ['Seed': 1];
+  var Marker: integer := Scores['Seed'];
+  return Scores['Added'] + Marker
+end;
+
+begin
+  var Pending: task := go Work();
+  WriteLn(Wait(Pending))
+end.
+"#;
+    let mut server = server_for(DICTIONARY_TASK);
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let breakpoint = server.handle_line(&request(
+        2,
+        "breakpoint.set",
+        json!({"source":"<memory>","line":8}),
+    ));
+    assert_eq!(breakpoint[0]["body"]["verified"], true, "{breakpoint:?}");
+    let _ = server.handle_line(&request(3, "launch", json!({"stop_on_entry":false})));
+    let _ = wait_until_stopped(&mut server);
+
+    let child_stack = server.handle_line(&request(4, "stack", json!({"task_id":1})));
+    let child_frame = child_stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("child dictionary frame");
+    let main_stack = server.handle_line(&request(5, "stack", json!({"task_id":0})));
+    let main_frame = main_stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("main task frame");
+
+    let inserted = server.handle_line(&request(
+        6,
+        "dictionary.insert",
+        json!({"frame_id":child_frame,"target":"Scores","key":"'Added'","expression":"8"}),
+    ));
+    assert_eq!(inserted[0]["body"]["result"], "{2 entries}", "{inserted:?}");
+    let expired_main = server.handle_line(&request(7, "scopes", json!({"frame_id":main_frame})));
+    assert_eq!(expired_main[0]["error"]["code"], "unknown_frame");
+
+    let _ = server.handle_line(&request(8, "continue", json!({})));
+    let terminated = server.wait();
+    assert!(
+        terminated
+            .iter()
+            .any(|event| { event["event"] == "output" && event["body"]["text"] == "9\n" })
+    );
+}
+
+#[test]
 fn wait_all_sleep_detached_and_nested_spawn_complete_under_debugging() {
     const WAIT_ALL: &str = r#"program TaskWaitAll;
 

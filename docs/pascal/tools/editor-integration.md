@@ -58,8 +58,19 @@ stack frame; omitting a frame is global-only. Stored-field and index selectors
 are evaluated against the stopped pre-edit state. Successful edits refresh all
 task snapshots; rejected edits leave the current frames and values usable.
 
+Three Command Palette actions provide explicit dictionary structure changes:
+**Debug: Insert Dictionary Entry**, **Debug: Remove Dictionary Entry**, and
+**Debug: Replace Dictionary Key**. They require an active stopped FPAS session
+and selected frame, prompt for the dictionary target and required FPAS
+expressions, and invoke the matching DAP custom request. Insert appends one
+missing key/value pair; remove returns and deletes one existing pair; key
+replacement preserves the value and iteration position. Successful commands
+refresh variables, while cancellation or any rejected input sends no partial
+mutation.
+
 Immutable, hidden, uninitialized, or evaluation-only values are read-only.
-Dictionary keys, missing dictionary entries, string characters, function
+Dictionary entry values remain editable through standard variable mutation;
+structure changes use the explicit commands. String characters, function
 captures, enum and `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted resources are not
 editable. A rejected edit reports an actionable debugger error and keeps the

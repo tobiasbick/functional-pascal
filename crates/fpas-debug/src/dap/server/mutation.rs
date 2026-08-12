@@ -69,7 +69,7 @@ impl DapServer {
         records
     }
 
-    fn append_variables_invalidation(&mut self, records: &mut Vec<Value>) {
+    pub(super) fn append_variables_invalidation(&mut self, records: &mut Vec<Value>) {
         let succeeded = records.first().is_some_and(|record| {
             record.get("type").and_then(Value::as_str) == Some("response")
                 && record.get("success").and_then(Value::as_bool) == Some(true)

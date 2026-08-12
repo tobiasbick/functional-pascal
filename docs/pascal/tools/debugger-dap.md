@@ -17,9 +17,10 @@ FPAS tasks.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
-`evaluate`, `setVariable`, `setExpression`, `cancel`, `continue`, `pause`,
-`next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported requests
-fail explicitly.
+`evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
+`fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `cancel`, `continue`,
+`pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
+requests fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
@@ -57,7 +58,19 @@ back to main. The response has the same rendered value, type, fresh aggregate
 reference, and exact child counts as `setVariable`. Non-default `format` is
 rejected consistently.
 
-After a successful mutation, clients that initialized with
+The three FPAS custom requests provide dictionary structure mutation because
+DAP has no standard equivalent. They use `frameId`, `target`, and `key`;
+insertion additionally uses `value`, while key replacement uses `newKey`.
+`target` selects a complete mutable dictionary using the same bounded target
+grammar as `setExpression`. Insert requires a missing key, remove requires an
+existing key, and replacement requires an existing old key and missing,
+different new key. Successful bodies contain the committed dictionary as
+`value`, `type`, `variablesReference`, `namedVariables`, and
+`indexedVariables`. Remove adds `removed`; replacement adds `oldKey` and
+`newKey`. The custom requests map directly to the shared JSONL operations and
+do not define separate mutation behavior or capability flags.
+
+After any successful value or dictionary mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the
 `variables` area after the response. No invalidation event is sent after a
 failure or to clients that did not negotiate it. Successful mutation expires

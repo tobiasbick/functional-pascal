@@ -87,13 +87,26 @@ cell identity, refreshes every stopped task snapshot, and expires previous
 frames and variable references. Clients must request stack, scopes, and
 variables again after success. Failed mutation preserves every old reference.
 
-Immutable or uninitialized bindings, compiler-hidden storage, dictionary keys,
+Dictionary structure mutation is exposed through explicit JSONL commands, DAP
+custom requests, and three Functional Pascal VS Code commands. Insert requires
+a missing key and appends the pair. Remove requires an existing key, removes
+that pair, and returns the removed value. Key replacement requires an existing
+old key and missing, different new key; it preserves the value and iteration
+position. Each operation addresses a complete dictionary container through the
+same bounded textual target form, validates key and value expressions against
+portable `dict of K to V` metadata, and commits one mutable root atomically.
+The operations support locals, mutable parameters, globals, closure captures,
+nested aggregate paths, and stopped task frames. Success expires all inspection
+references; every failure preserves both live state and existing references.
+
+Immutable or uninitialized bindings, compiler-hidden storage,
 evaluation-only results, function captures, enum or `Result`/`Option` payload
 descendants, task values, function values, and opaque hosted values are not
-writable. Mutation cannot insert or remove dictionary entries, change
-dictionary keys, resize arrays, edit a string character, invoke a property
-setter, change control flow, or initialize a binding before normal execution
-does so.
+writable. Existing `setVariable` and `setExpression` operations still cannot
+insert/remove entries or change keys; clients use the explicit dictionary
+operations instead. Mutation cannot resize arrays, edit a string character,
+invoke a property setter, change control flow, or initialize a binding before
+normal execution does so.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

@@ -14,7 +14,11 @@ consciously deferred there.
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation
-domain. Later mutation forms remain recorded in [deferred.md](deferred.md).
+domain.
+
+Explicit dictionary insertion, removal, and key replacement are implemented
+through JSONL, DAP custom requests, and VS Code commands. Later mutation forms
+remain recorded in [deferred.md](deferred.md).
 
 The implemented debugger does not change FPAS syntax, semantics, or the
 language specification.

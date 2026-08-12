@@ -1,5 +1,6 @@
 //! Atomic live-root mutation after detached expression evaluation.
 
+mod dictionary;
 mod model;
 mod replace;
 mod resolve;
@@ -13,8 +14,9 @@ use super::inspection::{MutationRoot, MutationTarget};
 use super::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::worker::Worker;
 
-pub use model::{DebugAssignmentSelector, DebugAssignmentTarget};
-pub(in crate::vm::debug) use resolve::target as resolve_target;
+pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remove, replace_key};
+pub use model::{DebugAssignmentSelector, DebugAssignmentTarget, DebugDictionaryMutationResult};
+pub(in crate::vm::debug) use resolve::{target as resolve_target, target_with_value};
 
 pub(super) fn validate_replacement(
     executable: &VerifiedExecutable,
@@ -28,6 +30,16 @@ pub(super) fn validate_replacement(
         replacement,
         max_depth,
     )
+}
+
+/// Validates one detached operation value against portable debugger type metadata.
+pub(super) fn validate_value(
+    executable: &VerifiedExecutable,
+    expected: fpas_bytecode::DebugTypeId,
+    value: &Value,
+    max_depth: usize,
+) -> Result<(), DebugSessionError> {
+    validate::value(executable.executable(), expected, value, max_depth)
 }
 
 pub(super) fn commit(

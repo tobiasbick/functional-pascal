@@ -45,7 +45,7 @@ pub(super) fn validate_replacement(
 }
 
 /// Validates one detached operation value against portable debugger type metadata.
-pub(super) fn validate_value(
+pub(in crate::vm::debug) fn validate_value(
     executable: &VerifiedExecutable,
     expected: fpas_bytecode::DebugTypeId,
     value: &Value,

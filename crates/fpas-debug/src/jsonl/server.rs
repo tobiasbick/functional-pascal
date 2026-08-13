@@ -4,6 +4,7 @@ mod breakpoints;
 mod completion;
 mod dictionary;
 mod evaluation;
+mod forced_return;
 mod mutation;
 mod sequence;
 mod tasks;
@@ -204,6 +205,7 @@ impl JsonlServer {
             "string.replace_character" => {
                 self.replace_string_character(request_id, command, arguments)
             }
+            "frame.return" => self.force_return(request_id, command, arguments),
             "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(

@@ -184,6 +184,14 @@ pub enum DebugErrorKind {
     UnknownBreakpoint,
     /// A frame identifier belongs to an expired or different stop snapshot.
     UnknownFrame,
+    /// Forced return is not available for this stop, frame, task, or result category.
+    FrameReturnUnsupported,
+    /// A value-returning function was force-returned without an expression.
+    FrameReturnValueRequired,
+    /// A procedure was force-returned with an unexpected expression.
+    FrameReturnValueUnexpected,
+    /// The evaluated return value does not match the declared portable result type.
+    FrameReturnType,
     /// A variables reference belongs to an expired or different stop snapshot.
     UnknownVariablesReference,
     /// The requested writable child does not exist in the current container.

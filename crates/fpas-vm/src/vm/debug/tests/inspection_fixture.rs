@@ -94,6 +94,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
                 scope: 1,
             },
         ],
+        ..Default::default()
     };
     let helper_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -113,6 +114,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             cell_backed: false,
         }],
         sequence_points: vec![point(8, 10)],
+        ..Default::default()
     };
     Executable {
         code: vec![

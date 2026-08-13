@@ -48,6 +48,13 @@ end.
         image.debug_types.get(binding("Value").ty.get() as usize),
         Some(&DebugType::Integer)
     );
+    assert_eq!(
+        add.debug
+            .result_type
+            .and_then(|ty| image.debug_types.get(ty.get() as usize)),
+        Some(&DebugType::Integer),
+        "source functions retain a portable result type"
+    );
     assert_ne!(binding("Nested").scope, binding("Offset").scope);
     assert!(
         !add.debug.sequence_points.is_empty(),

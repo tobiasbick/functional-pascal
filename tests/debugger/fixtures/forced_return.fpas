@@ -1,0 +1,25 @@
+program ForcedReturn;
+
+uses Std.Console;
+
+function PlusOne(Value: integer): integer;
+begin
+  return Value + 1
+end;
+
+function Compute(Value: integer): integer;
+begin
+  var Offset: integer := 1;
+  return Value + Offset
+end;
+
+procedure Announce(Message: string);
+begin
+  WriteLn(Message)
+end;
+
+begin
+  var Answer: integer := Compute(41);
+  Announce('skip me');
+  WriteLn(Answer)
+end.

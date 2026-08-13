@@ -117,6 +117,11 @@ pub(super) fn validate_debug_info(
             validate_debug_location(location, source_count)?;
         }
     }
+    if let Some(ty) = function.debug.result_type
+        && (ty as usize) >= debug_type_count
+    {
+        return Err(ObjectError::InvalidTableReference("function result type"));
+    }
     let mut previous = None;
     for point in &function.debug.sequence_points {
         if previous.is_some_and(|address| address >= point.instruction_start)

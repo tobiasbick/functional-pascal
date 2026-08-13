@@ -20,6 +20,7 @@ use crate::vm::worker::Worker;
 
 mod dictionary;
 mod execution;
+mod forced_return;
 mod inspection;
 mod mutation;
 mod sequence;
@@ -317,6 +318,10 @@ impl DebugSession {
     }
 
     fn refresh_inspection(&mut self) {
+        self.refresh_inspection_with_reserved_handles(None);
+    }
+
+    fn refresh_inspection_with_reserved_handles(&mut self, reservation: Option<(u64, usize)>) {
         let task_id = self.last_stop.task_id;
         self.inspections.clear();
         for inspectable_task_id in self.runtime.inspectable_task_ids() {
@@ -324,12 +329,16 @@ impl DebugSession {
                 continue;
             };
             self.inspection_generation = self.inspection_generation.wrapping_add(1).max(1);
+            let reserved_handles = reservation
+                .filter(|(reserved_task_id, _)| *reserved_task_id == inspectable_task_id)
+                .map_or(0, |(_, count)| count);
             self.inspections.insert(
                 inspectable_task_id,
-                InspectionSnapshot::capture(
+                InspectionSnapshot::capture_with_reserved_handles(
                     worker,
                     self.inspection_generation,
                     self.inspection_limits,
+                    reserved_handles,
                 ),
             );
         }

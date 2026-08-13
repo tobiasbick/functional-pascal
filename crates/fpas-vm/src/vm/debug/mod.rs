@@ -3,6 +3,7 @@
 mod breakpoints;
 mod calls;
 mod evaluation;
+mod forced_return;
 mod inspection;
 mod mutation;
 mod session;
@@ -19,6 +20,7 @@ pub use evaluation::{
     DebugBinaryOperation, DebugEvaluateResult, DebugEvaluationLimits, DebugExpression,
     DebugUnaryOperation,
 };
+pub use forced_return::DebugForcedReturnResult;
 pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };

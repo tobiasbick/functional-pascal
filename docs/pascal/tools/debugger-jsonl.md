@@ -45,6 +45,7 @@ compatibility mode. A response precedes events caused by that request.
 | `array.insert` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed array, affected index, and fresh child reference |
 | `array.remove` | stopped | `target`, `index`; optional `frame_id` | committed array, affected index, removed value, and fresh child reference |
 | `string.replace_character` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed string, affected index, and old/new characters |
+| `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result and the fresh caller frame |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -156,6 +157,23 @@ uses the normal five rendered fields and adds `index`; removal also adds
 All inputs run once under one shared budget before an atomic commit. Initialize
 advertises `array_insert`, `array_remove`, and `string_replace_character`.
 
+`frame.return` completes the active ordinary callee without resuming the
+program:
+
+```json
+{"type":"request","id":17,"command":"frame.return","arguments":{"frame_id":4294967297,"expression":"42"}}
+{"type":"response","request_id":17,"command":"frame.return","success":true,"body":{"task_id":0,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0,"frame":{"frame_id":8589934593,"name":"main","depth":0}}}
+```
+
+`frame_id` must be the current generation's depth-zero frame for the task that
+caused the current non-failure stop, and that frame must have a saved caller.
+Functions require `expression`; procedures omit it. The expression uses the
+same detached evaluator as `evaluate` and is checked against the portable
+declared result type before the one-frame unwind. Success returns the rendered
+result fields plus the fresh caller `frame`, remains stopped, and refreshes
+every stopped-task snapshot. Failure is atomic. Initialize advertises
+`frame_return`. Procedures render as `()` with `type_name` `unit`.
+
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
 intrinsics. Calls use a detached copy of globals, arguments, receivers,
@@ -185,10 +203,10 @@ that sequence point.
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
-three sequence structure operations,
+three sequence structure operations, forced return,
 conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
 execution and reverse execution remain false;
-`task_threads` is true.
+`task_threads` is true. `frame_return` is true.
 
 ## Default limits
 
@@ -219,7 +237,9 @@ Stable errors include `invalid_request`, `invalid_state`,
 `variable_path_unsupported`, `variable_uninitialized`, `variable_value_type`,
 `variable_unavailable`, `dictionary_key_exists`, `dictionary_key_missing`,
 `dictionary_key_unchanged`, `sequence_index_out_of_bounds`,
-`string_character_required`, `string_character_unchanged`, `unknown_task`,
+`string_character_required`, `string_character_unchanged`,
+`frame_return_unsupported`, `frame_return_value_required`,
+`frame_return_value_unexpected`, `frame_return_type`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

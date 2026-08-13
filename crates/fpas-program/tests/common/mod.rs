@@ -73,6 +73,7 @@ pub fn program_image() -> ProgramImage {
                     },
                     scope: 0,
                 }],
+                result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
             },
         }],
         constants: vec![

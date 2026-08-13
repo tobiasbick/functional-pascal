@@ -41,7 +41,8 @@ export async function verifyManifest() {
       "functionalPascal.debug.replaceDictionaryKey",
       "functionalPascal.debug.insertArrayElement",
       "functionalPascal.debug.removeArrayElement",
-      "functionalPascal.debug.replaceStringCharacter"
+      "functionalPascal.debug.replaceStringCharacter",
+      "functionalPascal.debug.forceReturn"
     ]
   );
   assert.ok(

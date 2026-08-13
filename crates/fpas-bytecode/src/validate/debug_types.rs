@@ -45,6 +45,9 @@ pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(),
         for binding in &function.debug.bindings {
             validate_type_reference(executable, binding.ty, "debug binding type")?;
         }
+        if let Some(result_type) = function.debug.result_type {
+            validate_type_reference(executable, result_type, "function result type")?;
+        }
     }
     Ok(())
 }

@@ -11,6 +11,11 @@ pub struct FunctionDebugInfo {
     pub bindings: Vec<DebugBinding>,
     /// Ordered executable sequence points.
     pub sequence_points: Vec<SequencePoint>,
+    /// Portable result type when debugger metadata is available.
+    ///
+    /// `None` means the function has no retained result metadata, not `unit` and not
+    /// `Dynamic`. **Documentation:** `docs/pascal/tools/debugger.md`
+    pub result_type: Option<DebugTypeId>,
 }
 
 /// One function-local lexical scope.

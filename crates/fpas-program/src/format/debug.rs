@@ -81,6 +81,10 @@ pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<
         encode_location(output, point.location);
         write_u32(output, point.scope);
     }
+    write_bool(output, debug.result_type.is_some());
+    if let Some(ty) = debug.result_type {
+        write_u32(output, ty.get());
+    }
     Ok(())
 }
 
@@ -169,10 +173,17 @@ pub(super) fn decode(
         });
     }
 
+    let result_type = if read_bool(reader, "debug_has_result_type")? {
+        Some(DebugTypeId::new(reader.u32("debug_result_type")?))
+    } else {
+        None
+    };
+
     Ok(FunctionDebugInfo {
         scopes,
         bindings,
         sequence_points,
+        result_type,
     })
 }
 

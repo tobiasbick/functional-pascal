@@ -24,6 +24,36 @@ remains deferred. Debugger initialization of a visible mutable local or global
 root is implemented; descendant writes on empty storage and skipping the later
 source initializer remain deferred.
 
+### Function-value assignment beyond bounded copy
+
+The implemented slice copies an already materialized, visible,
+non-task-bound function value into a structurally compatible mutable target.
+The following broader callable mutations remain deferred:
+
+- constructing a new closure from `function` or `procedure` expression syntax;
+- materializing a named, nested, static, or bound-record routine when no
+  visible source binding already contains it;
+- accepting computed function sources such as calls, properties, methods,
+  constructors, record updates, aggregate children, payload children, or
+  evaluation-result handles;
+- assigning task-bound closures or retained graphs containing mutable cells,
+  task handles, opaque handles, or nested task-bound functions;
+- proving same-task escape and destination-lifetime constraints for those
+  identity-bearing values;
+- assigning function values to `Dynamic` storage or inferring signatures from
+  runtime names, IDs, arity, or display text;
+- constructing inactive enum, `Result`, or `Option` payloads containing a
+  function value;
+- editing captures, callable targets, task-bound flags, code, source maps, or
+  signatures in place; and
+- assigning task handles, capture cells themselves, or opaque hosted
+  resources.
+
+Re-entry gate: define portable source and destination type proof, retained
+identity and lifetime rules, escape constraints, atomic commit behavior,
+protocol parity, and bounded negative coverage without inferring semantics
+from runtime display data.
+
 Deferred:
 
 - implicitly switching a data-carrying enum variant or a `Result`/`Option`
@@ -34,21 +64,22 @@ Deferred:
   an unqualified field name;
 - creating a fieldless variant through a descendant target or advertising
   inactive variants as virtual Variables children or custom editor controls;
-- assigning function values outside the bounded copy slice documented in
-  [`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md),
-  task handles, or opaque hosted resources;
+- assigning task handles or opaque hosted resources;
 - filling uninitialized storage through field, index, or payload descendants;
 - creating a missing capture cell or treating an absent parameter as
   user-initializable;
-- forcing or replacing return values;
+- forcing or replacing return values outside the bounded active-callee package
+  documented in [`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md);
 - changing the instruction pointer or restarting a frame; and
 - data breakpoints or breakpoint actions that modify state.
 
-The implemented slice copies one existing visible, non-task-bound function
-value into a structurally compatible mutable target. Function construction,
-task-bound closures, task handles, and opaque resources remain outside that
-slice as recorded in
-[`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md).
+The immediately following uninitialized-descendant and missing
+parameter/capture items remain deferred because no atomic construction or
+identity semantics have been accepted. Bounded active-callee forced return is
+implemented. Entry frames, older frames, peer or suspended tasks, completed
+returns, runtime-error recovery, and identity-bearing result values remain
+explicitly outside that slice in
+[`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md).
 
 Bounded array insertion/removal and Unicode-scalar string character replacement
 are implemented. The remaining operations need additional lvalue, source-assignment,

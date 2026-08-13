@@ -99,6 +99,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             local(23, 16, 3, true, DebugBindingKind::Local, false),
         ],
         sequence_points: vec![point(0, 1), point(24, 2), point(26, 3)],
+        ..Default::default()
     };
     let helper_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -107,6 +108,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         }],
         bindings: vec![local(30, 0, 2, true, DebugBindingKind::Parameter, false)],
         sequence_points: vec![point(37, 10)],
+        ..Default::default()
     };
     let routine = |name, start, end, arity, captures, registers, convention, debug| FunctionInfo {
         name: StringId::new(name),

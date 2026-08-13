@@ -69,6 +69,7 @@ pub(super) fn compile_debug_info(
         scopes,
         bindings,
         sequence_points,
+        result_type: Some(DebugTypeId::new(function.signature.result.get())),
     })
 }
 

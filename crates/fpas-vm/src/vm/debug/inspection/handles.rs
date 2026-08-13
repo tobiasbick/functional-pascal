@@ -11,6 +11,18 @@ use super::targets::MutationAccess;
 use crate::vm::debug::evaluation::{DebugEvaluateResult, DebugEvaluationLimits};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 
+/// Fully rendered evaluation result prepared before a live debugger commit.
+pub(in crate::vm::debug) struct PreparedEvaluationResult {
+    rendered: render::RenderedValue,
+}
+
+impl PreparedEvaluationResult {
+    /// Return the number of snapshot handles needed to retain this result.
+    pub(in crate::vm::debug) fn reserved_handles(&self) -> usize {
+        usize::from(!self.rendered.children.is_empty())
+    }
+}
+
 impl InspectionSnapshot {
     pub(in crate::vm::debug) fn validate_evaluation_frame(
         &self,
@@ -156,7 +168,8 @@ impl InspectionSnapshot {
         value: Value,
         limits: DebugEvaluationLimits,
     ) -> Result<DebugEvaluateResult, DebugSessionError> {
-        let rendered = self.render_evaluation_value(&value, limits)?;
+        let prepared = self.prepare_evaluation_result(&value, limits)?;
+        let rendered = prepared.rendered;
         let variables_reference = if rendered.children.is_empty() {
             0
         } else {
@@ -169,6 +182,50 @@ impl InspectionSnapshot {
             named_variables: rendered.named_children,
             indexed_variables: rendered.indexed_children,
         })
+    }
+
+    /// Render and resource-check a result before a live debugger mutation.
+    pub(in crate::vm::debug) fn prepare_evaluation_result(
+        &self,
+        value: &Value,
+        limits: DebugEvaluationLimits,
+    ) -> Result<PreparedEvaluationResult, DebugSessionError> {
+        let rendered = self.render_evaluation_value(value, limits)?;
+        if !rendered.children.is_empty() && self.limits.max_handles == 0 {
+            return Err(DebugSessionError {
+                kind: DebugErrorKind::InspectionLimit,
+                message: "debug variable handle limit reached".to_string(),
+                hint: "Increase the configured handle limit before returning an expandable value."
+                    .to_string(),
+            });
+        }
+        Ok(PreparedEvaluationResult { rendered })
+    }
+
+    /// Retain a pre-rendered result in a snapshot that reserved its handle slot.
+    pub(in crate::vm::debug) fn retain_prepared_evaluation_result(
+        &mut self,
+        prepared: PreparedEvaluationResult,
+    ) -> DebugEvaluateResult {
+        let rendered = prepared.rendered;
+        let variables_reference = if rendered.children.is_empty() {
+            0
+        } else {
+            debug_assert!(self.handles.len() < self.limits.max_handles);
+            let id = item_id(self.generation, self.handles.len());
+            self.handles.push(HandleEntry {
+                id,
+                values: rendered.children,
+            });
+            id
+        };
+        DebugEvaluateResult {
+            value: rendered.summary,
+            type_name: rendered.type_name,
+            variables_reference,
+            named_variables: rendered.named_children,
+            indexed_variables: rendered.indexed_children,
+        }
     }
 
     /// Renders a bounded summary without allocating an inspection handle.

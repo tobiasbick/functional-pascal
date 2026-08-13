@@ -25,11 +25,12 @@ or escaping sources are rejected before execution.
 The debugger supports source breakpoints, pause, continue, step in/over/out,
 stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
-non-stopping logpoints, stopped-state variable mutation, output, and structured
-runtime failures. Execution is bounded by `--timeout`, `--instruction-limit`,
-and `--output-limit`. Programs may spawn retained and detached tasks. Attach,
-non-stop task execution, control-flow manipulation, and reverse execution
-remain unsupported.
+non-stopping logpoints, stopped-state variable mutation, forced return from the
+active ordinary callee, output, and structured runtime failures. Execution is
+bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
+may spawn retained and detached tasks. Attach, non-stop task execution, reverse
+execution, and control-flow changes other than the bounded forced-return
+command remain unsupported.
 
 Task debugging is deterministic and all-stop. The debug session runs the main
 program and spawned FPAS tasks on one host execution lane, while normal
@@ -150,6 +151,25 @@ and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
 property setter or change control flow. If execution later reaches the source
 initializer, that store overwrites the debugger-provided value.
+
+Forced return is a dedicated stopped-state command, not an assignment and not
+`stepOut`. JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code
+command **Debug: Force Return** accept only the current generation's depth-zero
+frame for the task that caused the current non-failure stop. That frame must be
+an ordinary callee with a saved caller. A function requires one expression
+evaluated in the callee under the same detached policy and limits as
+`evaluate`. A procedure omits the expression and returns `unit`. The value is
+checked against the function's portable declared result type before any live
+frame changes. Success pops exactly that callee, releases its register window,
+restores the caller, writes the result to the saved destination when present,
+remains all-stop, and refreshes every stopped-task snapshot once. It does not
+run remaining callee instructions, dispatch a `Return` opcode, or add to the VM
+instruction count. Failure leaves frames, registers, the current stop,
+instruction count, and inspection handles unchanged. Entry and task-root
+frames, older frames, waiting, sleeping, or peer tasks, runtime-error stops,
+missing result metadata, and Dynamic, first-class function, task, capture-cell,
+or opaque results are rejected. Remaining control-flow exclusions stay in
+[`docs/future/debugger/forced-return/consciously-deferred.md`](../../future/debugger/forced-return/consciously-deferred.md).
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

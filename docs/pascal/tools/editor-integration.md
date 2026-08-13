@@ -19,7 +19,8 @@ desktop editors. The implemented editor features are:
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
-  evaluation, and stopped-state editing of supported mutable values
+  evaluation, stopped-state editing of supported mutable values, and forced
+  return from the active callee
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -84,6 +85,15 @@ current length, and string indexes count Unicode scalars rather than UTF-8
 bytes. Character replacement requires exactly one different character. The
 commands share the stopped frame, atomic commit, error, and refresh behavior of
 dictionary commands.
+
+**Debug: Force Return** completes the active ordinary callee of the task that
+caused the current non-failure stop. The command uses the selected depth-zero
+stack frame. Procedures return immediately; functions prompt for one FPAS
+expression when the command is invoked without an expression. The custom DAP
+request `fpas/forceReturn` writes the validated result into the caller and
+refreshes stack and variable views without resuming the program. Entry frames,
+older frames, peer tasks, runtime-error stops, and unsupported result types are
+rejected without changing live state.
 
 Immutable, hidden, or evaluation-only values are read-only. Uninitialized
 mutable locals and globals accept only a complete root assignment.

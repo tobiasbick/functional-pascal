@@ -145,6 +145,7 @@ fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
             },
             scope: 0,
         }],
+        ..Default::default()
     };
     let first =
         link_objects(std::slice::from_ref(&unit), &program()).expect("first deterministic link");
@@ -186,6 +187,29 @@ fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
     );
     let execution = Vm::new(first).run().expect("linked VM execution");
     assert_eq!(execution.value, Value::Unit);
+}
+
+#[test]
+fn linker_retains_result_only_debug_types() {
+    let mut library = unit(true);
+    library.debug_types = vec![
+        fpas_unit::object::ObjectDebugType::Dynamic,
+        fpas_unit::object::ObjectDebugType::Integer,
+    ];
+    library.functions[0].debug.result_type = Some(1);
+    let linked =
+        link_objects(std::slice::from_ref(&library), &program()).expect("result type link");
+    let image = linked.executable();
+    let function = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("library.unit.zed"))
+        .expect("library function");
+    let result_type = function.debug.result_type.expect("portable result type");
+    assert_eq!(
+        image.debug_types.get(result_type.get() as usize),
+        Some(&fpas_bytecode::DebugType::Integer)
+    );
 }
 
 #[test]

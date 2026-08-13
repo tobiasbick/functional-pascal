@@ -25,6 +25,18 @@ impl InspectionSnapshot {
         generation: u32,
         limits: DebugInspectionLimits,
     ) -> Self {
+        Self::capture_with_reserved_handles(worker, generation, limits, 0)
+    }
+
+    /// Capture a snapshot while leaving bounded capacity for post-commit result handles.
+    pub(in crate::vm::debug) fn capture_with_reserved_handles(
+        worker: &Worker,
+        generation: u32,
+        limits: DebugInspectionLimits,
+        reserved_handles: usize,
+    ) -> Self {
+        let mut capture_limits = limits;
+        capture_limits.max_handles = capture_limits.max_handles.saturating_sub(reserved_handles);
         let mut snapshot = Self {
             generation,
             executable: Arc::clone(&worker.executable),
@@ -33,7 +45,7 @@ impl InspectionSnapshot {
             total_frames: worker.call_stack.len().saturating_add(1),
             handles: Vec::new(),
             child_handles: HashMap::new(),
-            limits,
+            limits: capture_limits,
         };
         let mut captured = vec![CapturedFrame {
             function: worker.function,
@@ -53,6 +65,7 @@ impl InspectionSnapshot {
         for (depth, frame) in captured.into_iter().enumerate() {
             snapshot.capture_frame(worker, frame, depth);
         }
+        snapshot.limits = limits;
         snapshot
     }
 

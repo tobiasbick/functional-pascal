@@ -82,6 +82,12 @@ fn reachable_types(object: &RelocatableObject) -> Vec<bool> {
         )
         .chain(
             object
+                .functions
+                .iter()
+                .filter_map(|function| function.debug.result_type),
+        )
+        .chain(
+            object
                 .records
                 .iter()
                 .flat_map(|record| record.field_types.iter().copied()),

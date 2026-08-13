@@ -32,7 +32,12 @@ Bounded assignment of an already materialized, visible, non-task-bound
 first-class function value onto a structurally compatible mutable target is
 implemented through the same `setVariable`/`setExpression` surfaces. Function
 construction, task-bound closures, Dynamic endpoints, and opaque resources
-remain deferred in [`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md).
+remain recorded centrally in [deferred.md](deferred.md).
+
+Bounded forced return from the active ordinary callee is implemented through
+JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code command
+`functionalPascal.debug.forceReturn`. Remaining control-flow exclusions stay in
+[`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

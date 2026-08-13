@@ -85,6 +85,10 @@ pub(super) fn merge(
     ))
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "debug merge needs source, string, and type translation tables"
+)]
 fn merge_debug(
     object: &RelocatableObject,
     function: &fpas_unit::object::ObjectFunction,
@@ -159,6 +163,11 @@ fn merge_debug(
         scopes,
         bindings,
         sequence_points,
+        result_type: function
+            .debug
+            .result_type
+            .map(|ty| debug_types.translate(object_index, ty))
+            .transpose()?,
     })
 }
 

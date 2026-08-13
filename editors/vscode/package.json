@@ -165,6 +165,11 @@
         "command": "functionalPascal.debug.replaceStringCharacter",
         "title": "Debug: Replace String Character",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.forceReturn",
+        "title": "Debug: Force Return",
+        "category": "Functional Pascal"
       }
     ],
     "configuration": {

@@ -109,6 +109,7 @@ fn debug(points: &[(u32, u32)]) -> FunctionDebugInfo {
             .iter()
             .map(|(instruction, line)| point(*instruction, *line))
             .collect(),
+        ..Default::default()
     }
 }
 
@@ -428,6 +429,7 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 
 mod behavior;
 mod evaluation;
+mod forced_return;
 mod function_value_assignment;
 mod inspection_fixture;
 mod mutation;

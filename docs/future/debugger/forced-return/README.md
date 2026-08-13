@@ -1,10 +1,11 @@
-# Function-value assignment
+# Forced return
 
 Status: implemented on 2026-08-13.
 
-This package copies an already materialized, visible, non-task-bound first-class
-function value into a structurally compatible existing mutable target. The
-shared VM debugger remains authoritative for JSONL, DAP, and VS Code.
+This package copies one bounded control-flow mutation: while stopped inside an
+ordinary active callee, the debugger may complete that callee immediately with
+a validated return value and remain stopped in its caller. One shared VM
+operation remains authoritative for JSONL, DAP, and VS Code.
 
 This is debugger tooling only. It does not change FPAS syntax, semantics, or
 the language specification.

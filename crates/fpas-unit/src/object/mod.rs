@@ -275,6 +275,7 @@ impl RelocatableObject {
                         scope: point.scope,
                     })
                     .collect(),
+                result_type: function.debug.result_type.map(|ty| ty.get()),
             };
             functions.push(ObjectFunction {
                 name: strings(function.name)?,

@@ -83,6 +83,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             local(14, 11, 2, true),
         ],
         sequence_points: vec![point(27, 1)],
+        ..Default::default()
     };
     let helper_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -102,6 +103,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             cell_backed: false,
         }],
         sequence_points: vec![point(30, 10)],
+        ..Default::default()
     };
     Executable {
         code: vec![
@@ -301,6 +303,7 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
             cell_backed: false,
         }],
         sequence_points: vec![point(3, 1)],
+        ..Default::default()
     };
     Executable {
         code: vec![

@@ -149,6 +149,11 @@ pub struct ObjectFunctionDebugInfo {
     pub bindings: Vec<ObjectDebugBinding>,
     /// Ordered function-local sequence points.
     pub sequence_points: Vec<ObjectSequencePoint>,
+    /// Object-local portable result type, absent when metadata was not retained.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    #[serde(default)]
+    pub result_type: Option<u32>,
 }
 
 /// One function-local lexical scope.

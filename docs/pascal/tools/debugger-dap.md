@@ -19,7 +19,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
-`fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `cancel`, `continue`,
+`fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
 requests fail explicitly.
 
@@ -94,6 +94,15 @@ scalars and `value` must evaluate to exactly one different scalar. Successful
 bodies use the standard mutation fields and add `index`; removal adds
 `removed`, and string replacement adds `oldCharacter` and `newCharacter`.
 They map directly to the corresponding JSONL operations.
+
+`fpas/forceReturn` is the DAP mapping of JSONL `frame.return`. Arguments are
+`frameId` and optional `expression`. A successful body contains `value`,
+`type`, `variablesReference`, `namedVariables`, `indexedVariables`, `taskId`,
+and the fresh caller `frame`. The adapter does not advertise a DAP capability
+flag for this custom request. After a successful forced return, clients that
+initialized with `supportsInvalidatedEvent: true` receive one `invalidated`
+event whose `areas` are `stacks` and `variables`. Failure emits no invalidation
+and leaves the current stop unchanged.
 
 After any successful value, dictionary, or sequence mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the

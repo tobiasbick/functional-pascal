@@ -75,6 +75,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             local(9, 6, 0, true, DebugBindingKind::Capture),
         ],
         sequence_points: vec![point(0, 1), point(6, 2)],
+        ..Default::default()
     };
     let helper_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -83,6 +84,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         }],
         bindings: vec![local(8, 0, 0, false, DebugBindingKind::Parameter)],
         sequence_points: vec![point(9, 10)],
+        ..Default::default()
     };
     Executable {
         code: vec![
@@ -210,6 +212,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
             }],
             bindings: Vec::new(),
             sequence_points: vec![point(0, 1), point(2, 2)],
+            ..Default::default()
         },
     };
     let work = FunctionInfo {
@@ -238,6 +241,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
                 cell_backed: false,
             }],
             sequence_points: vec![point(4, 20)],
+            ..Default::default()
         },
     };
     Executable {

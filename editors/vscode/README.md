@@ -27,7 +27,9 @@ and program output use the bundled CLI's DAP adapter; the
 adapter supplies the bundled source standard library automatically. The
 language server remains responsible only for static editor features.
 Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
-Stop. The Run and Debug sidebar exposes the call stack, lexical scopes, locals,
+Stop. While stopped in an ordinary callee, **Functional Pascal: Debug: Force
+Return** completes that frame with a validated result and stays stopped in the
+caller. The Run and Debug sidebar exposes the call stack, lexical scopes, locals,
 parameters, globals, and expandable aggregate values. Evaluated aggregates are
 also expandable until execution resumes. Program output, logpoint text, and
 structured runtime failures appear in the Debug Console. Log messages use
@@ -76,6 +78,12 @@ Array insertion accepts indexes from zero through the current length; removal
 uses an existing zero-based index. String indexes count Unicode characters and
 the replacement must be a one-character FPAS string. Successful commands
 refresh debugger variables; failures and cancelled prompts send no mutation.
+
+Use **Functional Pascal: Debug: Force Return** while stopped in an ordinary
+callee. Procedures complete without a prompt; functions prompt for one FPAS
+return expression unless the command is invoked with an expression. The
+command completes that callee, leaves the session stopped in the caller, and
+refreshes the call stack and Variables view. It does not resume the program.
 
 ## Build
 

@@ -74,6 +74,7 @@ fn candidate() -> Executable {
                         },
                         scope: 0,
                     }],
+                    result_type: Some(fpas_bytecode::DebugTypeId::new(0)),
                 },
             },
             FunctionInfo {
@@ -176,6 +177,7 @@ fn conversion_covers_every_register_table_operand_and_is_deterministic() {
         fpas_unit::object::ObjectDebugType::Enum("demo.enum".to_string())
     );
     assert_eq!(first.functions[1].source_runs[0].instruction_start, 0);
+    assert_eq!(first.functions[0].debug.result_type, Some(0));
     assert!(
         first
             .relocations
@@ -230,6 +232,13 @@ fn object_debug_type_ids_cycles_and_field_shapes_are_rejected() {
         Err(ObjectError::InvalidTableReference(
             "record debug field type shape"
         ))
+    );
+
+    let mut result = object();
+    result.functions[0].debug.result_type = Some(99);
+    assert_eq!(
+        result.validate(),
+        Err(ObjectError::InvalidTableReference("function result type"))
     );
 }
 

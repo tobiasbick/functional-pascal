@@ -153,6 +153,21 @@ fn portable_debug_type_ids_layouts_cycles_depth_and_shapes_are_checked() {
 }
 
 #[test]
+fn function_result_type_ids_are_checked() {
+    let mut executable = minimal_executable();
+    executable.functions[0].debug.result_type = Some(DebugTypeId::new(1));
+    assert!(matches!(
+        error_kind(executable),
+        ValidationErrorKind::TableReference {
+            table: "debug types",
+            operand: "function result type",
+            actual: 1,
+            length: 1
+        }
+    ));
+}
+
+#[test]
 fn unknown_opcodes_are_rejected() {
     let mut unknown = minimal_executable();
     replace_root_code(

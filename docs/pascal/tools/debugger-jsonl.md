@@ -46,6 +46,8 @@ compatibility mode. A response precedes events caused by that request.
 | `array.remove` | stopped | `target`, `index`; optional `frame_id` | committed array, affected index, removed value, and fresh child reference |
 | `string.replace_character` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed string, affected index, and old/new characters |
 | `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result and the fresh caller frame |
+| `variant.describe` | stopped | `target`; optional `frame_id` | canonical variants and declared fields for one wrapper target |
+| `variant.construct` | stopped | `target`, `variant`, `fields`; optional `frame_id` | committed wrapper value, canonical variant, and fresh child reference |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -97,7 +99,7 @@ frame's task and lexical scope. An omitted frame searches globals only and
 never falls back to the selected or main frame. Array indexes must be in range;
 dictionary keys must already exist. An unqualified inactive field does not
 select a variant. Fieldless and multi-field variants still require a complete
-constructor on the binding. An uninitialized mutable local or global accepts
+constructor on the binding or `variant.construct`. An uninitialized mutable local or global accepts
 only the complete root name; field, index, and variant-transition selectors on
 empty storage fail with `variable_path_unsupported`. Text indexes and aggregate
 structure
@@ -174,6 +176,27 @@ result fields plus the fresh caller `frame`, remains stopped, and refreshes
 every stopped-task snapshot. Failure is atomic. Initialize advertises
 `frame_return`. Procedures render as `()` with `type_name` `unit`.
 
+`variant.describe` returns the constructible variants for one textual mutable
+enum, `Result`, or `Option` target without changing live state:
+
+```json
+{"type":"request","id":20,"command":"variant.describe","arguments":{"frame_id":3,"target":"Selected"}}
+{"type":"response","request_id":20,"command":"variant.describe","success":true,"body":{"target":"Selected","type_name":"Choice","variants":[{"name":"Choice.Empty","fields":[]},{"name":"Choice.Pair","fields":[{"name":"Left","type_name":"Integer"},{"name":"Right","type_name":"Integer"}]}]}}
+```
+
+`variant.construct` builds one complete variant and commits it atomically:
+
+```json
+{"type":"request","id":21,"command":"variant.construct","arguments":{"frame_id":3,"target":"Selected","variant":"Choice.Pair","fields":{"Left":"1","Right":"2"}}}
+```
+
+`fields` maps canonical or ASCII-case-insensitive field names to debugger
+expression strings. A fieldless variant requires `{}`. Expressions are parsed
+before any evaluation, then evaluated once in declaration order under one
+shared budget. Success returns the ordinary five rendered fields plus canonical
+`variant`. Discovery does not expire handles; successful construction does.
+Initialize advertises `variant_describe` and `variant_construct`.
+
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
 intrinsics. Calls use a detached copy of globals, arguments, receivers,
@@ -203,10 +226,11 @@ that sequence point.
 V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
-three sequence structure operations, forced return,
-conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
+three sequence structure operations, forced return, variant describe and
+construct, conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
 execution and reverse execution remain false;
-`task_threads` is true. `frame_return` is true.
+`task_threads` is true. `frame_return`, `variant_describe`, and
+`variant_construct` are true.
 
 ## Default limits
 
@@ -239,7 +263,8 @@ Stable errors include `invalid_request`, `invalid_state`,
 `dictionary_key_unchanged`, `sequence_index_out_of_bounds`,
 `string_character_required`, `string_character_unchanged`,
 `frame_return_unsupported`, `frame_return_value_required`,
-`frame_return_value_unexpected`, `frame_return_type`, `unknown_task`,
+`frame_return_value_unexpected`, `frame_return_type`, `variant_unknown`,
+`variant_field_set`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

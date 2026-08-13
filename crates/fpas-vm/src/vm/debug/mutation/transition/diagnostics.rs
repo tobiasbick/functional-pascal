@@ -1,24 +1,21 @@
 //! Actionable errors for qualified variant-transition assignment.
 
 use super::super::super::types::{DebugErrorKind, DebugSessionError};
-use super::suffix::VariantInfo;
+use super::super::variant::{WrapperMetadata, constructor_example, qualified_example};
 
-pub(super) fn unqualified_or_unknown(
-    name: &str,
-    type_name: &str,
-    variants: &[VariantInfo],
-) -> DebugSessionError {
-    let owners = variants
+pub(super) fn unqualified_or_unknown(name: &str, wrapper: &WrapperMetadata) -> DebugSessionError {
+    let owners = wrapper
+        .variants
         .iter()
         .filter(|variant| {
             variant
                 .fields
                 .iter()
-                .any(|field| field.eq_ignore_ascii_case(name))
+                .any(|field| field.name.eq_ignore_ascii_case(name))
         })
         .collect::<Vec<_>>();
     if owners.is_empty() {
-        return unknown_variant(name, type_name, variants);
+        return unknown_variant(name, wrapper);
     }
     let example = owners
         .first()
@@ -28,18 +25,19 @@ pub(super) fn unqualified_or_unknown(
                 variant
                     .fields
                     .iter()
-                    .find(|field| field.eq_ignore_ascii_case(name))
-                    .map(String::as_str),
+                    .find(|field| field.name.eq_ignore_ascii_case(name))
+                    .map(|field| field.name.as_str()),
             )
         })
-        .unwrap_or_else(|| format!("{type_name} constructor"));
+        .unwrap_or_else(|| format!("{} constructor", wrapper.type_name));
     let constructor = owners
         .first()
-        .map(|variant| constructor_example(type_name, &variant.name, variant.fields.len()))
-        .unwrap_or_else(|| format!("a complete `{type_name}` constructor"));
+        .map(|variant| constructor_example(&wrapper.type_name, &variant.name, variant.fields.len()))
+        .unwrap_or_else(|| format!("a complete `{}` constructor", wrapper.type_name));
     unsupported_path(
         format!(
-            "debug variable target field `{name}` is not a writable payload of an inactive `{type_name}` variant"
+            "debug variable target field `{name}` is not a writable payload of an inactive `{}` variant",
+            wrapper.type_name
         ),
         format!(
             "Name the variant explicitly, such as `{example}`, or replace the complete binding with `{constructor}`."
@@ -47,24 +45,29 @@ pub(super) fn unqualified_or_unknown(
     )
 }
 
-pub(super) fn unknown_variant(
-    name: &str,
-    type_name: &str,
-    variants: &[VariantInfo],
-) -> DebugSessionError {
-    let example = variants
+pub(super) fn unknown_variant(name: &str, wrapper: &WrapperMetadata) -> DebugSessionError {
+    let example = wrapper
+        .variants
         .iter()
         .find(|variant| variant.fields.len() == 1)
-        .map(|variant| qualified_example(&variant.name, variant.fields.first().map(String::as_str)))
-        .or_else(|| {
-            variants
-                .first()
-                .map(|variant| constructor_example(type_name, &variant.name, variant.fields.len()))
+        .map(|variant| {
+            qualified_example(
+                &variant.name,
+                variant.fields.first().map(|field| field.name.as_str()),
+            )
         })
-        .unwrap_or_else(|| format!("{type_name} constructor"));
+        .or_else(|| {
+            wrapper.variants.first().map(|variant| {
+                constructor_example(&wrapper.type_name, &variant.name, variant.fields.len())
+            })
+        })
+        .unwrap_or_else(|| format!("{} constructor", wrapper.type_name));
     DebugSessionError {
         kind: DebugErrorKind::VariableTargetUnknown,
-        message: format!("debug variable target variant `{name}` does not exist on `{type_name}`"),
+        message: format!(
+            "debug variable target variant `{name}` does not exist on `{}`",
+            wrapper.type_name
+        ),
         hint: format!("Use an exact variant name from executable metadata, such as `{example}`."),
     }
 }
@@ -123,31 +126,6 @@ pub(super) fn nested_inactive_payload(qualified: &str, constructor: &str) -> Deb
         format!(
             "Assign `{qualified}` with the complete payload, or replace the complete binding with `{constructor}`."
         ),
-    )
-}
-
-pub(super) fn constructor_example(type_name: &str, variant: &str, field_count: usize) -> String {
-    match (type_name, variant, field_count) {
-        ("Option", "None", _) | (_, "None", 0) => "None".to_string(),
-        ("Option", "Some", _) => "Some(...)".to_string(),
-        ("Result", "Ok", _) => "Ok(...)".to_string(),
-        ("Result", "Error", _) => "Error(...)".to_string(),
-        (_, _, 0) => format!("{type_name}.{variant}"),
-        (_, _, _) => format!("{type_name}.{variant}(...)"),
-    }
-}
-
-pub(super) fn qualified_example(variant: &str, field: Option<&str>) -> String {
-    match field {
-        Some(field) => format!("{variant}.{field}"),
-        None => variant.to_string(),
-    }
-}
-
-pub(super) fn unsupported_metadata() -> DebugSessionError {
-    unsupported_path(
-        "debug variable target lacks assignable portable type metadata",
-        "Select a descendant already supported by setVariable, or replace the complete binding with a constructor.",
     )
 }
 

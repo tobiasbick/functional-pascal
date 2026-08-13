@@ -7,7 +7,7 @@ use super::*;
 use crate::vm::debug::calls::CallSandbox;
 use crate::vm::debug::evaluation::{
     DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value, evaluate_values,
-    evaluate_values_with_checkpoint,
+    evaluate_values_with_checkpoint, evaluate_values_with_dynamic_suffix,
 };
 use crate::vm::debug::inspection::{DebugFrame, DebugScope, DebugVariable, Paginated};
 use crate::vm::debug::types::{DebugTask, DebugTaskEvent};
@@ -281,6 +281,42 @@ impl DebugSession {
         evaluate_values_with_checkpoint(
             prefix,
             suffix,
+            limits,
+            |name| inspection.resolve_evaluation_name(frame_id, name),
+            |target, arguments| sandbox.invoke(target, arguments),
+            checkpoint,
+        )
+    }
+
+    /// Evaluates selectors, derives ordered value expressions, and evaluates them under one budget.
+    pub(super) fn evaluate_runtime_values_with_dynamic_suffix<T>(
+        &self,
+        prefix: &[DebugExpression],
+        frame_id: Option<u64>,
+        limits: DebugEvaluationLimits,
+        checkpoint: impl FnOnce(
+            &[fpas_bytecode::Value],
+        ) -> Result<(T, Vec<DebugExpression>), DebugSessionError>,
+    ) -> Result<(T, Vec<fpas_bytecode::Value>), DebugSessionError> {
+        let task_id = self.task_for_frame(frame_id)?;
+        let inspection = self
+            .inspections
+            .get(&task_id)
+            .ok_or_else(|| unknown_task(task_id))?;
+        inspection.validate_evaluation_frame(frame_id)?;
+        let worker = self
+            .runtime
+            .worker(task_id)
+            .ok_or_else(|| unknown_task(task_id))?;
+        let mut sandbox = CallSandbox::new(
+            Arc::clone(&self.executable),
+            Arc::clone(&worker.layouts),
+            &worker.globals,
+            limits,
+            Arc::clone(&self.evaluation_cancelled),
+        )?;
+        evaluate_values_with_dynamic_suffix(
+            prefix,
             limits,
             |name| inspection.resolve_evaluation_name(frame_id, name),
             |target, arguments| sandbox.invoke(target, arguments),

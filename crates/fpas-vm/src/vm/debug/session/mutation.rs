@@ -263,7 +263,7 @@ impl DebugSession {
         )
     }
 
-    fn commit_mutation(
+    pub(super) fn commit_mutation(
         &mut self,
         task_id: u64,
         target: &super::super::inspection::MutationTarget,

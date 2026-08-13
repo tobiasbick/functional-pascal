@@ -8,6 +8,7 @@ mod forced_return;
 mod mutation;
 mod sequence;
 mod tasks;
+mod variant;
 
 use std::collections::{HashMap, HashSet};
 
@@ -206,6 +207,8 @@ impl JsonlServer {
                 self.replace_string_character(request_id, command, arguments)
             }
             "frame.return" => self.force_return(request_id, command, arguments),
+            "variant.describe" => self.describe_variant(request_id, command, arguments),
+            "variant.construct" => self.construct_variant(request_id, command, arguments),
             "evaluate.cancel" => self.cancel_evaluation(request_id, command),
             "disconnect" => self.disconnect(request_id, command),
             _ => vec![failure(

@@ -1,0 +1,85 @@
+program VariantConstruction;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+  Choice = enum
+    Empty;
+    Count(Value: integer);
+    Pair(Left: integer; Right: integer);
+    Nested(Item: Point);
+  end;
+  Holder = record
+    Item: Choice;
+  end;
+  Outer = enum
+    First(Item: Choice);
+    Second(Item: Choice);
+  end;
+
+mutable var
+  GlobalChoice: Choice := Choice.Empty;
+  Tick: integer := 0;
+
+function ChoiceValue(Item: Choice): integer;
+begin
+  case Item of
+    Choice.Empty:
+    begin
+      return 0
+    end;
+    Choice.Count(Value):
+    begin
+      return Value
+    end;
+    Choice.Pair(Left, Right):
+    begin
+      return Left + Right
+    end;
+    Choice.Nested(Item):
+    begin
+      return Item.X + Item.Y
+    end
+  end
+end;
+
+function Next(): integer;
+begin
+  Tick := Tick + 1;
+  return Tick
+end;
+
+begin
+  mutable var Origin: Point := record
+    X := 4;
+    Y := 5;
+  end;
+  mutable var Selected: Choice := Choice.Empty;
+  mutable var PairValue: Choice := Choice.Pair(2, 3);
+  mutable var EmptyValue: Choice := Choice.Empty;
+  mutable var NestedValue: Choice := Choice.Nested(Origin);
+  mutable var Outcome: result of integer, string := Ok(6);
+  mutable var Failed: result of integer, string := Error('old');
+  mutable var Optional: option of integer := Some(7);
+  mutable var Missing: option of integer := None;
+  mutable var PackedHolder: Holder := record
+    Item := Choice.Empty;
+  end;
+  mutable var Items: array of Choice := [Choice.Empty];
+  mutable var Scores: dict of string to Choice := ['blue': Choice.Empty];
+  mutable var WrappedChoice: result of Choice, string := Ok(Choice.Empty);
+  mutable var WrappedChoices: array of result of Choice, string := [Ok(Choice.Empty)];
+  mutable var OuterValue: Outer := Outer.First(Choice.Empty);
+  var Fixed: Choice := Choice.Count(99);
+  var StopMarker: integer := 0;
+  WriteLn(ChoiceValue(Selected));
+  WriteLn(ChoiceValue(PackedHolder.Item));
+  WriteLn(ChoiceValue(Items[0]));
+  WriteLn(ChoiceValue(Scores['blue']));
+  WriteLn(ChoiceValue(GlobalChoice));
+  WriteLn(ChoiceValue(Fixed))
+end.

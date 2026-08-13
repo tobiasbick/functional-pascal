@@ -435,6 +435,7 @@ mod inspection_fixture;
 mod mutation;
 mod payload_mutation;
 mod uninitialized_assignment;
+mod variant_construction;
 mod variant_replacement;
 mod variant_transition;
 

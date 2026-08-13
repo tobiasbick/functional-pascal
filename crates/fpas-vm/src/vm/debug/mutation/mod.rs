@@ -8,6 +8,7 @@ mod resolve;
 mod sequence;
 mod transition;
 mod validate;
+mod variant;
 
 use std::sync::TryLockError;
 
@@ -29,6 +30,13 @@ pub use model::{
 pub(in crate::vm::debug) use resolve::{ResolvedAssignment, resolve_assignment, target_with_value};
 pub(in crate::vm::debug) use sequence::{insert_array, remove_array, replace_string_character};
 pub(in crate::vm::debug) use transition::construct as construct_transition;
+pub use variant::{
+    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
+};
+pub(in crate::vm::debug) use variant::{
+    VariantMetadata, WrapperMetadata, complete_value, constructible_description,
+    ordered_field_expressions, require_constructible_fields, require_wrapper, unknown_variant,
+};
 
 pub(super) fn validate_replacement(
     executable: &VerifiedExecutable,

@@ -15,99 +15,7 @@ use crate::vm::value_ops::{
     self, BinaryOperation, UnaryOperation, ValueOperationError, ValueOperationErrorKind,
 };
 
-pub(in crate::vm::debug) fn evaluate_value(
-    expression: &DebugExpression,
-    limits: DebugEvaluationLimits,
-    mut resolve: impl FnMut(&str) -> Result<Value, DebugSessionError>,
-    mut invoke: impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
-) -> Result<Value, DebugSessionError> {
-    let mut budget = EvaluationBudget {
-        operations: 0,
-        traversals: 0,
-        visited_cells: HashSet::new(),
-    };
-    evaluate(
-        expression,
-        0,
-        limits,
-        &mut budget,
-        &mut resolve,
-        &mut invoke,
-    )
-}
-
-/// Evaluates multiple expressions in order under one shared resource budget.
-pub(in crate::vm::debug) fn evaluate_values(
-    expressions: &[DebugExpression],
-    limits: DebugEvaluationLimits,
-    mut resolve: impl FnMut(&str) -> Result<Value, DebugSessionError>,
-    mut invoke: impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
-) -> Result<Vec<Value>, DebugSessionError> {
-    let mut budget = EvaluationBudget {
-        operations: 0,
-        traversals: 0,
-        visited_cells: HashSet::new(),
-    };
-    expressions
-        .iter()
-        .map(|expression| {
-            evaluate(
-                expression,
-                0,
-                limits,
-                &mut budget,
-                &mut resolve,
-                &mut invoke,
-            )
-        })
-        .collect()
-}
-
-/// Evaluates a prefix, runs one validation checkpoint, then evaluates a suffix under one budget.
-pub(in crate::vm::debug) fn evaluate_values_with_checkpoint<T>(
-    prefix: &[DebugExpression],
-    suffix: &[DebugExpression],
-    limits: DebugEvaluationLimits,
-    mut resolve: impl FnMut(&str) -> Result<Value, DebugSessionError>,
-    mut invoke: impl FnMut(DebugCallTarget, Vec<Value>) -> Result<Value, DebugSessionError>,
-    checkpoint: impl FnOnce(&[Value]) -> Result<T, DebugSessionError>,
-) -> Result<(T, Vec<Value>), DebugSessionError> {
-    let mut budget = EvaluationBudget {
-        operations: 0,
-        traversals: 0,
-        visited_cells: HashSet::new(),
-    };
-    let prefix = prefix
-        .iter()
-        .map(|expression| {
-            evaluate(
-                expression,
-                0,
-                limits,
-                &mut budget,
-                &mut resolve,
-                &mut invoke,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let checkpoint = checkpoint(&prefix)?;
-    let suffix = suffix
-        .iter()
-        .map(|expression| {
-            evaluate(
-                expression,
-                0,
-                limits,
-                &mut budget,
-                &mut resolve,
-                &mut invoke,
-            )
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok((checkpoint, suffix))
-}
-
-fn evaluate(
+pub(super) fn evaluate(
     expression: &DebugExpression,
     depth: usize,
     limits: DebugEvaluationLimits,
@@ -466,8 +374,18 @@ fn unavailable_error(message: impl Into<String>, hint: impl Into<String>) -> Deb
     }
 }
 
-struct EvaluationBudget {
+pub(super) struct EvaluationBudget {
     operations: usize,
     traversals: usize,
     visited_cells: HashSet<usize>,
+}
+
+impl EvaluationBudget {
+    pub(super) fn new() -> Self {
+        Self {
+            operations: 0,
+            traversals: 0,
+            visited_cells: HashSet::new(),
+        }
+    }
 }

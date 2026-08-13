@@ -85,6 +85,12 @@ return expression unless the command is invoked with an expression. The
 command completes that callee, leaves the session stopped in the caller, and
 refreshes the call stack and Variables view. It does not resume the program.
 
+Use **Functional Pascal: Debug: Construct Variant** while stopped on a mutable
+enum, `Result`, or `Option` target. The command discovers legal variants,
+prompts for each declared field expression, and commits one complete value
+without resuming. Fieldless variants need no field expressions. Cancelled
+prompts leave the stopped program unchanged.
+
 ## Build
 
 Node.js 22 or newer and a stable Rust toolchain are required. From the

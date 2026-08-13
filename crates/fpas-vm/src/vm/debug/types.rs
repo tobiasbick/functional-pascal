@@ -192,6 +192,10 @@ pub enum DebugErrorKind {
     FrameReturnValueUnexpected,
     /// The evaluated return value does not match the declared portable result type.
     FrameReturnType,
+    /// The requested variant name is not present on the target wrapper type.
+    VariantUnknown,
+    /// Construction fields are missing, extra, unknown, or ASCII-case-duplicate.
+    VariantFieldSet,
     /// A variables reference belongs to an expired or different stop snapshot.
     UnknownVariablesReference,
     /// The requested writable child does not exist in the current container.

@@ -1,5 +1,10 @@
 # Source-debugger roadmap
 
+## Active implementation plans
+
+There is no active debugger implementation plan. The next package should
+select one bounded row from [deferred.md](deferred.md).
+
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
 non-stopping logpoints, and stopped-state mutation of supported mutable values.
@@ -14,7 +19,13 @@ consciously deferred there.
 
 The implemented debugger includes complete-value replacement of mutable enum,
 `Result`, and `Option` values through the existing `setVariable`/`setExpression`
-path. Implicit switching through a stale payload-child handle remains deferred.
+path, plus explicit metadata-driven discovery and complete construction of
+fieldless, single-field, and multi-field variants through JSONL
+`variant.describe` / `variant.construct`, DAP `fpas/variantDescribe` /
+`fpas/variantConstruct`, and VS Code **Debug: Construct Variant**. Remaining
+exclusions stay in
+[`aggregate-construction/consciously-deferred.md`](aggregate-construction/consciously-deferred.md).
+Implicit switching through a stale payload-child handle remains deferred.
 
 Debugger initialization of a visible, source-declared mutable local or global
 before normal execution initializes that binding is implemented through the

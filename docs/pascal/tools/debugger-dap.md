@@ -19,7 +19,8 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
-`fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`, `cancel`, `continue`,
+`fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
+`fpas/variantDescribe`, `fpas/variantConstruct`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
 requests fail explicitly.
 
@@ -51,6 +52,9 @@ It does not advertise inactive variants as virtual children. Visible
 uninitialized mutable locals and globals accept one complete root
 value. Complete-value replacements use constructor expressions such as
 `Choice.Pair(1, 2)`, `Ok(3)`, `Error('failed')`, `Some(4)`, and `None`.
+Fieldless and multi-field variants can also be built through
+`fpas/variantDescribe` and `fpas/variantConstruct` without writing a
+constructor expression.
 Function-typed targets accept one visible binding that already holds a
 compatible non-task-bound function value. Direct named routines, new closure
 syntax, and inactive-variant function payloads remain rejected.
@@ -103,6 +107,15 @@ flag for this custom request. After a successful forced return, clients that
 initialized with `supportsInvalidatedEvent: true` receive one `invalidated`
 event whose `areas` are `stacks` and `variables`. Failure emits no invalidation
 and leaves the current stop unchanged.
+
+`fpas/variantDescribe` and `fpas/variantConstruct` map `frameId`, `target`,
+`variant`, and `fields` onto JSONL `variant.describe` and `variant.construct`.
+Describe returns `target`, `typeName`, and `variants` with `name` plus
+`typeName` on each field. Construct returns the standard mutation fields plus
+`variant`. The adapter does not advertise DAP capability flags for these custom
+requests. After a successful construct, clients that initialized with
+`supportsInvalidatedEvent: true` receive one `invalidated` event whose `areas`
+are `variables`. Discovery and failures emit no invalidation.
 
 After any successful value, dictionary, or sequence mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the

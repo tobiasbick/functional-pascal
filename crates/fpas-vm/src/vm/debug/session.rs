@@ -24,6 +24,7 @@ mod forced_return;
 mod inspection;
 mod mutation;
 mod sequence;
+mod variant;
 
 /// Thread-safe cooperative pause request handle.
 #[derive(Clone)]

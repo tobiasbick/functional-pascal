@@ -5,6 +5,7 @@ mod forced_return;
 mod mutation;
 mod sequence;
 mod tasks;
+mod variant;
 
 use std::collections::HashMap;
 
@@ -117,6 +118,8 @@ impl DapServer {
                 self.replace_string_character(request_seq, command, &arguments)
             }
             "fpas/forceReturn" => self.force_return(request_seq, command, &arguments),
+            "fpas/variantDescribe" => self.describe_variant(request_seq, command, &arguments),
+            "fpas/variantConstruct" => self.construct_variant(request_seq, command, &arguments),
             "cancel" => self.core_request(
                 request_seq,
                 command,
@@ -502,6 +505,9 @@ fn dap_stop_reason(reason: Option<&str>) -> &'static str {
 
 fn dap_body(command: &str, body: Value) -> Value {
     if let Some(result) = forced_return::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = variant::response_body(command, &body) {
         return result;
     }
     if let Some(result) = mutation::custom_response_body(command, &body) {

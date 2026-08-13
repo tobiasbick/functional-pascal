@@ -25,7 +25,8 @@ or escaping sources are rejected before execution.
 The debugger supports source breakpoints, pause, continue, step in/over/out,
 stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
-non-stopping logpoints, stopped-state variable mutation, forced return from the
+non-stopping logpoints, stopped-state variable mutation, explicit complete
+construction of enum, `Result`, and `Option` variants, forced return from the
 active ordinary callee, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
@@ -88,7 +89,8 @@ payload, for example `Optional.Some.value`, `Outcome.Error.value`, or
 `Selected.Count.Value`. The variant name is required and matched
 case-insensitively against executable metadata; an unqualified inactive field
 never selects a variant. Fieldless variants and multi-field payloads still use
-a complete constructor on the binding. Index selectors and
+a complete constructor on the binding, or the explicit variant-construction
+commands below. Index selectors and
 the replacement are
 ordinary debugger expressions and may use the same controlled detached calls
 as `evaluate`. All selectors are evaluated once from left to right against the
@@ -151,6 +153,23 @@ and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
 property setter or change control flow. If execution later reaches the source
 initializer, that store overwrites the debugger-provided value.
+
+Explicit variant construction is a dedicated stopped-state command, not
+`setVariable` and not a Variables-tree child. JSONL `variant.describe` /
+`variant.construct`, DAP `fpas/variantDescribe` / `fpas/variantConstruct`, and
+the VS Code command **Debug: Construct Variant** address the same textual
+mutable target as `expression.set`. Discovery returns canonical variant names
+and declared fields from portable metadata without mutating live state or
+expiring handles. Construction requires exactly one expression per declared
+field, evaluates those expressions once in declaration order under one shared
+budget, and commits one complete enum, `Result`, or `Option` value atomically.
+Enum names are fully qualified (`Choice.Pair`); `Result` and `Option` use `Ok`,
+`Error`, `Some`, and `None`. Matching is ASCII-case-insensitive; responses use
+canonical spelling. An uninitialized mutable root may receive the complete
+value; descendants still require existing outer storage. Function, task, and
+capture-cell fields, omitted or extra fields, inactive Variables children, and
+writes to old payload-child handles remain rejected. Existing constructor
+assignment through `setVariable` / `setExpression` is unchanged.
 
 Forced return is a dedicated stopped-state command, not an assignment and not
 `stepOut`. JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code

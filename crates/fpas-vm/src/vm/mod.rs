@@ -37,8 +37,9 @@ pub use debug::{
     DebugForcedReturnResult, DebugFrame, DebugInspectionLimits, DebugPauseHandle, DebugRunResult,
     DebugScope, DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop,
     DebugStopReason, DebugStringMutationResult, DebugTask, DebugTaskEvent, DebugTaskEventKind,
-    DebugTaskState, DebugTermination, DebugUnaryOperation, DebugVariable, Paginated,
-    SourceBreakpoint, SourceLocation,
+    DebugTaskState, DebugTermination, DebugUnaryOperation, DebugVariable,
+    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
+    Paginated, SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

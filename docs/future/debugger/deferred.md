@@ -1,186 +1,38 @@
-# Deferred debugger scope
+# Deferred debugger backlog
 
-The following capabilities are intentionally excluded from the first debugger
-release. Protocol adapters must advertise them as unsupported and must not
-silently approximate them. Deferral keeps the initial engine deterministic,
-read-only, and testable; it does not reject these features permanently.
+This file lists only unresolved capability packages. Implemented behavior and
+its supported limits belong in [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
+Detailed exclusions may live in an active implementation package, but must not
+be duplicated here.
 
-Read-only expression evaluation, detached controlled calls, watches,
-conditional breakpoints, exact-hit conditions, non-stopping logpoints, and
-stopped-state `setVariable` and textual `setExpression` for supported mutable
-values are implemented. Calls
-with host I/O, nondeterminism, blocking, tasks, opaque resources, or unresolved
-dynamic effects are deliberately rejected by the implemented safety policy and
-are not a deferred promise. The following work remains intentionally deferred.
+Calls with host I/O, nondeterminism, blocking, tasks, opaque resources, or
+unresolved dynamic effects are rejected by the implemented evaluation safety
+policy. They are not automatically promises for future implementation.
 
-## Additional state and control-flow mutation
+## Open packages
 
-Complete-value replacement of a mutable enum, `Result`, or `Option` is
-implemented through the existing mutation surfaces. Explicit qualified
-single-payload variant transition through textual assignment is also
-implemented. Implicitly switching the live variant through an old payload-child
-handle, rebinding stale handles, or partially constructing a new payload
-remains deferred. Debugger initialization of a visible mutable local or global
-root is implemented; descendant writes on empty storage and skipping the later
-source initializer remain deferred.
+| ID | Capability package | Deferred boundary | Re-entry gate |
+|---|---|---|---|
+| DBG-D02 | Empty-storage construction | Descendant writes into uninitialized aggregates, missing capture cells, absent parameters, or suppression of a later source initializer | Define allocation, aliasing, lifetime, and initializer-precedence semantics before exposing writable targets |
+| DBG-D03 | Identity-bearing assignment | New or computed closures, task-bound functions, `Dynamic` callable endpoints, task handles, capture cells, opaque resources, or in-place callable editing | Prove portable types, identity, escape, lifetime, ownership, and bounded atomic commit without display-data inference |
+| DBG-D04 | Control flow beyond bounded forced return | Root/task completion, non-active or multi-frame unwind, completed-return replacement, runtime-error recovery, arbitrary instruction changes, and frame restart | Specify cleanup, scheduler and waiter effects, frame/task ownership, portable result proof, and rollback; see [`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md) |
+| DBG-D05 | Task control and history | Non-stop execution, per-task resume/pause, task creation/cancellation/restart, scheduler shortcuts, retained completed-task state, and task-history UI | Define a quiescence protocol, shared-state visibility, cancellation propagation, retention/privacy bounds, and protocol-equivalent stops |
+| DBG-D06 | Interactive hosted programs | Live terminal input, full-screen console/TUI debugging, graph-window events while paused, and reliable pause inside blocking host calls | Separate debuggee transport from DAP stdio and prove authentication, cleanup, input ordering, cancellation, and host-event behavior |
+| DBG-D07 | Attach, remote, and native debugging | Attach to a running VM or bundle, remote sessions, and OS-level machine-code debugging | Define discovery, authentication, version negotiation, source mapping, disconnect ownership, and a recoverable transport |
+| DBG-D08 | Advanced breakpoints | Data and function breakpoints, richer runtime-failure filters, and breakpoint actions that mutate state or control flow | Define stable runtime identities, exact stop/mutation semantics, bounded overhead, atomicity, and JSONL/DAP parity |
+| DBG-D09 | Reverse execution and hot reload | Backward stepping, deterministic recording/replay, suspended code replacement, and preserving live frames across recompilation | Define a versioned VM/host snapshot boundary and compatibility rules for active functions, layouts, values, tasks, and external effects |
 
-### Function-value assignment beyond bounded copy
+## Maintenance rules
 
-The implemented slice copies an already materialized, visible,
-non-task-bound function value into a structurally compatible mutable target.
-The following broader callable mutations remain deferred:
+- Keep one row per independently specifiable unresolved package.
+- Completing a package removes its row; current limitations stay in user-facing
+  documentation and regression tests.
+- Splitting a package replaces its parent row. Do not append children while
+  retaining the same parent description.
+- Active plans use stable work IDs, evidence, resume instructions, and their
+  own consciously-deferred file. On completion, retain only genuinely
+  independent unresolved packages here.
+- Do not use this backlog to preserve implementation history.
 
-- constructing a new closure from `function` or `procedure` expression syntax;
-- materializing a named, nested, static, or bound-record routine when no
-  visible source binding already contains it;
-- accepting computed function sources such as calls, properties, methods,
-  constructors, record updates, aggregate children, payload children, or
-  evaluation-result handles;
-- assigning task-bound closures or retained graphs containing mutable cells,
-  task handles, opaque handles, or nested task-bound functions;
-- proving same-task escape and destination-lifetime constraints for those
-  identity-bearing values;
-- assigning function values to `Dynamic` storage or inferring signatures from
-  runtime names, IDs, arity, or display text;
-- constructing inactive enum, `Result`, or `Option` payloads containing a
-  function value;
-- editing captures, callable targets, task-bound flags, code, source maps, or
-  signatures in place; and
-- assigning task handles, capture cells themselves, or opaque hosted
-  resources.
-
-Re-entry gate: define portable source and destination type proof, retained
-identity and lifetime rules, escape constraints, atomic commit behavior,
-protocol parity, and bounded negative coverage without inferring semantics
-from runtime display data.
-
-Deferred:
-
-- implicitly switching a data-carrying enum variant or a `Result`/`Option`
-  wrapper through a descendant write or stale payload handle;
-- accepting or rebinding any expired variable, frame, task, or snapshot handle;
-- constructing a multi-field payload one field at a time, retaining hidden
-  payload values, synthesizing defaults, or selecting an inactive variant from
-  an unqualified field name;
-- creating a fieldless variant through a descendant target or advertising
-  inactive variants as virtual Variables children or custom editor controls;
-- assigning task handles or opaque hosted resources;
-- filling uninitialized storage through field, index, or payload descendants;
-- creating a missing capture cell or treating an absent parameter as
-  user-initializable;
-- forcing or replacing return values outside the bounded active-callee package
-  documented in [`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md);
-- changing the instruction pointer or restarting a frame; and
-- data breakpoints or breakpoint actions that modify state.
-
-The immediately following uninitialized-descendant and missing
-parameter/capture items remain deferred because no atomic construction or
-identity semantics have been accepted. Bounded active-callee forced return is
-implemented. Entry frames, older frames, peer or suspended tasks, completed
-returns, runtime-error recovery, and identity-bearing result values remain
-explicitly outside that slice in
-[`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md).
-
-Bounded array insertion/removal and Unicode-scalar string character replacement
-are implemented. The remaining operations need additional lvalue, source-assignment,
-control-flow, lifetime, or runtime-identity semantics beyond atomic replacement
-of an existing typed value.
-
-Re-entry gate: define the chosen operation independently, including its source
-visibility, mutability, ownership, lifetime, type, cleanup, and stop semantics,
-then add focused atomicity and continuation tests before advertising it.
-
-## Advanced task-debugging control and history
-
-Deterministic launch-owned all-stop debugging of current FPAS tasks is
-implemented. The following broader task facilities remain deferred:
-
-- non-stop or parallel debug execution where one task runs while another stays
-  inspectable;
-- per-task continue or pause;
-- debugger commands that create, cancel, restart, reprioritize, or detach a
-  task, replace its result, failure, dependency, or timer, or force it runnable;
-- assigning task handles through debugger mutation;
-- spawn-to-child, waiter-to-dependency, scheduler-history, task-name, or
-  task-group stepping shortcuts;
-- persistent completed-task stacks, variables, timelines, or ancestry; and
-- custom VS Code task panels, filters, scheduler visualizations, or exported
-  execution traces.
-
-Reason: all-stop current-state debugging does not define the memory consistency,
-rollback, lifetime, retention, and scheduling semantics required by these
-operations. The implemented debugger deliberately keeps one deterministic host
-execution lane and exposes no live values while another task advances.
-
-Re-entry gate: specify one bounded operation independently, including shared
-state visibility, task ownership, identity, cancellation propagation, cleanup,
-and protocol-equivalent stop behavior. Non-stop work additionally requires a
-quiescence protocol that proves inspection never sees torn frames or values;
-history work requires explicit retention and privacy limits.
-
-## Interactive terminal, TUI, and graph applications
-
-Deferred:
-
-- live `Read`/`ReadLn`/`ReadKey` through a VS Code integrated terminal;
-- full-screen console/TUI debugging;
-- interactive graph-window event delivery while paused;
-- reliable pause during a blocking host call.
-
-Reason: DAP stdio must remain reserved for protocol traffic. Interactive
-program input requires a separate debuggee process or another transport, while
-TUI and graph hosts have additional event-loop and redraw constraints.
-
-V1 may accept deterministic preloaded input in external command scripts, but
-must not claim interactive terminal support.
-
-Re-entry gate: launch a separate debuggee through the editor terminal, connect
-it to the adapter through an authenticated local pipe, and prove cleanup,
-cancellation, input ordering, output separation, and window-event behavior on
-supported hosts.
-
-## Attach and native executable debugging
-
-Deferred:
-
-- attaching to an already running `fpas` VM;
-- attaching to a bundled host-native executable;
-- OS-level native instruction debugging;
-- remote debugging.
-
-Reason: V1 owns execution from launch and keeps debug state in-process. Native
-bundles currently contain a runner and bytecode image but no debugger transport
-or rendezvous mechanism.
-
-Re-entry gate: define process discovery, authentication, version negotiation,
-source mapping, disconnect ownership, and a recoverable local transport. This
-remains bytecode source debugging, not machine-code debugging.
-
-## Advanced breakpoint forms
-
-Deferred:
-
-- data breakpoints;
-- function breakpoints;
-- exception filters beyond structured runtime failure;
-- breakpoint actions that modify state.
-
-Re-entry gate: each form needs a stable runtime identity, precise stop semantics,
-bounded overhead, and protocol-equivalence tests for JSONL and DAP.
-
-## Reverse debugging, replay, and hot reload
-
-Deferred:
-
-- step backwards;
-- deterministic execution recording and replay;
-- editing and replacing code in a suspended session;
-- preserving breakpoints and frames across recompilation.
-
-Reason: these require snapshotting or replaying VM state, hosted resources,
-input, randomness, time, tasks, and external side effects. Hot reload also
-changes function, layout, and register identities.
-
-Re-entry gate: first define a deterministic hosted-runtime boundary and a
-versioned snapshot/replay format. Hot reload requires explicit compatibility
-rules for active frames and values.
+The next debugger package should select one bounded row, create its own plan
+under this directory, and leave every unrelated row unchanged.

@@ -10,7 +10,7 @@ mod session;
 mod tasks;
 mod types;
 
-pub(in crate::vm::debug) use calls::construct_enum_payload;
+pub(in crate::vm::debug) use calls::{construct_enum, construct_enum_payload};
 
 #[cfg(test)]
 mod tests;
@@ -26,7 +26,8 @@ pub use inspection::{
 };
 pub use mutation::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
-    DebugDictionaryMutationResult, DebugStringMutationResult,
+    DebugDictionaryMutationResult, DebugStringMutationResult, DebugVariantConstructionResult,
+    DebugVariantDescription, DebugVariantField, DebugVariantInfo,
 };
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{

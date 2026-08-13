@@ -50,6 +50,8 @@ pub(super) fn session_error(
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
         fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",
         fpas_vm::DebugErrorKind::FrameReturnType => "frame_return_type",
+        fpas_vm::DebugErrorKind::VariantUnknown => "variant_unknown",
+        fpas_vm::DebugErrorKind::VariantFieldSet => "variant_field_set",
         fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",
         fpas_vm::DebugErrorKind::VariableTargetUnknown => "variable_target_unknown",
         fpas_vm::DebugErrorKind::VariableTargetExpired => "variable_target_expired",

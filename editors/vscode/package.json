@@ -170,6 +170,11 @@
         "command": "functionalPascal.debug.forceReturn",
         "title": "Debug: Force Return",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.constructVariant",
+        "title": "Debug: Construct Variant",
+        "category": "Functional Pascal"
       }
     ],
     "configuration": {

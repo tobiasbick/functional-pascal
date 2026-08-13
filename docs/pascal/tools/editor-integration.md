@@ -95,6 +95,13 @@ refreshes stack and variable views without resuming the program. Entry frames,
 older frames, peer tasks, runtime-error stops, and unsupported result types are
 rejected without changing live state.
 
+**Debug: Construct Variant** discovers and constructs one complete enum,
+`Result`, or `Option` value on a textual mutable target. The command prompts
+for the target, presents a Quick Pick of canonical variants from
+`fpas/variantDescribe`, prompts once per declared field, and calls
+`fpas/variantConstruct`. Cancelled prompts send no mutation. Programmatic
+arguments may supply `frameId`, `target`, `variant`, and `fields`.
+
 Immutable, hidden, or evaluation-only values are read-only. Uninitialized
 mutable locals and globals accept only a complete root assignment.
 Dictionary entry values and existing array elements remain editable through

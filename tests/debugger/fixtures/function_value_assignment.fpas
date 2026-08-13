@@ -1,0 +1,33 @@
+program FunctionValueAssignment;
+
+uses Std.Console;
+
+type
+  Handler = function(Value: integer): integer;
+
+function AddOne(Value: integer): integer;
+begin
+  return Value + 1
+end;
+
+function AddTwo(Value: integer): integer;
+begin
+  return Value + 2
+end;
+
+function MakeAdder(Amount: integer): Handler;
+begin
+  return function(Value: integer): integer begin
+    return Value + Amount
+  end
+end;
+
+begin
+  mutable var Current: Handler := AddOne;
+  var Backup: Handler := AddTwo;
+  var Captured: Handler := MakeAdder(10);
+  var Frozen: Handler := AddOne;
+  var StopMarker: integer := 0;
+  WriteLn(Current(1));
+  WriteLn(Captured(1))
+end.

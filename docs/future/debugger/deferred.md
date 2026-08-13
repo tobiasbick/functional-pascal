@@ -28,7 +28,15 @@ Deferred:
 
 - implicitly switching a data-carrying enum variant or a `Result`/`Option`
   wrapper through a descendant write or stale payload handle;
-- assigning function values, task handles, or opaque hosted resources;
+- accepting or rebinding any expired variable, frame, task, or snapshot handle;
+- constructing a multi-field payload one field at a time, retaining hidden
+  payload values, synthesizing defaults, or selecting an inactive variant from
+  an unqualified field name;
+- creating a fieldless variant through a descendant target or advertising
+  inactive variants as virtual Variables children or custom editor controls;
+- assigning function values outside the bounded copy slice documented in
+  [`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md),
+  task handles, or opaque hosted resources;
 - filling uninitialized storage through field, index, or payload descendants;
 - creating a missing capture cell or treating an absent parameter as
   user-initializable;
@@ -36,13 +44,11 @@ Deferred:
 - changing the instruction pointer or restarting a frame; and
 - data breakpoints or breakpoint actions that modify state.
 
-The exact boundary and prerequisites for the uninitialized-binding slice are
-recorded in
-[`uninitialized-binding-assignment/consciously-deferred.md`](uninitialized-binding-assignment/consciously-deferred.md).
-Qualified single-payload variant transition is implemented; remaining
-exclusions for stale-handle rebinding, unqualified guessing, multi-field
-incremental construction, and virtual Variables children are recorded in
-[`variant-transition-assignment/consciously-deferred.md`](variant-transition-assignment/consciously-deferred.md).
+The implemented slice copies one existing visible, non-task-bound function
+value into a structurally compatible mutable target. Function construction,
+task-bound closures, task handles, and opaque resources remain outside that
+slice as recorded in
+[`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md).
 
 Bounded array insertion/removal and Unicode-scalar string character replacement
 are implemented. The remaining operations need additional lvalue, source-assignment,

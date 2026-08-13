@@ -89,8 +89,11 @@ Immutable, hidden, or evaluation-only values are read-only. Uninitialized
 mutable locals and globals accept only a complete root assignment.
 Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
-explicit commands. Function
-captures, task values, function values, and opaque hosted resources are not
+explicit commands. A function-typed Variables or Watch target can be replaced
+by copying one visible binding that already holds a compatible non-task-bound
+function value, for example `Backup`. Direct named routines, new closure
+syntax, task-bound functions, and inactive-variant function payloads remain
+rejected. Task values and opaque hosted resources are not
 editable. Textual `setExpression` may assign an explicit inactive
 single-payload variant such as `Optional.Some.value`; Variables does not
 advertise inactive variants as children. A write to an old payload-child

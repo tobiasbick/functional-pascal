@@ -1,6 +1,7 @@
 //! Atomic live-root mutation after detached expression evaluation.
 
 mod dictionary;
+mod function_value;
 mod model;
 mod replace;
 mod resolve;
@@ -17,6 +18,10 @@ use super::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::worker::Worker;
 
 pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remove, replace_key};
+pub(in crate::vm::debug) use function_value::{
+    inactive_function_payload, is_function_type, prepare as prepare_function_value,
+    source_name as function_value_source_name,
+};
 pub use model::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
     DebugDictionaryMutationResult, DebugStringMutationResult,

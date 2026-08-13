@@ -72,10 +72,11 @@ Replacement expressions use the same parser, detached
 controlled-call policy, and resource limits as `evaluate`. Complete mutable enum,
 `Result`, and `Option` values accept constructor expressions such as
 `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
-`None`. A successful result
-has the same five rendered fields as `evaluate`, refreshes inspection state,
-and expires all earlier variable references. Any failure is atomic and leaves
-the old references usable.
+`None`. Function-typed targets accept one visible binding that already holds a
+compatible non-task-bound function value, for example `Backup`. A successful
+result has the same five rendered fields as `evaluate`, refreshes inspection
+state, and expires all earlier variable references. Any failure is atomic and
+leaves the old references usable.
 
 `expression.set` addresses a target without first requesting variable handles:
 
@@ -102,6 +103,9 @@ structure
 changes are unsupported by `expression.set`; use the explicit dictionary and
 sequence commands below. Complete enum, `Result`, and `Option` values can also
 be replaced by assigning a constructor expression to the complete target. A
+function-typed target accepts one visible source binding that already holds a
+compatible non-task-bound function value. Direct named routines, new closure
+syntax, and inactive-variant function payloads remain rejected. A
 write to an old payload-child handle never selects a different variant.
 
 Selectors run once from left to right and the replacement runs last, all

@@ -366,16 +366,25 @@ impl DapServer {
                     );
                     output.push(self.success(request_seq, &command, response_body));
                 } else {
-                    output.push(
-                        self.failure(
-                            request_seq,
-                            &command,
-                            record
-                                .pointer("/error/message")
-                                .and_then(Value::as_str)
-                                .unwrap_or("Debugger request failed."),
-                        ),
-                    );
+                    let message = record
+                        .pointer("/error/message")
+                        .and_then(Value::as_str)
+                        .unwrap_or("Debugger request failed.");
+                    let code = record
+                        .pointer("/error/code")
+                        .and_then(Value::as_str)
+                        .unwrap_or("debugger_request_failed");
+                    let help = record
+                        .pointer("/error/help")
+                        .and_then(Value::as_str)
+                        .unwrap_or("Retry the request after refreshing the current stopped state.");
+                    output.push(self.structured_failure(
+                        request_seq,
+                        &command,
+                        code,
+                        message,
+                        help,
+                    ));
                 }
             } else {
                 output.extend(self.translate_events(vec![record]));
@@ -434,6 +443,17 @@ impl DapServer {
     fn failure(&mut self, request_seq: u64, command: &str, message: &str) -> Value {
         let seq = self.take_seq();
         json!({"seq":seq,"type":"response","request_seq":request_seq,"success":false,"command":command,"message":message,"body":{"error":{"format":message,"showUser":true}}})
+    }
+    fn structured_failure(
+        &mut self,
+        request_seq: u64,
+        command: &str,
+        code: &str,
+        message: &str,
+        help: &str,
+    ) -> Value {
+        let seq = self.take_seq();
+        json!({"seq":seq,"type":"response","request_seq":request_seq,"success":false,"command":command,"message":message,"body":{"error":{"code":code,"format":message,"help":help,"showUser":true}}})
     }
     fn event(&mut self, name: &str, body: Value) -> Value {
         let seq = self.take_seq();

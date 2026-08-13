@@ -132,6 +132,9 @@ fn validate(
             }
             Ok(())
         }
+        (DebugType::Function { .. }, Value::Function(function)) if depth == 0 => {
+            super::function_value::validate_root(function, max_depth, 65_536)
+        }
         (DebugType::Function { .. } | DebugType::Cell(_) | DebugType::Task(_), _) => {
             Err(type_error(
                 expected,

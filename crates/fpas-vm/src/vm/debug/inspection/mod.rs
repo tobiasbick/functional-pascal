@@ -7,6 +7,7 @@ mod mutation_targets;
 mod render;
 mod snapshot;
 mod targets;
+mod typed_bindings;
 
 pub use model::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,

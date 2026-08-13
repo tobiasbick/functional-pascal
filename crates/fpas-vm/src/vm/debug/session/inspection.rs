@@ -189,7 +189,7 @@ impl DebugSession {
     }
 
     /// Evaluates an expression to the underlying runtime value in its task context.
-    pub(super) fn evaluate_runtime_value(
+    pub(in crate::vm::debug) fn evaluate_runtime_value(
         &self,
         expression: &DebugExpression,
         frame_id: Option<u64>,

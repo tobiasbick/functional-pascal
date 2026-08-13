@@ -41,7 +41,9 @@ While stopped, the Variables view can edit mutable locals, parameters, globals,
 closure captures, record fields, array elements, existing dictionary
 values, active enum payload fields, `Result`/`Option` `.value` children, and
 complete mutable enum, `Result`, and `Option` values using constructor
-expressions such as `Choice.Pair(1, 2)` or `None`. Editor clients can also use
+expressions such as `Choice.Pair(1, 2)` or `None`. A function-typed Variables
+or Watch target can be replaced by copying one visible binding that already
+holds a compatible non-task-bound function value. Editor clients can also use
 the standard DAP `setExpression` request for an explicit inactive
 single-payload variant such as `Optional.Some.value` or
 `Selected.Count.Value`; in VS Code this is the **Set Value** action on a Watch
@@ -50,10 +52,11 @@ locals and globals can be assigned one complete value through the same
 Variables and Watch edits.
 Rejected edits leave the session stopped and unchanged. A successful
 edit refreshes the Variables view; continuing execution observes the committed
-value unless a later source initializer overwrites it. Dictionary keys are not edited through the standard Variables request;
-immutable bindings, evaluation-only
-results, task values, and opaque
-host values are not editable. Uninitialized bindings have no writable
+value unless a later source initializer overwrites it. Dictionary keys are not
+edited through the standard Variables request; immutable bindings,
+evaluation-only results, task values, and opaque host values are not editable.
+Function values are editable only by copying an already materialized, visible,
+non-task-bound function binding. Uninitialized bindings have no writable
 descendants. Variables does not list inactive variants as children. A write to
 an old payload-child handle never selects a
 different variant. Task debugging is deterministic and all-stop;

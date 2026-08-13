@@ -51,6 +51,9 @@ It does not advertise inactive variants as virtual children. Visible
 uninitialized mutable locals and globals accept one complete root
 value. Complete-value replacements use constructor expressions such as
 `Choice.Pair(1, 2)`, `Ok(3)`, `Error('failed')`, `Some(4)`, and `None`.
+Function-typed targets accept one visible binding that already holds a
+compatible non-task-bound function value. Direct named routines, new closure
+syntax, and inactive-variant function payloads remain rejected.
 The response contains the rendered `value`,
 `type`, a fresh `variablesReference`, and exact named/indexed child counts.
 Non-default `format` options are rejected because value-formatting negotiation
@@ -63,10 +66,11 @@ visible binding followed by stored record fields, active enum payload fields,
 wrapper `.value`, an explicit inactive single-payload variant suffix such as
 `Some.value` or `Count.Value`, or array/existing-dictionary
 indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
-expression as `value`. Uninitialized mutable roots accept the complete binding
-name only. Omitting `frameId` searches globals only. A supplied frame selects its
-exact FPAS task and lexical scope; stale or foreign frames fail without falling
-back to main. The response has the same rendered value, type, fresh aggregate
+expression as `value`. Function-typed targets accept one visible source binding
+that already holds a compatible non-task-bound function value. Uninitialized
+mutable roots accept the complete binding name only. Omitting `frameId`
+searches globals only. A supplied frame selects its exact FPAS task and
+lexical scope; stale or foreign frames fail without falling back to main. The response has the same rendered value, type, fresh aggregate
 reference, and exact child counts as `setVariable`. Non-default `format` is
 rejected consistently.
 
@@ -98,6 +102,12 @@ failure or to clients that did not negotiate it. Successful mutation expires
 earlier frames, scopes, and variable references for every stopped task, so
 clients must refetch them. Failure preserves the current stop and all
 references.
+
+Failures returned by the shared debugger core retain their machine-facing
+JSONL details in the DAP `body.error` object: `code` is the stable error code,
+`format` is the user-facing message, and `help` is the actionable hint. Local
+DAP request-shape failures that never reach the core provide the standard
+`format` and `showUser` fields only.
 
 `setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
 unchanged to the shared breakpoint policy. A condition stops only on Boolean

@@ -15,24 +15,24 @@ consciously deferred there.
 The implemented debugger includes complete-value replacement of mutable enum,
 `Result`, and `Option` values through the existing `setVariable`/`setExpression`
 path. Implicit switching through a stale payload-child handle remains deferred.
-The completed implementation record, decisions, regressions, and restart
-instructions live in
-[`variant-replacement/`](variant-replacement/README.md).
 
 Debugger initialization of a visible, source-declared mutable local or global
 before normal execution initializes that binding is implemented through the
 same mutation surfaces. Descendant writes on empty storage, skipping the later
 source initializer, and treating parameters or captures as uninitialized
-targets remain deferred. The implementation record, verification mapping, and
-restart instructions live in
-[`uninitialized-binding-assignment/`](uninitialized-binding-assignment/README.md).
+targets remain deferred.
 
 Explicit, variant-qualified descendant assignment that constructs one complete
 single-payload enum, `Result`, or `Option` variant is implemented through
 textual `setExpression` / JSONL `expression.set`. Stale-handle switching,
 unqualified variant guessing, multi-field incremental construction, and
-virtual Variables children remain deferred. The implementation record lives in
-[`variant-transition-assignment/`](variant-transition-assignment/README.md).
+virtual Variables children remain deferred.
+
+Bounded assignment of an already materialized, visible, non-task-bound
+first-class function value onto a structurally compatible mutable target is
+implemented through the same `setVariable`/`setExpression` surfaces. Function
+construction, task-bound closures, Dynamic endpoints, and opaque resources
+remain deferred in [`function-value-assignment/consciously-deferred.md`](function-value-assignment/consciously-deferred.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

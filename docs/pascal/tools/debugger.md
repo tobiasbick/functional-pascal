@@ -94,6 +94,13 @@ as `evaluate`. All selectors are evaluated once from left to right against the
 unchanged pre-commit snapshot, followed by the replacement, under one shared
 evaluation and call budget. Wrapper payloads accept only `.value`.
 Handle-based `setVariable` does not advertise inactive variants as children.
+A mutable function-typed target can be replaced by copying one visible binding
+that already holds a compatible first-class function value, for example
+`Current := Backup`. The assignment shares the existing immutable function
+storage; it does not reconstruct the closure or its environment. The source
+must be a binding name after parentheses are removed. Direct named routines,
+bound methods, new closure syntax, computed expressions, Dynamic endpoints,
+task-bound functions, and inactive-variant function payloads remain rejected.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
@@ -127,9 +134,12 @@ commands. An unchanged character is rejected without writing.
 
 Immutable bindings, compiler-hidden storage,
 evaluation-only results, function captures,
-task values, function values, and opaque hosted values are not
-writable. Uninitialized mutable locals and globals accept only a complete root
-value; they have no writable fields, indexes, dictionary entries, or payload
+task values, and opaque hosted values are not
+writable. Function values are writable only by copying an already
+materialized, visible, non-task-bound function binding onto a structurally
+compatible mutable function-typed path. Uninitialized mutable locals and
+globals accept only a complete root value; they have no writable fields,
+indexes, dictionary entries, or payload
 descendants, and a qualified variant transition cannot synthesize that outer
 storage. A write to an old payload-child handle never selects a different
 variant; after a successful write the previous child handles are unavailable

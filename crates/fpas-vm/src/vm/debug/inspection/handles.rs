@@ -257,16 +257,14 @@ fn resolve_name(
     globals: &[RetainedValue],
     name: &str,
 ) -> Result<Value, DebugSessionError> {
-    let retained = frame_values
-        .into_iter()
-        .flatten()
-        .chain(globals)
-        .find(|value| value.name.eq_ignore_ascii_case(name))
-        .ok_or_else(|| DebugSessionError {
-            kind: DebugErrorKind::UnknownName,
-            message: format!("debug expression name `{name}` is not visible"),
-            hint: "Use a parameter, local, capture, or global visible at the selected frame."
-                .to_string(),
+    let retained =
+        super::typed_bindings::visible_binding(frame_values, globals, name).ok_or_else(|| {
+            DebugSessionError {
+                kind: DebugErrorKind::UnknownName,
+                message: format!("debug expression name `{name}` is not visible"),
+                hint: "Use a parameter, local, capture, or global visible at the selected frame."
+                    .to_string(),
+            }
         })?;
     retained.value.clone().ok_or_else(|| DebugSessionError {
         kind: DebugErrorKind::UninitializedValue,

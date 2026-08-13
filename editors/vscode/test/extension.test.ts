@@ -49,7 +49,7 @@ export async function run(): Promise<void> {
   );
   const document = await vscode.workspace.openTextDocument(fixture);
   assert.equal(document.languageId, "fpas");
-  const editor = await vscode.window.showTextDocument(document);
+  await vscode.window.showTextDocument(document);
 
   const parserDiagnostics = await waitForDiagnostics(
     document.uri,
@@ -60,36 +60,20 @@ export async function run(): Promise<void> {
     JSON.stringify(parserDiagnostics)
   );
 
+  await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
+
   const messySource =
     "program Corrected; begin // kept\n var Value:integer:=1 end.";
-  await editor.edit((edit) => {
-    edit.replace(
-      new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length)),
-      messySource
-    );
-  });
-  await waitForDiagnostics(
-    document.uri,
-    (diagnostics) => diagnostics.length === 0
+  await verifyFormattingKeepsLineEnding(
+    extension.extensionPath,
+    messySource,
+    vscode.EndOfLine.LF
   );
-
-  const formattingEdits = await vscode.commands.executeCommand<
-    vscode.TextEdit[]
-  >("vscode.executeFormatDocumentProvider", document.uri, {
-    tabSize: 2,
-    insertSpaces: true
-  });
-  assert.ok(formattingEdits);
-  assert.ok(formattingEdits.length > 0);
-  const formattingWorkspaceEdit = new vscode.WorkspaceEdit();
-  formattingWorkspaceEdit.set(document.uri, formattingEdits);
-  assert.equal(await vscode.workspace.applyEdit(formattingWorkspaceEdit), true);
-  assert.equal(
-    document.getText(),
-    "program Corrected;\n\nbegin\n  // kept\n  var Value: integer := 1\nend.\n"
+  await verifyFormattingKeepsLineEnding(
+    extension.extensionPath,
+    messySource.replaceAll("\n", "\r\n"),
+    vscode.EndOfLine.CRLF
   );
-
-  await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
 
   const workspaceMain = vscode.Uri.file(
     path.join(
@@ -198,6 +182,61 @@ export async function run(): Promise<void> {
   console.log(
     "Functional Pascal extension diagnostics, formatting, navigation, IntelliSense, semantic tools, project workflows, debugger, and lifecycle test passed."
   );
+}
+
+async function verifyFormattingKeepsLineEnding(
+  extensionPath: string,
+  source: string,
+  expectedEol: vscode.EndOfLine
+): Promise<void> {
+  const suffix = expectedEol === vscode.EndOfLine.CRLF ? "crlf" : "lf";
+  const fixturePath = path.join(
+    extensionPath,
+    "test",
+    "fixtures",
+    `.formatting-eol-${suffix}.fpas`
+  );
+  await fs.writeFile(fixturePath, source, "utf8");
+  try {
+    const document = await vscode.workspace.openTextDocument(fixturePath);
+    assert.equal(document.languageId, "fpas");
+    await vscode.window.showTextDocument(document);
+    await waitForDiagnostics(
+      document.uri,
+      (diagnostics) => diagnostics.length === 0
+    );
+    assert.equal(document.eol, expectedEol);
+
+    const formattingEdits = await vscode.commands.executeCommand<
+      vscode.TextEdit[]
+    >("vscode.executeFormatDocumentProvider", document.uri, {
+      tabSize: 2,
+      insertSpaces: true
+    });
+    assert.ok(formattingEdits);
+    assert.ok(formattingEdits.length > 0);
+    const formattingWorkspaceEdit = new vscode.WorkspaceEdit();
+    formattingWorkspaceEdit.set(document.uri, formattingEdits);
+    assert.equal(await vscode.workspace.applyEdit(formattingWorkspaceEdit), true);
+
+    const newline = expectedEol === vscode.EndOfLine.CRLF ? "\r\n" : "\n";
+    assert.equal(
+      document.getText(),
+      [
+        "program Corrected;",
+        "",
+        "begin",
+        "  // kept",
+        "  var Value: integer := 1",
+        "end.",
+        ""
+      ].join(newline)
+    );
+    assert.equal(document.eol, expectedEol);
+  } finally {
+    await vscode.commands.executeCommand("workbench.action.revertAndCloseActiveEditor");
+    await fs.rm(fixturePath, { force: true });
+  }
 }
 
 async function verifyExternalProjectChanges(): Promise<void> {

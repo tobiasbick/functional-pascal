@@ -145,6 +145,8 @@ begin
   AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
   mutable var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
+  NoteValue.Body := ((('first off-screen line' + Std.Str.Chr(10)) + 'second off-screen line') +
+                     Std.Str.Chr(10)) + (Std.Str.Chr(65279) + 'visible body text');
   var Issue: NoteIssue := record
     Path := 'broken.note';
     Message := 'invalid header';
@@ -162,6 +164,10 @@ begin
   AssertEquals('╯', InitialSnapshot.CellAt(32, 22).Glyph);
   AssertEquals('╰', InitialSnapshot.CellAt(33, 22).Glyph);
   AssertTrue(ScreenContains(InitialSnapshot, '…'));
+  AssertTrue(Std.Str.Contains(Model.Notes[0].Body, Std.Str.Chr(65279) + 'visible body text'));
+  Model.BodyOffset := TuiPoint.Create(0, 2);
+  Model := App.RunIterations(Model, NotesUpdate, NotesView, 0, 0);
+  AssertTrue(ScreenContains(App.SurfaceSnapshot(), 'visible body text'));
   App.Inject(TuiMsgTextChanged(TuiControlId.Create(3), TuiAction.Create(3), 'Modern terminal notes', 21));
   App.Inject(TuiMsgTextAreaChanged(TuiControlId.Create(5), TuiAction.Create(5), 'Written through MVU', 19, TuiPoint.Create(0, 0)));
   Model := App.RunIterations(Model, NotesUpdate, NotesView, 2, 0);

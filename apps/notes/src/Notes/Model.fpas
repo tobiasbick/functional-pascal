@@ -202,7 +202,7 @@ begin
   var ContentWidth: integer := MaximumWidth - 1;
   for Grapheme: string in Std.Console.SplitGraphemes(Text) do
   begin
-    var GraphemeWidth: integer := Std.Console.GraphemeWidth(Grapheme);
+    var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
     if Width + GraphemeWidth > ContentWidth then
     begin
       return Clipped + '…'

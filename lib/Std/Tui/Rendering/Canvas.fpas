@@ -155,8 +155,12 @@ public type
           return
         end;
 
-        Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
-        X := X + Std.Console.DisplayWidth(Glyph)
+        var GlyphWidth: integer := Std.Console.DisplayWidth(Glyph);
+        if GlyphWidth > 0 then
+        begin
+          Self.PutCell(TuiPoint.Create(X, Position.Y), TuiCell.Create(Glyph, Role));
+          X := X + GlyphWidth
+        end
       end
     end;
 

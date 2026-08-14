@@ -11,6 +11,10 @@ fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }
 
+[dev-dependencies]
+fpas-compiler = { path = "../fpas-compiler" }
+fpas-parser = { path = "../fpas-parser" }
+
 [lints]
 workspace = true
 

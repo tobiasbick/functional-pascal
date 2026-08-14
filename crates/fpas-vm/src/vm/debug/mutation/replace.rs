@@ -5,7 +5,7 @@ use fpas_bytecode::Value;
 use super::super::inspection::{MutationPath, active_label};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 
-pub(super) fn descendant(
+pub(in crate::vm::debug) fn descendant(
     mut root: Value,
     path: &[MutationPath],
     replacement: Value,
@@ -14,7 +14,10 @@ pub(super) fn descendant(
     Ok(root)
 }
 
-pub(super) fn resolve<'a>(mut value: &'a Value, path: &[MutationPath]) -> Option<&'a Value> {
+pub(in crate::vm::debug) fn resolve<'a>(
+    mut value: &'a Value,
+    path: &[MutationPath],
+) -> Option<&'a Value> {
     for component in path {
         value = match (component, value) {
             (MutationPath::RecordField(index), Value::Record(record)) => {

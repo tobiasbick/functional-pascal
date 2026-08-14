@@ -9,6 +9,7 @@ import { resolveStandardLibraryPath } from "../standardLibraryPath";
 import { registerDictionaryCommands } from "./dictionaryCommands";
 import { registerForcedReturnCommand } from "./forcedReturnCommand";
 import { registerSequenceCommands } from "./sequenceCommands";
+import { registerStorageInitializationCommand } from "./storageInitializationCommand";
 import { registerVariantConstructionCommand } from "./variantConstructionCommand";
 
 /** Register the Functional Pascal debug type without changing LSP ownership. */
@@ -25,6 +26,7 @@ export function registerDebugger(context: vscode.ExtensionContext): void {
   registerForcedReturnCommand(context);
   registerSequenceCommands(context);
   registerVariantConstructionCommand(context);
+  registerStorageInitializationCommand(context);
   context.subscriptions.push(provider, factory);
 }
 

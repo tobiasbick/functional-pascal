@@ -16,8 +16,9 @@ pub use vm::{
     DebugEvaluateResult, DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits,
     DebugExpression, DebugForcedReturnResult, DebugFrame, DebugInspectionLimits, DebugPauseHandle,
     DebugRunResult, DebugScope, DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState,
-    DebugStop, DebugStopReason, DebugStringMutationResult, DebugTask, DebugTaskEvent,
-    DebugTaskEventKind, DebugTaskState, DebugTermination, DebugUnaryOperation, DebugVariable,
-    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
-    Execution, Paginated, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm, VmError, VmOutput,
+    DebugStop, DebugStopReason, DebugStorageInitializationResult, DebugStringMutationResult,
+    DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState, DebugTermination,
+    DebugUnaryOperation, DebugVariable, DebugVariantConstructionResult, DebugVariantDescription,
+    DebugVariantField, DebugVariantInfo, Execution, Paginated, ShutdownHandle, SourceBreakpoint,
+    SourceLocation, Vm, VmError, VmOutput,
 };

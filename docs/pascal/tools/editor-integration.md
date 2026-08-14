@@ -102,8 +102,16 @@ for the target, presents a Quick Pick of canonical variants from
 `fpas/variantConstruct`. Cancelled prompts send no mutation. Programmatic
 arguments may supply `frameId`, `target`, `variant`, and `fields`.
 
+**Debug: Initialize Empty Storage** seeds one descendant below an empty
+mutable local or global. The command prompts for the textual target, a complete
+root initializer, and the descendant replacement, then calls
+`fpas/initializeStorage`. Cancelled prompts send no mutation. Programmatic
+arguments may supply `frameId`, `target`, `initializer`, and `expression`.
+
 Immutable, hidden, or evaluation-only values are read-only. Uninitialized
-mutable locals and globals accept only a complete root assignment.
+mutable locals and globals accept a complete root assignment through standard
+variable mutation, or a seeded descendant through **Debug: Initialize Empty
+Storage**.
 Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. A function-typed Variables or Watch target can be replaced

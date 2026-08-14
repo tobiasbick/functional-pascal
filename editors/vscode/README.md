@@ -91,6 +91,13 @@ prompts for each declared field expression, and commits one complete value
 without resuming. Fieldless variants need no field expressions. Cancelled
 prompts leave the stopped program unchanged.
 
+Use **Functional Pascal: Debug: Initialize Empty Storage** while stopped on an
+empty mutable local or global. The command prompts for a descendant target, a
+complete root initializer, and a replacement expression, then commits the
+rebuilt root once without resuming. Cancelled prompts leave the stopped
+program unchanged. A later source initializer still overwrites the debugger
+value.
+
 ## Build
 
 Node.js 22 or newer and a stable Rust toolchain are required. From the

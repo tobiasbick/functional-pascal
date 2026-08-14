@@ -2,8 +2,8 @@
 
 ## Active implementation plans
 
-There is no active debugger implementation plan. The next package should
-select one bounded row from [deferred.md](deferred.md).
+There is no active debugger implementation plan. Select the next bounded row
+from [deferred.md](deferred.md) before starting new debugger work.
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -22,16 +22,16 @@ The implemented debugger includes complete-value replacement of mutable enum,
 path, plus explicit metadata-driven discovery and complete construction of
 fieldless, single-field, and multi-field variants through JSONL
 `variant.describe` / `variant.construct`, DAP `fpas/variantDescribe` /
-`fpas/variantConstruct`, and VS Code **Debug: Construct Variant**. Remaining
-exclusions stay in
-[`aggregate-construction/consciously-deferred.md`](aggregate-construction/consciously-deferred.md).
-Implicit switching through a stale payload-child handle remains deferred.
+`fpas/variantConstruct`, and VS Code **Debug: Construct Variant**. Implicit
+switching through a stale payload-child handle remains unsupported.
 
 Debugger initialization of a visible, source-declared mutable local or global
 before normal execution initializes that binding is implemented through the
-same mutation surfaces. Descendant writes on empty storage, skipping the later
-source initializer, and treating parameters or captures as uninitialized
-targets remain deferred.
+same mutation surfaces. Seeded descendant initialization below empty storage
+is implemented through JSONL `storage.initialize`, DAP
+`fpas/initializeStorage`, and VS Code **Debug: Initialize Empty Storage**.
+Skipping the later source initializer and treating parameters or captures as
+uninitialized targets remain deferred.
 
 Explicit, variant-qualified descendant assignment that constructs one complete
 single-payload enum, `Result`, or `Option` variant is implemented through
@@ -47,8 +47,8 @@ remain recorded centrally in [deferred.md](deferred.md).
 
 Bounded forced return from the active ordinary callee is implemented through
 JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code command
-`functionalPascal.debug.forceReturn`. Remaining control-flow exclusions stay in
-[`forced-return/consciously-deferred.md`](forced-return/consciously-deferred.md).
+`functionalPascal.debug.forceReturn`. Broader control-flow mutation remains
+tracked as `DBG-D04` in [deferred.md](deferred.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

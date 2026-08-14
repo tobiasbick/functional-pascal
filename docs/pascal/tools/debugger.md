@@ -144,7 +144,19 @@ compatible mutable function-typed path. Uninitialized mutable locals and
 globals accept only a complete root value; they have no writable fields,
 indexes, dictionary entries, or payload
 descendants, and a qualified variant transition cannot synthesize that outer
-storage. A write to an old payload-child handle never selects a different
+storage. Seeded descendant initialization is a dedicated command: the client
+supplies both a complete root initializer and the descendant replacement, and
+the debugger prepares the value off to the side before committing the complete
+root once. JSONL `storage.initialize`, DAP `fpas/initializeStorage`, and the
+VS Code command **Debug: Initialize Empty Storage** address a textual target
+with at least one selector. The initializer must produce the declared complete
+root type; every field, in-range array element, existing dictionary key, and
+active payload in the path must already exist in that seed. Evaluation order is
+initializer, index selectors, then replacement, under one shared budget.
+Identity-bearing values anywhere in the seed are rejected. If the root is
+already initialized, the command fails and points the client to `expression.set`
+/ `setExpression`. A later source initializer still runs and overwrites the
+debugger value. A write to an old payload-child handle never selects a different
 variant; after a successful write the previous child handles are unavailable
 and clients must request variables again. Existing `setVariable` and
 `setExpression` operations still cannot insert/remove entries or change keys;
@@ -187,8 +199,8 @@ instruction count. Failure leaves frames, registers, the current stop,
 instruction count, and inspection handles unchanged. Entry and task-root
 frames, older frames, waiting, sleeping, or peer tasks, runtime-error stops,
 missing result metadata, and Dynamic, first-class function, task, capture-cell,
-or opaque results are rejected. Remaining control-flow exclusions stay in
-[`docs/future/debugger/forced-return/consciously-deferred.md`](../../future/debugger/forced-return/consciously-deferred.md).
+or opaque results are rejected. Broader control-flow mutation remains tracked
+as `DBG-D04` in the [deferred debugger backlog](../../future/debugger/deferred.md).
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

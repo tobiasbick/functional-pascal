@@ -20,7 +20,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
-`fpas/variantDescribe`, `fpas/variantConstruct`, `cancel`, `continue`,
+`fpas/variantDescribe`, `fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
 requests fail explicitly.
 
@@ -116,6 +116,15 @@ Describe returns `target`, `typeName`, and `variants` with `name` plus
 requests. After a successful construct, clients that initialized with
 `supportsInvalidatedEvent: true` receive one `invalidated` event whose `areas`
 are `variables`. Discovery and failures emit no invalidation.
+
+`fpas/initializeStorage` maps `frameId`, `target`, `initializer`, and
+`expression` onto JSONL `storage.initialize`. A successful body contains
+`root`, `target`, `rootValue`, `value`, `type`, `variablesReference`,
+`namedVariables`, and `indexedVariables`. The adapter does not advertise a DAP
+capability flag for this custom request. After a successful request, clients
+that initialized with `supportsInvalidatedEvent: true` receive one
+`invalidated` event whose `areas` are `variables`. Failure emits no
+invalidation and retains current handles.
 
 After any successful value, dictionary, or sequence mutation, clients that initialized with
 `supportsInvalidatedEvent: true` receive an `invalidated` event for the

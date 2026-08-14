@@ -1,0 +1,79 @@
+program EmptyStorageConstruction;
+
+uses Std.Console;
+
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+  Choice = enum
+    Empty;
+    Count(Value: integer);
+    Pair(Left: integer; Right: integer);
+  end;
+  Holder = record
+    Count: integer;
+    Nested: Point;
+    Items: array of integer;
+    Scores: dict of string to integer;
+    Item: Choice;
+    Outcome: result of integer, string;
+    Optional: option of integer;
+  end;
+  BoxFn = record
+    Action: function(): integer;
+  end;
+
+function Identity(): integer;
+begin
+  return 1
+end;
+
+function MakeInitialState(): Holder;
+begin
+  return record
+    Count := 1;
+    Nested := record
+      X := 2;
+      Y := 3;
+    end;
+    Items := [10, 20, 30];
+    Scores := ['blue': 4];
+    Item := Choice.Count(5);
+    Outcome := Ok(6);
+    Optional := Some(7);
+  end
+end;
+
+mutable var
+  Tick: integer := 0;
+  GlobalState: Holder := MakeInitialState();
+
+function Next(): integer;
+begin
+  Tick := Tick + 1;
+  return Tick
+end;
+
+begin
+  mutable var Callback: function(): integer := Identity;
+  mutable var State: Holder := MakeInitialState();
+  mutable var Origin: Point := record
+    X := 8;
+    Y := 9;
+  end;
+  mutable var Items: array of integer := [1, 2, 3];
+  mutable var Scores: dict of string to integer := ['red': 1];
+  mutable var Selected: Choice := Choice.Empty;
+  mutable var Outcome: result of integer, string := Ok(1);
+  mutable var Optional: option of integer := Some(1);
+  mutable var Boxed: BoxFn := record
+    Action := Identity;
+  end;
+  var Frozen: integer := 1;
+  var StopMarker: integer := 0;
+  WriteLn(State.Count);
+  WriteLn(State.Nested.X);
+  WriteLn(GlobalState.Count)
+end.

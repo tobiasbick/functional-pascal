@@ -196,6 +196,8 @@ pub enum DebugErrorKind {
     VariantUnknown,
     /// Construction fields are missing, extra, unknown, or ASCII-case-duplicate.
     VariantFieldSet,
+    /// Seeded empty-storage initialization targeted a root that already holds a value.
+    StorageAlreadyInitialized,
     /// A variables reference belongs to an expired or different stop snapshot.
     UnknownVariablesReference,
     /// The requested writable child does not exist in the current container.

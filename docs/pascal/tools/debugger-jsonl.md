@@ -48,6 +48,7 @@ compatibility mode. A response precedes events caused by that request.
 | `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result and the fresh caller frame |
 | `variant.describe` | stopped | `target`; optional `frame_id` | canonical variants and declared fields for one wrapper target |
 | `variant.construct` | stopped | `target`, `variant`, `fields`; optional `frame_id` | committed wrapper value, canonical variant, and fresh child reference |
+| `storage.initialize` | stopped | `target`, `initializer`, `expression`; optional `frame_id` | committed descendant and complete-root summaries |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
@@ -101,15 +102,16 @@ dictionary keys must already exist. An unqualified inactive field does not
 select a variant. Fieldless and multi-field variants still require a complete
 constructor on the binding or `variant.construct`. An uninitialized mutable local or global accepts
 only the complete root name; field, index, and variant-transition selectors on
-empty storage fail with `variable_path_unsupported`. Text indexes and aggregate
-structure
-changes are unsupported by `expression.set`; use the explicit dictionary and
-sequence commands below. Complete enum, `Result`, and `Option` values can also
-be replaced by assigning a constructor expression to the complete target. A
-function-typed target accepts one visible source binding that already holds a
-compatible non-task-bound function value. Direct named routines, new closure
-syntax, and inactive-variant function payloads remain rejected. A
-write to an old payload-child handle never selects a different variant.
+empty storage fail with `variable_path_unsupported`. Use `storage.initialize`
+when a descendant below empty storage must be seeded from an explicit complete
+root. Text indexes and aggregate structure changes are unsupported by
+`expression.set`; use the explicit dictionary and sequence commands below.
+Complete enum, `Result`, and `Option` values can also be replaced by assigning
+a constructor expression to the complete target. A function-typed target
+accepts one visible source binding that already holds a compatible
+non-task-bound function value. Direct named routines, new closure syntax, and
+inactive-variant function payloads remain rejected. A write to an old
+payload-child handle never selects a different variant.
 
 Selectors run once from left to right and the replacement runs last, all
 against the unchanged stopped snapshot and under one expression/call budget.
@@ -197,6 +199,26 @@ shared budget. Success returns the ordinary five rendered fields plus canonical
 `variant`. Discovery does not expire handles; successful construction does.
 Initialize advertises `variant_describe` and `variant_construct`.
 
+`storage.initialize` seeds one descendant below an empty mutable local or
+global. `target` must include at least one selector. `initializer` is a normal
+debugger expression that produces the declared complete root; `expression`
+replaces the selected descendant. The debugger evaluates initializer, index
+selectors, and replacement once under one shared budget, resolves the path
+against the detached seed, and commits the rebuilt complete root atomically:
+
+```json
+{"type":"request","id":30,"command":"storage.initialize","arguments":{"frame_id":3,"target":"State.Items[0].Count","initializer":"MakeInitialState()","expression":"42"}}
+{"type":"response","request_id":30,"command":"storage.initialize","success":true,"body":{"root":"State","target":"State.Items[0].Count","root_value":"Holder {...}","value":"42","type":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0}}
+```
+
+The request accepts only `frame_id`, `target`, `initializer`, and `expression`.
+The returned `target` substitutes evaluated indexes; string keys use escaped
+FPAS string-literal syntax such as `Scores['it''s']`.
+An already initialized root fails with `storage_already_initialized` and does
+not become ordinary mutation. Failure leaves empty storage and inspection
+handles unchanged. A later source initializer still overwrites the debugger
+value. Initialize advertises `storage_initialize`.
+
 `evaluate` may call exact executable routines, record methods and readable
 properties, visible first-class functions, and deterministic `Std.*`
 intrinsics. Calls use a detached copy of globals, arguments, receivers,
@@ -227,10 +249,11 @@ V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
-construct, conditional breakpoints, hit conditions, and logpoints. Attach, non-stop
-execution and reverse execution remain false;
-`task_threads` is true. `frame_return`, `variant_describe`, and
-`variant_construct` are true.
+construct, empty-storage initialization, conditional breakpoints, hit
+conditions, and logpoints. Attach, non-stop execution and reverse execution
+remain false;
+`task_threads` is true. `frame_return`, `variant_describe`,
+`variant_construct`, and `storage_initialize` are true.
 
 ## Default limits
 
@@ -264,7 +287,7 @@ Stable errors include `invalid_request`, `invalid_state`,
 `string_character_required`, `string_character_unchanged`,
 `frame_return_unsupported`, `frame_return_value_required`,
 `frame_return_value_unexpected`, `frame_return_type`, `variant_unknown`,
-`variant_field_set`, `unknown_task`,
+`variant_field_set`, `storage_already_initialized`, `unknown_task`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

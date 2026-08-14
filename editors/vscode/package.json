@@ -175,6 +175,11 @@
         "command": "functionalPascal.debug.constructVariant",
         "title": "Debug: Construct Variant",
         "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.initializeStorage",
+        "title": "Debug: Initialize Empty Storage",
+        "category": "Functional Pascal"
       }
     ],
     "configuration": {

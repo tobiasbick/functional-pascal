@@ -1,9 +1,11 @@
 //! DAP request translation onto the JSONL debugger core.
 
 mod dictionary;
+mod dispatch;
 mod forced_return;
 mod mutation;
 mod sequence;
+mod storage;
 mod tasks;
 mod variant;
 
@@ -84,61 +86,7 @@ impl DapServer {
         } else {
             Vec::new()
         };
-        let mut response = match command {
-            "initialize" => self.initialize(request_seq, &arguments),
-            "launch" => { self.stop_on_entry = arguments.get("stopOnEntry").and_then(Value::as_bool).unwrap_or(false); vec![self.success(request_seq, command, json!({}))] }
-            "setBreakpoints" => self.set_breakpoints(request_seq, &arguments),
-            "configurationDone" => self.core_request(request_seq, command, "launch", json!({"stop_on_entry":self.stop_on_entry})),
-            "threads" if self.core.status() == ServerStatus::Running => {
-                let body = self.threads.active_threads();
-                vec![self.success(request_seq, command, body)]
-            }
-            "threads" => self.core_request(request_seq, command, "tasks", json!({})),
-            "stackTrace" => match self.task_id(&arguments, "threadId") {
-                Ok(task_id) => self.core_request(request_seq, command, "stack", json!({"task_id":task_id,"start":arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),"count":arguments.get("levels").and_then(Value::as_u64).unwrap_or(64)})),
-                Err(message) => vec![self.failure(request_seq, command, &message)],
-            },
-            "scopes" => self.core_request(request_seq, command, "scopes", json!({"frame_id":arguments.get("frameId").cloned().unwrap_or(Value::Null)})),
-            "variables" => self.core_request(request_seq, command, "variables", json!({"variables_reference":arguments.get("variablesReference").cloned().unwrap_or(Value::Null),"start":arguments.get("start").cloned().unwrap_or(json!(0)),"count":arguments.get("count").cloned().unwrap_or(json!(100))})),
-            "evaluate" => self.evaluate(request_seq, command, &arguments),
-            "setVariable" => self.set_variable(request_seq, command, &arguments),
-            "setExpression" => self.set_expression(request_seq, command, &arguments),
-            "fpas/dictionaryInsert" => {
-                self.insert_dictionary(request_seq, command, &arguments)
-            }
-            "fpas/dictionaryRemove" => {
-                self.remove_dictionary(request_seq, command, &arguments)
-            }
-            "fpas/dictionaryReplaceKey" => {
-                self.replace_dictionary_key(request_seq, command, &arguments)
-            }
-            "fpas/arrayInsert" => self.insert_array(request_seq, command, &arguments),
-            "fpas/arrayRemove" => self.remove_array(request_seq, command, &arguments),
-            "fpas/stringReplaceCharacter" => {
-                self.replace_string_character(request_seq, command, &arguments)
-            }
-            "fpas/forceReturn" => self.force_return(request_seq, command, &arguments),
-            "fpas/variantDescribe" => self.describe_variant(request_seq, command, &arguments),
-            "fpas/variantConstruct" => self.construct_variant(request_seq, command, &arguments),
-            "cancel" => self.core_request(
-                request_seq,
-                command,
-                "evaluate.cancel",
-                json!({"request_id": arguments.get("requestId")}),
-            ),
-            "continue" if self.runtime_failed => {
-                self.runtime_failed = false;
-                self.core_request(request_seq, command, "disconnect", json!({}))
-            }
-            "continue" => self.core_request(request_seq, command, "continue", json!({})),
-            "pause" => self.core_request(request_seq, command, "pause", json!({})),
-            "next" => self.step_request(request_seq, command, "step_over", &arguments),
-            "stepIn" => self.step_request(request_seq, command, "step_into", &arguments),
-            "stepOut" => self.step_request(request_seq, command, "step_out", &arguments),
-            "disconnect" => self.core_request(request_seq, command, "disconnect", json!({})),
-            "source" => self.source(request_seq, command, &arguments),
-            _ => vec![self.failure(request_seq, command, &format!("DAP request `{command}` is unsupported by the FPAS debugger."))],
-        };
+        let mut response = self.dispatch_request(request_seq, command, &arguments);
         output.append(&mut response);
         output
     }
@@ -508,6 +456,9 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = variant::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = storage::response_body(command, &body) {
         return result;
     }
     if let Some(result) = mutation::custom_response_body(command, &body) {

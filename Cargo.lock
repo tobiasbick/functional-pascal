@@ -782,7 +782,9 @@ name = "fpas-vm"
 version = "0.0.1"
 dependencies = [
  "fpas-bytecode",
+ "fpas-compiler",
  "fpas-diagnostics",
+ "fpas-parser",
  "fpas-std",
 ]
 

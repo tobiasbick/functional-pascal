@@ -1,6 +1,7 @@
 //! Atomic live-root mutation after detached expression evaluation.
 
 mod dictionary;
+pub(in crate::vm::debug) mod empty_storage;
 mod function_value;
 mod model;
 mod replace;
@@ -19,6 +20,7 @@ use super::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::worker::Worker;
 
 pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remove, replace_key};
+pub use empty_storage::DebugStorageInitializationResult;
 pub(in crate::vm::debug) use function_value::{
     inactive_function_payload, is_function_type, prepare as prepare_function_value,
     source_name as function_value_source_name,
@@ -38,7 +40,7 @@ pub(in crate::vm::debug) use variant::{
     ordered_field_expressions, require_constructible_fields, require_wrapper, unknown_variant,
 };
 
-pub(super) fn validate_replacement(
+pub(in crate::vm::debug) fn validate_replacement(
     executable: &VerifiedExecutable,
     target: &MutationTarget,
     replacement: &Value,
@@ -62,7 +64,7 @@ pub(in crate::vm::debug) fn validate_value(
     validate::value(executable.executable(), expected, value, max_depth)
 }
 
-pub(super) fn commit(
+pub(in crate::vm::debug) fn commit(
     worker: &mut Worker,
     generation: u32,
     target: &MutationTarget,

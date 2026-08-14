@@ -428,6 +428,7 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 }
 
 mod behavior;
+mod empty_storage_construction;
 mod evaluation;
 mod forced_return;
 mod function_value_assignment;

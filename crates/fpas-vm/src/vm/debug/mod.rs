@@ -26,8 +26,8 @@ pub use inspection::{
 };
 pub use mutation::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
-    DebugDictionaryMutationResult, DebugStringMutationResult, DebugVariantConstructionResult,
-    DebugVariantDescription, DebugVariantField, DebugVariantInfo,
+    DebugDictionaryMutationResult, DebugStorageInitializationResult, DebugStringMutationResult,
+    DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
 };
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{

@@ -104,9 +104,10 @@ They map directly to the corresponding JSONL operations.
 
 `fpas/forceReturn` is the DAP mapping of JSONL `frame.return`. Arguments are
 `frameId` and optional `expression`. A successful body contains `value`,
-`type`, `variablesReference`, `namedVariables`, `indexedVariables`, `taskId`,
-and the fresh caller `frame`. The adapter does not advertise a DAP capability
-flag for this custom request. After a successful forced return, clients that
+`type`, `variablesReference`, `namedVariables`, `indexedVariables`,
+`unwoundFrames`, `taskId`, and the fresh caller `frame`. `unwoundFrames` is the
+selected depth plus one. The adapter does not advertise a DAP capability flag
+for this custom request. After a successful forced return, clients that
 initialized with `supportsInvalidatedEvent: true` receive one `invalidated`
 event whose `areas` are `stacks` and `variables`. Failure emits no invalidation
 and leaves the current stop unchanged.

@@ -81,6 +81,7 @@ fn dap_force_return_matches_jsonl_and_invalidates_stacks_and_variables() {
     assert_eq!(returned[0]["success"], true, "{returned:?}");
     assert_eq!(returned[0]["body"]["value"], "99");
     assert_eq!(returned[0]["body"]["type"], "integer");
+    assert_eq!(returned[0]["body"]["unwoundFrames"], 1);
     assert_eq!(returned[0]["body"]["frame"]["name"], "forcedreturn");
     assert_eq!(returned.len(), 2, "{returned:?}");
     assert_eq!(returned[1]["event"], "invalidated");
@@ -126,6 +127,10 @@ fn dap_force_return_matches_jsonl_and_invalidates_stacks_and_variables() {
         jsonl_result[0]["body"]["result"],
         returned[0]["body"]["value"]
     );
+    assert_eq!(
+        jsonl_result[0]["body"]["unwound_frames"],
+        returned[0]["body"]["unwoundFrames"]
+    );
 
     let rejected = send(
         &mut adapter,
@@ -154,4 +159,28 @@ fn dap_force_return_omits_invalidation_when_the_function_requires_a_value() {
         rejected[0]["body"]["error"]["code"],
         "frame_return_value_required"
     );
+}
+
+#[test]
+fn dap_force_return_unwinds_a_selected_older_frame_and_invalidates_once() {
+    let mut adapter = server();
+    let mut seq = initialize(&mut adapter, true);
+    let _leaf = stop_in_function(&mut adapter, &mut seq, "leaf");
+    let branch = frames(&mut adapter, &mut seq)[1]["id"]
+        .as_u64()
+        .expect("selected frame");
+    let returned = send(
+        &mut adapter,
+        &mut seq,
+        "fpas/forceReturn",
+        json!({"frameId": branch, "expression": "Local"}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["value"], "11");
+    assert_eq!(returned[0]["body"]["unwoundFrames"], 2);
+    assert_eq!(returned[0]["body"]["frame"]["name"], "forcedreturn");
+    assert_eq!(returned.len(), 2, "{returned:?}");
+    assert_eq!(returned[1]["event"], "invalidated");
+    assert_eq!(returned[1]["body"]["areas"][0], "stacks");
+    assert_eq!(returned[1]["body"]["areas"][1], "variables");
 }

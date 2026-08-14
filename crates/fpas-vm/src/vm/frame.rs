@@ -9,7 +9,7 @@ pub(super) const MAX_CALL_DEPTH: usize = 4096;
 pub(super) const MAX_REGISTER_SLOTS: usize = 1_048_576;
 
 /// Continuation saved while a callee owns the active register window.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct CallFrame {
     pub function: FunctionId,
     pub ip: usize,

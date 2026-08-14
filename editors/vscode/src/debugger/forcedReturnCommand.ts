@@ -11,7 +11,7 @@ export interface ForcedReturnInput {
   readonly expression?: string;
 }
 
-/** Register the editor command that completes the active callee. */
+/** Register the editor command that completes the selected callee. */
 export function registerForcedReturnCommand(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(
@@ -89,9 +89,13 @@ async function request(
   if (expression !== undefined) args.expression = expression;
   const result = await selection.session.customRequest("fpas/forceReturn", args) as {
     value?: string;
+    unwoundFrames?: number;
   };
+  const frames = result.unwoundFrames === undefined
+    ? ""
+    : ` (${result.unwoundFrames} ${result.unwoundFrames === 1 ? "frame" : "frames"})`;
   void vscode.window.showInformationMessage(
-    `Functional Pascal returned: ${result.value ?? "committed"}`
+    `Functional Pascal returned: ${result.value ?? "committed"}${frames}`
   );
 }
 

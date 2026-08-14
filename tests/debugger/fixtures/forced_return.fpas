@@ -13,12 +13,29 @@ begin
   return Value + Offset
 end;
 
+function Leaf(Value: integer): integer;
+begin
+  var Inner: integer := 999;
+  WriteLn('leaf');
+  return Value + 1
+end;
+
+function Branch(Value: integer): integer;
+begin
+  var Local: integer := Value + 10;
+  var Nested: integer := Leaf(Local);
+  WriteLn('branch');
+  return Nested
+end;
+
 procedure Announce(Message: string);
 begin
   WriteLn(Message)
 end;
 
 begin
+  var Nested: integer := Branch(1);
+  WriteLn(Nested);
   var Answer: integer := Compute(41);
   Announce('skip me');
   WriteLn(Answer)

@@ -85,6 +85,7 @@ fn jsonl_frame_return_completes_a_function_and_continues_from_the_caller() {
     assert_eq!(returned[0]["success"], true, "{returned:?}");
     assert_eq!(returned[0]["body"]["result"], "42");
     assert_eq!(returned[0]["body"]["type_name"], "integer");
+    assert_eq!(returned[0]["body"]["unwound_frames"], 1);
     assert_eq!(returned[0]["body"]["frame"]["name"], "forcedreturn");
     assert_eq!(returned[0]["body"]["frame"]["depth"], 0);
 
@@ -147,6 +148,7 @@ fn jsonl_frame_return_completes_a_procedure_and_rejects_convention_errors() {
     );
     assert_eq!(returned[0]["success"], true, "{returned:?}");
     assert_eq!(returned[0]["body"]["result"], "()");
+    assert_eq!(returned[0]["body"]["unwound_frames"], 1);
 
     let _ = send(&mut server, &mut id, "continue", json!({}));
     let output = server
@@ -211,4 +213,61 @@ end.
     );
     assert_eq!(returned[0]["success"], true, "{returned:?}");
     assert_eq!(returned[0]["body"]["result"], "9");
+    assert_eq!(returned[0]["body"]["unwound_frames"], 1);
+}
+
+fn frame_id_at_depth(frames: &[Value], depth: u64) -> u64 {
+    frames
+        .iter()
+        .find(|frame| frame["depth"] == depth)
+        .and_then(|frame| frame["frame_id"].as_u64())
+        .unwrap_or_else(|| panic!("stack should include depth {depth}"))
+}
+
+#[test]
+fn jsonl_frame_return_completes_a_selected_older_frame() {
+    let mut server = server();
+    let mut id = initialize(&mut server);
+    let _leaf = stop_in_function(&mut server, &mut id, "leaf");
+    let frames = stack_frames(&mut server, &mut id);
+    let branch = frame_id_at_depth(&frames, 1);
+    let unknown = send(
+        &mut server,
+        &mut id,
+        "frame.return",
+        json!({"frame_id": 1, "expression": "1"}),
+    );
+    assert_eq!(unknown[0]["error"]["code"], "unknown_frame", "{unknown:?}");
+
+    let returned = send(
+        &mut server,
+        &mut id,
+        "frame.return",
+        json!({"frame_id": branch, "expression": "Local"}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["result"], "11");
+    assert_eq!(returned[0]["body"]["unwound_frames"], 2);
+    assert_eq!(returned[0]["body"]["frame"]["name"], "forcedreturn");
+    assert_eq!(returned[0]["body"]["frame"]["depth"], 0);
+
+    let caller = stack_frames(&mut server, &mut id)[0]["frame_id"]
+        .as_u64()
+        .expect("caller");
+    let nested = send(
+        &mut server,
+        &mut id,
+        "evaluate",
+        json!({"frame_id": caller, "expression": "Nested"}),
+    );
+    assert_eq!(nested[0]["body"]["result"], "11", "{nested:?}");
+
+    let _ = send(&mut server, &mut id, "continue", json!({}));
+    let output = server
+        .wait()
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["text"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "11\nskip me\n42\n", "{output:?}");
 }

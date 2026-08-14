@@ -20,7 +20,7 @@ desktop editors. The implemented editor features are:
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
   evaluation, stopped-state editing of supported mutable values, and forced
-  return from the active callee
+  return from a selected ordinary callee
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -86,14 +86,15 @@ bytes. Character replacement requires exactly one different character. The
 commands share the stopped frame, atomic commit, error, and refresh behavior of
 dictionary commands.
 
-**Debug: Force Return** completes the active ordinary callee of the task that
-caused the current non-failure stop. The command uses the selected depth-zero
-stack frame. Procedures return immediately; functions prompt for one FPAS
-expression when the command is invoked without an expression. The custom DAP
-request `fpas/forceReturn` writes the validated result into the caller and
-refreshes stack and variable views without resuming the program. Entry frames,
-older frames, peer tasks, runtime-error stops, and unsupported result types are
-rejected without changing live state.
+**Debug: Force Return** completes the selected ordinary callee of the task that
+caused the current non-failure stop. The command uses the currently selected
+stack frame, including an older frame in the same stopped task. Procedures
+return immediately; functions prompt for one FPAS expression when the command
+is invoked without an expression. The custom DAP request `fpas/forceReturn`
+writes the validated result into that frame's caller, discards every younger
+frame, and refreshes stack and variable views without resuming the program.
+Program and task entry frames, peer tasks, runtime-error stops, and unsupported
+result types are rejected without changing live state.
 
 **Debug: Construct Variant** discovers and constructs one complete enum,
 `Result`, or `Option` value on a textual mutable target. The command prompts

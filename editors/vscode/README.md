@@ -27,12 +27,13 @@ and program output use the bundled CLI's DAP adapter; the
 adapter supplies the bundled source standard library automatically. The
 language server remains responsible only for static editor features.
 Use the Debug toolbar for Continue, Pause, Step Into, Step Over, Step Out, and
-Stop. While stopped in an ordinary callee, **Functional Pascal: Debug: Force
-Return** completes that frame with a validated result and stays stopped in the
-caller. The Run and Debug sidebar exposes the call stack, lexical scopes, locals,
-parameters, globals, and expandable aggregate values. Evaluated aggregates are
-also expandable until execution resumes. Program output, logpoint text, and
-structured runtime failures appear in the Debug Console. Log messages use
+Stop. While stopped, **Functional Pascal: Debug: Force Return** completes the
+selected ordinary callee — including an older frame — with a validated result
+and stays stopped in that frame's caller. The Run and Debug sidebar exposes the
+call stack, lexical scopes, locals, parameters, globals, and expandable
+aggregate values. Evaluated aggregates are also expandable until execution
+resumes. Program output, logpoint text, and structured runtime failures appear
+in the Debug Console. Log messages use
 `{expression}` interpolation and `{{`/`}}` for literal braces. Debugger-side
 calls may invoke deterministic functions, procedures, record methods,
 constructors, readable properties, visible closures, and pure `Std.*`
@@ -81,11 +82,12 @@ uses an existing zero-based index. String indexes count Unicode characters and
 the replacement must be a one-character FPAS string. Successful commands
 refresh debugger variables; failures and cancelled prompts send no mutation.
 
-Use **Functional Pascal: Debug: Force Return** while stopped in an ordinary
-callee. Procedures complete without a prompt; functions prompt for one FPAS
-return expression unless the command is invoked with an expression. The
-command completes that callee, leaves the session stopped in the caller, and
-refreshes the call stack and Variables view. It does not resume the program.
+Use **Functional Pascal: Debug: Force Return** while stopped on a selected
+ordinary callee. Procedures complete without a prompt; functions prompt for one
+FPAS return expression unless the command is invoked with an expression. The
+command completes the selected frame and every younger frame, leaves the
+session stopped in the selected frame's caller, and refreshes the call stack
+and Variables view. It does not resume the program.
 
 Use **Functional Pascal: Debug: Construct Variant** while stopped on a mutable
 enum, `Result`, or `Option` target. The command discovers legal variants,

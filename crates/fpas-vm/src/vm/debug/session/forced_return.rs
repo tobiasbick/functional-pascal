@@ -5,12 +5,13 @@ use std::sync::atomic::Ordering;
 use super::*;
 use crate::vm::debug::evaluation::{DebugEvaluationLimits, DebugExpression};
 use crate::vm::debug::forced_return::{
-    DebugForcedReturnResult, commit, prepare_return_value, reject_declared_category,
-    require_convention, require_eligible, require_result_type, unknown_frame, unsupported,
+    DebugForcedReturnResult, commit, prepare_return_value, prepare_selection,
+    reject_declared_category, require_convention, require_eligible, require_result_type,
+    unknown_frame, unsupported,
 };
 
 impl DebugSession {
-    /// Complete the active ordinary callee with a validated return value and remain stopped in its caller.
+    /// Complete a selected ordinary callee with a validated return value and remain stopped in its caller.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     ///
@@ -26,7 +27,7 @@ impl DebugSession {
         self.force_return_with_limits(frame_id, expression, DebugEvaluationLimits::default())
     }
 
-    /// Complete the active callee using explicit evaluation and validation limits.
+    /// Complete a selected callee using explicit evaluation and validation limits.
     ///
     /// # Errors
     ///
@@ -55,7 +56,7 @@ impl DebugSession {
                 .into_iter()
                 .find(|frame| frame.id == frame_id)
                 .ok_or_else(|| unknown_frame(frame_id))?;
-            let function = {
+            let prepared = {
                 let worker = self
                     .runtime
                     .worker(task_id)
@@ -69,17 +70,17 @@ impl DebugSession {
                     self.runtime.task_state(task_id),
                     worker,
                 )?;
-                worker.function
+                prepare_selection(worker, frame.depth)?
             };
             let (convention, result_type) = {
                 let info = self
                     .executable
                     .executable()
                     .functions
-                    .get(usize::from(function.get()))
+                    .get(usize::from(prepared.selected_function.get()))
                     .ok_or_else(|| {
                         unsupported(
-                            "forced return is not available because the active function metadata is missing",
+                            "forced return is not available because the selected function metadata is missing",
                             "Rebuild the executable with the current compiler and retry.",
                         )
                     })?;
@@ -95,18 +96,18 @@ impl DebugSession {
                 None => fpas_bytecode::Value::Unit,
             };
             prepare_return_value(&self.executable, result_type, &value, limits.max_depth)?;
-            let prepared = self
+            let prepared_result = self
                 .inspections
                 .get(&task_id)
                 .ok_or_else(|| unknown_task(task_id))?
                 .prepare_evaluation_result(&value, limits)?;
-            let reserved_handles = prepared.reserved_handles();
+            let reserved_handles = prepared_result.reserved_handles();
             {
                 let worker = self
                     .runtime
                     .worker_mut(task_id)
                     .ok_or_else(|| unknown_task(task_id))?;
-                commit(worker, value.clone())?;
+                commit(worker, &prepared, value.clone())?;
             }
             self.last_stop = {
                 let Some(worker) = self.runtime.worker(task_id) else {
@@ -126,7 +127,7 @@ impl DebugSession {
             let Some(inspection) = self.inspections.get_mut(&task_id) else {
                 unreachable!("forced-return refresh retains its selected task snapshot")
             };
-            let rendered = inspection.retain_prepared_evaluation_result(prepared);
+            let rendered = inspection.retain_prepared_evaluation_result(prepared_result);
             let Some(caller) = inspection
                 .stack(0, 1)
                 .ok()
@@ -141,6 +142,7 @@ impl DebugSession {
                 variables_reference: rendered.variables_reference,
                 named_variables: rendered.named_variables,
                 indexed_variables: rendered.indexed_variables,
+                unwound_frames: prepared.unwind_count,
                 frame: caller,
             })
         })();

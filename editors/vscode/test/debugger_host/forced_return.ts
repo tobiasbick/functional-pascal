@@ -1,4 +1,4 @@
-/** Real Extension Host coverage for completing the active callee. */
+/** Real Extension Host coverage for completing a selected callee. */
 
 import assert from "node:assert/strict";
 
@@ -33,20 +33,22 @@ export async function verifyForcedReturn(
     "",
     "uses Std.Console;",
     "",
-    "function Compute(Value: integer): integer;",
+    "function Leaf(Value: integer): integer;",
     "begin",
-    "  var Offset: integer := 1;",
-    "  return Value + Offset",
+    "  WriteLn('leaf');",
+    "  return Value + 1",
     "end;",
     "",
-    "procedure Announce(Message: string);",
+    "function Branch(Value: integer): integer;",
     "begin",
-    "  WriteLn(Message)",
+    "  var Local: integer := Value + 10;",
+    "  var Nested: integer := Leaf(Local);",
+    "  WriteLn('branch');",
+    "  return Nested",
     "end;",
     "",
     "begin",
-    "  var Answer: integer := Compute(41);",
-    "  Announce('skip me');",
+    "  var Answer: integer := Branch(1);",
     "  WriteLn(Answer)",
     "end.",
     ""
@@ -67,14 +69,21 @@ export async function verifyForcedReturn(
       () => sent.slice(marker.sent).some((message) => message.event === "stopped"),
       "forced-return entry"
     );
-    const frameId = await waitUntilFrame(
+    await waitUntilFrame(
       session as vscode.DebugSession,
-      "compute",
+      "leaf",
       () => sent.slice(marker.sent)
     );
+    const stack = await (session as vscode.DebugSession).customRequest("stackTrace", {
+      threadId: 1,
+      startFrame: 0,
+      levels: 8
+    }) as { stackFrames: Array<{ id: number; name: string }> };
+    const selected = stack.stackFrames.find((frame) => frame.name === "branch");
+    assert.ok(selected, `older branch frame should be selectable: ${JSON.stringify(stack.stackFrames)}`);
     await vscode.commands.executeCommand(FORCE_RETURN_COMMAND, {
-      frameId,
-      expression: "99"
+      frameId: selected.id,
+      expression: "Local"
     });
     await waitFor(
       () => eventCount(sent.slice(marker.sent), "invalidated") >= 1,
@@ -88,7 +97,7 @@ export async function verifyForcedReturn(
     assert.deepEqual(areas, ["stacks", "variables"]);
 
     const answer = await namedVariable(session as vscode.DebugSession, "Locals", "Answer");
-    assert.equal(answer.value, "99");
+    assert.equal(answer.value, "11");
 
     await session.customRequest("continue", { threadId: 1 });
     await waitFor(
@@ -100,11 +109,13 @@ export async function verifyForcedReturn(
       .filter((message) => message.event === "output")
       .map((message) => String(message.body?.output ?? ""))
       .join("");
-    assert.equal(output, "skip me\n99\n", `continuation observed the forced result: ${JSON.stringify(output)}`);
-    assert.ok(
-      received.slice(marker.received).some((message) => message.command === "fpas/forceReturn"),
-      "Extension Host forwards forced return"
-    );
+    assert.equal(output, "11\n", `continuation skipped younger bodies: ${JSON.stringify(output)}`);
+    const request = received
+      .slice(marker.received)
+      .find((message) => message.command === "fpas/forceReturn");
+    assert.ok(request, "Extension Host forwards forced return");
+    assert.equal(request.arguments?.frameId, selected.id, "command forwards the selected older frame");
+    assert.equal(request.arguments?.expression, "Local");
   } finally {
     if (session) await vscode.debug.stopDebugging(session);
     await closeAndRemoveSource(sourcePath);

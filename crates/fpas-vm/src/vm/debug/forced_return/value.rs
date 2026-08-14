@@ -1,71 +1,11 @@
-//! Eligibility, convention, category, and portable result-type proof.
+//! Convention, portable result type, category, and value proof.
 
 use fpas_bytecode::{DebugType, DebugTypeId, ReturnConvention, Value, VerifiedExecutable};
 
 use super::super::evaluation::DebugExpression;
-use super::super::inspection::DebugFrame;
 use super::super::mutation;
-use super::super::types::{DebugErrorKind, DebugSessionError, DebugSessionState, DebugStopReason};
+use super::super::types::{DebugErrorKind, DebugSessionError};
 use super::{unsupported, value_required, value_unexpected};
-use crate::vm::debug::types::DebugTaskState;
-use crate::vm::worker::Worker;
-
-/// Reject stops, frames, and tasks outside the accepted forced-return slice.
-pub(in crate::vm::debug) fn require_eligible(
-    state: DebugSessionState,
-    stop_reason: DebugStopReason,
-    stop_task_id: u64,
-    frame: &DebugFrame,
-    frame_task_id: u64,
-    task_state: Option<DebugTaskState>,
-    worker: &Worker,
-) -> Result<(), DebugSessionError> {
-    if state == DebugSessionState::Failed || stop_reason == DebugStopReason::RuntimeError {
-        return Err(unsupported(
-            "forced return is not available after a runtime-error stop",
-            "Clear the failure by restarting the debug session; this command is not exception recovery.",
-        ));
-    }
-    if frame_task_id != stop_task_id {
-        return Err(unsupported(
-            format!(
-                "forced return is not available for task {frame_task_id}; the current stop belongs to task {stop_task_id}"
-            ),
-            "Select the depth-zero frame of the task that caused the current stop.",
-        ));
-    }
-    if frame.depth != 0 {
-        return Err(unsupported(
-            format!(
-                "forced return is not available for frame depth {}; only the active callee is supported",
-                frame.depth
-            ),
-            "Select the current innermost stack frame (depth zero) of the stopped task.",
-        ));
-    }
-    match task_state {
-        Some(DebugTaskState::Waiting | DebugTaskState::Sleeping) => {
-            return Err(unsupported(
-                "forced return is not available for a waiting or sleeping task",
-                "Wait until the selected task is the runnable task that caused the current stop.",
-            ));
-        }
-        Some(DebugTaskState::Failed | DebugTaskState::Cancelled | DebugTaskState::Completed) => {
-            return Err(unsupported(
-                "forced return is not available for a failed, cancelled, or completed task",
-                "Select the active callee of the task that caused the current non-failure stop.",
-            ));
-        }
-        Some(DebugTaskState::Runnable | DebugTaskState::Running) | None => {}
-    }
-    if worker.call_stack.is_empty() {
-        return Err(unsupported(
-            "forced return is not available for a program or task entry frame",
-            "Step into an ordinary callee that has a saved caller before using forced return.",
-        ));
-    }
-    Ok(())
-}
 
 /// Require a portable result type before any detached evaluation.
 pub(in crate::vm::debug) fn require_result_type(
@@ -73,13 +13,13 @@ pub(in crate::vm::debug) fn require_result_type(
 ) -> Result<DebugTypeId, DebugSessionError> {
     result_type.ok_or_else(|| {
         unsupported(
-            "forced return is not available because this function has no portable result type metadata",
+            "forced return is not available because the selected function has no portable result type metadata",
             "Rebuild the program with current debugger metadata; result types are not inferred from names or opcodes.",
         )
     })
 }
 
-/// Require the expression presence to match the callee's return convention.
+/// Require the expression presence to match the selected function's return convention.
 pub(in crate::vm::debug) fn require_convention(
     convention: ReturnConvention,
     expression: Option<&DebugExpression>,
@@ -103,15 +43,15 @@ pub(in crate::vm::debug) fn reject_declared_category(
         )),
         DebugType::Function { .. } => Err(unsupported(
             "forced return does not support first-class function results",
-            "Use a non-function result type in this first debugger slice.",
+            "Use a non-function result type for forced return.",
         )),
         DebugType::Task(_) => Err(unsupported(
             "forced return does not support task-handle results",
-            "Use a non-task result type in this first debugger slice.",
+            "Use a non-task result type for forced return.",
         )),
         DebugType::Cell(_) => Err(unsupported(
             "forced return does not support capture-cell results",
-            "Use a non-cell result type in this first debugger slice.",
+            "Use a non-cell result type for forced return.",
         )),
         DebugType::Unit
         | DebugType::Boolean
@@ -175,7 +115,7 @@ fn map_type_error(error: DebugSessionError) -> DebugSessionError {
                 "forced return value",
                 1,
             ),
-            hint: "Use an expression whose complete value matches the function's declared result type."
+            hint: "Use an expression whose complete value matches the selected function's declared result type."
                 .to_string(),
         }
     } else {

@@ -45,7 +45,7 @@ compatibility mode. A response precedes events caused by that request.
 | `array.insert` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed array, affected index, and fresh child reference |
 | `array.remove` | stopped | `target`, `index`; optional `frame_id` | committed array, affected index, removed value, and fresh child reference |
 | `string.replace_character` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed string, affected index, and old/new characters |
-| `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result and the fresh caller frame |
+| `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result, unwind count, and the fresh caller frame |
 | `variant.describe` | stopped | `target`; optional `frame_id` | canonical variants and declared fields for one wrapper target |
 | `variant.construct` | stopped | `target`, `variant`, `fields`; optional `frame_id` | committed wrapper value, canonical variant, and fresh child reference |
 | `storage.initialize` | stopped | `target`, `initializer`, `expression`; optional `frame_id` | committed descendant and complete-root summaries |
@@ -165,20 +165,21 @@ uses the normal five rendered fields and adds `index`; removal also adds
 All inputs run once under one shared budget before an atomic commit. Initialize
 advertises `array_insert`, `array_remove`, and `string_replace_character`.
 
-`frame.return` completes the active ordinary callee without resuming the
+`frame.return` completes a selected ordinary callee without resuming the
 program:
 
 ```json
 {"type":"request","id":17,"command":"frame.return","arguments":{"frame_id":4294967297,"expression":"42"}}
-{"type":"response","request_id":17,"command":"frame.return","success":true,"body":{"task_id":0,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0,"frame":{"frame_id":8589934593,"name":"main","depth":0}}}
+{"type":"response","request_id":17,"command":"frame.return","success":true,"body":{"task_id":0,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0,"unwound_frames":1,"frame":{"frame_id":8589934593,"name":"main","depth":0}}}
 ```
 
-`frame_id` must be the current generation's depth-zero frame for the task that
-caused the current non-failure stop, and that frame must have a saved caller.
-Functions require `expression`; procedures omit it. The expression uses the
-same detached evaluator as `evaluate` and is checked against the portable
-declared result type before the one-frame unwind. Success returns the rendered
-result fields plus the fresh caller `frame`, remains stopped, and refreshes
+`frame_id` must be a current-generation frame for the task that caused the
+current non-failure stop, and that frame must have a saved caller. Depth zero
+unwinds one frame; a deeper selected frame unwinds that frame plus every
+younger frame. Functions require `expression` evaluated in the selected frame;
+procedures omit it. Convention and portable result type come from the selected
+function. Success returns the rendered result fields, `unwound_frames` (selected
+depth plus one), and the fresh caller `frame`, remains stopped, and refreshes
 every stopped-task snapshot. Failure is atomic. Initialize advertises
 `frame_return`. Procedures render as `()` with `type_name` `unit`.
 

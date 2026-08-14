@@ -2,8 +2,8 @@
 
 ## Active implementation plans
 
-There is no active debugger implementation plan. Remaining identity-bearing
-assignment work stays in [deferred.md](deferred.md) as `DBG-D03`.
+There is no active debugger implementation plan. Remaining control-flow work
+stays in [deferred.md](deferred.md) as `DBG-D04`.
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -47,8 +47,9 @@ entered or capturing closures, bound-receiver synthesis, task-bound functions,
 Dynamic endpoints, and opaque resources remain recorded centrally in
 [deferred.md](deferred.md).
 
-Bounded forced return from the active ordinary callee is implemented through
-JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code command
+Bounded forced return from a selected ordinary callee — including an older
+frame of the stop-owning task — is implemented through JSONL `frame.return`,
+DAP `fpas/forceReturn`, and the VS Code command
 `functionalPascal.debug.forceReturn`. Broader control-flow mutation remains
 tracked as `DBG-D04` in [deferred.md](deferred.md).
 

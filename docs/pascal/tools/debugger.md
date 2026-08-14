@@ -26,8 +26,8 @@ The debugger supports source breakpoints, pause, continue, step in/over/out,
 stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping logpoints, stopped-state variable mutation, explicit complete
-construction of enum, `Result`, and `Option` variants, forced return from the
-active ordinary callee, output, and structured runtime failures. Execution is
+construction of enum, `Result`, and `Option` variants, forced return from a
+selected ordinary callee, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
 execution, and control-flow changes other than the bounded forced-return
@@ -193,22 +193,26 @@ assignment through `setVariable` / `setExpression` is unchanged.
 
 Forced return is a dedicated stopped-state command, not an assignment and not
 `stepOut`. JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code
-command **Debug: Force Return** accept only the current generation's depth-zero
-frame for the task that caused the current non-failure stop. That frame must be
-an ordinary callee with a saved caller. A function requires one expression
-evaluated in the callee under the same detached policy and limits as
-`evaluate`. A procedure omits the expression and returns `unit`. The value is
-checked against the function's portable declared result type before any live
-frame changes. Success pops exactly that callee, releases its register window,
-restores the caller, writes the result to the saved destination when present,
-remains all-stop, and refreshes every stopped-task snapshot once. It does not
-run remaining callee instructions, dispatch a `Return` opcode, or add to the VM
-instruction count. Failure leaves frames, registers, the current stop,
-instruction count, and inspection handles unchanged. Entry and task-root
-frames, older frames, waiting, sleeping, or peer tasks, runtime-error stops,
-missing result metadata, and Dynamic, first-class function, task, capture-cell,
-or opaque results are rejected. Broader control-flow mutation remains tracked
-as `DBG-D04` in the [deferred debugger backlog](../../future/debugger/deferred.md).
+command **Debug: Force Return** accept a current-generation frame from the task
+that caused the current non-failure stop when that frame has a saved caller.
+Depth zero completes the active callee. A deeper selected frame is removed
+together with every younger frame. A function requires one expression evaluated
+in the selected frame under the same detached policy and limits as `evaluate`.
+A procedure omits the expression and returns `unit`. Convention and portable
+result type come from the selected function. The value is checked before any
+live frame changes. Success releases the selected register window and all
+younger windows, restores the selected frame's caller, writes the result only
+to that caller's saved destination, remains all-stop, and refreshes every
+stopped-task snapshot once. The result includes the number of unwound frames,
+which is the selected depth plus one. It does not run remaining selected or
+younger instructions, dispatch a `Return` opcode, or add to the VM instruction
+count. Failure leaves frames, registers, the current stop, instruction count,
+and inspection handles unchanged. Program and task entry frames, waiting,
+sleeping, or peer tasks, runtime-error stops, missing result metadata, and
+Dynamic, first-class function, task, capture-cell, or opaque results are
+rejected. Returning an ordinary older frame into an entry caller is allowed.
+Broader control-flow mutation remains tracked as `DBG-D04` in the
+[deferred debugger backlog](../../future/debugger/deferred.md).
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

@@ -16,6 +16,7 @@ pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
         "variablesReference": body.get("variables_reference"),
         "namedVariables": body.get("named_variables"),
         "indexedVariables": body.get("indexed_variables"),
+        "unwoundFrames": body.get("unwound_frames"),
         "taskId": body.get("task_id"),
         "frame": {
             "id": frame.get("frame_id"),

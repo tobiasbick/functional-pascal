@@ -69,6 +69,7 @@ impl JsonlServer {
                     "variables_reference": result.variables_reference,
                     "named_variables": result.named_variables,
                     "indexed_variables": result.indexed_variables,
+                    "unwound_frames": result.unwound_frames,
                     "frame": frame_body(&result.frame)
                 }),
             )],

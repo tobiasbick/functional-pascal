@@ -1,17 +1,18 @@
-//! Protocol-neutral forced return from the active ordinary callee.
+//! Protocol-neutral forced return from a selected ordinary callee.
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod commit;
-mod validate;
+mod eligibility;
+mod value;
 
 use super::inspection::DebugFrame;
 use super::types::{DebugErrorKind, DebugSessionError};
 
 pub(in crate::vm::debug) use commit::commit;
-pub(in crate::vm::debug) use validate::{
-    prepare_return_value, reject_declared_category, require_convention, require_eligible,
-    require_result_type,
+pub(in crate::vm::debug) use eligibility::{prepare_selection, require_eligible};
+pub(in crate::vm::debug) use value::{
+    prepare_return_value, reject_declared_category, require_convention, require_result_type,
 };
 
 /// Rendered result of one successful forced return.
@@ -29,7 +30,9 @@ pub struct DebugForcedReturnResult {
     pub named_variables: usize,
     /// Number of indexed children.
     pub indexed_variables: usize,
-    /// Fresh caller frame after the one-frame unwind.
+    /// Selected frame plus every younger discarded frame.
+    pub unwound_frames: usize,
+    /// Fresh caller frame after the unwind.
     pub frame: DebugFrame,
 }
 
@@ -47,8 +50,8 @@ pub(super) fn unsupported(
 pub(super) fn value_required() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::FrameReturnValueRequired,
-        message: "forced return requires a return expression for this function".to_string(),
-        hint: "Supply one FPAS expression that evaluates to the declared result type, for example `42`."
+        message: "forced return requires a return expression for the selected function".to_string(),
+        hint: "Supply one FPAS expression that evaluates to the selected function's declared result type, for example `42`."
             .to_string(),
     }
 }
@@ -56,8 +59,9 @@ pub(super) fn value_required() -> DebugSessionError {
 pub(super) fn value_unexpected() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::FrameReturnValueUnexpected,
-        message: "forced return does not accept a return expression for this procedure".to_string(),
-        hint: "Omit `expression` when completing a procedure; procedures return `unit`."
+        message: "forced return does not accept a return expression for the selected procedure"
+            .to_string(),
+        hint: "Omit `expression` when completing a selected procedure; procedures return `unit`."
             .to_string(),
     }
 }

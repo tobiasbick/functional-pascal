@@ -111,6 +111,17 @@ canonical spelling. The routine signature is proven from portable parameter and
 result metadata; capturing routines, bound methods, new closure syntax,
 computed expressions, Dynamic endpoints, task-bound functions, and
 inactive-variant function payloads remain rejected.
+A mutable task-typed target can be replaced by copying one visible binding
+that already holds a compatible task handle, for example `Current := Pending`.
+The debugger copies the exact runtime task ID and does not spawn, retain,
+resume, cancel, consume, or poll the scheduler. Source and destination must
+both be declared `task` types whose result types match structurally under the
+ordinary evaluation depth and value budgets. The source is one simple binding
+name after parentheses are removed; literals, calls, selectors, numeric IDs,
+and rendered `<task N>` display text are rejected. Copied pending handles keep
+the ordinary `Wait`/`WaitAll` lifetime. Consumed or otherwise invalid handles
+are not revived and are not rejected early. Dynamic endpoints and complete
+aggregates that merely contain task handles remain non-assignable.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
@@ -144,11 +155,15 @@ commands. An unchanged character is rejected without writing.
 
 Immutable bindings, compiler-hidden storage,
 evaluation-only results, function captures,
-task values, and opaque hosted values are not
+and opaque hosted values are not
 writable. Function values are writable by copying an already
 materialized, visible, non-task-bound function binding, or by assigning a
 unique non-capturing executable routine, onto a structurally
-compatible mutable function-typed path. Uninitialized mutable locals and
+compatible mutable function-typed path. Task handles are writable by copying
+one visible initialized binding whose declared task result type matches the
+destination; the copy preserves the runtime ID and does not change scheduler
+ownership. Whole aggregates that contain task handles, Dynamic endpoints, and
+numeric or `<task N>` input remain rejected. Uninitialized mutable locals and
 globals accept only a complete root value; they have no writable fields,
 indexes, dictionary entries, or payload
 descendants, and a qualified variant transition cannot synthesize that outer

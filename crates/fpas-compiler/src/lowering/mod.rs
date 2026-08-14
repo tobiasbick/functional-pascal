@@ -9,6 +9,7 @@ mod concurrency;
 mod context;
 mod control_flow;
 mod expr;
+mod globals;
 mod imports;
 mod members;
 mod routines;
@@ -21,9 +22,7 @@ pub(crate) use imports::ImportPlan;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use fpas_ir::{
-    Function, FunctionId, Global, GlobalId, IntrinsicId, IntrinsicSignature, Operation, Program,
-};
+use fpas_ir::{Function, FunctionId, IntrinsicId, IntrinsicSignature, Operation, Program};
 use fpas_parser::{Decl, Program as AstProgram, Stmt, Unit};
 
 use crate::CompileError;
@@ -132,43 +131,8 @@ fn lower_analyzed_root(
     routines::collect(declarations, &mut routines);
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
     let mut constants = collect_enum_constants(declarations);
-    let mut globals = Vec::new();
-    let mut global_bindings = BTreeMap::new();
-    for declaration in declarations {
-        let (name, type_expr, span, mutable) = match declaration {
-            fpas_parser::Decl::Const(definition) => (
-                &definition.name,
-                &definition.type_expr,
-                definition.span,
-                false,
-            ),
-            fpas_parser::Decl::Var(definition) => (
-                &definition.name,
-                &definition.type_expr,
-                definition.span,
-                false,
-            ),
-            fpas_parser::Decl::MutableVar(definition) => (
-                &definition.name,
-                &definition.type_expr,
-                definition.span,
-                true,
-            ),
-            _ => continue,
-        };
-        let ty = type_table
-            .type_expr(type_expr)
-            .map_err(|error| vec![error])?;
-        let id = GlobalId::try_from_index(globals.len())
-            .map_err(|_| vec![context::unsupported(span, "global identifier overflow")])?;
-        globals.push(Global {
-            id,
-            name: name.clone(),
-            ty,
-            mutable,
-        });
-        global_bindings.insert(name.to_ascii_lowercase(), context::GlobalBinding { id, ty });
-    }
+    let (mut globals, mut global_bindings) =
+        globals::collect(declarations, &metadata, &mut type_table).map_err(|error| vec![error])?;
     let mut callables = routines::callable_table(&routines, &mut type_table, &metadata)
         .map_err(|error| vec![error])?;
     let first_import_id = u32::try_from(routines.len().saturating_add(1))

@@ -1,0 +1,28 @@
+program TaskHandleAssignment;
+
+uses Std.Console, Std.Task;
+
+function Seven(): integer;
+begin
+  return 7
+end;
+
+function Nine(): integer;
+begin
+  return 9
+end;
+
+function Label(): string;
+begin
+  return 'nope'
+end;
+
+begin
+  var Pending: task := go Seven();
+  mutable var Current: task := go Nine();
+  var Frozen: task := go Seven();
+  var Wrong: task := go Label();
+  mutable var StopMarker: integer := 0;
+  StopMarker := StopMarker + 1;
+  WriteLn(Wait(Current))
+end.

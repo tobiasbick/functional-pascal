@@ -49,9 +49,9 @@ impl InspectionSnapshot {
         let ty = retained.debug_type.ok_or_else(|| DebugSessionError {
             kind: DebugErrorKind::VariableValueType,
             message: format!(
-                "debug source binding `{name}` does not retain portable function type metadata"
+                "debug source binding `{name}` does not retain portable type metadata"
             ),
-            hint: "Assign from a source-declared function binding, not an evaluation-only result."
+            hint: "Assign from a source-declared binding, not an evaluation-only result."
                 .to_string(),
         })?;
         Ok(ty)

@@ -215,3 +215,75 @@ end.
             })
     );
 }
+
+#[test]
+fn compiler_retains_distinct_task_result_types_for_local_and_global_bindings() {
+    let program = parse_ok(
+        r#"
+program DebugTaskResultTypes;
+
+uses Std.Task;
+
+function Seven(): integer;
+begin
+  return 7
+end;
+
+function Label(): string;
+begin
+  return 'nope'
+end;
+
+var GlobalCurrent: task := go Seven();
+var GlobalWrong: task := go Label();
+
+begin
+  var Current: task := go Seven();
+  var Wrong: task := go Label()
+end.
+"#,
+    );
+    let executable = crate::compile(&program).expect("task debug types should compile");
+    let image = executable.executable();
+    let binding_type = |name: &str| {
+        let binding = image.functions[0]
+            .debug
+            .bindings
+            .iter()
+            .find(|binding| image.strings.get(binding.name) == Some(name))
+            .expect("named task binding");
+        image
+            .debug_types
+            .get(binding.ty.get() as usize)
+            .expect("task debug type")
+    };
+    let global_type = |name: &str| {
+        let binding = image
+            .globals
+            .iter()
+            .find(|binding| image.strings.get(binding.name) == Some(name))
+            .expect("named global task binding");
+        image
+            .debug_types
+            .get(binding.ty.get() as usize)
+            .expect("global task debug type")
+    };
+    for (current, wrong) in [
+        (binding_type("Current"), binding_type("Wrong")),
+        (global_type("GlobalCurrent"), global_type("GlobalWrong")),
+    ] {
+        let (DebugType::Task(current_result), DebugType::Task(wrong_result)) = (current, wrong)
+        else {
+            panic!("expected task bindings, got {current:?} and {wrong:?}");
+        };
+        assert_ne!(current_result, wrong_result);
+        assert_eq!(
+            image.debug_types.get(current_result.get() as usize),
+            Some(&DebugType::Integer)
+        );
+        assert_eq!(
+            image.debug_types.get(wrong_result.get() as usize),
+            Some(&DebugType::String)
+        );
+    }
+}

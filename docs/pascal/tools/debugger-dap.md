@@ -60,6 +60,11 @@ compatible non-task-bound function value, or one statically resolved
 non-capturing executable routine such as `AddTwo` or `Math.Transform`. A simple
 name uses lexical lookup first. Capturing routines, new closure
 syntax, and inactive-variant function payloads remain rejected.
+Task-typed targets accept one visible binding that already holds a compatible
+task handle. Standard `setVariable` / `setExpression` copy the exact runtime
+ID; they do not add a DAP capability or custom request. Numeric IDs, `<task N>`
+display text, Dynamic endpoints, and aggregates that contain task handles
+remain rejected. Copied handles keep ordinary `Wait`/`WaitAll` lifetime rules.
 The response contains the rendered `value`,
 `type`, a fresh `variablesReference`, and exact named/indexed child counts.
 Non-default `format` options are rejected because value-formatting negotiation
@@ -74,7 +79,9 @@ wrapper `.value`, an explicit inactive single-payload variant suffix such as
 indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
 expression as `value`. Function-typed targets accept one visible source binding
 that already holds a compatible non-task-bound function value, or one
-statically resolved non-capturing executable routine. Uninitialized
+statically resolved non-capturing executable routine. Task-typed targets accept
+one visible source binding that already holds a compatible task handle.
+Uninitialized
 mutable roots accept the complete binding name only. Omitting `frameId`
 searches globals only. A supplied frame selects its exact FPAS task and
 lexical scope; stale or foreign frames fail without falling back to main. The response has the same rendered value, type, fresh aggregate

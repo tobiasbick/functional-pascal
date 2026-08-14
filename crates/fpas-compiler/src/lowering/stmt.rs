@@ -122,7 +122,13 @@ impl LoweringContext {
     }
 
     fn lower_variable(&mut self, definition: &VarDef, mutable: bool) -> Result<(), CompileError> {
-        let ty = self.declared_type(&definition.type_expr)?;
+        let declared = self.declared_type(&definition.type_expr)?;
+        let ty = if self.is_bare_task_binding(declared) {
+            let inferred = self.expression_ir_type(&definition.value)?;
+            self.specialize_task_binding(declared, inferred)
+        } else {
+            declared
+        };
         let value = self.lower_expression_as(&definition.value, ty)?;
         if mutable && self.is_cell_backed(&definition.name) {
             let cell_ty = self.cell_type(ty, definition.span)?;

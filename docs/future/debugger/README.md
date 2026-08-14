@@ -2,8 +2,8 @@
 
 ## Active implementation plans
 
-There is no active debugger implementation plan. Remaining control-flow work
-stays in [deferred.md](deferred.md) as `DBG-D04`.
+There is no active debugger implementation plan. Open capability packages and
+their re-entry gates remain in [deferred.md](deferred.md).
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -42,9 +42,13 @@ virtual Variables children remain deferred.
 Bounded assignment of an already materialized, visible, non-task-bound
 first-class function value, and of one statically resolved non-capturing
 executable routine, onto a structurally compatible mutable target is
-implemented through the same `setVariable`/`setExpression` surfaces. Newly
+implemented through the same `setVariable`/`setExpression` surfaces. Bounded
+copying of an already materialized, visible task handle onto a structurally
+compatible mutable target is implemented through those same surfaces: the copy
+preserves the exact runtime task ID and does not consult the scheduler. Newly
 entered or capturing closures, bound-receiver synthesis, task-bound functions,
-Dynamic endpoints, and opaque resources remain recorded centrally in
+Dynamic endpoints, capture cells, opaque resources, and in-place callable
+editing remain recorded centrally in
 [deferred.md](deferred.md).
 
 Bounded forced return from a selected ordinary callee — including an older

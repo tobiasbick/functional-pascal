@@ -362,19 +362,20 @@ impl LoweringContext {
             .id(&self.expression_type(expression)?, span.line, span.column)
     }
 
+    pub(super) fn specialize_task_binding(&self, declared: TypeId, inferred: TypeId) -> TypeId {
+        self.type_table.specialize_task_binding(declared, inferred)
+    }
+
+    pub(super) fn is_bare_task_binding(&self, declared: TypeId) -> bool {
+        self.type_table.is_bare_task_binding(declared)
+    }
+
     pub(super) fn task_type(
-        &self,
+        &mut self,
         inner: TypeId,
         span: fpas_lexer::Span,
     ) -> Result<TypeId, CompileError> {
-        self.type_table.task_type(inner).ok_or_else(|| {
-            internal_compiler_error(
-                "Task result type is missing from the register type table.",
-                "This is an internal compiler error. Re-run compilation and report the source program.",
-                span.line,
-                span.column,
-            )
-        })
+        self.type_table.intern_task_type(inner, span)
     }
 
     pub(super) fn function_result_type(&self, callable: TypeId) -> Option<TypeId> {

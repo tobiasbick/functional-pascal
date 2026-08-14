@@ -4,6 +4,8 @@ use super::*;
 use crate::vm::debug::evaluation::{DebugEvaluateResult, DebugEvaluationLimits, DebugExpression};
 use crate::vm::debug::mutation::{DebugAssignmentSelector, DebugAssignmentTarget};
 
+mod replacement;
+
 impl DebugSession {
     /// Replace one mutable variable or supported descendant with an evaluated expression.
     ///
@@ -171,28 +173,15 @@ impl DebugSession {
             };
             let (target, replacement) = match resolved {
                 super::super::mutation::ResolvedAssignment::Existing { target, .. } => {
-                    let replacement = if super::super::mutation::is_function_type(
-                        self.executable.executable(),
+                    let replacement = self.finish_existing_replacement(
+                        task_id,
+                        expression,
+                        evaluated_replacement,
+                        catalog_fallback,
                         target.expected_type,
-                    ) {
-                        if catalog_fallback {
-                            self.prepare_catalog_routine(expression, target.expected_type, limits)?
-                        } else {
-                            self.finish_function_replacement(
-                                task_id,
-                                expression,
-                                evaluated_replacement.into_iter().next(),
-                                target.expected_type,
-                                frame_id,
-                                limits,
-                            )?
-                        }
-                    } else {
-                        evaluated_replacement
-                            .into_iter()
-                            .next()
-                            .ok_or_else(replacement_unavailable)?
-                    };
+                        frame_id,
+                        limits,
+                    )?;
                     (target, replacement)
                 }
                 super::super::mutation::ResolvedAssignment::Transition { target, spec, .. } => {
@@ -212,152 +201,6 @@ impl DebugSession {
         })();
         self.evaluation_cancelled.store(false, Ordering::Release);
         result
-    }
-
-    fn replacement_suffix(
-        executable: &fpas_bytecode::Executable,
-        resolved: &super::super::mutation::ResolvedAssignment,
-        expression: &DebugExpression,
-        limits: DebugEvaluationLimits,
-    ) -> Result<Vec<DebugExpression>, DebugSessionError> {
-        match resolved {
-            super::super::mutation::ResolvedAssignment::Existing { target, .. }
-                if super::super::mutation::is_function_type(executable, target.expected_type) =>
-            {
-                let source = super::super::mutation::function_value_source(expression, limits)?;
-                Ok(vec![DebugExpression::Name(source.requested().to_string())])
-            }
-            _ => Ok(vec![expression.clone()]),
-        }
-    }
-
-    fn function_source_allows_catalog(
-        executable: &fpas_bytecode::Executable,
-        resolved: &super::super::mutation::ResolvedAssignment,
-        expression: &DebugExpression,
-        limits: DebugEvaluationLimits,
-    ) -> bool {
-        matches!(
-            resolved,
-            super::super::mutation::ResolvedAssignment::Existing { target, .. }
-                if super::super::mutation::is_function_type(executable, target.expected_type)
-        ) && super::super::mutation::function_value_source(expression, limits).is_ok()
-    }
-
-    fn validate_replacement_source(
-        executable: &fpas_bytecode::Executable,
-        resolved: &super::super::mutation::ResolvedAssignment,
-        expression: &DebugExpression,
-        limits: DebugEvaluationLimits,
-    ) -> Result<(), DebugSessionError> {
-        match resolved {
-            super::super::mutation::ResolvedAssignment::Existing { target, .. } => {
-                if super::super::mutation::is_function_type(executable, target.expected_type) {
-                    super::super::mutation::function_value_source(expression, limits)?;
-                }
-                Ok(())
-            }
-            super::super::mutation::ResolvedAssignment::Transition { spec, .. } => {
-                if super::super::mutation::is_function_type(executable, spec.payload_type) {
-                    return Err(super::super::mutation::inactive_function_payload());
-                }
-                Ok(())
-            }
-        }
-    }
-
-    fn evaluate_replacement_for_target(
-        &self,
-        task_id: u64,
-        expected: fpas_bytecode::DebugTypeId,
-        expression: &DebugExpression,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        if super::super::mutation::is_function_type(self.executable.executable(), expected) {
-            self.finish_function_replacement(task_id, expression, None, expected, frame_id, limits)
-        } else {
-            self.evaluate_runtime_value(expression, frame_id, limits)
-        }
-    }
-
-    fn finish_function_replacement(
-        &self,
-        task_id: u64,
-        expression: &DebugExpression,
-        evaluated: Option<fpas_bytecode::Value>,
-        expected: fpas_bytecode::DebugTypeId,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        match super::super::mutation::function_value_source(expression, limits)? {
-            super::super::mutation::FunctionSource::BindingOrRoutine(name) => {
-                let value = match evaluated {
-                    Some(value) => Ok(value),
-                    None => self.evaluate_runtime_value(
-                        &DebugExpression::Name(name.clone()),
-                        frame_id,
-                        limits,
-                    ),
-                };
-                match value {
-                    Ok(value) => self.prepare_function_replacement(
-                        task_id, &name, value, expected, frame_id, limits,
-                    ),
-                    Err(error) if error.kind == DebugErrorKind::UnknownName => {
-                        super::super::mutation::prepare_routine_value(
-                            &self.executable,
-                            &name,
-                            expected,
-                            limits,
-                        )
-                    }
-                    Err(error) => Err(error),
-                }
-            }
-            super::super::mutation::FunctionSource::Routine(_) => {
-                self.prepare_catalog_routine(expression, expected, limits)
-            }
-        }
-    }
-
-    fn prepare_catalog_routine(
-        &self,
-        expression: &DebugExpression,
-        expected: fpas_bytecode::DebugTypeId,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        let source = super::super::mutation::function_value_source(expression, limits)?;
-        super::super::mutation::prepare_routine_value(
-            &self.executable,
-            source.requested(),
-            expected,
-            limits,
-        )
-    }
-
-    fn prepare_function_replacement(
-        &self,
-        task_id: u64,
-        name: &str,
-        value: fpas_bytecode::Value,
-        expected: fpas_bytecode::DebugTypeId,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        super::super::mutation::prepare_function_value(
-            self.executable.executable(),
-            inspection,
-            name,
-            value,
-            expected,
-            frame_id,
-            limits,
-        )
     }
 
     pub(super) fn commit_mutation(

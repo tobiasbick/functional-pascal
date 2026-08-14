@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
 use super::*;
-use crate::vm::debug::calls::CallSandbox;
+use crate::vm::debug::calls::LazyCallSandbox;
 use crate::vm::debug::evaluation::{
     DebugEvaluateResult, DebugEvaluationLimits, DebugExpression, evaluate_value, evaluate_values,
     evaluate_values_with_checkpoint, evaluate_values_with_dynamic_suffix,
@@ -205,13 +205,13 @@ impl DebugSession {
             .runtime
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = CallSandbox::new(
+        let mut sandbox = LazyCallSandbox::new(
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
-            &worker.globals,
+            Arc::clone(&worker.globals),
             limits,
             Arc::clone(&self.evaluation_cancelled),
-        )?;
+        );
         evaluate_value(
             expression,
             limits,
@@ -237,13 +237,13 @@ impl DebugSession {
             .runtime
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = CallSandbox::new(
+        let mut sandbox = LazyCallSandbox::new(
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
-            &worker.globals,
+            Arc::clone(&worker.globals),
             limits,
             Arc::clone(&self.evaluation_cancelled),
-        )?;
+        );
         evaluate_values(
             expressions,
             limits,
@@ -271,13 +271,13 @@ impl DebugSession {
             .runtime
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = CallSandbox::new(
+        let mut sandbox = LazyCallSandbox::new(
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
-            &worker.globals,
+            Arc::clone(&worker.globals),
             limits,
             Arc::clone(&self.evaluation_cancelled),
-        )?;
+        );
         evaluate_values_with_checkpoint(
             prefix,
             suffix,
@@ -308,13 +308,13 @@ impl DebugSession {
             .runtime
             .worker(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
-        let mut sandbox = CallSandbox::new(
+        let mut sandbox = LazyCallSandbox::new(
             Arc::clone(&self.executable),
             Arc::clone(&worker.layouts),
-            &worker.globals,
+            Arc::clone(&worker.globals),
             limits,
             Arc::clone(&self.evaluation_cancelled),
-        )?;
+        );
         evaluate_values_with_dynamic_suffix(
             prefix,
             limits,

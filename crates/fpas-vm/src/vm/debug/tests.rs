@@ -435,6 +435,7 @@ mod function_value_assignment;
 mod inspection_fixture;
 mod mutation;
 mod payload_mutation;
+mod task_handle_assignment;
 mod uninitialized_assignment;
 mod variant_construction;
 mod variant_replacement;

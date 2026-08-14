@@ -114,7 +114,13 @@ non-task-bound function value, or one statically resolved non-capturing
 executable routine such as `AddTwo` or `Math.Transform`. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an
 unknown name. Capturing routines, new closure syntax, computed expressions, and
-inactive-variant function payloads remain rejected. A write to an old
+inactive-variant function payloads remain rejected. A task-typed target accepts
+one visible source binding that already holds a compatible task handle, for
+example `Current := Pending`. The request copies the exact runtime ID through
+the standard `variable.set` / `expression.set` commands; it does not add a
+capability flag or custom command. Numeric IDs, `<task N>` display text, calls,
+Dynamic endpoints, and complete aggregates that contain task handles remain
+rejected. Copied handles keep ordinary `Wait`/`WaitAll` lifetime rules. A write to an old
 payload-child handle never selects a different variant.
 
 Selectors run once from left to right and the replacement runs last, all

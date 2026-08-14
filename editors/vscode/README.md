@@ -47,7 +47,12 @@ complete mutable enum, `Result`, and `Option` values using constructor
 expressions such as `Choice.Pair(1, 2)` or `None`. A function-typed Variables
 or Watch target can be replaced by copying one visible binding that already
 holds a compatible non-task-bound function value, or by assigning a unique
-non-capturing executable routine such as `AddTwo`. Editor clients can also use
+non-capturing executable routine such as `AddTwo`. A task-typed Variables or
+Watch target can be replaced by copying one visible binding that already holds
+a compatible task handle, for example `Pending`. The editor uses the standard
+Variables/Watch edit flow; it does not add a custom command. Numeric IDs,
+`<task N>` display text, Dynamic endpoints, and complete aggregates that
+contain task handles remain rejected. Editor clients can also use
 the standard DAP `setExpression` request for an explicit inactive
 single-payload variant such as `Optional.Some.value` or
 `Selected.Count.Value`; in VS Code this is the **Set Value** action on a Watch
@@ -58,10 +63,12 @@ Rejected edits leave the session stopped and unchanged. A successful
 edit refreshes the Variables view; continuing execution observes the committed
 value unless a later source initializer overwrites it. Dictionary keys are not
 edited through the standard Variables request; immutable bindings,
-evaluation-only results, task values, and opaque host values are not editable.
+evaluation-only results, and opaque host values are not editable.
 Function values are editable by copying an already materialized, visible,
 non-task-bound function binding, or by assigning a unique non-capturing
-executable routine. Uninitialized bindings have no writable
+executable routine. Task handles are editable by copying one visible
+initialized binding whose declared task result type matches the destination.
+Uninitialized bindings have no writable
 descendants. Variables does not list inactive variants as children. A write to
 an old payload-child handle never selects a
 different variant. Task debugging is deterministic and all-stop;
@@ -226,7 +233,8 @@ a safe auto-import, semantic tokens, an applied diagnostic quick fix, project
 commands, Problems, cancellation, Testing API outcomes, read-only evaluation
 and controlled calls in every supported DAP context, detached-state recovery,
 mutable scalar and aggregate Variables-view edits with invalidation and
-continued-execution checks, conditional and exact-hit stops, and non-stopping
+continued-execution checks, function-value and task-handle assignment through
+the standard edit flow, conditional and exact-hit stops, and non-stopping
 logpoints,
 restarts it once, and shuts it down with the extension:
 

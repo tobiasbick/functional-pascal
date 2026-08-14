@@ -121,7 +121,11 @@ function value, for example `Backup`, or by assigning a unique non-capturing
 routine name such as `AddTwo` or `Math.Transform`. A simple name prefers a
 visible binding; capturing routines, new closure
 syntax, task-bound functions, and inactive-variant function payloads remain
-rejected. Task values and opaque hosted resources are not
+rejected. A task-typed Variables or Watch target can be replaced by copying one
+visible binding that already holds a compatible task handle, for example
+`Pending`. The editor uses the standard Variables/Watch edit flow; it does not
+add a custom command. Numeric IDs, `<task N>` display text, Dynamic endpoints,
+and complete aggregates that contain task handles remain rejected. Opaque hosted resources are not
 editable. Textual `setExpression` may assign an explicit inactive
 single-payload variant such as `Optional.Some.value`; Variables does not
 advertise inactive variants as children. A write to an old payload-child

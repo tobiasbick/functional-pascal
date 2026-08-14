@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use fpas_bytecode::{DebugType, DebugTypeId};
 
 use super::super::super::types::{DebugErrorKind, DebugSessionError};
+use super::super::portable_type::{self, TypeLimitWording};
 
 /// Prove two portable types are structurally compatible as function signatures.
 #[cfg(test)]
@@ -68,7 +69,7 @@ pub(super) fn require_signature(
                 .zip(destination_parameters)
                 .enumerate()
             {
-                if !structurally_equal(
+                if !portable_type::structurally_equal(
                     types,
                     *left,
                     *right,
@@ -77,6 +78,7 @@ pub(super) fn require_signature(
                     &mut values,
                     max_values,
                     &mut visiting,
+                    TypeLimitWording::FUNCTION_SIGNATURE,
                 )? {
                     return Err(signature_mismatch(&format!(
                         "parameter {} does not match the destination function type",
@@ -84,7 +86,7 @@ pub(super) fn require_signature(
                     )));
                 }
             }
-            if structurally_equal(
+            if portable_type::structurally_equal(
                 types,
                 source_result,
                 *destination_result,
@@ -93,6 +95,7 @@ pub(super) fn require_signature(
                 &mut values,
                 max_values,
                 &mut visiting,
+                TypeLimitWording::FUNCTION_SIGNATURE,
             )? {
                 Ok(())
             } else {
@@ -107,180 +110,8 @@ pub(super) fn require_signature(
     }
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "recursive structural comparison threads depth, value budget, and cycle state"
-)]
-fn structurally_equal(
-    types: &[DebugType],
-    left: DebugTypeId,
-    right: DebugTypeId,
-    depth: usize,
-    max_depth: usize,
-    values: &mut usize,
-    max_values: usize,
-    visiting: &mut HashSet<(u32, u32)>,
-) -> Result<bool, DebugSessionError> {
-    if depth > max_depth {
-        return Err(DebugSessionError {
-            kind: DebugErrorKind::EvaluationLimit,
-            message: format!("debug function signature exceeds depth limit {max_depth}"),
-            hint: "Use a shallower function signature, or raise the evaluation depth limit."
-                .to_string(),
-        });
-    }
-    *values = values.saturating_add(1);
-    if *values > max_values {
-        return Err(DebugSessionError {
-            kind: DebugErrorKind::EvaluationLimit,
-            message: format!("debug function signature exceeds detached-value limit {max_values}"),
-            hint: "Use a smaller function signature, or raise the evaluation value limit."
-                .to_string(),
-        });
-    }
-    if left == right {
-        return Ok(true);
-    }
-    let pair = (left.get(), right.get());
-    if !visiting.insert(pair) {
-        return Ok(true);
-    }
-    Ok(match (lookup(types, left)?, lookup(types, right)?) {
-        (DebugType::Unit, DebugType::Unit)
-        | (DebugType::Boolean, DebugType::Boolean)
-        | (DebugType::Integer, DebugType::Integer)
-        | (DebugType::Real, DebugType::Real)
-        | (DebugType::String, DebugType::String)
-        | (DebugType::Dynamic, DebugType::Dynamic) => true,
-        (DebugType::Array(left), DebugType::Array(right))
-        | (DebugType::Option(left), DebugType::Option(right))
-        | (DebugType::Cell(left), DebugType::Cell(right))
-        | (DebugType::Task(left), DebugType::Task(right)) => structurally_equal(
-            types,
-            *left,
-            *right,
-            depth.saturating_add(1),
-            max_depth,
-            values,
-            max_values,
-            visiting,
-        )?,
-        (
-            DebugType::Dictionary {
-                key: left_key,
-                value: left_value,
-            },
-            DebugType::Dictionary {
-                key: right_key,
-                value: right_value,
-            },
-        ) => {
-            structurally_equal(
-                types,
-                *left_key,
-                *right_key,
-                depth.saturating_add(1),
-                max_depth,
-                values,
-                max_values,
-                visiting,
-            )? && structurally_equal(
-                types,
-                *left_value,
-                *right_value,
-                depth.saturating_add(1),
-                max_depth,
-                values,
-                max_values,
-                visiting,
-            )?
-        }
-        (
-            DebugType::Result {
-                ok: left_ok,
-                error: left_error,
-            },
-            DebugType::Result {
-                ok: right_ok,
-                error: right_error,
-            },
-        ) => {
-            structurally_equal(
-                types,
-                *left_ok,
-                *right_ok,
-                depth.saturating_add(1),
-                max_depth,
-                values,
-                max_values,
-                visiting,
-            )? && structurally_equal(
-                types,
-                *left_error,
-                *right_error,
-                depth.saturating_add(1),
-                max_depth,
-                values,
-                max_values,
-                visiting,
-            )?
-        }
-        (
-            DebugType::Function {
-                parameters: left_parameters,
-                result: left_result,
-            },
-            DebugType::Function {
-                parameters: right_parameters,
-                result: right_result,
-            },
-        ) => {
-            left_parameters.len() == right_parameters.len()
-                && left_parameters.iter().zip(right_parameters).try_fold(
-                    true,
-                    |matches, (left, right)| {
-                        Ok(matches
-                            && structurally_equal(
-                                types,
-                                *left,
-                                *right,
-                                depth.saturating_add(1),
-                                max_depth,
-                                values,
-                                max_values,
-                                visiting,
-                            )?)
-                    },
-                )?
-                && structurally_equal(
-                    types,
-                    *left_result,
-                    *right_result,
-                    depth.saturating_add(1),
-                    max_depth,
-                    values,
-                    max_values,
-                    visiting,
-                )?
-        }
-        (DebugType::Record(left), DebugType::Record(right)) => left == right,
-        (DebugType::Enum(left), DebugType::Enum(right)) => left == right,
-        _ => false,
-    })
-}
-
 fn lookup(types: &[DebugType], id: DebugTypeId) -> Result<&DebugType, DebugSessionError> {
-    types
-        .get(id.get() as usize)
-        .ok_or_else(|| DebugSessionError {
-            kind: DebugErrorKind::VariableValueType,
-            message: format!(
-                "debug function assignment refers to unavailable portable type #{}",
-                id.get()
-            ),
-            hint: "Use source and destination bindings whose types are retained in the executable."
-                .to_string(),
-        })
+    portable_type::lookup(types, id, TypeLimitWording::FUNCTION_SIGNATURE)
 }
 
 fn signature_mismatch(detail: &str) -> DebugSessionError {

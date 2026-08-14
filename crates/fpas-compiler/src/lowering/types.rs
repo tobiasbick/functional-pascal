@@ -2,6 +2,7 @@
 
 mod expressions;
 mod layouts;
+mod task;
 
 use fpas_ir::{
     EnumLayout, EnumLayoutId, FieldId, IrType, RecordLayout, RecordLayoutId, TypeDefinition,
@@ -238,13 +239,6 @@ impl TypeTable {
         let mut candidates = candidates.into_iter();
         let id = candidates.next()?;
         candidates.next().is_none().then_some(id)
-    }
-
-    pub fn task_type(&self, inner: TypeId) -> Option<TypeId> {
-        self.definitions
-            .iter()
-            .find(|definition| definition.kind == IrType::Task(inner))
-            .map(|definition| definition.id)
     }
 
     pub fn kind(&self, ty: TypeId) -> Option<&IrType> {

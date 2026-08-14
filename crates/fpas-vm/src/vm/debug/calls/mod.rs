@@ -3,6 +3,7 @@
 mod detach;
 mod enum_constructor;
 mod execute;
+mod lazy;
 mod resolution;
 
 use std::sync::Arc;
@@ -12,6 +13,7 @@ use fpas_bytecode::{RuntimeEnumLayout, Value, VerifiedExecutable};
 use crate::vm::debug::types::DebugSessionError;
 
 pub(super) use execute::CallSandbox;
+pub(super) use lazy::LazyCallSandbox;
 
 /// Construct one detached enum value from verified variant metadata and field values.
 pub(in crate::vm::debug) fn construct_enum(

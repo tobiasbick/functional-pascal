@@ -13,6 +13,7 @@ import { verifyVariantReplacement } from "./debugger_host/variant_replacement";
 import { verifyVariantTransition } from "./debugger_host/variant_transition";
 import { verifyUninitializedAssignment } from "./debugger_host/uninitialized_assignment";
 import { verifyFunctionValueAssignment } from "./debugger_host/function_value_assignment";
+import { verifyTaskHandleAssignment } from "./debugger_host/task_handle_assignment";
 import { verifyForcedReturn } from "./debugger_host/forced_return";
 import { verifyVariantConstruction } from "./debugger_host/variant_construction";
 import { verifyEmptyStorageConstruction } from "./debugger_host/empty_storage_construction";
@@ -49,6 +50,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyVariantTransition(workspaceRoot, received, sent);
     await verifyUninitializedAssignment(workspaceRoot, received, sent);
     await verifyFunctionValueAssignment(workspaceRoot, received, sent);
+    await verifyTaskHandleAssignment(workspaceRoot, received, sent);
     await verifyForcedReturn(workspaceRoot, received, sent);
     await verifyVariantConstruction(workspaceRoot, received, sent);
     await verifyEmptyStorageConstruction(workspaceRoot, received, sent);

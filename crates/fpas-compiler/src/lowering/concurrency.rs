@@ -25,7 +25,7 @@ impl LoweringContext {
         let [DesignatorPart::Ident(name, _)] = designator.parts.as_slice() else {
             return Err(unsupported(designator.span, "task call target"));
         };
-        let (callee, _output) = if self.has_binding(name) {
+        let (callee, output) = if self.has_binding(name) {
             let callee_ty = self
                 .binding_type(name)
                 .ok_or_else(|| unsupported(designator.span, "task callable binding"))?;
@@ -59,7 +59,7 @@ impl LoweringContext {
         self.record_call_arguments(arguments.len(), span)?;
         self.can_spawn_tasks = true;
         if retain_result {
-            let task = self.task_type(super::types::DYNAMIC, span)?;
+            let task = self.task_type(output, span)?;
             self.emit_value(Operation::SpawnTask { callee, arguments }, task, span)
         } else {
             self.emit_effect(Operation::SpawnDetachedTask { callee, arguments }, span)?;

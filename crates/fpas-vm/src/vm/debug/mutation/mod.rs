@@ -4,9 +4,11 @@ mod dictionary;
 pub(in crate::vm::debug) mod empty_storage;
 mod function_value;
 mod model;
+mod portable_type;
 mod replace;
 mod resolve;
 mod sequence;
+mod task_value;
 mod transition;
 mod validate;
 mod variant;
@@ -31,6 +33,9 @@ pub use model::{
 };
 pub(in crate::vm::debug) use resolve::{ResolvedAssignment, resolve_assignment, target_with_value};
 pub(in crate::vm::debug) use sequence::{insert_array, remove_array, replace_string_character};
+pub(in crate::vm::debug) use task_value::{
+    inactive_task_payload, is_task_type, prepare as prepare_task_value, source as task_value_source,
+};
 pub(in crate::vm::debug) use transition::construct as construct_transition;
 pub use variant::{
     DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,

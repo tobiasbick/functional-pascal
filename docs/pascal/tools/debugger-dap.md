@@ -56,7 +56,9 @@ Fieldless and multi-field variants can also be built through
 `fpas/variantDescribe` and `fpas/variantConstruct` without writing a
 constructor expression.
 Function-typed targets accept one visible binding that already holds a
-compatible non-task-bound function value. Direct named routines, new closure
+compatible non-task-bound function value, or one statically resolved
+non-capturing executable routine such as `AddTwo` or `Math.Transform`. A simple
+name uses lexical lookup first. Capturing routines, new closure
 syntax, and inactive-variant function payloads remain rejected.
 The response contains the rendered `value`,
 `type`, a fresh `variablesReference`, and exact named/indexed child counts.
@@ -71,7 +73,8 @@ wrapper `.value`, an explicit inactive single-payload variant suffix such as
 `Some.value` or `Count.Value`, or array/existing-dictionary
 indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
 expression as `value`. Function-typed targets accept one visible source binding
-that already holds a compatible non-task-bound function value. Uninitialized
+that already holds a compatible non-task-bound function value, or one
+statically resolved non-capturing executable routine. Uninitialized
 mutable roots accept the complete binding name only. Omitting `frameId`
 searches globals only. A supplied frame selects its exact FPAS task and
 lexical scope; stale or foreign frames fail without falling back to main. The response has the same rendered value, type, fresh aggregate

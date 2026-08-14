@@ -1,4 +1,4 @@
-/** Real Extension Host coverage for copying first-class function values. */
+/** Real Extension Host coverage for assigning first-class function values. */
 
 import assert from "node:assert/strict";
 
@@ -70,7 +70,7 @@ export async function verifyFunctionValueAssignment(
     );
     await waitUntilInitialized(session as vscode.DebugSession, "StopMarker");
 
-    await setExpression(session as vscode.DebugSession, "Current", "Backup", "<function addtwo>");
+    await setExpression(session as vscode.DebugSession, "Current", "AddTwo", "<function addtwo>");
     const current = await namedVariable(session as vscode.DebugSession, "Locals", "Current");
     assert.equal(current.value, "<function addtwo>");
     await waitFor(
@@ -98,7 +98,7 @@ export async function verifyFunctionValueAssignment(
       .filter((message) => message.event === "output")
       .map((message) => String(message.body?.output ?? ""))
       .join("");
-    assert.equal(output, "3\n", `continuation invoked the copied function: ${JSON.stringify(output)}`);
+    assert.equal(output, "3\n", `continuation invoked the assigned routine: ${JSON.stringify(output)}`);
     assert.ok(
       received.slice(marker.received).some((message) => message.command === "setExpression"),
       "Extension Host forwards textual function-value assignment"

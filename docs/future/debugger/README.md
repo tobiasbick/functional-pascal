@@ -2,8 +2,8 @@
 
 ## Active implementation plans
 
-There is no active debugger implementation plan. Select the next bounded row
-from [deferred.md](deferred.md) before starting new debugger work.
+There is no active debugger implementation plan. Remaining identity-bearing
+assignment work stays in [deferred.md](deferred.md) as `DBG-D03`.
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -40,10 +40,12 @@ unqualified variant guessing, multi-field incremental construction, and
 virtual Variables children remain deferred.
 
 Bounded assignment of an already materialized, visible, non-task-bound
-first-class function value onto a structurally compatible mutable target is
-implemented through the same `setVariable`/`setExpression` surfaces. Function
-construction, task-bound closures, Dynamic endpoints, and opaque resources
-remain recorded centrally in [deferred.md](deferred.md).
+first-class function value, and of one statically resolved non-capturing
+executable routine, onto a structurally compatible mutable target is
+implemented through the same `setVariable`/`setExpression` surfaces. Newly
+entered or capturing closures, bound-receiver synthesis, task-bound functions,
+Dynamic endpoints, and opaque resources remain recorded centrally in
+[deferred.md](deferred.md).
 
 Bounded forced return from the active ordinary callee is implemented through
 JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code command

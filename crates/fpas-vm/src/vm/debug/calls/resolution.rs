@@ -5,6 +5,7 @@ use std::sync::Arc;
 use fpas_bytecode::{FunctionId, Intrinsic, RuntimeEnumLayout, VerifiedExecutable};
 
 use super::detach::error;
+use crate::vm::debug::routines::{callable_name_matches, matching_functions};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 use crate::vm::layouts::RuntimeLayouts;
 
@@ -68,23 +69,6 @@ pub(super) fn resolve_named(
     }
 }
 
-fn matching_functions(executable: &VerifiedExecutable, name: &str) -> Vec<FunctionId> {
-    executable
-        .executable()
-        .functions
-        .iter()
-        .enumerate()
-        .filter(|(_, function)| {
-            executable
-                .executable()
-                .strings
-                .get(function.name)
-                .is_some_and(|candidate| callable_name_matches(candidate, name))
-        })
-        .map(|(index, _)| FunctionId::new(u16::try_from(index).unwrap_or(u16::MAX)))
-        .collect()
-}
-
 fn matching_intrinsics(name: &str) -> Vec<Intrinsic> {
     Intrinsic::all()
         .filter(|intrinsic| callable_name_matches(&intrinsic.debugger_name(), name))
@@ -131,14 +115,6 @@ fn split_qualified_constructor(name: &str) -> Option<(&str, &str)> {
     } else {
         Some((owner, variant))
     }
-}
-
-fn callable_name_matches(candidate: &str, requested: &str) -> bool {
-    candidate.eq_ignore_ascii_case(requested)
-        || (!requested.contains('.')
-            && candidate
-                .rsplit_once('.')
-                .is_some_and(|(_, short)| short.eq_ignore_ascii_case(requested)))
 }
 
 #[cfg(test)]

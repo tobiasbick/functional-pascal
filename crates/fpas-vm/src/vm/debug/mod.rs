@@ -6,6 +6,7 @@ mod evaluation;
 mod forced_return;
 mod inspection;
 mod mutation;
+mod routines;
 mod session;
 mod tasks;
 mod types;

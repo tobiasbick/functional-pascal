@@ -44,6 +44,10 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             "a",
             "Arg",
             "G",
+            "Value",
+            "Math.Transform",
+            "Stats.Transform",
+            "backup",
         ]
         .into_iter()
         .map(str::to_string)
@@ -108,6 +112,16 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         }],
         bindings: vec![local(30, 0, 2, true, DebugBindingKind::Parameter, false)],
         sequence_points: vec![point(37, 10)],
+        result_type: Some(DebugTypeId::new(1)),
+        ..Default::default()
+    };
+    let integer_param = FunctionDebugInfo {
+        scopes: vec![DebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: vec![local(32, 0, 0, false, DebugBindingKind::Parameter, false)],
+        result_type: Some(DebugTypeId::new(0)),
         ..Default::default()
     };
     let routine = |name, start, end, arity, captures, registers, convention, debug| FunctionInfo {
@@ -160,6 +174,15 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             abc(Opcode::Return, 2, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 8).expect("transform +3"),
+            abc(Opcode::AddInteger, 2, 0, 1),
+            abc(Opcode::Return, 2, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 9).expect("transform +4"),
+            abc(Opcode::AddInteger, 2, 0, 1),
+            abc(Opcode::Return, 2, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 10).expect("backup +100"),
+            abc(Opcode::AddInteger, 2, 0, 1),
+            abc(Opcode::Return, 2, 0, 0),
         ],
         functions: vec![
             routine(0, 0, 28, 0, 0, 24, ReturnConvention::Unit, root_debug),
@@ -171,7 +194,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 0,
                 3,
                 ReturnConvention::Value,
-                FunctionDebugInfo::default(),
+                integer_param.clone(),
             ),
             routine(
                 3,
@@ -181,7 +204,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 0,
                 3,
                 ReturnConvention::Value,
-                FunctionDebugInfo::default(),
+                integer_param.clone(),
             ),
             routine(
                 4,
@@ -204,6 +227,27 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 FunctionDebugInfo::default(),
             ),
             routine(1, 37, 38, 1, 0, 1, ReturnConvention::Unit, helper_debug),
+            routine(
+                33,
+                38,
+                41,
+                1,
+                0,
+                3,
+                ReturnConvention::Value,
+                integer_param.clone(),
+            ),
+            routine(
+                34,
+                41,
+                44,
+                1,
+                0,
+                3,
+                ReturnConvention::Value,
+                integer_param.clone(),
+            ),
+            routine(35, 44, 47, 1, 0, 3, ReturnConvention::Value, integer_param),
         ],
         constants: vec![
             Constant::Function {
@@ -220,6 +264,9 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             Constant::Integer(0),
             Constant::String(StringId::new(29)),
             Constant::Integer(7),
+            Constant::Integer(3),
+            Constant::Integer(4),
+            Constant::Integer(100),
         ],
         strings,
         globals: vec![GlobalInfo {
@@ -295,6 +342,24 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                     instruction_start: InstructionAddress::new(37),
                     source: SourceId::new(0),
                     line: 10,
+                    column: 3,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(38),
+                    source: SourceId::new(0),
+                    line: 24,
+                    column: 3,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(41),
+                    source: SourceId::new(0),
+                    line: 25,
+                    column: 3,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(44),
+                    source: SourceId::new(0),
+                    line: 26,
                     column: 3,
                 },
             ],
@@ -386,6 +451,63 @@ pub(super) fn stop_with_functions(session: &mut DebugSession) {
     panic!("Current never became an initialized function")
 }
 
+#[test]
+fn compiled_fixture_retains_portable_routine_parameter_and_result_metadata() {
+    const SOURCE: &str =
+        include_str!("../../../../../../../tests/debugger/fixtures/function_value_assignment.fpas");
+    let (program, diagnostics) = fpas_parser::parse(SOURCE);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile function-value fixture");
+    let image = executable.executable();
+    let add_two = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("addtwo"))
+        .expect("AddTwo");
+    assert_eq!(add_two.arity, 1);
+    assert_eq!(add_two.capture_count, 0);
+    let parameters = add_two
+        .debug
+        .bindings
+        .iter()
+        .filter(|binding| binding.kind == DebugBindingKind::Parameter && !binding.hidden)
+        .collect::<Vec<_>>();
+    assert_eq!(parameters.len(), 1);
+    assert!(
+        parameters[0].register.get() < add_two.register_count,
+        "parameter register must be inside the function frame"
+    );
+    assert_eq!(
+        image.debug_types.get(parameters[0].ty.get() as usize),
+        Some(&DebugType::Integer)
+    );
+    assert_eq!(
+        add_two
+            .debug
+            .result_type
+            .and_then(|ty| image.debug_types.get(ty.get() as usize)),
+        Some(&DebugType::Integer)
+    );
+    let transform = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("math.transform"))
+        .expect("Math.Transform");
+    assert_eq!(transform.arity, 1);
+    assert_eq!(transform.capture_count, 0);
+    let transform_parameters = transform
+        .debug
+        .bindings
+        .iter()
+        .filter(|binding| binding.kind == DebugBindingKind::Parameter && !binding.hidden)
+        .collect::<Vec<_>>();
+    assert_eq!(transform_parameters.len(), 1);
+    assert!(
+        transform_parameters[0].register.get() < transform.register_count,
+        "static method parameter register must be inside the function frame"
+    );
+}
+
 pub(super) fn function_identity(left: &fpas_bytecode::Value, right: &fpas_bytecode::Value) -> bool {
     match (left, right) {
         (fpas_bytecode::Value::Function(first), fpas_bytecode::Value::Function(second)) => {
@@ -396,3 +518,4 @@ pub(super) fn function_identity(left: &fpas_bytecode::Value, right: &fpas_byteco
 }
 
 mod cases;
+mod routines;

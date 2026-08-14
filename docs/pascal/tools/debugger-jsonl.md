@@ -77,7 +77,8 @@ controlled-call policy, and resource limits as `evaluate`. Complete mutable enum
 `Result`, and `Option` values accept constructor expressions such as
 `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
 `None`. Function-typed targets accept one visible binding that already holds a
-compatible non-task-bound function value, for example `Backup`. A successful
+compatible non-task-bound function value, for example `Backup`, or one unique
+non-capturing executable routine such as `AddTwo`. A successful
 result has the same five rendered fields as `evaluate`, refreshes inspection
 state, and expires all earlier variable references. Any failure is atomic and
 leaves the old references usable.
@@ -109,7 +110,10 @@ root. Text indexes and aggregate structure changes are unsupported by
 Complete enum, `Result`, and `Option` values can also be replaced by assigning
 a constructor expression to the complete target. A function-typed target
 accepts one visible source binding that already holds a compatible
-non-task-bound function value. Direct named routines, new closure syntax, and
+non-task-bound function value, or one statically resolved non-capturing
+executable routine such as `AddTwo` or `Math.Transform`. A simple name uses
+lexical lookup first and falls back to the executable catalog only after an
+unknown name. Capturing routines, new closure syntax, computed expressions, and
 inactive-variant function payloads remain rejected. A write to an old
 payload-child handle never selects a different variant.
 

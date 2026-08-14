@@ -99,11 +99,18 @@ evaluation and call budget. Wrapper payloads accept only `.value`.
 Handle-based `setVariable` does not advertise inactive variants as children.
 A mutable function-typed target can be replaced by copying one visible binding
 that already holds a compatible first-class function value, for example
-`Current := Backup`. The assignment shares the existing immutable function
-storage; it does not reconstruct the closure or its environment. The source
-must be a binding name after parentheses are removed. Direct named routines,
-bound methods, new closure syntax, computed expressions, Dynamic endpoints,
-task-bound functions, and inactive-variant function payloads remain rejected.
+`Current := Backup`, or by assigning one statically resolved non-capturing
+executable routine such as `Current := AddTwo` or `Current := Math.Transform`.
+Copying a binding shares the existing immutable function storage and does not
+reconstruct its environment. A simple name uses ordinary lexical lookup first;
+the executable catalog is consulted only after that lookup reports an unknown
+name. Qualified identifier chains are catalog names only. Matching is
+ASCII-case-insensitive, an unqualified short name is accepted only when exactly
+one executable routine has that final component, and the stored value uses
+canonical spelling. The routine signature is proven from portable parameter and
+result metadata; capturing routines, bound methods, new closure syntax,
+computed expressions, Dynamic endpoints, task-bound functions, and
+inactive-variant function payloads remain rejected.
 
 The debugger validates the complete replacement against portable FPAS type
 metadata before committing one live root. A failed parse, evaluation, call,
@@ -138,8 +145,9 @@ commands. An unchanged character is rejected without writing.
 Immutable bindings, compiler-hidden storage,
 evaluation-only results, function captures,
 task values, and opaque hosted values are not
-writable. Function values are writable only by copying an already
-materialized, visible, non-task-bound function binding onto a structurally
+writable. Function values are writable by copying an already
+materialized, visible, non-task-bound function binding, or by assigning a
+unique non-capturing executable routine, onto a structurally
 compatible mutable function-typed path. Uninitialized mutable locals and
 globals accept only a complete root value; they have no writable fields,
 indexes, dictionary entries, or payload

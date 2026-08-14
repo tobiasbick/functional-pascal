@@ -191,7 +191,34 @@ fn dap_set_variable_and_set_expression_copy_function_values() {
         "setExpression",
         json!({"frameId":current,"expression":"Current","value":"AddTwo"}),
     );
-    assert_eq!(named[0]["success"], false, "{named:?}");
+    assert_eq!(named.len(), 2, "{named:?}");
+    assert_eq!(named[0]["success"], true, "{named:?}");
+    assert_eq!(named[0]["body"]["value"], "<function addtwo>");
+    assert_eq!(named[1]["event"], "invalidated");
+
+    let current = frame(&mut adapter, &mut seq);
+    let named_call = evaluate(&mut adapter, &mut seq, current, "Current(1)");
+    assert_eq!(named_call[0]["body"]["result"], "3");
+
+    let qualified = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"Current","value":"Math.Transform"}),
+    );
+    assert_eq!(qualified[0]["success"], true, "{qualified:?}");
+    assert_eq!(qualified[1]["event"], "invalidated");
+
+    let current = frame(&mut adapter, &mut seq);
+    let ambiguous = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"Current","value":"Transform"}),
+    );
+    assert_eq!(ambiguous.len(), 1, "{ambiguous:?}");
+    assert_eq!(ambiguous[0]["success"], false);
+    assert!(ambiguous.iter().all(|record| record.get("event").is_none()));
 
     let _ = send(&mut adapter, &mut seq, "continue", json!({"threadId":1}));
     let output = adapter
@@ -200,7 +227,7 @@ fn dap_set_variable_and_set_expression_copy_function_values() {
         .filter(|record| record["event"] == "output")
         .filter_map(|record| record["body"]["output"].as_str())
         .collect::<String>();
-    assert_eq!(output, "11\n11\n");
+    assert_eq!(output, "4\n11\n");
 }
 
 #[test]
@@ -252,13 +279,13 @@ fn dap_and_jsonl_function_assignment_results_and_errors_match() {
         &mut dap,
         &mut dap_seq,
         "setExpression",
-        json!({"frameId":dap_frame,"expression":"Current","value":"AddTwo"}),
+        json!({"frameId":dap_frame,"expression":"Current","value":"MakeAdder(1)"}),
     );
     let jsonl_failure = jsonl_send(
         &mut jsonl,
         &mut jsonl_id,
         "expression.set",
-        json!({"frame_id":current_jsonl_frame,"target":"Current","expression":"AddTwo"}),
+        json!({"frame_id":current_jsonl_frame,"target":"Current","expression":"MakeAdder(1)"}),
     );
     assert_eq!(
         dap_failure[0]["body"]["error"]["code"],

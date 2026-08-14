@@ -22,8 +22,8 @@ use crate::vm::worker::Worker;
 pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remove, replace_key};
 pub use empty_storage::DebugStorageInitializationResult;
 pub(in crate::vm::debug) use function_value::{
-    inactive_function_payload, is_function_type, prepare as prepare_function_value,
-    source_name as function_value_source_name,
+    FunctionSource, inactive_function_payload, is_function_type, prepare as prepare_function_value,
+    prepare_routine as prepare_routine_value, source as function_value_source,
 };
 pub use model::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,

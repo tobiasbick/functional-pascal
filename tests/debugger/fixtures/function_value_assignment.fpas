@@ -4,6 +4,18 @@ uses Std.Console;
 
 type
   Handler = function(Value: integer): integer;
+  Math = record
+    static function Transform(Value: integer): integer;
+    begin
+      return Value + 3
+    end;
+  end;
+  Stats = record
+    static function Transform(Value: integer): integer;
+    begin
+      return Value + 4
+    end;
+  end;
 
 function AddOne(Value: integer): integer;
 begin

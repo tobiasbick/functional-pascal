@@ -116,7 +116,9 @@ Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. A function-typed Variables or Watch target can be replaced
 by copying one visible binding that already holds a compatible non-task-bound
-function value, for example `Backup`. Direct named routines, new closure
+function value, for example `Backup`, or by assigning a unique non-capturing
+routine name such as `AddTwo` or `Math.Transform`. A simple name prefers a
+visible binding; capturing routines, new closure
 syntax, task-bound functions, and inactive-variant function payloads remain
 rejected. Task values and opaque hosted resources are not
 editable. Textual `setExpression` may assign an explicit inactive

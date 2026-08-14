@@ -8,6 +8,7 @@ use super::model::{DebugAssignmentSelector, DebugAssignmentTarget};
 use super::transition::{self, QualifiedSuffix, SuffixResolution, TransitionSpec};
 
 /// Concretized textual assignment: an existing path or a complete variant switch.
+#[derive(Clone)]
 pub(in crate::vm::debug) enum ResolvedAssignment {
     /// Ordinary writable descendant of the live value.
     Existing {

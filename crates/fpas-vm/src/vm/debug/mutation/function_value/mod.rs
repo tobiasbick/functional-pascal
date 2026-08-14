@@ -3,13 +3,18 @@
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod captures;
+mod routine;
 mod signature;
+mod source;
 
 use fpas_bytecode::{DebugType, DebugTypeId, Executable, SharedFunction, Value};
 
-use super::super::evaluation::{DebugEvaluationLimits, DebugExpression};
+use super::super::evaluation::DebugEvaluationLimits;
 use super::super::inspection::InspectionSnapshot;
 use super::super::types::{DebugErrorKind, DebugSessionError};
+
+pub(in crate::vm::debug) use routine::prepare as prepare_routine;
+pub(in crate::vm::debug) use source::{FunctionSource, extract as source};
 
 /// Whether a portable debugger type is a first-class function signature.
 pub(in crate::vm::debug) fn is_function_type(executable: &Executable, ty: DebugTypeId) -> bool {
@@ -17,16 +22,6 @@ pub(in crate::vm::debug) fn is_function_type(executable: &Executable, ty: DebugT
         executable.debug_types.get(ty.get() as usize),
         Some(DebugType::Function { .. })
     )
-}
-
-/// Require the one supported source-expression shape for function assignment.
-pub(in crate::vm::debug) fn source_name(
-    expression: &DebugExpression,
-) -> Result<&str, DebugSessionError> {
-    match expression {
-        DebugExpression::Name(name) => Ok(name),
-        _ => Err(unsupported_source()),
-    }
 }
 
 /// Validate one evaluated, structurally compatible, non-task-bound function value.
@@ -66,7 +61,13 @@ pub(in crate::vm::debug) fn prepare(
             ));
         }
     }
-    signature::require_compatible(&executable.debug_types, source_type, expected)?;
+    signature::require_compatible_bounded(
+        &executable.debug_types,
+        source_type,
+        expected,
+        limits.max_depth,
+        limits.max_detached_values,
+    )?;
     let Value::Function(function) = &value else {
         return Err(type_error(
             "source binding does not contain a first-class function value",
@@ -94,16 +95,6 @@ pub(in crate::vm::debug) fn inactive_function_payload() -> DebugSessionError {
             .to_string(),
         hint: "Assign into an existing function-typed path such as a mutable local or `optional.value` when Some is already active."
             .to_string(),
-    }
-}
-
-fn unsupported_source() -> DebugSessionError {
-    DebugSessionError {
-        kind: DebugErrorKind::VariableValueType,
-        message: "debug function assignment requires one visible source binding name".to_string(),
-        hint:
-            "Copy an existing function value with a binding name, for example `Current := Backup`."
-                .to_string(),
     }
 }
 

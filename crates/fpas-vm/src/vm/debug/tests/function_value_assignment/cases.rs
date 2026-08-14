@@ -196,7 +196,7 @@ fn source_lookup_follows_lexical_shadowing_and_globals_only_frames() {
         "3"
     );
     let missing = session
-        .set_expression(&root("G"), &name("Backup"), None)
+        .set_expression(&root("G"), &name("Captured"), None)
         .expect_err("globals-only source lookup");
     assert_eq!(missing.kind, DebugErrorKind::UnknownName);
     session
@@ -240,7 +240,7 @@ fn signature_and_source_shape_failures_are_actionable() {
         .set_expression(&root("Current"), &call("Backup", 1), Some(frame))
         .expect_err("call");
     assert_eq!(call.kind, DebugErrorKind::VariableValueType);
-    assert!(call.hint.contains("binding name"), "{}", call.hint);
+    assert!(call.hint.contains("AddTwo"), "{}", call.hint);
     let field = session
         .set_expression(
             &root("Current"),
@@ -250,8 +250,8 @@ fn signature_and_source_shape_failures_are_actionable() {
             },
             Some(frame),
         )
-        .expect_err("aggregate source");
-    assert_eq!(field.kind, DebugErrorKind::VariableValueType);
+        .expect_err("unknown qualified routine");
+    assert_eq!(field.kind, DebugErrorKind::UnknownName);
     assert_eq!(
         named(
             &session

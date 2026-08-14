@@ -124,9 +124,43 @@ fn jsonl_function_values_copy_atomically_and_continue() {
     );
     assert_eq!(captured_call[0]["body"]["result"], "11");
 
+    let assigned = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Current","expression":"AddTwo"}),
+    );
+    assert_eq!(assigned[0]["success"], true, "{assigned:?}");
+    assert_eq!(assigned[0]["body"]["result"], "<function addtwo>");
+    let current = frame(&mut server, &mut id);
+    let named_call = send(
+        &mut server,
+        &mut id,
+        "evaluate",
+        json!({"frame_id":current,"expression":"Current(1)"}),
+    );
+    assert_eq!(named_call[0]["body"]["result"], "3");
+
+    let qualified = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Current","expression":"Math.Transform"}),
+    );
+    assert_eq!(qualified[0]["success"], true, "{qualified:?}");
+    assert_eq!(qualified[0]["body"]["result"], "<function math.transform>");
+    let current = frame(&mut server, &mut id);
+    let qualified_call = send(
+        &mut server,
+        &mut id,
+        "evaluate",
+        json!({"frame_id":current,"expression":"Current(1)"}),
+    );
+    assert_eq!(qualified_call[0]["body"]["result"], "4");
+
     let failures = [
         ("Frozen", "Backup", "variable_not_mutable"),
-        ("Current", "AddTwo", "unknown_name"),
+        ("Current", "Transform", "call_ambiguous"),
         ("Current", "MakeAdder(1)", "variable_value_type"),
         (
             "Current",
@@ -134,6 +168,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
             "unsupported_expression",
         ),
         ("Current", "1", "variable_value_type"),
+        ("Current", "MissingRoutine", "unknown_name"),
     ];
     for (target, expression, code) in failures {
         let failed = send(
@@ -166,7 +201,7 @@ fn jsonl_function_values_copy_atomically_and_continue() {
         .filter(|record| record["event"] == "output")
         .filter_map(|record| record["body"]["text"].as_str())
         .collect::<String>();
-    assert_eq!(output, "11\n11\n");
+    assert_eq!(output, "4\n11\n");
 }
 
 #[test]
@@ -247,7 +282,7 @@ end.
         &mut server,
         &mut id,
         "expression.set",
-        json!({"frame_id":child_frame,"target":"Current","expression":"Backup"}),
+        json!({"frame_id":child_frame,"target":"Current","expression":"AddTwo"}),
     );
     assert_eq!(
         updated[0]["body"]["result"], "<function addtwo>",

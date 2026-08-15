@@ -75,17 +75,26 @@ fn candidate() -> Executable {
                         scope: 0,
                     }],
                     result_type: Some(fpas_bytecode::DebugTypeId::new(0)),
+                    ..FunctionDebugInfo::default()
                 },
             },
             FunctionInfo {
                 name: StringId::new(1),
                 code: CodeRange::new(InstructionAddress::new(9), InstructionAddress::new(10)),
                 arity: 0,
-                capture_count: 0,
-                register_count: 0,
+                capture_count: 1,
+                register_count: 1,
                 return_convention: ReturnConvention::Unit,
                 flags: FunctionFlags::default(),
-                debug: fpas_bytecode::FunctionDebugInfo::default(),
+                debug: FunctionDebugInfo {
+                    lexical_owner: Some(FunctionId::new(0)),
+                    capture_sources: vec![fpas_bytecode::DebugCaptureSource {
+                        binding: fpas_bytecode::DebugBindingId::new(0),
+                        ty: fpas_bytecode::DebugTypeId::new(0),
+                        kind: fpas_bytecode::DebugCaptureKind::Value,
+                    }],
+                    ..FunctionDebugInfo::default()
+                },
             },
         ],
         constants: vec![Constant::String(StringId::new(2))],
@@ -178,6 +187,13 @@ fn conversion_covers_every_register_table_operand_and_is_deterministic() {
     );
     assert_eq!(first.functions[1].source_runs[0].instruction_start, 0);
     assert_eq!(first.functions[0].debug.result_type, Some(0));
+    assert_eq!(first.functions[1].debug.lexical_owner, Some(0));
+    assert_eq!(first.functions[1].debug.capture_sources.len(), 1);
+    assert_eq!(first.functions[1].debug.capture_sources[0].binding, 0);
+    assert_eq!(
+        first.functions[1].debug.capture_sources[0].kind,
+        fpas_unit::object::ObjectCaptureKind::Value
+    );
     assert!(
         first
             .relocations
@@ -279,4 +295,28 @@ fn duplicate_case_insensitive_definition_is_rejected_by_canonical_contract() {
         object.validate(),
         Err(ObjectError::DuplicateName(_))
     ));
+}
+
+#[test]
+fn capture_provenance_owner_binding_and_count_are_validated() {
+    let mut missing_owner = object();
+    missing_owner.functions[1].debug.lexical_owner = None;
+    assert_eq!(
+        missing_owner.validate(),
+        Err(ObjectError::InvalidTableReference("lexical owner"))
+    );
+
+    let mut count = object();
+    count.functions[1].debug.capture_sources.clear();
+    assert_eq!(
+        count.validate(),
+        Err(ObjectError::InvalidTableReference("capture source count"))
+    );
+
+    let mut binding = object();
+    binding.functions[1].debug.capture_sources[0].binding = 9;
+    assert_eq!(
+        binding.validate(),
+        Err(ObjectError::InvalidTableReference("capture source"))
+    );
 }

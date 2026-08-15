@@ -26,7 +26,7 @@ pub struct ClosureInfo {
 /// Maps closure expression identity to [`ClosureInfo`].
 pub type ClosureInfoMap = HashMap<usize, ClosureInfo>;
 
-/// Capture metadata for a named nested routine (keyed by canonical routine name).
+/// Capture metadata for a named nested routine (keyed by AST declaration identity).
 ///
 /// **Documentation:** `docs/pascal/language/functions/closures.md`
 #[derive(Debug, Clone, PartialEq)]
@@ -37,8 +37,8 @@ pub struct NestedRoutineCaptureInfo {
     pub task_bound: bool,
 }
 
-/// Maps nested routine names to their capture metadata.
-pub type NestedRoutineCaptureMap = HashMap<String, NestedRoutineCaptureInfo>;
+/// Maps stable in-pipeline routine declaration identities to capture metadata.
+pub type NestedRoutineCaptureMap = HashMap<usize, NestedRoutineCaptureInfo>;
 
 /// Build [`ClosureInfo`] from analyzed captures.
 #[must_use]

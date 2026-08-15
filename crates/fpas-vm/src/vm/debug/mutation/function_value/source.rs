@@ -136,9 +136,9 @@ fn source_limit(message: &str, hint: &str) -> DebugSessionError {
 fn unsupported_source() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::VariableValueType,
-        message: "debug function assignment requires a binding name or a non-capturing routine name"
+        message: "debug function assignment requires a binding name or a unique executable routine name"
             .to_string(),
-        hint: "Copy an existing function value such as `Current := Backup`, or assign a routine such as `Current := AddTwo`."
+        hint: "Copy an existing function value such as `Current := Backup`, or assign a routine such as `Current := AddTwo` or a capturing nested routine from its owner frame."
             .to_string(),
     }
 }

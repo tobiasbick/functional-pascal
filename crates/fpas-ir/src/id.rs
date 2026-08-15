@@ -95,3 +95,5 @@ identifier!(/// Identifies a variant inside one enum layout.
 VariantId, "variant identifier");
 identifier!(/// Identifies a registered intrinsic signature.
 IntrinsicId, "intrinsic identifier");
+identifier!(/// Identifies a function-local debugger binding in dense declaration order.
+DebugBindingId, "debug binding identifier");

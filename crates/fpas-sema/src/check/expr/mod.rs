@@ -13,7 +13,6 @@ mod postfix;
 mod record_fields;
 
 use super::Checker;
-use crate::scope::SymbolKind;
 use crate::types::Ty;
 use fpas_parser::*;
 
@@ -163,13 +162,6 @@ impl Checker {
         };
         if symbol.task_bound {
             return true;
-        }
-        if matches!(symbol.kind, SymbolKind::Function | SymbolKind::Procedure) {
-            let canonical = crate::scope::canonical_symbol_name(&name);
-            return self
-                .nested_routine_captures
-                .get(&canonical)
-                .is_some_and(|info| info.task_bound);
         }
         false
     }

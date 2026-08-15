@@ -1,8 +1,9 @@
 //! Bounded binary conversion for function debugger metadata.
 
 use fpas_bytecode::{
-    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, DebugTypeId,
-    FunctionDebugInfo, InstructionAddress, Register, SequencePoint, SourceId, StringId,
+    DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind, DebugCaptureSource,
+    DebugScope, DebugSourceLocation, DebugTypeId, FunctionDebugInfo, FunctionId,
+    InstructionAddress, Register, SequencePoint, SourceId, StringId,
 };
 
 use super::sections::{SectionReader, write_u8, write_u16, write_u32};
@@ -12,12 +13,16 @@ const NO_PARENT: u32 = u32::MAX;
 const BINDING_PARAMETER: u8 = 0;
 const BINDING_LOCAL: u8 = 1;
 const BINDING_CAPTURE: u8 = 2;
+const CAPTURE_VALUE: u8 = 0;
+const CAPTURE_CELL: u8 = 1;
+const CAPTURE_ENCLOSING_CELL: u8 = 2;
 
 #[derive(Default)]
 pub(super) struct DebugCounts {
     scopes: usize,
     bindings: usize,
     sequence_points: usize,
+    capture_sources: usize,
 }
 
 pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<(), FormatError> {
@@ -84,6 +89,31 @@ pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<
     write_bool(output, debug.result_type.is_some());
     if let Some(ty) = debug.result_type {
         write_u32(output, ty.get());
+    }
+    write_bool(output, debug.lexical_owner.is_some());
+    if let Some(owner) = debug.lexical_owner {
+        write_u16(output, owner.get());
+    }
+    check_limit(
+        "debug_capture_sources",
+        debug.capture_sources.len(),
+        fpas_bytecode::limits::MAX_CLOSURE_CAPTURES,
+    )?;
+    write_u32(
+        output,
+        checked_u32("debug_capture_source_count", debug.capture_sources.len())?,
+    );
+    for source in &debug.capture_sources {
+        write_u32(output, source.binding.get());
+        write_u32(output, source.ty.get());
+        write_u8(
+            output,
+            match source.kind {
+                DebugCaptureKind::Value => CAPTURE_VALUE,
+                DebugCaptureKind::Cell => CAPTURE_CELL,
+                DebugCaptureKind::EnclosingCell => CAPTURE_ENCLOSING_CELL,
+            },
+        );
     }
     Ok(())
 }
@@ -178,12 +208,42 @@ pub(super) fn decode(
     } else {
         None
     };
+    let lexical_owner = if read_bool(reader, "debug_has_lexical_owner")? {
+        Some(FunctionId::new(reader.u16("debug_lexical_owner")?))
+    } else {
+        None
+    };
+    let source_count = read_count(
+        reader,
+        "debug_capture_source_count",
+        &mut totals.capture_sources,
+        fpas_bytecode::limits::MAX_CLOSURE_CAPTURES,
+    )?;
+    let mut capture_sources = Vec::with_capacity(source_count);
+    for _ in 0..source_count {
+        let binding = DebugBindingId::new(reader.u32("debug_capture_binding")?);
+        let ty = DebugTypeId::new(reader.u32("debug_capture_type")?);
+        let kind = match reader.u8("debug_capture_kind")? {
+            CAPTURE_VALUE => DebugCaptureKind::Value,
+            CAPTURE_CELL => DebugCaptureKind::Cell,
+            CAPTURE_ENCLOSING_CELL => DebugCaptureKind::EnclosingCell,
+            value => {
+                return Err(FormatError::InvalidValue {
+                    field: "debug_capture_kind",
+                    value: u64::from(value),
+                });
+            }
+        };
+        capture_sources.push(DebugCaptureSource { binding, ty, kind });
+    }
 
     Ok(FunctionDebugInfo {
         scopes,
         bindings,
         sequence_points,
         result_type,
+        lexical_owner,
+        capture_sources,
     })
 }
 

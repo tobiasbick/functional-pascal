@@ -21,8 +21,20 @@ pub(crate) struct InspectionSnapshot {
 
 pub(super) struct FrameSnapshot {
     pub(super) frame: DebugFrame,
+    pub(super) function: fpas_bytecode::FunctionId,
     pub(super) scopes: Vec<DebugScope>,
     pub(super) evaluation_values: Vec<RetainedValue>,
+    pub(super) bindings: Vec<FrameBinding>,
+}
+
+/// One owner-function binding captured from a live frame, indexed by debug binding ID.
+pub(super) struct FrameBinding {
+    pub(super) initialized: bool,
+    pub(super) value: Option<fpas_bytecode::Value>,
+    pub(super) ty: fpas_bytecode::DebugTypeId,
+    pub(super) hidden: bool,
+    pub(super) cell_backed: bool,
+    pub(super) visible: bool,
 }
 
 pub(super) struct HandleEntry {

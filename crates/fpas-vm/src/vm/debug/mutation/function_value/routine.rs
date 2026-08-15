@@ -1,6 +1,8 @@
-//! Zero-capture executable routine proof and empty-capture value materialization.
+//! Zero-capture and capturing named-routine proof and function-value materialization.
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
+
+mod captures;
 
 use std::collections::HashSet;
 
@@ -9,15 +11,18 @@ use fpas_bytecode::{
 };
 
 use super::super::super::evaluation::DebugEvaluationLimits;
+use super::super::super::inspection::InspectionSnapshot;
 use super::super::super::routines::matching_functions;
 use super::super::super::types::{DebugErrorKind, DebugSessionError};
 use super::signature;
 
-/// Materialize one canonical empty-capture function value for a catalog routine.
+/// Materialize one canonical function value for a catalog routine.
 pub(in crate::vm::debug) fn prepare(
     executable: &VerifiedExecutable,
+    inspection: Option<&InspectionSnapshot>,
     name: &str,
     expected: DebugTypeId,
+    frame_id: Option<u64>,
     limits: DebugEvaluationLimits,
 ) -> Result<Value, DebugSessionError> {
     if matches!(
@@ -44,10 +49,32 @@ pub(in crate::vm::debug) fn prepare(
             )
         })?;
     if function.capture_count != 0 {
-        return Err(type_error(
-            &format!("routine `{canonical}` requires captures"),
-            "Assign a non-capturing executable routine, or copy a visible function binding.",
-        ));
+        let inspection = inspection.ok_or_else(|| {
+            type_error(
+                &format!("routine `{canonical}` requires captures"),
+                "Select the live frame of the nested routine's enclosing function, then assign the routine name.",
+            )
+        })?;
+        let captures = captures::materialize(
+            executable,
+            inspection,
+            function_id,
+            function,
+            &canonical,
+            frame_id,
+            limits,
+        )?;
+        let (parameters, result) =
+            portable_signature(executable.executable(), function, &canonical)?;
+        signature::require_signature(
+            &executable.executable().debug_types,
+            &parameters,
+            result,
+            expected,
+            limits.max_depth,
+            limits.max_detached_values,
+        )?;
+        return Ok(Value::function(function_id, canonical, captures, false));
     }
     let (parameters, result) = portable_signature(executable.executable(), function, &canonical)?;
     signature::require_signature(
@@ -164,7 +191,7 @@ fn portable_signature(
     ))
 }
 
-fn type_error(detail: &str, hint: &str) -> DebugSessionError {
+pub(super) fn type_error(detail: &str, hint: &str) -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::VariableValueType,
         message: format!("debug function assignment is rejected: {detail}"),

@@ -99,18 +99,27 @@ evaluation and call budget. Wrapper payloads accept only `.value`.
 Handle-based `setVariable` does not advertise inactive variants as children.
 A mutable function-typed target can be replaced by copying one visible binding
 that already holds a compatible first-class function value, for example
-`Current := Backup`, or by assigning one statically resolved non-capturing
-executable routine such as `Current := AddTwo` or `Current := Math.Transform`.
+`Current := Backup`, or by assigning one statically resolved executable
+routine such as `Current := AddTwo`, `Current := Math.Transform`, or a named
+nested routine whose direct captures are immutable values available in the
+exact selected live lexical-owner frame, for example `Current := AddBase` or
+`Current := MakeAdder.AddBase`.
 Copying a binding shares the existing immutable function storage and does not
-reconstruct its environment. A simple name uses ordinary lexical lookup first;
+reconstruct its environment. Assigning a capturing nested routine constructs a
+new function value from verified capture provenance and the selected owner
+frame; it does not search older, peer-task, or similarly named frames.
+Every capture source must be initialized and visible in that frame.
+A simple name uses ordinary lexical lookup first;
 the executable catalog is consulted only after that lookup reports an unknown
 name. Qualified identifier chains are catalog names only. Matching is
 ASCII-case-insensitive, an unqualified short name is accepted only when exactly
 one executable routine has that final component, and the stored value uses
-canonical spelling. The routine signature is proven from portable parameter and
-result metadata; capturing routines, bound methods, new closure syntax,
-computed expressions, Dynamic endpoints, task-bound functions, and
-inactive-variant function payloads remain rejected.
+canonical spelling. Nested routines are stored under their enclosing-routine
+path, so `AddBase` and `MakeAdder.AddBase` identify the same unique nested
+function. The routine signature is proven from portable parameter and
+result metadata; anonymous closure syntax, mutable `Cell` or `EnclosingCell`
+captures, bound methods, computed expressions, Dynamic endpoints, task-bound
+functions, and inactive-variant function payloads remain rejected.
 A mutable task-typed target can be replaced by copying one visible binding
 that already holds a compatible task handle, for example `Current := Pending`.
 The debugger copies the exact runtime task ID and does not spawn, retain,
@@ -158,7 +167,9 @@ evaluation-only results, function captures,
 and opaque hosted values are not
 writable. Function values are writable by copying an already
 materialized, visible, non-task-bound function binding, or by assigning a
-unique non-capturing executable routine, onto a structurally
+unique executable routine — including a named nested routine whose direct
+captures are immutable, initialized values from the selected lexical-owner
+frame — onto a structurally
 compatible mutable function-typed path. Task handles are writable by copying
 one visible initialized binding whose declared task result type matches the
 destination; the copy preserves the runtime ID and does not change scheduler

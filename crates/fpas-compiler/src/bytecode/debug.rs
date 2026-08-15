@@ -65,11 +65,37 @@ pub(super) fn compile_debug_info(
                 })
         })
         .collect();
+    let lexical_owner = function
+        .debug
+        .lexical_owner
+        .map(|owner| {
+            u16::try_from(owner.get())
+                .map(fpas_bytecode::FunctionId::new)
+                .map_err(|_| super::compile_error("lexical owner exceeds bytecode function id"))
+        })
+        .transpose()?;
     Ok(FunctionDebugInfo {
         scopes,
         bindings,
         sequence_points,
         result_type: Some(DebugTypeId::new(function.signature.result.get())),
+        lexical_owner,
+        capture_sources: function
+            .debug
+            .capture_sources
+            .iter()
+            .map(|source| fpas_bytecode::DebugCaptureSource {
+                binding: fpas_bytecode::DebugBindingId::new(source.binding.get()),
+                ty: DebugTypeId::new(source.ty.get()),
+                kind: match source.kind {
+                    fpas_ir::CaptureKind::Value => fpas_bytecode::DebugCaptureKind::Value,
+                    fpas_ir::CaptureKind::Cell => fpas_bytecode::DebugCaptureKind::Cell,
+                    fpas_ir::CaptureKind::EnclosingCell => {
+                        fpas_bytecode::DebugCaptureKind::EnclosingCell
+                    }
+                },
+            })
+            .collect(),
     })
 }
 

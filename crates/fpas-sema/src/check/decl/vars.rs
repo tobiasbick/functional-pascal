@@ -40,7 +40,7 @@ impl Checker {
         };
 
         let task_bound = self.expr_is_task_bound(Self::expr_lookup_key(&v.value));
-        if !self.scopes.define(
+        if !self.scopes.define_with_declaration(
             &v.name,
             Symbol {
                 ty: stored_ty,
@@ -48,6 +48,7 @@ impl Checker {
                 kind: SymbolKind::Var,
                 task_bound,
             },
+            v.span,
         ) {
             self.error_with_code(
                 SEMA_DUPLICATE_DECLARATION,

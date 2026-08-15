@@ -28,6 +28,9 @@ fn deterministic_round_trip_preserves_every_register_table() {
     assert_eq!(decoded.source_paths(), image.source_paths());
     assert_eq!(decoded.source_hashes(), image.source_hashes());
     assert_eq!(decoded.executable(), image.executable());
+    let nested = &decoded.executable().executable().functions[1].debug;
+    assert_eq!(nested.lexical_owner.map(|owner| owner.get()), Some(0));
+    assert_eq!(nested.capture_sources.len(), 1);
 }
 
 #[test]
@@ -36,7 +39,7 @@ fn canonical_image_has_target_independent_digest() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "17c06539c8320bb96f6f8496263db98548496663b5f712f0473260f2e8581d62"
+        "599b560e62c7c80099227b5bd78172fb7e0fd8e151cac49ec9c18197d413b2c9"
     );
 }
 

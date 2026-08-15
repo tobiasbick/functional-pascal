@@ -82,6 +82,23 @@ pub fn expr_lookup_key(expr: &fpas_parser::Expr) -> usize {
     check::Checker::expr_lookup_key(expr)
 }
 
+/// Stable key for capture metadata belonging to one named function declaration.
+///
+/// The AST remains immutable throughout analysis and lowering, so its declaration address is a
+/// precise in-pipeline identity and cannot collide when unrelated parents use the same short name.
+#[must_use]
+pub fn function_decl_lookup_key(function: &fpas_parser::FunctionDecl) -> usize {
+    std::ptr::from_ref(function) as usize
+}
+
+/// Stable key for capture metadata belonging to one named procedure declaration.
+///
+/// This uses the same immutable-AST lifetime contract as [`function_decl_lookup_key`].
+#[must_use]
+pub fn procedure_decl_lookup_key(procedure: &fpas_parser::ProcedureDecl) -> usize {
+    std::ptr::from_ref(procedure) as usize
+}
+
 /// Stable key for looking up [`MethodCallMap`] entries for a postfix method operation.
 ///
 /// Uses the memory address of the [`fpas_parser::PostfixOperation`] in the AST. Same soundness

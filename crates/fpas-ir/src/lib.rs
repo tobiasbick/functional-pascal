@@ -14,15 +14,18 @@ mod program;
 mod terminator;
 pub mod validate;
 
-pub use debug::{DebugBinding, DebugBindingKind, DebugScope, FunctionDebugInfo, SequencePoint};
+pub use debug::{
+    DebugBinding, DebugBindingKind, DebugCaptureSource, DebugScope, FunctionDebugInfo,
+    SequencePoint,
+};
 pub use fpas_diagnostics::SourceSpan;
 pub use function::{
     BasicBlock, BlockParameter, CaptureDeclaration, CaptureKind, Function, FunctionSignature,
     Local, ValueDefinition,
 };
 pub use id::{
-    BlockId, EnumLayoutId, FieldId, FunctionId, GlobalId, IdConversionError, IntrinsicId, LocalId,
-    RecordLayoutId, TypeId, ValueId, VariantId, checked_count,
+    BlockId, DebugBindingId, EnumLayoutId, FieldId, FunctionId, GlobalId, IdConversionError,
+    IntrinsicId, LocalId, RecordLayoutId, TypeId, ValueId, VariantId, checked_count,
 };
 pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
 pub use program::{

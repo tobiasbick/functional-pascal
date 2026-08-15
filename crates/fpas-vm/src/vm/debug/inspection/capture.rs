@@ -82,13 +82,10 @@ impl InspectionSnapshot {
         let mut locals = Vec::new();
         let mut captures = Vec::new();
         let mut retained_bindings = Vec::new();
+        let mut frame_bindings = Vec::with_capacity(function.debug.bindings.len());
         let frame_id = item_id(self.generation, depth);
         for binding in &function.debug.bindings {
-            if binding.hidden || !visible_scope_set.contains(&binding.scope) {
-                continue;
-            }
-            let name = image.strings.get(binding.name).unwrap_or("<binding>");
-            let type_name = image.strings.get(binding.type_name).unwrap_or("dynamic");
+            let visible = visible_scope_set.contains(&binding.scope);
             let register = frame
                 .base
                 .saturating_add(usize::from(binding.register.get()));
@@ -96,6 +93,19 @@ impl InspectionSnapshot {
             let value = initialized
                 .then(|| worker.registers.get(register).cloned())
                 .flatten();
+            frame_bindings.push(super::snapshot::FrameBinding {
+                initialized,
+                value: value.clone(),
+                ty: binding.ty,
+                hidden: binding.hidden,
+                cell_backed: binding.cell_backed,
+                visible,
+            });
+            if binding.hidden || !visible {
+                continue;
+            }
+            let name = image.strings.get(binding.name).unwrap_or("<binding>");
+            let type_name = image.strings.get(binding.type_name).unwrap_or("dynamic");
             let mutation = binding_mutation(
                 binding,
                 value.as_ref(),
@@ -161,8 +171,10 @@ impl InspectionSnapshot {
                 location,
                 depth,
             },
+            function: frame.function,
             scopes,
             evaluation_values,
+            bindings: frame_bindings,
         });
     }
 }

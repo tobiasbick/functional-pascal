@@ -3,10 +3,10 @@ use crate::vm::debug::evaluation::DebugEvaluationLimits;
 use crate::vm::debug::routines::callable_name_matches;
 use crate::vm::debug::types::DebugErrorKind;
 use fpas_bytecode::{
-    CodeRange, DebugBinding, DebugBindingKind, DebugScope, DebugType, DebugTypeId, Executable,
-    FunctionDebugInfo, FunctionFlags, FunctionId, FunctionInfo, Instruction, InstructionAddress,
-    Opcode, Register, ReturnConvention, SourceId, SourceMap, SourceRun, StringId, StringTable,
-    VerifiedExecutable,
+    CodeRange, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
+    DebugCaptureSource, DebugScope, DebugType, DebugTypeId, Executable, FunctionDebugInfo,
+    FunctionFlags, FunctionId, FunctionInfo, Instruction, InstructionAddress, Opcode, Register,
+    ReturnConvention, SourceId, SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
 };
 
 fn parameter(register: u16, hidden: bool) -> DebugBinding {
@@ -51,6 +51,7 @@ fn function(
             bindings,
             sequence_points: Vec::new(),
             result_type,
+            ..FunctionDebugInfo::default()
         },
     }
 }
@@ -80,6 +81,7 @@ fn executable(
         code.push(Instruction::abc(Opcode::Return, 0, 0, 0, 0).expect("return"));
         all_functions.push(function);
     }
+    attach_cell_capture_provenance(&mut all_functions);
     let runs = all_functions
         .iter()
         .map(|function| SourceRun {
@@ -109,6 +111,49 @@ fn executable(
     .expect("routine executable")
 }
 
+fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
+    let slots = functions
+        .iter()
+        .map(|function| function.capture_count)
+        .max()
+        .unwrap_or(0);
+    if slots == 0 {
+        return;
+    }
+    functions[0].register_count = functions[0].register_count.max(slots);
+    functions[0].debug.scopes = vec![DebugScope {
+        id: 0,
+        parent: None,
+    }];
+    functions[0].debug.bindings = (0..slots)
+        .map(|index| DebugBinding {
+            name: StringId::new(2),
+            type_name: StringId::new(3),
+            ty: DebugTypeId::new(0),
+            register: Register::new(index).expect("register"),
+            kind: DebugBindingKind::Local,
+            mutable: true,
+            scope: 0,
+            declaration: None,
+            hidden: false,
+            cell_backed: true,
+        })
+        .collect();
+    for function in functions.iter_mut().skip(1) {
+        if function.capture_count == 0 {
+            continue;
+        }
+        function.debug.lexical_owner = Some(FunctionId::new(0));
+        function.debug.capture_sources = (0..function.capture_count)
+            .map(|index| DebugCaptureSource {
+                binding: DebugBindingId::new(u32::from(index)),
+                ty: DebugTypeId::new(0),
+                kind: DebugCaptureKind::Cell,
+            })
+            .collect();
+    }
+}
+
 #[test]
 fn complete_metadata_materializes_an_empty_capture_function() {
     let executable = executable(
@@ -131,8 +176,10 @@ fn complete_metadata_materializes_an_empty_capture_function() {
     );
     let value = prepare(
         &executable,
+        None,
         "AddTwo",
         DebugTypeId::new(1),
+        None,
         DebugEvaluationLimits::default(),
     )
     .expect("routine");
@@ -170,8 +217,10 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
     assert_eq!(
         prepare(
             &capturing,
+            None,
             "adder",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("captures")
@@ -200,8 +249,10 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
     assert!(
         prepare(
             &hidden,
+            None,
             "hidden",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("hidden")
@@ -230,8 +281,10 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
     assert!(
         prepare(
             &unordered,
+            None,
             "shifted",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("register")
@@ -260,8 +313,10 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
     assert!(
         prepare(
             &missing_result,
+            None,
             "incomplete",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("result")
@@ -269,7 +324,7 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
         .contains("result type")
     );
     let image = missing_result.executable();
-    assert!(portable_signature(&image, &image.functions[1], "incomplete").is_err());
+    assert!(portable_signature(image, &image.functions[1], "incomplete").is_err());
 }
 
 #[test]
@@ -305,8 +360,10 @@ fn ambiguous_and_unknown_names_are_stable() {
     assert_eq!(
         prepare(
             &executable,
+            None,
             "transform",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("ambiguous")
@@ -316,8 +373,10 @@ fn ambiguous_and_unknown_names_are_stable() {
     assert_eq!(
         prepare(
             &executable,
+            None,
             "missing",
             DebugTypeId::new(1),
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("unknown")
@@ -326,8 +385,10 @@ fn ambiguous_and_unknown_names_are_stable() {
     );
     let procedure = prepare(
         &executable,
+        None,
         "math.transform",
         DebugTypeId::new(1),
+        None,
         DebugEvaluationLimits::default(),
     )
     .expect("unique qualified procedure");

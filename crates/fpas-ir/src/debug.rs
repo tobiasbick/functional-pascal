@@ -1,6 +1,7 @@
 //! Source-level debugger metadata retained beside operational IR.
 
-use crate::{BlockId, LocalId, SourceSpan, TypeId};
+use crate::function::CaptureKind;
+use crate::{BlockId, DebugBindingId, FunctionId, LocalId, SourceSpan, TypeId};
 
 /// Complete source-debug metadata for one function.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -11,6 +12,27 @@ pub struct FunctionDebugInfo {
     pub bindings: Vec<DebugBinding>,
     /// Source execution points attached to IR instructions.
     pub sequence_points: Vec<SequencePoint>,
+    /// Lexical owner of a capturing function; absent when the function has no captures.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    pub lexical_owner: Option<FunctionId>,
+    /// Capture identity in runtime closure ABI order.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    pub capture_sources: Vec<DebugCaptureSource>,
+}
+
+/// One exact owner binding captured by a nested function, in closure ABI order.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DebugCaptureSource {
+    /// Dense owner-function binding identity. Runtime names are not a substitute.
+    pub binding: DebugBindingId,
+    /// Portable type of the captured value.
+    pub ty: TypeId,
+    /// Representation mandated by semantic capture analysis.
+    pub kind: CaptureKind,
 }
 
 /// One lexical source scope.

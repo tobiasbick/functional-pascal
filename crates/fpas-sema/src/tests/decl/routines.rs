@@ -113,6 +113,44 @@ fn nested_function_scope() {
 }
 
 #[test]
+fn nested_function_captures_enclosing_body_local() {
+    check_ok(
+        "program T; \
+         function Make(): function(Value: integer): integer; \
+           function Add(Value: integer): integer; \
+           begin return Value + Offset end; \
+         begin \
+           var Offset: integer := 7; \
+           return Add \
+         end; \
+         begin end.",
+    );
+}
+
+#[test]
+fn nested_function_does_not_see_inner_block_locals() {
+    let errors = check_errors(
+        "program T; \
+         function Outer(): integer; \
+           function Inner(): integer; \
+           begin return Hidden end; \
+         begin \
+           begin \
+             var Hidden: integer := 1; \
+             return Inner() \
+           end \
+         end; \
+         begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("Undefined identifier `Hidden`")),
+        "expected inner-block local to stay hidden, got {errors:#?}"
+    );
+}
+
+#[test]
 fn mutable_param() {
     check_ok(
         "program T; \

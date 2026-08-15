@@ -1,10 +1,11 @@
 //! Hand-built executables for debugger function-value assignment.
 
 use fpas_bytecode::{
-    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugType, DebugTypeId,
-    Executable, FunctionDebugInfo, FunctionFlags, FunctionId, FunctionInfo, GlobalInfo,
-    Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField, RecordLayout, Register,
-    ReturnConvention, SourceId, SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
+    CodeRange, Constant, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
+    DebugCaptureSource, DebugScope, DebugType, DebugTypeId, Executable, FunctionDebugInfo,
+    FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
+    NO_REGISTER, Opcode, RecordField, RecordLayout, Register, ReturnConvention, SourceId,
+    SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
 };
 
 pub(super) use super::*;
@@ -214,7 +215,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 1,
                 3,
                 ReturnConvention::Value,
-                FunctionDebugInfo::default(),
+                capturing_cell_debug(12, 2),
             ),
             routine(
                 5,
@@ -224,7 +225,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 1,
                 1,
                 ReturnConvention::Unit,
-                FunctionDebugInfo::default(),
+                capturing_cell_debug(12, 2),
             ),
             routine(1, 37, 38, 1, 0, 1, ReturnConvention::Unit, helper_debug),
             routine(
@@ -506,6 +507,22 @@ fn compiled_fixture_retains_portable_routine_parameter_and_result_metadata() {
         transform_parameters[0].register.get() < transform.register_count,
         "static method parameter register must be inside the function frame"
     );
+}
+
+fn capturing_cell_debug(binding: u32, ty: u32) -> FunctionDebugInfo {
+    FunctionDebugInfo {
+        scopes: vec![DebugScope {
+            id: 0,
+            parent: None,
+        }],
+        lexical_owner: Some(FunctionId::new(0)),
+        capture_sources: vec![DebugCaptureSource {
+            binding: DebugBindingId::new(binding),
+            ty: DebugTypeId::new(ty),
+            kind: DebugCaptureKind::Cell,
+        }],
+        ..Default::default()
+    }
 }
 
 pub(super) fn function_identity(left: &fpas_bytecode::Value, right: &fpas_bytecode::Value) -> bool {

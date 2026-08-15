@@ -213,6 +213,68 @@ fn linker_retains_result_only_debug_types() {
 }
 
 #[test]
+fn linker_relocates_lexical_owner_function_ids() {
+    let mut library = unit(true);
+    library.functions[0].register_count = 1;
+    library.functions[0].debug = fpas_unit::object::ObjectFunctionDebugInfo {
+        scopes: vec![fpas_unit::object::ObjectDebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: vec![fpas_unit::object::ObjectDebugBinding {
+            name: "captured".to_string(),
+            type_name: "dynamic".to_string(),
+            ty: 0,
+            register: 0,
+            kind: fpas_unit::object::ObjectDebugBindingKind::Local,
+            mutable: false,
+            scope: 0,
+            declaration: None,
+            hidden: false,
+            cell_backed: false,
+        }],
+        ..Default::default()
+    };
+    library.functions[1].capture_count = 1;
+    library.functions[1].register_count = 1;
+    library.functions[1].debug = fpas_unit::object::ObjectFunctionDebugInfo {
+        lexical_owner: Some(0),
+        capture_sources: vec![fpas_unit::object::ObjectCaptureSource {
+            binding: 0,
+            ty: 0,
+            kind: fpas_unit::object::ObjectCaptureKind::Value,
+        }],
+        ..Default::default()
+    };
+    let linked =
+        link_objects(std::slice::from_ref(&library), &program()).expect("capture provenance link");
+    let image = linked.executable();
+    let alpha = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("library.unit.alpha"))
+        .expect("alpha");
+    let zed_id = image
+        .functions
+        .iter()
+        .position(|function| image.strings.get(function.name) == Some("library.unit.zed"))
+        .expect("zed");
+    assert_eq!(alpha.capture_count, 1);
+    assert_eq!(
+        alpha
+            .debug
+            .lexical_owner
+            .map(|owner| usize::from(owner.get())),
+        Some(zed_id)
+    );
+    assert_eq!(alpha.debug.capture_sources.len(), 1);
+    assert_eq!(
+        alpha.debug.capture_sources[0].kind,
+        fpas_bytecode::DebugCaptureKind::Value
+    );
+}
+
+#[test]
 fn unit_initializers_are_prefixed_in_dependency_order_and_require_procedure_abi() {
     let mut library = unit(true);
     library.initializer = Some(0);

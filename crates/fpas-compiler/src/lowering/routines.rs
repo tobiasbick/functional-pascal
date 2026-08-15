@@ -10,7 +10,7 @@ use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
 
-use super::context::{Callable, FunctionInput, LoweringContext, unsupported};
+use super::context::{Callable, FunctionInput, LoweringContext, ParameterInput, unsupported};
 use super::types;
 
 pub(super) enum Routine<'a> {
@@ -22,6 +22,7 @@ pub(super) enum Routine<'a> {
 
 pub(super) struct LoweringInput<'a> {
     pub id: FunctionId,
+    pub runtime_name: &'a str,
     pub metadata: &'a AnalysisMetadata,
     pub callables: &'a BTreeMap<String, Callable>,
     pub globals: &'a BTreeMap<String, super::context::GlobalBinding>,
@@ -90,20 +91,50 @@ impl Routine<'_> {
             _ => self.name().to_string(),
         }
     }
+
+    fn capture_key(&self) -> usize {
+        match self {
+            Self::Function(function) | Self::RecordFunction(_, function) => {
+                fpas_sema::function_decl_lookup_key(function)
+            }
+            Self::Procedure(procedure) | Self::RecordProcedure(_, procedure) => {
+                fpas_sema::procedure_decl_lookup_key(procedure)
+            }
+        }
+    }
 }
 
-pub(super) fn collect<'a>(declarations: &'a [Decl], routines: &mut Vec<Routine<'a>>) {
+pub(super) fn collect<'a>(
+    declarations: &'a [Decl],
+    routines: &mut Vec<Routine<'a>>,
+    owners: &mut Vec<FunctionId>,
+    names: &mut Vec<String>,
+    parent: FunctionId,
+    parent_name: &str,
+) {
     for declaration in declarations {
         match declaration {
             Decl::Function(function) => {
+                let id = FunctionId::new(
+                    u32::try_from(routines.len().saturating_add(1)).unwrap_or(u32::MAX),
+                );
+                let name = nested_runtime_name(parent_name, &function.name);
                 routines.push(Routine::Function(function));
+                owners.push(parent);
+                names.push(name.clone());
                 let FuncBody::Block { nested, .. } = &function.body;
-                collect(nested, routines);
+                collect(nested, routines, owners, names, id, &name);
             }
             Decl::Procedure(procedure) => {
+                let id = FunctionId::new(
+                    u32::try_from(routines.len().saturating_add(1)).unwrap_or(u32::MAX),
+                );
+                let name = nested_runtime_name(parent_name, &procedure.name);
                 routines.push(Routine::Procedure(procedure));
+                owners.push(parent);
+                names.push(name.clone());
                 let FuncBody::Block { nested, .. } = &procedure.body;
-                collect(nested, routines);
+                collect(nested, routines, owners, names, id, &name);
             }
             Decl::TypeDef(definition) => {
                 if let TypeBody::Record(record) = &definition.body {
@@ -111,11 +142,16 @@ pub(super) fn collect<'a>(declarations: &'a [Decl], routines: &mut Vec<Routine<'
                         match method {
                             RecordMethod::Function(function)
                             | RecordMethod::StaticFunction(function) => {
-                                routines.push(Routine::RecordFunction(&definition.name, function))
+                                routines.push(Routine::RecordFunction(&definition.name, function));
+                                owners.push(parent);
+                                names.push(format!("{}.{}", definition.name, function.name));
                             }
                             RecordMethod::Procedure(procedure)
                             | RecordMethod::StaticProcedure(procedure) => {
-                                routines.push(Routine::RecordProcedure(&definition.name, procedure))
+                                routines
+                                    .push(Routine::RecordProcedure(&definition.name, procedure));
+                                owners.push(parent);
+                                names.push(format!("{}.{}", definition.name, procedure.name));
                             }
                         }
                     }
@@ -126,17 +162,29 @@ pub(super) fn collect<'a>(declarations: &'a [Decl], routines: &mut Vec<Routine<'
     }
 }
 
+fn nested_runtime_name(parent_name: &str, name: &str) -> String {
+    if parent_name.is_empty() {
+        name.to_string()
+    } else {
+        format!("{parent_name}.{name}")
+    }
+}
+
 pub(super) fn callable_table(
     routines: &[Routine<'_>],
+    owners: &[FunctionId],
+    names: &[String],
     types: &mut types::TypeTable,
     metadata: &AnalysisMetadata,
 ) -> Result<BTreeMap<String, Callable>, CompileError> {
     let mut table = BTreeMap::new();
+    let mut captures_by_function = BTreeMap::<FunctionId, Vec<super::context::CaptureInput>>::new();
     for (index, routine) in routines.iter().enumerate() {
         let function = FunctionId::new(
             u32::try_from(index.saturating_add(1))
                 .map_err(|_| unsupported(routine.span(), "function identifier overflow"))?,
         );
+        let parent = owners.get(index).copied().unwrap_or(FunctionId::new(0));
         let parameters = routine
             .params()
             .iter()
@@ -146,9 +194,13 @@ pub(super) fn callable_table(
             .collect::<Result<Vec<_>, _>>()?;
         let result = routine.result(types)?;
         let value_type = types.function_type(parameters.clone(), result, routine.span())?;
+        let parent_captures = captures_by_function
+            .get(&parent)
+            .cloned()
+            .unwrap_or_default();
         let captures = metadata
             .nested_routine_captures
-            .get(&routine.name().to_ascii_lowercase())
+            .get(&routine.capture_key())
             .map(|info| {
                 info.captures
                     .iter()
@@ -158,7 +210,13 @@ pub(super) fn callable_table(
                             routine.span().line,
                             routine.span().column,
                         )?;
-                        let kind = if capture.mutable {
+                        let reuses_cell = parent_captures.iter().any(|outer| {
+                            outer.name.eq_ignore_ascii_case(&capture.name)
+                                && outer.kind != fpas_ir::CaptureKind::Value
+                        });
+                        let kind = if reuses_cell {
+                            fpas_ir::CaptureKind::EnclosingCell
+                        } else if capture.mutable {
                             fpas_ir::CaptureKind::Cell
                         } else {
                             fpas_ir::CaptureKind::Value
@@ -173,14 +231,20 @@ pub(super) fn callable_table(
                             ty,
                             storage_ty,
                             kind,
+                            declaration: Some(capture.declaration.diagnostic_span_or_synthetic()),
                         })
                     })
                     .collect::<Result<Vec<_>, CompileError>>()
             })
             .transpose()?
             .unwrap_or_default();
+        captures_by_function.insert(function, captures.clone());
+        let runtime_name = names
+            .get(index)
+            .cloned()
+            .unwrap_or_else(|| routine.runtime_name());
         table.insert(
-            routine.runtime_name().to_ascii_lowercase(),
+            runtime_name.to_ascii_lowercase(),
             Callable {
                 function,
                 parameters,
@@ -200,6 +264,7 @@ pub(super) fn lower(
 ) -> Result<(Function, types::TypeTable), CompileError> {
     let LoweringInput {
         id,
+        runtime_name,
         metadata,
         callables,
         globals,
@@ -208,7 +273,7 @@ pub(super) fn lower(
         bound_method_targets,
         cell_names,
     } = input;
-    let runtime_name = routine.runtime_name();
+    let runtime_name = runtime_name.to_string();
     let captures = callables
         .get(&runtime_name.to_ascii_lowercase())
         .map(|callable| callable.captures.clone())
@@ -219,7 +284,11 @@ pub(super) fn lower(
         .map(|parameter| {
             types
                 .type_expr_with_params(&parameter.type_expr, routine.type_params())
-                .map(|ty| (parameter.name.clone(), ty))
+                .map(|ty| ParameterInput {
+                    name: parameter.name.clone(),
+                    ty,
+                    declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                })
         })
         .collect::<Result<Vec<_>, _>>()?;
     let mut context = LoweringContext::new(FunctionInput {

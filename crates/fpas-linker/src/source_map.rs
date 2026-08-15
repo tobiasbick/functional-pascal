@@ -3,8 +3,9 @@
 use std::collections::HashMap;
 
 use fpas_bytecode::{
-    DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation, FunctionDebugInfo,
-    InstructionAddress, Register, SequencePoint, SourceId, SourceMap, SourceRun,
+    DebugBinding, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, DebugScope,
+    DebugSourceLocation, FunctionDebugInfo, FunctionId, InstructionAddress, Register,
+    SequencePoint, SourceId, SourceMap, SourceRun,
 };
 use fpas_unit::object::{ObjectDebugBindingKind, ObjectDebugLocation, RelocatableObject};
 
@@ -15,6 +16,7 @@ use crate::strings::StringInterner;
 pub(super) fn merge(
     objects: &[&RelocatableObject],
     function_order: &[(usize, usize)],
+    function_maps: &[Vec<Option<FunctionId>>],
     code_starts: &[u32],
     code_bases: &[u32],
     debug_types: &DebugTypeIds,
@@ -69,6 +71,7 @@ pub(super) fn merge(
             object,
             function,
             object_index,
+            function_maps,
             code_bases[final_index],
             &mut source_paths,
             &mut source_ids,
@@ -93,6 +96,7 @@ fn merge_debug(
     object: &RelocatableObject,
     function: &fpas_unit::object::ObjectFunction,
     object_index: usize,
+    function_maps: &[Vec<Option<FunctionId>>],
     code_base: u32,
     source_paths: &mut Vec<fpas_bytecode::StringId>,
     source_ids: &mut HashMap<String, SourceId>,
@@ -168,6 +172,34 @@ fn merge_debug(
             .result_type
             .map(|ty| debug_types.translate(object_index, ty))
             .transpose()?,
+        lexical_owner: function
+            .debug
+            .lexical_owner
+            .map(|local| {
+                function_maps
+                    .get(object_index)
+                    .and_then(|map| map.get(local as usize).copied().flatten())
+                    .ok_or(LinkError::Overflow("lexical owner function ID"))
+            })
+            .transpose()?,
+        capture_sources: function
+            .debug
+            .capture_sources
+            .iter()
+            .map(|source| {
+                Ok(DebugCaptureSource {
+                    binding: fpas_bytecode::DebugBindingId::new(source.binding),
+                    ty: debug_types.translate(object_index, source.ty)?,
+                    kind: match source.kind {
+                        fpas_unit::object::ObjectCaptureKind::Value => DebugCaptureKind::Value,
+                        fpas_unit::object::ObjectCaptureKind::Cell => DebugCaptureKind::Cell,
+                        fpas_unit::object::ObjectCaptureKind::EnclosingCell => {
+                            DebugCaptureKind::EnclosingCell
+                        }
+                    },
+                })
+            })
+            .collect::<Result<Vec<_>, LinkError>>()?,
     })
 }
 

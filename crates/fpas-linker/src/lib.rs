@@ -270,6 +270,7 @@ pub fn link_objects(
     let (source_map, function_debug) = source_map::merge(
         &objects,
         &ids.functions.order,
+        &ids.functions.maps,
         &code_starts,
         &code_bases,
         &debug_type_ids,

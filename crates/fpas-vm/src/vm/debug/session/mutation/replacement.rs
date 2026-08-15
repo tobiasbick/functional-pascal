@@ -116,7 +116,7 @@ impl DebugSession {
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
         if super::super::super::mutation::is_function_type(self.executable.executable(), expected) {
             if catalog_fallback {
-                self.prepare_catalog_routine(expression, expected, limits)
+                self.prepare_catalog_routine(expression, expected, frame_id, limits)
             } else {
                 self.finish_function_replacement(
                     task_id,
@@ -173,8 +173,10 @@ impl DebugSession {
                     Err(error) if error.kind == DebugErrorKind::UnknownName => {
                         super::super::super::mutation::prepare_routine_value(
                             &self.executable,
+                            self.inspections.get(&task_id),
                             &name,
                             expected,
+                            frame_id,
                             limits,
                         )
                     }
@@ -182,7 +184,7 @@ impl DebugSession {
                 }
             }
             super::super::super::mutation::FunctionSource::Routine(_) => {
-                self.prepare_catalog_routine(expression, expected, limits)
+                self.prepare_catalog_routine(expression, expected, frame_id, limits)
             }
         }
     }
@@ -210,13 +212,19 @@ impl DebugSession {
         &self,
         expression: &DebugExpression,
         expected: fpas_bytecode::DebugTypeId,
+        frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
         let source = super::super::super::mutation::function_value_source(expression, limits)?;
+        let task_id = frame_id
+            .and_then(|frame_id| self.task_for_frame(Some(frame_id)).ok())
+            .unwrap_or(self.last_stop.task_id);
         super::super::super::mutation::prepare_routine_value(
             &self.executable,
+            self.inspections.get(&task_id),
             source.requested(),
             expected,
+            frame_id,
             limits,
         )
     }

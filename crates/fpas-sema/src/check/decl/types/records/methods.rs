@@ -25,6 +25,8 @@ pub(super) struct PendingMethodBody<'a> {
     pub(super) type_params: &'a [TypeParam],
     /// Resolved formal parameters, including an instance receiver when present.
     pub(super) params: Vec<ParamTy>,
+    /// Exact source declarations corresponding to `params`.
+    pub(super) param_spans: Vec<fpas_lexer::Span>,
     /// Resolved function result, or `None` for a procedure.
     pub(super) return_type: Option<Ty>,
     /// Parsed routine body checked after record registration completes.
@@ -202,6 +204,7 @@ impl Checker {
                 qualified_name: qualified,
                 type_params: &function.type_params,
                 params,
+                param_spans: function.params.iter().map(|param| param.span).collect(),
                 return_type: Some(return_ty),
                 body: &function.body,
             },
@@ -271,6 +274,7 @@ impl Checker {
                 qualified_name: qualified,
                 type_params: &function.type_params,
                 params,
+                param_spans: function.params.iter().map(|param| param.span).collect(),
                 return_type: Some(return_ty),
                 body: &function.body,
             },
@@ -331,6 +335,7 @@ impl Checker {
                 qualified_name: qualified,
                 type_params: &procedure.type_params,
                 params,
+                param_spans: procedure.params.iter().map(|param| param.span).collect(),
                 return_type: None,
                 body: &procedure.body,
             },
@@ -390,6 +395,7 @@ impl Checker {
                 qualified_name: qualified,
                 type_params: &procedure.type_params,
                 params,
+                param_spans: procedure.params.iter().map(|param| param.span).collect(),
                 return_type: None,
                 body: &procedure.body,
             },

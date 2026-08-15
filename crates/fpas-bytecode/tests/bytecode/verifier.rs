@@ -1,8 +1,8 @@
 use fpas_bytecode::{
-    CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
-    DebugType, DebugTypeId, EnumTypeId, FunctionId, GlobalInfo, Instruction, InstructionAddress,
-    NO_REGISTER, Opcode, RecordTypeId, Register, ReturnConvention, SequencePoint, SourceId,
-    StringId, ValidationErrorKind,
+    CodeRange, Constant, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
+    DebugCaptureSource, DebugScope, DebugSourceLocation, DebugType, DebugTypeId, EnumTypeId,
+    FunctionId, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordTypeId,
+    Register, ReturnConvention, SequencePoint, SourceId, StringId, ValidationErrorKind,
 };
 
 use super::support::{
@@ -93,6 +93,113 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
     assert!(matches!(
         error_kind(duplicate),
         ValidationErrorKind::DebugSequenceOrder { .. }
+    ));
+}
+
+fn capturing_executable() -> fpas_bytecode::Executable {
+    let mut executable = minimal_executable();
+    executable.code.push(return_unit());
+    executable.functions[0].register_count = 1;
+    executable.functions[0].debug.scopes = vec![DebugScope {
+        id: 0,
+        parent: None,
+    }];
+    executable.functions[0].debug.bindings = vec![DebugBinding {
+        name: StringId::new(0),
+        type_name: StringId::new(0),
+        ty: DebugTypeId::new(0),
+        register: Register::new(0).expect("register"),
+        kind: DebugBindingKind::Local,
+        mutable: false,
+        scope: 0,
+        declaration: None,
+        hidden: false,
+        cell_backed: false,
+    }];
+    executable.functions.push(fpas_bytecode::FunctionInfo {
+        name: StringId::new(0),
+        code: CodeRange::new(InstructionAddress::new(1), InstructionAddress::new(2)),
+        arity: 0,
+        capture_count: 1,
+        register_count: 1,
+        return_convention: ReturnConvention::Unit,
+        flags: fpas_bytecode::FunctionFlags::default(),
+        debug: fpas_bytecode::FunctionDebugInfo {
+            lexical_owner: Some(FunctionId::new(0)),
+            capture_sources: vec![DebugCaptureSource {
+                binding: DebugBindingId::new(0),
+                ty: DebugTypeId::new(0),
+                kind: DebugCaptureKind::Value,
+            }],
+            ..fpas_bytecode::FunctionDebugInfo::default()
+        },
+    });
+    executable.source_map.runs.push(fpas_bytecode::SourceRun {
+        instruction_start: InstructionAddress::new(1),
+        source: SourceId::new(0),
+        line: 2,
+        column: 1,
+    });
+    executable
+}
+
+#[test]
+fn capture_provenance_count_owner_binding_and_kind_are_checked() {
+    capturing_executable()
+        .verify()
+        .expect("valid capture provenance");
+
+    let mut missing_owner = capturing_executable();
+    missing_owner.functions[1].debug.lexical_owner = None;
+    assert!(matches!(
+        error_kind(missing_owner),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut count = capturing_executable();
+    count.functions[1].debug.capture_sources.clear();
+    assert!(matches!(
+        error_kind(count),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut binding = capturing_executable();
+    binding.functions[1].debug.capture_sources[0].binding = DebugBindingId::new(9);
+    assert!(matches!(
+        error_kind(binding),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut cell = capturing_executable();
+    cell.functions[1].debug.capture_sources[0].kind = DebugCaptureKind::Cell;
+    assert!(matches!(
+        error_kind(cell),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut extra = minimal_executable();
+    extra.functions[0].debug.lexical_owner = Some(FunctionId::new(0));
+    assert!(matches!(
+        error_kind(extra),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut hidden = capturing_executable();
+    hidden.functions[0].debug.bindings[0].hidden = true;
+    assert!(matches!(
+        error_kind(hidden),
+        ValidationErrorKind::DebugCaptureProvenance { .. }
+    ));
+
+    let mut ty = capturing_executable();
+    ty.functions[1].debug.capture_sources[0].ty = DebugTypeId::new(9);
+    assert!(matches!(
+        error_kind(ty),
+        ValidationErrorKind::TableReference {
+            table: "debug types",
+            operand: "capture source type",
+            ..
+        } | ValidationErrorKind::DebugCaptureProvenance { .. }
     ));
 }
 

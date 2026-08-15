@@ -333,6 +333,15 @@ pub enum ValidationErrorKind {
         /// Number of field types.
         types: usize,
     },
+    /// Debugger capture provenance is incomplete, ordered wrongly, or refers to an invalid owner.
+    DebugCaptureProvenance {
+        /// Human-readable invariant that failed.
+        reason: &'static str,
+        /// Related raw identifier when one exists.
+        actual: u32,
+        /// Expected identifier, count, or exclusive table length.
+        expected: u32,
+    },
 }
 
 impl fmt::Display for ValidationError {

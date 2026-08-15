@@ -35,6 +35,8 @@ pub enum EntityKind {
     Intrinsic,
     /// Function-local lexical debugger scope.
     DebugScope,
+    /// Function-local debugger binding identity.
+    DebugBinding,
 }
 
 /// Identifies where a validation error occurred.
@@ -174,6 +176,13 @@ pub enum ValidationErrorKind {
     },
     /// A fixed-width identifier or collection count would overflow.
     Conversion(IdConversionError),
+    /// Debugger capture provenance is incomplete, ordered wrongly, or refers to an invalid owner.
+    CaptureProvenance {
+        /// Human-readable invariant that failed.
+        reason: &'static str,
+        /// Related raw identifier when one exists.
+        actual: u32,
+    },
 }
 
 /// A structured typed-IR validation failure.

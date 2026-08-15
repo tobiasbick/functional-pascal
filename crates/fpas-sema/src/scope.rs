@@ -1,4 +1,5 @@
 use crate::types::Ty;
+use fpas_lexer::Span;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 
@@ -52,6 +53,7 @@ struct Scope {
 struct ScopedSymbol {
     original_name: String,
     symbol: Symbol,
+    declaration: Option<Span>,
 }
 
 impl Scope {
@@ -108,7 +110,23 @@ impl ScopeStack {
     /// Returns false if already defined in the same scope.
     pub fn define(&mut self, name: &str, symbol: Symbol) -> bool {
         let scope_index = self.scopes.len() - 1;
-        Self::define_in_scope(&mut self.scopes[scope_index], name, symbol)
+        Self::define_in_scope(&mut self.scopes[scope_index], name, symbol, None)
+    }
+
+    /// Define a source binding in the current scope with its exact declaration span.
+    pub fn define_with_declaration(
+        &mut self,
+        name: &str,
+        symbol: Symbol,
+        declaration: Span,
+    ) -> bool {
+        let scope_index = self.scopes.len() - 1;
+        Self::define_in_scope(
+            &mut self.scopes[scope_index],
+            name,
+            symbol,
+            Some(declaration),
+        )
     }
 
     /// Define in the outermost (program) scope. Used for `Std.*` short aliases so nested checking
@@ -116,10 +134,15 @@ impl ScopeStack {
     ///
     /// **Documentation:** `docs/pascal/program-structure/units.md` (from the repository root).
     pub fn define_in_root(&mut self, name: &str, symbol: Symbol) -> bool {
-        Self::define_in_scope(&mut self.scopes[0], name, symbol)
+        Self::define_in_scope(&mut self.scopes[0], name, symbol, None)
     }
 
-    fn define_in_scope(scope: &mut Scope, name: &str, symbol: Symbol) -> bool {
+    fn define_in_scope(
+        scope: &mut Scope,
+        name: &str,
+        symbol: Symbol,
+        declaration: Option<Span>,
+    ) -> bool {
         let canonical_name = canonical_symbol_name(name);
         if scope.symbols.contains_key(&canonical_name) {
             return false;
@@ -129,6 +152,7 @@ impl ScopeStack {
             ScopedSymbol {
                 original_name: name.to_string(),
                 symbol,
+                declaration,
             },
         );
         true
@@ -140,12 +164,29 @@ impl ScopeStack {
         self.scopes[0].symbols.remove(&canonical_name).is_some()
     }
 
+    /// Remove a symbol from the innermost scope.
+    pub fn remove_from_current(&mut self, name: &str) -> bool {
+        let canonical_name = canonical_symbol_name(name);
+        self.scopes
+            .last_mut()
+            .is_some_and(|scope| scope.symbols.remove(&canonical_name).is_some())
+    }
+
     /// Look up a symbol and the scope index where it was found (0 = program root).
     pub fn lookup_with_scope(&self, name: &str) -> Option<(usize, &Symbol)> {
+        self.lookup_with_scope_and_declaration(name)
+            .map(|(scope, symbol, _)| (scope, symbol))
+    }
+
+    /// Look up a symbol together with its scope and exact source declaration, when present.
+    pub fn lookup_with_scope_and_declaration(
+        &self,
+        name: &str,
+    ) -> Option<(usize, &Symbol, Option<Span>)> {
         let canonical_name = canonical_symbol_name(name);
         for (index, scope) in self.scopes.iter().enumerate().rev() {
             if let Some(sym) = scope.symbols.get(&canonical_name) {
-                return Some((index, &sym.symbol));
+                return Some((index, &sym.symbol, sym.declaration));
             }
         }
         None
@@ -269,5 +310,23 @@ mod tests {
             ),
             "root scope must remain usable after extra pop_scope"
         );
+    }
+
+    #[test]
+    fn remove_from_current_drops_only_the_innermost_symbol() {
+        let mut stack = ScopeStack::new();
+        stack.push_scope();
+        assert!(stack.define(
+            "offset",
+            Symbol {
+                ty: Ty::Integer,
+                mutable: false,
+                kind: SymbolKind::Var,
+                task_bound: false,
+            }
+        ));
+        assert!(stack.remove_from_current("Offset"));
+        assert!(stack.lookup_current("offset").is_none());
+        assert!(!stack.remove_from_current("offset"));
     }
 }

@@ -173,6 +173,7 @@ pub(super) fn mixed_function_over_procedure_executable() -> VerifiedExecutable {
                     bindings: vec![binding(5, 0, 0, DebugBindingKind::Local, true)],
                     sequence_points: vec![point(0, 1)],
                     result_type: Some(DebugTypeId::new(1)),
+                    ..Default::default()
                 },
             ),
             named_routine(
@@ -211,6 +212,7 @@ fn root_debug() -> FunctionDebugInfo {
         ],
         sequence_points: vec![point(0, 1), point(2, 2)],
         result_type: Some(DebugTypeId::new(1)),
+        ..Default::default()
     }
 }
 
@@ -227,6 +229,7 @@ fn branch_debug() -> FunctionDebugInfo {
         ],
         sequence_points: vec![point(4, 10), point(6, 11)],
         result_type: Some(DebugTypeId::new(0)),
+        ..Default::default()
     }
 }
 
@@ -242,6 +245,7 @@ fn leaf_debug() -> FunctionDebugInfo {
         ],
         sequence_points: vec![point(8, 20)],
         result_type: Some(DebugTypeId::new(0)),
+        ..Default::default()
     }
 }
 

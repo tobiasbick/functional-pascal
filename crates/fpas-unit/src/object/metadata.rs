@@ -154,6 +154,16 @@ pub struct ObjectFunctionDebugInfo {
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     #[serde(default)]
     pub result_type: Option<u32>,
+    /// Object-local lexical owner function index; absent when the function has no captures.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    #[serde(default)]
+    pub lexical_owner: Option<u32>,
+    /// Capture identity in runtime closure ABI order, using object-local binding indexes.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    #[serde(default)]
+    pub capture_sources: Vec<ObjectCaptureSource>,
 }
 
 /// One function-local lexical scope.
@@ -221,4 +231,30 @@ pub struct ObjectSequencePoint {
     pub location: ObjectDebugLocation,
     /// Innermost active lexical scope.
     pub scope: u32,
+}
+
+/// Object-local capture identity for one nested-function capture.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectCaptureSource {
+    /// Object-local owner binding index.
+    pub binding: u32,
+    /// Object-local portable debugger type identifier.
+    pub ty: u32,
+    /// Representation mandated by semantic capture analysis.
+    pub kind: ObjectCaptureKind,
+}
+
+/// Capture representation stored in relocatable object metadata.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum ObjectCaptureKind {
+    /// The closure captures an immutable value.
+    Value,
+    /// The closure captures a mutable cell.
+    Cell,
+    /// The closure reuses an enclosing mutable cell.
+    EnclosingCell,
 }

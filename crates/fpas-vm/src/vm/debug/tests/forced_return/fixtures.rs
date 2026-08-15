@@ -74,6 +74,7 @@ pub(super) fn spawn_then_call_executable() -> VerifiedExecutable {
             bindings: vec![binding(5, 0, 0, DebugBindingKind::Local, true)],
             sequence_points: vec![point(0, 1), point(3, 2)],
             result_type: Some(DebugTypeId::new(1)),
+            ..Default::default()
         },
     );
     root.flags.uses_spawn_tasks = true;
@@ -199,6 +200,7 @@ fn nested_executable(kind: ReturnKind) -> VerifiedExecutable {
             bindings: vec![binding(5, 0, 1, DebugBindingKind::Local, true)],
             sequence_points: vec![point(0, 1), point(1, 2)],
             result_type: Some(DebugTypeId::new(0)),
+            ..Default::default()
         },
         _ => FunctionDebugInfo {
             scopes: vec![DebugScope {
@@ -211,6 +213,7 @@ fn nested_executable(kind: ReturnKind) -> VerifiedExecutable {
             ],
             sequence_points: vec![point(0, 1), point(2, 2)],
             result_type: Some(DebugTypeId::new(1)),
+            ..Default::default()
         },
     };
     executable(
@@ -256,6 +259,7 @@ fn compute_function(kind: ReturnKind, start: u32) -> FunctionInfo {
             ],
             sequence_points: vec![point(start, 10), point(start + 1, 11)],
             result_type,
+            ..Default::default()
         },
     }
 }
@@ -277,6 +281,7 @@ fn announce_function() -> FunctionInfo {
             bindings: Vec::new(),
             sequence_points: vec![point(2, 10)],
             result_type: Some(DebugTypeId::new(0)),
+            ..Default::default()
         },
     }
 }
@@ -298,6 +303,7 @@ fn collect_function() -> FunctionInfo {
             bindings: Vec::new(),
             sequence_points: vec![point(2, 10)],
             result_type: Some(DebugTypeId::new(1)),
+            ..Default::default()
         },
     }
 }

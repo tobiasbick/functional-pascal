@@ -93,6 +93,7 @@ impl Checker {
         qualified_name: &str,
         type_params: &[TypeParam],
         params: &[ParamTy],
+        param_spans: &[fpas_lexer::Span],
         return_type: Option<Ty>,
         body: &FuncBody,
     ) {
@@ -118,8 +119,8 @@ impl Checker {
             );
         }
 
-        for param in params {
-            self.scopes.define(
+        for (param, span) in params.iter().zip(param_spans) {
+            self.scopes.define_with_declaration(
                 &param.name,
                 Symbol {
                     ty: param.ty.clone(),
@@ -127,6 +128,7 @@ impl Checker {
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },
+                *span,
             );
         }
         let previous_ctx = self.scopes.function_ctx.take();

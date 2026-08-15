@@ -1,7 +1,8 @@
 use fpas_bytecode::{
-    CodeRange, Constant, Executable, FunctionFlags, FunctionId, FunctionInfo, Instruction,
-    InstructionAddress, Opcode, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
-    StringTable, Value,
+    CodeRange, Constant, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
+    DebugCaptureSource, DebugScope, DebugTypeId, Executable, FunctionFlags, FunctionId,
+    FunctionInfo, Instruction, InstructionAddress, Opcode, Register, ReturnConvention, SourceId,
+    SourceMap, SourceRun, StringId, StringTable, Value,
 };
 use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
@@ -35,25 +36,27 @@ pub(super) fn image(
         .map(|index| format!("f{index}"))
         .collect::<Vec<_>>();
     names.push("register-calls.fpas".to_string());
+    let mut functions = specs
+        .iter()
+        .enumerate()
+        .map(|(index, spec)| FunctionInfo {
+            name: StringId::try_from_index(index).expect("test name id must fit"),
+            code: CodeRange::new(
+                InstructionAddress::new(spec.start),
+                InstructionAddress::new(spec.end),
+            ),
+            arity: spec.arity,
+            capture_count: spec.captures,
+            register_count: spec.registers,
+            return_convention: spec.returns,
+            flags: FunctionFlags::default(),
+            debug: fpas_bytecode::FunctionDebugInfo::default(),
+        })
+        .collect::<Vec<_>>();
+    attach_cell_capture_provenance(&mut functions);
     Executable {
         code,
-        functions: specs
-            .iter()
-            .enumerate()
-            .map(|(index, spec)| FunctionInfo {
-                name: StringId::try_from_index(index).expect("test name id must fit"),
-                code: CodeRange::new(
-                    InstructionAddress::new(spec.start),
-                    InstructionAddress::new(spec.end),
-                ),
-                arity: spec.arity,
-                capture_count: spec.captures,
-                register_count: spec.registers,
-                return_convention: spec.returns,
-                flags: FunctionFlags::default(),
-                debug: fpas_bytecode::FunctionDebugInfo::default(),
-            })
-            .collect(),
+        functions,
         constants,
         strings: StringTable::new(names),
         globals: Vec::new(),
@@ -77,6 +80,49 @@ pub(super) fn image(
     }
     .verify()
     .expect("test executable must verify")
+}
+
+fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
+    let slots = functions
+        .iter()
+        .map(|function| function.capture_count)
+        .max()
+        .unwrap_or(0);
+    if slots == 0 {
+        return;
+    }
+    functions[0].register_count = functions[0].register_count.max(slots);
+    functions[0].debug.scopes = vec![DebugScope {
+        id: 0,
+        parent: None,
+    }];
+    functions[0].debug.bindings = (0..slots)
+        .map(|index| DebugBinding {
+            name: StringId::new(0),
+            type_name: StringId::new(0),
+            ty: DebugTypeId::new(0),
+            register: Register::new(index).expect("register"),
+            kind: DebugBindingKind::Local,
+            mutable: true,
+            scope: 0,
+            declaration: None,
+            hidden: false,
+            cell_backed: true,
+        })
+        .collect();
+    for function in functions.iter_mut().skip(1) {
+        if function.capture_count == 0 {
+            continue;
+        }
+        function.debug.lexical_owner = Some(FunctionId::new(0));
+        function.debug.capture_sources = (0..function.capture_count)
+            .map(|index| DebugCaptureSource {
+                binding: DebugBindingId::new(u32::from(index)),
+                ty: DebugTypeId::new(0),
+                kind: DebugCaptureKind::Cell,
+            })
+            .collect();
+    }
 }
 
 #[test]

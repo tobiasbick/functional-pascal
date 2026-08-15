@@ -1,6 +1,8 @@
 //! Source bindings, scopes, and sequence points used by debugger adapters.
 
-use crate::{DebugTypeId, InstructionAddress, Register, SourceId, StringId};
+use crate::{
+    DebugBindingId, DebugTypeId, FunctionId, InstructionAddress, Register, SourceId, StringId,
+};
 
 /// Complete debugger metadata for one executable function.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -16,6 +18,40 @@ pub struct FunctionDebugInfo {
     /// `None` means the function has no retained result metadata, not `unit` and not
     /// `Dynamic`. **Documentation:** `docs/pascal/tools/debugger.md`
     pub result_type: Option<DebugTypeId>,
+    /// Lexical owner of a capturing function; absent when the function has no captures.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    pub lexical_owner: Option<FunctionId>,
+    /// Capture identity in runtime closure ABI order.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    pub capture_sources: Vec<DebugCaptureSource>,
+}
+
+/// Capture representation recorded for debugger construction and verification.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DebugCaptureKind {
+    /// The closure captures an immutable value.
+    Value,
+    /// The closure captures a mutable cell.
+    Cell,
+    /// The closure reuses an enclosing mutable cell.
+    EnclosingCell,
+}
+
+/// One exact owner binding captured by a nested function, in closure ABI order.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct DebugCaptureSource {
+    /// Dense owner-function binding identity. Runtime names are not a substitute.
+    pub binding: DebugBindingId,
+    /// Portable type of the captured value.
+    pub ty: DebugTypeId,
+    /// Representation mandated by semantic capture analysis.
+    pub kind: DebugCaptureKind,
 }
 
 /// One function-local lexical scope.

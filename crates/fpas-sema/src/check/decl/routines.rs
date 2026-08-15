@@ -7,11 +7,11 @@ use super::super::closures::{
     CaptureBinding, NestedRoutineCaptureInfo, collect_captures, task_bound_from_captures,
 };
 use super::Checker;
-use crate::scope::{FunctionCtx, Symbol, SymbolKind, canonical_symbol_name};
+use crate::scope::{FunctionCtx, Symbol, SymbolKind};
 use crate::types::{FunctionTy, ParamTy, ProcedureTy, Ty, TypeConstraint};
 use fpas_diagnostics::codes::SEMA_DUPLICATE_DECLARATION;
 use fpas_lexer::Span;
-use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl};
+use fpas_parser::{FuncBody, FunctionDecl, ProcedureDecl, Stmt};
 
 impl Checker {
     /// Check function declarations against `docs/pascal/language/functions/README.md`.
@@ -50,11 +50,16 @@ impl Checker {
             &f.name,
             &f.type_params,
             &params,
+            &f.params,
             Some(return_ty),
             &f.body,
         );
         if is_nested {
-            self.record_nested_routine_captures(&f.name, captures);
+            self.record_nested_routine_captures(
+                &f.name,
+                crate::function_decl_lookup_key(f),
+                captures,
+            );
         }
     }
 
@@ -92,11 +97,16 @@ impl Checker {
             &p.name,
             &p.type_params,
             &params,
+            &p.params,
             None,
             &p.body,
         );
         if is_nested {
-            self.record_nested_routine_captures(&p.name, captures);
+            self.record_nested_routine_captures(
+                &p.name,
+                crate::procedure_decl_lookup_key(p),
+                captures,
+            );
         }
     }
 
@@ -122,6 +132,7 @@ impl Checker {
         name: &str,
         type_params: &[fpas_parser::TypeParam],
         params: &[ParamTy],
+        source_params: &[fpas_parser::FormalParam],
         return_type: Option<Ty>,
         body: &FuncBody,
     ) -> Vec<CaptureBinding> {
@@ -146,8 +157,8 @@ impl Checker {
             );
         }
 
-        for p in params {
-            self.scopes.define(
+        for (p, source) in params.iter().zip(source_params) {
+            self.scopes.define_with_declaration(
                 &p.name,
                 Symbol {
                     ty: p.ty.clone(),
@@ -155,6 +166,7 @@ impl Checker {
                     kind: SymbolKind::Param,
                     task_bound: false,
                 },
+                source.span,
             );
         }
 
@@ -170,8 +182,12 @@ impl Checker {
             owner_unit,
         });
 
+        let hoisted = self.hoist_body_locals(stmts);
         for decl in nested {
             self.check_decl(decl);
+        }
+        for name in &hoisted {
+            self.scopes.remove_from_current(name);
         }
         for stmt in stmts {
             self.check_stmt(stmt);
@@ -190,10 +206,50 @@ impl Checker {
         captures
     }
 
-    fn record_nested_routine_captures(&mut self, name: &str, captures: Vec<CaptureBinding>) {
+    /// Make function-body locals visible to nested routine bodies without changing
+    /// sequential sibling visibility in the enclosing body.
+    ///
+    /// Nested declarations are checked before body statements, but
+    /// `docs/pascal/language/functions/closures.md` lets named nested routines capture
+    /// enclosing locals. Locals nested inside inner `begin` blocks stay hidden.
+    fn hoist_body_locals(&mut self, stmts: &[Stmt]) -> Vec<String> {
+        let mut names = Vec::new();
+        for stmt in stmts {
+            let (variable, mutable) = match stmt {
+                Stmt::Var(variable) => (variable, false),
+                Stmt::MutableVar(variable) => (variable, true),
+                _ => continue,
+            };
+            let ty = self.resolve_type_expr(&variable.type_expr);
+            let defined = self.scopes.define_with_declaration(
+                &variable.name,
+                Symbol {
+                    ty,
+                    mutable,
+                    kind: SymbolKind::Var,
+                    task_bound: false,
+                },
+                variable.span,
+            );
+            if defined {
+                names.push(variable.name.clone());
+            }
+        }
+        names
+    }
+
+    fn record_nested_routine_captures(
+        &mut self,
+        name: &str,
+        key: usize,
+        captures: Vec<CaptureBinding>,
+    ) {
         let task_bound = task_bound_from_captures(&captures);
+        if let Some(symbol) = self.scopes.lookup_mut(name) {
+            symbol.task_bound = task_bound;
+        }
         self.nested_routine_captures.insert(
-            canonical_symbol_name(name),
+            key,
             NestedRoutineCaptureInfo {
                 captures,
                 task_bound,

@@ -281,6 +281,13 @@ fn apply_imports(
         })
         .map(|(_, function)| function.clone())
         .collect();
+    for function in &mut object.functions {
+        if let Some(owner) = function.debug.lexical_owner {
+            function.debug.lexical_owner = usize::try_from(owner)
+                .ok()
+                .and_then(|index| function_map.get(index).copied().flatten());
+        }
+    }
     object.globals = object
         .globals
         .iter()

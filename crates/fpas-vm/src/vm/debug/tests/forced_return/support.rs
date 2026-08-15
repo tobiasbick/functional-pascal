@@ -50,6 +50,7 @@ pub(super) fn debug_info(result: u32, points: &[(u32, u32)]) -> FunctionDebugInf
             .map(|(instruction, line)| point(*instruction, *line))
             .collect(),
         result_type: Some(DebugTypeId::new(result)),
+        ..Default::default()
     }
 }
 

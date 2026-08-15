@@ -10,9 +10,9 @@ mod validate;
 mod value;
 
 pub use debug::{
-    DebugBinding, DebugBindingKind, DebugEffectSet, DebugScope, DebugSourceLocation, DebugType,
-    FunctionDebugInfo, FunctionEffectSummary, SequencePoint, analyze_debug_effects,
-    intrinsic_debug_effects,
+    DebugBinding, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, DebugEffectSet,
+    DebugScope, DebugSourceLocation, DebugType, FunctionDebugInfo, FunctionEffectSummary,
+    SequencePoint, analyze_debug_effects, intrinsic_debug_effects,
 };
 pub use executable::{Executable, VerifiedExecutable};
 pub use fpas_diagnostics::SourceLocation;
@@ -31,9 +31,9 @@ pub use metadata::{
     SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
-    ConstantId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId, InstructionAddress,
-    IntrinsicId, NO_REGISTER, OperandError, RecordFieldId, RecordTypeId, Register, SourceId,
-    StringId,
+    ConstantId, DebugBindingId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId,
+    InstructionAddress, IntrinsicId, NO_REGISTER, OperandError, RecordFieldId, RecordTypeId,
+    Register, SourceId, StringId,
 };
 pub use validate::{ValidationError, ValidationErrorKind};
 pub use value::{

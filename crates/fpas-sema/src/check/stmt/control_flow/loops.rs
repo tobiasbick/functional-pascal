@@ -32,7 +32,7 @@ impl Checker {
         self.check_type_compat(&var_ty, &end_ty, "for loop end", span);
 
         self.scopes.push_scope();
-        self.scopes.define(
+        self.scopes.define_with_declaration(
             var_name,
             Symbol {
                 ty: var_ty,
@@ -40,6 +40,7 @@ impl Checker {
                 kind: SymbolKind::ForVar,
                 task_bound: false,
             },
+            span,
         );
 
         self.scopes.loop_depth += 1;
@@ -80,7 +81,7 @@ impl Checker {
         }
 
         self.scopes.push_scope();
-        self.scopes.define(
+        self.scopes.define_with_declaration(
             var_name,
             Symbol {
                 ty: var_ty,
@@ -88,6 +89,7 @@ impl Checker {
                 kind: SymbolKind::ForVar,
                 task_bound: false,
             },
+            span,
         );
 
         self.scopes.loop_depth += 1;

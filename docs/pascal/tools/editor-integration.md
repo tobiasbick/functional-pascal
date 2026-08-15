@@ -117,10 +117,13 @@ Dictionary entry values and existing array elements remain editable through
 standard variable mutation; structure changes and string characters use the
 explicit commands. A function-typed Variables or Watch target can be replaced
 by copying one visible binding that already holds a compatible non-task-bound
-function value, for example `Backup`, or by assigning a unique non-capturing
-routine name such as `AddTwo` or `Math.Transform`. A simple name prefers a
-visible binding; capturing routines, new closure
-syntax, task-bound functions, and inactive-variant function payloads remain
+function value, for example `Backup`, or by assigning a unique executable
+routine name such as `AddTwo`, `Math.Transform`, `AddBase`, or
+`MakeAdder.AddBase`. Named nested routines materialize only when every direct
+capture is an immutable initialized value in the selected lexical-owner frame.
+A simple name prefers a
+visible binding; anonymous closure syntax, mutable `Cell` or `EnclosingCell`
+captures, task-bound functions, and inactive-variant function payloads remain
 rejected. A task-typed Variables or Watch target can be replaced by copying one
 visible binding that already holds a compatible task handle, for example
 `Pending`. The editor uses the standard Variables/Watch edit flow; it does not

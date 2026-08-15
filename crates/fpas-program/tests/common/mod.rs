@@ -29,53 +29,79 @@ pub fn program_image() -> ProgramImage {
         "local",
         "Integer",
         "property",
+        "nested",
     ]
     .into_iter()
     .map(str::to_string)
     .collect();
     let executable = Executable {
-        code: vec![Instruction::abc(Opcode::Return, NO_REGISTER, 0, 0, 0).expect("return")],
-        functions: vec![FunctionInfo {
-            name: StringId::new(0),
-            code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
-            arity: 0,
-            capture_count: 0,
-            register_count: 1,
-            return_convention: ReturnConvention::Unit,
-            flags: FunctionFlags::default(),
-            debug: FunctionDebugInfo {
-                scopes: vec![DebugScope {
-                    id: 0,
-                    parent: None,
-                }],
-                bindings: vec![DebugBinding {
-                    name: StringId::new(8),
-                    type_name: StringId::new(9),
-                    ty: fpas_bytecode::DebugTypeId::new(2),
-                    register: Register::new(0).expect("register"),
-                    kind: DebugBindingKind::Local,
-                    mutable: true,
-                    scope: 0,
-                    declaration: Some(DebugSourceLocation {
-                        source: SourceId::new(0),
-                        line: 3,
-                        column: 1,
-                    }),
-                    hidden: false,
-                    cell_backed: false,
-                }],
-                sequence_points: vec![SequencePoint {
-                    instruction: InstructionAddress::new(0),
-                    location: DebugSourceLocation {
-                        source: SourceId::new(0),
-                        line: 3,
-                        column: 5,
-                    },
-                    scope: 0,
-                }],
-                result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
+        code: vec![
+            Instruction::abc(Opcode::Return, NO_REGISTER, 0, 0, 0).expect("return"),
+            Instruction::abc(Opcode::Return, 0, 0, 0, 0).expect("nested return"),
+        ],
+        functions: vec![
+            FunctionInfo {
+                name: StringId::new(0),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
+                arity: 0,
+                capture_count: 0,
+                register_count: 1,
+                return_convention: ReturnConvention::Unit,
+                flags: FunctionFlags::default(),
+                debug: FunctionDebugInfo {
+                    scopes: vec![DebugScope {
+                        id: 0,
+                        parent: None,
+                    }],
+                    bindings: vec![DebugBinding {
+                        name: StringId::new(8),
+                        type_name: StringId::new(9),
+                        ty: fpas_bytecode::DebugTypeId::new(2),
+                        register: Register::new(0).expect("register"),
+                        kind: DebugBindingKind::Local,
+                        mutable: true,
+                        scope: 0,
+                        declaration: Some(DebugSourceLocation {
+                            source: SourceId::new(0),
+                            line: 3,
+                            column: 1,
+                        }),
+                        hidden: false,
+                        cell_backed: false,
+                    }],
+                    sequence_points: vec![SequencePoint {
+                        instruction: InstructionAddress::new(0),
+                        location: DebugSourceLocation {
+                            source: SourceId::new(0),
+                            line: 3,
+                            column: 5,
+                        },
+                        scope: 0,
+                    }],
+                    result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
+                    ..FunctionDebugInfo::default()
+                },
             },
-        }],
+            FunctionInfo {
+                name: StringId::new(11),
+                code: CodeRange::new(InstructionAddress::new(1), InstructionAddress::new(2)),
+                arity: 0,
+                capture_count: 1,
+                register_count: 1,
+                return_convention: ReturnConvention::Value,
+                flags: FunctionFlags::default(),
+                debug: FunctionDebugInfo {
+                    lexical_owner: Some(FunctionId::new(0)),
+                    capture_sources: vec![fpas_bytecode::DebugCaptureSource {
+                        binding: fpas_bytecode::DebugBindingId::new(0),
+                        ty: fpas_bytecode::DebugTypeId::new(2),
+                        kind: fpas_bytecode::DebugCaptureKind::Value,
+                    }],
+                    result_type: Some(fpas_bytecode::DebugTypeId::new(2)),
+                    ..FunctionDebugInfo::default()
+                },
+            },
+        ],
         constants: vec![
             Constant::Integer(i64::MIN),
             Constant::Real(0.0_f64.to_bits()),
@@ -145,12 +171,20 @@ pub fn program_image() -> ProgramImage {
         ],
         source_map: SourceMap {
             sources: vec![StringId::new(1)],
-            runs: vec![SourceRun {
-                instruction_start: InstructionAddress::new(0),
-                source: SourceId::new(0),
-                line: 3,
-                column: 5,
-            }],
+            runs: vec![
+                SourceRun {
+                    instruction_start: InstructionAddress::new(0),
+                    source: SourceId::new(0),
+                    line: 3,
+                    column: 5,
+                },
+                SourceRun {
+                    instruction_start: InstructionAddress::new(1),
+                    source: SourceId::new(0),
+                    line: 8,
+                    column: 5,
+                },
+            ],
         },
         entry: FunctionId::new(0),
     }

@@ -79,7 +79,7 @@ impl Checker {
             {
                 self.mark_scalar_guard_binding(&arm.labels[0]);
                 self.scopes.push_scope();
-                self.scopes.define(
+                self.scopes.define_with_declaration(
                     binding_name,
                     Symbol {
                         ty: case_ty.clone(),
@@ -87,6 +87,7 @@ impl Checker {
                         kind: SymbolKind::Var,
                         task_bound: false,
                     },
+                    arm.span,
                 );
                 self.check_guard(&arm.guard, span);
                 self.check_stmt(&arm.body);
@@ -107,7 +108,7 @@ impl Checker {
             if !bindings.is_empty() {
                 self.scopes.push_scope();
                 for (name, ty) in &bindings {
-                    self.scopes.define(
+                    self.scopes.define_with_declaration(
                         name,
                         Symbol {
                             ty: ty.clone(),
@@ -115,6 +116,7 @@ impl Checker {
                             kind: SymbolKind::Var,
                             task_bound: false,
                         },
+                        arm.span,
                     );
                 }
             }

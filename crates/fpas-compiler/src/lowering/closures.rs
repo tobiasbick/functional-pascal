@@ -12,25 +12,27 @@ use crate::CompileError;
 
 use super::context::{
     BoundMethodTarget, Callable, CaptureInput, ClosureTarget, FunctionInput, LoweringContext,
-    unsupported,
+    ParameterInput, unsupported,
 };
 use super::types;
 
 pub(super) struct ClosureRoutine<'a> {
     expression: &'a Expr,
-    id: FunctionId,
+    pub id: FunctionId,
     name: String,
     captures: Vec<CaptureInput>,
+    pub owner: FunctionId,
 }
 
 pub(super) struct BoundMethodRoutine {
-    id: FunctionId,
+    pub id: FunctionId,
     name: String,
     target: FunctionId,
     receiver_ty: fpas_ir::TypeId,
     parameters: Vec<fpas_ir::TypeId>,
     result: fpas_ir::TypeId,
     span: fpas_lexer::Span,
+    pub owner: FunctionId,
 }
 
 pub(super) struct ClosureRegistry<'a> {
@@ -53,6 +55,35 @@ impl<'a> ClosureRegistry<'a> {
             cell_names: HashMap::new(),
             callables,
             next_id: first_id,
+        }
+    }
+
+    /// Mark owner locals that named nested routines capture as cells.
+    ///
+    /// Anonymous closures already record this during discovery. Named nested captures
+    /// come from the callable table and must use the same MakeCell lowering.
+    pub fn seed_named_nested_cells(
+        &mut self,
+        owners: &[FunctionId],
+        runtime_names: &[String],
+        callables: &BTreeMap<String, Callable>,
+    ) {
+        for (index, owner) in owners.iter().copied().enumerate() {
+            let Some(name) = runtime_names.get(index) else {
+                continue;
+            };
+            let Some(callable) = callables.get(&name.to_ascii_lowercase()) else {
+                continue;
+            };
+            for capture in &callable.captures {
+                if capture.kind == CaptureKind::Value {
+                    continue;
+                }
+                self.cell_names
+                    .entry(owner)
+                    .or_default()
+                    .insert(capture.name.to_ascii_lowercase());
+            }
         }
     }
 
@@ -90,7 +121,11 @@ impl<'a> ClosureRegistry<'a> {
             .map(|parameter| {
                 types
                     .type_expr(&parameter.type_expr)
-                    .map(|ty| (parameter.name.clone(), ty))
+                    .map(|ty| ParameterInput {
+                        name: parameter.name.clone(),
+                        ty,
+                        declaration: Some(parameter.span.diagnostic_span_or_synthetic()),
+                    })
             })
             .collect::<Result<Vec<_>, _>>()?;
         let result = closure
@@ -279,6 +314,7 @@ impl<'a> ClosureRegistry<'a> {
                             ty,
                             storage_ty,
                             kind,
+                            declaration: Some(capture.declaration.diagnostic_span_or_synthetic()),
                         })
                     })
                     .collect::<Result<Vec<_>, CompileError>>()?;
@@ -303,6 +339,7 @@ impl<'a> ClosureRegistry<'a> {
                     id,
                     name: info.synthetic_name.clone(),
                     captures,
+                    owner,
                 });
                 let FuncBody::Block { stmts, .. } = &closure.body;
                 self.discover_statements(stmts, id, metadata, types)?;
@@ -310,7 +347,7 @@ impl<'a> ClosureRegistry<'a> {
             Expr::Designator(designator) => {
                 let key = fpas_sema::designator_lookup_key(designator);
                 if let Some(info) = metadata.bound_methods.get(&key) {
-                    self.register_bound_method(key, info, designator.span, types)?;
+                    self.register_bound_method(key, info, owner, designator.span, types)?;
                 }
                 self.visit_designator(&designator.parts, owner, metadata, types)?
             }
@@ -374,7 +411,7 @@ impl<'a> ClosureRegistry<'a> {
                         PostfixOperation::Field { span, .. } => {
                             let key = fpas_sema::postfix_operation_lookup_key(operation);
                             if let Some(info) = metadata.bound_methods.get(&key) {
-                                self.register_bound_method(key, info, *span, types)?;
+                                self.register_bound_method(key, info, owner, *span, types)?;
                             }
                         }
                     }

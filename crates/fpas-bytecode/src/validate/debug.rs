@@ -1,6 +1,6 @@
 //! Validation for executable debugger scopes, bindings, and sequence points.
 
-use crate::{DebugSourceLocation, FunctionId};
+use crate::{DebugCaptureKind, DebugSourceLocation, FunctionId};
 
 use super::{ValidationError, ValidationErrorKind};
 
@@ -73,8 +73,134 @@ pub(super) fn validate_debug_info(executable: &crate::Executable) -> Result<(), 
             validate_location(executable, function_id, point.location)?;
             previous = Some(address);
         }
+        validate_capture_provenance(executable, function_id)?;
     }
     Ok(())
+}
+
+fn validate_capture_provenance(
+    executable: &crate::Executable,
+    function_id: FunctionId,
+) -> Result<(), ValidationError> {
+    let function = &executable.functions[usize::from(function_id.get())];
+    let sources = &function.debug.capture_sources;
+    if function.capture_count == 0 {
+        if function.debug.lexical_owner.is_some() || !sources.is_empty() {
+            return Err(provenance(
+                executable,
+                function_id,
+                "zero-capture functions must omit lexical owner and capture sources",
+                sources.len() as u32,
+                0,
+            ));
+        }
+        return Ok(());
+    }
+    let Some(owner_id) = function.debug.lexical_owner else {
+        return Err(provenance(
+            executable,
+            function_id,
+            "capturing functions must record a lexical owner",
+            u32::from(function_id.get()),
+            1,
+        ));
+    };
+    let owner_index = usize::from(owner_id.get());
+    let Some(owner) = executable.functions.get(owner_index) else {
+        return Err(provenance(
+            executable,
+            function_id,
+            "lexical owner function is out of bounds",
+            u32::from(owner_id.get()),
+            executable.functions.len() as u32,
+        ));
+    };
+    if sources.len() != usize::from(function.capture_count) {
+        return Err(provenance(
+            executable,
+            function_id,
+            "capture source count must equal the function capture count",
+            sources.len() as u32,
+            u32::from(function.capture_count),
+        ));
+    }
+    for source in sources {
+        let binding_index = usize::try_from(source.binding.get()).unwrap_or(usize::MAX);
+        let Some(binding) = owner.debug.bindings.get(binding_index) else {
+            return Err(provenance(
+                executable,
+                function_id,
+                "capture source binding is out of bounds on the lexical owner",
+                source.binding.get(),
+                owner.debug.bindings.len() as u32,
+            ));
+        };
+        if executable
+            .debug_types
+            .get(source.ty.get() as usize)
+            .is_none()
+        {
+            return Err(ValidationError::function(
+                executable,
+                function_id,
+                ValidationErrorKind::TableReference {
+                    table: "debug types",
+                    operand: "capture source type",
+                    actual: u64::from(source.ty.get()),
+                    length: executable.debug_types.len(),
+                },
+            ));
+        }
+        if binding.ty != source.ty {
+            return Err(provenance(
+                executable,
+                function_id,
+                "capture source type must match the owner binding type",
+                source.ty.get(),
+                binding.ty.get(),
+            ));
+        }
+        match source.kind {
+            DebugCaptureKind::Value if binding.cell_backed || binding.hidden => {
+                return Err(provenance(
+                    executable,
+                    function_id,
+                    "value captures cannot refer to a hidden or cell-backed owner binding",
+                    source.binding.get(),
+                    0,
+                ));
+            }
+            DebugCaptureKind::Cell | DebugCaptureKind::EnclosingCell if !binding.cell_backed => {
+                return Err(provenance(
+                    executable,
+                    function_id,
+                    "cell captures must refer to a cell-backed owner binding",
+                    source.binding.get(),
+                    1,
+                ));
+            }
+            _ => {}
+        }
+    }
+    Ok(())
+}
+
+fn provenance(
+    executable: &crate::Executable,
+    function: FunctionId,
+    reason: &'static str,
+    actual: u32,
+    expected: u32,
+) -> ValidationError {
+    ValidationError::function(
+        executable,
+        function,
+        ValidationErrorKind::DebugCaptureProvenance {
+            reason,
+            actual,
+            expected,
+        },
+    )
 }
 
 fn validate_scope(

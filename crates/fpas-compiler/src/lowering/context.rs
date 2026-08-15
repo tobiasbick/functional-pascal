@@ -42,11 +42,29 @@ pub(super) struct Callable {
 }
 
 #[derive(Debug, Clone)]
+/// One lexical capture and the source declaration that selected it.
 pub(super) struct CaptureInput {
+    /// Source-level binding name.
     pub name: String,
+    /// Value type exposed to the nested routine.
     pub ty: TypeId,
+    /// Storage type used by the closure environment.
     pub storage_ty: TypeId,
+    /// Capture representation used by the runtime.
     pub kind: fpas_ir::CaptureKind,
+    /// Exact source declaration when the capture originates in user code.
+    pub declaration: Option<fpas_ir::SourceSpan>,
+}
+
+#[derive(Debug, Clone)]
+/// One lowered parameter and its optional source declaration identity.
+pub(super) struct ParameterInput {
+    /// Source-level parameter name.
+    pub name: String,
+    /// Lowered parameter type.
+    pub ty: TypeId,
+    /// Exact source declaration when the parameter originates in user code.
+    pub declaration: Option<fpas_ir::SourceSpan>,
 }
 
 #[derive(Debug, Clone)]
@@ -72,7 +90,7 @@ pub(super) struct FunctionInput<'a> {
     pub name: &'a str,
     pub id: FunctionId,
     pub result: TypeId,
-    pub parameters: &'a [(String, TypeId)],
+    pub parameters: &'a [ParameterInput],
     pub captures: &'a [CaptureInput],
     pub globals: BTreeMap<String, GlobalBinding>,
     pub constants: BTreeMap<String, fpas_ir::Constant>,
@@ -148,9 +166,12 @@ impl LoweringContext {
         let parameters = parameter_types
             .iter()
             .enumerate()
-            .map(|(index, (_, ty))| {
+            .map(|(index, parameter)| {
                 ValueId::try_from_index(index)
-                    .map(|id| ValueDefinition { id, ty: *ty })
+                    .map(|id| ValueDefinition {
+                        id,
+                        ty: parameter.ty,
+                    })
                     .map_err(|error| {
                         internal_compiler_error(
                             error.to_string(),
@@ -171,7 +192,7 @@ impl LoweringContext {
             ..fpas_ir::FunctionDebugInfo::default()
         };
         let mut entry = empty_block(BlockId::new(0));
-        for ((name, ty), parameter) in parameter_types.iter().zip(&parameters) {
+        for (input, parameter) in parameter_types.iter().zip(&parameters) {
             let local = LocalId::try_from_index(locals.len()).map_err(|error| {
                 internal_compiler_error(
                     error.to_string(),
@@ -182,25 +203,25 @@ impl LoweringContext {
             })?;
             locals.push(Local {
                 id: local,
-                ty: *ty,
+                ty: input.ty,
                 mutable: true,
                 capture: None,
             });
             debug.bindings.push(fpas_ir::DebugBinding {
                 local,
-                name: name.clone(),
+                name: input.name.clone(),
                 kind: fpas_ir::DebugBindingKind::Parameter,
-                ty: *ty,
+                ty: input.ty,
                 mutable: true,
                 scope: 0,
-                declaration: None,
+                declaration: input.declaration,
                 hidden: false,
                 cell_backed: false,
             });
             bindings.push(Binding {
-                name: name.to_ascii_lowercase(),
+                name: input.name.to_ascii_lowercase(),
                 storage: BindingStorage::Local(local),
-                ty: *ty,
+                ty: input.ty,
                 depth: 0,
                 cell: false,
             });
@@ -236,7 +257,7 @@ impl LoweringContext {
                 ty: capture.ty,
                 mutable: capture.kind != fpas_ir::CaptureKind::Value,
                 scope: 0,
-                declaration: None,
+                declaration: capture.declaration,
                 hidden: false,
                 cell_backed: capture.kind != fpas_ir::CaptureKind::Value,
             });

@@ -9,7 +9,8 @@ use crate::CompileError;
 
 use super::{BoundMethodRoutine, ClosureRegistry};
 use crate::lowering::context::{
-    BoundMethodTarget, CaptureInput, FunctionInput, GlobalBinding, LoweringContext, unsupported,
+    BoundMethodTarget, CaptureInput, FunctionInput, GlobalBinding, LoweringContext, ParameterInput,
+    unsupported,
 };
 use crate::lowering::types;
 
@@ -26,13 +27,18 @@ impl ClosureRegistry<'_> {
             .parameters
             .iter()
             .enumerate()
-            .map(|(index, ty)| (format!("argument{index}"), *ty))
+            .map(|(index, ty)| ParameterInput {
+                name: format!("argument{index}"),
+                ty: *ty,
+                declaration: None,
+            })
             .collect::<Vec<_>>();
         let captures = vec![CaptureInput {
             name: "__bound_self".to_string(),
             ty: routine.receiver_ty,
             storage_ty: routine.receiver_ty,
             kind: CaptureKind::Value,
+            declaration: None,
         }];
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,
@@ -51,8 +57,8 @@ impl ClosureRegistry<'_> {
         })?;
         let receiver = context.read_capture("__bound_self", routine.span)?;
         let mut arguments = vec![receiver];
-        for (name, _) in &parameters {
-            arguments.push(context.read_named_local(name, routine.span)?);
+        for parameter in &parameters {
+            arguments.push(context.read_named_local(&parameter.name, routine.span)?);
         }
         context.record_call_arguments(arguments.len(), routine.span)?;
         let result = context.emit_value(
@@ -75,6 +81,7 @@ impl ClosureRegistry<'_> {
         &mut self,
         key: usize,
         info: &fpas_sema::BoundMethodInfo,
+        owner: FunctionId,
         span: fpas_lexer::Span,
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
@@ -113,6 +120,7 @@ impl ClosureRegistry<'_> {
             parameters: parameters.to_vec(),
             result: callable.result,
             span,
+            owner,
         });
         Ok(())
     }

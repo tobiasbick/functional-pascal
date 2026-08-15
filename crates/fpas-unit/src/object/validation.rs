@@ -85,6 +85,7 @@ pub(super) fn validate_source_runs(
 
 pub(super) fn validate_debug_info(
     function: &ObjectFunction,
+    functions: &[ObjectFunction],
     source_count: usize,
     debug_type_count: usize,
 ) -> Result<(), ObjectError> {
@@ -135,6 +136,54 @@ pub(super) fn validate_debug_info(
         }
         validate_debug_location(point.location, source_count)?;
         previous = Some(point.instruction_start);
+    }
+    validate_capture_provenance(function, functions, debug_type_count)?;
+    Ok(())
+}
+
+fn validate_capture_provenance(
+    function: &ObjectFunction,
+    functions: &[ObjectFunction],
+    debug_type_count: usize,
+) -> Result<(), ObjectError> {
+    let sources = &function.debug.capture_sources;
+    if function.capture_count == 0 {
+        if function.debug.lexical_owner.is_some() || !sources.is_empty() {
+            return Err(ObjectError::InvalidTableReference("capture provenance"));
+        }
+        return Ok(());
+    }
+    let Some(owner_index) = function.debug.lexical_owner else {
+        return Err(ObjectError::InvalidTableReference("lexical owner"));
+    };
+    let Some(owner) = functions.get(owner_index as usize) else {
+        return Err(ObjectError::InvalidTableReference("lexical owner"));
+    };
+    if sources.len() != usize::from(function.capture_count) {
+        return Err(ObjectError::InvalidTableReference("capture source count"));
+    }
+    for source in sources {
+        if source.binding as usize >= owner.debug.bindings.len()
+            || source.ty as usize >= debug_type_count
+        {
+            return Err(ObjectError::InvalidTableReference("capture source"));
+        }
+        let binding = &owner.debug.bindings[source.binding as usize];
+        if binding.ty != source.ty {
+            return Err(ObjectError::InvalidTableReference("capture source type"));
+        }
+        match source.kind {
+            crate::object::ObjectCaptureKind::Value if binding.cell_backed || binding.hidden => {
+                return Err(ObjectError::InvalidTableReference("value capture source"));
+            }
+            crate::object::ObjectCaptureKind::Cell
+            | crate::object::ObjectCaptureKind::EnclosingCell
+                if !binding.cell_backed =>
+            {
+                return Err(ObjectError::InvalidTableReference("cell capture source"));
+            }
+            _ => {}
+        }
     }
     Ok(())
 }

@@ -8,6 +8,7 @@ mod closures;
 mod concurrency;
 mod context;
 mod control_flow;
+mod debug;
 mod expr;
 mod globals;
 mod imports;
@@ -20,7 +21,7 @@ mod validation;
 
 pub(crate) use imports::ImportPlan;
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use fpas_ir::{Function, FunctionId, IntrinsicId, IntrinsicSignature, Operation, Program};
 use fpas_parser::{Decl, Program as AstProgram, Stmt, Unit};
@@ -128,13 +129,28 @@ fn lower_analyzed_root(
     supporting_interfaces: &[fpas_unit::interface::UnitInterface],
 ) -> Result<LoweredUnit, Vec<CompileError>> {
     let mut routines = Vec::new();
-    routines::collect(declarations, &mut routines);
+    let mut routine_owners = Vec::new();
+    let mut runtime_names = Vec::new();
+    routines::collect(
+        declarations,
+        &mut routines,
+        &mut routine_owners,
+        &mut runtime_names,
+        FunctionId::new(0),
+        "",
+    );
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
     let mut constants = collect_enum_constants(declarations);
     let (mut globals, mut global_bindings) =
         globals::collect(declarations, &metadata, &mut type_table).map_err(|error| vec![error])?;
-    let mut callables = routines::callable_table(&routines, &mut type_table, &metadata)
-        .map_err(|error| vec![error])?;
+    let mut callables = routines::callable_table(
+        &routines,
+        &routine_owners,
+        &runtime_names,
+        &mut type_table,
+        &metadata,
+    )
+    .map_err(|error| vec![error])?;
     let first_import_id = u32::try_from(routines.len().saturating_add(1))
         .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?;
     let (imports, imported_stubs) = imports::install(
@@ -160,6 +176,7 @@ fn lower_analyzed_root(
         )
         .ok_or_else(|| vec![context::unsupported(span, "function identifier overflow")])?;
     let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone());
+    closures.seed_named_nested_cells(&routine_owners, &runtime_names, &callables);
     closures
         .discover_statements(body, FunctionId::new(0), &metadata, &mut type_table)
         .map_err(|error| vec![error])?;
@@ -236,6 +253,7 @@ fn lower_analyzed_root(
             &mut type_table,
             routines::LoweringInput {
                 id,
+                runtime_name: runtime_names.get(index).map(String::as_str).unwrap_or(""),
                 metadata: &metadata,
                 callables: &callables,
                 globals: &global_bindings,
@@ -278,6 +296,21 @@ fn lower_analyzed_root(
         functions.push(function);
     }
     functions.sort_by_key(|function| function.id);
+    let mut owner_map = HashMap::new();
+    for (index, owner) in routine_owners.iter().copied().enumerate() {
+        let id = FunctionId::new(
+            u32::try_from(index.saturating_add(1))
+                .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
+        );
+        owner_map.insert(id, owner);
+    }
+    for routine in &closures.routines {
+        owner_map.insert(routine.id, routine.owner);
+    }
+    for routine in &closures.bound_routines {
+        owner_map.insert(routine.id, routine.owner);
+    }
+    debug::attach(&mut functions, &owner_map).map_err(|error| vec![error])?;
     let ir = Program {
         types: type_table.definitions(),
         globals,

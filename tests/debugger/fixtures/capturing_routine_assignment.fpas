@@ -1,0 +1,166 @@
+program CapturingRoutineAssignment;
+
+uses Std.Console, Std.Task;
+
+type
+  Handler = function(Value: integer): integer;
+  Action = procedure();
+  Math = record
+    static function Transform(Value: integer): integer;
+    begin
+      return Value + 5
+    end;
+  end;
+  Stats = record
+    static function Transform(Value: integer): integer;
+    begin
+      return Value + 6
+    end;
+  end;
+
+function Identity(Value: integer): integer;
+begin
+  return Value
+end;
+
+procedure Noop();
+begin
+end;
+
+function MakeAdder(Base: integer): Handler;
+function AddBase(Value: integer): integer;
+begin
+  return Base + Value
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var MakeStop: integer := 0;
+  return Current
+end;
+
+function Combine(Left: integer; Right: integer): Handler;
+function AddBoth(Value: integer): integer;
+begin
+  return (Value + Left * 10) + Right
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var CombineStop: integer := 0;
+  return Current
+end;
+
+function Outer(Offset: integer): integer;
+function AddOffset(Value: integer): integer;
+begin
+  return Value + Offset
+end;
+begin
+  mutable var Current: Handler := Identity;
+  begin
+    var Offset: integer := 99;
+    var ShadowStop: integer := 0;
+    return Current(1)
+  end
+end;
+
+function Walk(N: integer; Acc: integer): integer;
+function AddAcc(Value: integer): integer;
+begin
+  return Value + Acc
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var WalkStop: integer := 0;
+  if N = 0 then
+  begin
+    return Current(0)
+  end
+  else
+  begin
+    return Walk(N - 1, Acc + 10)
+  end
+end;
+
+function Mutating(): Handler;
+function AddCell(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  mutable var Current: Handler := Identity;
+  var CellStop: integer := 0;
+  return Current
+end;
+
+function OuterCell(): Handler;
+function Mid(): Handler;
+function AddEnclosed(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  var Keep: integer := Cell;
+  mutable var Current: Handler := Identity;
+  var EnclosingStop: integer := 0;
+  return Current
+end;
+begin
+  mutable var Cell: integer := 1;
+  return Mid()
+end;
+
+function LateInit(): integer;
+function AddLate(Value: integer): integer;
+begin
+  return Value + Offset
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var LateStop: integer := 0;
+  var Offset: integer := 7;
+  var LateReady: integer := 0;
+  return Current(1)
+end;
+
+function Worker(Base: integer): integer;
+function AddWorker(Value: integer): integer;
+begin
+  return Base + Value
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var WorkerStop: integer := 0;
+  return Current(1)
+end;
+
+function HoldTask(Pending: task): Handler;
+function IgnorePending(Value: integer): integer;
+begin
+  var Keep: task := Pending;
+  return Value
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var TaskStop: integer := 0;
+  return Current
+end;
+
+begin
+  mutable var Current: Handler := Identity;
+  mutable var Job: Action := Noop;
+  var First: Handler := MakeAdder(10);
+  var Both: Handler := Combine(3, 4);
+  var Shadowed: integer := Outer(7);
+  var Recursed: integer := Walk(2, 1);
+  var Mutated: Handler := Mutating();
+  var Enclosed: Handler := OuterCell();
+  var Late: integer := LateInit();
+  var Pending: task := go Worker(8);
+  var Held: Handler := HoldTask(Pending);
+  var RootStop: integer := 0;
+  WriteLn(Wait(Pending));
+  WriteLn(First(1))
+end.

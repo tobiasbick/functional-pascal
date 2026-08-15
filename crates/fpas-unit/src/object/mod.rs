@@ -17,10 +17,10 @@ pub use codec::{decode_object, encode_object};
 pub use error::ObjectError;
 pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
-    ObjectConstant, ObjectDebugBinding, ObjectDebugBindingKind, ObjectDebugLocation,
-    ObjectDebugScope, ObjectDebugType, ObjectEnumLayout, ObjectEnumVariant,
-    ObjectFunctionDebugInfo, ObjectGlobal, ObjectRecordLayout, ObjectRecordProperty,
-    ObjectSequencePoint, ObjectSourceRun,
+    ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
+    ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
+    ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectRecordLayout,
+    ObjectRecordProperty, ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -34,7 +34,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 4;
+pub const OBJECT_VERSION: u16 = 5;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -276,6 +276,30 @@ impl RelocatableObject {
                     })
                     .collect(),
                 result_type: function.debug.result_type.map(|ty| ty.get()),
+                lexical_owner: function
+                    .debug
+                    .lexical_owner
+                    .map(|owner| u32::from(owner.get())),
+                capture_sources: function
+                    .debug
+                    .capture_sources
+                    .iter()
+                    .map(|source| crate::object::ObjectCaptureSource {
+                        binding: source.binding.get(),
+                        ty: source.ty.get(),
+                        kind: match source.kind {
+                            fpas_bytecode::DebugCaptureKind::Value => {
+                                crate::object::ObjectCaptureKind::Value
+                            }
+                            fpas_bytecode::DebugCaptureKind::Cell => {
+                                crate::object::ObjectCaptureKind::Cell
+                            }
+                            fpas_bytecode::DebugCaptureKind::EnclosingCell => {
+                                crate::object::ObjectCaptureKind::EnclosingCell
+                            }
+                        },
+                    })
+                    .collect(),
             };
             functions.push(ObjectFunction {
                 name: strings(function.name)?,
@@ -448,7 +472,12 @@ impl RelocatableObject {
                 });
             }
             validate_source_runs(function, self.sources.len())?;
-            validation::validate_debug_info(function, self.sources.len(), self.debug_types.len())?;
+            validation::validate_debug_info(
+                function,
+                &self.functions,
+                self.sources.len(),
+                self.debug_types.len(),
+            )?;
             for (instruction_index, word) in function.code.iter().copied().enumerate() {
                 let instruction = Instruction::from_word(word);
                 let expected = relocation_category(instruction)?;

@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 
-use crate::scope::{ScopeStack, SymbolKind, canonical_symbol_name};
+use crate::scope::{ScopeStack, SymbolKind};
 use crate::types::Ty;
 use fpas_parser::{
     CaseLabel, Decl, Designator, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt,
@@ -26,6 +26,8 @@ pub struct CaptureBinding {
     /// `true` when the captured binding already holds a task-bound value
     /// (for example a nested closure that captured a mutable cell).
     pub task_bound: bool,
+    /// Exact declaration of the captured source binding.
+    pub declaration: fpas_lexer::Span,
 }
 
 /// Collect lexical captures referenced by `body`.
@@ -81,7 +83,9 @@ impl CaptureCollector<'_> {
         if !self.seen.insert(canonical) {
             return;
         }
-        let Some((scope_index, symbol)) = self.scopes.lookup_with_scope(name) else {
+        let Some((scope_index, symbol, declaration)) =
+            self.scopes.lookup_with_scope_and_declaration(name)
+        else {
             return;
         };
         if scope_index == 0 || scope_index >= self.closure_scope_index {
@@ -93,11 +97,15 @@ impl CaptureCollector<'_> {
         ) {
             return;
         }
+        let Some(declaration) = declaration else {
+            return;
+        };
         self.captures.push(CaptureBinding {
             name: name.to_string(),
             ty: symbol.ty.clone(),
             mutable: symbol.mutable,
             task_bound: symbol.task_bound,
+            declaration,
         });
     }
 
@@ -141,7 +149,7 @@ impl CaptureCollector<'_> {
             Decl::Function(function) => {
                 let captures = self
                     .nested_routine_captures
-                    .get(&canonical_symbol_name(&function.name))
+                    .get(&crate::function_decl_lookup_key(function))
                     .map(|info| info.captures.clone())
                     .unwrap_or_default();
                 self.collect_transitive_captures(&captures);
@@ -149,7 +157,7 @@ impl CaptureCollector<'_> {
             Decl::Procedure(procedure) => {
                 let captures = self
                     .nested_routine_captures
-                    .get(&canonical_symbol_name(&procedure.name))
+                    .get(&crate::procedure_decl_lookup_key(procedure))
                     .map(|info| info.captures.clone())
                     .unwrap_or_default();
                 self.collect_transitive_captures(&captures);

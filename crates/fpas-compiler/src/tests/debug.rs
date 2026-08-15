@@ -1,3 +1,9 @@
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "compiler debug tests keep fixture failures local"
+)]
+
 use fpas_bytecode::{DebugBindingKind, DebugType};
 
 use super::parse_ok;
@@ -285,5 +291,181 @@ end.
             image.debug_types.get(wrong_result.get() as usize),
             Some(&DebugType::String)
         );
+    }
+}
+
+#[test]
+fn compiler_records_exact_capture_provenance_for_named_nested_routines() {
+    let program = parse_ok(
+        r#"
+program CaptureProvenance;
+
+type
+  Handler = function(Value: integer): integer;
+
+function MakeAdder(Base: integer): Handler;
+  function AddBase(Value: integer): integer;
+  begin
+    return Base + Value
+  end;
+begin
+  return AddBase
+end;
+
+function Outer(Offset: integer): integer;
+  function AddOffset(Value: integer): integer;
+  begin
+    return Value + Offset
+  end;
+begin
+  begin
+    var Offset: integer := 99;
+    return AddOffset(1)
+  end
+end;
+
+function Mutating(): Handler;
+  function AddCell(Value: integer): integer;
+  begin
+    Cell := Cell + 1;
+    return Value + Cell
+  end;
+begin
+  mutable var Cell: integer := 1;
+  return AddCell
+end;
+
+function OuterCell(): Handler;
+  function Mid(): Handler;
+    function AddEnclosed(Value: integer): integer;
+    begin
+      Cell := Cell + 1;
+      return Value + Cell
+    end;
+  begin
+    var Keep: integer := Cell;
+    return AddEnclosed
+  end;
+begin
+  mutable var Cell: integer := 1;
+  return Mid()
+end;
+
+begin
+  var First: Handler := MakeAdder(10);
+  var Answer: integer := Outer(7);
+  var Next: Handler := Mutating();
+  var Enclosed: Handler := OuterCell()
+end.
+"#,
+    );
+    let executable = crate::compile(&program).expect("capture provenance should compile");
+    let image = executable.executable();
+    let function = |name: &str| {
+        image
+            .functions
+            .iter()
+            .find(|function| image.strings.get(function.name) == Some(name))
+            .expect("named function")
+    };
+    let add_base = function("makeadder.addbase");
+    assert_eq!(add_base.capture_count, 1);
+    let owner = add_base.debug.lexical_owner.expect("lexical owner");
+    assert_eq!(
+        image
+            .strings
+            .get(image.functions[usize::from(owner.get())].name),
+        Some("makeadder")
+    );
+    assert_eq!(add_base.debug.capture_sources.len(), 1);
+    assert_eq!(
+        add_base.debug.capture_sources[0].kind,
+        fpas_bytecode::DebugCaptureKind::Value
+    );
+    let owner_binding = &image.functions[usize::from(owner.get())].debug.bindings
+        [add_base.debug.capture_sources[0].binding.get() as usize];
+    assert_eq!(image.strings.get(owner_binding.name), Some("Base"));
+    assert!(!owner_binding.cell_backed);
+
+    let add_offset = function("outer.addoffset");
+    let outer = add_offset.debug.lexical_owner.expect("outer owner");
+    let outer_function = &image.functions[usize::from(outer.get())];
+    let captured =
+        &outer_function.debug.bindings[add_offset.debug.capture_sources[0].binding.get() as usize];
+    assert_eq!(image.strings.get(captured.name), Some("Offset"));
+    assert_eq!(captured.kind, DebugBindingKind::Parameter);
+    let shadow_count = outer_function
+        .debug
+        .bindings
+        .iter()
+        .filter(|binding| image.strings.get(binding.name) == Some("Offset"))
+        .count();
+    assert_eq!(shadow_count, 2);
+
+    let add_cell = function("mutating.addcell");
+    assert_eq!(
+        add_cell.debug.capture_sources[0].kind,
+        fpas_bytecode::DebugCaptureKind::Cell
+    );
+
+    let add_enclosed = function("outercell.mid.addenclosed");
+    assert_eq!(
+        add_enclosed.debug.capture_sources[0].kind,
+        fpas_bytecode::DebugCaptureKind::EnclosingCell
+    );
+    let mid = function("outercell.mid");
+    assert_eq!(
+        mid.debug.capture_sources[0].kind,
+        fpas_bytecode::DebugCaptureKind::Cell
+    );
+}
+
+#[test]
+fn same_named_nested_routines_keep_distinct_capture_identity() {
+    let program = parse_ok(
+        r#"
+program DistinctNestedCaptures;
+
+type
+  Handler = function(Value: integer): integer;
+
+function FactoryA(A: integer): Handler;
+  function Apply(Value: integer): integer;
+  begin
+    return A + Value
+  end;
+begin
+  return Apply
+end;
+
+function FactoryB(B: integer): Handler;
+  function Apply(Value: integer): integer;
+  begin
+    return B + Value
+  end;
+begin
+  return Apply
+end;
+
+begin
+  var First: Handler := FactoryA(1);
+  var Second: Handler := FactoryB(2)
+end.
+"#,
+    );
+    let executable = crate::compile(&program).expect("same-named nested routines should compile");
+    let image = executable.executable();
+
+    for (routine_name, source_name) in [("factorya.apply", "A"), ("factoryb.apply", "B")] {
+        let routine = image
+            .functions
+            .iter()
+            .find(|function| image.strings.get(function.name) == Some(routine_name))
+            .expect("nested routine");
+        let owner = routine.debug.lexical_owner.expect("lexical owner");
+        let source = routine.debug.capture_sources[0];
+        let binding = &image.functions[usize::from(owner.get())].debug.bindings
+            [source.binding.get() as usize];
+        assert_eq!(image.strings.get(binding.name), Some(source_name));
     }
 }

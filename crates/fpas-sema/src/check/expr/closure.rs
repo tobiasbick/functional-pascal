@@ -32,6 +32,7 @@ impl Checker {
             &synthetic_name,
             &[],
             &params_ty,
+            params,
             return_ty.clone(),
             body,
         );

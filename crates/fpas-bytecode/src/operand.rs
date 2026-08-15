@@ -100,6 +100,7 @@ fixed_operand!(IntrinsicId, u16, "intrinsic");
 fixed_operand!(InstructionAddress, u32, "instruction address");
 fixed_operand!(SourceId, u32, "source");
 fixed_operand!(DebugTypeId, u32, "debug type");
+fixed_operand!(DebugBindingId, u32, "debug binding");
 
 /// A fixed-width operand cannot represent the requested value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

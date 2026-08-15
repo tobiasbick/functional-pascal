@@ -160,6 +160,7 @@ impl Checker {
                 &pending.qualified_name,
                 pending.type_params,
                 &pending.params,
+                &pending.param_spans,
                 pending.return_type,
                 pending.body,
             );

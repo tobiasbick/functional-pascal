@@ -1,6 +1,7 @@
 //! Immutable stopped-state snapshots and bounded variable expansion.
 
 mod capture;
+mod capture_sources;
 mod handles;
 mod model;
 mod mutation_targets;

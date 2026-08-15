@@ -181,7 +181,24 @@ impl LoweringContext {
     }
 
     pub(in crate::lowering) fn resolve_callable(&self, name: &str) -> Option<Callable> {
-        self.callables.get(&name.to_ascii_lowercase()).cloned()
+        let canonical = name.to_ascii_lowercase();
+        if let Some(callable) = self.callables.get(&canonical) {
+            return Some(callable.clone());
+        }
+        let mut scope = self.program_name.as_str();
+        loop {
+            let child = format!("{scope}.{canonical}");
+            if let Some(callable) = self.callables.get(&child) {
+                return Some(callable.clone());
+            }
+            let (parent, tail) = scope.rsplit_once('.')?;
+            if tail == canonical
+                && let Some(callable) = self.callables.get(scope)
+            {
+                return Some(callable.clone());
+            }
+            scope = parent;
+        }
     }
 
     pub(in crate::lowering) fn has_binding(&self, name: &str) -> bool {

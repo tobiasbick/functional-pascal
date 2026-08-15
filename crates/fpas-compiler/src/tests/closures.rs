@@ -1,7 +1,8 @@
 use fpas_ir::{
     BasicBlock, BinaryOperation, BlockId, BlockTarget, CaptureDeclaration, CaptureKind, Constant,
-    Function, FunctionId, FunctionSignature, Instruction, IrType, Local, LocalId, Operation,
-    Program, Terminator, TypeDefinition, TypeId, ValueDefinition, ValueId,
+    DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureSource, DebugScope, Function,
+    FunctionId, FunctionSignature, Instruction, IrType, Local, LocalId, Operation, Program,
+    Terminator, TypeDefinition, TypeId, ValueDefinition, ValueId,
 };
 
 const UNIT: TypeId = TypeId::new(0);
@@ -134,9 +135,31 @@ fn root_function() -> Function {
             result: UNIT,
         },
         parameters: Vec::new(),
-        locals: Vec::new(),
+        locals: vec![Local {
+            id: LocalId::new(0),
+            ty: CELL,
+            mutable: true,
+            capture: None,
+        }],
         captures: Vec::new(),
-        debug: fpas_ir::FunctionDebugInfo::default(),
+        debug: fpas_ir::FunctionDebugInfo {
+            scopes: vec![DebugScope {
+                id: 0,
+                parent: None,
+            }],
+            bindings: vec![DebugBinding {
+                local: LocalId::new(0),
+                name: "cell".to_string(),
+                kind: DebugBindingKind::Local,
+                ty: INTEGER,
+                mutable: true,
+                scope: 0,
+                declaration: None,
+                hidden: false,
+                cell_backed: true,
+            }],
+            ..fpas_ir::FunctionDebugInfo::default()
+        },
         blocks: vec![
             BasicBlock {
                 id: BlockId::new(0),
@@ -227,7 +250,30 @@ fn increment_function() -> Function {
             ty: INTEGER,
             kind: CaptureKind::Cell,
         }],
-        debug: fpas_ir::FunctionDebugInfo::default(),
+        debug: fpas_ir::FunctionDebugInfo {
+            scopes: vec![DebugScope {
+                id: 0,
+                parent: None,
+            }],
+            bindings: vec![DebugBinding {
+                local: LocalId::new(0),
+                name: "cell".to_string(),
+                kind: DebugBindingKind::Capture,
+                ty: INTEGER,
+                mutable: true,
+                scope: 0,
+                declaration: None,
+                hidden: false,
+                cell_backed: true,
+            }],
+            lexical_owner: Some(FunctionId::new(0)),
+            capture_sources: vec![DebugCaptureSource {
+                binding: DebugBindingId::new(0),
+                ty: INTEGER,
+                kind: CaptureKind::Cell,
+            }],
+            ..fpas_ir::FunctionDebugInfo::default()
+        },
         blocks: vec![BasicBlock {
             id: BlockId::new(0),
             parameters: Vec::new(),

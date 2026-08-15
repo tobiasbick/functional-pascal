@@ -6,6 +6,12 @@ Language specification: [`docs/pascal/`](.) — implemented behavior and stdlib 
 
 Planned features: [`docs/future/`](../future/).
 
+For local coding-model experiments, the reproducible training-data generator
+and its generated splits are maintained separately in
+[`training/fpas/`](../../training/fpas/). The dataset is derived from this
+documentation plus repository examples and tests; it does not change the
+language specification.
+
 ## Design Principles
 
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.

@@ -36,6 +36,23 @@ Agent-oriented detail (file layout, Definition of done, skills) lives in
    For touched `.fpas` under `examples/`, `tests/`, or `apps/`, also run
    `fpas fmt --check` (or `scripts/format-fpas-sources.sh`).
 
+### Training data
+
+The local-model dataset is maintained under [`training/fpas/`](training/fpas/).
+Do not hand-edit generated JSONL or place training artifacts under `docs/`.
+Update the generator or its source-selection rules, regenerate the artifacts,
+and run both commands:
+
+```text
+python training/fpas/generate_dataset.py
+python training/fpas/validate_dataset.py
+```
+
+Dataset contributions must preserve the deterministic train/validation/test
+split, use relative repository paths only, and keep the test split out of
+training. Do not upload repository sources or generated datasets to an
+external hub as part of a normal code contribution.
+
 ### Examples and FPAS tests
 
 - **`examples/`** — demos and tutorials. Do not put `*_test.fpas` here.

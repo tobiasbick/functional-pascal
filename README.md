@@ -218,6 +218,22 @@ More examples in the [`examples/`](examples/) directory.
 
 Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
+### Local model training data
+
+The reproducible Functional Pascal fine-tuning dataset lives under
+[`training/fpas/`](training/fpas/). It is generated from implemented docs,
+examples, applications, and regression tests and uses Hugging Face's
+conversational JSONL format. Build and validate it locally with:
+
+```sh
+python training/fpas/generate_dataset.py
+python training/fpas/validate_dataset.py
+```
+
+The generated files can be selected in Unsloth Studio for local LoRA/QLoRA
+training. Keep the held-out test split out of training and validate generated
+FPAS with the compiler and test runner afterward.
+
 ### Multi-file projects and libraries
 
 Larger programs use a `.fpasprj` project file. Each imported unit is built independently into a source-adjacent `.fpascu` sidecar and linked into the final program automatically. Sources and manifests remain authoritative; sidecars are derived, Git-ignored build outputs. Reference library projects from `[dependencies].projects` (paths) or `[dependencies].workspace` (member `project.name` inside a `.fpasworkspace`). Libraries may hide internal units from dependents with `[exports].units` in the library `.fpasprj`. See [Projects](docs/pascal/program-structure/projects.md), [library-deps](examples/pascal/library-deps/), and [monorepo](examples/pascal/monorepo/).

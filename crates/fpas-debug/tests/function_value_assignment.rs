@@ -62,6 +62,31 @@ fn locals_reference(server: &mut JsonlServer, id: &mut u64, frame_id: u64) -> u6
         .expect("locals")
 }
 
+fn variable<'a>(variables: &'a [Value], name: &str) -> &'a Value {
+    variables
+        .iter()
+        .find(|variable| variable["name"] == name)
+        .unwrap_or_else(|| panic!("missing {name}"))
+}
+
+fn listed_variables(server: &mut JsonlServer, id: &mut u64, reference: u64) -> Vec<Value> {
+    send(
+        server,
+        id,
+        "variables",
+        json!({"variables_reference":reference}),
+    )[0]["body"]["variables"]
+        .as_array()
+        .expect("variables")
+        .clone()
+}
+
+fn child_handle(variables: &[Value], name: &str, field: &str) -> u64 {
+    variable(variables, name)[field]
+        .as_u64()
+        .unwrap_or_else(|| panic!("{name} {field}"))
+}
+
 #[test]
 fn jsonl_function_values_copy_atomically_and_continue() {
     let mut server = server();
@@ -332,4 +357,78 @@ end.
             .any(|record| record["event"] == "output" && record["body"]["text"] == "3\n"),
         "{terminated:?}"
     );
+}
+
+#[test]
+fn jsonl_synthetic_function_children_stay_non_assignable() {
+    let mut server = server();
+    let mut id = 0;
+    let _ = send(&mut server, &mut id, "initialize", json!({"version":2}));
+    let _ = send(
+        &mut server,
+        &mut id,
+        "launch",
+        json!({"stop_on_entry":true}),
+    );
+    let initial_frame = stop_with_initialized_locals(&mut server, &mut id);
+    let locals = locals_reference(&mut server, &mut id, initial_frame);
+    let locals_page = listed_variables(&mut server, &mut id, locals);
+    let captured_handle = child_handle(&locals_page, "Captured", "variables_reference");
+    assert_ne!(captured_handle, 0);
+    let children = listed_variables(&mut server, &mut id, captured_handle);
+    assert!(
+        children.iter().any(|child| child["name"] == "capture[0]"),
+        "{children:?}"
+    );
+
+    let rejected = send(
+        &mut server,
+        &mut id,
+        "variable.set",
+        json!({"variables_reference":captured_handle,"name":"capture[0]","expression":"99"}),
+    );
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+    assert_eq!(rejected[0]["error"]["code"], "variable_path_unsupported");
+    let preserved = listed_variables(&mut server, &mut id, locals);
+    assert!(
+        variable(&preserved, "Captured")["value"]
+            .as_str()
+            .expect("value")
+            .starts_with("<function"),
+        "{preserved:?}"
+    );
+
+    let current = frame(&mut server, &mut id);
+    let bound = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Current","expression":"Receiver.Add"}),
+    );
+    assert_eq!(bound[0]["success"], true, "{bound:?}");
+    let current = frame(&mut server, &mut id);
+    let locals = locals_reference(&mut server, &mut id, current);
+    let locals_page = listed_variables(&mut server, &mut id, locals);
+    let receiver_handle = child_handle(&locals_page, "Current", "variables_reference");
+    let children = listed_variables(&mut server, &mut id, receiver_handle);
+    assert!(
+        children.iter().any(|child| child["name"] == "receiver"),
+        "{children:?}"
+    );
+    let rejected = send(
+        &mut server,
+        &mut id,
+        "variable.set",
+        json!({"variables_reference":receiver_handle,"name":"receiver","expression":"Receiver"}),
+    );
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+    assert_eq!(rejected[0]["error"]["code"], "variable_path_unsupported");
+    let current = frame(&mut server, &mut id);
+    let invoked = send(
+        &mut server,
+        &mut id,
+        "evaluate",
+        json!({"frame_id":current,"expression":"Current(1)"}),
+    );
+    assert_eq!(invoked[0]["body"]["result"], "11", "{invoked:?}");
 }

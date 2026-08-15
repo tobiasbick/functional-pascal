@@ -563,5 +563,9 @@ pub(super) fn function_identity(left: &fpas_bytecode::Value, right: &fpas_byteco
     }
 }
 
+mod capture_destination;
 mod cases;
+mod dynamic;
+mod opaque;
+mod reconstruction;
 mod routines;

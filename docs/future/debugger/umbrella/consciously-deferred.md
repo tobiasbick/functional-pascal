@@ -21,11 +21,14 @@ the capability packages owned by [implementation-plan.md](implementation-plan.md
 
 ## Decisions, not promises
 
-The following remain inside the umbrella as explicit feasibility decisions,
-not promises that implementation will be accepted:
+The following boundaries remain inside the umbrella as explicit decisions or
+prerequisites, not promises that implementation will be accepted:
 
 - Dynamic callable endpoints, opaque identity-bearing resources, and in-place
-  callable editing in `UMB-10D`.
+  callable editing were rejected by `UMB-10D`; its evidence remains in parent
+  progress, focused tests, and current debugger documentation. Task-bound
+  capture-cell destinations remain blocked on `UMB-70A` cell identity and
+  lifetime.
 - Arbitrary instruction changes in `UMB-30D`.
 - Non-stop execution, scheduler shortcuts, and persistent history in
   `UMB-40D`.
@@ -44,4 +47,3 @@ preserved as backlog.
 - Do not describe unimplemented behavior under `docs/pascal/`.
 - Remove obsolete exclusions when their capability passes acceptance.
 - Delete this file with the umbrella after `UMB-99`.
-

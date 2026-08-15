@@ -61,9 +61,10 @@ materialized, visible task handle onto a structurally
 compatible mutable target is implemented through those same surfaces: the copy
 preserves the exact runtime task ID and does not consult the scheduler. Newly
 entered anonymous closures require the versioned live-image work in `UMB-90`.
-Dynamic endpoints, capture-cell destinations, opaque resources, and in-place
-callable editing remain owned by `UMB-10D` in the
-[active umbrella](umbrella/implementation-plan.md).
+Dynamic callable endpoints, opaque hosted-resource assignment, and in-place
+callable child editing were rejected by `UMB-10D`. Task-bound writes into
+capture-cell destinations remain blocked on stable cell identities in
+`UMB-70A`.
 
 Bounded forced return from a selected ordinary callee — including an older
 frame of the stop-owning task — is implemented through JSONL `frame.return`,

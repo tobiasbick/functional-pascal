@@ -131,7 +131,8 @@ is evaluated once, its method signature must match the destination, and live or
 opaque identities inside the receiver graph are rejected. An identifier-only
 chain falls back to the routine catalog only when its receiver name is unknown.
 Anonymous closure syntax, non-method computed expressions, escaping or foreign-task
-copies of materialized task-bound functions, and
+copies of materialized task-bound functions, synthetic function children such as
+`receiver` and `capture[i]`, and
 inactive-variant function payloads remain rejected. A task-typed target accepts
 one visible source binding that already holds a compatible task handle, for
 example `Current := Pending`. The request copies the exact runtime ID through

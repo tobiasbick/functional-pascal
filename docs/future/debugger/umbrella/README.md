@@ -1,7 +1,7 @@
 # Source-debugger completion umbrella
 
-Status: implementation active; see [progress.md](progress.md) for the current
-child and checkpoint.
+Status: between implementation packages; see [progress.md](progress.md) for the
+current checkpoint and next executable work item.
 
 This directory is the single resumable plan for the remaining source-debugger
 backlog. It absorbs the former `DBG-D03` through `DBG-D09` rows without
@@ -39,6 +39,9 @@ and acceptance gate between packages.
 - [architecture.md](architecture.md) owns invariants shared by every package.
 - [dependency-map.md](dependency-map.md) owns ordering and parallelism rules.
 - [risk-register.md](risk-register.md) owns stop conditions and mitigations.
+- [`umb-20/`](umb-20/README.md) is the execution-ready plan for the next
+  primary package. Completed `UMB-10D` evidence is retained in parent progress,
+  tests, and current debugger documentation rather than an obsolete plan.
 - [consciously-deferred.md](consciously-deferred.md) records only umbrella
   boundaries, not duplicate backlog entries.
 - [`../deferred.md`](../deferred.md) lists only independent work outside an
@@ -52,7 +55,8 @@ pass.
 ## Execution rules
 
 1. Complete `UMB-00` before changing debugger behavior.
-2. Mark exactly one primary package `active` in [progress.md](progress.md).
+2. Mark at most one primary package `active` in [progress.md](progress.md).
+   Between recoverable package checkpoints, none may be active.
 3. Freeze the package contract and negative boundaries before editing code.
 4. Reuse the Rust debugger engine; JSONL, DAP, and VS Code remain adapters.
 5. Preserve task, frame, value, and stop-generation ownership explicitly.

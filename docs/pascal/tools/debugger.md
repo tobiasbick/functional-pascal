@@ -181,7 +181,8 @@ JSONL, matching DAP custom requests, and three Functional Pascal VS Code
 commands. An unchanged character is rejected without writing.
 
 Immutable bindings, compiler-hidden storage,
-evaluation-only results, function captures,
+evaluation-only results, synthetic function children such as `receiver` and
+`capture[i]`, function captures,
 and opaque hosted values are not
 writable. Function values are writable by copying an already
 materialized, visible function binding, or by assigning a

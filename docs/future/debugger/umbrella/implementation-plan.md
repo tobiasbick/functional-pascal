@@ -6,8 +6,8 @@
 |---|---|---|---|---|
 | `UMB-00` | Checkpoint current debugger work and establish a trustworthy baseline | none | done | Worktree scope is explicit; focused gates pass; unrelated baseline failures are independently classified |
 | `UMB-01` | Freeze contracts and split every inherited boundary into testable slices | `UMB-00` | done | Every child below has positive, negative, ownership, atomicity, adapter, and bound requirements or an explicit feasibility gate |
-| `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | active | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code |
-| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | pending | Stable metadata-driven matching and equivalent stop/filter behavior pass without source display inference |
+| `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
+| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | pending | Stable metadata-driven matching and equivalent stop/filter behavior pass without source display inference; execution plan in [`umb-20/`](umb-20/README.md) |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | pending | Accepted completion, recovery, or restart operations define cleanup, waiter effects, rollback, and selected-task behavior |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | pending | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
@@ -48,7 +48,7 @@ mixing unrelated changes.
 | `UMB-10A` | done | Copy an already materialized task-bound function | Same-owner, same-task lifetime and escape proof; foreign, global, descendant, spawn, and stale cases fail atomically |
 | `UMB-10B` | blocked by `UMB-90` | Enter a new anonymous closure expression | A new body needs a verified function in the shared live executable; resume only after versioned image replacement exists, then prove bounded parsing and exact capture provenance |
 | `UMB-10C` | done | Synthesize a bound receiver callable | Exact method identity, receiver type/layout, lifetime, and task ownership |
-| `UMB-10D` | pending | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | Separate feasibility decision for each identity class; no generic unsafe fallback |
+| `UMB-10D` | done | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | `U10D-DYN` rejected; `U10D-CELL` blocked by `UMB-70A`; `U10D-OPAQUE` rejected; `U10D-EDIT` rejected (`UMB-90` keeps code/signature); evidence retained in parent progress, tests, and current docs |
 
 Completing one child does not mark `UMB-10` complete until every other child is
 implemented or reclassified by evidence.
@@ -63,6 +63,12 @@ The capability remains inside this umbrella and resumes after `UMB-90`; it is
 not duplicated in the central deferred list.
 
 ## `UMB-20` — Low-dependency advanced breakpoints
+
+The context-loss-safe work breakdown, fixed contracts, file layout, and
+verification rows live in [`umb-20/`](umb-20/README.md). It begins with
+`U20-00`; do not mark the package active until the previous worktree has a
+recoverable checkpoint or the user explicitly authorizes continuing without
+one.
 
 | Child | Scope | Additional gate |
 |---|---|---|

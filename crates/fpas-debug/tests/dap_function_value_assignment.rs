@@ -87,6 +87,31 @@ fn locals_reference(adapter: &mut DapServer, seq: &mut u64, frame_id: u64) -> u6
         .expect("locals")
 }
 
+fn variable<'a>(variables: &'a [Value], name: &str) -> &'a Value {
+    variables
+        .iter()
+        .find(|variable| variable["name"] == name)
+        .unwrap_or_else(|| panic!("missing {name}"))
+}
+
+fn listed_variables(adapter: &mut DapServer, seq: &mut u64, reference: u64) -> Vec<Value> {
+    send(
+        adapter,
+        seq,
+        "variables",
+        json!({"variablesReference":reference}),
+    )[0]["body"]["variables"]
+        .as_array()
+        .expect("variables")
+        .clone()
+}
+
+fn child_handle(variables: &[Value], name: &str) -> u64 {
+    variable(variables, name)["variablesReference"]
+        .as_u64()
+        .unwrap_or_else(|| panic!("{name} variablesReference"))
+}
+
 fn initialize_and_stop(adapter: &mut DapServer, invalidation: bool) -> (u64, u64) {
     let mut seq = 0;
     let initialized = send(
@@ -334,4 +359,63 @@ fn dap_and_jsonl_function_assignment_results_and_errors_match() {
         dap_failure[0]["body"]["error"]["help"],
         jsonl_failure[0]["error"]["help"]
     );
+}
+
+#[test]
+fn dap_synthetic_function_children_stay_non_assignable_without_invalidation() {
+    let mut adapter = server();
+    let (mut seq, initial_frame) = initialize_and_stop(&mut adapter, true);
+    let locals = locals_reference(&mut adapter, &mut seq, initial_frame);
+    let locals_page = listed_variables(&mut adapter, &mut seq, locals);
+    let captured_handle = child_handle(&locals_page, "Captured");
+    assert_ne!(captured_handle, 0);
+    let children = listed_variables(&mut adapter, &mut seq, captured_handle);
+    assert!(
+        children.iter().any(|child| child["name"] == "capture[0]"),
+        "{children:?}"
+    );
+
+    let rejected = send(
+        &mut adapter,
+        &mut seq,
+        "setVariable",
+        json!({"variablesReference":captured_handle,"name":"capture[0]","value":"99"}),
+    );
+    assert_eq!(rejected.len(), 1, "{rejected:?}");
+    assert_eq!(rejected[0]["success"], false);
+    assert!(rejected.iter().all(|record| record.get("event").is_none()));
+    assert_eq!(
+        rejected[0]["body"]["error"]["code"],
+        "variable_path_unsupported"
+    );
+
+    let current = frame(&mut adapter, &mut seq);
+    let bound = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"Current","value":"Receiver.Add"}),
+    );
+    assert_eq!(bound[0]["success"], true, "{bound:?}");
+    assert_eq!(bound[1]["event"], "invalidated");
+    let current = frame(&mut adapter, &mut seq);
+    let locals = locals_reference(&mut adapter, &mut seq, current);
+    let locals_page = listed_variables(&mut adapter, &mut seq, locals);
+    let receiver_handle = child_handle(&locals_page, "Current");
+    let children = listed_variables(&mut adapter, &mut seq, receiver_handle);
+    assert!(
+        children.iter().any(|child| child["name"] == "receiver"),
+        "{children:?}"
+    );
+    let rejected = send(
+        &mut adapter,
+        &mut seq,
+        "setVariable",
+        json!({"variablesReference":receiver_handle,"name":"receiver","value":"Receiver"}),
+    );
+    assert_eq!(rejected.len(), 1, "{rejected:?}");
+    assert_eq!(rejected[0]["success"], false);
+    assert!(rejected.iter().all(|record| record.get("event").is_none()));
+    let invoked = evaluate(&mut adapter, &mut seq, current, "Current(1)");
+    assert_eq!(invoked[0]["body"]["result"], "11", "{invoked:?}");
 }

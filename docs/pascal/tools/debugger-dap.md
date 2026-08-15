@@ -68,7 +68,8 @@ simple name uses lexical lookup first. `Receiver.Method` binds one evaluated
 record snapshot through the compiler-retained record-method mapping after
 exact receiver-layout and visible-signature validation. Receiver graphs with
 live or opaque identities are rejected atomically. Anonymous closure syntax, escaping or
-foreign-task task-bound copies, and inactive-variant function payloads remain rejected.
+foreign-task task-bound copies, synthetic function children such as `receiver`
+and `capture[i]`, and inactive-variant function payloads remain rejected.
 Task-typed targets accept one visible binding that already holds a compatible
 task handle. Standard `setVariable` / `setExpression` copy the exact runtime
 ID; they do not add a DAP capability or custom request. Numeric IDs, `<task N>`

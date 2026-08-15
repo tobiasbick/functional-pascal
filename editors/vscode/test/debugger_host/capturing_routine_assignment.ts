@@ -55,6 +55,13 @@ export async function verifyCapturingRoutineAssignment(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "capturing-routine-assignment", lines);
+  const stopLine = lines.findIndex((line) => line.includes("var MakeStop: integer := 0"));
+  assert.ok(stopLine >= 0, "compact program includes MakeStop");
+  const breakpoint = new vscode.SourceBreakpoint(
+    new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 0)),
+    true
+  );
+  vscode.debug.addBreakpoints([breakpoint]);
   const marker = { received: received.length, sent: sent.length };
   let session: vscode.DebugSession | undefined;
   try {
@@ -64,13 +71,12 @@ export async function verifyCapturingRoutineAssignment(
       name: "FPAS debugger capturing routine assignment",
       program: sourcePath,
       cwd: workspaceRoot,
-      stopOnEntry: true
+      stopOnEntry: false
     });
     await waitFor(
       () => sent.slice(marker.sent).some((message) => message.event === "stopped"),
-      "capturing-routine-assignment entry"
+      "capturing-routine-assignment MakeStop"
     );
-    await waitUntilInitialized(session as vscode.DebugSession, "MakeStop");
 
     await setLocal(session as vscode.DebugSession, "Current", "AddBase", "<function makeadder.addbase>");
     await setExpression(
@@ -116,21 +122,10 @@ export async function verifyCapturingRoutineAssignment(
       "Extension Host forwards Watch capturing-routine assignment"
     );
   } finally {
+    vscode.debug.removeBreakpoints([breakpoint]);
     if (session) await vscode.debug.stopDebugging(session);
     await closeAndRemoveSource(sourcePath);
   }
-}
-
-async function waitUntilInitialized(
-  session: vscode.DebugSession,
-  name: string
-): Promise<void> {
-  for (let attempt = 0; attempt < 64; attempt += 1) {
-    const variable = await namedVariable(session, "Locals", name).catch(() => undefined);
-    if (variable && variable.value !== "<uninitialized>") return;
-    await session.customRequest("stepIn", { threadId: 1 });
-  }
-  throw new Error(`${name} never became initialized`);
 }
 
 async function setLocal(

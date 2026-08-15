@@ -53,6 +53,13 @@ export async function verifyFunctionValueAssignment(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "function-value-assignment", lines);
+  const stopLine = lines.findIndex((line) => line.includes("mutable var StopMarker: integer := 0"));
+  assert.ok(stopLine >= 0, "compact program includes StopMarker");
+  const breakpoint = new vscode.SourceBreakpoint(
+    new vscode.Location(vscode.Uri.file(sourcePath), new vscode.Position(stopLine, 0)),
+    true
+  );
+  vscode.debug.addBreakpoints([breakpoint]);
   const marker = { received: received.length, sent: sent.length };
   let session: vscode.DebugSession | undefined;
   try {
@@ -62,13 +69,12 @@ export async function verifyFunctionValueAssignment(
       name: "FPAS debugger function-value assignment",
       program: sourcePath,
       cwd: workspaceRoot,
-      stopOnEntry: true
+      stopOnEntry: false
     });
     await waitFor(
       () => sent.slice(marker.sent).some((message) => message.event === "stopped"),
-      "function-value-assignment entry"
+      "function-value-assignment StopMarker"
     );
-    await waitUntilInitialized(session as vscode.DebugSession, "StopMarker");
 
     await setExpression(session as vscode.DebugSession, "Current", "AddTwo", "<function addtwo>");
     const current = await namedVariable(session as vscode.DebugSession, "Locals", "Current");
@@ -104,21 +110,10 @@ export async function verifyFunctionValueAssignment(
       "Extension Host forwards textual function-value assignment"
     );
   } finally {
+    vscode.debug.removeBreakpoints([breakpoint]);
     if (session) await vscode.debug.stopDebugging(session);
     await closeAndRemoveSource(sourcePath);
   }
-}
-
-async function waitUntilInitialized(
-  session: vscode.DebugSession,
-  name: string
-): Promise<void> {
-  for (let attempt = 0; attempt < 64; attempt += 1) {
-    const variable = await namedVariable(session, "Locals", name).catch(() => undefined);
-    if (variable && variable.value !== "<uninitialized>") return;
-    await session.customRequest("stepIn", { threadId: 1 });
-  }
-  throw new Error(`${name} never became initialized`);
 }
 
 async function setExpression(

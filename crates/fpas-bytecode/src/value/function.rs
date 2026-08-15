@@ -17,6 +17,8 @@ pub struct FunctionValue {
     pub name: String,
     /// Captured values appended to arguments when invoked.
     pub captures: Vec<Value>,
+    /// Receiver inserted before visible arguments for a debugger-synthesized bound method.
+    pub bound_receiver: Option<Value>,
     /// Whether mutable capture state prevents crossing task boundaries.
     pub task_bound: bool,
     /// Owning runtime task when `task_bound` is true; otherwise `None`.
@@ -34,6 +36,7 @@ impl SharedFunction {
             function,
             name,
             captures,
+            bound_receiver: None,
             task_bound: false,
             owner_task: None,
         }))
@@ -50,8 +53,21 @@ impl SharedFunction {
             function,
             name,
             captures,
+            bound_receiver: None,
             task_bound: true,
             owner_task: Some(owner_task),
+        }))
+    }
+
+    /// Create a non-task-bound method value with one receiver argument.
+    pub fn bound(function: FunctionId, name: String, receiver: Value) -> Self {
+        Self(Arc::new(FunctionValue {
+            function,
+            name,
+            captures: Vec::new(),
+            bound_receiver: Some(receiver),
+            task_bound: false,
+            owner_task: None,
         }))
     }
 }

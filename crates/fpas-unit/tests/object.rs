@@ -9,8 +9,8 @@ use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingKind, DebugScope, DebugSourceLocation,
     EnumLayout, EnumTypeId, EnumVariant, Executable, FunctionDebugInfo, FunctionFlags, FunctionId,
     FunctionInfo, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordField,
-    RecordLayout, RecordProperty, Register, ReturnConvention, SequencePoint, SourceId, SourceMap,
-    SourceRun, StringId, StringTable,
+    RecordLayout, RecordMethod, RecordProperty, Register, ReturnConvention, SequencePoint,
+    SourceId, SourceMap, SourceRun, StringId, StringTable,
 };
 use fpas_unit::object::{
     OBJECT_VERSION, ObjectError, RelocatableObject, RelocationKind, decode_object, encode_object,
@@ -108,6 +108,8 @@ fn candidate() -> Executable {
             "demo.enum".to_string(),
             "item".to_string(),
             "fixture.fpas".to_string(),
+            "method".to_string(),
+            "demo.record.method".to_string(),
         ]),
         globals: vec![GlobalInfo {
             name: StringId::new(3),
@@ -123,6 +125,10 @@ fn candidate() -> Executable {
             properties: vec![RecordProperty {
                 name: StringId::new(5),
                 getter: StringId::new(1),
+            }],
+            methods: vec![RecordMethod {
+                name: StringId::new(9),
+                routine: StringId::new(10),
             }],
         }],
         enums: vec![EnumLayout {

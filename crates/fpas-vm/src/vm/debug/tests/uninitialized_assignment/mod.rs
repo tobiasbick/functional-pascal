@@ -145,6 +145,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                 },
             ],
             properties: Vec::new(),
+            methods: Vec::new(),
         }],
         enums: Vec::new(),
         enum_variants: Vec::new(),

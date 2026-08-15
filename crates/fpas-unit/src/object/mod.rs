@@ -20,7 +20,7 @@ pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
     ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
     ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectRecordLayout,
-    ObjectRecordProperty, ObjectSequencePoint, ObjectSourceRun,
+    ObjectRecordMethod, ObjectRecordProperty, ObjectSequencePoint, ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -34,7 +34,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 5;
+pub const OBJECT_VERSION: u16 = 6;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -145,6 +145,16 @@ impl RelocatableObject {
                             Ok(ObjectRecordProperty {
                                 name: strings(property.name)?,
                                 getter: strings(property.getter)?,
+                            })
+                        })
+                        .collect::<Result<Vec<_>, ObjectError>>()?,
+                    methods: record
+                        .methods
+                        .iter()
+                        .map(|method| {
+                            Ok(ObjectRecordMethod {
+                                name: strings(method.name)?,
+                                routine: strings(method.routine)?,
                             })
                         })
                         .collect::<Result<Vec<_>, ObjectError>>()?,

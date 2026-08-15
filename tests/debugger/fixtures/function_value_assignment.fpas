@@ -4,6 +4,7 @@ uses Std.Console;
 
 type
   Handler = function(Value: integer): integer;
+  NoArgHandler = function(): integer;
   Math = record
     static function Transform(Value: integer): integer;
     begin
@@ -16,6 +17,14 @@ type
       return Value + 4
     end;
   end;
+  Counter = record
+    Base: integer;
+
+    function Add(Self: Counter; Value: integer): integer;
+    begin
+      return Self.Base + Value
+    end;
+  end;
 
 function AddOne(Value: integer): integer;
 begin
@@ -25,6 +34,11 @@ end;
 function AddTwo(Value: integer): integer;
 begin
   return Value + 2
+end;
+
+function Answer(): integer;
+begin
+  return 42
 end;
 
 function MakeAdder(Amount: integer): Handler;
@@ -39,6 +53,10 @@ begin
   var Backup: Handler := AddTwo;
   var Captured: Handler := MakeAdder(10);
   var Frozen: Handler := AddOne;
+  mutable var WrongSignature: NoArgHandler := Answer;
+  var Receiver: Counter := record
+    Base := 10;
+  end;
   var StopMarker: integer := 0;
   WriteLn(Current(1));
   WriteLn(Captured(1))

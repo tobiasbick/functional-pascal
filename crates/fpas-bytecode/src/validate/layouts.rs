@@ -74,6 +74,10 @@ pub(super) fn validate_tables(executable: &crate::Executable) -> Result<(), Vali
             validate_string(executable, property.name, "record property name")?;
             validate_string(executable, property.getter, "record property getter")?;
         }
+        for method in &record.methods {
+            validate_string(executable, method.name, "record method name")?;
+            validate_string(executable, method.routine, "record method routine")?;
+        }
     }
     for enumeration in &executable.enums {
         validate_string(executable, enumeration.name, "enum name")?;

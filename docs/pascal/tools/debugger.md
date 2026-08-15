@@ -104,6 +104,13 @@ routine such as `Current := AddTwo`, `Current := Math.Transform`, or a named
 nested routine whose captures are the recorded immutable values and existing
 mutable cells in the exact selected live lexical-owner frame, for example
 `Current := AddBase`, `Current := MakeAdder.AddBase`, or `Current := AddCell`.
+An instance method can be bound to one evaluated record receiver snapshot, for
+example `Current := Receiver.Add`. The record layout supplies the exact method
+mapping retained by the compiler; the debugger does not infer a method from a
+rendered type or function name. The method's receiver parameter and remaining
+portable signature must match the exact runtime record layout and destination
+function type. Receiver graphs containing cells, task handles, opaque handles,
+or task-bound functions are rejected before mutation.
 Copying a binding shares the exact existing function and capture storage and
 does not reconstruct its environment. An already materialized task-bound
 function can be copied only within its selected owner task, onto a mutable
@@ -120,13 +127,15 @@ local or parameter register in that same frame; globals, capture-cell roots,
 aggregate descendants, and Dynamic endpoints remain rejected for those values.
 A simple name uses ordinary lexical lookup first;
 the executable catalog is consulted only after that lookup reports an unknown
-name. Qualified identifier chains are catalog names only. Matching is
+name. For `Receiver.Method`, the receiver expression is evaluated once first;
+an identifier-only chain falls back to the executable catalog only when its
+receiver name is unknown. Matching is
 ASCII-case-insensitive, an unqualified short name is accepted only when exactly
 one executable routine has that final component, and the stored value uses
 canonical spelling. Nested routines are stored under their enclosing-routine
 path, so `AddBase` and `MakeAdder.AddBase` identify the same unique nested
 function. The routine signature is proven from portable parameter and
-result metadata; anonymous closure syntax, bound methods, computed
+result metadata; anonymous closure syntax, non-method computed function
 expressions, Dynamic endpoints, foreign-task or escaping task-bound copies,
 and inactive-variant function payloads remain rejected.
 A mutable task-typed target can be replaced by copying one visible binding

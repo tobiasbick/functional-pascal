@@ -2,6 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
+mod bound_method;
 mod captures;
 mod destination;
 mod routine;
@@ -14,6 +15,7 @@ use super::super::evaluation::DebugEvaluationLimits;
 use super::super::inspection::{InspectionSnapshot, MutationTarget};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 
+pub(in crate::vm::debug) use bound_method::prepare as prepare_bound_method;
 pub(in crate::vm::debug) use routine::prepare as prepare_routine;
 pub(in crate::vm::debug) use source::{FunctionSource, extract as source};
 

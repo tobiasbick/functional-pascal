@@ -46,6 +46,8 @@ pub struct ObjectRecordLayout {
     pub field_types: Vec<u32>,
     /// Readable properties and canonical getter routine names.
     pub properties: Vec<ObjectRecordProperty>,
+    /// Instance methods and canonical routine names.
+    pub methods: Vec<ObjectRecordMethod>,
 }
 
 /// Relocatable property-to-getter mapping.
@@ -55,6 +57,15 @@ pub struct ObjectRecordProperty {
     pub name: String,
     /// Canonical qualified getter routine name.
     pub getter: String,
+}
+
+/// Relocatable method-to-routine mapping.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectRecordMethod {
+    /// Source method member name.
+    pub name: String,
+    /// Canonical qualified routine name.
+    pub routine: String,
 }
 
 /// One enum variant and its associated fields.

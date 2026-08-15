@@ -76,12 +76,19 @@ impl ValueDetacher {
             Value::OptionSome(value) => Ok(Value::OptionSome(Box::new(self.detach(value)?))),
             Value::OptionNone => Ok(Value::OptionNone),
             Value::Function(function) => {
+                let bound_receiver = function
+                    .bound_receiver
+                    .as_ref()
+                    .map(|receiver| self.detach(receiver))
+                    .transpose()?;
                 let captures = function
                     .captures
                     .iter()
                     .map(|value| self.detach(value))
                     .collect::<Result<Vec<_>, _>>()?;
-                Ok(if function.task_bound {
+                Ok(if let Some(receiver) = bound_receiver {
+                    Value::bound_function(function.function, function.name.clone(), receiver)
+                } else if function.task_bound {
                     Value::task_owned_function(
                         function.function,
                         function.name.clone(),

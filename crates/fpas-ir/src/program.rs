@@ -148,6 +148,8 @@ pub struct RecordLayout {
     pub fields: Vec<RecordField>,
     /// Readable properties and their exact compiler-resolved getter names.
     pub properties: Vec<RecordProperty>,
+    /// Instance methods and their exact compiler-resolved routine names.
+    pub methods: Vec<RecordMethod>,
 }
 
 /// Readable property mapping retained for debugger-side exact binding.
@@ -157,6 +159,15 @@ pub struct RecordProperty {
     pub name: String,
     /// Canonical qualified getter routine name.
     pub getter: String,
+}
+
+/// Instance-method mapping retained for debugger-side bound receiver values.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RecordMethod {
+    /// Public source member spelling.
+    pub name: String,
+    /// Canonical qualified routine name resolved by semantic analysis.
+    pub routine: String,
 }
 
 /// A field inside a record layout.

@@ -82,14 +82,23 @@ impl Worker {
                     "Task target is outside the function table",
                 )
             })?;
-        if usize::from(info.arity) != usize::from(operands.auxiliary) {
+        let visible_arity = usize::from(info.arity)
+            .checked_sub(usize::from(function.bound_receiver.is_some()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Bound task target has no receiver parameter",
+                )
+            })?;
+        if visible_arity != usize::from(operands.auxiliary) {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
                 self.current_address,
                 RUNTIME_WRONG_CALL_ARITY,
                 format!(
                     "Function `{}` expects {} arguments, got {}",
-                    function.name, info.arity, operands.auxiliary
+                    function.name, visible_arity, operands.auxiliary
                 ),
                 "Spawn the task with the declared number of arguments.",
             ));
@@ -99,8 +108,11 @@ impl Worker {
         let arguments = self.clone_window(argument_base, operands.auxiliary)?;
         let (registers, register_initialized) = Self::register_window(
             usize::from(register_count),
-            arguments
-                .into_iter()
+            function
+                .bound_receiver
+                .iter()
+                .cloned()
+                .chain(arguments)
                 .chain(function.captures.iter().cloned()),
         );
         let id = scheduler.alloc_id();

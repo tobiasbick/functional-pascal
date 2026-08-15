@@ -137,6 +137,16 @@ pub fn link_objects(
                         })
                     })
                     .collect::<Result<Vec<_>, LinkError>>()?,
+                methods: record
+                    .methods
+                    .iter()
+                    .map(|method| {
+                        Ok(fpas_bytecode::RecordMethod {
+                            name: strings.intern(&method.name)?,
+                            routine: strings.intern(&method.routine)?,
+                        })
+                    })
+                    .collect::<Result<Vec<_>, LinkError>>()?,
             })
         })
         .collect::<Result<Vec<_>, LinkError>>()?;

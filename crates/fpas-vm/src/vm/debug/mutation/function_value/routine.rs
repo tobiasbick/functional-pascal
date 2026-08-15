@@ -130,7 +130,7 @@ fn resolve_unique(
     }
 }
 
-fn portable_signature(
+pub(super) fn portable_signature(
     executable: &Executable,
     function: &FunctionInfo,
     canonical: &str,

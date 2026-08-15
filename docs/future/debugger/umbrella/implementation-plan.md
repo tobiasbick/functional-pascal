@@ -46,12 +46,21 @@ mixing unrelated changes.
 | Child | Status | Scope | Additional gate |
 |---|---|---|---|
 | `UMB-10A` | done | Copy an already materialized task-bound function | Same-owner, same-task lifetime and escape proof; foreign, global, descendant, spawn, and stale cases fail atomically |
-| `UMB-10B` | pending | Enter a new anonymous closure expression | Bounded parser and exact capture provenance; no display-text or dynamic-name inference |
-| `UMB-10C` | pending | Synthesize a bound receiver callable | Exact method identity, receiver type/layout, lifetime, and task ownership |
+| `UMB-10B` | blocked by `UMB-90` | Enter a new anonymous closure expression | A new body needs a verified function in the shared live executable; resume only after versioned image replacement exists, then prove bounded parsing and exact capture provenance |
+| `UMB-10C` | done | Synthesize a bound receiver callable | Exact method identity, receiver type/layout, lifetime, and task ownership |
 | `UMB-10D` | pending | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | Separate feasibility decision for each identity class; no generic unsafe fallback |
 
 Completing one child does not mark `UMB-10` complete until every other child is
 implemented or reclassified by evidence.
+
+`UMB-10B` is not implementable as assignment-only work. `SharedFunction`
+contains an executable-local `FunctionId`, and every worker resolves that ID in
+the immutable `Arc<VerifiedExecutable>` shared by the session. A newly entered
+body therefore requires verified code and metadata to be committed into a
+versioned live image. Source-text matching against an existing function or a
+debugger-only interpreter would violate the identity and one-engine contracts.
+The capability remains inside this umbrella and resumes after `UMB-90`; it is
+not duplicated in the central deferred list.
 
 ## `UMB-20` — Low-dependency advanced breakpoints
 

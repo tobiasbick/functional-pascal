@@ -125,8 +125,12 @@ parameter register of that owner frame. A task-bound source may be copied only
 within its selected owner task and frame; global, descendant, capture-cell,
 foreign-task, and stale destinations fail without mutation. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an
-unknown name. Qualified identifier chains are catalog names only. Anonymous
-closure syntax, bound methods, computed expressions, escaping or foreign-task
+unknown name. `Receiver.Method` constructs a bound method from the receiver's
+exact runtime record layout and compiler-retained method mapping. The receiver
+is evaluated once, its method signature must match the destination, and live or
+opaque identities inside the receiver graph are rejected. An identifier-only
+chain falls back to the routine catalog only when its receiver name is unknown.
+Anonymous closure syntax, non-method computed expressions, escaping or foreign-task
 copies of materialized task-bound functions, and
 inactive-variant function payloads remain rejected. A task-typed target accepts
 one visible source binding that already holds a compatible task handle, for

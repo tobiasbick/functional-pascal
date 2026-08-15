@@ -26,10 +26,12 @@ UMB-01 contract decomposition
                             UMB-80 record and replay
                               |
                               v
-                            UMB-90 hot reload
-                              |
-                              v
-                            UMB-99 closure
+UMB-90 hot reload
+      |
+      +--> UMB-10B entered anonymous closures
+      |
+      v
+    UMB-99 closure
 ```
 
 `UMB-10`, `UMB-20`, and the contract-only portion of `UMB-30` may be analyzed
@@ -51,6 +53,7 @@ their files, runtime invariants, and verification gates are proven disjoint.
 | `UMB-70` | `UMB-40A` and stable identities | Data stops and actions require deterministic shared-state visibility and exact mutation identities |
 | `UMB-80` | `UMB-40`, `UMB-50`, `UMB-70` identity hooks | Replay must capture scheduler and host events at stable observation points |
 | `UMB-90` | `UMB-80` snapshot/version model | Hot reload needs versioned state and compatibility proofs for suspended execution |
+| `UMB-10B` | `UMB-90` | A newly entered closure body needs a verified function identity in the versioned live executable |
 | `UMB-99` | all resolved primary packages | Runs final parity, packaging, documentation, and backlog cleanup |
 
 ## Shared gates
@@ -61,4 +64,3 @@ changes a machine operation also depends on JSONL before DAP and VS Code.
 
 If a prerequisite is rejected, dependent packages stop and are re-scoped in
 this map before implementation continues.
-

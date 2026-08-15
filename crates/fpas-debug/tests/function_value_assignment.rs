@@ -158,6 +158,32 @@ fn jsonl_function_values_copy_atomically_and_continue() {
     );
     assert_eq!(qualified_call[0]["body"]["result"], "4");
 
+    let current = frame(&mut server, &mut id);
+    let bound = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Current","expression":"Receiver.Add"}),
+    );
+    assert_eq!(bound[0]["success"], true, "{bound:?}");
+    assert_eq!(bound[0]["body"]["result"], "<function Counter.Add>");
+    let current = frame(&mut server, &mut id);
+    let bound_call = send(
+        &mut server,
+        &mut id,
+        "evaluate",
+        json!({"frame_id":current,"expression":"Current(1)"}),
+    );
+    assert_eq!(bound_call[0]["body"]["result"], "11", "{bound_call:?}");
+    let reset = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Current","expression":"Math.Transform"}),
+    );
+    assert_eq!(reset[0]["success"], true, "{reset:?}");
+    let current = frame(&mut server, &mut id);
+
     let failures = [
         ("Frozen", "Backup", "variable_not_mutable"),
         ("Current", "Transform", "call_ambiguous"),
@@ -168,6 +194,8 @@ fn jsonl_function_values_copy_atomically_and_continue() {
             "unsupported_expression",
         ),
         ("Current", "1", "variable_value_type"),
+        ("Current", "Receiver.Missing", "unknown_name"),
+        ("WrongSignature", "Receiver.Add", "variable_value_type"),
         ("Current", "MissingRoutine", "unknown_name"),
     ];
     for (target, expression, code) in failures {

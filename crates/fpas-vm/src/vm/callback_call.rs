@@ -46,7 +46,16 @@ impl Worker {
                     "Callback target is outside the function table",
                 )
             })?;
-        if arguments.len() != usize::from(info.arity) {
+        let visible_arity = usize::from(info.arity)
+            .checked_sub(usize::from(function.bound_receiver.is_some()))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Bound callback target has no receiver parameter",
+                )
+            })?;
+        if arguments.len() != visible_arity {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
                 self.current_address,
@@ -54,19 +63,25 @@ impl Worker {
                 format!(
                     "Function `{}` expects {} arguments, got {}",
                     function.name,
-                    info.arity,
+                    visible_arity,
                     arguments.len()
                 ),
                 "Check the callback signature and the intrinsic's callback contract.",
             ));
         }
 
+        let call_arguments = function
+            .bound_receiver
+            .iter()
+            .chain(arguments)
+            .cloned()
+            .collect::<Vec<_>>();
         let mut callback = if let Some(mut callback) = self.callback_worker.borrow_mut().take() {
             callback.reset_for_callback(
                 target,
                 info.code.start,
                 info.register_count,
-                arguments,
+                &call_arguments,
                 &function.captures,
                 self.task_id,
             )?;
@@ -75,7 +90,7 @@ impl Worker {
             let mut callback = Self::for_function_with_captures(
                 Arc::clone(&self.executable),
                 target,
-                arguments,
+                &call_arguments,
                 &function.captures,
                 Arc::clone(&self.globals),
                 Arc::clone(&self.layouts),

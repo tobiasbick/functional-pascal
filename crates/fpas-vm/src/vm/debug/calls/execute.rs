@@ -86,6 +86,7 @@ impl CallSandbox {
             DebugCallTarget::Named(name) => self.invoke_named(&name, arguments),
             DebugCallTarget::Value(Value::Function(function)) => self.invoke_function(
                 function.function,
+                function.bound_receiver.as_ref(),
                 &function.captures,
                 arguments,
                 &function.name,
@@ -147,7 +148,9 @@ impl CallSandbox {
         arguments: Vec<Value>,
     ) -> Result<Value, DebugSessionError> {
         match resolve_named(&self.executable, &self.layouts, name)? {
-            NamedTarget::Function(function) => self.invoke_function(function, &[], arguments, name),
+            NamedTarget::Function(function) => {
+                self.invoke_function(function, None, &[], arguments, name)
+            }
             NamedTarget::EnumConstructor(layout) => enum_constructor::construct(
                 &self.executable,
                 layout,
@@ -236,8 +239,9 @@ impl CallSandbox {
     fn invoke_function(
         &mut self,
         function: FunctionId,
+        bound_receiver: Option<&Value>,
         captures: &[Value],
-        arguments: Vec<Value>,
+        mut arguments: Vec<Value>,
         display_name: &str,
     ) -> Result<Value, DebugSessionError> {
         let info = self
@@ -252,12 +256,21 @@ impl CallSandbox {
                     "Rebuild the executable with the current compiler.",
                 )
             })?;
-        if usize::from(info.arity) != arguments.len() {
+        let visible_arity = usize::from(info.arity)
+            .checked_sub(usize::from(bound_receiver.is_some()))
+            .ok_or_else(|| {
+                error(
+                    DebugErrorKind::CallArity,
+                    format!("debug callable `{display_name}` has no receiver parameter"),
+                    "Rebuild the executable with current bound-method metadata.",
+                )
+            })?;
+        if visible_arity != arguments.len() {
             return Err(error(
                 DebugErrorKind::CallArity,
                 format!(
                     "debug callable `{display_name}` expects {} arguments, received {}",
-                    info.arity,
+                    visible_arity,
                     arguments.len()
                 ),
                 "Pass the exact declared argument count.",
@@ -280,6 +293,9 @@ impl CallSandbox {
             .copied()
             .unwrap_or(DebugEffectSet::UNKNOWN);
         self.require_safe(display_name, effects)?;
+        if let Some(receiver) = bound_receiver {
+            arguments.insert(0, receiver.clone());
+        }
         let arguments = self.detach_values(&arguments)?;
         let captures = self.detach_values(captures)?;
         let mut worker = Worker::for_function_with_captures(

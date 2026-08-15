@@ -210,6 +210,41 @@ fn dap_set_variable_and_set_expression_copy_function_values() {
     assert_eq!(qualified[1]["event"], "invalidated");
 
     let current = frame(&mut adapter, &mut seq);
+    let bound = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"Current","value":"Receiver.Add"}),
+    );
+    assert_eq!(bound[0]["success"], true, "{bound:?}");
+    assert_eq!(bound[0]["body"]["value"], "<function Counter.Add>");
+    assert_eq!(bound[1]["event"], "invalidated");
+    let current = frame(&mut adapter, &mut seq);
+    let bound_call = evaluate(&mut adapter, &mut seq, current, "Current(1)");
+    assert_eq!(bound_call[0]["body"]["result"], "11", "{bound_call:?}");
+
+    let reset = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"Current","value":"Math.Transform"}),
+    );
+    assert_eq!(reset[0]["success"], true, "{reset:?}");
+    let current = frame(&mut adapter, &mut seq);
+    let wrong_signature = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current,"expression":"WrongSignature","value":"Receiver.Add"}),
+    );
+    assert_eq!(wrong_signature.len(), 1, "{wrong_signature:?}");
+    assert_eq!(wrong_signature[0]["success"], false);
+    assert!(
+        wrong_signature
+            .iter()
+            .all(|record| record.get("event").is_none())
+    );
+
     let ambiguous = send(
         &mut adapter,
         &mut seq,

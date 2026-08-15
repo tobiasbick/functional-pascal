@@ -27,6 +27,9 @@ pub(super) fn require_eligible(
         max_values,
     };
     state.visited.insert(identity_of_function(function));
+    if let Some(receiver) = &function.bound_receiver {
+        walk(receiver, 1, &mut state)?;
+    }
     function
         .captures
         .iter()
@@ -53,6 +56,9 @@ pub(super) fn require_task_owned(
         max_values,
     };
     state.visited.insert(identity_of_function(function));
+    if let Some(receiver) = &function.bound_receiver {
+        walk(receiver, 1, &mut state)?;
+    }
     for capture in &function.captures {
         match capture {
             Value::Cell(cell) => {
@@ -145,10 +151,15 @@ fn walk(value: &Value, depth: usize, state: &mut WalkState) -> Result<(), DebugS
             "source function captures a nested task-bound function",
             "Assign a non-task-bound function whose captures contain no cells, tasks, or opaque handles.",
         )),
-        Value::Function(function) => function
-            .captures
-            .iter()
-            .try_for_each(|capture| walk(capture, depth.saturating_add(1), state)),
+        Value::Function(function) => {
+            if let Some(receiver) = &function.bound_receiver {
+                walk(receiver, depth.saturating_add(1), state)?;
+            }
+            function
+                .captures
+                .iter()
+                .try_for_each(|capture| walk(capture, depth.saturating_add(1), state))
+        }
         Value::Array(values) => values
             .iter()
             .try_for_each(|value| walk(value, depth.saturating_add(1), state)),
@@ -216,7 +227,7 @@ fn limit(message: String, hint: &str) -> DebugSessionError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fpas_bytecode::FunctionId;
+    use fpas_bytecode::{FunctionId, RecordTypeId, RuntimeRecordLayout, SharedRecord};
     use std::sync::{Arc, Mutex};
 
     fn function(captures: Vec<Value>, task_bound: bool) -> SharedFunction {
@@ -229,6 +240,30 @@ mod tests {
             Value::Function(function) => function,
             other => panic!("expected function, got {}", other.type_name()),
         }
+    }
+
+    #[test]
+    fn bound_receiver_rejects_nested_task_identity() {
+        let receiver = Value::Record(SharedRecord::new(
+            Arc::new(RuntimeRecordLayout {
+                record: RecordTypeId::new(0),
+                type_name: "Holder".to_string(),
+                fields: vec!["pending".to_string()],
+            }),
+            vec![Value::Task(7)],
+        ));
+        let Value::Function(function) =
+            Value::bound_function(FunctionId::new(1), "Holder.Read".to_string(), receiver)
+        else {
+            unreachable!("bound constructor")
+        };
+
+        assert_eq!(
+            require_eligible(&function, 16, 32)
+                .expect_err("task identity must not escape through a receiver")
+                .kind,
+            DebugErrorKind::VariableValueType
+        );
     }
 
     #[test]

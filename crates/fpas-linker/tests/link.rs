@@ -362,6 +362,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
         properties: Vec::new(),
+        methods: Vec::new(),
     });
     first.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -385,6 +386,7 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
         fields: vec!["kind".to_string(), "character".to_string()],
         field_types: vec![0, 0],
         properties: Vec::new(),
+        methods: Vec::new(),
     });
     second.definitions.push(ObjectDefinition {
         name: "std.console.keyevent".to_string(),
@@ -408,6 +410,7 @@ fn incompatible_record_layout_import_is_rejected_before_relocation() {
         fields: vec!["x".to_string(), "y".to_string()],
         field_types: vec![0, 0],
         properties: Vec::new(),
+        methods: Vec::new(),
     });
     library.definitions.push(ObjectDefinition {
         name: "library.unit.point".to_string(),
@@ -453,6 +456,10 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         fields: vec!["x".to_string()],
         field_types: vec![0],
         properties: Vec::new(),
+        methods: vec![fpas_unit::object::ObjectRecordMethod {
+            name: "translate".to_string(),
+            routine: "library.unit.alpha".to_string(),
+        }],
     });
     library.enums.push(fpas_unit::object::ObjectEnumLayout {
         name: "library.unit.choice".to_string(),
@@ -552,6 +559,15 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
     let linked = link_objects(&[library], &root).expect("layout link");
     assert_eq!(linked.executable().globals.len(), 1);
     assert_eq!(linked.executable().records.len(), 1);
+    let method = linked.executable().records[0].methods[0];
+    assert_eq!(
+        linked.executable().strings.get(method.name),
+        Some("translate")
+    );
+    assert_eq!(
+        linked.executable().strings.get(method.routine),
+        Some("library.unit.alpha")
+    );
     assert_eq!(linked.executable().enums.len(), 1);
     assert_eq!(linked.executable().enum_variants.len(), 1);
     assert_eq!(

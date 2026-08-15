@@ -136,6 +136,7 @@ pub fn all_opcodes_executable() -> Executable {
                 name: StringId::new(4),
                 getter: StringId::new(1),
             }],
+            methods: Vec::new(),
         }],
         enums: vec![EnumLayout {
             name: StringId::new(5),

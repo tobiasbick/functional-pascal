@@ -27,8 +27,8 @@ pub use intrinsic::{
     TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
-    Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, RecordProperty,
-    SourceMap, SourceRun, StringTable,
+    Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, RecordMethod,
+    RecordProperty, SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
     ConstantId, DebugBindingId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId,
@@ -42,4 +42,4 @@ pub use value::{
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 13;
+pub const BYTECODE_VERSION: u32 = 14;

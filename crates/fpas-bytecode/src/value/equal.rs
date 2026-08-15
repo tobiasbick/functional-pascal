@@ -54,6 +54,11 @@ fn compare_values(a: &Value, b: &Value) -> bool {
                 && a.name == b.name
                 && a.task_bound == b.task_bound
                 && a.owner_task == b.owner_task
+                && match (&a.bound_receiver, &b.bound_receiver) {
+                    (Some(left), Some(right)) => compare_values(left, right),
+                    (None, None) => true,
+                    _ => false,
+                }
                 && a.captures.len() == b.captures.len()
                 && a.captures
                     .iter()

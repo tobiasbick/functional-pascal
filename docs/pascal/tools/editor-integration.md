@@ -125,7 +125,9 @@ mutable cells. Constructed cell-capturing functions are task-bound to the
 selected task and may be stored only in a mutable local or parameter register
 of that owner frame. An already materialized task-bound function may be copied
 only within that selected owner task and frame; the copy preserves its exact
-function and cell handles. A simple name prefers a visible binding; anonymous
+function and cell handles. `Receiver.Method` binds one evaluated record
+snapshot using compiler-retained method identity and exact signature checks;
+no editor-specific command or name inference is used. A simple name prefers a visible binding; anonymous
 closure syntax, escaping or foreign-task task-bound copies, and
 inactive-variant function payloads remain rejected. A task-typed Variables or Watch target can be replaced by copying one
 visible binding that already holds a compatible task handle, for example

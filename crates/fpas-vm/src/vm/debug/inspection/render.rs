@@ -194,12 +194,17 @@ pub(super) fn render_with_executable(
             format!("<function {}>", function.name),
             value.type_name.clone(),
             function
-                .captures
+                .bound_receiver
                 .iter()
-                .enumerate()
-                .map(|(index, child)| child_value(format!("capture[{index}]"), child, value, None))
+                .map(|receiver| child_value("receiver".to_string(), receiver, value, None))
+                .chain(function.captures.iter().enumerate().map(|(index, child)| {
+                    child_value(format!("capture[{index}]"), child, value, None)
+                }))
                 .collect(),
-            function.captures.len(),
+            function
+                .captures
+                .len()
+                .saturating_add(usize::from(function.bound_receiver.is_some())),
             0,
             value.presentation_hint.clone(),
             limits,

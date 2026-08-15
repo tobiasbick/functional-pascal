@@ -25,7 +25,8 @@ pub(in crate::vm::debug) use dictionary::{DictionaryTransformation, insert, remo
 pub use empty_storage::DebugStorageInitializationResult;
 pub(in crate::vm::debug) use function_value::{
     AssignmentContext as FunctionAssignmentContext, FunctionSource, inactive_function_payload,
-    is_function_type, prepare as prepare_function_value, prepare_routine as prepare_routine_value,
+    is_function_type, prepare as prepare_function_value,
+    prepare_bound_method as prepare_bound_method_value, prepare_routine as prepare_routine_value,
     source as function_value_source,
 };
 pub use model::{

@@ -144,6 +144,7 @@ pub fn scalar_program() -> Program {
                 ty: INTEGER,
             }],
             properties: Vec::new(),
+            methods: Vec::new(),
         }],
         enum_layouts: vec![EnumLayout {
             id: EnumLayoutId::new(0),

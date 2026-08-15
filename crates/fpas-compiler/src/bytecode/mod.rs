@@ -88,10 +88,21 @@ pub(super) fn compile_program(
                     })
                 })
                 .collect::<Result<Vec<_>, CompileError>>()?;
+            let methods = layout
+                .methods
+                .iter()
+                .map(|method| {
+                    Ok(fpas_bytecode::RecordMethod {
+                        name: metadata.intern_string(&method.name)?,
+                        routine: metadata.intern_string(&method.routine)?,
+                    })
+                })
+                .collect::<Result<Vec<_>, CompileError>>()?;
             Ok(fpas_bytecode::RecordLayout {
                 name,
                 fields,
                 properties,
+                methods,
             })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;

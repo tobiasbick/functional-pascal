@@ -186,6 +186,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
                 ty: DebugTypeId::new(2),
             }],
             properties: Vec::new(),
+            methods: Vec::new(),
         }],
         enums: vec![
             EnumLayout {

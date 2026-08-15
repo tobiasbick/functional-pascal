@@ -80,6 +80,14 @@ impl TypeTable {
                         })
                 })
                 .collect(),
+            methods: record
+                .methods
+                .iter()
+                .map(|(name, _)| fpas_ir::RecordMethod {
+                    name: name.clone(),
+                    routine: format!("{}.{}", record.name, name),
+                })
+                .collect(),
         });
         Ok(id)
     }

@@ -54,14 +54,16 @@ An already materialized task-bound function can be copied within that selected
 owner task and frame onto another mutable local or parameter register; the
 exact function and cell handles are preserved. Global, descendant,
 capture-cell, foreign-task, and stale-frame escape paths remain rejected.
-Bounded
-copying of an already materialized, visible task handle onto a structurally
+Bound-receiver synthesis from compiler-retained record method mappings is
+implemented through the same mutation surfaces with exact receiver-layout,
+signature, and value-graph validation. Bounded copying of an already
+materialized, visible task handle onto a structurally
 compatible mutable target is implemented through those same surfaces: the copy
 preserves the exact runtime task ID and does not consult the scheduler. Newly
-entered anonymous closures, bound-receiver synthesis,
-Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable
-editing remain recorded centrally in
-[deferred.md](deferred.md).
+entered anonymous closures require the versioned live-image work in `UMB-90`.
+Dynamic endpoints, capture-cell destinations, opaque resources, and in-place
+callable editing remain owned by `UMB-10D` in the
+[active umbrella](umbrella/implementation-plan.md).
 
 Bounded forced return from a selected ordinary callee — including an older
 frame of the stop-owning task — is implemented through JSONL `frame.return`,

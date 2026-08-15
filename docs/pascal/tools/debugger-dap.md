@@ -64,7 +64,10 @@ functions are task-bound to the selected task and may be stored only in a
 mutable local or parameter register of that owner frame. An already
 materialized task-bound function may be copied only within that selected owner
 task and frame; the copy preserves its exact function and cell handles. A
-simple name uses lexical lookup first. Anonymous closure syntax, escaping or
+simple name uses lexical lookup first. `Receiver.Method` binds one evaluated
+record snapshot through the compiler-retained record-method mapping after
+exact receiver-layout and visible-signature validation. Receiver graphs with
+live or opaque identities are rejected atomically. Anonymous closure syntax, escaping or
 foreign-task task-bound copies, and inactive-variant function payloads remain rejected.
 Task-typed targets accept one visible binding that already holds a compatible
 task handle. Standard `setVariable` / `setExpression` copy the exact runtime

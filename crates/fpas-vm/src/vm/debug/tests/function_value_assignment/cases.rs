@@ -36,6 +36,35 @@ fn non_capturing_function_replaces_compatible_mutable_local() {
 }
 
 #[test]
+fn metadata_backed_bound_method_replaces_and_invokes_compatible_local() {
+    let mut session = DebugSession::new(assignment_executable()).expect("debug session");
+    stop_with_functions(&mut session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let expression = DebugExpression::Field {
+        base: Box::new(name("Box")),
+        name: "Add".to_string(),
+    };
+    session
+        .set_expression(&root("Current"), &expression, Some(frame))
+        .expect("bind Holder.Add");
+    let frame = session.stack(0, 1).expect("fresh stack").items[0].id;
+    let assigned = runtime(&session, &name("Current"), frame);
+    let Value::Function(function) = assigned else {
+        panic!("bound method must be a function value")
+    };
+    assert_eq!(function.function, FunctionId::new(9));
+    assert!(function.bound_receiver.is_some());
+    assert!(function.captures.is_empty());
+    assert_eq!(
+        session
+            .evaluate(&call("Current", 5), Some(frame))
+            .expect("invoke bound method")
+            .value,
+        "8"
+    );
+}
+
+#[test]
 fn immutable_capture_copy_shares_the_existing_environment() {
     let mut session = DebugSession::new(assignment_executable()).expect("debug session");
     stop_with_functions(&mut session);

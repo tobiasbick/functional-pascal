@@ -75,6 +75,11 @@ impl Value {
         Self::Function(SharedFunction::unbound(function, name, captures))
     }
 
+    /// Create a first-class method value bound to one immutable receiver snapshot.
+    pub fn bound_function(function: crate::FunctionId, name: String, receiver: Value) -> Self {
+        Self::Function(SharedFunction::bound(function, name, receiver))
+    }
+
     /// Create a task-bound function owned by one runtime task.
     ///
     /// The owner token is runtime-only and is never stored in program artifacts.

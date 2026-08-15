@@ -310,6 +310,14 @@ fn encode_records(executable: &Executable) -> Result<EncodedSection, FormatError
             write_u32(&mut bytes, property.name.get());
             write_u32(&mut bytes, property.getter.get());
         }
+        write_u32(
+            &mut bytes,
+            checked_u32("record_methods", record.methods.len())?,
+        );
+        for method in &record.methods {
+            write_u32(&mut bytes, method.name.get());
+            write_u32(&mut bytes, method.routine.get());
+        }
     }
     Ok(EncodedSection {
         tag: TAGS[4],
@@ -350,10 +358,24 @@ fn decode_records(section: DecodedSection<'_>) -> Result<Vec<RecordLayout>, Form
                 getter: StringId::new(reader.u32("record_property_getter")?),
             });
         }
+        let method_count = reader.u32("record_method_count")? as usize;
+        check_count(
+            section.tag,
+            method_count,
+            fpas_bytecode::limits::MAX_LAYOUT_FIELDS,
+        )?;
+        let mut methods = Vec::with_capacity(method_count);
+        for _ in 0..method_count {
+            methods.push(fpas_bytecode::RecordMethod {
+                name: StringId::new(reader.u32("record_method_name")?),
+                routine: StringId::new(reader.u32("record_method_routine")?),
+            });
+        }
         records.push(RecordLayout {
             name,
             fields,
             properties,
+            methods,
         });
     }
     reader.finish()?;

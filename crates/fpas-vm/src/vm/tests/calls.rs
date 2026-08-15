@@ -273,6 +273,59 @@ fn numeric_function_value_calls_without_name_lookup() {
 }
 
 #[test]
+fn bound_function_value_prepends_receiver_before_visible_arguments() {
+    let executable = image(
+        vec![
+            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::CallValue, 2, 0, 1, 1),
+            abc(Opcode::Return, 2, 0, 0, 0),
+            abc(Opcode::AddInteger, 2, 0, 1, 0),
+            abc(Opcode::Return, 2, 0, 0, 0),
+        ],
+        Vec::new(),
+        &[
+            FunctionSpec {
+                start: 0,
+                end: 1,
+                arity: 0,
+                captures: 0,
+                registers: 0,
+                returns: ReturnConvention::Unit,
+            },
+            FunctionSpec {
+                start: 1,
+                end: 3,
+                arity: 2,
+                captures: 0,
+                registers: 3,
+                returns: ReturnConvention::Value,
+            },
+            FunctionSpec {
+                start: 3,
+                end: 5,
+                arity: 2,
+                captures: 0,
+                registers: 3,
+                returns: ReturnConvention::Value,
+            },
+        ],
+    );
+    let bound = Value::bound_function(
+        FunctionId::new(2),
+        "Counter.Add".to_string(),
+        Value::Integer(10),
+    );
+
+    assert_eq!(
+        Vm::new(executable)
+            .call(FunctionId::new(1), vec![bound, Value::Integer(5)])
+            .expect("bound value call should succeed")
+            .value,
+        Value::Integer(15)
+    );
+}
+
+#[test]
 fn mutable_capture_cell_is_shared_in_semantic_capture_order() {
     let executable = image(
         vec![

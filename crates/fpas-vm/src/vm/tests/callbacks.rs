@@ -156,6 +156,23 @@ fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
 }
 
 #[test]
+fn hosted_callback_prepends_a_bound_receiver() {
+    let worker = Worker::new(Arc::new(callback_image())).expect("worker");
+    let function = Value::bound_function(
+        FunctionId::new(1),
+        "Counter.Double".to_string(),
+        Value::Integer(3),
+    );
+
+    assert_eq!(
+        worker
+            .call_callback_sync(&function, &[])
+            .expect("bound callback"),
+        Value::Integer(6)
+    );
+}
+
+#[test]
 fn hosted_callback_worker_keeps_the_owner_task_when_reused() {
     let executable = image(
         vec![

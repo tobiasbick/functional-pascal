@@ -9,6 +9,34 @@ use fpas_bytecode::{DebugBindingKind, DebugType};
 use super::parse_ok;
 
 #[test]
+fn compiler_retains_exact_record_method_mappings_for_debugger_binding() {
+    let program = parse_ok(
+        r#"
+program DebugBoundMethod;
+type Counter = record
+  Base: integer;
+  function Add(Self: Counter; Value: integer): integer;
+  begin
+    return Self.Base + Value
+  end;
+end;
+begin
+  var C: Counter := record Base := 2; end;
+  if C.Add(3) <> 5 then panic('wrong')
+end.
+"#,
+    );
+    let executable = crate::compile(&program).expect("record method source should compile");
+    let image = executable.executable();
+    let record = image.records.first().expect("Counter layout");
+    let method = record.methods.first().expect("Counter.Add mapping");
+
+    assert_eq!(image.strings.get(record.name), Some("Counter"));
+    assert_eq!(image.strings.get(method.name), Some("Add"));
+    assert_eq!(image.strings.get(method.routine), Some("Counter.Add"));
+}
+
+#[test]
 fn compiler_retains_source_bindings_scopes_and_sequence_points() {
     let program = parse_ok(
         r#"

@@ -1,6 +1,7 @@
 # Source-debugger completion umbrella
 
-Status: planning complete; implementation has not started.
+Status: implementation active; see [progress.md](progress.md) for the current
+child and checkpoint.
 
 This directory is the single resumable plan for the remaining source-debugger
 backlog. It absorbs the former `DBG-D03` through `DBG-D09` rows without
@@ -82,4 +83,3 @@ The umbrella is complete only when every primary package is either:
 
 The umbrella directory is then deleted. Current behavior remains in tests and
 `docs/pascal/tools/`; unresolved work remains only in `deferred.md`.
-

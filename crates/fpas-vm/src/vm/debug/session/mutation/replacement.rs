@@ -21,7 +21,7 @@ impl DebugSession {
             {
                 let source =
                     super::super::super::mutation::function_value_source(expression, limits)?;
-                Ok(vec![DebugExpression::Name(source.requested().to_string())])
+                Ok(vec![source.evaluation_expression()])
             }
             super::super::super::mutation::ResolvedAssignment::Existing { target, .. }
                 if super::super::super::mutation::is_task_type(
@@ -46,7 +46,8 @@ impl DebugSession {
             resolved,
             super::super::super::mutation::ResolvedAssignment::Existing { target, .. }
                 if super::super::super::mutation::is_function_type(executable, target.expected_type)
-        ) && super::super::super::mutation::function_value_source(expression, limits).is_ok()
+        ) && super::super::super::mutation::function_value_source(expression, limits)
+            .is_ok_and(|source| source.allows_catalog_fallback())
     }
 
     pub(super) fn validate_replacement_source(
@@ -206,6 +207,16 @@ impl DebugSession {
             }
             super::super::super::mutation::FunctionSource::Routine(_) => {
                 self.prepare_catalog_routine(task_id, expression, destination, frame_id, limits)
+            }
+            super::super::super::mutation::FunctionSource::BoundReceiver { member, .. } => {
+                let receiver = evaluated.ok_or_else(super::replacement_unavailable)?;
+                super::super::super::mutation::prepare_bound_method_value(
+                    &self.executable,
+                    receiver,
+                    &member,
+                    expected,
+                    limits,
+                )
             }
         }
     }

@@ -429,6 +429,7 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 
 mod behavior;
 mod capturing_routine_assignment;
+mod cell_capturing_routine_assignment;
 mod empty_storage_construction;
 mod evaluation;
 mod forced_return;

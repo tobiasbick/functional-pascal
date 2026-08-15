@@ -1,0 +1,225 @@
+program CellCapturingRoutineAssignment;
+
+uses Std.Console, Std.Task;
+
+type
+  Handler = function(Value: integer): integer;
+  Action = procedure();
+  Pack = record
+    Item: Handler;
+  end;
+
+function Identity(Value: integer): integer;
+begin
+  return Value
+end;
+
+procedure Noop();
+begin
+end;
+
+mutable var
+  Shared: Handler := Identity;
+
+function Mutating(): Handler;
+function AddCell(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  var Original: Handler := AddCell;
+  mutable var Current: Handler := Identity;
+  var Frozen: Handler := Identity;
+  mutable var Copy: Handler := Identity;
+  var CellStop: integer := 0;
+  Cell := Cell + 10;
+  WriteLn(Current(0));
+  WriteLn(Original(0));
+  return Current
+end;
+
+function Mix(Base: integer): Handler;
+function MixBoth(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return (Value + Base) + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  mutable var Current: Handler := Identity;
+  var MixStop: integer := 0;
+  return Current
+end;
+
+function OuterCell(): Handler;
+function Mid(): Handler;
+function AddEnclosed(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  var Original: Handler := AddEnclosed;
+  mutable var Current: Handler := Identity;
+  var EnclosingStop: integer := 0;
+  return Current
+end;
+begin
+  mutable var Cell: integer := 1;
+  return Mid()
+end;
+
+function Walk(N: integer): integer;
+function AddAcc(Value: integer): integer;
+begin
+  Acc := Acc + 1;
+  return Value + Acc
+end;
+begin
+  mutable var Acc: integer := N;
+  mutable var Current: Handler := Identity;
+  var WalkStop: integer := 0;
+  if N = 0 then
+  begin
+    return Current(0)
+  end
+  else
+  begin
+    return Walk(N - 1)
+  end
+end;
+
+function Shadow(): Handler;
+function AddOffset(Value: integer): integer;
+begin
+  Offset := Offset + 1;
+  return Value + Offset
+end;
+begin
+  mutable var Offset: integer := 7;
+  mutable var Current: Handler := Identity;
+  begin
+    var Offset: integer := 99;
+    var ShadowStop: integer := 0;
+    return Current
+  end
+end;
+
+function LateCell(): Handler;
+function AddLate(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Current: Handler := Identity;
+  var LateStop: integer := 0;
+  mutable var Cell: integer := 1;
+  var LateReady: integer := 0;
+  return Current
+end;
+
+function PendingDest(): Handler;
+function AddPending(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  var PendingStop: integer := 0;
+  mutable var Current: Handler := Identity;
+  return Current
+end;
+
+procedure Apply(mutable Current: Handler);
+function AddParam(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  var ParamStop: integer := 0
+end;
+
+function NestedBox(): integer;
+function AddBoxed(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 1;
+  mutable var Packed: Pack := record
+    Item := Identity;
+  end;
+  var BoxStop: integer := 0;
+  return 0
+end;
+
+function CaptureDest(): Handler;
+function AddCaptured(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+function Touch(): integer;
+begin
+  return Current(0)
+end;
+begin
+  mutable var Cell: integer := 1;
+  mutable var Current: Handler := Identity;
+  var Keep: integer := Touch();
+  var CaptureDestStop: integer := 0;
+  return Current
+end;
+
+function SpawnProbe(): integer;
+procedure RunSpawn();
+begin
+  Cell := Cell + 1
+end;
+begin
+  mutable var Cell: integer := 1;
+  mutable var Current: Action := Noop;
+  var SpawnStop: integer := 0;
+  var Pending: task := go Current();
+  Wait(Pending);
+  return Cell
+end;
+
+function Worker(): Handler;
+function AddWorker(Value: integer): integer;
+begin
+  Cell := Cell + 1;
+  return Value + Cell
+end;
+begin
+  mutable var Cell: integer := 8;
+  mutable var Current: Handler := Identity;
+  var WorkerStop: integer := 0;
+  return Current
+end;
+
+begin
+  mutable var Current: Handler := Identity;
+  var Mutated: Handler := Mutating();
+  var Combined: Handler := Mix(4);
+  var Enclosed: Handler := OuterCell();
+  var Recursed: integer := Walk(2);
+  var Shadowed: Handler := Shadow();
+  var Late: Handler := LateCell();
+  var Pending: Handler := PendingDest();
+  Apply(Identity);
+  var Boxed: integer := NestedBox();
+  var CapturedDest: Handler := CaptureDest();
+  var Spawned: integer := SpawnProbe();
+  var Child: task := go Worker();
+  var Stolen: Handler := Wait(Child);
+  WriteLn(Stolen(1));
+  var RootStop: integer := 0
+end.

@@ -58,10 +58,12 @@ constructor expression.
 Function-typed targets accept one visible binding that already holds a
 compatible non-task-bound function value, or one statically resolved
 non-capturing executable routine such as `AddTwo` or `Math.Transform`, or a
-named nested routine whose direct captures are immutable initialized values in
-the selected lexical-owner frame. A simple
-name uses lexical lookup first. Anonymous closure syntax, mutable `Cell` or
-`EnclosingCell` captures, and inactive-variant function payloads remain rejected.
+named nested routine whose captures are immutable values or existing mutable
+cells in the selected lexical-owner frame. Constructed cell-capturing
+functions are task-bound to the selected task and may be stored only in a
+mutable local or parameter register of that owner frame. A simple
+name uses lexical lookup first. Anonymous closure syntax, copying already
+materialized task-bound functions, and inactive-variant function payloads remain rejected.
 Task-typed targets accept one visible binding that already holds a compatible
 task handle. Standard `setVariable` / `setExpression` copy the exact runtime
 ID; they do not add a DAP capability or custom request. Numeric IDs, `<task N>`
@@ -82,8 +84,10 @@ indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
 expression as `value`. Function-typed targets accept one visible source binding
 that already holds a compatible non-task-bound function value, one
 statically resolved non-capturing executable routine, or a named nested routine
-whose direct captures are immutable initialized values in the selected
-lexical-owner frame. Task-typed targets accept
+whose captures are immutable values or existing mutable cells in the selected
+lexical-owner frame. Constructed cell-capturing functions are task-bound to
+the selected task and may be stored only in a mutable local or parameter
+register of that owner frame. Task-typed targets accept
 one visible source binding that already holds a compatible task handle.
 Uninitialized
 mutable roots accept the complete binding name only. Omitting `frameId`

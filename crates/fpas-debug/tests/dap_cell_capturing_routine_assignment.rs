@@ -1,4 +1,4 @@
-//! DAP capturing named-routine assignment mapping and invalidation coverage.
+//! DAP Cell-capturing named-routine assignment mapping and invalidation coverage.
 
 #![allow(
     clippy::expect_used,
@@ -10,12 +10,12 @@ use fpas_debug::{PreparedDebugTarget, dap::DapServer};
 use serde_json::{Value, json};
 
 const SOURCE: &str =
-    include_str!("../../../tests/debugger/fixtures/capturing_routine_assignment.fpas");
+    include_str!("../../../tests/debugger/fixtures/cell_capturing_routine_assignment.fpas");
 
 fn server() -> DapServer {
     let (program, diagnostics) = fpas_parser::parse(SOURCE);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
-    let executable = fpas_compiler::compile(&program).expect("compile capturing-routine fixture");
+    let executable = fpas_compiler::compile(&program).expect("compile cell-capturing fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
 }
 
@@ -44,19 +44,6 @@ fn locals_reference(adapter: &mut DapServer, seq: &mut u64, frame_id: u64) -> u6
         .expect("locals")
 }
 
-fn evaluate(adapter: &mut DapServer, seq: &mut u64, frame_id: u64, expression: &str) -> Vec<Value> {
-    let mut result = send(
-        adapter,
-        seq,
-        "evaluate",
-        json!({"frameId":frame_id,"expression":expression}),
-    );
-    if result.is_empty() {
-        result = adapter.wait();
-    }
-    result
-}
-
 fn stop_at(adapter: &mut DapServer, seq: &mut u64, needle: &str) -> u64 {
     let line = SOURCE
         .lines()
@@ -75,7 +62,7 @@ fn stop_at(adapter: &mut DapServer, seq: &mut u64, needle: &str) -> u64 {
 }
 
 #[test]
-fn dap_set_expression_materializes_a_capturing_nested_routine() {
+fn dap_cell_capturing_assignment_invalidates_and_continues() {
     let mut adapter = server();
     let mut seq = 0;
     let initialized = send(
@@ -93,26 +80,26 @@ fn dap_set_expression_materializes_a_capturing_nested_routine() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "var CellStop: integer := 0;");
     let locals = locals_reference(&mut adapter, &mut seq, owner);
     let simple = send(
         &mut adapter,
         &mut seq,
         "setVariable",
-        json!({"variablesReference":locals,"name":"Current","value":"AddBase"}),
+        json!({"variablesReference":locals,"name":"Current","value":"AddCell"}),
     );
     assert_eq!(simple[0]["success"], true, "{simple:?}");
-    assert_eq!(simple[0]["body"]["value"], "<function makeadder.addbase>");
+    assert_eq!(simple[0]["body"]["value"], "<function mutating.addcell>");
 
     let current_frame = frame(&mut adapter, &mut seq);
     let assigned = send(
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":current_frame,"expression":"Current","value":"MakeAdder.AddBase"}),
+        json!({"frameId":current_frame,"expression":"Current","value":"Mutating.AddCell"}),
     );
     assert_eq!(assigned[0]["success"], true, "{assigned:?}");
-    assert_eq!(assigned[0]["body"]["value"], "<function makeadder.addbase>");
+    assert_eq!(assigned[0]["body"]["value"], "<function mutating.addcell>");
     assert!(
         assigned
             .iter()
@@ -120,14 +107,21 @@ fn dap_set_expression_materializes_a_capturing_nested_routine() {
         "{assigned:?}"
     );
 
-    let current = frame(&mut adapter, &mut seq);
-    let invoked = evaluate(&mut adapter, &mut seq, current, "Current(1)");
-    assert_eq!(invoked[0]["success"], true, "{invoked:?}");
-    assert_eq!(invoked[0]["body"]["result"], "11");
+    let _ = send(&mut adapter, &mut seq, "continue", json!({"threadId":1}));
+    let output = adapter
+        .wait()
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["output"].as_str())
+        .collect::<String>();
+    assert!(
+        output.starts_with("12\n13\n"),
+        "continuation must observe shared cell writes, got {output:?}"
+    );
 }
 
 #[test]
-fn dap_unknown_capturing_name_is_rejected_without_invalidation() {
+fn dap_global_cell_destination_is_rejected_without_invalidation() {
     let mut adapter = server();
     let mut seq = 0;
     let _ = send(
@@ -143,16 +137,13 @@ fn dap_unknown_capturing_name_is_rejected_without_invalidation() {
         json!({"stopOnEntry":true}),
     );
     let _ = send(&mut adapter, &mut seq, "configurationDone", json!({}));
-    let owner = stop_at(&mut adapter, &mut seq, "var MakeStop: integer := 0;");
+    let owner = stop_at(&mut adapter, &mut seq, "var CellStop: integer := 0;");
     let rejected = send(
         &mut adapter,
         &mut seq,
         "setExpression",
-        json!({"frameId":owner,"expression":"Current","value":"MissingRoutine"}),
+        json!({"frameId":owner,"expression":"Shared","value":"AddCell"}),
     );
     assert_eq!(rejected[0]["success"], false, "{rejected:?}");
     assert!(rejected.iter().all(|record| record.get("event").is_none()));
-    let current = frame(&mut adapter, &mut seq);
-    let preserved = evaluate(&mut adapter, &mut seq, current, "Current(1)");
-    assert_eq!(preserved[0]["body"]["result"], "1");
 }

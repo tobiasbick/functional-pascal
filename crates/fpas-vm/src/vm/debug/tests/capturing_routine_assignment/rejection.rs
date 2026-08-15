@@ -43,26 +43,7 @@ fn wrong_owner_stale_peer_and_uninitialized_sources_are_atomic() {
 }
 
 #[test]
-fn cell_enclosing_cell_task_graph_and_limits_are_rejected() {
-    let mut cell = DebugSession::new(compile_fixture()).expect("cell session");
-    let frame = run_to(&mut cell, "var CellStop: integer := 0;");
-    let capturing = cell
-        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
-        .expect_err("mutable cell");
-    assert_eq!(capturing.kind, DebugErrorKind::VariableValueType);
-    assert!(capturing.message.contains("cell"), "{capturing:?}");
-    let frame = cell.stack(0, 1).expect("preserved").items[0].id;
-    assert_eq!(preserved_identity(&mut cell, frame), "1");
-
-    let mut enclosing = DebugSession::new(compile_fixture()).expect("enclosing session");
-    let frame = run_to(&mut enclosing, "var EnclosingStop: integer := 0;");
-    let nested = enclosing
-        .set_expression(&root("Current"), &name("AddEnclosed"), Some(frame))
-        .expect_err("enclosing cell");
-    assert_eq!(nested.kind, DebugErrorKind::VariableValueType);
-    let frame = enclosing.stack(0, 1).expect("preserved").items[0].id;
-    assert_eq!(preserved_identity(&mut enclosing, frame), "1");
-
+fn task_graph_and_limits_are_rejected() {
     let mut held = DebugSession::new(compile_fixture()).expect("task graph session");
     let frame = run_to(&mut held, "var TaskStop: integer := 0;");
     let task = held

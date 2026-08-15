@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod captures;
+mod destination;
 
 use std::collections::HashSet;
 
@@ -11,18 +12,24 @@ use fpas_bytecode::{
 };
 
 use super::super::super::evaluation::DebugEvaluationLimits;
-use super::super::super::inspection::InspectionSnapshot;
+use super::super::super::inspection::{InspectionSnapshot, MutationTarget};
 use super::super::super::routines::matching_functions;
 use super::super::super::types::{DebugErrorKind, DebugSessionError};
 use super::signature;
 
 /// Materialize one canonical function value for a catalog routine.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "named-routine preparation keeps catalog, owner-frame, task, and destination proofs together"
+)]
 pub(in crate::vm::debug) fn prepare(
     executable: &VerifiedExecutable,
     inspection: Option<&InspectionSnapshot>,
     name: &str,
     expected: DebugTypeId,
     frame_id: Option<u64>,
+    task_id: u64,
+    destination: Option<&MutationTarget>,
     limits: DebugEvaluationLimits,
 ) -> Result<Value, DebugSessionError> {
     if matches!(
@@ -55,13 +62,15 @@ pub(in crate::vm::debug) fn prepare(
                 "Select the live frame of the nested routine's enclosing function, then assign the routine name.",
             )
         })?;
-        let captures = captures::materialize(
+        let constructed = captures::materialize(
             executable,
             inspection,
             function_id,
             function,
             &canonical,
             frame_id,
+            task_id,
+            destination,
             limits,
         )?;
         let (parameters, result) =
@@ -74,7 +83,7 @@ pub(in crate::vm::debug) fn prepare(
             limits.max_depth,
             limits.max_detached_values,
         )?;
-        return Ok(Value::function(function_id, canonical, captures, false));
+        return Ok(constructed);
     }
     let (parameters, result) = portable_signature(executable.executable(), function, &canonical)?;
     signature::require_signature(
@@ -85,7 +94,7 @@ pub(in crate::vm::debug) fn prepare(
         limits.max_depth,
         limits.max_detached_values,
     )?;
-    Ok(Value::function(function_id, canonical, Vec::new(), false))
+    Ok(Value::function(function_id, canonical, Vec::new()))
 }
 
 fn resolve_unique(

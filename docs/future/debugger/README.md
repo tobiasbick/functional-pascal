@@ -2,11 +2,9 @@
 
 ## Active implementation plans
 
-[`cell-capturing-routine-assignment/`](cell-capturing-routine-assignment/)
-plans the next bounded `DBG-D03` slice: assigning a named nested routine whose
-existing mutable capture cells are owned by the exact selected stopped task.
-The package is planned but not implemented. All other open capability packages
-and re-entry gates remain in [deferred.md](deferred.md).
+There is currently no active implementation plan. Open capability packages and
+re-entry gates remain in [deferred.md](deferred.md); implemented behavior is
+documented under [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -44,15 +42,19 @@ virtual Variables children remain deferred.
 
 Bounded assignment of an already materialized, visible, non-task-bound
 first-class function value, of one statically resolved non-capturing
-executable routine, and of a named nested routine whose direct captures are
-immutable values from the exact selected live lexical-owner frame, is
-implemented through the same `setVariable`/`setExpression` surfaces. Bounded
+executable routine, of a named nested routine whose direct captures are
+immutable values from the exact selected live lexical-owner frame, and of a
+named nested routine whose `Cell` and `EnclosingCell` captures clone existing
+handles from that same owner frame onto a mutable local or parameter register,
+is implemented through the same `setVariable`/`setExpression` surfaces.
+Constructed cell-capturing functions are task-bound to the selected task.
+Bounded
 copying of an already materialized, visible task handle onto a structurally
 compatible mutable target is implemented through those same surfaces: the copy
 preserves the exact runtime task ID and does not consult the scheduler. Newly
-entered anonymous closures, mutable `Cell`/`EnclosingCell` construction,
-bound-receiver synthesis, task-bound functions,
-Dynamic endpoints, capture cells, opaque resources, and in-place callable
+entered anonymous closures, copying already materialized task-bound functions,
+bound-receiver synthesis,
+Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable
 editing remain recorded centrally in
 [deferred.md](deferred.md).
 

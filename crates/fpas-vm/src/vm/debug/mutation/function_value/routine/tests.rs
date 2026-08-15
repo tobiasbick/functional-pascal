@@ -180,6 +180,8 @@ fn complete_metadata_materializes_an_empty_capture_function() {
         "AddTwo",
         DebugTypeId::new(1),
         None,
+        0,
+        None,
         DebugEvaluationLimits::default(),
     )
     .expect("routine");
@@ -221,6 +223,8 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
             "adder",
             DebugTypeId::new(1),
             None,
+            0,
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("captures")
@@ -252,6 +256,8 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
             None,
             "hidden",
             DebugTypeId::new(1),
+            None,
+            0,
             None,
             DebugEvaluationLimits::default()
         )
@@ -285,6 +291,8 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
             "shifted",
             DebugTypeId::new(1),
             None,
+            0,
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("register")
@@ -316,6 +324,8 @@ fn capturing_hidden_unordered_and_missing_metadata_are_rejected() {
             None,
             "incomplete",
             DebugTypeId::new(1),
+            None,
+            0,
             None,
             DebugEvaluationLimits::default()
         )
@@ -364,6 +374,8 @@ fn ambiguous_and_unknown_names_are_stable() {
             "transform",
             DebugTypeId::new(1),
             None,
+            0,
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("ambiguous")
@@ -377,6 +389,8 @@ fn ambiguous_and_unknown_names_are_stable() {
             "missing",
             DebugTypeId::new(1),
             None,
+            0,
+            None,
             DebugEvaluationLimits::default()
         )
         .expect_err("unknown")
@@ -388,6 +402,8 @@ fn ambiguous_and_unknown_names_are_stable() {
         None,
         "math.transform",
         DebugTypeId::new(1),
+        None,
+        0,
         None,
         DebugEvaluationLimits::default(),
     )

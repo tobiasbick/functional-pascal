@@ -30,7 +30,50 @@ pub(super) fn require_eligible(
     function
         .captures
         .iter()
-        .try_for_each(|capture| walk(capture, 1, &mut state))
+        .try_for_each(|capture| walk(capture, 1, &mut state))?;
+    Ok(())
+}
+
+/// Prove a task-owned function's capture graph without locking cell payloads.
+pub(super) fn require_task_owned(
+    function: &SharedFunction,
+    max_depth: usize,
+    max_values: usize,
+) -> Result<(), DebugSessionError> {
+    if !function.task_bound || function.owner_task.is_none() {
+        return Err(ownership(
+            "constructed function is missing a runtime task owner",
+            "Assign a named nested routine from the selected live owner task so mutable captures stay on that task.",
+        ));
+    }
+    let mut state = WalkState {
+        visited: HashSet::new(),
+        values: 0,
+        max_depth,
+        max_values,
+    };
+    state.visited.insert(identity_of_function(function));
+    for capture in &function.captures {
+        match capture {
+            Value::Cell(cell) => {
+                if !state.visited.insert(std::sync::Arc::as_ptr(cell) as usize) {
+                    continue;
+                }
+                state.values = state.values.saturating_add(1);
+                if state.values > state.max_values {
+                    return Err(limit(
+                        format!(
+                            "function capture graph exceeds detached-value limit {}",
+                            state.max_values
+                        ),
+                        "Use a function whose retained capture graph is smaller than the evaluation value limit.",
+                    ));
+                }
+            }
+            other => walk(other, 1, &mut state)?,
+        }
+    }
+    Ok(())
 }
 
 struct WalkState {
@@ -157,7 +200,12 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     fn function(captures: Vec<Value>, task_bound: bool) -> SharedFunction {
-        match Value::function(FunctionId::new(1), "work".to_string(), captures, task_bound) {
+        let value = if task_bound {
+            Value::task_owned_function(FunctionId::new(1), "work".to_string(), captures, 1)
+        } else {
+            Value::function(FunctionId::new(1), "work".to_string(), captures)
+        };
+        match value {
             Value::Function(function) => function,
             other => panic!("expected function, got {}", other.type_name()),
         }
@@ -169,7 +217,6 @@ mod tests {
             FunctionId::new(2),
             "nested".to_string(),
             vec![Value::Integer(1)],
-            false,
         );
         let captured = function(
             vec![
@@ -219,11 +266,11 @@ mod tests {
                 .contains("opaque")
         );
         let nested_bound = function(
-            vec![Value::function(
+            vec![Value::task_owned_function(
                 FunctionId::new(2),
                 "inner".to_string(),
                 Vec::new(),
-                true,
+                1,
             )],
             false,
         );
@@ -264,5 +311,39 @@ mod tests {
         let wide = function(vec![Value::Integer(1); 8], false);
         let values = require_eligible(&wide, 8, 4).expect_err("values");
         assert_eq!(values.kind, DebugErrorKind::EvaluationLimit);
+    }
+
+    #[test]
+    fn task_owned_cell_captures_are_counted_without_locking_payloads() {
+        let cell = Arc::new(Mutex::new(Value::Integer(1)));
+        let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let _guard = cell.lock().expect("lock");
+            panic!("poison the cell");
+        }));
+        let owned = function(vec![Value::Cell(Arc::clone(&cell))], true);
+        require_task_owned(&owned, 8, 64).expect("poisoned cell handle");
+        let missing_owner =
+            match Value::function(FunctionId::new(1), "work".to_string(), Vec::new()) {
+                Value::Function(function) => function,
+                other => panic!("expected function, got {}", other.type_name()),
+            };
+        assert!(
+            require_task_owned(&missing_owner, 8, 64)
+                .expect_err("unbound")
+                .message
+                .contains("task owner")
+        );
+        let nested = function(
+            vec![Value::Array(
+                vec![Value::Cell(Arc::new(Mutex::new(Value::Integer(1))))].into(),
+            )],
+            true,
+        );
+        assert!(
+            require_task_owned(&nested, 8, 64)
+                .expect_err("nested cell")
+                .message
+                .contains("cell")
+        );
     }
 }

@@ -2,9 +2,9 @@
 
 use std::sync::{Arc, Mutex};
 
-use fpas_bytecode::{AbcOperands, FunctionId, Register, Value};
+use fpas_bytecode::{AbcOperands, FunctionId, Register, SharedFunction, Value};
 use fpas_diagnostics::codes::{
-    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
+    RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 use super::dispatch::DispatchStep;
@@ -23,6 +23,7 @@ impl Worker {
         let Value::Function(function) = callee else {
             return Err(self.operand_type_error("function", &callee));
         };
+        self.require_function_task_owner(&function)?;
         let target = function.function;
         self.enter_call(
             target,
@@ -31,6 +32,25 @@ impl Worker {
             operands.auxiliary,
             &function.captures,
         )
+    }
+
+    pub(super) fn require_function_task_owner(
+        &self,
+        function: &SharedFunction,
+    ) -> Result<(), VmError> {
+        if !function.task_bound || function.owner_task == Some(self.task_id) {
+            return Ok(());
+        }
+        Err(diagnostics::at_address(
+            self.executable.executable(),
+            self.current_address,
+            RUNTIME_INVALID_TASK,
+            format!(
+                "Cannot invoke task-bound closure `{}` from a foreign task",
+                function.name
+            ),
+            "Invoke the closure on the task that owns it. Mutable captures keep a function on one task.",
+        ))
     }
 
     pub(super) fn make_closure(&mut self, operands: AbcOperands) -> Result<(), VmError> {
@@ -61,7 +81,11 @@ impl Worker {
         })?;
         self.write(
             self.call_register(operands.a)?,
-            Value::function(target, name.to_owned(), captures, task_bound),
+            if task_bound {
+                Value::task_owned_function(target, name.to_owned(), captures, self.task_id)
+            } else {
+                Value::function(target, name.to_owned(), captures)
+            },
         )
     }
 

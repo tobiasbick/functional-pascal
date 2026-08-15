@@ -8,7 +8,7 @@ use fpas_diagnostics::codes::RUNTIME_INTRINSIC_STACK_STATE_ERROR;
 
 use crate::vm::Vm;
 
-use super::support::{abx, execute};
+use super::support::abx;
 
 #[derive(Clone, Copy)]
 /// Compact function metadata used by hand-authored call bytecode tests.
@@ -440,42 +440,4 @@ fn callback_entry_rejects_wrong_arity_and_invalid_function_id() {
             .call(FunctionId::new(99), Vec::new())
             .is_err()
     );
-}
-
-#[test]
-fn mutable_cell_capture_marks_numeric_closure_task_bound() {
-    let executable = image(
-        vec![
-            abx(Opcode::LoadConstant, 0, 0),
-            abc(Opcode::MakeCell, 0, 0, 0, 0),
-            abc(Opcode::MakeClosure, 1, 1, 0, 1),
-            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
-            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
-        ],
-        vec![Constant::Integer(1)],
-        &[
-            FunctionSpec {
-                start: 0,
-                end: 4,
-                arity: 0,
-                captures: 0,
-                registers: 2,
-                returns: ReturnConvention::Unit,
-            },
-            FunctionSpec {
-                start: 4,
-                end: 5,
-                arity: 0,
-                captures: 1,
-                registers: 1,
-                returns: ReturnConvention::Unit,
-            },
-        ],
-    );
-    let (_, registers, _) = execute(executable).expect("closure construction should succeed");
-    let Value::Function(function) = &registers[1] else {
-        panic!("register must contain closure")
-    };
-    assert!(function.task_bound);
-    assert_eq!(function.function, FunctionId::new(1));
 }

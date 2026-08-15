@@ -97,7 +97,7 @@ fn capturing_routine_and_signature_mismatch_preserve_the_original_value() {
         .set_expression(&root("Current"), &name("adder"), Some(frame))
         .expect_err("captures");
     assert_eq!(capturing.kind, DebugErrorKind::VariableValueType);
-    assert!(capturing.message.contains("captures"), "{capturing:?}");
+    assert!(capturing.message.contains("capture"), "{capturing:?}");
     let procedure = session
         .set_expression(&root("Current"), &name("helper"), Some(frame))
         .expect_err("signature");

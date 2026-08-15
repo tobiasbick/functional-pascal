@@ -24,6 +24,7 @@ impl Worker {
                 "Pass a named function or function-typed variable as the callback argument.",
             ));
         };
+        self.require_function_task_owner(function)?;
         self.call_numeric_function(function, arguments.as_ref())
     }
 
@@ -67,21 +68,22 @@ impl Worker {
                 info.register_count,
                 arguments,
                 &function.captures,
+                self.task_id,
             )?;
             callback
         } else {
-            Box::new(
-                Self::for_function_with_captures(
-                    Arc::clone(&self.executable),
-                    target,
-                    arguments,
-                    &function.captures,
-                    Arc::clone(&self.globals),
-                    Arc::clone(&self.layouts),
-                    Arc::clone(&self.hosted),
-                )?
-                .with_scheduler(self.scheduler.clone()),
-            )
+            let mut callback = Self::for_function_with_captures(
+                Arc::clone(&self.executable),
+                target,
+                arguments,
+                &function.captures,
+                Arc::clone(&self.globals),
+                Arc::clone(&self.layouts),
+                Arc::clone(&self.hosted),
+            )?
+            .with_scheduler(self.scheduler.clone());
+            callback.task_id = self.task_id;
+            Box::new(callback)
         };
         let execution = callback.run_in_place();
         *self.callback_worker.borrow_mut() = Some(callback);
@@ -101,6 +103,7 @@ impl Worker {
         register_count: u16,
         arguments: &[Value],
         captures: &[Value],
+        task_id: u64,
     ) -> Result<(), VmError> {
         self.function = target;
         self.ip = usize::try_from(start.get()).map_err(|_| {
@@ -119,7 +122,7 @@ impl Worker {
         self.instruction_count = 0;
         self.callback_instruction_count.set(0);
         self.current_address = start;
-        self.task_id = 0;
+        self.task_id = task_id;
         self.retain_result = false;
         self.instructions_until_yield = super::TIMESLICE;
         self.suspend_requested = false;

@@ -53,6 +53,7 @@ fn compare_values(a: &Value, b: &Value) -> bool {
             a.function == b.function
                 && a.name == b.name
                 && a.task_bound == b.task_bound
+                && a.owner_task == b.owner_task
                 && a.captures.len() == b.captures.len()
                 && a.captures
                     .iter()

@@ -32,6 +32,7 @@ pub(super) struct FrameBinding {
     pub(super) initialized: bool,
     pub(super) value: Option<fpas_bytecode::Value>,
     pub(super) ty: fpas_bytecode::DebugTypeId,
+    pub(super) kind: fpas_bytecode::DebugBindingKind,
     pub(super) hidden: bool,
     pub(super) cell_backed: bool,
     pub(super) visible: bool,

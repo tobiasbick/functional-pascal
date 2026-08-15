@@ -10,5 +10,6 @@ mod register_stack;
 mod runtime;
 mod scalar;
 mod support;
+mod task_owned_functions;
 
 use support::*;

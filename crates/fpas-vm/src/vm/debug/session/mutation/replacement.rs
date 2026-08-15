@@ -83,13 +83,14 @@ impl DebugSession {
     pub(super) fn evaluate_replacement_for_target(
         &self,
         task_id: u64,
-        expected: fpas_bytecode::DebugTypeId,
+        target: &crate::vm::debug::inspection::MutationTarget,
         expression: &DebugExpression,
-        frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
+        let expected = target.expected_type;
+        let frame_id = target.frame_id;
         if super::super::super::mutation::is_function_type(self.executable.executable(), expected) {
-            self.finish_function_replacement(task_id, expression, None, expected, frame_id, limits)
+            self.finish_function_replacement(task_id, expression, None, target, frame_id, limits)
         } else if super::super::super::mutation::is_task_type(
             self.executable.executable(),
             expected,
@@ -110,19 +111,20 @@ impl DebugSession {
         expression: &DebugExpression,
         evaluated_replacement: Vec<fpas_bytecode::Value>,
         catalog_fallback: bool,
-        expected: fpas_bytecode::DebugTypeId,
+        destination: &crate::vm::debug::inspection::MutationTarget,
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
+        let expected = destination.expected_type;
         if super::super::super::mutation::is_function_type(self.executable.executable(), expected) {
             if catalog_fallback {
-                self.prepare_catalog_routine(expression, expected, frame_id, limits)
+                self.prepare_catalog_routine(task_id, expression, destination, frame_id, limits)
             } else {
                 self.finish_function_replacement(
                     task_id,
                     expression,
                     evaluated_replacement.into_iter().next(),
-                    expected,
+                    destination,
                     frame_id,
                     limits,
                 )
@@ -152,10 +154,11 @@ impl DebugSession {
         task_id: u64,
         expression: &DebugExpression,
         evaluated: Option<fpas_bytecode::Value>,
-        expected: fpas_bytecode::DebugTypeId,
+        destination: &crate::vm::debug::inspection::MutationTarget,
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
+        let expected = destination.expected_type;
         match super::super::super::mutation::function_value_source(expression, limits)? {
             super::super::super::mutation::FunctionSource::BindingOrRoutine(name) => {
                 let value = match evaluated {
@@ -177,6 +180,8 @@ impl DebugSession {
                             &name,
                             expected,
                             frame_id,
+                            task_id,
+                            Some(destination),
                             limits,
                         )
                     }
@@ -184,7 +189,7 @@ impl DebugSession {
                 }
             }
             super::super::super::mutation::FunctionSource::Routine(_) => {
-                self.prepare_catalog_routine(expression, expected, frame_id, limits)
+                self.prepare_catalog_routine(task_id, expression, destination, frame_id, limits)
             }
         }
     }
@@ -210,21 +215,21 @@ impl DebugSession {
 
     fn prepare_catalog_routine(
         &self,
+        task_id: u64,
         expression: &DebugExpression,
-        expected: fpas_bytecode::DebugTypeId,
+        destination: &crate::vm::debug::inspection::MutationTarget,
         frame_id: Option<u64>,
         limits: DebugEvaluationLimits,
     ) -> Result<fpas_bytecode::Value, DebugSessionError> {
         let source = super::super::super::mutation::function_value_source(expression, limits)?;
-        let task_id = frame_id
-            .and_then(|frame_id| self.task_for_frame(Some(frame_id)).ok())
-            .unwrap_or(self.last_stop.task_id);
         super::super::super::mutation::prepare_routine_value(
             &self.executable,
             self.inspections.get(&task_id),
             source.requested(),
-            expected,
+            destination.expected_type,
             frame_id,
+            task_id,
+            Some(destination),
             limits,
         )
     }

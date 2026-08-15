@@ -137,7 +137,7 @@ fn callback_and_debug_intrinsic_argument_windows_are_initialized() {
         ],
     );
     let callback = Worker::new(Arc::new(callback_image)).expect("callback worker");
-    let function = Value::function(FunctionId::new(1), "double".to_string(), Vec::new(), false);
+    let function = Value::function(FunctionId::new(1), "double".to_string(), Vec::new());
     assert_eq!(
         callback
             .call_callback_sync(&function, &[Value::Integer(3)])

@@ -97,6 +97,7 @@ impl InspectionSnapshot {
                 initialized,
                 value: value.clone(),
                 ty: binding.ty,
+                kind: binding.kind,
                 hidden: binding.hidden,
                 cell_backed: binding.cell_backed,
                 visible,

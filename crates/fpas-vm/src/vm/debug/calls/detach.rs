@@ -75,16 +75,23 @@ impl ValueDetacher {
             Value::ResultError(value) => Ok(Value::ResultError(Box::new(self.detach(value)?))),
             Value::OptionSome(value) => Ok(Value::OptionSome(Box::new(self.detach(value)?))),
             Value::OptionNone => Ok(Value::OptionNone),
-            Value::Function(function) => Ok(Value::function(
-                function.function,
-                function.name.clone(),
-                function
+            Value::Function(function) => {
+                let captures = function
                     .captures
                     .iter()
                     .map(|value| self.detach(value))
-                    .collect::<Result<Vec<_>, _>>()?,
-                false,
-            )),
+                    .collect::<Result<Vec<_>, _>>()?;
+                Ok(if function.task_bound {
+                    Value::task_owned_function(
+                        function.function,
+                        function.name.clone(),
+                        captures,
+                        0,
+                    )
+                } else {
+                    Value::function(function.function, function.name.clone(), captures)
+                })
+            }
             Value::Cell(cell) => self.detach_cell(cell),
             Value::Task(_) => Err(error(
                 DebugErrorKind::UnavailableValue,
@@ -189,5 +196,29 @@ mod tests {
             panic!("detached cycle back edge expected");
         };
         assert!(Arc::ptr_eq(&detached, back_edge));
+    }
+
+    #[test]
+    fn task_bound_functions_remain_owned_by_the_detached_sandbox() {
+        let live = Arc::new(Mutex::new(Value::Integer(7)));
+        let value = Value::task_owned_function(
+            fpas_bytecode::FunctionId::new(1),
+            "work".to_string(),
+            vec![Value::Cell(Arc::clone(&live))],
+            9,
+        );
+
+        let Value::Function(detached) = ValueDetacher::new(16)
+            .detach(&value)
+            .expect("detach task-bound function")
+        else {
+            panic!("detached function expected");
+        };
+        assert!(detached.task_bound);
+        assert_eq!(detached.owner_task, Some(0));
+        let [Value::Cell(detached_cell)] = detached.captures.as_slice() else {
+            panic!("detached cell capture expected");
+        };
+        assert!(!Arc::ptr_eq(detached_cell, &live));
     }
 }

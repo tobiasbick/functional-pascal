@@ -84,7 +84,11 @@ pub(super) fn validate_root(
     max_depth: usize,
     max_values: usize,
 ) -> Result<(), DebugSessionError> {
-    captures::require_eligible(function, max_depth, max_values)
+    if function.task_bound {
+        captures::require_task_owned(function, max_depth, max_values)
+    } else {
+        captures::require_eligible(function, max_depth, max_values)
+    }
 }
 
 /// Inactive-variant construction whose payload would be a function value.

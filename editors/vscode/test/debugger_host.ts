@@ -14,6 +14,7 @@ import { verifyVariantTransition } from "./debugger_host/variant_transition";
 import { verifyUninitializedAssignment } from "./debugger_host/uninitialized_assignment";
 import { verifyFunctionValueAssignment } from "./debugger_host/function_value_assignment";
 import { verifyCapturingRoutineAssignment } from "./debugger_host/capturing_routine_assignment";
+import { verifyCellCapturingRoutineAssignment } from "./debugger_host/cell_capturing_routine_assignment";
 import { verifyTaskHandleAssignment } from "./debugger_host/task_handle_assignment";
 import { verifyForcedReturn } from "./debugger_host/forced_return";
 import { verifyVariantConstruction } from "./debugger_host/variant_construction";
@@ -52,6 +53,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyUninitializedAssignment(workspaceRoot, received, sent);
     await verifyFunctionValueAssignment(workspaceRoot, received, sent);
     await verifyCapturingRoutineAssignment(workspaceRoot, received, sent);
+    await verifyCellCapturingRoutineAssignment(workspaceRoot, received, sent);
     await verifyTaskHandleAssignment(workspaceRoot, received, sent);
     await verifyForcedReturn(workspaceRoot, received, sent);
     await verifyVariantConstruction(workspaceRoot, received, sent);

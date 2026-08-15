@@ -70,14 +70,23 @@ impl Value {
         Self::Dict(pairs.into())
     }
 
-    /// Create a first-class function value with shared immutable storage.
-    pub fn function(
+    /// Create a non-task-bound first-class function value.
+    pub fn function(function: crate::FunctionId, name: String, captures: Vec<Value>) -> Self {
+        Self::Function(SharedFunction::unbound(function, name, captures))
+    }
+
+    /// Create a task-bound function owned by one runtime task.
+    ///
+    /// The owner token is runtime-only and is never stored in program artifacts.
+    pub fn task_owned_function(
         function: crate::FunctionId,
         name: String,
         captures: Vec<Value>,
-        task_bound: bool,
+        owner_task: u64,
     ) -> Self {
-        Self::Function(SharedFunction::new(function, name, captures, task_bound))
+        Self::Function(SharedFunction::task_owned(
+            function, name, captures, owner_task,
+        ))
     }
 
     /// Return the runtime type category name for diagnostics.
@@ -343,23 +352,28 @@ mod tests {
             crate::FunctionId::new(1),
             "demo.run".to_string(),
             vec![Value::Integer(1)],
-            false,
         );
         let right = Value::function(
             crate::FunctionId::new(1),
             "demo.run".to_string(),
             vec![Value::Integer(1)],
-            false,
         );
-        let task_bound = Value::function(
+        let task_bound = Value::task_owned_function(
             crate::FunctionId::new(1),
             "demo.run".to_string(),
             vec![Value::Integer(1)],
-            true,
+            1,
+        );
+        let other_owner = Value::task_owned_function(
+            crate::FunctionId::new(1),
+            "demo.run".to_string(),
+            vec![Value::Integer(1)],
+            2,
         );
 
         assert_eq!(left, right);
         assert_ne!(right, task_bound);
+        assert_ne!(task_bound, other_owner);
     }
 
     #[test]

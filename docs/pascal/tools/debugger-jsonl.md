@@ -79,8 +79,11 @@ controlled-call policy, and resource limits as `evaluate`. Complete mutable enum
 `None`. Function-typed targets accept one visible binding that already holds a
 compatible non-task-bound function value, for example `Backup`, one unique
 non-capturing executable routine such as `AddTwo`, or a named nested routine
-whose direct captures are immutable initialized values in the selected
-lexical-owner frame, for example `AddBase` or `MakeAdder.AddBase`. A successful
+whose captures are immutable values or existing mutable cells in the selected
+lexical-owner frame, for example `AddBase`, `MakeAdder.AddBase`, or `AddCell`.
+Constructed cell-capturing functions are task-bound to the selected task and
+may be stored only in a mutable local or parameter register of that owner
+frame. Copying an already materialized task-bound function remains rejected. A successful
 result has the same five rendered fields as `evaluate`, refreshes inspection
 state, and expires all earlier variable references. Any failure is atomic and
 leaves the old references usable.
@@ -114,12 +117,14 @@ a constructor expression to the complete target. A function-typed target
 accepts one visible source binding that already holds a compatible
 non-task-bound function value, or one statically resolved non-capturing
 executable routine such as `AddTwo` or `Math.Transform`, or a named nested
-routine whose direct captures are immutable initialized values in the selected
-lexical-owner frame. A simple name uses
+routine whose captures are immutable values or existing mutable cells in the
+selected lexical-owner frame. Constructed cell-capturing functions are
+task-bound to the selected task and may be stored only in a mutable local or
+parameter register of that owner frame. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an
 unknown name. Qualified identifier chains are catalog names only. Anonymous
-closure syntax, mutable `Cell` or `EnclosingCell` captures, bound methods,
-computed expressions, and
+closure syntax, bound methods, computed expressions, copying already
+materialized task-bound functions, and
 inactive-variant function payloads remain rejected. A task-typed target accepts
 one visible source binding that already holds a compatible task handle, for
 example `Current := Pending`. The request copies the exact runtime ID through

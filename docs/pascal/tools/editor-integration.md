@@ -118,12 +118,14 @@ standard variable mutation; structure changes and string characters use the
 explicit commands. A function-typed Variables or Watch target can be replaced
 by copying one visible binding that already holds a compatible non-task-bound
 function value, for example `Backup`, or by assigning a unique executable
-routine name such as `AddTwo`, `Math.Transform`, `AddBase`, or
-`MakeAdder.AddBase`. Named nested routines materialize only when every direct
-capture is an immutable initialized value in the selected lexical-owner frame.
-A simple name prefers a
-visible binding; anonymous closure syntax, mutable `Cell` or `EnclosingCell`
-captures, task-bound functions, and inactive-variant function payloads remain
+routine name such as `AddTwo`, `Math.Transform`, `AddBase`,
+`MakeAdder.AddBase`, or `AddCell`. Named nested routines materialize from the
+selected lexical-owner frame using recorded immutable values and existing
+mutable cells. Constructed cell-capturing functions are task-bound to the
+selected task and may be stored only in a mutable local or parameter register
+of that owner frame. A simple name prefers a
+visible binding; anonymous closure syntax, copying already materialized
+task-bound functions, and inactive-variant function payloads remain
 rejected. A task-typed Variables or Watch target can be replaced by copying one
 visible binding that already holds a compatible task handle, for example
 `Pending`. The editor uses the standard Variables/Watch edit flow; it does not

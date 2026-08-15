@@ -2,14 +2,16 @@
 //!
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
-use fpas_bytecode::{DebugBindingId, DebugCaptureSource, FunctionId, Value};
+use fpas_bytecode::{
+    DebugBindingId, DebugBindingKind, DebugCaptureKind, DebugCaptureSource, FunctionId, Value,
+};
 
 use super::snapshot::{FrameSnapshot, InspectionSnapshot};
 use crate::vm::debug::types::{DebugErrorKind, DebugSessionError};
 
 impl InspectionSnapshot {
     /// Read every capture source from the selected owner frame in ABI order.
-    pub(in crate::vm::debug) fn read_value_captures(
+    pub(in crate::vm::debug) fn read_captures(
         &self,
         frame_id: Option<u64>,
         owner: FunctionId,
@@ -18,20 +20,35 @@ impl InspectionSnapshot {
         let frame = self.owner_frame(frame_id, owner)?;
         sources
             .iter()
-            .map(|source| {
-                let captured = self.capture_binding(frame, source.binding)?;
-                if captured.cell_backed || captured.ty != source.ty {
-                    return Err(DebugSessionError {
-                        kind: DebugErrorKind::VariableValueType,
-                        message: "debug capturing routine assignment source binding does not match capture provenance"
-                            .to_string(),
-                        hint: "Assign a named nested routine whose captures are immutable values of the recorded types."
-                            .to_string(),
-                    });
+            .map(|source| self.read_capture(frame, source))
+            .collect()
+    }
+
+    fn read_capture(
+        &self,
+        frame: &FrameSnapshot,
+        source: &DebugCaptureSource,
+    ) -> Result<Value, DebugSessionError> {
+        let captured = self.capture_binding(frame, source.binding)?;
+        if captured.ty != source.ty {
+            return Err(type_mismatch(source.kind));
+        }
+        match source.kind {
+            DebugCaptureKind::Value => {
+                if captured.cell_backed {
+                    return Err(type_mismatch(source.kind));
                 }
                 captured.value.clone().ok_or_else(uninitialized_capture)
-            })
-            .collect()
+            }
+            DebugCaptureKind::Cell => {
+                require_cell_backed(captured, DebugBindingKind::Local, "direct mutable cell")
+            }
+            DebugCaptureKind::EnclosingCell => require_cell_backed(
+                captured,
+                DebugBindingKind::Capture,
+                "enclosing mutable cell",
+            ),
+        }
     }
 
     fn owner_frame(
@@ -109,6 +126,57 @@ impl InspectionSnapshot {
             return Err(uninitialized_capture());
         }
         Ok(captured)
+    }
+}
+
+fn require_cell_backed(
+    captured: &super::snapshot::FrameBinding,
+    expected_kind: DebugBindingKind,
+    label: &str,
+) -> Result<Value, DebugSessionError> {
+    let kind_ok = match expected_kind {
+        DebugBindingKind::Capture => captured.kind == DebugBindingKind::Capture,
+        _ => captured.kind != DebugBindingKind::Capture,
+    };
+    if !captured.cell_backed || !kind_ok {
+        return Err(DebugSessionError {
+            kind: DebugErrorKind::VariableValueType,
+            message: format!(
+                "debug capturing routine assignment source binding is not a {label} capture"
+            ),
+            hint:
+                "Assign a named nested routine whose mutable captures are the original owner cells."
+                    .to_string(),
+        });
+    }
+    match &captured.value {
+        Some(Value::Cell(cell)) => Ok(Value::Cell(std::sync::Arc::clone(cell))),
+        _ => Err(DebugSessionError {
+            kind: DebugErrorKind::VariableValueType,
+            message: format!(
+                "debug capturing routine assignment source binding does not hold a {label} handle"
+            ),
+            hint: "Assign a named nested routine whose mutable captures are live cell handles, not copied payloads."
+                .to_string(),
+        }),
+    }
+}
+
+fn type_mismatch(kind: DebugCaptureKind) -> DebugSessionError {
+    let hint = match kind {
+        DebugCaptureKind::Value => {
+            "Assign a named nested routine whose captures are immutable values of the recorded types."
+        }
+        DebugCaptureKind::Cell | DebugCaptureKind::EnclosingCell => {
+            "Assign a named nested routine whose mutable captures match the recorded cell identities."
+        }
+    };
+    DebugSessionError {
+        kind: DebugErrorKind::VariableValueType,
+        message:
+            "debug capturing routine assignment source binding does not match capture provenance"
+                .to_string(),
+        hint: hint.to_string(),
     }
 }
 

@@ -97,12 +97,11 @@ impl Worker {
                         "Function constant name is missing",
                     )
                 })?;
-                Ok(Value::function(
-                    function,
-                    name.to_owned(),
-                    Vec::new(),
-                    task_bound,
-                ))
+                Ok(if task_bound {
+                    Value::task_owned_function(function, name.to_owned(), Vec::new(), self.task_id)
+                } else {
+                    Value::function(function, name.to_owned(), Vec::new())
+                })
             }
         }
     }

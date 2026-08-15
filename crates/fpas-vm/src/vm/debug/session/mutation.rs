@@ -59,13 +59,8 @@ impl DebugSession {
                     ),
                     hint: "Request scopes and variables again for the current stop.".to_string(),
                 })??;
-            let replacement = self.evaluate_replacement_for_target(
-                task_id,
-                target.expected_type,
-                expression,
-                target.frame_id,
-                limits,
-            )?;
+            let replacement =
+                self.evaluate_replacement_for_target(task_id, &target, expression, limits)?;
             self.commit_mutation(task_id, &target, replacement, limits)
         })();
         self.evaluation_cancelled.store(false, Ordering::Release);
@@ -178,7 +173,7 @@ impl DebugSession {
                         expression,
                         evaluated_replacement,
                         catalog_fallback,
-                        target.expected_type,
+                        &target,
                         frame_id,
                         limits,
                     )?;

@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
 use fpas_bytecode::{
     CodeRange, Constant, Executable, FunctionFlags, FunctionId, FunctionInfo, Instruction,
     InstructionAddress, Opcode, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
     StringTable, Value,
 };
-use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
+use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
 
-use crate::vm::CallbackSession;
+use crate::vm::{CallbackSession, worker::Worker};
+
+use super::calls::{FunctionSpec, abc, image};
 
 fn callback_image() -> fpas_bytecode::VerifiedExecutable {
     let code = vec![
@@ -134,5 +138,75 @@ fn cancellation_and_shutdown_reject_later_callbacks() {
             .expect_err("shutdown")
             .code,
         RUNTIME_VM_SHUTDOWN
+    );
+}
+
+#[test]
+fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
+    let worker = Worker::new(Arc::new(callback_image())).expect("worker");
+    let function =
+        Value::task_owned_function(FunctionId::new(1), "double".to_string(), Vec::new(), 7);
+
+    let error = worker
+        .call_callback_sync(&function, &[Value::Integer(3)])
+        .expect_err("foreign task callback must fail");
+
+    assert_eq!(error.code, RUNTIME_INVALID_TASK);
+    assert!(error.message.contains("foreign task"), "{}", error.message);
+}
+
+#[test]
+fn hosted_callback_worker_keeps_the_owner_task_when_reused() {
+    let executable = image(
+        vec![
+            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::CallValue, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+            abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0, 0),
+        ],
+        Vec::new(),
+        &[
+            FunctionSpec {
+                start: 0,
+                end: 1,
+                arity: 0,
+                captures: 0,
+                registers: 0,
+                returns: ReturnConvention::Unit,
+            },
+            FunctionSpec {
+                start: 1,
+                end: 3,
+                arity: 0,
+                captures: 1,
+                registers: 1,
+                returns: ReturnConvention::Unit,
+            },
+            FunctionSpec {
+                start: 3,
+                end: 4,
+                arity: 0,
+                captures: 0,
+                registers: 0,
+                returns: ReturnConvention::Unit,
+            },
+        ],
+    );
+    let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+    worker.task_id = 7;
+    let inner = Value::task_owned_function(FunctionId::new(2), "inner".to_string(), Vec::new(), 7);
+    let outer = Value::task_owned_function(FunctionId::new(1), "outer".to_string(), vec![inner], 7);
+
+    assert_eq!(
+        worker
+            .call_callback_sync(&outer, Vec::new())
+            .expect("first same-task callback"),
+        Value::Unit
+    );
+    assert_eq!(
+        worker
+            .call_callback_sync(&outer, Vec::new())
+            .expect("reused same-task callback"),
+        Value::Unit
     );
 }

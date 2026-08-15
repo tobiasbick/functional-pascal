@@ -47,7 +47,11 @@ complete mutable enum, `Result`, and `Option` values using constructor
 expressions such as `Choice.Pair(1, 2)` or `None`. A function-typed Variables
 or Watch target can be replaced by copying one visible binding that already
 holds a compatible non-task-bound function value, or by assigning a unique
-non-capturing executable routine such as `AddTwo`. A task-typed Variables or
+executable routine such as `AddTwo`, `AddBase`, or `AddCell`. Named nested
+routines materialize from the selected lexical-owner frame using recorded
+immutable values and existing mutable cells. Constructed cell-capturing
+functions are task-bound to the selected task and may be stored only in a
+mutable local or parameter register of that owner frame. A task-typed Variables or
 Watch target can be replaced by copying one visible binding that already holds
 a compatible task handle, for example `Pending`. The editor uses the standard
 Variables/Watch edit flow; it does not add a custom command. Numeric IDs,
@@ -65,8 +69,9 @@ value unless a later source initializer overwrites it. Dictionary keys are not
 edited through the standard Variables request; immutable bindings,
 evaluation-only results, and opaque host values are not editable.
 Function values are editable by copying an already materialized, visible,
-non-task-bound function binding, or by assigning a unique non-capturing
-executable routine. Task handles are editable by copying one visible
+non-task-bound function binding, or by assigning a unique executable routine
+including a named nested routine whose captures are immutable values or
+existing mutable cells. Task handles are editable by copying one visible
 initialized binding whose declared task result type matches the destination.
 Uninitialized bindings have no writable
 descendants. Variables does not list inactive variants as children. A write to

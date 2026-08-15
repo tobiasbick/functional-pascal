@@ -111,7 +111,6 @@ fn summaries_cover_scalars_wrappers_aggregates_functions_and_opaque_values() {
             FunctionId::new(0),
             "callback".to_string(),
             vec![Value::Integer(1)],
-            false,
         )),
         limits,
     );

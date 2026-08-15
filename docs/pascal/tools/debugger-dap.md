@@ -56,14 +56,16 @@ Fieldless and multi-field variants can also be built through
 `fpas/variantDescribe` and `fpas/variantConstruct` without writing a
 constructor expression.
 Function-typed targets accept one visible binding that already holds a
-compatible non-task-bound function value, or one statically resolved
+compatible function value, or one statically resolved
 non-capturing executable routine such as `AddTwo` or `Math.Transform`, or a
 named nested routine whose captures are immutable values or existing mutable
 cells in the selected lexical-owner frame. Constructed cell-capturing
 functions are task-bound to the selected task and may be stored only in a
-mutable local or parameter register of that owner frame. A simple
-name uses lexical lookup first. Anonymous closure syntax, copying already
-materialized task-bound functions, and inactive-variant function payloads remain rejected.
+mutable local or parameter register of that owner frame. An already
+materialized task-bound function may be copied only within that selected owner
+task and frame; the copy preserves its exact function and cell handles. A
+simple name uses lexical lookup first. Anonymous closure syntax, escaping or
+foreign-task task-bound copies, and inactive-variant function payloads remain rejected.
 Task-typed targets accept one visible binding that already holds a compatible
 task handle. Standard `setVariable` / `setExpression` copy the exact runtime
 ID; they do not add a DAP capability or custom request. Numeric IDs, `<task N>`
@@ -82,12 +84,13 @@ wrapper `.value`, an explicit inactive single-payload variant suffix such as
 `Some.value` or `Count.Value`, or array/existing-dictionary
 indexes. Complete enum, `Result`, and `Option` targets also accept a constructor
 expression as `value`. Function-typed targets accept one visible source binding
-that already holds a compatible non-task-bound function value, one
+that already holds a compatible function value, one
 statically resolved non-capturing executable routine, or a named nested routine
 whose captures are immutable values or existing mutable cells in the selected
 lexical-owner frame. Constructed cell-capturing functions are task-bound to
 the selected task and may be stored only in a mutable local or parameter
-register of that owner frame. Task-typed targets accept
+register of that owner frame. Task-bound sources may be copied only within the
+selected owner task and frame. Task-typed targets accept
 one visible source binding that already holds a compatible task handle.
 Uninitialized
 mutable roots accept the complete binding name only. Omitting `frameId`

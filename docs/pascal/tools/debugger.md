@@ -104,9 +104,10 @@ routine such as `Current := AddTwo`, `Current := Math.Transform`, or a named
 nested routine whose captures are the recorded immutable values and existing
 mutable cells in the exact selected live lexical-owner frame, for example
 `Current := AddBase`, `Current := MakeAdder.AddBase`, or `Current := AddCell`.
-Copying a binding shares the existing immutable function storage and does not
-reconstruct its environment. Copying an already materialized task-bound
-function remains rejected. Assigning a capturing nested routine constructs a
+Copying a binding shares the exact existing function and capture storage and
+does not reconstruct its environment. An already materialized task-bound
+function can be copied only within its selected owner task, onto a mutable
+local or parameter register in the same selected frame. Assigning a capturing nested routine constructs a
 new function value from verified capture provenance and the selected owner
 frame; it does not search older, peer-task, or similarly named frames.
 Immutable captures clone values. `Cell` and `EnclosingCell` captures clone the
@@ -114,7 +115,7 @@ existing cell handles without reading their payloads. A constructed function
 that captures a cell is task-bound to the selected stopped task: later
 invocation on another task fails before callee entry, and `go` rejects it.
 Every capture source must be initialized and visible in that frame.
-Task-owned construction writes only a source-declared mutable function-typed
+Task-bound construction and copying write only a source-declared mutable function-typed
 local or parameter register in that same frame; globals, capture-cell roots,
 aggregate descendants, and Dynamic endpoints remain rejected for those values.
 A simple name uses ordinary lexical lookup first;
@@ -126,8 +127,8 @@ canonical spelling. Nested routines are stored under their enclosing-routine
 path, so `AddBase` and `MakeAdder.AddBase` identify the same unique nested
 function. The routine signature is proven from portable parameter and
 result metadata; anonymous closure syntax, bound methods, computed
-expressions, Dynamic endpoints, copying already materialized task-bound
-functions, and inactive-variant function payloads remain rejected.
+expressions, Dynamic endpoints, foreign-task or escaping task-bound copies,
+and inactive-variant function payloads remain rejected.
 A mutable task-typed target can be replaced by copying one visible binding
 that already holds a compatible task handle, for example `Current := Pending`.
 The debugger copies the exact runtime task ID and does not spawn, retain,
@@ -174,13 +175,14 @@ Immutable bindings, compiler-hidden storage,
 evaluation-only results, function captures,
 and opaque hosted values are not
 writable. Function values are writable by copying an already
-materialized, visible, non-task-bound function binding, or by assigning a
+materialized, visible function binding, or by assigning a
 unique executable routine — including a named nested routine whose captures
 are immutable values or existing mutable cells from the selected lexical-owner
 frame — onto a structurally
 compatible mutable function-typed path. Constructed cell-capturing functions
-are task-bound to the selected task and may be stored only in a mutable local
-or parameter register of that owner frame. Task handles are writable by copying
+are task-bound to the selected task. They can be copied only within that owner
+task and may be stored only in a mutable local or parameter register of the
+selected owner frame. Task handles are writable by copying
 one visible initialized binding whose declared task result type matches the
 destination; the copy preserves the runtime ID and does not change scheduler
 ownership. Whole aggregates that contain task handles, Dynamic endpoints, and

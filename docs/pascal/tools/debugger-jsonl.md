@@ -77,13 +77,14 @@ controlled-call policy, and resource limits as `evaluate`. Complete mutable enum
 `Result`, and `Option` values accept constructor expressions such as
 `Choice.Pair(1, 2)`, `Choice.Empty`, `Ok(3)`, `Error('failed')`, `Some(4)`, and
 `None`. Function-typed targets accept one visible binding that already holds a
-compatible non-task-bound function value, for example `Backup`, one unique
+compatible function value, for example `Backup`, one unique
 non-capturing executable routine such as `AddTwo`, or a named nested routine
 whose captures are immutable values or existing mutable cells in the selected
 lexical-owner frame, for example `AddBase`, `MakeAdder.AddBase`, or `AddCell`.
-Constructed cell-capturing functions are task-bound to the selected task and
-may be stored only in a mutable local or parameter register of that owner
-frame. Copying an already materialized task-bound function remains rejected. A successful
+Constructed cell-capturing functions are task-bound to the selected task. An
+already materialized task-bound function may be copied only within that owner
+task and into a mutable local or parameter register in the same selected
+frame. The copy preserves the exact function and cell handles. A successful
 result has the same five rendered fields as `evaluate`, refreshes inspection
 state, and expires all earlier variable references. Any failure is atomic and
 leaves the old references usable.
@@ -115,16 +116,18 @@ root. Text indexes and aggregate structure changes are unsupported by
 Complete enum, `Result`, and `Option` values can also be replaced by assigning
 a constructor expression to the complete target. A function-typed target
 accepts one visible source binding that already holds a compatible
-non-task-bound function value, or one statically resolved non-capturing
+function value, or one statically resolved non-capturing
 executable routine such as `AddTwo` or `Math.Transform`, or a named nested
 routine whose captures are immutable values or existing mutable cells in the
 selected lexical-owner frame. Constructed cell-capturing functions are
 task-bound to the selected task and may be stored only in a mutable local or
-parameter register of that owner frame. A simple name uses
+parameter register of that owner frame. A task-bound source may be copied only
+within its selected owner task and frame; global, descendant, capture-cell,
+foreign-task, and stale destinations fail without mutation. A simple name uses
 lexical lookup first and falls back to the executable catalog only after an
 unknown name. Qualified identifier chains are catalog names only. Anonymous
-closure syntax, bound methods, computed expressions, copying already
-materialized task-bound functions, and
+closure syntax, bound methods, computed expressions, escaping or foreign-task
+copies of materialized task-bound functions, and
 inactive-variant function payloads remain rejected. A task-typed target accepts
 one visible source binding that already holds a compatible task handle, for
 example `Current := Pending`. The request copies the exact runtime ID through

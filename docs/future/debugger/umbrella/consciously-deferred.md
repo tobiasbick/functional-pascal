@@ -1,0 +1,47 @@
+# Umbrella boundaries
+
+This file records what the umbrella does not authorize. It does not duplicate
+the capability packages owned by [implementation-plan.md](implementation-plan.md).
+
+## Outside the umbrella
+
+- FPAS syntax, static semantics, runtime language semantics, or language-spec
+  changes without separate explicit user agreement.
+- A second debugger engine in JSONL, DAP, VS Code, a remote agent, or a native
+  adapter.
+- Marketplace/Open VSX publication, telemetry collection, cloud hosting, or
+  repository CI automation unless separately requested.
+- Unauthenticated remote control or default exposure of host paths, environment
+  data, sources, recordings, or terminal contents.
+- Unbounded history, recordings, retained completed tasks, output, snapshots,
+  or breakpoint actions.
+- Unsafe thread termination as an implementation of pause or cancellation.
+- Backward-compatibility layers for obsolete internal debugger protocols unless
+  a concrete supported consumer is identified.
+
+## Decisions, not promises
+
+The following remain inside the umbrella as explicit feasibility decisions,
+not promises that implementation will be accepted:
+
+- Dynamic callable endpoints, opaque identity-bearing resources, and in-place
+  callable editing in `UMB-10D`.
+- Arbitrary instruction changes in `UMB-30D`.
+- Non-stop execution, scheduler shortcuts, and persistent history in
+  `UMB-40D`.
+- OS-level native debugging in `UMB-60C`.
+- Record/replay and hot reload in `UMB-80` and `UMB-90`.
+
+A rejected decision must state the missing invariant or disproportionate cost.
+Only a remaining independently useful capability is returned to
+[`../deferred.md`](../deferred.md); rejected implementation approaches are not
+preserved as backlog.
+
+## Maintenance
+
+- Do not copy umbrella child lists into `../deferred.md` while this plan is
+  active.
+- Do not describe unimplemented behavior under `docs/pascal/`.
+- Remove obsolete exclusions when their capability passes acceptance.
+- Delete this file with the umbrella after `UMB-99`.
+

@@ -107,6 +107,20 @@ fn dap_cell_capturing_assignment_invalidates_and_continues() {
         "{assigned:?}"
     );
 
+    let current_frame = frame(&mut adapter, &mut seq);
+    let copied = send(
+        &mut adapter,
+        &mut seq,
+        "setExpression",
+        json!({"frameId":current_frame,"expression":"Copy","value":"Current"}),
+    );
+    assert_eq!(copied[0]["success"], true, "{copied:?}");
+    assert_eq!(copied[0]["body"]["value"], "<function mutating.addcell>");
+    assert!(
+        copied.iter().any(|record| record["event"] == "invalidated"),
+        "{copied:?}"
+    );
+
     let _ = send(&mut adapter, &mut seq, "continue", json!({"threadId":1}));
     let output = adapter
         .wait()

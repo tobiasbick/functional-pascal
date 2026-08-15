@@ -76,6 +76,26 @@ pub(super) fn require_task_owned(
     Ok(())
 }
 
+/// Prove that a task-bound function belongs to the selected debugger task.
+pub(super) fn require_task_owner(
+    function: &SharedFunction,
+    task_id: u64,
+) -> Result<(), DebugSessionError> {
+    match function.owner_task {
+        Some(owner_task) if owner_task == task_id => Ok(()),
+        Some(owner_task) => Err(ownership(
+            &format!(
+                "source task-bound function belongs to task {owner_task}, not selected task {task_id}"
+            ),
+            "Select the stopped task that owns the function and copy it only between mutable local or parameter bindings in that task's selected frame.",
+        )),
+        None => Err(ownership(
+            "source task-bound function is missing a runtime task owner",
+            "Assign a task-bound function created for the selected live owner task.",
+        )),
+    }
+}
+
 struct WalkState {
     visited: HashSet<usize>,
     values: usize,
@@ -345,5 +365,15 @@ mod tests {
                 .message
                 .contains("cell")
         );
+    }
+
+    #[test]
+    fn task_owner_must_match_the_selected_task() {
+        let owned = function(Vec::new(), true);
+        require_task_owner(&owned, 1).expect("matching owner");
+        let error = require_task_owner(&owned, 2).expect_err("foreign owner");
+        assert_eq!(error.kind, DebugErrorKind::VariableValueType);
+        assert!(error.message.contains("task 1"), "{error:?}");
+        assert!(error.message.contains("task 2"), "{error:?}");
     }
 }

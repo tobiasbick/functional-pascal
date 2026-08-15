@@ -33,6 +33,9 @@ begin
   mutable var Current: Handler := Identity;
   var Frozen: Handler := Identity;
   mutable var Copy: Handler := Identity;
+  mutable var Packed: Pack := record
+    Item := Identity;
+  end;
   var CellStop: integer := 0;
   Cell := Cell + 10;
   WriteLn(Current(0));
@@ -172,6 +175,7 @@ begin
 end;
 begin
   mutable var Cell: integer := 1;
+  mutable var Source: Handler := Identity;
   mutable var Current: Handler := Identity;
   var Keep: integer := Touch();
   var CaptureDestStop: integer := 0;
@@ -220,6 +224,6 @@ begin
   var Spawned: integer := SpawnProbe();
   var Child: task := go Worker();
   var Stolen: Handler := Wait(Child);
-  WriteLn(Stolen(1));
-  var RootStop: integer := 0
+  var RootStop: integer := 0;
+  WriteLn(Stolen(1))
 end.

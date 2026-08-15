@@ -47,6 +47,7 @@ export async function verifyCellCapturingRoutineAssignment(
     "  mutable var Cell: integer := 1;",
     "  var Original: Handler := AddCell;",
     "  mutable var Current: Handler := Identity;",
+    "  mutable var Copy: Handler := Identity;",
     "  var CellStop: integer := 0;",
     "  Cell := Cell + 10;",
     "  WriteLn(Current(0));",
@@ -93,6 +94,14 @@ export async function verifyCellCapturingRoutineAssignment(
     );
     const current = await namedVariable(session as vscode.DebugSession, "Locals", "Current");
     assert.equal(current.value, "<function mutating.addcell>");
+    await setExpression(
+      session as vscode.DebugSession,
+      "Copy",
+      "Current",
+      "<function mutating.addcell>"
+    );
+    const copy = await namedVariable(session as vscode.DebugSession, "Locals", "Copy");
+    assert.equal(copy.value, "<function mutating.addcell>");
     await waitFor(
       () => eventCount(sent.slice(marker.sent), "invalidated") >= 1,
       "cell capturing routine assignment invalidation events"

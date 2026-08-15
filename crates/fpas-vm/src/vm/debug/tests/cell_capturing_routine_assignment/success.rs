@@ -190,16 +190,23 @@ fn uninitialized_local_and_mutable_parameter_registers_accept_task_owned_routine
 }
 
 #[test]
-fn copying_the_constructed_task_owned_function_stays_rejected() {
+fn copying_the_constructed_task_owned_function_preserves_identity_and_cells() {
     let mut session = DebugSession::new(compile_fixture()).expect("debug session");
     let frame = run_to(&mut session, "var CellStop: integer := 0;");
     session
         .set_expression(&root("Current"), &name("AddCell"), Some(frame))
         .expect("construct");
     let frame = session.stack(0, 1).expect("fresh").items[0].id;
-    let copied = session
+    let source = runtime(&session, &name("Current"), frame);
+    session
         .set_expression(&root("Copy"), &name("Current"), Some(frame))
-        .expect_err("copy task-bound");
-    assert_eq!(copied.kind, DebugErrorKind::VariableValueType);
-    assert!(copied.message.contains("task-bound"), "{copied:?}");
+        .expect("copy task-bound");
+    let frame = session.stack(0, 1).expect("fresh").items[0].id;
+    let copied = runtime(&session, &name("Copy"), frame);
+    assert!(
+        std::ptr::eq(&**as_function(&source), &**as_function(&copied)),
+        "copy must preserve the existing function allocation"
+    );
+    assert_eq!(rendered(&mut session, call("Current", 0), frame), "2");
+    assert_eq!(rendered(&mut session, call("Copy", 0), frame), "2");
 }

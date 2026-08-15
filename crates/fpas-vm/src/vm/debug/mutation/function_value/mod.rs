@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod captures;
+mod destination;
 mod routine;
 mod signature;
 mod source;
@@ -10,11 +11,25 @@ mod source;
 use fpas_bytecode::{DebugType, DebugTypeId, Executable, SharedFunction, Value};
 
 use super::super::evaluation::DebugEvaluationLimits;
-use super::super::inspection::InspectionSnapshot;
+use super::super::inspection::{InspectionSnapshot, MutationTarget};
 use super::super::types::{DebugErrorKind, DebugSessionError};
 
 pub(in crate::vm::debug) use routine::prepare as prepare_routine;
 pub(in crate::vm::debug) use source::{FunctionSource, extract as source};
+
+/// Stopped-task context required to prove one function assignment.
+pub(in crate::vm::debug) struct AssignmentContext<'a> {
+    /// Immutable inspection snapshot for the selected task.
+    pub(in crate::vm::debug) inspection: &'a InspectionSnapshot,
+    /// Selected live frame that owns source and destination bindings.
+    pub(in crate::vm::debug) frame_id: Option<u64>,
+    /// Runtime identity of the selected stopped task.
+    pub(in crate::vm::debug) task_id: u64,
+    /// Fully resolved destination whose escape boundary must be checked.
+    pub(in crate::vm::debug) destination: &'a MutationTarget,
+    /// Shared bounded-evaluation limits for source and capture validation.
+    pub(in crate::vm::debug) limits: DebugEvaluationLimits,
+}
 
 /// Whether a portable debugger type is a first-class function signature.
 pub(in crate::vm::debug) fn is_function_type(executable: &Executable, ty: DebugTypeId) -> bool {
@@ -24,20 +39,25 @@ pub(in crate::vm::debug) fn is_function_type(executable: &Executable, ty: DebugT
     )
 }
 
-/// Validate one evaluated, structurally compatible, non-task-bound function value.
+/// Validate one evaluated, structurally compatible function value for assignment.
 ///
 /// The destination must already have been resolved as a function-typed target. The source
 /// name has already been evaluated once through the ordinary expression budget. Cloning
-/// `Value::Function` shares the existing immutable function storage.
+/// `Value::Function` shares the existing function and capture storage.
 pub(in crate::vm::debug) fn prepare(
     executable: &Executable,
-    inspection: &InspectionSnapshot,
     name: &str,
     value: Value,
     expected: DebugTypeId,
-    frame_id: Option<u64>,
-    limits: DebugEvaluationLimits,
+    context: AssignmentContext<'_>,
 ) -> Result<Value, DebugSessionError> {
+    let AssignmentContext {
+        inspection,
+        frame_id,
+        task_id,
+        destination,
+        limits,
+    } = context;
     if matches!(
         executable.debug_types.get(expected.get() as usize),
         Some(DebugType::Dynamic)
@@ -74,7 +94,13 @@ pub(in crate::vm::debug) fn prepare(
             "Stop after the source binding has received a function value, then assign that name.",
         ));
     };
-    captures::require_eligible(function, limits.max_depth, limits.max_detached_values)?;
+    if function.task_bound {
+        destination::require_frame_register(Some(destination), frame_id, inspection.generation())?;
+        captures::require_task_owner(function, task_id)?;
+        captures::require_task_owned(function, limits.max_depth, limits.max_detached_values)?;
+    } else {
+        captures::require_eligible(function, limits.max_depth, limits.max_detached_values)?;
+    }
     Ok(value)
 }
 

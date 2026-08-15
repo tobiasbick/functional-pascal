@@ -103,6 +103,16 @@ fn jsonl_cell_capturing_assignment_continues_through_shared_cells() {
         "<function mutating.addcell>"
     );
 
+    let current = frame(&mut server, &mut id);
+    let copied = send(
+        &mut server,
+        &mut id,
+        "expression.set",
+        json!({"frame_id":current,"target":"Copy","expression":"Current"}),
+    );
+    assert_eq!(copied[0]["success"], true, "{copied:?}");
+    assert_eq!(copied[0]["body"]["result"], "<function mutating.addcell>");
+
     let _ = send(&mut server, &mut id, "continue", json!({}));
     let output = server
         .wait()

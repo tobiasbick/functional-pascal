@@ -3,7 +3,6 @@
 //! **Documentation:** `docs/pascal/tools/debugger.md`
 
 mod captures;
-mod destination;
 
 use std::collections::HashSet;
 

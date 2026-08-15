@@ -2,9 +2,11 @@
 
 ## Active implementation plans
 
-There is currently no active implementation plan. Open capability packages and
-re-entry gates remain in [deferred.md](deferred.md); implemented behavior is
-documented under [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
+The [source-debugger completion umbrella](umbrella/README.md) is the active,
+resumable plan for the remaining debugger backlog. It coordinates bounded
+packages in dependency order; it does not authorize one monolithic
+implementation. Current behavior remains documented under
+[`docs/pascal/tools/`](../../pascal/tools/debugger.md).
 
 The source debugger includes detached controlled calls, read-only expression
 evaluation, watches, conditional breakpoints, exact-hit conditions,
@@ -48,12 +50,15 @@ named nested routine whose `Cell` and `EnclosingCell` captures clone existing
 handles from that same owner frame onto a mutable local or parameter register,
 is implemented through the same `setVariable`/`setExpression` surfaces.
 Constructed cell-capturing functions are task-bound to the selected task.
+An already materialized task-bound function can be copied within that selected
+owner task and frame onto another mutable local or parameter register; the
+exact function and cell handles are preserved. Global, descendant,
+capture-cell, foreign-task, and stale-frame escape paths remain rejected.
 Bounded
 copying of an already materialized, visible task handle onto a structurally
 compatible mutable target is implemented through those same surfaces: the copy
 preserves the exact runtime task ID and does not consult the scheduler. Newly
-entered anonymous closures, copying already materialized task-bound functions,
-bound-receiver synthesis,
+entered anonymous closures, bound-receiver synthesis,
 Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable
 editing remain recorded centrally in
 [deferred.md](deferred.md).
@@ -61,8 +66,8 @@ editing remain recorded centrally in
 Bounded forced return from a selected ordinary callee — including an older
 frame of the stop-owning task — is implemented through JSONL `frame.return`,
 DAP `fpas/forceReturn`, and the VS Code command
-`functionalPascal.debug.forceReturn`. Broader control-flow mutation remains
-tracked as `DBG-D04` in [deferred.md](deferred.md).
+`functionalPascal.debug.forceReturn`. Broader control-flow mutation is owned by
+`UMB-30` in the [active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

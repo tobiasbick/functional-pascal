@@ -8,7 +8,6 @@ use super::super::super::super::evaluation::DebugEvaluationLimits;
 use super::super::super::super::inspection::{InspectionSnapshot, MutationTarget};
 use super::super::super::super::types::DebugSessionError;
 use super::super::captures as graph;
-use super::destination;
 use super::type_error;
 
 #[expect(
@@ -56,7 +55,11 @@ pub(super) fn materialize(
         }
     }
     let constructed = if task_bound {
-        destination::require_frame_register(destination, frame_id, inspection.generation())?;
+        super::super::destination::require_frame_register(
+            destination,
+            frame_id,
+            inspection.generation(),
+        )?;
         Value::task_owned_function(function_id, canonical.to_string(), captures, task_id)
     } else {
         Value::function(function_id, canonical.to_string(), captures)

@@ -170,9 +170,25 @@ impl DebugSession {
                     ),
                 };
                 match value {
-                    Ok(value) => self.prepare_function_replacement(
-                        task_id, &name, value, expected, frame_id, limits,
-                    ),
+                    Ok(value) => {
+                        let inspection = self
+                            .inspections
+                            .get(&task_id)
+                            .ok_or_else(|| unknown_task(task_id))?;
+                        super::super::super::mutation::prepare_function_value(
+                            self.executable.executable(),
+                            &name,
+                            value,
+                            expected,
+                            super::super::super::mutation::FunctionAssignmentContext {
+                                inspection,
+                                frame_id,
+                                task_id,
+                                destination,
+                                limits,
+                            },
+                        )
+                    }
                     Err(error) if error.kind == DebugErrorKind::UnknownName => {
                         super::super::super::mutation::prepare_routine_value(
                             &self.executable,
@@ -230,30 +246,6 @@ impl DebugSession {
             frame_id,
             task_id,
             Some(destination),
-            limits,
-        )
-    }
-
-    fn prepare_function_replacement(
-        &self,
-        task_id: u64,
-        name: &str,
-        value: fpas_bytecode::Value,
-        expected: fpas_bytecode::DebugTypeId,
-        frame_id: Option<u64>,
-        limits: DebugEvaluationLimits,
-    ) -> Result<fpas_bytecode::Value, DebugSessionError> {
-        let inspection = self
-            .inspections
-            .get(&task_id)
-            .ok_or_else(|| unknown_task(task_id))?;
-        super::super::super::mutation::prepare_function_value(
-            self.executable.executable(),
-            inspection,
-            name,
-            value,
-            expected,
-            frame_id,
             limits,
         )
     }

@@ -266,16 +266,15 @@ fn signature_and_source_shape_failures_are_actionable() {
 }
 
 #[test]
-fn task_bound_and_nested_forbidden_captures_are_rejected() {
+fn same_task_bound_copy_is_allowed_while_nested_forbidden_captures_are_rejected() {
     let mut session = DebugSession::new(assignment_executable()).expect("debug session");
     stop_with_functions(&mut session);
     let frame = session.stack(0, 1).expect("stack").items[0].id;
     let bound = session
         .set_expression(&root("Current"), &name("Bound"), Some(frame))
-        .expect_err("task-bound");
-    assert_eq!(bound.kind, DebugErrorKind::VariableValueType);
-    assert!(bound.message.contains("task-bound"), "{bound:?}");
-    assert!(bound.hint.contains("non-task-bound"), "{}", bound.hint);
+        .expect("same-task bound copy");
+    assert_eq!(bound.value, "<function adder>");
+    let frame = session.stack(0, 1).expect("fresh stack").items[0].id;
     let nested = session
         .set_expression(&root("Current"), &name("NestedCell"), Some(frame))
         .expect_err("nested cell");

@@ -91,6 +91,96 @@ fn global_descendant_capture_cell_and_immutable_destinations_are_rejected() {
 }
 
 #[test]
+fn copied_task_owned_functions_cannot_escape_the_owner_frame() {
+    let mut global = DebugSession::new(compile_fixture()).expect("global copy");
+    let frame = run_to(&mut global, "var CellStop: integer := 0;");
+    global
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    let frame = global.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = global
+        .set_expression(&root("Shared"), &name("Current"), Some(frame))
+        .expect_err("global escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("global"), "{rejected:?}");
+    assert_eq!(rendered(&mut global, call("Shared", 1), frame), "1");
+
+    let mut descendant = DebugSession::new(compile_fixture()).expect("descendant copy");
+    let frame = run_to(&mut descendant, "var CellStop: integer := 0;");
+    descendant
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    let frame = descendant.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = descendant
+        .set_expression(&field("Packed", "Item"), &name("Current"), Some(frame))
+        .expect_err("descendant escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("descendant"), "{rejected:?}");
+    let packed = runtime(
+        &descendant,
+        &DebugExpression::Field {
+            base: Box::new(name("Packed")),
+            name: "Item".to_string(),
+        },
+        frame,
+    );
+    assert_eq!(as_function(&packed).name, "identity");
+
+    let mut captured = DebugSession::new(compile_fixture()).expect("capture copy");
+    let frame = run_to(&mut captured, "var CaptureDestStop: integer := 0;");
+    captured
+        .set_expression(&root("Source"), &name("AddCaptured"), Some(frame))
+        .expect("construct source");
+    let frame = captured.stack(0, 1).expect("fresh").items[0].id;
+    let rejected = captured
+        .set_expression(&root("Current"), &name("Source"), Some(frame))
+        .expect_err("capture-cell escape");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("capture-cell"), "{rejected:?}");
+    let current = runtime(&captured, &name("Current"), frame);
+    assert_eq!(as_function(&current).name, "identity");
+}
+
+#[test]
+fn copied_task_owned_functions_reject_foreign_owner_and_stale_frame() {
+    let mut foreign = DebugSession::new(compile_fixture()).expect("foreign copy");
+    foreign
+        .set_breakpoint(SourceBreakpoint {
+            source: "<memory>".to_string(),
+            line: line("var RootStop: integer := 0;"),
+            column: None,
+        })
+        .expect("root breakpoint");
+    let worker = run_to(&mut foreign, "var WorkerStop: integer := 0;");
+    foreign
+        .set_expression(&root("Current"), &name("AddWorker"), Some(worker))
+        .expect("construct worker-owned source");
+    let _ = stopped(foreign.continue_execution().expect("reach root"));
+    let root_frame = foreign.stack(0, 1).expect("root frame").items[0].id;
+    let rejected = foreign
+        .set_expression(&root("Current"), &name("Stolen"), Some(root_frame))
+        .expect_err("foreign owner");
+    assert_eq!(rejected.kind, DebugErrorKind::VariableValueType);
+    assert!(rejected.message.contains("belongs to task"), "{rejected:?}");
+    assert_eq!(rendered(&mut foreign, call("Current", 1), root_frame), "1");
+
+    let mut stale = DebugSession::new(compile_fixture()).expect("stale copy");
+    let frame = run_to(&mut stale, "var CellStop: integer := 0;");
+    stale
+        .set_expression(&root("Current"), &name("AddCell"), Some(frame))
+        .expect("construct source");
+    assert_eq!(
+        stale
+            .set_expression(&root("Copy"), &name("Current"), Some(frame))
+            .expect_err("stale frame")
+            .kind,
+        DebugErrorKind::UnknownFrame
+    );
+    let frame = stale.stack(0, 1).expect("preserved frame").items[0].id;
+    assert_eq!(rendered(&mut stale, call("Copy", 1), frame), "1");
+}
+
+#[test]
 fn task_spawn_rejects_the_constructed_function() {
     let mut session = DebugSession::new(compile_fixture()).expect("spawn session");
     let frame = run_to(&mut session, "var SpawnStop: integer := 0;");

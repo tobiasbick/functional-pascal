@@ -8,7 +8,7 @@ mod scheduler;
 mod state;
 mod suspension;
 
-pub(super) use scheduler::TaskScheduler;
+pub(super) use scheduler::{RetainedResultReplacement, TaskScheduler};
 pub(super) use state::TaskState;
 pub(in crate::vm) use suspension::{DebugClock, TaskSuspension, TaskSuspensionState};
 

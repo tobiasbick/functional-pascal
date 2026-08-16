@@ -18,8 +18,8 @@ fn selected_older_function_unwinds_younger_frames_into_its_caller() {
         .expect("selected return");
     assert_eq!(result.value, "99");
     assert_eq!(result.unwound_frames, 2);
-    assert_eq!(result.frame.name, "root");
-    assert_eq!(result.frame.depth, 0);
+    assert_eq!(result.frame.as_ref().expect("caller").name, "root");
+    assert_eq!(result.frame.as_ref().expect("caller").depth, 0);
     assert_eq!(session.last_stop().call_depth, 0);
     assert_eq!(session.last_stop().reason, DebugStopReason::Pause);
     assert_eq!(session.test_instruction_count(), before_count);
@@ -49,7 +49,7 @@ fn unwind_count_is_selected_depth_plus_one() {
             "depth {depth}"
         );
         assert_eq!(session.stack(0, 16).expect("stack").total, 4 - (depth + 1));
-        assert_eq!(result.frame.depth, 0);
+        assert_eq!(result.frame.as_ref().expect("caller").depth, 0);
     }
 }
 
@@ -92,7 +92,7 @@ fn selected_procedure_convention_ignores_the_active_function() {
         .expect("procedure selected");
     assert_eq!(result.value, "()");
     assert_eq!(result.unwound_frames, 2);
-    assert_eq!(result.frame.name, "root");
+    assert_eq!(result.frame.as_ref().expect("caller").name, "root");
 }
 
 #[test]
@@ -280,7 +280,7 @@ fn returning_an_older_frame_into_the_entry_caller_is_allowed() {
     let result = session
         .force_return(compute, Some(&int_expr(4)))
         .expect("into entry");
-    assert_eq!(result.frame.name, "root");
+    assert_eq!(result.frame.as_ref().expect("caller").name, "root");
     assert_eq!(result.unwound_frames, 1);
     assert_eq!(session.last_stop().call_depth, 0);
 }

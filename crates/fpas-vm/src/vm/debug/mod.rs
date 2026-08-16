@@ -2,6 +2,7 @@
 
 mod breakpoints;
 mod calls;
+mod completed_result;
 mod evaluation;
 mod forced_return;
 mod inspection;
@@ -20,6 +21,7 @@ pub use breakpoints::{
     BoundBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits, FunctionBreakpoint,
     SourceBreakpoint,
 };
+pub use completed_result::DebugTaskResultReplacement;
 pub use evaluation::{
     DebugBinaryOperation, DebugEvaluateResult, DebugEvaluationLimits, DebugExpression,
     DebugUnaryOperation,

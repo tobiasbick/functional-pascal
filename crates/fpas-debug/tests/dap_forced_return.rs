@@ -10,9 +10,28 @@ use fpas_debug::{PreparedDebugTarget, dap::DapServer, jsonl::JsonlServer};
 use serde_json::{Value, json};
 
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/forced_return.fpas");
+const RECOVERY_SOURCE: &str = r#"program DebuggerRecovery;
+
+uses Std.Console;
+
+function Fail(): integer;
+begin
+  panic('boom');
+  return 1
+end;
+
+begin
+  var Value: integer := Fail();
+  WriteLn(Value)
+end.
+"#;
 
 fn server() -> DapServer {
-    let (program, diagnostics) = fpas_parser::parse(SOURCE);
+    server_for(SOURCE)
+}
+
+fn server_for(source: &str) -> DapServer {
+    let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile DAP forced-return fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
@@ -65,6 +84,69 @@ fn initialize(adapter: &mut DapServer, invalidation: bool) -> u64 {
     let _ = send(adapter, &mut seq, "launch", json!({"stopOnEntry": true}));
     let _ = send(adapter, &mut seq, "configurationDone", json!({}));
     seq
+}
+
+#[test]
+fn dap_force_return_completes_the_root_entry_without_invalidation() {
+    let mut adapter = server();
+    let mut seq = initialize(&mut adapter, true);
+    let entry = frames(&mut adapter, &mut seq)[0]["id"]
+        .as_u64()
+        .expect("entry frame");
+    let returned = send(
+        &mut adapter,
+        &mut seq,
+        "fpas/forceReturn",
+        json!({"frameId": entry}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["value"], "()");
+    assert_eq!(returned[0]["body"]["frame"], Value::Null);
+    assert_eq!(returned[0]["body"]["terminated"], true);
+    assert!(returned.iter().any(|record| record["event"] == "exited"));
+    assert!(
+        returned
+            .iter()
+            .any(|record| record["event"] == "terminated")
+    );
+    assert!(
+        returned
+            .iter()
+            .all(|record| record["event"] != "invalidated")
+    );
+    assert!(adapter.is_terminated());
+}
+
+#[test]
+fn dap_force_return_clears_runtime_failure_and_resumes_recovered_code() {
+    let mut adapter = server_for(RECOVERY_SOURCE);
+    let mut seq = initialize(&mut adapter, true);
+    let continued = send(&mut adapter, &mut seq, "continue", json!({"threadId":1}));
+    assert_eq!(continued[0]["success"], true, "{continued:?}");
+    let failed = adapter.wait();
+    assert!(failed.iter().any(|record| record["event"] == "stopped"));
+    let frame = frames(&mut adapter, &mut seq)[0]["id"]
+        .as_u64()
+        .expect("failed frame");
+    let returned = send(
+        &mut adapter,
+        &mut seq,
+        "fpas/forceReturn",
+        json!({"frameId":frame,"expression":"9"}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["value"], "9");
+
+    let continued = send(&mut adapter, &mut seq, "continue", json!({"threadId":1}));
+    assert_eq!(continued[0]["success"], true, "{continued:?}");
+    let resumed = adapter.wait();
+    let output = resumed
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["output"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "9\n", "{resumed:?}");
+    assert!(resumed.iter().any(|record| record["event"] == "terminated"));
 }
 
 #[test]

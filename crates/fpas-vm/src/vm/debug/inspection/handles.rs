@@ -21,6 +21,17 @@ impl PreparedEvaluationResult {
     pub(in crate::vm::debug) fn reserved_handles(&self) -> usize {
         usize::from(!self.rendered.children.is_empty())
     }
+
+    /// Convert a prepared terminal result without retaining expandable handles.
+    pub(in crate::vm::debug) fn into_terminal_result(self) -> DebugEvaluateResult {
+        DebugEvaluateResult {
+            value: self.rendered.summary,
+            type_name: self.rendered.type_name,
+            variables_reference: 0,
+            named_variables: 0,
+            indexed_variables: 0,
+        }
+    }
 }
 
 impl InspectionSnapshot {

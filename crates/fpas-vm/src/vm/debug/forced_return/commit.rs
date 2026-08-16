@@ -22,11 +22,16 @@ pub(in crate::vm::debug) fn commit(
             "Request stack frames again for the current stop and retry the selected frame.",
         ));
     }
-    apply(worker, prepared, value);
+    apply_prepared(worker, prepared, value);
     Ok(())
 }
 
-fn apply(worker: &mut Worker, prepared: &PreparedSelection, value: Value) {
+/// Apply an already revalidated unwind without another fallible step.
+pub(in crate::vm::debug) fn apply_prepared(
+    worker: &mut Worker,
+    prepared: &PreparedSelection,
+    value: Value,
+) {
     worker.call_stack.truncate(prepared.new_call_stack_len);
     worker.release_registers(prepared.selected_base);
     worker.function = prepared.caller.function;

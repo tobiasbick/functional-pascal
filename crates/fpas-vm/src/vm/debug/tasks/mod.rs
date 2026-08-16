@@ -2,4 +2,6 @@
 
 mod driver;
 
-pub(super) use driver::{DebugDispatch, DebugSchedule, DebugTaskRuntime};
+pub(super) use driver::{
+    CompletedResultTargetError, DebugDispatch, DebugSchedule, DebugTaskRuntime,
+};

@@ -58,6 +58,41 @@ pub(super) fn panic_executable() -> VerifiedExecutable {
     )
 }
 
+pub(super) fn callee_panic_executable() -> VerifiedExecutable {
+    executable(
+        vec![
+            Instruction::abc(Opcode::CallDirect, 0, 1, 0, 0).expect("failing call"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("panic message"),
+            abc(Opcode::Panic, 0, 0, 0),
+            abc(Opcode::Return, 1, 0, 0),
+        ],
+        vec![
+            routine(
+                0,
+                0,
+                2,
+                0,
+                1,
+                ReturnConvention::Unit,
+                debug_info(1, &[(0, 1)]),
+            ),
+            routine(
+                1,
+                2,
+                5,
+                0,
+                2,
+                ReturnConvention::Value,
+                debug_info(0, &[(2, 10)]),
+            ),
+        ],
+        vec![Constant::String(StringId::new(11))],
+        vec![(0, 1), (2, 10)],
+        vec![DebugType::Integer, DebugType::Unit],
+    )
+}
+
 pub(super) fn spawn_then_call_executable() -> VerifiedExecutable {
     let mut root = routine(
         0,
@@ -81,7 +116,7 @@ pub(super) fn spawn_then_call_executable() -> VerifiedExecutable {
     executable(
         vec![
             Instruction::abx(Opcode::LoadConstant, 3, 2).expect("task function"),
-            abc(Opcode::SpawnDetachedTask, 3, 0, 0),
+            Instruction::abc(Opcode::SpawnTask, 0, 3, 0, 0).expect("retained task"),
             Instruction::abx(Opcode::LoadConstant, 2, 0).expect("41"),
             Instruction::abc(Opcode::CallDirect, 0, 1, 2, 1).expect("compute"),
             abc(Opcode::Return, NO_REGISTER, 0, 0),
@@ -124,6 +159,125 @@ pub(super) fn spawn_then_call_executable() -> VerifiedExecutable {
             Constant::Integer(30),
         ],
         vec![(0, 1), (3, 2), (5, 10), (8, 20)],
+        vec![DebugType::Integer, DebugType::Unit],
+    )
+}
+
+pub(super) fn spawn_failing_task_executable() -> VerifiedExecutable {
+    let mut root = routine(
+        0,
+        0,
+        5,
+        0,
+        4,
+        ReturnConvention::Unit,
+        debug_info(1, &[(0, 1), (3, 2)]),
+    );
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 3, 0).expect("task function"),
+            Instruction::abc(Opcode::SpawnTask, 0, 3, 0, 0).expect("retained task"),
+            Instruction::abx(Opcode::LoadConstant, 2, 1).expect("41"),
+            Instruction::abc(Opcode::CallDirect, 1, 2, 2, 1).expect("compute"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 3).expect("panic message"),
+            abc(Opcode::Panic, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 2).expect("offset"),
+            abc(Opcode::AddInteger, 2, 0, 1),
+            abc(Opcode::Return, 2, 0, 0),
+        ],
+        vec![
+            root,
+            routine(
+                3,
+                5,
+                8,
+                0,
+                1,
+                ReturnConvention::Unit,
+                debug_info(1, &[(5, 20)]),
+            ),
+            routine(
+                1,
+                8,
+                11,
+                1,
+                3,
+                ReturnConvention::Value,
+                debug_info(0, &[(8, 10)]),
+            ),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Integer(41),
+            Constant::Integer(1),
+            Constant::String(StringId::new(11)),
+        ],
+        vec![(0, 1), (3, 2), (5, 20), (8, 10)],
+        vec![DebugType::Integer, DebugType::Unit],
+    )
+}
+
+pub(super) fn spawn_value_task_executable() -> VerifiedExecutable {
+    let mut root = routine(
+        0,
+        0,
+        5,
+        0,
+        4,
+        ReturnConvention::Unit,
+        debug_info(1, &[(0, 1), (3, 2)]),
+    );
+    root.flags.uses_spawn_tasks = true;
+    executable(
+        vec![
+            Instruction::abx(Opcode::LoadConstant, 3, 0).expect("task function"),
+            Instruction::abc(Opcode::SpawnTask, 0, 3, 0, 0).expect("retained task"),
+            Instruction::abx(Opcode::LoadConstant, 2, 1).expect("41"),
+            Instruction::abc(Opcode::CallDirect, 1, 2, 2, 1).expect("compute"),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 0, 3).expect("task result"),
+            abc(Opcode::Return, 0, 0, 0),
+            Instruction::abx(Opcode::LoadConstant, 1, 2).expect("offset"),
+            abc(Opcode::AddInteger, 2, 0, 1),
+            abc(Opcode::Return, 2, 0, 0),
+        ],
+        vec![
+            root,
+            routine(
+                3,
+                5,
+                7,
+                0,
+                1,
+                ReturnConvention::Value,
+                debug_info(0, &[(5, 20)]),
+            ),
+            routine(
+                1,
+                7,
+                10,
+                1,
+                3,
+                ReturnConvention::Value,
+                debug_info(0, &[(7, 10)]),
+            ),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Integer(41),
+            Constant::Integer(1),
+            Constant::Integer(7),
+        ],
+        vec![(0, 1), (3, 2), (5, 20), (7, 10)],
         vec![DebugType::Integer, DebugType::Unit],
     )
 }

@@ -11,7 +11,7 @@ export interface ForcedReturnInput {
   readonly expression?: string;
 }
 
-/** Register the editor command that completes the selected callee. */
+/** Register the editor command that completes the selected frame or task entry. */
 export function registerForcedReturnCommand(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand(

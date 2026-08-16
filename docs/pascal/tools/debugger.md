@@ -242,9 +242,10 @@ assignment through `setVariable` / `setExpression` is unchanged.
 Forced return is a dedicated stopped-state command, not an assignment and not
 `stepOut`. JSONL `frame.return`, DAP `fpas/forceReturn`, and the VS Code
 command **Debug: Force Return** accept a current-generation frame from the task
-that caused the current non-failure stop when that frame has a saved caller.
-Depth zero completes the active callee. A deeper selected frame is removed
-together with every younger frame. A function requires one expression evaluated
+that caused the current non-failure stop. Depth zero completes the active
+callee. A deeper selected frame is removed together with every younger frame.
+Selecting the oldest program or task entry frame completes that entry instead.
+A function requires one expression evaluated
 in the selected frame under the same detached policy and limits as `evaluate`.
 A procedure omits the expression and returns `unit`. Convention and portable
 result type come from the selected function. The value is checked before any
@@ -254,13 +255,22 @@ to that caller's saved destination, remains all-stop, and refreshes every
 stopped-task snapshot once. The result includes the number of unwound frames,
 which is the selected depth plus one. It does not run remaining selected or
 younger instructions, dispatch a `Return` opcode, or add to the VM instruction
-count. Failure leaves frames, registers, the current stop, instruction count,
-and inspection handles unchanged. Program and task entry frames, waiting,
-sleeping, or peer tasks, runtime-error stops, missing result metadata, and
-Dynamic, first-class function, task, capture-cell, or opaque results are
-rejected. Returning an ordinary older frame into an entry caller is allowed.
-Broader control-flow mutation remains tracked as `DBG-D04` in the
-[deferred debugger backlog](../../future/debugger/deferred.md).
+count. Completing the program entry terminates the session and cancels its
+remaining tasks without dispatching them. Completing a spawned task entry
+publishes its retained result when applicable, emits its task-exit event, and
+keeps the session stopped on another inspectable task. Failure leaves frames,
+registers, the current stop, instruction count, and inspection handles
+unchanged. At a runtime-error stop, the same command explicitly replaces the
+exact failed callee or entry result after all normal type checks. The original
+runtime diagnostic remains in the event history; a successful callee recovery
+returns to an all-stop caller and can be continued, while entry recovery uses
+the normal program/task completion rules. A stale or different retained failure
+is rejected atomically. Waiting, sleeping, or peer tasks, missing result
+metadata, and Dynamic, first-class function, task, capture-cell, or opaque
+results are rejected. Returning an ordinary older frame into an entry caller is
+allowed. Completed-return replacement, frame restart, and broader control-flow
+mutation remain tracked by `UMB-30` in the
+[debugger completion umbrella](../../future/debugger/umbrella/README.md).
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

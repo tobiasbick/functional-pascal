@@ -54,6 +54,7 @@ export async function verifyForcedReturn(
     ""
   ];
   const sourcePath = await writeSource(workspaceRoot, "forced-return", lines);
+  let recoverySourcePath: string | undefined;
   const marker = { received: received.length, sent: sent.length };
   let session: vscode.DebugSession | undefined;
   try {
@@ -116,8 +117,106 @@ export async function verifyForcedReturn(
     assert.ok(request, "Extension Host forwards forced return");
     assert.equal(request.arguments?.frameId, selected.id, "command forwards the selected older frame");
     assert.equal(request.arguments?.expression, "Local");
+
+    const terminalMarker = { received: received.length, sent: sent.length };
+    session = await startSession({
+      type: "fpas",
+      request: "launch",
+      name: "FPAS debugger root entry return",
+      program: sourcePath,
+      cwd: workspaceRoot,
+      stopOnEntry: true
+    });
+    await waitForStoppedReady(
+      () => sent.slice(terminalMarker.sent),
+      1,
+      "root-entry forced-return stop"
+    );
+    const entryStack = await session.customRequest("stackTrace", {
+      threadId: 1,
+      startFrame: 0,
+      levels: 1
+    }) as { stackFrames: Array<{ id: number }> };
+    const entry = entryStack.stackFrames[0];
+    assert.ok(entry, "root-entry session exposes its frame");
+    await vscode.commands.executeCommand(FORCE_RETURN_COMMAND, { frameId: entry.id });
+    await waitFor(
+      () => sent.slice(terminalMarker.sent).some((message) => message.event === "terminated"),
+      "root-entry forced-return termination"
+    );
+    assert.equal(
+      eventCount(sent.slice(terminalMarker.sent), "invalidated"),
+      0,
+      "terminal entry completion does not invalidate an ended session"
+    );
+    const terminalRequest = received
+      .slice(terminalMarker.received)
+      .find((message) => message.command === "fpas/forceReturn");
+    assert.equal(terminalRequest?.arguments?.frameId, entry.id);
+    assert.equal(terminalRequest?.arguments?.expression, undefined);
+
+    recoverySourcePath = await writeSource(workspaceRoot, "forced-return-recovery", [
+      "program DebuggerRecovery;",
+      "",
+      "uses Std.Console;",
+      "",
+      "function Fail(): integer;",
+      "begin",
+      "  panic('boom');",
+      "  return 1",
+      "end;",
+      "",
+      "begin",
+      "  var Value: integer := Fail();",
+      "  WriteLn(Value)",
+      "end.",
+      ""
+    ]);
+    const recoveryMarker = { received: received.length, sent: sent.length };
+    session = await startSession({
+      type: "fpas",
+      request: "launch",
+      name: "FPAS debugger runtime recovery",
+      program: recoverySourcePath,
+      cwd: workspaceRoot,
+      stopOnEntry: true
+    });
+    await waitForStoppedReady(
+      () => sent.slice(recoveryMarker.sent),
+      1,
+      "runtime-recovery entry stop"
+    );
+    await session.customRequest("continue", { threadId: 1 });
+    await waitForStoppedReady(
+      () => sent.slice(recoveryMarker.sent),
+      2,
+      "runtime-recovery failure stop"
+    );
+    const failedStack = await session.customRequest("stackTrace", {
+      threadId: 1,
+      startFrame: 0,
+      levels: 1
+    }) as { stackFrames: Array<{ id: number }> };
+    const failedFrame = failedStack.stackFrames[0];
+    assert.ok(failedFrame, "runtime-error stop exposes its failed frame");
+    await vscode.commands.executeCommand(FORCE_RETURN_COMMAND, {
+      frameId: failedFrame.id,
+      expression: "9"
+    });
+    await session.customRequest("continue", { threadId: 1 });
+    await waitFor(
+      () => sent.slice(recoveryMarker.sent).some((message) => message.event === "terminated"),
+      "runtime-recovery continuation"
+    );
+    const recoveryOutput = sent
+      .slice(recoveryMarker.sent)
+      .filter((message) => message.event === "output")
+      .map((message) => String(message.body?.output ?? ""))
+      .join("");
+    assert.ok(recoveryOutput.includes("9\n"), `recovered caller continued: ${recoveryOutput}`);
   } finally {
     if (session) await vscode.debug.stopDebugging(session);
+    if (recoverySourcePath) await closeAndRemoveSource(recoverySourcePath);
     await closeAndRemoveSource(sourcePath);
   }
 }

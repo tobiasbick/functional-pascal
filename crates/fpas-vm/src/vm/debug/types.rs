@@ -194,6 +194,10 @@ pub enum DebugErrorKind {
     FrameReturnValueUnexpected,
     /// The evaluated return value does not match the declared portable result type.
     FrameReturnType,
+    /// A task does not own an available unconsumed completed result.
+    TaskResultReplacementUnsupported,
+    /// A completed task replacement does not match its declared portable result type.
+    TaskResultReplacementType,
     /// The requested variant name is not present on the target wrapper type.
     VariantUnknown,
     /// Construction fields are missing, extra, unknown, or ASCII-case-duplicate.

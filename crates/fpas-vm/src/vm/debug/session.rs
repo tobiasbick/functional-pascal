@@ -22,6 +22,7 @@ use crate::vm::tasks::{DebugClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
 mod breakpoints;
+mod completed_result;
 mod dictionary;
 mod execution;
 mod forced_return;

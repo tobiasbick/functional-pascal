@@ -5,7 +5,7 @@ use serde_json::{Map, Value, json};
 use super::{JsonlServer, ServerStatus};
 use crate::evaluation::parse_debug_expression;
 use crate::jsonl::encode::{frame_body, invalid_state, missing_argument};
-use crate::jsonl::protocol::{failure, session_error, success};
+use crate::jsonl::protocol::{event, failure, session_error, success};
 
 impl JsonlServer {
     pub(super) fn force_return(
@@ -59,20 +59,31 @@ impl JsonlServer {
             return vec![invalid_state(request_id, command, self.status)];
         };
         match session.force_return_with_limits(frame_id, expression.as_ref(), limits) {
-            Ok(result) => vec![success(
-                request_id,
-                command,
-                json!({
-                    "task_id": result.task_id,
-                    "result": result.value,
-                    "type_name": result.type_name,
-                    "variables_reference": result.variables_reference,
-                    "named_variables": result.named_variables,
-                    "indexed_variables": result.indexed_variables,
-                    "unwound_frames": result.unwound_frames,
-                    "frame": frame_body(&result.frame)
-                }),
-            )],
+            Ok(result) => {
+                let mut records = vec![success(
+                    request_id,
+                    command,
+                    json!({
+                        "task_id": result.task_id,
+                        "result": result.value,
+                        "type_name": result.type_name,
+                        "variables_reference": result.variables_reference,
+                        "named_variables": result.named_variables,
+                        "indexed_variables": result.indexed_variables,
+                        "unwound_frames": result.unwound_frames,
+                        "frame": result.frame.as_ref().map(frame_body),
+                        "terminated": result.terminated
+                    }),
+                )];
+                if result.terminated {
+                    self.status = ServerStatus::Terminated;
+                    records.push(event(
+                        "terminated",
+                        json!({"reason":"completed", "exit_code":0}),
+                    ));
+                }
+                records
+            }
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }

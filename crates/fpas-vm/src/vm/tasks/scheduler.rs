@@ -1,5 +1,8 @@
 //! Register-task queue, retained results, timers, and shutdown coordination.
 
+#[cfg(test)]
+mod tests;
+
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex};
@@ -12,6 +15,20 @@ use crate::vm::{
 };
 
 use super::state::TaskState;
+
+/// Outcome of replacing one retained successful result without consuming it.
+pub(in crate::vm) enum RetainedResultReplacement {
+    /// The available result was replaced atomically.
+    Replaced,
+    /// The task has not completed yet.
+    Pending,
+    /// The task currently retains a failure instead of a successful result.
+    Failed,
+    /// The successful result was already consumed.
+    Consumed,
+    /// No retained task uses the supplied identity.
+    Unknown,
+}
 
 /// Mutable scheduler state shared by register workers; executable metadata remains immutable.
 pub(in crate::vm) struct TaskScheduler {
@@ -102,6 +119,42 @@ impl TaskScheduler {
         drop(results);
         self.results_available.notify_all();
     }
+    /// Replace one exact retained failure with a pending result.
+    pub(in crate::vm) fn recover_failure(&self, id: u64, expected: &VmError) -> bool {
+        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        let matches = matches!(
+            results.get(&id),
+            Some(TaskResultState::Failed(error)) if error.as_ref() == expected
+        );
+        if matches {
+            results.insert(id, TaskResultState::Pending);
+        }
+        drop(results);
+        if matches {
+            self.results_available.notify_all();
+        }
+        matches
+    }
+    /// Replace one exact retained failure with a successful result.
+    pub(in crate::vm) fn replace_failure(&self, id: u64, expected: &VmError, value: Value) -> bool {
+        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        let matches = matches!(
+            results.get(&id),
+            Some(TaskResultState::Failed(error)) if error.as_ref() == expected
+        );
+        if matches {
+            let replacement = match value {
+                Value::Unit => TaskResultState::Unit,
+                value => TaskResultState::Value(Box::new(value)),
+            };
+            results.insert(id, replacement);
+        }
+        drop(results);
+        if matches {
+            self.results_available.notify_all();
+        }
+        matches
+    }
     pub fn poll_result(&self, id: u64) -> TaskResultPoll {
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         let state = match results.remove(&id) {
@@ -134,6 +187,43 @@ impl TaskScheduler {
             TaskResultState::Value(value) => *value,
             _ => unreachable!(),
         })
+    }
+    /// Replace one available successful result without consuming it.
+    pub(in crate::vm) fn replace_available_result(
+        &self,
+        id: u64,
+        value: Value,
+    ) -> RetainedResultReplacement {
+        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        let outcome = match results.get(&id) {
+            Some(TaskResultState::Unit | TaskResultState::Value(_)) => {
+                let replacement = match value {
+                    Value::Unit => TaskResultState::Unit,
+                    value => TaskResultState::Value(Box::new(value)),
+                };
+                results.insert(id, replacement);
+                RetainedResultReplacement::Replaced
+            }
+            Some(TaskResultState::Pending) => RetainedResultReplacement::Pending,
+            Some(TaskResultState::Failed(_)) => RetainedResultReplacement::Failed,
+            None => {
+                let consumed = self
+                    .completions
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .contains(&id);
+                if consumed {
+                    RetainedResultReplacement::Consumed
+                } else {
+                    RetainedResultReplacement::Unknown
+                }
+            }
+        };
+        drop(results);
+        if matches!(outcome, RetainedResultReplacement::Replaced) {
+            self.results_available.notify_all();
+        }
+        outcome
     }
     pub fn poll_batch(&self, ids: &[u64]) -> TaskBatchPoll {
         let results = self.results.lock().unwrap_or_else(|e| e.into_inner());

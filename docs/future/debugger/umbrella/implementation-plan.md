@@ -7,8 +7,8 @@
 | `UMB-00` | Checkpoint current debugger work and establish a trustworthy baseline | none | done | Worktree scope is explicit; focused gates pass; unrelated baseline failures are independently classified |
 | `UMB-01` | Freeze contracts and split every inherited boundary into testable slices | `UMB-00` | done | Every child below has positive, negative, ownership, atomicity, adapter, and bound requirements or an explicit feasibility gate |
 | `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
-| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | active | Implementation and verification pass; recoverable checkpoint and detail-package cleanup remain in `U20-50` |
-| `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | pending | Accepted completion, recovery, or restart operations define cleanup, waiter effects, rollback, and selected-task behavior |
+| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
+| `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | active | Execute the context-loss-safe package in [`umb-30/`](umb-30/README.md) |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | pending | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | pending | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
@@ -64,11 +64,9 @@ not duplicated in the central deferred list.
 
 ## `UMB-20` — Low-dependency advanced breakpoints
 
-The context-loss-safe work breakdown, fixed contracts, file layout, and
-verification rows live in [`umb-20/`](umb-20/README.md). It begins with
-`U20-00`; do not mark the package active until the previous worktree has a
-recoverable checkpoint or the user explicitly authorizes continuing without
-one.
+Completed at checkpoint `1198b1c6`. The obsolete execution detail was removed;
+durable behavior and evidence remain in tests, current debugger documentation,
+and [progress.md](progress.md).
 
 | Child | Scope | Additional gate |
 |---|---|---|
@@ -77,6 +75,10 @@ one.
 | `UMB-20C` | Non-mutating breakpoint actions | Preserve stop ordering and bounded evaluation; mutating actions remain in `UMB-70C` |
 
 ## `UMB-30` — Controlled lifecycle and frame changes
+
+The fixed contracts, work IDs, layout, and verification rows live in
+[`umb-30/`](umb-30/README.md). Start with `U30-00`; do not implement dependent
+task-control behavior from `UMB-40` inside this package.
 
 | Child | Scope | Additional gate |
 |---|---|---|

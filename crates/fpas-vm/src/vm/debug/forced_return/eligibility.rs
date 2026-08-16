@@ -26,17 +26,39 @@ pub(in crate::vm::debug) struct PreparedSelection {
     pub new_call_stack_len: usize,
 }
 
+/// Stop and task ownership facts used by forced-return eligibility checks.
+pub(in crate::vm::debug) struct EligibilityContext {
+    /// Current debugger session state.
+    pub state: DebugSessionState,
+    /// Reason for the current physical stop.
+    pub stop_reason: DebugStopReason,
+    /// Task that caused the current stop.
+    pub stop_task_id: u64,
+    /// Task that owns the selected frame.
+    pub frame_task_id: u64,
+    /// Current lifecycle state of the selected task.
+    pub task_state: Option<DebugTaskState>,
+    /// Whether this command is replacing the exact retained runtime failure.
+    pub runtime_recovery: bool,
+}
+
 /// Reject stops, frames, and tasks outside the accepted forced-return slice.
 pub(in crate::vm::debug) fn require_eligible(
-    state: DebugSessionState,
-    stop_reason: DebugStopReason,
-    stop_task_id: u64,
+    context: EligibilityContext,
     frame: &DebugFrame,
-    frame_task_id: u64,
-    task_state: Option<DebugTaskState>,
     worker: &Worker,
 ) -> Result<(), DebugSessionError> {
-    if state == DebugSessionState::Failed || stop_reason == DebugStopReason::RuntimeError {
+    let EligibilityContext {
+        state,
+        stop_reason,
+        stop_task_id,
+        frame_task_id,
+        task_state,
+        runtime_recovery,
+    } = context;
+    if (state == DebugSessionState::Failed || stop_reason == DebugStopReason::RuntimeError)
+        && !runtime_recovery
+    {
         return Err(unsupported(
             "forced return is not available after a runtime-error stop",
             "Clear the failure by restarting the debug session; this command is not exception recovery.",
@@ -57,6 +79,7 @@ pub(in crate::vm::debug) fn require_eligible(
                 "Wait until the selected task is the runnable task that caused the current stop.",
             ));
         }
+        Some(DebugTaskState::Failed) if runtime_recovery => {}
         Some(DebugTaskState::Failed | DebugTaskState::Cancelled | DebugTaskState::Completed) => {
             return Err(unsupported(
                 "forced return is not available for a failed, cancelled, or completed task",
@@ -65,7 +88,7 @@ pub(in crate::vm::debug) fn require_eligible(
         }
         Some(DebugTaskState::Runnable | DebugTaskState::Running) | None => {}
     }
-    if frame.depth >= worker.call_stack.len() {
+    if frame.depth > worker.call_stack.len() {
         return Err(entry_unsupported());
     }
     Ok(())

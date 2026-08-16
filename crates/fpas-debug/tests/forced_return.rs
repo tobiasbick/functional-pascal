@@ -10,9 +10,28 @@ use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use serde_json::{Value, json};
 
 const SOURCE: &str = include_str!("../../../tests/debugger/fixtures/forced_return.fpas");
+const RECOVERY_SOURCE: &str = r#"program DebuggerRecovery;
+
+uses Std.Console;
+
+function Fail(): integer;
+begin
+  panic('boom');
+  return 1
+end;
+
+begin
+  var Value: integer := Fail();
+  WriteLn(Value)
+end.
+"#;
 
 fn server() -> JsonlServer {
-    let (program, diagnostics) = fpas_parser::parse(SOURCE);
+    server_for(SOURCE)
+}
+
+fn server_for(source: &str) -> JsonlServer {
+    let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile forced-return fixture");
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
@@ -55,6 +74,62 @@ fn initialize(server: &mut JsonlServer) -> u64 {
     assert_eq!(initialized[0]["body"]["capabilities"]["frame_return"], true);
     let _ = send(server, &mut id, "launch", json!({"stop_on_entry": true}));
     id
+}
+
+#[test]
+fn jsonl_frame_return_completes_the_root_entry_and_terminates() {
+    let mut server = server();
+    let mut id = initialize(&mut server);
+    let entry = stack_frames(&mut server, &mut id)[0]["frame_id"]
+        .as_u64()
+        .expect("entry frame");
+    let returned = send(
+        &mut server,
+        &mut id,
+        "frame.return",
+        json!({"frame_id": entry}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["result"], "()");
+    assert_eq!(returned[0]["body"]["frame"], Value::Null);
+    assert_eq!(returned[0]["body"]["terminated"], true);
+    assert_eq!(returned[1]["event"], "terminated");
+    assert_eq!(server.status(), fpas_debug::jsonl::ServerStatus::Terminated);
+}
+
+#[test]
+fn jsonl_frame_return_recovers_a_runtime_error_and_resumes() {
+    let mut server = server_for(RECOVERY_SOURCE);
+    let mut id = initialize(&mut server);
+    let _ = send(&mut server, &mut id, "continue", json!({}));
+    let failed = server.wait();
+    assert!(
+        failed
+            .iter()
+            .any(|record| record["event"] == "runtime_error")
+    );
+    let frame = stack_frames(&mut server, &mut id)[0]["frame_id"]
+        .as_u64()
+        .expect("failed frame");
+    let returned = send(
+        &mut server,
+        &mut id,
+        "frame.return",
+        json!({"frame_id":frame,"expression":"9"}),
+    );
+    assert_eq!(returned[0]["success"], true, "{returned:?}");
+    assert_eq!(returned[0]["body"]["result"], "9");
+    assert_eq!(returned[0]["body"]["terminated"], false);
+
+    let _ = send(&mut server, &mut id, "continue", json!({}));
+    let resumed = server.wait();
+    let output = resumed
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["text"].as_str())
+        .collect::<String>();
+    assert_eq!(output, "9\n", "{resumed:?}");
+    assert!(resumed.iter().any(|record| record["event"] == "terminated"));
 }
 
 #[test]

@@ -39,9 +39,10 @@ and acceptance gate between packages.
 - [architecture.md](architecture.md) owns invariants shared by every package.
 - [dependency-map.md](dependency-map.md) owns ordering and parallelism rules.
 - [risk-register.md](risk-register.md) owns stop conditions and mitigations.
-- [`umb-20/`](umb-20/README.md) is the execution-ready plan for the next
-  primary package. Completed `UMB-10D` evidence is retained in parent progress,
-  tests, and current debugger documentation rather than an obsolete plan.
+- [`umb-30/`](umb-30/README.md) is the execution-ready plan for the active
+  primary package. Completed `UMB-20` evidence is retained in parent progress,
+  tests, current debugger documentation, and checkpoint `1198b1c6` rather than
+  an obsolete detail plan.
 - [consciously-deferred.md](consciously-deferred.md) records only umbrella
   boundaries, not duplicate backlog entries.
 - [`../deferred.md`](../deferred.md) lists only independent work outside an

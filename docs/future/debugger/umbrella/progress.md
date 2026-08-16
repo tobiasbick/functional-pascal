@@ -3,11 +3,10 @@
 ## Current checkpoint
 
 - Umbrella state: implementation active
-- Active primary package: `UMB-20`
-- Last completed item: `UMB-20` / `U20-40`
-- Next child: `UMB-20` / `U20-50` (recoverable checkpoint and cleanup); active
-- Checkpoint: completed `UMB-10D` is recoverable at `87fd3b98`; UMB-20 is
-  implemented and verified in the current uncommitted worktree
+- Active primary package: `UMB-30`
+- Last completed item: `UMB-20`
+- Next child: `UMB-30` / `U30-20` (runtime-error recovery); active
+- Checkpoint: completed `UMB-20` is recoverable locally at `1198b1c6`
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -25,8 +24,8 @@ current worktree before changing or staging anything.
 | `UMB-00` | done | Current branch/worktree and focused baseline verified; CCRA is recoverable at `bed152a2` |
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
-| `UMB-20` | active | Implementation and verification pass; authorize checkpoint before detail-package cleanup and UMB-30 |
-| `UMB-30` | pending | Scheduler/waiter design review before code |
+| `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
+| `UMB-30` | active | `U30-10/11` entry completion passes; execute `U30-20` from [`umb-30/`](umb-30/README.md) |
 | `UMB-40` | pending | Quiescence protocol first |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
@@ -165,6 +164,10 @@ Evidence log:
 2026-08-16 | U20-00 | pending -> done | 87fd3b98 plus worktree | clean remote checkpoint; format, diff, Clippy, build, focused VM/JSONL/DAP, VS Code, and full workspace tests pass after correcting the stale Notes reference-count oracle | activate U20-01
 2026-08-16 | U20-01 | pending -> active | worktree | matching, protocol, failure, policy, file-size, and limit ownership inventory started | add negative contracts before U20-10
 2026-08-16 | UMB-20 | active -> active | worktree | function breakpoints, runtime filters, non-mutating policies, docs, focused tests, workspace suite, and VS Code host pass | checkpoint U20-50 before starting UMB-30
+2026-08-16 | UMB-20 | active -> done | 1198b1c6 | recoverable checkpoint includes shared VM behavior, JSONL/DAP/VS Code parity, current docs, and green workspace verification | remove completed detail package and activate UMB-30
+2026-08-16 | UMB-30 | pending -> active | 1198b1c6 base | context-loss-safe lifecycle package created from current runtime, scheduler, forced-return, protocol, and historical boundary evidence | execute U30-00
+2026-08-16 | U30-00 | active -> done | 1198b1c6 plus docs | format, locked workspace build, 29 VM, 4 JSONL, and 3 DAP forced-return tests pass | execute U30-01
+2026-08-16 | U30-10/11 | pending -> done | worktree | root/task entry completion, retained results, task events, JSONL/DAP/VS Code parity, docs, Clippy, build, and full workspace suite pass | execute U30-20
 ```
 
 ## Resume commands
@@ -180,8 +183,8 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The active closure step is `U20-50` in
-[`umb-20/implementation-plan.md`](umb-20/implementation-plan.md). `UMB-10D`
+The active implementation step is `U30-20` in
+[`umb-30/implementation-plan.md`](umb-30/implementation-plan.md). `UMB-10D`
 evidence remains in this file, focused tests, and current debugger docs. Do not
 clean, reset, stage, commit, merge, or push without matching user authorization.
 

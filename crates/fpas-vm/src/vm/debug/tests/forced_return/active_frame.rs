@@ -13,8 +13,8 @@ fn forced_return_completes_a_scalar_function_and_restores_the_caller() {
     assert_eq!(result.value, "99");
     assert_eq!(result.type_name, "integer");
     assert_eq!(result.unwound_frames, 1);
-    assert_eq!(result.frame.name, "root");
-    assert_eq!(result.frame.depth, 0);
+    assert_eq!(result.frame.as_ref().expect("caller").name, "root");
+    assert_eq!(result.frame.as_ref().expect("caller").depth, 0);
     assert_eq!(session.last_stop().call_depth, 0);
     assert_eq!(session.last_stop().reason, DebugStopReason::Pause);
     assert_eq!(session.test_instruction_count(), before_count);
@@ -52,7 +52,7 @@ fn forced_return_completes_a_procedure_without_an_expression() {
         .expect("procedure return");
     assert_eq!(result.value, "()");
     assert_eq!(result.unwound_frames, 1);
-    assert_eq!(result.frame.name, "root");
+    assert_eq!(result.frame.as_ref().expect("caller").name, "root");
     assert_eq!(session.last_stop().call_depth, 0);
 }
 

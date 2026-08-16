@@ -1,5 +1,9 @@
 //! Debug-owned task catalog, readiness polling, and single-instruction dispatch.
 
+mod completed_result;
+mod completion;
+mod recovery;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,10 +16,14 @@ use crate::vm::dispatch::DispatchStep;
 use crate::vm::tasks::{DebugClock, TaskScheduler, TaskSuspensionState};
 use crate::vm::worker::Worker;
 
+pub(in crate::vm::debug) use completed_result::CompletedResultTargetError;
+
 struct TaskSlot {
     worker: Worker,
+    entry_function: fpas_bytecode::FunctionId,
     name: String,
     state: DebugTaskState,
+    failure: Option<VmError>,
     exited: bool,
 }
 
@@ -65,12 +73,15 @@ impl DebugTaskRuntime {
         scheduler: Arc<TaskScheduler>,
         clock: Arc<DebugClock>,
     ) -> Self {
+        let entry_function = root.function;
         let tasks = BTreeMap::from([(
             0,
             TaskSlot {
                 worker: root,
+                entry_function,
                 name: "FPAS main".to_string(),
                 state: DebugTaskState::Runnable,
+                failure: None,
                 exited: false,
             },
         )]);
@@ -184,9 +195,11 @@ impl DebugTaskRuntime {
             unreachable!("scheduled debug task must exist")
         };
         slot.state = DebugTaskState::Running;
+        slot.failure = None;
         self.last_dispatched = task_id;
         let dispatch = slot.worker.dispatch_one().map_err(|error| {
             slot.state = DebugTaskState::Failed;
+            slot.failure = Some(error.clone());
             if slot.worker.retain_result {
                 self.scheduler.store_failure(task_id, error.clone());
             }
@@ -234,6 +247,14 @@ impl DebugTaskRuntime {
         self.tasks.values().fold(0, |total, slot| {
             total.saturating_add(slot.worker.instruction_count)
         })
+    }
+
+    #[cfg(test)]
+    pub(in crate::vm::debug) fn test_poll_task_result(
+        &self,
+        task_id: u64,
+    ) -> crate::vm::TaskResultPoll {
+        self.scheduler.poll_result(task_id)
     }
 
     /// Drain stable task lifecycle events in creation/completion order.
@@ -307,6 +328,10 @@ impl DebugTaskRuntime {
                 Ok(false) => slot.state = state_from_suspension(&slot.worker),
                 Err(error) => {
                     slot.state = DebugTaskState::Failed;
+                    slot.failure = Some(error.clone());
+                    if slot.worker.retain_result {
+                        self.scheduler.store_failure(task_id, error.clone());
+                    }
                     return Err((task_id, error));
                 }
             }
@@ -334,8 +359,10 @@ impl DebugTaskRuntime {
                 task_id,
                 TaskSlot {
                     worker,
+                    entry_function: function,
                     name: format!("FPAS task {task_id}: {function_name}"),
                     state: DebugTaskState::Runnable,
+                    failure: None,
                     exited: false,
                 },
             );

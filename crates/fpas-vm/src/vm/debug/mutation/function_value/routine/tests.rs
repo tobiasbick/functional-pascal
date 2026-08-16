@@ -21,6 +21,7 @@ fn parameter(register: u16, hidden: bool) -> DebugBinding {
         declaration: None,
         hidden,
         cell_backed: false,
+        initializer: None,
     }
 }
 
@@ -137,6 +138,7 @@ fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
             declaration: None,
             hidden: false,
             cell_backed: true,
+            initializer: None,
         })
         .collect();
     for function in functions.iter_mut().skip(1) {

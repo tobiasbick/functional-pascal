@@ -2,9 +2,9 @@
 
 use fpas_bytecode::{
     CodeRange, Constant, DebugTypeId, EnumLayout, EnumTypeId, EnumVariant, Executable,
-    FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, Instruction, InstructionAddress,
-    RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId, SourceMap, SourceRun,
-    StringId, StringTable, VerifiedExecutable,
+    FunctionFlags, FunctionId, FunctionInfo, GlobalInfo, GlobalInitializer, Instruction,
+    InstructionAddress, RecordField, RecordLayout, RecordProperty, ReturnConvention, SourceId,
+    SourceMap, SourceRun, StringId, StringTable, VerifiedExecutable,
 };
 
 use super::debug::{self, DebugCounts};
@@ -253,6 +253,11 @@ fn encode_globals(executable: &Executable) -> Result<EncodedSection, FormatError
         write_u32(&mut bytes, global.name.get());
         write_u32(&mut bytes, global.ty.get());
         write_u8(&mut bytes, u8::from(global.mutable));
+        write_u8(&mut bytes, u8::from(global.initializer.is_some()));
+        if let Some(initializer) = global.initializer {
+            write_u16(&mut bytes, initializer.function.get());
+            write_u32(&mut bytes, initializer.instruction.get());
+        }
     }
     Ok(EncodedSection {
         tag: TAGS[3],
@@ -274,6 +279,16 @@ fn decode_globals(section: DecodedSection<'_>) -> Result<Vec<GlobalInfo>, Format
             name: StringId::new(reader.u32("global_name")?),
             ty: DebugTypeId::new(reader.u32("global_type")?),
             mutable: read_bool(&mut reader, "global_mutable")?,
+            initializer: if read_bool(&mut reader, "global_has_initializer")? {
+                Some(GlobalInitializer {
+                    function: FunctionId::new(reader.u16("global_initializer_function")?),
+                    instruction: InstructionAddress::new(
+                        reader.u32("global_initializer_instruction")?,
+                    ),
+                })
+            } else {
+                None
+            },
         });
     }
     reader.finish()?;

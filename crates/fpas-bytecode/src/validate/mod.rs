@@ -342,6 +342,15 @@ pub enum ValidationErrorKind {
         /// Expected identifier, count, or exclusive table length.
         expected: u32,
     },
+    /// Source-initializer metadata does not identify its exact verified store.
+    DebugInitializer {
+        /// Violated initializer identity rule.
+        reason: &'static str,
+        /// Related encoded address, opcode, register, or table index.
+        actual: u32,
+        /// Required address, opcode, register, or table index.
+        expected: u32,
+    },
 }
 
 impl fmt::Display for ValidationError {

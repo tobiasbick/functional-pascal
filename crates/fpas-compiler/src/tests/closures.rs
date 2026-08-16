@@ -157,6 +157,7 @@ fn root_function() -> Function {
                 declaration: None,
                 hidden: false,
                 cell_backed: true,
+                initializer: None,
             }],
             ..fpas_ir::FunctionDebugInfo::default()
         },
@@ -265,6 +266,7 @@ fn increment_function() -> Function {
                 declaration: None,
                 hidden: false,
                 cell_backed: true,
+                initializer: None,
             }],
             lexical_owner: Some(FunctionId::new(0)),
             capture_sources: vec![DebugCaptureSource {

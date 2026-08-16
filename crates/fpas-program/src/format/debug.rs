@@ -70,6 +70,10 @@ pub(super) fn encode(output: &mut Vec<u8>, debug: &FunctionDebugInfo) -> Result<
         }
         write_bool(output, binding.hidden);
         write_bool(output, binding.cell_backed);
+        write_bool(output, binding.initializer.is_some());
+        if let Some(initializer) = binding.initializer {
+            write_u32(output, initializer.get());
+        }
     }
 
     check_limit(
@@ -174,6 +178,13 @@ pub(super) fn decode(
         };
         let hidden = read_bool(reader, "debug_binding_hidden")?;
         let cell_backed = read_bool(reader, "debug_binding_cell_backed")?;
+        let initializer = if read_bool(reader, "debug_binding_has_initializer")? {
+            Some(InstructionAddress::new(
+                reader.u32("debug_binding_initializer")?,
+            ))
+        } else {
+            None
+        };
         bindings.push(DebugBinding {
             name,
             type_name,
@@ -185,6 +196,7 @@ pub(super) fn decode(
             declaration,
             hidden,
             cell_backed,
+            initializer,
         });
     }
 

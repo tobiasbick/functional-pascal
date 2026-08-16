@@ -108,6 +108,7 @@ fn attach_cell_capture_provenance(functions: &mut [FunctionInfo]) {
             declaration: None,
             hidden: false,
             cell_backed: true,
+            initializer: None,
         })
         .collect();
     for function in functions.iter_mut().skip(1) {

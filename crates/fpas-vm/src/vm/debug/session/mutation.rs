@@ -221,6 +221,12 @@ impl DebugSession {
             .worker_mut(task_id)
             .ok_or_else(|| unknown_task(task_id))?;
         let committed = super::super::mutation::commit(worker, generation, target, replacement)?;
+        if target.path.is_empty()
+            && !target.initialized
+            && let Some(initializer) = target.initializer
+        {
+            worker.suppress_source_initializer(initializer);
+        }
         self.invalidate_inspection();
         self.refresh_inspection();
         self.inspection_task_id = task_id;

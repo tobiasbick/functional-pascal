@@ -38,13 +38,16 @@ pub fn program_image() -> ProgramImage {
     .collect();
     let executable = Executable {
         code: vec![
+            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("initializer value"),
+            Instruction::abc(Opcode::Move, 0, 0, 0, 0).expect("local initializer"),
+            Instruction::abx(Opcode::StoreGlobal, 0, 0).expect("global initializer"),
             Instruction::abc(Opcode::Return, NO_REGISTER, 0, 0, 0).expect("return"),
             Instruction::abc(Opcode::Return, 0, 0, 0, 0).expect("nested return"),
         ],
         functions: vec![
             FunctionInfo {
                 name: StringId::new(0),
-                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(1)),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(4)),
                 arity: 0,
                 capture_count: 0,
                 register_count: 1,
@@ -70,6 +73,7 @@ pub fn program_image() -> ProgramImage {
                         }),
                         hidden: false,
                         cell_backed: false,
+                        initializer: Some(InstructionAddress::new(1)),
                     }],
                     sequence_points: vec![SequencePoint {
                         instruction: InstructionAddress::new(0),
@@ -86,7 +90,7 @@ pub fn program_image() -> ProgramImage {
             },
             FunctionInfo {
                 name: StringId::new(11),
-                code: CodeRange::new(InstructionAddress::new(1), InstructionAddress::new(2)),
+                code: CodeRange::new(InstructionAddress::new(4), InstructionAddress::new(5)),
                 arity: 0,
                 capture_count: 1,
                 register_count: 1,
@@ -124,6 +128,10 @@ pub fn program_image() -> ProgramImage {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(2),
             mutable: true,
+            initializer: Some(fpas_bytecode::GlobalInitializer {
+                function: FunctionId::new(0),
+                instruction: InstructionAddress::new(2),
+            }),
         }],
         records: vec![RecordLayout {
             name: StringId::new(4),
@@ -185,7 +193,7 @@ pub fn program_image() -> ProgramImage {
                     column: 5,
                 },
                 SourceRun {
-                    instruction_start: InstructionAddress::new(1),
+                    instruction_start: InstructionAddress::new(4),
                     source: SourceId::new(0),
                     line: 8,
                     column: 5,

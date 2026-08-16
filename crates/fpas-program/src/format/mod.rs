@@ -16,7 +16,7 @@ pub use read::decode;
 pub use write::encode;
 
 /// Current sectioned register `.fpascp` envelope format version.
-pub const PROGRAM_FORMAT_VERSION: u16 = 14;
+pub const PROGRAM_FORMAT_VERSION: u16 = 15;
 
 /// Invalid or unsupported `.fpascp` binary data.
 #[derive(Debug, Clone, PartialEq, Eq)]

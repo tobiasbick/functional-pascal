@@ -56,6 +56,7 @@ pub(super) fn collect(
             name: name.clone(),
             ty,
             mutable,
+            initializer: None,
         });
         bindings.insert(name.to_ascii_lowercase(), GlobalBinding { id, ty });
     }

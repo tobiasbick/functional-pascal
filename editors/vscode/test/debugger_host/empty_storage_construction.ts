@@ -129,8 +129,8 @@ export async function verifyEmptyStorageConstruction(
       .join("");
     assert.equal(
       output,
-      "1\n2\n",
-      `source initializer overwrites debugger value: ${JSON.stringify(output)}`
+      "1\n42\n",
+      `exact source initializer suppression preserves debugger value: ${JSON.stringify(output)}`
     );
     assert.ok(
       received.slice(marker.received).some((message) => message.command === "fpas/initializeStorage"),

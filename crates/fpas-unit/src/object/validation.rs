@@ -117,6 +117,23 @@ pub(super) fn validate_debug_info(
         if let Some(location) = binding.declaration {
             validate_debug_location(location, source_count)?;
         }
+        if let Some(initializer) = binding.initializer_start {
+            let instruction = function
+                .code
+                .get(initializer as usize)
+                .copied()
+                .map(fpas_bytecode::Instruction::from_word)
+                .ok_or(ObjectError::InvalidTableReference(
+                    "debug binding initializer instruction",
+                ))?;
+            if instruction.opcode().ok() != Some(fpas_bytecode::Opcode::Move)
+                || instruction.abc_payload().a != binding.register
+            {
+                return Err(ObjectError::InvalidTableReference(
+                    "debug binding initializer store",
+                ));
+            }
+        }
     }
     if let Some(ty) = function.debug.result_type
         && (ty as usize) >= debug_type_count

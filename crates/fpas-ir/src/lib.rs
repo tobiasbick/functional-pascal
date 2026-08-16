@@ -15,8 +15,8 @@ mod terminator;
 pub mod validate;
 
 pub use debug::{
-    DebugBinding, DebugBindingKind, DebugCaptureSource, DebugScope, FunctionDebugInfo,
-    SequencePoint,
+    DebugBinding, DebugBindingKind, DebugCaptureSource, DebugInstructionLocation, DebugScope,
+    FunctionDebugInfo, SequencePoint,
 };
 pub use fpas_diagnostics::SourceSpan;
 pub use function::{
@@ -29,7 +29,7 @@ pub use id::{
 };
 pub use instruction::{BinaryOperation, Constant, Instruction, Operation, UnaryOperation};
 pub use program::{
-    EnumLayout, EnumVariant, Global, IntrinsicSignature, IrType, Program, RecordField,
-    RecordLayout, RecordMethod, RecordProperty, TypeDefinition,
+    EnumLayout, EnumVariant, Global, GlobalInitializer, IntrinsicSignature, IrType, Program,
+    RecordField, RecordLayout, RecordMethod, RecordProperty, TypeDefinition,
 };
 pub use terminator::{BlockTarget, Terminator};

@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use fpas_bytecode::{DebugTypeId, EnumVariantId, Value};
 
+use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
+
 pub(in crate::vm::debug) use payload::{PayloadError, active_label, resolve as resolve_payload};
 
 #[derive(Clone)]
@@ -25,6 +27,7 @@ pub(in crate::vm::debug) struct MutationTarget {
     pub frame_id: Option<u64>,
     /// Whether live storage already holds a value at capture time.
     pub initialized: bool,
+    pub initializer: Option<SourceInitializerTarget>,
 }
 
 #[derive(Clone)]

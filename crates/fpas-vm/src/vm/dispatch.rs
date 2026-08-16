@@ -50,6 +50,9 @@ impl Worker {
                 "Instruction counter overflowed",
             )
         })?;
+        if self.take_suppressed_source_initializer(self.current_address) {
+            return Ok(DispatchStep::Continue);
+        }
         let opcode = instruction.opcode().map_err(|error| {
             diagnostics::internal(
                 self.executable.executable(),

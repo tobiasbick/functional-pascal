@@ -101,8 +101,8 @@ export async function verifyUninitializedAssignment(
       .join("");
     assert.equal(
       output,
-      "1\n99\n0\n2\n",
-      `source initializers overwrite debugger values: ${JSON.stringify(
+      "30\n8\n1\n2\n",
+      `exact source initializer suppression preserves debugger values: ${JSON.stringify(
         sent.slice(marker.sent).filter((message) => message.event === "output")
       )}`
     );

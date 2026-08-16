@@ -4,7 +4,7 @@
     reason = "compiler debug tests keep fixture failures local"
 )]
 
-use fpas_bytecode::{DebugBindingKind, DebugType};
+use fpas_bytecode::{DebugBindingKind, DebugType, Opcode};
 
 use super::parse_ok;
 
@@ -78,6 +78,13 @@ end.
     assert_eq!(binding("Value").kind, DebugBindingKind::Parameter);
     assert_eq!(binding("Offset").kind, DebugBindingKind::Local);
     assert_eq!(binding("Nested").kind, DebugBindingKind::Local);
+    for name in ["Offset", "Nested"] {
+        let binding = binding(name);
+        let initializer = binding.initializer.expect("local initializer store");
+        let instruction = image.code[initializer.get() as usize];
+        assert_eq!(instruction.opcode(), Ok(Opcode::Move));
+        assert_eq!(instruction.abc_payload().a, binding.register.get());
+    }
     assert_eq!(
         image.debug_types.get(binding("Value").ty.get() as usize),
         Some(&DebugType::Integer)
@@ -203,6 +210,10 @@ end.
         .iter()
         .find(|global| image.strings.get(global.name) == Some("Scores"))
         .expect("global metadata");
+    let initializer = global.initializer.expect("global initializer store");
+    let instruction = image.code[initializer.instruction.get() as usize];
+    assert_eq!(initializer.function, image.entry);
+    assert_eq!(instruction.opcode(), Ok(Opcode::StoreGlobal));
     assert!(matches!(
         image.debug_types.get(global.ty.get() as usize),
         Some(DebugType::Dictionary { .. })

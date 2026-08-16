@@ -33,8 +33,10 @@ before normal execution initializes that binding is implemented through the
 same mutation surfaces. Seeded descendant initialization below empty storage
 is implemented through JSONL `storage.initialize`, DAP
 `fpas/initializeStorage`, and VS Code **Debug: Initialize Empty Storage**.
-Skipping the later source initializer and treating parameters or captures as
-uninitialized targets remain deferred.
+The compiler now retains exact local/global initializer-store identity through
+bytecode, unit objects, linking, and program images. A successful debugger
+initialization suppresses that one still-pending store in the exact live frame.
+Treating parameters or captures as uninitialized targets remains deferred.
 
 Explicit, variant-qualified descendant assignment that constructs one complete
 single-payload enum, `Result`, or `Option` variant is implemented through

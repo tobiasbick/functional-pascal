@@ -138,6 +138,15 @@ fn merge_debug(
                     .transpose()?,
                 hidden: binding.hidden,
                 cell_backed: binding.cell_backed,
+                initializer: binding
+                    .initializer_start
+                    .map(|instruction| {
+                        code_base
+                            .checked_add(instruction)
+                            .map(InstructionAddress::new)
+                            .ok_or(LinkError::Overflow("debug binding initializer address"))
+                    })
+                    .transpose()?,
             })
         })
         .collect::<Result<Vec<_>, LinkError>>()?;

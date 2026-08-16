@@ -1,8 +1,9 @@
 use fpas_bytecode::{
     CodeRange, Constant, DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind,
     DebugCaptureSource, DebugScope, DebugSourceLocation, DebugType, DebugTypeId, EnumTypeId,
-    FunctionId, GlobalInfo, Instruction, InstructionAddress, NO_REGISTER, Opcode, RecordTypeId,
-    Register, ReturnConvention, SequencePoint, SourceId, StringId, ValidationErrorKind,
+    FunctionId, GlobalInfo, GlobalInitializer, Instruction, InstructionAddress, NO_REGISTER,
+    Opcode, RecordTypeId, Register, ReturnConvention, SequencePoint, SourceId, StringId,
+    ValidationErrorKind,
 };
 
 use super::support::{
@@ -48,6 +49,7 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
         declaration: Some(location),
         hidden: false,
         cell_backed: false,
+        initializer: None,
     }];
     valid.functions[0].debug.sequence_points = vec![SequencePoint {
         instruction: InstructionAddress::new(0),
@@ -96,6 +98,65 @@ fn debugger_metadata_references_ranges_and_order_are_checked() {
     ));
 }
 
+#[test]
+fn debugger_initializer_metadata_requires_exact_verified_stores() {
+    let mut valid = minimal_executable();
+    valid.functions[0].register_count = 1;
+    valid.functions[0].debug.scopes = vec![DebugScope {
+        id: 0,
+        parent: None,
+    }];
+    valid.functions[0].debug.bindings = vec![DebugBinding {
+        name: StringId::new(0),
+        type_name: StringId::new(0),
+        ty: DebugTypeId::new(0),
+        register: Register::new(0).expect("register"),
+        kind: DebugBindingKind::Local,
+        mutable: true,
+        scope: 0,
+        declaration: None,
+        hidden: false,
+        cell_backed: false,
+        initializer: Some(InstructionAddress::new(1)),
+    }];
+    valid.globals = vec![GlobalInfo {
+        name: StringId::new(0),
+        ty: DebugTypeId::new(0),
+        mutable: true,
+        initializer: Some(GlobalInitializer {
+            function: FunctionId::new(0),
+            instruction: InstructionAddress::new(2),
+        }),
+    }];
+    replace_root_code(
+        &mut valid,
+        vec![
+            abc(Opcode::LoadUnit, 0, 0, 0, 0),
+            abc(Opcode::Move, 0, 0, 0, 0),
+            abx(Opcode::StoreGlobal, 0, 0),
+            return_unit(),
+        ],
+    );
+    valid.clone().verify().expect("exact initializer stores");
+
+    let mut binding = valid.clone();
+    binding.functions[0].debug.bindings[0].initializer = Some(InstructionAddress::new(0));
+    assert!(matches!(
+        error_kind(binding),
+        ValidationErrorKind::DebugInitializer { .. }
+    ));
+
+    let mut global = valid;
+    global.globals[0].initializer = Some(GlobalInitializer {
+        function: FunctionId::new(0),
+        instruction: InstructionAddress::new(1),
+    });
+    assert!(matches!(
+        error_kind(global),
+        ValidationErrorKind::DebugInitializer { .. }
+    ));
+}
+
 fn capturing_executable() -> fpas_bytecode::Executable {
     let mut executable = minimal_executable();
     executable.code.push(return_unit());
@@ -115,6 +176,7 @@ fn capturing_executable() -> fpas_bytecode::Executable {
         declaration: None,
         hidden: false,
         cell_backed: false,
+        initializer: None,
     }];
     executable.functions.push(fpas_bytecode::FunctionInfo {
         name: StringId::new(0),
@@ -342,6 +404,7 @@ fn global_index_path_global_and_window_are_checked() {
         name: StringId::new(0),
         ty: DebugTypeId::new(0),
         mutable: true,
+        initializer: None,
     }];
     replace_root_code(
         &mut window,

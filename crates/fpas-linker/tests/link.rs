@@ -190,6 +190,96 @@ fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
 }
 
 #[test]
+fn linker_rebases_exact_local_and_global_initializer_stores() {
+    let mut library = unit(true);
+    library.functions[0].register_count = 1;
+    library.functions[0].code = vec![
+        Instruction::abx(Opcode::LoadConstant, 0, 0)
+            .expect("initializer value")
+            .word(),
+        Instruction::abx(Opcode::StoreGlobal, 0, 0)
+            .expect("global initializer")
+            .word(),
+        Instruction::abc(Opcode::Move, 0, 0, 0, 0)
+            .expect("local initializer")
+            .word(),
+        return_unit(),
+    ];
+    library.functions[0].debug = fpas_unit::object::ObjectFunctionDebugInfo {
+        scopes: vec![fpas_unit::object::ObjectDebugScope {
+            id: 0,
+            parent: None,
+        }],
+        bindings: vec![fpas_unit::object::ObjectDebugBinding {
+            name: "value".to_string(),
+            type_name: "dynamic".to_string(),
+            ty: 0,
+            register: 0,
+            kind: fpas_unit::object::ObjectDebugBindingKind::Local,
+            mutable: true,
+            scope: 0,
+            declaration: None,
+            hidden: false,
+            cell_backed: false,
+            initializer_start: Some(2),
+        }],
+        ..Default::default()
+    };
+    library.globals.push(fpas_unit::object::ObjectGlobal {
+        name: "library.unit.counter".to_string(),
+        ty: 0,
+        mutable: true,
+        initializer: Some(fpas_unit::object::ObjectInitializer {
+            function: 0,
+            instruction_start: 1,
+        }),
+    });
+    library.definitions.push(ObjectDefinition {
+        name: "library.unit.counter".to_string(),
+        target: DefinitionTarget::Global(0),
+        public: false,
+    });
+    library
+        .definitions
+        .sort_by(|left, right| left.name.cmp(&right.name));
+    library.relocations.extend([
+        Relocation {
+            function: 0,
+            instruction: 0,
+            kind: RelocationKind::Constant(0),
+        },
+        Relocation {
+            function: 0,
+            instruction: 1,
+            kind: RelocationKind::Global(SymbolReference::Local(0)),
+        },
+    ]);
+
+    let linked = link_objects(std::slice::from_ref(&library), &program())
+        .expect("initializer metadata link");
+    let image = linked.executable();
+    let function = image
+        .functions
+        .iter()
+        .find(|function| image.strings.get(function.name) == Some("library.unit.zed"))
+        .expect("linked initializer owner");
+    assert_eq!(
+        function.debug.bindings[0].initializer,
+        Some(fpas_bytecode::InstructionAddress::new(
+            function.code.start.get() + 2
+        ))
+    );
+    let global = image
+        .globals
+        .iter()
+        .find(|global| image.strings.get(global.name) == Some("library.unit.counter"))
+        .expect("linked initialized global");
+    let initializer = global.initializer.expect("linked global initializer");
+    assert_eq!(initializer.function, fpas_bytecode::FunctionId::new(2));
+    assert_eq!(initializer.instruction.get(), function.code.start.get() + 1);
+}
+
+#[test]
 fn linker_retains_result_only_debug_types() {
     let mut library = unit(true);
     library.debug_types = vec![
@@ -232,6 +322,7 @@ fn linker_relocates_lexical_owner_function_ids() {
             declaration: None,
             hidden: false,
             cell_backed: false,
+            initializer_start: None,
         }],
         ..Default::default()
     };
@@ -450,6 +541,7 @@ fn imported_global_record_and_enum_references_become_dense_numeric_ids() {
         name: "library.unit.counter".to_string(),
         ty: 0,
         mutable: true,
+        initializer: None,
     });
     library.records.push(fpas_unit::object::ObjectRecordLayout {
         name: "library.unit.point".to_string(),

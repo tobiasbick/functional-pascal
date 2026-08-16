@@ -222,7 +222,7 @@ fn debug_jsonl_dictionary_mutations_commit_before_continuation() {
         .filter(|record| record["event"] == "output")
         .filter_map(|record| record["body"]["text"].as_str())
         .collect::<String>();
-    assert_eq!(output, "2\n3\n");
+    assert_eq!(output, "2\n3\n", "unexpected debugger records: {records:?}");
     assert!(records.iter().any(|record| record["event"] == "terminated"));
 }
 

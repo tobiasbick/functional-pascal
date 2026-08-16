@@ -41,6 +41,7 @@ impl LoweringContext {
             declaration: Some(span.diagnostic_span_or_synthetic()),
             hidden,
             cell_backed: false,
+            initializer: None,
         });
         self.bindings.push(Binding {
             name: name.to_ascii_lowercase(),
@@ -444,6 +445,33 @@ impl LoweringContext {
         span: Span,
     ) -> Result<(), CompileError> {
         self.emit_effect(Operation::WriteLocal { value, local }, span)
+    }
+
+    pub(in crate::lowering) fn initialize_local(
+        &mut self,
+        local: LocalId,
+        value: ValueId,
+        span: Span,
+    ) -> Result<(), CompileError> {
+        let location = self.emit_initializer_store(Operation::WriteLocal { value, local }, span)?;
+        let binding = self
+            .debug
+            .bindings
+            .iter_mut()
+            .find(|binding| binding.local == local)
+            .ok_or_else(|| {
+                internal_compiler_error(
+                    format!(
+                        "Local {} has no debugger binding for its initializer.",
+                        local.get()
+                    ),
+                    "This is an internal compiler error. Re-run compilation and report the source program.",
+                    span.line,
+                    span.column,
+                )
+            })?;
+        binding.initializer = Some(location);
+        Ok(())
     }
 
     pub(in crate::lowering) fn begin_scope(&mut self) {

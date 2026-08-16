@@ -124,6 +124,13 @@ impl Allocation {
 }
 
 fn coalesced_local_writes(function: &Function) -> BTreeMap<ValueId, LocalId> {
+    let initializer_writes = function
+        .debug
+        .bindings
+        .iter()
+        .filter_map(|binding| binding.initializer)
+        .map(|location| (location.block, location.instruction))
+        .collect::<BTreeSet<_>>();
     let mut use_counts = BTreeMap::<ValueId, usize>::new();
     for block in &function.blocks {
         for instruction in &block.instructions {
@@ -140,13 +147,16 @@ fn coalesced_local_writes(function: &Function) -> BTreeMap<ValueId, LocalId> {
 
     let mut writes = BTreeMap::new();
     for block in &function.blocks {
-        for pair in block.instructions.windows(2) {
+        for (index, pair) in block.instructions.windows(2).enumerate() {
             let Some(result) = pair[0].result else {
                 continue;
             };
             let Operation::WriteLocal { value, local } = &pair[1].operation else {
                 continue;
             };
+            if initializer_writes.contains(&(block.id, index.saturating_add(1))) {
+                continue;
+            }
             if result.id == *value && use_counts.get(value) == Some(&1) {
                 writes.insert(*value, *local);
             }

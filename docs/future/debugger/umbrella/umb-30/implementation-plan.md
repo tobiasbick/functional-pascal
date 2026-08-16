@@ -46,9 +46,9 @@ Record their exact layout before editing them.
 | `U30-20` | done | Implement exact runtime-error recovery for live and entry frames | Exact unconsumed failure transition, preserved diagnostic, and stale/consumed rejection pass |
 | `U30-21` | done | Map recovery through adapters/editor and document it | Protocol-equivalent recovery and negative errors pass |
 | `U30-30` | done | Decide and implement the provable completed-return replacement subset | Retained-result replacement passes without overclaiming removed ordinary call frames |
-| `U30-40` | active | Implement selected live-frame restart | Current args/captures retained; locals/temporaries reset; younger frames removed; no command-time execution |
-| `U30-41` | pending | Prove and implement source-initializer suppression or record the missing portable identity | Exact metadata round trip and suppression tests pass, or precise dependency is recorded |
-| `U30-42` | pending | Map restart/suppression through adapters/editor and current docs | JSONL/DAP/VS Code parity passes |
+| `U30-40` | done | Implement selected live-frame restart | Current args/captures retained; locals/temporaries reset; younger frames removed; no command-time execution |
+| `U30-41` | done | Prove and implement source-initializer suppression or record the missing portable identity | Exact metadata round trip and suppression tests pass, or precise dependency is recorded |
+| `U30-42` | done | Map restart/suppression through adapters/editor and current docs | Restart and suppression parity pass through existing mutation commands |
 | `U30-50` | pending | Run arbitrary instruction-change feasibility; implement only destinations whose invariants are provable | Positive safe-destination and negative CFG/dataflow tests pass, or explicit rejection/dependency is recorded |
 | `U30-60` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |
 

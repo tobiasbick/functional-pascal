@@ -47,7 +47,7 @@ end.",
     let executable = crate::compile(&program).expect("compiler compilation should succeed");
     let image = executable.executable();
 
-    assert_eq!(image.code.len(), 6);
+    assert_eq!(image.code.len(), 8);
     let add = image
         .code
         .iter()
@@ -56,12 +56,20 @@ end.",
         .abc_operands()
         .expect("integer addition uses ABC operands");
     assert_eq!(add.a, 1, "addition should write directly into local B");
-    assert!(!image.code.iter().any(|instruction| {
-        instruction.opcode() == Ok(fpas_bytecode::Opcode::Move)
-            && instruction
-                .abc_operands()
-                .is_ok_and(|operands| operands.a == 1)
-    }));
+    assert_eq!(
+        image
+            .code
+            .iter()
+            .filter(|instruction| {
+                instruction.opcode() == Ok(fpas_bytecode::Opcode::Move)
+                    && instruction
+                        .abc_operands()
+                        .is_ok_and(|operands| operands.a == 1)
+            })
+            .count(),
+        1,
+        "only B's exact source initializer should move into local B"
+    );
     assert!(image.functions[0].register_count <= 5);
 }
 

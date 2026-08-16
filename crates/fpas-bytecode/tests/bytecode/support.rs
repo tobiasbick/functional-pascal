@@ -125,6 +125,7 @@ pub fn all_opcodes_executable() -> Executable {
             name: StringId::new(7),
             ty: DebugTypeId::new(0),
             mutable: true,
+            initializer: None,
         }],
         records: vec![RecordLayout {
             name: StringId::new(3),

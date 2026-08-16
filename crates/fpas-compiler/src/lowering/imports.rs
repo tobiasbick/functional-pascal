@@ -106,6 +106,7 @@ pub(super) fn install(
                     name: symbol.qualified_name.to_ascii_lowercase(),
                     ty,
                     mutable,
+                    initializer: None,
                 });
                 let binding = GlobalBinding { id, ty };
                 global_bindings.insert(symbol.name.to_ascii_lowercase(), binding);

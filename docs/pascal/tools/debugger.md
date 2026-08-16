@@ -212,16 +212,25 @@ active payload in the path must already exist in that seed. Evaluation order is
 initializer, index selectors, then replacement, under one shared budget.
 Identity-bearing values anywhere in the seed are rejected. If the root is
 already initialized, the command fails and points the client to `expression.set`
-/ `setExpression`. A later source initializer still runs and overwrites the
-debugger value. A write to an old payload-child handle never selects a different
+/ `setExpression`. When the compiler retained the exact declaration store and
+that store is still pending in the selected live frame, successful debugger
+initialization suppresses that one store. This applies equally to complete-root
+`setVariable` / `setExpression` and seeded `storage.initialize`; initializer
+expressions are not re-evaluated and unrelated stores still execute. The
+suppression identity is the verified function, live frame, and exact `Move` or
+`StoreGlobal` instruction, never a source-name, line, or register scan. A write
+to an old payload-child handle never selects a different
 variant; after a successful write the previous child handles are unavailable
 and clients must request variables again. Existing `setVariable` and
 `setExpression` operations still cannot insert/remove entries or change keys;
 clients use the explicit dictionary operations instead. Standard `setVariable`
 and `setExpression` still cannot resize arrays or address string characters;
 clients use the explicit sequence operations instead. Mutation cannot invoke a
-property setter or change control flow. If execution later reaches the source
-initializer, that store overwrites the debugger-provided value.
+property setter or otherwise change control flow. Executables without exact
+initializer metadata retain the conservative behavior: the mutation succeeds,
+but a later ordinary source store can overwrite it. Parameters and captures do
+not have suppressible declaration stores and remain unavailable while
+uninitialized.
 
 Explicit variant construction is a dedicated stopped-state command, not
 `setVariable` and not a Variables-tree child. JSONL `variant.describe` /

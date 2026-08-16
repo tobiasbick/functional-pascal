@@ -21,6 +21,8 @@ use self::debug::{compile_debug_info, compile_debug_types};
 use self::metadata::MetadataBuilder;
 use self::selection::{Selector, abc, abx};
 
+type EmittedInstructionAddresses = Vec<(BlockId, usize, InstructionAddress)>;
+
 pub(super) fn compile_program(
     program: &Program,
 ) -> Result<fpas_bytecode::VerifiedExecutable, CompileError> {
@@ -35,30 +37,54 @@ pub(super) fn compile_program(
     let (mut metadata, _) = MetadataBuilder::new(&program.functions[0].name)?;
     let mut code = Vec::new();
     let mut functions = Vec::with_capacity(program.functions.len());
+    let mut instruction_addresses = Vec::with_capacity(program.functions.len());
     for (index, function) in program.functions.iter().enumerate() {
         if usize::try_from(function.id.get()).ok() != Some(index) {
             return Err(compile_error(
                 "register function identifiers must be dense and ordered",
             ));
         }
-        functions.push(compile_function(
-            program,
-            function,
-            &mut code,
-            &mut metadata,
-        )?);
+        let (compiled, addresses) = compile_function(program, function, &mut code, &mut metadata)?;
+        functions.push(compiled);
+        instruction_addresses.push(addresses);
     }
     let globals = program
         .globals
         .iter()
         .map(|global| {
-            metadata
-                .intern_string(&global.name)
-                .map(|name| fpas_bytecode::GlobalInfo {
-                    name,
-                    ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
-                    mutable: global.mutable,
+            let name = metadata.intern_string(&global.name)?;
+            let initializer = global
+                .initializer
+                .map(|initializer| {
+                    let function_index = usize::try_from(initializer.function.get())
+                        .map_err(|_| compile_error("global initializer function overflow"))?;
+                    let instruction = instruction_addresses
+                        .get(function_index)
+                        .and_then(|addresses| {
+                            addresses.iter().find(|(block, instruction, _)| {
+                                *block == initializer.location.block
+                                    && *instruction == initializer.location.instruction
+                            })
+                        })
+                        .map(|(_, _, address)| *address)
+                        .ok_or_else(|| {
+                            compile_error("global initializer has no emitted store instruction")
+                        })?;
+                    let function = u16::try_from(initializer.function.get())
+                        .map(fpas_bytecode::FunctionId::new)
+                        .map_err(|_| compile_error("global initializer function overflow"))?;
+                    Ok(fpas_bytecode::GlobalInitializer {
+                        function,
+                        instruction,
+                    })
                 })
+                .transpose()?;
+            Ok(fpas_bytecode::GlobalInfo {
+                name,
+                ty: fpas_bytecode::DebugTypeId::new(global.ty.get()),
+                mutable: global.mutable,
+                initializer,
+            })
         })
         .collect::<Result<Vec<_>, _>>()?;
     let records = program
@@ -160,7 +186,7 @@ fn compile_function(
     function: &Function,
     code: &mut Vec<Instruction>,
     metadata: &mut MetadataBuilder,
-) -> Result<FunctionInfo, CompileError> {
+) -> Result<(FunctionInfo, EmittedInstructionAddresses), CompileError> {
     let allocation = Allocation::build(function)?;
     let layout = BlockLayout::build_at(program, function, &allocation, code.len())?;
     let name = metadata.function_name(&function.name)?;
@@ -177,13 +203,7 @@ fn compile_function(
             for selected in selector.select(instruction, metadata)? {
                 emit(code, metadata, instruction.source, selected)?;
             }
-            if code.len() > selected_start
-                && function
-                    .debug
-                    .sequence_points
-                    .iter()
-                    .any(|point| point.block == block.id && point.instruction == instruction_index)
-            {
+            if code.len() > selected_start {
                 debug_points.push((
                     block.id,
                     instruction_index,
@@ -223,18 +243,21 @@ fn compile_function(
         ReturnConvention::Value
     };
     let debug = compile_debug_info(program, function, &allocation, &debug_points, metadata)?;
-    Ok(FunctionInfo {
-        name,
-        code: CodeRange::new(code_start, code_end),
-        arity,
-        capture_count,
-        register_count: allocation.register_count,
-        return_convention,
-        flags: FunctionFlags {
-            uses_spawn_tasks: function.can_spawn_tasks,
+    Ok((
+        FunctionInfo {
+            name,
+            code: CodeRange::new(code_start, code_end),
+            arity,
+            capture_count,
+            register_count: allocation.register_count,
+            return_convention,
+            flags: FunctionFlags {
+                uses_spawn_tasks: function.can_spawn_tasks,
+            },
+            debug,
         },
-        debug,
-    })
+        debug_points,
+    ))
 }
 
 fn emit_terminator(

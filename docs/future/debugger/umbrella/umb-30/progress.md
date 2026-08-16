@@ -3,12 +3,11 @@
 ## Current checkpoint
 
 - Package: `UMB-30` active
-- Active work ID: `U30-40`
-- Base checkpoint: `48daa5cd`
-- Code changes after base: U30-30 JSONL, DAP, VS Code, tests, and current docs
-  are implemented and focused gates pass in the worktree
-- Next action: inventory worker/frame reconstruction inputs and add restart
-  rejection plus register-state atomicity tests before enabling restart
+- Active work IDs: none; `U30-50` is pending and not started
+- Base checkpoint: `b7517403`
+- Code changes after base: completed `U30-41` and suppression part of `U30-42`
+  remain in the worktree
+- Next action: begin `U30-50` only after an explicit continuation request
 - Commit/push authorization: none for current worktree changes
 
 ## Work status
@@ -22,9 +21,9 @@
 | `U30-20` | done | Exact failed-callee and entry recovery transitions preserve the diagnostic and resume correctly |
 | `U30-21` | done | JSONL, DAP, real VS Code recovery flow, and current docs pass |
 | `U30-30` | done | Typed retained-result replacement passes VM, JSONL, DAP, strict library Clippy, and real VS Code host gates |
-| `U30-40` | active | Inventory and test selected live-frame reconstruction before implementation |
-| `U30-41` | pending | Source-initializer suppression proof/slice |
-| `U30-42` | pending | Restart/suppression adapters/editor/docs |
+| `U30-40` | done | Selected-frame reconstruction retains ABI inputs/captures, resets later state, removes younger frames, and executes nothing at command time |
+| `U30-41` | done | Exact local/global initializer identity round-trips through all portable artifacts; one pending store is suppressed only for the exact live frame |
+| `U30-42` | done | Existing JSONL/DAP mutation commands and VS Code flows preserve debugger initialization after continue; current docs describe the exact and fallback behavior |
 | `U30-50` | pending | Instruction-change feasibility/slice |
 | `U30-60` | pending | Full verification and closure |
 
@@ -43,10 +42,10 @@
 - Scheduler failures are retained and repeatably observable, but have no
   compare-and-transition identity or recovery generation. Successful results
   are consumed once and then represented only by a completion ID.
-- Existing source debug bindings retain declaration identity, register, scope,
-  type, mutability, visibility, and capture provenance. They do not retain the
-  exact instruction that performs a source initializer store, so initializer
-  suppression cannot be implemented by current metadata alone.
+- Source debug bindings now retain exact verified initializer stores. Local
+  stores identify an owner-function `Move` into the binding register; global
+  stores identify an owner-function `StoreGlobal` for the exact global slot.
+  The identity survives unit objects, linking, and program images.
 
 These are inventory facts, not acceptance of the planned operations.
 
@@ -63,6 +62,8 @@ These are inventory facts, not acceptance of the planned operations.
 2026-08-16 | U30-20 | active -> done | 48daa5cd | exact failed callee/entry transitions, atomic type rejection, preserved diagnostics, and resumed output pass | map adapters and editor
 2026-08-16 | U30-21 | pending -> done | 48daa5cd | JSONL, DAP, real VS Code host, current docs, strict library Clippy, build, and workspace suite pass | implement retained-result subset
 2026-08-16 | U30-30 | pending -> done | worktree | stable retained task result is typed, repeatable before consumption, protocol-equivalent, editor-accessible, and instruction-free; 36 VM, 14 JSONL/DAP, strict library Clippy, and real VS Code host pass | activate U30-40
+2026-08-16 | U30-40/42 | active -> done/active | b7517403 | four VM restart tests, paired JSONL/DAP tests, format, strict library Clippy, current docs, and real VS Code host flow pass; restart preserves exact ABI/capture state and dispatches nothing | retain exact initializer-store identity for U30-41
+2026-08-16 | U30-41/42 | active -> done | b7517403 plus worktree | exact initializer metadata, verifier rejection, artifact round trips, frame/task-safe one-store suppression, forced-return compatibility, JSONL/DAP parity, VS Code host flow, current docs, format, strict changed-library Clippy, locked workspace build/tests, and diff check pass | wait; U30-50 remains pending
 ```
 
 ## Resume commands

@@ -27,8 +27,8 @@ pub use intrinsic::{
     TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
-    Constant, EnumLayout, EnumVariant, GlobalInfo, RecordField, RecordLayout, RecordMethod,
-    RecordProperty, SourceMap, SourceRun, StringTable,
+    Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,
+    RecordMethod, RecordProperty, SourceMap, SourceRun, StringTable,
 };
 pub use operand::{
     ConstantId, DebugBindingId, DebugTypeId, EnumTypeId, EnumVariantId, FunctionId, GlobalId,

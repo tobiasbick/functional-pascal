@@ -135,13 +135,10 @@ impl LoweringContext {
             let cell = self.emit_value(Operation::MakeCell(value), cell_ty, definition.span)?;
             let local = self.declare_local(&definition.name, cell_ty, true, definition.span)?;
             self.mark_binding_cell(&definition.name, ty);
-            self.emit_effect(
-                Operation::WriteLocal { value: cell, local },
-                definition.span,
-            )
+            self.initialize_local(local, cell, definition.span)
         } else {
             let local = self.declare_local(&definition.name, ty, mutable, definition.span)?;
-            self.emit_effect(Operation::WriteLocal { value, local }, definition.span)
+            self.initialize_local(local, value, definition.span)
         }
     }
 }

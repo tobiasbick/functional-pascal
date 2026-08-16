@@ -42,6 +42,7 @@ pub(super) fn child_task_executable() -> VerifiedExecutable {
         declaration: Some(location(line)),
         hidden: false,
         cell_backed: false,
+        initializer: None,
     };
     let scalar = FunctionDebugInfo {
         scopes: vec![DebugScope {

@@ -62,6 +62,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden: false,
         cell_backed: false,
+        initializer: None,
     };
     let root_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -101,6 +102,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             declaration: Some(location(10)),
             hidden: false,
             cell_backed: false,
+            initializer: None,
         }],
         sequence_points: vec![point(30, 10)],
         ..Default::default()
@@ -178,6 +180,7 @@ pub(super) fn variant_executable() -> VerifiedExecutable {
             name: StringId::new(27),
             ty: DebugTypeId::new(2),
             mutable: true,
+            initializer: None,
         }],
         records: vec![RecordLayout {
             name: StringId::new(25),
@@ -302,6 +305,7 @@ pub(super) fn collision_executable() -> VerifiedExecutable {
             declaration: Some(location(1)),
             hidden: false,
             cell_backed: false,
+            initializer: None,
         }],
         sequence_points: vec![point(3, 1)],
         ..Default::default()

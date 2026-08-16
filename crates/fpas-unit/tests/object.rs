@@ -30,6 +30,7 @@ fn candidate() -> Executable {
         abc(Opcode::TestVariant, 4, 3, 0),
         abc(Opcode::LoadEnumField, 5, 3, 0),
         Instruction::abc(Opcode::CallDirect, NO_REGISTER, 1, 0, 0).expect("direct call"),
+        abc(Opcode::Move, 0, 0, 0),
         abc(Opcode::Return, NO_REGISTER, 0, 0),
         abc(Opcode::Return, NO_REGISTER, 0, 0),
     ];
@@ -38,7 +39,7 @@ fn candidate() -> Executable {
         functions: vec![
             FunctionInfo {
                 name: StringId::new(0),
-                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(9)),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(10)),
                 arity: 0,
                 capture_count: 0,
                 register_count: 6,
@@ -64,6 +65,7 @@ fn candidate() -> Executable {
                         }),
                         hidden: false,
                         cell_backed: false,
+                        initializer: Some(InstructionAddress::new(8)),
                     }],
                     sequence_points: vec![SequencePoint {
                         instruction: InstructionAddress::new(0),
@@ -80,7 +82,7 @@ fn candidate() -> Executable {
             },
             FunctionInfo {
                 name: StringId::new(1),
-                code: CodeRange::new(InstructionAddress::new(9), InstructionAddress::new(10)),
+                code: CodeRange::new(InstructionAddress::new(10), InstructionAddress::new(11)),
                 arity: 0,
                 capture_count: 1,
                 register_count: 1,
@@ -115,6 +117,10 @@ fn candidate() -> Executable {
             name: StringId::new(3),
             ty: fpas_bytecode::DebugTypeId::new(0),
             mutable: true,
+            initializer: Some(fpas_bytecode::GlobalInitializer {
+                function: FunctionId::new(0),
+                instruction: InstructionAddress::new(1),
+            }),
         }],
         records: vec![RecordLayout {
             name: StringId::new(4),
@@ -156,7 +162,7 @@ fn candidate() -> Executable {
                     column: 1,
                 },
                 SourceRun {
-                    instruction_start: InstructionAddress::new(9),
+                    instruction_start: InstructionAddress::new(10),
                     source: SourceId::new(0),
                     line: 4,
                     column: 1,
@@ -197,6 +203,17 @@ fn conversion_covers_every_register_table_operand_and_is_deterministic() {
     assert_eq!(first.functions[1].debug.capture_sources.len(), 1);
     assert_eq!(first.functions[1].debug.capture_sources[0].binding, 0);
     assert_eq!(
+        first.functions[0].debug.bindings[0].initializer_start,
+        Some(8)
+    );
+    assert_eq!(
+        first.globals[0].initializer,
+        Some(fpas_unit::object::ObjectInitializer {
+            function: 0,
+            instruction_start: 1,
+        })
+    );
+    assert_eq!(
         first.functions[1].debug.capture_sources[0].kind,
         fpas_unit::object::ObjectCaptureKind::Value
     );
@@ -228,6 +245,31 @@ fn incompatible_object_version_is_rejected_before_linking() {
             actual: OBJECT_VERSION - 1,
             expected: OBJECT_VERSION,
         })
+    );
+}
+
+#[test]
+fn object_rejects_initializer_metadata_that_does_not_name_its_exact_store() {
+    let mut binding = object();
+    binding.functions[0].debug.bindings[0].initializer_start = Some(0);
+    assert_eq!(
+        binding.validate(),
+        Err(ObjectError::InvalidTableReference(
+            "debug binding initializer store"
+        ))
+    );
+
+    let mut global = object();
+    global.globals[0]
+        .initializer
+        .as_mut()
+        .expect("global initializer")
+        .instruction_start = 0;
+    assert_eq!(
+        global.validate(),
+        Err(ObjectError::InvalidTableReference(
+            "global source initializer store"
+        ))
     );
 }
 

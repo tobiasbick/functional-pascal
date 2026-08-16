@@ -166,6 +166,7 @@ fn writable(value: Value, ty: fpas_bytecode::DebugTypeId) -> RetainedValue {
         generation: 1,
         frame_id: Some(1),
         initialized: true,
+        initializer: None,
     });
     retained
 }

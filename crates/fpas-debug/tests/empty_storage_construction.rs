@@ -179,8 +179,8 @@ fn jsonl_storage_initialize_commits_nested_target_and_continues() {
         .map(|record| record["body"]["text"].as_str().unwrap_or_default())
         .collect::<String>();
     assert_eq!(
-        output, "1\n2\n1\n",
-        "source initializer overwrites: {output:?}"
+        output, "1\n42\n1\n",
+        "exact source initializer suppression preserves the seeded root: {output:?}"
     );
 }
 

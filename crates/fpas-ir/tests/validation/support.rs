@@ -177,12 +177,14 @@ pub fn all_operations_program() -> Program {
             name: "answer".to_string(),
             ty: INTEGER,
             mutable: true,
+            initializer: None,
         },
         Global {
             id: GlobalId::new(1),
             name: "cell".to_string(),
             ty: CELL,
             mutable: false,
+            initializer: None,
         },
     ];
     program.intrinsics = vec![IntrinsicSignature {

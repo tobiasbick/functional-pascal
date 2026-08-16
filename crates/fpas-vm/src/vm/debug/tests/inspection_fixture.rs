@@ -47,6 +47,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden,
         cell_backed: false,
+        initializer: None,
     };
     let root_debug = FunctionDebugInfo {
         scopes: vec![
@@ -84,6 +85,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
                 declaration: Some(location(3)),
                 hidden: false,
                 cell_backed: false,
+                initializer: None,
             },
         ],
         sequence_points: vec![
@@ -112,6 +114,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             declaration: Some(location(10)),
             hidden: false,
             cell_backed: false,
+            initializer: None,
         }],
         sequence_points: vec![point(8, 10)],
         ..Default::default()
@@ -161,6 +164,7 @@ pub(super) fn inspection_executable() -> VerifiedExecutable {
             name: StringId::new(10),
             ty: fpas_bytecode::DebugTypeId::new(0),
             mutable: true,
+            initializer: None,
         }],
         records: Vec::new(),
         enums: Vec::new(),

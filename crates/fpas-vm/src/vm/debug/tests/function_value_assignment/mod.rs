@@ -77,6 +77,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden,
         cell_backed: kind == DebugBindingKind::Capture,
+        initializer: None,
     };
     let root_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -293,6 +294,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             name: StringId::new(31),
             ty: DebugTypeId::new(2),
             mutable: true,
+            initializer: None,
         }],
         records: vec![RecordLayout {
             name: StringId::new(27),

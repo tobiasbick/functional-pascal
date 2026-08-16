@@ -145,6 +145,7 @@ impl Worker {
             frames: Vec::new(),
             retain_result: !detached,
             instruction_count: 0,
+            suppressed_initializers: Vec::new(),
         });
         Ok(())
     }

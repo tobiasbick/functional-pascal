@@ -6,6 +6,7 @@ mod completed_result;
 mod evaluation;
 mod forced_return;
 mod frame_restart;
+pub(in crate::vm) mod initializer_suppression;
 mod inspection;
 mod mutation;
 mod routines;

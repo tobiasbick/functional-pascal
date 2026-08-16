@@ -1,6 +1,15 @@
 //! Dense global-slot declarations.
 
-use crate::{DebugTypeId, StringId};
+use crate::{DebugTypeId, FunctionId, InstructionAddress, StringId};
+
+/// Exact executable identity of one global source initializer store.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GlobalInitializer {
+    /// Function containing the store.
+    pub function: FunctionId,
+    /// Exact store instruction.
+    pub instruction: InstructionAddress,
+}
 
 /// Metadata for one executable-wide global slot.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -11,4 +20,6 @@ pub struct GlobalInfo {
     pub ty: DebugTypeId,
     /// Whether bytecode may store a new value after initialization.
     pub mutable: bool,
+    /// Exact source-declaration store, when present in this executable.
+    pub initializer: Option<GlobalInitializer>,
 }

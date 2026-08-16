@@ -51,6 +51,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden: false,
         cell_backed: kind == DebugBindingKind::Capture,
+        initializer: (name == 3).then_some(InstructionAddress::new(1)),
     };
     let root_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -74,7 +75,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             local(8, 5, 0, true, DebugBindingKind::Parameter),
             local(9, 6, 0, true, DebugBindingKind::Capture),
         ],
-        sequence_points: vec![point(0, 1), point(6, 2)],
+        sequence_points: vec![point(0, 1), point(7, 2)],
         ..Default::default()
     };
     let helper_debug = FunctionDebugInfo {
@@ -83,12 +84,13 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             parent: None,
         }],
         bindings: vec![local(8, 0, 0, false, DebugBindingKind::Parameter)],
-        sequence_points: vec![point(9, 10)],
+        sequence_points: vec![point(10, 10)],
         ..Default::default()
     };
     Executable {
         code: vec![
-            Instruction::abx(Opcode::LoadConstant, 0, 0).expect("count init"),
+            Instruction::abx(Opcode::LoadConstant, 7, 0).expect("count value"),
+            abc(Opcode::Move, 0, 7, 0),
             Instruction::abx(Opcode::LoadConstant, 1, 1).expect("frozen init"),
             abc(Opcode::LoadUnit, 2, 0, 0),
             Instruction::abx(Opcode::LoadConstant, 7, 2).expect("global value"),
@@ -102,7 +104,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
         functions: vec![
             FunctionInfo {
                 name: StringId::new(0),
-                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(9)),
+                code: CodeRange::new(InstructionAddress::new(0), InstructionAddress::new(10)),
                 arity: 0,
                 capture_count: 0,
                 register_count: 8,
@@ -112,7 +114,7 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             },
             FunctionInfo {
                 name: StringId::new(1),
-                code: CodeRange::new(InstructionAddress::new(9), InstructionAddress::new(10)),
+                code: CodeRange::new(InstructionAddress::new(10), InstructionAddress::new(11)),
                 arity: 1,
                 capture_count: 0,
                 register_count: 1,
@@ -131,6 +133,10 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
             name: StringId::new(15),
             ty: DebugTypeId::new(0),
             mutable: true,
+            initializer: Some(fpas_bytecode::GlobalInitializer {
+                function: FunctionId::new(0),
+                instruction: InstructionAddress::new(5),
+            }),
         }],
         records: vec![RecordLayout {
             name: StringId::new(12),
@@ -165,13 +171,13 @@ pub(super) fn assignment_executable() -> VerifiedExecutable {
                     column: 3,
                 },
                 SourceRun {
-                    instruction_start: InstructionAddress::new(6),
+                    instruction_start: InstructionAddress::new(7),
                     source: SourceId::new(0),
                     line: 2,
                     column: 3,
                 },
                 SourceRun {
-                    instruction_start: InstructionAddress::new(9),
+                    instruction_start: InstructionAddress::new(10),
                     source: SourceId::new(0),
                     line: 10,
                     column: 3,
@@ -240,6 +246,7 @@ pub(super) fn task_assignment_executable() -> VerifiedExecutable {
                 declaration: Some(location(20)),
                 hidden: false,
                 cell_backed: false,
+                initializer: None,
             }],
             sequence_points: vec![point(4, 20)],
             ..Default::default()

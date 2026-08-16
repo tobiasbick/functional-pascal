@@ -79,6 +79,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden,
         cell_backed: kind == DebugBindingKind::Capture,
+        initializer: None,
     };
     let mut code = Vec::new();
     push(
@@ -317,6 +318,7 @@ fn typed_executable(consume_pending: bool) -> VerifiedExecutable {
             name: StringId::new(25),
             ty: DebugTypeId::new(4),
             mutable: true,
+            initializer: None,
         }],
         records: vec![RecordLayout {
             name: StringId::new(27),

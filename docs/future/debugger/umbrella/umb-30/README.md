@@ -1,6 +1,6 @@
 # UMB-30 controlled lifecycle and frame changes
 
-Status: active. Resume at `U30-40` in [progress.md](progress.md).
+Status: active. Resume at pending `U30-50` in [progress.md](progress.md).
 
 This package owns explicit debugger operations that replace normal execution
 at a task or frame boundary. It extends the existing shared VM debugger engine;

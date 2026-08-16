@@ -100,17 +100,52 @@ fn mutable_local_and_global_roots_initialize_from_handles_and_names() {
 }
 
 #[test]
-fn source_initializer_overwrites_debugger_initialization_after_continue() {
+fn exact_source_initializers_preserve_debugger_initialization_after_continue() {
     let mut session = DebugSession::new(assignment_executable()).expect("debug session");
     let frame = session.stack(0, 1).expect("stack").items[0].id;
     session
         .set_expression(&root("Count"), &DebugExpression::Integer(30), Some(frame))
         .expect("debugger value");
+    session
+        .set_expression(&root("G"), &DebugExpression::Integer(40), None)
+        .expect("debugger global value");
     stopped(session.step_into().expect("source initializer"));
     let locals = scope_reference(&mut session, "Locals");
     assert_eq!(
         named(
-            &session.variables(locals, 0, 10).expect("overwritten").items,
+            &session.variables(locals, 0, 10).expect("preserved").items,
+            "Count"
+        )
+        .value,
+        "30"
+    );
+    let globals = scope_reference(&mut session, "Globals");
+    assert_eq!(
+        named(
+            &session.variables(globals, 0, 10).expect("globals").items,
+            "G"
+        )
+        .value,
+        "40"
+    );
+}
+
+#[test]
+fn rejected_initialization_does_not_suppress_the_source_store() {
+    let mut session = DebugSession::new(assignment_executable()).expect("debug session");
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    assert_eq!(
+        session
+            .set_expression(&root("Count"), &DebugExpression::Boolean(true), Some(frame))
+            .expect_err("wrong type")
+            .kind,
+        DebugErrorKind::VariableValueType
+    );
+    stopped(session.step_into().expect("source initializer"));
+    let locals = scope_reference(&mut session, "Locals");
+    assert_eq!(
+        named(
+            &session.variables(locals, 0, 10).expect("initialized").items,
             "Count"
         )
         .value,

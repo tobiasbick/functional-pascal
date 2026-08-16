@@ -3,6 +3,15 @@
 use crate::function::CaptureKind;
 use crate::{BlockId, DebugBindingId, FunctionId, LocalId, SourceSpan, TypeId};
 
+/// Exact IR instruction identity retained for debugger-only control operations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DebugInstructionLocation {
+    /// Owning basic block.
+    pub block: BlockId,
+    /// Zero-based instruction index within the block.
+    pub instruction: usize,
+}
+
 /// Complete source-debug metadata for one function.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FunctionDebugInfo {
@@ -76,6 +85,8 @@ pub struct DebugBinding {
     pub hidden: bool,
     /// Whether the register contains a mutable capture cell rather than its displayed value.
     pub cell_backed: bool,
+    /// Exact source-declaration store, when this binding has one.
+    pub initializer: Option<DebugInstructionLocation>,
 }
 
 /// A debugger execution boundary attached to one source-bearing IR instruction.

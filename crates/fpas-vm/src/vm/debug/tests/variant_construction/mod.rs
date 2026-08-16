@@ -97,6 +97,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
             declaration: Some(location(1)),
             hidden: false,
             cell_backed: false,
+            initializer: None,
         }],
         sequence_points: vec![point(3, 1)],
         ..Default::default()
@@ -141,6 +142,7 @@ pub(super) fn order_executable() -> VerifiedExecutable {
             name: StringId::new(9),
             ty: DebugTypeId::new(0),
             mutable: true,
+            initializer: None,
         }],
         records: Vec::new(),
         enums: vec![EnumLayout {

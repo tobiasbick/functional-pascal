@@ -135,6 +135,17 @@ pub struct Global {
     pub ty: TypeId,
     /// Whether stores after initialization are permitted.
     pub mutable: bool,
+    /// Exact source-declaration store, when this global is source-defined.
+    pub initializer: Option<GlobalInitializer>,
+}
+
+/// Exact IR identity of one global source initializer store.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GlobalInitializer {
+    /// Function containing the store.
+    pub function: FunctionId,
+    /// Function-local IR instruction identity.
+    pub location: crate::DebugInstructionLocation,
 }
 
 /// A record layout known to the IR.

@@ -1,6 +1,6 @@
 //! Validation for executable debugger scopes, bindings, and sequence points.
 
-use crate::{DebugCaptureKind, DebugSourceLocation, FunctionId};
+use crate::{DebugCaptureKind, DebugSourceLocation, FunctionId, Opcode};
 
 use super::{ValidationError, ValidationErrorKind};
 
@@ -44,6 +44,14 @@ pub(super) fn validate_debug_info(executable: &crate::Executable) -> Result<(), 
             if let Some(location) = binding.declaration {
                 validate_location(executable, function_id, location)?;
             }
+            if let Some(initializer) = binding.initializer {
+                validate_binding_initializer(
+                    executable,
+                    function_id,
+                    binding.register.get(),
+                    initializer,
+                )?;
+            }
         }
         let mut previous = None;
         for point in &function.debug.sequence_points {
@@ -75,7 +83,124 @@ pub(super) fn validate_debug_info(executable: &crate::Executable) -> Result<(), 
         }
         validate_capture_provenance(executable, function_id)?;
     }
+    validate_global_initializers(executable)?;
     Ok(())
+}
+
+fn validate_binding_initializer(
+    executable: &crate::Executable,
+    function_id: FunctionId,
+    register: u16,
+    address: crate::InstructionAddress,
+) -> Result<(), ValidationError> {
+    let function = &executable.functions[usize::from(function_id.get())];
+    if !function.code.contains(address) {
+        return Err(initializer_error(
+            executable,
+            function_id,
+            "binding initializer must be inside its owning function",
+            address.get(),
+            function.code.start.get(),
+        ));
+    }
+    let instruction = executable.code[address.get() as usize];
+    let opcode = instruction.opcode().map_err(|error| {
+        ValidationError::instruction(
+            executable,
+            function_id,
+            address,
+            None,
+            ValidationErrorKind::Instruction(error),
+        )
+    })?;
+    if opcode != Opcode::Move {
+        return Err(initializer_error(
+            executable,
+            function_id,
+            "binding initializer must identify a Move store",
+            opcode as u32,
+            Opcode::Move as u32,
+        ));
+    }
+    let destination = instruction.abc_payload().a;
+    if destination != register {
+        return Err(initializer_error(
+            executable,
+            function_id,
+            "binding initializer destination must match its binding register",
+            u32::from(destination),
+            u32::from(register),
+        ));
+    }
+    Ok(())
+}
+
+fn validate_global_initializers(executable: &crate::Executable) -> Result<(), ValidationError> {
+    for (global_index, global) in executable.globals.iter().enumerate() {
+        let Some(initializer) = global.initializer else {
+            continue;
+        };
+        let function = executable
+            .functions
+            .get(usize::from(initializer.function.get()))
+            .ok_or_else(|| {
+                initializer_error(
+                    executable,
+                    initializer.function,
+                    "global initializer function must exist",
+                    u32::from(initializer.function.get()),
+                    executable.functions.len() as u32,
+                )
+            })?;
+        if !function.code.contains(initializer.instruction) {
+            return Err(initializer_error(
+                executable,
+                initializer.function,
+                "global initializer must be inside its owning function",
+                initializer.instruction.get(),
+                function.code.start.get(),
+            ));
+        }
+        let instruction = executable.code[initializer.instruction.get() as usize];
+        let opcode = instruction.opcode().map_err(|error| {
+            ValidationError::instruction(
+                executable,
+                initializer.function,
+                initializer.instruction,
+                None,
+                ValidationErrorKind::Instruction(error),
+            )
+        })?;
+        let operand = instruction.abx_payload().bx;
+        if opcode != Opcode::StoreGlobal || operand as usize != global_index {
+            return Err(initializer_error(
+                executable,
+                initializer.function,
+                "global initializer must identify its exact StoreGlobal",
+                operand,
+                global_index as u32,
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn initializer_error(
+    executable: &crate::Executable,
+    function: FunctionId,
+    reason: &'static str,
+    actual: u32,
+    expected: u32,
+) -> ValidationError {
+    ValidationError::function(
+        executable,
+        function,
+        ValidationErrorKind::DebugInitializer {
+            reason,
+            actual,
+            expected,
+        },
+    )
 }
 
 fn validate_capture_provenance(

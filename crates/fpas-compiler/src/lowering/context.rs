@@ -217,6 +217,7 @@ impl LoweringContext {
                 declaration: input.declaration,
                 hidden: false,
                 cell_backed: false,
+                initializer: None,
             });
             bindings.push(Binding {
                 name: input.name.to_ascii_lowercase(),
@@ -260,6 +261,7 @@ impl LoweringContext {
                 declaration: capture.declaration,
                 hidden: false,
                 cell_backed: capture.kind != fpas_ir::CaptureKind::Value,
+                initializer: None,
             });
             bindings.push(Binding {
                 name: capture.name.to_ascii_lowercase(),
@@ -467,6 +469,14 @@ impl LoweringContext {
         operation: Operation,
         span: Span,
     ) -> Result<(), CompileError> {
+        self.emit_effect_with_location(operation, span).map(|_| ())
+    }
+
+    pub(super) fn emit_effect_with_location(
+        &mut self,
+        operation: Operation,
+        span: Span,
+    ) -> Result<fpas_ir::DebugInstructionLocation, CompileError> {
         let source = span.diagnostic_span_or_synthetic();
         let instruction = self.current_block_mut()?.instructions.len();
         self.current_block_mut()?.instructions.push(Instruction {
@@ -475,7 +485,28 @@ impl LoweringContext {
             operation,
         });
         self.record_sequence_point(instruction, source);
-        Ok(())
+        Ok(fpas_ir::DebugInstructionLocation {
+            block: self.current,
+            instruction,
+        })
+    }
+
+    pub(super) fn emit_initializer_store(
+        &mut self,
+        operation: Operation,
+        span: Span,
+    ) -> Result<fpas_ir::DebugInstructionLocation, CompileError> {
+        let source = span.diagnostic_span_or_synthetic();
+        let instruction = self.current_block_mut()?.instructions.len();
+        self.current_block_mut()?.instructions.push(Instruction {
+            source: Some(source),
+            result: None,
+            operation,
+        });
+        Ok(fpas_ir::DebugInstructionLocation {
+            block: self.current,
+            instruction,
+        })
     }
 }
 

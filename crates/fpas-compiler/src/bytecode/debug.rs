@@ -47,6 +47,23 @@ pub(super) fn compile_debug_info(
                 declaration: binding.declaration.map(location),
                 hidden: binding.hidden,
                 cell_backed: binding.cell_backed,
+                initializer: binding
+                    .initializer
+                    .map(|initializer| {
+                        point_addresses
+                            .iter()
+                            .find(|(block, instruction, _)| {
+                                *block == initializer.block
+                                    && *instruction == initializer.instruction
+                            })
+                            .map(|(_, _, address)| *address)
+                            .ok_or_else(|| {
+                                super::compile_error(
+                                    "debug binding initializer has no emitted store instruction",
+                                )
+                            })
+                    })
+                    .transpose()?,
             })
         })
         .collect::<Result<Vec<_>, CompileError>>()?;

@@ -10,12 +10,14 @@ use super::render::RetainedValue;
 use super::snapshot::{FrameSnapshot, InspectionSnapshot, item_id};
 use super::targets::{MutationAccess, MutationRoot, MutationTarget};
 use crate::vm::debug::breakpoints;
+use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 use crate::vm::debug::types::SourceLocation;
 use crate::vm::worker::Worker;
 
 struct CapturedFrame {
     function: FunctionId,
     instruction: InstructionAddress,
+    next_instruction: InstructionAddress,
     base: usize,
 }
 
@@ -51,12 +53,16 @@ impl InspectionSnapshot {
             function: worker.function,
             instruction: InstructionAddress::try_from_index(worker.ip)
                 .unwrap_or(worker.current_address),
+            next_instruction: InstructionAddress::try_from_index(worker.ip)
+                .unwrap_or(worker.current_address),
             base: worker.base,
         }];
         captured.extend(worker.call_stack.iter().rev().map(|frame| {
             CapturedFrame {
                 function: frame.function,
                 instruction: InstructionAddress::try_from_index(frame.ip.saturating_sub(1))
+                    .unwrap_or(worker.current_address),
+                next_instruction: InstructionAddress::try_from_index(frame.ip)
                     .unwrap_or(worker.current_address),
                 base: frame.base,
             }
@@ -114,6 +120,14 @@ impl InspectionSnapshot {
                 register,
                 self.generation,
                 frame_id,
+                binding
+                    .initializer
+                    .filter(|initializer| initializer.get() >= frame.next_instruction.get())
+                    .map(|instruction| SourceInitializerTarget {
+                        function: frame.function,
+                        base: frame.base,
+                        instruction,
+                    }),
             );
             let retained = RetainedValue {
                 name: name.to_string(),
@@ -187,6 +201,7 @@ fn binding_mutation(
     register: usize,
     generation: u32,
     frame_id: u64,
+    initializer: Option<SourceInitializerTarget>,
 ) -> MutationAccess {
     if !binding.mutable {
         return MutationAccess::NotMutable;
@@ -213,6 +228,7 @@ fn binding_mutation(
         generation,
         frame_id: Some(frame_id),
         initialized,
+        initializer: if initialized { None } else { initializer },
     })
 }
 
@@ -268,6 +284,13 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
                         generation,
                         frame_id: None,
                         initialized: value.is_some(),
+                        initializer: value
+                            .is_none()
+                            .then_some(global.initializer)
+                            .flatten()
+                            .and_then(|initializer| {
+                                pending_global_initializer(worker, initializer)
+                            }),
                     })
                 } else {
                     MutationAccess::NotMutable
@@ -275,6 +298,32 @@ fn capture_globals(worker: &Worker, generation: u32) -> Vec<RetainedValue> {
             }
         })
         .collect()
+}
+
+fn pending_global_initializer(
+    worker: &Worker,
+    initializer: fpas_bytecode::GlobalInitializer,
+) -> Option<SourceInitializerTarget> {
+    let mut matches = Vec::new();
+    if worker.function == initializer.function
+        && initializer.instruction.get() >= u32::try_from(worker.ip).unwrap_or(u32::MAX)
+    {
+        matches.push(SourceInitializerTarget {
+            function: worker.function,
+            base: worker.base,
+            instruction: initializer.instruction,
+        });
+    }
+    matches.extend(worker.call_stack.iter().filter_map(|frame| {
+        (frame.function == initializer.function
+            && initializer.instruction.get() >= u32::try_from(frame.ip).unwrap_or(u32::MAX))
+        .then_some(SourceInitializerTarget {
+            function: frame.function,
+            base: frame.base,
+            instruction: initializer.instruction,
+        })
+    }));
+    (matches.len() == 1).then(|| matches[0])
 }
 
 fn diagnostic_location(worker: &Worker, instruction: InstructionAddress) -> Option<SourceLocation> {

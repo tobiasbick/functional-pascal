@@ -35,6 +35,7 @@ pub(super) fn binding(
         }),
         hidden: false,
         cell_backed: false,
+        initializer: None,
     }
 }
 

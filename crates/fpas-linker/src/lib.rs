@@ -95,7 +95,7 @@ pub fn link_objects(
         .map_err(|_| LinkError::Overflow("unit initializer call count"))?;
     let mut strings = strings::StringInterner::default();
 
-    let linked_globals = ids
+    let mut linked_globals = ids
         .globals
         .order
         .iter()
@@ -105,6 +105,7 @@ pub fn link_objects(
                 name: strings.intern(&global.name)?,
                 ty: debug_type_ids.translate(*object, global.ty)?,
                 mutable: global.mutable,
+                initializer: None,
             })
         })
         .collect::<Result<Vec<_>, LinkError>>()?;
@@ -200,6 +201,33 @@ pub fn link_objects(
                     .map_err(|_| LinkError::Overflow("function code length"))?,
             )
             .ok_or(LinkError::Overflow("instruction addresses"))?;
+    }
+    for (linked, (object, local)) in linked_globals.iter_mut().zip(&ids.globals.order) {
+        let Some(initializer) = objects[*object].globals[*local].initializer else {
+            continue;
+        };
+        let function = ids.functions.maps[*object]
+            .get(initializer.function as usize)
+            .copied()
+            .flatten()
+            .ok_or(LinkError::Overflow("global initializer function ID"))?;
+        let final_function = ids
+            .functions
+            .order
+            .iter()
+            .position(|entry| *entry == (*object, initializer.function as usize))
+            .ok_or(LinkError::Overflow("global initializer function order"))?;
+        let instruction = InstructionAddress::new(
+            code_bases[final_function]
+                .checked_add(initializer.instruction_start)
+                .ok_or(LinkError::Overflow(
+                    "global initializer instruction address",
+                ))?,
+        );
+        linked.initializer = Some(fpas_bytecode::GlobalInitializer {
+            function,
+            instruction,
+        });
     }
     let mut code = Vec::with_capacity(code_length as usize);
     let mut linked_functions = Vec::with_capacity(ids.functions.order.len());

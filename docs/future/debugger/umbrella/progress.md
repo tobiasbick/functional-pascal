@@ -5,10 +5,10 @@
 - Umbrella state: implementation active
 - Active primary package: `UMB-30`
 - Last completed item: `UMB-20`
-- Next child: `UMB-30` / `U30-40` (selected frame restart); active
-- Checkpoint: entry completion, runtime recovery, and the retained-result VM
-  foundation are recoverable locally at `48daa5cd`; U30-30 adapters are in the
-  worktree
+- Next child: `UMB-30` / `U30-50` (instruction-change feasibility); pending
+- Checkpoint: entry completion, runtime recovery, retained-result replacement,
+  and selected frame restart are recoverable at `b7517403`; exact initializer
+  suppression is complete in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -27,7 +27,7 @@ current worktree before changing or staging anything.
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
-| `UMB-30` | active | `U30-10` through `U30-30` pass; execute `U30-40` from [`umb-30/`](umb-30/README.md) |
+| `UMB-30` | active | `U30-10` through `U30-42` pass; `U30-50` remains pending in [`umb-30/`](umb-30/README.md) |
 | `UMB-40` | pending | Quiescence protocol first |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
@@ -172,6 +172,8 @@ Evidence log:
 2026-08-16 | U30-10/11 | pending -> done | worktree | root/task entry completion, retained results, task events, JSONL/DAP/VS Code parity, docs, Clippy, build, and full workspace suite pass | execute U30-20
 2026-08-16 | U30-20/21 | pending -> done | 48daa5cd | exact runtime-error recovery passes VM, scheduler, JSONL, DAP, VS Code, docs, and full workspace gates | execute U30-30
 2026-08-16 | U30-30 | pending -> done | worktree | retained completed task results are typed, replaceable until consumption, available through JSONL/DAP/VS Code, and explicitly do not claim removed ordinary call frames | execute U30-40
+2026-08-16 | U30-40/42 | active -> done/active | b7517403 | selected frame restart passes VM, JSONL, DAP, VS Code, documentation, formatting, and strict library Clippy gates | execute U30-41 and finish suppression adapters
+2026-08-16 | U30-41/42 | active -> done | b7517403 plus worktree | portable exact initializer stores and live-frame suppression pass verifier, artifact, VM, forced-return, JSONL, DAP, VS Code, docs, Clippy, build, and workspace gates | wait before U30-50
 ```
 
 ## Resume commands
@@ -187,7 +189,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The active implementation step is `U30-40` in
+The next pending implementation step is `U30-50` in
 [`umb-30/implementation-plan.md`](umb-30/implementation-plan.md). `UMB-10D`
 evidence remains in this file, focused tests, and current debugger docs. Do not
 clean, reset, stage, commit, merge, or push without matching user authorization.

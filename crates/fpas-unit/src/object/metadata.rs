@@ -33,6 +33,18 @@ pub struct ObjectGlobal {
     pub ty: u32,
     /// Whether stores are allowed after initialization.
     pub mutable: bool,
+    /// Exact source initializer in object-local coordinates.
+    #[serde(default)]
+    pub initializer: Option<ObjectInitializer>,
+}
+
+/// Object-local identity of one source initializer store.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct ObjectInitializer {
+    /// Object-local function index.
+    pub function: u32,
+    /// Function-local instruction index.
+    pub instruction_start: u32,
 }
 
 /// Ordered record layout.
@@ -231,6 +243,9 @@ pub struct ObjectDebugBinding {
     pub hidden: bool,
     /// Whether the register stores a mutable capture cell.
     pub cell_backed: bool,
+    /// Function-local source initializer instruction, when present.
+    #[serde(default)]
+    pub initializer_start: Option<u32>,
 }
 
 /// A function-local debugger sequence point.

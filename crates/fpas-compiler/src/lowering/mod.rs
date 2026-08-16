@@ -209,6 +209,7 @@ fn lower_analyzed_root(
         type_table: type_table.clone(),
     })
     .map_err(|error| vec![error])?;
+    let mut global_initializers = Vec::new();
     for declaration in declarations {
         let (name, value, span) = match declaration {
             fpas_parser::Decl::Const(definition) => {
@@ -225,15 +226,11 @@ fn lower_analyzed_root(
         let value = context
             .lower_expression(value)
             .map_err(|error| vec![error])?;
-        context
-            .emit_effect(
-                Operation::StoreGlobal {
-                    global: global_bindings[&name.to_ascii_lowercase()].id,
-                    value,
-                },
-                span,
-            )
+        let global = global_bindings[&name.to_ascii_lowercase()].id;
+        let location = context
+            .emit_effect_with_location(Operation::StoreGlobal { global, value }, span)
             .map_err(|error| vec![error])?;
+        global_initializers.push((global, location));
     }
     for statement in body {
         context
@@ -241,6 +238,15 @@ fn lower_analyzed_root(
             .map_err(|error| vec![error])?;
     }
     let (root, updated_types) = context.finish(span).map_err(|error| vec![error])?;
+    for (global, location) in global_initializers {
+        let declaration = globals
+            .get_mut(global.get() as usize)
+            .ok_or_else(|| vec![context::unsupported(span, "global initializer identifier")])?;
+        declaration.initializer = Some(fpas_ir::GlobalInitializer {
+            function: FunctionId::new(0),
+            location,
+        });
+    }
     type_table = updated_types;
     let mut functions = vec![root];
     for (index, routine) in routines.iter().enumerate() {

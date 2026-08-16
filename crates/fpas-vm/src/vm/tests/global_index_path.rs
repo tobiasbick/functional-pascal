@@ -38,6 +38,7 @@ fn global_index_path_updates_nested_arrays_and_preserves_aliases() {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: true,
+        initializer: None,
     }];
     let (_, registers, _) = execute(image.verify().expect("global path image must verify"))
         .expect("global path update must run");
@@ -67,6 +68,7 @@ fn global_index_path_rejects_out_of_bounds_indexes() {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: true,
+        initializer: None,
     }];
     let error = execute(image.verify().expect("global path image must verify"))
         .expect_err("out-of-bounds global update must fail");

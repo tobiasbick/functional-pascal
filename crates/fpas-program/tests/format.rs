@@ -31,6 +31,17 @@ fn deterministic_round_trip_preserves_every_register_table() {
     let nested = &decoded.executable().executable().functions[1].debug;
     assert_eq!(nested.lexical_owner.map(|owner| owner.get()), Some(0));
     assert_eq!(nested.capture_sources.len(), 1);
+    let executable = decoded.executable().executable();
+    assert_eq!(
+        executable.functions[0].debug.bindings[0].initializer,
+        Some(fpas_bytecode::InstructionAddress::new(1))
+    );
+    assert_eq!(
+        executable.globals[0]
+            .initializer
+            .map(|initializer| initializer.instruction),
+        Some(fpas_bytecode::InstructionAddress::new(2))
+    );
 }
 
 #[test]
@@ -39,7 +50,7 @@ fn canonical_image_has_target_independent_digest() {
 
     assert_eq!(
         format!("{:?}", fpas_program::Digest::of(bytes)),
-        "d823e36ea8f00e0fd34e7fb7f2c064b9f09b57af086a8d4ba6600e11504601a4"
+        "52203ac923d932478a0fa33fc7520757ec7ab7ef15687c214a8b4b20b4ccda9b"
     );
 }
 

@@ -52,6 +52,7 @@ fn payload_executable() -> VerifiedExecutable {
         declaration: Some(location(1)),
         hidden: false,
         cell_backed: false,
+        initializer: None,
     };
     let root_debug = FunctionDebugInfo {
         scopes: vec![DebugScope {
@@ -89,6 +90,7 @@ fn payload_executable() -> VerifiedExecutable {
             declaration: Some(location(10)),
             hidden: false,
             cell_backed: false,
+            initializer: None,
         }],
         sequence_points: vec![point(24, 10)],
         ..Default::default()

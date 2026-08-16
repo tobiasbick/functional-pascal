@@ -159,7 +159,7 @@ fn dap_set_variable_and_set_expression_initialize_uninitialized_roots() {
         .filter(|record| record["event"] == "output")
         .filter_map(|record| record["body"]["output"].as_str())
         .collect::<String>();
-    assert_eq!(output, "1\n99\n0\n3\n2\n");
+    assert_eq!(output, "30\n8\n1\n3\n2\n");
 }
 
 #[test]

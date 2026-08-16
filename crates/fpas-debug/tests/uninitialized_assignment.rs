@@ -182,7 +182,7 @@ fn jsonl_uninitialized_roots_initialize_atomically_and_continue() {
         .filter(|record| record["event"] == "output")
         .filter_map(|record| record["body"]["text"].as_str())
         .collect::<String>();
-    assert_eq!(output, "1\n99\n0\n3\n2\n");
+    assert_eq!(output, "30\n8\n1\n3\n2\n");
 }
 
 #[test]
@@ -263,6 +263,6 @@ end.
     assert!(
         terminated
             .iter()
-            .any(|record| { record["event"] == "output" && record["body"]["text"] == "1\n" })
+            .any(|record| { record["event"] == "output" && record["body"]["text"] == "5\n" })
     );
 }

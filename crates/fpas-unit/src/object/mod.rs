@@ -19,8 +19,9 @@ pub use function::{ObjectFunction, ObjectReturn};
 pub use metadata::{
     ObjectCaptureKind, ObjectCaptureSource, ObjectConstant, ObjectDebugBinding,
     ObjectDebugBindingKind, ObjectDebugLocation, ObjectDebugScope, ObjectDebugType,
-    ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectRecordLayout,
-    ObjectRecordMethod, ObjectRecordProperty, ObjectSequencePoint, ObjectSourceRun,
+    ObjectEnumLayout, ObjectEnumVariant, ObjectFunctionDebugInfo, ObjectGlobal, ObjectInitializer,
+    ObjectRecordLayout, ObjectRecordMethod, ObjectRecordProperty, ObjectSequencePoint,
+    ObjectSourceRun,
 };
 pub use relocation::{Relocation, RelocationKind};
 pub use symbol::{
@@ -34,7 +35,7 @@ use validation::{
 };
 
 /// Schema version embedded in every encoded register object payload.
-pub const OBJECT_VERSION: u16 = 6;
+pub const OBJECT_VERSION: u16 = 7;
 
 /// Independently compiled register-bytecode object with symbolic external references.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
@@ -123,6 +124,28 @@ impl RelocatableObject {
                     name: strings(global.name)?,
                     ty: global.ty.get(),
                     mutable: global.mutable,
+                    initializer: global
+                        .initializer
+                        .map(|initializer| {
+                            let function = executable
+                                .functions
+                                .get(usize::from(initializer.function.get()))
+                                .ok_or(ObjectError::InvalidTableReference(
+                                    "global initializer function",
+                                ))?;
+                            let instruction_start = initializer
+                                .instruction
+                                .get()
+                                .checked_sub(function.code.start.get())
+                                .ok_or(ObjectError::InvalidTableReference(
+                                    "global initializer instruction",
+                                ))?;
+                            Ok(ObjectInitializer {
+                                function: u32::from(initializer.function.get()),
+                                instruction_start,
+                            })
+                        })
+                        .transpose()?,
                 })
             })
             .collect::<Result<Vec<_>, ObjectError>>()?;
@@ -268,6 +291,17 @@ impl RelocatableObject {
                             }),
                             hidden: binding.hidden,
                             cell_backed: binding.cell_backed,
+                            initializer_start: binding
+                                .initializer
+                                .map(|initializer| {
+                                    initializer
+                                        .get()
+                                        .checked_sub(function.code.start.get())
+                                        .ok_or(ObjectError::InvalidTableReference(
+                                            "debug binding initializer instruction",
+                                        ))
+                                })
+                                .transpose()?,
                         })
                     })
                     .collect::<Result<Vec<_>, ObjectError>>()?,
@@ -432,6 +466,24 @@ impl RelocatableObject {
             return Err(ObjectError::InvalidTableReference(
                 "entry and initializer are mutually exclusive",
             ));
+        }
+        for global in &self.globals {
+            if let Some(initializer) = global.initializer {
+                let instruction = self
+                    .functions
+                    .get(initializer.function as usize)
+                    .and_then(|function| function.code.get(initializer.instruction_start as usize))
+                    .copied()
+                    .map(Instruction::from_word)
+                    .ok_or(ObjectError::InvalidTableReference(
+                        "global source initializer instruction",
+                    ))?;
+                if instruction.opcode().ok() != Some(fpas_bytecode::Opcode::StoreGlobal) {
+                    return Err(ObjectError::InvalidTableReference(
+                        "global source initializer store",
+                    ));
+                }
+            }
         }
         validation::validate_debug_types(
             &self.debug_types,

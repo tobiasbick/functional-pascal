@@ -1,6 +1,6 @@
 //! Prepared multi-frame Worker transition that does not dispatch instructions.
 
-use fpas_bytecode::Value;
+use fpas_bytecode::{InstructionAddress, Opcode, Value};
 
 use super::super::types::DebugSessionError;
 use super::eligibility::{PreparedSelection, prepare_selection};
@@ -40,5 +40,43 @@ pub(in crate::vm::debug) fn apply_prepared(
     if let Some(destination) = prepared.caller.return_destination {
         worker.registers[destination] = value;
         worker.register_initialized[destination] = true;
+        complete_declared_initializer_move(worker, destination);
     }
+}
+
+fn complete_declared_initializer_move(worker: &mut Worker, source: usize) {
+    let Ok(address) = InstructionAddress::try_from_index(worker.ip) else {
+        return;
+    };
+    let image = worker.executable.executable();
+    let Some(function) = image.functions.get(usize::from(worker.function.get())) else {
+        return;
+    };
+    let Some(binding) = function
+        .debug
+        .bindings
+        .iter()
+        .find(|binding| binding.initializer == Some(address))
+    else {
+        return;
+    };
+    let Some(instruction) = image.code.get(worker.ip).copied() else {
+        return;
+    };
+    if instruction.opcode().ok() != Some(Opcode::Move) {
+        return;
+    }
+    let operands = instruction.abc_payload();
+    if worker.base.saturating_add(usize::from(operands.b)) != source
+        || operands.a != binding.register.get()
+    {
+        return;
+    }
+    worker.ip = worker.ip.saturating_add(1);
+    if worker.take_suppressed_source_initializer(address) {
+        return;
+    }
+    let destination = worker.base.saturating_add(usize::from(operands.a));
+    worker.registers[destination] = worker.registers[source].clone();
+    worker.register_initialized[destination] = true;
 }

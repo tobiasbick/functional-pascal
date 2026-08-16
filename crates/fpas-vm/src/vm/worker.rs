@@ -5,6 +5,7 @@ use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{FunctionId, InstructionAddress, Value, VerifiedExecutable};
 
+use super::debug::initializer_suppression::SourceInitializerTarget;
 use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
 use super::hosted::HostedState;
@@ -37,6 +38,7 @@ pub(super) struct Worker {
     pub(in crate::vm) debug_tasks: bool,
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
     pub(in crate::vm) debug_clock: Option<Arc<DebugClock>>,
+    pub(in crate::vm) suppressed_initializers: Vec<SourceInitializerTarget>,
 }
 
 impl Worker {
@@ -155,6 +157,7 @@ impl Worker {
             debug_tasks: false,
             task_suspension: None,
             debug_clock: None,
+            suppressed_initializers: Vec::new(),
         })
     }
 
@@ -195,6 +198,7 @@ impl Worker {
             debug_tasks: self.debug_tasks,
             task_suspension: None,
             debug_clock: self.debug_clock.clone(),
+            suppressed_initializers: Vec::new(),
         }
     }
 
@@ -229,6 +233,7 @@ impl Worker {
             debug_tasks: self.debug_tasks,
             task_suspension: None,
             debug_clock: self.debug_clock.clone(),
+            suppressed_initializers: task.suppressed_initializers,
         }
     }
 
@@ -246,6 +251,7 @@ impl Worker {
             frames: std::mem::take(&mut self.call_stack),
             retain_result: self.retain_result,
             instruction_count: self.instruction_count,
+            suppressed_initializers: std::mem::take(&mut self.suppressed_initializers),
         }
     }
 

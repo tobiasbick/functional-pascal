@@ -108,6 +108,8 @@ pub struct DebugBinding {
     pub hidden: bool,
     /// Whether the stored value is a mutable closure cell to dereference for display.
     pub cell_backed: bool,
+    /// Exact executable instruction that performs the source-declaration store.
+    pub initializer: Option<InstructionAddress>,
 }
 
 /// A source execution boundary at one global instruction address.

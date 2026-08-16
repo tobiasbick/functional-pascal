@@ -120,6 +120,7 @@ fn globals_are_dense_and_immutable_slots_initialize_once() {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: false,
+        initializer: None,
     }];
     let (_, registers, _) = execute(image.verify().expect("global image must verify"))
         .expect("global program must run");
@@ -220,6 +221,7 @@ fn immutable_global_rejects_a_second_store() {
         name: StringId::new(2),
         ty: fpas_bytecode::DebugTypeId::new(0),
         mutable: false,
+        initializer: None,
     }];
     let error = execute(image.verify().expect("global image must verify"))
         .expect_err("second immutable store must fail");

@@ -170,6 +170,9 @@ impl DebugSession {
             return Err(already_initialized(&root));
         }
         crate::vm::debug::mutation::commit(worker, generation, &target, rebuilt)?;
+        if let Some(initializer) = target.initializer {
+            worker.suppress_source_initializer(initializer);
+        }
         self.invalidate_inspection();
         self.refresh_inspection();
         self.inspection_task_id = task_id;

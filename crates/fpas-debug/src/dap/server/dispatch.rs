@@ -82,6 +82,10 @@ impl DapServer {
                 self.replace_string_character(request_seq, command, arguments)
             }
             "fpas/forceReturn" => self.force_return(request_seq, command, arguments),
+            "restartFrame" => self.restart_frame(request_seq, command, arguments),
+            "fpas/replaceTaskResult" => {
+                self.replace_completed_task_result(request_seq, command, arguments)
+            }
             "fpas/variantDescribe" => self.describe_variant(request_seq, command, arguments),
             "fpas/variantConstruct" => self.construct_variant(request_seq, command, arguments),
             "fpas/initializeStorage" => self.initialize_storage(request_seq, command, arguments),

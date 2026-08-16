@@ -172,6 +172,11 @@
         "category": "Functional Pascal"
       },
       {
+        "command": "functionalPascal.debug.replaceTaskResult",
+        "title": "Debug: Replace Completed Task Result",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.debug.constructVariant",
         "title": "Debug: Construct Variant",
         "category": "Functional Pascal"

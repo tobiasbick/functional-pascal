@@ -43,10 +43,10 @@ Record their exact layout before editing them.
 | `U30-01` | done | Freeze command/error/event contracts; inventory scheduler result identity and source-binding metadata; add rejection/atomicity tests | Entry transition is frozen; recovery and initializer metadata gaps are recorded explicitly |
 | `U30-10` | done | Implement shared root/task entry-frame completion | Typed retained result, one exit, root cancellation, no hidden execution, and atomic rejection pass in VM tests |
 | `U30-11` | done | Map entry completion through JSONL, DAP, and VS Code; update current docs | JSONL/DAP parity and the real extension-host lifecycle test pass |
-| `U30-20` | active | Implement exact runtime-error recovery for live and entry frames | Exact unconsumed failure transition, preserved diagnostic, and stale/consumed rejection pass |
-| `U30-21` | pending | Map recovery through adapters/editor and document it | Protocol-equivalent recovery and negative errors pass |
-| `U30-30` | pending | Decide and implement the provable completed-return replacement subset | Retained-result replacement passes, or an evidence-backed named dependency is recorded without overclaiming |
-| `U30-40` | pending | Implement selected live-frame restart | Current args/captures retained; locals/temporaries reset; younger frames removed; no command-time execution |
+| `U30-20` | done | Implement exact runtime-error recovery for live and entry frames | Exact unconsumed failure transition, preserved diagnostic, and stale/consumed rejection pass |
+| `U30-21` | done | Map recovery through adapters/editor and document it | Protocol-equivalent recovery and negative errors pass |
+| `U30-30` | done | Decide and implement the provable completed-return replacement subset | Retained-result replacement passes without overclaiming removed ordinary call frames |
+| `U30-40` | active | Implement selected live-frame restart | Current args/captures retained; locals/temporaries reset; younger frames removed; no command-time execution |
 | `U30-41` | pending | Prove and implement source-initializer suppression or record the missing portable identity | Exact metadata round trip and suppression tests pass, or precise dependency is recorded |
 | `U30-42` | pending | Map restart/suppression through adapters/editor and current docs | JSONL/DAP/VS Code parity passes |
 | `U30-50` | pending | Run arbitrary instruction-change feasibility; implement only destinations whose invariants are provable | Positive safe-destination and negative CFG/dataflow tests pass, or explicit rejection/dependency is recorded |

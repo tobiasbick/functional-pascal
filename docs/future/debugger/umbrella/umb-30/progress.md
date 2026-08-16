@@ -3,12 +3,12 @@
 ## Current checkpoint
 
 - Package: `UMB-30` active
-- Active work ID: `U30-20`
-- Base checkpoint: `1198b1c6`
-- Code changes after base: U30-10/11 root/task entry completion is implemented
-  and fully verified in the worktree
-- Next action: add exact scheduler failure compare/transition primitives and
-  recovery atomicity tests before enabling failed-frame replacement
+- Active work ID: `U30-40`
+- Base checkpoint: `48daa5cd`
+- Code changes after base: U30-30 JSONL, DAP, VS Code, tests, and current docs
+  are implemented and focused gates pass in the worktree
+- Next action: inventory worker/frame reconstruction inputs and add restart
+  rejection plus register-state atomicity tests before enabling restart
 - Commit/push authorization: none for current worktree changes
 
 ## Work status
@@ -19,10 +19,10 @@
 | `U30-01` | done | Entry contract frozen; recovery token and initializer-store metadata gaps recorded |
 | `U30-10` | done | Root/task entry completion, retained result, task exit, cancellation, and no-dispatch behavior pass |
 | `U30-11` | done | JSONL, DAP, VS Code lifecycle, and current docs pass |
-| `U30-20` | active | Add exact retained-failure transition and recovery atomicity tests |
-| `U30-21` | pending | Recovery adapters/editor/docs |
-| `U30-30` | pending | Completed-result replacement decision/slice |
-| `U30-40` | pending | Frame restart shared engine |
+| `U30-20` | done | Exact failed-callee and entry recovery transitions preserve the diagnostic and resume correctly |
+| `U30-21` | done | JSONL, DAP, real VS Code recovery flow, and current docs pass |
+| `U30-30` | done | Typed retained-result replacement passes VM, JSONL, DAP, strict library Clippy, and real VS Code host gates |
+| `U30-40` | active | Inventory and test selected live-frame reconstruction before implementation |
 | `U30-41` | pending | Source-initializer suppression proof/slice |
 | `U30-42` | pending | Restart/suppression adapters/editor/docs |
 | `U30-50` | pending | Instruction-change feasibility/slice |
@@ -60,6 +60,9 @@ These are inventory facts, not acceptance of the planned operations.
 2026-08-16 | U30-10 | pending -> done | worktree | root/task entry completion publishes retained results once, cancels root peers, emits exits, and dispatches no instruction; 32 VM tests pass | map adapters
 2026-08-16 | U30-11 | pending -> done | worktree | 5 JSONL, 4 DAP, real VS Code host, strict Clippy, workspace build, and complete workspace suite pass; debugger docs updated | activate U30-20
 2026-08-16 | U30-20 | pending -> active | worktree | scheduler retains failures but lacks exact compare/transition identity | add recovery transition contracts
+2026-08-16 | U30-20 | active -> done | 48daa5cd | exact failed callee/entry transitions, atomic type rejection, preserved diagnostics, and resumed output pass | map adapters and editor
+2026-08-16 | U30-21 | pending -> done | 48daa5cd | JSONL, DAP, real VS Code host, current docs, strict library Clippy, build, and workspace suite pass | implement retained-result subset
+2026-08-16 | U30-30 | pending -> done | worktree | stable retained task result is typed, repeatable before consumption, protocol-equivalent, editor-accessible, and instruction-free; 36 VM, 14 JSONL/DAP, strict library Clippy, and real VS Code host pass | activate U30-40
 ```
 
 ## Resume commands

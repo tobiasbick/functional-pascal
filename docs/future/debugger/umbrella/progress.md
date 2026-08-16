@@ -5,8 +5,10 @@
 - Umbrella state: implementation active
 - Active primary package: `UMB-30`
 - Last completed item: `UMB-20`
-- Next child: `UMB-30` / `U30-20` (runtime-error recovery); active
-- Checkpoint: completed `UMB-20` is recoverable locally at `1198b1c6`
+- Next child: `UMB-30` / `U30-40` (selected frame restart); active
+- Checkpoint: entry completion, runtime recovery, and the retained-result VM
+  foundation are recoverable locally at `48daa5cd`; U30-30 adapters are in the
+  worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -25,7 +27,7 @@ current worktree before changing or staging anything.
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
-| `UMB-30` | active | `U30-10/11` entry completion passes; execute `U30-20` from [`umb-30/`](umb-30/README.md) |
+| `UMB-30` | active | `U30-10` through `U30-30` pass; execute `U30-40` from [`umb-30/`](umb-30/README.md) |
 | `UMB-40` | pending | Quiescence protocol first |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
@@ -168,6 +170,8 @@ Evidence log:
 2026-08-16 | UMB-30 | pending -> active | 1198b1c6 base | context-loss-safe lifecycle package created from current runtime, scheduler, forced-return, protocol, and historical boundary evidence | execute U30-00
 2026-08-16 | U30-00 | active -> done | 1198b1c6 plus docs | format, locked workspace build, 29 VM, 4 JSONL, and 3 DAP forced-return tests pass | execute U30-01
 2026-08-16 | U30-10/11 | pending -> done | worktree | root/task entry completion, retained results, task events, JSONL/DAP/VS Code parity, docs, Clippy, build, and full workspace suite pass | execute U30-20
+2026-08-16 | U30-20/21 | pending -> done | 48daa5cd | exact runtime-error recovery passes VM, scheduler, JSONL, DAP, VS Code, docs, and full workspace gates | execute U30-30
+2026-08-16 | U30-30 | pending -> done | worktree | retained completed task results are typed, replaceable until consumption, available through JSONL/DAP/VS Code, and explicitly do not claim removed ordinary call frames | execute U30-40
 ```
 
 ## Resume commands
@@ -183,7 +187,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The active implementation step is `U30-20` in
+The active implementation step is `U30-40` in
 [`umb-30/implementation-plan.md`](umb-30/implementation-plan.md). `UMB-10D`
 evidence remains in this file, focused tests, and current debugger docs. Do not
 clean, reset, stage, commit, merge, or push without matching user authorization.

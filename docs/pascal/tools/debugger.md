@@ -27,7 +27,8 @@ stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
-selected ordinary callee, output, and structured runtime failures. Execution is
+selected live frame or task entry, replacement of an unconsumed retained task
+result, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
 execution, and control-flow changes other than the bounded forced-return
@@ -268,8 +269,24 @@ the normal program/task completion rules. A stale or different retained failure
 is rejected atomically. Waiting, sleeping, or peer tasks, missing result
 metadata, and Dynamic, first-class function, task, capture-cell, or opaque
 results are rejected. Returning an ordinary older frame into an entry caller is
-allowed. Completed-return replacement, frame restart, and broader control-flow
-mutation remain tracked by `UMB-30` in the
+allowed.
+
+Completed retained task results have a separate stopped-state replacement
+operation. JSONL `task.result.replace`, DAP `fpas/replaceTaskResult`, and the VS
+Code command **Debug: Replace Completed Task Result** take the stable runtime
+task ID, an optional current evaluation frame, and a replacement expression for
+a function task. Procedure tasks omit the expression. The task must have
+completed successfully, have a retained handle, and still expose an unconsumed
+result. The expression is evaluated and checked against the task entry
+function's portable result type before the scheduler result changes. Replacing
+the same result repeatedly before `Wait` is allowed; the last replacement is
+what the waiter consumes. Consumed, pending, failed, detached, unknown, or
+unsupported result categories are rejected atomically. The command executes no
+program instruction and invalidates only stopped variable snapshots. Ordinary
+callee results whose frames have already been removed have no retained
+completion identity and cannot be replaced.
+
+Frame restart and broader control-flow mutation remain tracked by `UMB-30` in the
 [debugger completion umbrella](../../future/debugger/umbrella/README.md).
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,

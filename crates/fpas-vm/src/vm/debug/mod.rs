@@ -5,6 +5,7 @@ mod calls;
 mod completed_result;
 mod evaluation;
 mod forced_return;
+mod frame_restart;
 mod inspection;
 mod mutation;
 mod routines;
@@ -27,6 +28,7 @@ pub use evaluation::{
     DebugUnaryOperation,
 };
 pub use forced_return::DebugForcedReturnResult;
+pub use frame_restart::DebugFrameRestartResult;
 pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };

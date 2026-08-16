@@ -1,10 +1,12 @@
 //! DAP request translation onto the JSONL debugger core.
 
 mod breakpoints;
+mod completed_result;
 mod dictionary;
 mod dispatch;
 mod exceptions;
 mod forced_return;
+mod frame_restart;
 mod mutation;
 mod sequence;
 mod storage;
@@ -142,6 +144,7 @@ impl DapServer {
                 "exceptionBreakpointFilters":exceptions::advertised_filters(),
                 "supportsCancelRequest":true,
                 "supportsSetVariable":true,"supportsSetExpression":true,
+                "supportsRestartFrame":true,
                 "supportsSingleThreadExecutionRequests":false,
                 "supportsStepBack":false
             }),
@@ -396,6 +399,12 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = forced_return::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = frame_restart::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = completed_result::response_body(command, &body) {
         return result;
     }
     if let Some(result) = variant::response_body(command, &body) {

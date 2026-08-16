@@ -1,11 +1,13 @@
 //! Stateful JSONL request handling and asynchronous execution event delivery.
 
 mod breakpoints;
+mod completed_result;
 mod completion;
 mod dictionary;
 mod dispatch;
 mod evaluation;
 mod forced_return;
+mod frame_restart;
 mod function_breakpoints;
 mod mutation;
 mod runtime_failures;

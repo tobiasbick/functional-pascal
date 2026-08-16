@@ -49,6 +49,10 @@ impl JsonlServer {
                 self.replace_string_character(request_id, command, arguments)
             }
             "frame.return" => self.force_return(request_id, command, arguments),
+            "frame.restart" => self.restart_frame(request_id, command, arguments),
+            "task.result.replace" => {
+                self.replace_completed_task_result(request_id, command, arguments)
+            }
             "variant.describe" => self.describe_variant(request_id, command, arguments),
             "variant.construct" => self.construct_variant(request_id, command, arguments),
             "storage.initialize" => self.initialize_storage(request_id, command, arguments),

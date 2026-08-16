@@ -434,6 +434,7 @@ mod cell_capturing_routine_assignment;
 mod empty_storage_construction;
 mod evaluation;
 mod forced_return;
+mod frame_restart;
 mod function_value_assignment;
 mod inspection_fixture;
 mod mutation;

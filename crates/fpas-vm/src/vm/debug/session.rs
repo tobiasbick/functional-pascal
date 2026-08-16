@@ -26,6 +26,7 @@ mod completed_result;
 mod dictionary;
 mod execution;
 mod forced_return;
+mod frame_restart;
 mod inspection;
 mod mutation;
 mod sequence;

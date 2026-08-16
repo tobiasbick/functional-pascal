@@ -9,6 +9,7 @@ mod evaluation;
 mod forced_return;
 mod frame_restart;
 mod function_breakpoints;
+mod instruction;
 mod mutation;
 mod runtime_failures;
 mod sequence;

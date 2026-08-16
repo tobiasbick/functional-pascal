@@ -7,6 +7,7 @@ mod dispatch;
 mod exceptions;
 mod forced_return;
 mod frame_restart;
+mod instruction;
 mod mutation;
 mod sequence;
 mod storage;
@@ -145,6 +146,7 @@ impl DapServer {
                 "supportsCancelRequest":true,
                 "supportsSetVariable":true,"supportsSetExpression":true,
                 "supportsRestartFrame":true,
+                "supportsGotoTargetsRequest":false,
                 "supportsSingleThreadExecutionRequests":false,
                 "supportsStepBack":false
             }),

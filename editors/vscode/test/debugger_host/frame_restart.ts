@@ -58,6 +58,7 @@ export async function verifyFrameRestart(
       .slice(marker.sent)
       .find((message) => message.type === "response" && message.command === "initialize");
     assert.equal(initialize?.body?.supportsRestartFrame, true);
+    assert.equal(initialize?.body?.supportsGotoTargetsRequest, false);
     const stack = await session.customRequest("stackTrace", {
       threadId: 1,
       startFrame: 0,

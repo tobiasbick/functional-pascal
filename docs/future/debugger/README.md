@@ -71,8 +71,11 @@ capture-cell destinations remain blocked on stable cell identities in
 Bounded forced return from a selected ordinary callee — including an older
 frame of the stop-owning task — is implemented through JSONL `frame.return`,
 DAP `fpas/forceReturn`, and the VS Code command
-`functionalPascal.debug.forceReturn`. Broader control-flow mutation is owned by
-`UMB-30` in the [active umbrella](umbrella/implementation-plan.md).
+`functionalPascal.debug.forceReturn`. Selected-frame restart is implemented
+through JSONL `frame.restart`, DAP `restartFrame`, and VS Code **Restart Frame**.
+Arbitrary instruction-pointer changes were rejected by `UMB-30D`. Remaining
+task-control work is owned by `UMB-40` in the
+[active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

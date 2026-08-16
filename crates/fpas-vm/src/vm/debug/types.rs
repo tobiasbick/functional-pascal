@@ -188,6 +188,8 @@ pub enum DebugErrorKind {
     UnknownFrame,
     /// Frame restart is not available for this stop, task, frame, or register state.
     FrameRestartUnsupported,
+    /// An instruction-pointer change cannot be proven from existing bytecode dataflow.
+    InstructionChangeUnsupported,
     /// Forced return is not available for this stop, frame, task, or result category.
     FrameReturnUnsupported,
     /// A value-returning function was force-returned without an expression.

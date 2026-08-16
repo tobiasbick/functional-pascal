@@ -9,6 +9,7 @@ mod bytecode {
     mod effects;
     mod executable;
     mod instruction;
+    mod instruction_change;
     mod support;
     mod verifier;
 }

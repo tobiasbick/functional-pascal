@@ -28,6 +28,7 @@ mod execution;
 mod forced_return;
 mod frame_restart;
 mod inspection;
+mod instruction;
 mod mutation;
 mod sequence;
 mod storage;

@@ -14,7 +14,8 @@ allocated runtime diagnostic code. It does not advertise attach, completions, da
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
 register/disassembly access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
-FPAS tasks.
+FPAS tasks. It advertises `supportsRestartFrame: true` and
+`supportsGotoTargetsRequest: false`.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `setFunctionBreakpoints`, `setExceptionBreakpoints`,
@@ -22,8 +23,10 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
-`fpas/variantDescribe`, `fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
-`pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. Unsupported
+`restartFrame`, `fpas/replaceTaskResult`, `fpas/variantDescribe`,
+`fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
+`pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
+`gotoTargets` fail with `instruction_change_unsupported`. Other unsupported
 requests fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
@@ -135,6 +138,25 @@ for this custom request. After a successful forced return, clients that
 initialized with `supportsInvalidatedEvent: true` receive one `invalidated`
 event whose `areas` are `stacks` and `variables`. Failure emits no invalidation
 and leaves the current stop unchanged.
+
+`restartFrame` is the DAP mapping of JSONL `frame.restart`. Arguments are
+`frameId`. A successful body contains `taskId` and `discardedFrames`. Clients
+that initialized with `supportsInvalidatedEvent: true` receive one
+`invalidated` event whose `areas` are `stacks` and `variables`. The adapter
+advertises `supportsRestartFrame`.
+
+`goto` and `gotoTargets` map onto JSONL `instruction.set` and always fail with
+`instruction_change_unsupported` while stopped. The adapter advertises
+`supportsGotoTargetsRequest: false`. Use `next`, `stepIn`, `stepOut`, a source
+breakpoint, or `restartFrame`.
+
+`fpas/replaceTaskResult` is the DAP mapping of JSONL `task.result.replace`.
+Arguments are `taskId`, optional `frameId`, and optional `expression`. A
+successful body contains `taskId`, `value`, `type`, `variablesReference`,
+`namedVariables`, and `indexedVariables`. Clients that initialized with
+`supportsInvalidatedEvent: true` receive one `invalidated` event whose `areas`
+are `variables`. The adapter does not advertise a DAP capability flag for this
+custom request.
 
 `fpas/variantDescribe` and `fpas/variantConstruct` map `frameId`, `target`,
 `variant`, and `fields` onto JSONL `variant.describe` and `variant.construct`.

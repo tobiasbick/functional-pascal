@@ -83,6 +83,7 @@ impl DapServer {
             }
             "fpas/forceReturn" => self.force_return(request_seq, command, arguments),
             "restartFrame" => self.restart_frame(request_seq, command, arguments),
+            "goto" | "gotoTargets" => self.set_instruction(request_seq, command, arguments),
             "fpas/replaceTaskResult" => {
                 self.replace_completed_task_result(request_seq, command, arguments)
             }

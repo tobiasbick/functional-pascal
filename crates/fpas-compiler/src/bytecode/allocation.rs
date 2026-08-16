@@ -336,7 +336,7 @@ mod tests {
         Instruction, Local, LocalId, Operation, Terminator, TypeId, ValueDefinition, ValueId,
     };
 
-    use super::{coalesced_local_writes, largest_window};
+    use super::{Allocation, coalesced_local_writes, largest_window};
 
     #[test]
     fn one_argument_calls_need_no_copy_window() {
@@ -396,6 +396,82 @@ mod tests {
             },
         });
         assert!(!coalesced_local_writes(&function).contains_key(&value.id));
+    }
+
+    #[test]
+    fn non_overlapping_temporaries_reuse_registers() {
+        let first = ValueDefinition {
+            id: ValueId::new(0),
+            ty: TypeId::new(0),
+        };
+        let second = ValueDefinition {
+            id: ValueId::new(1),
+            ty: TypeId::new(0),
+        };
+        let function = Function {
+            id: FunctionId::new(0),
+            name: "reuse".to_string(),
+            signature: FunctionSignature {
+                parameters: Vec::new(),
+                result: TypeId::new(1),
+            },
+            parameters: Vec::new(),
+            locals: Vec::new(),
+            captures: Vec::new(),
+            debug: fpas_ir::FunctionDebugInfo::default(),
+            blocks: vec![BasicBlock {
+                id: BlockId::new(0),
+                parameters: Vec::new(),
+                instructions: vec![
+                    Instruction {
+                        source: None,
+                        result: Some(first),
+                        operation: Operation::Const(Constant::Integer(1)),
+                    },
+                    Instruction {
+                        source: None,
+                        result: None,
+                        operation: Operation::StoreGlobal {
+                            global: GlobalId::new(0),
+                            value: first.id,
+                        },
+                    },
+                    Instruction {
+                        source: None,
+                        result: Some(second),
+                        operation: Operation::Const(Constant::Integer(2)),
+                    },
+                    Instruction {
+                        source: None,
+                        result: None,
+                        operation: Operation::StoreGlobal {
+                            global: GlobalId::new(0),
+                            value: second.id,
+                        },
+                    },
+                ],
+                terminators: vec![Terminator::Return(None)],
+            }],
+            entry: BlockId::new(0),
+            max_call_arguments: 0,
+            can_spawn_tasks: false,
+        };
+        let allocation = match Allocation::build(&function) {
+            Ok(allocation) => allocation,
+            Err(_) => panic!("allocate reused temporaries"),
+        };
+        let first_register = match allocation.value(first.id) {
+            Ok(register) => register,
+            Err(_) => panic!("missing first temporary"),
+        };
+        let second_register = match allocation.value(second.id) {
+            Ok(register) => register,
+            Err(_) => panic!("missing second temporary"),
+        };
+        assert_eq!(
+            first_register, second_register,
+            "an interior jump cannot assume a temporary still has its earlier type"
+        );
     }
 
     fn function_with(instructions: Vec<Instruction>) -> Function {

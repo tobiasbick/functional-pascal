@@ -29,7 +29,11 @@ prerequisites, not promises that implementation will be accepted:
   progress, focused tests, and current debugger documentation. Task-bound
   capture-cell destinations remain blocked on `UMB-70A` cell identity and
   lifetime.
-- Arbitrary instruction changes in `UMB-30D`.
+- Arbitrary instruction changes were rejected by `UMB-30D` / `U30-50`. Existing
+  bytecode verification proves the original CFG from entry, not initialized
+  registers or operand types at an interior sequence point. Temporary registers
+  are reused. Function-entry reconstruction remains `frame.restart`. Evidence
+  remains in parent progress, focused tests, and current debugger documentation.
 - Non-stop execution, scheduler shortcuts, and persistent history in
   `UMB-40D`.
 - OS-level native debugging in `UMB-60C`.

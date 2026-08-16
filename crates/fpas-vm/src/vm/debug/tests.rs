@@ -437,6 +437,7 @@ mod forced_return;
 mod frame_restart;
 mod function_value_assignment;
 mod inspection_fixture;
+mod instruction_change;
 mod mutation;
 mod payload_mutation;
 mod task_handle_assignment;

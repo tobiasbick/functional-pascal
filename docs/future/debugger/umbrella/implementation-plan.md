@@ -8,7 +8,7 @@
 | `UMB-01` | Freeze contracts and split every inherited boundary into testable slices | `UMB-00` | done | Every child below has positive, negative, ownership, atomicity, adapter, and bound requirements or an explicit feasibility gate |
 | `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
-| `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | active | Execute the context-loss-safe package in [`umb-30/`](umb-30/README.md) |
+| `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | pending | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | pending | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
@@ -76,16 +76,17 @@ and [progress.md](progress.md).
 
 ## `UMB-30` — Controlled lifecycle and frame changes
 
-The fixed contracts, work IDs, layout, and verification rows live in
-[`umb-30/`](umb-30/README.md). Start with `U30-00`; do not implement dependent
-task-control behavior from `UMB-40` inside this package.
+Completed. The obsolete execution detail was removed; durable behavior and
+evidence remain in tests, current debugger documentation, and
+[progress.md](progress.md). Do not implement dependent task-control behavior
+from `UMB-40` until `UMB-40` is activated.
 
 | Child | Scope | Additional gate |
 |---|---|---|
-| `UMB-30A` | Root and task completion | Define task results, waiters, retained handles, cleanup, and terminal events |
-| `UMB-30B` | Runtime-error recovery and completed-return replacement | Define resumable failure classes and prove rollback for unsupported failures |
-| `UMB-30C` | Frame restart and source-initializer suppression | Reconstruct exact frame/register state without stale captures or duplicated side effects |
-| `UMB-30D` | Arbitrary instruction changes | Feasibility gate for control-flow, stack, source, and verifier invariants before implementation |
+| `UMB-30A` | Root and task entry completion | Typed retained result, one exit, root cancellation, no hidden execution |
+| `UMB-30B` | Runtime-error recovery and retained-result replacement | Exact unconsumed failure transition; retained completed results only |
+| `UMB-30C` | Frame restart and source-initializer suppression | Current args/captures retained; portable initializer identity |
+| `UMB-30D` | Arbitrary instruction changes | Rejected: existing verifier dataflow cannot prove interior destinations; shared `instruction.set` / DAP `goto` rejection |
 
 ## `UMB-40` — Task quiescence, control, and history
 

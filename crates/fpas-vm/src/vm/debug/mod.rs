@@ -8,6 +8,7 @@ mod forced_return;
 mod frame_restart;
 pub(in crate::vm) mod initializer_suppression;
 mod inspection;
+mod instruction;
 mod mutation;
 mod routines;
 mod session;

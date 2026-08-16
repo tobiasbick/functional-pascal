@@ -96,6 +96,18 @@ frame, and refreshes stack and variable views without resuming the program.
 Program and task entry frames, peer tasks, runtime-error stops, and unsupported
 result types are rejected without changing live state.
 
+**Restart Frame** is the standard DAP `restartFrame` action. It reconstructs
+the selected live frame of the stop-owning task at that function's entry,
+keeps current parameters and captures, clears locals and temporaries, and
+discards younger frames without running the program. VS Code does not offer
+Set Next Statement: `goto` / `gotoTargets` are unsupported.
+
+**Debug: Replace Completed Task Result** replaces one unconsumed retained
+completed task result through `fpas/replaceTaskResult`. Function tasks prompt
+for one FPAS expression; procedure tasks omit it. The command executes no
+program instruction. Consumed, pending, failed, or unsupported results are
+rejected without changing live state.
+
 **Debug: Construct Variant** discovers and constructs one complete enum,
 `Result`, or `Option` value on a textual mutable target. The command prompts
 for the target, presents a Quick Pick of canonical variants from

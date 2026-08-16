@@ -48,6 +48,9 @@ compatibility mode. A response precedes events caused by that request.
 | `array.remove` | stopped | `target`, `index`; optional `frame_id` | committed array, affected index, removed value, and fresh child reference |
 | `string.replace_character` | stopped | `target`, `index`, `expression`; optional `frame_id` | committed string, affected index, and old/new characters |
 | `frame.return` | stopped | `frame_id`; optional `expression` | completed callee result, unwind count, and the fresh caller frame |
+| `frame.restart` | stopped | `frame_id` | reconstructed selected frame at function entry and discarded younger-frame count |
+| `instruction.set` | stopped | optional `frame_id`, optional `instruction` | always rejected; capability `instruction_set` is `false` |
+| `task.result.replace` | stopped | `task_id`; optional `frame_id`, optional `expression` | replaced unconsumed retained task result |
 | `variant.describe` | stopped | `target`; optional `frame_id` | canonical variants and declared fields for one wrapper target |
 | `variant.construct` | stopped | `target`, `variant`, `fields`; optional `frame_id` | committed wrapper value, canonical variant, and fresh child reference |
 | `storage.initialize` | stopped | `target`, `initializer`, `expression`; optional `frame_id` | committed descendant and complete-root summaries |
@@ -226,6 +229,40 @@ function. Success returns the rendered result fields, `unwound_frames` (selected
 depth plus one), and the fresh caller `frame`, remains stopped, and refreshes
 every stopped-task snapshot. Failure is atomic. Initialize advertises
 `frame_return`. Procedures render as `()` with `type_name` `unit`.
+
+`frame.restart` reconstructs one selected live frame of the stop-owning task
+without executing bytecode:
+
+```json
+{"type":"request","id":18,"command":"frame.restart","arguments":{"frame_id":4294967297}}
+{"type":"response","request_id":18,"command":"frame.restart","success":true,"body":{"task_id":0,"discarded_frames":0,"frame":{"frame_id":8589934593,"name":"branch","depth":0}}}
+```
+
+Current parameters and captures are kept. Locals and temporaries are cleared,
+younger frames are discarded, and execution remains stopped at the selected
+function entry. Initialize advertises `frame_restart`.
+
+`instruction.set` is a known rejected command. Initialize advertises
+`instruction_set: false`. A current `frame_id` still identifies expired handles
+as `unknown_frame`; every concrete destination, including the current
+instruction, returns `instruction_change_unsupported`. Use `step_into`,
+`step_over`, `step_out`, a source breakpoint, or `frame.restart`.
+
+`task.result.replace` replaces one unconsumed retained completed task result
+without executing bytecode:
+
+```json
+{"type":"request","id":19,"command":"task.result.replace","arguments":{"task_id":1,"frame_id":8589934593,"expression":"42"}}
+{"type":"response","request_id":19,"command":"task.result.replace","success":true,"body":{"task_id":1,"result":"42","type_name":"integer","variables_reference":0,"named_variables":0,"indexed_variables":0}}
+```
+
+`task_id` is the stable runtime task identity. Function tasks require
+`expression`; procedure tasks omit it. An optional `frame_id` evaluates the
+expression in that current frame; omitting it searches globals only. The task
+must have completed successfully with a still-unconsumed retained handle.
+Repeated replacement before `Wait` is allowed. Consumed, pending, failed,
+detached, unknown, or unsupported results are rejected atomically. Initialize
+advertises `task_result_replacement`.
 
 `variant.describe` returns the constructible variants for one textual mutable
 enum, `Result`, or `Option` target without changing live state:

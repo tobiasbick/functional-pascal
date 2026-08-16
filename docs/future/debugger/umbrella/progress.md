@@ -2,13 +2,14 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementation active
-- Active primary package: `UMB-30`
-- Last completed item: `UMB-20`
-- Next child: `UMB-30` / `U30-50` (instruction-change feasibility); pending
-- Checkpoint: entry completion, runtime recovery, retained-result replacement,
-  and selected frame restart are recoverable at `b7517403`; exact initializer
-  suppression is complete in the current worktree
+- Umbrella state: between implementation packages
+- Active primary package: none
+- Last completed item: `UMB-30`
+- Next child: `UMB-40` after an authorized `UMB-30` checkpoint
+- Checkpoint: entry completion, recovery, retained-result replacement, frame
+  restart, initializer suppression, and instruction-change rejection are
+  complete in the current worktree on `c60e43ed` plus uncommitted package
+  closure
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -27,7 +28,7 @@ current worktree before changing or staging anything.
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
-| `UMB-30` | active | `U30-10` through `U30-42` pass; `U30-50` remains pending in [`umb-30/`](umb-30/README.md) |
+| `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection; detail plan removed |
 | `UMB-40` | pending | Quiescence protocol first |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
@@ -174,6 +175,9 @@ Evidence log:
 2026-08-16 | U30-30 | pending -> done | worktree | retained completed task results are typed, replaceable until consumption, available through JSONL/DAP/VS Code, and explicitly do not claim removed ordinary call frames | execute U30-40
 2026-08-16 | U30-40/42 | active -> done/active | b7517403 | selected frame restart passes VM, JSONL, DAP, VS Code, documentation, formatting, and strict library Clippy gates | execute U30-41 and finish suppression adapters
 2026-08-16 | U30-41/42 | active -> done | b7517403 plus worktree | portable exact initializer stores and live-frame suppression pass verifier, artifact, VM, forced-return, JSONL, DAP, VS Code, docs, Clippy, build, and workspace gates | wait before U30-50
+2026-08-16 | U30-50 | pending -> done | c60e43ed plus worktree | instruction-change feasibility rejected; shared JSONL/DAP rejection, current docs, format, Clippy, workspace suite, and VS Code host pass | wait before U30-60
+2026-08-16 | U30-60 | pending -> done | c60e43ed plus worktree | docs reconciled; `umb-30/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test (retry after an unrelated semantic-tools diagnostics timeout) pass | wait for checkpoint authorization before UMB-40
+2026-08-16 | UMB-30 | active -> done | c60e43ed plus worktree | package closed; no primary package active until the recoverable checkpoint is authorized | activate UMB-40 only after that checkpoint
 ```
 
 ## Resume commands
@@ -189,10 +193,11 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U30-50` in
-[`umb-30/implementation-plan.md`](umb-30/implementation-plan.md). `UMB-10D`
-evidence remains in this file, focused tests, and current debugger docs. Do not
-clean, reset, stage, commit, merge, or push without matching user authorization.
+The next pending implementation step is `UMB-40` after an authorized `UMB-30`
+checkpoint. `UMB-10D` evidence remains in this file, focused tests, and current
+debugger docs. Do not clean, reset, stage, commit, merge, or push without
+matching user authorization. Do not activate `UMB-40` in the same uncommitted
+worktree.
 
 ## Evidence log format
 

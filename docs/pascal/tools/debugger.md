@@ -28,11 +28,12 @@ expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
 selected live frame or task entry, replacement of an unconsumed retained task
-result, output, and structured runtime failures. Execution is
+result, selected-frame restart, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
-execution, and control-flow changes other than the bounded forced-return
-command remain unsupported.
+execution, and arbitrary instruction-pointer changes remain unsupported. Frame
+restart reconstructs a selected live frame at its function entry; it is not a
+general `goto`.
 
 Task debugging is deterministic and all-stop. The debug session runs the main
 program and spawned FPAS tasks on one host execution lane, while normal
@@ -295,8 +296,20 @@ program instruction and invalidates only stopped variable snapshots. Ordinary
 callee results whose frames have already been removed have no retained
 completion identity and cannot be replaced.
 
-Frame restart and broader control-flow mutation remain tracked by `UMB-30` in the
-[debugger completion umbrella](../../future/debugger/umbrella/README.md).
+JSONL `frame.restart`, DAP `restartFrame`, and the VS Code **Restart Frame**
+action reconstruct one selected live frame of the stop-owning task. Current
+parameter and capture values are kept, including exact cell handles. Locals and
+temporaries are cleared, younger frames are discarded, and the instruction
+pointer returns to the selected function entry. The command executes no
+bytecode; repeated side effects occur only after an explicit continue. Peer,
+waiting, sleeping, failed, and completed tasks are rejected atomically.
+
+Arbitrary instruction-pointer changes, including DAP `goto` / `gotoTargets` and
+JSONL `instruction.set`, are rejected. Existing bytecode verification proves
+the original control-flow graph from function entry, not safe interior jumps.
+Temporary registers are reused, so a same-function sequence-point destination
+cannot be shown to preserve initialization, operand types, or lexical state.
+Use stepping, a source breakpoint, or frame restart instead.
 
 Every call runs in a separate detached sandbox. Arguments, receivers, globals,
 aggregates, and closure cells are deep-cloned while preserving sharing and

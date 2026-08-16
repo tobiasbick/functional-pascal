@@ -21,6 +21,6 @@ pub use vm::{
     DebugStringMutationResult, DebugTask, DebugTaskEvent, DebugTaskEventKind,
     DebugTaskResultReplacement, DebugTaskState, DebugTermination, DebugUnaryOperation,
     DebugVariable, DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField,
-    DebugVariantInfo, DebuggeeChannelState, Execution, FunctionBreakpoint, Paginated,
-    ShutdownHandle, SourceBreakpoint, SourceLocation, Vm, VmError, VmOutput,
+    DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult, Execution, FunctionBreakpoint,
+    Paginated, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm, VmError, VmOutput,
 };

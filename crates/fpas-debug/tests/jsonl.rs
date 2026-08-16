@@ -123,6 +123,7 @@ fn initialize_reports_the_configured_execution_limits() {
         max_instructions: 123,
         timeout: Duration::from_millis(456),
         max_output_bytes: 789,
+        max_input_bytes: 321,
     };
     let mut server = server_with_limits("program Main; begin end.", limits);
 
@@ -134,6 +135,7 @@ fn initialize_reports_the_configured_execution_limits() {
     assert_eq!(reported["instructions"], 123);
     assert_eq!(reported["timeout_milliseconds"], 456);
     assert_eq!(reported["captured_output_bytes"], 789);
+    assert_eq!(reported["debuggee_input_bytes"], 321);
     assert_eq!(reported["evaluation_calls"], 64);
     assert_eq!(reported["evaluation_call_depth"], 32);
     assert_eq!(reported["evaluation_call_instructions"], 1_000_000);

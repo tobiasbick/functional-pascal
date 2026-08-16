@@ -13,10 +13,12 @@ fpas debug app.fpasprj --protocol dap
 Program arguments follow `--`. JSONL live mode uses one UTF-8 JSON object per
 line on stdin/stdout; script mode processes `--commands` deterministically.
 DAP uses standard `Content-Length` framing. Protocol stdout never contains raw
-program output; output is delivered as structured events. Live debuggee stdin,
-an integrated debug terminal, and TUI/graph event injection are not aliases of
-that protocol stream. `Read`/`ReadLn` still block inside hosted console
-intrinsics and cannot be fed from protocol stdin.
+program output; output is delivered as structured events. Protocol stdin is
+never `Read`/`ReadLn` input. While the session is stopped, clients queue
+program lines through JSONL `io.input` or DAP `fpas/input`; continue then
+consumes those lines in order. An empty queue is a runtime input failure, not a
+hang on process stdin. EOF is a separate command. There is no integrated debug
+terminal, and `ReadKey` / TUI events are not this channel.
 
 The complete wire contracts are documented in [JSONL protocol V2](debugger-jsonl.md)
 and the [Debug Adapter Protocol contract](debugger-dap.md).
@@ -31,8 +33,10 @@ expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
 selected live frame or task entry, replacement of an unconsumed retained task
-result, selected-frame restart, output, and structured runtime failures. Execution is
-bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
+result, selected-frame restart, queued program input for `Read`/`ReadLn`, output, and structured runtime failures. Execution is
+bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
+program input is also bounded by the advertised `debuggee_input_bytes` limit
+(default 1,048,576). Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
 execution, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
@@ -58,8 +62,11 @@ one live non-root task, marks it cancelled, and stores runtime diagnostic
 waiters; those waiters observe the stored failure on the next continue. The
 main task cannot be cancelled this way; disconnect the session instead.
 Debugger task creation and task restart are rejected. Use `go` in the program,
-or restart a selected frame. Live debuggee input is rejected; keep JSONL or DAP
-bytes on the protocol stream. Step in, over, and out target the
+or restart a selected frame. While stopped, JSONL `io.input` and DAP
+`fpas/input` queue one line for hosted `Read`/`ReadLn`. Continue consumes
+queued lines in order. An empty queue or a closed input stream is runtime
+diagnostic `F4011`. EOF and cancel are separate commands; protocol stdin is
+never program input. Step in, over, and out target the
 selected task; when it is waiting, the driver may run unpaused dependencies in
 stable task-ID order until the selected task becomes runnable. A breakpoint, runtime
 failure, pause, or resource limit reached by any task takes precedence and
@@ -379,7 +386,9 @@ atomically.
 Pause and execution-limit checks are cooperative at VM instruction boundaries.
 A blocking host intrinsic already in progress cannot be interrupted; the pause
 or limit is observed at the next source/instruction boundary after that call
-returns.
+returns. `Read`/`ReadLn` consume lines that were queued at a previous stop.
+They do not wait for a later `io.input` while already blocked inside the
+intrinsic.
 
 VS Code-compatible editors use the contributed `fpas` debug type. A minimal
 `launch.json` entry is:

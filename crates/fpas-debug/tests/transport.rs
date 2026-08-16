@@ -1,4 +1,4 @@
-//! JSONL protocol stdout stays framed; live debuggee stdin is rejected.
+//! JSONL protocol stdout stays framed; queued debuggee input is ordered.
 
 #![allow(
     clippy::expect_used,
@@ -11,9 +11,10 @@ use fpas_debug::{
     PreparedDebugTarget,
     jsonl::{JsonlServer, ServerStatus, serve, serve_script},
 };
+use fpas_vm::DebugExecutionLimits;
 use serde_json::{Value, json};
 
-const SOURCE: &str = r#"program TransportOutput;
+const OUTPUT_SOURCE: &str = r#"program TransportOutput;
 
 uses Std.Console;
 
@@ -22,11 +23,29 @@ begin
 end.
 "#;
 
-fn server() -> JsonlServer {
-    let (program, diagnostics) = fpas_parser::parse(SOURCE);
+const INPUT_SOURCE: &str = r#"program TransportInput;
+
+uses Std.Console;
+
+begin
+  WriteLn(ReadLn());
+  WriteLn(ReadLn())
+end.
+"#;
+
+fn server_for(source: &str) -> JsonlServer {
+    let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile transport fixture");
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
+}
+
+fn server() -> JsonlServer {
+    server_for(OUTPUT_SOURCE)
+}
+
+fn input_server() -> JsonlServer {
+    server_for(INPUT_SOURCE)
 }
 
 fn request(id: u64, command: &str, arguments: Value) -> String {
@@ -41,13 +60,21 @@ fn parse_records(output: &[u8]) -> Vec<Value> {
         .collect()
 }
 
+fn output_texts(records: &[Value]) -> Vec<&str> {
+    records
+        .iter()
+        .filter(|record| record["event"] == "output")
+        .filter_map(|record| record["body"]["text"].as_str())
+        .collect()
+}
+
 #[test]
-fn initialize_advertises_structured_output_without_live_input() {
+fn initialize_advertises_structured_output_and_live_input() {
     let mut server = server();
     let initialized = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let capabilities = &initialized[0]["body"]["capabilities"];
     assert_eq!(capabilities["structured_output"], true);
-    assert_eq!(capabilities["live_input"], false);
+    assert_eq!(capabilities["live_input"], true);
     assert_eq!(capabilities["live_terminal"], false);
 }
 
@@ -68,12 +95,7 @@ fn program_output_is_structured_events_not_raw_protocol_bytes() {
         String::from_utf8_lossy(&output)
     );
     let records = parse_records(&output);
-    let texts: Vec<&str> = records
-        .iter()
-        .filter(|record| record["event"] == "output")
-        .filter_map(|record| record["body"]["text"].as_str())
-        .collect();
-    assert_eq!(texts, ["hello-raw\n"]);
+    assert_eq!(output_texts(&records), ["hello-raw\n"]);
     assert!(records.iter().all(|record| record.is_object()));
 }
 
@@ -88,22 +110,71 @@ fn raw_stdin_is_a_protocol_error_not_debuggee_input() {
 }
 
 #[test]
-fn live_input_command_rejects_without_launching_output() {
-    let mut server = server();
+fn queued_input_is_ordered_and_does_not_use_protocol_stdin() {
+    let mut server = input_server();
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
     assert_eq!(server.status(), ServerStatus::Stopped);
-    let rejected = server.handle_line(&request(3, "io.input", json!({"text":"hello-raw"})));
-    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
-    assert_eq!(rejected[0]["error"]["code"], "live_input_unsupported");
-    assert_eq!(server.status(), ServerStatus::Stopped);
-    let disconnected = server.handle_line(&request(4, "disconnect", json!({})));
-    assert!(disconnected.iter().any(|record| record["success"] == true));
+    let first = server.handle_line(&request(3, "io.input", json!({"text":"one"})));
+    assert_eq!(first[0]["success"], true, "{first:?}");
+    assert_eq!(first[0]["body"]["bytes"], 4);
+    let second = server.handle_line(&request(4, "io.input", json!({"text":"two"})));
+    assert_eq!(second[0]["body"]["session_bytes"], 8, "{second:?}");
+    let missing = server.handle_line(&request(5, "io.input", json!({})));
+    assert_eq!(missing[0]["error"]["code"], "invalid_request");
+    let mut records = server.handle_line(&request(6, "continue", json!({})));
+    records.extend(server.wait());
+    assert_eq!(output_texts(&records), ["one\n", "two\n"]);
+}
+
+#[test]
+fn eof_and_cancel_are_deterministic() {
+    let mut eof_server = input_server();
+    let _ = eof_server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = eof_server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let eof = eof_server.handle_line(&request(3, "io.eof", json!({})));
+    assert_eq!(eof[0]["body"]["eof"], true, "{eof:?}");
+    let late = eof_server.handle_line(&request(4, "io.input", json!({"text":"late"})));
+    assert_eq!(late[0]["error"]["code"], "debuggee_input_closed");
+    let mut records = eof_server.handle_line(&request(5, "continue", json!({})));
+    records.extend(eof_server.wait());
     assert!(
-        !disconnected.iter().any(|record| {
-            record["event"] == "output" && record["body"]["text"] == "hello-raw\n"
-        })
+        records.iter().any(|record| {
+            record["event"] == "stopped" && record["body"]["reason"] == "runtime_error"
+        }),
+        "{records:?}"
     );
+
+    let mut cancel_server = input_server();
+    let _ = cancel_server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = cancel_server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let _ = cancel_server.handle_line(&request(3, "io.input", json!({"text":"secret"})));
+    let cleared = cancel_server.handle_line(&request(4, "io.cancel", json!({})));
+    assert_eq!(cleared[0]["body"]["cleared"], true, "{cleared:?}");
+    let mut records = cancel_server.handle_line(&request(5, "continue", json!({})));
+    records.extend(cancel_server.wait());
+    assert!(output_texts(&records).is_empty(), "{records:?}");
+}
+
+#[test]
+fn input_limit_is_a_stable_error() {
+    let (program, diagnostics) = fpas_parser::parse(INPUT_SOURCE);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile limit fixture");
+    let mut server = JsonlServer::new(
+        PreparedDebugTarget::new(executable, Vec::new()).with_execution_limits(
+            DebugExecutionLimits {
+                max_input_bytes: 1,
+                ..DebugExecutionLimits::default()
+            },
+        ),
+    )
+    .expect("limited JSONL server");
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let rejected = server.handle_line(&request(3, "io.input", json!({"text":"ab"})));
+    assert_eq!(rejected[0]["error"]["code"], "debuggee_input_limit");
+    assert_eq!(server.status(), ServerStatus::Stopped);
 }
 
 #[test]

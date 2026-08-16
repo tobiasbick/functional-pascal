@@ -421,6 +421,9 @@ fn dap_body(command: &str, body: Value) -> Value {
     if let Some(result) = storage::response_body(command, &body) {
         return result;
     }
+    if let Some(result) = io::response_body(command, &body) {
+        return result;
+    }
     if let Some(result) = mutation::custom_response_body(command, &body) {
         return result;
     }

@@ -45,5 +45,5 @@ pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
     DebugStop, DebugStopReason, DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState,
-    DebugTermination, SourceLocation,
+    DebugTermination, DebuggeeInputResult, SourceLocation,
 };

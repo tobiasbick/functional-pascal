@@ -33,6 +33,7 @@ pub(crate) fn debug_cli(
         max_instructions: config.instruction_limit,
         timeout: config.timeout,
         max_output_bytes: config.output_limit,
+        ..fpas_vm::DebugExecutionLimits::default()
     };
     let target = target.with_execution_limits(limits);
     let result = match config.protocol {

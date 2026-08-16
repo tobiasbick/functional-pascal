@@ -12,6 +12,8 @@ pub struct DebugExecutionLimits {
     pub timeout: Duration,
     /// Maximum captured standard-output bytes over the whole session.
     pub max_output_bytes: usize,
+    /// Maximum queued debuggee input bytes over the whole session.
+    pub max_input_bytes: usize,
 }
 
 impl Default for DebugExecutionLimits {
@@ -20,8 +22,20 @@ impl Default for DebugExecutionLimits {
             max_instructions: 100_000_000,
             timeout: Duration::from_secs(300),
             max_output_bytes: 1_048_576,
+            max_input_bytes: 1_048_576,
         }
     }
+}
+
+/// One accepted debuggee input line queued for hosted `Read` / `ReadLn`.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct DebuggeeInputResult {
+    /// UTF-8 bytes counted for this line, including the stored newline.
+    pub bytes: usize,
+    /// Cumulative accepted debuggee input bytes for the session.
+    pub session_bytes: usize,
 }
 
 /// Source position resolved from an executable debugger sequence point.
@@ -196,8 +210,12 @@ pub enum DebugErrorKind {
     TaskCreateUnsupported,
     /// Restarting a task would invent a new runtime identity.
     TaskRestartUnsupported,
-    /// Live debuggee stdin is not a proven channel and is not protocol stdin.
+    /// Mixing process stdin onto the protocol stream remains unsupported.
     LiveInputUnsupported,
+    /// Queued debuggee input would exceed the session input limit.
+    DebuggeeInputLimit,
+    /// The debuggee input channel is closed or has already signaled EOF.
+    DebuggeeInputClosed,
     /// Forced return is not available for this stop, frame, task, or result category.
     FrameReturnUnsupported,
     /// A value-returning function was force-returned without an expression.

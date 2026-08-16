@@ -76,6 +76,7 @@ impl DebugSession {
         self.state = DebugSessionState::Terminated;
         self.pause_requested.store(false, Ordering::Release);
         self.debuggee.close();
+        self.with_text_input(fpas_std::TextInput::clear_queued);
         self.invalidate_inspection();
     }
 

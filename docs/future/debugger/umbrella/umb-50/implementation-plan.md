@@ -11,22 +11,26 @@ crates/fpas-cli/src/
   cli_debug.rs                 — exists: binds JSONL/DAP to process stdio (~302 LOC)
 crates/fpas-debug/src/
   jsonl/transport.rs           — exists: JSONL stdin/stdout (~84 LOC)
-  jsonl/server/io.rs           — NEW: `io.input` rejection
+  jsonl/server/io.rs           — exists: `io.input` / `io.eof` / `io.cancel`
   dap/framing.rs               — exists: DAP Content-Length (~121 LOC)
-  dap/server/io.rs             — NEW: `fpas/input` rejection
+  dap/server/io.rs             — exists: `fpas/input` / `fpas/eof` / `fpas/cancelInput`
 crates/fpas-vm/src/vm/debug/
-  io/channel.rs                — NEW: session-owned debuggee channel
-  session/io.rs                — NEW: live-input rejection and channel state
-  tests/transport.rs           — NEW: mixing, disconnect, and input atomicity
+  io/channel.rs                — exists: session-owned debuggee channel
+  session/io.rs                — exists: queued input, EOF, cancel, disconnect
+  tests/transport.rs           — exists: mixing, order, EOF, quota, disconnect
+crates/fpas-std/src/console/
+  input.rs                     — exists: queue-only TextInput for debug
 crates/fpas-vm/src/vm/hosted/
   console.rs                   — exists: Std.Console/TUI intrinsics (~407 LOC)
   graph/host.rs                — exists: Std.Graph callbacks (~391 LOC)
 crates/fpas-vm/src/vm/debug/
   tests/behavior.rs            — exists: cooperative pause-in-host (~451 LOC)
+editors/vscode/src/debugger/
+  inputCommand.ts              — exists: send / EOF / cancel program input
 ```
 
-Do not add live terminal or hosted event-dispatch modules until `U50-20` /
-`U50-30`. Split `console.rs` before adding pause-in-host work.
+Do not add hosted event-dispatch modules until `U50-30`. Split `console.rs`
+before adding pause-in-host work.
 
 ## Ordered work
 
@@ -36,8 +40,8 @@ Do not add live terminal or hosted event-dispatch modules until `U50-20` /
 | `U50-01` | done | Freeze transport contracts; inventory protocol/debuggee mixing, live input, TUI/graph dispatch while stopped, and in-call pause | Mixing is rejected by test; live input, live terminal, and in-call pause remain current bounds |
 | `U50-10` | done | Implement the proven `UMB-50A` debuggee-channel subset | Protocol bytes stay unambiguous; disconnect/EOF are deterministic |
 | `U50-11` | done | Map the accepted channel through JSONL, then DAP/VS Code | Identity parity; no second console runtime in the editor |
-| `U50-20` | pending | Implement `UMB-50B` live terminal I/O only after `U50-10` | Ordered input, cancellation, EOF, cleanup, and output limits |
-| `U50-21` | pending | Map terminal I/O through adapters/editor | Protocol-equivalent success and negatives |
+| `U50-20` | done | Implement `UMB-50B` live terminal I/O only after `U50-10` | Ordered input, cancellation, EOF, cleanup, and output limits |
+| `U50-21` | done | Map terminal I/O through adapters/editor | Protocol-equivalent success and negatives |
 | `U50-30` | pending | Implement the proven `UMB-50C` TUI/graph event subset | No hidden handler dispatch while stopped |
 | `U50-31` | pending | Map accepted event ownership through adapters/editor | Protocol-equivalent success and negatives |
 | `U50-40` | pending | Run `UMB-50D` pause-in-host feasibility | Positive in-call subset or explicit rejection/dependency |

@@ -5,7 +5,7 @@
 - Umbrella state: implementing `UMB-50`
 - Active primary package: `UMB-50`
 - Last completed item: `UMB-40` at `6422489e`
-- Next child: `U50-20` after `U50-11`
+- Next child: `U50-30` after `U50-21`
 - Checkpoint: recoverable `UMB-40` close at `6422489e`; `UMB-50` package
   activated in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
@@ -28,7 +28,7 @@ current worktree before changing or staging anything.
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
 | `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
-| `UMB-50` | active | Transport separation first; see [umb-50/progress.md](umb-50/progress.md) |
+| `UMB-50` | active | Queued Read/ReadLn input mapped; see [umb-50/progress.md](umb-50/progress.md) |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
 | `UMB-70` | pending | Stable data identities before watchpoints; `U10D-CELL` depends on `UMB-70A` |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
@@ -193,6 +193,8 @@ Evidence log:
 2026-08-16 | U50-01 | pending -> done | 6422489e plus worktree | raw protocol stdin rejected; structured output only | implement U50-10
 2026-08-16 | U50-10 | pending -> done | 6422489e plus worktree | session debuggee channel connect/close; live input rejects without mutation | map adapters
 2026-08-16 | U50-11 | pending -> done | 6422489e plus worktree | JSONL `io.input`, DAP `fpas/input`, VS Code structured output without a second console | wait before U50-20
+2026-08-16 | U50-20 | pending -> done | 6422489e plus worktree | queued Read/ReadLn order, F4011, EOF, cancel, quota, disconnect | map adapters
+2026-08-16 | U50-21 | pending -> done | 6422489e plus worktree | JSONL/DAP/VS Code live input; live_input true, live_terminal false | wait before U50-30
 ```
 
 ## Resume commands
@@ -208,7 +210,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U50-20` in
+The next pending implementation step is `U50-30` in
 [umb-50/progress.md](umb-50/progress.md). `UMB-40` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

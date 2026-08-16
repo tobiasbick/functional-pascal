@@ -27,8 +27,8 @@ These are inventory facts for `U50-00`, not acceptance of later children.
   `crates/fpas-debug/src/dap/framing.rs` and maps those events.
 - `DebugSession` owns a debuggee channel that is connected at launch and
   closed by disconnect. `--output-limit` still bounds captured stdout.
-  `io.input` / `fpas/input` reject live stdin. Protocol stdin is never
-  debuggee input.
+  Stopped-state `io.input` / `fpas/input` queue hosted `Read`/`ReadLn` lines.
+  Protocol stdin is never debuggee input.
 - `Worker::execute_hosted_intrinsic` owns console, args, callbacks, graph,
   and test-host intrinsics. `Std.Console` Read/ReadLn/ReadKey block inside
   the intrinsic through `text_input` / `key_input`. Write/WriteLn mutate the
@@ -50,8 +50,9 @@ These are inventory facts for `U50-00`, not acceptance of later children.
   only inside structured `output` events.
 - The session owns a debuggee channel that is connected at launch and closed
   by disconnect without dispatching remaining bytecode.
-- `io.input` / `fpas/input` reject with `live_input_unsupported`. Capabilities
-  `live_input` and `live_terminal` are false.
+- Protocol stdin is never hosted `Read`/`ReadLn` input. `UMB-50B` later
+  queued those lines through `io.input` / `fpas/input`; `live_terminal`
+  remains false.
 - Protocol stdin EOF ends adapter `serve`; it is not debuggee stdin EOF.
 - TUI/graph handlers run only as bytecode inside hosted intrinsics. All-stop
   inspection does not dispatch them. Pending OS events while stopped belong to
@@ -65,11 +66,11 @@ These are inventory facts for `U50-00`, not acceptance of later children.
 
 ## `UMB-50B` — live terminal input and output
 
-- Begins only after `UMB-50A` can deliver bytes without protocol ambiguity.
-- Input must be ordered, cancellable, and bounded. EOF is a first-class
-  event. Process cleanup must not leak host handles.
-- Existing captured `output` events remain the fallback until a live channel
-  is proven.
+- Proven subset: stopped-state queued lines, EOF, cancel, and a cumulative
+  session byte quota. Hosted debug `TextInput` never reads process stdin.
+- Captured structured `output` events remain the program-output channel.
+- Not in this subset: a second console/PTY (`live_terminal` stays false),
+  `ReadKey`/TUI, or waiting inside an already blocked `ReadLn` (`U50-40`).
 
 ## `UMB-50C` — TUI and graph events
 

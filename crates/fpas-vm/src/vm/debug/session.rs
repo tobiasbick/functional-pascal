@@ -183,7 +183,7 @@ impl DebugSession {
         let layouts = RuntimeLayouts::build(executable.executable(), InstructionAddress::new(0))
             .map(Arc::new)
             .map_err(runtime_initialization_error)?;
-        let hosted = Arc::new(HostedState::new(fpas_std::Console::new(), arguments));
+        let hosted = Arc::new(HostedState::for_debug(fpas_std::Console::new(), arguments));
         let scheduler = Arc::new(TaskScheduler::new());
         let worker = Worker::for_function_with_state(
             Arc::clone(&executable),
@@ -226,7 +226,7 @@ impl DebugSession {
             inspections,
             inspection_limits,
             execution_limits,
-            debuggee: DebuggeeChannel::new(),
+            debuggee: DebuggeeChannel::new(execution_limits.max_input_bytes),
         })
     }
 

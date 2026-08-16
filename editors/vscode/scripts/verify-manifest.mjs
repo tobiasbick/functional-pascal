@@ -47,6 +47,9 @@ export async function verifyManifest() {
       "functionalPascal.debug.pauseTask",
       "functionalPascal.debug.resumeTask",
       "functionalPascal.debug.cancelTask",
+      "functionalPascal.debug.sendInput",
+      "functionalPascal.debug.signalInputEof",
+      "functionalPascal.debug.cancelInput",
       "functionalPascal.debug.constructVariant",
       "functionalPascal.debug.initializeStorage"
     ]

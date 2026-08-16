@@ -20,7 +20,8 @@ desktop editors. The implemented editor features are:
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
   evaluation, stopped-state editing of supported mutable values, forced
-  return from a selected ordinary callee, and per-task pause/resume/cancel
+  return from a selected ordinary callee, per-task pause/resume/cancel, and
+  queued program input for `Read`/`ReadLn`
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -36,8 +37,10 @@ Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
 Run and Debug exposes stack frames, lexical scopes, expandable aggregates,
 watches, hover and Debug Console evaluation, conditional breakpoints, exact
 positive hit conditions, logpoints, and structured program output. Debug Console
-input is read-only evaluation, not program stdin. Live debuggee terminals are
-not created.
+input is read-only evaluation, not program stdin. **Debug: Send Program Input**
+queues one `Read`/`ReadLn` line on the stopped session; **Debug: Signal Program
+Input EOF** and **Debug: Cancel Queued Program Input** map onto the matching
+DAP custom requests. The extension does not create a second debug terminal.
 
 Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call

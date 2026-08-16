@@ -13,7 +13,7 @@ import {
   writeSource
 } from "./support";
 
-/** Verify structured output and rejected live debuggee input. */
+/** Verify structured output without a second console runtime. */
 export async function verifyDebuggerTransport(
   workspaceRoot: string,
   received: DapMessage[],
@@ -43,25 +43,6 @@ export async function verifyDebuggerTransport(
     });
     await waitForStoppedReady(() => sent.slice(marker.sent), 1, "transport entry stop");
 
-    await assert.rejects(
-      async () => session?.customRequest("fpas/input", { text: "hello-raw" }),
-      /live debuggee input is not supported|live_input_unsupported/i,
-      "live debuggee stdin is not a DAP request"
-    );
-    const inputRequest = received
-      .slice(marker.received)
-      .find((message) => message.command === "fpas/input");
-    assert.ok(inputRequest, "host forwards fpas/input to the adapter");
-    assert.ok(
-      sent.slice(marker.sent).some(
-        (message) =>
-          message.type === "response" &&
-          message.command === "fpas/input" &&
-          message.success === false
-      ),
-      "fpas/input fails without starting a second console"
-    );
-
     const evaluated = await session.customRequest("evaluate", {
       expression: "1",
       context: "repl"
@@ -69,7 +50,7 @@ export async function verifyDebuggerTransport(
     assert.equal(evaluated.result, "1");
     assert.equal(
       received.slice(marker.received).filter((message) => message.command === "fpas/input").length,
-      1,
+      0,
       "Debug Console evaluation does not inject debuggee stdin"
     );
 

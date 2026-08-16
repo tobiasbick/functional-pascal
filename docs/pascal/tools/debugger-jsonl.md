@@ -40,7 +40,9 @@ compatibility mode. A response precedes events caused by that request.
 | `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `F4016` on the next continue |
 | `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
 | `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
-| `io.input` | stopped | optional `text` | always rejected; capability `live_input` is `false` |
+| `io.input` | stopped | required `text` | queues one `Read`/`ReadLn` line; capability `live_input` is `true` |
+| `io.eof` | stopped | none | later `Read`/`ReadLn` observe end of input; later `io.input` fails |
+| `io.cancel` | stopped | none | drops unread queued lines; the session byte quota is unchanged |
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
@@ -355,7 +357,13 @@ conditions, and logpoints. Attach, non-stop execution and reverse execution
 remain false;
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
-`structured_output` is true; `live_input` and `live_terminal` are false.
+`structured_output` is true. `live_input` is true: stopped-state `io.input`
+queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
+second console or PTY. Empty `text` is a valid empty line. Each accepted line
+counts `text` UTF-8 bytes plus one stored newline against
+`debuggee_input_bytes`. Cancel drops unread lines and does not reset that
+quota. Disconnect closes the channel, signals EOF, and clears queued input.
+Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 `frame_return`, `variant_describe`,
 `variant_construct`, and `storage_initialize` are true.
 
@@ -377,6 +385,7 @@ remain false;
 | Log template bytes / interpolations | 16,384 / 64 |
 | Cumulative log output bytes | 1,048,576 |
 | Captured program output bytes | 1,048,576 |
+| Queued debuggee input bytes | 1,048,576 |
 | Instructions / resume timeout | 100,000,000 / 300 seconds |
 
 Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
@@ -394,7 +403,8 @@ Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `frame_return_unsupported`, `frame_return_value_required`,
 `frame_return_value_unexpected`, `frame_return_type`, `variant_unknown`,
 `variant_field_set`, `storage_already_initialized`, `unknown_task`,
-`task_create_unsupported`, `task_restart_unsupported`, `live_input_unsupported`,
+`task_create_unsupported`, `task_restart_unsupported`, `debuggee_input_limit`,
+`debuggee_input_closed`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

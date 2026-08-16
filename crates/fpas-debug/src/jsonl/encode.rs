@@ -57,7 +57,7 @@ pub(super) fn initialize_records(
         "reverse_execution": false
     });
     if let Value::Object(capabilities) = &mut capabilities {
-        capabilities.insert("live_input".into(), json!(false));
+        capabilities.insert("live_input".into(), json!(true));
         capabilities.insert("live_terminal".into(), json!(false));
     }
     vec![
@@ -89,6 +89,7 @@ pub(super) fn initialize_records(
                     "evaluation_detached_values": evaluation.max_detached_values,
                     "evaluation_call_timeout_milliseconds": evaluation.call_timeout.as_millis(),
                     "captured_output_bytes": execution.max_output_bytes,
+                    "debuggee_input_bytes": execution.max_input_bytes,
                     "instructions": execution.max_instructions,
                     "timeout_milliseconds": execution.timeout.as_millis()
                 }
@@ -271,6 +272,8 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
         fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
         fpas_vm::DebugErrorKind::LiveInputUnsupported => "live_input_unsupported",
+        fpas_vm::DebugErrorKind::DebuggeeInputLimit => "debuggee_input_limit",
+        fpas_vm::DebugErrorKind::DebuggeeInputClosed => "debuggee_input_closed",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
         fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",

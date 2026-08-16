@@ -192,6 +192,21 @@
         "category": "Functional Pascal"
       },
       {
+        "command": "functionalPascal.debug.sendInput",
+        "title": "Debug: Send Program Input",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.signalInputEof",
+        "title": "Debug: Signal Program Input EOF",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.cancelInput",
+        "title": "Debug: Cancel Queued Program Input",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.debug.constructVariant",
         "title": "Debug: Construct Variant",
         "category": "Functional Pascal"

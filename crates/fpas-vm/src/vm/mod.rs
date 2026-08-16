@@ -41,8 +41,8 @@ pub use debug::{
     DebugStringMutationResult, DebugTask, DebugTaskEvent, DebugTaskEventKind,
     DebugTaskResultReplacement, DebugTaskState, DebugTermination, DebugUnaryOperation,
     DebugVariable, DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField,
-    DebugVariantInfo, DebuggeeChannelState, FunctionBreakpoint, Paginated, SourceBreakpoint,
-    SourceLocation,
+    DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult, FunctionBreakpoint, Paginated,
+    SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

@@ -26,7 +26,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
-`fpas/variantDescribe`,
+`fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. Other unsupported
@@ -171,8 +171,9 @@ custom request.
 the hold flag. `fpas/cancelTask` maps a known `threadId` onto JSONL
 `task.cancel`. A successful body contains `taskId` and `state`, and the adapter
 emits `thread`/`exited`. `fpas/createTask` and `fpas/restartTask` map onto the
-JSONL rejections. `fpas/input` maps onto JSONL `io.input` and always fails with
-`live_input_unsupported`; protocol stdin is never debuggee stdin. The adapter does not advertise
+JSONL rejections. `fpas/input` maps onto JSONL `io.input` with required `text`
+and returns `bytes` plus `sessionBytes`. `fpas/eof` and `fpas/cancelInput` map
+onto `io.eof` and `io.cancel`. Protocol stdin is never debuggee stdin. The adapter does not advertise
 `supportsSingleThreadExecutionRequests`. After the next `threads` request, a
 held task's name includes `[paused]`; cancelled tasks are omitted from
 `threads` while remaining in the JSONL catalog.

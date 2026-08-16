@@ -22,7 +22,7 @@ pub(super) enum LiveConsoleEvent {
 }
 
 /// CRT-style keyboard buffer: test queue plus optional raw-mode stdin via crossterm.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct KeyInput {
     test_queue: VecDeque<char>,
     /// Second character of a two-byte extended sequence (`#0` then scan code), CRT-style.
@@ -38,11 +38,48 @@ pub struct KeyInput {
     raw_mode: bool,
     /// Set when any test-queue data is pushed; prevents falling through to live terminal I/O.
     test_mode: bool,
+    /// When false, never poll or enter the process terminal (debugger hosted state).
+    os_events: bool,
+}
+
+impl Default for KeyInput {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl KeyInput {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            test_queue: VecDeque::new(),
+            pending: VecDeque::new(),
+            event_queue: VecDeque::new(),
+            console_event_queue: VecDeque::new(),
+            live_queue: VecDeque::new(),
+            live_console_queue: VecDeque::new(),
+            raw_mode: false,
+            test_mode: false,
+            os_events: true,
+        }
+    }
+
+    /// Construct a queue-only stream that never polls the process terminal.
+    pub fn without_os_events() -> Self {
+        Self {
+            os_events: false,
+            test_queue: VecDeque::new(),
+            pending: VecDeque::new(),
+            event_queue: VecDeque::new(),
+            console_event_queue: VecDeque::new(),
+            live_queue: VecDeque::new(),
+            live_console_queue: VecDeque::new(),
+            raw_mode: false,
+            test_mode: false,
+        }
+    }
+
+    pub(super) fn allows_os_events(&self) -> bool {
+        self.os_events && !self.test_mode
     }
 
     pub fn push_chars(&mut self, s: &str) {

@@ -72,13 +72,13 @@ impl HostedState {
         }
     }
 
-    /// Hosted state that never reads process stdin; debugger input is queued.
+    /// Hosted state that never reads process stdin or terminal events.
     pub(super) fn for_debug(console: Console, program_args: Vec<String>) -> Self {
         Self {
             program_args,
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::without_os_stdin()),
-            key_input: Mutex::new(KeyInput::new()),
+            key_input: Mutex::new(KeyInput::without_os_events()),
             graph: Mutex::new(GraphState::default()),
         }
     }

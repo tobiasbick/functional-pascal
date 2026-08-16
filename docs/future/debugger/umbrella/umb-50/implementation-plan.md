@@ -18,6 +18,8 @@ crates/fpas-vm/src/vm/debug/
   io/channel.rs                — exists: session-owned debuggee channel
   session/io.rs                — exists: queued input, EOF, cancel, disconnect
   tests/transport.rs           — exists: mixing, order, EOF, quota, disconnect
+  tests/events.rs              — exists: TUI/graph dispatch waits until resume
+  session/events.rs            — exists: test injectors for queued TUI/graph events
 crates/fpas-std/src/console/
   input.rs                     — exists: queue-only TextInput for debug
 crates/fpas-vm/src/vm/hosted/
@@ -29,7 +31,7 @@ editors/vscode/src/debugger/
   inputCommand.ts              — exists: send / EOF / cancel program input
 ```
 
-Do not add hosted event-dispatch modules until `U50-30`. Split `console.rs`
+Do not add pause-in-host modules until `U50-40`. Split `console.rs`
 before adding pause-in-host work.
 
 ## Ordered work
@@ -42,8 +44,8 @@ before adding pause-in-host work.
 | `U50-11` | done | Map the accepted channel through JSONL, then DAP/VS Code | Identity parity; no second console runtime in the editor |
 | `U50-20` | done | Implement `UMB-50B` live terminal I/O only after `U50-10` | Ordered input, cancellation, EOF, cleanup, and output limits |
 | `U50-21` | done | Map terminal I/O through adapters/editor | Protocol-equivalent success and negatives |
-| `U50-30` | pending | Implement the proven `UMB-50C` TUI/graph event subset | No hidden handler dispatch while stopped |
-| `U50-31` | pending | Map accepted event ownership through adapters/editor | Protocol-equivalent success and negatives |
+| `U50-30` | done | Implement the proven `UMB-50C` TUI/graph event subset | No hidden handler dispatch while stopped |
+| `U50-31` | done | Map accepted event ownership through adapters/editor | Protocol-equivalent success and negatives |
 | `U50-40` | pending | Run `UMB-50D` pause-in-host feasibility | Positive in-call subset or explicit rejection/dependency |
 | `U50-50` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |
 

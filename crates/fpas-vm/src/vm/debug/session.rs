@@ -25,6 +25,7 @@ use crate::vm::worker::Worker;
 mod breakpoints;
 mod completed_result;
 mod dictionary;
+mod events;
 mod execution;
 mod forced_return;
 mod frame_restart;

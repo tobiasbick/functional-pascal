@@ -18,7 +18,10 @@ never `Read`/`ReadLn` input. While the session is stopped, clients queue
 program lines through JSONL `io.input` or DAP `fpas/input`; continue then
 consumes those lines in order. An empty queue is a runtime input failure, not a
 hang on process stdin. EOF is a separate command. There is no integrated debug
-terminal, and `ReadKey` / TUI events are not this channel.
+terminal, and `ReadKey` / TUI events are not this channel. TUI and graph
+handlers run only as bytecode inside hosted intrinsics. Stopped inspection does
+not dispatch pending OS or test events; those wait until continue. Debug
+sessions never poll the editor terminal for keys.
 
 The complete wire contracts are documented in [JSONL protocol V2](debugger-jsonl.md)
 and the [Debug Adapter Protocol contract](debugger-dap.md).
@@ -388,7 +391,9 @@ A blocking host intrinsic already in progress cannot be interrupted; the pause
 or limit is observed at the next source/instruction boundary after that call
 returns. `Read`/`ReadLn` consume lines that were queued at a previous stop.
 They do not wait for a later `io.input` while already blocked inside the
-intrinsic.
+intrinsic. `ReadEvent`, `PollEvent`, and graph `On*` handlers likewise run only
+when bytecode resumes; they do not run during stack, variable, or evaluate
+requests.
 
 VS Code-compatible editors use the contributed `fpas` debug type. A minimal
 `launch.json` entry is:

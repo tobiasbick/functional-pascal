@@ -3,6 +3,8 @@
 use super::*;
 use crate::vm::debug::io::DebuggeeChannelState;
 use crate::vm::debug::types::DebuggeeInputResult;
+#[cfg(test)]
+use fpas_std::KeyInput;
 use fpas_std::TextInput;
 
 impl DebugSession {
@@ -65,6 +67,20 @@ impl DebugSession {
         let mut input = worker
             .hosted
             .text_input
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        operation(&mut input)
+    }
+
+    /// Apply `operation` to the hosted keyboard and TUI event queue.
+    #[cfg(test)]
+    pub(super) fn with_key_input<R>(&self, operation: impl FnOnce(&mut KeyInput) -> R) -> R {
+        let Some(worker) = self.runtime.worker(0) else {
+            unreachable!("debug runtime always retains the main task")
+        };
+        let mut input = worker
+            .hosted
+            .key_input
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         operation(&mut input)

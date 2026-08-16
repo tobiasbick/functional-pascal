@@ -19,7 +19,7 @@ impl KeyInput {
         {
             return Ok(true);
         }
-        if self.test_mode {
+        if self.test_mode || !self.allows_os_events() {
             return Ok(false);
         }
         self.ensure_raw_mode(location)?;
@@ -58,6 +58,9 @@ impl KeyInput {
         if let Some(key) = self.take_live_key() {
             return Ok(map_key_for_read(key.code, &mut self.pending));
         }
+        if !self.allows_os_events() {
+            return Err(missing_queued_input("ReadKey", location));
+        }
 
         self.ensure_raw_mode(location)?;
         let key = self.read_live_key(location, "ReadKey failed")?;
@@ -75,6 +78,9 @@ impl KeyInput {
         if let Some(key) = self.take_live_key() {
             return Ok(map_crossterm_key(&key));
         }
+        if !self.allows_os_events() {
+            return Err(missing_queued_input("ReadKeyEvent", location));
+        }
 
         self.ensure_raw_mode(location)?;
         let key = self.read_live_key(location, "ReadKeyEvent failed")?;
@@ -85,7 +91,7 @@ impl KeyInput {
         if !self.console_event_queue.is_empty() || !self.live_console_queue.is_empty() {
             return Ok(true);
         }
-        if self.test_mode || !self.raw_mode {
+        if self.test_mode || !self.allows_os_events() || !self.raw_mode {
             return Ok(false);
         }
         loop {
@@ -123,6 +129,9 @@ impl KeyInput {
         }
         if let Some(event) = self.take_live_console_event() {
             return Ok(map_console_event(event));
+        }
+        if !self.allows_os_events() {
+            return Err(missing_queued_input("ReadEvent", location));
         }
 
         self.ensure_raw_mode(location)?;
@@ -167,7 +176,7 @@ impl KeyInput {
         if let Some(event) = self.take_live_console_event() {
             return Ok(Some(map_console_event(event)));
         }
-        if self.test_mode {
+        if self.test_mode || !self.allows_os_events() {
             return Ok(None);
         }
 
@@ -263,7 +272,7 @@ impl KeyInput {
         if let Some(event) = self.take_live_console_event() {
             return Ok(Some(map_console_event(event)));
         }
-        if self.test_mode {
+        if self.test_mode || !self.allows_os_events() {
             return Ok(None);
         }
         // Only poll the real terminal if we are already in raw mode.
@@ -302,6 +311,9 @@ impl KeyInput {
         if self.raw_mode {
             return Ok(());
         }
+        if !self.allows_os_events() {
+            return Ok(());
+        }
         enable_raw_mode().map_err(|e| {
             std_runtime_error(
                 RUNTIME_CONSOLE_INPUT_FAILURE,
@@ -336,6 +348,15 @@ impl KeyInput {
             }
         }
     }
+}
+
+fn missing_queued_input(operation: &str, location: SourceLocation) -> StdError {
+    std_runtime_error(
+        RUNTIME_CONSOLE_INPUT_FAILURE,
+        format!("{operation}: no input available"),
+        "Queue a console event before this call, or signal end of input.",
+        location,
+    )
 }
 
 #[cfg(test)]

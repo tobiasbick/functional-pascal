@@ -3,11 +3,11 @@
 ## Current checkpoint
 
 - Package: `UMB-50` active
-- Active work IDs: none; `U50-30` is pending
+- Active work IDs: none; `U50-40` is pending
 - Base checkpoint: `6422489e`
-- Code changes after base: debuggee channel, queued live `Read`/`ReadLn`
-  input, JSONL/DAP/VS Code mapping
-- Next action: begin `U50-30` only after an explicit continuation request
+- Code changes after base: debuggee channel, queued Read/ReadLn, TUI/graph
+  event ownership while stopped
+- Next action: begin `U50-40` only after an explicit continuation request
 - Commit/push authorization: none for current worktree changes
 
 ## Work status
@@ -20,20 +20,17 @@
 | `U50-11` | done | JSONL `io.input`, DAP `fpas/input`, capabilities `live_input`/`live_terminal` false, VS Code host has no second console |
 | `U50-20` | done | Queued `Read`/`ReadLn` input: order, empty-queue `F4011`, EOF, cancel, session byte quota, disconnect cleanup |
 | `U50-21` | done | JSONL `io.input`/`io.eof`/`io.cancel`, DAP `fpas/input`/`fpas/eof`/`fpas/cancelInput`, VS Code commands, `live_input: true`, `live_terminal: false` |
-| `U50-30` | pending | TUI/graph event ownership |
-| `U50-31` | pending | Adapter/editor mapping |
+| `U50-30` | done | TUI/graph handlers run only as bytecode; debug KeyInput never polls the terminal |
+| `U50-31` | done | JSONL/DAP reject `io.event` / `fpas/event`; VS Code has no second event loop |
 | `U50-40` | pending | Pause-in-host feasibility |
 | `U50-50` | pending | Full verification and closure |
 
 ## Frozen bounds
 
 - Protocol stdin EOF ends `serve`; it is not debuggee stdin EOF.
-- TUI/graph handlers run only as bytecode inside hosted intrinsics. Pending OS
-  events while stopped belong to `U50-30`.
 - Pause during a blocking host intrinsic is observed after the intrinsic
   returns. In-call wait for later `io.input` belongs to `U50-40`.
-- `console.rs` and `graph/host.rs` still need splits before pause-in-host or
-  event-ownership modules.
+- `console.rs` still needs a split before pause-in-host work.
 - `live_terminal` remains false: no second VS Code console or PTY.
 
 ## Evidence log
@@ -46,6 +43,8 @@
 2026-08-16 | U50-11 | pending -> done | 6422489e plus worktree | JSONL `io.input`, DAP `fpas/input`, VS Code host structured output, no second console; cargo fmt, locked workspace build/tests, Clippy, and npm test pass | wait before U50-20
 2026-08-16 | U50-20 | pending -> done | 6422489e plus worktree | queued Read/ReadLn order, F4011, EOF, cancel, quota, disconnect; hosted TextInput never reads OS stdin | map adapters
 2026-08-16 | U50-21 | pending -> done | 6422489e plus worktree | JSONL/DAP success and negatives; VS Code send/eof/cancel commands; live_input true, live_terminal false | wait before U50-30
+2026-08-16 | U50-30 | pending -> done | ac18d148 plus worktree | debug KeyInput never polls OS; TUI/graph handlers wait until resume; inspection does not dispatch | map adapters
+2026-08-16 | U50-31 | pending -> done | ac18d148 plus worktree | JSONL `io.event` and DAP `fpas/event` unsupported; no second VS Code event loop | wait before U50-40
 ```
 
 ## Resume commands

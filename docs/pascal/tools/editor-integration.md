@@ -40,7 +40,9 @@ positive hit conditions, logpoints, and structured program output. Debug Console
 input is read-only evaluation, not program stdin. **Debug: Send Program Input**
 queues one `Read`/`ReadLn` line on the stopped session; **Debug: Signal Program
 Input EOF** and **Debug: Cancel Queued Program Input** map onto the matching
-DAP custom requests. The extension does not create a second debug terminal.
+DAP custom requests. The extension does not create a second debug terminal. TUI and graph
+handlers run only after continue; Debug Console evaluation does not dispatch
+them.
 
 Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call

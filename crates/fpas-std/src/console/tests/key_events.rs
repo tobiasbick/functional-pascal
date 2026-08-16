@@ -245,3 +245,21 @@ fn key_input_event_pending_is_false_when_all_queues_are_empty() {
     let mut k = test_key_input();
     assert!(!k.event_pending(test_location()).unwrap());
 }
+
+#[test]
+fn debugger_key_input_never_polls_the_terminal() {
+    let mut input = KeyInput::without_os_events();
+    assert!(!input.event_pending(test_location()).unwrap());
+    assert!(input.poll_event(test_location()).unwrap().is_none());
+    let error = input.read_event(test_location()).unwrap_err();
+    assert!(error.message.contains("no input available"));
+    input.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Escape"),
+        '\u{1b}',
+        false,
+        false,
+        false,
+        false,
+    )));
+    assert!(input.event_pending(test_location()).unwrap());
+}

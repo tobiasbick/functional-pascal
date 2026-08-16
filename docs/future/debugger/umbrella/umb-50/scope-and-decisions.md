@@ -55,8 +55,8 @@ These are inventory facts for `U50-00`, not acceptance of later children.
   remains false.
 - Protocol stdin EOF ends adapter `serve`; it is not debuggee stdin EOF.
 - TUI/graph handlers run only as bytecode inside hosted intrinsics. All-stop
-  inspection does not dispatch them. Pending OS events while stopped belong to
-  `U50-30`.
+  inspection does not dispatch them. Debug hosted `KeyInput` never polls the
+  process terminal.
 - Pause requested during a blocking host intrinsic is observed after that
   intrinsic returns (`cooperative_pause_waits_for_a_blocking_intrinsic_to_return`).
   In-call interruption belongs to `U50-40`.
@@ -74,10 +74,13 @@ These are inventory facts for `U50-00`, not acceptance of later children.
 
 ## `UMB-50C` — TUI and graph events
 
-- Event ownership must be deterministic while stopped and after resume.
-- A stop freezes hosted event dispatch the same way it freezes bytecode:
-  no hidden paint, key, or mouse handler runs during inspection.
-- Reuse all-stop from `UMB-40A`; do not invent a second event loop.
+- Proven subset: debug hosted `KeyInput` never polls the process terminal.
+  Queued TUI events and graph `On*` handlers run only as bytecode after
+  continue. Stopped stack, variables, and evaluate do not dispatch them.
+- JSONL `io.event` and DAP `fpas/event` are unsupported. There is no second
+  editor event loop.
+- In-call pause inside `Application.Run` or blocking `ReadEvent` remains
+  `U50-40`.
 
 ## `UMB-50D` — pause inside blocking host calls
 

@@ -35,6 +35,20 @@ impl JsonlServer {
                         "runtime_error",
                         diagnostic_body(diagnostic, stop.task_id),
                     ));
+                    if !self.runtime_failure_policy.should_stop(diagnostic.code) {
+                        session.disconnect();
+                        records.extend(session.take_task_events().into_iter().map(task_event));
+                        self.status = ServerStatus::Terminated;
+                        records.push(event(
+                            "terminated",
+                            json!({
+                                "reason": "runtime_error",
+                                "exit_code": 1,
+                                "diagnostic_code": diagnostic.code.to_string()
+                            }),
+                        ));
+                        return records;
+                    }
                 }
                 if stop.reason == fpas_vm::DebugStopReason::Breakpoint
                     && !stop.breakpoint_ids.is_empty()

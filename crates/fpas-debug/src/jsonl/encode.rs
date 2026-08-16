@@ -12,6 +12,7 @@ pub(super) fn initialize_records(
 ) -> Vec<Value> {
     let inspection = fpas_vm::DebugInspectionLimits::default();
     let evaluation = fpas_vm::DebugEvaluationLimits::default();
+    let breakpoints = fpas_vm::DebugBreakpointLimits::default();
     vec![
         success(
             request_id,
@@ -21,6 +22,8 @@ pub(super) fn initialize_records(
                 "version": 2,
                 "capabilities": {
                     "source_breakpoints": true,
+                    "function_breakpoints": true,
+                    "runtime_failure_filters": true,
                     "pause": true,
                     "continue": true,
                     "step_into": true,
@@ -58,6 +61,10 @@ pub(super) fn initialize_records(
                     "value_depth": inspection.max_depth,
                     "string_characters": inspection.max_string_chars,
                     "retained_handles": inspection.max_handles,
+                    "breakpoints": breakpoints.max_breakpoints,
+                    "function_breakpoint_bindings": breakpoints.max_function_bindings,
+                    "function_name_bytes": breakpoints.max_function_name_bytes,
+                    "runtime_failure_filters": crate::breakpoints::MAX_RUNTIME_FAILURE_FILTERS,
                     "expression_bytes": evaluation.max_expression_bytes,
                     "expression_depth": evaluation.max_depth,
                     "expression_operations": evaluation.max_operations,
@@ -108,6 +115,30 @@ pub(super) fn index_argument(arguments: &Map<String, Value>, name: &str, default
 
 pub(super) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
     json!({"breakpoint_id":breakpoint.id,"verified":breakpoint.is_verified(),"requested":{"source":breakpoint.requested.source,"line":breakpoint.requested.line,"column":breakpoint.requested.column},"location":breakpoint.location.as_ref().map(location_body),"message":(!breakpoint.is_verified()).then_some("No executable sequence point exists on the requested line.")})
+}
+
+pub(super) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Value {
+    let message = if breakpoint.functions.is_empty() {
+        Some("No executable function metadata matches the requested selector.".to_string())
+    } else if breakpoint.instructions.is_empty() {
+        Some("Matching functions have no executable entry sequence point.".to_string())
+    } else if breakpoint.functions.len() > 1 {
+        Some(format!(
+            "Bound to {} exact functions in executable order.",
+            breakpoint.functions.len()
+        ))
+    } else {
+        None
+    };
+    json!({
+        "breakpoint_id": breakpoint.id,
+        "verified": breakpoint.is_verified(),
+        "requested": {"name": breakpoint.requested.name},
+        "matched_functions": breakpoint.functions.iter().map(|function| function.get()).collect::<Vec<_>>(),
+        "match_count": breakpoint.functions.len(),
+        "locations": breakpoint.locations.iter().map(location_body).collect::<Vec<_>>(),
+        "message": message
+    })
 }
 
 pub(super) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
@@ -208,6 +239,7 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
         fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
         fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
+        fpas_vm::DebugErrorKind::BreakpointLimit => "breakpoint_limit",
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",

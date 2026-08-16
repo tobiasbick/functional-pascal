@@ -28,6 +28,8 @@ compatibility mode. A response precedes events caused by that request.
 | `initialize` | created | optional `version` (default `2`) | capabilities and limits |
 | `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message` | logical breakpoint and verification |
 | `breakpoint.clear` | initialized/stopped | `breakpoint_id` | removal confirmation |
+| `function_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `name` with optional `condition`, `hit_condition` | replace-all logical function breakpoints and verification |
+| `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `continue` | stopped | none | resumes all tasks |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
@@ -50,6 +52,23 @@ compatibility mode. A response precedes events caused by that request.
 | `variant.construct` | stopped | `target`, `variant`, `fields`; optional `frame_id` | committed wrapper value, canonical variant, and fresh child reference |
 | `storage.initialize` | stopped | `target`, `initializer`, `expression`; optional `frame_id` | committed descendant and complete-root summaries |
 | `disconnect` | non-terminal | optional `terminate` | cleanup confirmation |
+
+Function selectors are ASCII case-insensitive. A canonical selector such as
+`Math.Transform` matches one exact executable name; a short selector such as
+`Transform` matches every executable function with that final name component.
+The result retains one logical `breakpoint_id` and reports
+`matched_functions`, `match_count`, ordered entry `locations`, `verified`, and
+an explanatory `message` when needed. Replace-all is atomic. At most 256
+logical source/function breakpoints are retained, one selector may bind at most
+64 exact functions, and a selector contains at most 1,024 UTF-8 bytes.
+
+Runtime-failure filtering is session-local and defaults to `all`. Only `all`
+or exact allocated diagnostic codes are accepted; no code ranges or inferred
+categories exist. An empty `filters` array selects no stops. A nonmatching
+failure still emits `runtime_error`, then `terminated` with
+`reason: "runtime_error"`, `exit_code: 1`, and `diagnostic_code`, without a
+`stopped` event. Invalid, reserved, duplicate, mixed, or more than 64 filters
+reject without changing the previous selection.
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
 variable references belong to the current stop and expire on resume. Evaluation
@@ -275,7 +294,8 @@ the responsible task. A stopped breakpoint event includes both the first
 `breakpoint_id` and ordered `breakpoint_ids` for all logical breakpoints at
 that sequence point.
 
-V2 advertises source breakpoints, pause/continue/steps, pagination, inspection,
+V2 advertises source and function breakpoints, runtime-failure filters,
+pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
@@ -291,6 +311,8 @@ remain false;
 |---|---:|
 | Frames / variables per response | 256 / 256 |
 | Value depth / retained handles | 16 / 16,384 |
+| Logical breakpoints / exact function bindings | 256 / 64 |
+| Function selector bytes / runtime-failure filters | 1,024 / 64 |
 | String characters / rendered variables bytes | 4,096 / 1,048,576 |
 | Expression bytes / depth | 4,096 / 64 |
 | Expression operations / traversals | 1,024 / 16 |
@@ -303,7 +325,7 @@ remain false;
 | Captured program output bytes | 1,048,576 |
 | Instructions / resume timeout | 100,000,000 / 300 seconds |
 
-Stable errors include `invalid_request`, `invalid_state`,
+Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `unsupported_protocol_version`, `unsupported_capability`, `unknown_breakpoint`,
 `unknown_frame`, `unknown_variables_reference`, `unknown_name`,
 `uninitialized_value`, `evaluation_type`, `evaluation_domain`,

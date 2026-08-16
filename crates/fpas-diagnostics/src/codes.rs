@@ -29,8 +29,8 @@ macro_rules! define_codes {
             pub const $name: DiagnosticCode = DiagnosticCode::new($value);
         )*
 
-        #[cfg(test)]
-        const $inventory: &[DiagnosticCode] = &[$($name),*];
+        #[doc = concat!("Stable allocated diagnostic inventory `", stringify!($inventory), "`.")]
+        pub const $inventory: &[DiagnosticCode] = &[$($name),*];
     };
 }
 

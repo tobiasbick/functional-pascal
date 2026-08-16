@@ -8,10 +8,10 @@ use fpas_bytecode::{
 };
 
 use super::{
-    DebugAssignmentSelector, DebugAssignmentTarget, DebugBinaryOperation, DebugErrorKind,
-    DebugEvaluationLimits, DebugExecutionLimits, DebugExpression, DebugInspectionLimits,
-    DebugRunResult, DebugSession, DebugSessionState, DebugStopReason, DebugTaskState,
-    SourceBreakpoint,
+    DebugAssignmentSelector, DebugAssignmentTarget, DebugBinaryOperation, DebugBreakpointLimits,
+    DebugErrorKind, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
+    DebugInspectionLimits, DebugRunResult, DebugSession, DebugSessionState, DebugStopReason,
+    DebugTaskState, FunctionBreakpoint, SourceBreakpoint,
 };
 
 fn abc(opcode: Opcode, a: u16, b: u16, c: u16) -> Instruction {
@@ -428,6 +428,7 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 }
 
 mod behavior;
+mod breakpoints;
 mod capturing_routine_assignment;
 mod cell_capturing_routine_assignment;
 mod empty_storage_construction;

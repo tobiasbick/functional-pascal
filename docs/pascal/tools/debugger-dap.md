@@ -5,17 +5,19 @@ work to the same protocol-neutral session as JSONL V2.
 
 ## Capabilities and requests
 
-The adapter advertises configuration-done, pause, source breakpoints,
+The adapter advertises configuration-done, pause, source and function breakpoints,
 conditional breakpoints, hit conditions, logpoints, evaluate-for-hover,
 step-in/next/step-out, stack and variable pagination, delayed stack loading,
 cancel, set-variable, set-expression, and terminate-on-disconnect for an owned
-launch. It does not advertise attach, completions, data/function/instruction
+launch. It also advertises exception-breakpoint filters for `all` and every
+allocated runtime diagnostic code. It does not advertise attach, completions, data/instruction
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
 register/disassembly access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
 FPAS tasks.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
+`setFunctionBreakpoints`, `setExceptionBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
@@ -178,6 +180,22 @@ stopping. Runtime log interpolation errors emit a rate-limited stderr output
 event and continue. When normal breakpoints and logpoints share a sequence
 point, log output is emitted in request order before the combined stop.
 
+`setFunctionBreakpoints` uses standard DAP replace-all semantics. Each `name`
+is matched case-insensitively against executable metadata. Canonical names such
+as `Math.Transform` bind exactly; a short name such as `Transform` binds every
+routine with that final component while retaining one logical breakpoint ID.
+The standard response reports verified or unverified state and an actionable
+message. `condition` and positive-decimal `hitCondition` use the shared source
+breakpoint policy. Function logpoints and adapter-local name inference are not
+implemented.
+
+`setExceptionBreakpoints` accepts the advertised `all` filter by itself or
+exact advertised codes such as `F4001`; an empty array selects no runtime
+failure stops. The default `all` selection preserves inspectable exception
+stops. For a nonmatching code the adapter emits diagnostic `output`, then
+`exited` with code `1` and `terminated`, without a `stopped` event. Invalid,
+reserved, duplicate, mixed, or excessive selections fail atomically.
+
 ## Launch and stepping
 
 ```json
@@ -197,8 +215,10 @@ Compiled images additionally require `sourceRoot`. The adapter emits standard
 `initialized`, `thread`, `output`, `stopped`, `exited`, and `terminated`
 events. Spawned tasks emit one ordered thread-start and thread-exit event.
 Stopped events identify the responsible thread and report
-`allThreadsStopped: true`. Runtime failures stop with reason `exception`,
-remain inspectable, and terminate on the next continue or disconnect.
+`allThreadsStopped: true`. A selected runtime failure stops with reason
+`exception`, remains inspectable, and terminates on the next continue or
+disconnect. A filtered-out runtime failure follows the non-stopping failed-exit
+sequence above.
 
 A source breakpoint binds to the first reachable sequence point at or after
 the requested line within the same declaration region. Unreachable lines stay

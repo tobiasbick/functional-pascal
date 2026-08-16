@@ -6,7 +6,9 @@ mod dictionary;
 mod dispatch;
 mod evaluation;
 mod forced_return;
+mod function_breakpoints;
 mod mutation;
+mod runtime_failures;
 mod sequence;
 mod storage;
 mod tasks;
@@ -20,7 +22,7 @@ use super::actor::{ResumeCommand, SessionActor};
 use super::encode::*;
 use super::protocol::{event, failure, session_error, success};
 use crate::PreparedDebugTarget;
-use crate::breakpoints::BreakpointPolicy;
+use crate::breakpoints::{BreakpointPolicy, RuntimeFailurePolicy};
 
 /// Coarse server lifecycle visible to transport drivers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -45,6 +47,8 @@ pub struct JsonlServer {
     request_ids: HashSet<u64>,
     output_cursor: usize,
     breakpoint_policies: HashMap<u64, BreakpointPolicy>,
+    function_breakpoint_ids: Vec<u64>,
+    runtime_failure_policy: RuntimeFailurePolicy,
     log_output_bytes: usize,
     pending_evaluation: Option<(u64, String)>,
 }
@@ -64,6 +68,8 @@ impl JsonlServer {
             request_ids: HashSet::new(),
             output_cursor: 0,
             breakpoint_policies: HashMap::new(),
+            function_breakpoint_ids: Vec::new(),
+            runtime_failure_policy: RuntimeFailurePolicy::default(),
             log_output_bytes: 0,
             pending_evaluation: None,
         })

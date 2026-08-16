@@ -2,22 +2,21 @@
 
 ## Current checkpoint
 
-- Umbrella state: between implementation packages
-- Active primary package: none
-- Last completed item: `UMB-10D`
-- Next child: `UMB-20` / `U20-00` (checkpoint and baseline); plan ready, not
-  started
-- Checkpoint: completed `UMB-10C` is recoverable at `eed79928`; `UMB-10D`
-  identity-boundary decisions are in the worktree
+- Umbrella state: implementation active
+- Active primary package: `UMB-20`
+- Last completed item: `UMB-20` / `U20-40`
+- Next child: `UMB-20` / `U20-50` (recoverable checkpoint and cleanup); active
+- Checkpoint: completed `UMB-10D` is recoverable at `87fd3b98`; UMB-20 is
+  implemented and verified in the current uncommitted worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
 - Implementation started: yes
 
 The umbrella plan and completed `UMB-10A` implementation are committed at
-`f1c991e2`. Completed `UMB-10C` is committed at `eed79928`. The current
-worktree contains the completed `UMB-10D` decisions and focused rejection
-tests. Inspect the current worktree before changing or staging anything.
+`f1c991e2`. Completed `UMB-10C` is committed at `eed79928`; completed
+`UMB-10D` is committed and available remotely at `87fd3b98`. Inspect the
+current worktree before changing or staging anything.
 
 ## Package status
 
@@ -26,7 +25,7 @@ tests. Inspect the current worktree before changing or staging anything.
 | `UMB-00` | done | Current branch/worktree and focused baseline verified; CCRA is recoverable at `bed152a2` |
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
-| `UMB-20` | pending | Execution plan ready in [`umb-20/`](umb-20/README.md); perform `U20-00` before activation |
+| `UMB-20` | active | Implementation and verification pass; authorize checkpoint before detail-package cleanup and UMB-30 |
 | `UMB-30` | pending | Scheduler/waiter design review before code |
 | `UMB-40` | pending | Quiescence protocol first |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
@@ -41,20 +40,19 @@ Only one primary package may be `active`.
 
 ## Known baseline evidence
 
-The immediately preceding debugger review established:
+The `U20-00` baseline established:
 
 - Rust formatting, diff checks, workspace build, focused bytecode/VM/debugger
   tests, FPAS fixture formatting, and VS Code extension-host tests passed.
-- The full workspace test completed with one independently known
-  language-service failure:
-  `repository_references_find_notes_update_in_the_consuming_program` reports
-  23 references while its assertion expects 22.
+- The stale independent language-service reference-count oracle was corrected
+  after a Notes fixture gained one real reference; its focused test and the
+  full workspace suite now pass.
 - Strict library Clippy for the changed VM and debugger libraries passed.
   Workspace/all-target Clippy is not a gate for this slice because existing
   test/example findings are outside its changed library scope.
 
-Do not stage or commit the UMB-10D decisions, or push `eed79928`, without
-matching user authorization.
+Do not stage, commit, or push current `UMB-20` work without matching user
+authorization.
 
 ## Child evidence
 
@@ -164,6 +162,9 @@ Evidence log:
 2026-08-15 | UMB-10D | pending -> pending | worktree | execution-ready plan splits Dynamic, capture-cell, opaque-resource, and callable-editing decisions with exact gates and evidence | refresh the U10D-00 baseline, then start U10D-01
 2026-08-15 | UMB-10D | pending -> done | worktree | DYN rejected, CELL blocked by UMB-70A, OPAQUE rejected, EDIT rejected; focused rejection tests, current-doc limitations, format/build/Clippy/npm, and workspace BASELINE recorded | start UMB-20A
 2026-08-15 | UMB-20 | pending -> pending | worktree | context-loss-safe contracts, work IDs, file layout, negative gates, adapter parity, and verification matrix recorded; UMB-10D detail plan deleted after review | perform U20-00 after checkpoint authorization
+2026-08-16 | U20-00 | pending -> done | 87fd3b98 plus worktree | clean remote checkpoint; format, diff, Clippy, build, focused VM/JSONL/DAP, VS Code, and full workspace tests pass after correcting the stale Notes reference-count oracle | activate U20-01
+2026-08-16 | U20-01 | pending -> active | worktree | matching, protocol, failure, policy, file-size, and limit ownership inventory started | add negative contracts before U20-10
+2026-08-16 | UMB-20 | active -> active | worktree | function breakpoints, runtime filters, non-mutating policies, docs, focused tests, workspace suite, and VS Code host pass | checkpoint U20-50 before starting UMB-30
 ```
 
 ## Resume commands
@@ -179,7 +180,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next implementation step is `U20-00` in
+The active closure step is `U20-50` in
 [`umb-20/implementation-plan.md`](umb-20/implementation-plan.md). `UMB-10D`
 evidence remains in this file, focused tests, and current debugger docs. Do not
 clean, reset, stage, commit, merge, or push without matching user authorization.

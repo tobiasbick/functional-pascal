@@ -22,10 +22,10 @@ Direct `.fpascp` debugging requires `--source-root`. Every portable source path
 must remain below that root and its BLAKE3 identity must match the image. Stale
 or escaping sources are rejected before execution.
 
-The debugger supports source breakpoints, pause, continue, step in/over/out,
+The debugger supports source and function breakpoints, pause, continue, step in/over/out,
 stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
-non-stopping logpoints, stopped-state variable mutation, explicit complete
+non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
 selected ordinary callee, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
@@ -291,6 +291,24 @@ hit. Log messages interpolate `{expression}` and escape braces as `{{` and
 `}}`; valid logpoints never stop execution. Runtime condition errors stop
 safely, while runtime log interpolation errors report a bounded diagnostic and
 continue.
+
+A function breakpoint names executable routine metadata rather than a source
+line. Matching is ASCII case-insensitive. A canonical selector such as
+`Math.Transform` binds that exact routine; a short selector such as
+`Transform` binds every executable routine whose final name component matches,
+in executable order. One logical breakpoint ID covers all of those exact
+function identities. A missing selector or a matching routine without an entry
+sequence point remains visible as unverified. Function breakpoints support the
+same Boolean conditions and exact positive hit counts as source breakpoints;
+log messages remain source-breakpoint behavior.
+
+Runtime failures stop for inspection by default. A client may instead replace
+the session filter with exact advertised diagnostic codes such as `F4001`, or
+with the single filter `all`. An empty selection stops on no runtime failures.
+A nonmatching failure is still reported as a structured diagnostic, then the
+session terminates unsuccessfully without exposing a stopped state. Unknown,
+reserved, duplicate, mixed `all`/code, or excessive selections are rejected
+atomically.
 
 Pause and execution-limit checks are cooperative at VM instruction boundaries.
 A blocking host intrinsic already in progress cannot be interrupted; the pause

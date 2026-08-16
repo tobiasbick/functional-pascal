@@ -13,6 +13,7 @@ import { verifyVariantReplacement } from "./debugger_host/variant_replacement";
 import { verifyVariantTransition } from "./debugger_host/variant_transition";
 import { verifyUninitializedAssignment } from "./debugger_host/uninitialized_assignment";
 import { verifyFunctionValueAssignment } from "./debugger_host/function_value_assignment";
+import { verifyFunctionBreakpoints } from "./debugger_host/function_breakpoints";
 import { verifyCapturingRoutineAssignment } from "./debugger_host/capturing_routine_assignment";
 import { verifyCellCapturingRoutineAssignment } from "./debugger_host/cell_capturing_routine_assignment";
 import { verifyTaskHandleAssignment } from "./debugger_host/task_handle_assignment";
@@ -21,6 +22,7 @@ import { verifyVariantConstruction } from "./debugger_host/variant_construction"
 import { verifyEmptyStorageConstruction } from "./debugger_host/empty_storage_construction";
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
+import { verifyRuntimeFailureFilters } from "./debugger_host/runtime_failure_filters";
 import { verifyTaskDebugging } from "./debugger_host/task_debugging";
 import { verifyVariableMutation } from "./debugger_host/variable_mutation";
 import type { DapMessage } from "./debugger_host/support";
@@ -43,6 +45,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyDebuggerLifecycle(workspaceRoot, received, sent);
     await verifyPauseAndDisconnect(workspaceRoot, received, sent);
     await verifyRuntimeFailure(workspaceRoot, received, sent);
+    await verifyRuntimeFailureFilters(workspaceRoot, received, sent);
     await verifyDebuggerEvaluation(workspaceRoot, received, sent);
     await verifyExpressionMutation(workspaceRoot, received, sent);
     await verifyDictionaryMutation(workspaceRoot, received, sent);
@@ -52,6 +55,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyVariantTransition(workspaceRoot, received, sent);
     await verifyUninitializedAssignment(workspaceRoot, received, sent);
     await verifyFunctionValueAssignment(workspaceRoot, received, sent);
+    await verifyFunctionBreakpoints(workspaceRoot, received, sent);
     await verifyCapturingRoutineAssignment(workspaceRoot, received, sent);
     await verifyCellCapturingRoutineAssignment(workspaceRoot, received, sent);
     await verifyTaskHandleAssignment(workspaceRoot, received, sent);

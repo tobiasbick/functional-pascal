@@ -208,12 +208,19 @@ impl DebugSession {
     ) -> Option<DebugRunResult> {
         let sequence = self.next_sequence_point(task_id);
         if let Some((instruction, _)) = sequence {
-            let breakpoint_ids = self
-                .breakpoints
+            let mut breakpoint_ids = self
+                .source_breakpoints
                 .iter()
                 .filter(|breakpoint| breakpoint.instruction == Some(instruction.get()))
                 .map(|breakpoint| breakpoint.id)
                 .collect::<Vec<_>>();
+            breakpoint_ids.extend(
+                self.function_breakpoints
+                    .iter()
+                    .filter(|breakpoint| breakpoint.instructions.contains(&instruction.get()))
+                    .map(|breakpoint| breakpoint.id),
+            );
+            breakpoint_ids.sort_unstable();
             if !breakpoint_ids.is_empty() {
                 return Some(self.stop_for_reason(
                     task_id,
@@ -365,7 +372,11 @@ impl DebugSession {
     ) -> Option<(InstructionAddress, &fpas_bytecode::SequencePoint)> {
         let worker = self.runtime.worker(task_id)?;
         let instruction = InstructionAddress::try_from_index(worker.ip).ok()?;
-        let point = breakpoints::point_at(&self.executable, worker.function, instruction)?;
+        let point = crate::vm::debug::breakpoints::point_at(
+            &self.executable,
+            worker.function,
+            instruction,
+        )?;
         Some((instruction, point))
     }
 }

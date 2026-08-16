@@ -21,7 +21,13 @@ impl DapServer {
                     .unwrap_or(false);
                 vec![self.success(request_seq, command, json!({}))]
             }
-            "setBreakpoints" => self.set_breakpoints(request_seq, arguments),
+            "setBreakpoints" => self.set_source_breakpoints(request_seq, arguments),
+            "setFunctionBreakpoints" => {
+                self.set_function_breakpoints(request_seq, arguments)
+            }
+            "setExceptionBreakpoints" => {
+                self.set_exception_breakpoints(request_seq, arguments)
+            }
             "configurationDone" => self.core_request(
                 request_seq,
                 command,

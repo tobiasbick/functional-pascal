@@ -182,6 +182,8 @@ pub enum DebugErrorKind {
     UnknownTask,
     /// A breakpoint identifier is unknown.
     UnknownBreakpoint,
+    /// Breakpoint count, identity, or physical binding limits were exceeded.
+    BreakpointLimit,
     /// A frame identifier belongs to an expired or different stop snapshot.
     UnknownFrame,
     /// Forced return is not available for this stop, frame, task, or result category.

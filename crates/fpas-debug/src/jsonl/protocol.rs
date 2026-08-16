@@ -45,6 +45,7 @@ pub(super) fn session_error(
         fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
         fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
         fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
+        fpas_vm::DebugErrorKind::BreakpointLimit => "breakpoint_limit",
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",

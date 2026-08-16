@@ -1,6 +1,7 @@
 # UMB-20 — Advanced breakpoint package
 
-Status: plan ready; implementation has not started.
+Status: implementation and verification complete in the worktree; recoverable
+checkpoint and package cleanup remain pending.
 
 This directory is the context-loss-safe execution package for `UMB-20` from
 the parent [implementation plan](../implementation-plan.md). It covers

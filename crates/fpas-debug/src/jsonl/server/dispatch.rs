@@ -18,6 +18,12 @@ impl JsonlServer {
             "launch" => self.launch(request_id, command, arguments),
             "breakpoint.set" => self.set_breakpoint(request_id, command, arguments),
             "breakpoint.clear" => self.clear_breakpoint(request_id, command, arguments),
+            "function_breakpoints.replace" => {
+                self.replace_function_breakpoints(request_id, command, arguments)
+            }
+            "runtime_failures.replace" => {
+                self.replace_runtime_failure_filters(request_id, command, arguments)
+            }
             "continue" => self.resume(request_id, command, ResumeCommand::Continue),
             "step_into" => {
                 self.task_resume(request_id, command, arguments, ResumeCommand::StepInto)

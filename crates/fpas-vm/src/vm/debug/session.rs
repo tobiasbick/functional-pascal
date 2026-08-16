@@ -6,7 +6,10 @@ use std::sync::{Arc, RwLock};
 
 use fpas_bytecode::{InstructionAddress, VerifiedExecutable};
 
-use super::breakpoints::{self, BoundBreakpoint, SourceBreakpoint};
+use super::breakpoints::{
+    BoundBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits, FunctionBreakpoint,
+    SourceBreakpoint,
+};
 use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
 use super::tasks::DebugTaskRuntime;
 use super::types::{
@@ -18,6 +21,7 @@ use crate::vm::layouts::RuntimeLayouts;
 use crate::vm::tasks::{DebugClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
+mod breakpoints;
 mod dictionary;
 mod execution;
 mod forced_return;
@@ -58,8 +62,10 @@ pub struct DebugSession {
     executable: Arc<VerifiedExecutable>,
     runtime: DebugTaskRuntime,
     state: DebugSessionState,
-    breakpoints: Vec<BoundBreakpoint>,
+    source_breakpoints: Vec<BoundBreakpoint>,
+    function_breakpoints: Vec<BoundFunctionBreakpoint>,
     next_breakpoint_id: u64,
+    breakpoint_limits: DebugBreakpointLimits,
     pause_requested: Arc<AtomicBool>,
     evaluation_cancelled: Arc<AtomicBool>,
     last_stop: DebugStop,
@@ -200,8 +206,10 @@ impl DebugSession {
             executable,
             runtime,
             state: DebugSessionState::Stopped,
-            breakpoints: Vec::new(),
+            source_breakpoints: Vec::new(),
+            function_breakpoints: Vec::new(),
             next_breakpoint_id: 1,
+            breakpoint_limits: DebugBreakpointLimits::default(),
             pause_requested,
             evaluation_cancelled,
             last_stop,
@@ -254,45 +262,6 @@ impl DebugSession {
         DebugEvaluationCancelHandle {
             cancelled: Arc::clone(&self.evaluation_cancelled),
         }
-    }
-
-    /// Add one source breakpoint and return its verified or unverified binding.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`DebugErrorKind::InvalidState`] after termination or runtime failure.
-    pub fn set_breakpoint(
-        &mut self,
-        requested: SourceBreakpoint,
-    ) -> Result<BoundBreakpoint, DebugSessionError> {
-        self.require_stopped("breakpoint.set")?;
-        let id = self.next_breakpoint_id;
-        self.next_breakpoint_id = self.next_breakpoint_id.saturating_add(1);
-        let breakpoint = breakpoints::bind(&self.executable, id, requested);
-        self.breakpoints.push(breakpoint.clone());
-        Ok(breakpoint)
-    }
-
-    /// Remove one session breakpoint.
-    ///
-    /// # Errors
-    ///
-    /// Returns an invalid-state or unknown-breakpoint error.
-    pub fn clear_breakpoint(&mut self, id: u64) -> Result<(), DebugSessionError> {
-        self.require_stopped("breakpoint.clear")?;
-        let Some(index) = self
-            .breakpoints
-            .iter()
-            .position(|breakpoint| breakpoint.id == id)
-        else {
-            return Err(DebugSessionError {
-                kind: DebugErrorKind::UnknownBreakpoint,
-                message: format!("debug breakpoint {id} does not exist"),
-                hint: "Use an ID returned by breakpoint.set in this session.".to_string(),
-            });
-        };
-        self.breakpoints.remove(index);
-        Ok(())
     }
 
     fn require_stopped(&self, command: &'static str) -> Result<(), DebugSessionError> {
@@ -441,11 +410,12 @@ fn stop_at_worker(
     } else {
         InstructionAddress::try_from_index(worker.ip).unwrap_or(worker.current_address)
     };
-    let point = breakpoints::point_at(executable, worker.function, instruction);
+    let point = crate::vm::debug::breakpoints::point_at(executable, worker.function, instruction);
     DebugStop {
         reason,
         task_id: worker.task_id,
-        location: point.and_then(|point| breakpoints::source_location(executable, point)),
+        location: point
+            .and_then(|point| crate::vm::debug::breakpoints::source_location(executable, point)),
         instruction: instruction.get(),
         call_depth: worker.call_stack.len(),
         breakpoint_id: breakpoint_ids.first().copied(),

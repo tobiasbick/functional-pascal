@@ -7,7 +7,7 @@
 | `UMB-00` | Checkpoint current debugger work and establish a trustworthy baseline | none | done | Worktree scope is explicit; focused gates pass; unrelated baseline failures are independently classified |
 | `UMB-01` | Freeze contracts and split every inherited boundary into testable slices | `UMB-00` | done | Every child below has positive, negative, ownership, atomicity, adapter, and bound requirements or an explicit feasibility gate |
 | `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
-| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | pending | Stable metadata-driven matching and equivalent stop/filter behavior pass without source display inference; execution plan in [`umb-20/`](umb-20/README.md) |
+| `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | active | Implementation and verification pass; recoverable checkpoint and detail-package cleanup remain in `U20-50` |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | pending | Accepted completion, recovery, or restart operations define cleanup, waiter effects, rollback, and selected-task behavior |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | pending | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |

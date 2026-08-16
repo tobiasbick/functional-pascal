@@ -16,7 +16,10 @@ pub(in crate::vm::debug) use calls::{construct_enum, construct_enum_payload};
 #[cfg(test)]
 mod tests;
 
-pub use breakpoints::{BoundBreakpoint, SourceBreakpoint};
+pub use breakpoints::{
+    BoundBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits, FunctionBreakpoint,
+    SourceBreakpoint,
+};
 pub use evaluation::{
     DebugBinaryOperation, DebugEvaluateResult, DebugEvaluationLimits, DebugExpression,
     DebugUnaryOperation,

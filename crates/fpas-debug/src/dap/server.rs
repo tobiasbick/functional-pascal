@@ -1,7 +1,9 @@
 //! DAP request translation onto the JSONL debugger core.
 
+mod breakpoints;
 mod dictionary;
 mod dispatch;
+mod exceptions;
 mod forced_return;
 mod mutation;
 mod sequence;
@@ -22,7 +24,7 @@ pub struct DapServer {
     core: JsonlServer,
     sequence: u64,
     stop_on_entry: bool,
-    breakpoints: HashMap<String, Vec<u64>>,
+    source_breakpoints: HashMap<String, Vec<u64>>,
     source_paths: Vec<String>,
     sources: HashMap<String, String>,
     runtime_failed: bool,
@@ -48,7 +50,7 @@ impl DapServer {
             core: JsonlServer::new(target)?,
             sequence: 1,
             stop_on_entry: false,
-            breakpoints: HashMap::new(),
+            source_breakpoints: HashMap::new(),
             source_paths,
             sources,
             runtime_failed: false,
@@ -136,6 +138,8 @@ impl DapServer {
                 "supportsTerminateRequest":false,"supportsEvaluateForHovers":true,
                 "supportsConditionalBreakpoints":true,"supportsHitConditionalBreakpoints":true,
                 "supportsLogPoints":true,
+                "supportsFunctionBreakpoints":true,
+                "exceptionBreakpointFilters":exceptions::advertised_filters(),
                 "supportsCancelRequest":true,
                 "supportsSetVariable":true,"supportsSetExpression":true,
                 "supportsSingleThreadExecutionRequests":false,
@@ -144,73 +148,6 @@ impl DapServer {
         )];
         output.extend(self.translate_events(records));
         output
-    }
-
-    fn set_breakpoints(&mut self, request_seq: u64, arguments: &Value) -> Vec<Value> {
-        let requested_source = arguments
-            .pointer("/source/path")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_string();
-        if requested_source.is_empty() {
-            return vec![self.failure(
-                request_seq,
-                "setBreakpoints",
-                "setBreakpoints requires source.path.",
-            )];
-        }
-        let source = self.resolve_source_path(&requested_source);
-        for id in self.breakpoints.remove(&source).unwrap_or_default() {
-            let core_id = self.next_core_id();
-            let _ = self.core.handle_line(&core_request(
-                core_id,
-                "breakpoint.clear",
-                json!({"breakpoint_id":id}),
-            ));
-        }
-        let mut ids = Vec::new();
-        let mut bodies = Vec::new();
-        for requested in arguments
-            .get("breakpoints")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default()
-        {
-            let core_id = self.next_core_id();
-            let records = self.core.handle_line(&core_request(
-                core_id,
-                "breakpoint.set",
-                json!({
-                    "source":source,
-                    "line":requested.get("line"),
-                    "column":requested.get("column"),
-                    "condition":requested.get("condition"),
-                    "hit_condition":requested.get("hitCondition"),
-                    "log_message":requested.get("logMessage")
-                }),
-            ));
-            if let Some(body) = records.first().and_then(|record| record.get("body")) {
-                if let Some(id) = body.get("breakpoint_id").and_then(Value::as_u64) {
-                    ids.push(id);
-                }
-                bodies.push(json!({"id":body.get("breakpoint_id"),"verified":body.get("verified"),"message":body.get("message"),"source":{"path":source},"line":body.pointer("/location/line").or_else(|| requested.get("line")),"column":body.pointer("/location/column").or_else(|| requested.get("column"))}));
-            }
-        }
-        self.breakpoints.insert(source, ids);
-        vec![self.success(request_seq, "setBreakpoints", json!({"breakpoints":bodies}))]
-    }
-
-    fn resolve_source_path(&self, requested: &str) -> String {
-        let normalized = requested.replace('\\', "/");
-        let mut matches = self
-            .source_paths
-            .iter()
-            .filter(|source| normalized == **source || normalized.ends_with(&format!("/{source}")));
-        let first = matches.next();
-        if first.is_some() && matches.next().is_none() {
-            return first.cloned().unwrap_or_else(|| requested.to_string());
-        }
-        requested.to_string()
     }
 
     fn source(&mut self, request_seq: u64, command: &str, arguments: &Value) -> Vec<Value> {
@@ -452,6 +389,12 @@ fn dap_stop_reason(reason: Option<&str>) -> &'static str {
 }
 
 fn dap_body(command: &str, body: Value) -> Value {
+    if let Some(result) = breakpoints::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = exceptions::response_body(command) {
+        return result;
+    }
     if let Some(result) = forced_return::response_body(command, &body) {
         return result;
     }

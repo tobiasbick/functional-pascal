@@ -9,8 +9,8 @@
 | `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
-| `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | active | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
-| `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
+| `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | done | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
+| `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | active | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | pending | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
 | `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | pending | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
 | `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | pending | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
@@ -89,18 +89,23 @@ and [progress.md](progress.md).
 
 ## `UMB-40` — Task quiescence, control, and history
 
-Active. Execute only the next work ID in
-[umb-40/progress.md](umb-40/progress.md). Quiescence (`UMB-40A`) must pass
-before per-task control, create/cancel/restart, or history feasibility.
+Completed at implementation checkpoint `6422489e`. The obsolete execution
+detail was removed; durable behavior and evidence remain in tests, current
+debugger documentation, and [progress.md](progress.md).
 
-| Child | Scope | Additional gate |
-|---|---|---|
-| `UMB-40A` | Quiescence protocol | Define all-stop ownership, shared-state observation, blocked host work, and scheduler handoff |
-| `UMB-40B` | Per-task pause and resume | No hidden execution of supposedly stopped peers; JSONL/DAP task identity parity |
-| `UMB-40C` | Task creation, cancellation, and restart | Define result handles, waiters, cleanup, propagation, and deterministic errors |
-| `UMB-40D` | Non-stop execution, scheduler shortcuts, and retained history | Separate bounded feasibility gates after all-stop controls are stable |
+| Child | Status | Scope | Additional gate |
+|---|---|---|---|
+| `UMB-40A` | done | Quiescence protocol | All-stop ownership, shared-state observation, blocked host work, and scheduler handoff |
+| `UMB-40B` | done | Per-task pause and resume | No hidden execution of supposedly stopped peers; JSONL/DAP task identity parity |
+| `UMB-40C` | done | Task creation, cancellation, and restart | Cancel stores `F4016` without command-time dispatch; create and restart rejected |
+| `UMB-40D` | rejected | Non-stop execution, scheduler shortcuts, and retained history | Dirty shared-state reads, hidden shortcuts, and unbounded catalogs are forbidden |
 
 ## `UMB-50` — Interactive hosted programs
+
+Active. Execute only the next work ID in
+[umb-50/progress.md](umb-50/progress.md). Transport separation (`UMB-50A`)
+must pass before live terminal input, TUI/graph event ownership, or
+pause-in-host work.
 
 | Child | Scope | Additional gate |
 |---|---|---|

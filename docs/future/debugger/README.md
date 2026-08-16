@@ -16,9 +16,11 @@ Its current user and protocol documentation lives under
 
 [deferred.md](deferred.md) lists independent postponed debugger work outside
 the active umbrella. Deterministic, launch-owned, all-stop task debugging is
-implemented; remaining quiescence proofs, per-task control, create/cancel,
-non-stop execution, stepping shortcuts, and persistent task history are owned
-by `UMB-40` in the [active umbrella](umbrella/implementation-plan.md).
+implemented, including per-task pause/resume and cancel. Debugger task
+creation, task restart, non-stop execution, stepping shortcuts, and persistent
+task history were rejected by `UMB-40`. Remaining hosted-transport, live
+terminal, TUI/graph, and pause-in-host work is owned by `UMB-50` in the
+[active umbrella](umbrella/implementation-plan.md).
 
 The implemented debugger includes complete-value replacement of mutable enum,
 `Result`, and `Option` values through the existing `setVariable`/`setExpression`
@@ -73,9 +75,11 @@ frame of the stop-owning task — is implemented through JSONL `frame.return`,
 DAP `fpas/forceReturn`, and the VS Code command
 `functionalPascal.debug.forceReturn`. Selected-frame restart is implemented
 through JSONL `frame.restart`, DAP `restartFrame`, and VS Code **Restart Frame**.
-Arbitrary instruction-pointer changes were rejected by `UMB-30D`. Remaining
-task-control work is owned by `UMB-40` in the
-[active umbrella](umbrella/implementation-plan.md).
+Arbitrary instruction-pointer changes were rejected by `UMB-30D`. All-stop
+task control, per-task pause/resume, and cancel are implemented; debugger
+task creation, task restart, non-stop execution, and unbounded history were
+rejected by `UMB-40`. Remaining hosted-transport work is owned by `UMB-50` in
+the [active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

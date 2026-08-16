@@ -2,11 +2,11 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementing `UMB-40`
-- Active primary package: `UMB-40`
-- Last completed item: `UMB-30` at `c2a264d0`
-- Next child: `U40-50` after `U40-40`
-- Checkpoint: recoverable `UMB-30` close at `c2a264d0`; `UMB-40` package
+- Umbrella state: implementing `UMB-50`
+- Active primary package: `UMB-50`
+- Last completed item: `UMB-40` at `6422489e`
+- Next child: `U50-01` after `U50-00`
+- Checkpoint: recoverable `UMB-40` close at `6422489e`; `UMB-50` package
   activated in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
@@ -27,8 +27,8 @@ current worktree before changing or staging anything.
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
 | `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
-| `UMB-40` | active | Quiescence protocol first; see [umb-40/progress.md](umb-40/progress.md) |
-| `UMB-50` | pending | Transport separation design after `UMB-40A` |
+| `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
+| `UMB-50` | active | Transport separation first; see [umb-50/progress.md](umb-50/progress.md) |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
 | `UMB-70` | pending | Stable data identities before watchpoints; `U10D-CELL` depends on `UMB-70A` |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
@@ -186,6 +186,10 @@ Evidence log:
 2026-08-16 | U40-30 | pending -> done | c2a264d0 plus worktree | cancel stores F4016 without command-time dispatch; create/restart reject | map adapters
 2026-08-16 | U40-31 | pending -> done | c2a264d0 plus worktree | JSONL/DAP/VS Code cancel; create/restart capabilities false; current docs | record U40-40
 2026-08-16 | U40-40 | pending -> done | c2a264d0 plus worktree | non-stop, shortcuts, and unbounded history rejected | wait before U40-50
+2026-08-16 | U40-50 | pending -> done | 6422489e plus worktree | docs reconciled; `umb-40/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test pass | wait for UMB-50
+2026-08-16 | UMB-40 | active -> done | 6422489e | recoverable checkpoint includes all-stop task control, cancel, create/restart rejection, and removed `umb-40/` detail | activate UMB-50
+2026-08-16 | UMB-50 | pending -> active | 6422489e base | context-loss-safe hosted-transport package created | execute U50-00
+2026-08-16 | U50-00 | active -> done | 6422489e plus docs | format, locked workspace build, Clippy, workspace suite, and VS Code host pass | freeze U50-01
 ```
 
 ## Resume commands
@@ -201,8 +205,8 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U40-50` in
-[umb-40/progress.md](umb-40/progress.md). `UMB-10D` evidence remains in this
+The next pending implementation step is `U50-01` in
+[umb-50/progress.md](umb-50/progress.md). `UMB-40` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.
 

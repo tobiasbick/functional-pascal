@@ -1,17 +1,17 @@
-# UMB-40 task quiescence, control, and bounded history
+# UMB-50 interactive debuggee transport and hosted programs
 
-Status: active. Resume at pending `U40-50` in [progress.md](progress.md).
+Status: active. Resume at pending `U50-01` in [progress.md](progress.md).
 
-This package owns deterministic task observation and control after the
-`UMB-30` lifecycle contract. It extends the existing shared VM debugger
-engine; JSONL, DAP, and VS Code remain adapters. It does not introduce a
-second interpreter, change the FPAS language, absorb hosted-transport pause
-from `UMB-50`, or absorb data-breakpoint identities from `UMB-70`.
+This package owns protocol-versus-debuggee I/O after the `UMB-40` all-stop
+contract. It extends the existing shared VM debugger engine and hosted
+runtime; JSONL, DAP, and VS Code remain adapters. It does not change the
+FPAS language, absorb attach/remote from `UMB-60`, or absorb data-breakpoint
+identities from `UMB-70`. Unsafe thread termination remains forbidden.
 
 ## Files
 
-- [scope-and-decisions.md](scope-and-decisions.md) freezes all-stop ownership,
-  observation, scheduler handoff, per-task control, and feasibility contracts.
+- [scope-and-decisions.md](scope-and-decisions.md) freezes transport
+  ownership, terminal I/O, TUI/graph events, and pause-in-host contracts.
 - [implementation-plan.md](implementation-plan.md) owns ordered work IDs and
   the intended source layout.
 - [verification-matrix.md](verification-matrix.md) defines required positive,
@@ -31,7 +31,7 @@ from `UMB-50`, or absorb data-breakpoint identities from `UMB-70`.
 
 ## Package exit
 
-`UMB-40` is complete only when each child is implemented, rejected, blocked by
+`UMB-50` is complete only when each child is implemented, rejected, blocked by
 a named umbrella dependency, or split by evidence; all applicable verification
 rows pass; current debugger documentation describes only implemented behavior;
 and a recoverable checkpoint exists. Delete this directory after that

@@ -14,7 +14,9 @@ allocated runtime diagnostic code. It does not advertise attach, completions, da
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
 register/disassembly access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
-FPAS tasks. It advertises `supportsRestartFrame: true` and
+FPAS tasks. Per-task holds use custom requests `fpas/pauseTask` and
+`fpas/resumeTask` with a known `threadId`; they do not change continue or
+pause into single-thread execution. It advertises `supportsRestartFrame: true` and
 `supportsGotoTargetsRequest: false`.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
@@ -23,7 +25,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
-`restartFrame`, `fpas/replaceTaskResult`, `fpas/variantDescribe`,
+`restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/variantDescribe`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. Other unsupported
@@ -33,7 +35,11 @@ requests fail explicitly.
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
 `stepOut` select that task. Unknown or expired DAP thread IDs fail explicitly
 instead of falling back to main. Continue and pause remain whole-session
-operations; a continue response reports `allThreadsContinued: true`.
+operations even when a `threadId` or `singleThread` argument is supplied; a
+continue response reports `allThreadsContinued: true`. A paused task remains in
+`threads` with a `[paused]` name suffix until `fpas/resumeTask`. DAP `threads` omits
+completed and cancelled tasks after their thread-exit event; JSONL `tasks`
+still lists those identities for lifecycle reporting.
 
 `evaluate` accepts contexts `watch`, `repl`, `hover`, and `variables`. A
 supplied `frameId` must belong to the current stop; omitting it deliberately
@@ -157,6 +163,17 @@ successful body contains `taskId`, `value`, `type`, `variablesReference`,
 `supportsInvalidatedEvent: true` receive one `invalidated` event whose `areas`
 are `variables`. The adapter does not advertise a DAP capability flag for this
 custom request.
+
+`fpas/pauseTask` and `fpas/resumeTask` map a known `threadId` onto JSONL
+`task.pause` and `task.resume`. A successful body contains `taskId` and
+`paused`. Continue and pause remain whole-session; these requests only change
+the hold flag. `fpas/cancelTask` maps a known `threadId` onto JSONL
+`task.cancel`. A successful body contains `taskId` and `state`, and the adapter
+emits `thread`/`exited`. `fpas/createTask` and `fpas/restartTask` map onto the
+JSONL rejections. The adapter does not advertise
+`supportsSingleThreadExecutionRequests`. After the next `threads` request, a
+held task's name includes `[paused]`; cancelled tasks are omitted from
+`threads` while remaining in the JSONL catalog.
 
 `fpas/variantDescribe` and `fpas/variantConstruct` map `frameId`, `target`,
 `variant`, and `fields` onto JSONL `variant.describe` and `variant.construct`.

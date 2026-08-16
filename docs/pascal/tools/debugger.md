@@ -23,7 +23,7 @@ must remain below that root and its BLAKE3 identity must match the image. Stale
 or escaping sources are rejected before execution.
 
 The debugger supports source and function breakpoints, pause, continue, step in/over/out,
-stack frames, lexical scopes, variables, aggregate expansion, read-only
+per-task pause, resume, and cancel, stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
 construction of enum, `Result`, and `Option` variants, forced return from a
@@ -31,7 +31,7 @@ selected live frame or task entry, replacement of an unconsumed retained task
 result, selected-frame restart, output, and structured runtime failures. Execution is
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
-execution, and arbitrary instruction-pointer changes remain unsupported. Frame
+execution, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 
@@ -40,11 +40,24 @@ program and spawned FPAS tasks on one host execution lane, while normal
 non-debug execution keeps using the concurrent worker pool. Each stop freezes
 all live tasks at complete bytecode instruction boundaries. Task IDs are stable
 for the session, and current runnable, waiting, sleeping, failed, and completed
-states are available through the JSONL task catalog or DAP threads.
+states are available through the JSONL task catalog or DAP threads. The catalog
+is the current stop snapshot: listing tasks does not run waiters, wake timers,
+or admit queued spawns.
 
-Continue and pause apply to the whole session. Step in, over, and out target the
-selected task; when it is waiting, the driver may run dependencies in stable
-task-ID order until the selected task becomes runnable. A breakpoint, runtime
+Continue and pause apply to the whole session. A stopped-state per-task pause
+holds one current runtime task so later continue and peer steps skip it until
+an explicit per-task resume. Unknown, completed, cancelled, and failed task IDs
+reject without mutation. Newly admitted tasks start unpaused. Stepping a paused
+task rejects. If continue cannot make progress without running a paused task,
+the session stops immediately with pause. A stopped-state per-task cancel names
+one live non-root task, marks it cancelled, and stores runtime diagnostic
+`F4016` for retained waiters. It does not run bytecode, drain spawns, or wake
+waiters; those waiters observe the stored failure on the next continue. The
+main task cannot be cancelled this way; disconnect the session instead.
+Debugger task creation and task restart are rejected. Use `go` in the program,
+or restart a selected frame. Step in, over, and out target the
+selected task; when it is waiting, the driver may run unpaused dependencies in
+stable task-ID order until the selected task becomes runnable. A breakpoint, runtime
 failure, pause, or resource limit reached by any task takes precedence and
 identifies that task. Instruction, output, and resume-time limits cover the
 combined work of the entire session. Completed and cancelled tasks remain

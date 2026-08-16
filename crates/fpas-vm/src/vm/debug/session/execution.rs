@@ -85,12 +85,19 @@ impl DebugSession {
     ) -> Result<DebugRunResult, DebugSessionError> {
         self.require_stopped(mode.command())?;
         let selected_task = selected_task.unwrap_or(self.last_stop.task_id);
+        if mode != ResumeMode::Continue {
+            if !self.runtime.task_is_inspectable(selected_task) {
+                return Err(unknown_task(selected_task));
+            }
+            if self.runtime.task_is_paused(selected_task) {
+                return Err(paused_step_error(mode.command(), selected_task));
+            }
+        }
         let starting_depth = if mode == ResumeMode::Continue {
             0
         } else {
             self.runtime
                 .worker(selected_task)
-                .filter(|_| self.runtime.task_is_inspectable(selected_task))
                 .map(|worker| worker.call_stack.len())
                 .ok_or_else(|| unknown_task(selected_task))?
         };
@@ -134,6 +141,13 @@ impl DebugSession {
                     }
                     self.runtime.wait(wait);
                     continue;
+                }
+                DebugSchedule::NoUnpausedWork => {
+                    return Ok(self.stop_for_reason(
+                        selected_task,
+                        DebugStopReason::Pause,
+                        Vec::new(),
+                    ));
                 }
             };
             if resumed_at_boundary

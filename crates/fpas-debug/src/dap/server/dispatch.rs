@@ -87,6 +87,11 @@ impl DapServer {
             "fpas/replaceTaskResult" => {
                 self.replace_completed_task_result(request_seq, command, arguments)
             }
+            "fpas/pauseTask" => self.pause_task(request_seq, command, arguments),
+            "fpas/resumeTask" => self.resume_task(request_seq, command, arguments),
+            "fpas/cancelTask" => self.cancel_task(request_seq, command, arguments),
+            "fpas/createTask" => self.create_task(request_seq, command),
+            "fpas/restartTask" => self.restart_task(request_seq, command, arguments),
             "fpas/variantDescribe" => self.describe_variant(request_seq, command, arguments),
             "fpas/variantConstruct" => self.construct_variant(request_seq, command, arguments),
             "fpas/initializeStorage" => self.initialize_storage(request_seq, command, arguments),

@@ -49,6 +49,8 @@ pub(super) fn session_error(
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::FrameRestartUnsupported => "frame_restart_unsupported",
         fpas_vm::DebugErrorKind::InstructionChangeUnsupported => "instruction_change_unsupported",
+        fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
+        fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
         fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",

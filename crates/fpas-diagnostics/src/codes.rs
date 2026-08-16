@@ -5,7 +5,7 @@
 //! - **Parse:** `F1001`–`F1999`
 //! - **Sema:** `F2001`–`F2999`
 //! - **Compile:** `F3001`–`F3999`
-//! - **Runtime:** `F4001`–`F4999` (reserved gap: `F4016`–`F4017`)
+//! - **Runtime:** `F4001`–`F4999` (reserved gap: `F4017`)
 //! - **Internal:** `F9001`–`F9999` and any other unassigned value
 //!
 //! Extension workflow:
@@ -134,7 +134,10 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
     RUNTIME_CONVERSION_FAILURE = 4013;
     RUNTIME_CONSOLE_STATE_ERROR = 4014;
     RUNTIME_UNWRAP_FAILURE = 4015;
-    // Reserved: 4016–4017 (gap before task/runtime codes; do not reuse without audit).
+
+    /// A retained task was cancelled by the debugger without running its remaining body.
+    RUNTIME_TASK_CANCELLED = 4016;
+    // Reserved: 4017 (gap before task/runtime codes; do not reuse without audit).
     RUNTIME_INVALID_TASK = 4018;
     RUNTIME_DICT_KEY_NOT_FOUND = 4019;
     RUNTIME_VM_SHUTDOWN = 4020;

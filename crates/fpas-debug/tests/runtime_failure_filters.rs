@@ -114,7 +114,7 @@ fn invalid_replacement_is_atomic() {
             .collect(),
     );
     for invalid in [
-        json!(["F4016"]),
+        json!(["F4017"]),
         json!(["F4001", "F4001"]),
         json!(["all", "F4001"]),
         excessive,

@@ -10,6 +10,7 @@ import { registerDictionaryCommands } from "./dictionaryCommands";
 import { registerForcedReturnCommand } from "./forcedReturnCommand";
 import { registerSequenceCommands } from "./sequenceCommands";
 import { registerStorageInitializationCommand } from "./storageInitializationCommand";
+import { registerTaskControlCommands } from "./taskControlCommand";
 import { registerTaskResultCommand } from "./taskResultCommand";
 import { registerVariantConstructionCommand } from "./variantConstructionCommand";
 
@@ -29,6 +30,7 @@ export function registerDebugger(context: vscode.ExtensionContext): void {
   registerVariantConstructionCommand(context);
   registerStorageInitializationCommand(context);
   registerTaskResultCommand(context);
+  registerTaskControlCommands(context);
   context.subscriptions.push(provider, factory);
 }
 

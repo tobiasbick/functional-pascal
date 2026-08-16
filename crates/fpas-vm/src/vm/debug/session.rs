@@ -29,9 +29,11 @@ mod forced_return;
 mod frame_restart;
 mod inspection;
 mod instruction;
+mod lifecycle;
 mod mutation;
 mod sequence;
 mod storage;
+mod tasks;
 mod variant;
 
 /// Thread-safe cooperative pause request handle.
@@ -440,5 +442,13 @@ fn unknown_task(task_id: u64) -> DebugSessionError {
         kind: DebugErrorKind::UnknownTask,
         message: format!("debug task {task_id} is unknown or no longer inspectable"),
         hint: "Request the current task list and select an inspectable task.".to_string(),
+    }
+}
+
+fn paused_step_error(command: &'static str, task_id: u64) -> DebugSessionError {
+    DebugSessionError {
+        kind: DebugErrorKind::InvalidState,
+        message: format!("debug command `{command}` cannot run paused task {task_id}"),
+        hint: "Resume the task before stepping it, or continue other unpaused tasks.".to_string(),
     }
 }

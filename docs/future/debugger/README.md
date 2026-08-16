@@ -14,11 +14,11 @@ non-stopping logpoints, and stopped-state mutation of supported mutable values.
 Its current user and protocol documentation lives under
 [`docs/pascal/tools/`](../../pascal/tools/debugger.md).
 
-[deferred.md](deferred.md) lists all consciously postponed debugger work
-together with its rationale and re-entry gates. Deterministic, launch-owned,
-all-stop task debugging is implemented; non-stop execution, task-control
-mutation, cross-task stepping shortcuts, and persistent task history remain
-consciously deferred there.
+[deferred.md](deferred.md) lists independent postponed debugger work outside
+the active umbrella. Deterministic, launch-owned, all-stop task debugging is
+implemented; remaining quiescence proofs, per-task control, create/cancel,
+non-stop execution, stepping shortcuts, and persistent task history are owned
+by `UMB-40` in the [active umbrella](umbrella/implementation-plan.md).
 
 The implemented debugger includes complete-value replacement of mutable enum,
 `Result`, and `Option` values through the existing `setVariable`/`setExpression`

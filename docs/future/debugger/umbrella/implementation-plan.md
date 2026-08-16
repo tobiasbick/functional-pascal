@@ -9,7 +9,7 @@
 | `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
-| `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | pending | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
+| `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | active | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | pending | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | pending | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
 | `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | pending | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
@@ -76,10 +76,9 @@ and [progress.md](progress.md).
 
 ## `UMB-30` — Controlled lifecycle and frame changes
 
-Completed. The obsolete execution detail was removed; durable behavior and
-evidence remain in tests, current debugger documentation, and
-[progress.md](progress.md). Do not implement dependent task-control behavior
-from `UMB-40` until `UMB-40` is activated.
+Completed at checkpoint `c2a264d0`. The obsolete execution detail was removed;
+durable behavior and evidence remain in tests, current debugger documentation,
+and [progress.md](progress.md).
 
 | Child | Scope | Additional gate |
 |---|---|---|
@@ -89,6 +88,10 @@ from `UMB-40` until `UMB-40` is activated.
 | `UMB-30D` | Arbitrary instruction changes | Rejected: existing verifier dataflow cannot prove interior destinations; shared `instruction.set` / DAP `goto` rejection |
 
 ## `UMB-40` — Task quiescence, control, and history
+
+Active. Execute only the next work ID in
+[umb-40/progress.md](umb-40/progress.md). Quiescence (`UMB-40A`) must pass
+before per-task control, create/cancel/restart, or history feasibility.
 
 | Child | Scope | Additional gate |
 |---|---|---|

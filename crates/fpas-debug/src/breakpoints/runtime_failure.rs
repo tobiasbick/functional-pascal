@@ -113,7 +113,7 @@ mod tests {
                 .expect("empty")
                 .should_stop(fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC)
         );
-        for invalid in ["f4010", "F410", "F4016", "F9999", "all,F4010"] {
+        for invalid in ["f4010", "F410", "F4017", "F9999", "all,F4010"] {
             assert!(RuntimeFailurePolicy::parse(&[invalid.to_string()]).is_err());
         }
         assert!(RuntimeFailurePolicy::parse(&["all".to_string(), "F4010".to_string()]).is_err());

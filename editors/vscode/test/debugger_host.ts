@@ -25,7 +25,9 @@ import { verifyEmptyStorageConstruction } from "./debugger_host/empty_storage_co
 import { verifyPauseAndDisconnect } from "./debugger_host/pause";
 import { verifyRuntimeFailure } from "./debugger_host/runtime_failure";
 import { verifyRuntimeFailureFilters } from "./debugger_host/runtime_failure_filters";
+import { verifyTaskControl } from "./debugger_host/task_control";
 import { verifyTaskDebugging } from "./debugger_host/task_debugging";
+import { verifyTaskLifecycle } from "./debugger_host/task_lifecycle";
 import { verifyVariableMutation } from "./debugger_host/variable_mutation";
 import type { DapMessage } from "./debugger_host/support";
 
@@ -69,6 +71,8 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyVariableMutation(workspaceRoot, received, sent);
     await verifyBreakpointPolicies(workspaceRoot, received, sent);
     await verifyTaskDebugging(workspaceRoot, received, sent);
+    await verifyTaskControl(workspaceRoot, received, sent);
+    await verifyTaskLifecycle(workspaceRoot, received, sent);
   } finally {
     await vscode.debug.stopDebugging();
     tracker.dispose();

@@ -139,6 +139,7 @@ export async function verifyTaskDebugging(
     const stepStop = stoppedEvents(sent.slice(marker.sent))[1];
     assert.equal(stepStop.body?.reason, "step");
     assert.equal(numberBodyField(stepStop, "threadId"), firstThread);
+    assert.equal(stepStop.body?.allThreadsStopped, true);
 
     await session.customRequest("continue", { threadId: firstThread });
     await waitForStoppedReady(() => sent.slice(marker.sent), 3, "second task breakpoint");

@@ -19,8 +19,8 @@ desktop editors. The implemented editor features are:
 - project check, build, run, test, format, and format-check workflows
 - Problems, Testing view, cancellation, active-project status, and terminal runs
 - source debugging with breakpoints, task threads, stepping, inspection,
-  evaluation, stopped-state editing of supported mutable values, and forced
-  return from a selected ordinary callee
+  evaluation, stopped-state editing of supported mutable values, forced
+  return from a selected ordinary callee, and per-task pause/resume/cancel
 - language-server restart and output-channel commands
 
 The extension and native language server live under
@@ -40,10 +40,14 @@ positive hit conditions, logpoints, and structured program output.
 Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call
 stack and therefore the context used by Variables, Watch, hover, evaluation,
-and supported variable edits. Stops are all-thread stops: Continue and Pause
-apply to the complete session, while Step Into, Step Over, and Step Out target
-the selected task. A breakpoint or runtime failure in another task interrupts
-a pending step and selects the responsible task.
+and supported variable edits. Stops are all-thread stops. Continue and Pause
+apply to the complete session even if a thread is selected. **Debug: Pause Task**
+and **Debug: Resume Task** hold or release one selected task without leaving
+all-stop; a held task appears as `[paused]` in Threads. **Debug: Cancel Task**
+cancels one live non-root task; waiters observe diagnostic `F4016` on the next
+continue. Debugger task creation and task restart are not contributed. Step Into, Step
+Over, and Step Out target the selected task. A breakpoint or runtime failure
+in another task interrupts a pending step and selects the responsible task.
 
 At a stable stop, the Variables view can replace mutable locals, mutable
 parameters, mutable globals, mutable closure captures, record fields, array

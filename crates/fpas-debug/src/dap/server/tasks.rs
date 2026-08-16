@@ -70,11 +70,15 @@ impl ThreadMap {
             let thread_id = self.thread_id(task_id);
             if let Some(entry) = self.tasks.get_mut(&task_id) {
                 entry.thread_id = thread_id;
-                entry.name = task
+                let name = task
                     .get("name")
                     .and_then(Value::as_str)
-                    .unwrap_or("FPAS task")
-                    .to_string();
+                    .unwrap_or("FPAS task");
+                entry.name = if task.get("paused").and_then(Value::as_bool) == Some(true) {
+                    format!("{name} [paused]")
+                } else {
+                    name.to_string()
+                };
             }
         }
     }

@@ -2,6 +2,9 @@
 
 mod completed_result;
 mod completion;
+mod control;
+mod lifecycle;
+mod quiescence;
 mod recovery;
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -10,13 +13,15 @@ use std::time::Duration;
 
 use fpas_bytecode::Value;
 
-use super::super::types::{DebugTask, DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
+use super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
 use crate::vm::VmError;
 use crate::vm::dispatch::DispatchStep;
 use crate::vm::tasks::{DebugClock, TaskScheduler, TaskSuspensionState};
 use crate::vm::worker::Worker;
 
 pub(in crate::vm::debug) use completed_result::CompletedResultTargetError;
+pub(in crate::vm::debug) use control::TaskHoldError;
+pub(in crate::vm::debug) use lifecycle::TaskCancelError;
 
 struct TaskSlot {
     worker: Worker,
@@ -25,6 +30,23 @@ struct TaskSlot {
     state: DebugTaskState,
     failure: Option<VmError>,
     exited: bool,
+    paused: bool,
+}
+
+impl TaskSlot {
+    fn is_schedulable(&self) -> bool {
+        self.state == DebugTaskState::Runnable && !self.paused
+    }
+
+    fn unpaused_sleep_remaining(&self) -> Option<Duration> {
+        if self.paused {
+            return None;
+        }
+        match self.worker.debug_suspension_state() {
+            Some(TaskSuspensionState::Sleeping { remaining }) => Some(remaining),
+            _ => None,
+        }
+    }
 }
 
 /// Result of polling the deterministic task scheduler for its next action.
@@ -38,6 +60,8 @@ pub(in crate::vm::debug) enum DebugSchedule {
     },
     /// No task is runnable before the supplied bounded polling delay.
     Idle(Duration),
+    /// Live work remains, but every unpaused task is blocked on a paused peer.
+    NoUnpausedWork,
 }
 
 /// Result of dispatching exactly one task instruction.
@@ -83,6 +107,7 @@ impl DebugTaskRuntime {
                 state: DebugTaskState::Runnable,
                 failure: None,
                 exited: false,
+                paused: false,
             },
         )]);
         Self {
@@ -126,20 +151,6 @@ impl DebugTaskRuntime {
             .collect()
     }
 
-    /// Capture the bounded-protocol task catalog in stable ID order.
-    pub(in crate::vm::debug) fn catalog(&mut self) -> Vec<DebugTask> {
-        self.drain_spawned();
-        self.tasks
-            .iter()
-            .map(|(&id, slot)| DebugTask {
-                id,
-                name: slot.name.clone(),
-                state: slot.state,
-                inspectable: slot.state.is_inspectable(),
-            })
-            .collect()
-    }
-
     /// Select the next runnable task or the bounded idle delay before polling again.
     pub(in crate::vm::debug) fn schedule(
         &mut self,
@@ -150,7 +161,7 @@ impl DebugTaskRuntime {
         if let Some(task_id) = preferred.filter(|task_id| {
             self.tasks
                 .get(task_id)
-                .is_some_and(|slot| slot.state == DebugTaskState::Runnable)
+                .is_some_and(TaskSlot::is_schedulable)
         }) {
             return Ok(DebugSchedule::Runnable {
                 task_id,
@@ -160,7 +171,7 @@ impl DebugTaskRuntime {
         let mut runnable = self
             .tasks
             .iter()
-            .filter_map(|(&id, slot)| (slot.state == DebugTaskState::Runnable).then_some(id));
+            .filter_map(|(&id, slot)| slot.is_schedulable().then_some(id));
         let first = runnable.next();
         let selected = first.and_then(|first| {
             std::iter::once(first)
@@ -174,16 +185,20 @@ impl DebugTaskRuntime {
                 resumed_at_boundary: self.resumed_at_boundary.remove(&task_id),
             });
         }
-        let wait = self
+        if let Some(wait) = self
             .tasks
             .values()
-            .filter_map(|slot| match slot.worker.debug_suspension_state() {
-                Some(TaskSuspensionState::Sleeping { remaining }) => Some(remaining),
-                _ => None,
-            })
+            .filter_map(TaskSlot::unpaused_sleep_remaining)
             .min()
-            .unwrap_or(Duration::from_millis(1));
-        Ok(DebugSchedule::Idle(wait.min(Duration::from_millis(1))))
+        {
+            return Ok(DebugSchedule::Idle(wait.min(Duration::from_millis(1))));
+        }
+        if self.tasks.values().any(|slot| {
+            slot.paused && slot.state.is_inspectable() && slot.state != DebugTaskState::Failed
+        }) {
+            return Ok(DebugSchedule::NoUnpausedWork);
+        }
+        Ok(DebugSchedule::Idle(Duration::from_millis(1)))
     }
 
     /// Execute exactly one instruction in the selected task.
@@ -194,6 +209,7 @@ impl DebugTaskRuntime {
         let Some(slot) = self.tasks.get_mut(&task_id) else {
             unreachable!("scheduled debug task must exist")
         };
+        debug_assert!(!slot.paused, "paused debug tasks must not be dispatched");
         slot.state = DebugTaskState::Running;
         slot.failure = None;
         self.last_dispatched = task_id;
@@ -364,6 +380,7 @@ impl DebugTaskRuntime {
                     state: DebugTaskState::Runnable,
                     failure: None,
                     exited: false,
+                    paused: false,
                 },
             );
             self.resumed_at_boundary.insert(task_id);

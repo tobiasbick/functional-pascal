@@ -1,7 +1,7 @@
 # Source-debugger completion umbrella
 
-Status: between implementation packages; see [progress.md](progress.md) for the
-current checkpoint and next executable work item.
+Status: `UMB-40` active; see [progress.md](progress.md) for the current
+checkpoint and next executable work item.
 
 This directory is the single resumable plan for the remaining source-debugger
 backlog. It absorbs the former `DBG-D03` through `DBG-D09` rows without
@@ -43,9 +43,8 @@ and acceptance gate between packages.
   debugger documentation, and checkpoint `1198b1c6` rather than an obsolete
   detail plan.
 - Completed `UMB-30` evidence is retained in parent progress, tests, current
-  debugger documentation, and the current worktree rather than an obsolete
-  detail plan. `UMB-40` stays pending until a recoverable `UMB-30` checkpoint
-  is authorized.
+  debugger documentation, and checkpoint `c2a264d0` rather than an obsolete
+  detail plan. Active `UMB-40` detail lives in [umb-40/](umb-40/).
 - [consciously-deferred.md](consciously-deferred.md) records only umbrella
   boundaries, not duplicate backlog entries.
 - [`../deferred.md`](../deferred.md) lists only independent work outside an

@@ -13,6 +13,49 @@ pub(super) fn initialize_records(
     let inspection = fpas_vm::DebugInspectionLimits::default();
     let evaluation = fpas_vm::DebugEvaluationLimits::default();
     let breakpoints = fpas_vm::DebugBreakpointLimits::default();
+    let capabilities = json!({
+        "source_breakpoints": true,
+        "function_breakpoints": true,
+        "runtime_failure_filters": true,
+        "pause": true,
+        "continue": true,
+        "step_into": true,
+        "step_over": true,
+        "step_out": true,
+        "stack_pagination": true,
+        "scope_inspection": true,
+        "variable_pagination": true,
+        "aggregate_expansion": true,
+        "structured_output": true,
+        "attach": false,
+        "non_stop": false,
+        "task_threads": true,
+        "task_pause": true,
+        "task_cancel": true,
+        "task_create": false,
+        "task_restart": false,
+        "evaluate": true,
+        "evaluate_calls": true,
+        "set_variable": true,
+        "set_expression": true,
+        "dictionary_insert": true,
+        "dictionary_remove": true,
+        "dictionary_replace_key": true,
+        "array_insert": true,
+        "array_remove": true,
+        "string_replace_character": true,
+        "frame_return": true,
+        "frame_restart": true,
+        "instruction_set": false,
+        "task_result_replacement": true,
+        "variant_describe": true,
+        "variant_construct": true,
+        "storage_initialize": true,
+        "conditional_breakpoints": true,
+        "hit_conditions": true,
+        "logpoints": true,
+        "reverse_execution": false
+    });
     vec![
         success(
             request_id,
@@ -20,44 +63,7 @@ pub(super) fn initialize_records(
             json!({
                 "protocol": "fpas-debug-jsonl",
                 "version": 2,
-                "capabilities": {
-                    "source_breakpoints": true,
-                    "function_breakpoints": true,
-                    "runtime_failure_filters": true,
-                    "pause": true,
-                    "continue": true,
-                    "step_into": true,
-                    "step_over": true,
-                    "step_out": true,
-                    "stack_pagination": true,
-                    "scope_inspection": true,
-                    "variable_pagination": true,
-                    "aggregate_expansion": true,
-                    "structured_output": true,
-                    "attach": false,
-                    "task_threads": true,
-                    "evaluate": true,
-                    "evaluate_calls": true,
-                    "set_variable": true,
-                    "set_expression": true,
-                    "dictionary_insert": true,
-                    "dictionary_remove": true,
-                    "dictionary_replace_key": true,
-                    "array_insert": true,
-                    "array_remove": true,
-                    "string_replace_character": true,
-                    "frame_return": true,
-                    "frame_restart": true,
-                    "instruction_set": false,
-                    "task_result_replacement": true,
-                    "variant_describe": true,
-                    "variant_construct": true,
-                    "storage_initialize": true,
-                    "conditional_breakpoints": true,
-                    "hit_conditions": true,
-                    "logpoints": true,
-                    "reverse_execution": false
-                },
+                "capabilities": capabilities,
                 "limits": {
                     "stack_frames": inspection.max_frames,
                     "variables": inspection.max_children,
@@ -179,12 +185,24 @@ pub(super) fn optional_u64_argument(
     }
 }
 
+/// Parses a required non-negative integer request argument.
+pub(super) fn required_u64_argument(
+    request_id: u64,
+    command: &str,
+    arguments: &Map<String, Value>,
+    name: &str,
+) -> Result<u64, Value> {
+    optional_u64_argument(request_id, command, arguments, name)?
+        .ok_or_else(|| missing_argument(request_id, command, name))
+}
+
 pub(super) fn task_body(task: &fpas_vm::DebugTask) -> Value {
     json!({
         "task_id": task.id,
         "name": task.name,
         "state": task.state.as_str(),
-        "inspectable": task.inspectable
+        "inspectable": task.inspectable,
+        "paused": task.paused
     })
 }
 
@@ -246,6 +264,8 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
         fpas_vm::DebugErrorKind::FrameRestartUnsupported => "frame_restart_unsupported",
         fpas_vm::DebugErrorKind::InstructionChangeUnsupported => "instruction_change_unsupported",
+        fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
+        fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
         fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",

@@ -177,6 +177,21 @@
         "category": "Functional Pascal"
       },
       {
+        "command": "functionalPascal.debug.pauseTask",
+        "title": "Debug: Pause Task",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.resumeTask",
+        "title": "Debug: Resume Task",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.cancelTask",
+        "title": "Debug: Cancel Task",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.debug.constructVariant",
         "title": "Debug: Construct Variant",
         "category": "Functional Pascal"

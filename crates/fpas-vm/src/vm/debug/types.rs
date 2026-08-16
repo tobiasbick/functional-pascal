@@ -99,7 +99,7 @@ pub enum DebugTaskState {
     Completed,
     /// Raised the runtime failure that stopped the session.
     Failed,
-    /// Was cancelled by root termination or debugger disconnect.
+    /// Was cancelled by root termination, debugger disconnect, or `task.cancel`.
     Cancelled,
 }
 
@@ -135,6 +135,8 @@ pub struct DebugTask {
     pub state: DebugTaskState,
     /// Whether stack and frame inspection is valid at this stop.
     pub inspectable: bool,
+    /// Whether session-wide continue and peer steps skip this task until resume.
+    pub paused: bool,
 }
 
 /// Stable kind of task-lifecycle event emitted between debugger stops.
@@ -190,6 +192,10 @@ pub enum DebugErrorKind {
     FrameRestartUnsupported,
     /// An instruction-pointer change cannot be proven from existing bytecode dataflow.
     InstructionChangeUnsupported,
+    /// Debugger-created tasks cannot be proven without executing a spawn.
+    TaskCreateUnsupported,
+    /// Restarting a task would invent a new runtime identity.
+    TaskRestartUnsupported,
     /// Forced return is not available for this stop, frame, task, or result category.
     FrameReturnUnsupported,
     /// A value-returning function was force-returned without an expression.

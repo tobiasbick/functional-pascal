@@ -293,4 +293,17 @@ impl DebugSession {
     ) -> crate::vm::TaskResultPoll {
         self.runtime.test_poll_task_result(task_id)
     }
+
+    #[cfg(test)]
+    pub(in crate::vm::debug) fn test_enqueue_pending_task(
+        &self,
+        function: fpas_bytecode::FunctionId,
+    ) {
+        self.runtime.test_enqueue_pending_task(function);
+    }
+
+    #[cfg(test)]
+    pub(in crate::vm::debug) fn test_advance_clock(&self, duration: std::time::Duration) {
+        self.runtime.wait(duration);
+    }
 }

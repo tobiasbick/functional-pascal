@@ -2,14 +2,12 @@
 
 ## Current checkpoint
 
-- Umbrella state: between implementation packages
-- Active primary package: none
-- Last completed item: `UMB-30`
-- Next child: `UMB-40` after an authorized `UMB-30` checkpoint
-- Checkpoint: entry completion, recovery, retained-result replacement, frame
-  restart, initializer suppression, and instruction-change rejection are
-  complete in the current worktree on `c60e43ed` plus uncommitted package
-  closure
+- Umbrella state: implementing `UMB-40`
+- Active primary package: `UMB-40`
+- Last completed item: `UMB-30` at `c2a264d0`
+- Next child: `U40-50` after `U40-40`
+- Checkpoint: recoverable `UMB-30` close at `c2a264d0`; `UMB-40` package
+  activated in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -28,8 +26,8 @@ current worktree before changing or staging anything.
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
 | `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
-| `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection; detail plan removed |
-| `UMB-40` | pending | Quiescence protocol first |
+| `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
+| `UMB-40` | active | Quiescence protocol first; see [umb-40/progress.md](umb-40/progress.md) |
 | `UMB-50` | pending | Transport separation design after `UMB-40A` |
 | `UMB-60` | pending | Local attach before remote; native is go/no-go |
 | `UMB-70` | pending | Stable data identities before watchpoints; `U10D-CELL` depends on `UMB-70A` |
@@ -177,7 +175,17 @@ Evidence log:
 2026-08-16 | U30-41/42 | active -> done | b7517403 plus worktree | portable exact initializer stores and live-frame suppression pass verifier, artifact, VM, forced-return, JSONL, DAP, VS Code, docs, Clippy, build, and workspace gates | wait before U30-50
 2026-08-16 | U30-50 | pending -> done | c60e43ed plus worktree | instruction-change feasibility rejected; shared JSONL/DAP rejection, current docs, format, Clippy, workspace suite, and VS Code host pass | wait before U30-60
 2026-08-16 | U30-60 | pending -> done | c60e43ed plus worktree | docs reconciled; `umb-30/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test (retry after an unrelated semantic-tools diagnostics timeout) pass | wait for checkpoint authorization before UMB-40
-2026-08-16 | UMB-30 | active -> done | c60e43ed plus worktree | package closed; no primary package active until the recoverable checkpoint is authorized | activate UMB-40 only after that checkpoint
+2026-08-16 | UMB-30 | active -> done | c2a264d0 | recoverable checkpoint includes instruction-change rejection, current docs, and removed `umb-30/` detail | activate UMB-40
+2026-08-16 | UMB-40 | pending -> active | c2a264d0 base | context-loss-safe quiescence package created | execute U40-00
+2026-08-16 | U40-00 | active -> done | c2a264d0 plus docs | format, locked workspace build, 13 VM behavior, 6 JSONL task, 2 DAP task, 10 DAP, and 1 scheduler test pass | freeze U40-01
+2026-08-16 | U40-01 | pending -> done | c2a264d0 plus worktree | all-stop inspection cannot dispatch or admit tasks; frozen peers keep instruction windows | wait before U40-10
+2026-08-16 | U40-10 | pending -> done | c2a264d0 plus worktree | stopped catalog no longer drains spawns; VM quiescence tests lock all-stop observation, shared globals, timers, and failed-handle expiry | wait before U40-11
+2026-08-16 | U40-11 | pending -> done | c2a264d0 plus worktree | JSONL/DAP all-stop identity, session-wide continue, current docs, and VS Code host pass | wait before U40-20
+2026-08-16 | U40-20 | pending -> done | c2a264d0 plus worktree | VM per-task pause/resume holds; paused peers are not dispatched; unknown/completed IDs reject atomically | wait before U40-21
+2026-08-16 | U40-21 | pending -> done | c2a264d0 plus worktree | JSONL/DAP/VS Code per-task holds; `task_pause: true`; single-thread DAP remains false | wait before U40-30
+2026-08-16 | U40-30 | pending -> done | c2a264d0 plus worktree | cancel stores F4016 without command-time dispatch; create/restart reject | map adapters
+2026-08-16 | U40-31 | pending -> done | c2a264d0 plus worktree | JSONL/DAP/VS Code cancel; create/restart capabilities false; current docs | record U40-40
+2026-08-16 | U40-40 | pending -> done | c2a264d0 plus worktree | non-stop, shortcuts, and unbounded history rejected | wait before U40-50
 ```
 
 ## Resume commands
@@ -193,11 +201,10 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `UMB-40` after an authorized `UMB-30`
-checkpoint. `UMB-10D` evidence remains in this file, focused tests, and current
-debugger docs. Do not clean, reset, stage, commit, merge, or push without
-matching user authorization. Do not activate `UMB-40` in the same uncommitted
-worktree.
+The next pending implementation step is `U40-50` in
+[umb-40/progress.md](umb-40/progress.md). `UMB-10D` evidence remains in this
+file, focused tests, and current debugger docs. Do not clean, reset, stage,
+commit, merge, or push without matching user authorization.
 
 ## Evidence log format
 

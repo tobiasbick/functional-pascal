@@ -3,5 +3,6 @@
 mod driver;
 
 pub(super) use driver::{
-    CompletedResultTargetError, DebugDispatch, DebugSchedule, DebugTaskRuntime,
+    CompletedResultTargetError, DebugDispatch, DebugSchedule, DebugTaskRuntime, TaskCancelError,
+    TaskHoldError,
 };

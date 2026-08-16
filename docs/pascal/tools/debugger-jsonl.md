@@ -31,10 +31,15 @@ compatibility mode. A response precedes events caused by that request.
 | `function_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `name` with optional `condition`, `hit_condition` | replace-all logical function breakpoints and verification |
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
-| `continue` | stopped | none | resumes all tasks |
+| `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
+| `pause` | running | none | cooperative pause request; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
-| `pause` | running | none | cooperative pause request |
 | `tasks` | stopped | optional `start`, `count` | bounded task catalog |
+| `task.pause` | stopped | `task_id` | hold one live task; later continue and peer steps skip it |
+| `task.resume` | stopped | `task_id` | clear one task hold without resuming the session |
+| `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `F4016` on the next continue |
+| `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
+| `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
@@ -78,13 +83,20 @@ variable references belong to the current stop and expire on resume. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
-The task catalog returns stable `task_id`, `name`, `state`, and `inspectable`
-fields. States are `runnable`, `running`, `waiting`, `sleeping`, `completed`,
-`failed`, or `cancelled`. Omitted task selection resolves to the task that
+The task catalog returns stable `task_id`, `name`, `state`, `inspectable`, and
+`paused` fields from the current all-stop snapshot. Listing tasks does not dispatch
+bytecode, admit queued spawns, or wake waiters or timers. `state` is `runnable`,
+`running`, `waiting`, `sleeping`, `completed`, `failed`, or `cancelled`. Omitted task selection resolves to the task that
 caused the current stop, or main task `0` at entry. Frame and variable IDs are
 qualified by their task snapshot and cannot alias across tasks. Completed or
 cancelled tasks are catalog-visible for lifecycle reporting but reject stack
-inspection.
+inspection. `task.pause` and `task.resume` name a current runtime `task_id` and
+change only that hold; they do not dispatch or expire inspection IDs.
+`task.cancel` names a current non-root `task_id`, marks it `cancelled`, emits
+`task`/`exited`, and stores `F4016` when the task retains a result. It does not
+dispatch or wake waiters. Root, unknown, completed, cancelled, and failed
+identities reject without mutation. `task.create` and `task.restart` always
+fail with `task_create_unsupported` and `task_restart_unsupported`.
 
 `variable.set` addresses one child returned by `variables`. The reference and
 child name must belong to the current stop. Mutable locals, parameters,
@@ -326,7 +338,8 @@ point. Policy order is condition, hit test, then log-or-stop. Log templates use
 Events are `initialized`, `breakpoint`, `output`, `task`, `stopped`,
 `runtime_error`, `terminated`, and fatal `protocol_error`. Task events report
 `started` or `exited` with a stable `task_id`. Every stopped event reports the
-responsible `task_id` and `all_tasks_stopped: true`; runtime errors also carry
+responsible `task_id` and `all_tasks_stopped: true`, including pause, step,
+breakpoint, and inspectable runtime-error stops; runtime errors also carry
 the responsible task. A stopped breakpoint event includes both the first
 `breakpoint_id` and ordered `breakpoint_ids` for all logical breakpoints at
 that sequence point.
@@ -339,7 +352,8 @@ three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. Attach, non-stop execution and reverse execution
 remain false;
-`task_threads` is true. `frame_return`, `variant_describe`,
+`task_threads` is true, `task_pause` is true, `task_cancel` is true,
+`task_create` and `task_restart` are false, and `non_stop` is false. `frame_return`, `variant_describe`,
 `variant_construct`, and `storage_initialize` are true.
 
 ## Default limits

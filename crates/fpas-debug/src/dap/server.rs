@@ -8,9 +8,11 @@ mod exceptions;
 mod forced_return;
 mod frame_restart;
 mod instruction;
+mod lifecycle;
 mod mutation;
 mod sequence;
 mod storage;
+mod task_control;
 mod tasks;
 mod variant;
 
@@ -407,6 +409,9 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = completed_result::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = task_control::response_body(command, &body) {
         return result;
     }
     if let Some(result) = variant::response_body(command, &body) {

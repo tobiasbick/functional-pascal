@@ -54,6 +54,11 @@ impl DebugSession {
 
     /// Return a bounded page of tasks captured by the all-stop session.
     ///
+    /// The catalog is a snapshot of already admitted tasks. Queued spawns and
+    /// waiter or timer readiness change only on an explicit resume.
+    ///
+    /// **Documentation:** `docs/pascal/tools/debugger.md`
+    ///
     /// # Errors
     ///
     /// Returns an invalid-state or inspection-limit error.

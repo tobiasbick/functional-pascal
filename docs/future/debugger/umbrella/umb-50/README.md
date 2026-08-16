@@ -1,6 +1,6 @@
 # UMB-50 interactive debuggee transport and hosted programs
 
-Status: active. Resume at pending `U50-01` in [progress.md](progress.md).
+Status: active. Resume at pending `U50-20` in [progress.md](progress.md).
 
 This package owns protocol-versus-debuggee I/O after the `UMB-40` all-stop
 contract. It extends the existing shared VM debugger engine and hosted

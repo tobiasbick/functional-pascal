@@ -444,6 +444,7 @@ mod quiescence;
 mod task_control;
 mod task_handle_assignment;
 mod task_lifecycle;
+mod transport;
 mod uninitialized_assignment;
 mod variant_construction;
 mod variant_replacement;

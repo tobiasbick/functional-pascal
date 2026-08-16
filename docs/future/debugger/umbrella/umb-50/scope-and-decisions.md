@@ -25,9 +25,10 @@ These are inventory facts for `U50-00`, not acceptance of later children.
   JSON lines. Captured program output is re-emitted as structured `output`
   events, not as raw bytes on the protocol stream. DAP framing lives in
   `crates/fpas-debug/src/dap/framing.rs` and maps those events.
-- `DebugSession::output()` retains captured stdout lines. `--output-limit`
-  bounds the session. There is no live debuggee stdin channel distinct from
-  protocol stdin.
+- `DebugSession` owns a debuggee channel that is connected at launch and
+  closed by disconnect. `--output-limit` still bounds captured stdout.
+  `io.input` / `fpas/input` reject live stdin. Protocol stdin is never
+  debuggee input.
 - `Worker::execute_hosted_intrinsic` owns console, args, callbacks, graph,
   and test-host intrinsics. `Std.Console` Read/ReadLn/ReadKey block inside
   the intrinsic through `text_input` / `key_input`. Write/WriteLn mutate the
@@ -41,15 +42,26 @@ These are inventory facts for `U50-00`, not acceptance of later children.
   pause is observed after the intrinsic returns. `UMB-50D` owns interruption
   inside that call.
 
-## `UMB-50A` — protocol versus debuggee transport
+## Frozen `UMB-50A` subset
 
-- Begins only after `U50-00` records the current stdio sharing.
-- A successful debuggee channel must not parse as JSONL or DAP. Protocol
-  stdout must not contain raw program bytes.
-- Lifecycle covers connect, disconnect, EOF, and recoverable I/O errors
-  without dropping the debug session unless disconnect is requested.
-- Authentication here means the debug session owns the channel; it is not
-  remote attach (`UMB-60`).
+- Protocol stdin is JSONL or DAP. Raw lines and unframed bytes are protocol
+  errors; they are never hosted `Read`/`ReadLn` input.
+- Protocol stdout is JSON lines or `Content-Length` frames. `WriteLn` appears
+  only inside structured `output` events.
+- The session owns a debuggee channel that is connected at launch and closed
+  by disconnect without dispatching remaining bytecode.
+- `io.input` / `fpas/input` reject with `live_input_unsupported`. Capabilities
+  `live_input` and `live_terminal` are false.
+- Protocol stdin EOF ends adapter `serve`; it is not debuggee stdin EOF.
+- TUI/graph handlers run only as bytecode inside hosted intrinsics. All-stop
+  inspection does not dispatch them. Pending OS events while stopped belong to
+  `U50-30`.
+- Pause requested during a blocking host intrinsic is observed after that
+  intrinsic returns (`cooperative_pause_waits_for_a_blocking_intrinsic_to_return`).
+  In-call interruption belongs to `U50-40`.
+- Recoverable I/O errors must not drop the debug session unless disconnect is
+  requested. Authentication here means the debug session owns the channel; it
+  is not remote attach (`UMB-60`).
 
 ## `UMB-50B` — live terminal input and output
 

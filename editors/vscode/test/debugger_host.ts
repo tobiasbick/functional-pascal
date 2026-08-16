@@ -28,6 +28,7 @@ import { verifyRuntimeFailureFilters } from "./debugger_host/runtime_failure_fil
 import { verifyTaskControl } from "./debugger_host/task_control";
 import { verifyTaskDebugging } from "./debugger_host/task_debugging";
 import { verifyTaskLifecycle } from "./debugger_host/task_lifecycle";
+import { verifyDebuggerTransport } from "./debugger_host/transport";
 import { verifyVariableMutation } from "./debugger_host/variable_mutation";
 import type { DapMessage } from "./debugger_host/support";
 
@@ -73,6 +74,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyTaskDebugging(workspaceRoot, received, sent);
     await verifyTaskControl(workspaceRoot, received, sent);
     await verifyTaskLifecycle(workspaceRoot, received, sent);
+    await verifyDebuggerTransport(workspaceRoot, received, sent);
   } finally {
     await vscode.debug.stopDebugging();
     tracker.dispose();

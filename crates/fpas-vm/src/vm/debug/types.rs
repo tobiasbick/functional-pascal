@@ -196,6 +196,8 @@ pub enum DebugErrorKind {
     TaskCreateUnsupported,
     /// Restarting a task would invent a new runtime identity.
     TaskRestartUnsupported,
+    /// Live debuggee stdin is not a proven channel and is not protocol stdin.
+    LiveInputUnsupported,
     /// Forced return is not available for this stop, frame, task, or result category.
     FrameReturnUnsupported,
     /// A value-returning function was force-returned without an expression.

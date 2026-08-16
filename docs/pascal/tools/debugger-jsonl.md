@@ -40,6 +40,7 @@ compatibility mode. A response precedes events caused by that request.
 | `task.cancel` | stopped | `task_id` | cancel one live non-root task; retained waiters observe `F4016` on the next continue |
 | `task.create` | stopped | none | always rejected; capability `task_create` is `false` |
 | `task.restart` | stopped | optional `task_id` | always rejected; capability `task_restart` is `false` |
+| `io.input` | stopped | optional `text` | always rejected; capability `live_input` is `false` |
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
@@ -353,7 +354,9 @@ construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. Attach, non-stop execution and reverse execution
 remain false;
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
-`task_create` and `task_restart` are false, and `non_stop` is false. `frame_return`, `variant_describe`,
+`task_create` and `task_restart` are false, and `non_stop` is false.
+`structured_output` is true; `live_input` and `live_terminal` are false.
+`frame_return`, `variant_describe`,
 `variant_construct`, and `storage_initialize` are true.
 
 ## Default limits
@@ -391,6 +394,7 @@ Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `frame_return_unsupported`, `frame_return_value_required`,
 `frame_return_value_unexpected`, `frame_return_type`, `variant_unknown`,
 `variant_field_set`, `storage_already_initialized`, `unknown_task`,
+`task_create_unsupported`, `task_restart_unsupported`, `live_input_unsupported`,
 `timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or

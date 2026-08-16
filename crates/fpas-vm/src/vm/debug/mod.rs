@@ -9,6 +9,7 @@ mod frame_restart;
 pub(in crate::vm) mod initializer_suppression;
 mod inspection;
 mod instruction;
+mod io;
 mod mutation;
 mod routines;
 mod session;
@@ -34,6 +35,7 @@ pub use frame_restart::DebugFrameRestartResult;
 pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
+pub use io::DebuggeeChannelState;
 pub use mutation::{
     DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
     DebugDictionaryMutationResult, DebugStorageInitializationResult, DebugStringMutationResult,

@@ -5,7 +5,7 @@
 - Umbrella state: implementing `UMB-50`
 - Active primary package: `UMB-50`
 - Last completed item: `UMB-40` at `6422489e`
-- Next child: `U50-01` after `U50-00`
+- Next child: `U50-20` after `U50-11`
 - Checkpoint: recoverable `UMB-40` close at `6422489e`; `UMB-50` package
   activated in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
@@ -190,6 +190,9 @@ Evidence log:
 2026-08-16 | UMB-40 | active -> done | 6422489e | recoverable checkpoint includes all-stop task control, cancel, create/restart rejection, and removed `umb-40/` detail | activate UMB-50
 2026-08-16 | UMB-50 | pending -> active | 6422489e base | context-loss-safe hosted-transport package created | execute U50-00
 2026-08-16 | U50-00 | active -> done | 6422489e plus docs | format, locked workspace build, Clippy, workspace suite, and VS Code host pass | freeze U50-01
+2026-08-16 | U50-01 | pending -> done | 6422489e plus worktree | raw protocol stdin rejected; structured output only | implement U50-10
+2026-08-16 | U50-10 | pending -> done | 6422489e plus worktree | session debuggee channel connect/close; live input rejects without mutation | map adapters
+2026-08-16 | U50-11 | pending -> done | 6422489e plus worktree | JSONL `io.input`, DAP `fpas/input`, VS Code structured output without a second console | wait before U50-20
 ```
 
 ## Resume commands
@@ -205,7 +208,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U50-01` in
+The next pending implementation step is `U50-20` in
 [umb-50/progress.md](umb-50/progress.md). `UMB-40` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

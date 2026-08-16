@@ -11,6 +11,7 @@ use super::breakpoints::{
     SourceBreakpoint,
 };
 use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
+use super::io::DebuggeeChannel;
 use super::tasks::DebugTaskRuntime;
 use super::types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
@@ -29,6 +30,7 @@ mod forced_return;
 mod frame_restart;
 mod inspection;
 mod instruction;
+mod io;
 mod lifecycle;
 mod mutation;
 mod sequence;
@@ -79,6 +81,7 @@ pub struct DebugSession {
     inspections: BTreeMap<u64, InspectionSnapshot>,
     inspection_limits: DebugInspectionLimits,
     execution_limits: DebugExecutionLimits,
+    debuggee: DebuggeeChannel,
 }
 
 impl DebugSession {
@@ -223,6 +226,7 @@ impl DebugSession {
             inspections,
             inspection_limits,
             execution_limits,
+            debuggee: DebuggeeChannel::new(),
         })
     }
 

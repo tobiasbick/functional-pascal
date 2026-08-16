@@ -8,6 +8,7 @@ mod exceptions;
 mod forced_return;
 mod frame_restart;
 mod instruction;
+mod io;
 mod lifecycle;
 mod mutation;
 mod sequence;

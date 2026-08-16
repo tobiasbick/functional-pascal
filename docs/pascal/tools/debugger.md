@@ -13,7 +13,10 @@ fpas debug app.fpasprj --protocol dap
 Program arguments follow `--`. JSONL live mode uses one UTF-8 JSON object per
 line on stdin/stdout; script mode processes `--commands` deterministically.
 DAP uses standard `Content-Length` framing. Protocol stdout never contains raw
-program output; output is delivered as structured events.
+program output; output is delivered as structured events. Live debuggee stdin,
+an integrated debug terminal, and TUI/graph event injection are not aliases of
+that protocol stream. `Read`/`ReadLn` still block inside hosted console
+intrinsics and cannot be fed from protocol stdin.
 
 The complete wire contracts are documented in [JSONL protocol V2](debugger-jsonl.md)
 and the [Debug Adapter Protocol contract](debugger-dap.md).
@@ -55,7 +58,8 @@ one live non-root task, marks it cancelled, and stores runtime diagnostic
 waiters; those waiters observe the stored failure on the next continue. The
 main task cannot be cancelled this way; disconnect the session instead.
 Debugger task creation and task restart are rejected. Use `go` in the program,
-or restart a selected frame. Step in, over, and out target the
+or restart a selected frame. Live debuggee input is rejected; keep JSONL or DAP
+bytes on the protocol stream. Step in, over, and out target the
 selected task; when it is waiting, the driver may run unpaused dependencies in
 stable task-ID order until the selected task becomes runnable. A breakpoint, runtime
 failure, pause, or resource limit reached by any task takes precedence and

@@ -35,7 +35,9 @@ The contributed `fpas` debug type launches the bundled CLI's DAP adapter.
 Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
 Run and Debug exposes stack frames, lexical scopes, expandable aggregates,
 watches, hover and Debug Console evaluation, conditional breakpoints, exact
-positive hit conditions, logpoints, and structured program output.
+positive hit conditions, logpoints, and structured program output. Debug Console
+input is read-only evaluation, not program stdin. Live debuggee terminals are
+not created.
 
 Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call

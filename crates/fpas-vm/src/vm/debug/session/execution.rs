@@ -75,6 +75,7 @@ impl DebugSession {
         self.runtime.cancel();
         self.state = DebugSessionState::Terminated;
         self.pause_requested.store(false, Ordering::Release);
+        self.debuggee.close();
         self.invalidate_inspection();
     }
 

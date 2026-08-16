@@ -13,7 +13,7 @@ pub(super) fn initialize_records(
     let inspection = fpas_vm::DebugInspectionLimits::default();
     let evaluation = fpas_vm::DebugEvaluationLimits::default();
     let breakpoints = fpas_vm::DebugBreakpointLimits::default();
-    let capabilities = json!({
+    let mut capabilities = json!({
         "source_breakpoints": true,
         "function_breakpoints": true,
         "runtime_failure_filters": true,
@@ -56,6 +56,10 @@ pub(super) fn initialize_records(
         "logpoints": true,
         "reverse_execution": false
     });
+    if let Value::Object(capabilities) = &mut capabilities {
+        capabilities.insert("live_input".into(), json!(false));
+        capabilities.insert("live_terminal".into(), json!(false));
+    }
     vec![
         success(
             request_id,
@@ -266,6 +270,7 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::InstructionChangeUnsupported => "instruction_change_unsupported",
         fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
         fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
+        fpas_vm::DebugErrorKind::LiveInputUnsupported => "live_input_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
         fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
         fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",

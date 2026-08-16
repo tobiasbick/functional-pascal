@@ -10,6 +10,7 @@ mod forced_return;
 mod frame_restart;
 mod function_breakpoints;
 mod instruction;
+mod io;
 mod lifecycle;
 mod mutation;
 mod runtime_failures;

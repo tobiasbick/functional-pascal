@@ -13,6 +13,7 @@ pub use fpas_std::ScreenSnapshot;
 pub use vm::{
     BoundBreakpoint, BoundFunctionBreakpoint, CallbackSession, DebugArrayMutationResult,
     DebugAssignmentSelector, DebugAssignmentTarget, DebugBinaryOperation, DebugBreakpointLimits,
+    DebugDataLocation, DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,
     DebugDictionaryMutationResult, DebugErrorKind, DebugEvaluateResult,
     DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
     DebugForcedReturnResult, DebugFrame, DebugFrameRestartResult, DebugInspectionLimits,

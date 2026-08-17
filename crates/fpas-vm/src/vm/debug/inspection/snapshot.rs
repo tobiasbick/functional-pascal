@@ -52,4 +52,16 @@ impl InspectionSnapshot {
     pub(in crate::vm::debug) const fn generation(&self) -> u32 {
         self.generation
     }
+
+    /// Return the function identity captured for one current-stop frame.
+    pub(in crate::vm::debug) fn frame_function(
+        &self,
+        frame_id: Option<u64>,
+    ) -> Option<fpas_bytecode::FunctionId> {
+        let frame_id = frame_id?;
+        self.frames
+            .iter()
+            .find(|frame| frame.frame.id == frame_id)
+            .map(|frame| frame.function)
+    }
 }

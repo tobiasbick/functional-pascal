@@ -20,9 +20,10 @@ These are inventory facts for `U70-00`/`U70-01`, not acceptance of later childre
 - Stopped-state mutation already validates some portable identities. Capture-cell
   destinations remain rejected until this package proves cell identity and
   lifetime (`U10D-CELL` → `UMB-70A`).
-- JSONL advertises `data_breakpoints: false`. DAP advertises
-  `supportsDataBreakpoints: false`. Known data-breakpoint commands reject
-  without mutation. Inspection handles expire on resume and are not watchpoint
+- JSONL advertises `data_breakpoints: false` and `location_describe: true`.
+  DAP advertises `supportsDataBreakpoints: false` and maps
+  `fpas/locationDescribe`. Known data-breakpoint commands reject without
+  mutation. Inspection handles expire on resume and are not watchpoint
   identities.
 - Attach and remote debugging were rejected by `UMB-60`. Native OS debugging
   was rejected by `UMB-60C`.
@@ -44,7 +45,23 @@ watchpoint that must survive continue.
 - Supported descendants (record fields, array indexes, dictionary values, enum
   payload fields, Result/Option wrappers) inherit the root lifetime.
 
-Do not add data-breakpoint modules until `U70-10` proves durable location IDs.
+Do not add data-breakpoint modules until `U70-20`. Capture-cell destinations
+stay rejected: `ClosureCell` has pointer identity but no owner-task or alias
+registry (`unregistered_alias`).
+
+## Proven identity subset (`U70-10`)
+
+- Globals: executable-stable slot index. Lifetime `executable`. Survives
+  continue for the session.
+- Frame registers: `(task_id, function, register)` while that activation is on
+  the stack. Lifetime `live_frame`. The protocol handle still expires on
+  resume; re-describe from a fresh stop if the frame is still live.
+- Capture cells: no issued identity. Lifetime `unregistered_alias`. Task-bound
+  function assignment keeps rejecting capture-cell destinations.
+- Descendants inherit the root kind and lifetime.
+
+JSONL `location.describe` and DAP `fpas/locationDescribe` expose that subset.
+Data breakpoints stay unsupported until `U70-20`.
 
 ## `UMB-70A` — stable observable data identities
 

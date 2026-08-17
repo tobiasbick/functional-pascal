@@ -32,7 +32,8 @@ use self::worker::Worker;
 pub use callback::CallbackSession;
 pub use debug::{
     BoundBreakpoint, BoundFunctionBreakpoint, DebugArrayMutationResult, DebugAssignmentSelector,
-    DebugAssignmentTarget, DebugBinaryOperation, DebugBreakpointLimits,
+    DebugAssignmentTarget, DebugBinaryOperation, DebugBreakpointLimits, DebugDataLocation,
+    DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,
     DebugDictionaryMutationResult, DebugErrorKind, DebugEvaluateResult,
     DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
     DebugForcedReturnResult, DebugFrame, DebugFrameRestartResult, DebugInspectionLimits,

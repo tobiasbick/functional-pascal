@@ -60,6 +60,7 @@ pub(super) fn initialize_records(
         capabilities.insert("live_input".into(), json!(true));
         capabilities.insert("live_terminal".into(), json!(false));
         capabilities.insert("data_breakpoints".into(), json!(false));
+        capabilities.insert("location_describe".into(), json!(true));
     }
     vec![
         success(

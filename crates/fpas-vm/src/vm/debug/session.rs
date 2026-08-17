@@ -33,6 +33,7 @@ mod inspection;
 mod instruction;
 mod io;
 mod lifecycle;
+mod location;
 mod mutation;
 mod sequence;
 mod storage;

@@ -12,6 +12,7 @@ mod function_breakpoints;
 mod instruction;
 mod io;
 mod lifecycle;
+mod location;
 mod mutation;
 mod runtime_failures;
 mod sequence;

@@ -10,6 +10,7 @@ mod frame_restart;
 mod instruction;
 mod io;
 mod lifecycle;
+mod location;
 mod mutation;
 mod sequence;
 mod storage;
@@ -430,6 +431,9 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = mutation::custom_response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = location::response_body(command, &body) {
         return result;
     }
     match command {

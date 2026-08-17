@@ -49,6 +49,7 @@ compatibility mode. A response precedes events caused by that request.
 | `stack` | stopped | optional `task_id`, `start`, `count` | bounded frames and resolved `task_id` |
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
+| `location.describe` | stopped | `variables_reference`, `name` | kind, lifetime, and optional durable identity |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
@@ -86,7 +87,9 @@ reject without changing the previous selection.
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
 variable references belong to the current stop and expire on resume. They are
-not data-breakpoint identities. Evaluation
+not data-breakpoint identities. `location.describe` names a global, live-frame
+register, or unregistered capture cell from a current-stop child; inspection
+handles still expire. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
@@ -364,14 +367,15 @@ remain false;
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
 queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
 second console or PTY. `data_breakpoints` is false; `data_breakpoint.set` and
-`data_breakpoints.replace` are known rejected commands because inspection
-handles expire on resume. Empty `text` is a valid empty line. Each accepted line
+`data_breakpoints.replace` are known rejected commands. `location_describe` is
+true: stopped-state `location.describe` names a durable identity from a current
+inspection child. Empty `text` is a valid empty line. Each accepted line
 counts `text` UTF-8 bytes plus one stored newline against
 `debuggee_input_bytes`. Cancel drops unread lines and does not reset that
 quota. Disconnect closes the channel, signals EOF, and clears queued input.
 Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 `frame_return`, `variant_describe`,
-`variant_construct`, and `storage_initialize` are true.
+`variant_construct`, `storage_initialize`, and `location_describe` are true.
 
 ## Default limits
 

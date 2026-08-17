@@ -30,7 +30,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
 `fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
-`fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
+`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
 `setDataBreakpoints`, `dataBreakpointInfo`,
@@ -54,7 +54,8 @@ supplied `frameId` must belong to the current stop; omitting it deliberately
 evaluates globals only. Successful responses include `result`, `type`,
 `variablesReference`, `namedVariables`, and `indexedVariables`. Evaluated
 aggregates expand through `variables`; all references expire when execution
-resumes and are not data-breakpoint identities. The accepted expression subset and limits are documented in
+resumes and are not data-breakpoint identities. `fpas/locationDescribe` names a
+durable location from a current-stop `variablesReference` child. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

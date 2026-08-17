@@ -28,7 +28,7 @@ impl JsonlServer {
                 command,
                 "unsupported_capability",
                 "Data breakpoints are not supported.",
-                "Inspection handles expire on resume and cannot name a watchpoint. Use source or function breakpoints.",
+                "Inspection handles expire on resume. Use `location.describe` for durable identities; data breakpoints remain unsupported.",
             )],
             "breakpoint.set" => self.set_breakpoint(request_id, command, arguments),
             "breakpoint.clear" => self.clear_breakpoint(request_id, command, arguments),
@@ -73,6 +73,7 @@ impl JsonlServer {
             "frame.return" => self.force_return(request_id, command, arguments),
             "frame.restart" => self.restart_frame(request_id, command, arguments),
             "instruction.set" => self.set_instruction(request_id, command, arguments),
+            "location.describe" => self.describe_location(request_id, command, arguments),
             "task.result.replace" => {
                 self.replace_completed_task_result(request_id, command, arguments)
             }

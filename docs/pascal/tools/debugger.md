@@ -97,7 +97,12 @@ statements, declarations, and assignments inside `evaluate` remain rejected.
 `expression.set` are separate stopped-state operations. Handle-based mutation
 addresses a child previously returned by `variables`. Those inspection
 identities belong to the current stop and are not data-breakpoint or watchpoint
-IDs. Textual mutation starts
+IDs. JSONL `location.describe` and DAP `fpas/locationDescribe` name a durable
+location from that current-stop child: globals keep an executable slot identity
+across continue; frame registers remain valid only while that activation is
+live; capture cells have no alias registry and are not watchpoint identities.
+Task-bound function assignment still rejects capture-cell destinations. Data
+breakpoints remain unsupported. Textual mutation starts
 with one visible binding and accepts stored record fields, active enum payload
 fields, wrapper `.value`, and array or dictionary indexes, for example
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,

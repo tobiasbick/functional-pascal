@@ -23,6 +23,20 @@ impl JsonlServer {
                 "Debugger attach is not supported.",
                 "Use `launch`. The debugger owns an in-process VM and does not attach to a running process.",
             )],
+            "step_back" | "reverse_continue" => vec![failure(
+                request_id,
+                command,
+                "unsupported_capability",
+                "Reverse execution is not supported.",
+                "Use continue or a forward step. The debugger does not record or replay execution.",
+            )],
+            "record" | "replay" => vec![failure(
+                request_id,
+                command,
+                "unsupported_capability",
+                "Debugger record and replay are not supported.",
+                "Launch a new debug session. Recordings are not retained.",
+            )],
             "data_breakpoint.set" => vec![failure(
                 request_id,
                 command,

@@ -46,7 +46,7 @@ bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
-execution, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
+execution, record and replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 

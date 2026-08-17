@@ -18,7 +18,8 @@
 These are inventory facts for `U80-00`, not acceptance of later children.
 
 - Debug sessions are launch-owned and all-stop. JSONL advertises
-  `reverse_execution: false`. DAP advertises `supportsStepBack: false`.
+  `reverse_execution: false` and `record_replay: false`. DAP advertises
+  `supportsStepBack: false`.
 - No recording envelope, event log, or replay driver exists in `fpas-vm` or
   `fpas-debug`.
 - Scheduler choices in a debug session run on one host execution lane.
@@ -28,10 +29,41 @@ These are inventory facts for `U80-00`, not acceptance of later children.
   Inspection handles expire on resume.
 - Attach, remote, and native debugging were rejected by `UMB-60`.
 
+## Frozen recording-off contract (`U80-01`)
+
+Recording and reverse execution stay off until later children capture or
+reject each named effect. A named reject changes no stack, frame, task, or
+adapter state. Missing effects below are tests or recorded bounds, not a
+replayability claim.
+
+Observable today on the recording-off path:
+
+- All-stop instruction-boundary dispatch on one debug host lane; task IDs
+  stay stable for the session.
+- Structured console output events.
+- Queued debuggee `Read`/`ReadLn` (`io.input`).
+- Durable global identities, data breakpoints, and breakpoint assign from
+  `UMB-70`.
+
+Not replayable until captured or rejected:
+
+- `Std.Random`
+- Wall-clock and `Std.Time` beyond debug Sleep (`DebugClock::realtime()` on
+  launch-owned sessions; `manual()` exists only in VM tests)
+- `Std.Fs`, environment, process, network, and path host effects
+- OS TUI `ReadKey`/`ReadEvent` and graph `On*` handlers (they run only as
+  bytecode after resume and are not recorded)
+- Non-debug worker-pool scheduling (`fpas run`)
+- Host paths in any future envelope (privacy)
+
+Named rejects without resume or mutation:
+
+- JSONL `step_back`, `reverse_continue`, `record`, and `replay`
+- DAP `stepBack` and `reverseContinue`
+
 ## `UMB-80A` — recording envelope and program identity
 
-- Begins only after `U80-00` records current scheduler, host, and identity
-  ownership.
+- Begins only after `U80-01` freezes recording-off and named rejects.
 - The envelope must name source and program identity without host paths.
 
 ## `UMB-80B` — scheduler and host-event capture

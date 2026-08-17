@@ -26,6 +26,11 @@ impl DapServer {
                 command,
                 "DAP attach is unsupported; launch a Functional Pascal program instead.",
             )],
+            "stepBack" | "reverseContinue" => vec![self.failure(
+                request_seq,
+                command,
+                "Reverse execution is unsupported; the debugger cannot step backward or replay.",
+            )],
             "disassemble" | "readMemory" | "writeMemory" => vec![self.failure(
                 request_seq,
                 command,

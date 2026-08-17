@@ -12,9 +12,10 @@ cancel, set-variable, set-expression, and terminate-on-disconnect for an owned
 launch. It also advertises exception-breakpoint filters for `all` and every
 allocated runtime diagnostic code. It explicitly advertises `supportsAttach: false`,
 `supportsDataBreakpoints: true`,
-`supportsDisassembleRequest: false`, and `supportsReadMemoryRequest: false`.
+`supportsDisassembleRequest: false`, `supportsReadMemoryRequest: false`, and
+`supportsStepBack: false`.
 It does not advertise completions, instruction
-breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
+breakpoints, restart, reverse execution, record/replay, hot reload, non-stop execution, or raw
 register access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
 FPAS tasks. Per-task holds use custom requests `fpas/pauseTask` and
@@ -34,8 +35,8 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
-`disassemble`, `readMemory`, and `writeMemory` fail as unsupported. Other
-unsupported requests fail explicitly.
+`stepBack`, `reverseContinue`, `disassemble`, `readMemory`, and `writeMemory`
+fail as unsupported. Other unsupported requests fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and

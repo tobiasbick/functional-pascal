@@ -11,8 +11,10 @@ crates/fpas-vm/src/vm/debug/
   session/execution.rs         — exists: controlled dispatch
   tasks.rs                     — exists: debug task runtime
 crates/fpas-debug/src/
-  jsonl/encode.rs              — exists: reverse_execution false
+  jsonl/encode.rs              — exists: reverse_execution false, record_replay false
+  jsonl/server/dispatch.rs     — exists: named step_back/record/replay rejects
   dap/server.rs                — exists: supportsStepBack false
+  dap/server/dispatch.rs       — exists: named stepBack/reverseContinue rejects
 ```
 
 Do not add recording or replay modules until `U80-10` is active.
@@ -22,7 +24,7 @@ Do not add recording or replay modules until `U80-10` is active.
 | ID | Status | Work | Exit gate |
 |---|---|---|---|
 | `U80-00` | done | Verify `UMB-70` close and current scheduler, host, and identity ownership | Recorded clean-code baseline; documentation-only transition is explicit |
-| `U80-01` | pending | Freeze recording contracts; inventory scheduler choices and host-visible effects | Missing effects are tests or recorded bounds |
+| `U80-01` | done | Freeze recording contracts; inventory scheduler choices and host-visible effects | Missing effects are tests or recorded bounds |
 | `U80-10` | pending | Implement the proven `UMB-80A` envelope subset | Versioned identity without host paths |
 | `U80-11` | pending | Map accepted envelope operations through JSONL, then DAP/VS Code | Protocol parity |
 | `U80-20` | pending | Implement `UMB-80B` capture only after `U80-10` | Events recorded only at explicit boundaries |

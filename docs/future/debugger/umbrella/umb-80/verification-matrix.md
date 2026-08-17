@@ -8,13 +8,13 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | `V80-01` | Recording envelope names program identity without host paths | Envelope tests or child-not-started evidence | pending |
 | `V80-02` | Scheduler and supported host events are captured only at explicit boundaries | Capture tests or child-not-started evidence | pending |
 | `V80-03` | Memory, disk, event, snapshot, and retention bounds hold | Limit tests or child-not-started evidence | pending |
-| `V80-04` | Unsupported nondeterminism is rejected before replay is claimed | Rejection tests or child-not-started evidence | pending |
-| `V80-05` | Recording-disabled execution matches the current launch-owned path | Recording-off tests or child-not-started evidence | pending |
-| `V80-06` | JSONL and DAP expose equivalent record/replay success and failures | Paired adapter tests | pending |
-| `V80-07` | VS Code exposes only supported recording UX | Extension-host tests | pending |
-| `V80-08` | Current docs describe implemented behavior and limitations only | Documentation review | pending |
-| `V80-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pending |
-| `V80-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pending |
+| `V80-04` | Unsupported nondeterminism is rejected before replay is claimed | Named JSONL/DAP rejects; no replay claim | pass |
+| `V80-05` | Recording-disabled execution matches the current launch-owned path | Rejects leave status and stack unchanged | pass |
+| `V80-06` | JSONL and DAP expose equivalent record/replay success and failures | Paired `record_replay` / `dap_record_replay` tests | pass |
+| `V80-07` | VS Code exposes only supported recording UX | No recording command; `supportsStepBack` is false | pass |
+| `V80-08` | Current docs describe implemented behavior and limitations only | Debugger pages list record/replay as unsupported | pass |
+| `V80-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pass |
+| `V80-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pass |
 
 ## Standard final commands
 

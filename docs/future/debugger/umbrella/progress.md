@@ -4,10 +4,10 @@
 
 - Umbrella state: implementing `UMB-80`
 - Active primary package: `UMB-80`
-- Last completed item: `U80-00` after `U70-40`
-- Next child: `U80-01` after `U80-00`
-- Checkpoint: recoverable `UMB-70` close plus record/replay package
-  activation in the current worktree; `UMB-80` package is active
+- Last completed item: `U80-01` after `U80-00`
+- Next child: `U80-10` after `U80-01`
+- Checkpoint: recoverable recording-off freeze in the current worktree;
+  `UMB-80` package remains active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
   (no capture-cell alias registry after `UMB-70A`)
 - Branch: `codex/fpas-debugger`
@@ -31,7 +31,7 @@ current worktree before changing or staging anything.
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
 | `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
-| `UMB-80` | active | Record/replay package created; see [umb-80/progress.md](umb-80/progress.md) |
+| `UMB-80` | active | Recording-off freeze; see [umb-80/progress.md](umb-80/progress.md) |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
 | `UMB-99` | pending | Final parity and plan removal |
 
@@ -221,6 +221,7 @@ Evidence log:
 2026-08-17 | UMB-70 | active -> done | 26b47a1d | recoverable checkpoint includes global data breakpoints, location describe, breakpoint-hit assign, and removed `umb-70/` detail | activate UMB-80
 2026-08-17 | UMB-80 | pending -> active | 26b47a1d base | context-loss-safe record/replay package created from launch-owned all-stop sessions with reverse_execution false | execute U80-00
 2026-08-17 | U80-00 | active -> done | 26b47a1d plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U80-01
+2026-08-17 | U80-01 | pending -> done | worktree | named reverse/record rejects; record_replay false; paired JSONL/DAP tests; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | envelope U80-10
 ```
 
 ## Resume commands
@@ -236,7 +237,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U80-01` in
+The next pending implementation step is `U80-10` in
 [umb-80/progress.md](umb-80/progress.md). `UMB-70` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

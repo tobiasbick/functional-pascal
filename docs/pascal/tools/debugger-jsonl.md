@@ -32,6 +32,8 @@ compatibility mode. A response precedes events caused by that request.
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
+| `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
+| `record`, `replay` | any | none | always rejected; capability `record_replay` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
 | `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
@@ -372,8 +374,8 @@ aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
-conditions, and logpoints. Attach, non-stop execution and reverse execution
-remain false;
+conditions, and logpoints. `attach`, `non_stop`, `reverse_execution`, and
+`record_replay` remain false;
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`

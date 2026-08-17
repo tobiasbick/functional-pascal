@@ -1,18 +1,19 @@
-# UMB-70 data breakpoints and bounded breakpoint actions
+# UMB-80 deterministic record and replay
 
-Status: active. Resume at pending `U70-40` in [progress.md](progress.md).
+Status: active. Resume at pending `U80-01` in [progress.md](progress.md).
 
-This package owns stable observable data identities and mutation-observation
-stops after the `UMB-40` all-stop contract. It extends the existing shared VM
-debugger engine; JSONL, DAP, and VS Code remain adapters. It does not change
-the FPAS language, absorb attach/remote from the rejected `UMB-60` work, or
-add a second debugger engine. Capture-cell destinations (`U10D-CELL`) resume
-here as `UMB-70A`.
+This package owns versioned, bounded recordings of scheduler choices and
+supported host-visible events after the `UMB-40` all-stop, `UMB-50` transport,
+and `UMB-70` identity contracts. It extends the existing shared VM debugger
+engine; JSONL, DAP, and VS Code remain adapters. It does not change the FPAS
+language, reopen attach/remote from the rejected `UMB-60` work, or add a
+second debugger engine. Forward execution with recording disabled must stay
+unchanged.
 
 ## Files
 
-- [scope-and-decisions.md](scope-and-decisions.md) freezes identity, data-stop,
-  and mutating-action contracts.
+- [scope-and-decisions.md](scope-and-decisions.md) freezes envelope, capture,
+  bound, and rejection contracts.
 - [implementation-plan.md](implementation-plan.md) owns ordered work IDs and
   the intended source layout.
 - [verification-matrix.md](verification-matrix.md) defines required positive,
@@ -32,7 +33,7 @@ here as `UMB-70A`.
 
 ## Package exit
 
-`UMB-70` is complete only when each child is implemented, rejected, blocked by
+`UMB-80` is complete only when each child is implemented, rejected, blocked by
 a named umbrella dependency, or split by evidence; all applicable verification
 rows pass; current debugger documentation describes only implemented behavior;
 and a recoverable checkpoint exists. Delete this directory after that

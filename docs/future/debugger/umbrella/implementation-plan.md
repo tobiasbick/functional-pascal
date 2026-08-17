@@ -12,8 +12,8 @@
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | done | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | done | Protocol I/O is separated from debuggee I/O; queued terminal input, stopped TUI/graph ownership, and cooperative pause after host returns |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | done | Local attach, remote sessions, and native OS debugging rejected; sessions stay launch-owned |
-| `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | active | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
-| `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | pending | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
+| `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | done | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
+| `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | active | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
 | `UMB-90` | Suspended-code hot reload | `UMB-80` | pending | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
 | `UMB-99` | Final parity, packaging, documentation, and cleanup | all resolved packages | pending | Applicable matrix rows pass; current docs match behavior; independent deferrals are centralized; umbrella plan is removed |
 
@@ -48,7 +48,7 @@ mixing unrelated changes.
 | `UMB-10A` | done | Copy an already materialized task-bound function | Same-owner, same-task lifetime and escape proof; foreign, global, descendant, spawn, and stale cases fail atomically |
 | `UMB-10B` | blocked by `UMB-90` | Enter a new anonymous closure expression | A new body needs a verified function in the shared live executable; resume only after versioned image replacement exists, then prove bounded parsing and exact capture provenance |
 | `UMB-10C` | done | Synthesize a bound receiver callable | Exact method identity, receiver type/layout, lifetime, and task ownership |
-| `UMB-10D` | done | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | `U10D-DYN` rejected; `U10D-CELL` blocked by `UMB-70A`; `U10D-OPAQUE` rejected; `U10D-EDIT` rejected (`UMB-90` keeps code/signature); evidence retained in parent progress, tests, and current docs |
+| `UMB-10D` | done | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | `U10D-DYN` rejected; `U10D-CELL` remains rejected after `UMB-70A` (no alias registry); `U10D-OPAQUE` rejected; `U10D-EDIT` rejected (`UMB-90` keeps code/signature); evidence retained in parent progress, tests, and current docs |
 
 Completing one child does not mark `UMB-10` complete until every other child is
 implemented or reclassified by evidence.
@@ -72,7 +72,7 @@ and [progress.md](progress.md).
 |---|---|---|
 | `UMB-20A` | Function breakpoints | Match stable function metadata, including nested and same-named routines |
 | `UMB-20B` | Rich runtime-failure filters | Filter stable diagnostic codes/categories without hiding unclassified failures |
-| `UMB-20C` | Non-mutating breakpoint actions | Preserve stop ordering and bounded evaluation; mutating actions remain in `UMB-70C` |
+| `UMB-20C` | Non-mutating breakpoint actions | Preserve stop ordering and bounded evaluation; mutating actions were implemented by `UMB-70C` |
 
 ## `UMB-30` — Controlled lifecycle and frame changes
 
@@ -127,17 +127,21 @@ debugger documentation, and [progress.md](progress.md).
 
 ## `UMB-70` — Data breakpoints and actions
 
-Active. Execute only the next work ID in
-[umb-70/progress.md](umb-70/progress.md). Stable identities (`UMB-70A`) must
-pass before data breakpoints or mutating actions.
+Completed at implementation checkpoint `26b47a1d`. The obsolete execution
+detail was removed; durable behavior and evidence remain in tests, current
+debugger documentation, and [progress.md](progress.md).
 
-| Child | Scope | Additional gate |
-|---|---|---|
-| `UMB-70A` | Stable observable data identities | Globals, frame registers, cells, and supported descendants have exact lifetimes |
-| `UMB-70B` | Data breakpoints | Read/write/change semantics and bounded overhead are deterministic across tasks |
-| `UMB-70C` | Mutating breakpoint actions | Reuse prepare/validate/commit and invalidate snapshots exactly once |
+| Child | Status | Scope | Additional gate |
+|---|---|---|---|
+| `UMB-70A` | done | Stable observable data identities | Globals keep an executable slot; frame registers are live-activation only; capture cells stay `unregistered_alias` |
+| `UMB-70B` | done | Data breakpoints | Global write/change watches; read and frame identities unverified; replace-all is atomic and bounded |
+| `UMB-70C` | done | Mutating breakpoint actions | One global assign after condition and hit tests; function breakpoints reject assign |
 
 ## `UMB-80` — Record and replay
+
+Active. Execute only the next work ID in
+[umb-80/progress.md](umb-80/progress.md). Do not claim replayability before
+unsupported host or scheduler effects are inventoried and rejected.
 
 - Version the recording envelope and source/program identity.
 - Record scheduler choices and supported host inputs at explicit boundaries.

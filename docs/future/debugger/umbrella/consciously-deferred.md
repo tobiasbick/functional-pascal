@@ -27,8 +27,8 @@ prerequisites, not promises that implementation will be accepted:
 - Dynamic callable endpoints, opaque identity-bearing resources, and in-place
   callable editing were rejected by `UMB-10D`; its evidence remains in parent
   progress, focused tests, and current debugger documentation. Task-bound
-  capture-cell destinations remain blocked on `UMB-70A` cell identity and
-  lifetime.
+  capture-cell destinations remain rejected after `UMB-70A`: capture cells have
+  pointer identity but no owner-task or alias registry.
 - Arbitrary instruction changes were rejected by `UMB-30D` / `U30-50`. Existing
   bytecode verification proves the original CFG from entry, not initialized
   registers or operand types at an interior sequence point. Temporary registers

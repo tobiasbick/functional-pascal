@@ -2,15 +2,14 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementing `UMB-70`
-- Active primary package: `UMB-70`
-- Last completed item: `U70-31` after `U70-30`
-- Next child: `U70-40` after `U70-31`
-- Checkpoint: recoverable `U70-01` freeze plus durable location describe,
-  global data breakpoints, and mutating breakpoint assign in the current
-  worktree; `UMB-70` package remains active
+- Umbrella state: implementing `UMB-80`
+- Active primary package: `UMB-80`
+- Last completed item: `U80-00` after `U70-40`
+- Next child: `U80-01` after `U80-00`
+- Checkpoint: recoverable `UMB-70` close plus record/replay package
+  activation in the current worktree; `UMB-80` package is active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
-  under `UMB-70A` until an alias registry exists
+  (no capture-cell alias registry after `UMB-70A`)
 - Branch: `codex/fpas-debugger`
 - Implementation started: yes
 
@@ -31,8 +30,8 @@ current worktree before changing or staging anything.
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
-| `UMB-70` | active | Global assign on source/data breakpoint hits; see [umb-70/progress.md](umb-70/progress.md) |
-| `UMB-80` | pending | Recording format and nondeterminism inventory first |
+| `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
+| `UMB-80` | active | Record/replay package created; see [umb-80/progress.md](umb-80/progress.md) |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
 | `UMB-99` | pending | Final parity and plan removal |
 
@@ -216,6 +215,12 @@ Evidence log:
 2026-08-17 | U70-11 | pending -> done | 6f0b3b30 plus worktree | JSONL location.describe and DAP fpas/locationDescribe; data breakpoints stay false; format/build/Clippy/workspace tests/npm/diff check pass | wait for U70-20
 2026-08-17 | U70-20 | pending -> done | b65ecfc plus worktree | global write/change data breakpoints; read and frames unverified; atomic limit | map U70-21
 2026-08-17 | U70-21 | pending -> done | b65ecfc plus worktree | JSONL/DAP data-breakpoint mapping; no extra VS Code watchpoint UX; format/build/Clippy/workspace tests/npm/diff check pass | wait for U70-30
+2026-08-17 | U70-30 | pending -> done | da50b07b plus worktree | assign_data_location reuses commit_mutation; snapshots refresh once on success | map U70-31
+2026-08-17 | U70-31 | pending -> done | 26b47a1d | JSONL/DAP assign mapping; function breakpoints reject assign; format/build/Clippy/workspace tests/npm/diff check pass | wait for U70-40
+2026-08-17 | U70-40 | pending -> done | 26b47a1d plus worktree | docs reconciled; `umb-70/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test pass | wait for UMB-80
+2026-08-17 | UMB-70 | active -> done | 26b47a1d | recoverable checkpoint includes global data breakpoints, location describe, breakpoint-hit assign, and removed `umb-70/` detail | activate UMB-80
+2026-08-17 | UMB-80 | pending -> active | 26b47a1d base | context-loss-safe record/replay package created from launch-owned all-stop sessions with reverse_execution false | execute U80-00
+2026-08-17 | U80-00 | active -> done | 26b47a1d plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U80-01
 ```
 
 ## Resume commands
@@ -231,8 +236,8 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U70-40` in
-[umb-70/progress.md](umb-70/progress.md). `UMB-60` evidence remains in this
+The next pending implementation step is `U80-01` in
+[umb-80/progress.md](umb-80/progress.md). `UMB-70` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.
 

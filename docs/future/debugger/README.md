@@ -22,7 +22,9 @@ task history were rejected by `UMB-40`. Protocol and debuggee I/O are separated;
 queued `Read`/`ReadLn`, structured output, and stopped TUI/graph ownership are
 implemented. In-call interruption of blocking host intrinsics was rejected by
 `UMB-50`. Attach, remote sessions, and native OS debugging were rejected by
-`UMB-60`. Remaining data-breakpoint work is owned by `UMB-70` in the
+`UMB-60`. Global write/change data breakpoints, durable location describe, and
+optional global assignment on source or data breakpoint hits were implemented
+by `UMB-70`. Remaining record/replay work is owned by `UMB-80` in the
 [active umbrella](umbrella/implementation-plan.md).
 
 The implemented debugger includes complete-value replacement of mutable enum,
@@ -70,8 +72,8 @@ preserves the exact runtime task ID and does not consult the scheduler. Newly
 entered anonymous closures require the versioned live-image work in `UMB-90`.
 Dynamic callable endpoints, opaque hosted-resource assignment, and in-place
 callable child editing were rejected by `UMB-10D`. Task-bound writes into
-capture-cell destinations remain blocked on stable cell identities in
-`UMB-70A`.
+capture-cell destinations remain rejected after `UMB-70A`: capture cells have
+no alias registry.
 
 Bounded forced return from a selected ordinary callee — including an older
 frame of the stop-owning task — is implemented through JSONL `frame.return`,
@@ -82,8 +84,9 @@ Arbitrary instruction-pointer changes were rejected by `UMB-30D`. All-stop
 task control, per-task pause/resume, and cancel are implemented; debugger
 task creation, task restart, non-stop execution, and unbounded history were
 rejected by `UMB-40`. Attach, remote sessions, and native OS debugging were
-rejected by `UMB-60`. Remaining data-breakpoint work is owned by `UMB-70` in
-the [active umbrella](umbrella/implementation-plan.md).
+rejected by `UMB-60`. Global data breakpoints and breakpoint-hit assignment
+were implemented by `UMB-70`. Remaining record/replay work is owned by
+`UMB-80` in the [active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

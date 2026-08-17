@@ -65,9 +65,11 @@ returns a persistable `dataId` only for executable globals (`g:<index>`) with
 JSONL. VS Code uses the standard variable data-breakpoint
 UI; the adapter does not add a second watchpoint command or an assign editor
 command. `fpas/record` starts capturing all-stop events and queued `Read`/`ReadLn`
-lines without resuming or enabling reverse playback. `fpas/recordingDescribe`
-names versioned program identity, portable sources, whether capture is on, and
-captured events. The accepted expression subset and limits are documented in
+lines without resuming or enabling reverse playback. Capture stays in session
+memory, keeps at most 4,096 events, writes no recording files, and retains no
+recording snapshots. `fpas/recordingDescribe` names versioned program identity,
+portable sources, whether capture is on, whether later events were dropped,
+the event ceiling, and captured events. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

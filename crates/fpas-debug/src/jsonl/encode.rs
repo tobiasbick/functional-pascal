@@ -66,6 +66,7 @@ pub(super) fn initialize_records(
         capabilities.insert("record_replay".into(), json!(false));
         capabilities.insert("recording_describe".into(), json!(true));
         capabilities.insert("recording_capture".into(), json!(true));
+        capabilities.insert("recording_disk".into(), json!(false));
     }
     vec![
         success(
@@ -97,6 +98,8 @@ pub(super) fn initialize_records(
                     "evaluation_call_timeout_milliseconds": evaluation.call_timeout.as_millis(),
                     "captured_output_bytes": execution.max_output_bytes,
                     "debuggee_input_bytes": execution.max_input_bytes,
+                    "recording_events": fpas_vm::MAX_RECORDING_EVENTS,
+                    "recording_snapshots": 0,
                     "instructions": execution.max_instructions,
                     "timeout_milliseconds": execution.timeout.as_millis()
                 }

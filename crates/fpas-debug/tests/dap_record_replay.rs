@@ -72,6 +72,11 @@ fn dap_step_back_after_stop_does_not_resume() {
     let recorded = send(&mut server, &mut seq, "fpas/record", json!({}));
     assert_eq!(recorded[0]["success"], true, "{recorded:?}");
     assert_eq!(recorded[0]["body"]["capturing"], true);
+    assert_eq!(recorded[0]["body"]["truncated"], false);
+    assert_eq!(
+        recorded[0]["body"]["eventLimit"],
+        fpas_vm::MAX_RECORDING_EVENTS
+    );
     assert_eq!(recorded.len(), 1, "{recorded:?}");
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
@@ -93,15 +98,23 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
     assert_eq!(described[0]["body"]["capturing"], false);
+    assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["eventCount"], 0);
+    assert_eq!(
+        described[0]["body"]["eventLimit"],
+        fpas_vm::MAX_RECORDING_EVENTS
+    );
     assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");
 
     let recorded = send(&mut server, &mut seq, "fpas/record", json!({}));
     assert_eq!(recorded[0]["success"], true, "{recorded:?}");
     assert_eq!(recorded[0]["body"]["capturing"], true);
+    assert_eq!(recorded[0]["body"]["truncated"], false);
 
     let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
     assert_eq!(described[0]["body"]["capturing"], true);
+    assert_eq!(described[0]["body"]["truncated"], false);
     assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
     assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
 

@@ -34,6 +34,7 @@ pub enum DebugRecordingEvent {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct DebugRecordingLog {
     capturing: bool,
+    truncated: bool,
     events: Vec<DebugRecordingEvent>,
 }
 
@@ -42,6 +43,12 @@ impl DebugRecordingLog {
     #[must_use]
     pub const fn capturing(&self) -> bool {
         self.capturing
+    }
+
+    /// Whether later events were dropped after the in-memory ceiling.
+    #[must_use]
+    pub const fn truncated(&self) -> bool {
+        self.truncated
     }
 
     /// Captured events in order. Empty while recording is off.
@@ -76,9 +83,14 @@ impl DebugRecordingLog {
     }
 
     fn push(&mut self, event: DebugRecordingEvent) {
-        if self.capturing && self.events.len() < MAX_RECORDING_EVENTS {
-            self.events.push(event);
+        if !self.capturing {
+            return;
         }
+        if self.events.len() >= MAX_RECORDING_EVENTS {
+            self.truncated = true;
+            return;
+        }
+        self.events.push(event);
     }
 }
 
@@ -106,6 +118,7 @@ mod tests {
         log.push_stop(&stop(0));
         log.push_input("queued");
         assert!(!log.capturing());
+        assert!(!log.truncated());
         assert!(log.events().is_empty());
     }
 
@@ -119,5 +132,6 @@ mod tests {
         }
         assert_eq!(log.events().len(), MAX_RECORDING_EVENTS);
         assert!(log.capturing());
+        assert!(log.truncated());
     }
 }

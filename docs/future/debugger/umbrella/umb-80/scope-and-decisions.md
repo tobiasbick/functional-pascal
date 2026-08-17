@@ -79,13 +79,18 @@ must not resume.
 - Events are recorded only at explicit all-stop boundaries and successful
   queued `Read`/`ReadLn` input. Mid-resume scheduler choices are not logged.
 - A second `record` is idempotent. Capture does not resume or enable replay.
-- An in-memory ceiling of 4096 events is an implementation bound; advertised
-  retention and disk limits belong to `UMB-80C`.
+- An in-memory ceiling of 4096 events is enforced; later events are dropped
+  and `truncated` is reported.
 
 ## `UMB-80C` — bounds and retention
 
 - Begins only after capture points exist.
 - Default paths must not retain unbounded events, snapshots, or files.
+- Capture keeps at most 4,096 events in session memory. Overflow drops later
+  events, leaves forward execution unchanged, and reports `truncated`.
+- No recording files are written (`recording_disk` is false).
+- No recording snapshots are retained (`recording_snapshots` is 0).
+- Retention is the debug session lifetime.
 
 ## `UMB-80D` — unsupported effects and recording-off
 

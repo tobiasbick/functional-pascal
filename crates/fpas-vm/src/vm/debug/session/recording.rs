@@ -50,6 +50,12 @@ impl DebugSession {
         self.recording.events()
     }
 
+    /// Whether later capture events were dropped after the in-memory ceiling.
+    #[must_use]
+    pub const fn recording_truncated(&self) -> bool {
+        self.recording.truncated()
+    }
+
     pub(super) fn capture_current_stop(&mut self) {
         self.recording.push_stop(&self.last_stop);
     }

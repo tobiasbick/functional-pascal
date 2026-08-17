@@ -87,11 +87,13 @@ fn from_executable_rejects_posix_absolute_sources() {
 fn recording_stays_empty_until_start() {
     let mut session = compile_session("program Quiet; begin end.");
     assert!(!session.is_recording());
+    assert!(!session.recording_truncated());
     assert!(session.recording_events().is_empty());
     match session.continue_execution().expect("forward execution") {
         DebugRunResult::Terminated(_) | DebugRunResult::Stopped(_) => {}
     }
     assert!(session.recording_events().is_empty());
+    assert!(!session.recording_truncated());
 }
 
 #[test]
@@ -106,6 +108,7 @@ end.
     );
     session.start_recording();
     assert!(session.is_recording());
+    assert!(!session.recording_truncated());
     let events = session.recording_events();
     assert_eq!(events.len(), 1, "{events:?}");
     assert!(

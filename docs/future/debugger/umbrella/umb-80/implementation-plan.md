@@ -14,16 +14,15 @@ crates/fpas-vm/src/vm/debug/
     capture.rs                 — exists: bounded in-memory event log
   tasks.rs                     — exists: debug task runtime
 crates/fpas-debug/src/
-  jsonl/encode.rs              — exists: reverse_execution false, record_replay false, recording_describe true, recording_capture true
+  jsonl/encode.rs              — exists: reverse_execution false, record_replay false, recording_describe true, recording_capture true, recording_disk false, recording_events 4096, recording_snapshots 0
   jsonl/server/dispatch.rs     — exists: named step_back/replay rejects; record starts capture
-  jsonl/server/recording.rs    — exists: envelope, capture, and describe mapping
+  jsonl/server/recording.rs    — exists: envelope, capture, truncated, and describe mapping
   dap/server.rs                — exists: supportsStepBack false
   dap/server/dispatch.rs       — exists: named stepBack/reverseContinue rejects; fpas/recordingDescribe; fpas/record
-  dap/server/recording.rs      — exists: envelope and capture mapping
+  dap/server/recording.rs      — exists: envelope, capture, and bound mapping
 ```
 
-Do not add disk, retention, or replay modules until `U80-30` or `U80-40` is
-active.
+Do not add replay modules until `U80-40` is active.
 
 ## Ordered work
 
@@ -35,8 +34,8 @@ active.
 | `U80-11` | done | Map accepted envelope operations through JSONL, then DAP/VS Code | Protocol parity |
 | `U80-20` | done | Implement `UMB-80B` capture only after `U80-10` | Events recorded only at explicit boundaries |
 | `U80-21` | done | Map capture through adapters/editor | Protocol-equivalent success and negatives |
-| `U80-30` | pending | Implement `UMB-80C` bounds and retention only after `U80-20` | Default paths cannot grow without bound |
-| `U80-31` | pending | Map bounds through adapters/editor | Capability and error parity |
+| `U80-30` | done | Implement `UMB-80C` bounds and retention only after `U80-20` | Default paths cannot grow without bound |
+| `U80-31` | done | Map bounds through adapters/editor | Capability and error parity |
 | `U80-40` | pending | Implement `UMB-80D` unsupported-effect rejection and recording-off proof | Replay claims only after rejects; disabled path unchanged |
 | `U80-41` | pending | Map rejection and recording-off through adapters/editor | Protocol-equivalent success and negatives |
 | `U80-50` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |

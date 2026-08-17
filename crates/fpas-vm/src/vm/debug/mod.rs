@@ -46,7 +46,9 @@ pub use mutation::{
     DebugDictionaryMutationResult, DebugStorageInitializationResult, DebugStringMutationResult,
     DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField, DebugVariantInfo,
 };
-pub use recording::{DebugRecordingEnvelope, DebugRecordingEvent, RECORDING_ENVELOPE_VERSION};
+pub use recording::{
+    DebugRecordingEnvelope, DebugRecordingEvent, MAX_RECORDING_EVENTS, RECORDING_ENVELOPE_VERSION,
+};
 pub use session::{DebugEvaluationCancelHandle, DebugPauseHandle, DebugSession};
 pub use types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,

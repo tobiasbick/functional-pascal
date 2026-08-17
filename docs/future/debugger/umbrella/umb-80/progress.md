@@ -3,12 +3,11 @@
 ## Current checkpoint
 
 - Package: `UMB-80` active
-- Active work IDs: none; `U80-30` is pending
-- Base checkpoint: `2e3e58e7`
-- Code changes after base: in-memory capture of all-stop and queued
-  `Read`/`ReadLn` events; JSONL `record` and DAP `fpas/record`; describe
-  reports `capturing` and events; replay and reverse-step stay rejected
-- Next action: begin `U80-30` only after an explicit continuation request
+- Active work IDs: none; `U80-40` is pending
+- Base checkpoint: `65eb91ea`
+- Code changes after base: advertised in-memory event ceiling; truncated
+  flag; no recording disk or snapshot store; JSONL/DAP report the bound
+- Next action: begin `U80-40` only after an explicit continuation request
 - Commit/push authorization: commit requested with this continuation
 
 ## Work status
@@ -21,8 +20,8 @@
 | `U80-11` | done | JSONL `recording.describe` and DAP `fpas/recordingDescribe`; no extra VS Code recording UX; record/replay stay rejected |
 | `U80-20` | done | Capture is off until `start_recording`; all-stop and queued `Read`/`ReadLn` events only; in-memory ceiling 4096; no replay |
 | `U80-21` | done | JSONL `record` and DAP `fpas/record`; describe reports capturing and events; replay/`stepBack` stay rejected; no extra VS Code recording UX |
-| `U80-30` | pending | Bounds and retention |
-| `U80-31` | pending | Adapter/editor mapping |
+| `U80-30` | done | Event ceiling advertised and enforced; overflow sets truncated; no disk files; snapshot limit 0; session-lifetime retention |
+| `U80-31` | done | JSONL `recording_events`/`recording_snapshots`/`recording_disk`; describe/record report truncated and event limit; DAP camelCase parity; no extra VS Code recording UX |
 | `U80-40` | pending | Unsupported-effect rejection and recording-off proof |
 | `U80-41` | pending | Adapter/editor mapping |
 | `U80-50` | pending | Full verification and closure |
@@ -31,8 +30,9 @@
 
 - JSONL `reverse_execution` and `record_replay` are false. DAP
   `supportsStepBack` is false. Envelope describe is available; capture starts
-  only after `record` / `fpas/record`. No replay driver exists.
-- These are inventory facts, not acceptance of `UMB-80C`–`UMB-80D`.
+  only after `record` / `fpas/record`. Capture is bounded in session memory.
+  No replay driver exists.
+- These are inventory facts, not acceptance of `UMB-80D`.
 
 ## Evidence log
 
@@ -44,6 +44,8 @@
 2026-08-17 | U80-11 | pending -> done | worktree | JSONL/DAP recording.describe; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | capture U80-20
 2026-08-17 | U80-20 | pending -> done | worktree | all-stop and queued-input capture; recording-off stays empty | map U80-21
 2026-08-17 | U80-21 | pending -> done | worktree | JSONL/DAP record starts capture; replay stays rejected; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | bounds U80-30
+2026-08-17 | U80-30 | pending -> done | worktree | advertised 4096 event ceiling; truncated; no disk or snapshot store | map U80-31
+2026-08-17 | U80-31 | pending -> done | worktree | JSONL/DAP bound and truncated mapping; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject U80-40
 ```
 
 ## Resume commands

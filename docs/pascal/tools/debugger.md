@@ -46,7 +46,7 @@ bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
 may spawn retained and detached tasks. Attach, non-stop task execution, reverse
-execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `Read`/`ReadLn` lines without resuming or enabling reverse playback. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, and captured events. Frame
+execution, replay, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Recording is off until JSONL `record` or DAP `fpas/record`; those commands capture later all-stop events and queued `Read`/`ReadLn` lines without resuming or enabling reverse playback. Capture stays in session memory, keeps at most 4,096 events, writes no recording files, and retains no recording snapshots. Later events are dropped and `recording.describe` / `fpas/recordingDescribe` report `truncated`. JSONL `recording.describe` and DAP `fpas/recordingDescribe` name the current program, portable sources, whether capture is on, the event ceiling, and captured events. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
 

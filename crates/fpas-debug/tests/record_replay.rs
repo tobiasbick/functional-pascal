@@ -42,6 +42,15 @@ fn jsonl_record_replay_is_advertised_false_and_rejects_without_launch() {
         initialized[0]["body"]["capabilities"]["recording_capture"],
         true
     );
+    assert_eq!(
+        initialized[0]["body"]["capabilities"]["recording_disk"],
+        false
+    );
+    assert_eq!(
+        initialized[0]["body"]["limits"]["recording_events"],
+        fpas_vm::MAX_RECORDING_EVENTS
+    );
+    assert_eq!(initialized[0]["body"]["limits"]["recording_snapshots"], 0);
     assert_eq!(server.status(), ServerStatus::Initialized);
 
     for (id, command) in [(2, "step_back"), (3, "reverse_continue"), (4, "replay")] {
@@ -76,6 +85,11 @@ fn jsonl_record_replay_after_stop_does_not_resume() {
     let recorded = server.handle_line(&request(7, "record", json!({})));
     assert_eq!(recorded[0]["success"], true, "{recorded:?}");
     assert_eq!(recorded[0]["body"]["capturing"], true);
+    assert_eq!(recorded[0]["body"]["truncated"], false);
+    assert_eq!(
+        recorded[0]["body"]["event_limit"],
+        fpas_vm::MAX_RECORDING_EVENTS
+    );
     assert_eq!(recorded.len(), 1, "{recorded:?}");
     assert_eq!(server.status(), ServerStatus::Stopped);
 
@@ -97,6 +111,12 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
     assert_eq!(described[0]["body"]["capturing"], false);
+    assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["event_count"], 0);
+    assert_eq!(
+        described[0]["body"]["event_limit"],
+        fpas_vm::MAX_RECORDING_EVENTS
+    );
     assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");
     assert_eq!(server.status(), ServerStatus::Initialized);
@@ -108,6 +128,7 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
 
     let described = server.handle_line(&request(4, "recording.describe", json!({})));
     assert_eq!(described[0]["body"]["capturing"], true);
+    assert_eq!(described[0]["body"]["truncated"], false);
     assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
     assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
 }

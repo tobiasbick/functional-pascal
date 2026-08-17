@@ -25,6 +25,7 @@ impl JsonlServer {
                     &envelope,
                     session.is_recording(),
                     session.recording_events(),
+                    session.recording_truncated(),
                 ),
             )],
             Err(error) => vec![session_error(request_id, command, error)],
@@ -47,7 +48,9 @@ impl JsonlServer {
             command,
             json!({
                 "capturing": true,
+                "truncated": session.recording_truncated(),
                 "event_count": session.recording_events().len(),
+                "event_limit": fpas_vm::MAX_RECORDING_EVENTS,
             }),
         )]
     }
@@ -57,6 +60,7 @@ fn envelope_body(
     envelope: &fpas_vm::DebugRecordingEnvelope,
     capturing: bool,
     events: &[fpas_vm::DebugRecordingEvent],
+    truncated: bool,
 ) -> Value {
     json!({
         "version": envelope.version,
@@ -64,6 +68,9 @@ fn envelope_body(
         "program": envelope.program,
         "sources": envelope.sources,
         "capturing": capturing,
+        "truncated": truncated,
+        "event_count": events.len(),
+        "event_limit": fpas_vm::MAX_RECORDING_EVENTS,
         "events": events.iter().map(event_body).collect::<Vec<_>>(),
     })
 }

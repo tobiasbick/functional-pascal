@@ -208,6 +208,29 @@ fn resolve_cli_config_parses_test_strict_flag() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
 
+#[test]
+fn resolve_cli_config_rejects_debug_listen_and_attach_flags() {
+    let cwd = create_temp_dir("reject-attach-flags");
+    let cases = [
+        vec!["run", "--debug-listen", "app.fpas"],
+        vec!["run", "--listen", "app.fpas"],
+        vec!["debug", "--attach", "app.fpas"],
+        vec!["debug", "--debug-listen", "app.fpas"],
+    ];
+    for args in cases {
+        let result = resolve_cli_config(
+            &args
+                .iter()
+                .map(|arg| String::from(*arg))
+                .collect::<Vec<_>>(),
+            &cwd,
+        );
+        let error = result.expect_err(&format!("{args:?} must stay unknown"));
+        assert!(error.contains("Unknown option"), "{args:?}: {error}");
+    }
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
 fn test_project(prefix: &str) -> std::path::PathBuf {
     let cwd = create_temp_dir(prefix);
     write_text(&cwd.join("demo.fpasprj"), TEST_PROJECT);

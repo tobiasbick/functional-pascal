@@ -81,3 +81,17 @@ fn jsonl_native_inspection_commands_are_unsupported() {
     }
     assert_eq!(server.status(), ServerStatus::Stopped);
 }
+
+#[test]
+fn jsonl_server_constructs_a_launch_owned_session_at_entry() {
+    let mut server = server();
+    assert_eq!(server.status(), ServerStatus::Created);
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    assert_eq!(server.status(), ServerStatus::Initialized);
+    let launched = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    assert!(
+        launched.iter().any(|record| record["event"] == "stopped"),
+        "{launched:?}"
+    );
+    assert_eq!(server.status(), ServerStatus::Stopped);
+}

@@ -11,8 +11,8 @@
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | done | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | done | Protocol I/O is separated from debuggee I/O; queued terminal input, stopped TUI/graph ownership, and cooperative pause after host returns |
-| `UMB-60` | Attach and remote debugging | `UMB-50` | active | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
-| `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | pending | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
+| `UMB-60` | Attach and remote debugging | `UMB-50` | done | Local attach, remote sessions, and native OS debugging rejected; sessions stay launch-owned |
+| `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | active | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
 | `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | pending | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
 | `UMB-90` | Suspended-code hot reload | `UMB-80` | pending | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
 | `UMB-99` | Final parity, packaging, documentation, and cleanup | all resolved packages | pending | Applicable matrix rows pass; current docs match behavior; independent deferrals are centralized; umbrella plan is removed |
@@ -115,17 +115,21 @@ debugger documentation, and [progress.md](progress.md).
 
 ## `UMB-60` — Attach and remote
 
-Active. Execute only the next work ID in
-[umb-60/progress.md](umb-60/progress.md). Local attach (`UMB-60A`) must pass
-before remote sessions.
+Completed at implementation checkpoint `eb0fbe64`. The obsolete execution
+detail was removed; durable behavior and evidence remain in tests, current
+debugger documentation, and [progress.md](progress.md).
 
 | Child | Status | Scope | Additional gate |
 |---|---|---|---|
-| `UMB-60A` | pending | Local attach to a running VM or bundle | Discovery, authorization, disconnect ownership, and source mapping |
-| `UMB-60B` | pending | Remote sessions | Authentication, encryption boundary, version negotiation, recovery, and privacy limits |
-| `UMB-60C` | rejected | OS-level native debugging | Host-process gdb/lldb would be a second semantic engine; FPAS inspection stays at source/bytecode boundaries |
+| `UMB-60A` | rejected | Local attach to a running VM or bundle | `fpas run` uses `Vm::run` with no listener; `DebugSession` constructs the VM at launch. Connect-without-construct would be a second execution driver |
+| `UMB-60B` | rejected | Remote sessions | Depends on local attach; unauthenticated remote control is forbidden |
+| `UMB-60C` | rejected | OS-level native debugging | Host-process gdb/lldb would be a second semantic engine |
 
 ## `UMB-70` — Data breakpoints and actions
+
+Active. Execute only the next work ID in
+[umb-70/progress.md](umb-70/progress.md). Stable identities (`UMB-70A`) must
+pass before data breakpoints or mutating actions.
 
 | Child | Scope | Additional gate |
 |---|---|---|

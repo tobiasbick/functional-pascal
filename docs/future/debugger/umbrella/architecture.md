@@ -46,9 +46,9 @@ identity policy.
 - Pause inside hosted work is cooperative at VM instruction boundaries. An
   in-progress host intrinsic cannot be interrupted; pause is observed after it
   returns. Unsafe thread termination is forbidden.
-- Attach and remote sessions require explicit ownership of launch, disconnect,
-  cleanup, and debuggee lifetime. Native OS debugging of the host process is
-  not a second semantic engine; it is rejected.
+- Attach and remote sessions remain launch-owned. Connecting to an already
+  running `fpas run` process is rejected. Native OS debugging of the host
+  process is not a second semantic engine; it is rejected.
 
 ### Prepare, validate, commit
 

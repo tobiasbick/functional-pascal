@@ -42,6 +42,10 @@ prerequisites, not promises that implementation will be accepted:
 - OS-level native debugging in `UMB-60C`. The debuggee is FPAS bytecode in
   `fpas-vm`; gdb/lldb of the host process would be a second semantic engine.
   Disassemble and memory requests stay unsupported.
+- Local attach and remote sessions in `UMB-60A` / `UMB-60B`. `fpas run` has no
+  debug listener; `DebugSession` constructs the in-process VM at launch.
+  Connect-without-construct would be a second execution driver.
+  Unauthenticated remote control stays forbidden.
 - Record/replay and hot reload in `UMB-80` and `UMB-90`.
 
 A rejected decision must state the missing invariant or disproportionate cost.

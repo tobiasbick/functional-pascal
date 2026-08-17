@@ -43,8 +43,9 @@ identity policy.
 - `dispatch_one` remains the controlled VM execution boundary.
 - The initial task model is deterministic launch-owned all-stop debugging.
 - Per-task or non-stop operations require the quiescence contract in `UMB-40`.
-- A pause request inside hosted or blocking work requires a transport and
-  cancellation contract; polling an unrelated adapter is insufficient.
+- Pause inside hosted work is cooperative at VM instruction boundaries. An
+  in-progress host intrinsic cannot be interrupted; pause is observed after it
+  returns. Unsafe thread termination is forbidden.
 - Attach and remote sessions require explicit ownership of launch, disconnect,
   cleanup, and debuggee lifetime.
 

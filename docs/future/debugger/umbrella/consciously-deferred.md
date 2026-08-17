@@ -36,6 +36,9 @@ prerequisites, not promises that implementation will be accepted:
   remains in parent progress, focused tests, and current debugger documentation.
 - Non-stop execution, scheduler shortcuts, and persistent history in
   `UMB-40D`.
+- In-call interruption of blocking host intrinsics in `UMB-50D`. Pause remains
+  cooperative after the intrinsic returns; empty-queue `ReadLn` fails with
+  `F4011` rather than waiting. Unsafe thread kill stays forbidden.
 - OS-level native debugging in `UMB-60C`.
 - Record/replay and hot reload in `UMB-80` and `UMB-90`.
 

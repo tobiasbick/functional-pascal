@@ -32,7 +32,7 @@ compatibility mode. A response precedes events caused by that request.
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
-| `pause` | running | none | cooperative pause request; extra `task_id` is ignored |
+| `pause` | running | none | cooperative pause; observed after the current hosted intrinsic returns; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
 | `tasks` | stopped | optional `start`, `count` | bounded task catalog |
 | `task.pause` | stopped | `task_id` | hold one live task; later continue and peer steps skip it |

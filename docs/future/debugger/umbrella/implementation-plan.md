@@ -10,8 +10,8 @@
 | `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | done | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
-| `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | active | Protocol I/O is separated from debuggee I/O; terminal/TUI/graph events support cancellation, cleanup, and reliable pause |
-| `UMB-60` | Attach and remote debugging | `UMB-50` | pending | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
+| `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | done | Protocol I/O is separated from debuggee I/O; queued terminal input, stopped TUI/graph ownership, and cooperative pause after host returns |
+| `UMB-60` | Attach and remote debugging | `UMB-50` | active | Discovery, authentication, versions, sources, disconnect ownership, recovery, and adapter parity are proven |
 | `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | pending | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
 | `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | pending | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
 | `UMB-90` | Suspended-code hot reload | `UMB-80` | pending | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
@@ -102,19 +102,22 @@ debugger documentation, and [progress.md](progress.md).
 
 ## `UMB-50` — Interactive hosted programs
 
-Active. Execute only the next work ID in
-[umb-50/progress.md](umb-50/progress.md). Transport separation (`UMB-50A`)
-must pass before live terminal input, TUI/graph event ownership, or
-pause-in-host work.
+Completed at implementation checkpoint `aee4f6a2`. The obsolete execution
+detail was removed; durable behavior and evidence remain in tests, current
+debugger documentation, and [progress.md](progress.md).
 
-| Child | Scope | Additional gate |
-|---|---|---|
-| `UMB-50A` | Separate debuggee transport from JSONL/DAP transport | Authenticated, recoverable lifecycle with no protocol-byte ambiguity |
-| `UMB-50B` | Live terminal input and output | Ordered input, cancellation, EOF, process cleanup, and output limits |
-| `UMB-50C` | Full-screen TUI and graph events | Deterministic event ownership while stopped and after resume |
-| `UMB-50D` | Reliable pause inside blocking host calls | Cooperative interruption contract without unsafe thread termination |
+| Child | Status | Scope | Additional gate |
+|---|---|---|---|
+| `UMB-50A` | done | Separate debuggee transport from JSONL/DAP | Protocol bytes stay unambiguous; disconnect/EOF are deterministic |
+| `UMB-50B` | done | Live terminal input and output | Ordered queued input, cancellation, EOF, cleanup, and output limits; `live_terminal` stays false |
+| `UMB-50C` | done | TUI and graph events | Handlers run only as bytecode after resume; no second editor event loop |
+| `UMB-50D` | rejected | Reliable pause inside blocking host calls | In-call interruption would require splitting blocking host waits into a debug-owned wait; unsafe thread kill is forbidden. Pause remains cooperative after the intrinsic returns |
 
 ## `UMB-60` — Attach and remote
+
+Active. Execute only the next work ID in
+[umb-60/progress.md](umb-60/progress.md). Local attach (`UMB-60A`) must pass
+before remote sessions or the native go/no-go.
 
 | Child | Scope | Additional gate |
 |---|---|---|

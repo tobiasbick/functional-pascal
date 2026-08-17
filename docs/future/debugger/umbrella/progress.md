@@ -2,12 +2,12 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementing `UMB-50`
-- Active primary package: `UMB-50`
-- Last completed item: `UMB-40` at `6422489e`
-- Next child: `U50-40` after `U50-31`
-- Checkpoint: recoverable `UMB-40` close at `6422489e`; `UMB-50` package
-  activated in the current worktree
+- Umbrella state: implementing `UMB-60`
+- Active primary package: `UMB-60`
+- Last completed item: `UMB-50` at `aee4f6a2`
+- Next child: `U60-01` after `U60-00`
+- Checkpoint: recoverable `UMB-50` close in the current worktree; `UMB-60`
+  package activated
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -28,8 +28,8 @@ current worktree before changing or staging anything.
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
 | `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
-| `UMB-50` | active | Queued input and stopped event ownership; see [umb-50/progress.md](umb-50/progress.md) |
-| `UMB-60` | pending | Local attach before remote; native is go/no-go |
+| `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
+| `UMB-60` | active | Launch-owned attach remains false; see [umb-60/progress.md](umb-60/progress.md) |
 | `UMB-70` | pending | Stable data identities before watchpoints; `U10D-CELL` depends on `UMB-70A` |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
@@ -197,6 +197,11 @@ Evidence log:
 2026-08-16 | U50-21 | pending -> done | 6422489e plus worktree | JSONL/DAP/VS Code live input; live_input true, live_terminal false | wait before U50-30
 2026-08-16 | U50-30 | pending -> done | ac18d148 plus worktree | TUI/graph handlers wait until resume; debug KeyInput never polls OS | map adapters
 2026-08-16 | U50-31 | pending -> done | ac18d148 plus worktree | JSONL/DAP event inject unsupported; no second editor event loop | wait before U50-40
+2026-08-17 | U50-40 | pending -> done | aee4f6a2 plus worktree | in-call host interruption rejected; pause stays cooperative after the intrinsic; empty-queue ReadLn fails with F4011 | close U50-50
+2026-08-17 | U50-50 | pending -> done | aee4f6a2 plus worktree | docs reconciled; `umb-50/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test pass | wait for UMB-60
+2026-08-17 | UMB-50 | active -> done | aee4f6a2 | recoverable checkpoint includes debuggee channel, queued input, stopped event ownership, and in-call pause rejection | activate UMB-60
+2026-08-17 | UMB-60 | pending -> active | aee4f6a2 base | context-loss-safe attach/remote package created from launch-owned JSONL/DAP and attach:false capabilities | execute U60-00
+2026-08-17 | U60-00 | active -> done | aee4f6a2 plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U60-01
 ```
 
 ## Resume commands
@@ -212,8 +217,8 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U50-40` in
-[umb-50/progress.md](umb-50/progress.md). `UMB-40` evidence remains in this
+The next pending implementation step is `U60-01` in
+[umb-60/progress.md](umb-60/progress.md). `UMB-50` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.
 

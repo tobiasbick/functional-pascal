@@ -1,17 +1,18 @@
-# UMB-50 interactive debuggee transport and hosted programs
+# UMB-60 attach and remote debugging
 
-Status: active. Resume at pending `U50-40` in [progress.md](progress.md).
+Status: active. Resume at pending `U60-01` in [progress.md](progress.md).
 
-This package owns protocol-versus-debuggee I/O after the `UMB-40` all-stop
-contract. It extends the existing shared VM debugger engine and hosted
-runtime; JSONL, DAP, and VS Code remain adapters. It does not change the
-FPAS language, absorb attach/remote from `UMB-60`, or absorb data-breakpoint
-identities from `UMB-70`. Unsafe thread termination remains forbidden.
+This package owns attaching to an already running VM or bundle after the
+`UMB-50` launch-owned transport contract. It extends the existing shared VM
+debugger engine; JSONL, DAP, and VS Code remain adapters. It does not change
+the FPAS language, absorb data-breakpoint identities from `UMB-70`, or add a
+second semantic debugger engine. Unauthenticated discovery and raw host-path
+exposure remain forbidden.
 
 ## Files
 
-- [scope-and-decisions.md](scope-and-decisions.md) freezes transport
-  ownership, terminal I/O, TUI/graph events, and pause-in-host contracts.
+- [scope-and-decisions.md](scope-and-decisions.md) freezes local attach,
+  remote sessions, and native go/no-go contracts.
 - [implementation-plan.md](implementation-plan.md) owns ordered work IDs and
   the intended source layout.
 - [verification-matrix.md](verification-matrix.md) defines required positive,
@@ -31,7 +32,7 @@ identities from `UMB-70`. Unsafe thread termination remains forbidden.
 
 ## Package exit
 
-`UMB-50` is complete only when each child is implemented, rejected, blocked by
+`UMB-60` is complete only when each child is implemented, rejected, blocked by
 a named umbrella dependency, or split by evidence; all applicable verification
 rows pass; current debugger documentation describes only implemented behavior;
 and a recoverable checkpoint exists. Delete this directory after that

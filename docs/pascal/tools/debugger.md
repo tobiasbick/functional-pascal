@@ -389,11 +389,12 @@ atomically.
 Pause and execution-limit checks are cooperative at VM instruction boundaries.
 A blocking host intrinsic already in progress cannot be interrupted; the pause
 or limit is observed at the next source/instruction boundary after that call
-returns. `Read`/`ReadLn` consume lines that were queued at a previous stop.
-They do not wait for a later `io.input` while already blocked inside the
-intrinsic. `ReadEvent`, `PollEvent`, and graph `On*` handlers likewise run only
-when bytecode resumes; they do not run during stack, variable, or evaluate
-requests.
+returns, including `Std.Time.Sleep` and `Application.Run`. `Read`/`ReadLn`
+consume lines that were queued at a previous stop. They do not wait for a later
+`io.input` while already blocked inside the intrinsic; an empty queue fails with
+`F4011` instead of hanging. `ReadEvent`, `PollEvent`, and graph `On*` handlers
+likewise run only when bytecode resumes; they do not run during stack, variable,
+or evaluate requests.
 
 VS Code-compatible editors use the contributed `fpas` debug type. A minimal
 `launch.json` entry is:

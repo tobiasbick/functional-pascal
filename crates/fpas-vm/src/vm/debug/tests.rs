@@ -440,6 +440,7 @@ mod function_value_assignment;
 mod inspection_fixture;
 mod instruction_change;
 mod mutation;
+mod pause_in_host;
 mod payload_mutation;
 mod quiescence;
 mod task_control;

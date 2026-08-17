@@ -37,7 +37,9 @@ IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and
 `stepOut` select that task. Unknown or expired DAP thread IDs fail explicitly
 instead of falling back to main. Continue and pause remain whole-session
 operations even when a `threadId` or `singleThread` argument is supplied; a
-continue response reports `allThreadsContinued: true`. A paused task remains in
+continue response reports `allThreadsContinued: true`. Pause is cooperative at
+VM instruction boundaries; an in-progress host intrinsic finishes before the
+pause stop is reported. A paused task remains in
 `threads` with a `[paused]` name suffix until `fpas/resumeTask`. DAP `threads` omits
 completed and cancelled tasks after their thread-exit event; JSONL `tasks`
 still lists those identities for lifecycle reporting.

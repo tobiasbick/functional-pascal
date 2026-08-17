@@ -5,9 +5,9 @@
 - Umbrella state: implementing `UMB-60`
 - Active primary package: `UMB-60`
 - Last completed item: `UMB-50` at `aee4f6a2`
-- Next child: `U60-01` after `U60-00`
-- Checkpoint: recoverable `UMB-50` close in the current worktree; `UMB-60`
-  package activated
+- Next child: `U60-10` after `U60-01`/`U60-30`
+- Checkpoint: recoverable `UMB-50` close at `fb91a7c7`; `UMB-60` attach freeze
+  and native rejection in the current worktree
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -29,7 +29,7 @@ current worktree before changing or staging anything.
 | `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
-| `UMB-60` | active | Launch-owned attach remains false; see [umb-60/progress.md](umb-60/progress.md) |
+| `UMB-60` | active | Attach and native inspection rejected; local attach still needs a debuggee listener; see [umb-60/progress.md](umb-60/progress.md) |
 | `UMB-70` | pending | Stable data identities before watchpoints; `U10D-CELL` depends on `UMB-70A` |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
@@ -202,6 +202,8 @@ Evidence log:
 2026-08-17 | UMB-50 | active -> done | aee4f6a2 | recoverable checkpoint includes debuggee channel, queued input, stopped event ownership, and in-call pause rejection | activate UMB-60
 2026-08-17 | UMB-60 | pending -> active | aee4f6a2 base | context-loss-safe attach/remote package created from launch-owned JSONL/DAP and attach:false capabilities | execute U60-00
 2026-08-17 | U60-00 | active -> done | aee4f6a2 plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U60-01
+2026-08-17 | U60-01 | pending -> done | fb91a7c7 plus worktree | JSONL/DAP attach reject without mutation; VS Code attach request rejected; current docs | wait before U60-10
+2026-08-17 | U60-30 | pending -> done | fb91a7c7 plus worktree | native disassemble/memory/registers unsupported; second semantic engine forbidden | wait before U60-10
 ```
 
 ## Resume commands
@@ -217,7 +219,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U60-01` in
+The next pending implementation step is `U60-10` in
 [umb-60/progress.md](umb-60/progress.md). `UMB-50` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

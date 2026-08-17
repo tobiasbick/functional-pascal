@@ -14,28 +14,28 @@
 6. Unauthenticated discovery and default exposure of host paths, environment
    data, or sources are forbidden.
 
-## Current ownership inventory
+## Frozen launch-owned bound
 
-These are inventory facts for `U60-00`, not acceptance of later children.
-
-- `fpas debug` launches and owns the debuggee. JSONL capabilities advertise
-  `attach: false`. DAP initialize does not advertise attach; unsupported
-  requests fail explicitly.
-- VS Code documents launch-owned debugging; attach remains unsupported.
-- Protocol stdin/stdout remain the launch-owned JSONL or DAP transport proven
-  by `UMB-50`. There is no discovery listener, attach handshake, or remote
-  authentication surface.
-- Disconnect currently ends a launch-owned session. Attach-specific ownership
-  of an independently running VM or bundle is not implemented.
-- Native OS debugging would be a second semantic engine unless it only
-  supplies the existing VM session. `UMB-60C` owns that go/no-go.
+- `fpas debug` launches and owns an in-process VM. JSONL capabilities
+  advertise `attach: false`. JSONL `attach` is `unsupported_capability`.
+- DAP initialize advertises `supportsAttach: false`. DAP `attach` fails
+  without launching. VS Code contributes only `launch` and rejects
+  `request: "attach"` before starting an adapter.
+- There is no discovery listener, attach handshake, or debug port on
+  `fpas run`. Disconnect ends a launch-owned session. Sources map at launch
+  through `--source-root` / image identity, not through attach.
+- Native OS debugging is rejected (`UMB-60C`). DAP advertises
+  `supportsDisassembleRequest` and `supportsReadMemoryRequest` false.
+  `disassemble`, `readMemory`, `writeMemory`, JSONL `disassemble`, and
+  `registers` fail without mutating the stopped session.
 
 ## `UMB-60A` — local attach
 
-- Begins only after `U60-00` records the current launch-owned bound.
 - A successful attach must prove discovery, authorization, disconnect
   ownership, and source mapping without mixing protocol and debuggee bytes.
-- Until that subset is proven, attach remains false.
+- That subset requires a debuggee-owned listener and a debugger that connects
+  without constructing the VM. Until it exists, attach remains false.
+- Begins only at `U60-10`.
 
 ## `UMB-60B` — remote sessions
 
@@ -45,9 +45,9 @@ These are inventory facts for `U60-00`, not acceptance of later children.
 
 ## `UMB-60C` — OS-level native debugging
 
-- Go/no-go based on the actual runtime and bundle model.
-- A second semantic debugger engine is forbidden. Native tooling may only
-  exist if it reuses the shared VM session.
+- Rejected. The debuggee is FPAS bytecode in `fpas-vm`, not a native user
+  binary. gdb/lldb of the host process would be a second semantic engine.
+  One-engine inspection stays at FPAS source/bytecode boundaries.
 
 ## Out of scope
 

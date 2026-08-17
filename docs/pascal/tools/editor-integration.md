@@ -33,6 +33,8 @@ reimplemented in TypeScript.
 ## Source debugging and variable editing
 
 The contributed `fpas` debug type launches the bundled CLI's DAP adapter.
+Attach configurations are rejected. Native disassembly and memory requests
+are unsupported.
 Source breakpoints can be set in an `.fpas` editor gutter or with **F9**.
 Run and Debug exposes stack frames, lexical scopes, expandable aggregates,
 watches, hover and Debug Console evaluation, conditional breakpoints, exact

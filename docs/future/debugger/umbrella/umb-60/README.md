@@ -1,13 +1,13 @@
 # UMB-60 attach and remote debugging
 
-Status: active. Resume at pending `U60-01` in [progress.md](progress.md).
+Status: active. Resume at pending `U60-10` in [progress.md](progress.md).
 
 This package owns attaching to an already running VM or bundle after the
 `UMB-50` launch-owned transport contract. It extends the existing shared VM
 debugger engine; JSONL, DAP, and VS Code remain adapters. It does not change
 the FPAS language, absorb data-breakpoint identities from `UMB-70`, or add a
 second semantic debugger engine. Unauthenticated discovery and raw host-path
-exposure remain forbidden.
+exposure remain forbidden. Native OS debugging was rejected by `UMB-60C`.
 
 ## Files
 

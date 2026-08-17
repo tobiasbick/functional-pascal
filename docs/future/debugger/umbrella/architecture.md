@@ -47,7 +47,8 @@ identity policy.
   in-progress host intrinsic cannot be interrupted; pause is observed after it
   returns. Unsafe thread termination is forbidden.
 - Attach and remote sessions require explicit ownership of launch, disconnect,
-  cleanup, and debuggee lifetime.
+  cleanup, and debuggee lifetime. Native OS debugging of the host process is
+  not a second semantic engine; it is rejected.
 
 ### Prepare, validate, commit
 

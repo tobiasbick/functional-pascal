@@ -150,6 +150,10 @@ impl DapServer {
                 "supportsSetVariable":true,"supportsSetExpression":true,
                 "supportsRestartFrame":true,
                 "supportsGotoTargetsRequest":false,
+                "supportsAttach":false,
+                "supportsDisassembleRequest":false,
+                "supportsReadMemoryRequest":false,
+                "supportsWriteMemoryRequest":false,
                 "supportsSingleThreadExecutionRequests":false,
                 "supportsStepBack":false
             }),

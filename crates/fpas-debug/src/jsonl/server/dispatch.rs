@@ -16,6 +16,13 @@ impl JsonlServer {
         match command {
             "initialize" => self.initialize(request_id, command, arguments),
             "launch" => self.launch(request_id, command, arguments),
+            "attach" => vec![failure(
+                request_id,
+                command,
+                "unsupported_capability",
+                "Debugger attach is not supported.",
+                "Use `launch`. The debugger owns an in-process VM and does not attach to a running process.",
+            )],
             "breakpoint.set" => self.set_breakpoint(request_id, command, arguments),
             "breakpoint.clear" => self.clear_breakpoint(request_id, command, arguments),
             "function_breakpoints.replace" => {

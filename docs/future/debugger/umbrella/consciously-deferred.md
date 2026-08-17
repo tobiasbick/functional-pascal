@@ -39,7 +39,9 @@ prerequisites, not promises that implementation will be accepted:
 - In-call interruption of blocking host intrinsics in `UMB-50D`. Pause remains
   cooperative after the intrinsic returns; empty-queue `ReadLn` fails with
   `F4011` rather than waiting. Unsafe thread kill stays forbidden.
-- OS-level native debugging in `UMB-60C`.
+- OS-level native debugging in `UMB-60C`. The debuggee is FPAS bytecode in
+  `fpas-vm`; gdb/lldb of the host process would be a second semantic engine.
+  Disassemble and memory requests stay unsupported.
 - Record/replay and hot reload in `UMB-80` and `UMB-90`.
 
 A rejected decision must state the missing invariant or disproportionate cost.

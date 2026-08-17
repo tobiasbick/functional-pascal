@@ -31,6 +31,7 @@ compatibility mode. A response precedes events caused by that request.
 | `function_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `name` with optional `condition`, `hit_condition` | replace-all logical function breakpoints and verification |
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
+| `attach` | any | none | always rejected; capability `attach` is `false` |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
 | `pause` | running | none | cooperative pause; observed after the current hosted intrinsic returns; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |

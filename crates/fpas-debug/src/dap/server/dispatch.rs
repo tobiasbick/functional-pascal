@@ -21,6 +21,16 @@ impl DapServer {
                     .unwrap_or(false);
                 vec![self.success(request_seq, command, json!({}))]
             }
+            "attach" => vec![self.failure(
+                request_seq,
+                command,
+                "DAP attach is unsupported; launch a Functional Pascal program instead.",
+            )],
+            "disassemble" | "readMemory" | "writeMemory" => vec![self.failure(
+                request_seq,
+                command,
+                "Native memory and disassembly are unsupported; the debugger inspects FPAS bytecode.",
+            )],
             "setBreakpoints" => self.set_source_breakpoints(request_seq, arguments),
             "setFunctionBreakpoints" => {
                 self.set_function_breakpoints(request_seq, arguments)

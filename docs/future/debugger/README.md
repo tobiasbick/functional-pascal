@@ -21,8 +21,8 @@ creation, task restart, non-stop execution, stepping shortcuts, and persistent
 task history were rejected by `UMB-40`. Protocol and debuggee I/O are separated;
 queued `Read`/`ReadLn`, structured output, and stopped TUI/graph ownership are
 implemented. In-call interruption of blocking host intrinsics was rejected by
-`UMB-50`. Remaining attach, remote, and native-debugger work is owned by
-`UMB-60` in the
+`UMB-50`. Native OS debugging was rejected by `UMB-60C`. Remaining attach and
+remote work is owned by `UMB-60` in the
 [active umbrella](umbrella/implementation-plan.md).
 
 The implemented debugger includes complete-value replacement of mutable enum,
@@ -81,8 +81,8 @@ through JSONL `frame.restart`, DAP `restartFrame`, and VS Code **Restart Frame**
 Arbitrary instruction-pointer changes were rejected by `UMB-30D`. All-stop
 task control, per-task pause/resume, and cancel are implemented; debugger
 task creation, task restart, non-stop execution, and unbounded history were
-rejected by `UMB-40`. Remaining attach, remote, and native-debugger work is
-owned by `UMB-60` in
+rejected by `UMB-40`. Native OS debugging was rejected by `UMB-60C`. Remaining
+attach and remote work is owned by `UMB-60` in
 the [active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP

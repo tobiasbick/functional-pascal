@@ -117,13 +117,13 @@ debugger documentation, and [progress.md](progress.md).
 
 Active. Execute only the next work ID in
 [umb-60/progress.md](umb-60/progress.md). Local attach (`UMB-60A`) must pass
-before remote sessions or the native go/no-go.
+before remote sessions.
 
-| Child | Scope | Additional gate |
-|---|---|---|
-| `UMB-60A` | Local attach to a running VM or bundle | Discovery, authorization, disconnect ownership, and source mapping |
-| `UMB-60B` | Remote sessions | Authentication, encryption boundary, version negotiation, recovery, and privacy limits |
-| `UMB-60C` | OS-level native debugging | Go/no-go decision based on the actual runtime and bundle model; no second semantic debugger engine |
+| Child | Status | Scope | Additional gate |
+|---|---|---|---|
+| `UMB-60A` | pending | Local attach to a running VM or bundle | Discovery, authorization, disconnect ownership, and source mapping |
+| `UMB-60B` | pending | Remote sessions | Authentication, encryption boundary, version negotiation, recovery, and privacy limits |
+| `UMB-60C` | rejected | OS-level native debugging | Host-process gdb/lldb would be a second semantic engine; FPAS inspection stays at source/bytecode boundaries |
 
 ## `UMB-70` — Data breakpoints and actions
 

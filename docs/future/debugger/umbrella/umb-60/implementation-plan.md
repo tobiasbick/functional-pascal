@@ -12,32 +12,38 @@ crates/fpas-cli/src/
 crates/fpas-debug/src/
   jsonl/encode.rs              — exists: capabilities include `attach: false`
   jsonl/server.rs              — exists: launch/serve (~416 LOC)
-  dap/server.rs                — exists: launch initialize; no attach request (~437 LOC)
+  jsonl/server/dispatch.rs     — exists: explicit `attach` rejection
+  dap/server.rs                — exists: `supportsAttach` false (~437 LOC)
+  dap/server/dispatch.rs       — exists: attach/disassemble/readMemory reject
+crates/fpas-debug/tests/
+  attach.rs                    — exists: JSONL attach freeze and native reject
+  dap_attach.rs                — exists: DAP attach freeze and native reject
 editors/vscode/src/debugger/
-  adapter.ts                   — exists: launch adapter (~105 LOC)
+  adapter.ts                   — exists: launch adapter; attach request rejected
 ```
 
-Do not add attach or remote modules until `U60-10` is active.
+Do not add a debuggee listener or attach handshake until `U60-10` is active.
 
 ## Ordered work
 
 | ID | Status | Work | Exit gate |
 |---|---|---|---|
 | `U60-00` | done | Verify `UMB-50` close, launch-owned file sizes, and current attach=false ownership | Recorded clean-code baseline; documentation-only transition is explicit |
-| `U60-01` | pending | Freeze attach contracts; inventory discovery, authorization, disconnect ownership, source mapping, and native feasibility | Attach remains rejected by test or recorded as the current bound |
+| `U60-01` | done | Freeze attach contracts; inventory discovery, authorization, disconnect ownership, source mapping, and native feasibility | Attach remains rejected by test; native go/no-go is `U60-30` |
 | `U60-10` | pending | Implement the proven `UMB-60A` local-attach subset | Discovery, authorization, disconnect, and source mapping are deterministic |
 | `U60-11` | pending | Map the accepted attach path through JSONL, then DAP/VS Code | Identity parity; no second debugger engine in the editor |
 | `U60-20` | pending | Implement `UMB-60B` remote sessions only after `U60-10` | Authentication, version negotiation, recovery, and privacy limits |
 | `U60-21` | pending | Map remote sessions through adapters/editor | Protocol-equivalent success and negatives |
-| `U60-30` | pending | Run `UMB-60C` native debugging feasibility | Positive native subset or explicit rejection |
+| `U60-30` | done | Run `UMB-60C` native debugging feasibility | Rejected: native inspection would be a second semantic engine |
 | `U60-40` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |
 
 ## Test placement
 
-- VM/session tests lock discovery, disconnect ownership, and source mapping.
-- JSONL and DAP tests must pair the same scenario and assert equivalent
-  attach failures until a proven subset exists.
-- VS Code extension-host tests exercise only advertised attach UX; they do
+- VM/session tests lock discovery, disconnect ownership, and source mapping
+  only after a proven attach subset exists.
+- JSONL and DAP tests pair attach and native-inspection failures until a
+  proven attach subset exists.
+- VS Code extension-host tests exercise only advertised launch UX; they do
   not duplicate VM invariants.
 
 ## Per-work-item procedure

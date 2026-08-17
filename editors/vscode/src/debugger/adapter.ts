@@ -57,6 +57,11 @@ class FunctionalPascalDebugConfigurationProvider
       configuration.program = editor.document.uri.fsPath;
       configuration.stopOnEntry = false;
     }
+    const unsupported = unsupportedDebugRequestReason(configuration.request);
+    if (unsupported) {
+      void vscode.window.showErrorMessage(unsupported);
+      return undefined;
+    }
     if (typeof configuration.program !== "string" || configuration.program.length === 0) {
       void vscode.window.showErrorMessage(
         "Functional Pascal debugging requires a source, project, workspace, or compiled image in `program`."
@@ -85,6 +90,14 @@ class FunctionalPascalDebugAdapterFactory
       { cwd: session.configuration.cwd }
     );
   }
+}
+
+/** Why a debug request cannot start; `undefined` means the request is allowed. */
+export function unsupportedDebugRequestReason(request: unknown): string | undefined {
+  if (request === "attach") {
+    return "Functional Pascal debugging does not support attach; use a launch configuration.";
+  }
+  return undefined;
 }
 
 /** Build deterministic CLI arguments for one VS Code launch configuration. */

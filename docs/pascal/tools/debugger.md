@@ -1,6 +1,9 @@
 # Source debugger
 
-`fpas debug` runs a program in the bounded source debugger. It accepts a
+`fpas debug` runs a program in the bounded source debugger. Sessions are
+launch-owned: the debugger constructs an in-process VM and does not attach to
+an already running process. Native OS debugging of the host process is
+unsupported. It accepts a
 `.fpas` program, a program `.fpasprj`, a workspace with one program, or a
 `.fpascp` image. No debugger operation changes FPAS language semantics.
 

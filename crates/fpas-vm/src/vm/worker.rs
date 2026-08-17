@@ -36,6 +36,7 @@ pub(super) struct Worker {
     pub instructions_until_yield: u32,
     pub suspend_requested: bool,
     pub(in crate::vm) debug_tasks: bool,
+    pub(in crate::vm) debug_last_global_store: Option<u32>,
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
     pub(in crate::vm) debug_clock: Option<Arc<DebugClock>>,
     pub(in crate::vm) suppressed_initializers: Vec<SourceInitializerTarget>,
@@ -155,6 +156,7 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: false,
+            debug_last_global_store: None,
             task_suspension: None,
             debug_clock: None,
             suppressed_initializers: Vec::new(),
@@ -171,6 +173,18 @@ impl Worker {
         self.debug_tasks = true;
         self.debug_clock = Some(clock);
         self
+    }
+
+    /// Record a successful global store for debugger data breakpoints.
+    pub(in crate::vm) fn note_debug_global_store(&mut self, index: usize) {
+        if self.debug_tasks {
+            self.debug_last_global_store = u32::try_from(index).ok();
+        }
+    }
+
+    /// Take the last debug-owned global store, if one is pending.
+    pub(in crate::vm) fn take_debug_global_store(&mut self) -> Option<u32> {
+        self.debug_last_global_store.take()
     }
 
     pub(super) fn pool_template(&self) -> Self {
@@ -196,6 +210,7 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
+            debug_last_global_store: None,
             task_suspension: None,
             debug_clock: self.debug_clock.clone(),
             suppressed_initializers: Vec::new(),
@@ -231,6 +246,7 @@ impl Worker {
             instructions_until_yield: super::TIMESLICE,
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
+            debug_last_global_store: None,
             task_suspension: None,
             debug_clock: self.debug_clock.clone(),
             suppressed_initializers: task.suppressed_initializers,

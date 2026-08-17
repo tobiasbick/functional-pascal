@@ -41,22 +41,22 @@ fn location_body(location: &fpas_vm::DebugDataLocation) -> Value {
         "descendant": location.descendant,
     });
     if let (Value::Object(body), Some(identity)) = (&mut body, location.identity) {
-        body.insert("identity".into(), identity_body(identity));
+        body.insert(
+            "identity".into(),
+            crate::jsonl::encode::identity_body(identity),
+        );
     }
     body
 }
 
-fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
-    match identity {
-        fpas_vm::DebugDataLocationIdentity::Global { index } => json!({"index": index}),
-        fpas_vm::DebugDataLocationIdentity::FrameRegister {
-            task_id,
-            function,
-            register,
-        } => json!({
-            "task_id": task_id,
-            "function": function,
-            "register": register
-        }),
+pub(super) fn parse_identity(value: &Value) -> Option<fpas_vm::DebugDataLocationIdentity> {
+    let object = value.as_object()?;
+    if let Some(index) = object.get("index").and_then(Value::as_u64) {
+        return Some(fpas_vm::DebugDataLocationIdentity::Global { index });
     }
+    Some(fpas_vm::DebugDataLocationIdentity::FrameRegister {
+        task_id: object.get("task_id").and_then(Value::as_u64)?,
+        function: object.get("function").and_then(Value::as_u64)?,
+        register: object.get("register").and_then(Value::as_u64)?,
+    })
 }

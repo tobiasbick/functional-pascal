@@ -67,8 +67,10 @@ pub enum DebugSessionState {
 pub enum DebugStopReason {
     /// Initial launch stop before the entry sequence point executes.
     Entry,
-    /// A verified source breakpoint was reached.
+    /// A verified source or function breakpoint was reached.
     Breakpoint,
+    /// A verified global data breakpoint observed a matching store.
+    DataBreakpoint,
     /// A cooperative pause request was observed.
     Pause,
     /// A step command reached its next source boundary.
@@ -90,7 +92,7 @@ pub struct DebugStop {
     pub instruction: u32,
     /// Zero-based active call depth.
     pub call_depth: usize,
-    /// Breakpoint identifier when `reason` is [`DebugStopReason::Breakpoint`].
+    /// First breakpoint identifier when the stop names one or more logical breakpoints.
     pub breakpoint_id: Option<u64>,
     /// All logical breakpoint identifiers bound to the reached sequence point.
     pub breakpoint_ids: Vec<u64>,

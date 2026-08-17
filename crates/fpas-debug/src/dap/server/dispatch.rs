@@ -31,11 +31,8 @@ impl DapServer {
                 command,
                 "Native memory and disassembly are unsupported; the debugger inspects FPAS bytecode.",
             )],
-            "setDataBreakpoints" | "dataBreakpointInfo" => vec![self.failure(
-                request_seq,
-                command,
-                "Data breakpoints are unsupported; inspection references expire on resume.",
-            )],
+            "setDataBreakpoints" => self.set_data_breakpoints(request_seq, arguments),
+            "dataBreakpointInfo" => self.data_breakpoint_info(request_seq, arguments),
             "setBreakpoints" => self.set_source_breakpoints(request_seq, arguments),
             "setFunctionBreakpoints" => {
                 self.set_function_breakpoints(request_seq, arguments)

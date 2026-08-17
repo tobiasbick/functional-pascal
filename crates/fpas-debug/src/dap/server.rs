@@ -2,6 +2,7 @@
 
 mod breakpoints;
 mod completed_result;
+mod data_breakpoints;
 mod dictionary;
 mod dispatch;
 mod exceptions;
@@ -152,7 +153,7 @@ impl DapServer {
                 "supportsRestartFrame":true,
                 "supportsGotoTargetsRequest":false,
                 "supportsAttach":false,
-                "supportsDataBreakpoints":false,
+                "supportsDataBreakpoints":true,
                 "supportsDisassembleRequest":false,
                 "supportsReadMemoryRequest":false,
                 "supportsWriteMemoryRequest":false,
@@ -395,6 +396,7 @@ fn dap_stop_reason(reason: Option<&str>) -> &'static str {
     match reason {
         Some("entry") => "entry",
         Some("breakpoint") => "breakpoint",
+        Some("data_breakpoint") => "data breakpoint",
         Some("pause") => "pause",
         Some("step") => "step",
         Some("runtime_error") => "exception",
@@ -404,6 +406,9 @@ fn dap_stop_reason(reason: Option<&str>) -> &'static str {
 
 fn dap_body(command: &str, body: Value) -> Value {
     if let Some(result) = breakpoints::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = data_breakpoints::response_body(command, &body) {
         return result;
     }
     if let Some(result) = exceptions::response_body(command) {

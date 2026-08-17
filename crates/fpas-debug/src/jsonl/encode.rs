@@ -59,7 +59,8 @@ pub(super) fn initialize_records(
     if let Value::Object(capabilities) = &mut capabilities {
         capabilities.insert("live_input".into(), json!(true));
         capabilities.insert("live_terminal".into(), json!(false));
-        capabilities.insert("data_breakpoints".into(), json!(false));
+        capabilities.insert("data_breakpoints".into(), json!(true));
+        capabilities.insert("data_breakpoint_access".into(), json!(["write", "change"]));
         capabilities.insert("location_describe".into(), json!(true));
     }
     vec![
@@ -221,10 +222,38 @@ pub(super) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
     event("task", json!({"reason": reason, "task_id": change.task_id}))
 }
 
+pub(super) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) -> Value {
+    json!({
+        "breakpoint_id": breakpoint.id,
+        "verified": breakpoint.is_verified(),
+        "requested": {
+            "identity": identity_body(breakpoint.requested.identity),
+            "access": breakpoint.requested.access.as_str()
+        },
+        "message": breakpoint.message
+    })
+}
+
+pub(super) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
+    match identity {
+        fpas_vm::DebugDataLocationIdentity::Global { index } => json!({"index": index}),
+        fpas_vm::DebugDataLocationIdentity::FrameRegister {
+            task_id,
+            function,
+            register,
+        } => json!({
+            "task_id": task_id,
+            "function": function,
+            "register": register
+        }),
+    }
+}
+
 fn stop_reason(reason: fpas_vm::DebugStopReason) -> &'static str {
     match reason {
         fpas_vm::DebugStopReason::Entry => "entry",
         fpas_vm::DebugStopReason::Breakpoint => "breakpoint",
+        fpas_vm::DebugStopReason::DataBreakpoint => "data_breakpoint",
         fpas_vm::DebugStopReason::Pause => "pause",
         fpas_vm::DebugStopReason::Step => "step",
         fpas_vm::DebugStopReason::RuntimeError => "runtime_error",

@@ -54,6 +54,8 @@ impl Worker {
             return Err(self.bad_slot("global", o.bx));
         };
         *slot = Some(value);
+        drop(globals);
+        self.note_debug_global_store(index);
         Ok(())
     }
 

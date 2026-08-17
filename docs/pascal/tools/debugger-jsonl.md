@@ -32,8 +32,8 @@ compatibility mode. A response precedes events caused by that request.
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
-| `data_breakpoint.set` | any | none | always rejected; capability `data_breakpoints` is `false` |
-| `data_breakpoints.replace` | any | none | always rejected; capability `data_breakpoints` is `false` |
+| `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
+| `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
 | `pause` | running | none | cooperative pause; observed after the current hosted intrinsic returns; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
@@ -74,7 +74,7 @@ Function selectors are ASCII case-insensitive. A canonical selector such as
 The result retains one logical `breakpoint_id` and reports
 `matched_functions`, `match_count`, ordered entry `locations`, `verified`, and
 an explanatory `message` when needed. Replace-all is atomic. At most 256
-logical source/function breakpoints are retained, one selector may bind at most
+logical source, function, and data breakpoints are retained, one selector may bind at most
 64 exact functions, and a selector contains at most 1,024 UTF-8 bytes.
 
 Runtime-failure filtering is session-local and defaults to `all`. Only `all`
@@ -89,7 +89,10 @@ An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
 variable references belong to the current stop and expire on resume. They are
 not data-breakpoint identities. `location.describe` names a global, live-frame
 register, or unregistered capture cell from a current-stop child; inspection
-handles still expire. Evaluation
+handles still expire. `data_breakpoints.replace` watches a global identity
+with `access` `write` (any store) or `change` (store that differs from the
+resume snapshot). `read`, frame-register identities, and missing identities
+are unverified or rejected; they do not resume execution. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
@@ -354,20 +357,26 @@ the responsible task. A stopped breakpoint event includes both the first
 `breakpoint_id` and ordered `breakpoint_ids` for all logical breakpoints at
 that sequence point.
 
+A data-breakpoint stop uses reason `data_breakpoint` and the same
+`breakpoint_id` / `breakpoint_ids` fields. Source or function hits on the same
+instruction keep reason `breakpoint` and still list every matching identifier.
+
 V2 advertises source and function breakpoints, runtime-failure filters,
 pause/continue/steps, pagination, inspection,
 aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
-conditions, and logpoints. Attach, data breakpoints, non-stop execution and reverse execution
+conditions, and logpoints. Attach, non-stop execution and reverse execution
 remain false;
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
 queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
-second console or PTY. `data_breakpoints` is false; `data_breakpoint.set` and
-`data_breakpoints.replace` are known rejected commands. `location_describe` is
+second console or PTY. `data_breakpoints` is true with
+`data_breakpoint_access` `write` and `change`. `data_breakpoints.replace`
+accepts identities from `location.describe`; `data_breakpoint.set` remains
+rejected. `location_describe` is
 true: stopped-state `location.describe` names a durable identity from a current
 inspection child. Empty `text` is a valid empty line. Each accepted line
 counts `text` UTF-8 bytes plus one stored newline against
@@ -383,7 +392,7 @@ Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 |---|---:|
 | Frames / variables per response | 256 / 256 |
 | Value depth / retained handles | 16 / 16,384 |
-| Logical breakpoints / exact function bindings | 256 / 64 |
+| Logical source, function, and data breakpoints / exact function bindings | 256 / 64 |
 | Function selector bytes / runtime-failure filters | 1,024 / 64 |
 | String characters / rendered variables bytes | 4,096 / 1,048,576 |
 | Expression bytes / depth | 4,096 / 64 |

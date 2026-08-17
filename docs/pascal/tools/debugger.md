@@ -33,7 +33,8 @@ Direct `.fpascp` debugging requires `--source-root`. Every portable source path
 must remain below that root and its BLAKE3 identity must match the image. Stale
 or escaping sources are rejected before execution.
 
-The debugger supports source and function breakpoints, pause, continue, step in/over/out,
+The debugger supports source and function breakpoints, global write and change
+data breakpoints, pause, continue, step in/over/out,
 per-task pause, resume, and cancel, stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
@@ -43,7 +44,7 @@ result, selected-frame restart, queued program input for `Read`/`ReadLn`, output
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
-may spawn retained and detached tasks. Attach, data breakpoints, non-stop task execution, reverse
+may spawn retained and detached tasks. Attach, non-stop task execution, reverse
 execution, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
@@ -102,7 +103,11 @@ location from that current-stop child: globals keep an executable slot identity
 across continue; frame registers remain valid only while that activation is
 live; capture cells have no alias registry and are not watchpoint identities.
 Task-bound function assignment still rejects capture-cell destinations. Data
-breakpoints remain unsupported. Textual mutation starts
+breakpoints watch executable globals by that identity: `write` stops on any
+store to the slot, and `change` stops only when the stored value differs from
+the snapshot taken at the last resume. Frame registers, capture cells, and
+`read` access are not watchable. Inspection handles still expire on resume;
+global identities used as data breakpoints survive continue. Textual mutation starts
 with one visible binding and accepts stored record fields, active enum payload
 fields, wrapper `.value`, and array or dictionary indexes, for example
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,

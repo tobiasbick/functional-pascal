@@ -21,7 +21,10 @@ impl DebugSession {
     ) -> Result<BoundBreakpoint, DebugSessionError> {
         self.require_stopped("breakpoint.set")?;
         self.require_breakpoint_capacity(
-            self.source_breakpoints.len() + self.function_breakpoints.len() + 1,
+            self.source_breakpoints.len()
+                + self.function_breakpoints.len()
+                + self.data_breakpoints.len()
+                + 1,
         )?;
         let id = self.take_breakpoint_ids(1)?;
         let breakpoint = binding::bind_source(&self.executable, id, requested);
@@ -44,7 +47,9 @@ impl DebugSession {
         requested: Vec<FunctionBreakpoint>,
     ) -> Result<Vec<BoundFunctionBreakpoint>, DebugSessionError> {
         self.require_stopped("function_breakpoints.replace")?;
-        self.require_breakpoint_capacity(self.source_breakpoints.len() + requested.len())?;
+        self.require_breakpoint_capacity(
+            self.source_breakpoints.len() + self.data_breakpoints.len() + requested.len(),
+        )?;
         let count = u64::try_from(requested.len()).map_err(|_| breakpoint_id_limit())?;
         let next_id = self
             .next_breakpoint_id
@@ -110,6 +115,15 @@ impl DebugSession {
             self.function_breakpoints.remove(index);
             return Ok(());
         }
+        if let Some(index) = self
+            .data_breakpoints
+            .iter()
+            .position(|breakpoint| breakpoint.id == id)
+        {
+            self.data_breakpoints.remove(index);
+            self.refresh_data_watch_snapshots();
+            return Ok(());
+        }
         Err(DebugSessionError {
             kind: DebugErrorKind::UnknownBreakpoint,
             message: format!("debug breakpoint {id} does not exist"),
@@ -117,7 +131,10 @@ impl DebugSession {
         })
     }
 
-    fn require_breakpoint_capacity(&self, requested_total: usize) -> Result<(), DebugSessionError> {
+    pub(super) fn require_breakpoint_capacity(
+        &self,
+        requested_total: usize,
+    ) -> Result<(), DebugSessionError> {
         if requested_total <= self.breakpoint_limits.max_breakpoints {
             return Ok(());
         }
@@ -138,7 +155,7 @@ impl DebugSession {
     }
 }
 
-fn breakpoint_id_limit() -> DebugSessionError {
+pub(super) fn breakpoint_id_limit() -> DebugSessionError {
     DebugSessionError {
         kind: DebugErrorKind::BreakpointLimit,
         message: "debug session exhausted its logical breakpoint identifiers".to_string(),

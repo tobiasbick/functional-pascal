@@ -4,11 +4,11 @@ use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, RwLock};
 
-use fpas_bytecode::{InstructionAddress, VerifiedExecutable};
+use fpas_bytecode::{InstructionAddress, Value, VerifiedExecutable};
 
 use super::breakpoints::{
-    BoundBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits, FunctionBreakpoint,
-    SourceBreakpoint,
+    BoundBreakpoint, BoundDataBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits,
+    FunctionBreakpoint, SourceBreakpoint,
 };
 use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
 use super::io::DebuggeeChannel;
@@ -24,6 +24,7 @@ use crate::vm::worker::Worker;
 
 mod breakpoints;
 mod completed_result;
+mod data_breakpoints;
 mod dictionary;
 mod events;
 mod execution;
@@ -73,6 +74,8 @@ pub struct DebugSession {
     state: DebugSessionState,
     source_breakpoints: Vec<BoundBreakpoint>,
     function_breakpoints: Vec<BoundFunctionBreakpoint>,
+    data_breakpoints: Vec<BoundDataBreakpoint>,
+    data_watch_snapshots: BTreeMap<u64, Option<Value>>,
     next_breakpoint_id: u64,
     breakpoint_limits: DebugBreakpointLimits,
     pause_requested: Arc<AtomicBool>,
@@ -218,6 +221,8 @@ impl DebugSession {
             state: DebugSessionState::Stopped,
             source_breakpoints: Vec::new(),
             function_breakpoints: Vec::new(),
+            data_breakpoints: Vec::new(),
+            data_watch_snapshots: BTreeMap::new(),
             next_breakpoint_id: 1,
             breakpoint_limits: DebugBreakpointLimits::default(),
             pause_requested,

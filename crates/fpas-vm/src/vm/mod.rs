@@ -31,19 +31,19 @@ use self::worker::Worker;
 
 pub use callback::CallbackSession;
 pub use debug::{
-    BoundBreakpoint, BoundFunctionBreakpoint, DebugArrayMutationResult, DebugAssignmentSelector,
-    DebugAssignmentTarget, DebugBinaryOperation, DebugBreakpointLimits, DebugDataLocation,
-    DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,
-    DebugDictionaryMutationResult, DebugErrorKind, DebugEvaluateResult,
-    DebugEvaluationCancelHandle, DebugEvaluationLimits, DebugExecutionLimits, DebugExpression,
-    DebugForcedReturnResult, DebugFrame, DebugFrameRestartResult, DebugInspectionLimits,
-    DebugPauseHandle, DebugRunResult, DebugScope, DebugScopeKind, DebugSession, DebugSessionError,
-    DebugSessionState, DebugStop, DebugStopReason, DebugStorageInitializationResult,
-    DebugStringMutationResult, DebugTask, DebugTaskEvent, DebugTaskEventKind,
-    DebugTaskResultReplacement, DebugTaskState, DebugTermination, DebugUnaryOperation,
-    DebugVariable, DebugVariantConstructionResult, DebugVariantDescription, DebugVariantField,
-    DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult, FunctionBreakpoint, Paginated,
-    SourceBreakpoint, SourceLocation,
+    BoundBreakpoint, BoundDataBreakpoint, BoundFunctionBreakpoint, DataBreakpoint,
+    DataBreakpointAccess, DebugArrayMutationResult, DebugAssignmentSelector, DebugAssignmentTarget,
+    DebugBinaryOperation, DebugBreakpointLimits, DebugDataLocation, DebugDataLocationIdentity,
+    DebugDataLocationKind, DebugDataLocationLifetime, DebugDictionaryMutationResult,
+    DebugErrorKind, DebugEvaluateResult, DebugEvaluationCancelHandle, DebugEvaluationLimits,
+    DebugExecutionLimits, DebugExpression, DebugForcedReturnResult, DebugFrame,
+    DebugFrameRestartResult, DebugInspectionLimits, DebugPauseHandle, DebugRunResult, DebugScope,
+    DebugScopeKind, DebugSession, DebugSessionError, DebugSessionState, DebugStop, DebugStopReason,
+    DebugStorageInitializationResult, DebugStringMutationResult, DebugTask, DebugTaskEvent,
+    DebugTaskEventKind, DebugTaskResultReplacement, DebugTaskState, DebugTermination,
+    DebugUnaryOperation, DebugVariable, DebugVariantConstructionResult, DebugVariantDescription,
+    DebugVariantField, DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult,
+    FunctionBreakpoint, Paginated, SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

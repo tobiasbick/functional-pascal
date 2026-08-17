@@ -131,6 +131,13 @@ impl DebugTaskRuntime {
         self.tasks.get_mut(&task_id).map(|slot| &mut slot.worker)
     }
 
+    /// Drop pending global-store observations before a new resume.
+    pub(in crate::vm::debug) fn clear_debug_global_stores(&mut self) {
+        for slot in self.tasks.values_mut() {
+            slot.worker.take_debug_global_store();
+        }
+    }
+
     /// Whether a task currently has a stable instruction-boundary snapshot.
     pub(in crate::vm::debug) fn task_is_inspectable(&self, task_id: u64) -> bool {
         self.tasks

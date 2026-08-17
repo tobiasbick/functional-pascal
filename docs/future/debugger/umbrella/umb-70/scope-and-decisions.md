@@ -20,11 +20,11 @@ These are inventory facts for `U70-00`/`U70-01`, not acceptance of later childre
 - Stopped-state mutation already validates some portable identities. Capture-cell
   destinations remain rejected until this package proves cell identity and
   lifetime (`U10D-CELL` → `UMB-70A`).
-- JSONL advertises `data_breakpoints: false` and `location_describe: true`.
-  DAP advertises `supportsDataBreakpoints: false` and maps
-  `fpas/locationDescribe`. Known data-breakpoint commands reject without
-  mutation. Inspection handles expire on resume and are not watchpoint
-  identities.
+- JSONL advertises `data_breakpoints: true` with `data_breakpoint_access`
+  `write` and `change`, and `location_describe: true`. DAP advertises
+  `supportsDataBreakpoints: true` and maps `dataBreakpointInfo` /
+  `setDataBreakpoints`. Inspection handles expire on resume and are not
+  watchpoint identities; global location identities are.
 - Attach and remote debugging were rejected by `UMB-60`. Native OS debugging
   was rejected by `UMB-60C`.
 
@@ -45,7 +45,7 @@ watchpoint that must survive continue.
 - Supported descendants (record fields, array indexes, dictionary values, enum
   payload fields, Result/Option wrappers) inherit the root lifetime.
 
-Do not add data-breakpoint modules until `U70-20`. Capture-cell destinations
+Do not add mutating-action modules until `U70-30`. Capture-cell destinations
 stay rejected: `ClosureCell` has pointer identity but no owner-task or alias
 registry (`unregistered_alias`).
 
@@ -61,7 +61,21 @@ registry (`unregistered_alias`).
 - Descendants inherit the root kind and lifetime.
 
 JSONL `location.describe` and DAP `fpas/locationDescribe` expose that subset.
-Data breakpoints stay unsupported until `U70-20`.
+
+## Proven data-breakpoint subset (`U70-20`)
+
+- Watch executable globals only. Frame-register identities stay unverified.
+  Capture cells have no identity and remain unwatchable.
+- Access `write` (any debug-owned store to that global index) and `change`
+  (that store and the new value differs from the snapshot taken at resume).
+  `read` / `readWrite` stay unverified. Loads are not instrumented.
+- Descendants of a global watch the root slot, including index-path stores.
+- Logical data breakpoints share the existing 256 breakpoint limit with source
+  and function breakpoints. Replace-all is atomic.
+- No condition, hit, or log policy on data breakpoints. Missing policy stops.
+- JSONL `data_breakpoints.replace` and DAP `dataBreakpointInfo` /
+  `setDataBreakpoints` map the same engine. `data_breakpoint.set` stays
+  rejected. VS Code uses the standard variable data-breakpoint UI.
 
 ## `UMB-70A` — stable observable data identities
 

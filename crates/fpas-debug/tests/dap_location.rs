@@ -41,7 +41,7 @@ fn send(server: &mut DapServer, seq: &mut u64, command: &str, arguments: Value) 
 
 fn start(server: &mut DapServer, seq: &mut u64) {
     let initialized = send(server, seq, "initialize", json!({}));
-    assert_eq!(initialized[0]["body"]["supportsDataBreakpoints"], false);
+    assert_eq!(initialized[0]["body"]["supportsDataBreakpoints"], true);
     let _ = send(server, seq, "launch", json!({"stopOnEntry":true}));
     let configured = send(server, seq, "configurationDone", json!({}));
     assert!(
@@ -123,13 +123,6 @@ fn dap_location_describe_names_globals_across_continue() {
         json!({"variablesReference":globals,"name":"Flag"}),
     );
     assert_eq!(second[0]["body"]["identity"], first[0]["body"]["identity"]);
-    let rejected = send(
-        &mut server,
-        &mut seq,
-        "setDataBreakpoints",
-        json!({"breakpoints":[]}),
-    );
-    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
 }
 
 #[test]

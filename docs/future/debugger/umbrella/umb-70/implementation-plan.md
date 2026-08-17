@@ -12,16 +12,20 @@ crates/fpas-vm/src/vm/debug/
   session.rs                   — exists: launch-owned session
   breakpoints/source.rs        — exists: source breakpoints
   breakpoints/function.rs      — exists: function breakpoints
+  breakpoints/data.rs          — exists: data-breakpoint requests and binding
+  session/data_breakpoints.rs  — exists: replace, snapshots, hit check
   mutation/                    — exists: stopped-state writes
 crates/fpas-debug/src/
   jsonl/server/location.rs     — exists: location.describe
+  jsonl/server/data_breakpoints.rs — exists: data_breakpoints.replace
   dap/server/location.rs       — exists: fpas/locationDescribe
+  dap/server/data_breakpoints.rs — exists: dataBreakpointInfo / setDataBreakpoints
   breakpoints/policy.rs        — exists: stop ordering
   breakpoints/runtime_failure.rs — exists: failure filters
 ```
 
-Do not add data-breakpoint modules until `U70-20` is active. Identity modules
-exist after `U70-10`.
+Do not add mutating-action modules until `U70-30` is active. Data-breakpoint
+modules exist after `U70-20`.
 
 ## Ordered work
 
@@ -31,8 +35,8 @@ exist after `U70-10`.
 | `U70-01` | done | Freeze identity and data-stop contracts; inventory globals, frames, cells, and descendants | Missing identities are tests or recorded bounds |
 | `U70-10` | done | Implement the proven `UMB-70A` identity subset | Exact lifetimes for supported locations; capture-cell destinations unblocked or still rejected with evidence |
 | `U70-11` | done | Map accepted identities through JSONL, then DAP/VS Code | Identity parity |
-| `U70-20` | pending | Implement `UMB-70B` data breakpoints only after `U70-10` | Read/write/change stops are deterministic and bounded |
-| `U70-21` | pending | Map data breakpoints through adapters/editor | Protocol-equivalent success and negatives |
+| `U70-20` | done | Implement `UMB-70B` data breakpoints only after `U70-10` | Read/write/change stops are deterministic and bounded |
+| `U70-21` | done | Map data breakpoints through adapters/editor | Protocol-equivalent success and negatives |
 | `U70-30` | pending | Implement `UMB-70C` mutating breakpoint actions only after `U70-20` | Prepare/validate/commit once; snapshots invalidate once |
 | `U70-31` | pending | Map mutating actions through adapters/editor | Protocol-equivalent success and negatives |
 | `U70-40` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |

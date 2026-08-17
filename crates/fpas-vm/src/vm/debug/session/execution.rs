@@ -105,6 +105,8 @@ impl DebugSession {
         };
         self.state = DebugSessionState::Running;
         self.invalidate_inspection();
+        self.runtime.clear_debug_global_stores();
+        self.refresh_data_watch_snapshots();
         let mut pause_pending = false;
         let started = Instant::now();
         loop {
@@ -222,28 +224,33 @@ impl DebugSession {
         starting_depth: usize,
         pause_pending: bool,
     ) -> Option<DebugRunResult> {
+        let data_ids = self.take_data_breakpoint_hits(task_id);
         let sequence = self.next_sequence_point(task_id);
+        let mut breakpoint_ids = Vec::new();
         if let Some((instruction, _)) = sequence {
-            let mut breakpoint_ids = self
-                .source_breakpoints
-                .iter()
-                .filter(|breakpoint| breakpoint.instruction == Some(instruction.get()))
-                .map(|breakpoint| breakpoint.id)
-                .collect::<Vec<_>>();
+            breakpoint_ids.extend(
+                self.source_breakpoints
+                    .iter()
+                    .filter(|breakpoint| breakpoint.instruction == Some(instruction.get()))
+                    .map(|breakpoint| breakpoint.id),
+            );
             breakpoint_ids.extend(
                 self.function_breakpoints
                     .iter()
                     .filter(|breakpoint| breakpoint.instructions.contains(&instruction.get()))
                     .map(|breakpoint| breakpoint.id),
             );
-            breakpoint_ids.sort_unstable();
-            if !breakpoint_ids.is_empty() {
-                return Some(self.stop_for_reason(
-                    task_id,
-                    DebugStopReason::Breakpoint,
-                    breakpoint_ids,
-                ));
-            }
+        }
+        let source_or_function = !breakpoint_ids.is_empty();
+        breakpoint_ids.extend(data_ids);
+        breakpoint_ids.sort_unstable();
+        if !breakpoint_ids.is_empty() {
+            let reason = if source_or_function {
+                DebugStopReason::Breakpoint
+            } else {
+                DebugStopReason::DataBreakpoint
+            };
+            return Some(self.stop_for_reason(task_id, reason, breakpoint_ids));
         }
         if pause_pending && sequence.is_some() {
             return Some(self.stop_for_reason(task_id, DebugStopReason::Pause, Vec::new()));

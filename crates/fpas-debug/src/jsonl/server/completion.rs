@@ -50,8 +50,10 @@ impl JsonlServer {
                         return records;
                     }
                 }
-                if stop.reason == fpas_vm::DebugStopReason::Breakpoint
-                    && !stop.breakpoint_ids.is_empty()
+                if matches!(
+                    stop.reason,
+                    fpas_vm::DebugStopReason::Breakpoint | fpas_vm::DebugStopReason::DataBreakpoint
+                ) && !stop.breakpoint_ids.is_empty()
                 {
                     let frame_id = session
                         .stack(0, 1)

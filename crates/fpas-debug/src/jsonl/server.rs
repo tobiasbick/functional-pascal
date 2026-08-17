@@ -3,6 +3,7 @@
 mod breakpoints;
 mod completed_result;
 mod completion;
+mod data_breakpoints;
 mod dictionary;
 mod dispatch;
 mod evaluation;

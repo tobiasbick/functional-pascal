@@ -9,7 +9,7 @@ use crate::vm::debug::types::SourceLocation;
 /// Resource bounds for session-local debugger breakpoint state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DebugBreakpointLimits {
-    /// Maximum logical source and function breakpoints retained by a session.
+    /// Maximum logical source, function, and data breakpoints retained by a session.
     pub max_breakpoints: usize,
     /// Maximum exact executable functions bound by one logical function selector.
     pub max_function_bindings: usize,

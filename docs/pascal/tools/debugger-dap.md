@@ -11,7 +11,7 @@ step-in/next/step-out, stack and variable pagination, delayed stack loading,
 cancel, set-variable, set-expression, and terminate-on-disconnect for an owned
 launch. It also advertises exception-breakpoint filters for `all` and every
 allocated runtime diagnostic code. It explicitly advertises `supportsAttach: false`,
-`supportsDataBreakpoints: false`,
+`supportsDataBreakpoints: true`,
 `supportsDisassembleRequest: false`, and `supportsReadMemoryRequest: false`.
 It does not advertise completions, instruction
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
@@ -23,7 +23,8 @@ pause into single-thread execution. It advertises `supportsRestartFrame: true` a
 `supportsGotoTargetsRequest: false`.
 
 Supported requests are `initialize`, `launch`, `setBreakpoints`,
-`setFunctionBreakpoints`, `setExceptionBreakpoints`,
+`setFunctionBreakpoints`, `setExceptionBreakpoints`, `dataBreakpointInfo`,
+`setDataBreakpoints`,
 `configurationDone`, `threads`, `stackTrace`, `scopes`, `variables`,
 `evaluate`, `setVariable`, `setExpression`, `fpas/dictionaryInsert`,
 `fpas/dictionaryRemove`, `fpas/dictionaryReplaceKey`, `fpas/arrayInsert`,
@@ -33,7 +34,6 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
-`setDataBreakpoints`, `dataBreakpointInfo`,
 `disassemble`, `readMemory`, and `writeMemory` fail as unsupported. Other
 unsupported requests fail explicitly.
 
@@ -55,7 +55,12 @@ evaluates globals only. Successful responses include `result`, `type`,
 `variablesReference`, `namedVariables`, and `indexedVariables`. Evaluated
 aggregates expand through `variables`; all references expire when execution
 resumes and are not data-breakpoint identities. `fpas/locationDescribe` names a
-durable location from a current-stop `variablesReference` child. The accepted expression subset and limits are documented in
+durable location from a current-stop `variablesReference` child. `dataBreakpointInfo`
+returns a persistable `dataId` only for executable globals (`g:<index>`) with
+`accessTypes: ["write"]`. Frame registers and capture cells return a null
+`dataId`. `setDataBreakpoints` maps those IDs onto JSONL
+`data_breakpoints.replace`. VS Code uses the standard variable data-breakpoint
+UI; the adapter does not add a second watchpoint command. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

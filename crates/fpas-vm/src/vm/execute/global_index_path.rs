@@ -67,6 +67,8 @@ impl Worker {
             ));
         }
         *slot = Some(root);
+        drop(globals);
+        self.note_debug_global_store(global_index);
         Ok(())
     }
 

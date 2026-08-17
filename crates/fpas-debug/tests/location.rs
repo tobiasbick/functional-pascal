@@ -107,7 +107,7 @@ fn jsonl_location_describe_names_globals_across_continue() {
     );
     assert_eq!(
         initialized[0]["body"]["capabilities"]["data_breakpoints"],
-        false
+        true
     );
     let launched = send(
         &mut server,

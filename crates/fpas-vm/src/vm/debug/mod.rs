@@ -23,8 +23,8 @@ pub(in crate::vm::debug) use calls::{construct_enum, construct_enum_payload};
 mod tests;
 
 pub use breakpoints::{
-    BoundBreakpoint, BoundFunctionBreakpoint, DebugBreakpointLimits, FunctionBreakpoint,
-    SourceBreakpoint,
+    BoundBreakpoint, BoundDataBreakpoint, BoundFunctionBreakpoint, DataBreakpoint,
+    DataBreakpointAccess, DebugBreakpointLimits, FunctionBreakpoint, SourceBreakpoint,
 };
 pub use completed_result::DebugTaskResultReplacement;
 pub use evaluation::{

@@ -23,6 +23,13 @@ impl JsonlServer {
                 "Debugger attach is not supported.",
                 "Use `launch`. The debugger owns an in-process VM and does not attach to a running process.",
             )],
+            "data_breakpoint.set" | "data_breakpoints.replace" => vec![failure(
+                request_id,
+                command,
+                "unsupported_capability",
+                "Data breakpoints are not supported.",
+                "Inspection handles expire on resume and cannot name a watchpoint. Use source or function breakpoints.",
+            )],
             "breakpoint.set" => self.set_breakpoint(request_id, command, arguments),
             "breakpoint.clear" => self.clear_breakpoint(request_id, command, arguments),
             "function_breakpoints.replace" => {

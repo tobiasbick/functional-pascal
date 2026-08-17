@@ -23,7 +23,7 @@ Do not add data-breakpoint modules until `U70-10` is active.
 | ID | Status | Work | Exit gate |
 |---|---|---|---|
 | `U70-00` | done | Verify `UMB-60` close, current breakpoint/mutation ownership, and `U10D-CELL` dependency | Recorded clean-code baseline; documentation-only transition is explicit |
-| `U70-01` | pending | Freeze identity and data-stop contracts; inventory globals, frames, cells, and descendants | Missing identities are tests or recorded bounds |
+| `U70-01` | done | Freeze identity and data-stop contracts; inventory globals, frames, cells, and descendants | Missing identities are tests or recorded bounds |
 | `U70-10` | pending | Implement the proven `UMB-70A` identity subset | Exact lifetimes for supported locations; capture-cell destinations unblocked or still rejected with evidence |
 | `U70-11` | pending | Map accepted identities through JSONL, then DAP/VS Code | Identity parity |
 | `U70-20` | pending | Implement `UMB-70B` data breakpoints only after `U70-10` | Read/write/change stops are deterministic and bounded |

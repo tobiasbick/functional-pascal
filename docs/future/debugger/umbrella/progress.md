@@ -4,10 +4,10 @@
 
 - Umbrella state: implementing `UMB-70`
 - Active primary package: `UMB-70`
-- Last completed item: `UMB-60` at `eb0fbe64`
-- Next child: `U70-01` after `U70-00`
-- Checkpoint: recoverable `UMB-60` close in the current worktree; `UMB-70`
-  package activated
+- Last completed item: `U70-01` freeze after `U70-00`
+- Next child: `U70-10` after `U70-01`
+- Checkpoint: recoverable `UMB-60` close plus `U70-01` data-breakpoint freeze
+  in the current worktree; `UMB-70` package remains active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` is reclassified to
   `UMB-70A`
 - Branch: `codex/fpas-debugger`
@@ -30,7 +30,7 @@ current worktree before changing or staging anything.
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
-| `UMB-70` | active | Stable identities before watchpoints; see [umb-70/progress.md](umb-70/progress.md) |
+| `UMB-70` | active | `U70-01` freeze keeps data breakpoints off; see [umb-70/progress.md](umb-70/progress.md) |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
 | `UMB-99` | pending | Final parity and plan removal |
@@ -210,6 +210,7 @@ Evidence log:
 2026-08-17 | UMB-60 | active -> done | eb0fbe64 | recoverable checkpoint includes attach/native rejection and launch-owned sessions | activate UMB-70
 2026-08-17 | UMB-70 | pending -> active | eb0fbe64 base | context-loss-safe data-breakpoint package created from current source/function breakpoints and mutation identities | execute U70-00
 2026-08-17 | U70-00 | active -> done | eb0fbe64 plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U70-01
+2026-08-17 | U70-01 | pending -> done | 7ab3e705 plus worktree | JSONL/DAP keep data breakpoints false; paired rejects do not resume; inspection IDs stay stop-scoped; format/build/Clippy/workspace tests/npm/diff check pass | wait for U70-10
 ```
 
 ## Resume commands
@@ -225,7 +226,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U70-01` in
+The next pending implementation step is `U70-10` in
 [umb-70/progress.md](umb-70/progress.md). `UMB-60` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

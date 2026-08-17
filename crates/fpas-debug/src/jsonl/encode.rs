@@ -59,6 +59,7 @@ pub(super) fn initialize_records(
     if let Value::Object(capabilities) = &mut capabilities {
         capabilities.insert("live_input".into(), json!(true));
         capabilities.insert("live_terminal".into(), json!(false));
+        capabilities.insert("data_breakpoints".into(), json!(false));
     }
     vec![
         success(

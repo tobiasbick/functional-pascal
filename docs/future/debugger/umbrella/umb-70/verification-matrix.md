@@ -10,11 +10,11 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | `V70-03` | Data breakpoints stop deterministically on read, write, or change | VM/adapter tests or child-not-started evidence | pending |
 | `V70-04` | Watchpoint overhead and retained state are bounded | Limit tests | pending |
 | `V70-05` | Mutating breakpoint actions commit once and invalidate once | Transaction tests or child-not-started evidence | pending |
-| `V70-06` | JSONL and DAP expose equivalent data-stop success and failures | Paired adapter tests | pending |
+| `V70-06` | JSONL and DAP expose equivalent data-stop success and failures | Paired adapter tests | pass |
 | `V70-07` | VS Code exposes only supported watchpoint UX | Extension-host tests | pending |
-| `V70-08` | Current docs describe implemented behavior and limitations only | Documentation review | pending |
-| `V70-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pending |
-| `V70-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pending |
+| `V70-08` | Current docs describe implemented behavior and limitations only | Documentation review | pass |
+| `V70-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pass |
+| `V70-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pass |
 
 ## Standard final commands
 

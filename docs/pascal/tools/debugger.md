@@ -43,7 +43,7 @@ result, selected-frame restart, queued program input for `Read`/`ReadLn`, output
 bounded by `--timeout`, `--instruction-limit`, and `--output-limit`. Queued
 program input is also bounded by the advertised `debuggee_input_bytes` limit
 (default 1,048,576). Programs
-may spawn retained and detached tasks. Attach, non-stop task execution, reverse
+may spawn retained and detached tasks. Attach, data breakpoints, non-stop task execution, reverse
 execution, debugger task creation, task restart, retained execution history, and arbitrary instruction-pointer changes remain unsupported. Frame
 restart reconstructs a selected live frame at its function entry; it is not a
 general `goto`.
@@ -95,7 +95,9 @@ statements, declarations, and assignments inside `evaluate` remain rejected.
 
 `setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
 `expression.set` are separate stopped-state operations. Handle-based mutation
-addresses a child previously returned by `variables`. Textual mutation starts
+addresses a child previously returned by `variables`. Those inspection
+identities belong to the current stop and are not data-breakpoint or watchpoint
+IDs. Textual mutation starts
 with one visible binding and accepts stored record fields, active enum payload
 fields, wrapper `.value`, and array or dictionary indexes, for example
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,

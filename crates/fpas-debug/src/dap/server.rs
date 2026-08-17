@@ -151,6 +151,7 @@ impl DapServer {
                 "supportsRestartFrame":true,
                 "supportsGotoTargetsRequest":false,
                 "supportsAttach":false,
+                "supportsDataBreakpoints":false,
                 "supportsDisassembleRequest":false,
                 "supportsReadMemoryRequest":false,
                 "supportsWriteMemoryRequest":false,

@@ -32,7 +32,8 @@ identity policy.
 - Function IDs, task IDs, frame IDs, binding IDs, cell allocations, and stop
   generations are identities. Display names and rendered values are not.
 - A protocol reference is valid only for the stop generation and task that
-  created it unless a package explicitly proves a longer lifetime.
+  created it unless a package explicitly proves a longer lifetime. Data
+  breakpoints must not reuse those inspection handles as watchpoint identities.
 - Task-bound functions retain an explicit runtime owner and never become
   transferable through detachment, adapter conversion, or display parsing.
 - Portable artifacts contain reconstructible metadata, never process-local

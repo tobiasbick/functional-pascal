@@ -32,6 +32,8 @@ compatibility mode. A response precedes events caused by that request.
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
+| `data_breakpoint.set` | any | none | always rejected; capability `data_breakpoints` is `false` |
+| `data_breakpoints.replace` | any | none | always rejected; capability `data_breakpoints` is `false` |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
 | `pause` | running | none | cooperative pause; observed after the current hosted intrinsic returns; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
@@ -83,7 +85,8 @@ failure still emits `runtime_error`, then `terminated` with
 reject without changing the previous selection.
 
 An omitted evaluation `frame_id` exposes globals only. A supplied frame and all
-variable references belong to the current stop and expire on resume. Evaluation
+variable references belong to the current stop and expire on resume. They are
+not data-breakpoint identities. Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
@@ -354,13 +357,15 @@ aggregate expansion, structured output, evaluation, controlled calls,
 set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
-conditions, and logpoints. Attach, non-stop execution and reverse execution
+conditions, and logpoints. Attach, data breakpoints, non-stop execution and reverse execution
 remain false;
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
 queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
-second console or PTY. Empty `text` is a valid empty line. Each accepted line
+second console or PTY. `data_breakpoints` is false; `data_breakpoint.set` and
+`data_breakpoints.replace` are known rejected commands because inspection
+handles expire on resume. Empty `text` is a valid empty line. Each accepted line
 counts `text` UTF-8 bytes plus one stored newline against
 `debuggee_input_bytes`. Cancel drops unread lines and does not reset that
 quota. Disconnect closes the channel, signals EOF, and clears queued input.

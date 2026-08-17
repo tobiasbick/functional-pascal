@@ -11,8 +11,9 @@ step-in/next/step-out, stack and variable pagination, delayed stack loading,
 cancel, set-variable, set-expression, and terminate-on-disconnect for an owned
 launch. It also advertises exception-breakpoint filters for `all` and every
 allocated runtime diagnostic code. It explicitly advertises `supportsAttach: false`,
+`supportsDataBreakpoints: false`,
 `supportsDisassembleRequest: false`, and `supportsReadMemoryRequest: false`.
-It does not advertise completions, data/instruction
+It does not advertise completions, instruction
 breakpoints, restart, reverse execution, hot reload, non-stop execution, or raw
 register access. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
@@ -32,6 +33,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/variantConstruct`, `fpas/initializeStorage`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
+`setDataBreakpoints`, `dataBreakpointInfo`,
 `disassemble`, `readMemory`, and `writeMemory` fail as unsupported. Other
 unsupported requests fail explicitly.
 
@@ -52,7 +54,7 @@ supplied `frameId` must belong to the current stop; omitting it deliberately
 evaluates globals only. Successful responses include `result`, `type`,
 `variablesReference`, `namedVariables`, and `indexedVariables`. Evaluated
 aggregates expand through `variables`; all references expire when execution
-resumes. The accepted expression subset and limits are documented in
+resumes and are not data-breakpoint identities. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

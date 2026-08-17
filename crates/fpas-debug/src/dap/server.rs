@@ -13,6 +13,7 @@ mod io;
 mod lifecycle;
 mod location;
 mod mutation;
+mod recording;
 mod sequence;
 mod storage;
 mod task_control;
@@ -439,6 +440,9 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = location::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = recording::response_body(command, &body) {
         return result;
     }
     match command {

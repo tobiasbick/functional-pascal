@@ -15,6 +15,7 @@ mod io;
 mod lifecycle;
 mod location;
 mod mutation;
+mod recording;
 mod runtime_failures;
 mod sequence;
 mod storage;

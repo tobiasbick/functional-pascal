@@ -52,6 +52,7 @@ compatibility mode. A response precedes events caused by that request.
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `location.describe` | stopped | `variables_reference`, `name` | kind, lifetime, and optional durable identity |
+| `recording.describe` | initialized/stopped | none | versioned program and portable source identity; does not start recording |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
@@ -375,7 +376,9 @@ set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. `attach`, `non_stop`, `reverse_execution`, and
-`record_replay` remain false;
+`record_replay` remain false; `recording_describe` is true: initialized or
+stopped `recording.describe` names versioned program identity and portable
+sources without starting a recording.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
@@ -392,7 +395,8 @@ counts `text` UTF-8 bytes plus one stored newline against
 quota. Disconnect closes the channel, signals EOF, and clears queued input.
 Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 `frame_return`, `variant_describe`,
-`variant_construct`, `storage_initialize`, `location_describe`, and
+`variant_construct`, `storage_initialize`, `location_describe`,
+`recording_describe`, and
 `breakpoint_assign` are true.
 
 ## Default limits
@@ -433,7 +437,7 @@ Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `variant_field_set`, `storage_already_initialized`, `unknown_task`,
 `task_create_unsupported`, `task_restart_unsupported`, `debuggee_input_limit`,
 `debuggee_input_closed`,
-`timeout`, `instruction_limit`, and `output_limit`. Parse/validation failures
+`timeout`, `instruction_limit`, `output_limit`, and `recording_host_path`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or
 `expression_target_unsupported` before runtime target errors are considered.

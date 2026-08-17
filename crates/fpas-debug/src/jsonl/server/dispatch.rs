@@ -91,6 +91,7 @@ impl JsonlServer {
             "frame.restart" => self.restart_frame(request_id, command, arguments),
             "instruction.set" => self.set_instruction(request_id, command, arguments),
             "location.describe" => self.describe_location(request_id, command, arguments),
+            "recording.describe" => self.describe_recording(request_id, command),
             "task.result.replace" => {
                 self.replace_completed_task_result(request_id, command, arguments)
             }

@@ -447,6 +447,7 @@ mod mutation;
 mod pause_in_host;
 mod payload_mutation;
 mod quiescence;
+mod recording;
 mod task_control;
 mod task_handle_assignment;
 mod task_lifecycle;

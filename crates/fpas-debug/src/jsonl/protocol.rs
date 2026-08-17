@@ -97,6 +97,7 @@ pub(super) fn session_error(
         fpas_vm::DebugErrorKind::ExecutionTimeout => "timeout",
         fpas_vm::DebugErrorKind::InstructionLimit => "instruction_limit",
         fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
+        fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
     };
     failure(request_id, command, code, error.message, error.hint)
 }

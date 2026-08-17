@@ -34,6 +34,10 @@ fn jsonl_record_replay_is_advertised_false_and_rejects_without_launch() {
         initialized[0]["body"]["capabilities"]["record_replay"],
         false
     );
+    assert_eq!(
+        initialized[0]["body"]["capabilities"]["recording_describe"],
+        true
+    );
     assert_eq!(server.status(), ServerStatus::Initialized);
 
     for (id, command) in [
@@ -78,5 +82,45 @@ fn jsonl_record_replay_after_stop_does_not_resume() {
     assert_eq!(server.status(), ServerStatus::Stopped);
 
     let same_stack = server.handle_line(&request(8, "stack", json!({})));
+    assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
+}
+
+#[test]
+fn jsonl_recording_describe_names_portable_identity_without_recording() {
+    let mut server = server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let described = server.handle_line(&request(2, "recording.describe", json!({})));
+    assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described[0]["body"]["version"], 1);
+    assert_eq!(
+        described[0]["body"]["bytecode_version"],
+        fpas_bytecode::BYTECODE_VERSION
+    );
+    assert_eq!(described[0]["body"]["program"], "recordreplay");
+    assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
+    assert_eq!(described.len(), 1, "{described:?}");
+    assert_eq!(server.status(), ServerStatus::Initialized);
+
+    let rejected = server.handle_line(&request(3, "record", json!({})));
+    assert_eq!(rejected[0]["error"]["code"], "unsupported_capability");
+    assert_eq!(server.status(), ServerStatus::Initialized);
+}
+
+#[test]
+fn jsonl_recording_describe_after_stop_does_not_resume() {
+    let mut server = server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let stack = server.handle_line(&request(3, "stack", json!({})));
+    let frame = stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("entry frame");
+
+    let described = server.handle_line(&request(4, "recording.describe", json!({})));
+    assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described.len(), 1, "{described:?}");
+    assert_eq!(server.status(), ServerStatus::Stopped);
+
+    let same_stack = server.handle_line(&request(5, "stack", json!({})));
     assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
 }

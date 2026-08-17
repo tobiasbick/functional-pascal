@@ -5,7 +5,7 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 
 | ID | Requirement | Evidence | Status |
 |---|---|---|---|
-| `V80-01` | Recording envelope names program identity without host paths | Envelope tests or child-not-started evidence | pending |
+| `V80-01` | Recording envelope names program identity without host paths | VM/JSONL/DAP envelope tests | pass |
 | `V80-02` | Scheduler and supported host events are captured only at explicit boundaries | Capture tests or child-not-started evidence | pending |
 | `V80-03` | Memory, disk, event, snapshot, and retention bounds hold | Limit tests or child-not-started evidence | pending |
 | `V80-04` | Unsupported nondeterminism is rejected before replay is claimed | Named JSONL/DAP rejects; no replay claim | pass |

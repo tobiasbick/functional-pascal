@@ -37,6 +37,7 @@ mod lifecycle;
 mod location;
 mod location_assign;
 mod mutation;
+mod recording;
 mod sequence;
 mod storage;
 mod tasks;

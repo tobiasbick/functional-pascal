@@ -73,3 +73,44 @@ fn dap_step_back_after_stop_does_not_resume() {
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
 }
+
+#[test]
+fn dap_recording_describe_names_portable_identity_without_step_back() {
+    let mut server = server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
+    assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described[0]["body"]["version"], 1);
+    assert_eq!(
+        described[0]["body"]["bytecodeVersion"],
+        fpas_bytecode::BYTECODE_VERSION
+    );
+    assert_eq!(described[0]["body"]["program"], "recordreplay");
+    assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
+    assert_eq!(described.len(), 1, "{described:?}");
+
+    let rejected = send(&mut server, &mut seq, "stepBack", json!({}));
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+}
+
+#[test]
+fn dap_recording_describe_after_stop_does_not_resume() {
+    let mut server = server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+    let stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    let frame = stack[0]["body"]["stackFrames"][0]["id"]
+        .as_u64()
+        .expect("entry frame");
+
+    let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
+    assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described.len(), 1, "{described:?}");
+
+    let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
+}

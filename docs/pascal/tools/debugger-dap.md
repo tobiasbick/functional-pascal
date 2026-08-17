@@ -32,7 +32,7 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
 `fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
-`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `cancel`, `continue`,
+`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
 `stepBack`, `reverseContinue`, `disassemble`, `readMemory`, and `writeMemory`
@@ -64,7 +64,8 @@ returns a persistable `dataId` only for executable globals (`g:<index>`) with
 `setDataBreakpoints` items forwards the same global identity and expression as
 JSONL. VS Code uses the standard variable data-breakpoint
 UI; the adapter does not add a second watchpoint command or an assign editor
-command. The accepted expression subset and limits are documented in
+command. `fpas/recordingDescribe` names versioned program identity and portable
+sources; it does not enable reverse execution or recordings. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

@@ -64,7 +64,10 @@ Named rejects without resume or mutation:
 ## `UMB-80A` — recording envelope and program identity
 
 - Begins only after `U80-01` freezes recording-off and named rejects.
-- The envelope must name source and program identity without host paths.
+- The envelope names versioned program identity and portable sources.
+- Host filesystem paths are rejected without echoing the path or mutating
+  the session. JSONL `recording.describe` and DAP `fpas/recordingDescribe`
+  expose that identity. `record` / `replay` / reverse-step remain rejected.
 
 ## `UMB-80B` — scheduler and host-event capture
 

@@ -9,15 +9,19 @@ must enter focused modules instead of extending mixed roots.
 crates/fpas-vm/src/vm/debug/
   session.rs                   — exists: launch-owned session
   session/execution.rs         — exists: controlled dispatch
+  session/recording.rs         — exists: envelope describe
+  recording.rs                 — exists: versioned identity without host paths
   tasks.rs                     — exists: debug task runtime
 crates/fpas-debug/src/
-  jsonl/encode.rs              — exists: reverse_execution false, record_replay false
-  jsonl/server/dispatch.rs     — exists: named step_back/record/replay rejects
+  jsonl/encode.rs              — exists: reverse_execution false, record_replay false, recording_describe true
+  jsonl/server/dispatch.rs     — exists: named step_back/record/replay rejects; recording.describe
+  jsonl/server/recording.rs    — exists: envelope mapping
   dap/server.rs                — exists: supportsStepBack false
-  dap/server/dispatch.rs       — exists: named stepBack/reverseContinue rejects
+  dap/server/dispatch.rs       — exists: named stepBack/reverseContinue rejects; fpas/recordingDescribe
+  dap/server/recording.rs      — exists: envelope mapping
 ```
 
-Do not add recording or replay modules until `U80-10` is active.
+Do not add capture or replay modules until `U80-20` is active.
 
 ## Ordered work
 
@@ -25,8 +29,8 @@ Do not add recording or replay modules until `U80-10` is active.
 |---|---|---|---|
 | `U80-00` | done | Verify `UMB-70` close and current scheduler, host, and identity ownership | Recorded clean-code baseline; documentation-only transition is explicit |
 | `U80-01` | done | Freeze recording contracts; inventory scheduler choices and host-visible effects | Missing effects are tests or recorded bounds |
-| `U80-10` | pending | Implement the proven `UMB-80A` envelope subset | Versioned identity without host paths |
-| `U80-11` | pending | Map accepted envelope operations through JSONL, then DAP/VS Code | Protocol parity |
+| `U80-10` | done | Implement the proven `UMB-80A` envelope subset | Versioned identity without host paths |
+| `U80-11` | done | Map accepted envelope operations through JSONL, then DAP/VS Code | Protocol parity |
 | `U80-20` | pending | Implement `UMB-80B` capture only after `U80-10` | Events recorded only at explicit boundaries |
 | `U80-21` | pending | Map capture through adapters/editor | Protocol-equivalent success and negatives |
 | `U80-30` | pending | Implement `UMB-80C` bounds and retention only after `U80-20` | Default paths cannot grow without bound |

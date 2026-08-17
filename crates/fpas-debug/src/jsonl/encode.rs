@@ -64,6 +64,7 @@ pub(super) fn initialize_records(
         capabilities.insert("location_describe".into(), json!(true));
         capabilities.insert("breakpoint_assign".into(), json!(true));
         capabilities.insert("record_replay".into(), json!(false));
+        capabilities.insert("recording_describe".into(), json!(true));
     }
     vec![
         success(
@@ -350,5 +351,6 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::ExecutionTimeout => "timeout",
         fpas_vm::DebugErrorKind::InstructionLimit => "instruction_limit",
         fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
+        fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
     }
 }

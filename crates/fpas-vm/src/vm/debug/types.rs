@@ -300,6 +300,8 @@ pub enum DebugErrorKind {
     InstructionLimit,
     /// Captured program output exceeded its byte budget.
     OutputLimit,
+    /// A recording envelope would name a host filesystem path.
+    RecordingHostPath,
 }
 
 /// Actionable debugger command failure.

@@ -3,9 +3,11 @@
 use serde_json::{Map, Value, json};
 
 use super::{JsonlServer, ServerStatus};
-use crate::breakpoints::BreakpointPolicy;
+use crate::breakpoints::{BreakpointAssign, BreakpointPolicy};
+use crate::evaluation::parse_debug_expression;
 use crate::jsonl::encode::{breakpoint_body, invalid_state, missing_argument};
-use crate::jsonl::protocol::{event, session_error, success};
+use crate::jsonl::protocol::{event, failure, session_error, success};
+use crate::jsonl::server::location::parse_identity;
 
 impl JsonlServer {
     pub(super) fn set_breakpoint(
@@ -35,10 +37,23 @@ impl JsonlServer {
             .get("column")
             .and_then(Value::as_u64)
             .and_then(|column| u32::try_from(column).ok());
+        let assign = match parse_assign_argument(arguments.get("assign")) {
+            Ok(assign) => assign,
+            Err(message) => {
+                return vec![failure(
+                    request_id,
+                    command,
+                    "invalid_request",
+                    message,
+                    "Send `assign.identity` from `location.describe` and one replacement `expression`.",
+                )];
+            }
+        };
         let policy = match BreakpointPolicy::parse(
             arguments.get("condition").and_then(Value::as_str),
             arguments.get("hit_condition").and_then(Value::as_str),
             arguments.get("log_message").and_then(Value::as_str),
+            assign,
         ) {
             Ok(policy) => policy,
             Err(error) => {
@@ -101,4 +116,37 @@ impl JsonlServer {
             None => vec![invalid_state(request_id, command, self.status)],
         }
     }
+}
+
+pub(super) fn parse_assign_argument(
+    value: Option<&Value>,
+) -> Result<Option<BreakpointAssign>, String> {
+    let Some(value) = value else {
+        return Ok(None);
+    };
+    if value.is_null() {
+        return Ok(None);
+    }
+    let Some(object) = value.as_object() else {
+        return Err(
+            "Command `assign` must be an object with `identity` and `expression`.".to_string(),
+        );
+    };
+    if object
+        .keys()
+        .any(|field| !matches!(field.as_str(), "identity" | "expression"))
+    {
+        return Err("Command `assign` contains an unsupported field.".to_string());
+    }
+    let Some(identity) = object.get("identity").and_then(parse_identity) else {
+        return Err(
+            "Command `assign` requires a location identity from `location.describe`.".to_string(),
+        );
+    };
+    let Some(source) = object.get("expression").and_then(Value::as_str) else {
+        return Err("Command `assign` requires string field `expression`.".to_string());
+    };
+    let expression = parse_debug_expression(source, fpas_vm::DebugEvaluationLimits::default())
+        .map_err(|error| format!("{} Help: {}", error.message, error.hint))?;
+    BreakpointAssign::new(identity, expression).map(Some)
 }

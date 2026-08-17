@@ -62,6 +62,7 @@ pub(super) fn initialize_records(
         capabilities.insert("data_breakpoints".into(), json!(true));
         capabilities.insert("data_breakpoint_access".into(), json!(["write", "change"]));
         capabilities.insert("location_describe".into(), json!(true));
+        capabilities.insert("breakpoint_assign".into(), json!(true));
     }
     vec![
         success(

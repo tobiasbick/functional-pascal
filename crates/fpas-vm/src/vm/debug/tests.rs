@@ -429,6 +429,7 @@ fn stopped(result: DebugRunResult) -> super::DebugStop {
 }
 
 mod behavior;
+mod breakpoint_assign;
 mod breakpoints;
 mod capturing_routine_assignment;
 mod cell_capturing_routine_assignment;

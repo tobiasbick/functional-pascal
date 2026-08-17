@@ -61,7 +61,8 @@ impl DapServer {
             };
             breakpoints.push(json!({
                 "identity": identity,
-                "access": access
+                "access": access,
+                "assign": breakpoint.get("assign")
             }));
         }
         self.core_request(

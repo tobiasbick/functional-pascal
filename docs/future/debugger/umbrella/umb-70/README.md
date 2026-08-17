@@ -1,6 +1,6 @@
 # UMB-70 data breakpoints and bounded breakpoint actions
 
-Status: active. Resume at pending `U70-30` in [progress.md](progress.md).
+Status: active. Resume at pending `U70-40` in [progress.md](progress.md).
 
 This package owns stable observable data identities and mutation-observation
 stops after the `UMB-40` all-stop contract. It extends the existing shared VM

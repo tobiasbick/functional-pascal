@@ -84,7 +84,11 @@ fn dap_missing_function_selector_is_unverified() {
 
 #[test]
 fn dap_rejects_unsupported_function_logpoints_and_actions() {
-    for unsupported in [json!({"logMessage":"value"}), json!({"action":"mutate"})] {
+    for unsupported in [
+        json!({"logMessage":"value"}),
+        json!({"action":"mutate"}),
+        json!({"assign":{"identity":{"index":0},"expression":"1"}}),
+    ] {
         let mut server = server();
         let _ = server.handle(request(1, "initialize", json!({})));
         let mut breakpoint = json!({"name":"Helper"});

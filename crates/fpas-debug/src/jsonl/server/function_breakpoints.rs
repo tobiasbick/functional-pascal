@@ -69,6 +69,7 @@ impl JsonlServer {
                 item.get("condition").and_then(Value::as_str),
                 item.get("hit_condition").and_then(Value::as_str),
                 None,
+                None,
             ) {
                 Ok(policy) => policy,
                 Err(error) => {

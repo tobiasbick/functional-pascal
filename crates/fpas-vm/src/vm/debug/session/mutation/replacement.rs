@@ -81,7 +81,7 @@ impl DebugSession {
         }
     }
 
-    pub(super) fn evaluate_replacement_for_target(
+    pub(in super::super) fn evaluate_replacement_for_target(
         &self,
         task_id: u64,
         target: &crate::vm::debug::inspection::MutationTarget,

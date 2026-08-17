@@ -49,9 +49,19 @@ impl DapServer {
                     "column":requested.get("column"),
                     "condition":requested.get("condition"),
                     "hit_condition":requested.get("hitCondition"),
-                    "log_message":requested.get("logMessage")
+                    "log_message":requested.get("logMessage"),
+                    "assign":requested.get("assign")
                 }),
             ));
+            if records
+                .first()
+                .is_some_and(|record| record["success"] == false)
+            {
+                let message = records[0]["error"]["message"]
+                    .as_str()
+                    .unwrap_or("Invalid breakpoint request.");
+                return vec![self.failure(request_seq, "setBreakpoints", message)];
+            }
             if let Some(body) = records.first().and_then(|record| record.get("body")) {
                 if let Some(id) = body.get("breakpoint_id").and_then(Value::as_u64) {
                     ids.push(id);
@@ -81,12 +91,14 @@ impl DapServer {
             .cloned()
             .unwrap_or_default();
         if requested.iter().any(|breakpoint| {
-            breakpoint.get("logMessage").is_some() || breakpoint.get("action").is_some()
+            breakpoint.get("logMessage").is_some()
+                || breakpoint.get("action").is_some()
+                || breakpoint.get("assign").is_some()
         }) {
             return vec![self.failure(
                 request_seq,
                 "setFunctionBreakpoints",
-                "Function breakpoints support only name, condition, and hitCondition; logMessage and custom actions are unsupported.",
+                "Function breakpoints support only name, condition, and hitCondition; logMessage, assign, and custom actions are unsupported.",
             )];
         }
         let breakpoints = requested

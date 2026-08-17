@@ -59,8 +59,11 @@ durable location from a current-stop `variablesReference` child. `dataBreakpoint
 returns a persistable `dataId` only for executable globals (`g:<index>`) with
 `accessTypes: ["write"]`. Frame registers and capture cells return a null
 `dataId`. `setDataBreakpoints` maps those IDs onto JSONL
-`data_breakpoints.replace`. VS Code uses the standard variable data-breakpoint
-UI; the adapter does not add a second watchpoint command. The accepted expression subset and limits are documented in
+`data_breakpoints.replace`. Optional `assign` on `setBreakpoints` and
+`setDataBreakpoints` items forwards the same global identity and expression as
+JSONL. VS Code uses the standard variable data-breakpoint
+UI; the adapter does not add a second watchpoint command or an assign editor
+command. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves
@@ -223,12 +226,16 @@ JSONL details in the DAP `body.error` object: `code` is the stable error code,
 DAP request-shape failures that never reach the core provide the standard
 `format` and `showUser` fields only.
 
-`setBreakpoints` forwards DAP `condition`, `hitCondition`, and `logMessage`
-unchanged to the shared breakpoint policy. A condition stops only on Boolean
+`setBreakpoints` forwards DAP `condition`, `hitCondition`, `logMessage`, and
+optional `assign` unchanged to the shared breakpoint policy. A condition stops only on Boolean
 `true`. A hit condition is one positive decimal `N` and matches exactly the Nth
 physical hit. Log messages use `{expression}`, with `{{` and `}}` for literal
-braces, and never cause a user-visible stop. Invalid expressions, hit syntax,
-or templates return an unverified DAP breakpoint with an actionable message.
+braces, and never cause a user-visible stop. After condition and hit tests, an
+optional `assign` object `{ identity, expression }` writes one executable
+global through the same mutation transaction as `setVariable`. Invalid
+expressions, hit syntax, or templates return an unverified DAP breakpoint with
+an actionable message. An invalid `assign` identity or unparsable replacement
+fails the request without creating the breakpoint.
 
 Runtime condition errors emit a debugger diagnostic and fail closed by
 stopping. Runtime log interpolation errors emit a rate-limited stderr output
@@ -241,8 +248,8 @@ as `Math.Transform` bind exactly; a short name such as `Transform` binds every
 routine with that final component while retaining one logical breakpoint ID.
 The standard response reports verified or unverified state and an actionable
 message. `condition` and positive-decimal `hitCondition` use the shared source
-breakpoint policy. Function logpoints and adapter-local name inference are not
-implemented.
+breakpoint policy. Function logpoints, assignments, and adapter-local name
+inference are not implemented.
 
 `setExceptionBreakpoints` accepts the advertised `all` filter by itself or
 exact advertised codes such as `F4001`; an empty array selects no runtime

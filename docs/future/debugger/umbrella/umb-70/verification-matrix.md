@@ -9,7 +9,7 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | `V70-02` | Capture-cell destinations are accepted or remain rejected with evidence | Mutation tests plus `UMB-70A` decision | pass |
 | `V70-03` | Data breakpoints stop deterministically on read, write, or change | VM write/change hits; read unverified | pass |
 | `V70-04` | Watchpoint overhead and retained state are bounded | Limit tests | pass |
-| `V70-05` | Mutating breakpoint actions commit once and invalidate once | Transaction tests or child-not-started evidence | pending |
+| `V70-05` | Mutating breakpoint actions commit once and invalidate once | VM assign plus JSONL/DAP policy tests | pass |
 | `V70-06` | JSONL and DAP expose equivalent data-stop success and failures | Paired adapter tests | pass |
 | `V70-07` | VS Code exposes only supported watchpoint UX | Standard DAP data breakpoints; no extra command | pass |
 | `V70-08` | Current docs describe implemented behavior and limitations only | Documentation review | pass |

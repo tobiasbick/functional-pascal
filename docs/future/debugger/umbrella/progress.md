@@ -4,10 +4,11 @@
 
 - Umbrella state: implementing `UMB-70`
 - Active primary package: `UMB-70`
-- Last completed item: `U70-21` after `U70-20`
-- Next child: `U70-30` after `U70-21`
-- Checkpoint: recoverable `U70-01` freeze plus durable location describe and
-  global data breakpoints in the current worktree; `UMB-70` package remains active
+- Last completed item: `U70-31` after `U70-30`
+- Next child: `U70-40` after `U70-31`
+- Checkpoint: recoverable `U70-01` freeze plus durable location describe,
+  global data breakpoints, and mutating breakpoint assign in the current
+  worktree; `UMB-70` package remains active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
   under `UMB-70A` until an alias registry exists
 - Branch: `codex/fpas-debugger`
@@ -30,7 +31,7 @@ current worktree before changing or staging anything.
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
-| `UMB-70` | active | Global write/change data breakpoints; see [umb-70/progress.md](umb-70/progress.md) |
+| `UMB-70` | active | Global assign on source/data breakpoint hits; see [umb-70/progress.md](umb-70/progress.md) |
 | `UMB-80` | pending | Recording format and nondeterminism inventory first |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
 | `UMB-99` | pending | Final parity and plan removal |
@@ -230,7 +231,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U70-30` in
+The next pending implementation step is `U70-40` in
 [umb-70/progress.md](umb-70/progress.md). `UMB-60` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

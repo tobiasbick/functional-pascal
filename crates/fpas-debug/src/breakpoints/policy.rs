@@ -1,9 +1,10 @@
-//! Deterministic condition, physical-hit, and log-or-stop policy.
+//! Deterministic condition, physical-hit, assign, and log-or-stop policy.
 
 use std::collections::HashSet;
 
 use fpas_vm::{DebugEvaluationLimits, DebugExpression, DebugSession, DebugSessionError};
 
+use super::BreakpointAssign;
 use super::hit_condition;
 use crate::evaluation::{
     EvaluationParseError, LogMessage, LogMessageLimits, LogSegment, parse_debug_expression,
@@ -14,6 +15,7 @@ pub(crate) struct BreakpointPolicy {
     condition: Option<DebugExpression>,
     hit_condition: Option<u64>,
     log_message: Option<LogMessage>,
+    assign: Option<BreakpointAssign>,
     physical_hits: u64,
     reported_errors: HashSet<String>,
 }
@@ -23,6 +25,7 @@ impl BreakpointPolicy {
         condition: Option<&str>,
         hit_condition_source: Option<&str>,
         log_message_source: Option<&str>,
+        assign: Option<BreakpointAssign>,
     ) -> Result<Self, EvaluationParseError> {
         let evaluation_limits = DebugEvaluationLimits::default();
         let condition = condition
@@ -38,9 +41,22 @@ impl BreakpointPolicy {
             condition,
             hit_condition,
             log_message,
+            assign,
             physical_hits: 0,
             reported_errors: HashSet::new(),
         })
+    }
+
+    /// Policy that only assigns one global, then stops.
+    pub(crate) fn with_assign(assign: BreakpointAssign) -> Self {
+        Self {
+            condition: None,
+            hit_condition: None,
+            log_message: None,
+            assign: Some(assign),
+            physical_hits: 0,
+            reported_errors: HashSet::new(),
+        }
     }
 
     pub(crate) fn apply(
@@ -64,6 +80,27 @@ impl BreakpointPolicy {
             .is_some_and(|expected| expected != self.physical_hits)
         {
             return BreakpointOutcome::Continue;
+        }
+        let mut frame_id = frame_id;
+        if let Some(assign) = &self.assign {
+            match session.assign_data_location_in_frame(
+                assign.identity,
+                &assign.expression,
+                Some(frame_id),
+            ) {
+                Ok(_) => {
+                    if let Some(id) = session
+                        .stack(0, 1)
+                        .ok()
+                        .and_then(|page| page.items.first().map(|frame| frame.id))
+                    {
+                        frame_id = id;
+                    }
+                }
+                Err(error) => {
+                    return BreakpointOutcome::StopWithDiagnostic(self.once_diagnostic(error));
+                }
+            }
         }
         let Some(log_message) = &self.log_message else {
             return BreakpointOutcome::Stop;

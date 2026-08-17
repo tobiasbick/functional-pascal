@@ -2,6 +2,7 @@
 
 use serde_json::{Map, Value, json};
 
+use super::breakpoints::parse_assign_argument;
 use super::location::parse_identity;
 use super::{JsonlServer, ServerStatus};
 use crate::jsonl::encode::{data_breakpoint_body, invalid_state, missing_argument};
@@ -24,6 +25,7 @@ impl JsonlServer {
             return vec![missing_argument(request_id, command, "breakpoints")];
         };
         let mut data_breakpoints = Vec::with_capacity(requested.len());
+        let mut assigns = Vec::with_capacity(requested.len());
         for (index, item) in requested.iter().enumerate() {
             let Some(item) = item.as_object() else {
                 return vec![invalid_data_request(
@@ -35,7 +37,7 @@ impl JsonlServer {
             };
             if item
                 .keys()
-                .any(|field| !matches!(field.as_str(), "identity" | "access"))
+                .any(|field| !matches!(field.as_str(), "identity" | "access" | "assign"))
             {
                 return vec![invalid_data_request(
                     request_id,
@@ -67,6 +69,19 @@ impl JsonlServer {
                 },
             };
             data_breakpoints.push(fpas_vm::DataBreakpoint { identity, access });
+            let assign = match parse_assign_argument(item.get("assign")) {
+                Ok(assign) => assign,
+                Err(message) => {
+                    return vec![failure(
+                        request_id,
+                        command,
+                        "invalid_request",
+                        format!("Data breakpoint at index {index}: {message}"),
+                        "Send `assign.identity` from `location.describe` and one replacement `expression`.",
+                    )];
+                }
+            };
+            assigns.push(assign);
         }
         let bound = match self
             .actor
@@ -77,6 +92,18 @@ impl JsonlServer {
             Some(Err(error)) => return vec![session_error(request_id, command, error)],
             None => return vec![invalid_state(request_id, command, self.status)],
         };
+        for id in self.data_breakpoint_ids.drain(..) {
+            self.breakpoint_policies.remove(&id);
+        }
+        self.data_breakpoint_ids = bound.iter().map(|breakpoint| breakpoint.id).collect();
+        for (breakpoint, assign) in bound.iter().zip(assigns) {
+            if let Some(assign) = assign {
+                self.breakpoint_policies.insert(
+                    breakpoint.id,
+                    crate::breakpoints::BreakpointPolicy::with_assign(assign),
+                );
+            }
+        }
         let bodies = bound.iter().map(data_breakpoint_body).collect::<Vec<_>>();
         let mut records = vec![success(request_id, command, json!({"breakpoints": bodies}))];
         records.extend(

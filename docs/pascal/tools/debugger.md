@@ -34,7 +34,8 @@ must remain below that root and its BLAKE3 identity must match the image. Stale
 or escaping sources are rejected before execution.
 
 The debugger supports source and function breakpoints, global write and change
-data breakpoints, pause, continue, step in/over/out,
+data breakpoints, optional assignment of one executable global when a source or
+data breakpoint hits, pause, continue, step in/over/out,
 per-task pause, resume, and cancel, stack frames, lexical scopes, variables, aggregate expansion, read-only
 expression evaluation, conditional breakpoints, exact-hit conditions,
 non-stopping source logpoints, selectable runtime-failure stops, stopped-state variable mutation, explicit complete
@@ -107,7 +108,12 @@ breakpoints watch executable globals by that identity: `write` stops on any
 store to the slot, and `change` stops only when the stored value differs from
 the snapshot taken at the last resume. Frame registers, capture cells, and
 `read` access are not watchable. Inspection handles still expire on resume;
-global identities used as data breakpoints survive continue. Textual mutation starts
+global identities used as data breakpoints survive continue. A source or data
+breakpoint may assign one of those global identities when it hits: the
+replacement is prepared and committed through the same stopped-state mutation
+path, then inspection snapshots refresh once. Frame registers and capture cells
+are not assignable from breakpoint actions. Function breakpoints do not accept
+an assignment. Textual mutation starts
 with one visible binding and accepts stored record fields, active enum payload
 fields, wrapper `.value`, and array or dictionary indexes, for example
 `Counter`, `Origin.X`, `choice.count`, `result.value`, `optional.value`,
@@ -379,7 +385,10 @@ inspectable unless the session was disconnected.
 A breakpoint condition must produce Boolean `true` to stop. A hit condition is
 one positive decimal integer such as `3`, meaning exactly the third physical
 hit. Log messages interpolate `{expression}` and escape braces as `{{` and
-`}}`; valid logpoints never stop execution. Runtime condition errors stop
+`}}`; valid logpoints never stop execution. After the condition and hit tests,
+an optional assignment to one executable-global identity runs once, then
+log-or-stop. Assignment failures stop with a diagnostic and leave storage
+unchanged. Runtime condition errors stop
 safely, while runtime log interpolation errors report a bounded diagnostic and
 continue.
 
@@ -391,7 +400,7 @@ in executable order. One logical breakpoint ID covers all of those exact
 function identities. A missing selector or a matching routine without an entry
 sequence point remains visible as unverified. Function breakpoints support the
 same Boolean conditions and exact positive hit counts as source breakpoints;
-log messages remain source-breakpoint behavior.
+log messages and assignments are not accepted.
 
 Runtime failures stop for inspection by default. A client may instead replace
 the session filter with exact advertised diagnostic codes such as `F4001`, or

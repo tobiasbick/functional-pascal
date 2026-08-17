@@ -21,10 +21,11 @@ These are inventory facts for `U70-00`/`U70-01`, not acceptance of later childre
   destinations remain rejected until this package proves cell identity and
   lifetime (`U10D-CELL` → `UMB-70A`).
 - JSONL advertises `data_breakpoints: true` with `data_breakpoint_access`
-  `write` and `change`, and `location_describe: true`. DAP advertises
-  `supportsDataBreakpoints: true` and maps `dataBreakpointInfo` /
-  `setDataBreakpoints`. Inspection handles expire on resume and are not
-  watchpoint identities; global location identities are.
+  `write` and `change`, `location_describe: true`, and `breakpoint_assign:
+  true`. DAP advertises `supportsDataBreakpoints: true` and maps
+  `dataBreakpointInfo` / `setDataBreakpoints`. Optional `assign` forwards on
+  `setBreakpoints` and `setDataBreakpoints`. Inspection handles expire on
+  resume and are not watchpoint identities; global location identities are.
 - Attach and remote debugging were rejected by `UMB-60`. Native OS debugging
   was rejected by `UMB-60C`.
 
@@ -45,9 +46,9 @@ watchpoint that must survive continue.
 - Supported descendants (record fields, array indexes, dictionary values, enum
   payload fields, Result/Option wrappers) inherit the root lifetime.
 
-Do not add mutating-action modules until `U70-30`. Capture-cell destinations
-stay rejected: `ClosureCell` has pointer identity but no owner-task or alias
-registry (`unregistered_alias`).
+Do not add further mutating-action modules until a later package. Capture-cell
+destinations stay rejected: `ClosureCell` has pointer identity but no owner-task
+or alias registry (`unregistered_alias`).
 
 ## Proven identity subset (`U70-10`)
 
@@ -72,10 +73,27 @@ JSONL `location.describe` and DAP `fpas/locationDescribe` expose that subset.
 - Descendants of a global watch the root slot, including index-path stores.
 - Logical data breakpoints share the existing 256 breakpoint limit with source
   and function breakpoints. Replace-all is atomic.
-- No condition, hit, or log policy on data breakpoints. Missing policy stops.
+- No condition, hit, or log policy on data breakpoints unless `assign` is
+  present. Missing policy still stops. Optional `assign` uses the shared
+  source-breakpoint policy after the watch hits.
 - JSONL `data_breakpoints.replace` and DAP `dataBreakpointInfo` /
   `setDataBreakpoints` map the same engine. `data_breakpoint.set` stays
   rejected. VS Code uses the standard variable data-breakpoint UI.
+
+## Proven mutating-action subset (`U70-30`)
+
+- Optional `assign: { identity, expression }` on source `breakpoint.set` and
+  data `data_breakpoints.replace` items.
+- Identity must be an executable global. Frame registers and capture cells are
+  rejected at set time without creating the breakpoint.
+- Policy order is condition → hit → assign → log-or-stop.
+- Assign reuses prepare/validate/commit. Snapshots invalidate once per
+  successful assign. Failures leave storage and generation unchanged.
+- After a successful assign, log interpolation re-reads `frame_id` from the
+  refreshed stack.
+- Function breakpoints reject `assign`, `action`, and `logMessage`.
+- JSONL advertises `breakpoint_assign: true`. DAP forwards `assign`; VS Code
+  has no extra assign command.
 
 ## `UMB-70A` — stable observable data identities
 

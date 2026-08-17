@@ -35,6 +35,7 @@ mod instruction;
 mod io;
 mod lifecycle;
 mod location;
+mod location_assign;
 mod mutation;
 mod sequence;
 mod storage;

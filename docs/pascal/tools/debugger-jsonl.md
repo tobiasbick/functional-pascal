@@ -26,14 +26,14 @@ compatibility mode. A response precedes events caused by that request.
 | Command | State | Arguments | Result |
 |---|---|---|---|
 | `initialize` | created | optional `version` (default `2`) | capabilities and limits |
-| `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message` | logical breakpoint and verification |
+| `breakpoint.set` | initialized/stopped | `source`, `line`; optional `column`, `condition`, `hit_condition`, `log_message`, `assign` | logical breakpoint and verification |
 | `breakpoint.clear` | initialized/stopped | `breakpoint_id` | removal confirmation |
 | `function_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `name` with optional `condition`, `hit_condition` | replace-all logical function breakpoints and verification |
 | `runtime_failures.replace` | initialized/stopped | `filters`: `all` alone or exact advertised `Fdddd` codes | replace-all runtime-failure stop selection |
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
-| `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) | replace-all logical data breakpoints and verification |
+| `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
 | `pause` | running | none | cooperative pause; observed after the current hosted intrinsic returns; extra `task_id` is ignored |
 | `step_into`, `step_over`, `step_out` | stopped | optional `task_id` | resumes toward the selected task's next step stop |
@@ -92,7 +92,12 @@ register, or unregistered capture cell from a current-stop child; inspection
 handles still expire. `data_breakpoints.replace` watches a global identity
 with `access` `write` (any store) or `change` (store that differs from the
 resume snapshot). `read`, frame-register identities, and missing identities
-are unverified or rejected; they do not resume execution. Evaluation
+are unverified or rejected; they do not resume execution. Optional `assign` on
+`breakpoint.set` or a `data_breakpoints.replace` item names one global
+identity and a replacement expression. The assignment runs after condition and
+hit tests and before log-or-stop. Frame-register identities are rejected
+without creating the breakpoint. Function breakpoints reject `assign`.
+Evaluation
 returns `result`, `type_name`, `variables_reference`, `named_variables`, and
 `indexed_variables`.
 
@@ -376,7 +381,8 @@ queues lines for hosted `Read`/`ReadLn`. `live_terminal` is false; there is no
 second console or PTY. `data_breakpoints` is true with
 `data_breakpoint_access` `write` and `change`. `data_breakpoints.replace`
 accepts identities from `location.describe`; `data_breakpoint.set` remains
-rejected. `location_describe` is
+rejected. `breakpoint_assign` is true: source and data breakpoints may assign
+one executable-global identity after condition and hit tests. `location_describe` is
 true: stopped-state `location.describe` names a durable identity from a current
 inspection child. Empty `text` is a valid empty line. Each accepted line
 counts `text` UTF-8 bytes plus one stored newline against
@@ -384,7 +390,8 @@ counts `text` UTF-8 bytes plus one stored newline against
 quota. Disconnect closes the channel, signals EOF, and clears queued input.
 Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 `frame_return`, `variant_describe`,
-`variant_construct`, `storage_initialize`, and `location_describe` are true.
+`variant_construct`, `storage_initialize`, `location_describe`, and
+`breakpoint_assign` are true.
 
 ## Default limits
 

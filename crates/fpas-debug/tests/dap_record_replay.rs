@@ -69,6 +69,10 @@ fn dap_step_back_after_stop_does_not_resume() {
         assert_eq!(rejected[0]["success"], false, "{command}: {rejected:?}");
         assert_eq!(rejected.len(), 1, "{command}: {rejected:?}");
     }
+    let recorded = send(&mut server, &mut seq, "fpas/record", json!({}));
+    assert_eq!(recorded[0]["success"], true, "{recorded:?}");
+    assert_eq!(recorded[0]["body"]["capturing"], true);
+    assert_eq!(recorded.len(), 1, "{recorded:?}");
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
@@ -88,7 +92,18 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     );
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
+    assert_eq!(described[0]["body"]["capturing"], false);
+    assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");
+
+    let recorded = send(&mut server, &mut seq, "fpas/record", json!({}));
+    assert_eq!(recorded[0]["success"], true, "{recorded:?}");
+    assert_eq!(recorded[0]["body"]["capturing"], true);
+
+    let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
+    assert_eq!(described[0]["body"]["capturing"], true);
+    assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
+    assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
 
     let rejected = send(&mut server, &mut seq, "stepBack", json!({}));
     assert_eq!(rejected[0]["success"], false, "{rejected:?}");
@@ -109,8 +124,43 @@ fn dap_recording_describe_after_stop_does_not_resume() {
 
     let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
     assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described[0]["body"]["capturing"], false);
     assert_eq!(described.len(), 1, "{described:?}");
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
+}
+
+#[test]
+fn dap_record_captures_queued_input_without_replay() {
+    let source = r#"program CaptureInput;
+uses Std.Console;
+begin
+  WriteLn(ReadLn())
+end.
+"#;
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile capture fixture");
+    let mut server =
+        DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server");
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+    let _ = send(&mut server, &mut seq, "fpas/record", json!({}));
+    let queued = send(&mut server, &mut seq, "fpas/input", json!({"text":"hello"}));
+    assert_eq!(queued[0]["success"], true, "{queued:?}");
+    let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
+    assert_eq!(described[0]["body"]["capturing"], true);
+    let events = described[0]["body"]["events"].as_array().expect("events");
+    assert!(
+        events
+            .iter()
+            .any(|event| event["kind"] == "input" && event["text"] == "hello"),
+        "{described:?}"
+    );
+    let rejected = send(&mut server, &mut seq, "stepBack", json!({}));
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
 }

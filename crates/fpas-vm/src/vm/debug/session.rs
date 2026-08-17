@@ -12,6 +12,7 @@ use super::breakpoints::{
 };
 use super::inspection::{DebugInspectionLimits, InspectionSnapshot};
 use super::io::DebuggeeChannel;
+use super::recording::DebugRecordingLog;
 use super::tasks::DebugTaskRuntime;
 use super::types::{
     DebugErrorKind, DebugExecutionLimits, DebugRunResult, DebugSessionError, DebugSessionState,
@@ -89,6 +90,7 @@ pub struct DebugSession {
     inspection_limits: DebugInspectionLimits,
     execution_limits: DebugExecutionLimits,
     debuggee: DebuggeeChannel,
+    recording: DebugRecordingLog,
 }
 
 impl DebugSession {
@@ -236,6 +238,7 @@ impl DebugSession {
             inspection_limits,
             execution_limits,
             debuggee: DebuggeeChannel::new(execution_limits.max_input_bytes),
+            recording: DebugRecordingLog::default(),
         })
     }
 

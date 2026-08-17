@@ -33,7 +33,8 @@ compatibility mode. A response precedes events caused by that request.
 | `launch` | initialized | optional `stop_on_entry` | starts or stops at entry |
 | `attach` | any | none | always rejected; capability `attach` is `false` |
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
-| `record`, `replay` | any | none | always rejected; capability `record_replay` is `false` |
+| `record` | initialized/stopped | none | starts capturing all-stop events and queued `Read`/`ReadLn` lines; does not resume; capability `recording_capture` is `true` |
+| `replay` | any | none | always rejected; capability `record_replay` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
 | `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
@@ -52,7 +53,7 @@ compatibility mode. A response precedes events caused by that request.
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `location.describe` | stopped | `variables_reference`, `name` | kind, lifetime, and optional durable identity |
-| `recording.describe` | initialized/stopped | none | versioned program and portable source identity; does not start recording |
+| `recording.describe` | initialized/stopped | none | versioned program, portable sources, capturing flag, and captured events; does not start recording or resume |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
@@ -376,9 +377,11 @@ set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. `attach`, `non_stop`, `reverse_execution`, and
-`record_replay` remain false; `recording_describe` is true: initialized or
-stopped `recording.describe` names versioned program identity and portable
-sources without starting a recording.
+`record_replay` remain false. `recording_describe` and `recording_capture` are
+true: initialized or stopped `record` starts capturing all-stop events and
+queued `Read`/`ReadLn` lines without resuming; `recording.describe` names
+versioned program identity, portable sources, whether capture is on, and
+captured events. Replay and reverse-step stay rejected.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`
@@ -396,7 +399,7 @@ quota. Disconnect closes the channel, signals EOF, and clears queued input.
 Protocol stdin EOF still ends `serve`; it is not debuggee EOF.
 `frame_return`, `variant_describe`,
 `variant_construct`, `storage_initialize`, `location_describe`,
-`recording_describe`, and
+`recording_describe`, `recording_capture`, and
 `breakpoint_assign` are true.
 
 ## Default limits

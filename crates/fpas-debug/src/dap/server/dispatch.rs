@@ -115,6 +115,7 @@ impl DapServer {
             "fpas/variantDescribe" => self.describe_variant(request_seq, command, arguments),
             "fpas/locationDescribe" => self.describe_location(request_seq, command, arguments),
             "fpas/recordingDescribe" => self.describe_recording(request_seq, command),
+            "fpas/record" => self.start_recording(request_seq, command),
             "fpas/variantConstruct" => self.construct_variant(request_seq, command, arguments),
             "fpas/initializeStorage" => self.initialize_storage(request_seq, command, arguments),
             "cancel" => self.core_request(

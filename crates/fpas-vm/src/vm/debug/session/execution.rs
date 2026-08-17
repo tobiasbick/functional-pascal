@@ -286,6 +286,7 @@ impl DebugSession {
         self.last_stop = stop_at_worker(&self.executable, worker, reason, breakpoint_ids, None);
         self.last_stop.task_id = task_id;
         self.refresh_inspection();
+        self.capture_current_stop();
         DebugRunResult::Stopped(self.last_stop.clone())
     }
 
@@ -311,6 +312,7 @@ impl DebugSession {
         );
         self.last_stop.task_id = task_id;
         self.refresh_inspection();
+        self.capture_current_stop();
         DebugRunResult::Stopped(self.last_stop.clone())
     }
 
@@ -331,6 +333,7 @@ impl DebugSession {
             diagnostic: None,
         };
         self.refresh_inspection();
+        self.capture_current_stop();
         DebugRunResult::Stopped(self.last_stop.clone())
     }
 

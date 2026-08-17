@@ -38,14 +38,13 @@ fn jsonl_record_replay_is_advertised_false_and_rejects_without_launch() {
         initialized[0]["body"]["capabilities"]["recording_describe"],
         true
     );
+    assert_eq!(
+        initialized[0]["body"]["capabilities"]["recording_capture"],
+        true
+    );
     assert_eq!(server.status(), ServerStatus::Initialized);
 
-    for (id, command) in [
-        (2, "step_back"),
-        (3, "reverse_continue"),
-        (4, "record"),
-        (5, "replay"),
-    ] {
+    for (id, command) in [(2, "step_back"), (3, "reverse_continue"), (4, "replay")] {
         let rejected = server.handle_line(&request(id, command, json!({})));
         assert_eq!(
             rejected[0]["error"]["code"], "unsupported_capability",
@@ -66,12 +65,7 @@ fn jsonl_record_replay_after_stop_does_not_resume() {
         .as_u64()
         .expect("entry frame");
 
-    for (id, command) in [
-        (4, "step_back"),
-        (5, "reverse_continue"),
-        (6, "record"),
-        (7, "replay"),
-    ] {
+    for (id, command) in [(4, "step_back"), (5, "reverse_continue"), (6, "replay")] {
         let rejected = server.handle_line(&request(id, command, json!({})));
         assert_eq!(
             rejected[0]["error"]["code"], "unsupported_capability",
@@ -79,6 +73,10 @@ fn jsonl_record_replay_after_stop_does_not_resume() {
         );
         assert_eq!(rejected.len(), 1, "{command}: {rejected:?}");
     }
+    let recorded = server.handle_line(&request(7, "record", json!({})));
+    assert_eq!(recorded[0]["success"], true, "{recorded:?}");
+    assert_eq!(recorded[0]["body"]["capturing"], true);
+    assert_eq!(recorded.len(), 1, "{recorded:?}");
     assert_eq!(server.status(), ServerStatus::Stopped);
 
     let same_stack = server.handle_line(&request(8, "stack", json!({})));
@@ -98,12 +96,52 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     );
     assert_eq!(described[0]["body"]["program"], "recordreplay");
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
+    assert_eq!(described[0]["body"]["capturing"], false);
+    assert_eq!(described[0]["body"]["events"], json!([]));
     assert_eq!(described.len(), 1, "{described:?}");
     assert_eq!(server.status(), ServerStatus::Initialized);
 
-    let rejected = server.handle_line(&request(3, "record", json!({})));
-    assert_eq!(rejected[0]["error"]["code"], "unsupported_capability");
+    let recorded = server.handle_line(&request(3, "record", json!({})));
+    assert_eq!(recorded[0]["success"], true, "{recorded:?}");
+    assert_eq!(recorded[0]["body"]["capturing"], true);
     assert_eq!(server.status(), ServerStatus::Initialized);
+
+    let described = server.handle_line(&request(4, "recording.describe", json!({})));
+    assert_eq!(described[0]["body"]["capturing"], true);
+    assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
+    assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
+}
+
+#[test]
+fn jsonl_record_captures_queued_input_without_replay() {
+    let source = r#"program CaptureInput;
+uses Std.Console;
+begin
+  WriteLn(ReadLn())
+end.
+"#;
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile capture fixture");
+    let mut server =
+        JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server");
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let _ = server.handle_line(&request(3, "record", json!({})));
+    let queued = server.handle_line(&request(4, "io.input", json!({"text":"hello"})));
+    assert_eq!(queued[0]["success"], true, "{queued:?}");
+    let described = server.handle_line(&request(5, "recording.describe", json!({})));
+    assert_eq!(described[0]["body"]["capturing"], true);
+    let events = described[0]["body"]["events"].as_array().expect("events");
+    assert!(
+        events
+            .iter()
+            .any(|event| event["kind"] == "input" && event["text"] == "hello"),
+        "{described:?}"
+    );
+    let rejected = server.handle_line(&request(6, "replay", json!({})));
+    assert_eq!(rejected[0]["error"]["code"], "unsupported_capability");
+    assert_eq!(server.status(), ServerStatus::Stopped);
 }
 
 #[test]
@@ -118,6 +156,7 @@ fn jsonl_recording_describe_after_stop_does_not_resume() {
 
     let described = server.handle_line(&request(4, "recording.describe", json!({})));
     assert_eq!(described[0]["success"], true, "{described:?}");
+    assert_eq!(described[0]["body"]["capturing"], false);
     assert_eq!(described.len(), 1, "{described:?}");
     assert_eq!(server.status(), ServerStatus::Stopped);
 

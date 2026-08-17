@@ -28,6 +28,7 @@ impl DebugSession {
         match self.debuggee.accept_line(bytes) {
             Ok(session_bytes) => {
                 self.with_text_input(|text| text.push_line(input));
+                self.capture_input(input);
                 Ok(DebuggeeInputResult {
                     bytes,
                     session_bytes,

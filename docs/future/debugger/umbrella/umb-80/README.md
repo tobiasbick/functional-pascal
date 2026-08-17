@@ -1,6 +1,6 @@
 # UMB-80 deterministic record and replay
 
-Status: active. Resume at pending `U80-20` in [progress.md](progress.md).
+Status: active. Resume at pending `U80-30` in [progress.md](progress.md).
 
 This package owns versioned, bounded recordings of scheduler choices and
 supported host-visible events after the `UMB-40` all-stop, `UMB-50` transport,

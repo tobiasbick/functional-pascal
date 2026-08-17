@@ -28,15 +28,16 @@ impl JsonlServer {
                 command,
                 "unsupported_capability",
                 "Reverse execution is not supported.",
-                "Use continue or a forward step. The debugger does not record or replay execution.",
+                "Use continue or a forward step. The debugger does not replay execution.",
             )],
-            "record" | "replay" => vec![failure(
+            "replay" => vec![failure(
                 request_id,
                 command,
                 "unsupported_capability",
-                "Debugger record and replay are not supported.",
-                "Launch a new debug session. Recordings are not retained.",
+                "Debugger replay is not supported.",
+                "Forward execution can capture stops and queued input. Reverse playback is not available.",
             )],
+            "record" => self.start_recording(request_id, command),
             "data_breakpoint.set" => vec![failure(
                 request_id,
                 command,

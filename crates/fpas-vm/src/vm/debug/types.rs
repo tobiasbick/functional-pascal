@@ -79,6 +79,21 @@ pub enum DebugStopReason {
     RuntimeError,
 }
 
+impl DebugStopReason {
+    /// Return the stable lowercase protocol spelling.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Entry => "entry",
+            Self::Breakpoint => "breakpoint",
+            Self::DataBreakpoint => "data_breakpoint",
+            Self::Pause => "pause",
+            Self::Step => "step",
+            Self::RuntimeError => "runtime_error",
+        }
+    }
+}
+
 /// Stable snapshot identifying one debugger stop.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DebugStop {

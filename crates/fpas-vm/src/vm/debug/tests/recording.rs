@@ -1,7 +1,7 @@
 //! Recording envelope identity without host paths.
 
 use super::*;
-use crate::vm::debug::{DebugRecordingEnvelope, RECORDING_ENVELOPE_VERSION};
+use crate::vm::debug::{DebugRecordingEnvelope, DebugRecordingEvent, RECORDING_ENVELOPE_VERSION};
 
 fn compile_session(source: &str) -> DebugSession {
     let (program, diagnostics) = fpas_parser::parse(source);
@@ -81,4 +81,96 @@ fn from_executable_rejects_posix_absolute_sources() {
         .expect_err("posix absolute path must be rejected");
     assert_eq!(error.kind, DebugErrorKind::RecordingHostPath);
     assert!(!error.message.contains("/abs"), "{error:?}");
+}
+
+#[test]
+fn recording_stays_empty_until_start() {
+    let mut session = compile_session("program Quiet; begin end.");
+    assert!(!session.is_recording());
+    assert!(session.recording_events().is_empty());
+    match session.continue_execution().expect("forward execution") {
+        DebugRunResult::Terminated(_) | DebugRunResult::Stopped(_) => {}
+    }
+    assert!(session.recording_events().is_empty());
+}
+
+#[test]
+fn start_recording_captures_current_stop_and_later_input() {
+    let mut session = compile_session(
+        r#"program CaptureInput;
+uses Std.Console;
+begin
+  WriteLn(ReadLn())
+end.
+"#,
+    );
+    session.start_recording();
+    assert!(session.is_recording());
+    let events = session.recording_events();
+    assert_eq!(events.len(), 1, "{events:?}");
+    assert!(
+        matches!(
+            &events[0],
+            DebugRecordingEvent::Stop {
+                task_id: 0,
+                reason: DebugStopReason::Entry,
+                ..
+            }
+        ),
+        "{events:?}"
+    );
+    session
+        .push_debuggee_input("hello")
+        .expect("queue debuggee input");
+    assert!(
+        session
+            .recording_events()
+            .iter()
+            .any(|event| matches!(event, DebugRecordingEvent::Input { text } if text == "hello")),
+        "{:?}",
+        session.recording_events()
+    );
+    session.start_recording();
+    assert_eq!(
+        session
+            .recording_events()
+            .iter()
+            .filter(|event| matches!(event, DebugRecordingEvent::Stop { .. }))
+            .count(),
+        1,
+        "starting twice must not duplicate the current stop"
+    );
+}
+
+#[test]
+fn continue_after_record_captures_the_next_all_stop() {
+    let mut session = compile_session(
+        r#"program CaptureStop;
+begin
+  mutable var Flag: integer := 0;
+  Flag := 1
+end.
+"#,
+    );
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "<memory>".to_string(),
+            line: 4,
+            column: None,
+        })
+        .expect("breakpoint");
+    session.start_recording();
+    let stop = stopped(session.continue_execution().expect("run to breakpoint"));
+    assert_eq!(stop.reason, DebugStopReason::Breakpoint);
+    assert!(
+        session.recording_events().iter().any(|event| matches!(
+            event,
+            DebugRecordingEvent::Stop {
+                reason: DebugStopReason::Breakpoint,
+                ..
+            }
+        )),
+        "{:?}",
+        session.recording_events()
+    );
 }

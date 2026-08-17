@@ -65,6 +65,7 @@ pub(super) fn initialize_records(
         capabilities.insert("breakpoint_assign".into(), json!(true));
         capabilities.insert("record_replay".into(), json!(false));
         capabilities.insert("recording_describe".into(), json!(true));
+        capabilities.insert("recording_capture".into(), json!(true));
     }
     vec![
         success(
@@ -253,14 +254,7 @@ pub(super) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Val
 }
 
 fn stop_reason(reason: fpas_vm::DebugStopReason) -> &'static str {
-    match reason {
-        fpas_vm::DebugStopReason::Entry => "entry",
-        fpas_vm::DebugStopReason::Breakpoint => "breakpoint",
-        fpas_vm::DebugStopReason::DataBreakpoint => "data_breakpoint",
-        fpas_vm::DebugStopReason::Pause => "pause",
-        fpas_vm::DebugStopReason::Step => "step",
-        fpas_vm::DebugStopReason::RuntimeError => "runtime_error",
-    }
+    reason.as_str()
 }
 
 fn location_body(location: &fpas_vm::SourceLocation) -> Value {

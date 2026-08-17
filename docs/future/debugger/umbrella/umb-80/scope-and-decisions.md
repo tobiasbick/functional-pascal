@@ -58,8 +58,11 @@ Not replayable until captured or rejected:
 
 Named rejects without resume or mutation:
 
-- JSONL `step_back`, `reverse_continue`, `record`, and `replay`
+- JSONL `step_back`, `reverse_continue`, and `replay`
 - DAP `stepBack` and `reverseContinue`
+
+JSONL `record` and DAP `fpas/record` start capture after `U80-20`; they still
+must not resume.
 
 ## `UMB-80A` — recording envelope and program identity
 
@@ -67,12 +70,17 @@ Named rejects without resume or mutation:
 - The envelope names versioned program identity and portable sources.
 - Host filesystem paths are rejected without echoing the path or mutating
   the session. JSONL `recording.describe` and DAP `fpas/recordingDescribe`
-  expose that identity. `record` / `replay` / reverse-step remain rejected.
+  expose that identity. Replay and reverse-step remain rejected.
 
 ## `UMB-80B` — scheduler and host-event capture
 
 - Begins only after the envelope can name a recording.
-- Capture is allowed only at explicit all-stop or host-input boundaries.
+- Capture is off until JSONL `record` or DAP `fpas/record`.
+- Events are recorded only at explicit all-stop boundaries and successful
+  queued `Read`/`ReadLn` input. Mid-resume scheduler choices are not logged.
+- A second `record` is idempotent. Capture does not resume or enable replay.
+- An in-memory ceiling of 4096 events is an implementation bound; advertised
+  retention and disk limits belong to `UMB-80C`.
 
 ## `UMB-80C` — bounds and retention
 

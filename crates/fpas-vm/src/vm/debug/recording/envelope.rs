@@ -4,7 +4,7 @@
 
 use fpas_bytecode::{BYTECODE_VERSION, VerifiedExecutable};
 
-use super::types::{DebugErrorKind, DebugSessionError};
+use super::super::types::{DebugErrorKind, DebugSessionError};
 
 /// Envelope schema version for debugger recordings.
 pub const RECORDING_ENVELOPE_VERSION: u32 = 1;

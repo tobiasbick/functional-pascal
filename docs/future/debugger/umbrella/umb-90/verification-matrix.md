@@ -9,12 +9,12 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | `V90-02` | Incompatible updates are rejected before the live image changes | Atomic reject tests or child-not-started evidence | pending |
 | `V90-03` | A recoverable old image remains until the new image commits | Rollback tests or child-not-started evidence | pending |
 | `V90-04` | Memory, disk, snapshot, and retention bounds hold | Limit tests or child-not-started evidence | pending |
-| `V90-05` | Recording capture is not used as a live-image snapshot store | Inventory plus later negatives | pending |
-| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired adapter tests | pending |
-| `V90-07` | VS Code exposes only supported reload UX | Extension-host tests | pending |
-| `V90-08` | Current docs describe implemented behavior and limitations only | Documentation review | pending |
-| `V90-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pending |
-| `V90-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pending |
+| `V90-05` | Recording capture is not used as a live-image snapshot store | Reload rejects after `record` / `fpas/record` leave the stack unchanged | pass |
+| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired `hot_reload` / `dap_hot_reload` named rejects | pass |
+| `V90-07` | VS Code exposes only supported reload UX | No reload command; DAP does not advertise `supportsHotReload` | pass |
+| `V90-08` | Current docs describe implemented behavior and limitations only | Debugger pages name `reload` / `fpas/reload` rejects without a live-image claim | pass |
+| `V90-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pass |
+| `V90-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pass |
 
 ## Standard final commands
 

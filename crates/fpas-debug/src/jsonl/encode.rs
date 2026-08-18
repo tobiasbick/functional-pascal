@@ -67,6 +67,7 @@ pub(super) fn initialize_records(
         capabilities.insert("recording_describe".into(), json!(true));
         capabilities.insert("recording_capture".into(), json!(true));
         capabilities.insert("recording_disk".into(), json!(false));
+        capabilities.insert("hot_reload".into(), json!(false));
     }
     vec![
         success(

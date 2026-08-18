@@ -24,15 +24,44 @@ These are inventory facts for `U90-00`, not acceptance of later children.
   `supportsStepBack: false`. Describe reports `replayable: false`.
 - Capture exists after `record` / `fpas/record`, keeps at most 4,096 events,
   writes no files, and retains no recording snapshots.
-- No hot-reload command, compatibility classifier, or recoverable old image
-  exists in `fpas-vm` or `fpas-debug`.
+- JSONL advertises `hot_reload: false`. Named `reload` / `image.replace` and
+  DAP `fpas/reload` rejects exist. No compatibility classifier or recoverable
+  old image exists in `fpas-vm`.
 - Attach, remote, and native debugging were rejected by `UMB-60`. Replay
   remains unsupported after `UMB-80`.
 
+## Frozen hot-reload-off contract (`U90-01`)
+
+Hot reload stays off until later children name accepted updates. A named
+reject changes no stack, frame, task, or live executable. Missing rules
+below are tests or recorded bounds, not a live-image claim.
+
+Observable today on the current launch-owned path:
+
+- One immutable `Arc<VerifiedExecutable>` shared by workers. `FunctionId`
+  values stay image-local.
+- JSONL `hot_reload: false`. DAP does not advertise hot reload. Named JSONL
+  `reload` / `image.replace` and DAP `fpas/reload` rejects do not resume or
+  replace the image.
+- Recording capture from `UMB-80` stays a stop/input log. It is not a
+  snapshot store for live-image replacement.
+
+Not reloadable until classified, rejected, or migrated by later children:
+
+- Active and inactive function bodies
+- Record, enum, and global layouts
+- Closures, capture cells, and task identities
+- Debug metadata, source maps, and sequence points
+- Newly entered anonymous closures (`UMB-10B`)
+
+Named rejects without resume or mutation:
+
+- JSONL `reload` and `image.replace`
+- DAP `fpas/reload`
+
 ## `UMB-90A` — compatibility classification
 
-- Begins only after `U90-00` records current executable and identity
-  ownership.
+- Begins only after `U90-01` freezes hot-reload-off and named rejects.
 - Compatibility must cover active and inactive function bodies, records,
   enums, globals, closures, tasks, and debug metadata.
 - Missing rules are tests or recorded bounds, not a live-image claim.

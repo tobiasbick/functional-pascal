@@ -37,6 +37,13 @@ impl JsonlServer {
                 "Debugger replay is not supported.",
                 "Forward execution can capture stops and queued input. Reverse playback is not available.",
             )],
+            "reload" | "image.replace" => vec![failure(
+                request_id,
+                command,
+                "unsupported_capability",
+                "Live-image hot reload is not supported.",
+                "Keep the current launch-owned executable. The debugger does not replace compiled code while stopped.",
+            )],
             "record" => self.start_recording(request_id, command),
             "data_breakpoint.set" => vec![failure(
                 request_id,

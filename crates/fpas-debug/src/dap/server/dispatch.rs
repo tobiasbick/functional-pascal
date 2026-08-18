@@ -116,6 +116,11 @@ impl DapServer {
             "fpas/locationDescribe" => self.describe_location(request_seq, command, arguments),
             "fpas/recordingDescribe" => self.describe_recording(request_seq, command),
             "fpas/record" => self.start_recording(request_seq, command),
+            "fpas/reload" => vec![self.failure(
+                request_seq,
+                command,
+                "Live-image hot reload is unsupported; the debugger cannot replace the compiled program.",
+            )],
             "fpas/variantConstruct" => self.construct_variant(request_seq, command, arguments),
             "fpas/initializeStorage" => self.initialize_storage(request_seq, command, arguments),
             "cancel" => self.core_request(

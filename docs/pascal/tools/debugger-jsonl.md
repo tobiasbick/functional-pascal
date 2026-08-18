@@ -35,7 +35,7 @@ compatibility mode. A response precedes events caused by that request.
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
 | `record` | initialized/stopped | none | starts capturing all-stop events and queued `Read`/`ReadLn` lines; does not resume; capability `recording_capture` is `true`; recordings stay in session memory |
 | `replay` | any | none | always rejected; capability `record_replay` is `false` |
-| `replay` | any | none | always rejected; capability `record_replay` is `false` |
+| `reload`, `image.replace` | any | none | always rejected; capability `hot_reload` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
 | `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
@@ -378,7 +378,7 @@ set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. `attach`, `non_stop`, `reverse_execution`, and
-`record_replay` remain false. `recording_describe` and `recording_capture` are
+`record_replay` remain false. `hot_reload` is false. `recording_describe` and `recording_capture` are
 true; `recording_disk` is false. Initialized or stopped `record` starts
 capturing all-stop events and queued `Read`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
@@ -387,7 +387,8 @@ captured events, and `replayable: false`. While capturing, unsupported host
 effects such as `Std.Random` stop with `F4024` before the intrinsic runs.
 Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
-rejected.
+rejected. `reload` and `image.replace` stay rejected without replacing the live
+executable.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`

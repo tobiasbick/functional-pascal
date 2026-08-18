@@ -36,7 +36,8 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
 `stepBack`, `reverseContinue`, `disassemble`, `readMemory`, and `writeMemory`
-fail as unsupported. Other unsupported requests fail explicitly.
+fail as unsupported. `fpas/reload` fails as unsupported live-image replacement.
+Other unsupported requests fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP
 IDs to spawned FPAS tasks. `stackTrace.threadId`, `next`, `stepIn`, and

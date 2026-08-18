@@ -69,6 +69,7 @@ fn envelope_body(
         "sources": envelope.sources,
         "capturing": capturing,
         "truncated": truncated,
+        "replayable": false,
         "event_count": events.len(),
         "event_limit": fpas_vm::MAX_RECORDING_EVENTS,
         "events": events.iter().map(event_body).collect::<Vec<_>>(),

@@ -112,6 +112,7 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
     assert_eq!(described[0]["body"]["capturing"], false);
     assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["replayable"], false);
     assert_eq!(described[0]["body"]["event_count"], 0);
     assert_eq!(
         described[0]["body"]["event_limit"],
@@ -129,6 +130,7 @@ fn jsonl_recording_describe_names_portable_identity_without_recording() {
     let described = server.handle_line(&request(4, "recording.describe", json!({})));
     assert_eq!(described[0]["body"]["capturing"], true);
     assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["replayable"], false);
     assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
     assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
 }
@@ -183,4 +185,68 @@ fn jsonl_recording_describe_after_stop_does_not_resume() {
 
     let same_stack = server.handle_line(&request(5, "stack", json!({})));
     assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
+}
+
+const RANDOM_ASSIGN: &str = r#"program QuietRandom;
+uses Std.Random;
+begin
+  mutable var X: integer := 0;
+  X := RandomInt(1, 1)
+end.
+"#;
+
+fn random_server() -> JsonlServer {
+    let (program, diagnostics) = fpas_parser::parse(RANDOM_ASSIGN);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile random fixture");
+    JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
+}
+
+#[test]
+fn jsonl_recording_off_random_terminates_without_f4024() {
+    let mut server = random_server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":false})));
+    let mut records = Vec::new();
+    while server.status() == ServerStatus::Running {
+        records.extend(server.wait());
+    }
+    assert!(
+        !records.iter().any(|record| {
+            record["event"] == "runtime_error" && record["body"]["code"] == "F4024"
+        }),
+        "{records:?}"
+    );
+    assert_eq!(server.status(), ServerStatus::Terminated);
+}
+
+#[test]
+fn jsonl_capturing_rejects_random_without_claiming_replay() {
+    let mut server = random_server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let _ = server.handle_line(&request(3, "record", json!({})));
+    let continued = server.handle_line(&request(4, "continue", json!({})));
+    assert_eq!(continued[0]["success"], true, "{continued:?}");
+    let records = server.wait();
+    assert!(
+        records.iter().any(|record| {
+            record["event"] == "runtime_error" && record["body"]["code"] == "F4024"
+        }),
+        "{records:?}"
+    );
+    assert!(
+        records.iter().any(|record| {
+            record["event"] == "stopped" && record["body"]["reason"] == "runtime_error"
+        }),
+        "{records:?}"
+    );
+    assert_eq!(server.status(), ServerStatus::Stopped);
+
+    let described = server.handle_line(&request(5, "recording.describe", json!({})));
+    assert_eq!(described[0]["body"]["replayable"], false);
+    assert_eq!(described[0]["body"]["capturing"], true);
+    let rejected = server.handle_line(&request(6, "replay", json!({})));
+    assert_eq!(rejected[0]["error"]["code"], "unsupported_capability");
+    assert_eq!(server.status(), ServerStatus::Stopped);
 }

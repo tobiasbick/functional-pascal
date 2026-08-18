@@ -23,7 +23,8 @@ impl DebugSession {
     /// Start capturing all-stop and queued `Read`/`ReadLn` events.
     ///
     /// Recording is off until this is called. The current stop is recorded once
-    /// when capture starts. Reverse execution stays unsupported.
+    /// when capture starts. Reverse execution stays unsupported. Later resume
+    /// rejects unsupported host effects with `F4024` before they run.
     ///
     /// **Documentation:** `docs/pascal/tools/debugger.md`
     pub fn start_recording(&mut self) {
@@ -62,5 +63,26 @@ impl DebugSession {
 
     pub(super) fn capture_input(&mut self, text: &str) {
         self.recording.push_input(text);
+    }
+
+    /// Reject the pending instruction when capture cannot record that host effect.
+    ///
+    /// Recording-off execution skips this check. A diagnostic points at the
+    /// pending intrinsic and leaves it unexecuted.
+    pub(super) fn reject_unsupported_recording_effect(
+        &mut self,
+        task_id: u64,
+    ) -> Option<fpas_diagnostics::Diagnostic> {
+        if !self.recording.capturing() {
+            return None;
+        }
+        let worker = self.runtime.worker_mut(task_id)?;
+        let (address, diagnostic) =
+            crate::vm::debug::recording::pending_unsupported_recording_effect(
+                &worker.executable,
+                worker.ip,
+            )?;
+        worker.current_address = address;
+        Some(diagnostic)
     }
 }

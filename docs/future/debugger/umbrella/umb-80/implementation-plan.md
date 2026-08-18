@@ -5,24 +5,25 @@
 ```text
 crates/fpas-vm/src/vm/debug/
   session.rs                   — exists: launch-owned session with capture log
-  session/execution.rs         — exists: all-stop capture hooks
+  session/execution.rs         — exists: all-stop capture hooks and F4024 reject-before-dispatch
   session/io.rs                — exists: queued-input capture hook
-  session/recording.rs         — exists: envelope describe and start_recording
+  session/recording.rs         — exists: envelope describe, start_recording, and effect reject
   recording/
-    mod.rs                     — exists: envelope and capture re-exports
+    mod.rs                     — exists: envelope, capture, and effect re-exports
     envelope.rs                — exists: versioned identity without host paths
     capture.rs                 — exists: bounded in-memory event log
+    effects.rs                 — exists: pending-intrinsic capture reject list
   tasks.rs                     — exists: debug task runtime
 crates/fpas-debug/src/
   jsonl/encode.rs              — exists: reverse_execution false, record_replay false, recording_describe true, recording_capture true, recording_disk false, recording_events 4096, recording_snapshots 0
   jsonl/server/dispatch.rs     — exists: named step_back/replay rejects; record starts capture
-  jsonl/server/recording.rs    — exists: envelope, capture, truncated, and describe mapping
+  jsonl/server/recording.rs    — exists: envelope, capture, truncated, replayable false, and describe mapping
   dap/server.rs                — exists: supportsStepBack false
   dap/server/dispatch.rs       — exists: named stepBack/reverseContinue rejects; fpas/recordingDescribe; fpas/record
-  dap/server/recording.rs      — exists: envelope, capture, and bound mapping
+  dap/server/recording.rs      — exists: envelope, capture, bound, and replayable mapping
 ```
 
-Do not add replay modules until `U80-40` is active.
+Do not add replay modules until a later package claims replay.
 
 ## Ordered work
 
@@ -36,8 +37,8 @@ Do not add replay modules until `U80-40` is active.
 | `U80-21` | done | Map capture through adapters/editor | Protocol-equivalent success and negatives |
 | `U80-30` | done | Implement `UMB-80C` bounds and retention only after `U80-20` | Default paths cannot grow without bound |
 | `U80-31` | done | Map bounds through adapters/editor | Capability and error parity |
-| `U80-40` | pending | Implement `UMB-80D` unsupported-effect rejection and recording-off proof | Replay claims only after rejects; disabled path unchanged |
-| `U80-41` | pending | Map rejection and recording-off through adapters/editor | Protocol-equivalent success and negatives |
+| `U80-40` | done | Implement `UMB-80D` unsupported-effect rejection and recording-off proof | Replay claims only after rejects; disabled path unchanged |
+| `U80-41` | done | Map rejection and recording-off through adapters/editor | Protocol-equivalent success and negatives |
 | `U80-50` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |
 
 ## Test placement

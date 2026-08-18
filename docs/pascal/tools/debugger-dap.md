@@ -69,7 +69,9 @@ lines without resuming or enabling reverse playback. Capture stays in session
 memory, keeps at most 4,096 events, writes no recording files, and retains no
 recording snapshots. `fpas/recordingDescribe` names versioned program identity,
 portable sources, whether capture is on, whether later events were dropped,
-the event ceiling, and captured events. The accepted expression subset and limits are documented in
+the event ceiling, captured events, and `replayable: false`. While capturing,
+unsupported host effects such as `Std.Random` stop with `F4024` before the
+intrinsic runs. Execution without `fpas/record` is unchanged. The accepted expression subset and limits are documented in
 [Source debugger](debugger.md). Controlled calls execute asynchronously in a
 detached sandbox so standard DAP `cancel` and `disconnect` requests can reach
 an active evaluation. Cancellation returns an evaluation failure and preserves

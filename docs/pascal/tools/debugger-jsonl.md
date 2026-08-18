@@ -54,7 +54,7 @@ compatibility mode. A response precedes events caused by that request.
 | `scopes` | stopped | `frame_id` | lexical scopes |
 | `variables` | stopped | `variables_reference`; optional `start`, `count` | values or aggregate children |
 | `location.describe` | stopped | `variables_reference`, `name` | kind, lifetime, and optional durable identity |
-| `recording.describe` | initialized/stopped | none | versioned program, portable sources, capturing flag, truncated flag, event count/limit, and captured events; does not start recording or resume |
+| `recording.describe` | initialized/stopped | none | versioned program, portable sources, capturing flag, truncated flag, `replayable: false`, event count/limit, and captured events; does not start recording or resume |
 | `evaluate` | stopped | `expression`; optional `frame_id` | rendered detached value and child reference |
 | `variable.set` | stopped | `variables_reference`, `name`, `expression` | committed rendered value and fresh child reference |
 | `expression.set` | stopped | `target`, `expression`; optional `frame_id` | committed rendered value and fresh child reference |
@@ -383,7 +383,9 @@ true; `recording_disk` is false. Initialized or stopped `record` starts
 capturing all-stop events and queued `Read`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
 whether capture is on, whether later events were dropped, the event ceiling,
-and captured events. Capture keeps at most 4,096 events, writes no recording
+captured events, and `replayable: false`. While capturing, unsupported host
+effects such as `Std.Random` stop with `F4024` before the intrinsic runs.
+Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
 rejected.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,

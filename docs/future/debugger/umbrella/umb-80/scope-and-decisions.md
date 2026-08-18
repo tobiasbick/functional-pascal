@@ -95,7 +95,12 @@ must not resume.
 ## `UMB-80D` — unsupported effects and recording-off
 
 - Unsupported nondeterminism is rejected before a recording claims
-  replayability.
+  replayability. While capturing, the pending intrinsic is classified at the
+  instruction boundary: `Std.Random`; wall-clock `Std.Time` other than `Sleep`;
+  `Std.Fs`, `Std.Env`, `Std.Proc`, `Std.Graph`, and `Std.Args`; and console
+  host effects other than `Read`/`ReadLn`/`Write`/`WriteLn` stop with `F4024`
+  and are not executed. Describe reports `replayable: false`. Replay stays
+  rejected.
 - The recording-disabled path must match current launch-owned execution.
 
 ## Out of scope

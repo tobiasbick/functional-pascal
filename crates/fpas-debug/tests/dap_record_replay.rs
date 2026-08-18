@@ -99,6 +99,7 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     assert_eq!(described[0]["body"]["sources"], json!(["<memory>"]));
     assert_eq!(described[0]["body"]["capturing"], false);
     assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["replayable"], false);
     assert_eq!(described[0]["body"]["eventCount"], 0);
     assert_eq!(
         described[0]["body"]["eventLimit"],
@@ -115,6 +116,7 @@ fn dap_recording_describe_names_portable_identity_without_step_back() {
     let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
     assert_eq!(described[0]["body"]["capturing"], true);
     assert_eq!(described[0]["body"]["truncated"], false);
+    assert_eq!(described[0]["body"]["replayable"], false);
     assert_eq!(described[0]["body"]["events"][0]["kind"], "stop");
     assert_eq!(described[0]["body"]["events"][0]["reason"], "entry");
 
@@ -174,6 +176,85 @@ end.
             .any(|event| event["kind"] == "input" && event["text"] == "hello"),
         "{described:?}"
     );
+    let rejected = send(&mut server, &mut seq, "stepBack", json!({}));
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+}
+
+const RANDOM_ASSIGN: &str = r#"program QuietRandom;
+uses Std.Random;
+begin
+  mutable var X: integer := 0;
+  X := RandomInt(1, 1)
+end.
+"#;
+
+fn random_server() -> DapServer {
+    let (program, diagnostics) = fpas_parser::parse(RANDOM_ASSIGN);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let executable = fpas_compiler::compile(&program).expect("compile random fixture");
+    DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
+}
+
+#[test]
+fn dap_recording_off_random_terminates_without_f4024() {
+    let mut server = random_server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(
+        &mut server,
+        &mut seq,
+        "launch",
+        json!({"stopOnEntry":false}),
+    );
+    let mut messages = send(&mut server, &mut seq, "configurationDone", json!({}));
+    while server.is_running() {
+        messages.extend(server.wait());
+    }
+    assert!(
+        !messages.iter().any(|message| {
+            message["event"] == "output"
+                && message["body"]["output"]
+                    .as_str()
+                    .is_some_and(|output| output.contains("recording capture cannot execute"))
+        }),
+        "{messages:?}"
+    );
+    assert!(server.is_terminated());
+}
+
+#[test]
+fn dap_capturing_rejects_random_without_claiming_replay() {
+    let mut server = random_server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+    let _ = send(&mut server, &mut seq, "fpas/record", json!({}));
+    let continued = send(&mut server, &mut seq, "continue", json!({"threadId":1}));
+    assert_eq!(continued[0]["success"], true, "{continued:?}");
+    let messages = server.wait();
+    assert!(
+        messages.iter().any(|message| {
+            message["event"] == "stopped" && message["body"]["reason"] == "exception"
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|message| {
+            message["event"] == "output"
+                && message["body"]["output"].as_str().is_some_and(|output| {
+                    output.contains("Std.Random")
+                        && output.contains("recording capture cannot execute")
+                })
+        }),
+        "{messages:?}"
+    );
+    assert!(!server.is_terminated());
+
+    let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
+    assert_eq!(described[0]["body"]["replayable"], false);
+    assert_eq!(described[0]["body"]["capturing"], true);
     let rejected = send(&mut server, &mut seq, "stepBack", json!({}));
     assert_eq!(rejected[0]["success"], false, "{rejected:?}");
 }

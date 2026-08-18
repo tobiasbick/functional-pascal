@@ -165,6 +165,9 @@ impl DebugSession {
             {
                 return Ok(result);
             }
+            if let Some(diagnostic) = self.reject_unsupported_recording_effect(task_id) {
+                return Ok(self.stop_for_runtime_error(task_id, diagnostic));
+            }
             let dispatch = match self.runtime.dispatch(task_id) {
                 Ok(dispatch) => dispatch,
                 Err((task_id, diagnostic)) => {

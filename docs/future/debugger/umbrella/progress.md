@@ -4,10 +4,10 @@
 
 - Umbrella state: implementing `UMB-80`
 - Active primary package: `UMB-80`
-- Last completed item: `U80-31` after `U80-30`
-- Next child: `U80-40` after `U80-31`
-- Checkpoint: recoverable bounded in-memory capture without disk, snapshots,
-  or replay; `UMB-80` package remains active
+- Last completed item: `U80-41` after `U80-40`
+- Next child: `U80-50` after `U80-41`
+- Checkpoint: recoverable capturing F4024 reject without replay; recording-off
+  execution unchanged; `UMB-80` package remains active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
   (no capture-cell alias registry after `UMB-70A`)
 - Branch: `codex/fpas-debugger`
@@ -31,7 +31,7 @@ current worktree before changing or staging anything.
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
 | `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
-| `UMB-80` | active | Bounded in-memory capture; replay stays rejected; see [umb-80/progress.md](umb-80/progress.md) |
+| `UMB-80` | active | Capturing F4024 reject; replay stays rejected; see [umb-80/progress.md](umb-80/progress.md) |
 | `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
 | `UMB-99` | pending | Final parity and plan removal |
 
@@ -228,6 +228,8 @@ Evidence log:
 2026-08-17 | U80-21 | pending -> done | worktree | JSONL/DAP record starts capture; replay stays rejected; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | bounds U80-30
 2026-08-17 | U80-30 | pending -> done | worktree | advertised 4096 event ceiling; truncated; no disk or snapshot store | map U80-31
 2026-08-17 | U80-31 | pending -> done | worktree | JSONL/DAP bound and truncated mapping; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject U80-40
+2026-08-18 | U80-40 | pending -> done | worktree | capturing F4024 reject-before-dispatch; recording-off Random still terminates | map U80-41
+2026-08-18 | U80-41 | pending -> done | worktree | JSONL/DAP F4024 and replayable false; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | close U80-50
 ```
 
 ## Resume commands
@@ -243,7 +245,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U80-20` in
+The next pending implementation step is `U80-50` in
 [umb-80/progress.md](umb-80/progress.md). `UMB-70` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

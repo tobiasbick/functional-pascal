@@ -24,6 +24,7 @@ pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
             "sources": body.get("sources"),
             "capturing": body.get("capturing"),
             "truncated": body.get("truncated"),
+            "replayable": body.get("replayable"),
             "eventCount": body.get("event_count"),
             "eventLimit": body.get("event_limit"),
             "events": body.get("events").and_then(Value::as_array).into_iter().flatten().map(dap_event).collect::<Vec<_>>(),

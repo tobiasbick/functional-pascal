@@ -148,6 +148,9 @@ define_codes!(RUNTIME_ALLOCATED_CODES => {
 
     /// `Std.Test` assertion or explicit `Fail` call.
     RUNTIME_TEST_ASSERTION_FAILED = 4023;
+
+    /// Recording capture hit a host effect that is not replayable.
+    RUNTIME_RECORDING_UNSUPPORTED_EFFECT = 4024;
 });
 
 define_codes!(INTERNAL_ALLOCATED_CODES => {

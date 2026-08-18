@@ -3,6 +3,33 @@
 use super::*;
 use crate::vm::debug::{DebugRecordingEnvelope, DebugRecordingEvent, RECORDING_ENVELOPE_VERSION};
 
+fn local_value(session: &mut DebugSession, name: &str) -> String {
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let locals = session
+        .scopes(frame)
+        .expect("scopes")
+        .into_iter()
+        .find(|scope| scope.name == "Locals")
+        .expect("locals")
+        .variables_reference;
+    session
+        .variables(locals, 0, 16)
+        .expect("variables")
+        .items
+        .into_iter()
+        .find(|variable| variable.name.eq_ignore_ascii_case(name))
+        .expect("local")
+        .value
+}
+
+const RANDOM_ASSIGN: &str = r#"program QuietRandom;
+uses Std.Random;
+begin
+  mutable var X: integer := 0;
+  X := RandomInt(1, 1)
+end.
+"#;
+
 fn compile_session(source: &str) -> DebugSession {
     let (program, diagnostics) = fpas_parser::parse(source);
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
@@ -170,6 +197,48 @@ end.
             event,
             DebugRecordingEvent::Stop {
                 reason: DebugStopReason::Breakpoint,
+                ..
+            }
+        )),
+        "{:?}",
+        session.recording_events()
+    );
+}
+
+#[test]
+fn recording_off_still_executes_random() {
+    let mut session = compile_session(RANDOM_ASSIGN);
+    assert!(!session.is_recording());
+    assert!(matches!(
+        session.continue_execution().expect("recording-off random"),
+        DebugRunResult::Terminated(_)
+    ));
+    assert_eq!(session.state(), DebugSessionState::Terminated);
+}
+
+#[test]
+fn capturing_rejects_random_before_the_intrinsic_runs() {
+    let mut session = compile_session(RANDOM_ASSIGN);
+    session.start_recording();
+    let stop = stopped(session.continue_execution().expect("capture random"));
+    assert_eq!(session.state(), DebugSessionState::Failed);
+    assert_eq!(stop.reason, DebugStopReason::RuntimeError);
+    let diagnostic = stop.diagnostic.expect("F4024");
+    assert_eq!(
+        diagnostic.code,
+        fpas_diagnostics::codes::RUNTIME_RECORDING_UNSUPPORTED_EFFECT
+    );
+    assert!(
+        diagnostic.message.contains("Std.Random"),
+        "{}",
+        diagnostic.message
+    );
+    assert_eq!(local_value(&mut session, "X"), "0");
+    assert!(
+        session.recording_events().iter().any(|event| matches!(
+            event,
+            DebugRecordingEvent::Stop {
+                reason: DebugStopReason::RuntimeError,
                 ..
             }
         )),

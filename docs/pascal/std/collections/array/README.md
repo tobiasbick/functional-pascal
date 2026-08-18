@@ -63,7 +63,7 @@ All routines are **generic over element type `T`** (your array’s element type)
 | Concern | Location |
 |---------|-----------|
 | Pure helpers | [`array.rs`](../../../../../crates/fpas-std/src/array.rs) |
-| `Push` / `Pop` | [`vm/mod.rs`](../../../../../crates/fpas-vm/src/vm/mod.rs), [`std_calls/array.rs`](../../../../../crates/fpas-compiler/src/compiler/std_calls/array.rs) |
+| `Push` / `Pop` | [`vm/mod.rs`](../../../../../crates/fpas-vm/src/vm/mod.rs), [`lowering/calls.rs`](../../../../../crates/fpas-compiler/src/lowering/calls.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

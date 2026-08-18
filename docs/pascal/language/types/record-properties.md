@@ -86,7 +86,7 @@ The receiver before the final property must be a designator. Assignment through
 a temporary remains invalid:
 
 ```pascal
-CreateButton().Text := 'Lost';  { error }
+CreateButton().Text := 'Lost';  // Error
 ```
 
 Writing a read-only property is a compile-time error.
@@ -97,7 +97,7 @@ registry, or other mutable facility without mutating the handle binding itself:
 
 ```pascal
 var Button: TuiButton := FindButton();
-Button.Text := 'Save';  { OK — Button is unchanged as a value }
+Button.Text := 'Save';  // Valid — Button is unchanged as a value
 ```
 
 ## Properties versus fields

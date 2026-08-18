@@ -96,7 +96,7 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 - Make the minimum change that solves the task.
 - Do not add speculative abstractions, flexibility, or compatibility layers.
 - Do not refactor unrelated code just because you noticed it.
-- Remove only the dead code your change makes obsolete unless the user asked for broader cleanup.
+- Remove dead code exposed by your change only, unless the user asked for broader cleanup.
 - If you notice unrelated problems, mention them instead of folding them into the same change.
 
 ## Rust and Documentation Rules
@@ -129,10 +129,11 @@ When planning file changes, show the intended layout before implementation.
 Example:
 
 ```text
-crates/fpas-compiler/src/compiler/
-  ├── expr.rs        — expression compilation (exists, ~200 LOC)
-  ├── pattern.rs     — pattern matching (exists, ~350 LOC)
-  └── guard.rs       — NEW: guard clause compilation (~80 LOC, split from pattern.rs)
+crates/fpas-compiler/src/lowering/
+  ├── calls.rs          — call lowering (exists)
+  ├── case.rs           — case lowering (exists)
+  ├── control_flow.rs   — MODIFY: retain branch orchestration
+  └── loops.rs          — NEW: loop lowering split from control_flow.rs
 ```
 
 If you are reorganizing existing files, call that out explicitly.
@@ -140,12 +141,11 @@ If you are reorganizing existing files, call that out explicitly.
 Example:
 
 ```text
-crates/fpas-compiler/src/
-  ├── compiler.rs              — MOVED/SPLIT: old monolithic file
-  └── compiler/
-      ├── mod.rs               — NEW: compiler module root
-      ├── expr.rs              — MOVED: expression compilation
-      └── stmt.rs              — MOVED: statement compilation
+crates/fpas-vm/src/vm/hosted/
+  ├── console.rs               — MODIFY: retain intrinsic dispatch
+  └── console/
+      ├── input.rs             — NEW: extracted input handling
+      └── terminal.rs          — NEW: extracted terminal lifecycle
 ```
 
 Then proceed with the implementation.

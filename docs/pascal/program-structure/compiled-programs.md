@@ -63,19 +63,17 @@ The same validation is applied before encoding. After decoding, the complete exe
 verifier checks instruction forms, register windows, numeric IDs, function ranges, control flow,
 layouts, source maps, and the entry function before the VM can execute the image.
 
-## Format compatibility
+## Format validation
 
-The current sectioned envelope is program format version 10 and register-bytecode version 10. A
-producer that changes either wire contract must increment the corresponding version; format and
-bytecode changes made for one cutover are versioned together. Readers reject unsupported program or
-bytecode versions before execution and `fpas run` tells the user to rebuild from project sources.
-
-Earlier bytecode formats are not migrated. Source-backed project builds replace stale or
+The sectioned envelope uses program format version 10 and register-bytecode version 10. A producer
+that changes either wire contract must increment the corresponding version; related program and
+bytecode changes use matching versions. Readers reject unsupported versions before execution, and
+`fpas run` tells the user to rebuild from project sources. Source-backed project builds replace
 incompatible artifacts automatically. A source-less incompatible `.fpascp` cannot run and must be
-rebuilt from its original sources.
+rebuilt from its sources.
 
-`.fpascp` is an internal derived format, not a source distribution or package boundary. Rebuild it
-from its project sources with the current compiler rather than editing or migrating it by hand.
+`.fpascp` is an internal derived format, not a source distribution or package boundary. Build it
+from project sources with the compiler rather than editing it by hand.
 
 ## See also
 

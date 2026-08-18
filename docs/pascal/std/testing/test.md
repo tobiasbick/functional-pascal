@@ -134,9 +134,10 @@ Rust unit tests that need temporary files should keep using `std::env::temp_dir(
 
 ---
 
-## Scripted input (legacy)
+## Runner-side project configuration
 
-`fpas test` still accepts optional `<test>.script.toml` sidecars for project overrides (`--script`, `[test.overrides]`). **Prefer native FPAS test APIs** for new tests:
+`fpas test` accepts optional `<test>.script.toml` sidecars for project overrides
+(`--script`, `[test.overrides]`). Test event input and screen assertions use FPAS test APIs:
 
 | Need | Native API |
 | ---- | ---------- |
@@ -144,10 +145,10 @@ Rust unit tests that need temporary files should keep using `std::env::temp_dir(
 | Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 | Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
-`*.script.toml` currently contains only project runner configuration such as `[test.overrides]`;
+`*.script.toml` contains only project runner configuration such as `[test.overrides]`;
 event input belongs in native FPAS APIs (`PushReadLn`, `TestSendKey`, graph test injectors).
 
-Graph golden pixel checks (`*.expect.pixels`) still run runner-side after `Application.OpenForTest` + `Present`.
+Graph golden pixel checks (`*.expect.pixels`) run runner-side after `Application.OpenForTest` + `Present`.
 
 ---
 
@@ -185,7 +186,7 @@ Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../.
 | Concern | Location |
 |---------|----------|
 | Registration | [`std_registry/loaded/test.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/test.rs) |
-| Compiler | [`std_calls/test.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/test.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Runtime | [`test/`](../../../../crates/fpas-std/src/test/) |
 | Intrinsics | [`intrinsic/test.rs`](../../../../crates/fpas-bytecode/src/intrinsic/test.rs) |
 | In-memory runner images | [`cli_test/image/`](../../../../crates/fpas-cli/src/cli_test/image/) |

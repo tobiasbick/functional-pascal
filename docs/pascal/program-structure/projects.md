@@ -88,7 +88,7 @@ build their source-adjacent `.fpascu` files and do not produce `.fpascp`.
 Test projects build helper-unit sidecars and validate all test programs without
 creating one shared program image. Both artifact types are derived outputs and
 are ignored by Git. See [Compiled program images](compiled-programs.md) for the
-`.fpascp` identity, validation limits, and format-compatibility policy.
+`.fpascp` identity, validation limits, and format-version policy.
 
 Concurrent program builds coordinate through a persistent `hello.fpascp.lock`
 file beside the image. The lock file contains no program data, is ignored by
@@ -113,7 +113,7 @@ Optional on `kind = "library"` projects. Controls which units other projects may
 
 Rules:
 
-- Omitted `[exports]` means **all units** in the library are importable by dependents (same as before).
+- Omitted `[exports]` means **all units** in the library are importable by dependents.
 - `[exports].units` lists unit names that dependents may reference in `uses`. Other units in the library remain available only inside the library via `uses`.
 - Each name must match a `unit` in the library's `[sources]` (case-insensitive).
 - `[exports]` applies to `kind = "library"` projects only.

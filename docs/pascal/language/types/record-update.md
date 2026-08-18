@@ -14,7 +14,7 @@ type
 
 var
   P: Point := record X := 1; Y := 2; end;
-  Q: Point := P with X := 99; end;   { Q.X=99, Q.Y=2; P is unchanged }
+  Q: Point := P with X := 99; end;   // Q.X=99, Q.Y=2; P is unchanged
 ```
 
 Multiple fields can be updated in one expression:

@@ -29,9 +29,9 @@ uses `IncLocal` / `SetLocalPop` for the index and element store; the bound test 
 
 | Concern | Location |
 |---------|----------|
-| Lowering | [`for_loops.rs`](../../../../crates/fpas-compiler/src/compiler/stmt/loops/for_loops.rs) |
-| Opcodes | [`op.rs`](../../../../crates/fpas-bytecode/src/op.rs) |
-| VM | [`stack_scope.rs`](../../../../crates/fpas-vm/src/vm/execute/stack_scope.rs), [`control_calls.rs`](../../../../crates/fpas-vm/src/vm/execute/control_calls.rs) |
+| Lowering | [`control_flow.rs`](../../../../crates/fpas-compiler/src/lowering/control_flow.rs) |
+| Opcodes | [`instruction.rs`](../../../../crates/fpas-bytecode/src/instruction.rs) |
+| VM | [`dispatch.rs`](../../../../crates/fpas-vm/src/vm/dispatch.rs) |
 
 ## See also
 

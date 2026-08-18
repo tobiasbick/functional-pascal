@@ -6,10 +6,10 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`var_block`, `var_
 
 ```pascal
 var
-  Name: string := 'Alice';       { immutable — cannot be reassigned }
+  Name: string := 'Alice';       // Immutable — cannot be reassigned
 
 mutable var
-  Age: integer := 30;            { mutable — can be reassigned }
+  Age: integer := 30;            // Mutable — can be reassigned
 ```
 
 Reassigning an immutable variable is a compile-time error:
@@ -19,7 +19,7 @@ var
   X: integer := 10;
 
 begin
-  X := 20;  { ERROR: cannot assign to immutable variable 'X' }
+  X := 20;  // Error: cannot assign to immutable variable 'X'
 end.
 ```
 
@@ -30,7 +30,7 @@ mutable var
   Count: integer := 0;
 
 begin
-  Count := Count + 1;  { OK }
+  Count := Count + 1  // Valid mutable assignment
 end.
 ```
 

@@ -11,7 +11,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
-| Debugging | [Debugger roadmap](debugger/README.md) | Explicitly postponed debugger capabilities and re-entry gates |
 
 ## Architecture records and development intake
 
@@ -25,4 +24,4 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 - Move behavior to `docs/pascal/` only after it is implemented.
 - Keep each future plan updated with status, next steps, and verification notes when work starts.
 - Record compiler panics and language limitations with source-level workarounds in [compiler-panic-followups.md](compiler-panic-followups.md).
-- Remove completed planning notes once the implemented docs and tests make the plan obsolete.
+- Remove completed planning notes once implemented docs and tests cover their scope.

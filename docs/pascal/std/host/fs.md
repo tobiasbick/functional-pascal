@@ -184,7 +184,7 @@ Platform notes: `Glob` follows the host OS filesystem and the Rust `glob` crate.
 | Atomic publication | [`fs/publication.rs`](../../../../crates/fpas-std/src/fs/publication.rs) |
 | Bounded reads | [`fs/read.rs`](../../../../crates/fpas-std/src/fs/read.rs) |
 | Glob expansion | [`fs/glob.rs`](../../../../crates/fpas-std/src/fs/glob.rs) |
-| Call lowering | [`std_calls/fs.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/fs.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/fs.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/fs.rs) |
 | Intrinsic ids | [`intrinsic/fs.rs`](../../../../crates/fpas-bytecode/src/intrinsic/fs.rs) |
 

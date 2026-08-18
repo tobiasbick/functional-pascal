@@ -111,7 +111,7 @@ WriteLn(BaseName(Normalize('dir/nested/../file.txt')))
 | Concern | Location |
 |---------|----------|
 | Runtime execution | [`path.rs`](../../../../crates/fpas-std/src/path.rs) |
-| Call lowering | [`std_calls/path.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/path.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/loaded/path.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/path.rs) |
 | Intrinsic ids | [`intrinsic/path.rs`](../../../../crates/fpas-bytecode/src/intrinsic/path.rs) |
 

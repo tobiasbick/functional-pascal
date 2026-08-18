@@ -1,8 +1,8 @@
-# Portable register VM acceptance
+# Portable register VM
 
-P11 closes the portable register VM rewrite with measured performance, Windows-native correctness,
-and durable implementation evidence. The accepted implementation is the only compiler, bytecode,
-artifact, and VM path. This work changes neither FPAS syntax nor FPAS semantics.
+The portable register VM is the only compiler, bytecode, artifact, and VM path. This document
+records its measured performance, Windows-native correctness, and implementation evidence. The
+architecture changes neither FPAS syntax nor FPAS semantics.
 
 ## Acceptance scope
 
@@ -74,10 +74,10 @@ The profiles supported the accepted decode, register-move, argument-window, call
 copy-on-write changes. The later reusable-register-storage change addressed the observed frame-growth
 cost as a separately measured follow-up.
 
-The one final P11 profile-driven change removed the unused copy-window register from one-argument
-call frames. Three loaded-host spot checks moved the `function_call` median from 930 ms to 851 ms, an
-8.5% reduction. Those spot checks decided that implementation step only. The quiet full-suite
-medians below supersede the earlier contaminated P11 acceptance numbers.
+The profile-driven copy-window change removes the unused register from one-argument call frames.
+Three loaded-host spot checks moved the `function_call` median from 930 ms to 851 ms, an 8.5%
+reduction. Those spot checks cover that implementation step only; the quiet full-suite medians
+below are the acceptance measurements.
 
 ### TUI follow-up profile
 
@@ -160,29 +160,16 @@ No benchmark source, iteration count, correctness check, or suite argument was w
 gain. The settled snapshot is also recorded in [Benchmark history](history.md) with the title
 `quiet portable register VM acceptance`.
 
-## Rejected experiments
-
-The following measured experiments were removed because they did not produce a repeatable net win or
-made the runtime less focused:
-
-- pooled or lazy Unicode character caches;
-- dedicated array-length and string-length opcodes;
-- hosted intrinsic match routing and broader intrinsic inlining;
-- generalized contiguous multi-argument call windows and parameter-prologue folding;
-- in-place scalar `Value` writes, which increased generated code and regressed the suite;
-- Thin LTO with one code-generation unit, which made this workload slower;
-- extra caching or compatibility layers retained only for the completed migration.
-
 ## Windows verification
 
-| OS | architecture | P11 status | evidence |
+| OS | architecture | status | evidence |
 |---|---|---|---|
 | Windows | x86-64 | verified | workspace build/test, Clippy, FPAS suite, canonical artifact tests, direct `.fpascp`, native application |
 | Windows | ARM64 | unverified | native host not used |
 | Linux | x86-64 and ARM64 | unverified | outside the final Windows-only scope |
 | macOS | x86-64 and ARM64 | unverified | outside the final Windows-only scope |
 | FreeBSD | x86-64 and ARM64 | unverified | outside the final Windows-only scope |
-| ChromeOS Linux environment | Celeron-class target | unverified | device unavailable for P11 |
+| ChromeOS Linux environment | Celeron-class target | unverified | device unavailable for verification |
 
 The Windows gates executed:
 
@@ -213,5 +200,3 @@ and records only the artifact digest and output—not a machine path or hostname
 
 The implementation is an internal compiler/bytecode/VM performance change. Current FPAS language,
 standard-library, project, CLI, and compiled-program documentation remains semantically correct.
-The completed future plan was removed after this record, tests, and benchmark history became the
-durable source of truth.

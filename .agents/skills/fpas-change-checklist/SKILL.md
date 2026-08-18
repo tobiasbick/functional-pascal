@@ -21,7 +21,7 @@ Never commit hostnames, usernames, home paths, or other machine-identifying meta
 | Kind | Typical touch points |
 |------|----------------------|
 | **Language** | `docs/pascal/language/…`, `fpas-parser`, `fpas-sema`, `fpas-compiler`, language tests in crates |
-| **Std unit** | `docs/pascal/std/<area>/…`, `fpas-sema` `std_registry`, `fpas-compiler` `std_calls`, `fpas-bytecode` `intrinsic`, `fpas-std`, `fpas-vm` |
+| **Std unit** | `docs/pascal/std/<area>/…`, `fpas-sema` `std_registry`, `fpas-compiler` intrinsic catalog/lowering, `fpas-bytecode` `intrinsic`, `fpas-std`, `fpas-vm` |
 | **CLI / projects** | `docs/pascal/program-structure/…`, `fpas-cli`, `fpas-project` |
 | **Refactor only** | No spec change; confirm docs unchanged; all existing tests pass |
 | **Docs only** | `docs/pascal/` only; no code tests unless fixing examples |
@@ -71,12 +71,14 @@ When changing a `Std.*` symbol or adding one, scan this list and update every la
 
 1. **Spec** — `docs/pascal/std/…`
 2. **Registration** — `crates/fpas-sema/src/std_registry/…`
-3. **Compiler lowering** — `crates/fpas-compiler/src/compiler/std_calls/…`
+3. **Compiler mapping/lowering** — `crates/fpas-compiler/src/intrinsic_catalog.rs`,
+   `lowering/calls.rs`, and `bytecode/selection/intrinsics.rs`
 4. **Bytecode** — `crates/fpas-bytecode/src/intrinsic/…`
 5. **Runtime** — `crates/fpas-std/src/…` and/or `crates/fpas-vm/src/…`
 6. **Tests** — Rust integration tests + optional `tests/*_test.fpas`
 
-Hosted units (`Std.Tui`, `Std.Graph`) also touch VM host modules under `fpas-vm/src/vm/execute/io/…`.
+Hosted units (`Std.Tui`, `Std.Graph`) also touch VM host modules under
+`fpas-vm/src/vm/hosted/…`.
 
 ## Step 5 — Verify
 

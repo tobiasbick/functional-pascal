@@ -72,7 +72,7 @@ Requires `uses Std.Str;`.
 |---------|-----------|
 | Algorithms | [`str.rs`](../../../../../crates/fpas-std/src/str.rs) |
 | Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
-| `ConcatStr` (sums cached lengths) | [`comparisons.rs`](../../../../../crates/fpas-vm/src/vm/execute/numeric/comparisons.rs) |
+| String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-vm/src/vm/value_ops/scalar.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

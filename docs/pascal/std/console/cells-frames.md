@@ -138,8 +138,8 @@ Frames may nest. Each `BeginFrame` requires a matching `Present`; an inner `Pres
 the nesting depth, and only the outermost call flushes. Calling `Present` when no frame is active
 explicitly flushes the pending screen state.
 
-Legacy cursor and text operations can be used during a frame. Their state changes are presented
-with the cell updates; outside a frame their existing immediate behavior is unchanged.
+Cursor and text operations can be used during a frame. Their state changes are presented with the
+cell updates; outside a frame they take effect immediately.
 
 ## Saved regions
 
@@ -180,7 +180,7 @@ pattern with concurrent row calculation and RGB cell colors.
 | Concern | Location |
 |---------|----------|
 | Public type and call registration | [`loaded/console.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/console.rs) |
-| Compiler lowering | [`std_calls/console/`](../../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Cell/color values | [`console/cell.rs`](../../../../crates/fpas-std/src/console/cell.rs) |
 | Cell, frame, and region operations | [`console/operations/`](../../../../crates/fpas-std/src/console/operations/mod.rs) |
 | Retained screen storage | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |

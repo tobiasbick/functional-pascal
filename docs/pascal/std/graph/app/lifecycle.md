@@ -27,7 +27,7 @@ Headless graph tests use in-program APIs instead of `*.script.toml` graph events
 | `Application.TestSendKey(App, Key)` | Enqueue one `Std.Console.KeyEvent` for the next hosted pump |
 | `Application.Run(App)` | Pump events and paint; auto-closes on exit (restores native backend) |
 
-Golden pixel checks (`*.expect.pixels`) still run runner-side after `Present` inside `OnPaint`.
+Golden pixel checks (`*.expect.pixels`) run runner-side after `Present` inside `OnPaint`.
 
 ---
 

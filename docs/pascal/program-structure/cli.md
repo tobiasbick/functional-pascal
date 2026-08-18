@@ -21,7 +21,7 @@ projects, type-checks, runs programs, and executes test bundles.
   cross-compilation.
 - `fpas run` — discovers what to run in the current directory:
   - If a `.fpasworkspace` file exists: runs the sole `kind = "program"` member; errors when there are zero or multiple program members.
-  - Otherwise searches for a `.fpasprj` file (no match, one match, or multiple matches with the same rules as before).
+  - Otherwise searches for a `.fpasprj` file and requires exactly one match.
 - `fpas run <path>` — detects input type by extension:
   - `.fpas` — runs as a single source file with a `program` declaration (no project needed).
   - `.fpasprj` — loads the program project, produces or reuses

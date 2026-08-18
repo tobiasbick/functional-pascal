@@ -18,8 +18,8 @@ fpas debug <target> --protocol jsonl --commands <path> --report jsonl
 
 Request IDs are unique positive integers. Malformed JSON, non-object records,
 invalid envelopes, duplicate IDs, and missing arguments produce stable errors.
-`initialize` accepts only version `2`; V1 is obsolete and is rejected without a
-compatibility mode. A response precedes events caused by that request.
+`initialize` accepts protocol version `2`. Any other version is rejected. A
+response precedes events caused by that request.
 
 ## Commands
 

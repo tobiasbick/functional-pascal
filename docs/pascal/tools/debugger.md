@@ -97,7 +97,7 @@ statements, declarations, and assignments inside `evaluate` remain rejected.
 
 `setVariable`, DAP `setExpression`, JSONL `variable.set`, and JSONL
 `expression.set` are separate stopped-state operations. Handle-based mutation
-addresses a child previously returned by `variables`. Those inspection
+addresses a child from a `variables` response. Those inspection
 identities belong to the current stop and are not data-breakpoint or watchpoint
 IDs. JSONL `location.describe` and DAP `fpas/locationDescribe` name a durable
 location from that current-stop child: globals keep an executable slot identity
@@ -138,7 +138,7 @@ also name an inactive single-payload variant explicitly and supply that
 payload, for example `Optional.Some.value`, `Outcome.Error.value`, or
 `Selected.Count.Value`. The variant name is required and matched
 case-insensitively against executable metadata; an unqualified inactive field
-never selects a variant. Fieldless variants and multi-field payloads still use
+never selects a variant. Fieldless variants and multi-field payloads use
 a complete constructor on the binding, or the explicit variant-construction
 commands below. Index selectors and
 the replacement are

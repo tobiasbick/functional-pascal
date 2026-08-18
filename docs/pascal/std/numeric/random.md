@@ -72,7 +72,7 @@ WriteLn(Random())
 | Concern | Location |
 |---------|-----------|
 | Runtime intrinsics | [`random.rs`](../../../../crates/fpas-std/src/random.rs) |
-| Call lowering | [`std_calls/random.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/random.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

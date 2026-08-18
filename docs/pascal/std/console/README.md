@@ -113,7 +113,7 @@ Everything below requires `uses Std.Console;`.
 | type | `SavedRegion` | opaque one-shot saved-region handle |
 | const | `Black`, `Blue`, `Green`, …, `White` | CRT-style color indices `0..15` |
 | const | `Blink` | text-attribute blink bit (`128`) |
-| const | `BW40`, `C40`, `BW80`, `C80`, `CO40`, `CO80`, `Mono`, `Font8x8` | text-mode compatibility constants |
+| const | `BW40`, `C40`, `BW80`, `C80`, `CO40`, `CO80`, `Mono`, `Font8x8` | text-mode constants |
 
 Extended color procedures (`TextColorRGB`, `TextBackgroundRGB`, `TextColor256`, `TextBackground256`) send terminal ANSI color escapes directly. They do not update the packed 16-color CRT attribute returned by `TextAttr()`. Calling `TextColor`, `TextBackground`, `HighVideo`, `LowVideo`, `NormVideo`, or `SetTextAttr` afterwards switches back to the packed CRT attribute path and overrides the extended color.
 
@@ -156,7 +156,7 @@ Reference: [`examples/math/mandelbrot/mandelbrot.fpas`](../../../../examples/mat
 | Retained screen model | [`console/screen/`](../../../../crates/fpas-std/src/console/screen/mod.rs) |
 | Key and event types | [`key_event.rs`](../../../../crates/fpas-std/src/key_event.rs), [`console_event.rs`](../../../../crates/fpas-std/src/console_event.rs) |
 | Bytecode / VM | [`intrinsic/mod.rs`](../../../../crates/fpas-bytecode/src/intrinsic/mod.rs), [`vm/mod.rs`](../../../../crates/fpas-vm/src/vm/mod.rs) |
-| Code generation | [`std_calls/console/`](../../../../crates/fpas-compiler/src/compiler/std_calls/console/mod.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 
 ## See also
 

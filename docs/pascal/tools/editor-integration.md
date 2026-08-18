@@ -238,7 +238,7 @@ sufficiently valid, semantic diagnostics.
 
 Each diagnostic preserves its stable `Fxxxx` code, error or warning severity,
 UTF-16 editor range, and compiler help text. Analysis is briefly debounced
-during typing. Results carry the exact document version, and superseded work
+during typing. Results carry the exact document version, and work for inactive document versions
 is discarded. Correcting the source or closing the document clears stale
 diagnostics. Diagnostic delivery uses one ordered publication lane, so a slow
 editor connection does not block document changes or shutdown while an older

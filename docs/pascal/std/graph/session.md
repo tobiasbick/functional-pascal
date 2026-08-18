@@ -43,7 +43,7 @@ Current runtime constraints:
 
 - `Std.Graph.Application.*` is main-task only; do not call it from `go` tasks
 - `DrawText` uses a built-in deterministic bitmap font
-- the runtime currently targets `winit` + `softbuffer`
+- the runtime uses `winit` + `softbuffer`
 - transient native `0x0` resize callbacks are ignored; `Size` keeps the last positive drawable extent
 - `Application.Open` rejects surfaces larger than `64 * 1024 * 1024` pixels (`Width * Height`)
 
@@ -256,8 +256,8 @@ end.
 |---------|----------|
 | Runtime logic | [crates/fpas-std/src/graph/](../../../../crates/fpas-std/src/graph/mod.rs) |
 | Type checking | [crates/fpas-sema/src/std_registry/loaded/graph/](../../../../crates/fpas-sema/src/std_registry/loaded/graph/mod.rs) |
-| Compiler lowering | [crates/fpas-compiler/src/compiler/std_calls/graph.rs](../../../../crates/fpas-compiler/src/compiler/std_calls/graph.rs) |
-| VM bridge | [crates/fpas-vm/src/vm/execute/io/graph/](../../../../crates/fpas-vm/src/vm/execute/io/graph/mod.rs) |
+| Compiler intrinsic catalog | [crates/fpas-compiler/src/intrinsic_catalog.rs](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
+| VM bridge | [crates/fpas-vm/src/vm/hosted/graph/](../../../../crates/fpas-vm/src/vm/hosted/graph/mod.rs) |
 | Intrinsics | [crates/fpas-bytecode/src/intrinsic/graph.rs](../../../../crates/fpas-bytecode/src/intrinsic/graph.rs) |
 
 ## See also

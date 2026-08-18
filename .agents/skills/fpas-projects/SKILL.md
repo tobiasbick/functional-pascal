@@ -118,6 +118,7 @@ Workspace lists members; **each consumer still declares its own** `[dependencies
 | `fpas run <file.fpascp>` | Validate and run a compiled program without sources |
 | `fpas check [<path>]` | Type-check without running (`.fpas`, dir, `.fpasprj`, `.fpasworkspace`) |
 | `fpas test [<path>]` | Run `*_test.fpas` entries; discover `kind = "test"` in workspace |
+| `fpas debug <path> --protocol <jsonl \| dap>` | Run an FPAS source, program project, workspace, or `.fpascp` in the source debugger |
 | `fpas fmt [<path>]` | Format `.fpas` sources |
 | `fpas fmt --check <path>` | Verify formatting |
 
@@ -142,6 +143,7 @@ fpas run my-app/my-app.fpascp      # run image without project sources
 fpas test tests/                   # full regression tree
 fpas test tests/suite.fpasprj      # bundled manifest
 fpas test tests/stdlib/tui/mvu_host_signature_test.fpas
+fpas debug my-app/my-app.fpasprj --protocol jsonl
 fpas check                         # sole workspace or project in cwd
 ```
 

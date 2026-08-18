@@ -60,7 +60,7 @@ Keyboard, mouse, and positive resize events are normalized before routing;
 paste and focus events are ignored. Mouse coordinates become zero-based.
 Consecutive native resize events are coalesced to the latest dimensions before
 layout and painting, so keyboard input following a resize burst is not delayed
-by obsolete intermediate frames.
+by intermediate frames that do not reflect application state.
 `Std.Console` owns raw mode, alternate-screen, input features, and cursor
 rollback for the interactive session.
 
@@ -103,7 +103,7 @@ Left-button pointer downs hit-test the previous arranged frame. Ordinary
 buttons capture the press, paint selected while the pointer remains inside, and
 emit their action only on a left-button release inside the same button.
 Dragging outside cancels the selected appearance and releasing outside does not
-activate the button. Focus changes precede the pointer message used to repaint
+activate the button. Focus changes precede the pointer message that repaints
 the pressed state. Other controls retain their immediate controlled changes,
 and unhandled pointer input remains `TuiMsg.Pointer`. A press inside a one-line
 input focuses it and proposes the caret nearest the clicked visible cell.

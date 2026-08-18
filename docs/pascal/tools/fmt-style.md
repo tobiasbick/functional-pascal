@@ -495,7 +495,7 @@ The formatter **normalizes** valid input. These changes are deliberate (not bugs
 | Extra parentheses from parse tree | May differ where precedence makes them redundant |
 | `uses` unit name casing (`Std.array`) | Canonical qualified id spelling from the AST |
 
-## Non-goals (v1 and later)
+## Non-goals
 
 - Configurable style (`.fpasfmt.toml`, line width, indent size, keyword case) — **one official style only**; no per-project overrides.
 - A separate formatter watch mode (`--watch`) — command-line users run

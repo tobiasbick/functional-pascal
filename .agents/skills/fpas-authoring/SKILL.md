@@ -96,7 +96,7 @@ Do **not** assume Delphi/Free Pascal:
 | `var x: Integer` mutable by default | `var` immutable; use `mutable var` to reassign |
 | `WriteLn('x');` required before every `end` | semicolons **separate** statements; no trailing `;` before `end` / `else` / `until` |
 | `uses Unit1, Unit2 in interface` | single `uses` clause; no Delphi `interface`/`implementation` split |
-| anonymous nested lambdas everywhere | pass **named** routines or variables with function types |
+| untyped lambda shorthand | use an anonymous `function` / `procedure` expression with explicit parameter and result types; use a named nested routine for implicit recursion |
 | `begin`/`end.` optional on programs | formatter inserts them — match [`fmt-style.md`](../../../docs/pascal/tools/fmt-style.md) |
 | `{...}`, `(*...*)`, or a separate doc-comment delimiter | `//` is the only comment syntax; an adjacent standalone block is Markdown documentation |
 

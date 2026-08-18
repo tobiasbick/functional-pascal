@@ -33,10 +33,10 @@ The `#` prefix denotes a character by its decimal byte value (range **0..255**).
 
 ```pascal
 var
-  LineBreak: string := #13#10;                  { CR+LF }
-  Greeting: string := 'Hello'#13#10'World';     { Hello\r\nWorld }
-  Tab: string := #9;                            { tab character }
-  Letter: string := #65;                        { 'A' }
+  LineBreak: string := #13#10;                  // CR+LF
+  Greeting: string := 'Hello'#13#10'World';     // Hello\r\nWorld
+  Tab: string := #9;                            // Tab character
+  Letter: string := #65;                        // 'A'
 ```
 
 ## See also

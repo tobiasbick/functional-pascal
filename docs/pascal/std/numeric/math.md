@@ -289,7 +289,7 @@ WriteLn(Clamp(1.5, 0.0, 1.0))   // 1.0
 | Concern | Location |
 |---------|-----------|
 | Runtime intrinsics | [`math.rs`](../../../../crates/fpas-std/src/math.rs) |
-| `Pi` lowering | [`std_calls/math.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/math.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 
 ## See also

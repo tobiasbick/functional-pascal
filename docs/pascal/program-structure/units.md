@@ -45,7 +45,7 @@ uses
 
 begin
   var Clamped: integer := Clamp(150, 0, 100);
-  WriteLn(Clamped);  { 100 }
+  WriteLn(Clamped);  // 100
 end.
 ```
 
@@ -57,8 +57,8 @@ When a unit is imported via `uses`, its exported symbols become available by the
 program Hello;
 uses Std.Console;
 begin
-  WriteLn('short');              { OK — short name }
-  Std.Console.WriteLn('full');   { OK — fully qualified }
+  WriteLn('short');              // OK — short name
+  Std.Console.WriteLn('full');   // OK — fully qualified
 end.
 ```
 
@@ -68,11 +68,11 @@ When two or more imported units export the same short name, the short name becom
 
 ```pascal
 program Demo;
-uses Std.Str, Std.Array;           { OK — no error at import }
+uses Std.Str, Std.Array;           // Both units may export Length
 begin
   // Length('hi');   ← ERROR: ambiguous — exists in Std.Str and Std.Array
-  var L1: integer := Std.Str.Length('hi');       { OK }
-  var L2: integer := Std.Array.Length([1, 2]);   { OK }
+  var L1: integer := Std.Str.Length('hi');       // Qualified string Length
+  var L2: integer := Std.Array.Length([1, 2]);   // Qualified array Length
 end.
 ```
 
@@ -141,13 +141,6 @@ ignored by Git; operating-system lock ownership is released automatically if the
 so a lock is never reclaimed merely because it is old. Reading an existing valid sidecar does not
 create a missing lock file, so a read-only source tree remains usable. If rebuilding is required,
 the command reports the source-adjacent file it could not publish.
-
-### Validation snapshot
-
-On 2026-07-23, the distribution precompiler was run twice against an isolated copy of the bundled
-standard library with a Windows debug build. The cold run compiled 48 units and reused none in
-712 ms; the warm run compiled none and reused all 48 in 150 ms. Timings are machine-dependent;
-the compiled/reused counters are the correctness check for incremental reuse.
 
 ## See also
 

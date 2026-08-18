@@ -65,8 +65,8 @@ if ParamCount() > 0 then
 
 | Concern | Location |
 |---------|-----------|
-| VM execution | [`args.rs`](../../../../crates/fpas-vm/src/vm/execute/io/args.rs) |
-| Call lowering | [`std_calls/args.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/args.rs) |
+| VM execution | [`args.rs`](../../../../crates/fpas-vm/src/vm/hosted/args.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 | Intrinsic ids | [`intrinsic/args.rs`](../../../../crates/fpas-bytecode/src/intrinsic/args.rs) |
 

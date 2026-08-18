@@ -61,7 +61,7 @@ if Exists('PATH') then
 | Concern | Location |
 |---------|----------|
 | Runtime execution | [`env.rs`](../../../../crates/fpas-std/src/env.rs) |
-| Call lowering | [`std_calls/env.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/env.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../crates/fpas-sema/src/std_registry/mod.rs) |
 | Intrinsic ids | [`intrinsic/env.rs`](../../../../crates/fpas-bytecode/src/intrinsic/env.rs) |
 

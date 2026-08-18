@@ -97,7 +97,7 @@ WriteLn(Stringify(Value));
 | --- | --- |
 | Registration | [`loaded/toml.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/toml.rs) |
 | Runtime | [`toml.rs`](../../../../crates/fpas-std/src/toml.rs) |
-| Compiler | [`std_calls/toml.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/toml.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Intrinsics | [`intrinsic/toml.rs`](../../../../crates/fpas-bytecode/src/intrinsic/toml.rs) |
 
 ## See also

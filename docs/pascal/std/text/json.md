@@ -94,7 +94,7 @@ Nesting deeper than **256** levels is rejected: `Parse` returns `Error(Message)`
 |---------|----------|
 | Registration | [`loaded/json.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/json.rs) |
 | Runtime | [`json.rs`](../../../../crates/fpas-std/src/json.rs) |
-| Compiler | [`std_calls/json.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/json.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Intrinsics | [`intrinsic/json.rs`](../../../../crates/fpas-bytecode/src/intrinsic/json.rs) |
 
 ## See also

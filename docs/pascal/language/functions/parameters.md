@@ -14,7 +14,7 @@ begin
 end;
 
 begin
-  var R: integer := Clamp(150, 0, 100);  { 100 }
+  var R: integer := Clamp(150, 0, 100);  // 100
 end.
 ```
 

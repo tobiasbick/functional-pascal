@@ -69,8 +69,8 @@ Individual characters can be read by 0-based integer index using bracket notatio
 ```pascal
 var
   S: string := 'Hello';
-  C: string := S[0];   { 'H' }
-  L: string := S[4];   { 'o' }
+  C: string := S[0];   // 'H'
+  L: string := S[4];   // 'o'
 ```
 
 Accessing an out-of-bounds index is a **runtime error**. The index must be an `integer`; non-integer indices are a compile-time error.
@@ -88,7 +88,7 @@ end
 
 ```pascal
 var
-  Full: string := 'Hello' + ' ' + 'World';  { 'Hello World' }
+  Full: string := 'Hello' + ' ' + 'World';  // 'Hello World'
 ```
 
 ## See also

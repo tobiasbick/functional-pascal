@@ -81,7 +81,7 @@ mutable var
   end;
 
 begin
-  P.X := 10.0;  { OK — P is mutable }
+  P.X := 10.0;  // Valid — P is mutable
 end.
 ```
 
@@ -102,8 +102,8 @@ Omitting defaulted fields:
 
 ```pascal
 var
-  C: Config := record end;          { Host='localhost', Port=8080, Debug=false }
-  D: Config := record Port := 9000; end;  { Host='localhost', Port=9000, Debug=false }
+  C: Config := record end;                 // Host='localhost', Port=8080, Debug=false
+  D: Config := record Port := 9000; end;   // Host='localhost', Port=9000, Debug=false
 ```
 
 Explicitly providing a value overrides the default:
@@ -118,13 +118,13 @@ Fields without a default remain required:
 ```pascal
 type
   Vertex = record
-    Id: integer;           { required }
-    X: integer := 0;       { optional }
-    Y: integer := 0;       { optional }
+    Id: integer;           // Required
+    X: integer := 0;       // Optional
+    Y: integer := 0;       // Optional
   end;
 
 var
-  V: Vertex := record Id := 7; end;  { X=0, Y=0 from defaults }
+  V: Vertex := record Id := 7; end;  // X=0, Y=0 from defaults
 ```
 
 ## See also

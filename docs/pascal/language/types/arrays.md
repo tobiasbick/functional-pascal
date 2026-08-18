@@ -14,14 +14,14 @@ Operations:
 
 ```pascal
 var
-  Len: integer := Length(Numbers);  { 3 }
-  First: integer := Numbers[0];              { 1 }
+  Len: integer := Length(Numbers);  // 3
+  First: integer := Numbers[0];     // 1
 
 mutable var
   Items: array of integer := [1, 2];
 
 begin
-  Push(Items, 3);  { [1, 2, 3] }
+  Push(Items, 3)  // [1, 2, 3]
 end.
 ```
 

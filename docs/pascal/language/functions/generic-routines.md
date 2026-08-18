@@ -20,9 +20,9 @@ Type arguments are inferred from the call-site arguments:
 
 ```pascal
 begin
-  WriteLn(Identity(42));      { T = integer }
-  WriteLn(Identity('hello')); { T = string  }
-  PrintValue(3.14)            { T = real    }
+  WriteLn(Identity(42));       // T = integer
+  WriteLn(Identity('hello'));  // T = string
+  PrintValue(3.14)             // T = real
 end.
 ```
 

@@ -113,7 +113,7 @@ var Inc: procedure() :=
   begin
     Count := Count + 1
   end;
-go Inc();  { compile-time error }
+go Inc();  // Compile-time error
 
 // Rejected: nested task-bound capture
 var Outer: procedure() :=
@@ -121,7 +121,7 @@ var Outer: procedure() :=
   begin
     Inc()
   end;
-go Outer();  { compile-time error — Outer captures task-bound Inc }
+go Outer();  // Compile-time error — Outer captures task-bound Inc
 ```
 
 ## Panic and cleanup

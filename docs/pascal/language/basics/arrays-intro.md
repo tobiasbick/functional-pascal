@@ -15,8 +15,8 @@ Accessing elements uses bracket notation (0-based index):
 
 ```pascal
 var
-  First: integer := Numbers[0];   { 1 }
-  Second: string := Names[1];     { 'Bob' }
+  First: integer := Numbers[0];   // 1
+  Second: string := Names[1];     // 'Bob'
 ```
 
 For growth, mutation, and stdlib helpers, see [Arrays](../types/arrays.md).

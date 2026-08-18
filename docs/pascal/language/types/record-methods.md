@@ -60,10 +60,10 @@ Calling instance methods:
 var
   A: Point := record X := 0.0; Y := 0.0; end;
   B: Point := record X := 3.0; Y := 4.0; end;
-  Dist: real := A.DistanceTo(B);  { Self = A, Other = B }
+  Dist: real := A.DistanceTo(B);  // Self = A, Other = B
 
 begin
-  A.Print()  { Self = A }
+  A.Print()  // Self = A
 end.
 ```
 
@@ -96,7 +96,7 @@ var C: Counter := record Base := 10; end;
 var AddTen: function(Value: integer): integer := C.Add;
 
 begin
-  WriteLn(AddTen(5))  { 15 — Counter.Add(C, 5) }
+  WriteLn(AddTen(5))  // 15 — Counter.Add(C, 5)
 end.
 ```
 
@@ -158,7 +158,7 @@ var
   O: Point := Point.Origin();
 begin
   Point.Print(P);
-  WriteLn(P.Sum())  { 7 }
+  WriteLn(P.Sum())  // 7
 end.
 ```
 

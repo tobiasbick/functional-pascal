@@ -78,7 +78,7 @@ end
 |---------|----------|
 | Registration | [`std_registry/loaded/parse.rs`](../../../../crates/fpas-sema/src/std_registry/loaded/parse.rs) |
 | Runtime | [`parse.rs`](../../../../crates/fpas-std/src/parse.rs) |
-| Compiler | [`std_calls/parse.rs`](../../../../crates/fpas-compiler/src/compiler/std_calls/parse.rs) |
+| Compiler intrinsic catalog | [`intrinsic_catalog.rs`](../../../../crates/fpas-compiler/src/intrinsic_catalog.rs) |
 | Shared text | [`intrinsics.rs`](../../../../crates/fpas-std/src/intrinsics.rs) |
 | Intrinsics | [`intrinsic/parse.rs`](../../../../crates/fpas-bytecode/src/intrinsic/parse.rs) |
 

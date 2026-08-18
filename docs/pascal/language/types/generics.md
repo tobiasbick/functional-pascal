@@ -22,8 +22,8 @@ Type arguments are inferred from the call-site arguments — no explicit instant
 
 ```pascal
 var
-  X: integer := Identity(42);    { T inferred as integer }
-  S: string  := Identity('hi');  { T inferred as string  }
+  X: integer := Identity(42);    // T inferred as integer
+  S: string  := Identity('hi');  // T inferred as string
 ```
 
 ## Generic record methods
@@ -48,7 +48,7 @@ end;
 
 var
   B: Box := record Value := 42; end;
-  S: string := B.Map(ToText);   { R inferred as string }
+  S: string := B.Map(ToText);   // R inferred as string
 ```
 
 Method-level type parameters may also use constraints:
@@ -97,7 +97,7 @@ Constraint violations at call sites are compile-time errors:
 
 ```pascal
 var
-  M: integer := Max(3, 7);    { OK — integer is Comparable }
+  M: integer := Max(3, 7);    // Valid — integer is Comparable
 // var Bad := Max([1], [2]);   ← compile error: array is not Comparable
 ```
 

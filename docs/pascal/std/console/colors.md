@@ -61,7 +61,7 @@ The following CRT-style constants are available after `uses Std.Console;`:
 | 14 | `Yellow` |
 | 15 | `White` |
 
-Additional CRT compatibility constants:
+Additional text-mode constants:
 
 | Value | Constant |
 |------:|----------|

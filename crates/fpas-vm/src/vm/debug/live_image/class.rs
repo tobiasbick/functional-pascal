@@ -39,7 +39,7 @@ pub enum LiveImageUpdateClass {
 }
 
 impl LiveImageUpdateClass {
-    /// Classes the proven subset may accept. They are not applied until later children.
+    /// Classes the proven subset may accept for a live-image commit.
     pub const ACCEPTED: &'static [Self] = &[Self::Unchanged, Self::InactiveFunctionBody];
 
     /// Classes the proven subset rejects before any live-image replacement.
@@ -108,7 +108,6 @@ impl LiveImageClassification {
 /// Result of attempting to replace the live executable.
 ///
 /// Incompatible candidates are rejected before any image field changes.
-/// Accepted classes still report `applied: false` until versioned commit exists.
 ///
 /// **Documentation:** `docs/pascal/tools/debugger.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -119,14 +118,25 @@ pub struct LiveImageReplaceResult {
     pub accepted: bool,
     /// Whether the live `Arc<VerifiedExecutable>` was replaced.
     pub applied: bool,
+    /// Monotonic live-image version after this operation.
+    pub version: u64,
+    /// Whether one bounded previous image is available for rollback.
+    pub rollback_available: bool,
 }
 
 impl LiveImageReplaceResult {
-    pub(crate) const fn from_classification(classification: LiveImageClassification) -> Self {
+    pub(crate) const fn new(
+        classification: LiveImageClassification,
+        applied: bool,
+        version: u64,
+        rollback_available: bool,
+    ) -> Self {
         Self {
             class: classification.class,
             accepted: classification.accepted,
-            applied: false,
+            applied,
+            version,
+            rollback_available,
         }
     }
 }

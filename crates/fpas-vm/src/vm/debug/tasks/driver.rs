@@ -4,6 +4,7 @@ mod completed_result;
 mod completion;
 mod control;
 mod lifecycle;
+mod live_image;
 mod quiescence;
 mod recovery;
 

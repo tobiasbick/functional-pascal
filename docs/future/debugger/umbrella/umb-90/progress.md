@@ -3,11 +3,12 @@
 ## Current checkpoint
 
 - Package: `UMB-90` active
-- Active work IDs: none; `U90-30` is pending
+- Active work ID: `U90-31`
 - Base checkpoint: `b5125375`
-- Code changes after base: reject-before-commit replace gate; JSONL/DAP
-  `reload` / `image.replace` / `fpas/reload` report `applied: false`
-- Next action: begin `U90-30` only after an explicit continuation request
+- Code changes after base: versioned inactive-body commit; address remapping;
+  breakpoint rebinding; one-image rollback; recording-safe rejection
+- Next action: map commit and rollback through JSONL, DAP, CLI reload ownership,
+  and VS Code
 - Commit/push authorization: commit requested with this continuation
 
 ## Work status
@@ -20,7 +21,7 @@
 | `U90-11` | done | JSONL `reload.classify` and DAP `fpas/reloadClassify` name the same classes with `applied: false`; VS Code still has no reload command |
 | `U90-20` | done | `replace_live_image` rejects incompatible candidates before any `Arc<VerifiedExecutable>` change; accepted classes stay `applied: false` |
 | `U90-21` | done | JSONL `reload` / `image.replace` and DAP `fpas/reload` run the gate; incompatible candidates leave the stack unchanged |
-| `U90-30` | pending | Versioned live image and recoverable rollback |
+| `U90-30` | done | Version 1 launch image; atomic inactive-body commit; function-local address remap; all workers share candidate; one previous image; compatible rollback; recording-safe reject; focused VM tests |
 | `U90-31` | pending | Adapter/editor mapping |
 | `U90-50` | pending | Full verification and closure |
 
@@ -47,6 +48,7 @@
 2026-08-18 | U90-11 | pending -> done | b5125375 | JSONL reload.classify and DAP fpas/reloadClassify; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject-before-commit U90-20
 2026-08-18 | U90-20 | pending -> done | worktree | replace_live_image rejects incompatibles before any image field change; accepted applied false | map U90-21
 2026-08-18 | U90-21 | pending -> done | worktree | JSONL reload/image.replace and DAP fpas/reload gate; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | versioned image U90-30
+2026-08-18 | U90-30 | pending -> done | worktree | versioned atomic inactive-body commit; normalized function-local metadata; address remap; breakpoint rebind; bounded rollback; recording-safe reject; VM live-image regressions pass | map U90-31
 ```
 
 ## Resume commands

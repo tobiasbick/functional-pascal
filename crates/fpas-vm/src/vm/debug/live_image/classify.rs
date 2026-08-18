@@ -62,7 +62,7 @@ fn classify(
         return LiveImageClassification::new(LiveImageUpdateClass::FunctionSet);
     };
 
-    let mut body_changed = Vec::new();
+    let mut body_changed = BTreeSet::new();
     let mut debug_changed = false;
     for (name, (id, current_function)) in &current_functions {
         let Some((_, candidate_function)) = candidate_functions.get(name) else {
@@ -81,12 +81,11 @@ fn classify(
         }
         let current_code = function_code(current, current_function);
         let candidate_code = function_code(candidate, candidate_function);
-        if current_code != candidate_code
-            || current_function.register_count != candidate_function.register_count
-        {
-            body_changed.push(*id);
-        }
-        if debug_identity(current, current_function)
+        let body_differs = current_code != candidate_code
+            || current_function.register_count != candidate_function.register_count;
+        if body_differs {
+            body_changed.insert(*id);
+        } else if debug_identity(current, current_function)
             != debug_identity(candidate, candidate_function)
         {
             debug_changed = true;
@@ -96,11 +95,14 @@ fn classify(
     if body_changed.iter().any(|id| active.contains(id)) {
         return LiveImageClassification::new(LiveImageUpdateClass::ActiveFunctionBody);
     }
+    if debug_changed
+        || source_map_identity(current, &body_changed)
+            != source_map_identity(candidate, &body_changed)
+    {
+        return LiveImageClassification::new(LiveImageUpdateClass::DebugMetadata);
+    }
     if !body_changed.is_empty() {
         return LiveImageClassification::new(LiveImageUpdateClass::InactiveFunctionBody);
-    }
-    if debug_changed || source_map_identity(current) != source_map_identity(candidate) {
-        return LiveImageClassification::new(LiveImageUpdateClass::DebugMetadata);
     }
     LiveImageClassification::new(LiveImageUpdateClass::Unchanged)
 }

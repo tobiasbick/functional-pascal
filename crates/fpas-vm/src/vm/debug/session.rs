@@ -74,6 +74,8 @@ impl DebugPauseHandle {
 /// Single-use controlled execution session for one verified executable.
 pub struct DebugSession {
     executable: Arc<VerifiedExecutable>,
+    previous_executable: Option<Arc<VerifiedExecutable>>,
+    live_image_version: u64,
     runtime: DebugTaskRuntime,
     state: DebugSessionState,
     source_breakpoints: Vec<BoundBreakpoint>,
@@ -222,6 +224,8 @@ impl DebugSession {
         let runtime = DebugTaskRuntime::new(worker, scheduler, debug_clock);
         Ok(Self {
             executable,
+            previous_executable: None,
+            live_image_version: 1,
             runtime,
             state: DebugSessionState::Stopped,
             source_breakpoints: Vec::new(),

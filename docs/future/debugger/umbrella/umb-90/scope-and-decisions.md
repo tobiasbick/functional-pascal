@@ -88,10 +88,22 @@ Named rejects without resume or mutation:
 
 ## `UMB-90C` — versioned live image and rollback
 
-- Begins only after reject-before-commit is proven.
-- A recoverable old image stays available until the new image commits.
-- Default paths must not retain unbounded images or snapshots.
-- JSONL, DAP, and VS Code report the same accepted and rejected changes.
+- Began only after reject-before-commit was proven.
+- Every session starts at image version 1. A compatible inactive-body commit
+  increments the version; an unchanged candidate does not.
+- Function IDs must retain their executable order. Active frame, continuation,
+  current-address, and exact initializer instruction addresses are remapped by
+  function-local offset before every retained worker switches to the same image.
+- Source and function breakpoints are rebound against the candidate. A success
+  invalidates and refreshes inspection exactly once.
+- Exactly one previous image is retained. Rollback runs the same compatibility
+  and atomic commit path, increments the version, and swaps the replaced image
+  into that single rollback slot. Repeated updates therefore retain at most two
+  session-owned images and no snapshots or disk artifacts.
+- A real image change is rejected while recording capture is active. Existing
+  events are neither relabeled nor used as rollback state. An unchanged check is
+  still non-mutating.
+- JSONL, DAP, and VS Code mapping remains `U90-31`.
 
 ## Out of scope
 

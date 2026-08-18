@@ -34,6 +34,96 @@ fn patch_helper_body(current: &VerifiedExecutable) -> VerifiedExecutable {
     image.verify().expect("helper body candidate")
 }
 
+fn patch_helper_with_shifted_sequence_point(current: &VerifiedExecutable) -> VerifiedExecutable {
+    let mut image = current.clone().into_unverified();
+    image.code.insert(4, abc(Opcode::LoadUnit, 0, 0, 0));
+    image.functions[1].code =
+        fpas_bytecode::CodeRange::new(InstructionAddress::new(4), InstructionAddress::new(7));
+    for point in &mut image.functions[1].debug.sequence_points {
+        point.instruction = InstructionAddress::new(point.instruction.get() + 1);
+    }
+    image.source_map.runs[1].instruction_start = InstructionAddress::new(5);
+    image.source_map.runs.insert(
+        1,
+        SourceRun {
+            instruction_start: InstructionAddress::new(4),
+            source: SourceId::new(0),
+            line: 9,
+            column: 3,
+        },
+    );
+    image.verify().expect("shifted helper body candidate")
+}
+
+fn inactive_between_active_functions_pair() -> (VerifiedExecutable, VerifiedExecutable) {
+    let target = function("helper", 3, 5, 1, debug(&[(3, 20), (4, 21)]));
+    let mut current = executable(
+        vec![
+            abc(Opcode::CallDirect, NO_REGISTER, 2, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+            abc(Opcode::LoadUnit, 0, 0, 0),
+            abc(Opcode::Return, NO_REGISTER, 0, 0),
+        ],
+        vec![
+            function("root", 0, 2, 0, debug(&[(0, 1), (1, 2)])),
+            function("helper", 2, 3, 1, debug(&[(2, 10)])),
+            target,
+        ],
+        Vec::new(),
+        vec![(0, 1), (2, 10), (3, 20)],
+    )
+    .into_unverified();
+    current.strings = StringTable::new(vec![
+        "root".to_string(),
+        "helper".to_string(),
+        "test.fpas".to_string(),
+        "boom".to_string(),
+        "target".to_string(),
+    ]);
+    current.functions[2].name = StringId::new(4);
+    let current = current.verify().expect("active-shift current");
+
+    let mut candidate = current.clone().into_unverified();
+    candidate.code.insert(2, abc(Opcode::LoadUnit, 0, 0, 0));
+    candidate.functions[1].code =
+        fpas_bytecode::CodeRange::new(InstructionAddress::new(2), InstructionAddress::new(4));
+    candidate.functions[1].debug.sequence_points = vec![point(2, 9), point(3, 10)];
+    candidate.functions[2].code =
+        fpas_bytecode::CodeRange::new(InstructionAddress::new(4), InstructionAddress::new(6));
+    for point in &mut candidate.functions[2].debug.sequence_points {
+        point.instruction = InstructionAddress::new(point.instruction.get() + 1);
+    }
+    candidate.source_map.runs = vec![
+        SourceRun {
+            instruction_start: InstructionAddress::new(0),
+            source: SourceId::new(0),
+            line: 1,
+            column: 3,
+        },
+        SourceRun {
+            instruction_start: InstructionAddress::new(2),
+            source: SourceId::new(0),
+            line: 9,
+            column: 3,
+        },
+        SourceRun {
+            instruction_start: InstructionAddress::new(3),
+            source: SourceId::new(0),
+            line: 10,
+            column: 3,
+        },
+        SourceRun {
+            instruction_start: InstructionAddress::new(4),
+            source: SourceId::new(0),
+            line: 20,
+            column: 3,
+        },
+    ];
+    let candidate = candidate.verify().expect("active-shift candidate");
+    (current, candidate)
+}
+
 fn owner_binding() -> DebugBinding {
     DebugBinding {
         name: StringId::new(1),
@@ -236,6 +326,19 @@ fn added_functions_are_rejected() {
 }
 
 #[test]
+fn reordered_function_ids_are_rejected() {
+    let (current, _) = inactive_between_active_functions_pair();
+    let mut image = current.clone().into_unverified();
+    let helper_name = image.functions[1].name;
+    image.functions[1].name = image.functions[2].name;
+    image.functions[2].name = helper_name;
+    let candidate = image.verify().expect("reordered candidate");
+    let classification = classify_current(current, candidate);
+    assert_eq!(classification.class, LiveImageUpdateClass::FunctionSet);
+    assert!(!classification.accepted);
+}
+
+#[test]
 fn added_capturing_functions_are_rejected_as_anonymous_closures() {
     let current = pair_executable();
     let mut extra = function("extra", 6, 7, 1, debug(&[(6, 20)]));
@@ -302,7 +405,7 @@ fn live_ptr(session: &DebugSession) -> *const VerifiedExecutable {
 }
 
 #[test]
-fn unchanged_replace_is_accepted_without_applying_a_new_image() {
+fn unchanged_replace_keeps_the_current_version_and_image() {
     let current = pair_executable();
     let mut session = DebugSession::new(current.clone()).expect("debug session");
     let before = live_ptr(&session);
@@ -313,12 +416,14 @@ fn unchanged_replace_is_accepted_without_applying_a_new_image() {
     assert_eq!(result.class, LiveImageUpdateClass::Unchanged);
     assert!(result.accepted);
     assert!(!result.applied);
+    assert_eq!(result.version, 1);
+    assert!(!result.rollback_available);
     assert_eq!(live_ptr(&session), before);
     assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
 }
 
 #[test]
-fn inactive_body_replace_is_accepted_without_committing() {
+fn inactive_body_replace_commits_one_shared_version() {
     let current = pair_executable();
     let candidate = patch_helper_body(&current);
     let mut session = DebugSession::new(current).expect("debug session");
@@ -329,9 +434,128 @@ fn inactive_body_replace_is_accepted_without_committing() {
         .expect("inactive body replace");
     assert_eq!(result.class, LiveImageUpdateClass::InactiveFunctionBody);
     assert!(result.accepted);
-    assert!(!result.applied);
+    assert!(result.applied);
+    assert_eq!(result.version, 2);
+    assert!(result.rollback_available);
+    assert_ne!(live_ptr(&session), before);
+    assert_ne!(session.stack(0, 1).expect("stack").items[0].id, frame);
+    assert!(session.test_workers_share_live_image());
+    assert_eq!(session.test_retained_live_image_count(), 2);
+}
+
+#[test]
+fn rollback_restores_the_previous_image_as_a_new_bounded_version() {
+    let current = pair_executable();
+    let candidate = patch_helper_body(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    let original = live_ptr(&session);
+    session
+        .replace_live_image(&candidate)
+        .expect("candidate commit");
+    let replacement = live_ptr(&session);
+    let result = session.rollback_live_image().expect("rollback");
+    assert_eq!(result.class, LiveImageUpdateClass::InactiveFunctionBody);
+    assert!(result.applied);
+    assert_eq!(result.version, 3);
+    assert!(result.rollback_available);
+    assert_eq!(live_ptr(&session), original);
+    assert_ne!(live_ptr(&session), replacement);
+    assert!(session.test_workers_share_live_image());
+    assert_eq!(session.test_retained_live_image_count(), 2);
+}
+
+#[test]
+fn repeated_rollbacks_never_retain_more_than_two_session_images() {
+    let current = pair_executable();
+    let candidate = patch_helper_body(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    session
+        .replace_live_image(&candidate)
+        .expect("initial candidate commit");
+    for expected_version in 3..=10 {
+        let result = session.rollback_live_image().expect("bounded rollback");
+        assert_eq!(result.version, expected_version);
+        assert_eq!(session.test_retained_live_image_count(), 2);
+        assert!(session.test_workers_share_live_image());
+    }
+}
+
+#[test]
+fn rollback_without_a_previous_image_is_actionable_and_atomic() {
+    let mut session = DebugSession::new(pair_executable()).expect("debug session");
+    let before = live_ptr(&session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let error = session
+        .rollback_live_image()
+        .expect_err("missing rollback image");
+    assert_eq!(error.kind, DebugErrorKind::LiveImageRollbackUnavailable);
+    assert_eq!(session.live_image_version(), 1);
     assert_eq!(live_ptr(&session), before);
     assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
+}
+
+#[test]
+fn changed_inactive_prefix_remaps_the_active_instruction_and_continues() {
+    let (current, candidate) = inactive_between_active_functions_pair();
+    let mut session = DebugSession::new(current).expect("debug session");
+    session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 20,
+            column: None,
+        })
+        .expect("target breakpoint");
+    let stop = stopped(session.continue_execution().expect("target stop"));
+    assert_eq!(stop.instruction, 3);
+    let result = session
+        .replace_live_image(&candidate)
+        .expect("shifted inactive prefix");
+    assert!(result.applied);
+    assert_eq!(session.last_stop().instruction, 4);
+    assert!(matches!(
+        session
+            .continue_execution()
+            .expect("continue remapped image"),
+        DebugRunResult::Terminated(_)
+    ));
+}
+
+#[test]
+fn source_breakpoints_rebind_to_changed_inactive_body_metadata() {
+    let current = pair_executable();
+    let candidate = patch_helper_with_shifted_sequence_point(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    let bound = session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 10,
+            column: None,
+        })
+        .expect("helper breakpoint");
+    assert_eq!(bound.instruction, Some(4));
+    session
+        .replace_live_image(&candidate)
+        .expect("helper replacement");
+    let stop = stopped(session.continue_execution().expect("rebound breakpoint"));
+    assert_eq!(stop.instruction, 5);
+    assert_eq!(stop.location.expect("source location").line, 10);
+}
+
+#[test]
+fn recording_rejects_a_real_image_commit_without_relabeling_events() {
+    let current = pair_executable();
+    let candidate = patch_helper_body(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    session.start_recording();
+    let before = live_ptr(&session);
+    let events = session.recording_events().to_vec();
+    let error = session
+        .replace_live_image(&candidate)
+        .expect_err("recording must retain its image identity");
+    assert_eq!(error.kind, DebugErrorKind::InvalidState);
+    assert_eq!(session.live_image_version(), 1);
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.recording_events(), events);
 }
 
 #[test]

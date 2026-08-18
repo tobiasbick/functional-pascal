@@ -352,5 +352,6 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
         fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
         fpas_vm::DebugErrorKind::LiveImageIncompatible => "live_image_incompatible",
+        fpas_vm::DebugErrorKind::LiveImageRollbackUnavailable => "live_image_rollback_unavailable",
     }
 }

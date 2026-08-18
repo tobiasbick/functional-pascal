@@ -1,8 +1,11 @@
 //! Portable fingerprints for live-image compatibility comparison.
 
+use std::collections::BTreeSet;
+
 use fpas_bytecode::{
-    DebugCaptureKind, DebugType, DebugTypeId, EnumTypeId, Executable, FunctionId, FunctionInfo,
-    Instruction, RecordTypeId, ReturnConvention, StringId,
+    DebugCaptureKind, DebugSourceLocation, DebugType, DebugTypeId, EnumTypeId, Executable,
+    FunctionId, FunctionInfo, Instruction, InstructionAddress, RecordTypeId, ReturnConvention,
+    StringId,
 };
 
 pub(super) fn string_at(image: &Executable, id: StringId) -> &str {
@@ -22,13 +25,11 @@ pub(super) fn entry_name(image: &Executable) -> String {
 }
 
 pub(super) fn function_names(image: &Executable) -> Vec<String> {
-    let mut names: Vec<String> = image
+    image
         .functions
         .iter()
         .map(|function| function_name(image, function))
-        .collect();
-    names.sort();
-    names
+        .collect()
 }
 
 pub(super) fn named_functions(image: &Executable) -> Vec<(String, FunctionId, &FunctionInfo)> {
@@ -96,10 +97,48 @@ pub(super) fn signature_identity(function: &FunctionInfo) -> (u8, ReturnConventi
 }
 
 pub(super) fn debug_identity(image: &Executable, function: &FunctionInfo) -> String {
+    let bindings: Vec<String> = function
+        .debug
+        .bindings
+        .iter()
+        .map(|binding| {
+            format!(
+                "{}:{}:{}:{:?}:{}:{}:{:?}:{}:{}:{:?}",
+                string_at(image, binding.name),
+                string_at(image, binding.type_name),
+                type_key(image, binding.ty),
+                binding.register,
+                binding.kind as u8,
+                binding.mutable,
+                binding
+                    .declaration
+                    .map(|location| source_location_key(image, location)),
+                binding.scope,
+                binding.hidden,
+                binding
+                    .initializer
+                    .and_then(|address| local_instruction(function, address)),
+            )
+        })
+        .collect();
+    let sequence_points: Vec<String> = function
+        .debug
+        .sequence_points
+        .iter()
+        .map(|point| {
+            format!(
+                "{:?}:{}:{}",
+                local_instruction(function, point.instruction),
+                source_location_key(image, point.location),
+                point.scope
+            )
+        })
+        .collect();
     format!(
-        "{:?}:{:?}:{:?}",
+        "{:?}:{:?}:{:?}:{:?}",
         function.debug.scopes,
-        function.debug.sequence_points,
+        bindings,
+        sequence_points,
         function.debug.result_type.map(|ty| type_key(image, ty))
     )
 }
@@ -202,14 +241,70 @@ pub(super) fn global_layouts(image: &Executable) -> Vec<String> {
         .collect()
 }
 
-pub(super) fn source_map_identity(image: &Executable) -> String {
-    let sources: Vec<&str> = image
+pub(super) fn source_map_identity(
+    image: &Executable,
+    ignored_functions: &BTreeSet<FunctionId>,
+) -> Vec<String> {
+    image
+        .source_map
+        .runs
+        .iter()
+        .filter_map(|run| {
+            let (function, info) = containing_function(image, run.instruction_start)?;
+            if ignored_functions.contains(&function) {
+                return None;
+            }
+            Some(format!(
+                "{}:{:?}:{}:{}:{}",
+                function.get(),
+                local_instruction(info, run.instruction_start),
+                source_name(image, run.source),
+                run.line,
+                run.column
+            ))
+        })
+        .collect()
+}
+
+fn source_location_key(image: &Executable, location: DebugSourceLocation) -> String {
+    format!(
+        "{}:{}:{}",
+        source_name(image, location.source),
+        location.line,
+        location.column
+    )
+}
+
+fn source_name(image: &Executable, source: fpas_bytecode::SourceId) -> &str {
+    image
         .source_map
         .sources
+        .get(source.get() as usize)
+        .map(|name| string_at(image, *name))
+        .unwrap_or("")
+}
+
+fn local_instruction(function: &FunctionInfo, instruction: InstructionAddress) -> Option<u32> {
+    instruction
+        .get()
+        .checked_sub(function.code.start.get())
+        .filter(|offset| instruction.get() < function.code.end.get() || *offset == 0)
+}
+
+fn containing_function(
+    image: &Executable,
+    instruction: InstructionAddress,
+) -> Option<(FunctionId, &FunctionInfo)> {
+    image
+        .functions
         .iter()
-        .map(|source| string_at(image, *source))
-        .collect();
-    format!("{:?}:{:?}", sources, image.source_map.runs)
+        .enumerate()
+        .find(|(_, function)| function.code.start <= instruction && instruction < function.code.end)
+        .and_then(|(index, function)| {
+            FunctionId::try_from_index(index)
+                .ok()
+                .map(|id| (id, function))
+        })
 }
 
 fn enum_name(image: &Executable, id: EnumTypeId) -> &str {

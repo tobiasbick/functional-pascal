@@ -4,9 +4,9 @@
 
 - Umbrella state: implementing `UMB-90`
 - Active primary package: `UMB-90`
-- Last completed item: `U90-01` after `U90-00`
-- Next child: `U90-10` after `U90-01`
-- Checkpoint: recoverable hot-reload-off freeze without live-image replacement;
+- Last completed item: `U90-11` after `U90-10`
+- Next child: `U90-20` after `U90-11`
+- Checkpoint: named live-image compatibility classes without replacement;
   `UMB-90` package remains active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
   (no capture-cell alias registry after `UMB-70A`)
@@ -32,7 +32,7 @@ current worktree before changing or staging anything.
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
 | `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
 | `UMB-80` | done | Bounded capture, `F4024` while capturing, recording-off unchanged, and replay rejected at `aa2af962`; `umb-80/` removed |
-| `UMB-90` | active | Hot-reload-off freeze; see [umb-90/progress.md](umb-90/progress.md) |
+| `UMB-90` | active | Named compatibility classes; see [umb-90/progress.md](umb-90/progress.md) |
 | `UMB-99` | pending | Final parity and plan removal |
 
 Allowed statuses are `pending`, `active`, `blocked`, `rejected`, and `done`.
@@ -234,7 +234,9 @@ Evidence log:
 2026-08-18 | UMB-80 | active -> done | aa2af962 | recoverable checkpoint includes bounded capture, capturing F4024, recording-off unchanged, rejected replay, and removed `umb-80/` detail | activate UMB-90
 2026-08-18 | UMB-90 | pending -> active | aa2af962 base | context-loss-safe hot-reload package created from launch-owned all-stop sessions with an immutable shared executable | execute U90-00
 2026-08-18 | U90-00 | active -> done | aa2af962 plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U90-01
-2026-08-18 | U90-01 | pending -> done | worktree | named reload rejects; hot_reload false; paired JSONL/DAP tests; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | classify U90-10
+2026-08-18 | U90-01 | pending -> done | 1a0e6c2e | named reload rejects; hot_reload false; paired JSONL/DAP tests; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | classify U90-10
+2026-08-18 | U90-10 | pending -> done | worktree | named accepted/rejected classes; classify-without-replace VM tests | map U90-11
+2026-08-18 | U90-11 | pending -> done | worktree | JSONL reload.classify and DAP fpas/reloadClassify; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject-before-commit U90-20
 ```
 
 ## Resume commands
@@ -250,7 +252,7 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U90-10` in
+The next pending implementation step is `U90-20` in
 [umb-90/progress.md](umb-90/progress.md). `UMB-80` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.

@@ -11,6 +11,7 @@ mod frame_restart;
 mod instruction;
 mod io;
 mod lifecycle;
+mod live_image;
 mod location;
 mod mutation;
 mod recording;
@@ -443,6 +444,9 @@ fn dap_body(command: &str, body: Value) -> Value {
         return result;
     }
     if let Some(result) = recording::response_body(command, &body) {
+        return result;
+    }
+    if let Some(result) = live_image::response_body(command, &body) {
         return result;
     }
     match command {

@@ -13,6 +13,7 @@ mod function_breakpoints;
 mod instruction;
 mod io;
 mod lifecycle;
+mod live_image;
 mod location;
 mod mutation;
 mod recording;

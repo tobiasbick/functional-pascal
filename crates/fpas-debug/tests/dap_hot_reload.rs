@@ -77,3 +77,30 @@ fn dap_hot_reload_after_stop_does_not_resume_or_replace_the_image() {
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
 }
+
+#[test]
+fn dap_reload_classify_names_classes_without_replacing_the_image() {
+    let mut server = server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+    let stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    let frame = stack[0]["body"]["stackFrames"][0]["id"]
+        .as_u64()
+        .expect("entry frame");
+
+    let classified = send(&mut server, &mut seq, "fpas/reloadClassify", json!({}));
+    assert_eq!(classified[0]["success"], true, "{classified:?}");
+    assert_eq!(classified[0]["body"]["class"], "unchanged");
+    assert_eq!(classified[0]["body"]["accepted"], true);
+    assert_eq!(classified[0]["body"]["applied"], false);
+    assert_eq!(
+        classified[0]["body"]["acceptedClasses"],
+        json!(["unchanged", "inactive_function_body"])
+    );
+
+    let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
+}

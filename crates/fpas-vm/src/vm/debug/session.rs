@@ -35,6 +35,7 @@ mod inspection;
 mod instruction;
 mod io;
 mod lifecycle;
+mod live_image;
 mod location;
 mod location_assign;
 mod mutation;

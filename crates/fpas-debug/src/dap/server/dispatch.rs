@@ -116,6 +116,7 @@ impl DapServer {
             "fpas/locationDescribe" => self.describe_location(request_seq, command, arguments),
             "fpas/recordingDescribe" => self.describe_recording(request_seq, command),
             "fpas/record" => self.start_recording(request_seq, command),
+            "fpas/reloadClassify" => self.classify_live_image(request_seq, command),
             "fpas/reload" => vec![self.failure(
                 request_seq,
                 command,

@@ -44,6 +44,7 @@ impl JsonlServer {
                 "Live-image hot reload is not supported.",
                 "Keep the current launch-owned executable. The debugger does not replace compiled code while stopped.",
             )],
+            "reload.classify" => self.classify_live_image(request_id, command),
             "record" => self.start_recording(request_id, command),
             "data_breakpoint.set" => vec![failure(
                 request_id,

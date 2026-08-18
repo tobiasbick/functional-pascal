@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 use std::time::Duration;
 
-use fpas_bytecode::Value;
+use fpas_bytecode::{FunctionId, Value};
 
 use super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
 use crate::vm::VmError;
@@ -119,6 +119,16 @@ impl DebugTaskRuntime {
             events: Vec::new(),
             root_result: None,
         }
+    }
+
+    /// Function identities currently on any retained worker stack.
+    pub(in crate::vm::debug) fn active_function_ids(&self) -> BTreeSet<FunctionId> {
+        let mut ids = BTreeSet::new();
+        for slot in self.tasks.values() {
+            ids.insert(slot.worker.function);
+            ids.extend(slot.worker.call_stack.iter().map(|frame| frame.function));
+        }
+        ids
     }
 
     /// Return one retained task worker, including terminal workers.

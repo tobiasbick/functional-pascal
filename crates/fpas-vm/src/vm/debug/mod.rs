@@ -10,6 +10,7 @@ pub(in crate::vm) mod initializer_suppression;
 mod inspection;
 mod instruction;
 mod io;
+mod live_image;
 mod location;
 mod mutation;
 mod recording;
@@ -38,6 +39,7 @@ pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
 pub use io::DebuggeeChannelState;
+pub use live_image::{LiveImageClassification, LiveImageUpdateClass};
 pub use location::{
     DebugDataLocation, DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,
 };

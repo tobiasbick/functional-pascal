@@ -62,9 +62,17 @@ Named rejects without resume or mutation:
 ## `UMB-90A` — compatibility classification
 
 - Begins only after `U90-01` freezes hot-reload-off and named rejects.
-- Compatibility must cover active and inactive function bodies, records,
-  enums, globals, closures, tasks, and debug metadata.
-- Missing rules are tests or recorded bounds, not a live-image claim.
+- The proven accepted subset is `unchanged` and `inactive_function_body`.
+- Named rejects are `active_function_body`, `record_layout`, `enum_layout`,
+  `global_layout`, `closure_capture`, `task_identity`, `function_set`,
+  `anonymous_closure`, `entry_point`, and `debug_metadata`.
+- Classification compares a candidate image with the live executable and
+  current stacks. It does not replace the live `Arc<VerifiedExecutable>`.
+- Live function values and capture cells are not heap-scanned; capture-count
+  and capture-source mismatches are `closure_capture`. New capturing functions
+  are `anonymous_closure`; `UMB-10B` stays blocked.
+- JSONL `reload.classify` and DAP `fpas/reloadClassify` name those classes
+  without a second compiled candidate and report `applied: false`.
 
 ## `UMB-90B` — reject before commit
 

@@ -442,6 +442,7 @@ mod frame_restart;
 mod function_value_assignment;
 mod inspection_fixture;
 mod instruction_change;
+mod live_image;
 mod location;
 mod mutation;
 mod pause_in_host;

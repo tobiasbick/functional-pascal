@@ -1,6 +1,6 @@
 # UMB-90 suspended-code hot reload
 
-Status: active. Resume at pending `U90-10` in [progress.md](progress.md).
+Status: active. Resume at pending `U90-20` in [progress.md](progress.md).
 
 This package owns compatibility proofs and versioned live-image replacement
 for a stopped debug session after the `UMB-80` recording identity and bound

@@ -40,6 +40,13 @@ constructors, readable properties, visible closures, and pure `Std.*`
 intrinsics. They run against a detached copy of stopped state; writes are
 discarded, and calls involving output, files, processes, environment, time,
 randomness, blocking, tasks, or unknown dynamic effects are rejected.
+Use **Functional Pascal: Debug: Reload Compatible Changes** to rebuild the
+exact launch target while initialized or stopped. Changes limited to inactive
+function bodies commit atomically and refresh sources, breakpoints, stacks, and
+variables. **Debug: Roll Back Last Reload** restores the single preceding image
+as a new version. Active bodies, function-set or layout changes, captures, and
+anonymous closures are rejected before the live image changes. This reloads
+FPAS program code only; it does not debug or replace the native Rust VM.
 While stopped, the Variables view can edit mutable locals, parameters, globals,
 closure captures, record fields, array elements, existing dictionary
 values, active enum payload fields, `Result`/`Option` `.value` children, and

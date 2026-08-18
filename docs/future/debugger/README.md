@@ -1,112 +1,16 @@
 # Source-debugger roadmap
 
-## Active implementation plans
+There is no active source-debugger implementation plan. The completion
+umbrella has been resolved and removed.
 
-The [source-debugger completion umbrella](umbrella/README.md) is the active,
-resumable plan for the remaining debugger backlog. It coordinates bounded
-packages in dependency order; it does not authorize one monolithic
-implementation. Current behavior remains documented under
-[`docs/pascal/tools/`](../../pascal/tools/debugger.md).
+Implemented behavior, supported limits, and explicit rejections are documented
+under [`docs/pascal/tools/`](../../pascal/tools/debugger.md). The debugger is a
+single FPAS source-level engine shared by JSONL and DAP/VS Code; it does not
+provide native Rust/VM process debugging.
 
-The source debugger includes detached controlled calls, read-only expression
-evaluation, watches, conditional breakpoints, exact-hit conditions,
-non-stopping logpoints, and stopped-state mutation of supported mutable values.
-Its current user and protocol documentation lives under
-[`docs/pascal/tools/`](../../pascal/tools/debugger.md).
+[deferred.md](deferred.md) is the sole backlog for independently useful future
+debugger capabilities. It currently contains no open package.
 
-[deferred.md](deferred.md) lists independent postponed debugger work outside
-the active umbrella. Deterministic, launch-owned, all-stop task debugging is
-implemented, including per-task pause/resume and cancel. Debugger task
-creation, task restart, non-stop execution, stepping shortcuts, and persistent
-task history were rejected by `UMB-40`. Protocol and debuggee I/O are separated;
-queued `Read`/`ReadLn`, structured output, and stopped TUI/graph ownership are
-implemented. In-call interruption of blocking host intrinsics was rejected by
-`UMB-50`. Attach, remote sessions, and native OS debugging were rejected by
-`UMB-60`. Global write/change data breakpoints, durable location describe, and
-optional global assignment on source or data breakpoint hits were implemented
-by `UMB-70`. Versioned bounded recording capture, `F4024` rejection of
-unreplayable host effects, and recording-off execution were implemented by
-`UMB-80`; reverse execution and replay remain rejected. Remaining hot-reload
-work is owned by `UMB-90` in the
-[active umbrella](umbrella/implementation-plan.md).
-
-The implemented debugger includes complete-value replacement of mutable enum,
-`Result`, and `Option` values through the existing `setVariable`/`setExpression`
-path, plus explicit metadata-driven discovery and complete construction of
-fieldless, single-field, and multi-field variants through JSONL
-`variant.describe` / `variant.construct`, DAP `fpas/variantDescribe` /
-`fpas/variantConstruct`, and VS Code **Debug: Construct Variant**. Implicit
-switching through a stale payload-child handle remains unsupported.
-
-Debugger initialization of a visible, source-declared mutable local or global
-before normal execution initializes that binding is implemented through the
-same mutation surfaces. Seeded descendant initialization below empty storage
-is implemented through JSONL `storage.initialize`, DAP
-`fpas/initializeStorage`, and VS Code **Debug: Initialize Empty Storage**.
-The compiler now retains exact local/global initializer-store identity through
-bytecode, unit objects, linking, and program images. A successful debugger
-initialization suppresses that one still-pending store in the exact live frame.
-Treating parameters or captures as uninitialized targets remains deferred.
-
-Explicit, variant-qualified descendant assignment that constructs one complete
-single-payload enum, `Result`, or `Option` variant is implemented through
-textual `setExpression` / JSONL `expression.set`. Stale-handle switching,
-unqualified variant guessing, multi-field incremental construction, and
-virtual Variables children remain deferred.
-
-Bounded assignment of an already materialized, visible, non-task-bound
-first-class function value, of one statically resolved non-capturing
-executable routine, of a named nested routine whose direct captures are
-immutable values from the exact selected live lexical-owner frame, and of a
-named nested routine whose `Cell` and `EnclosingCell` captures clone existing
-handles from that same owner frame onto a mutable local or parameter register,
-is implemented through the same `setVariable`/`setExpression` surfaces.
-Constructed cell-capturing functions are task-bound to the selected task.
-An already materialized task-bound function can be copied within that selected
-owner task and frame onto another mutable local or parameter register; the
-exact function and cell handles are preserved. Global, descendant,
-capture-cell, foreign-task, and stale-frame escape paths remain rejected.
-Bound-receiver synthesis from compiler-retained record method mappings is
-implemented through the same mutation surfaces with exact receiver-layout,
-signature, and value-graph validation. Bounded copying of an already
-materialized, visible task handle onto a structurally
-compatible mutable target is implemented through those same surfaces: the copy
-preserves the exact runtime task ID and does not consult the scheduler. Newly
-entered anonymous closures require the versioned live-image work in `UMB-90`.
-Dynamic callable endpoints, opaque hosted-resource assignment, and in-place
-callable child editing were rejected by `UMB-10D`. Task-bound writes into
-capture-cell destinations remain rejected after `UMB-70A`: capture cells have
-no alias registry.
-
-Bounded forced return from a selected ordinary callee — including an older
-frame of the stop-owning task — is implemented through JSONL `frame.return`,
-DAP `fpas/forceReturn`, and the VS Code command
-`functionalPascal.debug.forceReturn`. Selected-frame restart is implemented
-through JSONL `frame.restart`, DAP `restartFrame`, and VS Code **Restart Frame**.
-Arbitrary instruction-pointer changes were rejected by `UMB-30D`. All-stop
-task control, per-task pause/resume, and cancel are implemented; debugger
-task creation, task restart, non-stop execution, and unbounded history were
-rejected by `UMB-40`. Attach, remote sessions, and native OS debugging were
-rejected by `UMB-60`. Global data breakpoints and breakpoint-hit assignment
-were implemented by `UMB-70`. Versioned bounded recording capture and
-capturing `F4024` rejection were implemented by `UMB-80`; reverse execution
-and replay remain rejected. Remaining hot-reload work is owned by
-`UMB-90` in the [active umbrella](umbrella/implementation-plan.md).
-
-Textual debugger expression mutation is implemented through DAP
-`setExpression` and JSONL `expression.set` for the existing bounded mutation
-domain.
-
-Explicit dictionary insertion, removal, and key replacement are implemented
-through JSONL, DAP custom requests, and VS Code commands. Bounded array
-insertion/removal and Unicode-scalar string character replacement are also
-implemented through all three surfaces. Writable descendants of the currently
-active data-carrying enum, `Result`, and `Option` payload are implemented
-through standard `setVariable`/`setExpression` and their JSONL counterparts.
-Complete-value replacement of those same enum, `Result`, and `Option` roots is
-also implemented. Textual qualified single-payload variant transition is
-implemented through `setExpression` / `expression.set`. Later mutation forms
-remain recorded in [deferred.md](deferred.md).
-
-The implemented debugger does not change FPAS syntax, semantics, or the
-language specification.
+Future work must add one bounded, independently testable row there before
+creating another resumable plan. Do not restore completed umbrella history as
+backlog.

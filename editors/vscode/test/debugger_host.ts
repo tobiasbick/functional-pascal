@@ -19,6 +19,7 @@ import { verifyCellCapturingRoutineAssignment } from "./debugger_host/cell_captu
 import { verifyTaskHandleAssignment } from "./debugger_host/task_handle_assignment";
 import { verifyForcedReturn } from "./debugger_host/forced_return";
 import { verifyFrameRestart } from "./debugger_host/frame_restart";
+import { verifyLiveReload } from "./debugger_host/live_reload";
 import { verifyTaskResultReplacement } from "./debugger_host/task_result_replacement";
 import { verifyVariantConstruction } from "./debugger_host/variant_construction";
 import { verifyEmptyStorageConstruction } from "./debugger_host/empty_storage_construction";
@@ -67,6 +68,7 @@ export async function verifyDebuggerHost(): Promise<void> {
     await verifyTaskHandleAssignment(workspaceRoot, received, sent);
     await verifyForcedReturn(workspaceRoot, received, sent);
     await verifyFrameRestart(workspaceRoot, received, sent);
+    await verifyLiveReload(workspaceRoot, received, sent);
     await verifyTaskResultReplacement(workspaceRoot, received, sent);
     await verifyVariantConstruction(workspaceRoot, received, sent);
     await verifyEmptyStorageConstruction(workspaceRoot, received, sent);

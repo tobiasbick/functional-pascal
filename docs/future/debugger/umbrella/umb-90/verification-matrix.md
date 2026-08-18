@@ -10,9 +10,9 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | `V90-03` | A recoverable old image remains until the new image commits | VM commit, incompatible atomicity, and successful rollback tests | pass |
 | `V90-04` | Memory, disk, snapshot, and retention bounds hold | VM repeated commit/rollback retains current plus one previous image; recording snapshots remain zero | pass |
 | `V90-05` | Recording capture is not used as a live-image snapshot store | Reload rejects after `record` / `fpas/record` leave the stack unchanged | pass |
-| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired `hot_reload` / `dap_hot_reload` classify, Unchanged gate, and incompatible reject | pass |
-| `V90-07` | VS Code exposes only supported reload UX | No reload command; DAP does not advertise `supportsHotReload` | pass |
-| `V90-08` | Current docs describe implemented behavior and limitations only | Debugger pages name the replace gate, `applied: false`, and classify classes without a committed live-image claim | pass |
+| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired `hot_reload` / `dap_hot_reload` classify, commit, version, rollback, source switch, invalidation, unavailable rollback, and incompatible reject | pass |
+| `V90-07` | VS Code exposes only supported reload UX | Reload and rollback commands; Extension Host changes an inactive body, commits, rolls back, recommits, and executes the changed code | pass |
+| `V90-08` | Current docs describe implemented behavior and limitations only | Debugger pages name accepted inactive-body commits, rejection classes, bounded rollback, recording exclusion, and FPAS-only ownership | pass |
 | `V90-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pass |
 | `V90-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pass |
 

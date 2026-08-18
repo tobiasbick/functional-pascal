@@ -71,8 +71,9 @@ Named rejects without resume or mutation:
 - Live function values and capture cells are not heap-scanned; capture-count
   and capture-source mismatches are `closure_capture`. New capturing functions
   are `anonymous_closure`; `UMB-10B` stays blocked.
-- JSONL `reload.classify` and DAP `fpas/reloadClassify` name those classes
-  without a second compiled candidate and report `applied: false`.
+- JSONL `reload.classify` and DAP `fpas/reloadClassify` ask the CLI-owned
+  rebuild provider for a verified candidate, name its class, and report
+  `applied: false`.
 
 ## `UMB-90B` — reject before commit
 
@@ -103,7 +104,14 @@ Named rejects without resume or mutation:
 - A real image change is rejected while recording capture is active. Existing
   events are neither relabeled nor used as rollback state. An unchanged check is
   still non-mutating.
-- JSONL, DAP, and VS Code mapping remains `U90-31`.
+- `fpas-cli` owns rebuilding the exact launch target and supplies the verified
+  executable plus source contents to `fpas-debug`. JSONL and DAP invoke the
+  same session operation and swap sources only after a successful image commit.
+- DAP advertises hot reload only when that provider exists. A successful
+  commit or rollback invalidates stacks and variables. VS Code exposes one
+  reload and one rollback command over those custom requests.
+- This is FPAS source debugging. Native Rust/VM debugging and native process
+  hot swapping remain outside this debugger.
 
 ## Out of scope
 

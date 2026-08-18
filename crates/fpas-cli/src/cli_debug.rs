@@ -78,6 +78,25 @@ fn prepare_target(
     config: &DebugCliConfig,
     standard_library: Option<&fpas_project::StandardLibrary>,
 ) -> Result<fpas_debug::PreparedDebugTarget, String> {
+    let prepared = prepare_executable(config, standard_library)?;
+    let reload_config = config.clone();
+    let reload_library = standard_library.cloned();
+    Ok(
+        fpas_debug::PreparedDebugTarget::new(prepared.executable, config.program_args.clone())
+            .with_sources(prepared.sources)
+            .with_reloader(move || {
+                let prepared = prepare_executable(&reload_config, reload_library.as_ref())
+                    .map_err(|_| reload_build_error())?;
+                Ok(fpas_debug::ReloadedDebugTarget::new(prepared.executable)
+                    .with_sources(prepared.sources))
+            }),
+    )
+}
+
+fn prepare_executable(
+    config: &DebugCliConfig,
+    standard_library: Option<&fpas_project::StandardLibrary>,
+) -> Result<PreparedExecutable, String> {
     let prepared = match &config.input {
         CliInput::SourceFile(path) if path.is_dir() => {
             return Err(format!(
@@ -93,10 +112,16 @@ fn prepare_target(
         }
         CliInput::CompiledProgramFile(path) => prepare_image(path, config.source_root.as_deref())?,
     };
-    Ok(
-        fpas_debug::PreparedDebugTarget::new(prepared.executable, config.program_args.clone())
-            .with_sources(prepared.sources),
-    )
+    Ok(prepared)
+}
+
+fn reload_build_error() -> fpas_vm::DebugSessionError {
+    fpas_vm::DebugSessionError {
+        kind: fpas_vm::DebugErrorKind::LiveImageBuildFailed,
+        message: "the debugger launch target could not be rebuilt for live reload".to_string(),
+        hint: "Fix source or project diagnostics with `fpas check`, then retry reload. Host paths and compiler output are not copied onto the debugger protocol."
+            .to_string(),
+    }
 }
 
 fn prepare_source(

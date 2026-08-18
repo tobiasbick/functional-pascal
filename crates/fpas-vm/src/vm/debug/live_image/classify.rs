@@ -8,8 +8,9 @@ use fpas_bytecode::{Executable, FunctionId, VerifiedExecutable};
 
 use super::class::{LiveImageClassification, LiveImageUpdateClass};
 use super::fingerprint::{
-    capture_identity, debug_identity, entry_name, enum_layouts, function_code, function_names,
-    global_layouts, named_functions, record_layouts, signature_identity, source_map_identity,
+    capture_identity, debug_identity, entry_name, enum_layouts, function_body_identity,
+    function_names, global_layouts, named_functions, record_layouts, signature_identity,
+    source_map_identity,
 };
 
 /// Classify `candidate` against `current` using live stack function identities.
@@ -79,9 +80,9 @@ fn classify(
         if signature_identity(current_function) != signature_identity(candidate_function) {
             return LiveImageClassification::new(LiveImageUpdateClass::FunctionSet);
         }
-        let current_code = function_code(current, current_function);
-        let candidate_code = function_code(candidate, candidate_function);
-        let body_differs = current_code != candidate_code
+        let current_body = function_body_identity(current, current_function);
+        let candidate_body = function_body_identity(candidate, candidate_function);
+        let body_differs = current_body != candidate_body
             || current_function.register_count != candidate_function.register_count;
         if body_differs {
             body_changed.insert(*id);

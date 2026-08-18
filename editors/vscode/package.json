@@ -172,6 +172,16 @@
         "category": "Functional Pascal"
       },
       {
+        "command": "functionalPascal.debug.reload",
+        "title": "Debug: Reload Compatible Changes",
+        "category": "Functional Pascal"
+      },
+      {
+        "command": "functionalPascal.debug.rollbackReload",
+        "title": "Debug: Roll Back Last Reload",
+        "category": "Functional Pascal"
+      },
+      {
         "command": "functionalPascal.debug.replaceTaskResult",
         "title": "Debug: Replace Completed Task Result",
         "category": "Functional Pascal"

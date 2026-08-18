@@ -11,12 +11,11 @@ crates/fpas-vm/src/vm/debug/
   recording/                   — exists: envelope and capture only; not a live-image store
   tasks/driver/live_image.rs   — all-worker validation and shared-image commit
 crates/fpas-debug/src/
-  jsonl/encode.rs              — exists: hot_reload false; reload_classify true
-  jsonl/server/dispatch.rs     — exists: reload / image.replace gate and reload.classify
-  jsonl/server/live_image.rs   — exists: classify and reject-before-commit mapping
-  dap/server.rs                — exists: no hot-reload advertisement
-  dap/server/dispatch.rs       — exists: fpas/reload gate and fpas/reloadClassify
-  dap/server/live_image.rs     — exists: classify and replace mapping
+  target_reload.rs             — verified rebuilt image and source bundle
+  jsonl/server/live_image.rs   — classify, commit, source swap, and rollback mapping
+  dap/server/live_image.rs     — equivalent DAP mapping and invalidation
+editors/vscode/src/debugger/
+  liveReloadCommand.ts         — reload and rollback command surface
 ```
 
 ## Ordered work
@@ -30,7 +29,7 @@ crates/fpas-debug/src/
 | `U90-20` | done | Implement `UMB-90B` reject-before-commit only after `U90-10` | Incompatible updates leave the live image unchanged |
 | `U90-21` | done | Map rejection through adapters/editor | Protocol-equivalent success and negatives |
 | `U90-30` | done | Implement `UMB-90C` versioned image and rollback only after `U90-20` | Recoverable old image until commit; bounds hold |
-| `U90-31` | pending | Map commit and rollback through adapters/editor | Protocol-equivalent success and negatives |
+| `U90-31` | done | Map commit and rollback through adapters/editor | Protocol-equivalent success and negatives |
 | `U90-50` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |
 
 ## Test placement

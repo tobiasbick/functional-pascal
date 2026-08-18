@@ -6,7 +6,7 @@
 )]
 
 use fpas_debug::{
-    PreparedDebugTarget,
+    PreparedDebugTarget, ReloadedDebugTarget,
     jsonl::{JsonlServer, ServerStatus},
 };
 use serde_json::{Value, json};
@@ -16,6 +16,22 @@ fn server() -> JsonlServer {
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile hot-reload fixture");
     JsonlServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("JSONL server")
+}
+
+fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
+    let source = format!(
+        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value}\nend;\nbegin\nend."
+    );
+    let (program, diagnostics) = fpas_parser::parse(&source);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    fpas_compiler::compile(&program).expect("compile reloadable fixture")
+}
+
+fn reloadable_server() -> JsonlServer {
+    let candidate = compile_reloadable(2);
+    let target = PreparedDebugTarget::new(compile_reloadable(1), Vec::new())
+        .with_reloader(move || Ok(ReloadedDebugTarget::new(candidate.clone())));
+    JsonlServer::new(target).expect("reloadable JSONL server")
 }
 
 fn request(id: u64, command: &str, arguments: Value) -> String {
@@ -134,4 +150,45 @@ fn jsonl_incompatible_replace_is_rejected_before_the_image_changes() {
     assert_eq!(server.status(), ServerStatus::Stopped);
     let same_stack = server.handle_line(&request(4, "stack", json!({})));
     assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
+}
+
+#[test]
+fn jsonl_reload_commits_versions_and_exposes_bounded_rollback() {
+    let mut server = reloadable_server();
+    let initialized = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    assert_eq!(initialized[0]["body"]["capabilities"]["hot_reload"], true);
+    assert_eq!(
+        initialized[0]["body"]["capabilities"]["reload_rollback"],
+        true
+    );
+
+    let classified = server.handle_line(&request(2, "reload.classify", json!({})));
+    assert_eq!(classified[0]["body"]["class"], "inactive_function_body");
+    assert_eq!(classified[0]["body"]["applied"], false);
+    assert_eq!(classified[0]["body"]["version"], 1);
+
+    let reloaded = server.handle_line(&request(3, "reload", json!({})));
+    assert_eq!(reloaded[0]["success"], true, "{reloaded:?}");
+    assert_eq!(reloaded[0]["body"]["class"], "inactive_function_body");
+    assert_eq!(reloaded[0]["body"]["applied"], true);
+    assert_eq!(reloaded[0]["body"]["version"], 2);
+    assert_eq!(reloaded[0]["body"]["rollback_available"], true);
+
+    let rolled_back = server.handle_line(&request(4, "image.rollback", json!({})));
+    assert_eq!(rolled_back[0]["success"], true, "{rolled_back:?}");
+    assert_eq!(rolled_back[0]["body"]["applied"], true);
+    assert_eq!(rolled_back[0]["body"]["version"], 3);
+    assert_eq!(rolled_back[0]["body"]["rollback_available"], true);
+}
+
+#[test]
+fn jsonl_rollback_without_a_committed_image_is_a_stable_error() {
+    let mut server = server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let rejected = server.handle_line(&request(2, "image.rollback", json!({})));
+    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+    assert_eq!(
+        rejected[0]["error"]["code"],
+        "live_image_rollback_unavailable"
+    );
 }

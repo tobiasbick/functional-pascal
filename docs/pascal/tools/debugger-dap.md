@@ -15,8 +15,9 @@ allocated runtime diagnostic code. It explicitly advertises `supportsAttach: fal
 `supportsDisassembleRequest: false`, `supportsReadMemoryRequest: false`, and
 `supportsStepBack: false`.
 It does not advertise completions, instruction
-breakpoints, restart, reverse execution, replay, hot reload, non-stop execution, or raw
-register access. It explicitly advertises
+breakpoints, restart, reverse execution, replay, non-stop execution, or raw
+register access. CLI-owned launch targets advertise `supportsHotReload: true`;
+embedders without a rebuild provider omit it. It explicitly advertises
 `supportsSingleThreadExecutionRequests: false` because every stop freezes all
 FPAS tasks. Per-task holds use custom requests `fpas/pauseTask` and
 `fpas/resumeTask` with a known `threadId`; they do not change continue or
@@ -32,16 +33,17 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
 `fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
-`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `fpas/record`, `fpas/reloadClassify`, `fpas/reload`, `cancel`, `continue`,
+`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `fpas/record`, `fpas/reloadClassify`, `fpas/reload`, `fpas/reloadRollback`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
 `stepBack`, `reverseContinue`, `disassemble`, `readMemory`, and `writeMemory`
-fail as unsupported. `fpas/reload` classifies the live executable, rejects
-incompatible candidates before any image change, and reports `applied: false`
-without installing a new compiled program.
-`fpas/reloadClassify` names accepted classes `unchanged` and
-`inactive_function_body` and reports `applied: false` without replacing the
-compiled program.
+fail as unsupported. `fpas/reload` rebuilds the exact launch target and
+atomically installs an `inactive_function_body` candidate. `fpas/reloadRollback`
+restores the single preceding image. Both return the class, `applied`, a
+monotonic `version`, and `rollbackAvailable`; a successful change emits
+`invalidated` for stacks and variables when negotiated. `fpas/reloadClassify`
+rebuilds and names accepted classes `unchanged` and `inactive_function_body`
+and reports `applied: false` without replacing the compiled program.
 Other unsupported requests fail explicitly.
 
 `threads` maps main task `0` to DAP thread `1` and assigns stable positive DAP

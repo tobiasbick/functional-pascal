@@ -5,7 +5,7 @@
     reason = "protocol tests keep fixture failures local"
 )]
 
-use fpas_debug::{PreparedDebugTarget, dap::DapServer};
+use fpas_debug::{DebugSourceContent, PreparedDebugTarget, ReloadedDebugTarget, dap::DapServer};
 use serde_json::{Value, json};
 
 fn server() -> DapServer {
@@ -13,6 +13,35 @@ fn server() -> DapServer {
     assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
     let executable = fpas_compiler::compile(&program).expect("compile hot-reload fixture");
     DapServer::new(PreparedDebugTarget::new(executable, Vec::new())).expect("DAP server")
+}
+
+fn compile_reloadable(value: i64) -> fpas_bytecode::VerifiedExecutable {
+    let source = format!(
+        "program HotReload;\nfunction Helper(): integer;\nbegin\n  return {value}\nend;\nbegin\nend."
+    );
+    let (program, diagnostics) = fpas_parser::parse(&source);
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    fpas_compiler::compile(&program).expect("compile reloadable fixture")
+}
+
+fn reloadable_server() -> DapServer {
+    let candidate = compile_reloadable(2);
+    let target = PreparedDebugTarget::new(compile_reloadable(1), Vec::new())
+        .with_sources(vec![DebugSourceContent {
+            path: "test.fpas".to_string(),
+            content: "before".to_string(),
+        }])
+        .with_reloader(move || {
+            Ok(
+                ReloadedDebugTarget::new(candidate.clone()).with_sources(vec![
+                    DebugSourceContent {
+                        path: "test.fpas".to_string(),
+                        content: "after".to_string(),
+                    },
+                ]),
+            )
+        });
+    DapServer::new(target).expect("reloadable DAP server")
 }
 
 fn send(server: &mut DapServer, seq: &mut u64, command: &str, arguments: Value) -> Vec<Value> {
@@ -128,4 +157,52 @@ fn dap_incompatible_replace_is_rejected_before_the_image_changes() {
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
+}
+
+#[test]
+fn dap_reload_and_rollback_match_jsonl_and_refresh_sources() {
+    let mut server = reloadable_server();
+    let mut seq = 0;
+    let initialized = send(
+        &mut server,
+        &mut seq,
+        "initialize",
+        json!({"supportsInvalidatedEvent":true}),
+    );
+    assert_eq!(initialized[0]["body"]["supportsHotReload"], true);
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+
+    let reloaded = send(&mut server, &mut seq, "fpas/reload", json!({}));
+    assert_eq!(reloaded[0]["success"], true, "{reloaded:?}");
+    assert_eq!(reloaded[0]["body"]["class"], "inactive_function_body");
+    assert_eq!(reloaded[0]["body"]["applied"], true);
+    assert_eq!(reloaded[0]["body"]["version"], 2);
+    assert_eq!(reloaded[0]["body"]["rollbackAvailable"], true);
+    assert!(
+        reloaded
+            .iter()
+            .any(|message| message["event"] == "invalidated"),
+        "{reloaded:?}"
+    );
+    let source = send(
+        &mut server,
+        &mut seq,
+        "source",
+        json!({"source":{"path":"test.fpas"}}),
+    );
+    assert_eq!(source[0]["body"]["content"], "after");
+
+    let rolled_back = send(&mut server, &mut seq, "fpas/reloadRollback", json!({}));
+    assert_eq!(rolled_back[0]["success"], true, "{rolled_back:?}");
+    assert_eq!(rolled_back[0]["body"]["applied"], true);
+    assert_eq!(rolled_back[0]["body"]["version"], 3);
+    let source = send(
+        &mut server,
+        &mut seq,
+        "source",
+        json!({"source":{"path":"test.fpas"}}),
+    );
+    assert_eq!(source[0]["body"]["content"], "before");
 }

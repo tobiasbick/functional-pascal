@@ -34,6 +34,13 @@ fn patch_helper_body(current: &VerifiedExecutable) -> VerifiedExecutable {
     image.verify().expect("helper body candidate")
 }
 
+fn constant_helper_executable(value: i64) -> VerifiedExecutable {
+    let mut image = pair_executable().into_unverified();
+    image.code[4] = Instruction::abx(Opcode::LoadConstant, 0, 0).expect("integer constant");
+    image.constants = vec![Constant::Integer(value)];
+    image.verify().expect("constant helper executable")
+}
+
 fn patch_helper_with_shifted_sequence_point(current: &VerifiedExecutable) -> VerifiedExecutable {
     let mut image = current.clone().into_unverified();
     image.code.insert(4, abc(Opcode::LoadUnit, 0, 0, 0));
@@ -441,6 +448,20 @@ fn inactive_body_replace_commits_one_shared_version() {
     assert_ne!(session.stack(0, 1).expect("stack").items[0].id, frame);
     assert!(session.test_workers_share_live_image());
     assert_eq!(session.test_retained_live_image_count(), 2);
+}
+
+#[test]
+fn inactive_constant_change_is_a_semantic_body_update() {
+    let current = constant_helper_executable(1);
+    let candidate = constant_helper_executable(2);
+    assert_eq!(current.executable().code, candidate.executable().code);
+    let mut session = DebugSession::new(current).expect("debug session");
+    let result = session
+        .replace_live_image(&candidate)
+        .expect("constant-only body replace");
+    assert_eq!(result.class, LiveImageUpdateClass::InactiveFunctionBody);
+    assert!(result.applied);
+    assert_eq!(result.version, 2);
 }
 
 #[test]

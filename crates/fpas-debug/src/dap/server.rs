@@ -37,6 +37,7 @@ pub struct DapServer {
     source_breakpoints: HashMap<String, Vec<u64>>,
     source_paths: Vec<String>,
     sources: HashMap<String, String>,
+    source_revision: u64,
     runtime_failed: bool,
     pending_core_requests: HashMap<u64, (u64, String)>,
     supports_invalidated_event: bool,
@@ -63,6 +64,7 @@ impl DapServer {
             source_breakpoints: HashMap::new(),
             source_paths,
             sources,
+            source_revision: 1,
             runtime_failed: false,
             pending_core_requests: HashMap::new(),
             supports_invalidated_event: false,
@@ -160,9 +162,18 @@ impl DapServer {
                 "supportsReadMemoryRequest":false,
                 "supportsWriteMemoryRequest":false,
                 "supportsSingleThreadExecutionRequests":false,
-                "supportsStepBack":false
+                "supportsStepBack":false,
+                "supportsHotReload":self.core.supports_hot_reload()
             }),
         )];
+        if !self.core.supports_hot_reload()
+            && let Some(capabilities) = output
+                .first_mut()
+                .and_then(|response| response.get_mut("body"))
+                .and_then(Value::as_object_mut)
+        {
+            capabilities.remove("supportsHotReload");
+        }
         output.extend(self.translate_events(records));
         output
     }
@@ -222,7 +233,28 @@ impl DapServer {
         self.pending_core_requests
             .insert(id, (request_seq, dap_command.to_string()));
         let records = self.core.handle_line(&core_request(id, command, arguments));
+        self.sync_sources();
         self.translate_core(records)
+    }
+
+    fn sync_sources(&mut self) {
+        let revision = self.core.source_revision();
+        if revision == self.source_revision {
+            return;
+        }
+        self.source_paths = self
+            .core
+            .sources()
+            .iter()
+            .map(|source| source.path.clone())
+            .collect();
+        self.sources = self
+            .core
+            .sources()
+            .iter()
+            .map(|source| (source.path.clone(), source.content.clone()))
+            .collect();
+        self.source_revision = revision;
     }
 
     fn step_request(

@@ -31,8 +31,9 @@ use serde_json::{Map, Value, json};
 use super::actor::{ResumeCommand, SessionActor};
 use super::encode::*;
 use super::protocol::{event, failure, session_error, success};
-use crate::PreparedDebugTarget;
 use crate::breakpoints::{BreakpointPolicy, RuntimeFailurePolicy};
+use crate::target::DebugReloadProvider;
+use crate::{DebugSourceContent, PreparedDebugTarget};
 
 /// Coarse server lifecycle visible to transport drivers.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -62,6 +63,10 @@ pub struct JsonlServer {
     runtime_failure_policy: RuntimeFailurePolicy,
     log_output_bytes: usize,
     pending_evaluation: Option<(u64, String)>,
+    reloader: Option<DebugReloadProvider>,
+    sources: Vec<DebugSourceContent>,
+    previous_sources: Option<Vec<DebugSourceContent>>,
+    source_revision: u64,
 }
 
 impl JsonlServer {
@@ -70,8 +75,10 @@ impl JsonlServer {
     /// # Errors
     ///
     /// Returns a debugger initialization error for invalid runtime state.
-    pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
+    pub fn new(mut target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
         let execution_limits = target.execution_limits();
+        let reloader = target.take_reloader();
+        let sources = target.sources().to_vec();
         Ok(Self {
             status: ServerStatus::Created,
             actor: SessionActor::new(target.into_session()?),
@@ -84,6 +91,10 @@ impl JsonlServer {
             runtime_failure_policy: RuntimeFailurePolicy::default(),
             log_output_bytes: 0,
             pending_evaluation: None,
+            reloader,
+            sources,
+            previous_sources: None,
+            source_revision: 1,
         })
     }
 
@@ -97,6 +108,18 @@ impl JsonlServer {
     #[must_use]
     pub fn is_evaluating(&self) -> bool {
         self.actor.is_evaluating()
+    }
+
+    pub(crate) const fn supports_hot_reload(&self) -> bool {
+        self.reloader.is_some()
+    }
+
+    pub(crate) const fn source_revision(&self) -> u64 {
+        self.source_revision
+    }
+
+    pub(crate) fn sources(&self) -> &[DebugSourceContent] {
+        &self.sources
     }
 
     /// Parse and handle one complete UTF-8 JSON object line.
@@ -214,7 +237,12 @@ impl JsonlServer {
             )];
         }
         self.status = ServerStatus::Initialized;
-        initialize_records(request_id, command, self.execution_limits)
+        initialize_records(
+            request_id,
+            command,
+            self.execution_limits,
+            self.reloader.is_some(),
+        )
     }
 
     fn launch(

@@ -118,6 +118,7 @@ impl DapServer {
             "fpas/record" => self.start_recording(request_seq, command),
             "fpas/reloadClassify" => self.classify_live_image(request_seq, command),
             "fpas/reload" => self.replace_current_live_image(request_seq, command),
+            "fpas/reloadRollback" => self.rollback_live_image(request_seq, command),
             "fpas/variantConstruct" => self.construct_variant(request_seq, command, arguments),
             "fpas/initializeStorage" => self.initialize_storage(request_seq, command, arguments),
             "cancel" => self.core_request(

@@ -8,6 +8,7 @@ import { resolveCliPath } from "../cliPath";
 import { resolveStandardLibraryPath } from "../standardLibraryPath";
 import { registerDictionaryCommands } from "./dictionaryCommands";
 import { registerForcedReturnCommand } from "./forcedReturnCommand";
+import { registerLiveReloadCommands } from "./liveReloadCommand";
 import { registerSequenceCommands } from "./sequenceCommands";
 import { registerStorageInitializationCommand } from "./storageInitializationCommand";
 import { registerDebuggeeInputCommands } from "./inputCommand";
@@ -27,6 +28,7 @@ export function registerDebugger(context: vscode.ExtensionContext): void {
   );
   registerDictionaryCommands(context);
   registerForcedReturnCommand(context);
+  registerLiveReloadCommands(context);
   registerSequenceCommands(context);
   registerVariantConstructionCommand(context);
   registerStorageInitializationCommand(context);

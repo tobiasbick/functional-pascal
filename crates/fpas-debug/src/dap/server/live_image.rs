@@ -14,7 +14,13 @@ impl DapServer {
         request_seq: u64,
         command: &str,
     ) -> Vec<Value> {
-        self.core_request(request_seq, command, "image.replace", json!({}))
+        let records = self.core_request(request_seq, command, "image.replace", json!({}));
+        self.with_reload_invalidation(records)
+    }
+
+    pub(super) fn rollback_live_image(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
+        let records = self.core_request(request_seq, command, "image.rollback", json!({}));
+        self.with_reload_invalidation(records)
     }
 
     /// Reject an incompatible candidate before the live image can change.
@@ -34,17 +40,34 @@ impl DapServer {
     ) -> Result<fpas_vm::LiveImageReplaceResult, fpas_vm::DebugSessionError> {
         self.core.replace_live_image(candidate)
     }
+
+    fn with_reload_invalidation(&mut self, mut records: Vec<Value>) -> Vec<Value> {
+        let applied = records.iter().any(|record| {
+            record.get("type").and_then(Value::as_str) == Some("response")
+                && record.get("success").and_then(Value::as_bool) == Some(true)
+                && record.pointer("/body/applied").and_then(Value::as_bool) == Some(true)
+        });
+        if applied && self.supports_invalidated_event {
+            records.push(self.event("invalidated", json!({"areas":["stacks","variables"]})));
+        }
+        records
+    }
 }
 
 /// Translate one live-image custom-request result into DAP naming.
 pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    if command != "fpas/reloadClassify" && command != "fpas/reload" {
+    if !matches!(
+        command,
+        "fpas/reloadClassify" | "fpas/reload" | "fpas/reloadRollback"
+    ) {
         return None;
     }
     Some(json!({
         "class": body.get("class"),
         "accepted": body.get("accepted"),
         "applied": body.get("applied"),
+        "version": body.get("version"),
+        "rollbackAvailable": body.get("rollback_available"),
         "acceptedClasses": body.get("accepted_classes"),
         "rejectedClasses": body.get("rejected_classes"),
     }))

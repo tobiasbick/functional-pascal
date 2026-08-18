@@ -4,8 +4,7 @@ use std::collections::BTreeSet;
 
 use fpas_bytecode::{
     DebugCaptureKind, DebugSourceLocation, DebugType, DebugTypeId, EnumTypeId, Executable,
-    FunctionId, FunctionInfo, Instruction, InstructionAddress, RecordTypeId, ReturnConvention,
-    StringId,
+    FunctionId, FunctionInfo, InstructionAddress, Opcode, RecordTypeId, ReturnConvention, StringId,
 };
 
 pub(super) fn string_at(image: &Executable, id: StringId) -> &str {
@@ -47,13 +46,64 @@ pub(super) fn named_functions(image: &Executable) -> Vec<(String, FunctionId, &F
         .collect()
 }
 
-pub(super) fn function_code<'a>(
-    image: &'a Executable,
+pub(super) fn function_body_identity(
+    image: &Executable,
     function: &FunctionInfo,
-) -> Option<&'a [Instruction]> {
+) -> Option<Vec<String>> {
     let start = usize::try_from(function.code.start.get()).ok()?;
     let end = usize::try_from(function.code.end.get()).ok()?;
-    image.code.get(start..end)
+    image.code.get(start..end).map(|code| {
+        code.iter()
+            .map(|instruction| instruction_identity(image, function, *instruction))
+            .collect()
+    })
+}
+
+fn instruction_identity(
+    image: &Executable,
+    function: &FunctionInfo,
+    instruction: fpas_bytecode::Instruction,
+) -> String {
+    match instruction.opcode() {
+        Ok(Opcode::LoadConstant) => {
+            let operands = instruction.abx_payload();
+            format!(
+                "load:{}:{}",
+                operands.a,
+                constant_key(image, operands.bx as usize)
+            )
+        }
+        Ok(opcode @ (Opcode::Jump | Opcode::BranchIfFalse | Opcode::BranchIfTrue)) => {
+            let operands = instruction.abx_payload();
+            format!(
+                "jump:{}:{}:{:?}",
+                opcode as u8,
+                operands.a,
+                operands
+                    .bx
+                    .checked_sub(function.code.start.get())
+                    .filter(|offset| *offset <= function.code.end.get() - function.code.start.get())
+            )
+        }
+        _ => format!("word:{}", instruction.word()),
+    }
+}
+
+fn constant_key(image: &Executable, index: usize) -> String {
+    match image.constants.get(index) {
+        Some(fpas_bytecode::Constant::Integer(value)) => format!("integer:{value}"),
+        Some(fpas_bytecode::Constant::Real(bits)) => format!("real:{bits}"),
+        Some(fpas_bytecode::Constant::Boolean(value)) => format!("boolean:{value}"),
+        Some(fpas_bytecode::Constant::String(value)) => {
+            format!("string:{}", string_at(image, *value))
+        }
+        Some(fpas_bytecode::Constant::Unit) => "unit".to_string(),
+        Some(fpas_bytecode::Constant::Function {
+            function,
+            task_bound,
+        }) => format!("function:{}:{task_bound}", function.get()),
+        None => format!("missing:{index}"),
+    }
 }
 
 pub(super) fn capture_identity(image: &Executable, function: &FunctionInfo) -> String {

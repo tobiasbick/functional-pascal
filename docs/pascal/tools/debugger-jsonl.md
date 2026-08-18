@@ -35,8 +35,9 @@ compatibility mode. A response precedes events caused by that request.
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
 | `record` | initialized/stopped | none | starts capturing all-stop events and queued `Read`/`ReadLn` lines; does not resume; capability `recording_capture` is `true`; recordings stay in session memory |
 | `replay` | any | none | always rejected; capability `record_replay` is `false` |
-| `reload`, `image.replace` | initialized/stopped | none | classify the live executable and reject incompatible candidates before any image change; `applied` is `false`; capability `hot_reload` is `false` |
-| `reload.classify` | initialized/stopped | none | names accepted and rejected live-image classes without replacing the executable; capability `reload_classify` is `true`; `applied` is `false` |
+| `reload`, `image.replace` | initialized/stopped | none | rebuild the launch target and atomically install an `inactive_function_body` update; incompatible candidates fail before any image change |
+| `image.rollback` | initialized/stopped | none | atomically restore the single preceding live image as a new version |
+| `reload.classify` | initialized/stopped | none | rebuild and classify the launch target without replacing the executable; capability `reload_classify` is `true`; `applied` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
 | `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
 | `continue` | stopped | none | resumes all unpaused tasks; extra `task_id` is ignored |
@@ -379,7 +380,10 @@ set-variable, set-expression, all three dictionary structure operations, all
 three sequence structure operations, forced return, variant describe and
 construct, empty-storage initialization, conditional breakpoints, hit
 conditions, and logpoints. `attach`, `non_stop`, `reverse_execution`, and
-`record_replay` remain false. `hot_reload` is false. `reload_classify` is true. `recording_describe` and `recording_capture` are
+`record_replay` remain false. CLI-owned source, project, workspace, and compiled-image
+targets advertise `hot_reload` and `reload_rollback`; embedders without a rebuild
+provider advertise `hot_reload: false`. `reload_classify` is true.
+`recording_describe` and `recording_capture` are
 true; `recording_disk` is false. Initialized or stopped `record` starts
 capturing all-stop events and queued `Read`/`ReadLn` lines without resuming;
 `recording.describe` names versioned program identity, portable sources,
@@ -388,12 +392,18 @@ captured events, and `replayable: false`. While capturing, unsupported host
 effects such as `Std.Random` stop with `F4024` before the intrinsic runs.
 Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
-rejected. Initialized or stopped `reload` and `image.replace` classify the live
-executable, reject incompatible candidates with `live_image_incompatible`
-before any image change, and report `applied: false` without installing a new
-compiled program. `hot_reload` stays false. Initialized or stopped `reload.classify` names accepted classes
-`unchanged` and `inactive_function_body`, lists the rejected classes, and
-reports `applied: false` without resuming or replacing the image.
+rejected. Initialized or stopped `reload` and `image.replace` rebuild the exact
+launch target. `unchanged` reports `applied: false`; an
+`inactive_function_body` candidate is installed atomically and reports a new
+monotonic `version`. Every other class fails with `live_image_incompatible`
+before any image, stack, source, or breakpoint change. A successful commit
+keeps exactly one preceding image. `image.rollback` swaps that image back as a
+new version; another rollback toggles between the same bounded pair. Responses
+include `rollback_available`. Recording capture rejects an actual image commit
+and is never used as a snapshot store. Initialized or stopped
+`reload.classify` rebuilds and names accepted classes `unchanged` and
+`inactive_function_body`, lists the rejected classes, and reports
+`applied: false` without resuming or replacing the image.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
 `task_create` and `task_restart` are false, and `non_stop` is false.
 `structured_output` is true. `live_input` is true: stopped-state `io.input`

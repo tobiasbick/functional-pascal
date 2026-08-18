@@ -9,6 +9,7 @@ pub(super) fn initialize_records(
     request_id: u64,
     command: &str,
     execution: fpas_vm::DebugExecutionLimits,
+    hot_reload: bool,
 ) -> Vec<Value> {
     let inspection = fpas_vm::DebugInspectionLimits::default();
     let evaluation = fpas_vm::DebugEvaluationLimits::default();
@@ -67,8 +68,9 @@ pub(super) fn initialize_records(
         capabilities.insert("recording_describe".into(), json!(true));
         capabilities.insert("recording_capture".into(), json!(true));
         capabilities.insert("recording_disk".into(), json!(false));
-        capabilities.insert("hot_reload".into(), json!(false));
+        capabilities.insert("hot_reload".into(), json!(hot_reload));
         capabilities.insert("reload_classify".into(), json!(true));
+        capabilities.insert("reload_rollback".into(), json!(true));
     }
     vec![
         success(
@@ -352,6 +354,7 @@ pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
         fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
         fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
         fpas_vm::DebugErrorKind::LiveImageIncompatible => "live_image_incompatible",
+        fpas_vm::DebugErrorKind::LiveImageBuildFailed => "live_image_build_failed",
         fpas_vm::DebugErrorKind::LiveImageRollbackUnavailable => "live_image_rollback_unavailable",
     }
 }

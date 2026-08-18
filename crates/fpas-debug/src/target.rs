@@ -1,4 +1,7 @@
-//! Verified debugger launch input prepared by the owning CLI or editor adapter.
+//! Verified debugger launch and reload input prepared by the owning host.
+
+pub(crate) use crate::target_reload::DebugReloadProvider;
+pub use crate::target_reload::ReloadedDebugTarget;
 
 /// Verified source content available to editor protocol clients.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,6 +18,7 @@ pub struct PreparedDebugTarget {
     arguments: Vec<String>,
     execution_limits: fpas_vm::DebugExecutionLimits,
     sources: Vec<DebugSourceContent>,
+    reloader: Option<DebugReloadProvider>,
 }
 
 impl PreparedDebugTarget {
@@ -26,6 +30,7 @@ impl PreparedDebugTarget {
             arguments,
             execution_limits: fpas_vm::DebugExecutionLimits::default(),
             sources: Vec::new(),
+            reloader: None,
         }
     }
 
@@ -58,12 +63,29 @@ impl PreparedDebugTarget {
         self
     }
 
+    /// Attach the host-owned operation that rebuilds this exact launch target.
+    ///
+    /// The debugger invokes the provider only for explicit reload requests and
+    /// accepts only verified executables returned by it.
+    #[must_use]
+    pub fn with_reloader<F>(mut self, reloader: F) -> Self
+    where
+        F: FnMut() -> Result<ReloadedDebugTarget, fpas_vm::DebugSessionError> + Send + 'static,
+    {
+        self.reloader = Some(Box::new(reloader));
+        self
+    }
+
     pub(crate) fn sources(&self) -> &[DebugSourceContent] {
         &self.sources
     }
 
     pub(crate) const fn execution_limits(&self) -> fpas_vm::DebugExecutionLimits {
         self.execution_limits
+    }
+
+    pub(crate) fn take_reloader(&mut self) -> Option<DebugReloadProvider> {
+        self.reloader.take()
     }
 
     pub(crate) fn into_session(self) -> Result<fpas_vm::DebugSession, fpas_vm::DebugSessionError> {

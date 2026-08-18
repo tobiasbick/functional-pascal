@@ -43,6 +43,8 @@ export async function verifyManifest() {
       "functionalPascal.debug.removeArrayElement",
       "functionalPascal.debug.replaceStringCharacter",
       "functionalPascal.debug.forceReturn",
+      "functionalPascal.debug.reload",
+      "functionalPascal.debug.rollbackReload",
       "functionalPascal.debug.replaceTaskResult",
       "functionalPascal.debug.pauseTask",
       "functionalPascal.debug.resumeTask",

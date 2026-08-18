@@ -319,6 +319,8 @@ pub enum DebugErrorKind {
     RecordingHostPath,
     /// A live-image candidate is incompatible and was rejected before commit.
     LiveImageIncompatible,
+    /// The launch owner could not rebuild a verified live-image candidate.
+    LiveImageBuildFailed,
     /// No bounded previous live image is available for rollback.
     LiveImageRollbackUnavailable,
 }

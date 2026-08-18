@@ -1,7 +1,7 @@
 //! Live-image compatibility classes without replacement.
 
 use super::*;
-use crate::vm::debug::{LiveImageClassification, LiveImageUpdateClass};
+use crate::vm::debug::{DebugErrorKind, LiveImageClassification, LiveImageUpdateClass};
 use fpas_bytecode::{
     DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureKind, DebugCaptureSource,
     DebugTypeId, EnumLayout, FunctionId, GlobalInfo, Opcode, RecordField, RecordLayout, Register,
@@ -295,4 +295,94 @@ fn proven_subset_names_accepted_and_rejected_classes() {
             .iter()
             .all(|class| !class.is_accepted())
     );
+}
+
+fn live_ptr(session: &DebugSession) -> *const VerifiedExecutable {
+    session.live_executable() as *const VerifiedExecutable
+}
+
+#[test]
+fn unchanged_replace_is_accepted_without_applying_a_new_image() {
+    let current = pair_executable();
+    let mut session = DebugSession::new(current.clone()).expect("debug session");
+    let before = live_ptr(&session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let result = session
+        .replace_live_image(&current)
+        .expect("unchanged replace");
+    assert_eq!(result.class, LiveImageUpdateClass::Unchanged);
+    assert!(result.accepted);
+    assert!(!result.applied);
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
+}
+
+#[test]
+fn inactive_body_replace_is_accepted_without_committing() {
+    let current = pair_executable();
+    let candidate = patch_helper_body(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    let before = live_ptr(&session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let result = session
+        .replace_live_image(&candidate)
+        .expect("inactive body replace");
+    assert_eq!(result.class, LiveImageUpdateClass::InactiveFunctionBody);
+    assert!(result.accepted);
+    assert!(!result.applied);
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
+}
+
+#[test]
+fn incompatible_replace_is_rejected_before_the_live_image_changes() {
+    let current = pair_executable();
+    let mut image = current.clone().into_unverified();
+    image.records.push(RecordLayout {
+        name: StringId::new(3),
+        fields: vec![RecordField {
+            name: StringId::new(1),
+            ty: DebugTypeId::new(0),
+        }],
+        properties: Vec::new(),
+        methods: Vec::new(),
+    });
+    let candidate = image.verify().expect("record layout candidate");
+    let mut session = DebugSession::new(current).expect("debug session");
+    let before = live_ptr(&session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let reason = session.last_stop().reason;
+    let error = session
+        .replace_live_image(&candidate)
+        .expect_err("incompatible replace");
+    assert_eq!(error.kind, DebugErrorKind::LiveImageIncompatible);
+    assert!(error.message.contains("record_layout"), "{error:?}");
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
+    assert_eq!(session.last_stop().reason, reason);
+}
+
+#[test]
+fn active_body_replace_is_rejected_before_the_live_image_changes() {
+    let current = pair_executable();
+    let candidate = patch_helper_body(&current);
+    let mut session = DebugSession::new(current).expect("debug session");
+    let bound = session
+        .set_breakpoint(SourceBreakpoint {
+            source: "test.fpas".to_string(),
+            line: 10,
+            column: None,
+        })
+        .expect("helper breakpoint");
+    assert!(bound.is_verified());
+    let _ = stopped(session.continue_execution().expect("stop in helper"));
+    let before = live_ptr(&session);
+    let frame = session.stack(0, 1).expect("stack").items[0].id;
+    let error = session
+        .replace_live_image(&candidate)
+        .expect_err("active body replace");
+    assert_eq!(error.kind, DebugErrorKind::LiveImageIncompatible);
+    assert!(error.message.contains("active_function_body"), "{error:?}");
+    assert_eq!(live_ptr(&session), before);
+    assert_eq!(session.stack(0, 1).expect("stack").items[0].id, frame);
 }

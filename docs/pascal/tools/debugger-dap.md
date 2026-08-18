@@ -32,11 +32,13 @@ Supported requests are `initialize`, `launch`, `setBreakpoints`,
 `fpas/arrayRemove`, `fpas/stringReplaceCharacter`, `fpas/forceReturn`,
 `restartFrame`, `fpas/replaceTaskResult`, `fpas/pauseTask`, `fpas/resumeTask`, `fpas/cancelTask`, `fpas/createTask`, `fpas/restartTask`, `fpas/input`,
 `fpas/eof`, `fpas/cancelInput`, `fpas/variantDescribe`,
-`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `fpas/record`, `fpas/reloadClassify`, `cancel`, `continue`,
+`fpas/variantConstruct`, `fpas/initializeStorage`, `fpas/locationDescribe`, `fpas/recordingDescribe`, `fpas/record`, `fpas/reloadClassify`, `fpas/reload`, `cancel`, `continue`,
 `pause`, `next`, `stepIn`, `stepOut`, `source`, and `disconnect`. `goto` and
 `gotoTargets` fail with `instruction_change_unsupported`. `attach`,
 `stepBack`, `reverseContinue`, `disassemble`, `readMemory`, and `writeMemory`
-fail as unsupported. `fpas/reload` fails as unsupported live-image replacement.
+fail as unsupported. `fpas/reload` classifies the live executable, rejects
+incompatible candidates before any image change, and reports `applied: false`
+without installing a new compiled program.
 `fpas/reloadClassify` names accepted classes `unchanged` and
 `inactive_function_body` and reports `applied: false` without replacing the
 compiled program.

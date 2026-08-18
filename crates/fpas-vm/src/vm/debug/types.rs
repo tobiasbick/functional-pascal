@@ -317,6 +317,8 @@ pub enum DebugErrorKind {
     OutputLimit,
     /// A recording envelope would name a host filesystem path.
     RecordingHostPath,
+    /// A live-image candidate is incompatible and was rejected before commit.
+    LiveImageIncompatible,
 }
 
 /// Actionable debugger command failure.

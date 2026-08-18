@@ -24,7 +24,7 @@ pub use vm::{
     DebugTaskEventKind, DebugTaskResultReplacement, DebugTaskState, DebugTermination,
     DebugUnaryOperation, DebugVariable, DebugVariantConstructionResult, DebugVariantDescription,
     DebugVariantField, DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult, Execution,
-    FunctionBreakpoint, LiveImageClassification, LiveImageUpdateClass, MAX_RECORDING_EVENTS,
-    Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint, SourceLocation, Vm,
-    VmError, VmOutput,
+    FunctionBreakpoint, LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass,
+    MAX_RECORDING_EVENTS, Paginated, RECORDING_ENVELOPE_VERSION, ShutdownHandle, SourceBreakpoint,
+    SourceLocation, Vm, VmError, VmOutput,
 };

@@ -44,8 +44,8 @@ pub use debug::{
     DebugTaskEventKind, DebugTaskResultReplacement, DebugTaskState, DebugTermination,
     DebugUnaryOperation, DebugVariable, DebugVariantConstructionResult, DebugVariantDescription,
     DebugVariantField, DebugVariantInfo, DebuggeeChannelState, DebuggeeInputResult,
-    FunctionBreakpoint, LiveImageClassification, LiveImageUpdateClass, MAX_RECORDING_EVENTS,
-    Paginated, RECORDING_ENVELOPE_VERSION, SourceBreakpoint, SourceLocation,
+    FunctionBreakpoint, LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass,
+    MAX_RECORDING_EVENTS, Paginated, RECORDING_ENVELOPE_VERSION, SourceBreakpoint, SourceLocation,
 };
 pub use diagnostics::VmError;
 pub(crate) use diagnostics::runtime_error;

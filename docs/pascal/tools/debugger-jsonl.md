@@ -35,7 +35,7 @@ compatibility mode. A response precedes events caused by that request.
 | `step_back`, `reverse_continue` | any | none | always rejected; capability `reverse_execution` is `false` |
 | `record` | initialized/stopped | none | starts capturing all-stop events and queued `Read`/`ReadLn` lines; does not resume; capability `recording_capture` is `true`; recordings stay in session memory |
 | `replay` | any | none | always rejected; capability `record_replay` is `false` |
-| `reload`, `image.replace` | any | none | always rejected; capability `hot_reload` is `false` |
+| `reload`, `image.replace` | initialized/stopped | none | classify the live executable and reject incompatible candidates before any image change; `applied` is `false`; capability `hot_reload` is `false` |
 | `reload.classify` | initialized/stopped | none | names accepted and rejected live-image classes without replacing the executable; capability `reload_classify` is `true`; `applied` is `false` |
 | `data_breakpoint.set` | any | none | always rejected; use `data_breakpoints.replace` |
 | `data_breakpoints.replace` | initialized/stopped | `breakpoints`: array of `identity` from `location.describe` with optional `access` (`write`, `change`, or `read`) and optional `assign` | replace-all logical data breakpoints and verification |
@@ -388,8 +388,10 @@ captured events, and `replayable: false`. While capturing, unsupported host
 effects such as `Std.Random` stop with `F4024` before the intrinsic runs.
 Execution without `record` is unchanged. Capture keeps at most 4,096 events, writes no recording
 files, and retains no recording snapshots. Replay and reverse-step stay
-rejected. `reload` and `image.replace` stay rejected without replacing the live
-executable. Initialized or stopped `reload.classify` names accepted classes
+rejected. Initialized or stopped `reload` and `image.replace` classify the live
+executable, reject incompatible candidates with `live_image_incompatible`
+before any image change, and report `applied: false` without installing a new
+compiled program. `hot_reload` stays false. Initialized or stopped `reload.classify` names accepted classes
 `unchanged` and `inactive_function_body`, lists the rejected classes, and
 reports `applied: false` without resuming or replacing the image.
 `task_threads` is true, `task_pause` is true, `task_cancel` is true,
@@ -451,7 +453,8 @@ Stable errors include `invalid_request`, `invalid_state`, `breakpoint_limit`,
 `variant_field_set`, `storage_already_initialized`, `unknown_task`,
 `task_create_unsupported`, `task_restart_unsupported`, `debuggee_input_limit`,
 `debuggee_input_closed`,
-`timeout`, `instruction_limit`, `output_limit`, and `recording_host_path`. Parse/validation failures
+`timeout`, `instruction_limit`, `output_limit`, `recording_host_path`, and
+`live_image_incompatible`. Parse/validation failures
 also include a stable code, UTF-8 byte offset and length, message, and help.
 Textual target failures use `expression_target_parse` or
 `expression_target_unsupported` before runtime target errors are considered.

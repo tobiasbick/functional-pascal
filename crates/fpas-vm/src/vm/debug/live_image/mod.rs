@@ -6,5 +6,5 @@ mod class;
 mod classify;
 mod fingerprint;
 
-pub use class::{LiveImageClassification, LiveImageUpdateClass};
+pub use class::{LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass};
 pub use classify::classify_live_image;

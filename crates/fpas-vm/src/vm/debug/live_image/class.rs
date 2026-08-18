@@ -104,3 +104,29 @@ impl LiveImageClassification {
         }
     }
 }
+
+/// Result of attempting to replace the live executable.
+///
+/// Incompatible candidates are rejected before any image field changes.
+/// Accepted classes still report `applied: false` until versioned commit exists.
+///
+/// **Documentation:** `docs/pascal/tools/debugger.md`
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LiveImageReplaceResult {
+    /// Named update class for the candidate.
+    pub class: LiveImageUpdateClass,
+    /// Whether the proven subset treats this class as compatible.
+    pub accepted: bool,
+    /// Whether the live `Arc<VerifiedExecutable>` was replaced.
+    pub applied: bool,
+}
+
+impl LiveImageReplaceResult {
+    pub(crate) const fn from_classification(classification: LiveImageClassification) -> Self {
+        Self {
+            class: classification.class,
+            accepted: classification.accepted,
+            applied: false,
+        }
+    }
+}

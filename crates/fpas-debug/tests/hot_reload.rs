@@ -23,7 +23,7 @@ fn request(id: u64, command: &str, arguments: Value) -> String {
 }
 
 #[test]
-fn jsonl_hot_reload_is_advertised_false_and_rejects_without_launch() {
+fn jsonl_hot_reload_is_advertised_false_and_does_not_apply_without_launch() {
     let mut server = server();
     let initialized = server.handle_line(&request(1, "initialize", json!({"version":2})));
     assert_eq!(initialized[0]["body"]["capabilities"]["hot_reload"], false);
@@ -38,12 +38,14 @@ fn jsonl_hot_reload_is_advertised_false_and_rejects_without_launch() {
     assert_eq!(server.status(), ServerStatus::Initialized);
 
     for (id, command) in [(2, "reload"), (3, "image.replace")] {
-        let rejected = server.handle_line(&request(id, command, json!({})));
+        let replaced = server.handle_line(&request(id, command, json!({})));
         assert_eq!(
-            rejected[0]["error"]["code"], "unsupported_capability",
-            "{command}: {rejected:?}"
+            replaced[0]["body"]["class"], "unchanged",
+            "{command}: {replaced:?}"
         );
-        assert_eq!(rejected.len(), 1, "{command}: {rejected:?}");
+        assert_eq!(replaced[0]["body"]["accepted"], true, "{command}");
+        assert_eq!(replaced[0]["body"]["applied"], false, "{command}");
+        assert_eq!(replaced.len(), 1, "{command}: {replaced:?}");
     }
     assert_eq!(server.status(), ServerStatus::Initialized);
 }
@@ -64,12 +66,13 @@ fn jsonl_hot_reload_after_stop_does_not_resume_or_replace_the_image() {
     assert_eq!(described[0]["body"]["capturing"], true);
 
     for (id, command) in [(6, "reload"), (7, "image.replace")] {
-        let rejected = server.handle_line(&request(id, command, json!({})));
+        let replaced = server.handle_line(&request(id, command, json!({})));
         assert_eq!(
-            rejected[0]["error"]["code"], "unsupported_capability",
-            "{command}: {rejected:?}"
+            replaced[0]["body"]["class"], "unchanged",
+            "{command}: {replaced:?}"
         );
-        assert_eq!(rejected.len(), 1, "{command}: {rejected:?}");
+        assert_eq!(replaced[0]["body"]["applied"], false, "{command}");
+        assert_eq!(replaced.len(), 1, "{command}: {replaced:?}");
     }
     assert_eq!(server.status(), ServerStatus::Stopped);
 
@@ -106,5 +109,29 @@ fn jsonl_reload_classify_names_classes_without_replacing_the_image() {
     assert_eq!(after_stop[0]["body"]["applied"], false);
     assert_eq!(server.status(), ServerStatus::Stopped);
     let same_stack = server.handle_line(&request(6, "stack", json!({})));
+    assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
+}
+
+#[test]
+fn jsonl_incompatible_replace_is_rejected_before_the_image_changes() {
+    let mut server = server();
+    let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
+    let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
+    let stack = server.handle_line(&request(3, "stack", json!({})));
+    let frame = stack[0]["body"]["frames"][0]["frame_id"]
+        .as_u64()
+        .expect("entry frame");
+
+    let (program, diagnostics) = fpas_parser::parse(
+        "program IncompatibleReload;\nfunction Extra(): integer;\nbegin\n  return 1\nend;\nbegin\nend.",
+    );
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let candidate = fpas_compiler::compile(&program).expect("compile incompatible fixture");
+    let error = server
+        .replace_live_image(&candidate)
+        .expect_err("incompatible replace");
+    assert_eq!(error.kind, fpas_vm::DebugErrorKind::LiveImageIncompatible);
+    assert_eq!(server.status(), ServerStatus::Stopped);
+    let same_stack = server.handle_line(&request(4, "stack", json!({})));
     assert_eq!(same_stack[0]["body"]["frames"][0]["frame_id"], frame);
 }

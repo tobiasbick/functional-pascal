@@ -77,8 +77,14 @@ Named rejects without resume or mutation:
 ## `UMB-90B` — reject before commit
 
 - Begins only after compatibility can name accepted and rejected updates.
-- Incompatible updates are rejected before the live program image changes.
-- A named reject changes no stack, frame, task, or adapter state.
+- `replace_live_image` classifies first. Incompatible candidates return
+  `LiveImageIncompatible` before any live `Arc<VerifiedExecutable>` field
+  changes. Stack, frame, task, and adapter state stay the same.
+- Accepted classes (`unchanged`, `inactive_function_body`) report
+  `applied: false`. Versioned commit remains `U90-30`.
+- JSONL `reload` / `image.replace` and DAP `fpas/reload` run that gate on the
+  current live executable. A second compiled image is rejected through the
+  same session operation.
 
 ## `UMB-90C` — versioned live image and rollback
 

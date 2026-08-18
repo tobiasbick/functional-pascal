@@ -39,7 +39,7 @@ pub use inspection::{
     DebugFrame, DebugInspectionLimits, DebugScope, DebugScopeKind, DebugVariable, Paginated,
 };
 pub use io::DebuggeeChannelState;
-pub use live_image::{LiveImageClassification, LiveImageUpdateClass};
+pub use live_image::{LiveImageClassification, LiveImageReplaceResult, LiveImageUpdateClass};
 pub use location::{
     DebugDataLocation, DebugDataLocationIdentity, DebugDataLocationKind, DebugDataLocationLifetime,
 };

@@ -6,13 +6,13 @@ blocked row needs evidence in [progress.md](progress.md); it is not a pass.
 | ID | Requirement | Evidence | Status |
 |---|---|---|---|
 | `V90-01` | Compatibility names accepted and rejected live-image updates | VM `live_image` tests plus JSONL/DAP class lists | pass |
-| `V90-02` | Incompatible updates are rejected before the live image changes | Atomic reject tests or child-not-started evidence | pending |
+| `V90-02` | Incompatible updates are rejected before the live image changes | VM replace tests plus JSONL candidate reject leave stack and image unchanged | pass |
 | `V90-03` | A recoverable old image remains until the new image commits | Rollback tests or child-not-started evidence | pending |
 | `V90-04` | Memory, disk, snapshot, and retention bounds hold | Limit tests or child-not-started evidence | pending |
 | `V90-05` | Recording capture is not used as a live-image snapshot store | Reload rejects after `record` / `fpas/record` leave the stack unchanged | pass |
-| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired `hot_reload` / `dap_hot_reload` named rejects and classify | pass |
+| `V90-06` | JSONL and DAP expose equivalent reload success and failures | Paired `hot_reload` / `dap_hot_reload` classify, Unchanged gate, and incompatible reject | pass |
 | `V90-07` | VS Code exposes only supported reload UX | No reload command; DAP does not advertise `supportsHotReload` | pass |
-| `V90-08` | Current docs describe implemented behavior and limitations only | Debugger pages name classify classes and `reload` / `fpas/reload` rejects without a live-image replacement claim | pass |
+| `V90-08` | Current docs describe implemented behavior and limitations only | Debugger pages name the replace gate, `applied: false`, and classify classes without a committed live-image claim | pass |
 | `V90-09` | No FPAS syntax, semantic, or language-spec change | Diff review | pass |
 | `V90-10` | Formatting, locked workspace build/tests, changed-library Clippy, extension tests, and diff check pass | Commands recorded in progress | pass |
 

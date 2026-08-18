@@ -23,7 +23,7 @@ fn send(server: &mut DapServer, seq: &mut u64, command: &str, arguments: Value) 
 }
 
 #[test]
-fn dap_hot_reload_is_not_advertised_and_rejects_without_launch() {
+fn dap_hot_reload_is_not_advertised_and_does_not_apply_without_launch() {
     let mut server = server();
     let mut seq = 0;
     let initialized = send(&mut server, &mut seq, "initialize", json!({}));
@@ -34,13 +34,9 @@ fn dap_hot_reload_is_not_advertised_and_rejects_without_launch() {
     );
 
     let rejected = send(&mut server, &mut seq, "fpas/reload", json!({}));
-    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
-    assert!(
-        rejected[0]["message"]
-            .as_str()
-            .is_some_and(|message| message.contains("hot reload")),
-        "{rejected:?}"
-    );
+    assert_eq!(rejected[0]["success"], true, "{rejected:?}");
+    assert_eq!(rejected[0]["body"]["class"], "unchanged");
+    assert_eq!(rejected[0]["body"]["applied"], false);
     assert_eq!(rejected.len(), 1, "{rejected:?}");
 
     let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
@@ -70,9 +66,11 @@ fn dap_hot_reload_after_stop_does_not_resume_or_replace_the_image() {
     let described = send(&mut server, &mut seq, "fpas/recordingDescribe", json!({}));
     assert_eq!(described[0]["body"]["replayable"], false);
 
-    let rejected = send(&mut server, &mut seq, "fpas/reload", json!({}));
-    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
-    assert_eq!(rejected.len(), 1, "{rejected:?}");
+    let replaced = send(&mut server, &mut seq, "fpas/reload", json!({}));
+    assert_eq!(replaced[0]["success"], true, "{replaced:?}");
+    assert_eq!(replaced[0]["body"]["class"], "unchanged");
+    assert_eq!(replaced[0]["body"]["applied"], false);
+    assert_eq!(replaced.len(), 1, "{replaced:?}");
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
@@ -100,6 +98,33 @@ fn dap_reload_classify_names_classes_without_replacing_the_image() {
         classified[0]["body"]["acceptedClasses"],
         json!(["unchanged", "inactive_function_body"])
     );
+
+    let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);
+}
+
+#[test]
+fn dap_incompatible_replace_is_rejected_before_the_image_changes() {
+    let mut server = server();
+    let mut seq = 0;
+    let _ = send(&mut server, &mut seq, "initialize", json!({}));
+    let _ = send(&mut server, &mut seq, "launch", json!({"stopOnEntry":true}));
+    let _ = send(&mut server, &mut seq, "configurationDone", json!({}));
+    let _ = server.wait();
+    let stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
+    let frame = stack[0]["body"]["stackFrames"][0]["id"]
+        .as_u64()
+        .expect("entry frame");
+
+    let (program, diagnostics) = fpas_parser::parse(
+        "program IncompatibleReload;\nfunction Extra(): integer;\nbegin\n  return 1\nend;\nbegin\nend.",
+    );
+    assert!(diagnostics.is_empty(), "parse diagnostics: {diagnostics:?}");
+    let candidate = fpas_compiler::compile(&program).expect("compile incompatible fixture");
+    let error = server
+        .replace_live_image(&candidate)
+        .expect_err("incompatible replace");
+    assert_eq!(error.kind, fpas_vm::DebugErrorKind::LiveImageIncompatible);
 
     let same_stack = send(&mut server, &mut seq, "stackTrace", json!({"threadId":1}));
     assert_eq!(same_stack[0]["body"]["stackFrames"][0]["id"], frame);

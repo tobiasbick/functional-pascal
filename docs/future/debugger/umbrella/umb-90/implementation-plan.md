@@ -6,19 +6,19 @@
 crates/fpas-vm/src/vm/debug/
   live_image/                  — exists: named classes and classify-without-replace
   session.rs                   — exists: launch-owned session; shared Arc<VerifiedExecutable>
-  session/live_image.rs        — exists: DebugSession::classify_live_image
+  session/live_image.rs        — exists: classify and reject-before-commit replace
   recording/                   — exists: envelope and capture only; not a live-image store
   tasks.rs                     — exists: debug task runtime
 crates/fpas-debug/src/
   jsonl/encode.rs              — exists: hot_reload false; reload_classify true
-  jsonl/server/dispatch.rs     — exists: named reload rejects and reload.classify
-  jsonl/server/live_image.rs   — exists: classification mapping
+  jsonl/server/dispatch.rs     — exists: reload / image.replace gate and reload.classify
+  jsonl/server/live_image.rs   — exists: classify and reject-before-commit mapping
   dap/server.rs                — exists: no hot-reload advertisement
-  dap/server/dispatch.rs       — exists: named fpas/reload reject and fpas/reloadClassify
-  dap/server/live_image.rs     — exists: classification mapping
+  dap/server/dispatch.rs       — exists: fpas/reload gate and fpas/reloadClassify
+  dap/server/live_image.rs     — exists: classify and replace mapping
 ```
 
-Do not add image-replacement or rollback modules until `U90-20` is active.
+Do not add versioned-image or rollback modules until `U90-30` is active.
 
 ## Ordered work
 
@@ -28,8 +28,8 @@ Do not add image-replacement or rollback modules until `U90-20` is active.
 | `U90-01` | done | Freeze hot-reload contracts; inventory compatibility surfaces | Missing rules are tests or recorded bounds |
 | `U90-10` | done | Implement the proven `UMB-90A` compatibility subset | Named accepted and rejected update classes |
 | `U90-11` | done | Map accepted classification through JSONL, then DAP/VS Code | Protocol parity |
-| `U90-20` | pending | Implement `UMB-90B` reject-before-commit only after `U90-10` | Incompatible updates leave the live image unchanged |
-| `U90-21` | pending | Map rejection through adapters/editor | Protocol-equivalent success and negatives |
+| `U90-20` | done | Implement `UMB-90B` reject-before-commit only after `U90-10` | Incompatible updates leave the live image unchanged |
+| `U90-21` | done | Map rejection through adapters/editor | Protocol-equivalent success and negatives |
 | `U90-30` | pending | Implement `UMB-90C` versioned image and rollback only after `U90-20` | Recoverable old image until commit; bounds hold |
 | `U90-31` | pending | Map commit and rollback through adapters/editor | Protocol-equivalent success and negatives |
 | `U90-50` | pending | Run full verification, reconcile docs, and checkpoint/package closure | All applicable matrix rows pass and parent evidence is complete |

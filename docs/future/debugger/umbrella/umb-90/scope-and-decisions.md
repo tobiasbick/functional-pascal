@@ -1,0 +1,59 @@
+# UMB-90 scope and decisions
+
+## Shared invariants
+
+1. Runtime identities never depend on display text or adapter-local handles.
+2. A rejection changes no worker, scheduler result, waiter, stop generation,
+   or adapter state.
+3. JSONL and DAP call the same session or host operation. VS Code maps to
+   that adapter behavior.
+4. No FPAS syntax, semantics, or language documentation changes are in scope.
+5. Reload observes all-stop quiescence from `UMB-40A` and debuggee-channel
+   separation from `UMB-50`.
+6. Memory, disk, snapshot count, and retention stay bounded.
+7. The recording capture log from `UMB-80` is not a live-image snapshot store.
+
+## Current ownership inventory
+
+These are inventory facts for `U90-00`, not acceptance of later children.
+
+- Debug sessions are launch-owned and all-stop. The session executable is an
+  immutable `Arc<VerifiedExecutable>` shared by workers. `FunctionId` values
+  are local to that image.
+- JSONL advertises `record_replay: false`. DAP advertises
+  `supportsStepBack: false`. Describe reports `replayable: false`.
+- Capture exists after `record` / `fpas/record`, keeps at most 4,096 events,
+  writes no files, and retains no recording snapshots.
+- No hot-reload command, compatibility classifier, or recoverable old image
+  exists in `fpas-vm` or `fpas-debug`.
+- Attach, remote, and native debugging were rejected by `UMB-60`. Replay
+  remains unsupported after `UMB-80`.
+
+## `UMB-90A` — compatibility classification
+
+- Begins only after `U90-00` records current executable and identity
+  ownership.
+- Compatibility must cover active and inactive function bodies, records,
+  enums, globals, closures, tasks, and debug metadata.
+- Missing rules are tests or recorded bounds, not a live-image claim.
+
+## `UMB-90B` — reject before commit
+
+- Begins only after compatibility can name accepted and rejected updates.
+- Incompatible updates are rejected before the live program image changes.
+- A named reject changes no stack, frame, task, or adapter state.
+
+## `UMB-90C` — versioned live image and rollback
+
+- Begins only after reject-before-commit is proven.
+- A recoverable old image stays available until the new image commits.
+- Default paths must not retain unbounded images or snapshots.
+- JSONL, DAP, and VS Code report the same accepted and rejected changes.
+
+## Out of scope
+
+- Attach/remote (rejected by `UMB-60`).
+- Recording replay (unsupported after `UMB-80`).
+- In-call host interruption (rejected by `UMB-50D`).
+- Non-stop execution (rejected by `UMB-40D`).
+- Unauthenticated exposure of sources, recordings, or host metadata.

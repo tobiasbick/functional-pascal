@@ -1,19 +1,19 @@
-# UMB-80 deterministic record and replay
+# UMB-90 suspended-code hot reload
 
-Status: active. Resume at pending `U80-50` in [progress.md](progress.md).
+Status: active. Resume at pending `U90-01` in [progress.md](progress.md).
 
-This package owns versioned, bounded recordings of scheduler choices and
-supported host-visible events after the `UMB-40` all-stop, `UMB-50` transport,
-and `UMB-70` identity contracts. It extends the existing shared VM debugger
-engine; JSONL, DAP, and VS Code remain adapters. It does not change the FPAS
-language, reopen attach/remote from the rejected `UMB-60` work, or add a
-second debugger engine. Forward execution with recording disabled must stay
-unchanged.
+This package owns compatibility proofs and versioned live-image replacement
+for a stopped debug session after the `UMB-80` recording identity and bound
+capture contracts. It extends the existing shared VM debugger engine; JSONL,
+DAP, and VS Code remain adapters. It does not change the FPAS language, reopen
+attach/remote from the rejected `UMB-60` work, add a second debugger engine, or
+enable recording replay. Recording snapshots stay at zero; hot reload must not
+treat the capture log as a live image.
 
 ## Files
 
-- [scope-and-decisions.md](scope-and-decisions.md) freezes envelope, capture,
-  bound, and rejection contracts.
+- [scope-and-decisions.md](scope-and-decisions.md) freezes compatibility,
+  reject-before-commit, and rollback contracts.
 - [implementation-plan.md](implementation-plan.md) owns ordered work IDs and
   the intended source layout.
 - [verification-matrix.md](verification-matrix.md) defines required positive,
@@ -33,7 +33,7 @@ unchanged.
 
 ## Package exit
 
-`UMB-80` is complete only when each child is implemented, rejected, blocked by
+`UMB-90` is complete only when each child is implemented, rejected, blocked by
 a named umbrella dependency, or split by evidence; all applicable verification
 rows pass; current debugger documentation describes only implemented behavior;
 and a recoverable checkpoint exists. Delete this directory after that

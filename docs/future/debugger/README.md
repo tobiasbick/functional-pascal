@@ -24,7 +24,10 @@ implemented. In-call interruption of blocking host intrinsics was rejected by
 `UMB-50`. Attach, remote sessions, and native OS debugging were rejected by
 `UMB-60`. Global write/change data breakpoints, durable location describe, and
 optional global assignment on source or data breakpoint hits were implemented
-by `UMB-70`. Remaining record/replay work is owned by `UMB-80` in the
+by `UMB-70`. Versioned bounded recording capture, `F4024` rejection of
+unreplayable host effects, and recording-off execution were implemented by
+`UMB-80`; reverse execution and replay remain rejected. Remaining hot-reload
+work is owned by `UMB-90` in the
 [active umbrella](umbrella/implementation-plan.md).
 
 The implemented debugger includes complete-value replacement of mutable enum,
@@ -85,8 +88,10 @@ task control, per-task pause/resume, and cancel are implemented; debugger
 task creation, task restart, non-stop execution, and unbounded history were
 rejected by `UMB-40`. Attach, remote sessions, and native OS debugging were
 rejected by `UMB-60`. Global data breakpoints and breakpoint-hit assignment
-were implemented by `UMB-70`. Remaining record/replay work is owned by
-`UMB-80` in the [active umbrella](umbrella/implementation-plan.md).
+were implemented by `UMB-70`. Versioned bounded recording capture and
+capturing `F4024` rejection were implemented by `UMB-80`; reverse execution
+and replay remain rejected. Remaining hot-reload work is owned by
+`UMB-90` in the [active umbrella](umbrella/implementation-plan.md).
 
 Textual debugger expression mutation is implemented through DAP
 `setExpression` and JSONL `expression.set` for the existing bounded mutation

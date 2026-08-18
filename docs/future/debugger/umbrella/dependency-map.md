@@ -51,8 +51,8 @@ their files, runtime invariants, and verification gates are proven disjoint.
 | `UMB-50` | `UMB-40A` quiescence proof | Blocking host I/O must cooperate with pause, cancellation, and all-stop behavior |
 | `UMB-60` | `UMB-50` | Attach and remote sessions reuse the separated authenticated transport and cleanup model |
 | `UMB-70` | `UMB-40A` and stable identities | Data stops and actions require deterministic shared-state visibility and exact mutation identities |
-| `UMB-80` | `UMB-40`, `UMB-50`, `UMB-70` identity hooks | Replay must capture scheduler and host events at stable observation points |
-| `UMB-90` | `UMB-80` snapshot/version model | Hot reload needs versioned state and compatibility proofs for suspended execution |
+| `UMB-80` | `UMB-40`, `UMB-50`, `UMB-70` identity hooks | Capture records scheduler and host events at stable observation points; unsupported effects are rejected |
+| `UMB-90` | `UMB-80` versioned program identity | Hot reload needs a versioned live executable and compatibility proofs; the recording capture log is not a snapshot store |
 | `UMB-10B` | `UMB-90` | A newly entered closure body needs a verified function identity in the versioned live executable |
 | `UMB-99` | all resolved primary packages | Runs final parity, packaging, documentation, and backlog cleanup |
 

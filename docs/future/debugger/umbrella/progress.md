@@ -2,12 +2,12 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementing `UMB-80`
-- Active primary package: `UMB-80`
-- Last completed item: `U80-41` after `U80-40`
-- Next child: `U80-50` after `U80-41`
-- Checkpoint: recoverable capturing F4024 reject without replay; recording-off
-  execution unchanged; `UMB-80` package remains active
+- Umbrella state: implementing `UMB-90`
+- Active primary package: `UMB-90`
+- Last completed item: `U80-50` after `U80-41`
+- Next child: `U90-01` after `U90-00`
+- Checkpoint: recoverable bounded recording capture without replay; `umb-80/`
+  removed; `UMB-90` package is active
 - Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
   (no capture-cell alias registry after `UMB-70A`)
 - Branch: `codex/fpas-debugger`
@@ -31,8 +31,8 @@ current worktree before changing or staging anything.
 | `UMB-50` | done | Protocol/debuggee separation, queued Read/ReadLn, stopped TUI/graph ownership, and in-call pause rejection at `aee4f6a2` |
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
 | `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
-| `UMB-80` | active | Capturing F4024 reject; replay stays rejected; see [umb-80/progress.md](umb-80/progress.md) |
-| `UMB-90` | pending | Requires version/snapshot model from `UMB-80`; unblocks `UMB-10B` |
+| `UMB-80` | done | Bounded capture, `F4024` while capturing, recording-off unchanged, and replay rejected at `aa2af962`; `umb-80/` removed |
+| `UMB-90` | active | Live-image hot reload; see [umb-90/progress.md](umb-90/progress.md) |
 | `UMB-99` | pending | Final parity and plan removal |
 
 Allowed statuses are `pending`, `active`, `blocked`, `rejected`, and `done`.
@@ -230,6 +230,10 @@ Evidence log:
 2026-08-17 | U80-31 | pending -> done | worktree | JSONL/DAP bound and truncated mapping; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject U80-40
 2026-08-18 | U80-40 | pending -> done | worktree | capturing F4024 reject-before-dispatch; recording-off Random still terminates | map U80-41
 2026-08-18 | U80-41 | pending -> done | worktree | JSONL/DAP F4024 and replayable false; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | close U80-50
+2026-08-18 | U80-50 | pending -> done | aa2af962 plus worktree | docs reconciled; `umb-80/` removed; cargo fmt --check, git diff --check, locked workspace build, strict library Clippy, cargo test --workspace --locked --no-fail-fast, and npm test pass | wait for UMB-90
+2026-08-18 | UMB-80 | active -> done | aa2af962 | recoverable checkpoint includes bounded capture, capturing F4024, recording-off unchanged, rejected replay, and removed `umb-80/` detail | activate UMB-90
+2026-08-18 | UMB-90 | pending -> active | aa2af962 base | context-loss-safe hot-reload package created from launch-owned all-stop sessions with an immutable shared executable | execute U90-00
+2026-08-18 | U90-00 | active -> done | aa2af962 plus docs | format, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | freeze U90-01
 ```
 
 ## Resume commands
@@ -245,8 +249,8 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U80-50` in
-[umb-80/progress.md](umb-80/progress.md). `UMB-70` evidence remains in this
+The next pending implementation step is `U90-01` in
+[umb-90/progress.md](umb-90/progress.md). `UMB-80` evidence remains in this
 file, focused tests, and current debugger docs. Do not clean, reset, stage,
 commit, merge, or push without matching user authorization.
 

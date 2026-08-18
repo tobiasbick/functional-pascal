@@ -118,7 +118,7 @@ The following proofs are prerequisites rather than adapter-specific features:
 - scheduler quiescence and waiter effects;
 - debuggee I/O separation from protocol I/O;
 - bounded snapshots and event logs;
-- version and source compatibility for attach, replay, and hot reload.
+- version and source compatibility for hot reload.
 
 Packages may reuse a completed proof. They may not introduce a local substitute
 that creates divergent behavior.

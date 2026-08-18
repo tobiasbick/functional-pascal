@@ -9,7 +9,7 @@
 | `UMB-R05` | JSONL, DAP, and VS Code acquire divergent policy | all | Implement VM first, then JSONL, DAP, and editor mapping | Adapter accepts a request rejected by shared policy | open |
 | `UMB-R06` | Required identity is absent from portable debug metadata | `10`, `20`, `60`, `70`, `90` | Prove compiler-to-program round trip before runtime use | Runtime would need name guessing or source re-parsing | open |
 | `UMB-R07` | History, recordings, snapshots, or output grow without bound | `40`, `50`, `60`, `80`, `90` | Explicit count/byte/time retention limits and cleanup | Any default path retains unbounded state | open |
-| `UMB-R08` | Replay claims determinism while host or scheduler effects are missing | `80` | Inventory effects and reject unsupported recordings up front | Same recording can produce different visible state | open |
+| `UMB-R08` | Replay claims determinism while host or scheduler effects are missing | `80` | Inventory effects and reject unsupported recordings up front | Same recording can produce different visible state | controlled |
 | `UMB-R09` | Hot reload corrupts active layouts, closures, frames, or tasks | `90` | Versioned compatibility proof and recoverable old image | An incompatibility is detected only after commit | open |
 | `UMB-R10` | Attach or remote debug exposes paths, sources, or control without authorization | `60`, `80`, `90` | Authentication, source mapping, redaction, explicit ownership | Unauthenticated discovery/control or raw host metadata exposure | open |
 | `UMB-R11` | Unrelated workspace failures hide debugger regressions | `00`, `99` | Record exact baseline targets and run focused gates first | A new failure cannot be separated from the baseline | open |

@@ -13,8 +13,8 @@
 | `UMB-50` | Interactive debuggee transport and hosted programs | `UMB-40A` | done | Protocol I/O is separated from debuggee I/O; queued terminal input, stopped TUI/graph ownership, and cooperative pause after host returns |
 | `UMB-60` | Attach and remote debugging | `UMB-50` | done | Local attach, remote sessions, and native OS debugging rejected; sessions stay launch-owned |
 | `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | done | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
-| `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | active | Versioned bounded recordings replay scheduler and host-visible events deterministically or reject unsupported effects |
-| `UMB-90` | Suspended-code hot reload | `UMB-80` | pending | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
+| `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | done | Versioned bounded capture of all-stop and queued `Read`/`ReadLn` events; unsupported host effects stop with `F4024`; recording-off unchanged; reverse execution and replay remain rejected |
+| `UMB-90` | Suspended-code hot reload | `UMB-80` | active | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
 | `UMB-99` | Final parity, packaging, documentation, and cleanup | all resolved packages | pending | Applicable matrix rows pass; current docs match behavior; independent deferrals are centralized; umbrella plan is removed |
 
 Exactly one primary package may be marked `active` in `progress.md`.
@@ -139,17 +139,23 @@ debugger documentation, and [progress.md](progress.md).
 
 ## `UMB-80` — Record and replay
 
-Active. Execute only the next work ID in
-[umb-80/progress.md](umb-80/progress.md). Do not claim replayability before
-unsupported host or scheduler effects are inventoried and rejected.
+Completed at implementation checkpoint `aa2af962`. The obsolete execution
+detail was removed; durable behavior and evidence remain in tests, current
+debugger documentation, and [progress.md](progress.md).
 
-- Version the recording envelope and source/program identity.
-- Record scheduler choices and supported host inputs at explicit boundaries.
-- Bound memory, disk, event count, snapshot count, and retention.
-- Reject unsupported nondeterminism before claiming replayability.
-- Prove forward execution is unchanged when recording is disabled.
+| Child | Status | Scope | Additional gate |
+|---|---|---|---|
+| `UMB-80A` | done | Recording envelope and program identity | Versioned portable sources; host paths rejected without echo |
+| `UMB-80B` | done | Scheduler and host-event capture | Off until `record` / `fpas/record`; all-stop and queued `Read`/`ReadLn` only |
+| `UMB-80C` | done | Bounds and retention | 4,096 in-memory events; `truncated`; no disk; `recording_snapshots` 0 |
+| `UMB-80D` | done | Unsupported effects and recording-off | Capturing `F4024` before dispatch; recording-off unchanged; replay stays rejected |
 
 ## `UMB-90` — Hot reload
+
+Active. Execute only the next work ID in
+[umb-90/progress.md](umb-90/progress.md). Do not replace the live executable
+before compatibility and reject-before-commit are proven. Do not treat the
+`UMB-80` capture log as a snapshot store.
 
 - Define compatibility for active and inactive function bodies.
 - Define record, enum, global, closure, task, and debug-metadata migration.

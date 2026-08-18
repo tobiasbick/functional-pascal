@@ -46,7 +46,10 @@ prerequisites, not promises that implementation will be accepted:
   debug listener; `DebugSession` constructs the in-process VM at launch.
   Connect-without-construct would be a second execution driver.
   Unauthenticated remote control stays forbidden.
-- Record/replay and hot reload in `UMB-80` and `UMB-90`.
+- Replay remains unsupported after `UMB-80`: capture records all-stop and
+  queued `Read`/`ReadLn` events, then rejects unreplayable host effects with
+  `F4024` without enabling playback.
+- Hot reload in `UMB-90`.
 
 A rejected decision must state the missing invariant or disproportionate cost.
 Only a remaining independently useful capability is returned to

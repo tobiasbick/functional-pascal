@@ -1,6 +1,6 @@
 # Source-debugger completion umbrella
 
-Status: `UMB-80` active; see [progress.md](progress.md) for the current
+Status: `UMB-90` active; see [progress.md](progress.md) for the current
 checkpoint and next executable work item.
 
 This directory is the single resumable plan for the remaining source-debugger
@@ -56,7 +56,10 @@ and acceptance gate between packages.
   detail plan.
 - Completed `UMB-70` evidence is retained in parent progress, tests, current
   debugger documentation, and checkpoint `26b47a1d` rather than an obsolete
-  detail plan. Active `UMB-80` detail lives in [umb-80/](umb-80/).
+  detail plan.
+- Completed `UMB-80` evidence is retained in parent progress, tests, current
+  debugger documentation, and checkpoint `aa2af962` rather than an obsolete
+  detail plan. Active `UMB-90` detail lives in [umb-90/](umb-90/).
 - [consciously-deferred.md](consciously-deferred.md) records only umbrella
   boundaries, not duplicate backlog entries.
 - [`../deferred.md`](../deferred.md) lists only independent work outside an

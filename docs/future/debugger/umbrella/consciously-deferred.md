@@ -49,7 +49,9 @@ prerequisites, not promises that implementation will be accepted:
 - Replay remains unsupported after `UMB-80`: capture records all-stop and
   queued `Read`/`ReadLn` events, then rejects unreplayable host effects with
   `F4024` without enabling playback.
-- Hot reload in `UMB-90`.
+- Entered anonymous closure expressions are rejected after `UMB-90`: a newly
+  stored executable-local function ID cannot remain exact across rollback
+  without version-bound callable values and complete live-object migration.
 
 A rejected decision must state the missing invariant or disproportionate cost.
 Only a remaining independently useful capability is returned to

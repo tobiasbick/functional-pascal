@@ -359,6 +359,33 @@ fn dap_and_jsonl_function_assignment_results_and_errors_match() {
         dap_failure[0]["body"]["error"]["help"],
         jsonl_failure[0]["error"]["help"]
     );
+
+    let closure = "function(Value: integer): integer begin return Value end";
+    let dap_closure = send(
+        &mut dap,
+        &mut dap_seq,
+        "setExpression",
+        json!({"frameId":dap_frame,"expression":"Current","value":closure}),
+    );
+    let jsonl_closure = jsonl_send(
+        &mut jsonl,
+        &mut jsonl_id,
+        "expression.set",
+        json!({"frame_id":current_jsonl_frame,"target":"Current","expression":closure}),
+    );
+    assert_eq!(
+        dap_closure[0]["body"]["error"]["code"],
+        "unsupported_expression"
+    );
+    assert_eq!(
+        dap_closure[0]["body"]["error"]["code"],
+        jsonl_closure[0]["error"]["code"]
+    );
+    assert!(
+        dap_closure
+            .iter()
+            .all(|record| record.get("event").is_none())
+    );
 }
 
 #[test]

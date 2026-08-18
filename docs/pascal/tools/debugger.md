@@ -187,7 +187,11 @@ path, so `AddBase` and `MakeAdder.AddBase` identify the same unique nested
 function. The routine signature is proven from portable parameter and
 result metadata; anonymous closure syntax, non-method computed function
 expressions, Dynamic endpoints, foreign-task or escaping task-bound copies,
-and inactive-variant function payloads remain rejected.
+and inactive-variant function payloads remain rejected. An entered anonymous
+closure would add an executable-local function identity while its value could
+outlive a reload or rollback; the debugger does not create such dangling or
+version-ambiguous identities. Use a compiled named nested routine with verified
+capture metadata instead.
 A mutable task-typed target can be replaced by copying one visible binding
 that already holds a compatible task handle, for example `Current := Pending`.
 The debugger copies the exact runtime task ID and does not spawn, retain,

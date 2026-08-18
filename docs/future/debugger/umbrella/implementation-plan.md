@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | `UMB-00` | Checkpoint current debugger work and establish a trustworthy baseline | none | done | Worktree scope is explicit; focused gates pass; unrelated baseline failures are independently classified |
 | `UMB-01` | Freeze contracts and split every inherited boundary into testable slices | `UMB-00` | done | Every child below has positive, negative, ownership, atomicity, adapter, and bound requirements or an explicit feasibility gate |
-| `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | blocked | Each accepted value form preserves exact identity, task ownership, lifetime, type, and one-commit behavior across JSONL/DAP/VS Code; remaining `UMB-10B` waits on `UMB-90` |
+| `UMB-10` | Remaining identity-bearing assignment | `UMB-01` | done | Supported copies and compiled routine construction preserve identity; entered anonymous closures are rejected because their new executable-local identity cannot survive rollback safely |
 | `UMB-20` | Function breakpoints and runtime-failure filters | `UMB-01` | done | Metadata-driven matching and equivalent stop/filter behavior pass at checkpoint `1198b1c6` |
 | `UMB-30` | Controlled lifecycle and frame changes | `UMB-01` | done | Entry completion, recovery, retained-result replacement, frame restart, and initializer suppression pass in the current worktree; interior instruction changes rejected |
 | `UMB-40` | Task quiescence, control, and bounded history | `UMB-30` contract | done | Deterministic task operations preserve shared-state visibility, cancellation, retention bounds, and protocol-equivalent stops |
@@ -14,8 +14,8 @@
 | `UMB-60` | Attach and remote debugging | `UMB-50` | done | Local attach, remote sessions, and native OS debugging rejected; sessions stay launch-owned |
 | `UMB-70` | Data breakpoints and bounded breakpoint actions | `UMB-40A` | done | Stable data identities and mutation observation produce deterministic stops with bounded overhead and atomic actions |
 | `UMB-80` | Deterministic record and replay | `UMB-40`, `UMB-50`, `UMB-70` | done | Versioned bounded capture of all-stop and queued `Read`/`ReadLn` events; unsupported host effects stop with `F4024`; recording-off unchanged; reverse execution and replay remain rejected |
-| `UMB-90` | Suspended-code hot reload | `UMB-80` | active | Compatibility rules cover functions, layouts, values, tasks, sources, and rollback before any live image changes |
-| `UMB-99` | Final parity, packaging, documentation, and cleanup | all resolved packages | pending | Applicable matrix rows pass; current docs match behavior; independent deferrals are centralized; umbrella plan is removed |
+| `UMB-90` | Suspended-code hot reload | `UMB-80` | done | Inactive-body commit, exact-target rebuild, source/breakpoint refresh, versioning, and bounded rollback pass across JSONL/DAP/VS Code |
+| `UMB-99` | Final parity, packaging, documentation, and cleanup | all resolved packages | active | Applicable matrix rows pass; current docs match behavior; independent deferrals are centralized; umbrella plan is removed |
 
 Exactly one primary package may be marked `active` in `progress.md`.
 
@@ -46,7 +46,7 @@ mixing unrelated changes.
 | Child | Status | Scope | Additional gate |
 |---|---|---|---|
 | `UMB-10A` | done | Copy an already materialized task-bound function | Same-owner, same-task lifetime and escape proof; foreign, global, descendant, spawn, and stale cases fail atomically |
-| `UMB-10B` | blocked by `UMB-90` | Enter a new anonymous closure expression | A new body needs a verified function in the shared live executable; resume only after versioned image replacement exists, then prove bounded parsing and exact capture provenance |
+| `UMB-10B` | rejected after `UMB-90` | Enter a new anonymous closure expression | The value would retain a new image-local function ID across rollback/reload; without version-bound values and complete live-value migration, exact identity cannot be preserved |
 | `UMB-10C` | done | Synthesize a bound receiver callable | Exact method identity, receiver type/layout, lifetime, and task ownership |
 | `UMB-10D` | done | Dynamic endpoints, capture-cell destinations, opaque resources, and in-place callable editing | `U10D-DYN` rejected; `U10D-CELL` remains rejected after `UMB-70A` (no alias registry); `U10D-OPAQUE` rejected; `U10D-EDIT` rejected (`UMB-90` keeps code/signature); evidence retained in parent progress, tests, and current docs |
 
@@ -59,8 +59,12 @@ the immutable `Arc<VerifiedExecutable>` shared by the session. A newly entered
 body therefore requires verified code and metadata to be committed into a
 versioned live image. Source-text matching against an existing function or a
 debugger-only interpreter would violate the identity and one-engine contracts.
-The capability remains inside this umbrella and resumes after `UMB-90`; it is
-not duplicated in the central deferred list.
+`UMB-90` deliberately accepts only a stable ordered function set. Allowing the
+entered value to survive while rolling back to an image without its body would
+make the stored ID dangling or version-ambiguous. Heap, frame, task, retained
+result, and capture-cell migration plus version-bound callable values would be
+a second live-object model disproportionate to debugger assignment. The
+capability is therefore rejected rather than duplicated in the deferred list.
 
 ## `UMB-20` — Low-dependency advanced breakpoints
 

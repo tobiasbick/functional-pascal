@@ -2,14 +2,15 @@
 
 ## Current checkpoint
 
-- Umbrella state: implementing `UMB-90`
-- Active primary package: `UMB-90`
-- Last completed item: `U90-21` after `U90-20`
-- Next child: `U90-30` after `U90-21`
-- Checkpoint: reject-before-commit live-image gate without versioned replacement;
-  `UMB-90` package remains active
-- Blocked child: `UMB-10B` requires `UMB-90`; `U10D-CELL` remains rejected
-  (no capture-cell alias registry after `UMB-70A`)
+- Umbrella state: closing through `UMB-99`
+- Active primary package: `UMB-99`
+- Last completed item: `UMB-90` and the `UMB-10B` feasibility revisit
+- Next child: final parity, local VSIX smoke, documentation/backlog cleanup,
+  and umbrella removal
+- Checkpoint: versioned inactive-body reload and bounded rollback pass through
+  VM, JSONL, DAP, CLI, and VS Code
+- Rejected child: `UMB-10B` cannot preserve a newly stored image-local
+  function identity across rollback; `U10D-CELL` remains rejected
 - Branch: `codex/fpas-debugger`
 - Implementation started: yes
 
@@ -24,7 +25,7 @@ current worktree before changing or staging anything.
 |---|---|---|
 | `UMB-00` | done | Current branch/worktree and focused baseline verified; CCRA is recoverable at `bed152a2` |
 | `UMB-01` | done | Child contracts, dependencies, risks, and acceptance evidence frozen in this umbrella |
-| `UMB-10` | blocked | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; remaining `UMB-10B` waits on `UMB-90` |
+| `UMB-10` | done | `UMB-10A`, `UMB-10C`, and `UMB-10D` complete; `UMB-10B` rejected after versioned reload proved that new function identities cannot survive rollback safely |
 | `UMB-20` | done | Function breakpoints, exact runtime filters, policy ordering, adapters, docs, and full verification at `1198b1c6` |
 | `UMB-30` | done | Entry completion, recovery, retained-result replacement, frame restart, initializer suppression, and instruction-change rejection at `c2a264d0` |
 | `UMB-40` | done | All-stop quiescence, per-task pause/resume, cancel with `F4016`, create/restart rejection, and non-stop/history rejection at `6422489e` |
@@ -32,8 +33,8 @@ current worktree before changing or staging anything.
 | `UMB-60` | done | Local attach, remote, and native inspection rejected at `eb0fbe64`; sessions stay launch-owned |
 | `UMB-70` | done | Global write/change data breakpoints, location describe, and breakpoint-hit assign at `26b47a1d`; `umb-70/` removed |
 | `UMB-80` | done | Bounded capture, `F4024` while capturing, recording-off unchanged, and replay rejected at `aa2af962`; `umb-80/` removed |
-| `UMB-90` | active | Reject-before-commit gate; see [umb-90/progress.md](umb-90/progress.md) |
-| `UMB-99` | pending | Final parity and plan removal |
+| `UMB-90` | done | Versioned inactive-body reload, exact launch-target rebuild, source/breakpoint refresh, one-image rollback, protocol parity, and VS Code host execution at `0b4e41f2` |
+| `UMB-99` | active | Final parity, local VSIX smoke, docs/backlog reconciliation, and plan removal |
 
 Allowed statuses are `pending`, `active`, `blocked`, `rejected`, and `done`.
 Only one primary package may be `active`.
@@ -239,6 +240,13 @@ Evidence log:
 2026-08-18 | U90-11 | pending -> done | b5125375 | JSONL reload.classify and DAP fpas/reloadClassify; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | reject-before-commit U90-20
 2026-08-18 | U90-20 | pending -> done | worktree | replace_live_image rejects incompatibles before any image field change; accepted applied false | map U90-21
 2026-08-18 | U90-21 | pending -> done | worktree | JSONL reload/image.replace and DAP fpas/reload gate; cargo fmt --check, locked workspace build, Clippy, cargo test --workspace --locked --no-fail-fast, npm test, and git diff --check pass | versioned image U90-30
+2026-08-18 | U90-30 | pending -> done | ff45262e | atomic inactive-body commit, address remap, shared worker image, breakpoint rebind, recording-safe rejection, and bounded rollback | map U90-31
+2026-08-18 | U90-31 | pending -> done | 0b4e41f2 | exact-target CLI rebuild; JSONL/DAP versions, rollback, transactional sources, and invalidation; VS Code commands and real host execution | close U90-50
+2026-08-18 | U90-50 | pending -> done | 0b4e41f2 plus clean worktree | cargo fmt --check, locked workspace build, strict changed-library Clippy, full workspace tests, npm test, and diff check pass | revisit UMB-10B
+2026-08-18 | UMB-90 | active -> done | 0b4e41f2 | accepted stable-function-set reload is implemented; detail plan removed after evidence transfer | decide UMB-10B
+2026-08-18 | UMB-10B | blocked -> rejected | 0b4e41f2 plus review | new function ID stored in live values cannot remain exact across rollback without version-bound values and complete live-object migration; JSONL/DAP reject closure construction atomically | close UMB-10
+2026-08-18 | UMB-10 | blocked -> done | current worktree | all children implemented or evidence-backed rejected | activate UMB-99
+2026-08-18 | UMB-99 | pending -> active | current worktree | every primary package resolved | audit parity, package, reconcile docs/backlog, remove umbrella
 ```
 
 ## Resume commands
@@ -254,10 +262,10 @@ cargo fmt --check
 cargo build --workspace --locked
 ```
 
-The next pending implementation step is `U90-30` in
-[umb-90/progress.md](umb-90/progress.md). `UMB-80` evidence remains in this
-file, focused tests, and current debugger docs. Do not clean, reset, stage,
-commit, merge, or push without matching user authorization.
+The final implementation step is `UMB-99`: audit the acceptance matrix, build
+and inspect a local VSIX, reconcile current docs and the central deferred list,
+then remove this umbrella directory. Do not push, merge, or change branches
+without matching user authorization.
 
 ## Evidence log format
 

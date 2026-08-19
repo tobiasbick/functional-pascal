@@ -4,6 +4,10 @@ The external debugger protocol is UTF-8 JSON Lines: one complete JSON object
 per physical line. Protocol stdout contains only responses and events; program
 and logpoint output is carried by structured `output` events.
 
+Each request line is limited to 16 MiB, including its optional `CRLF` or `LF`
+terminator. An oversized line terminates the transport with an invalid-data
+error before the complete line is allocated.
+
 ## Invocation and envelopes
 
 ```text

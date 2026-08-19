@@ -3,6 +3,11 @@
 The adapter uses standard DAP `Content-Length` framing and delegates runtime
 work to the same protocol-neutral session as JSONL V2.
 
+Each message body is limited to 16 MiB. Framing accepts at most 64 header fields,
+8 KiB per header line, and 64 KiB for the complete header block including the
+terminating empty line. Inputs beyond those limits terminate the adapter with an
+invalid-data transport error before an oversized buffer is allocated.
+
 ## Capabilities and requests
 
 The adapter advertises configuration-done, pause, source and function breakpoints,

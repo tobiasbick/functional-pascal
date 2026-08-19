@@ -9,9 +9,8 @@ impl Checker {
         match function_ctx {
             Some(ref function_ctx) => match (&function_ctx.return_type, expr) {
                 (Some(expected), Some(expr)) => {
-                    let actual = self.check_expr(expr);
+                    let actual = self.check_expr_with_expected_record_literals(expr, expected);
                     self.check_type_compat(expected, &actual, "return value", span);
-                    self.try_annotate_expected_record_literals(expr, expected);
                 }
                 (Some(expected), None) => {
                     self.error_with_code(

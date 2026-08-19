@@ -1,6 +1,40 @@
 use super::*;
 
 #[test]
+fn contextual_record_literals_expand_defaults_in_all_lowering_positions() {
+    assert_succeeds(
+        r#"
+program ContextualRecords;
+type Point = record
+  X: integer := 0;
+  Y: integer := 0;
+end;
+const OriginPoint: Point := record X := 0; end;
+function Origin(): Point;
+begin
+  return record X := 4; end
+end;
+procedure Draw(P: Point);
+begin
+  if (P.X <> 0) or (P.Y <> 2) then panic('argument defaults')
+end;
+begin
+  mutable var P: Point := record end;
+  P := record X := 1; end;
+  Draw(record Y := 2; end);
+  var Points: array of Point := [record X := 3; end];
+  var Returned: Point := Origin();
+  if (P.X <> 1) or (P.Y <> 0) or
+     (Points[0].X <> 3) or (Points[0].Y <> 0) or
+     (Returned.X <> 4) or (Returned.Y <> 0) or
+     (OriginPoint.X <> 0) or (OriginPoint.Y <> 0) then
+    panic('contextual record defaults')
+end.
+"#,
+    );
+}
+
+#[test]
 fn globals_arrays_and_dictionaries_execute() {
     assert_succeeds(
         "\

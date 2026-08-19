@@ -227,6 +227,29 @@ impl Parser {
         self.expect_ident()
     }
 
+    /// Returns whether the current token belongs to the parent construct of a missing expression.
+    pub(crate) fn is_expression_recovery_boundary(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::End
+                | Token::Then
+                | Token::Do
+                | Token::Until
+                | Token::Else
+                | Token::Of
+                | Token::To
+                | Token::Downto
+                | Token::In
+                | Token::RParen
+                | Token::RBracket
+                | Token::Comma
+                | Token::Colon
+                | Token::Semicolon
+                | Token::Dot
+                | Token::Eof
+        )
+    }
+
     pub(crate) fn expect_semi(&mut self) {
         self.expect(&Token::Semicolon);
     }

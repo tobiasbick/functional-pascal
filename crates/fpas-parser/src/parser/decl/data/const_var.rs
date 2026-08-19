@@ -1,11 +1,20 @@
 use crate::ast::*;
 use crate::parser::Parser;
+use fpas_diagnostics::codes::PARSE_EXPECTED_IDENTIFIER;
 use fpas_lexer::Token;
 
 impl Parser {
     pub(in super::super) fn parse_const_block(&mut self, visibility: Visibility) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
+        if !self.at_declaration_name() {
+            self.error_with_code(
+                PARSE_EXPECTED_IDENTIFIER,
+                "Expected a constant declaration after `const`",
+                "Add a declaration such as `const X: integer := 1;`.",
+                self.current_span(),
+            );
+        }
         while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             defs.push(Decl::Const(self.parse_const_def(visibility)));
         }
@@ -35,6 +44,19 @@ impl Parser {
         }
         self.advance();
         let mut defs = Vec::new();
+        if !self.at_declaration_name() {
+            let (kind, example) = if mutable {
+                ("mutable variable", "mutable var X: integer := 1;")
+            } else {
+                ("variable", "var X: integer := 1;")
+            };
+            self.error_with_code(
+                PARSE_EXPECTED_IDENTIFIER,
+                &format!("Expected a {kind} declaration after the section keyword"),
+                &format!("Add a declaration such as `{example}`."),
+                self.current_span(),
+            );
+        }
         while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             let var_def = self.parse_var_def(visibility);
             if mutable {
@@ -44,6 +66,13 @@ impl Parser {
             }
         }
         defs
+    }
+
+    fn at_declaration_name(&self) -> bool {
+        matches!(
+            self.current_token(),
+            Token::Ident(_) | Token::Event | Token::Property
+        )
     }
 
     pub(in crate::parser) fn parse_typed_init_fields(

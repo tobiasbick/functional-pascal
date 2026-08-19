@@ -11,9 +11,17 @@ impl Console {
         if self.writer.is_none() {
             return;
         }
-        if let Ok((width, height)) = crossterm::terminal::size() {
+        if let Some((width, height)) = self.current_terminal_size() {
             self.state.resize(width, height);
         }
+    }
+
+    fn current_terminal_size(&self) -> Option<(u16, u16)> {
+        #[cfg(test)]
+        if let Some(size) = self.terminal_size_override {
+            return size;
+        }
+        crossterm::terminal::size().ok()
     }
 
     pub fn resize(&mut self, width: u16, height: u16) {

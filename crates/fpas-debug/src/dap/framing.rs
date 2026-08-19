@@ -7,8 +7,11 @@ use std::time::Duration;
 use serde_json::Value;
 
 use super::DapServer;
+use crate::transport_input::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
 
-const MAX_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
+const MAX_HEADER_LINE_BYTES: usize = 8 * 1024;
+const MAX_HEADER_BYTES: usize = 64 * 1024;
+const MAX_HEADER_COUNT: usize = 64;
 
 /// Read one DAP message, returning `None` on a clean end of stream.
 ///
@@ -17,19 +20,36 @@ const MAX_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
 /// Returns an actionable invalid-data error for malformed or truncated framing.
 pub fn read_message(reader: &mut impl BufRead) -> io::Result<Option<Value>> {
     let mut content_length = None;
+    let mut header_bytes = 0_usize;
+    let mut header_count = 0_usize;
     loop {
-        let mut header = String::new();
-        let count = reader.read_line(&mut header)?;
-        if count == 0 {
+        let Some(header_bytes_raw) = read_bounded_line(
+            reader,
+            MAX_HEADER_LINE_BYTES,
+            "DAP header line exceeds the 8 KiB limit",
+        )?
+        else {
             return if content_length.is_none() {
                 Ok(None)
             } else {
                 Err(invalid("truncated DAP headers"))
             };
+        };
+        header_bytes = header_bytes
+            .checked_add(header_bytes_raw.len())
+            .ok_or_else(|| invalid("DAP headers exceed the 64 KiB total limit"))?;
+        if header_bytes > MAX_HEADER_BYTES {
+            return Err(invalid("DAP headers exceed the 64 KiB total limit"));
         }
-        if header == "\r\n" || header == "\n" {
+        if header_bytes_raw == b"\r\n" || header_bytes_raw == b"\n" {
             break;
         }
+        header_count += 1;
+        if header_count > MAX_HEADER_COUNT {
+            return Err(invalid("DAP header count exceeds the limit of 64"));
+        }
+        let header = std::str::from_utf8(&header_bytes_raw)
+            .map_err(|_| invalid("DAP header is not valid UTF-8"))?;
         let Some((name, value)) = header.trim_end().split_once(':') else {
             return Err(invalid("malformed DAP header"));
         };
@@ -38,7 +58,7 @@ pub fn read_message(reader: &mut impl BufRead) -> io::Result<Option<Value>> {
                 .trim()
                 .parse::<usize>()
                 .map_err(|_| invalid("invalid DAP Content-Length"))?;
-            if length > MAX_MESSAGE_BYTES {
+            if length > MAX_DEBUGGER_MESSAGE_BYTES {
                 return Err(invalid("DAP message exceeds the 16 MiB limit"));
             }
             if content_length.replace(length).is_some() {

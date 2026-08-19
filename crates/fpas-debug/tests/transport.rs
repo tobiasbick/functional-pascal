@@ -112,12 +112,8 @@ fn raw_stdin_is_a_protocol_error_not_debuggee_input() {
 #[test]
 fn malformed_script_returns_transport_error_after_protocol_record() {
     let mut output = Vec::new();
-    let error = serve_script(
-        b"\n{\n".as_slice(),
-        &mut output,
-        server(),
-    )
-    .expect_err("malformed JSONL must fail the scripted transport");
+    let error = serve_script(b"\n{\n".as_slice(), &mut output, server())
+        .expect_err("malformed JSONL must fail the scripted transport");
     assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
     let records = parse_records(&output);
     assert_eq!(records.len(), 1);
@@ -142,6 +138,40 @@ fn clean_disconnect_remains_successful() {
     ]
     .join("\n");
     serve_script(script.as_bytes(), Vec::new(), server()).expect("clean disconnect");
+}
+
+#[test]
+fn jsonl_transport_rejects_oversized_lines_with_and_without_newline() {
+    const MAX_LINE_BYTES: usize = 16 * 1024 * 1024;
+
+    for newline in [false, true] {
+        let mut input = vec![b' '; MAX_LINE_BYTES + 1];
+        if newline {
+            input.push(b'\n');
+        }
+        let error = serve_script(input.as_slice(), Vec::new(), server())
+            .expect_err("oversized JSONL line must fail");
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        assert!(error.to_string().contains("16 MiB"), "{error}");
+    }
+}
+
+#[test]
+fn jsonl_transport_accepts_a_line_at_the_exact_limit() {
+    const MAX_LINE_BYTES: usize = 16 * 1024 * 1024;
+    const PREFIX: &str =
+        r#"{"type":"request","id":1,"command":"initialize","arguments":{},"padding":""#;
+    const SUFFIX: &str = "\"}\n";
+
+    let padding_len = MAX_LINE_BYTES - PREFIX.len() - SUFFIX.len();
+    let mut input = Vec::with_capacity(MAX_LINE_BYTES);
+    input.extend_from_slice(PREFIX.as_bytes());
+    input.resize(input.len() + padding_len, b'x');
+    input.extend_from_slice(SUFFIX.as_bytes());
+    assert_eq!(input.len(), MAX_LINE_BYTES);
+
+    serve_script(input.as_slice(), Vec::new(), server())
+        .expect("a JSONL request at the exact line limit must parse");
 }
 
 #[test]

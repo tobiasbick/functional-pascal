@@ -177,3 +177,56 @@ fn imported_name_ambiguity_is_reported_only_when_short_name_is_used() {
     );
     assert!(ambiguous_analysis.interface.is_none());
 }
+
+#[test]
+fn imported_enum_type_qualified_short_variant_is_ambiguous() {
+    let first = parse_unit(
+        "unit Demo.First;
+         public type Color = enum Red; Blue; end;",
+    );
+    let second = parse_unit(
+        "unit Demo.Second;
+         public type Color = enum Red; Green; end;",
+    );
+    let interfaces = [
+        analyze_unit(&first, &[])
+            .expect("first analysis")
+            .interface
+            .expect("first interface"),
+        analyze_unit(&second, &[])
+            .expect("second analysis")
+            .interface
+            .expect("second interface"),
+    ];
+
+    let qualified = parse_unit(
+        "unit Demo.Qualified;
+         uses Demo.First, Demo.Second;
+         public function Run(): Demo.First.Color;
+         begin return Demo.First.Color.Red end;",
+    );
+    let qualified_analysis = analyze_unit(&qualified, &interfaces).expect("qualified analysis");
+    assert!(
+        qualified_analysis.metadata.errors.is_empty(),
+        "{:#?}",
+        qualified_analysis.metadata.errors
+    );
+
+    let ambiguous = parse_unit(
+        "unit Demo.Ambiguous;
+         uses Demo.First, Demo.Second;
+         public function Run(): Demo.First.Color;
+         begin return Color.Red end;",
+    );
+    let ambiguous_analysis = analyze_unit(&ambiguous, &interfaces).expect("ambiguous analysis");
+    assert!(
+        ambiguous_analysis.metadata.errors.iter().any(|error| {
+            error.code == fpas_diagnostics::codes::SEMA_AMBIGUOUS_IMPORTED_NAME
+                && error.help.as_deref().is_some_and(|help| {
+                    help.contains("Demo.First.Color") && help.contains("Demo.Second.Color")
+                })
+        }),
+        "{:#?}",
+        ambiguous_analysis.metadata.errors
+    );
+}

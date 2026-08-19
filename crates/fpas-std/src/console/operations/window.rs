@@ -110,21 +110,13 @@ impl Console {
         self.state.last_mode
     }
 
-    pub fn screen_width(&self) -> i64 {
-        if self.writer.is_some()
-            && let Ok((width, _)) = crossterm::terminal::size()
-        {
-            return i64::from(width);
-        }
+    pub fn screen_width(&mut self) -> i64 {
+        self.sync_terminal_size();
         self.state.screen_width()
     }
 
-    pub fn screen_height(&self) -> i64 {
-        if self.writer.is_some()
-            && let Ok((_, height)) = crossterm::terminal::size()
-        {
-            return i64::from(height);
-        }
+    pub fn screen_height(&mut self) -> i64 {
+        self.sync_terminal_size();
         self.state.screen_height()
     }
 

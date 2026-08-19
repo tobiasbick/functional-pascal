@@ -30,6 +30,14 @@ impl Parser {
         self.expect(&Token::Of);
 
         let mut arms = Vec::new();
+        if self.is_case_arm_end() {
+            self.error_with_code(
+                PARSE_EXPECTED_TOKEN,
+                "Expected at least one case arm",
+                "Add a case arm such as `1: Value := 1` after `of`.",
+                self.current_span(),
+            );
+        }
         while !self.is_case_arm_end() {
             arms.push(self.parse_case_arm());
             if self.eat(&Token::Semicolon) {

@@ -1,5 +1,6 @@
 use super::Checker;
-use crate::types::Ty;
+use crate::scope::SymbolKind;
+use crate::types::{EnumTy, Ty};
 use fpas_diagnostics::codes::SEMA_NON_EXHAUSTIVE_CASE;
 use fpas_lexer::Span;
 use fpas_parser::{CaseArm, CaseLabel, DesignatorPart, DestructureVariant, Expr};
@@ -20,7 +21,9 @@ impl Checker {
                 .filter(|arm| arm.guard.is_none())
                 .flat_map(|arm| &arm.labels)
                 .filter_map(|label| match label {
-                    CaseLabel::Value { start, .. } => variant_name_from_expr(start),
+                    CaseLabel::Value { start, .. } => {
+                        self.resolved_enum_variant_name(start, enum_ty)
+                    }
                     _ => None,
                 })
                 .collect();
@@ -112,16 +115,32 @@ impl Checker {
             _ => {}
         }
     }
-}
 
-fn variant_name_from_expr(expr: &Expr) -> Option<&str> {
-    match expr {
-        Expr::Call { designator, .. } | Expr::Designator(designator) => {
-            designator.parts.last().and_then(|part| match part {
+    fn resolved_enum_variant_name<'a>(
+        &self,
+        expr: &'a Expr,
+        expected_enum: &EnumTy,
+    ) -> Option<&'a str> {
+        let designator = match expr {
+            Expr::Call { designator, .. } | Expr::Designator(designator) => designator,
+            _ => return None,
+        };
+        let parts = designator
+            .parts
+            .iter()
+            .map(|part| match part {
                 DesignatorPart::Ident(name, _) => Some(name.as_str()),
-                _ => None,
+                DesignatorPart::Index(_, _) => None,
             })
+            .collect::<Option<Vec<_>>>()?;
+        let symbol = self.scopes.lookup(&parts.join("."))?;
+        if symbol.kind != SymbolKind::EnumMember {
+            return None;
         }
-        _ => None,
+        let resolved_enum = self.resolve_enum_ty(&symbol.ty)?;
+        if !resolved_enum.name.eq_ignore_ascii_case(&expected_enum.name) {
+            return None;
+        }
+        parts.last().copied()
     }
 }

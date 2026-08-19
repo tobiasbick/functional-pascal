@@ -5,7 +5,7 @@ mod bound_methods;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use fpas_ir::{CaptureKind, Function, FunctionId};
-use fpas_parser::{CaseLabel, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
+use fpas_parser::{CaseLabel, Decl, DesignatorPart, Expr, FuncBody, PostfixOperation, Stmt};
 use fpas_sema::AnalysisMetadata;
 
 use crate::CompileError;
@@ -96,6 +96,24 @@ impl<'a> ClosureRegistry<'a> {
     ) -> Result<(), CompileError> {
         for statement in statements {
             self.visit_statement(statement, owner, metadata, types)?;
+        }
+        Ok(())
+    }
+
+    pub fn discover_declaration_initializers(
+        &mut self,
+        declarations: &'a [Decl],
+        owner: FunctionId,
+        metadata: &AnalysisMetadata,
+        types: &mut types::TypeTable,
+    ) -> Result<(), CompileError> {
+        for declaration in declarations {
+            let value = match declaration {
+                Decl::Const(definition) => &definition.value,
+                Decl::Var(definition) | Decl::MutableVar(definition) => &definition.value,
+                Decl::TypeDef(_) | Decl::Function(_) | Decl::Procedure(_) => continue,
+            };
+            self.visit_expression(value, owner, metadata, types)?;
         }
         Ok(())
     }

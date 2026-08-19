@@ -240,3 +240,27 @@ fn console_resize_clamps_screen_and_cursor_to_minimum_size() {
     assert_eq!(c.wind_min(), 0x0101);
     assert_eq!(c.wind_max(), 0x0101);
 }
+
+#[test]
+fn console_dimension_getters_synchronize_retained_terminal_state() {
+    let (mut console, _) = console_with_shared_writer();
+    console.set_test_terminal_size(Some((12, 6)));
+
+    assert_eq!(console.screen_width(), 12);
+    assert_eq!(console.screen_height(), 6);
+    let snapshot = console.screen_snapshot();
+    assert_eq!((snapshot.width, snapshot.height), (12, 6));
+    assert_eq!(console.wind_max(), 0x060c);
+}
+
+#[test]
+fn unavailable_terminal_size_keeps_retained_dimensions() {
+    let (mut console, _) = console_with_shared_writer();
+    console.resize(12, 6);
+    console.set_test_terminal_size(None);
+
+    assert_eq!(console.screen_width(), 12);
+    assert_eq!(console.screen_height(), 6);
+    let snapshot = console.screen_snapshot();
+    assert_eq!((snapshot.width, snapshot.height), (12, 6));
+}

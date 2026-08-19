@@ -1,6 +1,6 @@
 # Task 05 — Preserve `//` comments on `uses` items
 
-Status: open
+Status: in progress
 Severity: P1
 Difficulty: easy
 Language gate: no
@@ -59,3 +59,13 @@ cargo fmt
 - Uses-item comments survive format and a second format.
 - Existing fmt corpus / comment tests still pass.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify comment-aware uses emission and round-trip regressions
+- Files changed: `crates/fpas-fmt/src/comments/traversal.rs`,
+  `crates/fpas-fmt/src/comments/map.rs`, `crates/fpas-fmt/src/emit/program.rs`,
+  `crates/fpas-fmt/tests/comment_regressions.rs`
+- Verification: not run
+- Blockers: none

@@ -1,12 +1,13 @@
 //! Concurrent line transport that keeps protocol stdout machine-readable.
 
-use std::io::{self, BufRead, BufReader, Read, Write};
+use std::io::{self, BufReader, Read, Write};
 use std::sync::mpsc::{self, RecvTimeoutError};
 use std::time::Duration;
 
 use serde_json::Value;
 
 use super::{JsonlServer, ServerStatus};
+use crate::transport_input::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
 
 /// Serve JSONL requests until input closes or the debugger terminates.
 ///
@@ -22,10 +23,9 @@ where
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
         loop {
-            let mut line = String::new();
-            match reader.read_line(&mut line) {
-                Ok(0) => break,
-                Ok(_) => {
+            match read_request_line(&mut reader) {
+                Ok(None) => break,
+                Ok(Some(line)) => {
                     if sender.send(Ok(line)).is_err() {
                         break;
                     }
@@ -40,7 +40,7 @@ where
 
     loop {
         match receiver.recv_timeout(Duration::from_millis(10)) {
-            Ok(Ok(line)) => write_records(&mut writer, server.handle_line(line.trim_end()))?,
+            Ok(Ok(line)) => write_records(&mut writer, server.handle_line(&line))?,
             Ok(Err(error)) => return Err(error),
             Err(RecvTimeoutError::Timeout) => write_records(&mut writer, server.poll())?,
             Err(RecvTimeoutError::Disconnected) => {
@@ -66,8 +66,9 @@ pub fn serve_script<R: Read, W: Write>(
     mut writer: W,
     mut server: JsonlServer,
 ) -> io::Result<()> {
-    for line in BufReader::new(reader).lines() {
-        write_records(&mut writer, server.handle_line(&line?))?;
+    let mut reader = BufReader::new(reader);
+    while let Some(line) = read_request_line(&mut reader)? {
+        write_records(&mut writer, server.handle_line(&line))?;
         while server.status() == ServerStatus::Running {
             write_records(&mut writer, server.wait())?;
         }
@@ -79,6 +80,29 @@ pub fn serve_script<R: Read, W: Write>(
         write_records(&mut writer, server.wait())?;
     }
     Ok(())
+}
+
+fn read_request_line(reader: &mut impl std::io::BufRead) -> io::Result<Option<String>> {
+    let Some(mut bytes) = read_bounded_line(
+        reader,
+        MAX_DEBUGGER_MESSAGE_BYTES,
+        "JSONL request line exceeds the 16 MiB limit",
+    )?
+    else {
+        return Ok(None);
+    };
+    if bytes.last() == Some(&b'\n') {
+        bytes.pop();
+        if bytes.last() == Some(&b'\r') {
+            bytes.pop();
+        }
+    }
+    String::from_utf8(bytes).map(Some).map_err(|_| {
+        io::Error::new(
+            io::ErrorKind::InvalidData,
+            "JSONL request is not valid UTF-8",
+        )
+    })
 }
 
 fn termination_result(server: &JsonlServer) -> io::Result<()> {

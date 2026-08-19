@@ -71,8 +71,12 @@ impl LoweringContext {
             let canonical = format!("Std.Graph.{name}");
             return self.lower_intrinsic_call(&canonical, arguments, result, span);
         }
-        if self.has_binding(name) {
-            let callee = self.read_named_local(name, designator.span)?;
+        if self.has_binding(name) || self.has_global(name) {
+            let callee = if self.has_binding(name) {
+                self.read_named_local(name, designator.span)?
+            } else {
+                self.read_global(name, designator.span)?
+            };
             let values = self.lower_call_arguments(arguments, span)?;
             self.emit_value(
                 Operation::CallValue {

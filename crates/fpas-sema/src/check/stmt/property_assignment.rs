@@ -32,7 +32,7 @@ impl Checker {
         self.errors.truncate(property_checkpoint);
 
         let target_ty = self.check_designator_expr(target);
-        let value_ty = self.check_expr(value);
+        let value_ty = self.check_expr_with_expected_record_literals(value, &target_ty);
 
         if !target_ty.is_error() {
             self.check_type_compat(&target_ty, &value_ty, "assignment", span);
@@ -144,7 +144,7 @@ impl Checker {
             return true;
         };
 
-        let value_ty = self.check_expr(value);
+        let value_ty = self.check_expr_with_expected_record_literals(value, &property.ty);
         self.check_type_compat(&property.ty, &value_ty, "property assignment", span);
 
         let key = crate::designator_lookup_key(target);

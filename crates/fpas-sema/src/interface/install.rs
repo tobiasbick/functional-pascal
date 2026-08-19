@@ -142,10 +142,11 @@ impl check::Checker {
             let fully_qualified = format!("{}.{}", enum_ty.name, variant.name);
             self.scopes.define_in_root(&fully_qualified, symbol.clone());
             if !own_names.contains(&canonical_symbol_name(&exported.name)) {
-                self.scopes.define_in_root(
-                    &format!("{}.{}", exported.name, variant.name),
-                    symbol.clone(),
-                );
+                let type_qualified_short = format!("{}.{}", exported.name, variant.name);
+                short_candidates
+                    .entry(canonical_symbol_name(&type_qualified_short))
+                    .or_default()
+                    .push((fully_qualified.clone(), symbol.clone()));
             }
             let short = canonical_symbol_name(&variant.name);
             if !own_names.contains(&short) {

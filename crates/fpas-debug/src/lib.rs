@@ -7,5 +7,6 @@ mod breakpoints;
 mod evaluation;
 mod target;
 mod target_reload;
+mod transport_input;
 
 pub use target::{DebugSourceContent, PreparedDebugTarget, ReloadedDebugTarget};

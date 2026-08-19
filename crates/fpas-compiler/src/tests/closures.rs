@@ -15,6 +15,21 @@ const FUNCTION: TypeId = TypeId::new(5);
 use super::assert_succeeds;
 
 #[test]
+fn program_level_closure_initializer_is_discovered_before_lowering() {
+    assert_succeeds(
+        r#"
+program ClosureInit;
+var F: procedure() := procedure()
+begin
+end;
+begin
+  F()
+end.
+"#,
+    );
+}
+
+#[test]
 fn immutable_anonymous_capture_executes() {
     assert_succeeds(
         r#"

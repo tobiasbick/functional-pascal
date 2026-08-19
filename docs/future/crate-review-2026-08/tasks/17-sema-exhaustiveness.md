@@ -1,6 +1,6 @@
 # Task 17 — Enum `case` exhaustiveness uses resolved variants
 
-Status: open
+Status: in progress
 Severity: P2
 Difficulty: medium
 Language gate: no
@@ -52,3 +52,11 @@ cargo fmt
 - Shadowed names do not fake exhaustiveness.
 - Qualified labels still work.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify exhaustiveness counts only resolved enum-member symbols
+- Files changed: case exhaustiveness checker and sema regressions
+- Verification: not run
+- Blockers: none

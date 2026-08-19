@@ -49,20 +49,24 @@ pub(crate) fn collect(unit: &CompilationUnit, source: &str) -> CollectedAnchors 
     }));
 
     match unit {
-        CompilationUnit::Program(program) => collect_program(program, &begin_offsets, &mut anchors),
-        CompilationUnit::Unit(unit) => collect_unit(unit, &begin_offsets, &mut anchors),
+        CompilationUnit::Program(program) => {
+            collect_program(program, source, &begin_offsets, &mut anchors)
+        }
+        CompilationUnit::Unit(unit) => collect_unit(unit, source, &begin_offsets, &mut anchors),
     }
     anchors.leading.sort_unstable();
     anchors.leading.dedup();
     anchors
 }
 
-fn collect_program(program: &Program, begins: &[usize], out: &mut CollectedAnchors) {
+fn collect_program(program: &Program, source: &str, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(program.span.offset);
     out.declarations.insert(program.span.offset);
     push_span(program.span, out);
-    out.leading
-        .extend(program.uses.iter().map(|name| name.span.offset));
+    for name in &program.uses {
+        out.leading.push(name.span.offset);
+        push_uses_span(name.span, source, out);
+    }
     collect_decls(&program.declarations, begins, out);
     collect_stmts(&program.body, begins, out);
     collect_body(
@@ -83,11 +87,13 @@ fn collect_program(program: &Program, begins: &[usize], out: &mut CollectedAncho
     collect_header(program.span.offset, header_boundary, out);
 }
 
-fn collect_unit(unit: &Unit, begins: &[usize], out: &mut CollectedAnchors) {
+fn collect_unit(unit: &Unit, source: &str, begins: &[usize], out: &mut CollectedAnchors) {
     out.leading.push(unit.span.offset);
     out.declarations.insert(unit.span.offset);
-    out.leading
-        .extend(unit.uses.iter().map(|name| name.span.offset));
+    for name in &unit.uses {
+        out.leading.push(name.span.offset);
+        push_uses_span(name.span, source, out);
+    }
     collect_decls(&unit.declarations, begins, out);
     let header_boundary = unit
         .uses
@@ -344,6 +350,20 @@ fn push_span(span: Span, out: &mut CollectedAnchors) {
     out.emission.push(EmissionAnchor {
         start: span.offset,
         end: span_end(span),
+    });
+}
+
+fn push_uses_span(span: Span, source: &str, out: &mut CollectedAnchors) {
+    let name_end = span_end(span);
+    let delimiter_end = source.get(name_end..).and_then(|suffix| {
+        suffix
+            .char_indices()
+            .find(|(_, ch)| !ch.is_whitespace())
+            .and_then(|(offset, ch)| (ch == ',').then_some(name_end + offset + ch.len_utf8()))
+    });
+    out.emission.push(EmissionAnchor {
+        start: span.offset,
+        end: delimiter_end.unwrap_or(name_end),
     });
 }
 

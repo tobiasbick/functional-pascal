@@ -1,6 +1,6 @@
 # Task 15 — Contextually type record literals everywhere
 
-Status: open
+Status: in progress
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -73,3 +73,13 @@ cargo fmt
 - Defaulted omissions work outside `var`.
 - Required fields still required.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify contextual record typing across declarations, assignments, calls, arrays,
+  and returns
+- Files changed: expected-expression semantic checks, sema record-context tests, compiler aggregate
+  regression
+- Verification: not run
+- Blockers: none

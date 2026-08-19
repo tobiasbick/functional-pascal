@@ -1,6 +1,6 @@
 # Task 12 — Discover closures in program/unit declaration initializers
 
-Status: open
+Status: in progress
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -56,3 +56,11 @@ cargo fmt
 - Program-level closure init runs.
 - No `"unregistered closure"` on that shape.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify declaration-initializer closure discovery before root lowering
+- Files changed: compiler closure registry/lowering and closure tests
+- Verification: not run
+- Blockers: none

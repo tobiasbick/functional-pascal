@@ -47,6 +47,8 @@ pub struct Console {
     capture_line_buf: String,
     state: ConsoleState,
     writer: Option<Box<dyn Write + Send>>,
+    #[cfg(test)]
+    terminal_size_override: Option<Option<(u16, u16)>>,
     frame_depth: u32,
     /// Modes owned by `AcquireInteractiveTerminal` / `ReleaseInteractiveTerminal`.
     interactive: InteractiveTerminalOwnership,
@@ -65,6 +67,8 @@ impl Console {
             capture_line_buf: String::new(),
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
             writer: None,
+            #[cfg(test)]
+            terminal_size_override: None,
             frame_depth: 0,
             interactive: InteractiveTerminalOwnership::default(),
         }
@@ -78,6 +82,8 @@ impl Console {
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
             writer: Some(writer),
+            #[cfg(test)]
+            terminal_size_override: None,
             frame_depth: 0,
             interactive: InteractiveTerminalOwnership::default(),
         }
@@ -136,6 +142,10 @@ impl Console {
 
     pub(crate) fn test_cell_colors(&self, x: u16, y: u16) -> (char, String, String) {
         self.state.cell_color_labels(x, y)
+    }
+
+    pub(crate) fn set_test_terminal_size(&mut self, size: Option<(u16, u16)>) {
+        self.terminal_size_override = Some(size);
     }
 }
 

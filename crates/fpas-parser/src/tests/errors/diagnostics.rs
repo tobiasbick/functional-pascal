@@ -60,3 +60,27 @@ fn expected_expression_has_correct_code() {
         "help text must be present"
     );
 }
+
+#[test]
+fn missing_trailing_call_argument_preserves_closing_parenthesis() {
+    use fpas_diagnostics::codes::{PARSE_EXPECTED_EXPRESSION, PARSE_EXPECTED_TOKEN};
+
+    let (_, errors) = parse_with_errors("program T; begin Foo(1,) end.");
+    let parser_errors = errors
+        .iter()
+        .filter_map(ParseDiagnostic::as_parser_error)
+        .collect::<Vec<_>>();
+
+    assert!(
+        parser_errors
+            .iter()
+            .any(|error| error.code == PARSE_EXPECTED_EXPRESSION),
+        "expected missing-expression diagnostic: {parser_errors:#?}"
+    );
+    assert!(
+        parser_errors.iter().all(|error| {
+            error.code != PARSE_EXPECTED_TOKEN || !error.message.contains("Expected `)`")
+        }),
+        "the closing parenthesis was consumed: {parser_errors:#?}"
+    );
+}

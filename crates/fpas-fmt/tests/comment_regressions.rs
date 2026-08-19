@@ -117,3 +117,22 @@ fn eol_comment_stays_on_its_code_line() {
 
     assert!(formatted.contains("var A: integer := 1; // value\n"));
 }
+
+#[test]
+fn uses_item_comments_survive_formatting() {
+    let source = "program T;\nuses Std.Console, // io\n  Std.Conv;\nbegin\nend.";
+    let formatted = format_idempotently(source);
+
+    assert!(formatted.contains("Std.Console, // io\n"), "{formatted}");
+}
+
+#[test]
+fn standalone_comment_between_uses_items_survives_formatting() {
+    let source = "program T;\nuses Std.Console,\n  // conversions\n  Std.Conv;\nbegin\nend.";
+    let formatted = format_idempotently(source);
+
+    assert!(
+        formatted.contains("Std.Console,\n  // conversions\n  Std.Conv;"),
+        "{formatted}"
+    );
+}

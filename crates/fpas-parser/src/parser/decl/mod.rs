@@ -29,7 +29,9 @@ impl Parser {
                     decls.push(Decl::Procedure(self.parse_procedure_decl(visibility)));
                 }
                 Token::Static => {
-                    self.recover_invalid_static_decl();
+                    if let Some(decl) = self.recover_invalid_static_decl() {
+                        decls.push(decl);
+                    }
                 }
                 _ => break,
             }
@@ -38,7 +40,7 @@ impl Parser {
     }
 
     /// `static` is only valid on a function or procedure inside a record type body.
-    fn recover_invalid_static_decl(&mut self) {
+    fn recover_invalid_static_decl(&mut self) -> Option<Decl> {
         let span = self.current_span();
         self.error_with_code(
             PARSE_INVALID_STATIC_PLACEMENT,
@@ -48,13 +50,13 @@ impl Parser {
         );
         self.advance(); // consume `static`
         match self.current_token() {
-            Token::Function => {
-                let _ = self.parse_function_decl(Visibility::default());
-            }
-            Token::Procedure => {
-                let _ = self.parse_procedure_decl(Visibility::default());
-            }
-            _ => {}
+            Token::Function => Some(Decl::Function(
+                self.parse_function_decl(Visibility::default()),
+            )),
+            Token::Procedure => Some(Decl::Procedure(
+                self.parse_procedure_decl(Visibility::default()),
+            )),
+            _ => None,
         }
     }
 

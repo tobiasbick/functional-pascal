@@ -168,8 +168,7 @@ fn expand_glob(pattern: &str, cwd: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 fn is_symlink(path: &Path) -> bool {
-    std::fs::symlink_metadata(path)
-        .is_ok_and(|metadata| metadata.file_type().is_symlink())
+    std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
 }
 
 fn contains_glob_metacharacters(value: &str) -> bool {

@@ -36,7 +36,7 @@ fn emit_program(emitter: &mut Emitter, program: &Program, comments: &CommentMap)
     if let Some(anchor) = comments.uses_anchor() {
         emit_leading_comments(emitter, comments, anchor, false);
     }
-    emit_optional_uses(emitter, &program.uses);
+    emit_optional_uses(emitter, &program.uses, comments);
     if !program.declarations.is_empty() {
         emit_decls(emitter, &program.declarations, comments);
         emitter.blank_line();
@@ -65,15 +65,23 @@ fn emit_unit(emitter: &mut Emitter, unit: &Unit, comments: &CommentMap) {
     if let Some(anchor) = comments.uses_anchor() {
         emit_leading_comments(emitter, comments, anchor, false);
     }
-    emit_optional_uses(emitter, &unit.uses);
+    emit_optional_uses(emitter, &unit.uses, comments);
     if !unit.declarations.is_empty() {
         emit_decls(emitter, &unit.declarations, comments);
     }
     emit_trailing_end_comments(emitter, comments);
 }
 
-fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {
+fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
     if uses.is_empty() {
+        return;
+    }
+    if uses.iter().any(|unit_name| {
+        let offset = unit_name.span.offset;
+        !comments.leading_at(offset).is_empty() || !comments.trailing_at(offset).is_empty()
+    }) {
+        emit_commented_uses(emitter, uses, comments);
+        emitter.blank_line();
         return;
     }
     let items: Vec<String> = uses
@@ -82,6 +90,23 @@ fn emit_optional_uses(emitter: &mut Emitter, uses: &[QualifiedId]) {
         .collect();
     emit_wrapped_comma_list(emitter, "uses ", crate::style::INDENT_WIDTH, &items, ";");
     emitter.blank_line();
+}
+
+fn emit_commented_uses(emitter: &mut Emitter, uses: &[QualifiedId], comments: &CommentMap) {
+    emitter.writeln("uses");
+    emitter.with_indent(|inner| {
+        for (index, unit_name) in uses.iter().enumerate() {
+            let offset = unit_name.span.offset;
+            emit_leading_comments(inner, comments, offset, false);
+            inner.write_current_indent();
+            emit_qualified_id(inner, unit_name);
+            inner.write(if index + 1 == uses.len() { ";" } else { "," });
+            emit_trailing_comments(inner, comments, offset);
+            if !inner.ends_with_newline() {
+                inner.write_line_end();
+            }
+        }
+    });
 }
 
 fn finish_header_line(emitter: &mut Emitter, comments: &CommentMap, owner_start: usize) {

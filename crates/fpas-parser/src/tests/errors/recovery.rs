@@ -126,3 +126,63 @@ fn trailing_semicolon_in_param_list_does_not_invent_extra_param() {
         other => panic!("expected Function, got {other:#?}"),
     }
 }
+
+#[test]
+fn empty_declaration_sections_report_errors_and_recover() {
+    for source in [
+        "program T; const begin end.",
+        "program T; var begin end.",
+        "program T; mutable var begin end.",
+        "program T; type begin end.",
+        "program T; type E = enum end; begin end.",
+        "program T; begin case 1 of end end.",
+    ] {
+        let (_, errors) = parse_with_errors(source);
+        assert!(!errors.is_empty(), "expected parser error for `{source}`");
+    }
+}
+
+#[test]
+fn empty_const_section_keeps_following_var_declaration() {
+    let (program, errors) = parse_with_errors("program T; const var X: integer := 1; begin end.");
+
+    assert!(!errors.is_empty());
+    assert_eq!(program.declarations.len(), 1);
+    assert!(matches!(program.declarations[0], crate::Decl::Var(_)));
+}
+
+#[test]
+fn expression_recovery_keeps_record_end_and_following_statement() {
+    use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+
+    let (program, errors) =
+        parse_with_errors("program T; begin X := record Field := end; Y := 1 end.");
+
+    assert!(errors.iter().any(|error| {
+        error
+            .as_parser_error()
+            .is_some_and(|error| error.code == PARSE_EXPECTED_EXPRESSION)
+    }));
+    assert_eq!(program.body.len(), 2, "program AST: {program:#?}");
+    assert!(matches!(program.body[1], crate::Stmt::Assign { .. }));
+}
+
+#[test]
+fn invalid_top_level_static_keeps_recovered_routine() {
+    use fpas_diagnostics::codes::PARSE_INVALID_STATIC_PLACEMENT;
+
+    let (program, errors) = parse_with_errors(
+        "program T; static function Foo(): integer; begin return 1 end; begin end.",
+    );
+
+    assert!(errors.iter().any(|error| {
+        error
+            .as_parser_error()
+            .is_some_and(|error| error.code == PARSE_INVALID_STATIC_PLACEMENT)
+    }));
+    assert_eq!(program.declarations.len(), 1);
+    match &program.declarations[0] {
+        crate::Decl::Function(function) => assert_eq!(function.name, "Foo"),
+        other => panic!("expected recovered function, got {other:#?}"),
+    }
+}

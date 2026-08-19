@@ -1,6 +1,6 @@
 # Task 08 — Reject empty `const` / `var` / `type` / `enum` / `case` bodies
 
-Status: open
+Status: in progress
 Severity: P2
 Difficulty: easy
 Language gate: no
@@ -52,3 +52,11 @@ cargo fmt
 - Empty one-or-more constructs are errors.
 - Valid programs with one member still parse.
 - Docs unchanged (grammar already requires one-or-more).
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify empty-section diagnostics and recovery
+- Files changed: parser declaration/case parsers and `src/tests/errors/recovery.rs`
+- Verification: not run
+- Blockers: none

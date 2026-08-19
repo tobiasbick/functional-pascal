@@ -178,6 +178,14 @@ fn lower_analyzed_root(
     let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone());
     closures.seed_named_nested_cells(&routine_owners, &runtime_names, &callables);
     closures
+        .discover_declaration_initializers(
+            declarations,
+            FunctionId::new(0),
+            &metadata,
+            &mut type_table,
+        )
+        .map_err(|error| vec![error])?;
+    closures
         .discover_statements(body, FunctionId::new(0), &metadata, &mut type_table)
         .map_err(|error| vec![error])?;
     for (index, routine) in routines.iter().enumerate() {

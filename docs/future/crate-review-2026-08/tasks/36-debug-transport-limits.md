@@ -1,6 +1,6 @@
 # Task 36 — Bound DAP headers and JSONL request lines
 
-Status: open
+Status: in progress
 Severity: P2
 Difficulty: medium
 Language gate: no
@@ -51,3 +51,11 @@ cargo fmt
 - No debugger input line/header has an unbounded growth path.
 - Boundary tests cover accepted and rejected sizes.
 - Docs name the enforced limits.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify bounded DAP headers/bodies and JSONL request lines
+- Files changed: debugger transport input/framing, DAP/JSONL tests, debugger protocol docs
+- Verification: not run
+- Blockers: none

@@ -58,6 +58,51 @@ fn framing_uses_utf8_byte_lengths_and_rejects_truncation() {
 }
 
 #[test]
+fn framing_rejects_oversized_or_excessive_headers() {
+    let oversized = format!("X-Debug: {}\r\n", "x".repeat(8 * 1024));
+    let error = read_message(&mut BufReader::new(oversized.as_bytes()))
+        .expect_err("oversized header line must be rejected");
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+    assert!(error.to_string().contains("8 KiB"), "{error}");
+
+    let mut excessive = String::from("Content-Length: 2\r\n");
+    for _ in 0..64 {
+        excessive.push_str("X-Debug: value\r\n");
+    }
+    excessive.push_str("\r\n{}");
+    let error = read_message(&mut BufReader::new(excessive.as_bytes()))
+        .expect_err("excessive header count must be rejected");
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+    assert!(error.to_string().contains("count"), "{error}");
+
+    let mut excessive_bytes = String::from("Content-Length: 2\r\n");
+    for _ in 0..63 {
+        excessive_bytes.push_str("X-Debug: ");
+        excessive_bytes.push_str(&"x".repeat(1_040));
+        excessive_bytes.push_str("\r\n");
+    }
+    excessive_bytes.push_str("\r\n{}");
+    let error = read_message(&mut BufReader::new(excessive_bytes.as_bytes()))
+        .expect_err("excessive total header bytes must be rejected");
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+    assert!(error.to_string().contains("64 KiB"), "{error}");
+}
+
+#[test]
+fn framing_accepts_maximum_body_size() {
+    const MAX_BODY_BYTES: usize = 16 * 1024 * 1024;
+
+    let mut input = format!("Content-Length: {MAX_BODY_BYTES}\r\n\r\n").into_bytes();
+    input.extend_from_slice(b"{}");
+    input.resize(input.len() + MAX_BODY_BYTES - 2, b' ');
+
+    let message = read_message(&mut BufReader::new(input.as_slice()))
+        .expect("maximum body must parse")
+        .expect("message");
+    assert_eq!(message, json!({}));
+}
+
+#[test]
 fn supported_lifecycle_and_unsupported_request_are_explicit() {
     let requests = [
         request(1, "initialize", json!({})),

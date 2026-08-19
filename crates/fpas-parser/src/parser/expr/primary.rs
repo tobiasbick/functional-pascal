@@ -98,7 +98,9 @@ impl Parser {
                     "An expression (value, variable, or function call) is required here.",
                     span,
                 );
-                self.advance();
+                if !self.is_expression_recovery_boundary() {
+                    self.advance();
+                }
                 Expr::Error(span)
             }
         }

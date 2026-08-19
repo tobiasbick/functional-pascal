@@ -1,6 +1,6 @@
 # Task 09 — Do not consume sync tokens when an expression is missing
 
-Status: open
+Status: in progress
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -53,3 +53,12 @@ cargo fmt
 - Sync tokens stay in the stream.
 - The existing `X := end.` test still sees `PARSE_EXPECTED_EXPRESSION`.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify expression-boundary recovery regressions
+- Files changed: `crates/fpas-parser/src/parser/core.rs`,
+  `crates/fpas-parser/src/parser/expr/primary.rs`, parser error tests
+- Verification: not run
+- Blockers: none

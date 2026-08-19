@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::PARSE_EXPECTED_TOKEN;
+use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -11,6 +11,17 @@ impl Parser {
     ) -> Vec<Decl> {
         self.advance();
         let mut defs = Vec::new();
+        if !matches!(
+            self.current_token(),
+            Token::Ident(_) | Token::Event | Token::Property
+        ) {
+            self.error_with_code(
+                PARSE_EXPECTED_IDENTIFIER,
+                "Expected a type declaration after `type`",
+                "Add a declaration such as `type Count = integer;`.",
+                self.current_span(),
+            );
+        }
         while let Token::Ident(_) | Token::Event | Token::Property = self.current_token() {
             defs.push(Decl::TypeDef(
                 self.parse_type_def(visibility, allow_member_visibility),
@@ -58,6 +69,14 @@ impl Parser {
         let start = self.current_span();
         self.advance();
         let mut members = Vec::new();
+        if self.check(&Token::End) || self.at_end() {
+            self.error_with_code(
+                PARSE_EXPECTED_IDENTIFIER,
+                "Expected at least one enum member",
+                "Add a member such as `Red;` between `enum` and `end`.",
+                self.current_span(),
+            );
+        }
         while !self.check(&Token::End) && !self.at_end() {
             members.push(self.parse_enum_member());
         }

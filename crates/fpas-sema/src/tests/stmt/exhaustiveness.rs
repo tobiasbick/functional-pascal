@@ -99,3 +99,39 @@ fn case_on_recursive_enum_binding_is_checked_for_exhaustiveness() {
         "expected non-exhaustive nested case on recursive binding, got: {errors:#?}"
     );
 }
+
+#[test]
+fn shadowed_variant_name_does_not_count_toward_exhaustiveness() {
+    let errors = check_errors(
+        "program T; \
+         type Color = enum Red; Green; Blue; end; \
+         begin \
+           var C: Color := Color.Red; \
+           var Red: Color := Color.Blue; \
+           case C of \
+             Red, Color.Green, Color.Blue: return \
+           end \
+         end.",
+    );
+
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == fpas_diagnostics::codes::SEMA_NON_EXHAUSTIVE_CASE),
+        "shadowed Red must leave Color.Red uncovered: {errors:#?}"
+    );
+}
+
+#[test]
+fn qualified_enum_variants_still_satisfy_exhaustiveness() {
+    check_ok(
+        "program T; \
+         type Color = enum Red; Green; Blue; end; \
+         begin \
+           var C: Color := Color.Red; \
+           case C of \
+             Color.Red, Color.Green, Color.Blue: return \
+           end \
+         end.",
+    );
+}

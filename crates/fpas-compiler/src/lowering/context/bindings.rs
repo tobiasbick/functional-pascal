@@ -335,6 +335,11 @@ impl LoweringContext {
             .rev()
             .find(|binding| binding.name.eq_ignore_ascii_case(name))
             .and_then(|binding| self.type_table.function_result(binding.ty))
+            .or_else(|| {
+                self.globals
+                    .get(&name.to_ascii_lowercase())
+                    .and_then(|global| self.type_table.function_result(global.ty))
+            })
             .or_else(|| self.resolve_callable(name).map(|callable| callable.result))
     }
 

@@ -371,6 +371,28 @@ mod tests {
     }
 
     #[test]
+    fn attaches_leading_and_trailing_comments_to_uses_items() -> Result<(), String> {
+        let source = "program T;\nuses Std.Console, // io\n// conversions\nStd.Conv;\nbegin\nend.";
+        let (unit, errors) = parse_compilation_unit(source);
+        assert!(errors.is_empty(), "{errors:?}");
+        let map = CommentMap::build(source, &unit).map_err(|error| error.to_string())?;
+        let program = match &unit {
+            fpas_parser::CompilationUnit::Program(program) => program,
+            _ => return Err("expected program".to_string()),
+        };
+
+        assert_eq!(
+            map.trailing_at(program.uses[0].span.offset),
+            &["// io".to_string()]
+        );
+        assert_eq!(
+            map.leading_at(program.uses[1].span.offset)[0].text,
+            "// conversions"
+        );
+        Ok(())
+    }
+
+    #[test]
     fn preserves_line_comments_before_statements() {
         let source = "program T; begin\n  // setup\n  WriteLn('ok')\nend.";
         let (unit, errors) = parse_compilation_unit(source);

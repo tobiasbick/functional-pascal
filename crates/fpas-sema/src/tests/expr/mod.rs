@@ -4,6 +4,7 @@ use crate::analyze_with_types;
 mod bound_methods;
 mod closures;
 mod postfix;
+mod record_context;
 mod record_events;
 mod record_properties;
 

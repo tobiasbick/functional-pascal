@@ -1,6 +1,6 @@
 # Task 10 — Keep the routine AST when recovering invalid top-level `static`
 
-Status: open
+Status: in progress
 Severity: P2
 Difficulty: easy
 Language gate: no
@@ -34,3 +34,12 @@ cargo fmt
 - Foo is in the AST.
 - The placement error still fires.
 - Docs unchanged.
+
+## Progress
+
+- Base commit: 74b16b7b
+- Current step: verify recovered top-level static routine remains in the AST
+- Files changed: `crates/fpas-parser/src/parser/decl/mod.rs`,
+  `crates/fpas-parser/src/tests/errors/recovery.rs`
+- Verification: not run
+- Blockers: none

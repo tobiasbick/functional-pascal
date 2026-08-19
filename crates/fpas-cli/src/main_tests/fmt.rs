@@ -226,7 +226,8 @@ fn fmt_cli_does_not_follow_file_symlinks() {
     let link_result = std::os::windows::fs::symlink_file(&target, &link);
     if let Err(error) = link_result {
         #[cfg(windows)]
-        if error.kind() == std::io::ErrorKind::PermissionDenied || error.raw_os_error() == Some(1314)
+        if error.kind() == std::io::ErrorKind::PermissionDenied
+            || error.raw_os_error() == Some(1314)
         {
             fs::remove_dir_all(&cwd).expect("temp directory must be removed");
             fs::remove_dir_all(&outside).expect("target directory must be removed");
@@ -235,10 +236,8 @@ fn fmt_cli_does_not_follow_file_symlinks() {
         panic!("file symlink fixture failed: {error}");
     }
 
-    let (glob_exit, _, glob_stderr) = run_cli_args_and_capture_output(
-        &[String::from("fmt"), String::from("*.fpas")],
-        &cwd,
-    );
+    let (glob_exit, _, glob_stderr) =
+        run_cli_args_and_capture_output(&[String::from("fmt"), String::from("*.fpas")], &cwd);
     let (direct_exit, _, direct_stderr) = run_cli_args_and_capture_output(
         &[String::from("fmt"), link.to_string_lossy().into_owned()],
         &cwd,

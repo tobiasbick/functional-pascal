@@ -10,25 +10,8 @@ impl Checker {
     pub(crate) fn check_var_def(&mut self, v: &VarDef, mutable: bool) {
         let declared_ty = self.resolve_type_expr(&v.type_expr);
 
-        // Special handling: if the value is a record literal and the declared type resolves
-        // to a concrete named record, validate field presence (including defaults) and
-        // annotate the literal with the named type so the compiler can expand defaults.
-        let skip_compat = if matches!(&v.value, Expr::RecordLiteral { .. }) {
-            let resolved = self.resolve_visible_type(&declared_ty);
-            if matches!(resolved, crate::types::Ty::Record(_)) {
-                self.try_annotate_expected_record_literals(&v.value, &declared_ty);
-                true
-            } else {
-                false
-            }
-        } else {
-            false
-        };
-
-        if !skip_compat {
-            let value_ty = self.check_expr(&v.value);
-            self.check_type_compat(&declared_ty, &value_ty, "variable initializer", v.span);
-        }
+        let value_ty = self.check_expr_with_expected_record_literals(&v.value, &declared_ty);
+        self.check_type_compat(&declared_ty, &value_ty, "variable initializer", v.span);
 
         let stored_ty = match (&declared_ty, self.ty_of_checked(&v.value)) {
             (crate::types::Ty::Task(inner), crate::types::Ty::Task(actual))
@@ -73,7 +56,8 @@ impl Checker {
                 .iter()
                 .find(|(name, _)| name.eq_ignore_ascii_case(&field_init.name))
             {
-                let value_ty = self.check_expr(&field_init.value);
+                let value_ty =
+                    self.check_expr_with_expected_record_literals(&field_init.value, field_ty);
                 self.check_type_compat(
                     field_ty,
                     &value_ty,
@@ -178,7 +162,16 @@ impl Checker {
 
     /// When a record or array-of-record expression is contextually typed, annotate it with
     /// the named record type so the compiler emits `MakeRecord` with the runtime type tag.
-    pub(crate) fn try_annotate_expected_record_literals(&mut self, expr: &Expr, expected: &Ty) {
+    pub(crate) fn check_expr_with_expected_record_literals(
+        &mut self,
+        expr: &Expr,
+        expected: &Ty,
+    ) -> Ty {
+        self.try_annotate_expected_record_literals(expr, expected)
+            .unwrap_or_else(|| self.check_expr(expr))
+    }
+
+    fn try_annotate_expected_record_literals(&mut self, expr: &Expr, expected: &Ty) -> Option<Ty> {
         let resolved = self.resolve_visible_type(expected);
         match (expr, &resolved) {
             (
@@ -192,25 +185,29 @@ impl Checker {
                 self.validate_typed_record_literal_fields(fields, record_ty, *lit_span);
                 let key = Self::expr_lookup_key(expr);
                 self.expr_types.insert(key, Ty::Record(record_ty.clone()));
-                for field in fields {
-                    if let Some((_, field_ty)) = record_ty
-                        .fields
-                        .iter()
-                        .find(|(name, _)| name.eq_ignore_ascii_case(&field.name))
-                    {
-                        self.try_annotate_expected_record_literals(&field.value, field_ty);
-                    }
-                }
+                Some(Ty::Record(record_ty.clone()))
             }
             (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
                 let element_resolved = self.resolve_visible_type(element_ty);
                 if matches!(element_resolved, Ty::Record(_)) {
                     for element in elements {
-                        self.try_annotate_expected_record_literals(element, element_ty);
+                        let actual =
+                            self.check_expr_with_expected_record_literals(element, element_ty);
+                        self.check_type_compat(
+                            element_ty,
+                            &actual,
+                            "array element",
+                            element.span(),
+                        );
                     }
+                    let key = Self::expr_lookup_key(expr);
+                    self.expr_types.insert(key, resolved.clone());
+                    Some(resolved)
+                } else {
+                    None
                 }
             }
-            _ => {}
+            _ => None,
         }
     }
 }

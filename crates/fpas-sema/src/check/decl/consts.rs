@@ -10,7 +10,7 @@ use fpas_parser::{ConstDef, DesignatorPart, Expr};
 impl Checker {
     pub(super) fn check_const_def(&mut self, c: &ConstDef) {
         let declared_ty = self.resolve_type_expr(&c.type_expr);
-        let value_ty = self.check_expr(&c.value);
+        let value_ty = self.check_expr_with_expected_record_literals(&c.value, &declared_ty);
         self.check_type_compat(&declared_ty, &value_ty, "const initializer", c.span);
         if !value_ty.is_error() && !self.const_expr_is_compile_time_known(&c.value) {
             self.error_with_code(

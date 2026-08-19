@@ -110,6 +110,41 @@ fn raw_stdin_is_a_protocol_error_not_debuggee_input() {
 }
 
 #[test]
+fn malformed_script_returns_transport_error_after_protocol_record() {
+    let mut output = Vec::new();
+    let error = serve_script(
+        b"\n{\n".as_slice(),
+        &mut output,
+        server(),
+    )
+    .expect_err("malformed JSONL must fail the scripted transport");
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+    let records = parse_records(&output);
+    assert_eq!(records.len(), 1);
+    assert_eq!(records[0]["event"], "protocol_error");
+}
+
+#[test]
+fn malformed_live_input_returns_transport_error_after_protocol_record() {
+    let mut output = Vec::new();
+    let error = serve(Cursor::new(b"{\n"), &mut output, server())
+        .expect_err("malformed JSONL must fail the live transport");
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+    let records = parse_records(&output);
+    assert_eq!(records[0]["event"], "protocol_error");
+}
+
+#[test]
+fn clean_disconnect_remains_successful() {
+    let script = [
+        request(1, "initialize", json!({"version":2})),
+        request(2, "disconnect", json!({})),
+    ]
+    .join("\n");
+    serve_script(script.as_bytes(), Vec::new(), server()).expect("clean disconnect");
+}
+
+#[test]
 fn queued_input_is_ordered_and_does_not_use_protocol_stdin() {
     let mut server = input_server();
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));

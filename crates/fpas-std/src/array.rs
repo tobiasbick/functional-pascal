@@ -92,7 +92,7 @@ pub(crate) fn run(
             let start = pop_int(pop_value(call, location)?, location)?;
             let arr = expect_array(pop_value(call, location)?, location)?;
             let n = arr.len() as i64;
-            if start < 0 || len < 0 || start > n || start + len > n {
+            if start < 0 || len < 0 || start > n || len > n - start {
                 return Err(std_runtime_error(
                     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                     format!("Slice out of range (len={n}, start={start}, len_param={len})"),
@@ -100,7 +100,8 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            let out: Vec<Value> = arr[start as usize..(start + len) as usize].to_vec();
+            let end = start + len;
+            let out: Vec<Value> = arr[start as usize..end as usize].to_vec();
             call.push(Value::Array(out.into()));
         }
         Intrinsic::Array(ArrayIntrinsic::Concat) => {
@@ -159,6 +160,17 @@ mod tests {
             Value::Array(vec![Value::Integer(1), Value::Integer(2)].into()),
             Value::Integer(0),
             Value::Integer(3),
+        ];
+        let err = run_array(ArrayIntrinsic::Slice, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn slice_rejects_overflowing_range() {
+        let mut stack = vec![
+            Value::Array(vec![Value::Integer(1), Value::Integer(2)].into()),
+            Value::Integer(1),
+            Value::Integer(i64::MAX),
         ];
         let err = run_array(ArrayIntrinsic::Slice, &mut stack).unwrap_err();
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);

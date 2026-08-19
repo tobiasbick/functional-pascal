@@ -14,6 +14,28 @@ fn console_window_coordinates_are_relative() {
 }
 
 #[test]
+fn console_goto_xy_rejects_coordinates_outside_window() {
+    let mut console = Console::new();
+    assert!(console.goto_xy(0, 1, test_location()).is_err());
+    assert!(console.goto_xy(81, 1, test_location()).is_err());
+}
+
+#[test]
+fn console_window_rejects_coordinates_outside_screen() {
+    let mut console = Console::new();
+    assert!(console.window(0, 1, 1, 1, test_location()).is_err());
+    assert!(console.window(1, 1, 81, 1, test_location()).is_err());
+}
+
+#[test]
+fn console_accepts_origin_inside_valid_window() {
+    let mut console = Console::new();
+    console.window(10, 5, 12, 6, test_location()).unwrap();
+    console.goto_xy(1, 1, test_location()).unwrap();
+    assert_eq!((console.where_x(), console.where_y()), (1, 1));
+}
+
+#[test]
 fn console_clrscr_only_clears_active_window() {
     let mut c = Console::new();
     c.write(&Value::Str("ABCDE".into()), test_location())

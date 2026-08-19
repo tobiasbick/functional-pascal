@@ -240,19 +240,6 @@ pub(super) fn parse_options(mode: CliMode, cli_args: &[String]) -> Result<Parsed
                         .map_err(|_| "`--output-limit` is too large for this host.".to_string())?,
                 );
             }
-            "--report" if mode == CliMode::Debug => {
-                let value = take_option_value(
-                    cli_args,
-                    &mut index,
-                    "--report",
-                    "Missing format after `--report`.\n  help: Script mode supports `--report jsonl`.",
-                )?;
-                if value != "jsonl" {
-                    return Err(format!(
-                        "Unsupported debugger report `{value}`.\n  help: Use `--report jsonl`."
-                    ));
-                }
-            }
             "--jobs" if mode == CliMode::Test => {
                 let count = take_option_value(
                     cli_args,

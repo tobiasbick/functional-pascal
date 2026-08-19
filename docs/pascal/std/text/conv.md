@@ -112,6 +112,8 @@ WriteLn(StrToBool('FALSE'))    // false
 
 Returns `N` as an uppercase hexadecimal string, zero-padded to at least `Digits` characters.
 
+`Digits` must be at most **1_000_000**. Larger values raise a runtime error.
+
 ```pascal
 WriteLn(IntToHex(255, 2));    // FF
 WriteLn(IntToHex(255, 4))     // 00FF

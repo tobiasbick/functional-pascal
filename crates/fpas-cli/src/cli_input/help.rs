@@ -203,7 +203,7 @@ Options:
 
 Examples:
   fpas debug hello.fpas --protocol jsonl
-  fpas debug app.fpasprj --protocol jsonl --commands session.jsonl --report jsonl
+  fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
   fpas debug app.fpascp --source-root . --protocol jsonl
 
 ";

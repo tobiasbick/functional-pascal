@@ -53,6 +53,7 @@ pub enum ServerStatus {
 /// One protocol V2 server independent from stdin/stdout ownership.
 pub struct JsonlServer {
     status: ServerStatus,
+    fatal_termination: bool,
     actor: SessionActor,
     execution_limits: fpas_vm::DebugExecutionLimits,
     request_ids: HashSet<u64>,
@@ -81,6 +82,7 @@ impl JsonlServer {
         let sources = target.sources().to_vec();
         Ok(Self {
             status: ServerStatus::Created,
+            fatal_termination: false,
             actor: SessionActor::new(target.into_session()?),
             execution_limits,
             request_ids: HashSet::new(),
@@ -102,6 +104,10 @@ impl JsonlServer {
     #[must_use]
     pub const fn status(&self) -> ServerStatus {
         self.status
+    }
+
+    pub(super) const fn terminated_fatally(&self) -> bool {
+        self.fatal_termination
     }
 
     /// Whether a detached call evaluation currently owns the session actor.
@@ -462,6 +468,7 @@ impl JsonlServer {
 
     fn fatal_request(&mut self, message: impl Into<String>) -> Vec<Value> {
         self.status = ServerStatus::Terminated;
+        self.fatal_termination = true;
         vec![event(
             "protocol_error",
             error_body(

@@ -64,7 +64,12 @@ impl Console {
             self.check_coord(x2, self.state.width),
             self.check_coord(y2, self.state.height),
         ) else {
-            return Ok(());
+            return Err(std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("Window({x1}, {y1}, {x2}, {y2}) is outside the current screen"),
+                "Use inclusive coordinates from 1 through ScreenWidth and ScreenHeight.",
+                location,
+            ));
         };
         if x1 > x2 || y1 > y2 {
             return Err(std_runtime_error(

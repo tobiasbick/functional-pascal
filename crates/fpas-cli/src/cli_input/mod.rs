@@ -159,6 +159,9 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
                     "Pass a project or workspace path after `fpas build`, or use `fpas build --help`."
                 }
                 CliMode::Run => "Pass a source or project path after `fpas run`, or `fpas --help`.",
+                CliMode::Debug if arg == "--report" => {
+                    "JSONL is already the protocol output; use `fpas debug <target> --protocol jsonl --commands <path>`."
+                }
                 CliMode::Debug => {
                     "Pass a debug target after `fpas debug`, or use `fpas debug --help`."
                 }

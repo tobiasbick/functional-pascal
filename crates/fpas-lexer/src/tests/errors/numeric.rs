@@ -46,6 +46,22 @@ fn invalid_numeric_exponent_reports_explicit_help() {
 }
 
 #[test]
+fn exponent_rejects_leading_digit_separator() {
+    let (tokens, errors) = lex_with_errors("1.0e_3");
+    assert!(!errors.is_empty());
+    assert!(!tokens.contains(&Token::Real(1000.0)));
+    assert!(errors[0].message.contains("exponent"));
+}
+
+#[test]
+fn signed_exponent_rejects_leading_digit_separator() {
+    let (tokens, errors) = lex_with_errors("1.0e+_3");
+    assert!(!errors.is_empty());
+    assert!(!tokens.contains(&Token::Real(1000.0)));
+    assert!(errors[0].message.contains("exponent"));
+}
+
+#[test]
 fn real_literal_overflow_reports_error_and_no_token() {
     use fpas_diagnostics::codes::LEX_REAL_LITERAL_OVERFLOW;
 

@@ -231,6 +231,30 @@ fn resolve_cli_config_rejects_debug_listen_and_attach_flags() {
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
 
+#[test]
+fn resolve_cli_config_rejects_removed_debug_report_option() {
+    let cwd = create_temp_dir("reject-debug-report");
+    let result = resolve_cli_config(
+        &[
+            String::from("debug"),
+            String::from("app.fpas"),
+            String::from("--protocol"),
+            String::from("jsonl"),
+            String::from("--report"),
+            String::from("jsonl"),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    let error = result.expect_err("removed debug report option must fail");
+    assert!(error.contains("Unknown option `--report`"), "{error}");
+    assert!(
+        error.contains("--protocol jsonl --commands <path>"),
+        "{error}"
+    );
+}
+
 fn test_project(prefix: &str) -> std::path::PathBuf {
     let cwd = create_temp_dir(prefix);
     write_text(&cwd.join("demo.fpasprj"), TEST_PROJECT);

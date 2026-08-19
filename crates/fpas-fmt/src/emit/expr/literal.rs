@@ -112,15 +112,35 @@ pub(super) fn record_literal_end(fields: &[FieldInit]) -> &'static str {
 }
 
 pub(super) fn format_string(value: &str) -> String {
-    let mut out = String::from("'");
+    let mut out = String::new();
+    let mut quoted = false;
     for ch in value.chars() {
-        if ch == '\'' {
+        if ch.is_control() {
+            if quoted {
+                out.push('\'');
+                quoted = false;
+            }
+            out.push('#');
+            out.push_str(&(ch as u32).to_string());
+        } else if ch == '\'' {
+            if !quoted {
+                out.push('\'');
+                quoted = true;
+            }
             out.push_str("''");
         } else {
+            if !quoted {
+                out.push('\'');
+                quoted = true;
+            }
             out.push(ch);
         }
     }
-    out.push('\'');
+    if quoted {
+        out.push('\'');
+    } else if out.is_empty() {
+        out.push_str("''");
+    }
     out
 }
 

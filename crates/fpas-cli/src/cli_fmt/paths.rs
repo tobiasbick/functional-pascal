@@ -96,6 +96,14 @@ fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<
     }
 
     let path = normalize_input_path(arg, cwd);
+    if is_symlink(&path) {
+        let _ = writeln!(
+            stderr,
+            "Cannot format symbolic link `{}`.\n  help: Pass the regular `.fpas` file itself.",
+            path.display()
+        );
+        return Err(1);
+    }
     if path.is_dir() {
         let files = collect_fpas_files_in_dir(&path).map_err(|message| {
             let _ = writeln!(stderr, "{message}");
@@ -138,19 +146,30 @@ fn expand_glob(pattern: &str, cwd: &Path) -> Result<Vec<PathBuf>, String> {
         let entry = entry.map_err(|error| {
             format!("Error while evaluating glob pattern `{pattern}`.\n  details: {error}")
         })?;
-        if entry.is_file() && has_extension(&entry, SOURCE_FILE_EXTENSION) {
+        let metadata = std::fs::symlink_metadata(&entry).map_err(|error| {
+            format!(
+                "Cannot inspect glob result `{}`.\n  details: {error}",
+                entry.display()
+            )
+        })?;
+        if metadata.file_type().is_file() && has_extension(&entry, SOURCE_FILE_EXTENSION) {
             matches.push(entry);
         }
     }
 
     if matches.is_empty() {
         return Err(format!(
-            "Glob pattern `{pattern}` matched no `.fpas` files.\n  help: Check the path relative to `{}`.",
+            "Glob pattern `{pattern}` matched no regular `.fpas` files.\n  help: Check the path relative to `{}`; symbolic links are not formatted.",
             cwd.display()
         ));
     }
 
     Ok(dedupe_paths(matches))
+}
+
+fn is_symlink(path: &Path) -> bool {
+    std::fs::symlink_metadata(path)
+        .is_ok_and(|metadata| metadata.file_type().is_symlink())
 }
 
 fn contains_glob_metacharacters(value: &str) -> bool {

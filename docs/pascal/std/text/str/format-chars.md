@@ -15,6 +15,8 @@ WriteLn(IsNumeric('nope'))
 
 Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors. `Count` ≤ 0 yields an empty string.
 
+Positive `Count` must be at most **1_000_000**. Larger counts raise a runtime error.
+
 ```pascal
 WriteLn(FromChar('─', 40))
 ```

@@ -51,7 +51,7 @@ where
             }
         }
         if server.status() == ServerStatus::Terminated {
-            return Ok(());
+            return termination_result(&server);
         }
     }
 }
@@ -72,13 +72,24 @@ pub fn serve_script<R: Read, W: Write>(
             write_records(&mut writer, server.wait())?;
         }
         if server.status() == ServerStatus::Terminated {
-            return Ok(());
+            return termination_result(&server);
         }
     }
     while server.status() == ServerStatus::Running {
         write_records(&mut writer, server.wait())?;
     }
     Ok(())
+}
+
+fn termination_result(server: &JsonlServer) -> io::Result<()> {
+    if server.terminated_fatally() {
+        Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "fatal JSONL protocol error; inspect the emitted protocol_error record",
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 fn write_records(writer: &mut impl Write, records: Vec<Value>) -> io::Result<()> {

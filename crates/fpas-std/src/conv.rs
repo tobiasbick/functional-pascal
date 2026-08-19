@@ -6,6 +6,7 @@
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, pop_bool, pop_int, pop_real, pop_string, pop_value};
+use crate::limits::checked_collection_len;
 use crate::numeric_text::{parse_bool_text, parse_pascal_integer, parse_pascal_real};
 use fpas_bytecode::{ConvIntrinsic, Intrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
@@ -87,7 +88,7 @@ pub(crate) fn run(
                 ));
             }
 
-            let width = digits as usize;
+            let width = checked_collection_len(digits, location, "Std.Conv.IntToHex")?;
             let formatted = if n < 0 {
                 let magnitude = n.unsigned_abs();
                 format!("-{:0width$X}", magnitude, width = width)
@@ -122,7 +123,8 @@ pub(crate) fn run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fpas_diagnostics::codes::RUNTIME_CONVERSION_FAILURE;
+    use crate::limits::MAX_COLLECTION_LEN;
+    use fpas_diagnostics::codes::{RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_CONVERSION_FAILURE};
 
     fn loc() -> SourceLocation {
         SourceLocation::new(1, 1)
@@ -144,5 +146,12 @@ mod tests {
         let mut stack = vec![Value::Str("not-a-number".into())];
         let err = run_conv(ConvIntrinsic::StrToInt, &mut stack).unwrap_err();
         assert_eq!(err.code, RUNTIME_CONVERSION_FAILURE);
+    }
+
+    #[test]
+    fn int_to_hex_rejects_digits_above_limit() {
+        let mut stack = vec![Value::Integer(1), Value::Integer(MAX_COLLECTION_LEN + 1)];
+        let err = run_conv(ConvIntrinsic::IntToHex, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 }

@@ -64,7 +64,7 @@ pub(crate) fn run(
             let s = pop_string(pop_value(call, location)?, location)?;
             let chars: Vec<char> = s.chars().collect();
             let n = chars.len() as i64;
-            if start < 0 || len < 0 || start > n || start + len > n {
+            if start < 0 || len < 0 || start > n || len > n - start {
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Substring out of range (len={n}, start={start}, len_param={len})"),
@@ -72,9 +72,8 @@ pub(crate) fn run(
                     location,
                 ));
             }
-            let out: String = chars[start as usize..(start + len) as usize]
-                .iter()
-                .collect();
+            let end = start + len;
+            let out: String = chars[start as usize..end as usize].iter().collect();
             call.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::IndexOf) => {
@@ -186,15 +185,12 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::FromChar) => {
             let n = pop_int(pop_value(call, location)?, location)?;
             let c = pop_single_char(pop_value(call, location)?, location)?;
-            if n < 0 {
-                return Err(std_runtime_error(
-                    RUNTIME_NUMERIC_DOMAIN_ERROR,
-                    format!("FromChar count must be >= 0, got {n}"),
-                    "Pass a non-negative integer to Std.Str.FromChar.",
-                    location,
-                ));
-            }
-            let s: String = std::iter::repeat_n(c, n as usize).collect();
+            let len = if n <= 0 {
+                0
+            } else {
+                checked_collection_len(n, location, "Std.Str.FromChar")?
+            };
+            let s: String = std::iter::repeat_n(c, len).collect();
             call.push(Value::Str(s.into()));
         }
         Intrinsic::Str(StrIntrinsic::CharAt) => {
@@ -276,7 +272,7 @@ pub(crate) fn run(
             let s = pop_string(pop_value(call, location)?, location)?;
             let chars: Vec<char> = s.chars().collect();
             let n = chars.len() as i64;
-            if idx < 0 || len < 0 || idx > n || idx + len > n {
+            if idx < 0 || len < 0 || idx > n || len > n - idx {
                 return Err(std_runtime_error(
                     RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
                     format!("Delete out of range (length={n}, index={idx}, count={len})"),
@@ -284,8 +280,9 @@ pub(crate) fn run(
                     location,
                 ));
             }
+            let end = idx + len;
             let mut result: String = chars[..idx as usize].iter().collect();
-            let tail: String = chars[(idx + len) as usize..].iter().collect();
+            let tail: String = chars[end as usize..].iter().collect();
             result.push_str(&tail);
             call.push(Value::Str(result.into()));
         }
@@ -346,7 +343,7 @@ fn checked_pad_width(
             location,
         ))
     } else {
-        Ok(width as usize)
+        checked_collection_len(width, location, &format!("Std.Str.{intrinsic_name}"))
     }
 }
 
@@ -391,6 +388,58 @@ mod tests {
             Value::Integer(MAX_COLLECTION_LEN + 1),
         ];
         let err = run_str(StrIntrinsic::Repeat, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn substring_rejects_overflowing_range() {
+        let mut stack = vec![
+            Value::Str("ab".into()),
+            Value::Integer(1),
+            Value::Integer(i64::MAX),
+        ];
+        let err = run_str(StrIntrinsic::Substring, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_STRING_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn delete_rejects_overflowing_range() {
+        let mut stack = vec![
+            Value::Str("ab".into()),
+            Value::Integer(1),
+            Value::Integer(i64::MAX),
+        ];
+        let err = run_str(StrIntrinsic::Delete, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_STRING_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn from_char_returns_empty_for_non_positive_count() {
+        for count in [0, -1] {
+            let mut stack = vec![Value::Str("x".into()), Value::Integer(count)];
+            run_str(StrIntrinsic::FromChar, &mut stack).unwrap();
+            assert_eq!(stack, vec![Value::Str("".into())]);
+        }
+    }
+
+    #[test]
+    fn from_char_rejects_count_above_limit() {
+        let mut stack = vec![
+            Value::Str("x".into()),
+            Value::Integer(MAX_COLLECTION_LEN + 1),
+        ];
+        let err = run_str(StrIntrinsic::FromChar, &mut stack).unwrap_err();
+        assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    }
+
+    #[test]
+    fn padding_rejects_width_above_limit() {
+        let mut stack = vec![
+            Value::Str("x".into()),
+            Value::Integer(MAX_COLLECTION_LEN + 1),
+            Value::Str(" ".into()),
+        ];
+        let err = run_str(StrIntrinsic::PadLeft, &mut stack).unwrap_err();
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 

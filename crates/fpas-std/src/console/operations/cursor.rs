@@ -1,6 +1,7 @@
 use super::super::Console;
-use crate::error::StdError;
+use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::SourceLocation;
+use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Console {
     pub fn goto_xy(&mut self, x: i64, y: i64, location: SourceLocation) -> Result<(), StdError> {
@@ -10,7 +11,12 @@ impl Console {
             self.check_coord(x, self.state.window_width()),
             self.check_coord(y, self.state.window_height()),
         ) else {
-            return Ok(());
+            return Err(std_runtime_error(
+                RUNTIME_CONSOLE_STATE_ERROR,
+                format!("GotoXY({x}, {y}) is outside the active window"),
+                "Use window-relative coordinates from 1 through the active window width and height.",
+                location,
+            ));
         };
         self.state.set_cursor(x, y);
         self.render_if_ready(location)

@@ -9,7 +9,7 @@ debugging of the host process is unsupported. It accepts a
 
 ```text
 fpas debug app.fpasprj --protocol jsonl
-fpas debug app.fpasprj --protocol jsonl --commands session.jsonl --report jsonl
+fpas debug app.fpasprj --protocol jsonl --commands session.jsonl
 fpas debug app.fpasprj --protocol dap
 ```
 

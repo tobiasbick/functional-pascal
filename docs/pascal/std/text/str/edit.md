@@ -29,6 +29,8 @@ WriteLn(RepeatStr('─', 40)) // ───────────────�
 
 If `Length(S) < Width`, prepends `Fill` characters until length equals `Width`. Otherwise returns `S` unchanged.
 
+`Width` must be at most **1_000_000**. Larger widths raise a runtime error.
+
 ```pascal
 WriteLn(PadLeft('42', 5, '0'))  // 00042
 ```
@@ -38,6 +40,8 @@ WriteLn(PadLeft('42', 5, '0'))  // 00042
 ## `function PadRight(S: string; Width: integer; Fill: string): string`
 
 Like `PadLeft` but appends `Fill` on the right.
+
+`Width` must be at most **1_000_000**. Larger widths raise a runtime error.
 
 ```pascal
 WriteLn(PadRight('Hi', 6, '.'))  // Hi....
@@ -49,6 +53,8 @@ WriteLn(PadRight('Hi', 6, '.'))  // Hi....
 
 Centers `S` within `Width` characters of `Fill`. When the remaining space is odd, the extra character goes on the right.
 
+`Width` must be at most **1_000_000**. Larger widths raise a runtime error.
+
 ```pascal
 WriteLn(PadCenter('Hi', 6, '-'))  // --Hi--
 ```
@@ -58,6 +64,8 @@ WriteLn(PadCenter('Hi', 6, '-'))  // --Hi--
 ## `function FromChar(C: string; Count: integer): string`
 
 Builds a string of `Count` copies of `C`. `C` must contain exactly one Unicode scalar value; empty or multi-character strings are runtime errors. `Count` ≤ 0 yields an empty string.
+
+Positive `Count` must be at most **1_000_000**. Larger counts raise a runtime error.
 
 ```pascal
 WriteLn(FromChar('─', 40))

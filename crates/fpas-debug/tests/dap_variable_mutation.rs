@@ -109,3 +109,34 @@ fn dap_omits_invalidation_for_clients_that_do_not_support_it() {
     assert_eq!(records.len(), 1, "{records:?}");
     assert_eq!(records[0]["success"], true);
 }
+
+#[test]
+fn dap_zero_pagination_counts_return_all_items() {
+    let mut adapter = server();
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    stop_after_initialization(&mut adapter);
+
+    let omitted_stack = adapter.handle(request(5, "stackTrace", json!({"threadId":1})));
+    let zero_stack = adapter.handle(request(6, "stackTrace", json!({"threadId":1,"levels":0})));
+    assert_eq!(
+        zero_stack[0]["body"]["stackFrames"],
+        omitted_stack[0]["body"]["stackFrames"]
+    );
+
+    let mut seq = 6;
+    let locals = locals_reference(&mut adapter, &mut seq);
+    let omitted_variables = adapter.handle(request(
+        9,
+        "variables",
+        json!({"variablesReference":locals}),
+    ));
+    let zero_variables = adapter.handle(request(
+        10,
+        "variables",
+        json!({"variablesReference":locals,"count":0}),
+    ));
+    assert_eq!(
+        zero_variables[0]["body"]["variables"],
+        omitted_variables[0]["body"]["variables"]
+    );
+}

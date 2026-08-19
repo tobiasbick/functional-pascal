@@ -57,16 +57,22 @@ impl DapServer {
             }
             "threads" => self.core_request(request_seq, command, "tasks", json!({})),
             "stackTrace" => match self.task_id(arguments, "threadId") {
-                Ok(task_id) => self.core_request(
-                    request_seq,
-                    command,
-                    "stack",
-                    json!({
-                        "task_id": task_id,
-                        "start": arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),
-                        "count": arguments.get("levels").and_then(Value::as_u64).unwrap_or(64)
-                    }),
-                ),
+                Ok(task_id) => {
+                    let count = dap_page_count(
+                        arguments.get("levels"),
+                        fpas_vm::DebugInspectionLimits::default().max_frames,
+                    );
+                    self.core_request(
+                        request_seq,
+                        command,
+                        "stack",
+                        json!({
+                            "task_id": task_id,
+                            "start": arguments.get("startFrame").and_then(Value::as_u64).unwrap_or(0),
+                            "count": count
+                        }),
+                    )
+                }
                 Err(message) => vec![self.failure(request_seq, command, &message)],
             },
             "scopes" => self.core_request(
@@ -75,16 +81,22 @@ impl DapServer {
                 "scopes",
                 json!({"frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null)}),
             ),
-            "variables" => self.core_request(
-                request_seq,
-                command,
-                "variables",
-                json!({
-                    "variables_reference": arguments.get("variablesReference").cloned().unwrap_or(Value::Null),
-                    "start": arguments.get("start").cloned().unwrap_or(json!(0)),
-                    "count": arguments.get("count").cloned().unwrap_or(json!(100))
-                }),
-            ),
+            "variables" => {
+                let count = dap_page_count(
+                    arguments.get("count"),
+                    fpas_vm::DebugInspectionLimits::default().max_children,
+                );
+                self.core_request(
+                    request_seq,
+                    command,
+                    "variables",
+                    json!({
+                        "variables_reference": arguments.get("variablesReference").cloned().unwrap_or(Value::Null),
+                        "start": arguments.get("start").cloned().unwrap_or(json!(0)),
+                        "count": count
+                    }),
+                )
+            }
             "evaluate" => self.evaluate(request_seq, command, arguments),
             "setVariable" => self.set_variable(request_seq, command, arguments),
             "setExpression" => self.set_expression(request_seq, command, arguments),
@@ -144,5 +156,12 @@ impl DapServer {
                 &format!("DAP request `{command}` is unsupported by the FPAS debugger."),
             )],
         }
+    }
+}
+
+fn dap_page_count(value: Option<&Value>, all_count: usize) -> Value {
+    match value.and_then(Value::as_u64) {
+        None | Some(0) => Value::from(all_count as u64),
+        Some(count) => Value::from(count),
     }
 }

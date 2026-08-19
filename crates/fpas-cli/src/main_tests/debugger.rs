@@ -36,6 +36,28 @@ fn debug_jsonl_script_emits_only_json_records() {
 }
 
 #[test]
+fn debug_jsonl_malformed_script_exits_nonzero_after_protocol_error() {
+    let cwd = create_temp_dir("debug-jsonl-malformed");
+    let source = cwd.join("main.fpas");
+    let commands = cwd.join("commands.jsonl");
+    write_text(&source, "program Main; begin end.\n");
+    write_text(&commands, "\n{\n");
+
+    let (exit, stdout, stderr) =
+        support::run_cli_args_and_capture_output(&debug_args(&source, &commands), &cwd);
+    fs::remove_dir_all(&cwd).expect("remove debugger temp directory");
+
+    assert_eq!(exit, 1);
+    assert!(stderr.contains("fatal JSONL protocol error"), "{stderr}");
+    let records = stdout
+        .lines()
+        .map(|line| serde_json::from_str::<serde_json::Value>(line).expect("protocol JSONL"))
+        .collect::<Vec<_>>();
+    assert_eq!(records.len(), 1);
+    assert_eq!(records[0]["event"], "protocol_error");
+}
+
+#[test]
 fn debug_compile_failure_stays_off_protocol_stdout() {
     let cwd = create_temp_dir("debug-compile-failure");
     let source = cwd.join("broken.fpas");

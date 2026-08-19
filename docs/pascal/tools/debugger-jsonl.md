@@ -8,7 +8,7 @@ and logpoint output is carried by structured `output` events.
 
 ```text
 fpas debug <target> --protocol jsonl
-fpas debug <target> --protocol jsonl --commands <path> --report jsonl
+fpas debug <target> --protocol jsonl --commands <path>
 ```
 
 ```json

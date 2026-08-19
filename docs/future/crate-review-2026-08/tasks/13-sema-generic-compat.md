@@ -1,6 +1,6 @@
 # Task 13 — Generic bodies must not treat `T` as every type
 
-Status: open
+Status: complete
 Severity: P1
 Difficulty: hard
 Language gate: no
@@ -79,3 +79,10 @@ Run any `tests/stdlib/array/` Map tests you might have affected.
 - Illegal generic bodies error.
 - Inference and higher-order Std callbacks still type-check.
 - Docs unchanged.
+
+## Progress
+
+- Split wildcard generic unification from strict ordinary assignment compatibility.
+- Free, instance, and static calls now infer type parameters first, substitute them into formal
+  parameter types, and then perform strict compatibility checks.
+- Added generic-body return/condition, valid inference, and generic-function coercion regressions.

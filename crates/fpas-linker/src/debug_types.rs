@@ -1,5 +1,7 @@
 //! Deterministic relocation of object-local portable debugger types.
 
+use std::collections::HashSet;
+
 use fpas_bytecode::{DebugType, DebugTypeId};
 use fpas_unit::object::{DefinitionTarget, ObjectDebugType, RelocatableObject, SymbolKind};
 
@@ -65,6 +67,97 @@ pub(super) fn merge(
         }
     }
     Ok((maps, linked))
+}
+
+/// Compare two object-local debugger types by structure rather than numeric identifier.
+pub(super) fn structurally_equivalent(
+    objects: &[&RelocatableObject],
+    left: (usize, u32),
+    right: (usize, u32),
+) -> bool {
+    structurally_equivalent_inner(objects, left, right, &mut HashSet::new())
+}
+
+fn structurally_equivalent_inner(
+    objects: &[&RelocatableObject],
+    left: (usize, u32),
+    right: (usize, u32),
+    visited: &mut HashSet<(usize, u32, usize, u32)>,
+) -> bool {
+    if !visited.insert((left.0, left.1, right.0, right.1)) {
+        return true;
+    }
+    let Some(left_ty) = objects
+        .get(left.0)
+        .and_then(|object| object.debug_types.get(left.1 as usize))
+    else {
+        return false;
+    };
+    let Some(right_ty) = objects
+        .get(right.0)
+        .and_then(|object| object.debug_types.get(right.1 as usize))
+    else {
+        return false;
+    };
+    let child = |left_id, right_id, visited: &mut HashSet<_>| {
+        structurally_equivalent_inner(objects, (left.0, left_id), (right.0, right_id), visited)
+    };
+    match (left_ty, right_ty) {
+        (ObjectDebugType::Unit, ObjectDebugType::Unit)
+        | (ObjectDebugType::Boolean, ObjectDebugType::Boolean)
+        | (ObjectDebugType::Integer, ObjectDebugType::Integer)
+        | (ObjectDebugType::Real, ObjectDebugType::Real)
+        | (ObjectDebugType::String, ObjectDebugType::String)
+        | (ObjectDebugType::Dynamic, ObjectDebugType::Dynamic) => true,
+        (ObjectDebugType::Array(left), ObjectDebugType::Array(right))
+        | (ObjectDebugType::Option(left), ObjectDebugType::Option(right))
+        | (ObjectDebugType::Cell(left), ObjectDebugType::Cell(right))
+        | (ObjectDebugType::Task(left), ObjectDebugType::Task(right)) => {
+            child(*left, *right, visited)
+        }
+        (
+            ObjectDebugType::Dictionary {
+                key: left_key,
+                value: left_value,
+            },
+            ObjectDebugType::Dictionary {
+                key: right_key,
+                value: right_value,
+            },
+        )
+        | (
+            ObjectDebugType::Result {
+                ok: left_key,
+                error: left_value,
+            },
+            ObjectDebugType::Result {
+                ok: right_key,
+                error: right_value,
+            },
+        ) => child(*left_key, *right_key, visited) && child(*left_value, *right_value, visited),
+        (
+            ObjectDebugType::Function {
+                parameters: left_parameters,
+                result: left_result,
+            },
+            ObjectDebugType::Function {
+                parameters: right_parameters,
+                result: right_result,
+            },
+        ) => {
+            left_parameters.len() == right_parameters.len()
+                && left_parameters
+                    .iter()
+                    .zip(right_parameters)
+                    .all(|(left, right)| child(*left, *right, visited))
+                && child(*left_result, *right_result, visited)
+        }
+        (ObjectDebugType::Record(left), ObjectDebugType::Record(right))
+        | (ObjectDebugType::Enum(left), ObjectDebugType::Enum(right)) => {
+            left.eq_ignore_ascii_case(right)
+        }
+        _ => false,
+    }
 }
 
 fn reachable_types(object: &RelocatableObject) -> Vec<bool> {

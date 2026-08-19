@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use fpas_project::discover_workspace_file;
 
+use super::path_containment;
 use super::{WorkspaceContext, WorkspaceIssue, WorkspaceKind};
 use crate::document::normalized_path;
 
@@ -31,14 +32,14 @@ pub(super) fn discover_source_context(
 ) -> Result<Option<WorkspaceContext>, WorkspaceIssue> {
     let root = directory_for(&normalized_path(root));
     let source = normalized_path(source);
-    let bounded = source.starts_with(&root);
+    let bounded = path_containment::contains(&root, &source);
     let mut directory = directory_for(&source);
 
     loop {
         if let Some(context) = context_owning_source(&directory, &source)? {
             return Ok(Some(context));
         }
-        if (bounded && directory == root) || !directory.pop() {
+        if (bounded && path_containment::same(&directory, &root)) || !directory.pop() {
             return Ok(None);
         }
     }
@@ -210,4 +211,54 @@ pub(super) fn has_extension(path: &Path, expected: &str) -> bool {
     path.extension()
         .and_then(|value| value.to_str())
         .is_some_and(|value| value.eq_ignore_ascii_case(expected))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    use super::*;
+
+    fn fixture(label: &str) -> PathBuf {
+        static NEXT: AtomicU64 = AtomicU64::new(1);
+        std::env::temp_dir().join(format!(
+            "fpas-discovery-{label}-{}-{}",
+            std::process::id(),
+            NEXT.fetch_add(1, Ordering::Relaxed)
+        ))
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn nonexistent_inside_document_with_different_case_stops_at_root() {
+        let base = fixture("case-boundary");
+        let root = base.join("Workspace");
+        std::fs::create_dir_all(root.join("src")).expect("workspace directories");
+        std::fs::write(base.join("broken.fpasprj"), "not valid TOML")
+            .expect("outer invalid manifest");
+        let differently_cased =
+            PathBuf::from(root.to_string_lossy().to_ascii_lowercase()).join("src/missing.fpas");
+
+        let discovered = discover_source_context(&root, &differently_cased);
+        std::fs::remove_dir_all(&base).ok();
+        assert!(matches!(discovered, Ok(None)), "{discovered:?}");
+    }
+
+    #[test]
+    fn genuinely_outside_document_keeps_unbounded_discovery() {
+        let base = fixture("outside-boundary");
+        let root = base.join("workspace");
+        let outside = base.join("outside");
+        std::fs::create_dir_all(&root).expect("workspace directory");
+        std::fs::create_dir_all(&outside).expect("outside directory");
+        std::fs::write(outside.join("broken.fpasprj"), "not valid TOML")
+            .expect("outside invalid manifest");
+
+        let discovered = discover_source_context(&root, &outside.join("missing.fpas"));
+        std::fs::remove_dir_all(&base).ok();
+        assert!(
+            discovered.is_err(),
+            "outside discovery must remain unbounded"
+        );
+    }
 }

@@ -1,6 +1,18 @@
 # Task 28 — Preserve original and portable DAP source identities
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: portable identities now retain optional non-serialized original-path aliases;
+  DAP resolution is path-flavor aware, rejects ambiguity, and refreshes on reload/rollback
+- Tests: Windows casing, original-to-portable lookup, breakpoint lookup, ambiguous filenames,
+  reload/rollback aliases, and compiled-image source-root verification
+- Verification: full fpas-debug, full fpas-cli, and workspace definition of done passed on
+  2026-08-19
+- Docs: unchanged; portable protocol and recording identities remain unchanged
+- Blockers: none
 Severity: P1
 Difficulty: hard
 Language gate: no

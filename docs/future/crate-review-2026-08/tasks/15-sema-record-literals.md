@@ -1,6 +1,6 @@
 # Task 15 — Contextually type record literals everywhere
 
-Status: in progress
+Status: complete
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -81,5 +81,5 @@ cargo fmt
   and returns
 - Files changed: expected-expression semantic checks, sema record-context tests, compiler aggregate
   regression
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

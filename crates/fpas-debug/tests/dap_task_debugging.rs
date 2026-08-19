@@ -32,6 +32,7 @@ fn server() -> DapServer {
     DapServer::new(
         PreparedDebugTarget::new(executable, Vec::new()).with_sources(vec![DebugSourceContent {
             path: "<memory>".into(),
+            original_path: None,
             content: SOURCE.into(),
         }]),
     )

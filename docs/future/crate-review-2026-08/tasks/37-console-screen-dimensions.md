@@ -1,6 +1,6 @@
 # Task 37 — Keep reported console dimensions and retained state synchronized
 
-Status: in progress
+Status: complete
 Severity: P2
 Difficulty: medium
 Language gate: no
@@ -57,5 +57,5 @@ cargo fmt
 - Base commit: 74b16b7b
 - Current step: verify getter-driven terminal resize synchronization
 - Files changed: console state/query operations and screen tests
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

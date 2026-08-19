@@ -105,10 +105,11 @@ impl TaskScheduler {
             Value::Unit => TaskResultState::Unit,
             value => TaskResultState::Value(Box::new(value)),
         };
-        self.results
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(id, state);
+        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        if matches!(results.get(&id), Some(TaskResultState::Pending)) {
+            results.insert(id, state);
+        }
+        drop(results);
         self.results_available.notify_all();
     }
     pub fn store_failure(&self, id: u64, error: VmError) {
@@ -271,6 +272,22 @@ impl TaskScheduler {
                 .unwrap_or_else(|e| e.into_inner());
         }
     }
+    /// Complete one still-pending retained result after scheduler shutdown.
+    pub fn fail_pending_result_if_shutdown(&self, task_id: u64) {
+        if !self.is_shutdown() {
+            return;
+        }
+        let error = self
+            .first_error()
+            .unwrap_or_else(|| self.shutdown_error(task_id));
+        self.store_failure(task_id, error);
+    }
+    /// Complete all still-pending retained results in a wait batch after shutdown.
+    pub fn fail_pending_batch_if_shutdown(&self, task_ids: &[u64]) {
+        for task_id in task_ids {
+            self.fail_pending_result_if_shutdown(*task_id);
+        }
+    }
     pub fn schedule(&self, task: TaskState, milliseconds: u64) {
         if let Err(task) = self
             .timers
@@ -292,21 +309,14 @@ impl TaskScheduler {
             self.cancel(task);
         }
         self.shutdown.store(true, Ordering::Release);
+        self.complete_pending_results();
         self.timers.notify_shutdown();
         self.available.notify_all();
         self.results_available.notify_all();
     }
     /// Complete one retained task with the standard runtime-shutdown diagnostic.
     pub(in crate::vm) fn cancel_result(&self, task_id: u64) {
-        self.store_failure(
-            task_id,
-            runtime_error(
-                RUNTIME_VM_SHUTDOWN,
-                format!("Task {task_id} was canceled because the runtime shut down"),
-                "Wait for retained tasks before the main task finishes.",
-                SourceLocation::new(1, 1),
-            ),
-        );
+        self.store_failure(task_id, self.shutdown_error(task_id));
     }
     pub fn fail(&self, error: VmError) {
         *self.first_error.lock().unwrap_or_else(|e| e.into_inner()) = Some(error);
@@ -332,6 +342,26 @@ impl TaskScheduler {
     fn cancel(&self, task: TaskState) {
         if task.retain_result {
             self.cancel_result(task.id);
+        }
+    }
+    fn shutdown_error(&self, task_id: u64) -> VmError {
+        runtime_error(
+            RUNTIME_VM_SHUTDOWN,
+            format!("Task {task_id} was canceled because the runtime shut down"),
+            "Wait for retained tasks before the main task finishes.",
+            SourceLocation::new(1, 1),
+        )
+    }
+    fn complete_pending_results(&self) {
+        let first_error = self.first_error();
+        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        for (task_id, state) in results.iter_mut() {
+            if matches!(state, TaskResultState::Pending) {
+                let error = first_error
+                    .clone()
+                    .unwrap_or_else(|| self.shutdown_error(*task_id));
+                *state = TaskResultState::Failed(Box::new(error));
+            }
         }
     }
 }

@@ -18,26 +18,32 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
         EnumVariantTy {
             name: "String".into(),
             fields: vec![("Value".into(), Ty::String)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Integer".into(),
             fields: vec![("Value".into(), Ty::Integer)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Float".into(),
             fields: vec![("Value".into(), Ty::Real)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Boolean".into(),
             fields: vec![("Value".into(), Ty::Boolean)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Datetime".into(),
             fields: vec![("Value".into(), Ty::String)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Array".into(),
             fields: vec![("Items".into(), Ty::Array(Box::new(toml_ref.clone())))],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Table".into(),
@@ -45,6 +51,7 @@ pub(super) fn register_std_toml(checker: &mut Checker) {
                 "Fields".into(),
                 Ty::Dict(Box::new(Ty::String), Box::new(toml_ref)),
             )],
+            backing_value: None,
         },
     ];
     let toml_ty = Ty::Enum(Arc::new(EnumTy {

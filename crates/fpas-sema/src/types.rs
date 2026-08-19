@@ -174,6 +174,8 @@ pub struct EnumTy {
 pub struct EnumVariantTy {
     pub name: String,
     pub fields: Vec<(String, Ty)>,
+    /// Declared or implicit integer value for a simple enum member.
+    pub backing_value: Option<i64>,
 }
 
 impl EnumTy {
@@ -260,19 +262,30 @@ impl Ty {
 
     /// Returns true if both types are compatible (same type or one is Error).
     pub fn compatible_with(&self, other: &Ty) -> bool {
+        self.compatible_with_mode(other, true)
+    }
+
+    /// Returns true when ordinary assignment may use `other` as this type.
+    pub(crate) fn assignment_compatible_with(&self, other: &Ty) -> bool {
+        self.compatible_with_mode(other, false)
+    }
+
+    fn compatible_with_mode(&self, other: &Ty, generic_wildcard: bool) -> bool {
         if self.is_error() || other.is_error() {
             return true;
         }
         match (self, other) {
-            // GenericParam is compatible with anything (erased at runtime).
-            (Ty::GenericParam(..), _) | (_, Ty::GenericParam(..)) => true,
+            (Ty::GenericParam(left, _), Ty::GenericParam(right, _)) => {
+                left.eq_ignore_ascii_case(right)
+            }
+            (Ty::GenericParam(..), _) | (_, Ty::GenericParam(..)) => generic_wildcard,
             // Named type matches the concrete type with the same name (recursive enums).
             (Ty::Named(n), Ty::Enum(e)) | (Ty::Enum(e), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&e.name)
             }
             (Ty::Named(a), Ty::Named(b)) => a.eq_ignore_ascii_case(b),
             // Array with Error element type is compatible with any array
-            (Ty::Array(a), Ty::Array(b)) => a.compatible_with(b),
+            (Ty::Array(a), Ty::Array(b)) => a.compatible_with_mode(b, generic_wildcard),
             // Named type matches the concrete record with the same name (recursive records).
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)
@@ -282,7 +295,7 @@ impl Ty {
                 if !a.private_members.is_empty() || !b.private_members.is_empty() {
                     a.name.eq_ignore_ascii_case(&b.name)
                 } else {
-                    Self::record_fields_compatible(&a.fields, &b.fields)
+                    Self::record_fields_compatible_with_mode(&a.fields, &b.fields, generic_wildcard)
                 }
             }
             // Enums: same name is sufficient (type-erased generics).
@@ -290,15 +303,17 @@ impl Ty {
             (Ty::Unit, Ty::Unit) => true,
             // Result covariance
             (Ty::Result(ok1, err1), Ty::Result(ok2, err2)) => {
-                ok1.compatible_with(ok2) && err1.compatible_with(err2)
+                ok1.compatible_with_mode(ok2, generic_wildcard)
+                    && err1.compatible_with_mode(err2, generic_wildcard)
             }
             // Option covariance
-            (Ty::Option(a), Ty::Option(b)) => a.compatible_with(b),
+            (Ty::Option(a), Ty::Option(b)) => a.compatible_with_mode(b, generic_wildcard),
             // Task covariance (inner type may be erased as Error)
-            (Ty::Task(a), Ty::Task(b)) => a.compatible_with(b),
+            (Ty::Task(a), Ty::Task(b)) => a.compatible_with_mode(b, generic_wildcard),
             // Dict covariance
             (Ty::Dict(k1, v1), Ty::Dict(k2, v2)) => {
-                k1.compatible_with(k2) && v1.compatible_with(v2)
+                k1.compatible_with_mode(k2, generic_wildcard)
+                    && v1.compatible_with_mode(v2, generic_wildcard)
             }
             // Function and procedure structural compatibility: variadic flag, param count,
             // per-parameter mutability, and element-wise type compatibility. This allows
@@ -309,20 +324,20 @@ impl Ty {
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
                     return false;
                 }
-                a.return_type.compatible_with(&b.return_type)
-                    && a.params
-                        .iter()
-                        .zip(b.params.iter())
-                        .all(|(pa, pb)| pa.mutable == pb.mutable && pa.ty.compatible_with(&pb.ty))
+                a.return_type
+                    .compatible_with_mode(&b.return_type, generic_wildcard)
+                    && a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
+                        pa.mutable == pb.mutable
+                            && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
+                    })
             }
             (Ty::Procedure(a), Ty::Procedure(b)) => {
                 if a.variadic != b.variadic || a.params.len() != b.params.len() {
                     return false;
                 }
-                a.params
-                    .iter()
-                    .zip(b.params.iter())
-                    .all(|(pa, pb)| pa.mutable == pb.mutable && pa.ty.compatible_with(&pb.ty))
+                a.params.iter().zip(b.params.iter()).all(|(pa, pb)| {
+                    pa.mutable == pb.mutable && pa.ty.compatible_with_mode(&pb.ty, generic_wildcard)
+                })
             }
             _ => self == other,
         }
@@ -357,9 +372,18 @@ impl Ty {
         matches!(self, Ty::Integer | Ty::Boolean) || matches!(self, Ty::Enum(e) if !e.has_data())
     }
 
-    pub(crate) fn record_fields_compatible(
+    /// Compare record fields under ordinary assignment rules.
+    pub(crate) fn record_fields_assignment_compatible(
         fields: &[(String, Ty)],
         other_fields: &[(String, Ty)],
+    ) -> bool {
+        Self::record_fields_compatible_with_mode(fields, other_fields, false)
+    }
+
+    fn record_fields_compatible_with_mode(
+        fields: &[(String, Ty)],
+        other_fields: &[(String, Ty)],
+        generic_wildcard: bool,
     ) -> bool {
         if fields.len() != other_fields.len() {
             return false;
@@ -369,12 +393,12 @@ impl Ty {
             other_fields
                 .iter()
                 .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
-                .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
+                .is_some_and(|(_, other_ty)| ty.compatible_with_mode(other_ty, generic_wildcard))
         }) && other_fields.iter().all(|(name, ty)| {
             fields
                 .iter()
                 .find(|(other_name, _)| other_name.eq_ignore_ascii_case(name))
-                .is_some_and(|(_, other_ty)| ty.compatible_with(other_ty))
+                .is_some_and(|(_, other_ty)| ty.compatible_with_mode(other_ty, generic_wildcard))
         })
     }
 }

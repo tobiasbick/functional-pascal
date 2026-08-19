@@ -6,7 +6,7 @@ use fpas_unit::object::{
     DefinitionTarget, ImportShape, ObjectDefinition, RelocatableObject, SymbolKind, SymbolReference,
 };
 
-use crate::LinkError;
+use crate::{LinkError, debug_types};
 
 #[derive(Debug, Clone, Copy)]
 pub(super) struct ResolvedTarget {
@@ -32,6 +32,20 @@ impl SymbolTable {
                         (existing_object, existing_definition),
                         (object_index, definition_index),
                     ) {
+                        if matches!(
+                            (
+                                objects[existing_object].definitions[existing_definition].target,
+                                definition.target,
+                            ),
+                            (DefinitionTarget::Record(_), DefinitionTarget::Record(_))
+                                | (DefinitionTarget::Enum(_), DefinitionTarget::Enum(_))
+                        ) {
+                            return Err(LinkError::IncompatibleLayoutCopies {
+                                name: definition.name.clone(),
+                                left_owner: objects[existing_object].owner.clone(),
+                                right_owner: object.owner.clone(),
+                            });
+                        }
                         return Err(LinkError::DuplicateDefinition(definition.name.clone()));
                     }
                     let existing = &objects[existing_object].definitions[existing_definition];
@@ -163,6 +177,8 @@ fn matching_layout_definition(
     left: (usize, usize),
     right: (usize, usize),
 ) -> bool {
+    let left_object = left.0;
+    let right_object = right.0;
     let left_definition = &objects[left.0].definitions[left.1];
     let right_definition = &objects[right.0].definitions[right.1];
     match (left_definition.target, right_definition.target) {
@@ -174,11 +190,29 @@ fn matching_layout_definition(
                 return false;
             };
             left_layout.fields.len() == right_layout.fields.len()
+                && left_layout.field_types.len() == right_layout.field_types.len()
                 && left_layout
                     .fields
                     .iter()
                     .zip(&right_layout.fields)
                     .all(|(left, right)| left.eq_ignore_ascii_case(right))
+                && left_layout
+                    .field_types
+                    .iter()
+                    .zip(&right_layout.field_types)
+                    .all(|(left_type, right_type)| {
+                        debug_types::structurally_equivalent(
+                            objects,
+                            (left_object, *left_type),
+                            (right_object, *right_type),
+                        )
+                    })
+                && named_routines_match(&left_layout.properties, &right_layout.properties, |item| {
+                    (&item.name, &item.getter)
+                })
+                && named_routines_match(&left_layout.methods, &right_layout.methods, |item| {
+                    (&item.name, &item.routine)
+                })
         }
         (DefinitionTarget::Enum(left_index), DefinitionTarget::Enum(right_index)) => {
             let Some(left_layout) = objects[left.0].enums.get(left_index as usize) else {
@@ -195,15 +229,35 @@ fn matching_layout_definition(
                     .all(|(left, right)| {
                         left.name.eq_ignore_ascii_case(&right.name)
                             && left.fields.len() == right.fields.len()
+                            && left.field_types.len() == right.field_types.len()
                             && left
                                 .fields
                                 .iter()
                                 .zip(&right.fields)
                                 .all(|(left, right)| left.eq_ignore_ascii_case(right))
+                            && left.field_types.iter().zip(&right.field_types).all(
+                                |(left_type, right_type)| {
+                                    debug_types::structurally_equivalent(
+                                        objects,
+                                        (left_object, *left_type),
+                                        (right_object, *right_type),
+                                    )
+                                },
+                            )
                     })
         }
         _ => false,
     }
+}
+
+fn named_routines_match<T>(left: &[T], right: &[T], fields: impl Fn(&T) -> (&str, &str)) -> bool {
+    left.len() == right.len()
+        && left.iter().zip(right).all(|(left, right)| {
+            let (left_name, left_routine) = fields(left);
+            let (right_name, right_routine) = fields(right);
+            left_name.eq_ignore_ascii_case(right_name)
+                && left_routine.eq_ignore_ascii_case(right_routine)
+        })
 }
 
 fn validate_shape(

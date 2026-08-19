@@ -219,15 +219,28 @@ type
     Running;
     Done = 9;
   end;
+  StateAlias = State;
 begin
   var Value: State := state.rUnNiNg;
+  var AliasValue: StateAlias := StateAlias.Done;
   mutable var Number: integer := 0;
   case Value of
     State.Ready: Number := 4;
     State.Running: Number := 5;
     State.Done: Number := 9
   end;
-  if Number <> 5 then panic('simple enum mismatch')
+  if Number <> 5 then panic('simple enum mismatch');
+  case StateAlias.Running of
+    State.Ready: Number := 99;
+    State.Running: Number := Number + 1;
+    State.Done: Number := 99
+  end;
+  case AliasValue of
+    State.Ready: Number := 99;
+    State.Running: Number := 99;
+    State.Done: Number := Number + 1
+  end;
+  if Number <> 7 then panic('alias enum backing mismatch')
 end.",
     );
 }

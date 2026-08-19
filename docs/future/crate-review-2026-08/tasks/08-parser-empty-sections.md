@@ -1,6 +1,6 @@
 # Task 08 — Reject empty `const` / `var` / `type` / `enum` / `case` bodies
 
-Status: in progress
+Status: complete
 Severity: P2
 Difficulty: easy
 Language gate: no
@@ -58,5 +58,5 @@ cargo fmt
 - Base commit: 74b16b7b
 - Current step: verify empty-section diagnostics and recovery
 - Files changed: parser declaration/case parsers and `src/tests/errors/recovery.rs`
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

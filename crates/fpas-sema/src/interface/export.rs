@@ -62,19 +62,6 @@ fn apply_declared_metadata(
         return Ok(());
     };
     match (&definition.body, ty) {
-        (TypeBody::Enum(declared), artifact::InterfaceType::Enum(interface)) => {
-            let mut next_value = Some(0_i64);
-            for (variant, member) in interface.variants.iter_mut().zip(&declared.members) {
-                let value = member.value.or(next_value).ok_or_else(|| {
-                    InterfaceConversionError::new(format!(
-                        "enum member `{}.{}` requires an implicit backing value after 9223372036854775807",
-                        definition.name, member.name
-                    ))
-                })?;
-                variant.backing_value = Some(value);
-                next_value = value.checked_add(1);
-            }
-        }
         (TypeBody::Record(declared), artifact::InterfaceType::Record(interface)) => {
             for (field, declared_field) in interface.fields.iter_mut().zip(&declared.fields) {
                 field.default_value = declared_field

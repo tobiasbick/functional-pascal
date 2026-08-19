@@ -233,6 +233,77 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn missing_sibling_publishes_current_syntax_and_project_io_diagnostics() {
+    let temp = TempDirectory::new("missing-sibling-diagnostics");
+    temp.write(
+        "demo.fpasprj",
+        r#"[project]
+name = "demo"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    let valid =
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n";
+    let unit_source =
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n";
+    let main = temp.write("src/main.fpas", valid);
+    let unit = temp.write("src/math.fpas", unit_source);
+    let root_uri = temp.uri(".");
+    let main_uri = temp.uri("src/main.fpas");
+    let remove_unit = unit.clone();
+    let restore_unit = unit.clone();
+    let transcript = run_script(&[
+        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(initialized()),
+        TranscriptStep::Message(open(&main_uri, 1, valid)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Action(Box::new(move || {
+            std::fs::remove_file(&remove_unit).expect("remove sibling")
+        })),
+        TranscriptStep::Message(change(
+            &main_uri,
+            2,
+            "program Broken;\nbegin\n  if then\nend.\n",
+        )),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Action(Box::new(move || {
+            std::fs::write(&restore_unit, unit_source).expect("restore sibling")
+        })),
+        TranscriptStep::Message(change(&main_uri, 3, valid)),
+        TranscriptStep::Wait(ANALYSIS_WAIT),
+        TranscriptStep::Message(shutdown(2)),
+        TranscriptStep::Message(exit()),
+    ]);
+
+    assert_success(&transcript);
+    let published = notifications(&transcript.messages, "textDocument/publishDiagnostics");
+    let version_2 = publication(&published, 2)["params"]["diagnostics"]
+        .as_array()
+        .expect("version two diagnostics");
+    assert!(
+        version_2
+            .iter()
+            .any(|diagnostic| diagnostic["code"] == "FPAS_PROJECT_IO"),
+        "{version_2:?}"
+    );
+    assert!(
+        version_2.iter().any(|diagnostic| diagnostic["code"]
+            .as_str()
+            .is_some_and(|code| code.starts_with("F1"))),
+        "{version_2:?}"
+    );
+    assert_eq!(
+        publication(&published, 3)["params"]["diagnostics"],
+        json!([])
+    );
+    assert!(main.exists());
+}
+
+#[test]
 fn repository_root_discovers_a_nested_standard_library_before_diagnostics() {
     let temp = TempDirectory::new("nested-standard-library");
     temp.write(

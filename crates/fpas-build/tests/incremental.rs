@@ -294,6 +294,47 @@ units = ["Demo.Base", "Demo.Consumer"]
 }
 
 #[test]
+fn imported_qualified_enum_member_uses_persisted_backing_value() {
+    let root = temp_dir();
+    let manifest = root.join("enum.fpasprj");
+    write(
+        &manifest,
+        r#"[project]
+name = "enum-value"
+kind = "program"
+main = "src/main.fpas"
+
+[sources]
+include = ["src/**/*.fpas"]
+"#,
+    );
+    write(
+        &root.join("src/values.fpas"),
+        "unit Demo.Values;
+         public type State = enum Idle = 7; Ready; Done = 20; end;",
+    );
+    write(
+        &root.join("src/main.fpas"),
+        "program Demo;
+         uses Demo.Values, Std.Console;
+         begin Std.Console.WriteLn(Demo.Values.State.Ready) end.",
+    );
+
+    let project = load_project(&manifest).expect("enum project loading");
+    let graph = build_unit_graph(&project.source_files, &project.link_meta).expect("enum graph");
+    let main = project.main.expect("enum program main");
+    let source = fs::read_to_string(main).expect("enum main source");
+    let (program, diagnostics) = fpas_parser::parse(&source);
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+    let selection = resolve_program_units(&graph, &program.uses).expect("enum selection");
+    let built = build_program(&graph, &selection, &program, &BuildOptions::default())
+        .expect("enum register build");
+
+    assert_output(built, "8");
+    fs::remove_dir_all(root).ok();
+}
+
+#[test]
 fn failed_rebuild_preserves_previous_valid_sidecar() {
     let fixture = Fixture::create();
     fixture.build().expect("initial build");

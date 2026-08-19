@@ -21,7 +21,7 @@ mod validation;
 
 pub(crate) use imports::ImportPlan;
 
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, HashMap};
 
 use fpas_ir::{Function, FunctionId, IntrinsicId, IntrinsicSignature, Operation, Program};
 use fpas_parser::{Decl, Program as AstProgram, Stmt, Unit};
@@ -140,7 +140,7 @@ fn lower_analyzed_root(
         "",
     );
     let mut type_table = types::TypeTable::from_metadata(&metadata).map_err(|error| vec![error])?;
-    let mut constants = collect_enum_constants(declarations);
+    let mut constants = BTreeMap::new();
     let (mut globals, mut global_bindings) =
         globals::collect(declarations, &metadata, &mut type_table).map_err(|error| vec![error])?;
     let mut callables = routines::callable_table(
@@ -348,50 +348,6 @@ fn lower_analyzed_root(
         program: ir,
         imports,
     })
-}
-
-fn collect_enum_constants(declarations: &[Decl]) -> BTreeMap<String, fpas_ir::Constant> {
-    let mut constants = BTreeMap::new();
-    let mut ambiguous = BTreeSet::new();
-    for declaration in declarations {
-        let fpas_parser::Decl::TypeDef(definition) = declaration else {
-            continue;
-        };
-        let fpas_parser::TypeBody::Enum(enumeration) = &definition.body else {
-            continue;
-        };
-        if enumeration
-            .members
-            .iter()
-            .any(|member| !member.fields.is_empty())
-        {
-            continue;
-        }
-        let mut next = Some(0_i64);
-        for member in &enumeration.members {
-            let Some(value) = member.value.or(next) else {
-                continue;
-            };
-            next = value.checked_add(1);
-            let short = member.name.to_ascii_lowercase();
-            constants.insert(
-                format!("{}.{}", definition.name, member.name).to_ascii_lowercase(),
-                fpas_ir::Constant::Integer(value),
-            );
-            if ambiguous.contains(&short) {
-                continue;
-            }
-            match constants.entry(short) {
-                std::collections::btree_map::Entry::Occupied(entry) => {
-                    ambiguous.insert(entry.remove_entry().0);
-                }
-                std::collections::btree_map::Entry::Vacant(entry) => {
-                    entry.insert(fpas_ir::Constant::Integer(value));
-                }
-            }
-        }
-    }
-    constants
 }
 
 fn collect_intrinsic_signatures(

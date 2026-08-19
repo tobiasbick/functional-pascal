@@ -134,7 +134,10 @@ impl Checker {
             })
             .collect::<Option<Vec<_>>>()?;
         let symbol = self.scopes.lookup(&parts.join("."))?;
-        if symbol.kind != SymbolKind::EnumMember {
+        if !matches!(
+            symbol.kind,
+            SymbolKind::EnumMember | SymbolKind::EnumVariantConstructor
+        ) {
             return None;
         }
         let resolved_enum = self.resolve_enum_ty(&symbol.ty)?;

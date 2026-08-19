@@ -8,6 +8,8 @@ pub use crate::target_reload::ReloadedDebugTarget;
 pub struct DebugSourceContent {
     /// Portable path stored in debugger metadata.
     pub path: String,
+    /// Optional original host path accepted from an editor for this source.
+    pub original_path: Option<std::path::PathBuf>,
     /// Exact UTF-8 source text whose identity was verified before launch.
     pub content: String,
 }

@@ -29,6 +29,7 @@ fn reloadable_server() -> DapServer {
     let target = PreparedDebugTarget::new(compile_reloadable(1), Vec::new())
         .with_sources(vec![DebugSourceContent {
             path: "test.fpas".to_string(),
+            original_path: Some("C:\\Workspace\\before.fpas".into()),
             content: "before".to_string(),
         }])
         .with_reloader(move || {
@@ -36,6 +37,7 @@ fn reloadable_server() -> DapServer {
                 ReloadedDebugTarget::new(candidate.clone()).with_sources(vec![
                     DebugSourceContent {
                         path: "test.fpas".to_string(),
+                        original_path: Some("D:\\Workspace\\after.fpas".into()),
                         content: "after".to_string(),
                     },
                 ]),
@@ -190,7 +192,7 @@ fn dap_reload_and_rollback_match_jsonl_and_refresh_sources() {
         &mut server,
         &mut seq,
         "source",
-        json!({"source":{"path":"test.fpas"}}),
+        json!({"source":{"path":"d:/workspace/AFTER.fpas"}}),
     );
     assert_eq!(source[0]["body"]["content"], "after");
 
@@ -202,7 +204,7 @@ fn dap_reload_and_rollback_match_jsonl_and_refresh_sources() {
         &mut server,
         &mut seq,
         "source",
-        json!({"source":{"path":"test.fpas"}}),
+        json!({"source":{"path":"c:/workspace/BEFORE.fpas"}}),
     );
     assert_eq!(source[0]["body"]["content"], "before");
 }

@@ -101,7 +101,9 @@ impl Checker {
 
     pub(in super::super) fn check_while_stmt(&mut self, condition: &Expr, body: &Stmt, span: Span) {
         let condition_ty = self.check_expr(condition);
-        if !condition_ty.compatible_with(&Ty::Boolean) {
+        if matches!(condition_ty, Ty::GenericParam(..)) {
+            self.check_type_compat(&Ty::Boolean, &condition_ty, "while condition", span);
+        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
             self.error_with_code(
                 SEMA_NON_BOOLEAN_CONDITION,
                 "While condition must be a boolean expression",
@@ -130,7 +132,9 @@ impl Checker {
         self.scopes.loop_depth -= 1;
 
         let condition_ty = self.check_expr(condition);
-        if !condition_ty.compatible_with(&Ty::Boolean) {
+        if matches!(condition_ty, Ty::GenericParam(..)) {
+            self.check_type_compat(&Ty::Boolean, &condition_ty, "repeat condition", span);
+        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
             self.error_with_code(
                 SEMA_NON_BOOLEAN_CONDITION,
                 "Repeat/until condition must be a boolean expression",

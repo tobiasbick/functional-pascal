@@ -1,6 +1,6 @@
 # Task 11 — Preserve simple-enum backing values through aliases and imports
 
-Status: open
+Status: complete
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -69,3 +69,13 @@ cargo fmt
 - Backing values survive semantic interface conversion; the existing sidecar field remains intact.
 - Local, alias-qualified, and imported regressions pass.
 - Current language docs remain unchanged.
+
+## Progress
+
+- Added simple-enum backing values to semantic variants; data-enum variants retain `None`.
+- Local checking now calculates validated implicit/explicit values once for both diagnostics and
+  semantic construction; intrinsic simple enums receive ordinal values.
+- Interface conversion copies the existing sidecar field in both directions, including aliases.
+- Compiler designator lowering now reads the resolved semantic variant value and no longer falls
+  back to declaration position or a local AST enum-constant table.
+- Added local original/alias execution coverage and export/import/alias interface coverage.

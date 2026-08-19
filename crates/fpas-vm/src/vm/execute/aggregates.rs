@@ -99,22 +99,37 @@ impl Worker {
         let destination = register(o.a)?;
         let index = self.read(register(o.b)?)?.clone();
         let value = self.read(register(o.c)?)?.clone();
-        let collection = self.take(destination)?;
-        let updated = match (collection, index) {
-            (Value::Array(mut values), Value::Integer(index)) => {
-                let key = Value::Integer(index);
-                let index = self.array_index(&key)?;
+        let array_index = match self.read(destination)? {
+            Value::Array(values) => {
+                let index = self.array_index(&index)?;
                 let length = values.len();
-                *values.get_mut(index).ok_or_else(|| {
-                    self.aggregate_error_code(
+                if index >= length {
+                    return Err(self.aggregate_error_code(
                         RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS,
                         format!("Array index {index} out of bounds (len {length})"),
                         "Check index bounds before array assignment.",
-                    )
-                })? = value;
+                    ));
+                }
+                Some(index)
+            }
+            Value::Dict(_) => None,
+            other => return Err(self.type_mismatch("array or dictionary", other)),
+        };
+        let collection = self.take(destination)?;
+        let updated = match collection {
+            Value::Array(mut values) => {
+                let Some(index) = array_index else {
+                    return Err(diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        "Validated IndexSet array lost its index",
+                    ));
+                };
+                values[index] = value;
                 Value::Array(values)
             }
-            (Value::Dict(mut pairs), key) => {
+            Value::Dict(mut pairs) => {
+                let key = index;
                 if let Some((_, existing)) =
                     pairs.iter_mut().find(|(candidate, _)| *candidate == key)
                 {
@@ -124,7 +139,13 @@ impl Worker {
                 }
                 Value::Dict(pairs)
             }
-            (other, _) => return Err(self.type_mismatch("array or dictionary", &other)),
+            _ => {
+                return Err(diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Validated IndexSet destination changed type before commit",
+                ));
+            }
         };
         self.write(destination, updated)
     }

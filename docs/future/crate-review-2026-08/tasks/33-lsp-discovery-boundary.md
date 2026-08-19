@@ -1,6 +1,17 @@
 # Task 33 — Keep document-driven discovery inside the workspace root
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: workspace containment and terminal-root equality use one component-aware platform
+  policy without canonicalizing nonexistent buffers
+- Tests: Windows case-only containment, missing inside document, genuine outside discovery, and
+  non-Windows native case behavior
+- Verification: full language-service, LSP, and workspace definition of done passed on 2026-08-19
+- Docs: unchanged; discovery policy is unchanged apart from corrected path identity
+- Blockers: none
 Severity: P2
 Difficulty: medium
 Language gate: no

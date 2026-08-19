@@ -39,6 +39,20 @@ fn case_with_else() {
 }
 
 #[test]
+fn case_with_only_else() {
+    let stmts = body_stmts("program T; begin case X of else A := 0 end end.");
+    match &stmts[0] {
+        Stmt::Case {
+            arms, else_body, ..
+        } => {
+            assert!(arms.is_empty());
+            assert!(else_body.is_some());
+        }
+        _ => panic!("expected Case"),
+    }
+}
+
+#[test]
 fn case_multiple_labels() {
     let stmts = body_stmts("program T; begin case X of 1, 2, 3: A := 1 end end.");
     match &stmts[0] {

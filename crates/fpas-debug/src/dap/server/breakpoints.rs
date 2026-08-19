@@ -22,7 +22,12 @@ impl DapServer {
                 "setBreakpoints requires source.path.",
             )];
         }
-        let source = self.resolve_source_path(&requested_source);
+        let source = match self.resolve_source_path(&requested_source) {
+            Ok(source) => source,
+            Err(message) => {
+                return vec![self.failure(request_seq, "setBreakpoints", message)];
+            }
+        };
         for id in self.source_breakpoints.remove(&source).unwrap_or_default() {
             let core_id = self.next_core_id();
             let _ = self.core.handle_line(&core_request(
@@ -57,10 +62,16 @@ impl DapServer {
                 .first()
                 .is_some_and(|record| record["success"] == false)
             {
-                let message = records[0]["error"]["message"]
-                    .as_str()
-                    .unwrap_or("Invalid breakpoint request.");
-                return vec![self.failure(request_seq, "setBreakpoints", message)];
+                bodies.push(json!({
+                    "verified": false,
+                    "message": records[0]["error"]["message"]
+                        .as_str()
+                        .unwrap_or("Invalid breakpoint request."),
+                    "source": {"path": source},
+                    "line": requested.get("line"),
+                    "column": requested.get("column")
+                }));
+                continue;
             }
             if let Some(body) = records.first().and_then(|record| record.get("body")) {
                 if let Some(id) = body.get("breakpoint_id").and_then(Value::as_u64) {
@@ -119,17 +130,10 @@ impl DapServer {
         )
     }
 
-    pub(super) fn resolve_source_path(&self, requested: &str) -> String {
-        let normalized = requested.replace('\\', "/");
-        let mut matches = self
-            .source_paths
-            .iter()
-            .filter(|source| normalized == **source || normalized.ends_with(&format!("/{source}")));
-        let first = matches.next();
-        if first.is_some() && matches.next().is_none() {
-            return first.cloned().unwrap_or_else(|| requested.to_string());
-        }
-        requested.to_string()
+    pub(super) fn resolve_source_path(&self, requested: &str) -> Result<String, &'static str> {
+        self.source_paths.resolve(requested).map_err(
+            |_| "Source path is ambiguous; use the exact workspace path or portable debugger path.",
+        )
     }
 }
 

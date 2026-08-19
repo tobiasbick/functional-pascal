@@ -127,6 +127,45 @@ fn program() -> RelocatableObject {
     }
 }
 
+fn private_record_copy(
+    owner: &str,
+    debug_types: Vec<fpas_unit::object::ObjectDebugType>,
+    layout: fpas_unit::object::ObjectRecordLayout,
+) -> RelocatableObject {
+    let mut object = unit(owner == "library.unit");
+    if owner != "library.unit" {
+        for function in &mut object.functions {
+            function.name = function.name.replacen("library.unit", owner, 1);
+        }
+        for definition in &mut object.definitions {
+            definition.name = definition.name.replacen("library.unit", owner, 1);
+        }
+    }
+    object.owner = owner.to_string();
+    object.debug_types = debug_types;
+    let name = layout.name.clone();
+    object.records.push(layout);
+    object.definitions.push(ObjectDefinition {
+        name,
+        target: DefinitionTarget::Record(0),
+        public: false,
+    });
+    object
+        .definitions
+        .sort_by(|left, right| left.name.cmp(&right.name));
+    object
+}
+
+fn one_field_record(field_type: u32) -> fpas_unit::object::ObjectRecordLayout {
+    fpas_unit::object::ObjectRecordLayout {
+        name: "shared.node".to_string(),
+        fields: vec!["value".to_string()],
+        field_types: vec![field_type],
+        properties: Vec::new(),
+        methods: Vec::new(),
+    }
+}
+
 #[test]
 fn dependency_objects_link_deterministically_and_run_in_the_register_vm() {
     let mut unit = unit(true);
@@ -491,6 +530,148 @@ fn matching_private_layout_copies_share_one_canonical_type_id() {
     let executable = link_objects(&[first, second], &program())
         .expect("matching private layout copies must coalesce");
     assert_eq!(executable.executable().records.len(), 1);
+}
+
+#[test]
+fn record_layout_copies_reject_structurally_different_field_types() {
+    let left = private_record_copy(
+        "library.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        one_field_record(0),
+    );
+    let right = private_record_copy(
+        "other.unit",
+        vec![fpas_unit::object::ObjectDebugType::Real],
+        one_field_record(0),
+    );
+
+    assert!(matches!(
+        link_objects(&[left, right], &program()),
+        Err(LinkError::IncompatibleLayoutCopies {
+            name,
+            left_owner,
+            right_owner,
+        }) if name == "shared.node"
+            && left_owner == "library.unit"
+            && right_owner == "other.unit"
+    ));
+}
+
+#[test]
+fn equivalent_field_types_at_different_local_indexes_coalesce() {
+    let left = private_record_copy(
+        "library.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        one_field_record(0),
+    );
+    let right = private_record_copy(
+        "other.unit",
+        vec![
+            fpas_unit::object::ObjectDebugType::Dynamic,
+            fpas_unit::object::ObjectDebugType::Integer,
+        ],
+        one_field_record(1),
+    );
+
+    let executable =
+        link_objects(&[left, right], &program()).expect("equivalent copies must coalesce");
+    assert_eq!(executable.executable().records.len(), 1);
+}
+
+#[test]
+fn recursive_nested_layout_types_terminate_and_coalesce() {
+    let left = private_record_copy(
+        "library.unit",
+        vec![
+            fpas_unit::object::ObjectDebugType::Record("shared.node".to_string()),
+            fpas_unit::object::ObjectDebugType::Array(0),
+        ],
+        one_field_record(1),
+    );
+    let right = private_record_copy(
+        "other.unit",
+        vec![
+            fpas_unit::object::ObjectDebugType::Dynamic,
+            fpas_unit::object::ObjectDebugType::Record("shared.node".to_string()),
+            fpas_unit::object::ObjectDebugType::Array(1),
+        ],
+        one_field_record(2),
+    );
+
+    let executable =
+        link_objects(&[left, right], &program()).expect("recursive copies must coalesce");
+    assert_eq!(executable.executable().records.len(), 1);
+}
+
+#[test]
+fn record_layout_copies_compare_properties_and_methods() {
+    let mut left_layout = one_field_record(0);
+    left_layout
+        .properties
+        .push(fpas_unit::object::ObjectRecordProperty {
+            name: "Value".to_string(),
+            getter: "shared.node.getvalue".to_string(),
+        });
+    left_layout
+        .methods
+        .push(fpas_unit::object::ObjectRecordMethod {
+            name: "Reset".to_string(),
+            routine: "shared.node.reset".to_string(),
+        });
+    let mut right_layout = left_layout.clone();
+    right_layout.properties[0].getter = "shared.node.getother".to_string();
+    let left = private_record_copy(
+        "library.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        left_layout,
+    );
+    let right = private_record_copy(
+        "other.unit",
+        vec![fpas_unit::object::ObjectDebugType::Integer],
+        right_layout,
+    );
+
+    assert!(matches!(
+        link_objects(&[left, right], &program()),
+        Err(LinkError::IncompatibleLayoutCopies { name, .. }) if name == "shared.node"
+    ));
+}
+
+#[test]
+fn enum_layout_copies_compare_variant_field_types() {
+    let mut left = unit(false);
+    left.enums.push(fpas_unit::object::ObjectEnumLayout {
+        name: "shared.choice".to_string(),
+        variants: vec![fpas_unit::object::ObjectEnumVariant {
+            name: "some".to_string(),
+            fields: vec!["value".to_string()],
+            field_types: vec![0],
+        }],
+    });
+    left.debug_types = vec![fpas_unit::object::ObjectDebugType::Integer];
+    left.definitions.push(ObjectDefinition {
+        name: "shared.choice".to_string(),
+        target: DefinitionTarget::Enum(0),
+        public: false,
+    });
+    left.definitions.sort_by(|a, b| a.name.cmp(&b.name));
+    let mut right = left.clone();
+    right.owner = "other.unit".to_string();
+    for function in &mut right.functions {
+        function.name = function.name.replacen("library.unit", "other.unit", 1);
+    }
+    for definition in &mut right.definitions {
+        if definition.name != "shared.choice" {
+            definition.name = definition.name.replacen("library.unit", "other.unit", 1);
+        }
+    }
+    right.debug_types = vec![fpas_unit::object::ObjectDebugType::Real];
+    right.definitions.sort_by(|a, b| a.name.cmp(&b.name));
+
+    assert!(matches!(
+        link_objects(&[left, right], &program()),
+        Err(LinkError::IncompatibleLayoutCopies { name, .. }) if name == "shared.choice"
+    ));
 }
 
 #[test]

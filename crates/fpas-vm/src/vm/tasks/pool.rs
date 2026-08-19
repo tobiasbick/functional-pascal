@@ -11,22 +11,7 @@ pub(in crate::vm) fn pool_loop(
     scheduler: Arc<TaskScheduler>,
 ) -> Result<(), VmError> {
     while let Some(task) = scheduler.dequeue() {
-        let mut worker = template.worker_for_task(task);
-        match worker.run_task() {
-            Ok(Some(value)) => {
-                if worker.retain_result {
-                    scheduler.store_result(worker.task_id, value);
-                }
-            }
-            Ok(None) => {}
-            Err(error) => {
-                if worker.retain_result {
-                    scheduler.store_failure(worker.task_id, error.clone());
-                }
-                scheduler.fail(error.clone());
-                return Err(error);
-            }
-        }
+        run_to_completion(template.worker_for_task(task), &scheduler)?;
     }
     Ok(())
 }
@@ -36,10 +21,24 @@ pub(super) fn run_helped(
     task: TaskState,
     scheduler: Arc<TaskScheduler>,
 ) -> Result<(), VmError> {
-    let mut worker = parent.worker_for_task(task);
-    match worker.run_task()? {
-        Some(value) if worker.retain_result => scheduler.store_result(worker.task_id, value),
-        _ => {}
+    run_to_completion(parent.worker_for_task(task), &scheduler)
+}
+
+fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<(), VmError> {
+    match worker.run_task() {
+        Ok(Some(value)) => {
+            if worker.retain_result {
+                scheduler.store_result(worker.task_id, value);
+            }
+            Ok(())
+        }
+        Ok(None) => Ok(()),
+        Err(error) => {
+            if worker.retain_result {
+                scheduler.store_failure(worker.task_id, error.clone());
+            }
+            scheduler.fail(error.clone());
+            Err(error)
+        }
     }
-    Ok(())
 }

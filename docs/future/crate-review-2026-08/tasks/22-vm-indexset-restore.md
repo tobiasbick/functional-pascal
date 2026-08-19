@@ -1,6 +1,6 @@
 # Task 22 — Restore the destination after failed IndexSet
 
-Status: open
+Status: complete
 Severity: P2
 Difficulty: medium
 Language gate: no
@@ -43,3 +43,10 @@ cargo fmt
 - Every failed `IndexSet` path preserves the destination value.
 - The regression proves post-failure state, not only the diagnostic code.
 - Docs unchanged.
+
+## Progress
+
+- IndexSet now validates destination type, array index type, and array bounds before taking the
+  destination register.
+- Added worker-level post-failure inspection proving the original array and its initialized bit
+  remain intact after an out-of-bounds write.

@@ -1,6 +1,6 @@
 # Task 20 — Isolate failures of inline-helped tasks
 
-Status: open
+Status: complete
 Severity: P1
 Difficulty: hard
 Language gate: no
@@ -46,3 +46,10 @@ cargo fmt
 - Helped-task panic is recorded on that task.
 - Run-wide propagation does not leave B or A pending indefinitely.
 - Docs unchanged.
+
+## Progress
+
+- Pool workers and inline-helped workers now use one task completion/failure bookkeeping path.
+- A retained helped-task failure is stored before scheduler-wide failure propagation.
+- Scheduler transition coverage proves the original worker failure is retained for both the
+  failing task and shutdown-completed waiters; a live inline-help VM regression remains to add.

@@ -262,3 +262,61 @@ fn malformed_project_unit_returns_structured_analysis_error_for_valid_main() {
         fpas_language_service::LanguageServiceError::Analysis { .. }
     ));
 }
+
+#[test]
+fn diagnostic_analysis_stays_current_when_a_sibling_source_vanishes() {
+    let temp = TempDirectory::new("analysis-missing-sibling-diagnostics");
+    let (manifest, main, unit) = write_program_project(&temp);
+    let mut service = LanguageService::load(&manifest);
+    service
+        .documents_mut()
+        .open_document(&main, 1, "program App;\n\nuses Demo.Math;\n\nbegin\nend.\n")
+        .expect("open main");
+    let baseline = service
+        .analyze_document_diagnostics(&main)
+        .expect("baseline diagnostics");
+    assert!(baseline.failure().is_none());
+
+    std::fs::remove_file(&unit).expect("remove sibling");
+    service
+        .documents_mut()
+        .apply_full_text(&main, 2, "program Broken;\nbegin\n  if then\nend.\n")
+        .expect("change open main");
+    let failed = service
+        .analyze_document_diagnostics(&main)
+        .expect("current diagnostics despite missing sibling");
+    assert_eq!(
+        failed.document().snapshot().version(),
+        fpas_language_service::SourceVersion::Editor(2)
+    );
+    assert!(
+        failed
+            .document()
+            .diagnostics()
+            .iter()
+            .any(|item| item.is_error())
+    );
+    assert!(matches!(
+        failed.failure(),
+        Some(fpas_language_service::LanguageServiceError::SourceRead { path, .. }) if path == &unit
+    ));
+
+    temp.write(
+        "src/math.fpas",
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin\n  return 42\nend;\n",
+    );
+    service
+        .documents_mut()
+        .apply_full_text(
+            &main,
+            3,
+            "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+        )
+        .expect("restore main");
+    let restored = service
+        .analyze_document_diagnostics(&main)
+        .expect("restored semantic diagnostics");
+    assert!(restored.failure().is_none());
+    assert!(restored.document().semantic().is_some());
+    assert!(restored.document().diagnostics().is_empty());
+}

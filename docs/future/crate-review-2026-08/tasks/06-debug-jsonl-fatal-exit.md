@@ -1,6 +1,15 @@
 # Task 06 — Fatal JSONL protocol errors must exit nonzero
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation commit: 74b16b7b
+- Current step: complete; remove this task after the completion cleanup is committed
+- Verification: cargo fmt --all -- --check, cargo build --workspace, and
+  cargo test --workspace --no-fail-fast passed on 2026-08-19
+- Docs: current user-facing documentation was included or confirmed by the implementation slice
+- Blockers: none
 Severity: P1
 Difficulty: medium
 Language gate: no

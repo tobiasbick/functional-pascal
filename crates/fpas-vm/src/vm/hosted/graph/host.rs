@@ -271,55 +271,66 @@ impl Worker {
                 "Configure OnPaint once before calling Application.Run.",
             ));
         }
-        self.with_graph(|graph| graph.session.request_redraw_if_absent(location))?;
-        let result = loop {
-            self.dispatch_graph_redraw(location)?;
-            self.process_graph_event(64, location)?;
-            let stop = self.with_graph(|graph| {
-                if graph.window_closed {
-                    Some("WindowClosed")
-                } else if graph.host_stop_requested && graph.quit_requested {
-                    Some("HostAndUserStop")
-                } else if graph.host_stop_requested {
-                    Some("HostStop")
-                } else if graph.quit_requested {
-                    Some("UserQuit")
-                } else {
-                    None
-                }
-            });
-            if let Some(reason) = stop {
-                break records::exit_reason(self, reason)?;
-            }
-            let (idle, timeout) = self.with_graph(|graph| {
-                (
-                    graph.on_idle.clone(),
-                    if graph.idle_interval_ms > 0 {
-                        graph.idle_interval_ms
+        let run_result = (|| {
+            self.with_graph(|graph| graph.session.request_redraw_if_absent(location))?;
+            let result = loop {
+                self.dispatch_graph_redraw(location)?;
+                self.process_graph_event(64, location)?;
+                let stop = self.with_graph(|graph| {
+                    if graph.window_closed {
+                        Some("WindowClosed")
+                    } else if graph.host_stop_requested && graph.quit_requested {
+                        Some("HostAndUserStop")
+                    } else if graph.host_stop_requested {
+                        Some("HostStop")
+                    } else if graph.quit_requested {
+                        Some("UserQuit")
                     } else {
-                        50
-                    },
-                )
+                        None
+                    }
+                });
+                if let Some(reason) = stop {
+                    break records::exit_reason(self, reason)?;
+                }
+                let (idle, timeout) = self.with_graph(|graph| {
+                    (
+                        graph.on_idle.clone(),
+                        if graph.idle_interval_ms > 0 {
+                            graph.idle_interval_ms
+                        } else {
+                            50
+                        },
+                    )
+                });
+                let event = self.with_graph(|graph| {
+                    graph.session.read_host_ui_event_timeout(timeout, location)
+                })?;
+                if let Some(event) = event {
+                    self.with_graph(|graph| graph.host.ingest_ui_event(event));
+                } else if let Some(callback) = idle {
+                    self.call_callback_sync(
+                        &callback,
+                        vec![records::application(self, location)?],
+                    )?;
+                }
+            };
+            let on_exit = self.with_graph(|graph| {
+                graph.last_exit_reason = Some(result.clone());
+                graph.on_exit.clone()
             });
-            let event = self
-                .with_graph(|graph| graph.session.read_host_ui_event_timeout(timeout, location))?;
-            if let Some(event) = event {
-                self.with_graph(|graph| graph.host.ingest_ui_event(event));
-            } else if let Some(callback) = idle {
-                self.call_callback_sync(&callback, vec![records::application(self, location)?])?;
+            if let Some(callback) = on_exit {
+                self.call_callback_sync(
+                    &callback,
+                    vec![records::application(self, location)?, result],
+                )?;
             }
-        };
-        let on_exit = self.with_graph(|graph| {
-            graph.last_exit_reason = Some(result.clone());
-            graph.on_exit.clone()
-        });
-        if let Some(callback) = on_exit {
-            self.call_callback_sync(
-                &callback,
-                vec![records::application(self, location)?, result],
-            )?;
+            Ok(())
+        })();
+        let cleanup_result = self.close_graph(location);
+        match run_result {
+            Err(error) => Err(error),
+            Ok(()) => cleanup_result,
         }
-        self.close_graph(location)
     }
 
     fn graph_host_arity_error(&self) -> VmError {

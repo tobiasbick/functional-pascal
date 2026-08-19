@@ -1,6 +1,6 @@
 # Task 05 — Preserve `//` comments on `uses` items
 
-Status: in progress
+Status: complete
 Severity: P1
 Difficulty: easy
 Language gate: no
@@ -67,5 +67,5 @@ cargo fmt
 - Files changed: `crates/fpas-fmt/src/comments/traversal.rs`,
   `crates/fpas-fmt/src/comments/map.rs`, `crates/fpas-fmt/src/emit/program.rs`,
   `crates/fpas-fmt/tests/comment_regressions.rs`
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

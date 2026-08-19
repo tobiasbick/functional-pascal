@@ -49,8 +49,20 @@ fn array_index_updates_reject_out_of_bounds_indexes() {
         vec!["root", "test.fpas"],
         3,
     );
-    let error = execute(executable).expect_err("out-of-bounds array update must fail");
+    let mut worker = crate::vm::worker::Worker::new(Arc::new(executable)).expect("worker");
+    worker.dispatch_one().expect("array element");
+    worker.dispatch_one().expect("invalid index");
+    worker.dispatch_one().expect("array construction");
+    let error = match worker.dispatch_one() {
+        Err(error) => error,
+        Ok(_) => panic!("out-of-bounds array update must fail"),
+    };
     assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
+    assert_eq!(
+        worker.registers[2],
+        Value::Array(vec![Value::Integer(4)].into())
+    );
+    assert!(worker.register_is_initialized(2));
 }
 
 #[test]
@@ -303,3 +315,4 @@ fn positional_record_clones_share_layout_and_detach_values() {
     assert_eq!(original.body().values[0], Value::Integer(1));
     assert_eq!(updated.body().values[0], Value::Integer(2));
 }
+use std::sync::Arc;

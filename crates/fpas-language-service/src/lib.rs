@@ -19,7 +19,7 @@ mod semantic_tools;
 mod symbols;
 mod workspace;
 
-pub use analysis::{DocumentAnalysis, LanguageService, SemanticAnalysis};
+pub use analysis::{DiagnosticAnalysis, DocumentAnalysis, LanguageService, SemanticAnalysis};
 pub use cancellation::CancellationToken;
 pub use diagnostics::diagnostics_for_document;
 pub use document::{

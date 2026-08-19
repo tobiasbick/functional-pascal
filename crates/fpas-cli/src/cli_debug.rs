@@ -197,11 +197,17 @@ fn install_debug_sources(
     let hashes = bytes.iter().map(Digest::of).collect::<Vec<_>>();
     let sources = portable
         .iter()
+        .zip(source_paths)
         .zip(&bytes)
-        .map(|(path, bytes)| {
+        .map(|((path, original_path), bytes)| {
             String::from_utf8(bytes.clone())
                 .map(|content| fpas_debug::DebugSourceContent {
                     path: path.clone(),
+                    original_path: Some(
+                        original_path
+                            .canonicalize()
+                            .unwrap_or_else(|_| original_path.clone()),
+                    ),
                     content,
                 })
                 .map_err(|error| format!("Debug source `{path}` is not valid UTF-8: {error}"))
@@ -287,6 +293,7 @@ fn prepare_image(path: &Path, source_root: Option<&Path>) -> Result<PreparedExec
             .map_err(|error| format!("Debug source `{portable}` is not valid UTF-8: {error}"))?;
         sources.push(fpas_debug::DebugSourceContent {
             path: portable.clone(),
+            original_path: Some(candidate),
             content,
         });
     }
@@ -333,7 +340,17 @@ mod tests {
             fpas_program::encode(&image).expect("encode image"),
         )
         .expect("write image");
-        prepare_image(&image_path, Some(&root)).expect("matching source accepted");
+        let prepared = prepare_image(&image_path, Some(&root)).expect("matching source accepted");
+        assert_eq!(prepared.sources[0].path, "main.fpas");
+        assert_eq!(
+            prepared.sources[0].original_path.as_deref(),
+            Some(
+                source_path
+                    .canonicalize()
+                    .expect("canonical source")
+                    .as_path()
+            )
+        );
         crate::test_support::write_text(&source_path, "program Main; begin var X := 1 end.\n");
         let error = prepare_image(&image_path, Some(&root)).expect_err("stale source rejected");
         assert!(error.contains("is stale"));

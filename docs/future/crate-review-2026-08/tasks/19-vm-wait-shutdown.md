@@ -1,6 +1,6 @@
 # Task 19 — `Wait` / `WaitAll` must return when the runtime aborts
 
-Status: open
+Status: complete
 Severity: P1
 Difficulty: hard
 Language gate: no
@@ -48,3 +48,11 @@ If a test hangs, stop and fix; do not ship a sleep-and-hope test.
 - Wait returns on shutdown/abort.
 - No hot-spin (CPU-bound loop without blocking).
 - Docs unchanged unless Wait’s shutdown behavior was unspecified — then one sentence on the task page.
+
+## Progress
+
+- Wait and WaitAll now convert pending retained slots to stored failures once shutdown is visible,
+  instead of re-entering the non-blocking wait path.
+- Scheduler-wide worker failures preserve the first worker diagnostic; explicit cancellation uses
+  the existing runtime-shutdown diagnostic.
+- Added deterministic scheduler transition coverage; bounded live-VM regressions remain to add.

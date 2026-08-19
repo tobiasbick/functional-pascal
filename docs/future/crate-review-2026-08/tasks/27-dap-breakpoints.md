@@ -1,6 +1,17 @@
 # Task 27 — DAP `setBreakpoints` must be atomic per source
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: DAP-faithful partial validation returns one breakpoint result per requested
+  location, retains every installed ID, and lets the next replace clear all successful locations
+- Tests: mixed valid/line-zero replacement and subsequent empty replacement prove no VM leak;
+  existing invalid breakpoint-assign coverage now asserts an unverified item response
+- Verification: full fpas-debug tests and workspace definition of done passed on 2026-08-19
+- Docs: unchanged; behavior now follows the existing DAP contract
+- Blockers: none
 Severity: P1
 Difficulty: medium
 Language gate: no

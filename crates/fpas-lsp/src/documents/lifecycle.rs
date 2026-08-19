@@ -1,11 +1,9 @@
 //! Workspace loading and ordered editor document mutations.
 
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 use fpas_language_service::{
-    CancellationToken, DocumentAnalysis, LanguageService, LanguageServiceError, SourceVersion,
-    format_document,
+    CancellationToken, LanguageService, LanguageServiceError, SourceVersion, format_document,
 };
 use tower_lsp_server::ls_types::{
     DidChangeTextDocumentParams, DidCloseTextDocumentParams, DidOpenTextDocumentParams,
@@ -145,11 +143,11 @@ impl SynchronizedDocuments {
         editor_version(snapshot.version())
     }
 
-    pub(crate) async fn analyze_if_current(
+    pub(crate) async fn analyze_diagnostics_if_current(
         &self,
         path: &Path,
         version: i32,
-    ) -> Result<Option<Arc<DocumentAnalysis>>, LanguageServiceError> {
+    ) -> Result<Option<fpas_language_service::DiagnosticAnalysis>, LanguageServiceError> {
         let path = path.to_path_buf();
         tasks::run(&self.service, move |service, cancellation| {
             cancellation.check()?;
@@ -159,10 +157,10 @@ impl SynchronizedDocuments {
             if editor_version(snapshot.version()) != Some(version) {
                 return Ok(None);
             }
-            let analysis = service.analyze_document(&path)?;
+            let analysis = service.analyze_document_diagnostics(&path)?;
             cancellation.check()?;
             Ok(
-                (editor_version(analysis.snapshot().version()) == Some(version))
+                (editor_version(analysis.document().snapshot().version()) == Some(version))
                     .then_some(analysis),
             )
         })

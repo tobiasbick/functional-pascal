@@ -30,7 +30,7 @@ impl Parser {
         self.expect(&Token::Of);
 
         let mut arms = Vec::new();
-        if self.is_case_arm_end() {
+        if matches!(self.current_token(), Token::End | Token::Eof) {
             self.error_with_code(
                 PARSE_EXPECTED_TOKEN,
                 "Expected at least one case arm",

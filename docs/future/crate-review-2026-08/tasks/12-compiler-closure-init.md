@@ -1,6 +1,6 @@
 # Task 12 — Discover closures in program/unit declaration initializers
 
-Status: in progress
+Status: complete
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -62,5 +62,5 @@ cargo fmt
 - Base commit: 74b16b7b
 - Current step: verify declaration-initializer closure discovery before root lowering
 - Files changed: compiler closure registry/lowering and closure tests
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

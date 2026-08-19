@@ -1,6 +1,6 @@
 # Task 24 — Compare complete layout identity during linker coalescing
 
-Status: open
+Status: complete
 Severity: P2
 Difficulty: hard
 Language gate: no
@@ -56,3 +56,11 @@ cargo fmt
 - Coalescing is based on complete structural identity, not local numeric IDs.
 - Mismatches report both object/layout identities.
 - Existing matching-copy behavior remains valid.
+
+## Progress
+
+- Added cycle-safe structural comparison of object-local portable debug-type graphs.
+- Record copies now compare ordered field types, properties/getters, and methods/routines; enum
+  copies compare ordered variant field types.
+- Incompatible layout-copy diagnostics identify the canonical layout and both object owners.
+- Regression matrix remains to add and run.

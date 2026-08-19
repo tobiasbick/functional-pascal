@@ -1,6 +1,16 @@
 # Task 35 — Cover rejection of non-library dependencies
 
-Status: coverage
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: production code unchanged
+- Tests: direct project-path and workspace-name program dependencies both assert the existing
+  actionable library-only error; the existing library dependency success test remains green
+- Verification: full fpas-project and workspace definition of done passed on 2026-08-19
+- Docs: unchanged; tests lock down the documented rule
+- Blockers: none
 Severity: P3 coverage gap
 Difficulty: easy
 Language gate: no

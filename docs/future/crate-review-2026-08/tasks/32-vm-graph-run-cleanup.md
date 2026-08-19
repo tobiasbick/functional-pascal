@@ -1,6 +1,16 @@
 # Task 32 — Clean up graph state after failed Application.Run
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: all post-activation exits share one cleanup epilogue; an original run failure
+  takes precedence over any close failure
+- Tests: a callback failure clears active/session/headless state and permits a second graph acquire
+- Verification: full fpas-vm and workspace definition of done passed on 2026-08-19
+- Docs: unchanged; implementation now matches the existing lifecycle contract
+- Blockers: none
 Severity: P2
 Difficulty: medium
 Language gate: no

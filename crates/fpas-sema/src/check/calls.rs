@@ -96,21 +96,19 @@ impl Checker {
         let mut arg_types = Vec::with_capacity(args.len());
         for (index, arg) in args.iter().enumerate() {
             let arg_ty = if let Some(param) = params.get(index) {
-                let arg_ty = self.check_expr_with_expected_record_literals(arg, &param.ty);
-                self.check_type_compat(
-                    &param.ty,
-                    &arg_ty,
-                    &format!("argument {}", index + 1),
-                    span,
-                );
-                arg_ty
+                self.check_expr_with_expected_record_literals(arg, &param.ty)
             } else {
                 self.check_expr(arg)
             };
             arg_types.push(arg_ty);
         }
 
-        self.validate_routine_constraints(type_params, params, &arg_types, span)
+        let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
+        for (index, (param, arg_ty)) in params.iter().zip(&arg_types).enumerate() {
+            let expected = Self::substitute_type_params(&param.ty, &inferred);
+            self.check_type_compat(&expected, arg_ty, &format!("argument {}", index + 1), span);
+        }
+        inferred
     }
 
     /// Infer type arguments from argument types, enforce consistent reuse, and

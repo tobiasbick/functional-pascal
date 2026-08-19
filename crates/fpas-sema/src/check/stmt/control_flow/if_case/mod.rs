@@ -36,7 +36,9 @@ impl Checker {
         span: Span,
     ) {
         let condition_ty = self.check_expr(condition);
-        if !condition_ty.compatible_with(&Ty::Boolean) {
+        if matches!(condition_ty, Ty::GenericParam(..)) {
+            self.check_type_compat(&Ty::Boolean, &condition_ty, "if condition", span);
+        } else if !Ty::Boolean.assignment_compatible_with(&condition_ty) {
             self.error_with_code(
                 SEMA_NON_BOOLEAN_CONDITION,
                 "Condition must be a boolean expression",

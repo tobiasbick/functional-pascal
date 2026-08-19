@@ -1,6 +1,6 @@
 # Task 09 — Do not consume sync tokens when an expression is missing
 
-Status: in progress
+Status: complete
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -60,5 +60,5 @@ cargo fmt
 - Current step: verify expression-boundary recovery regressions
 - Files changed: `crates/fpas-parser/src/parser/core.rs`,
   `crates/fpas-parser/src/parser/expr/primary.rs`, parser error tests
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

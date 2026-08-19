@@ -1,6 +1,6 @@
 # Task 16 — Ambiguous imported enum type makes `Color.Red` ambiguous
 
-Status: in progress
+Status: complete
 Severity: P1
 Difficulty: medium
 Language gate: no
@@ -49,5 +49,5 @@ cargo fmt
 - Base commit: 74b16b7b
 - Current step: verify ambiguous and fully qualified imported enum variants
 - Files changed: semantic interface installation and interface tests
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

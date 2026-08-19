@@ -97,6 +97,60 @@ fn consumer_analysis_uses_interface_without_dependency_ast() {
 }
 
 #[test]
+fn enum_backing_values_survive_export_import_and_alias_export() {
+    let dependency = parse_unit(
+        "unit Demo.Values;
+         public type State = enum Idle = 7; Ready; Done = 20; end;",
+    );
+    let dependency_interface = analyze_unit(&dependency, &[])
+        .expect("dependency analysis must succeed")
+        .interface
+        .expect("dependency interface");
+    let state = dependency_interface
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "State")
+        .expect("State export");
+    let InterfaceType::Enum(state) = &state.ty else {
+        panic!("State must remain an enum");
+    };
+    assert_eq!(
+        state
+            .variants
+            .iter()
+            .map(|variant| variant.backing_value)
+            .collect::<Vec<_>>(),
+        [Some(7), Some(8), Some(20)]
+    );
+
+    let consumer = parse_unit(
+        "unit Demo.Aliases;
+         uses Demo.Values;
+         public type StateAlias = State;",
+    );
+    let consumer_interface = analyze_unit(&consumer, &[dependency_interface])
+        .expect("consumer analysis must succeed")
+        .interface
+        .expect("consumer interface");
+    let alias = consumer_interface
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "StateAlias")
+        .expect("StateAlias export");
+    let InterfaceType::Enum(alias) = &alias.ty else {
+        panic!("StateAlias must retain its enum descriptor");
+    };
+    assert_eq!(
+        alias
+            .variants
+            .iter()
+            .map(|variant| variant.backing_value)
+            .collect::<Vec<_>>(),
+        [Some(7), Some(8), Some(20)]
+    );
+}
+
+#[test]
 fn private_body_changes_do_not_change_interface_digest() {
     let left = parse_unit(
         "unit Demo.Stable;

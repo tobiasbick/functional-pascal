@@ -278,7 +278,7 @@ fn enum_to_interface(enum_ty: &EnumTy) -> Result<artifact::EnumType, InterfaceCo
                             })
                         })
                         .collect::<Result<_, InterfaceConversionError>>()?,
-                    backing_value: None,
+                    backing_value: variant.backing_value,
                 })
             })
             .collect::<Result<_, InterfaceConversionError>>()?,
@@ -460,6 +460,7 @@ fn interface_to_enum(enum_ty: &artifact::EnumType) -> Result<EnumTy, InterfaceCo
                         .iter()
                         .map(|field| Ok((field.name.clone(), interface_type_to_ty(&field.ty)?)))
                         .collect::<Result<_, InterfaceConversionError>>()?,
+                    backing_value: variant.backing_value,
                 })
             })
             .collect::<Result<_, InterfaceConversionError>>()?,

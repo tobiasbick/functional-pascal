@@ -23,11 +23,12 @@ impl Checker {
             return;
         }
 
-        self.check_enum_backing_values(&td.name, enum_ty);
+        let backing_values = self.enum_backing_values(&td.name, enum_ty);
 
         let mut seen_variants = HashSet::new();
         let mut variants = Vec::new();
-        for member in &enum_ty.members {
+        let mut variant_spans = Vec::new();
+        for (member, backing_value) in enum_ty.members.iter().zip(backing_values) {
             if !seen_variants.insert(canonical_symbol_name(&member.name)) {
                 self.error_with_code(
                     SEMA_DUPLICATE_DECLARATION,
@@ -56,7 +57,9 @@ impl Checker {
             variants.push(EnumVariantTy {
                 name: member.name.clone(),
                 fields,
+                backing_value,
             });
+            variant_spans.push(member.span);
         }
 
         let ty = Ty::Enum(Arc::new(EnumTy {
@@ -64,7 +67,7 @@ impl Checker {
             variants: variants.clone(),
         }));
 
-        for (member, variant) in enum_ty.members.iter().zip(variants.iter()) {
+        for (variant, span) in variants.iter().zip(variant_spans) {
             let kind = if variant.fields.is_empty() {
                 SymbolKind::EnumMember
             } else {
@@ -76,7 +79,7 @@ impl Checker {
                 kind,
                 task_bound: false,
             };
-            self.register_enum_variant_symbols(&td.name, &variant.name, symbol, member.span);
+            self.register_enum_variant_symbols(&td.name, &variant.name, symbol, span);
         }
 
         if let Some(existing) = self.scopes.lookup_mut(&td.name) {
@@ -89,8 +92,17 @@ impl Checker {
         }
     }
 
-    fn check_enum_backing_values(&mut self, enum_name: &str, enum_ty: &EnumType) {
+    fn enum_backing_values(&mut self, enum_name: &str, enum_ty: &EnumType) -> Vec<Option<i64>> {
+        if enum_ty
+            .members
+            .iter()
+            .any(|member| !member.fields.is_empty())
+        {
+            return vec![None; enum_ty.members.len()];
+        }
+
         let mut next_value = Some(0_i64);
+        let mut values = Vec::with_capacity(enum_ty.members.len());
         for member in &enum_ty.members {
             let backing = match member.value {
                 Some(value) => value,
@@ -105,13 +117,16 @@ impl Checker {
                             "Assign an explicit integer backing value to this member, or choose a preceding value below 9223372036854775807.",
                             member.span,
                         );
+                        values.push(None);
                         continue;
                     };
                     value
                 }
             };
+            values.push(Some(backing));
             next_value = backing.checked_add(1);
         }
+        values
     }
 
     /// Register `Type.Variant` and, when unambiguous, a short `Variant` alias at program scope.

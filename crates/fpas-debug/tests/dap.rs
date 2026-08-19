@@ -6,6 +6,7 @@
 )]
 
 use std::io::{BufReader, Cursor};
+use std::path::PathBuf;
 
 use fpas_debug::{
     DebugSourceContent, PreparedDebugTarget,
@@ -24,6 +25,7 @@ fn target(source: &str) -> PreparedDebugTarget {
     let executable = fpas_compiler::compile(&program).expect("compile DAP fixture");
     PreparedDebugTarget::new(executable, Vec::new()).with_sources(vec![DebugSourceContent {
         path: "<memory>".into(),
+        original_path: None,
         content: source.into(),
     }])
 }
@@ -55,6 +57,13 @@ fn framing_uses_utf8_byte_lengths_and_rejects_truncation() {
     let mut truncated = BufReader::new(Cursor::new(b"Content-Length: 5\r\n\r\n{}"));
     let error = read_message(&mut truncated).expect_err("truncated body rejected");
     assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+}
+
+fn target_with_sources(source: &str, sources: Vec<DebugSourceContent>) -> PreparedDebugTarget {
+    let (program, diagnostics) = fpas_parser::parse(source);
+    assert!(diagnostics.is_empty());
+    let executable = fpas_compiler::compile(&program).expect("compile DAP fixture");
+    PreparedDebugTarget::new(executable, Vec::new()).with_sources(sources)
 }
 
 #[test]
@@ -581,6 +590,132 @@ fn dap_hit_conditions_and_logpoints_match_jsonl_policy() {
         events
             .iter()
             .any(|message| message["event"] == "terminated")
+    );
+}
+
+#[test]
+fn mixed_source_breakpoints_report_each_location_and_clear_without_leaks() {
+    let source = "program Main;\nbegin\n  mutable var X: integer := 1;\n  X := X + 1\nend.";
+    let mut adapter = server(source);
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let _ = adapter.handle(request(2, "launch", json!({})));
+    let replaced = adapter.handle(request(
+        3,
+        "setBreakpoints",
+        json!({
+            "source":{"path":"<memory>"},
+            "breakpoints":[{"line":4},{"line":0}]
+        }),
+    ));
+    assert_eq!(replaced[0]["success"], true, "{replaced:?}");
+    assert_eq!(
+        replaced[0]["body"]["breakpoints"].as_array().map(Vec::len),
+        Some(2)
+    );
+    assert_eq!(replaced[0]["body"]["breakpoints"][0]["verified"], true);
+    assert_eq!(replaced[0]["body"]["breakpoints"][1]["verified"], false);
+
+    let cleared = adapter.handle(request(
+        4,
+        "setBreakpoints",
+        json!({"source":{"path":"<memory>"},"breakpoints":[]}),
+    ));
+    assert_eq!(cleared[0]["success"], true, "{cleared:?}");
+    let _ = adapter.handle(request(5, "configurationDone", json!({})));
+    let events = wait_dap_until_stable(&mut adapter);
+    assert!(!events.iter().any(|message| message["event"] == "stopped"));
+    assert!(
+        events
+            .iter()
+            .any(|message| message["event"] == "terminated")
+    );
+}
+
+#[test]
+fn source_lookup_uses_original_alias_without_exposing_it() {
+    let portable = "sources/0/main.fpas";
+    let original = "C:\\Workspace\\Outside\\Main.fpas";
+    let source = "program Main; begin end.";
+    let mut adapter = DapServer::new(target_with_sources(
+        source,
+        vec![DebugSourceContent {
+            path: portable.to_string(),
+            original_path: Some(PathBuf::from(original)),
+            content: source.to_string(),
+        }],
+    ))
+    .expect("create aliased DAP server");
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let response = adapter.handle(request(
+        2,
+        "source",
+        json!({"source":{"path":"c:/workspace/outside/main.fpas"}}),
+    ));
+    assert_eq!(response[0]["success"], true, "{response:?}");
+    assert_eq!(response[0]["body"]["content"], source);
+    assert!(!response[0].to_string().contains(original));
+}
+
+#[test]
+fn breakpoint_lookup_uses_windows_original_alias_and_returns_portable_path() {
+    let source = "program Main;\nbegin\n  var X: integer := 1\nend.";
+    let mut adapter = DapServer::new(target_with_sources(
+        source,
+        vec![DebugSourceContent {
+            path: "<memory>".to_string(),
+            original_path: Some(PathBuf::from("C:\\Workspace\\Main.fpas")),
+            content: source.to_string(),
+        }],
+    ))
+    .expect("create aliased DAP server");
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let _ = adapter.handle(request(2, "launch", json!({})));
+    let response = adapter.handle(request(
+        3,
+        "setBreakpoints",
+        json!({
+            "source":{"path":"c:/workspace/MAIN.fpas"},
+            "breakpoints":[{"line":3}]
+        }),
+    ));
+    assert_eq!(response[0]["success"], true, "{response:?}");
+    assert_eq!(response[0]["body"]["breakpoints"][0]["verified"], true);
+    assert_eq!(
+        response[0]["body"]["breakpoints"][0]["source"]["path"],
+        "<memory>"
+    );
+}
+
+#[test]
+fn ambiguous_source_suffix_does_not_bind() {
+    let source = "program Main; begin end.";
+    let mut adapter = DapServer::new(target_with_sources(
+        source,
+        vec![
+            DebugSourceContent {
+                path: "left/main.fpas".to_string(),
+                original_path: None,
+                content: "left".to_string(),
+            },
+            DebugSourceContent {
+                path: "right/main.fpas".to_string(),
+                original_path: None,
+                content: "right".to_string(),
+            },
+        ],
+    ))
+    .expect("create ambiguous DAP server");
+    let _ = adapter.handle(request(1, "initialize", json!({})));
+    let response = adapter.handle(request(
+        2,
+        "source",
+        json!({"source":{"path":"workspace/main.fpas"}}),
+    ));
+    assert_eq!(response[0]["success"], false, "{response:?}");
+    assert!(
+        response[0]["message"]
+            .as_str()
+            .is_some_and(|message| { message.to_ascii_lowercase().contains("ambiguous") })
     );
 }
 

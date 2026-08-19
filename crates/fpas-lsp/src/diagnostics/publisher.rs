@@ -5,10 +5,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
-use fpas_language_service::diagnostics_for_document;
+use fpas_language_service::{LanguageServiceError, diagnostics_for_document};
 use tokio::sync::{Mutex, mpsc};
 use tower_lsp_server::Client;
-use tower_lsp_server::ls_types::{Diagnostic, Uri};
+use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range, Uri};
 
 use super::convert::diagnostic_to_lsp;
 use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
@@ -51,7 +51,7 @@ impl DiagnosticPublisher {
                 return;
             }
             let analysis = match documents
-                .analyze_if_current(&document.path, document.version)
+                .analyze_diagnostics_if_current(&document.path, document.version)
                 .await
             {
                 Ok(Some(analysis)) => analysis,
@@ -67,8 +67,8 @@ impl DiagnosticPublisher {
                 }
             };
             let mut diagnostics = Vec::new();
-            for diagnostic in diagnostics_for_document(&analysis) {
-                match diagnostic_to_lsp(analysis.snapshot(), diagnostic) {
+            for diagnostic in diagnostics_for_document(analysis.document()) {
+                match diagnostic_to_lsp(analysis.document().snapshot(), diagnostic) {
                     Ok(diagnostic) => diagnostics.push(diagnostic),
                     Err(error) => tracing::warn!(
                         path = %document.path.display(),
@@ -77,6 +77,9 @@ impl DiagnosticPublisher {
                         "cannot convert compiler diagnostic to LSP"
                     ),
                 }
+            }
+            if let Some(failure) = analysis.failure() {
+                diagnostics.push(analysis_failure_diagnostic(failure));
             }
             let _ = publications.send(Publication::Diagnostics {
                 document,
@@ -97,6 +100,21 @@ impl DiagnosticPublisher {
 
     pub(crate) async fn shutdown(&self) {
         self.generations.lock().await.shutdown();
+    }
+}
+
+fn analysis_failure_diagnostic(error: &LanguageServiceError) -> Diagnostic {
+    let code = match error {
+        LanguageServiceError::SourceRead { .. } => "FPAS_PROJECT_IO",
+        _ => "FPAS_ANALYSIS",
+    };
+    Diagnostic {
+        range: Range::default(),
+        severity: Some(DiagnosticSeverity::ERROR),
+        code: Some(NumberOrString::String(code.to_string())),
+        source: Some("fpas".to_string()),
+        message: error.to_string(),
+        ..Diagnostic::default()
     }
 }
 

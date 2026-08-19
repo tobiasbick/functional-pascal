@@ -39,6 +39,7 @@ fn target(source: &'static str) -> PreparedDebugTarget {
     let executable = fpas_compiler::compile(&program).expect("compile DAP transport fixture");
     PreparedDebugTarget::new(executable, Vec::new()).with_sources(vec![DebugSourceContent {
         path: "<memory>".into(),
+        original_path: None,
         content: source.into(),
     }])
 }

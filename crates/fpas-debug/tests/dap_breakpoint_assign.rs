@@ -120,7 +120,11 @@ fn dap_frame_assign_is_rejected_without_creating_the_breakpoint() {
             }]
         }),
     );
-    assert_eq!(rejected[0]["success"], false, "{rejected:?}");
+    assert_eq!(rejected[0]["success"], true, "{rejected:?}");
+    assert_eq!(
+        rejected[0]["body"]["breakpoints"][0]["verified"], false,
+        "{rejected:?}"
+    );
     assert_eq!(rejected.len(), 1, "{rejected:?}");
 
     let continued = send(&mut server, &mut seq, "continue", json!({"threadId":1}));

@@ -31,6 +31,7 @@ fn target() -> PreparedDebugTarget {
     let executable = fpas_compiler::compile(&program).expect("compile task-lifecycle fixture");
     PreparedDebugTarget::new(executable, Vec::new()).with_sources(vec![DebugSourceContent {
         path: "<memory>".into(),
+        original_path: None,
         content: SOURCE.into(),
     }])
 }

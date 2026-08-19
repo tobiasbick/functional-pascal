@@ -183,7 +183,13 @@ impl Worker {
                         TaskResultPoll::Failed(error) => return Err(error),
                         TaskResultPoll::Consumed => return Err(self.invalid_task(*id)),
                         TaskResultPoll::Unknown => return Err(self.invalid_task(*id)),
-                        TaskResultPoll::Pending => self.help_or_wait_result(*id)?,
+                        TaskResultPoll::Pending => {
+                            let scheduler = self.scheduler_ref()?;
+                            scheduler.fail_pending_result_if_shutdown(*id);
+                            if !scheduler.is_shutdown() {
+                                self.help_or_wait_result(*id)?;
+                            }
+                        }
                     }
                 }
             }
@@ -207,7 +213,13 @@ impl Worker {
                         TaskBatchPoll::Complete => return Ok(Some(None)),
                         TaskBatchPoll::Failed(error) => return Err(error),
                         TaskBatchPoll::Unknown(id) => return Err(self.invalid_task(id)),
-                        TaskBatchPoll::Pending => self.help_or_wait_batch(&ids)?,
+                        TaskBatchPoll::Pending => {
+                            let scheduler = self.scheduler_ref()?;
+                            scheduler.fail_pending_batch_if_shutdown(&ids);
+                            if !scheduler.is_shutdown() {
+                                self.help_or_wait_batch(&ids)?;
+                            }
+                        }
                     }
                 }
             }

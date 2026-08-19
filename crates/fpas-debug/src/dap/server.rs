@@ -16,6 +16,7 @@ mod location;
 mod mutation;
 mod recording;
 mod sequence;
+mod source_paths;
 mod storage;
 mod task_control;
 mod tasks;
@@ -27,6 +28,7 @@ use serde_json::{Value, json};
 
 use crate::PreparedDebugTarget;
 use crate::jsonl::{JsonlServer, ServerStatus};
+use source_paths::SourcePaths;
 use tasks::ThreadMap;
 
 /// Stateful DAP adapter for one prepared target.
@@ -35,7 +37,7 @@ pub struct DapServer {
     sequence: u64,
     stop_on_entry: bool,
     source_breakpoints: HashMap<String, Vec<u64>>,
-    source_paths: Vec<String>,
+    source_paths: SourcePaths,
     sources: HashMap<String, String>,
     source_revision: u64,
     runtime_failed: bool,
@@ -51,7 +53,7 @@ impl DapServer {
     ///
     /// Returns debugger initialization failures for invalid runtime state.
     pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
-        let source_paths = target.source_paths();
+        let source_paths = SourcePaths::new(&target.source_paths(), target.sources());
         let sources = target
             .sources()
             .iter()
@@ -183,7 +185,10 @@ impl DapServer {
             .pointer("/source/path")
             .and_then(Value::as_str)
             .unwrap_or("");
-        let path = self.resolve_source_path(requested);
+        let path = match self.resolve_source_path(requested) {
+            Ok(path) => path,
+            Err(message) => return vec![self.failure(request_seq, command, message)],
+        };
         match self.sources.get(&path).cloned() {
             Some(content) => vec![self.success(
                 request_seq,
@@ -242,12 +247,15 @@ impl DapServer {
         if revision == self.source_revision {
             return;
         }
-        self.source_paths = self
-            .core
-            .sources()
-            .iter()
-            .map(|source| source.path.clone())
-            .collect();
+        self.source_paths = SourcePaths::new(
+            &self
+                .core
+                .sources()
+                .iter()
+                .map(|source| source.path.clone())
+                .collect::<Vec<_>>(),
+            self.core.sources(),
+        );
         self.sources = self
             .core
             .sources()

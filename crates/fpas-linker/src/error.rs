@@ -25,6 +25,15 @@ pub enum LinkError {
     },
     /// Two objects define the same canonical symbol.
     DuplicateDefinition(String),
+    /// Two objects provide incompatible copies of one canonical layout.
+    IncompatibleLayoutCopies {
+        /// Canonical record or enum name.
+        name: String,
+        /// Owner of the first encountered copy.
+        left_owner: String,
+        /// Owner of the conflicting copy.
+        right_owner: String,
+    },
     /// No definition satisfies an import.
     UnresolvedImport {
         /// Importing owner.
@@ -126,6 +135,14 @@ impl fmt::Display for LinkError {
             Self::DuplicateDefinition(name) => {
                 write!(formatter, "duplicate canonical definition `{name}`")
             }
+            Self::IncompatibleLayoutCopies {
+                name,
+                left_owner,
+                right_owner,
+            } => write!(
+                formatter,
+                "objects `{left_owner}` and `{right_owner}` define incompatible copies of layout `{name}`"
+            ),
             Self::UnresolvedImport { owner, name, kind } => write!(
                 formatter,
                 "object `{owner}` requires missing public {kind:?} definition `{name}`"

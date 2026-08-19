@@ -40,6 +40,26 @@ pub struct DocumentAnalysis {
     symbols: DocumentSymbols,
 }
 
+/// Current document diagnostics plus an optional project-analysis failure.
+pub struct DiagnosticAnalysis {
+    document: Arc<DocumentAnalysis>,
+    failure: Option<LanguageServiceError>,
+}
+
+impl DiagnosticAnalysis {
+    /// Returns syntax or full semantic diagnostics for the current snapshot.
+    #[must_use]
+    pub fn document(&self) -> &Arc<DocumentAnalysis> {
+        &self.document
+    }
+
+    /// Returns the project failure that prevented complete semantic diagnostics.
+    #[must_use]
+    pub fn failure(&self) -> Option<&LanguageServiceError> {
+        self.failure.as_ref()
+    }
+}
+
 impl DocumentAnalysis {
     pub(super) fn syntax_only(snapshot: Arc<DocumentSnapshot>) -> Self {
         let diagnostics = parse_diagnostics(&snapshot).into();
@@ -261,6 +281,33 @@ impl LanguageService {
                 "The source is not present in its loaded project analysis.",
             )
         })
+    }
+
+    /// Returns current diagnostics even when project-wide analysis cannot read a sibling source.
+    pub fn analyze_document_diagnostics(
+        &mut self,
+        path: &Path,
+    ) -> Result<DiagnosticAnalysis, LanguageServiceError> {
+        let target = self.documents.snapshot(path)?;
+        let result = (|| {
+            self.ensure_source_context(path)?;
+            if !self.is_editor_api_source(path)
+                && let Some(project) = self.analysis_project_for(path, target.compilation_unit())
+            {
+                self.project_snapshots(&project)?;
+            }
+            self.analyze_document(path)
+        })();
+        match result {
+            Ok(document) => Ok(DiagnosticAnalysis {
+                document,
+                failure: None,
+            }),
+            Err(failure) => Ok(DiagnosticAnalysis {
+                document: self.cached_syntax_only(target)?,
+                failure: Some(failure),
+            }),
+        }
     }
 
     /// Builds a collision-safe symbol index for every source in the current project catalog.

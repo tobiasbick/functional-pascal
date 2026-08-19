@@ -1,6 +1,6 @@
 # Task 10 — Keep the routine AST when recovering invalid top-level `static`
 
-Status: in progress
+Status: complete
 Severity: P2
 Difficulty: easy
 Language gate: no
@@ -41,5 +41,5 @@ cargo fmt
 - Current step: verify recovered top-level static routine remains in the AST
 - Files changed: `crates/fpas-parser/src/parser/decl/mod.rs`,
   `crates/fpas-parser/src/tests/errors/recovery.rs`
-- Verification: not run
+- Verification: full workspace definition of done passed on 2026-08-19
 - Blockers: none

@@ -29,7 +29,7 @@ impl Checker {
         context: &str,
         span: fpas_lexer::Span,
     ) {
-        if !expected.compatible_with(actual)
+        if !expected.assignment_compatible_with(actual)
             && !self.private_records_are_compatible_inside_owner(expected, actual)
         {
             self.error_with_code(
@@ -59,7 +59,7 @@ impl Checker {
             .all(|record| record.owner_unit.as_deref() == current_owner);
 
         private_records_are_owned_here
-            && Ty::record_fields_compatible(&expected.fields, &actual.fields)
+            && Ty::record_fields_assignment_compatible(&expected.fields, &actual.fields)
     }
 
     fn report_duplicate_declaration(&mut self, kind: &str, name: &str, span: fpas_lexer::Span) {

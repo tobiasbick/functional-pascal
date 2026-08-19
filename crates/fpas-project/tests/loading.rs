@@ -81,6 +81,67 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn project_path_dependency_rejects_a_program_project() {
+    let dir = temp_dir("program-path-dependency");
+    let dependency = dir.join("tool/tool.fpasprj");
+    let consumer = dir.join("app/app.fpasprj");
+    write(
+        &dependency,
+        "[project]\nname = \"tool\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+    );
+    write(
+        &dependency.parent().unwrap().join("main.fpas"),
+        "program Tool; begin end.\n",
+    );
+    write(
+        &consumer,
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[dependencies]\nprojects = [\"../tool/tool.fpasprj\"]\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+    );
+    write(
+        &consumer.parent().unwrap().join("main.fpas"),
+        "program App; begin end.\n",
+    );
+
+    let error = load_project(&consumer).expect_err("program dependency must be rejected");
+    fs::remove_dir_all(&dir).ok();
+    assert!(error.contains("must be a library project"), "{error}");
+    assert!(error.contains("kind = \"library\""), "{error}");
+}
+
+#[test]
+fn workspace_dependency_rejects_a_program_member() {
+    let dir = temp_dir("program-workspace-dependency");
+    let workspace = dir.join("suite.fpasworkspace");
+    let dependency = dir.join("tool/tool.fpasprj");
+    let consumer = dir.join("app/app.fpasprj");
+    write(
+        &workspace,
+        "[workspace]\nname = \"suite\"\nmembers = [\"tool/tool.fpasprj\", \"app/app.fpasprj\"]\n",
+    );
+    write(
+        &dependency,
+        "[project]\nname = \"tool\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+    );
+    write(
+        &dependency.parent().unwrap().join("main.fpas"),
+        "program Tool; begin end.\n",
+    );
+    write(
+        &consumer,
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[dependencies]\nworkspace = [\"tool\"]\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+    );
+    write(
+        &consumer.parent().unwrap().join("main.fpas"),
+        "program App; begin end.\n",
+    );
+
+    let error = load_project(&consumer).expect_err("program member must be rejected");
+    fs::remove_dir_all(&dir).ok();
+    assert!(error.contains("must be a library project"), "{error}");
+    assert!(error.contains("kind = \"library\""), "{error}");
+}
+
+#[test]
 fn load_project_applies_sources_exclude() {
     let dir = temp_dir("exclude");
     let project = dir.join("app.fpasprj");

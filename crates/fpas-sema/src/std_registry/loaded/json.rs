@@ -18,22 +18,27 @@ pub(super) fn register_std_json(checker: &mut Checker) {
         EnumVariantTy {
             name: "Null".into(),
             fields: vec![],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Bool".into(),
             fields: vec![("Value".into(), Ty::Boolean)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Number".into(),
             fields: vec![("Value".into(), Ty::Real)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "String".into(),
             fields: vec![("Value".into(), Ty::String)],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Array".into(),
             fields: vec![("Items".into(), Ty::Array(Box::new(json_ref.clone())))],
+            backing_value: None,
         },
         EnumVariantTy {
             name: "Object".into(),
@@ -41,6 +46,7 @@ pub(super) fn register_std_json(checker: &mut Checker) {
                 "Fields".into(),
                 Ty::Dict(Box::new(Ty::String), Box::new(json_ref)),
             )],
+            backing_value: None,
         },
     ];
     let json_ty = Ty::Enum(Arc::new(EnumTy {

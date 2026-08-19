@@ -17,9 +17,11 @@ pub(super) fn register_enum_type(
 ) -> Ty {
     let variants: Vec<EnumVariantTy> = variants
         .iter()
-        .map(|variant| EnumVariantTy {
+        .enumerate()
+        .map(|(index, variant)| EnumVariantTy {
             name: (*variant).to_string(),
             fields: vec![],
+            backing_value: i64::try_from(index).ok(),
         })
         .collect();
     let enum_ty = Ty::Enum(Arc::new(EnumTy {

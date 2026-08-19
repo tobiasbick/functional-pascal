@@ -1,6 +1,17 @@
 # Task 29 — Publish current diagnostics when a sibling source is unreadable
 
-Status: open
+Status: complete
+
+## Progress
+
+- Implementation: included in this review batch
+- Implementation: typed diagnostic analysis always retains the current syntax snapshot and carries
+  a project failure for the publisher to emit as FPAS_PROJECT_IO or FPAS_ANALYSIS
+- Tests: remove sibling, publish current syntax plus I/O failure, restore sibling, and resume
+  semantic diagnostics in both service and LSP integration coverage
+- Verification: full language-service, LSP, and workspace definition of done passed on 2026-08-19
+- Docs: unchanged; this fixes diagnostic freshness without changing language behavior
+- Blockers: none
 Severity: P2
 Difficulty: hard
 Language gate: no

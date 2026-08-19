@@ -8,7 +8,9 @@ Depends on: 19 (strongly recommended first)
 
 ## Goal
 
-While `Wait(A)` is pending, if the waiter dequeues and runs unrelated task `B` and `B` panics, `Wait(A)` must not fail with `B`’s diagnostic while leaving `B`’s result `Pending`.
+While `Wait(A)` is pending, if the waiter dequeues and runs unrelated task `B` and `B` panics, the
+runtime must record the failure on `B` before propagating the run-wide failure. No retained handle
+may remain `Pending` because it ran through the inline-help path.
 
 ## Bug
 
@@ -16,17 +18,21 @@ While `Wait(A)` is pending, if the waiter dequeues and runs unrelated task `B` a
 
 ## Fix
 
-`run_helped` must treat `B`’s failure the same as `pool_loop`: store result/failure for `B`, `scheduler.fail` if that is the policy for worker panics, and **return to the Wait(A) loop** unless the runtime is shutting down because of that failure. If the documented policy is “any worker panic aborts the whole run”, then Wait(A) should get the **run** diagnostic after `B`’s slot is filled — not a Pending `B` plus a mis-attributed `Wait(A)`.
+Extract one task-completion/failure bookkeeping path used by both `pool_loop` and `run_helped`.
+For `B`'s failure it must store `B`'s retained failure first, then enter the existing scheduler-wide
+failure path and propagate that run failure. Do not return to `Wait(A)` after `scheduler.fail`, because
+the documented policy aborts other work cooperatively. Task 19 must ensure every affected pending
+wait exits.
 
-Read pool_loop and match it. Do not duplicate a third failure path.
+Do not maintain a third copy of task-result/failure policy.
 
 ## Tests
 
 Two retained tasks: `A` sleeps/yields long enough that the waiter of `A` helps `B`; `B` panics. Assert:
 
-- `B`’s handle is failed (Wait(B) sees B’s panic), and/or
-- the process diagnostic is B’s panic,
-- `Wait(A)` is not reported as B’s error **while A is still running**, unless the whole VM is aborting **and** A’s wait returns (task 19).
+- `B`'s retained result slot contains B's original panic diagnostic before shutdown cleanup;
+- the process diagnostic is B's panic;
+- `A` and every waiter leave in bounded time through task 19's shutdown path.
 
 ## Verify
 
@@ -38,5 +44,5 @@ cargo fmt
 ## Done when
 
 - Helped-task panic is recorded on that task.
-- Wait(A) does not steal B’s error as its own result value.
+- Run-wide propagation does not leave B or A pending indefinitely.
 - Docs unchanged.

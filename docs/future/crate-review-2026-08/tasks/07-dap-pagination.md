@@ -12,11 +12,15 @@ Omitted or `0` `stackTrace.levels` and `variables.count` return the full page, n
 
 ## Spec
 
-Debug Adapter Protocol: `0` means unpaginated / all items. Clients send `0` expecting frames and variable children.
+[Debug Adapter Protocol specification](https://microsoft.github.io/debug-adapter-protocol/specification):
+omitted or `0` `levels`/`count` means all available items. Clients send `0` expecting frames and
+variable children.
 
 ## Bug
 
-`crates/fpas-debug/src/dap/server/dispatch.rs` forwards `0` into JSONL `count`. The VM uses `.take(count)`, so `0` yields nothing.
+`crates/fpas-debug/src/dap/server/dispatch.rs` forwards explicit `0` into JSONL `count`, so the VM's
+bounded iteration returns nothing. Omitted values are also wrong: the adapter invents finite
+defaults of 64 frames and 100 variables instead of returning all available items.
 
 ## Fix
 

@@ -1,45 +1,59 @@
-# Task 28 — DAP source matching: case-insensitive suffix + remapped paths
+# Task 28 — Preserve original and portable DAP source identities
 
 Status: open
 Severity: P1
-Difficulty: medium
+Difficulty: hard
 Language gate: no
 Depends on: none
 
 ## Goal
 
-Breakpoints bind on Windows when the client path casing differs from the stored project path. Out-of-tree library sources remapped to `sources/{index}/{filename}` still match when the IDE sends the real path.
+DAP source requests and breakpoints resolve when Windows path casing differs and when an out-of-tree
+source has a portable `sources/{index}/{filename}` image identity. Reload must preserve the mapping.
 
-## Bug
+## Verified cause
 
-`crates/fpas-debug/src/dap/server/breakpoints.rs` `resolve_source_path`: exact match or case-sensitive `ends_with("/" + stored)`. VS Code may send `src/Main.fpas` vs stored `src/main.fpas`.
+- `dap/server/breakpoints.rs::resolve_source_path` compares exact/case-sensitive suffix strings.
+- `fpas-cli/src/cli_debug.rs::portable_path` replaces an out-of-tree source's real path with an
+  alias.
+- `DebugSourceContent` stores only the portable path and content, so the adapter cannot match the
+  original path later.
 
-`crates/fpas-cli/src/cli_debug.rs` `portable_path` rewrites sources outside the project root to `sources/{index}/{filename}`. An IDE sending the real library path will not suffix-match that alias.
+## Required implementation
 
-Tests use `"<memory>"` and a matching `C:/workspace/<memory>` suffix only.
+1. Extend debugger source metadata with an optional original host path plus the portable canonical
+   identity. Keep protocol responses and executable source maps portable; do not serialize machine
+   paths into `.fpascp` images or recordings.
+2. Populate original paths for source/project launches. A prebuilt portable image may have no
+   original path; `--source-root` resolution can provide a verified host candidate for that launch.
+3. Carry the mapping through `PreparedDebugTarget`, hot reload, rollback, and DAP source lookup.
+4. Compare Windows-style paths case-insensitively and separator-normalized. Preserve case-sensitive
+   behavior for non-Windows native paths unless an explicit Windows drive/UNC form is detected.
+5. Reject ambiguous suffix/original matches instead of picking the first.
 
-## Fix
-
-- Compare paths case-insensitively on Windows (or always case-insensitive for ASCII drive/file names — match how the rest of FPAS compares paths).
-- When resolving DAP sources, also try the **original** path recorded before `portable_path`, if it is stored. If not stored, store it when building the debug source map (cli_debug.rs) and read it in the adapter.
-
-Do not require the user to set breakpoints on the alias path only.
+Do not write original absolute paths into repository docs, test fixtures, program images, or
+recording payloads.
 
 ## Tests
 
-- Same path with different casing binds.
-- A remapped `sources/0/lib.fpas` binds when the client sends the original `../libs/lib.fpas` (use the same helpers portable_path tests use).
+- Windows-style casing difference resolves to one portable source.
+- Real out-of-tree source path resolves to its `sources/0/...` alias.
+- Ambiguous same-filename sources do not bind incorrectly.
+- Mapping survives a compatible reload and rollback.
+- Compiled image/source-root launch still verifies source hashes.
 
 ## Verify
 
 ```text
 cargo test -p fpas-debug
 cargo test -p fpas-cli
+cargo build
+cargo test --workspace
 cargo fmt
 ```
 
 ## Done when
 
-- Case mismatch binds on Windows-style paths.
-- Real library path binds after remap.
-- Docs: one sentence in debugger/editor-integration if source aliases are documented.
+- DAP accepts real and portable identities without leaking host paths into portable artifacts.
+- Case handling follows path flavor rather than unconditional lowercasing.
+- Reload tests prove the mapping lifecycle.

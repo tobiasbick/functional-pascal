@@ -1,44 +1,40 @@
-# Task 23 — Do not retag library sources as `Own`
+# Task 23 — Decide ownership of a source shared by consumer and dependency
 
-Status: open
-Severity: P1
-Difficulty: medium
-Language gate: no
+Status: decision required
+Severity: P1 invariant risk; behavior pending
+Difficulty: medium after decision
+Language gate: yes (project-model specification)
 Depends on: none
 
-## Goal
+## Question
 
-If the same `.fpas` file is both a library unit and listed in the consumer’s `[sources]`, origin stays **Library**. `[exports]` still applies. The library can still `uses` that unit.
+What happens when one physical `.fpas` file is included by the consumer's `[sources]` and also
+arrives through a library dependency?
 
-## Spec
+## Verified ambiguity
 
-[`docs/pascal/program-structure/projects.md`](../../../pascal/program-structure/projects.md): the same file may appear via a library and via `[sources]`. Exports gate `Own → Library`.
+`dependencies.rs::merge_dependency` first records a library origin. Later,
+`mark_own_source_origins` overwrites it with `Own` when the consumer includes the same file. This can
+bypass `[exports]` checks or cause library-internal edges to be evaluated with consumer ownership.
+The current [`Projects`](../../../pascal/program-structure/projects.md) page discusses duplicate
+source entries inside one source list, but does not define cross-project physical-file overlap.
 
-## Bug
+## Options for user agreement
 
-`crates/fpas-project/src/dependencies.rs` `mark_own_source_origins` overwrites any merged file that `same_file`-matches the consumer include list. Then `unit_graph/resolve.rs`: `Own → Own` allows a program to `uses` a non-exported library unit; `Library → Own` is denied so the library cannot import its own file.
+1. **Reject overlap (recommended):** one physical source has one project owner. Emit an actionable
+   manifest error naming both projects.
+2. **Library ownership wins:** deduplicate the file and retain the dependency/export boundary.
+3. **Consumer ownership wins:** document that explicit consumer inclusion intentionally escapes
+   dependency exports; not recommended because it weakens the boundary.
 
-There is a symlink/alias origin test in `project_integrity.rs`, but nothing that loads consumer `[sources]` + dependency sharing one physical file.
+## Tests after decision
 
-## Fix
+- Physical equality and symlink/alias equality use `same_file` consistently.
+- Non-exported dependency units cannot be imported accidentally.
+- Library-internal imports and ordinary non-overlapping projects remain valid.
+- Update `projects.md` with the selected ownership rule.
 
-Do not overwrite an existing `Library` origin with `Own`. Only mark `Own` for files that were not already merged from a dependency. If both apply, **Library wins** (exports stay meaningful). Confirm with the spec text; if the spec wants Own-wins, stop and report — the review’s bug is export bypass, so Library-wins is the fix that matches `[exports]`.
+## Decision record
 
-## Tests
-
-Project test: two manifests, shared path, library does **not** export the unit → consumer `uses` that unit must fail. Library-internal `uses` still ok.
-
-Also the reverse false-reject: library unit importing the shared file must not get `Library → Own` denial.
-
-## Verify
-
-```text
-cargo test -p fpas-project
-cargo fmt
-```
-
-## Done when
-
-- Shared files keep Library origin.
-- Export bypass is gone.
-- Docs unchanged unless projects.md needs a one-line origin rule.
+- Selected option: pending
+- Approved by user: pending

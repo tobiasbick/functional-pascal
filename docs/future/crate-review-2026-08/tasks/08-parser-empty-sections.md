@@ -12,7 +12,8 @@ A `const` / `var` / `mutable var` / `type` / `enum` / `case` section with **zero
 
 ## Spec
 
-`specs/grammar.ebnf`: `const_def { const_def }`, `enum_member { enum_member }`, `case_arm { ';' case_arm }`.
+[`docs/specs/grammar.ebnf`](../../../specs/grammar.ebnf): `const_def { const_def }`,
+`enum_member { enum_member }`, `case_arm { ';' case_arm }`.
 
 ## Bug
 

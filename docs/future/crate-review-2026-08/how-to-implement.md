@@ -1,54 +1,75 @@
-# How to implement these tasks (cheaper model)
+# How to implement a crate-review task
 
-Read this file once, then implement **exactly one** numbered task from [`tasks/`](tasks/). Do not start a second task in the same session unless the user names it.
+Implement exactly one **open** numbered task from [`tasks/`](tasks/) unless the user explicitly
+groups tasks. A task marked **decision required** is blocked until the user records the selected
+behavior in that file. A task marked **coverage** changes tests only.
 
-These items are **bugfixes against the current spec**. They are not language-design work.
+## Before editing
 
-## Session protocol
+1. Read the workspace `AGENTS.md` and
+   [`.agents/skills/fpas-change-checklist/SKILL.md`](../../../.agents/skills/fpas-change-checklist/SKILL.md).
+2. Read [`README.md`](README.md), the selected task, and every specification page it cites.
+3. Inspect the target crate, nearby modules, existing helpers, tests, file sizes, and directory
+   shape. Do not rely on the review's source location without rechecking it.
+4. State assumptions, a verifiable success condition, and the intended file layout before editing.
+5. Change `Status: open` to `Status: in progress` and add a progress record:
 
-1. Open [`README.md`](README.md) and pick the next **open** task in the recommended order, or the task the user named.
-2. Read **only** that task file plus the spec pages it cites.
-3. Read the listed source files before editing. Match surrounding style.
-4. Implement the minimum change. Do not refactor unrelated code.
-5. Add the tests the task names. Do not add extra fixtures, helpers, or abstractions.
-6. Run the verify commands in the task. Then `cargo fmt`.
-7. In the closing message, fill the checklist from [`.agents/skills/fpas-change-checklist/SKILL.md`](../../../.agents/skills/fpas-change-checklist/SKILL.md):
-   - Docs: paths updated, or `unchanged — bugfix vs existing spec`
-   - Tests: paths added/updated
-   - Verify: commands run
+```text
+## Progress
 
-Do **not** edit this plan directory unless the user asks you to mark a task done.
+- Base commit: <commit>
+- Current step: <specific next action>
+- Files changed: none
+- Verification: not run
+- Blockers: none
+```
 
-## Hard rules
+Update this record before stopping so another model can resume after context loss.
 
-- **Language gate:** Do not change FPAS syntax, semantics, or pages under `docs/pascal/language/` unless the task says the spec itself is wrong **and** the user already agreed. These tasks implement the spec as written.
-- **English only** in code, comments, tests, and docs.
-- **No new keywords** (`private`, `opaque`, …). Visibility stays `public` vs default.
-- **No host metadata** (hostnames, usernames, home paths) in the repo.
-- **No GitHub Actions / CI config.**
-- Do not invent package managers, registries, or caches.
-- Workspace forbids `unsafe_code`. Do not add `unsafe`.
-- Prefer `Result` over `unwrap` / `expect` / `panic` in production code.
-- One concern per file. If a file is already huge, add the fix next to the existing logic; do not start a drive-by split unless the task says to.
+## Implementation rules
 
-## Where tests go
+- Make the smallest complete change that fixes the verified cause.
+- Reuse existing logic; do not create generic `utils.rs` or duplicate a parser, resolver, error
+  path, or scheduler path.
+- Follow the task's language gate. If current tests or docs contradict the task, stop, set the task
+  back to `open`, and record the contradiction instead of changing semantics silently.
+- Add the named regression tests. Do not weaken an existing assertion or use `#[ignore]`.
+- For `.fpas` changes, follow the `fpas-authoring` and `fpas-projects` skills as applicable and run
+  the FPAS formatter check required by `AGENTS.md`.
+- Keep code, comments, diagnostics, tests, and repository documentation in English and free of host
+  metadata.
 
-| Kind | Put them here |
-|------|----------------|
-| Lexer / parser / sema / compiler unit tests | `crates/<crate>/src/tests/…` next to the existing module the task names |
-| Std / VM runtime | crate tests **and** `tests/stdlib/…/*_test.fpas` when the task says so |
-| Formatter | `crates/fpas-fmt/tests/` using `assert_round_trip` / `assert_golden` |
-| CLI | `crates/fpas-cli` tests |
-| Debugger | `crates/fpas-debug` tests |
+## Verification
 
-FPAS tests: `*_test.fpas` under `tests/`, never under `examples/`. After adding `.fpas` files, run `fpas fmt --check` on those paths (or `scripts/format-fpas-sources.sh`).
+Run the task's focused commands first. Before completion, also run the workspace definition of
+done unless the task documents a concrete reason why one command is inapplicable:
 
-Reuse helpers already in the crate (`check_ok` / `check_errors`, `assert_succeeds`, `lex_with_errors`). Do not create `utils.rs`.
+```text
+cargo fmt
+cargo build
+cargo test --workspace
+```
 
-## If you get stuck
+For changed FPAS tests, also run the relevant `fpas test` target and `fpas fmt --check` (or
+`scripts/format-fpas-sources.sh`). Record exact commands and results in the task's progress section.
 
-- Difficulty **easy**: finish it. If a test already exists and contradicts the task, stop and report the contradiction; do not “fix” the spec.
-- Difficulty **medium**: finish it, but do not expand scope when a nearby function looks messy.
-- Difficulty **hard**: if the first approach would break existing generic / task / DAP tests, **stop**, describe what you observed, and do not land a partial guess. Leave the task for a stronger model.
+## Completion
 
-Never silence a failing existing test with `#[ignore]` or by weakening the assertion.
+1. Update current behavior documentation under `docs/pascal/` when observable behavior changed;
+   otherwise record `Docs: unchanged — implementation now matches the existing contract`.
+2. Set `Status: complete` only after code, tests, docs, and required verification pass.
+3. Record touched docs, tests, commands, and the implementation commit in the task.
+4. Remove the completed future task and its index entry once the implementation and current docs
+   are committed. Do not retain a historical “used to behave differently” note.
+
+## Test placement
+
+| Kind | Location |
+|---|---|
+| Lexer / parser / sema / compiler | Existing thematic module under `crates/<crate>/src/tests/` |
+| Std / VM runtime | Crate tests and a focused `tests/.../*_test.fpas` regression when appropriate |
+| Formatter | `crates/fpas-fmt/tests/` using existing round-trip/golden helpers |
+| CLI | Existing thematic tests in `crates/fpas-cli` |
+| Debugger | `crates/fpas-debug/tests/` or the owning module's unit tests |
+
+Never add FPAS tests under `examples/`, and never create a new public API solely as a test hook.

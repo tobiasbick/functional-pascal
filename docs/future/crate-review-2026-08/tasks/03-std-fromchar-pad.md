@@ -16,7 +16,9 @@ Depends on: none
 - [`docs/pascal/std/text/str/format-chars.md`](../../../pascal/std/text/str/format-chars.md): `Count ≤ 0` yields `''`.
 - [`docs/pascal/std/text/str/edit.md`](../../../pascal/std/text/str/edit.md): `RepeatStr` caps positive count at **1_000_000**.
 
-Reuse `checked_collection_len` / `MAX_COLLECTION_LEN` in `crates/fpas-std/src/limits.rs`. If Pad/IntToHex were previously unbounded with no documented cap, add one sentence to the matching std page (same 1_000_000 cap as `RepeatStr`) — that is documenting the implemented limit, not a new language feature.
+Reuse `checked_collection_len` / `MAX_COLLECTION_LEN` in `crates/fpas-std/src/limits.rs`.
+`Pad*` and `IntToHex` currently have no documented cap, so add one sentence to the matching Std
+pages (the same 1_000_000 cap as `RepeatStr`).
 
 ## Bug
 

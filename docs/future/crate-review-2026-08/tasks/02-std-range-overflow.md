@@ -12,8 +12,9 @@ Out-of-range `Slice`, `Std.Str.Substring`, and `Std.Str.Delete` are runtime erro
 
 ## Spec
 
-- [`docs/pascal/std/collections/array/combine.md`](../../../pascal/std/collections/array/combine.md) (Slice)
-- Substring / Delete pages under `docs/pascal/std/text/str/`
+- [`docs/pascal/std/collections/array/basics.md`](../../../pascal/std/collections/array/basics.md) (`Slice`)
+- [`docs/pascal/std/text/str/search.md`](../../../pascal/std/text/str/search.md) (`Substring`)
+- [`docs/pascal/std/text/str/edit.md`](../../../pascal/std/text/str/edit.md) (`Delete`)
 
 An out-of-range range is a **runtime error**.
 
@@ -24,8 +25,8 @@ An out-of-range range is a **runtime error**.
 Existing FPAS tests only use modest out-of-range values:
 
 - `tests/stdlib/array/slice_out_of_bounds_is_runtime_error_runtime_error.fpas`
-- `tests/stdlib/.../substring_out_of_bounds_is_runtime_error_runtime_error.fpas` (find the real path)
-- `tests/stdlib/.../delete_out_of_bounds_runtime_error.fpas` (find the real path)
+- `tests/stdlib/str/substring_out_of_bounds_is_runtime_error_runtime_error.fpas`
+- `tests/stdlib/str/delete_out_of_bounds_runtime_error.fpas`
 
 ## Fix
 

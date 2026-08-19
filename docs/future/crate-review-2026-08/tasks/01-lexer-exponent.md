@@ -12,7 +12,9 @@ Depends on: none
 
 ## Spec
 
-[`docs/pascal/language/basics/number-literals.md`](../../../pascal/language/basics/number-literals.md) and `decimal_digits` in `specs/grammar.ebnf`: a digit run is `digit { ['_'] digit }`. An exponent must start with a digit, not `_`.
+[`docs/pascal/language/basics/number-literals.md`](../../../pascal/language/basics/number-literals.md)
+and `decimal_digits` in [`docs/specs/grammar.ebnf`](../../../specs/grammar.ebnf): a digit
+run is `digit { ['_'] digit }`. An exponent must start with a digit, not `_`.
 
 ## Bug
 

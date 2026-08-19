@@ -4,7 +4,7 @@ Status: open
 Severity: P1
 Difficulty: medium
 Language gate: no
-Depends on: 14 (if 14 is open, either do 15 first or keep anonymous literals compatible with the expected named type)
+Depends on: none (complete this before deciding task 14)
 
 ## Goal
 

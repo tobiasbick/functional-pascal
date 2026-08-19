@@ -1,4 +1,4 @@
-# Task 11 — Simple enum members lower to backing integers, not variant index
+# Task 11 — Preserve simple-enum backing values through aliases and imports
 
 Status: open
 Severity: P1
@@ -8,59 +8,64 @@ Depends on: none
 
 ## Goal
 
-`PaletteColor.Green` and imported `Color.Red` emit the declared backing integer, same as `Color.Green` on the original typedef.
+Every spelling of a simple enum member emits its declared backing integer. This includes the
+original type, a type alias, an imported type, and fully qualified imported names.
 
-## Spec
+## Contract
 
-[`docs/pascal/language/types/enums.md`](../../../pascal/language/types/enums.md) and [`docs/pascal/language/types/type-aliases.md`](../../../pascal/language/types/type-aliases.md). Sema already accepts alias-qualified variants.
+- [`Enums`](../../../pascal/language/types/enums.md)
+- [`Type aliases`](../../../pascal/language/types/type-aliases.md)
+- [`Compiled units`](../../../pascal/program-structure/units.md#compiled-unit-sidecars)
 
-## Bug
+## Verified cause
 
-`crates/fpas-compiler/src/lowering/mod.rs` `collect_enum_constants` only inserts `{TypeDef}.{member}` and unambiguous shorts from **local** `TypeBody::Enum` bodies.
+`lowering/mod.rs::collect_enum_constants` records backing integers only from local enum AST nodes
+and only under the original local spelling. On a miss,
+`lowering/expr/designators.rs::lower_designator_expression` uses the variant position.
 
-`crates/fpas-compiler/src/lowering/expr/designators.rs`: on map miss it uses `variants.iter().position(...)` as `Const(Integer(index))`. Wrong when the qualified name is not the original typedef: `type PaletteColor = Color;` then `PaletteColor.Green` with `Green = 20` becomes `1`.
+`fpas_unit::interface::EnumVariant` already stores `backing_value`, and source interface export
+populates it. The loss occurs in `fpas-sema`: `EnumVariantTy` has no backing-value field,
+`interface_to_enum` discards the persisted value, and local semantic enum construction also omits
+it. Lowering therefore cannot recover the resolved value from the semantic type.
 
-Existing test `simple_enum_values_keep_backing_numbers_and_case_insensitivity` in `crates/fpas-compiler/src/tests/aggregates.rs` only uses `State.Running` (hits the map).
+## Required implementation
 
-## Fix
+1. Add an explicit optional/simple-enum backing value to `EnumVariantTy`. Data-carrying variants
+   must remain distinct and must not acquire ordinal-value semantics.
+2. Refactor local enum checking so validation and semantic construction share one backing-value
+   calculation. Populate implicit as well as explicit values. Register intrinsic simple enums with
+   their ordinal values and data enums without one.
+3. Copy the existing interface `backing_value` in both `enum_to_interface` and `interface_to_enum`.
+   Keep `fpas-unit`'s existing schema and serialization unchanged; add/adjust conversion tests so
+   aliases and imported interfaces cannot drop the field.
+4. Lower simple members from the resolved semantic variant value. Remove the variant-position
+   fallback for simple enums rather than retaining two authorities.
+5. Keep `collect_enum_constants` only for constants it still owns; remove dead enum-specific logic
+   exposed by the change.
 
-When lowering a simple (non-data) enum designator, take the backing value from the **enum type’s variant**, not from the constant map keyed by the source spelling. The `Ty::Enum` from `expression_type` already has variants; those variants should carry the integer value (check the `EnumTy` / variant struct). Prefer that over expanding `collect_enum_constants`.
-
-If variants do not store backing integers, add them in sema’s enum type **or** look up the original typedef name from the alias and use the existing map. Do not emit `position` as a value except when it equals the implicit backing (0,1,2,…) — even then prefer the stored integer.
-
-Do not change data enums (`MakeEnum`).
+Do not change data-enum `MakeEnum` lowering.
 
 ## Tests
 
-Add next to `simple_enum_values_keep_backing_numbers_and_case_insensitivity` in `crates/fpas-compiler/src/tests/aggregates.rs` using `assert_succeeds`:
-
-```pascal
-program AliasEnum;
-type
-  Color = enum
-    Red;
-    Green = 20;
-    Blue;
-  end;
-  PaletteColor = Color;
-begin
-  if PaletteColor.Green <> 20 then panic('alias backing')
-end.
-```
-
-If compiler tests cannot see type aliases that way, use whatever alias syntax the compiler tests already use. Also add a case that compares `Green` via the original name still equals 20.
-
-Imported enums: only add a compiler/unit test if this crate already has a multi-file compile helper. If not, skip import coverage here and mention it in the summary (sema+project test would belong in `fpas-cli` / `tests/`). Do not build a new project harness.
+- Compiler: implicit and explicit values through original and alias-qualified names.
+- Sema/interface conversion: imported simple variant and exported enum alias retain backing values.
+- Multi-unit compiler/build test: imported qualified enum member with a non-ordinal value executes
+  as that declared value.
+- Existing data-enum and sidecar tests remain green.
 
 ## Verify
 
 ```text
+cargo test -p fpas-sema
 cargo test -p fpas-compiler
+cargo build
+cargo test --workspace
 cargo fmt
 ```
 
 ## Done when
 
-- Alias-qualified simple enum members use backing values.
-- Data-enum lowering unchanged.
-- Docs unchanged.
+- No simple-enum spelling derives its value from `variants.position()`.
+- Backing values survive semantic interface conversion; the existing sidecar field remains intact.
+- Local, alias-qualified, and imported regressions pass.
+- Current language docs remain unchanged.

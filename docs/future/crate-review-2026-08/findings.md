@@ -1,62 +1,73 @@
-# Crate review findings (2026-08)
+# Verified crate-review findings (2026-08)
 
-Read-only review of the Rust workspace crates (~180k LOC, 21 crates). No P0 (universal release blocker) was found. Residual risk is concentrated in semantic soundness, a few codegen holes, task-runtime composition, and Std/DAP/fmt paths that disagree with their own spec.
+This is the evidence index for the current checkout. Implement only from the linked task files.
+Source symbols are named instead of volatile line numbers.
 
-This file is the **defect list**. Implement from [`tasks/`](tasks/), not by scanning this page and improvising.
+No P0 release blocker was demonstrated. The review covered all 21 Rust workspace crates
+(approximately 182,000 Rust lines including tests). Healthy areas in this pass include `fpas-ir`,
+`fpas-unit`, `fpas-program`, `fpas-bytecode`, `fpas-bundle`, build-sidecar reuse, and diagnostic
+rendering. “Healthy” means no defect was demonstrated by this review, not that the area is proven
+bug-free.
 
-Healthy areas (no demonstrated soundness hole in this pass): `fpas-ir`, `fpas-unit`, `fpas-program`, `fpas-bytecode`, `fpas-bundle`, `fpas-build` sidecar reuse, `fpas-diagnostics` rendering. Interpreter bounds/division/type errors generally become diagnostics. LSP UTF-16 conversion is explicit and tested. Formatter corpus round-trip exists; the holes are cases the corpus does not include.
+## Confirmed P1 defects
 
-## P1
+| Area | Finding | Evidence | Task |
+|---|---|---|---|
+| Lexer | A leading underscore in an exponent is consumed as a separator | `fpas-lexer/lexer/numbers.rs::consume_digits_with` | [01](tasks/01-lexer-exponent.md) |
+| Std | `Slice`, `Substring`, and `Delete` perform unchecked `start + len` | `fpas-std/src/array.rs`; `fpas-std/src/str.rs` | [02](tasks/02-std-range-overflow.md) |
+| Std | `FromChar` contradicts documented non-positive behavior and allocation caps are missing | `fpas-std/src/str.rs`; `fpas-std/src/conv.rs` | [03](tasks/03-std-fromchar-pad.md) |
+| Std | `Window` and `GotoXY` return success for invalid coordinates | `console/operations/window.rs`; `cursor.rs` | [04](tasks/04-std-console-coords.md) |
+| Fmt | Comments anchored to individual `uses` entries are never emitted | `fpas-fmt/src/emit/program.rs::emit_optional_uses` | [05](tasks/05-fmt-uses-comments.md) |
+| Debug/CLI | Fatal JSONL protocol input terminates the session but returns process success | `jsonl/server.rs::fatal_request`; `jsonl/transport.rs` | [06](tasks/06-debug-jsonl-fatal-exit.md) |
+| Debug | DAP omitted/zero pagination is converted to finite or empty pages | `dap/server/dispatch.rs` | [07](tasks/07-dap-pagination.md) |
+| Parser | Missing-expression recovery consumes parent synchronization tokens | `parser/expr/primary.rs::parse_primary_atom` | [09](tasks/09-parser-expr-recovery.md) |
+| Compiler | Alias/import-qualified simple enums fall back to variant index | `lowering/expr/designators.rs::lower_designator_expression` | [11](tasks/11-compiler-enum-alias.md) |
+| Compiler | Declaration initializers are absent from closure discovery | `lowering/mod.rs::lower_declarations_and_body` | [12](tasks/12-compiler-closure-init.md) |
+| Sema | Ordinary body checks treat `GenericParam` as compatible with every type | `fpas-sema/src/types.rs::Ty::compatible_with` | [13](tasks/13-sema-generic-compat.md) |
+| Sema | Record defaults/context are applied only in selected initializer paths | `check/decl/vars.rs::try_annotate_expected_record_literals` and callers | [15](tasks/15-sema-record-literals.md) |
+| Sema | A second imported `Color` does not make the existing `Color.Red` binding ambiguous | `interface/install.rs::install_imported_enum_variants` | [16](tasks/16-sema-imported-enum.md) |
+| VM | Pending `Wait`/`WaitAll` can spin after scheduler shutdown | `vm/tasks/mod.rs`; `tasks/scheduler.rs::wait_for_*` | [19](tasks/19-vm-wait-shutdown.md) |
+| VM | Inline-helped task failure bypasses pool failure bookkeeping | `vm/tasks/pool.rs::run_helped` | [20](tasks/20-vm-help-fail.md) |
+| Debug | Failed DAP source-breakpoint replacement can leak newly installed breakpoints | `dap/server/breakpoints.rs::set_source_breakpoints` | [27](tasks/27-dap-breakpoints.md) |
+| Debug | DAP source resolution is case-sensitive and retains only portable aliases | `dap/server/breakpoints.rs::resolve_source_path`; `fpas-cli/src/cli_debug.rs::portable_path` | [28](tasks/28-dap-source-paths.md) |
 
-| Area | Title | Location |
-|------|-------|----------|
-| Sema | `GenericParam` is compatible with every type | `crates/fpas-sema/src/types.rs:267` |
-| Sema | Named public/program records compared by field shape, not identity | `crates/fpas-sema/src/types.rs:280` |
-| Sema | Record-literal defaults only applied on `var` initializers | `crates/fpas-sema/src/check/decl/vars.rs:16` |
-| Sema | Imported `Color.Red` stays bound to the first install when two `Color` types clash | `crates/fpas-sema/src/interface/install.rs:144` |
-| Compiler | Alias/import-qualified simple enums lower as variant index, not backing integer | `crates/fpas-compiler/src/lowering/expr/designators.rs:88` |
-| Compiler | Closures in program/unit `var` initializers are never registered (ICE) | `crates/fpas-compiler/src/lowering/mod.rs:180` |
-| VM | `Wait` / `WaitAll` hot-spin when shutdown is set and the handle is still `Pending` | `crates/fpas-vm/src/vm/tasks/mod.rs:180` |
-| VM | Inline-helped task panic is attributed to the waiter | `crates/fpas-vm/src/vm/tasks/pool.rs:40` |
-| VM | Hosted callbacks inherit owner `task_id`; `Sleep`/`Yield` suspends the owner | `crates/fpas-vm/src/vm/callback_call.rs:100` |
-| Std | `Slice` / `Substring` / `Delete` overflow `start + len` instead of a runtime error | `crates/fpas-std/src/array.rs:95` |
-| Std | `FromChar` errors on `Count < 0` and has no length cap | `crates/fpas-std/src/str.rs:189` |
-| Std | `Window` / `GotoXY` swallow out-of-range coordinates | `crates/fpas-std/src/console/operations/window.rs:67` |
-| Debug | Blank JSONL line terminates the session; `--commands` can exit 0 | `crates/fpas-debug/src/jsonl/server.rs:140` |
-| Debug | Failed DAP `setBreakpoints` leaks already-installed breakpoints | `crates/fpas-debug/src/dap/server/breakpoints.rs:26` |
-| Debug | DAP source match is case-sensitive and misses remapped library paths | `crates/fpas-debug/src/dap/server/breakpoints.rs:122` |
-| Debug | DAP `levels`/`count` `0` means empty, not “all” | `crates/fpas-debug/src/dap/server/dispatch.rs:67` |
-| CLI | `--timeout` does not cover isolated-worker startup before `ready` | `crates/fpas-cli/src/cli_test/process/mod.rs:255` |
-| Lexer | `1.0e_3` lexes as `1000.0` with no diagnostic | `crates/fpas-lexer/src/lexer/numbers.rs:107` |
-| Parser | Missing-expression recovery consumes `end` / `)` / `then` / … | `crates/fpas-parser/src/parser/expr/primary.rs:101` |
-| Project | Shared library+consumer file is retagged `Own` (export bypass or false reject) | `crates/fpas-project/src/dependencies.rs:187` |
-| Fmt | `//` comments on `uses` items are dropped | `crates/fpas-fmt/src/comments/traversal.rs:64` |
+## Confirmed P2 defects
 
-## P2
+| Area | Finding | Evidence | Task |
+|---|---|---|---|
+| Parser | Empty one-or-more declaration/enum/case bodies produce no parser diagnostic | `parser/decl/data/const_var.rs`; `type_defs.rs`; `parser/stmt/branching.rs` | [08](tasks/08-parser-empty-sections.md) |
+| Parser | Invalid top-level `static` parses then discards the recovered routine AST | `parser/decl/mod.rs::recover_invalid_static_decl` | [10](tasks/10-parser-static-ast.md) |
+| Sema | Enum exhaustiveness counts the raw last identifier instead of the resolved label kind | `if_case/exhaustiveness.rs::enum_label_name` | [17](tasks/17-sema-exhaustiveness.md) |
+| VM | Failed `IndexSet` takes the destination value without restoring it | `vm/execute/aggregates.rs` | [22](tasks/22-vm-indexset-restore.md) |
+| VM | Failed `Application.Run` can bypass graph-session cleanup | `vm/hosted/graph/host.rs` | [32](tasks/32-vm-graph-run-cleanup.md) |
+| Linker | Duplicate layout coalescing compares names but not structural field types or members | `fpas-linker/src/symbols.rs::matching_layout_definition` | [24](tasks/24-linker-layouts.md) |
+| LSP | A sibling snapshot I/O error prevents a current diagnostics publication | `language-service/analysis/mod.rs::project_snapshots`; `fpas-lsp/diagnostics/publisher.rs` | [29](tasks/29-lsp-sibling-io.md) |
+| LSP | Case-only Windows path differences can disable the workspace-root discovery bound | `workspace/discovery.rs::discover_source_context` | [33](tasks/33-lsp-discovery-boundary.md) |
+| Fmt | Parsed control characters are emitted literally inside quoted strings | `fpas-fmt/src/emit/expr/literal.rs::format_string` | [30](tasks/30-fmt-char-codes.md) |
+| CLI | Glob expansion follows symlinked files and can write through them | `fpas-cli/src/cli_fmt/paths.rs::expand_glob` | [34](tasks/34-fmt-glob-symlinks.md) |
+| Debug | DAP header lines/count and JSONL request lines are unbounded before parsing | `dap/framing.rs`; `jsonl/transport.rs` | [36](tasks/36-debug-transport-limits.md) |
+| Std | `ScreenWidth`/`ScreenHeight` can report live terminal dimensions without resizing retained state | `console/operations/window.rs` | [37](tasks/37-console-screen-dimensions.md) |
 
-| Area | Title | Location |
-|------|-------|----------|
-| Sema | Enum exhaustiveness uses the last identifier, so a shadowed `Red` counts as covered | `crates/fpas-sema/src/check/stmt/control_flow/if_case/exhaustiveness.rs:22` |
-| Sema | Public signature may name a private type with no export diagnostic | `crates/fpas-sema/src/interface/export.rs:39` |
-| VM | Failed `IndexSet` leaves the destination slot empty | `crates/fpas-vm/src/vm/execute/aggregates.rs:102` |
-| VM | `Application.Run` error leaves `run_active` set | `crates/fpas-vm/src/vm/hosted/graph/host.rs:264` |
-| Std | `Pad*` / `IntToHex` accept unbounded widths | `crates/fpas-std/src/str.rs:349` |
-| Std | `ScreenWidth`/`Height` can disagree with the retained screen after resize | `crates/fpas-std/src/console/operations/io.rs:108` |
-| Parser | Empty `const` / `var` / `type` / `enum` / `case` bodies parse with no error | `crates/fpas-parser/src/parser/decl/mod.rs:11` |
-| Parser | Invalid top-level `static` discards the recovered routine AST | `crates/fpas-parser/src/parser/decl/mod.rs:49` |
-| Linker | Record/enum coalescing ignores field types | `crates/fpas-linker/src/symbols.rs:161` |
-| Project | POSIX-style absolute paths are not treated as absolute on Windows | `crates/fpas-project/src/paths.rs:215` |
-| LSP | Unreadable sibling project file fail-closes analysis (stale diagnostics) | `crates/fpas-language-service/src/analysis/mod.rs:250` |
-| LSP | Discovery can walk above the workspace when `starts_with` fails (Windows case) | `crates/fpas-language-service/src/workspace/discovery.rs:34` |
-| LSP | `lexical_normalize` pops `ParentDir` with no root guard | `crates/fpas-language-service/src/document/mod.rs:33` |
-| Fmt | Unprintable string bytes are written inside quotes instead of `#` codes | `crates/fpas-fmt/src/emit/expr/literal.rs:114` |
-| CLI | `fpas test` has no default timeout | `crates/fpas-cli/src/cli_input/mod.rs:233` |
-| Debug | DAP/JSONL `read_line` for headers/lines is uncapped | `crates/fpas-debug/src/dap/framing.rs:20` |
-| CLI | `fpas fmt` globs follow symlinks and write through them | `crates/fpas-cli/src/cli_fmt/paths.rs:141` |
+## Confirmed P3 defect
 
-## P3
+| Area | Finding | Evidence | Task |
+|---|---|---|---|
+| CLI | Debug `--report jsonl` is accepted and discarded although JSONL is already the protocol output | `cli_input/options.rs`; debug help/examples | [31](tasks/31-debug-report-option.md) |
 
-| Area | Title | Location |
-|------|-------|----------|
-| CLI | `--report jsonl` is parsed and documented, then discarded | `crates/fpas-cli/src/cli_input/options.rs:243` |
-| Project | No test that program/test manifests cannot appear in `[dependencies]` | `crates/fpas-project/src/dependencies.rs:167` |
+## Decision-required findings
+
+These are plausible problems, but the current specification does not select the proposed behavior.
+They are not implementation-ready bugfixes.
+
+| Area | Question | Task |
+|---|---|---|
+| Sema | Are distinct named records nominally incompatible or structurally compatible? | [14](tasks/14-sema-named-records.md) |
+| Sema | Must a public declaration that mentions a private type be rejected, or is an opaque public use allowed? | [18](tasks/18-sema-export-private-type.md) |
+| VM | Does `Sleep` inside a synchronous callback suspend the whole spawned task or block its current worker? | [21](tasks/21-vm-callback-sleep.md) |
+| Project | Is a physical source shared by consumer and dependency rejected, consumer-owned, or library-owned? | [23](tasks/23-project-origin.md) |
+| CLI | Should test timeout include worker startup, and should tests have a default timeout? | [26](tasks/26-cli-test-timeout.md) |
+
+## Coverage gap
+
+`ensure_library_dependency` already rejects non-library dependencies, but path and workspace forms
+lack direct regression coverage: [task 35](tasks/35-project-dependency-kind-tests.md).

@@ -1,42 +1,39 @@
-# Task 18 — Reject public signatures that name a private type
+# Task 18 — Decide public signatures that mention private types
 
-Status: open
-Severity: P2
-Difficulty: medium
-Language gate: no
+Status: decision required
+Severity: unclassified until decision
+Difficulty: medium after decision
+Language gate: yes
 Depends on: none
 
-## Goal
+## Question
 
-`public function Make(): Hidden` where `Hidden` is a private record/enum/alias is a sema error at the **exporting** unit. Importers must not receive an unusable `Named` they cannot resolve.
+What does a public unit declaration mean when its signature contains a unit-private named type?
 
-## Spec
+## Why this is blocked
 
-[`docs/pascal/program-structure/visibility.md`](../../../pascal/program-structure/visibility.md) and units docs: only `public` declarations are exported. A public API that mentions a non-exported type is not usable and should be diagnosed.
+`interface/export.rs` can serialize such a signature while omitting the private type declaration.
+The current [`Visibility`](../../../pascal/program-structure/visibility.md) and
+[`Units`](../../../pascal/program-structure/units.md) pages say which declarations are exported but
+do not state whether a public signature may expose a private type. Rejecting it is a new semantic
+rule unless the user selects it.
 
-## Bug
+## Options for user agreement
 
-`crates/fpas-sema/src/interface/export.rs`: any `public` declaration is exported. `ty_to_interface_reference` + `qualify_owned_name` names private types because they sit in `own_types`. `Hidden` itself is not exported.
+1. **Reject the declaration (recommended):** diagnose at the exporting unit with a hint to make the
+   type public or stop exporting the declaration.
+2. **Opaque public use:** define and implement an interface representation that lets importers hold
+   or pass the value without naming/constructing its private type. This is substantially larger.
 
-## Fix
+Do not export the private type implicitly; that would defeat the existing visibility modifier.
 
-When exporting a public declaration, walk its signature types. If a named type is owned by this unit and not public, emit a diagnostic (reuse or add `SEMA_*` code with a hint: make the type `public` or stop exporting the routine). Do not export the private type as a side effect.
+## Implementation after decision
 
-Do not introduce a `private` keyword.
+- Walk all nested signature types, including arrays, tasks, generic callables, records, and enums.
+- Add unit-interface tests for return, parameter, global, and nested type positions.
+- Update visibility/unit documentation with the selected rule.
 
-## Tests
+## Decision record
 
-Interface / integration test: unit with private `Hidden` and `public function Make(): Hidden` → error. Control: public type in the signature exports as today.
-
-## Verify
-
-```text
-cargo test -p fpas-sema
-cargo fmt
-```
-
-## Done when
-
-- The leaking signature is a compile error.
-- Valid public types in public signatures still export.
-- Docs: add a sentence under visibility/units **only if** this rule is not already stated; otherwise unchanged.
+- Selected option: pending
+- Approved by user: pending

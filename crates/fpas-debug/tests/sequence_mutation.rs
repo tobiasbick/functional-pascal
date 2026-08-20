@@ -2,6 +2,7 @@
 
 #![allow(
     clippy::expect_used,
+    clippy::panic,
     reason = "protocol tests keep fixture failures local"
 )]
 

@@ -1,152 +1,46 @@
-//! Stateful JSONL request handling and asynchronous execution event delivery.
+//! JSONL parsing and encoding around the protocol-neutral debugger engine.
 
-mod breakpoints;
-mod completed_result;
-mod completion;
-mod data_breakpoints;
-mod dictionary;
-mod dispatch;
-mod evaluation;
-mod forced_return;
-mod frame_restart;
-mod function_breakpoints;
-mod instruction;
-mod io;
-mod lifecycle;
-mod live_image;
-mod location;
-mod mutation;
-mod recording;
-mod runtime_failures;
-mod sequence;
-mod storage;
-mod task_control;
-mod tasks;
-mod variant;
+use serde_json::{Map, Value};
 
-use std::collections::{HashMap, HashSet};
+use crate::engine::{DebugCommand, DebugEngine, DebugRecord, DebugRequest};
+use crate::target::PreparedDebugTarget;
 
-use serde_json::{Map, Value, json};
+pub use crate::engine::DebugStatus as ServerStatus;
 
-use super::actor::{ResumeCommand, SessionActor};
-use super::encode::*;
-use super::protocol::{event, failure, session_error, success};
-use crate::breakpoints::{BreakpointPolicy, RuntimeFailurePolicy};
-use crate::target::DebugReloadProvider;
-use crate::{DebugSourceContent, PreparedDebugTarget};
-
-/// Coarse server lifecycle visible to transport drivers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ServerStatus {
-    /// Waiting for `initialize`.
-    Created,
-    /// Initialized but not launched.
-    Initialized,
-    /// Program execution is active.
-    Running,
-    /// Program execution is stopped and inspectable.
-    Stopped,
-    /// Session ended or a fatal protocol error occurred.
-    Terminated,
-}
-
-/// One protocol V2 server independent from stdin/stdout ownership.
+/// JSONL adapter for one protocol-neutral debugger engine.
 pub struct JsonlServer {
-    status: ServerStatus,
-    fatal_termination: bool,
-    actor: SessionActor,
-    execution_limits: fpas_vm::DebugExecutionLimits,
-    request_ids: HashSet<u64>,
-    output_cursor: usize,
-    breakpoint_policies: HashMap<u64, BreakpointPolicy>,
-    function_breakpoint_ids: Vec<u64>,
-    data_breakpoint_ids: Vec<u64>,
-    runtime_failure_policy: RuntimeFailurePolicy,
-    log_output_bytes: usize,
-    pending_evaluation: Option<(u64, String)>,
-    reloader: Option<DebugReloadProvider>,
-    sources: Vec<DebugSourceContent>,
-    previous_sources: Option<Vec<DebugSourceContent>>,
-    source_revision: u64,
+    engine: DebugEngine,
 }
 
 impl JsonlServer {
-    /// Construct a server around one prepared target.
+    /// Construct a JSONL adapter around one prepared target.
     ///
     /// # Errors
     ///
-    /// Returns a debugger initialization error for invalid runtime state.
-    pub fn new(mut target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
-        let execution_limits = target.execution_limits();
-        let reloader = target.take_reloader();
-        let sources = target.sources().to_vec();
+    /// Returns debugger initialization failures for invalid runtime state.
+    pub fn new(target: PreparedDebugTarget) -> Result<Self, fpas_vm::DebugSessionError> {
         Ok(Self {
-            status: ServerStatus::Created,
-            fatal_termination: false,
-            actor: SessionActor::new(target.into_session()?),
-            execution_limits,
-            request_ids: HashSet::new(),
-            output_cursor: 0,
-            breakpoint_policies: HashMap::new(),
-            function_breakpoint_ids: Vec::new(),
-            data_breakpoint_ids: Vec::new(),
-            runtime_failure_policy: RuntimeFailurePolicy::default(),
-            log_output_bytes: 0,
-            pending_evaluation: None,
-            reloader,
-            sources,
-            previous_sources: None,
-            source_revision: 1,
+            engine: DebugEngine::new(target)?,
         })
     }
 
-    /// Return the current protocol lifecycle state.
+    /// Return the current debugger lifecycle state.
     #[must_use]
     pub const fn status(&self) -> ServerStatus {
-        self.status
+        self.engine.status()
     }
 
     pub(super) const fn terminated_fatally(&self) -> bool {
-        self.fatal_termination
-    }
-
-    /// Whether a detached call evaluation currently owns the session actor.
-    #[must_use]
-    pub fn is_evaluating(&self) -> bool {
-        self.actor.is_evaluating()
-    }
-
-    pub(crate) const fn supports_hot_reload(&self) -> bool {
-        self.reloader.is_some()
-    }
-
-    pub(crate) const fn source_revision(&self) -> u64 {
-        self.source_revision
-    }
-
-    pub(crate) fn sources(&self) -> &[DebugSourceContent] {
-        &self.sources
+        self.engine.terminated_fatally()
     }
 
     /// Parse and handle one complete UTF-8 JSON object line.
-    ///
-    /// The returned records are ordered with the request response before any caused events.
     #[must_use]
     pub fn handle_line(&mut self, line: &str) -> Vec<Value> {
-        if self.status == ServerStatus::Terminated {
-            return vec![event(
-                "protocol_error",
-                error_body(
-                    "invalid_state",
-                    "The debugger session is terminated.",
-                    "Start a new `fpas debug` process.",
-                ),
-            )];
-        }
         let request = match serde_json::from_str::<Value>(line) {
             Ok(Value::Object(request)) => request,
-            Ok(_) => return self.fatal_request("JSONL requests must be JSON objects."),
-            Err(error) => return self.fatal_request(format!("Malformed JSONL request: {error}")),
+            Ok(_) => return self.fatal("JSONL requests must be JSON objects."),
+            Err(error) => return self.fatal(format!("Malformed JSONL request: {error}")),
         };
         let request_id = match request
             .get("id")
@@ -154,328 +48,80 @@ impl JsonlServer {
             .filter(|id| *id > 0)
         {
             Some(id) => id,
-            None => return self.fatal_request("Request field `id` must be a positive integer."),
+            None => return self.fatal("Request field `id` must be a positive integer."),
         };
-        let command = match request.get("command").and_then(Value::as_str) {
-            Some(command) => command.to_string(),
-            None => {
-                return vec![failure(
-                    request_id,
-                    "<missing>",
-                    "invalid_request",
-                    "Request field `command` must be a string.",
-                    "Send a command listed by the protocol V1 contract.",
-                )];
-            }
+        let Some(command) = request.get("command").and_then(Value::as_str) else {
+            return vec![crate::jsonl::protocol::failure(
+                request_id,
+                "<missing>",
+                "invalid_request",
+                "Request field `command` must be a string.",
+                "Send a command listed by the protocol V1 contract.",
+            )];
         };
         if request.get("type").and_then(Value::as_str) != Some("request") {
-            return vec![failure(
+            return vec![crate::jsonl::protocol::failure(
                 request_id,
-                &command,
+                command,
                 "invalid_request",
                 "Request field `type` must equal `request`.",
                 "Use the JSONL V1 request envelope.",
-            )];
-        }
-        if !self.request_ids.insert(request_id) {
-            return vec![failure(
-                request_id,
-                &command,
-                "invalid_request",
-                format!("Request ID {request_id} was already used."),
-                "Use a new positive request ID for every request.",
             )];
         }
         let arguments = match request.get("arguments") {
             None => Map::new(),
             Some(Value::Object(arguments)) => arguments.clone(),
             Some(_) => {
-                return vec![failure(
+                return vec![crate::jsonl::protocol::failure(
                     request_id,
-                    &command,
+                    command,
                     "invalid_request",
                     "Request field `arguments` must be an object.",
                     "Use `{}` when the command has no arguments.",
                 )];
             }
         };
-        let mut records = self.handle_request(request_id, &command, &arguments);
-        records.extend(self.poll());
-        records
+        let records = self.engine.execute(DebugRequest {
+            id: request_id,
+            command: DebugCommand::from_name(command),
+            arguments,
+        });
+        self.records_from_engine(records)
     }
 
-    /// Poll for records caused by an asynchronous continue or step operation.
+    /// Poll the engine for asynchronous records.
     #[must_use]
     pub fn poll(&mut self) -> Vec<Value> {
-        self.actor
-            .poll()
-            .map_or_else(Vec::new, |completion| self.complete_actor(completion))
+        let records = self.engine.poll();
+        self.records_from_engine(records)
     }
 
-    /// Wait for the active resume operation and return its terminal or stopped events.
+    /// Wait for the active engine operation to stop or finish.
     #[must_use]
     pub fn wait(&mut self) -> Vec<Value> {
-        self.actor
-            .wait()
-            .map_or_else(Vec::new, |completion| self.complete_actor(completion))
+        let records = self.engine.wait();
+        self.records_from_engine(records)
     }
 
-    fn initialize(
+    /// Replace the live image through the shared debugger engine.
+    ///
+    /// # Errors
+    ///
+    /// Returns a session error when the current stopped target cannot accept
+    /// the candidate image.
+    pub fn replace_live_image(
         &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if self.status != ServerStatus::Created {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let version = arguments
-            .get("version")
-            .and_then(Value::as_u64)
-            .unwrap_or(2);
-        if version != 2 {
-            return vec![failure(
-                request_id,
-                command,
-                "unsupported_protocol_version",
-                format!("Protocol version {version} is unsupported."),
-                "Request version 2.",
-            )];
-        }
-        self.status = ServerStatus::Initialized;
-        initialize_records(
-            request_id,
-            command,
-            self.execution_limits,
-            self.reloader.is_some(),
-        )
+        candidate: &fpas_bytecode::VerifiedExecutable,
+    ) -> Result<fpas_vm::LiveImageReplaceResult, fpas_vm::DebugSessionError> {
+        self.engine.replace_live_image(candidate)
     }
 
-    fn launch(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if self.status != ServerStatus::Initialized {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let stop_on_entry = arguments
-            .get("stop_on_entry")
-            .and_then(Value::as_bool)
-            .unwrap_or(true);
-        let mut records = vec![success(request_id, command, json!({"accepted": true}))];
-        if stop_on_entry {
-            self.status = ServerStatus::Stopped;
-            if let Some(session) = self.actor.session() {
-                records.push(stopped_event(session.last_stop()));
-            }
-        } else {
-            self.status = ServerStatus::Running;
-            if let Err(error) = self.actor.resume(ResumeCommand::Continue) {
-                self.status = ServerStatus::Stopped;
-                records.push(session_error(request_id, command, error));
-            }
-        }
-        records
+    fn fatal(&mut self, message: impl Into<String>) -> Vec<Value> {
+        let records = self.engine.fatal_protocol_error(message);
+        self.records_from_engine(records)
     }
 
-    fn resume(&mut self, request_id: u64, command: &str, resume: ResumeCommand) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        if self.actor.session().is_none() {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        if let Some(task_id) = resume.task_id()
-            && let Some(session) = self.actor.session_mut()
-            && let Err(error) = session.select_task(task_id)
-        {
-            return vec![session_error(request_id, command, error)];
-        }
-        match self.actor.resume(resume) {
-            Ok(()) => {
-                self.status = ServerStatus::Running;
-                vec![success(request_id, command, json!({"accepted": true}))]
-            }
-            Err(error) => vec![session_error(request_id, command, error)],
-        }
-    }
-
-    fn task_resume(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-        resume: fn(Option<u64>) -> ResumeCommand,
-    ) -> Vec<Value> {
-        match optional_u64_argument(request_id, command, arguments, "task_id") {
-            Ok(task_id) => self.resume(request_id, command, resume(task_id)),
-            Err(error) => vec![error],
-        }
-    }
-
-    fn pause(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if self.status != ServerStatus::Running {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        self.actor.pause();
-        vec![success(request_id, command, json!({"requested": true}))]
-    }
-
-    fn stack(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let start = index_argument(arguments, "start", 0);
-        let count = index_argument(arguments, "count", 64);
-        let Some(session) = self.actor.session_mut() else {
-            return vec![invalid_state(request_id, command, self.status)];
-        };
-        let task_id = match optional_u64_argument(request_id, command, arguments, "task_id") {
-            Ok(task_id) => task_id.unwrap_or_else(|| session.last_stop().task_id),
-            Err(error) => return vec![error],
-        };
-        match session.stack_for_task(task_id, start, count) {
-            Ok(frames) => vec![success(
-                request_id,
-                command,
-                json!({
-                    "frames": frames.items.iter().map(frame_body).collect::<Vec<_>>(),
-                    "total": frames.total,
-                    "task_id": task_id
-                }),
-            )],
-            Err(error) => vec![session_error(request_id, command, error)],
-        }
-    }
-
-    fn scopes(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let Some(frame_id) = arguments.get("frame_id").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "frame_id")];
-        };
-        let Some(session) = self.actor.session() else {
-            return vec![invalid_state(request_id, command, self.status)];
-        };
-        match session.scopes(frame_id) {
-            Ok(scopes) => vec![success(
-                request_id,
-                command,
-                json!({"scopes": scopes.iter().map(scope_body).collect::<Vec<_>>() }),
-            )],
-            Err(error) => vec![session_error(request_id, command, error)],
-        }
-    }
-
-    fn variables(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
-            return vec![invalid_state(request_id, command, self.status)];
-        }
-        let Some(reference) = arguments.get("variables_reference").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "variables_reference")];
-        };
-        let start = index_argument(arguments, "start", 0);
-        let count = index_argument(arguments, "count", 100);
-        let Some(session) = self.actor.session_mut() else {
-            return vec![invalid_state(request_id, command, self.status)];
-        };
-        match session.variables(reference, start, count) {
-            Ok(variables) => vec![success(
-                request_id,
-                command,
-                json!({
-                    "variables": variables.items.iter().map(variable_body).collect::<Vec<_>>(),
-                    "total": variables.total
-                }),
-            )],
-            Err(error) => vec![session_error(request_id, command, error)],
-        }
-    }
-
-    fn disconnect(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if self.actor.is_evaluating() {
-            self.actor.cancel_evaluation();
-            let mut records = self.wait();
-            records.extend(self.disconnect_session_events());
-            records.push(success(request_id, command, json!({"terminated": true})));
-            self.status = ServerStatus::Terminated;
-            records.push(event(
-                "terminated",
-                json!({"reason": "disconnect", "exit_code": 0}),
-            ));
-            return records;
-        }
-        if self.status == ServerStatus::Running {
-            self.actor.pause();
-            let mut records = vec![success(request_id, command, json!({"terminated": true}))];
-            records.extend(self.wait());
-            records.extend(self.disconnect_session_events());
-            self.status = ServerStatus::Terminated;
-            records.push(event(
-                "terminated",
-                json!({"reason": "disconnect", "exit_code": 0}),
-            ));
-            return records;
-        }
-        let mut records = vec![success(request_id, command, json!({"terminated": true}))];
-        records.extend(self.disconnect_session_events());
-        self.status = ServerStatus::Terminated;
-        records.push(event(
-            "terminated",
-            json!({"reason": "disconnect", "exit_code": 0}),
-        ));
-        records
-    }
-
-    fn disconnect_session_events(&mut self) -> Vec<Value> {
-        let Some(session) = self.actor.session_mut() else {
-            return Vec::new();
-        };
-        session.disconnect();
-        session
-            .take_task_events()
-            .into_iter()
-            .map(task_event)
-            .collect()
-    }
-
-    fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        let cancelled = self.actor.cancel_evaluation();
-        vec![success(
-            request_id,
-            command,
-            json!({"cancelled": cancelled}),
-        )]
-    }
-
-    fn fatal_request(&mut self, message: impl Into<String>) -> Vec<Value> {
-        self.status = ServerStatus::Terminated;
-        self.fatal_termination = true;
-        vec![event(
-            "protocol_error",
-            error_body(
-                "invalid_request",
-                message,
-                "Send one valid UTF-8 JSON request object per line.",
-            ),
-        )]
+    fn records_from_engine(&self, records: Vec<DebugRecord>) -> Vec<Value> {
+        records.into_iter().map(DebugRecord::into_jsonl).collect()
     }
 }

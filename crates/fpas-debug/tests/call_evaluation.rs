@@ -2,6 +2,7 @@
 
 #![allow(
     clippy::expect_used,
+    clippy::panic,
     reason = "integration fixtures keep compiler and debugger failures local"
 )]
 

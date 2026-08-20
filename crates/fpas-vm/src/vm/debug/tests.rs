@@ -1,5 +1,11 @@
 //! Focused controlled-execution tests independent from protocol adapters.
 
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "debugger tests use direct assertions to keep fixture failures local"
+)]
+
 use fpas_bytecode::{
     CodeRange, Constant, DebugScope, DebugSourceLocation, Executable, FunctionDebugInfo,
     FunctionFlags, FunctionId, FunctionInfo, Instruction, InstructionAddress, Intrinsic,

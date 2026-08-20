@@ -4,6 +4,7 @@ pub mod dap;
 pub mod jsonl;
 
 mod breakpoints;
+mod engine;
 mod evaluation;
 mod target;
 mod target_reload;

@@ -6,10 +6,7 @@ use crate::vm::debug::types::DebugTaskState;
 use super::chains::three_level_executable;
 use super::fixtures::*;
 
-pub(super) fn fingerprint(
-    session: &mut DebugSession,
-    task_id: u64,
-) -> (
+type StateFingerprint = (
     u64,
     DebugStop,
     Option<(
@@ -23,7 +20,9 @@ pub(super) fn fingerprint(
     Vec<u64>,
     Vec<String>,
     Vec<(u64, DebugTaskState)>,
-) {
+);
+
+pub(super) fn fingerprint(session: &mut DebugSession, task_id: u64) -> StateFingerprint {
     (
         session.test_instruction_count(),
         session.last_stop().clone(),

@@ -2,7 +2,7 @@
 
 use serde_json::{Value, json};
 
-pub(super) fn success(request_id: u64, command: &str, body: Value) -> Value {
+pub(crate) fn success(request_id: u64, command: &str, body: Value) -> Value {
     json!({
         "type": "response",
         "request_id": request_id,
@@ -12,7 +12,7 @@ pub(super) fn success(request_id: u64, command: &str, body: Value) -> Value {
     })
 }
 
-pub(super) fn failure(
+pub(crate) fn failure(
     request_id: u64,
     command: &str,
     code: &str,
@@ -32,11 +32,11 @@ pub(super) fn failure(
     })
 }
 
-pub(super) fn event(name: &str, body: Value) -> Value {
+pub(crate) fn event(name: &str, body: Value) -> Value {
     json!({"type": "event", "event": name, "body": body})
 }
 
-pub(super) fn session_error(
+pub(crate) fn session_error(
     request_id: u64,
     command: &str,
     error: fpas_vm::DebugSessionError,

@@ -4,21 +4,18 @@ use serde_json::{Map, Value, json};
 
 use super::breakpoints::parse_assign_argument;
 use super::location::parse_identity;
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::{data_breakpoint_body, invalid_state, missing_argument};
 use crate::jsonl::protocol::{event, failure, session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn replace_data_breakpoints(
         &mut self,
         request_id: u64,
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(requested) = arguments.get("breakpoints").and_then(Value::as_array) else {

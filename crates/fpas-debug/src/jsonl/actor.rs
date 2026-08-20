@@ -10,7 +10,7 @@ use fpas_vm::{
 
 #[derive(Clone, Copy)]
 /// Resume operation transferred to the owned session thread.
-pub(super) enum ResumeCommand {
+pub(crate) enum ResumeCommand {
     /// Resume the complete session without a selected-task step target.
     Continue,
     /// Step into the optional explicitly selected task.
@@ -23,7 +23,7 @@ pub(super) enum ResumeCommand {
 
 impl ResumeCommand {
     /// Return the explicit selected task, when this is a task-specific step.
-    pub(super) const fn task_id(self) -> Option<u64> {
+    pub(crate) const fn task_id(self) -> Option<u64> {
         match self {
             Self::Continue => None,
             Self::StepInto(task_id) | Self::StepOver(task_id) | Self::StepOut(task_id) => task_id,
@@ -31,22 +31,22 @@ impl ResumeCommand {
     }
 }
 
-pub(super) struct ResumeCompletion {
+pub(crate) struct ResumeCompletion {
     pub session: DebugSession,
     pub result: Result<DebugRunResult, DebugSessionError>,
 }
 
-pub(super) struct EvaluationCompletion {
+pub(crate) struct EvaluationCompletion {
     pub session: DebugSession,
     pub result: Result<DebugEvaluateResult, DebugSessionError>,
 }
 
-pub(super) enum ActorCompletion {
+pub(crate) enum ActorCompletion {
     Resume(ResumeCompletion),
     Evaluation(EvaluationCompletion),
 }
 
-pub(super) struct SessionActor {
+pub(crate) struct SessionActor {
     state: ActorState,
 }
 
@@ -66,27 +66,27 @@ enum ActorState {
 }
 
 impl SessionActor {
-    pub(super) fn new(session: DebugSession) -> Self {
+    pub(crate) fn new(session: DebugSession) -> Self {
         Self {
             state: ActorState::Ready(Box::new(session)),
         }
     }
 
-    pub(super) fn session(&self) -> Option<&DebugSession> {
+    pub(crate) fn session(&self) -> Option<&DebugSession> {
         match &self.state {
             ActorState::Ready(session) => Some(session),
             ActorState::Running { .. } | ActorState::Evaluating { .. } | ActorState::Empty => None,
         }
     }
 
-    pub(super) fn session_mut(&mut self) -> Option<&mut DebugSession> {
+    pub(crate) fn session_mut(&mut self) -> Option<&mut DebugSession> {
         match &mut self.state {
             ActorState::Ready(session) => Some(session),
             ActorState::Running { .. } | ActorState::Evaluating { .. } | ActorState::Empty => None,
         }
     }
 
-    pub(super) fn resume(&mut self, command: ResumeCommand) -> Result<(), DebugSessionError> {
+    pub(crate) fn resume(&mut self, command: ResumeCommand) -> Result<(), DebugSessionError> {
         let ActorState::Ready(session) = std::mem::replace(&mut self.state, ActorState::Empty)
         else {
             unreachable!("protocol state permits resume only while the actor is ready")
@@ -117,7 +117,7 @@ impl SessionActor {
         Ok(())
     }
 
-    pub(super) fn evaluate(
+    pub(crate) fn evaluate(
         &mut self,
         expression: DebugExpression,
         frame_id: Option<u64>,
@@ -144,13 +144,13 @@ impl SessionActor {
         };
     }
 
-    pub(super) fn pause(&self) {
+    pub(crate) fn pause(&self) {
         if let ActorState::Running { pause, .. } = &self.state {
             pause.request_pause();
         }
     }
 
-    pub(super) fn cancel_evaluation(&self) -> bool {
+    pub(crate) fn cancel_evaluation(&self) -> bool {
         if let ActorState::Evaluating { cancel, .. } = &self.state {
             cancel.cancel();
             true
@@ -159,11 +159,11 @@ impl SessionActor {
         }
     }
 
-    pub(super) const fn is_evaluating(&self) -> bool {
+    pub(crate) const fn is_evaluating(&self) -> bool {
         matches!(self.state, ActorState::Evaluating { .. })
     }
 
-    pub(super) fn poll(&mut self) -> Option<ActorCompletion> {
+    pub(crate) fn poll(&mut self) -> Option<ActorCompletion> {
         let (receiver, thread) = match &mut self.state {
             ActorState::Running {
                 receiver, thread, ..
@@ -192,7 +192,7 @@ impl SessionActor {
         }
     }
 
-    pub(super) fn wait(&mut self) -> Option<ActorCompletion> {
+    pub(crate) fn wait(&mut self) -> Option<ActorCompletion> {
         let (receiver, thread) = match &mut self.state {
             ActorState::Running {
                 receiver, thread, ..
@@ -210,7 +210,7 @@ impl SessionActor {
         completion
     }
 
-    pub(super) fn restore(&mut self, session: DebugSession) {
+    pub(crate) fn restore(&mut self, session: DebugSession) {
         self.state = ActorState::Ready(Box::new(session));
     }
 }

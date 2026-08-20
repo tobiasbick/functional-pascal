@@ -4,12 +4,10 @@ use super::*;
 
 use fpas_bytecode::FunctionId;
 
-fn fingerprint(
-    session: &mut DebugSession,
-) -> (
-    u64,
-    Vec<(u64, DebugTaskState, bool, Option<(u16, usize, usize)>)>,
-) {
+type TaskFingerprint = (u64, DebugTaskState, bool, Option<(u16, usize, usize)>);
+type StateFingerprint = (u64, Vec<TaskFingerprint>);
+
+fn fingerprint(session: &mut DebugSession) -> StateFingerprint {
     let count = session.test_instruction_count();
     let tasks = session
         .tasks(0, 16)

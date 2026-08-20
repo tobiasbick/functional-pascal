@@ -5,7 +5,7 @@ mod string;
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::evaluation::{parse_debug_assignment_target, parse_debug_expression};
 use crate::jsonl::encode::{invalid_state, missing_argument, optional_u64_argument};
 
@@ -21,9 +21,9 @@ fn parse_request(
     command: &str,
     arguments: &Map<String, Value>,
     expression_names: &[&str],
-    status: ServerStatus,
+    status: DebugStatus,
 ) -> Result<SequenceRequest, Value> {
-    if status != ServerStatus::Stopped {
+    if status != DebugStatus::Stopped {
         return Err(invalid_state(request_id, command, status));
     }
     let Some(target_source) = arguments.get("target").and_then(Value::as_str) else {

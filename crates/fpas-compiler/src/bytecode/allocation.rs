@@ -330,6 +330,7 @@ fn limit_error(message: &str) -> CompileError {
 }
 
 #[cfg(test)]
+#[allow(clippy::panic)]
 mod tests {
     use fpas_ir::{
         BasicBlock, BlockId, Constant, Function, FunctionId, FunctionSignature, GlobalId,

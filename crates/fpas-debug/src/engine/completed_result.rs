@@ -2,19 +2,19 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::evaluation::parse_debug_expression;
 use crate::jsonl::encode::{invalid_state, missing_argument, optional_u64_argument};
 use crate::jsonl::protocol::{failure, session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn replace_completed_task_result(
         &mut self,
         request_id: u64,
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let task_id = match required_task_id(request_id, command, arguments) {

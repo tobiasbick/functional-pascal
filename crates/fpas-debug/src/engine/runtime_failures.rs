@@ -2,22 +2,19 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::breakpoints::RuntimeFailurePolicy;
 use crate::jsonl::encode::{invalid_state, missing_argument};
 use crate::jsonl::protocol::{failure, success};
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn replace_runtime_failure_filters(
         &mut self,
         request_id: u64,
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(requested) = arguments.get("filters").and_then(Value::as_array) else {

@@ -2,16 +2,13 @@
 
 use serde_json::{Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::invalid_state;
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn classify_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let candidate = match self.reloader.as_mut() {
@@ -42,10 +39,7 @@ impl JsonlServer {
     }
 
     pub(super) fn reload_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let reloaded = match self.reloader.as_mut() {
@@ -78,10 +72,7 @@ impl JsonlServer {
     }
 
     pub(super) fn rollback_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(session) = self.actor.session_mut() else {

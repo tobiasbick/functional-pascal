@@ -2,7 +2,7 @@
 
 use serde_json::{Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::breakpoints::BreakpointOutcome;
 use crate::jsonl::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
 use crate::jsonl::encode::{
@@ -10,7 +10,7 @@ use crate::jsonl::encode::{
 };
 use crate::jsonl::protocol::event;
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn complete_actor(&mut self, completion: ActorCompletion) -> Vec<Value> {
         match completion {
             ActorCompletion::Resume(completion) => self.complete_resume(completion),
@@ -27,7 +27,7 @@ impl JsonlServer {
         records.extend(session.take_task_events().into_iter().map(task_event));
         match result {
             Ok(fpas_vm::DebugRunResult::Stopped(stop)) => {
-                self.status = ServerStatus::Stopped;
+                self.status = DebugStatus::Stopped;
                 if stop.reason == fpas_vm::DebugStopReason::RuntimeError
                     && let Some(diagnostic) = &stop.diagnostic
                 {
@@ -38,7 +38,7 @@ impl JsonlServer {
                     if !self.runtime_failure_policy.should_stop(diagnostic.code) {
                         session.disconnect();
                         records.extend(session.take_task_events().into_iter().map(task_event));
-                        self.status = ServerStatus::Terminated;
+                        self.status = DebugStatus::Terminated;
                         records.push(event(
                             "terminated",
                             json!({
@@ -120,9 +120,9 @@ impl JsonlServer {
                         }
                         if !should_stop {
                             self.actor.restore(session);
-                            self.status = ServerStatus::Running;
+                            self.status = DebugStatus::Running;
                             if let Err(error) = self.actor.resume(ResumeCommand::Continue) {
-                                self.status = ServerStatus::Stopped;
+                                self.status = DebugStatus::Stopped;
                                 records.push(event(
                                     "protocol_error",
                                     error_body(error_code(error.kind), error.message, error.hint),
@@ -136,7 +136,7 @@ impl JsonlServer {
                 self.actor.restore(session);
             }
             Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
-                self.status = ServerStatus::Terminated;
+                self.status = DebugStatus::Terminated;
                 records.push(event(
                     "terminated",
                     json!({
@@ -146,7 +146,7 @@ impl JsonlServer {
                 ));
             }
             Err(error) => {
-                self.status = ServerStatus::Stopped;
+                self.status = DebugStatus::Stopped;
                 records.push(event(
                     "protocol_error",
                     error_body(

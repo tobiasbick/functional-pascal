@@ -5,8 +5,8 @@ use serde_json::{Map, Value};
 use super::*;
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
-    pub(in crate::jsonl::server) fn replace_string_character(
+impl DebugEngine {
+    pub(in crate::engine) fn replace_string_character(
         &mut self,
         request_id: u64,
         command: &str,

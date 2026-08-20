@@ -2,11 +2,11 @@
 
 use serde_json::{Map, Value};
 
-use super::super::actor::ResumeCommand;
-use super::super::protocol::failure;
-use super::JsonlServer;
+use super::DebugEngine;
+use crate::jsonl::actor::ResumeCommand;
+use crate::jsonl::protocol::failure;
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn handle_request(
         &mut self,
         request_id: u64,

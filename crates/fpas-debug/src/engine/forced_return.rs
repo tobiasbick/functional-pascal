@@ -2,19 +2,19 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::evaluation::parse_debug_expression;
 use crate::jsonl::encode::{frame_body, invalid_state, missing_argument};
 use crate::jsonl::protocol::{event, failure, session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn force_return(
         &mut self,
         request_id: u64,
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(frame_id) = arguments.get("frame_id").and_then(Value::as_u64) else {
@@ -76,7 +76,7 @@ impl JsonlServer {
                     }),
                 )];
                 if result.terminated {
-                    self.status = ServerStatus::Terminated;
+                    self.status = DebugStatus::Terminated;
                     records.push(event(
                         "terminated",
                         json!({"reason":"completed", "exit_code":0}),

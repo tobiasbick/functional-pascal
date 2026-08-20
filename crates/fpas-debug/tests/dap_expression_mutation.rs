@@ -2,6 +2,7 @@
 
 #![allow(
     clippy::expect_used,
+    clippy::panic,
     reason = "DAP transcript tests keep fixture failures local"
 )]
 

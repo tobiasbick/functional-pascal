@@ -112,8 +112,10 @@ fn array_results_validate_structurally() {
 
 #[test]
 fn aggregate_result_uses_the_handle_reserved_during_caller_refresh() {
-    let mut inspection_limits = DebugInspectionLimits::default();
-    inspection_limits.max_handles = 1;
+    let inspection_limits = DebugInspectionLimits {
+        max_handles: 1,
+        ..DebugInspectionLimits::default()
+    };
     let mut session = DebugSession::with_limits(
         array_return_executable(),
         Vec::new(),

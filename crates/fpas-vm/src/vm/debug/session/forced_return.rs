@@ -10,6 +10,16 @@ use crate::vm::debug::forced_return::{
     require_eligible, require_result_type, unknown_frame, unsupported,
 };
 
+#[cfg(test)]
+type TestWorkerRegisters = (
+    u16,
+    usize,
+    usize,
+    usize,
+    Vec<fpas_bytecode::Value>,
+    Vec<bool>,
+);
+
 impl DebugSession {
     /// Complete a selected ordinary callee with a validated return value and remain stopped in its caller.
     ///
@@ -267,14 +277,7 @@ impl DebugSession {
     pub(in crate::vm::debug) fn test_worker_registers(
         &self,
         task_id: u64,
-    ) -> Option<(
-        u16,
-        usize,
-        usize,
-        usize,
-        Vec<fpas_bytecode::Value>,
-        Vec<bool>,
-    )> {
+    ) -> Option<TestWorkerRegisters> {
         let worker = self.runtime.worker(task_id)?;
         Some((
             worker.function.get(),

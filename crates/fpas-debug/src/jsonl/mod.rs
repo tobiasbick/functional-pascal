@@ -1,8 +1,8 @@
 //! Versioned UTF-8 JSON Lines debugger protocol.
 
-mod actor;
-mod encode;
-mod protocol;
+pub(crate) mod actor;
+pub(crate) mod encode;
+pub(crate) mod protocol;
 mod server;
 mod transport;
 

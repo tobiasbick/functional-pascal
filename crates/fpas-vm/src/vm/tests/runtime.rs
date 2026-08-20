@@ -20,8 +20,7 @@ fn task_function(
     register_count: u16,
     uses_spawn_tasks: bool,
 ) -> FunctionInfo {
-    let mut flags = FunctionFlags::default();
-    flags.uses_spawn_tasks = uses_spawn_tasks;
+    let flags = FunctionFlags { uses_spawn_tasks };
     FunctionInfo {
         name: StringId::new(name),
         code: CodeRange::new(InstructionAddress::new(start), InstructionAddress::new(end)),

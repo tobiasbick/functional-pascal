@@ -61,17 +61,16 @@ fn apply_declared_metadata(
     let Decl::TypeDef(definition) = declaration else {
         return Ok(());
     };
-    match (&definition.body, ty) {
-        (TypeBody::Record(declared), artifact::InterfaceType::Record(interface)) => {
-            for (field, declared_field) in interface.fields.iter_mut().zip(&declared.fields) {
-                field.default_value = declared_field
-                    .default_value
-                    .as_ref()
-                    .map(interface_constant_value)
-                    .transpose()?;
-            }
+    if let (TypeBody::Record(declared), artifact::InterfaceType::Record(interface)) =
+        (&definition.body, ty)
+    {
+        for (field, declared_field) in interface.fields.iter_mut().zip(&declared.fields) {
+            field.default_value = declared_field
+                .default_value
+                .as_ref()
+                .map(interface_constant_value)
+                .transpose()?;
         }
-        _ => {}
     }
     Ok(())
 }

@@ -2,24 +2,21 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::breakpoints::{BreakpointAssign, BreakpointPolicy};
+use crate::engine::location::parse_identity;
 use crate::evaluation::parse_debug_expression;
 use crate::jsonl::encode::{breakpoint_body, invalid_state, missing_argument};
 use crate::jsonl::protocol::{event, failure, session_error, success};
-use crate::jsonl::server::location::parse_identity;
 
-impl JsonlServer {
+impl DebugEngine {
     pub(super) fn set_breakpoint(
         &mut self,
         request_id: u64,
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(source) = arguments.get("source").and_then(Value::as_str) else {
@@ -96,10 +93,7 @@ impl JsonlServer {
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if !matches!(
-            self.status,
-            ServerStatus::Initialized | ServerStatus::Stopped
-        ) {
+        if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(id) = arguments.get("breakpoint_id").and_then(Value::as_u64) else {

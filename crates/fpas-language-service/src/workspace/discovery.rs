@@ -214,6 +214,7 @@ pub(super) fn has_extension(path: &Path, expected: &str) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use std::sync::atomic::{AtomicU64, Ordering};
 

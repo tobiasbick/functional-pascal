@@ -61,7 +61,7 @@ fn stop_in_child(server: &mut JsonlServer) {
     }));
 }
 
-fn child<'a>(tasks: &'a Value) -> &'a Value {
+fn child(tasks: &Value) -> &Value {
     tasks["body"]["tasks"]
         .as_array()
         .expect("tasks")

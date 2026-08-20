@@ -3,9 +3,9 @@
 use serde_json::{Map, Value, json};
 
 use super::protocol::{event, failure, success};
-use super::server::ServerStatus;
+use crate::engine::DebugStatus;
 
-pub(super) fn initialize_records(
+pub(crate) fn initialize_records(
     request_id: u64,
     command: &str,
     execution: fpas_vm::DebugExecutionLimits,
@@ -113,7 +113,7 @@ pub(super) fn initialize_records(
     ]
 }
 
-pub(super) fn invalid_state(request_id: u64, command: &str, state: ServerStatus) -> Value {
+pub(crate) fn invalid_state(request_id: u64, command: &str, state: DebugStatus) -> Value {
     failure(
         request_id,
         command,
@@ -123,7 +123,7 @@ pub(super) fn invalid_state(request_id: u64, command: &str, state: ServerStatus)
     )
 }
 
-pub(super) fn missing_argument(request_id: u64, command: &str, argument: &str) -> Value {
+pub(crate) fn missing_argument(request_id: u64, command: &str, argument: &str) -> Value {
     failure(
         request_id,
         command,
@@ -133,7 +133,7 @@ pub(super) fn missing_argument(request_id: u64, command: &str, argument: &str) -
     )
 }
 
-pub(super) fn index_argument(arguments: &Map<String, Value>, name: &str, default: usize) -> usize {
+pub(crate) fn index_argument(arguments: &Map<String, Value>, name: &str, default: usize) -> usize {
     arguments
         .get(name)
         .and_then(Value::as_u64)
@@ -141,11 +141,11 @@ pub(super) fn index_argument(arguments: &Map<String, Value>, name: &str, default
         .unwrap_or(default)
 }
 
-pub(super) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
+pub(crate) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
     json!({"breakpoint_id":breakpoint.id,"verified":breakpoint.is_verified(),"requested":{"source":breakpoint.requested.source,"line":breakpoint.requested.line,"column":breakpoint.requested.column},"location":breakpoint.location.as_ref().map(location_body),"message":(!breakpoint.is_verified()).then_some("No executable sequence point exists on the requested line.")})
 }
 
-pub(super) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Value {
+pub(crate) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Value {
     let message = if breakpoint.functions.is_empty() {
         Some("No executable function metadata matches the requested selector.".to_string())
     } else if breakpoint.instructions.is_empty() {
@@ -169,7 +169,7 @@ pub(super) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakp
     })
 }
 
-pub(super) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
+pub(crate) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
     event(
         "stopped",
         json!({"reason":stop_reason(stop.reason),"task_id":stop.task_id,"all_tasks_stopped":true,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id,"breakpoint_ids":stop.breakpoint_ids}),
@@ -177,7 +177,7 @@ pub(super) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
 }
 
 /// Parses an optional non-negative integer request argument.
-pub(super) fn optional_u64_argument(
+pub(crate) fn optional_u64_argument(
     request_id: u64,
     command: &str,
     arguments: &Map<String, Value>,
@@ -205,7 +205,7 @@ pub(super) fn optional_u64_argument(
 }
 
 /// Parses a required non-negative integer request argument.
-pub(super) fn required_u64_argument(
+pub(crate) fn required_u64_argument(
     request_id: u64,
     command: &str,
     arguments: &Map<String, Value>,
@@ -215,7 +215,7 @@ pub(super) fn required_u64_argument(
         .ok_or_else(|| missing_argument(request_id, command, name))
 }
 
-pub(super) fn task_body(task: &fpas_vm::DebugTask) -> Value {
+pub(crate) fn task_body(task: &fpas_vm::DebugTask) -> Value {
     json!({
         "task_id": task.id,
         "name": task.name,
@@ -225,7 +225,7 @@ pub(super) fn task_body(task: &fpas_vm::DebugTask) -> Value {
     })
 }
 
-pub(super) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
+pub(crate) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
     let reason = match change.kind {
         fpas_vm::DebugTaskEventKind::Started => "started",
         fpas_vm::DebugTaskEventKind::Exited => "exited",
@@ -233,7 +233,7 @@ pub(super) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
     event("task", json!({"reason": reason, "task_id": change.task_id}))
 }
 
-pub(super) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) -> Value {
+pub(crate) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) -> Value {
     json!({
         "breakpoint_id": breakpoint.id,
         "verified": breakpoint.is_verified(),
@@ -245,7 +245,7 @@ pub(super) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) ->
     })
 }
 
-pub(super) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
+pub(crate) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Value {
     match identity {
         fpas_vm::DebugDataLocationIdentity::Global { index } => json!({"index": index}),
         fpas_vm::DebugDataLocationIdentity::FrameRegister {
@@ -268,34 +268,34 @@ fn location_body(location: &fpas_vm::SourceLocation) -> Value {
     json!({"source":location.source,"line":location.line,"column":location.column})
 }
 
-pub(super) fn frame_body(frame: &fpas_vm::DebugFrame) -> Value {
+pub(crate) fn frame_body(frame: &fpas_vm::DebugFrame) -> Value {
     json!({"frame_id":frame.id,"name":frame.name,"location":frame.location.as_ref().map(location_body),"depth":frame.depth})
 }
 
-pub(super) fn scope_body(scope: &fpas_vm::DebugScope) -> Value {
+pub(crate) fn scope_body(scope: &fpas_vm::DebugScope) -> Value {
     json!({"name":scope.name,"kind":format!("{:?}",scope.kind).to_ascii_lowercase(),"variables_reference":scope.variables_reference,"named_variables":scope.named_variables,"expensive":scope.expensive})
 }
 
-pub(super) fn variable_body(variable: &fpas_vm::DebugVariable) -> Value {
+pub(crate) fn variable_body(variable: &fpas_vm::DebugVariable) -> Value {
     json!({"name":variable.name,"value":variable.value,"type_name":variable.type_name,"variables_reference":variable.variables_reference,"named_variables":variable.named_variables,"indexed_variables":variable.indexed_variables,"presentation_hint":variable.presentation_hint})
 }
 
-pub(super) fn output_events(session: &fpas_vm::DebugSession, cursor: &mut usize) -> Vec<Value> {
+pub(crate) fn output_events(session: &fpas_vm::DebugSession, cursor: &mut usize) -> Vec<Value> {
     let output = session.output();
     let records=output.lines.iter().skip(*cursor).enumerate().map(|(index,line)| event("output",json!({"category":"stdout","text":format!("{line}\n"),"sequence":cursor.saturating_add(index).saturating_add(1)}))).collect();
     *cursor = output.lines.len();
     records
 }
 
-pub(super) fn diagnostic_body(diagnostic: &fpas_diagnostics::Diagnostic, task_id: u64) -> Value {
+pub(crate) fn diagnostic_body(diagnostic: &fpas_diagnostics::Diagnostic, task_id: u64) -> Value {
     json!({"code":format!("F{:04}",diagnostic.code.value()),"message":diagnostic.message,"help":diagnostic.help,"line":diagnostic.span.line(),"column":diagnostic.span.column(),"source_id":diagnostic.span.source_id(),"task_id":task_id})
 }
 
-pub(super) fn error_body(code: &str, message: impl Into<String>, help: impl Into<String>) -> Value {
+pub(crate) fn error_body(code: &str, message: impl Into<String>, help: impl Into<String>) -> Value {
     json!({"code":code,"message":message.into(),"help":help.into()})
 }
 
-pub(super) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
+pub(crate) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
     match kind {
         fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
         fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",

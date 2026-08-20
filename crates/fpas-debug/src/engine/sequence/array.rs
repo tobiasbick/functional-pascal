@@ -5,8 +5,8 @@ use serde_json::{Map, Value};
 use super::*;
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
-    pub(in crate::jsonl::server) fn insert_array(
+impl DebugEngine {
+    pub(in crate::engine) fn insert_array(
         &mut self,
         request_id: u64,
         command: &str,
@@ -37,7 +37,7 @@ impl JsonlServer {
         }
     }
 
-    pub(in crate::jsonl::server) fn remove_array(
+    pub(in crate::engine) fn remove_array(
         &mut self,
         request_id: u64,
         command: &str,

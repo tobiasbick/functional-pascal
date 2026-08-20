@@ -2,11 +2,11 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::{invalid_state, missing_argument};
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     /// Queue one debuggee input line onto the session-owned channel.
     pub(super) fn push_debuggee_input(
         &mut self,
@@ -14,7 +14,7 @@ impl JsonlServer {
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(text) = arguments.get("text").and_then(Value::as_str) else {
@@ -35,7 +35,7 @@ impl JsonlServer {
 
     /// Signal debuggee input EOF without mixing protocol stdin.
     pub(super) fn signal_debuggee_eof(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(session) = self.actor.session_mut() else {
@@ -49,7 +49,7 @@ impl JsonlServer {
 
     /// Drop unread queued debuggee input.
     pub(super) fn cancel_debuggee_input(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(session) = self.actor.session_mut() else {

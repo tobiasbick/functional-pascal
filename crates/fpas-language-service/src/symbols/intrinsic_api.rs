@@ -133,6 +133,7 @@ fn find_symbol_mut<'a>(
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use std::sync::Arc;
 

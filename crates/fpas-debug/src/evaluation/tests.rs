@@ -1,3 +1,9 @@
+#![allow(
+    clippy::expect_used,
+    clippy::panic,
+    reason = "parser tests use direct assertions to keep failures local"
+)]
+
 use fpas_vm::{DebugAssignmentSelector, DebugEvaluationLimits, DebugExpression};
 
 use super::{

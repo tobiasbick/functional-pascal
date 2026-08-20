@@ -84,8 +84,10 @@ fn result_rendering_limit_failure_precedes_the_frame_commit() {
     let callee = stop_in_callee(&mut session, "compute");
     let task_id = session.last_stop().task_id;
     let before = fingerprint(&mut session, task_id);
-    let mut limits = DebugEvaluationLimits::default();
-    limits.max_output_bytes = 0;
+    let limits = DebugEvaluationLimits {
+        max_output_bytes: 0,
+        ..DebugEvaluationLimits::default()
+    };
 
     let error = session
         .force_return_with_limits(callee, Some(&int_expr(99)), limits)
@@ -97,8 +99,10 @@ fn result_rendering_limit_failure_precedes_the_frame_commit() {
 
 #[test]
 fn aggregate_result_handle_limit_failure_precedes_the_frame_commit() {
-    let mut inspection_limits = DebugInspectionLimits::default();
-    inspection_limits.max_handles = 0;
+    let inspection_limits = DebugInspectionLimits {
+        max_handles: 0,
+        ..DebugInspectionLimits::default()
+    };
     let mut session = DebugSession::with_limits(
         array_return_executable(),
         Vec::new(),

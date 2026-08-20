@@ -2,7 +2,8 @@
 
 use serde_json::{Value, json};
 
-use super::{DapServer, core_request};
+use super::DapServer;
+use crate::engine::{DebugRecord, DebugRequest};
 
 impl DapServer {
     pub(super) fn set_source_breakpoints(
@@ -30,7 +31,7 @@ impl DapServer {
         };
         for id in self.source_breakpoints.remove(&source).unwrap_or_default() {
             let core_id = self.next_core_id();
-            let _ = self.core.handle_line(&core_request(
+            let _ = self.core.execute(DebugRequest::new(
                 core_id,
                 "breakpoint.clear",
                 json!({"breakpoint_id":id}),
@@ -45,19 +46,24 @@ impl DapServer {
             .unwrap_or_default()
         {
             let core_id = self.next_core_id();
-            let records = self.core.handle_line(&core_request(
-                core_id,
-                "breakpoint.set",
-                json!({
-                    "source":source,
-                    "line":requested.get("line"),
-                    "column":requested.get("column"),
-                    "condition":requested.get("condition"),
-                    "hit_condition":requested.get("hitCondition"),
-                    "log_message":requested.get("logMessage"),
-                    "assign":requested.get("assign")
-                }),
-            ));
+            let records = self
+                .core
+                .execute(DebugRequest::new(
+                    core_id,
+                    "breakpoint.set",
+                    json!({
+                        "source":source,
+                        "line":requested.get("line"),
+                        "column":requested.get("column"),
+                        "condition":requested.get("condition"),
+                        "hit_condition":requested.get("hitCondition"),
+                        "log_message":requested.get("logMessage"),
+                        "assign":requested.get("assign")
+                    }),
+                ))
+                .into_iter()
+                .map(DebugRecord::into_jsonl)
+                .collect::<Vec<_>>();
             if records
                 .first()
                 .is_some_and(|record| record["success"] == false)

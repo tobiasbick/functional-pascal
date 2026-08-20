@@ -2,14 +2,14 @@
 
 use serde_json::{Map, Value};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::{invalid_state, missing_argument};
 use crate::jsonl::protocol::session_error;
 
-impl JsonlServer {
+impl DebugEngine {
     /// Reject debugger-created tasks with a stable capability error.
     pub(super) fn create_task(&mut self, request_id: u64, command: &str) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let Some(session) = self.actor.session_mut() else {
@@ -25,7 +25,7 @@ impl JsonlServer {
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let task_id = match arguments.get("task_id") {

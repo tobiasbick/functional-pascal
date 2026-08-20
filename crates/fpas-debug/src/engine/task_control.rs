@@ -2,11 +2,11 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::{invalid_state, required_u64_argument, task_event};
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     /// Hold one current runtime task so later continue and peer steps skip it.
     pub(super) fn pause_task(
         &mut self,
@@ -34,7 +34,7 @@ impl JsonlServer {
         arguments: &Map<String, Value>,
         paused: bool,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let task_id = match required_u64_argument(request_id, command, arguments, "task_id") {
@@ -66,7 +66,7 @@ impl JsonlServer {
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let task_id = match required_u64_argument(request_id, command, arguments, "task_id") {

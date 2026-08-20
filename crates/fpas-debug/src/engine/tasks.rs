@@ -2,11 +2,11 @@
 
 use serde_json::{Map, Value, json};
 
-use super::{JsonlServer, ServerStatus};
+use super::{DebugEngine, DebugStatus};
 use crate::jsonl::encode::{index_argument, invalid_state, task_body};
 use crate::jsonl::protocol::{session_error, success};
 
-impl JsonlServer {
+impl DebugEngine {
     /// Returns a page of tasks from the stopped debug session.
     pub(super) fn tasks(
         &mut self,
@@ -14,7 +14,7 @@ impl JsonlServer {
         command: &str,
         arguments: &Map<String, Value>,
     ) -> Vec<Value> {
-        if self.status != ServerStatus::Stopped {
+        if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
         let start = index_argument(arguments, "start", 0);

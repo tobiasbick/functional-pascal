@@ -5,9 +5,10 @@ use std::collections::HashMap;
 use fpas_bytecode::{Constant, ConstantId, FunctionId};
 use fpas_unit::object::{DefinitionTarget, ObjectConstant, RelocatableObject, SymbolKind};
 
+use crate::LinkError;
+use crate::plan::LinkIds;
 use crate::strings::StringInterner;
 use crate::symbols::SymbolTable;
-use crate::{LinkError, LinkIds};
 
 pub(super) struct ConstantIds {
     pub maps: Vec<Vec<ConstantId>>,

@@ -5,8 +5,9 @@ use std::collections::HashSet;
 use fpas_bytecode::{DebugType, DebugTypeId};
 use fpas_unit::object::{DefinitionTarget, ObjectDebugType, RelocatableObject, SymbolKind};
 
+use crate::LinkError;
+use crate::plan::LinkIds;
 use crate::symbols::{ResolvedTarget, SymbolTable};
-use crate::{LinkError, LinkIds};
 
 pub(super) struct DebugTypeIds {
     bases: Vec<u32>,

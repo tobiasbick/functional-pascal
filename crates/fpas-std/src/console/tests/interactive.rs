@@ -130,7 +130,7 @@ fn release_failure_retains_only_failed_mode_for_retry() {
     console.interactive = InteractiveTerminalOwnership {
         acquired: true,
         owns_paste: true,
-        owns_mouse: true,
+        owns_focus: true,
         ..InteractiveTerminalOwnership::default()
     };
 
@@ -141,7 +141,7 @@ fn release_failure_retains_only_failed_mode_for_retry() {
     assert!(error.message.contains("injected one-shot terminal failure"));
     assert!(console.interactive.acquired);
     assert!(console.interactive.owns_paste);
-    assert!(!console.interactive.owns_mouse);
+    assert!(!console.interactive.owns_focus);
 
     console
         .release_interactive_terminal(&mut key_input, test_location())

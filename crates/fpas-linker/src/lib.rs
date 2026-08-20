@@ -6,21 +6,14 @@ mod error;
 mod functions;
 mod globals;
 mod layouts;
+mod plan;
 mod relocation;
 mod source_map;
 mod strings;
 mod symbols;
 
 pub use error::LinkError;
-use functions::FunctionIds;
-use globals::GlobalIds;
-use layouts::LayoutIds;
-
-struct LinkIds {
-    functions: FunctionIds,
-    globals: GlobalIds,
-    layouts: LayoutIds,
-}
+use plan::LinkPlan;
 /// Link dependency-first unit objects and one root object into a verified register executable.
 ///
 /// IDs are assigned by dependency order and canonical symbol order, except that the root entry is
@@ -43,56 +36,15 @@ pub fn link_objects(
     };
     use fpas_unit::object::ObjectReturn;
 
-    let objects = units
-        .iter()
-        .chain(std::iter::once(program))
-        .collect::<Vec<_>>();
-    for unit in units {
-        unit.validate().map_err(|error| LinkError::InvalidObject {
-            owner: unit.owner.clone(),
-            detail: error.to_string(),
-        })?;
-        if unit.entry.is_some() {
-            return Err(LinkError::UnitEntry(unit.owner.clone()));
-        }
-    }
-    program
-        .validate()
-        .map_err(|error| LinkError::InvalidObject {
-            owner: program.owner.clone(),
-            detail: error.to_string(),
-        })?;
-    let entry = program
-        .entry
-        .and_then(|index| usize::try_from(index).ok())
-        .ok_or(LinkError::MissingProgramEntry)?;
-    validate_initializers(units)?;
-    let program_index = units.len();
-    let symbols = symbols::SymbolTable::build(&objects)?;
-    let functions = functions::assign(&objects, program_index, entry, &symbols)?;
-    let globals = globals::assign(&objects, &symbols)?;
-    let layouts = layouts::assign(&objects, &symbols)?;
-    let ids = LinkIds {
-        functions,
-        globals,
-        layouts,
-    };
-    let (debug_type_ids, linked_debug_types) = debug_types::merge(&objects, &ids, &symbols)?;
-    let initializer_targets = units
-        .iter()
-        .enumerate()
-        .filter_map(|(object_index, object)| {
-            object
-                .initializer
-                .map(|initializer| (object_index, initializer as usize))
-        })
-        .map(|(object_index, initializer)| {
-            ids.functions.maps[object_index][initializer]
-                .ok_or(LinkError::Overflow("unit initializer function ID"))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    let initializer_count = u32::try_from(initializer_targets.len())
-        .map_err(|_| LinkError::Overflow("unit initializer call count"))?;
+    let LinkPlan {
+        objects,
+        symbols,
+        ids,
+        debug_type_ids,
+        linked_debug_types,
+        initializer_targets,
+        code_layout,
+    } = LinkPlan::build(units, program)?;
     let mut strings = strings::StringInterner::default();
 
     let mut linked_globals = ids
@@ -178,30 +130,6 @@ pub fn link_objects(
     }
     let constants = constants::merge(&objects, &symbols, &ids, &mut strings)?;
 
-    let mut code_starts = Vec::with_capacity(ids.functions.order.len());
-    let mut code_bases = Vec::with_capacity(ids.functions.order.len());
-    let mut code_length = 0_u32;
-    for (final_index, (object, function)) in ids.functions.order.iter().enumerate() {
-        code_starts.push(code_length);
-        let prefix = if final_index == 0 {
-            initializer_count
-        } else {
-            0
-        };
-        code_bases.push(
-            code_length
-                .checked_add(prefix)
-                .ok_or(LinkError::Overflow("instruction addresses"))?,
-        );
-        code_length = code_length
-            .checked_add(prefix)
-            .ok_or(LinkError::Overflow("instruction addresses"))?
-            .checked_add(
-                u32::try_from(objects[*object].functions[*function].code.len())
-                    .map_err(|_| LinkError::Overflow("function code length"))?,
-            )
-            .ok_or(LinkError::Overflow("instruction addresses"))?;
-    }
     for (linked, (object, local)) in linked_globals.iter_mut().zip(&ids.globals.order) {
         let Some(initializer) = objects[*object].globals[*local].initializer else {
             continue;
@@ -211,14 +139,9 @@ pub fn link_objects(
             .copied()
             .flatten()
             .ok_or(LinkError::Overflow("global initializer function ID"))?;
-        let final_function = ids
-            .functions
-            .order
-            .iter()
-            .position(|entry| *entry == (*object, initializer.function as usize))
-            .ok_or(LinkError::Overflow("global initializer function order"))?;
         let instruction = InstructionAddress::new(
-            code_bases[final_function]
+            code_layout
+                .base_for(function)?
                 .checked_add(initializer.instruction_start)
                 .ok_or(LinkError::Overflow(
                     "global initializer instruction address",
@@ -229,15 +152,15 @@ pub fn link_objects(
             instruction,
         });
     }
-    let mut code = Vec::with_capacity(code_length as usize);
+    let mut code = Vec::with_capacity(code_layout.length as usize);
     let mut linked_functions = Vec::with_capacity(ids.functions.order.len());
     for (final_index, (object_index, function_index)) in
         ids.functions.order.iter().copied().enumerate()
     {
         let object = objects[object_index];
         let function = &object.functions[function_index];
-        let code_start = code_starts[final_index];
-        let code_base = code_bases[final_index];
+        let code_start = code_layout.starts[final_index];
+        let code_base = code_layout.bases[final_index];
         if final_index == 0 {
             for target in &initializer_targets {
                 code.push(
@@ -276,7 +199,7 @@ pub fn link_objects(
         }
         let end = code_start
             .checked_add(if final_index == 0 {
-                initializer_count
+                code_layout.initializer_count
             } else {
                 0
             })
@@ -309,8 +232,8 @@ pub fn link_objects(
         &objects,
         &ids.functions.order,
         &ids.functions.maps,
-        &code_starts,
-        &code_bases,
+        &code_layout.starts,
+        &code_layout.bases,
         &debug_type_ids,
         &mut strings,
     )?;
@@ -331,31 +254,4 @@ pub fn link_objects(
         entry: fpas_bytecode::FunctionId::new(0),
     };
     executable.verify().map_err(LinkError::InvalidExecutable)
-}
-
-fn validate_initializers(units: &[fpas_unit::object::RelocatableObject]) -> Result<(), LinkError> {
-    use fpas_unit::object::ObjectReturn;
-
-    for object in units {
-        let Some(initializer) = object.initializer else {
-            continue;
-        };
-        let function = &object.functions[initializer as usize];
-        let detail = if function.arity != 0 {
-            Some("expected zero parameters")
-        } else if function.capture_count != 0 {
-            Some("expected zero captures")
-        } else if function.returns != ObjectReturn::Unit {
-            Some("expected Unit return convention")
-        } else {
-            None
-        };
-        if let Some(detail) = detail {
-            return Err(LinkError::InvalidInitializer {
-                owner: object.owner.clone(),
-                detail,
-            });
-        }
-    }
-    Ok(())
 }

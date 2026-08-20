@@ -5,9 +5,10 @@ use fpas_unit::object::{
     DefinitionTarget, RelocatableObject, Relocation, RelocationKind, SymbolKind,
 };
 
+use crate::LinkError;
 use crate::constants::ConstantIds;
+use crate::plan::LinkIds;
 use crate::symbols::SymbolTable;
-use crate::{LinkError, LinkIds};
 
 /// Relocates one object instruction into the final executable tables.
 #[expect(

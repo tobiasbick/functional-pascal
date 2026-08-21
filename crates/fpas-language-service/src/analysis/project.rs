@@ -16,7 +16,7 @@ use crate::workspace::ProjectContext;
 use crate::{DocumentSnapshot, LanguageServiceError};
 
 use super::cache::AnalysisSet;
-use super::{DocumentAnalysis, semantic_document};
+use super::document::{DocumentAnalysis, semantic_document};
 
 pub(super) fn analyze_project(
     project: &ProjectContext,

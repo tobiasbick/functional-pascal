@@ -2,13 +2,18 @@
 //!
 //! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../../docs/pascal/std/testing/test.md)
 
+mod output;
+#[cfg(test)]
+mod tests;
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
 mod windows;
 
+use output::CappedBuffer;
+
 use std::fs;
-use std::io::{self, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -398,49 +403,6 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
         .map_err(|error| format!("Error writing worker result: {error}"))
 }
 
-struct CappedBuffer {
-    bytes: Vec<u8>,
-    limit: usize,
-    overflowed: bool,
-}
-
-impl CappedBuffer {
-    fn new(limit: usize) -> Self {
-        Self {
-            bytes: Vec::new(),
-            limit,
-            overflowed: false,
-        }
-    }
-
-    fn overflowed(&self) -> bool {
-        self.overflowed
-    }
-
-    fn into_inner(self) -> Vec<u8> {
-        self.bytes
-    }
-}
-
-impl Write for CappedBuffer {
-    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
-        let remaining = self.limit.saturating_sub(self.bytes.len());
-        if buffer.len() > remaining {
-            self.overflowed = true;
-            return Err(io::Error::new(
-                io::ErrorKind::FileTooLarge,
-                "isolated test output exceeded 8 MiB",
-            ));
-        }
-        self.bytes.extend_from_slice(buffer);
-        Ok(buffer.len())
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        Ok(())
-    }
-}
-
 fn configure_process_tree(command: &mut Command) {
     #[cfg(unix)]
     unix::configure(command);
@@ -457,25 +419,5 @@ fn terminate_process_tree(child: &mut Child) {
     {
         let _ = child.kill();
         let _ = child.wait();
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn capped_worker_output_reports_overflow() {
-        let mut output = CappedBuffer::new(4);
-
-        assert!(output.write_all(b"pass").is_ok());
-        assert!(output.write_all(b"!").is_err());
-        assert!(output.overflowed());
-        assert_eq!(output.into_inner(), b"pass");
-    }
-
-    #[test]
-    fn public_arguments_do_not_enter_worker_mode() {
-        assert_eq!(run_worker_from_args(&["test".to_string()]), None);
     }
 }

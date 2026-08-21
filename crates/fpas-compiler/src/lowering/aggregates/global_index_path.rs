@@ -4,7 +4,7 @@ use fpas_parser::DesignatorPart;
 
 use crate::CompileError;
 
-use super::LoweringContext;
+use crate::lowering::context::LoweringContext;
 
 impl LoweringContext {
     /// Lowers an index-only global write to the direct path operation when its encoding fits.

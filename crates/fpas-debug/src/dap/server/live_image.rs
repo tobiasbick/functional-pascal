@@ -3,10 +3,11 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn classify_live_image(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        self.core_request(request_seq, command, "reload.classify", json!({}))
+        self.core_request(request_seq, command, DebugOp::ReloadClassify)
     }
 
     pub(super) fn replace_current_live_image(
@@ -14,12 +15,12 @@ impl DapServer {
         request_seq: u64,
         command: &str,
     ) -> Vec<Value> {
-        let records = self.core_request(request_seq, command, "image.replace", json!({}));
+        let records = self.core_request(request_seq, command, DebugOp::ImageReplace);
         self.with_reload_invalidation(records)
     }
 
     pub(super) fn rollback_live_image(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        let records = self.core_request(request_seq, command, "image.rollback", json!({}));
+        let records = self.core_request(request_seq, command, DebugOp::ImageRollback);
         self.with_reload_invalidation(records)
     }
 
@@ -55,20 +56,36 @@ impl DapServer {
 }
 
 /// Translate one live-image custom-request result into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
     if !matches!(
         command,
         "fpas/reloadClassify" | "fpas/reload" | "fpas/reloadRollback"
     ) {
         return None;
     }
+    let ResponseBody::LiveImage {
+        class,
+        accepted,
+        applied,
+        version,
+        rollback_available,
+    } = body
+    else {
+        return None;
+    };
     Some(json!({
-        "class": body.get("class"),
-        "accepted": body.get("accepted"),
-        "applied": body.get("applied"),
-        "version": body.get("version"),
-        "rollbackAvailable": body.get("rollback_available"),
-        "acceptedClasses": body.get("accepted_classes"),
-        "rejectedClasses": body.get("rejected_classes"),
+        "class": class.as_str(),
+        "accepted": accepted,
+        "applied": applied,
+        "version": version,
+        "rollbackAvailable": rollback_available,
+        "acceptedClasses": fpas_vm::LiveImageUpdateClass::ACCEPTED
+            .iter()
+            .map(|class| class.as_str())
+            .collect::<Vec<_>>(),
+        "rejectedClasses": fpas_vm::LiveImageUpdateClass::REJECTED
+            .iter()
+            .map(|class| class.as_str())
+            .collect::<Vec<_>>(),
     }))
 }

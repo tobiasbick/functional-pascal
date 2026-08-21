@@ -1,10 +1,12 @@
-//! DAP request translation onto the JSONL debugger core.
+//! DAP adapter: wire spelling onto the typed debug engine.
 
+mod args;
 mod breakpoints;
 mod completed_result;
 mod data_breakpoints;
 mod dictionary;
 mod dispatch;
+mod events;
 mod exceptions;
 mod forced_return;
 mod frame_restart;
@@ -15,11 +17,13 @@ mod live_image;
 mod location;
 mod mutation;
 mod recording;
+mod response;
 mod sequence;
 mod source_paths;
 mod storage;
 mod task_control;
 mod tasks;
+mod values;
 mod variant;
 
 use std::collections::HashMap;
@@ -27,10 +31,7 @@ use std::collections::HashMap;
 use serde_json::{Value, json};
 
 use crate::PreparedDebugTarget;
-use crate::engine::{DebugEngine, DebugOp, DebugRecord, DebugRequest};
-use crate::jsonl::ServerStatus;
-use crate::jsonl::encode_record::encode_record;
-use crate::jsonl::parse::parse_op;
+use crate::engine::{DebugEngine, DebugOp, DebugRecord, DebugRequest, DebugStatus, ResponseBody};
 use source_paths::SourcePaths;
 use tasks::ThreadMap;
 
@@ -127,13 +128,13 @@ impl DapServer {
     /// Whether execution is active.
     #[must_use]
     pub fn is_running(&self) -> bool {
-        self.core.status() == ServerStatus::Running
+        self.core.status() == DebugStatus::Running
     }
 
     /// Whether the adapter has terminated.
     #[must_use]
     pub fn is_terminated(&self) -> bool {
-        self.core.status() == ServerStatus::Terminated
+        self.core.status() == DebugStatus::Terminated
     }
 
     fn initialize(&mut self, request_seq: u64, arguments: &Value) -> Vec<Value> {
@@ -177,7 +178,7 @@ impl DapServer {
         {
             capabilities.remove("supportsHotReload");
         }
-        output.extend(self.translate_events(records.into_iter().map(encode_record).collect()));
+        output.extend(self.translate_events(records));
         output
     }
 
@@ -216,37 +217,30 @@ impl DapServer {
                 &format!("DAP evaluate context `{context}` is unsupported; use watch, repl, hover, or variables."),
             )];
         }
-        self.core_request(
-            request_seq,
-            command,
-            "evaluate",
-            json!({
-                "expression": arguments.get("expression").cloned().unwrap_or(Value::Null),
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "async": true
-            }),
-        )
+        match args::required_string(arguments, "expression") {
+            Ok(expression) => self.core_request(
+                request_seq,
+                command,
+                DebugOp::Evaluate {
+                    expression,
+                    frame_id: arguments.get("frameId").and_then(Value::as_u64),
+                    async_eval: true,
+                },
+            ),
+            Err(message) => vec![self.failure(request_seq, command, &message)],
+        }
     }
 
-    fn core_request(
+    pub(super) fn core_request(
         &mut self,
         request_seq: u64,
         dap_command: &str,
-        command: &str,
-        arguments: Value,
+        op: DebugOp,
     ) -> Vec<Value> {
         let id = self.next_core_id();
         self.pending_core_requests
             .insert(id, (request_seq, dap_command.to_string()));
-        let arguments = arguments.as_object().cloned().unwrap_or_default();
-        let records = match parse_op(command, &arguments) {
-            Ok(op) => self.core.execute(DebugRequest::new(id, op)),
-            Err(error) => vec![DebugRecord::fail(
-                id,
-                crate::engine::DebugCommand::from_name(command),
-                error,
-            )],
-        };
+        let records = self.core.execute(DebugRequest::new(id, op));
         self.sync_sources();
         self.translate_core(records)
     }
@@ -278,16 +272,11 @@ impl DapServer {
         &mut self,
         request_seq: u64,
         command: &str,
-        core_command: &str,
         arguments: &Value,
+        op: impl FnOnce(u64) -> DebugOp,
     ) -> Vec<Value> {
         match self.task_id(arguments, "threadId") {
-            Ok(task_id) => self.core_request(
-                request_seq,
-                command,
-                core_command,
-                json!({"task_id": task_id}),
-            ),
+            Ok(task_id) => self.core_request(request_seq, command, op(task_id)),
             Err(message) => vec![self.failure(request_seq, command, &message)],
         }
     }
@@ -307,90 +296,42 @@ impl DapServer {
     fn translate_core(&mut self, records: Vec<DebugRecord>) -> Vec<Value> {
         let mut output = Vec::new();
         for record in records {
-            let record = encode_record(record);
-            if record.get("type").and_then(Value::as_str) == Some("response") {
-                let Some(core_id) = record.get("request_id").and_then(Value::as_u64) else {
-                    continue;
-                };
-                let Some((request_seq, command)) = self.pending_core_requests.remove(&core_id)
-                else {
-                    continue;
-                };
-                if record.get("success").and_then(Value::as_bool) == Some(true) {
-                    let response_body = self.dap_response_body(
-                        &command,
-                        record.get("body").cloned().unwrap_or_else(|| json!({})),
-                    );
+            match record {
+                DebugRecord::Response {
+                    request_id,
+                    outcome: Ok(body),
+                    ..
+                } => {
+                    let Some((request_seq, command)) =
+                        self.pending_core_requests.remove(&request_id)
+                    else {
+                        continue;
+                    };
+                    let response_body = self.dap_response_body(&command, body);
                     output.push(self.success(request_seq, &command, response_body));
-                } else {
-                    let message = record
-                        .pointer("/error/message")
-                        .and_then(Value::as_str)
-                        .unwrap_or("Debugger request failed.");
-                    let code = record
-                        .pointer("/error/code")
-                        .and_then(Value::as_str)
-                        .unwrap_or("debugger_request_failed");
-                    let help = record
-                        .pointer("/error/help")
-                        .and_then(Value::as_str)
-                        .unwrap_or("Retry the request after refreshing the current stopped state.");
+                }
+                DebugRecord::Response {
+                    request_id,
+                    outcome: Err(error),
+                    ..
+                } => {
+                    let Some((request_seq, command)) =
+                        self.pending_core_requests.remove(&request_id)
+                    else {
+                        continue;
+                    };
                     output.push(self.structured_failure(
                         request_seq,
                         &command,
-                        code,
-                        message,
-                        help,
+                        &error.code,
+                        &error.message,
+                        &error.help,
                     ));
                 }
-            } else {
-                output.extend(self.translate_events(vec![record]));
+                DebugRecord::Event(event) => output.extend(self.translate_event(event)),
             }
         }
         output
-    }
-
-    fn translate_events(&mut self, records: Vec<Value>) -> Vec<Value> {
-        let mut translated = Vec::new();
-        for record in records {
-            let Some(name) = record.get("event").and_then(Value::as_str) else {
-                continue;
-            };
-            let body = record.get("body").cloned().unwrap_or_else(|| json!({}));
-            match name {
-                "initialized" => translated.push(self.event("initialized", json!({}))),
-                "stopped" => {
-                    self.runtime_failed = body.get("reason").and_then(Value::as_str) == Some("runtime_error");
-                    let task_id = body.get("task_id").and_then(Value::as_u64).unwrap_or(0);
-                    let thread_id = self.threads.thread_id(task_id);
-                    translated.push(self.event("stopped", json!({"reason":dap_stop_reason(body.get("reason").and_then(Value::as_str)),"threadId":thread_id,"allThreadsStopped":true})));
-                }
-                "task" => {
-                    let task_id = body.get("task_id").and_then(Value::as_u64).unwrap_or(0);
-                    let thread_id = self.threads.thread_id(task_id);
-                    let reason = body.get("reason").and_then(Value::as_str).unwrap_or("started");
-                    if reason == "exited" {
-                        self.threads.mark_exited(task_id);
-                    }
-                    translated.push(self.event("thread", json!({"reason":reason,"threadId":thread_id})));
-                }
-                "output" => translated.push(self.event("output", json!({
-                    "category":body.get("category"),
-                    "output":body.get("text"),
-                    "source":body.pointer("/location/source").map(|path| json!({"path":path})),
-                    "line":body.pointer("/location/line"),
-                    "column":body.pointer("/location/column")
-                }))),
-                "terminated" => {
-                    translated.push(self.event("exited", json!({"exitCode":body.get("exit_code").and_then(Value::as_i64).unwrap_or(0)})));
-                    translated.push(self.event("terminated", json!({})));
-                }
-                "runtime_error" | "protocol_error" => translated.push(self.event("output", json!({"category":"stderr","output":format!("{}\n", body.get("message").and_then(Value::as_str).unwrap_or(name))}))),
-                "breakpoint" => {}
-                _ => {}
-            }
-        }
-        translated
     }
 
     fn success(&mut self, request_seq: u64, command: &str, body: Value) -> Value {
@@ -425,105 +366,13 @@ impl DapServer {
         1_000_000_000u64.saturating_add(self.take_seq())
     }
 
-    fn dap_response_body(&mut self, command: &str, body: Value) -> Value {
-        if command == "threads" {
-            let tasks = body
-                .get("tasks")
-                .and_then(Value::as_array)
-                .map(Vec::as_slice)
-                .unwrap_or_default();
+    fn dap_response_body(&mut self, command: &str, body: ResponseBody) -> Value {
+        if command == "threads"
+            && let ResponseBody::Tasks { tasks, .. } = &body
+        {
             self.threads.synchronize(tasks);
-            self.threads.active_threads()
-        } else {
-            dap_body(command, body)
+            return self.threads.active_threads();
         }
-    }
-}
-
-fn dap_stop_reason(reason: Option<&str>) -> &'static str {
-    match reason {
-        Some("entry") => "entry",
-        Some("breakpoint") => "breakpoint",
-        Some("data_breakpoint") => "data breakpoint",
-        Some("pause") => "pause",
-        Some("step") => "step",
-        Some("runtime_error") => "exception",
-        _ => "pause",
-    }
-}
-
-fn dap_body(command: &str, body: Value) -> Value {
-    if let Some(result) = breakpoints::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = data_breakpoints::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = exceptions::response_body(command) {
-        return result;
-    }
-    if let Some(result) = forced_return::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = frame_restart::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = completed_result::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = task_control::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = variant::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = storage::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = io::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = mutation::custom_response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = location::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = recording::response_body(command, &body) {
-        return result;
-    }
-    if let Some(result) = live_image::response_body(command, &body) {
-        return result;
-    }
-    match command {
-        "stackTrace" => {
-            json!({"stackFrames":body.get("frames").and_then(Value::as_array).into_iter().flatten().map(|frame| json!({"id":frame.get("frame_id"),"name":frame.get("name"),"source":{"path":frame.pointer("/location/source")},"line":frame.pointer("/location/line").unwrap_or(&json!(1)),"column":frame.pointer("/location/column").unwrap_or(&json!(1))})).collect::<Vec<_>>(),"totalFrames":body.get("total")})
-        }
-        "scopes" => {
-            json!({"scopes":body.get("scopes").and_then(Value::as_array).into_iter().flatten().map(|scope| json!({"name":scope.get("name"),"variablesReference":scope.get("variables_reference"),"namedVariables":scope.get("named_variables"),"expensive":scope.get("expensive")})).collect::<Vec<_>>() })
-        }
-        "variables" => {
-            json!({"variables":body.get("variables").and_then(Value::as_array).into_iter().flatten().map(|variable| json!({"name":variable.get("name"),"value":variable.get("value"),"type":variable.get("type_name"),"variablesReference":variable.get("variables_reference"),"namedVariables":variable.get("named_variables"),"indexedVariables":variable.get("indexed_variables")})).collect::<Vec<_>>() })
-        }
-        "evaluate" => {
-            json!({
-                "result": body.get("result"),
-                "type": body.get("type_name"),
-                "variablesReference": body.get("variables_reference"),
-                "namedVariables": body.get("named_variables"),
-                "indexedVariables": body.get("indexed_variables")
-            })
-        }
-        "setVariable" | "setExpression" => {
-            json!({
-                "value": body.get("result"),
-                "type": body.get("type_name"),
-                "variablesReference": body.get("variables_reference"),
-                "namedVariables": body.get("named_variables"),
-                "indexedVariables": body.get("indexed_variables")
-            })
-        }
-        "continue" => json!({"allThreadsContinued":true}),
-        _ => body,
+        response::dap_body(command, body)
     }
 }

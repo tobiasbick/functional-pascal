@@ -1,8 +1,10 @@
 //! DAP custom-request mapping for dictionary structure mutation.
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use super::DapServer;
+use super::args;
+use crate::engine::DebugOp;
 
 impl DapServer {
     pub(super) fn insert_dictionary(
@@ -11,19 +13,18 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
+        self.mutating_request(
             request_seq,
             command,
-            "dictionary.insert",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "target": arguments.get("target").cloned().unwrap_or(Value::Null),
-                "key": arguments.get("key").cloned().unwrap_or(Value::Null),
-                "expression": arguments.get("value").cloned().unwrap_or(Value::Null)
-            }),
-        );
-        self.append_variables_invalidation(&mut records);
-        records
+            (|| {
+                Ok(DebugOp::DictionaryInsert {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    key: args::required_string(arguments, "key")?,
+                    expression: args::required_string(arguments, "value")?,
+                })
+            })(),
+        )
     }
 
     pub(super) fn remove_dictionary(
@@ -32,18 +33,17 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
+        self.mutating_request(
             request_seq,
             command,
-            "dictionary.remove",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "target": arguments.get("target").cloned().unwrap_or(Value::Null),
-                "key": arguments.get("key").cloned().unwrap_or(Value::Null)
-            }),
-        );
-        self.append_variables_invalidation(&mut records);
-        records
+            (|| {
+                Ok(DebugOp::DictionaryRemove {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    key: args::required_string(arguments, "key")?,
+                })
+            })(),
+        )
     }
 
     pub(super) fn replace_dictionary_key(
@@ -52,18 +52,17 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
+        self.mutating_request(
             request_seq,
             command,
-            "dictionary.replace_key",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "target": arguments.get("target").cloned().unwrap_or(Value::Null),
-                "key": arguments.get("key").cloned().unwrap_or(Value::Null),
-                "new_key": arguments.get("newKey").cloned().unwrap_or(Value::Null)
-            }),
-        );
-        self.append_variables_invalidation(&mut records);
-        records
+            (|| {
+                Ok(DebugOp::DictionaryReplaceKey {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    key: args::required_string(arguments, "key")?,
+                    new_key: args::required_string(arguments, "newKey")?,
+                })
+            })(),
+        )
     }
 }

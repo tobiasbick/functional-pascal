@@ -4,6 +4,8 @@ use fpas_diagnostics::codes::RUNTIME_ALLOCATED_CODES;
 use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use crate::engine::DebugOp;
 
 impl DapServer {
     pub(super) fn set_exception_breakpoints(
@@ -11,17 +13,16 @@ impl DapServer {
         request_seq: u64,
         arguments: &Value,
     ) -> Vec<Value> {
-        let filters = arguments
-            .get("filters")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
-        self.core_request(
-            request_seq,
-            "setExceptionBreakpoints",
-            "runtime_failures.replace",
-            json!({"filters": filters}),
-        )
+        match args::parse_filters(arguments) {
+            Ok(filters) => self.core_request(
+                request_seq,
+                "setExceptionBreakpoints",
+                DebugOp::RuntimeFailuresReplace { filters },
+            ),
+            Err(message) => {
+                vec![self.failure(request_seq, "setExceptionBreakpoints", &message)]
+            }
+        }
     }
 }
 

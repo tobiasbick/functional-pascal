@@ -3,9 +3,8 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
-use crate::engine::{DebugCommand, DebugOp, DebugRecord, DebugRequest};
-use crate::jsonl::encode_record::encode_record;
-use crate::jsonl::parse::parse_op;
+use super::args;
+use crate::engine::{DebugOp, DebugRecord, DebugRequest, ResponseBody};
 
 impl DapServer {
     pub(super) fn set_source_breakpoints(
@@ -46,55 +45,95 @@ impl DapServer {
             .cloned()
             .unwrap_or_default()
         {
-            let core_id = self.next_core_id();
-            let arguments = json!({
-                "source":source,
-                "line":requested.get("line"),
-                "column":requested.get("column"),
-                "condition":requested.get("condition"),
-                "hit_condition":requested.get("hitCondition"),
-                "log_message":requested.get("logMessage"),
-                "assign":requested.get("assign")
-            });
-            let arguments = arguments.as_object().cloned().unwrap_or_default();
-            let records = match parse_op("breakpoint.set", &arguments) {
-                Ok(op) => self.core.execute(DebugRequest::new(core_id, op)),
-                Err(error) => vec![DebugRecord::fail(
-                    core_id,
-                    DebugCommand::BreakpointSet,
-                    error,
-                )],
-            }
-            .into_iter()
-            .map(encode_record)
-            .collect::<Vec<_>>();
-            if records
-                .first()
-                .is_some_and(|record| record["success"] == false)
-            {
+            let Some(line) = requested
+                .get("line")
+                .and_then(Value::as_u64)
+                .and_then(|line| u32::try_from(line).ok())
+                .filter(|line| *line > 0)
+            else {
                 bodies.push(json!({
                     "verified": false,
-                    "message": records[0]["error"]["message"]
-                        .as_str()
-                        .unwrap_or("Invalid breakpoint request."),
+                    "message": "setBreakpoints requires a positive line.",
                     "source": {"path": source},
                     "line": requested.get("line"),
                     "column": requested.get("column")
                 }));
                 continue;
-            }
-            if let Some(body) = records.first().and_then(|record| record.get("body")) {
-                if let Some(id) = body.get("breakpoint_id").and_then(Value::as_u64) {
-                    ids.push(id);
+            };
+            let column = requested
+                .get("column")
+                .and_then(Value::as_u64)
+                .and_then(|column| u32::try_from(column).ok());
+            let assign = match args::parse_assign(requested.get("assign")) {
+                Ok(assign) => assign,
+                Err(message) => {
+                    bodies.push(json!({
+                        "verified": false,
+                        "message": message,
+                        "source": {"path": source},
+                        "line": line,
+                        "column": requested.get("column")
+                    }));
+                    continue;
                 }
-                bodies.push(json!({
-                    "id": body.get("breakpoint_id"),
-                    "verified": body.get("verified"),
-                    "message": body.get("message"),
-                    "source": {"path": source},
-                    "line": body.pointer("/location/line").or_else(|| requested.get("line")),
-                    "column": body.pointer("/location/column").or_else(|| requested.get("column"))
-                }));
+            };
+            let core_id = self.next_core_id();
+            let records = self.core.execute(DebugRequest::new(
+                core_id,
+                DebugOp::BreakpointSet {
+                    source: source.clone(),
+                    line,
+                    column,
+                    assign,
+                    condition: args::optional_string(&requested, "condition"),
+                    hit_condition: args::optional_string(&requested, "hitCondition"),
+                    log_message: args::optional_string(&requested, "logMessage"),
+                },
+            ));
+            match records.into_iter().find_map(|record| match record {
+                DebugRecord::Response { outcome, .. } => Some(outcome),
+                DebugRecord::Event(_) => None,
+            }) {
+                Some(Ok(ResponseBody::Breakpoint(breakpoint))) => {
+                    ids.push(breakpoint.id);
+                    bodies.push(json!({
+                        "id": breakpoint.id,
+                        "verified": breakpoint.is_verified(),
+                        "message": (!breakpoint.is_verified()).then_some(
+                            "No executable sequence point exists on the requested line."
+                        ),
+                        "source": {"path": source},
+                        "line": breakpoint.location.as_ref().map_or(line, |location| location.line),
+                        "column": breakpoint.location.as_ref().map_or(column, |location| Some(location.column))
+                    }));
+                }
+                Some(Ok(ResponseBody::UnverifiedBreakpoint { message, .. })) => {
+                    bodies.push(json!({
+                        "verified": false,
+                        "message": message,
+                        "source": {"path": source},
+                        "line": line,
+                        "column": requested.get("column")
+                    }));
+                }
+                Some(Err(error)) => {
+                    bodies.push(json!({
+                        "verified": false,
+                        "message": error.message,
+                        "source": {"path": source},
+                        "line": line,
+                        "column": requested.get("column")
+                    }));
+                }
+                _ => {
+                    bodies.push(json!({
+                        "verified": false,
+                        "message": "Invalid breakpoint request.",
+                        "source": {"path": source},
+                        "line": line,
+                        "column": requested.get("column")
+                    }));
+                }
             }
         }
         self.source_breakpoints.insert(source, ids);
@@ -122,22 +161,14 @@ impl DapServer {
                 "Function breakpoints support only name, condition, and hitCondition; logMessage, assign, and custom actions are unsupported.",
             )];
         }
-        let breakpoints = requested
-            .into_iter()
-            .map(|breakpoint| {
-                json!({
-                    "name": breakpoint.get("name"),
-                    "condition": breakpoint.get("condition"),
-                    "hit_condition": breakpoint.get("hitCondition")
-                })
-            })
-            .collect::<Vec<_>>();
-        self.core_request(
-            request_seq,
-            "setFunctionBreakpoints",
-            "function_breakpoints.replace",
-            json!({"breakpoints": breakpoints}),
-        )
+        match args::parse_function_breakpoints(arguments) {
+            Ok(breakpoints) => self.core_request(
+                request_seq,
+                "setFunctionBreakpoints",
+                DebugOp::FunctionBreakpointsReplace { breakpoints },
+            ),
+            Err(message) => vec![self.failure(request_seq, "setFunctionBreakpoints", &message)],
+        }
     }
 
     pub(super) fn resolve_source_path(&self, requested: &str) -> Result<String, &'static str> {
@@ -147,28 +178,38 @@ impl DapServer {
     }
 }
 
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    let ResponseBody::FunctionBreakpoints { breakpoints } = body else {
+        return None;
+    };
     (command == "setFunctionBreakpoints").then(|| {
-        let breakpoints = body
-            .get("breakpoints")
-            .and_then(Value::as_array)
-            .into_iter()
-            .flatten()
-            .map(|breakpoint| {
-                let location = breakpoint
-                    .get("locations")
-                    .and_then(Value::as_array)
-                    .and_then(|locations| locations.first());
+        json!({
+            "breakpoints": breakpoints.iter().map(|breakpoint| {
+                let location = breakpoint.locations.first();
                 json!({
-                    "id": breakpoint.get("breakpoint_id"),
-                    "verified": breakpoint.get("verified"),
-                    "message": breakpoint.get("message"),
-                    "source": location.and_then(|location| location.get("source")).map(|path| json!({"path": path})),
-                    "line": location.and_then(|location| location.get("line")),
-                    "column": location.and_then(|location| location.get("column"))
+                    "id": breakpoint.id,
+                    "verified": breakpoint.is_verified(),
+                    "message": function_breakpoint_message(breakpoint),
+                    "source": location.map(|location| json!({"path": location.source})),
+                    "line": location.map(|location| location.line),
+                    "column": location.map(|location| location.column)
                 })
-            })
-            .collect::<Vec<_>>();
-        json!({"breakpoints": breakpoints})
+            }).collect::<Vec<_>>()
+        })
     })
+}
+
+fn function_breakpoint_message(breakpoint: &fpas_vm::BoundFunctionBreakpoint) -> Option<String> {
+    if breakpoint.functions.is_empty() {
+        Some("No executable function metadata matches the requested selector.".to_string())
+    } else if breakpoint.instructions.is_empty() {
+        Some("Matching functions have no executable entry sequence point.".to_string())
+    } else if breakpoint.functions.len() > 1 {
+        Some(format!(
+            "Bound to {} exact functions in executable order.",
+            breakpoint.functions.len()
+        ))
+    } else {
+        None
+    }
 }

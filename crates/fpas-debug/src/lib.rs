@@ -6,7 +6,6 @@ pub mod jsonl;
 mod breakpoints;
 mod engine;
 mod evaluation;
-mod identity;
 mod target;
 mod target_reload;
 mod transport;

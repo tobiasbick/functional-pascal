@@ -1,8 +1,10 @@
 //! DAP custom-request mapping for sequence structure mutation.
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use super::DapServer;
+use super::args;
+use crate::engine::DebugOp;
 
 impl DapServer {
     pub(super) fn insert_array(
@@ -11,7 +13,18 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.sequence_request(request_seq, command, "array.insert", arguments, true)
+        self.mutating_request(
+            request_seq,
+            command,
+            (|| {
+                Ok(DebugOp::ArrayInsert {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    index: args::required_string(arguments, "index")?,
+                    expression: args::required_string(arguments, "value")?,
+                })
+            })(),
+        )
     }
 
     pub(super) fn remove_array(
@@ -20,7 +33,17 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.sequence_request(request_seq, command, "array.remove", arguments, false)
+        self.mutating_request(
+            request_seq,
+            command,
+            (|| {
+                Ok(DebugOp::ArrayRemove {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    index: args::required_string(arguments, "index")?,
+                })
+            })(),
+        )
     }
 
     pub(super) fn replace_string_character(
@@ -29,33 +52,17 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.sequence_request(
+        self.mutating_request(
             request_seq,
             command,
-            "string.replace_character",
-            arguments,
-            true,
+            (|| {
+                Ok(DebugOp::StringReplaceCharacter {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    index: args::required_string(arguments, "index")?,
+                    expression: args::required_string(arguments, "value")?,
+                })
+            })(),
         )
-    }
-
-    fn sequence_request(
-        &mut self,
-        request_seq: u64,
-        command: &str,
-        core_command: &str,
-        arguments: &Value,
-        includes_expression: bool,
-    ) -> Vec<Value> {
-        let mut body = json!({
-            "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-            "target": arguments.get("target").cloned().unwrap_or(Value::Null),
-            "index": arguments.get("index").cloned().unwrap_or(Value::Null)
-        });
-        if includes_expression {
-            body["expression"] = arguments.get("value").cloned().unwrap_or(Value::Null);
-        }
-        let mut records = self.core_request(request_seq, command, core_command, body);
-        self.append_variables_invalidation(&mut records);
-        records
     }
 }

@@ -3,17 +3,20 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use crate::engine::{DebugOp, ResponseBody};
 
 /// Translate one per-task control response into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    match command {
-        "fpas/pauseTask" | "fpas/resumeTask" => Some(json!({
-            "taskId": body.get("task_id"),
-            "paused": body.get("paused")
-        })),
-        "fpas/cancelTask" => Some(json!({
-            "taskId": body.get("task_id"),
-            "state": body.get("state")
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    match (command, body) {
+        ("fpas/pauseTask" | "fpas/resumeTask", ResponseBody::TaskHold { task_id, paused }) => {
+            Some(json!({
+                "taskId": task_id,
+                "paused": paused
+            }))
+        }
+        ("fpas/cancelTask", ResponseBody::TaskCancelled { task_id }) => Some(json!({
+            "taskId": task_id,
+            "state": "cancelled"
         })),
         _ => None,
     }
@@ -26,7 +29,9 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.task_hold_request(request_seq, command, "task.pause", arguments)
+        self.task_hold_request(request_seq, command, arguments, |task_id| {
+            DebugOp::TaskPause { task_id }
+        })
     }
 
     pub(super) fn resume_task(
@@ -35,7 +40,9 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.task_hold_request(request_seq, command, "task.resume", arguments)
+        self.task_hold_request(request_seq, command, arguments, |task_id| {
+            DebugOp::TaskResume { task_id }
+        })
     }
 
     pub(super) fn cancel_task(
@@ -44,23 +51,20 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.task_hold_request(request_seq, command, "task.cancel", arguments)
+        self.task_hold_request(request_seq, command, arguments, |task_id| {
+            DebugOp::TaskCancel { task_id }
+        })
     }
 
     fn task_hold_request(
         &mut self,
         request_seq: u64,
         command: &str,
-        core_command: &str,
         arguments: &Value,
+        op: impl FnOnce(u64) -> DebugOp,
     ) -> Vec<Value> {
         match self.task_id(arguments, "threadId") {
-            Ok(task_id) => self.core_request(
-                request_seq,
-                command,
-                core_command,
-                json!({"task_id": task_id}),
-            ),
+            Ok(task_id) => self.core_request(request_seq, command, op(task_id)),
             Err(message) => vec![self.failure(request_seq, command, &message)],
         }
     }

@@ -1,8 +1,10 @@
-//! DAP data-breakpoint translation onto JSONL location identities.
+//! DAP data-breakpoint translation onto durable location identities.
 
 use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn data_breakpoint_info(
@@ -10,15 +12,22 @@ impl DapServer {
         request_seq: u64,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.core_request(
-            request_seq,
-            "dataBreakpointInfo",
-            "location.describe",
-            json!({
-                "variables_reference": arguments.get("variablesReference").cloned().unwrap_or(Value::Null),
-                "name": arguments.get("name").cloned().unwrap_or(Value::Null)
-            }),
-        )
+        match (
+            args::required_u64(arguments, "variablesReference"),
+            args::required_string(arguments, "name"),
+        ) {
+            (Ok(variables_reference), Ok(name)) => self.core_request(
+                request_seq,
+                "dataBreakpointInfo",
+                DebugOp::LocationDescribe {
+                    variables_reference,
+                    name,
+                },
+            ),
+            (Err(message), _) | (_, Err(message)) => {
+                vec![self.failure(request_seq, "dataBreakpointInfo", &message)]
+            }
+        }
     }
 
     pub(super) fn set_data_breakpoints(
@@ -26,96 +35,46 @@ impl DapServer {
         request_seq: u64,
         arguments: &Value,
     ) -> Vec<Value> {
-        let requested = arguments
-            .get("breakpoints")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
-        let mut breakpoints = Vec::with_capacity(requested.len());
-        for breakpoint in requested {
-            let Some(data_id) = breakpoint.get("dataId").and_then(Value::as_str) else {
-                return vec![self.failure(
-                    request_seq,
-                    "setDataBreakpoints",
-                    "setDataBreakpoints requires dataId from dataBreakpointInfo.",
-                )];
-            };
-            let Some(identity) = identity_from_data_id(data_id) else {
-                return vec![self.failure(
-                    request_seq,
-                    "setDataBreakpoints",
-                    "setDataBreakpoints dataId must name a global from dataBreakpointInfo.",
-                )];
-            };
-            let access = match breakpoint.get("accessType").and_then(Value::as_str) {
-                None | Some("write") => "write",
-                Some("change") => "change",
-                Some("read" | "readWrite") => "read",
-                Some(other) => {
-                    return vec![self.failure(
-                        request_seq,
-                        "setDataBreakpoints",
-                        &format!("Unsupported data-breakpoint accessType `{other}`."),
-                    )];
-                }
-            };
-            breakpoints.push(json!({
-                "identity": identity,
-                "access": access,
-                "assign": breakpoint.get("assign")
-            }));
+        match args::parse_data_breakpoints(arguments) {
+            Ok(breakpoints) => self.core_request(
+                request_seq,
+                "setDataBreakpoints",
+                DebugOp::DataBreakpointsReplace { breakpoints },
+            ),
+            Err(message) => vec![self.failure(request_seq, "setDataBreakpoints", &message)],
         }
-        self.core_request(
-            request_seq,
-            "setDataBreakpoints",
-            "data_breakpoints.replace",
-            json!({"breakpoints": breakpoints}),
-        )
     }
 }
 
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    match command {
-        "dataBreakpointInfo" => Some(info_body(body)),
-        "setDataBreakpoints" => Some(json!({
-            "breakpoints": body
-                .get("breakpoints")
-                .and_then(Value::as_array)
-                .into_iter()
-                .flatten()
-                .map(|breakpoint| json!({
-                    "id": breakpoint.get("breakpoint_id"),
-                    "verified": breakpoint.get("verified"),
-                    "message": breakpoint.get("message")
-                }))
-                .collect::<Vec<_>>()
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    match (command, body) {
+        ("dataBreakpointInfo", ResponseBody::Location(location)) => {
+            Some(info_body(location.identity))
+        }
+        ("setDataBreakpoints", ResponseBody::DataBreakpoints { breakpoints }) => Some(json!({
+            "breakpoints": breakpoints.iter().map(|breakpoint| json!({
+                "id": breakpoint.id,
+                "verified": breakpoint.is_verified(),
+                "message": breakpoint.message
+            })).collect::<Vec<_>>()
         })),
         _ => None,
     }
 }
 
-fn info_body(body: &Value) -> Value {
-    match parse_global_index(body) {
-        Some(index) => json!({
+fn info_body(identity: Option<fpas_vm::DebugDataLocationIdentity>) -> Value {
+    match identity {
+        Some(fpas_vm::DebugDataLocationIdentity::Global { index }) => json!({
             "dataId": format!("g:{index}"),
             "description": format!("global slot {index}"),
             "accessTypes": ["write"],
             "canPersist": false
         }),
-        None => json!({
+        _ => json!({
             "dataId": Value::Null,
             "description": "Only executable globals are watchable; frame registers and capture cells are not.",
             "accessTypes": ["write"],
             "canPersist": false
         }),
     }
-}
-
-fn parse_global_index(body: &Value) -> Option<u64> {
-    body.pointer("/identity/index").and_then(Value::as_u64)
-}
-
-fn identity_from_data_id(data_id: &str) -> Option<Value> {
-    let index = data_id.strip_prefix("g:")?.parse::<u64>().ok()?;
-    Some(json!({"index": index}))
 }

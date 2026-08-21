@@ -1,8 +1,10 @@
 //! DAP custom-request mapping for seeded empty-storage initialization.
 
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn initialize_storage(
@@ -11,62 +13,49 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
+        if let Err(message) = args::reject_unknown_fields(
+            arguments,
+            &["frameId", "target", "initializer", "expression"],
+        ) {
+            return vec![self.structured_failure(
+                request_seq,
+                command,
+                "invalid_request",
+                &message,
+                "Pass only `frameId`, `target`, `initializer`, and `expression`.",
+            )];
+        }
+        self.mutating_request(
             request_seq,
             command,
-            "storage.initialize",
-            jsonl_arguments(arguments),
-        );
-        self.append_variables_invalidation(&mut records);
-        records
+            (|| {
+                Ok(DebugOp::StorageInitialize {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    initializer: args::required_string(arguments, "initializer")?,
+                    expression: args::required_string(arguments, "expression")?,
+                })
+            })(),
+        )
     }
 }
 
 /// Translate one empty-storage custom-request result into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
     if command != "fpas/initializeStorage" {
         return None;
     }
+    let ResponseBody::Storage(result) = body else {
+        return None;
+    };
     Some(json!({
-        "root": body.get("root"),
-        "target": body.get("target"),
-        "rootValue": body.get("root_value"),
-        "value": body.get("value"),
-        "type": body.get("type"),
-        "variablesReference": body.get("variables_reference"),
-        "namedVariables": body.get("named_variables"),
-        "indexedVariables": body.get("indexed_variables")
+        "root": result.root,
+        "target": result.target,
+        "rootValue": result.root_value,
+        "value": result.value.value,
+        "type": result.value.type_name,
+        "variablesReference": result.value.variables_reference,
+        "namedVariables": result.value.named_variables,
+        "indexedVariables": result.value.indexed_variables
     }))
-}
-
-fn jsonl_arguments(arguments: &Value) -> Value {
-    let mut mapped = Map::from_iter([
-        (
-            "frame_id".to_string(),
-            arguments.get("frameId").cloned().unwrap_or(Value::Null),
-        ),
-        (
-            "target".to_string(),
-            arguments.get("target").cloned().unwrap_or(Value::Null),
-        ),
-        (
-            "initializer".to_string(),
-            arguments.get("initializer").cloned().unwrap_or(Value::Null),
-        ),
-        (
-            "expression".to_string(),
-            arguments.get("expression").cloned().unwrap_or(Value::Null),
-        ),
-    ]);
-    if let Some(object) = arguments.as_object() {
-        for (key, value) in object {
-            if !matches!(
-                key.as_str(),
-                "frameId" | "target" | "initializer" | "expression"
-            ) {
-                mapped.insert(key.clone(), value.clone());
-            }
-        }
-    }
-    Value::Object(mapped)
 }

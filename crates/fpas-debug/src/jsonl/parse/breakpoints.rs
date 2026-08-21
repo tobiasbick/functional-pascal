@@ -3,8 +3,8 @@
 use serde_json::{Map, Value};
 
 use super::args::{missing, optional_string, required_string};
+use super::identity::parse_identity;
 use crate::engine::{AssignOp, DataBreakpointOp, DebugOp, EngineFailure, FunctionBreakpointOp};
-use crate::identity::parse_identity;
 
 pub(super) fn parse_breakpoint_set(
     command: &str,

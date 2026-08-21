@@ -3,15 +3,21 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use crate::engine::{DebugOp, ResponseBody};
 
 /// Translate restart metadata into DAP-friendly extension fields.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    (command == "restartFrame").then(|| {
-        json!({
-            "taskId": body.get("task_id"),
-            "discardedFrames": body.get("discarded_frames")
-        })
-    })
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    if command != "restartFrame" {
+        return None;
+    }
+    let ResponseBody::FrameRestart(result) = body else {
+        return None;
+    };
+    Some(json!({
+        "taskId": result.task_id,
+        "discardedFrames": result.discarded_frames
+    }))
 }
 
 impl DapServer {
@@ -21,18 +27,18 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
-            request_seq,
-            command,
-            "frame.restart",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null)
-            }),
-        );
-        if restart_succeeded(&records) && self.supports_invalidated_event {
-            records.push(self.event("invalidated", json!({"areas":["stacks","variables"]})));
+        match args::required_u64(arguments, "frameId") {
+            Ok(frame_id) => {
+                let mut records =
+                    self.core_request(request_seq, command, DebugOp::FrameRestart { frame_id });
+                if restart_succeeded(&records) && self.supports_invalidated_event {
+                    records
+                        .push(self.event("invalidated", json!({"areas":["stacks","variables"]})));
+                }
+                records
+            }
+            Err(message) => vec![self.failure(request_seq, command, &message)],
         }
-        records
     }
 }
 

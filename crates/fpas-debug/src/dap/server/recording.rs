@@ -3,53 +3,73 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn describe_recording(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        self.core_request(request_seq, command, "recording.describe", json!({}))
+        self.core_request(request_seq, command, DebugOp::RecordingDescribe)
     }
 
     pub(super) fn start_recording(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        self.core_request(request_seq, command, "record", json!({}))
+        self.core_request(request_seq, command, DebugOp::Record)
     }
 }
 
 /// Translate one recording custom-request result into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    match command {
-        "fpas/recordingDescribe" => Some(json!({
-            "version": body.get("version"),
-            "bytecodeVersion": body.get("bytecode_version"),
-            "program": body.get("program"),
-            "sources": body.get("sources"),
-            "capturing": body.get("capturing"),
-            "truncated": body.get("truncated"),
-            "replayable": body.get("replayable"),
-            "eventCount": body.get("event_count"),
-            "eventLimit": body.get("event_limit"),
-            "events": body.get("events").and_then(Value::as_array).into_iter().flatten().map(dap_event).collect::<Vec<_>>(),
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    match (command, body) {
+        (
+            "fpas/recordingDescribe",
+            ResponseBody::Recording {
+                envelope,
+                capturing,
+                events,
+                truncated,
+            },
+        ) => Some(json!({
+            "version": envelope.version,
+            "bytecodeVersion": envelope.bytecode_version,
+            "program": envelope.program,
+            "sources": envelope.sources,
+            "capturing": capturing,
+            "truncated": truncated,
+            "replayable": false,
+            "eventCount": events.len(),
+            "eventLimit": fpas_vm::MAX_RECORDING_EVENTS,
+            "events": events.iter().map(dap_event).collect::<Vec<_>>(),
         })),
-        "fpas/record" => Some(json!({
-            "capturing": body.get("capturing"),
-            "truncated": body.get("truncated"),
-            "eventCount": body.get("event_count"),
-            "eventLimit": body.get("event_limit"),
+        (
+            "fpas/record",
+            ResponseBody::RecordingStarted {
+                capturing,
+                truncated,
+                event_count,
+            },
+        ) => Some(json!({
+            "capturing": capturing,
+            "truncated": truncated,
+            "eventCount": event_count,
+            "eventLimit": fpas_vm::MAX_RECORDING_EVENTS,
         })),
         _ => None,
     }
 }
 
-fn dap_event(event: &Value) -> Value {
-    match event.get("kind").and_then(Value::as_str) {
-        Some("input") => json!({
+fn dap_event(event: &fpas_vm::DebugRecordingEvent) -> Value {
+    match event {
+        fpas_vm::DebugRecordingEvent::Input { text } => json!({
             "kind": "input",
-            "text": event.get("text"),
+            "text": text,
         }),
-        _ => json!({
+        fpas_vm::DebugRecordingEvent::Stop {
+            task_id,
+            reason,
+            instruction,
+        } => json!({
             "kind": "stop",
-            "taskId": event.get("task_id"),
-            "reason": event.get("reason"),
-            "instruction": event.get("instruction"),
+            "taskId": task_id,
+            "reason": reason.as_str(),
+            "instruction": instruction,
         }),
     }
 }

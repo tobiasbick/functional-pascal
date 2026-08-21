@@ -2,6 +2,7 @@
 
 mod args;
 mod breakpoints;
+mod identity;
 mod structure;
 
 use serde_json::{Map, Value};

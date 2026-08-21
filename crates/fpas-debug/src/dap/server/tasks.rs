@@ -54,30 +54,25 @@ impl ThreadMap {
         thread_id
     }
 
-    /// Refresh the active cache from one stopped JSONL task catalog.
-    pub(super) fn synchronize(&mut self, tasks: &[Value]) {
+    /// Refresh the active cache from one stopped task catalog.
+    pub(super) fn synchronize(&mut self, tasks: &[fpas_vm::DebugTask]) {
         for entry in self.tasks.values_mut() {
             entry.active = false;
         }
         for task in tasks {
             if matches!(
-                task.get("state").and_then(Value::as_str),
-                Some("completed" | "cancelled")
+                task.state,
+                fpas_vm::DebugTaskState::Completed | fpas_vm::DebugTaskState::Cancelled
             ) {
                 continue;
             }
-            let task_id = task.get("task_id").and_then(Value::as_u64).unwrap_or(0);
-            let thread_id = self.thread_id(task_id);
-            if let Some(entry) = self.tasks.get_mut(&task_id) {
+            let thread_id = self.thread_id(task.id);
+            if let Some(entry) = self.tasks.get_mut(&task.id) {
                 entry.thread_id = thread_id;
-                let name = task
-                    .get("name")
-                    .and_then(Value::as_str)
-                    .unwrap_or("FPAS task");
-                entry.name = if task.get("paused").and_then(Value::as_bool) == Some(true) {
-                    format!("{name} [paused]")
+                entry.name = if task.paused {
+                    format!("{} [paused]", task.name)
                 } else {
-                    name.to_string()
+                    task.name.clone()
                 };
             }
         }

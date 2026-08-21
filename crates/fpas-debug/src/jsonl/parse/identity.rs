@@ -1,8 +1,8 @@
-//! JSON identity objects shared by protocol adapters.
+//! JSONL location-identity objects.
 
 use serde_json::Value;
 
-/// Parse a location identity object from adapter JSON.
+/// Parse a location identity object from JSONL arguments.
 #[must_use]
 pub(crate) fn parse_identity(value: &Value) -> Option<fpas_vm::DebugDataLocationIdentity> {
     let object = value.as_object()?;

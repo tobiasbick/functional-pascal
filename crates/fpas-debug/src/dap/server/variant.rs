@@ -3,6 +3,9 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use super::values;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn describe_variant(
@@ -11,15 +14,16 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.core_request(
-            request_seq,
-            command,
-            "variant.describe",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "target": arguments.get("target").cloned().unwrap_or(Value::Null)
-            }),
-        )
+        let op: Result<DebugOp, String> = (|| {
+            Ok(DebugOp::VariantDescribe {
+                frame_id: args::optional_u64(arguments, "frameId")?,
+                target: args::required_string(arguments, "target")?,
+            })
+        })();
+        match op {
+            Ok(op) => self.core_request(request_seq, command, op),
+            Err(message) => vec![self.failure(request_seq, command, &message)],
+        }
     }
 
     pub(super) fn construct_variant(
@@ -28,71 +32,49 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        let mut records = self.core_request(
+        self.mutating_request(
             request_seq,
             command,
-            "variant.construct",
-            json!({
-                "frame_id": arguments.get("frameId").cloned().unwrap_or(Value::Null),
-                "target": arguments.get("target").cloned().unwrap_or(Value::Null),
-                "variant": arguments.get("variant").cloned().unwrap_or(Value::Null),
-                "fields": arguments.get("fields").cloned().unwrap_or(Value::Null)
-            }),
-        );
-        self.append_variables_invalidation(&mut records);
-        records
+            (|| {
+                Ok(DebugOp::VariantConstruct {
+                    frame_id: args::optional_u64(arguments, "frameId")?,
+                    target: args::required_string(arguments, "target")?,
+                    variant: args::required_string(arguments, "variant")?,
+                    fields: args::parse_variant_fields(arguments)?,
+                })
+            })(),
+        )
     }
 }
 
 /// Translate one variant custom-request result into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    match command {
-        "fpas/variantDescribe" => Some(json!({
-            "target": body.get("target"),
-            "typeName": body.get("type_name"),
-            "variants": body.get("variants").and_then(Value::as_array).into_iter().flatten().map(|variant| {
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    match (command, body) {
+        (
+            "fpas/variantDescribe",
+            ResponseBody::VariantDescription {
+                target,
+                description,
+            },
+        ) => Some(json!({
+            "target": target,
+            "typeName": description.type_name,
+            "variants": description.variants.iter().map(|variant| {
                 json!({
-                    "name": variant.get("name"),
-                    "fields": variant.get("fields").and_then(Value::as_array).into_iter().flatten().map(|field| {
+                    "name": variant.name,
+                    "fields": variant.fields.iter().map(|field| {
                         json!({
-                            "name": field.get("name"),
-                            "typeName": field.get("type_name")
+                            "name": field.name,
+                            "typeName": field.type_name
                         })
                     }).collect::<Vec<_>>()
                 })
             }).collect::<Vec<_>>()
         })),
-        "fpas/variantConstruct" => {
-            let mut result = serde_json::Map::from_iter([
-                (
-                    "value".to_string(),
-                    body.get("result").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "type".to_string(),
-                    body.get("type_name").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "variablesReference".to_string(),
-                    body.get("variables_reference")
-                        .cloned()
-                        .unwrap_or(Value::Null),
-                ),
-                (
-                    "namedVariables".to_string(),
-                    body.get("named_variables").cloned().unwrap_or(Value::Null),
-                ),
-                (
-                    "indexedVariables".to_string(),
-                    body.get("indexed_variables")
-                        .cloned()
-                        .unwrap_or(Value::Null),
-                ),
-            ]);
-            if let Some(variant) = body.get("variant") {
-                result.insert("variant".to_string(), variant.clone());
-            }
-            Some(Value::Object(result))
+        ("fpas/variantConstruct", ResponseBody::VariantConstruct(result)) => {
+            let mut mapped = values::variable_value_json(&result.value);
+            mapped.insert("variant".into(), Value::String(result.variant.clone()));
+            Some(Value::Object(mapped))
         }
         _ => None,
     }

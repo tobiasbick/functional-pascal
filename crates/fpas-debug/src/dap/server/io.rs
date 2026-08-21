@@ -3,15 +3,23 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
+use super::args;
+use crate::engine::{DebugOp, ResponseBody};
 
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
-    match command {
-        "fpas/input" => Some(json!({
-            "bytes": body.get("bytes"),
-            "sessionBytes": body.get("session_bytes")
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
+    match (command, body) {
+        (
+            "fpas/input",
+            ResponseBody::InputQueued {
+                bytes,
+                session_bytes,
+            },
+        ) => Some(json!({
+            "bytes": bytes,
+            "sessionBytes": session_bytes
         })),
-        "fpas/eof" => Some(json!({"eof": body.get("eof")})),
-        "fpas/cancelInput" => Some(json!({"cleared": body.get("cleared")})),
+        ("fpas/eof", ResponseBody::Eof) => Some(json!({"eof": true})),
+        ("fpas/cancelInput", ResponseBody::Cleared) => Some(json!({"cleared": true})),
         _ => None,
     }
 }
@@ -23,19 +31,17 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.core_request(
-            request_seq,
-            command,
-            "io.input",
-            json!({"text": arguments.get("text").cloned().unwrap_or(Value::Null)}),
-        )
+        match args::required_string(arguments, "text") {
+            Ok(text) => self.core_request(request_seq, command, DebugOp::IoInput { text }),
+            Err(message) => vec![self.failure(request_seq, command, &message)],
+        }
     }
 
     pub(super) fn signal_debuggee_eof(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        self.core_request(request_seq, command, "io.eof", json!({}))
+        self.core_request(request_seq, command, DebugOp::IoEof)
     }
 
     pub(super) fn cancel_debuggee_input(&mut self, request_seq: u64, command: &str) -> Vec<Value> {
-        self.core_request(request_seq, command, "io.cancel", json!({}))
+        self.core_request(request_seq, command, DebugOp::IoCancel)
     }
 }

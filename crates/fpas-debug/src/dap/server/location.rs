@@ -1,8 +1,11 @@
 //! DAP custom-request mapping for durable data-location identities.
 
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use super::DapServer;
+use super::args;
+use super::values;
+use crate::engine::{DebugOp, ResponseBody};
 
 impl DapServer {
     pub(super) fn describe_location(
@@ -11,52 +14,43 @@ impl DapServer {
         command: &str,
         arguments: &Value,
     ) -> Vec<Value> {
-        self.core_request(
-            request_seq,
-            command,
-            "location.describe",
-            json!({
-                "variables_reference": arguments.get("variablesReference").cloned().unwrap_or(Value::Null),
-                "name": arguments.get("name").cloned().unwrap_or(Value::Null)
-            }),
-        )
+        match (
+            args::required_u64(arguments, "variablesReference"),
+            args::required_string(arguments, "name"),
+        ) {
+            (Ok(variables_reference), Ok(name)) => self.core_request(
+                request_seq,
+                command,
+                DebugOp::LocationDescribe {
+                    variables_reference,
+                    name,
+                },
+            ),
+            (Err(message), _) | (_, Err(message)) => {
+                vec![self.failure(request_seq, command, &message)]
+            }
+        }
     }
 }
 
 /// Translate one location custom-request result into DAP naming.
-pub(super) fn response_body(command: &str, body: &Value) -> Option<Value> {
+pub(super) fn response_body(command: &str, body: &ResponseBody) -> Option<Value> {
     if command != "fpas/locationDescribe" {
         return None;
     }
+    let ResponseBody::Location(location) = body else {
+        return None;
+    };
     let mut result = serde_json::Map::from_iter([
+        ("kind".into(), Value::String(location.kind.as_str().into())),
         (
-            "kind".to_string(),
-            body.get("kind").cloned().unwrap_or(Value::Null),
+            "lifetime".into(),
+            Value::String(location.lifetime.as_str().into()),
         ),
-        (
-            "lifetime".to_string(),
-            body.get("lifetime").cloned().unwrap_or(Value::Null),
-        ),
-        (
-            "descendant".to_string(),
-            body.get("descendant").cloned().unwrap_or(Value::Null),
-        ),
+        ("descendant".into(), Value::Bool(location.descendant)),
     ]);
-    if let Some(Value::Object(identity)) = body.get("identity") {
-        let mut mapped = serde_json::Map::new();
-        if let Some(index) = identity.get("index") {
-            mapped.insert("index".to_string(), index.clone());
-        }
-        if let Some(task_id) = identity.get("task_id") {
-            mapped.insert("taskId".to_string(), task_id.clone());
-        }
-        if let Some(function) = identity.get("function") {
-            mapped.insert("function".to_string(), function.clone());
-        }
-        if let Some(register) = identity.get("register") {
-            mapped.insert("register".to_string(), register.clone());
-        }
-        result.insert("identity".to_string(), Value::Object(mapped));
+    if let Some(identity) = location.identity {
+        result.insert("identity".into(), values::identity_json(identity));
     }
     Some(Value::Object(result))
 }

@@ -27,8 +27,10 @@ use std::collections::HashMap;
 use serde_json::{Value, json};
 
 use crate::PreparedDebugTarget;
-use crate::engine::{DebugEngine, DebugRecord, DebugRequest};
+use crate::engine::{DebugEngine, DebugOp, DebugRecord, DebugRequest};
 use crate::jsonl::ServerStatus;
+use crate::jsonl::encode_record::encode_record;
+use crate::jsonl::parse::parse_op;
 use source_paths::SourcePaths;
 use tasks::ThreadMap;
 
@@ -139,11 +141,9 @@ impl DapServer {
             .get("supportsInvalidatedEvent")
             .and_then(Value::as_bool)
             .unwrap_or(false);
-        let records = self.core.execute(DebugRequest::new(
-            request_seq,
-            "initialize",
-            json!({"version":2}),
-        ));
+        let records = self
+            .core
+            .execute(DebugRequest::new(request_seq, DebugOp::Initialize));
         let mut output = vec![self.success(
             request_seq,
             "initialize",
@@ -177,9 +177,7 @@ impl DapServer {
         {
             capabilities.remove("supportsHotReload");
         }
-        output.extend(
-            self.translate_events(records.into_iter().map(DebugRecord::into_jsonl).collect()),
-        );
+        output.extend(self.translate_events(records.into_iter().map(encode_record).collect()));
         output
     }
 
@@ -240,7 +238,15 @@ impl DapServer {
         let id = self.next_core_id();
         self.pending_core_requests
             .insert(id, (request_seq, dap_command.to_string()));
-        let records = self.core.execute(DebugRequest::new(id, command, arguments));
+        let arguments = arguments.as_object().cloned().unwrap_or_default();
+        let records = match parse_op(command, &arguments) {
+            Ok(op) => self.core.execute(DebugRequest::new(id, op)),
+            Err(error) => vec![DebugRecord::fail(
+                id,
+                crate::engine::DebugCommand::from_name(command),
+                error,
+            )],
+        };
         self.sync_sources();
         self.translate_core(records)
     }
@@ -301,7 +307,7 @@ impl DapServer {
     fn translate_core(&mut self, records: Vec<DebugRecord>) -> Vec<Value> {
         let mut output = Vec::new();
         for record in records {
-            let record = record.into_jsonl();
+            let record = encode_record(record);
             if record.get("type").and_then(Value::as_str) == Some("response") {
                 let Some(core_id) = record.get("request_id").and_then(Value::as_u64) else {
                     continue;

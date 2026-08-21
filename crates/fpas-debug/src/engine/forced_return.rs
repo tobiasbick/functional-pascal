@@ -1,57 +1,26 @@
-//! JSONL mapping for protocol-neutral forced return.
+//! Forced return from a selected live frame.
 
-use serde_json::{Map, Value, json};
-
+use super::record::{DebugEvent, DebugRecord, ResponseBody};
+use super::reply::{event, invalid_state, ok, parse_error, session_error};
 use super::{DebugEngine, DebugStatus};
 use crate::evaluation::parse_debug_expression;
-use crate::jsonl::encode::{frame_body, invalid_state, missing_argument};
-use crate::jsonl::protocol::{event, failure, session_error, success};
 
 impl DebugEngine {
     pub(super) fn force_return(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        frame_id: u64,
+        expression_source: Option<String>,
+    ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let Some(frame_id) = arguments.get("frame_id").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "frame_id")];
-        };
-        let expression_source = match arguments.get("expression") {
-            None | Some(Value::Null) => None,
-            Some(Value::String(source)) => Some(source.as_str()),
-            Some(_) => {
-                return vec![failure(
-                    request_id,
-                    command,
-                    "invalid_request",
-                    "Command `frame.return` argument `expression` must be a string when present.",
-                    "Omit `expression` for procedures, or pass one FPAS expression string for functions.",
-                )];
-            }
-        };
         let limits = fpas_vm::DebugEvaluationLimits::default();
         let expression = match expression_source {
-            Some(source) => match parse_debug_expression(source, limits) {
+            Some(source) => match parse_debug_expression(&source, limits) {
                 Ok(expression) => Some(expression),
-                Err(error) => {
-                    return vec![json!({
-                        "type": "response",
-                        "request_id": request_id,
-                        "command": command,
-                        "success": false,
-                        "error": {
-                            "code": error.code,
-                            "message": error.message,
-                            "help": error.hint,
-                            "offset": error.offset,
-                            "length": error.length
-                        }
-                    })];
-                }
+                Err(error) => return vec![parse_error(request_id, command, error)],
             },
             None => None,
         };
@@ -60,27 +29,16 @@ impl DebugEngine {
         };
         match session.force_return_with_limits(frame_id, expression.as_ref(), limits) {
             Ok(result) => {
-                let mut records = vec![success(
-                    request_id,
-                    command,
-                    json!({
-                        "task_id": result.task_id,
-                        "result": result.value,
-                        "type_name": result.type_name,
-                        "variables_reference": result.variables_reference,
-                        "named_variables": result.named_variables,
-                        "indexed_variables": result.indexed_variables,
-                        "unwound_frames": result.unwound_frames,
-                        "frame": result.frame.as_ref().map(frame_body),
-                        "terminated": result.terminated
-                    }),
-                )];
-                if result.terminated {
+                let terminated = result.terminated;
+                let mut records = vec![ok(request_id, command, ResponseBody::ForcedReturn(result))];
+                if terminated {
                     self.status = DebugStatus::Terminated;
-                    records.push(event(
-                        "terminated",
-                        json!({"reason":"completed", "exit_code":0}),
-                    ));
+                    records.push(event(DebugEvent::Terminated {
+                        reason: "completed",
+                        exit_code: 0,
+                        diagnostic_code: None,
+                        instruction_count: None,
+                    }));
                 }
                 records
             }

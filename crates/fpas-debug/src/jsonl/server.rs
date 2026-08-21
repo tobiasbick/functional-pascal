@@ -2,8 +2,11 @@
 
 use serde_json::{Map, Value};
 
-use crate::engine::{DebugCommand, DebugEngine, DebugRecord, DebugRequest};
+use crate::engine::{DebugEngine, DebugRecord, DebugRequest};
 use crate::target::PreparedDebugTarget;
+
+use super::encode_record::{encode_engine_failure, encode_record};
+use super::parse::parse_op;
 
 pub use crate::engine::DebugStatus as ServerStatus;
 
@@ -81,11 +84,11 @@ impl JsonlServer {
                 )];
             }
         };
-        let records = self.engine.execute(DebugRequest {
-            id: request_id,
-            command: DebugCommand::from_name(command),
-            arguments,
-        });
+        let op = match parse_op(command, &arguments) {
+            Ok(op) => op,
+            Err(error) => return vec![encode_engine_failure(request_id, command, error)],
+        };
+        let records = self.engine.execute(DebugRequest::new(request_id, op));
         self.records_from_engine(records)
     }
 
@@ -122,6 +125,6 @@ impl JsonlServer {
     }
 
     fn records_from_engine(&self, records: Vec<DebugRecord>) -> Vec<Value> {
-        records.into_iter().map(DebugRecord::into_jsonl).collect()
+        records.into_iter().map(encode_record).collect()
     }
 }

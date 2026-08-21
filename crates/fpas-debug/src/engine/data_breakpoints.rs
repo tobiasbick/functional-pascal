@@ -1,78 +1,34 @@
-//! Atomic JSONL mapping for global data breakpoints.
+//! Atomic global data breakpoints.
 
-use serde_json::{Map, Value, json};
-
-use super::breakpoints::parse_assign_argument;
-use super::location::parse_identity;
+use super::breakpoints::assign_from_op;
+use super::record::{DebugEvent, DebugRecord, ResponseBody};
+use super::reply::{event, invalid_request, invalid_state, ok, session_error};
+use super::request::DataBreakpointOp;
 use super::{DebugEngine, DebugStatus};
-use crate::jsonl::encode::{data_breakpoint_body, invalid_state, missing_argument};
-use crate::jsonl::protocol::{event, failure, session_error, success};
 
 impl DebugEngine {
     pub(super) fn replace_data_breakpoints(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        requested: Vec<DataBreakpointOp>,
+    ) -> Vec<DebugRecord> {
         if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let Some(requested) = arguments.get("breakpoints").and_then(Value::as_array) else {
-            return vec![missing_argument(request_id, command, "breakpoints")];
-        };
         let mut data_breakpoints = Vec::with_capacity(requested.len());
         let mut assigns = Vec::with_capacity(requested.len());
-        for (index, item) in requested.iter().enumerate() {
-            let Some(item) = item.as_object() else {
-                return vec![invalid_data_request(
-                    request_id,
-                    command,
-                    index,
-                    "expected an object",
-                )];
-            };
-            if item
-                .keys()
-                .any(|field| !matches!(field.as_str(), "identity" | "access" | "assign"))
-            {
-                return vec![invalid_data_request(
-                    request_id,
-                    command,
-                    index,
-                    "contains an unsupported field",
-                )];
-            }
-            let Some(identity) = item.get("identity").and_then(parse_identity) else {
-                return vec![invalid_data_request(
-                    request_id,
-                    command,
-                    index,
-                    "requires a location identity from `location.describe`",
-                )];
-            };
-            let access = match item.get("access").and_then(Value::as_str) {
-                None => fpas_vm::DataBreakpointAccess::Write,
-                Some(value) => match fpas_vm::DataBreakpointAccess::parse(value) {
-                    Some(access) => access,
-                    None => {
-                        return vec![invalid_data_request(
-                            request_id,
-                            command,
-                            index,
-                            "access must be write, change, or read",
-                        )];
-                    }
-                },
-            };
-            data_breakpoints.push(fpas_vm::DataBreakpoint { identity, access });
-            let assign = match parse_assign_argument(item.get("assign")) {
+        for (index, item) in requested.into_iter().enumerate() {
+            data_breakpoints.push(fpas_vm::DataBreakpoint {
+                identity: item.identity,
+                access: item.access,
+            });
+            let assign = match item.assign.map(assign_from_op).transpose() {
                 Ok(assign) => assign,
                 Err(message) => {
-                    return vec![failure(
+                    return vec![invalid_request(
                         request_id,
                         command,
-                        "invalid_request",
                         format!("Data breakpoint at index {index}: {message}"),
                         "Send `assign.identity` from `location.describe` and one replacement `expression`.",
                     )];
@@ -101,24 +57,18 @@ impl DebugEngine {
                 );
             }
         }
-        let bodies = bound.iter().map(data_breakpoint_body).collect::<Vec<_>>();
-        let mut records = vec![success(request_id, command, json!({"breakpoints": bodies}))];
+        let mut records = vec![ok(
+            request_id,
+            command,
+            ResponseBody::DataBreakpoints {
+                breakpoints: bound.clone(),
+            },
+        )];
         records.extend(
             bound
-                .iter()
-                .map(data_breakpoint_body)
-                .map(|body| event("breakpoint", body)),
+                .into_iter()
+                .map(|breakpoint| event(DebugEvent::DataBreakpoint(breakpoint))),
         );
         records
     }
-}
-
-fn invalid_data_request(request_id: u64, command: &str, index: usize, detail: &str) -> Value {
-    failure(
-        request_id,
-        command,
-        "invalid_request",
-        format!("Data breakpoint at index {index} {detail}."),
-        "Send identities from `location.describe` with access write or change.",
-    )
 }

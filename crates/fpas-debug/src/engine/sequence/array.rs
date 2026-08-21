@@ -1,23 +1,27 @@
-//! JSONL mapping for array insertion and removal.
-
-use serde_json::{Map, Value};
+//! Array insertion and removal.
 
 use super::*;
-use crate::jsonl::protocol::{session_error, success};
+use crate::engine::DebugEngine;
+use crate::engine::record::{DebugRecord, ResponseBody};
+use crate::engine::reply::{invalid_state, ok, session_error};
 
 impl DebugEngine {
     pub(in crate::engine) fn insert_array(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        target: String,
+        index: String,
+        expression: String,
+        frame_id: Option<u64>,
+    ) -> Vec<DebugRecord> {
         let request = match parse_request(
             request_id,
             command,
-            arguments,
-            &["index", "expression"],
             self.status,
+            &target,
+            &[index, expression],
+            frame_id,
         ) {
             Ok(request) => request,
             Err(response) => return vec![response],
@@ -32,7 +36,7 @@ impl DebugEngine {
             request.frame_id,
             request.limits,
         ) {
-            Ok(result) => vec![success(request_id, command, array_result_body(result))],
+            Ok(result) => vec![ok(request_id, command, ResponseBody::Array(result))],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
@@ -41,9 +45,18 @@ impl DebugEngine {
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
-        let request = match parse_request(request_id, command, arguments, &["index"], self.status) {
+        target: String,
+        index: String,
+        frame_id: Option<u64>,
+    ) -> Vec<DebugRecord> {
+        let request = match parse_request(
+            request_id,
+            command,
+            self.status,
+            &target,
+            &[index],
+            frame_id,
+        ) {
             Ok(request) => request,
             Err(response) => return vec![response],
         };
@@ -56,17 +69,8 @@ impl DebugEngine {
             request.frame_id,
             request.limits,
         ) {
-            Ok(result) => vec![success(request_id, command, array_result_body(result))],
+            Ok(result) => vec![ok(request_id, command, ResponseBody::Array(result))],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
-}
-
-fn array_result_body(result: fpas_vm::DebugArrayMutationResult) -> Value {
-    let mut body = evaluation_body(result.array);
-    body.insert("index".to_string(), Value::from(result.index));
-    if let Some(removed) = result.removed {
-        body.insert("removed".to_string(), Value::String(removed));
-    }
-    Value::Object(body)
 }

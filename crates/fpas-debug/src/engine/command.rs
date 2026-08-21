@@ -1,9 +1,6 @@
-//! Typed debugger commands shared by every protocol adapter.
+//! Typed debugger command names shared by every protocol adapter.
 
-use serde_json::Map;
-use serde_json::Value;
-
-/// One debugger operation independent from its wire spelling.
+/// One debugger operation name independent from its wire spelling.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DebugCommand {
     /// Start protocol negotiation.
@@ -200,29 +197,6 @@ impl DebugCommand {
 impl From<&str> for DebugCommand {
     fn from(name: &str) -> Self {
         Self::from_name(name)
-    }
-}
-
-/// A validated debugger request delivered to the engine.
-#[derive(Debug, Clone)]
-pub(crate) struct DebugRequest {
-    /// Correlation identifier supplied by the adapter.
-    pub(crate) id: u64,
-    /// Requested debugger operation.
-    pub(crate) command: DebugCommand,
-    /// Versioned operation payload.
-    pub(crate) arguments: Map<String, Value>,
-}
-
-impl DebugRequest {
-    /// Construct a request from an adapter-owned versioned payload.
-    #[must_use]
-    pub(crate) fn new(id: u64, command: impl Into<DebugCommand>, arguments: Value) -> Self {
-        Self {
-            id,
-            command: command.into(),
-            arguments: arguments.as_object().cloned().unwrap_or_default(),
-        }
     }
 }
 

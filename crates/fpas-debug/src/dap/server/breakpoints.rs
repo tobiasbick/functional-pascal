@@ -3,7 +3,9 @@
 use serde_json::{Value, json};
 
 use super::DapServer;
-use crate::engine::{DebugRecord, DebugRequest};
+use crate::engine::{DebugCommand, DebugOp, DebugRecord, DebugRequest};
+use crate::jsonl::encode_record::encode_record;
+use crate::jsonl::parse::parse_op;
 
 impl DapServer {
     pub(super) fn set_source_breakpoints(
@@ -33,8 +35,7 @@ impl DapServer {
             let core_id = self.next_core_id();
             let _ = self.core.execute(DebugRequest::new(
                 core_id,
-                "breakpoint.clear",
-                json!({"breakpoint_id":id}),
+                DebugOp::BreakpointClear { breakpoint_id: id },
             ));
         }
         let mut ids = Vec::new();
@@ -46,24 +47,27 @@ impl DapServer {
             .unwrap_or_default()
         {
             let core_id = self.next_core_id();
-            let records = self
-                .core
-                .execute(DebugRequest::new(
+            let arguments = json!({
+                "source":source,
+                "line":requested.get("line"),
+                "column":requested.get("column"),
+                "condition":requested.get("condition"),
+                "hit_condition":requested.get("hitCondition"),
+                "log_message":requested.get("logMessage"),
+                "assign":requested.get("assign")
+            });
+            let arguments = arguments.as_object().cloned().unwrap_or_default();
+            let records = match parse_op("breakpoint.set", &arguments) {
+                Ok(op) => self.core.execute(DebugRequest::new(core_id, op)),
+                Err(error) => vec![DebugRecord::fail(
                     core_id,
-                    "breakpoint.set",
-                    json!({
-                        "source":source,
-                        "line":requested.get("line"),
-                        "column":requested.get("column"),
-                        "condition":requested.get("condition"),
-                        "hit_condition":requested.get("hitCondition"),
-                        "log_message":requested.get("logMessage"),
-                        "assign":requested.get("assign")
-                    }),
-                ))
-                .into_iter()
-                .map(DebugRecord::into_jsonl)
-                .collect::<Vec<_>>();
+                    DebugCommand::BreakpointSet,
+                    error,
+                )],
+            }
+            .into_iter()
+            .map(encode_record)
+            .collect::<Vec<_>>();
             if records
                 .first()
                 .is_some_and(|record| record["success"] == false)

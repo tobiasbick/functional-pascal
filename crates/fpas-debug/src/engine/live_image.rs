@@ -1,13 +1,15 @@
-//! JSONL mapping for live-image classification and reject-before-commit.
+//! Live-image classification and reject-before-commit.
 
-use serde_json::{Value, json};
-
+use super::record::{DebugRecord, ResponseBody};
+use super::reply::{invalid_state, ok, session_error};
 use super::{DebugEngine, DebugStatus};
-use crate::jsonl::encode::invalid_state;
-use crate::jsonl::protocol::{session_error, success};
 
 impl DebugEngine {
-    pub(super) fn classify_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    pub(super) fn classify_live_image(
+        &mut self,
+        request_id: u64,
+        command: &str,
+    ) -> Vec<DebugRecord> {
         if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
@@ -25,10 +27,10 @@ impl DebugEngine {
             || session.classify_current_live_image(),
             |candidate| session.classify_live_image(candidate),
         );
-        vec![success(
+        vec![ok(
             request_id,
             command,
-            classification_body(
+            live_image_body(
                 classification.class,
                 classification.accepted,
                 false,
@@ -38,7 +40,7 @@ impl DebugEngine {
         )]
     }
 
-    pub(super) fn reload_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    pub(super) fn reload_live_image(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {
         if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
@@ -65,13 +67,17 @@ impl DebugEngine {
                 {
                     self.commit_sources(sources);
                 }
-                vec![success(request_id, command, replacement_body(result))]
+                vec![ok(request_id, command, replacement_body(result))]
             }
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
 
-    pub(super) fn rollback_live_image(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    pub(super) fn rollback_live_image(
+        &mut self,
+        request_id: u64,
+        command: &str,
+    ) -> Vec<DebugRecord> {
         if !matches!(self.status, DebugStatus::Initialized | DebugStatus::Stopped) {
             return vec![invalid_state(request_id, command, self.status)];
         }
@@ -83,7 +89,7 @@ impl DebugEngine {
                 if result.applied {
                     self.rollback_sources();
                 }
-                vec![success(request_id, command, replacement_body(result))]
+                vec![ok(request_id, command, replacement_body(result))]
             }
             Err(error) => vec![session_error(request_id, command, error)],
         }
@@ -132,8 +138,8 @@ impl DebugEngine {
     }
 }
 
-fn replacement_body(result: fpas_vm::LiveImageReplaceResult) -> Value {
-    classification_body(
+fn replacement_body(result: fpas_vm::LiveImageReplaceResult) -> ResponseBody {
+    live_image_body(
         result.class,
         result.accepted,
         result.applied,
@@ -142,26 +148,18 @@ fn replacement_body(result: fpas_vm::LiveImageReplaceResult) -> Value {
     )
 }
 
-fn classification_body(
+fn live_image_body(
     class: fpas_vm::LiveImageUpdateClass,
     accepted: bool,
     applied: bool,
     version: u64,
     rollback_available: bool,
-) -> Value {
-    json!({
-        "class": class.as_str(),
-        "accepted": accepted,
-        "applied": applied,
-        "version": version,
-        "rollback_available": rollback_available,
-        "accepted_classes": fpas_vm::LiveImageUpdateClass::ACCEPTED
-            .iter()
-            .map(|class| class.as_str())
-            .collect::<Vec<_>>(),
-        "rejected_classes": fpas_vm::LiveImageUpdateClass::REJECTED
-            .iter()
-            .map(|class| class.as_str())
-            .collect::<Vec<_>>(),
-    })
+) -> ResponseBody {
+    ResponseBody::LiveImage {
+        class,
+        accepted,
+        applied,
+        version,
+        rollback_available,
+    }
 }

@@ -1,24 +1,21 @@
 //! Completion handling between physical VM stops and logical debugger events.
 
-use serde_json::{Value, json};
-
+use super::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
+use super::error::EngineFailure;
+use super::record::{DebugEvent, DebugRecord, ResponseBody};
+use super::reply::{event, ok, output_events, session_error, task_event};
 use super::{DebugEngine, DebugStatus};
 use crate::breakpoints::BreakpointOutcome;
-use crate::jsonl::actor::{ActorCompletion, EvaluationCompletion, ResumeCommand, ResumeCompletion};
-use crate::jsonl::encode::{
-    diagnostic_body, error_body, error_code, output_events, stopped_event, task_event,
-};
-use crate::jsonl::protocol::event;
 
 impl DebugEngine {
-    pub(super) fn complete_actor(&mut self, completion: ActorCompletion) -> Vec<Value> {
+    pub(super) fn complete_actor(&mut self, completion: ActorCompletion) -> Vec<DebugRecord> {
         match completion {
             ActorCompletion::Resume(completion) => self.complete_resume(completion),
             ActorCompletion::Evaluation(completion) => self.complete_evaluation(completion),
         }
     }
 
-    fn complete_resume(&mut self, completion: ResumeCompletion) -> Vec<Value> {
+    fn complete_resume(&mut self, completion: ResumeCompletion) -> Vec<DebugRecord> {
         let ResumeCompletion {
             mut session,
             result,
@@ -31,22 +28,20 @@ impl DebugEngine {
                 if stop.reason == fpas_vm::DebugStopReason::RuntimeError
                     && let Some(diagnostic) = &stop.diagnostic
                 {
-                    records.push(event(
-                        "runtime_error",
-                        diagnostic_body(diagnostic, stop.task_id),
-                    ));
+                    records.push(event(DebugEvent::RuntimeError {
+                        diagnostic: diagnostic.clone(),
+                        task_id: stop.task_id,
+                    }));
                     if !self.runtime_failure_policy.should_stop(diagnostic.code) {
                         session.disconnect();
                         records.extend(session.take_task_events().into_iter().map(task_event));
                         self.status = DebugStatus::Terminated;
-                        records.push(event(
-                            "terminated",
-                            json!({
-                                "reason": "runtime_error",
-                                "exit_code": 1,
-                                "diagnostic_code": diagnostic.code.to_string()
-                            }),
-                        ));
+                        records.push(event(DebugEvent::Terminated {
+                            reason: "runtime_error",
+                            exit_code: 1,
+                            diagnostic_code: Some(diagnostic.code.to_string()),
+                            instruction_count: None,
+                        }));
                         return records;
                     }
                 }
@@ -77,43 +72,35 @@ impl DebugEngine {
                                 BreakpointOutcome::StopWithDiagnostic(diagnostic) => {
                                     should_stop = true;
                                     if let Some(diagnostic) = diagnostic {
-                                        records.push(event(
-                                            "protocol_error",
-                                            error_body(
-                                                error_code(diagnostic.kind),
-                                                diagnostic.message,
-                                                diagnostic.hint,
-                                            ),
-                                        ));
+                                        records.push(event(DebugEvent::ProtocolError(
+                                            EngineFailure::from_session(diagnostic),
+                                        )));
                                     }
                                 }
                                 BreakpointOutcome::Continue => {}
                                 BreakpointOutcome::Log(output) => {
                                     self.log_output_bytes =
                                         self.log_output_bytes.saturating_add(output.len());
-                                    records.push(event("output", json!({
-                                        "category": "console",
-                                        "text": output,
-                                        "breakpoint_id": breakpoint_id,
-                                        "location": stop.location.as_ref().map(|location| json!({
-                                            "source": location.source,
-                                            "line": location.line,
-                                            "column": location.column
-                                        }))
-                                    })));
+                                    records.push(event(DebugEvent::Output {
+                                        category: "console",
+                                        text: output,
+                                        sequence: None,
+                                        breakpoint_id: Some(*breakpoint_id),
+                                        location: stop.location.clone(),
+                                    }));
                                 }
                                 BreakpointOutcome::LogDiagnostic(diagnostic) => {
                                     if let Some(diagnostic) = diagnostic {
-                                        records.push(event(
-                                            "output",
-                                            json!({
-                                                "category": "stderr",
-                                                "text": format!(
-                                                    "Logpoint evaluation failed: {} Help: {}\n",
-                                                    diagnostic.message, diagnostic.hint
-                                                )
-                                            }),
-                                        ));
+                                        records.push(event(DebugEvent::Output {
+                                            category: "stderr",
+                                            text: format!(
+                                                "Logpoint evaluation failed: {} Help: {}\n",
+                                                diagnostic.message, diagnostic.hint
+                                            ),
+                                            sequence: None,
+                                            breakpoint_id: None,
+                                            location: None,
+                                        }));
                                     }
                                 }
                             }
@@ -123,65 +110,50 @@ impl DebugEngine {
                             self.status = DebugStatus::Running;
                             if let Err(error) = self.actor.resume(ResumeCommand::Continue) {
                                 self.status = DebugStatus::Stopped;
-                                records.push(event(
-                                    "protocol_error",
-                                    error_body(error_code(error.kind), error.message, error.hint),
-                                ));
+                                records.push(event(DebugEvent::ProtocolError(
+                                    EngineFailure::from_session(error),
+                                )));
                             }
                             return records;
                         }
                     }
                 }
-                records.push(stopped_event(&stop));
+                records.push(event(DebugEvent::Stopped(stop)));
                 self.actor.restore(session);
             }
             Ok(fpas_vm::DebugRunResult::Terminated(termination)) => {
                 self.status = DebugStatus::Terminated;
-                records.push(event(
-                    "terminated",
-                    json!({
-                        "reason": "completed", "exit_code": 0,
-                        "instruction_count": termination.instruction_count
-                    }),
-                ));
+                records.push(event(DebugEvent::Terminated {
+                    reason: "completed",
+                    exit_code: 0,
+                    diagnostic_code: None,
+                    instruction_count: Some(termination.instruction_count),
+                }));
             }
             Err(error) => {
                 self.status = DebugStatus::Stopped;
-                records.push(event(
-                    "protocol_error",
-                    error_body(
-                        error_code(error.kind),
-                        error.message.clone(),
-                        error.hint.clone(),
-                    ),
-                ));
+                records.push(event(DebugEvent::ProtocolError(
+                    EngineFailure::from_session(error.clone()),
+                )));
                 self.actor.restore(session);
             }
         }
         records
     }
 
-    fn complete_evaluation(&mut self, completion: EvaluationCompletion) -> Vec<Value> {
+    fn complete_evaluation(&mut self, completion: EvaluationCompletion) -> Vec<DebugRecord> {
         let EvaluationCompletion { session, result } = completion;
         self.actor.restore(session);
         let Some((request_id, command)) = self.pending_evaluation.take() else {
             return Vec::new();
         };
         match result {
-            Ok(result) => vec![crate::jsonl::protocol::success(
+            Ok(result) => vec![ok(
                 request_id,
-                &command,
-                json!({
-                    "result": result.value,
-                    "type_name": result.type_name,
-                    "variables_reference": result.variables_reference,
-                    "named_variables": result.named_variables,
-                    "indexed_variables": result.indexed_variables
-                }),
+                command.name(),
+                ResponseBody::Evaluate(result),
             )],
-            Err(error) => vec![crate::jsonl::protocol::session_error(
-                request_id, &command, error,
-            )],
+            Err(error) => vec![session_error(request_id, command.name(), error)],
         }
     }
 }

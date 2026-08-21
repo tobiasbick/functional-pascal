@@ -1,8 +1,7 @@
-//! Typed debugger result envelopes shared by protocol adapters.
-
-use serde_json::{Value, json};
+//! Typed debugger results shared by protocol adapters.
 
 use super::command::DebugCommand;
+use super::error::EngineFailure;
 
 /// A debugger result emitted after one typed engine request.
 #[derive(Debug, Clone)]
@@ -13,86 +12,161 @@ pub(crate) enum DebugRecord {
         request_id: u64,
         /// Completed debugger operation.
         command: DebugCommand,
-        /// Whether the operation succeeded.
-        success: bool,
-        /// Versioned success or failure payload.
-        payload: Value,
+        /// Success body or domain failure.
+        outcome: Result<ResponseBody, EngineFailure>,
     },
     /// An asynchronous debugger event.
-    Event {
-        /// Stable event name for adapter-specific translation.
-        name: String,
-        /// Versioned event payload.
-        payload: Value,
+    Event(DebugEvent),
+}
+
+/// Successful engine payload for one command.
+#[derive(Debug, Clone)]
+pub(crate) enum ResponseBody {
+    Accepted,
+    Requested,
+    Cancelled {
+        cancelled: bool,
     },
-    /// A record that cannot yet be represented by the typed envelope.
-    Unrecognized(Value),
+    TerminatedAck,
+    Eof,
+    Cleared,
+    Initialize {
+        execution: fpas_vm::DebugExecutionLimits,
+        hot_reload: bool,
+    },
+    Evaluate(fpas_vm::DebugEvaluateResult),
+    Tasks {
+        tasks: Vec<fpas_vm::DebugTask>,
+        total: usize,
+    },
+    TaskHold {
+        task_id: u64,
+        paused: bool,
+    },
+    TaskCancelled {
+        task_id: u64,
+    },
+    Stack {
+        frames: Vec<fpas_vm::DebugFrame>,
+        total: usize,
+        task_id: u64,
+    },
+    Scopes {
+        scopes: Vec<fpas_vm::DebugScope>,
+    },
+    Variables {
+        variables: Vec<fpas_vm::DebugVariable>,
+        total: usize,
+    },
+    InputQueued {
+        bytes: usize,
+        session_bytes: usize,
+    },
+    Breakpoint(fpas_vm::BoundBreakpoint),
+    UnverifiedBreakpoint {
+        source: String,
+        line: u32,
+        column: Option<u32>,
+        message: String,
+        error_code: String,
+        error_offset: usize,
+        error_length: usize,
+    },
+    BreakpointCleared {
+        breakpoint_id: u64,
+    },
+    FunctionBreakpoints {
+        breakpoints: Vec<fpas_vm::BoundFunctionBreakpoint>,
+    },
+    DataBreakpoints {
+        breakpoints: Vec<fpas_vm::BoundDataBreakpoint>,
+    },
+    RuntimeFilters {
+        filters: Vec<String>,
+    },
+    Dictionary(fpas_vm::DebugDictionaryMutationResult),
+    Array(fpas_vm::DebugArrayMutationResult),
+    StringCharacter(fpas_vm::DebugStringMutationResult),
+    ForcedReturn(fpas_vm::DebugForcedReturnResult),
+    FrameRestart(fpas_vm::DebugFrameRestartResult),
+    Location(fpas_vm::DebugDataLocation),
+    Recording {
+        envelope: fpas_vm::DebugRecordingEnvelope,
+        capturing: bool,
+        events: Vec<fpas_vm::DebugRecordingEvent>,
+        truncated: bool,
+    },
+    RecordingStarted {
+        capturing: bool,
+        truncated: bool,
+        event_count: usize,
+    },
+    LiveImage {
+        class: fpas_vm::LiveImageUpdateClass,
+        accepted: bool,
+        applied: bool,
+        version: u64,
+        rollback_available: bool,
+    },
+    VariantDescription {
+        target: String,
+        description: fpas_vm::DebugVariantDescription,
+    },
+    VariantConstruct(fpas_vm::DebugVariantConstructionResult),
+    Storage(fpas_vm::DebugStorageInitializationResult),
+    TaskResult(fpas_vm::DebugTaskResultReplacement),
+}
+
+/// Engine-owned debugger event.
+#[derive(Debug, Clone)]
+pub(crate) enum DebugEvent {
+    Initialized,
+    Stopped(fpas_vm::DebugStop),
+    Task(fpas_vm::DebugTaskEvent),
+    Output {
+        category: &'static str,
+        text: String,
+        sequence: Option<usize>,
+        breakpoint_id: Option<u64>,
+        location: Option<fpas_vm::SourceLocation>,
+    },
+    Terminated {
+        reason: &'static str,
+        exit_code: i32,
+        diagnostic_code: Option<String>,
+        instruction_count: Option<u64>,
+    },
+    RuntimeError {
+        diagnostic: fpas_diagnostics::Diagnostic,
+        task_id: u64,
+    },
+    ProtocolError(EngineFailure),
+    SourceBreakpoint(fpas_vm::BoundBreakpoint),
+    FunctionBreakpoint(fpas_vm::BoundFunctionBreakpoint),
+    DataBreakpoint(fpas_vm::BoundDataBreakpoint),
 }
 
 impl DebugRecord {
-    /// Decode an internal record while preserving every wire field.
     #[must_use]
-    pub(crate) fn from_jsonl(value: Value) -> Self {
-        match value.get("type").and_then(Value::as_str) {
-            Some("response") => {
-                let Some(request_id) = value.get("request_id").and_then(Value::as_u64) else {
-                    return Self::Unrecognized(value);
-                };
-                let Some(command) = value.get("command").and_then(Value::as_str) else {
-                    return Self::Unrecognized(value);
-                };
-                let Some(success) = value.get("success").and_then(Value::as_bool) else {
-                    return Self::Unrecognized(value);
-                };
-                let payload = if success {
-                    value.get("body").cloned().unwrap_or_else(|| json!({}))
-                } else {
-                    value.get("error").cloned().unwrap_or_else(|| json!({}))
-                };
-                Self::Response {
-                    request_id,
-                    command: DebugCommand::from_name(command),
-                    success,
-                    payload,
-                }
-            }
-            Some("event") => {
-                let Some(name) = value.get("event").and_then(Value::as_str) else {
-                    return Self::Unrecognized(value);
-                };
-                Self::Event {
-                    name: name.to_owned(),
-                    payload: value.get("body").cloned().unwrap_or_else(|| json!({})),
-                }
-            }
-            _ => Self::Unrecognized(value),
+    pub(crate) fn ok(request_id: u64, command: DebugCommand, body: ResponseBody) -> Self {
+        Self::Response {
+            request_id,
+            command,
+            outcome: Ok(body),
         }
     }
 
-    /// Encode this result for the JSONL adapter.
     #[must_use]
-    pub(crate) fn into_jsonl(self) -> Value {
-        match self {
-            Self::Response {
-                request_id,
-                command,
-                success: true,
-                payload,
-            } => json!({
-                "type":"response", "request_id":request_id, "command":command.name(),
-                "success":true, "body":payload
-            }),
-            Self::Response {
-                request_id,
-                command,
-                success: false,
-                payload,
-            } => json!({
-                "type":"response", "request_id":request_id, "command":command.name(),
-                "success":false, "error":payload
-            }),
-            Self::Event { name, payload } => json!({"type":"event", "event":name, "body":payload}),
-            Self::Unrecognized(value) => value,
+    pub(crate) fn fail(request_id: u64, command: DebugCommand, error: EngineFailure) -> Self {
+        Self::Response {
+            request_id,
+            command,
+            outcome: Err(error),
         }
+    }
+
+    #[must_use]
+    pub(crate) fn event(event: DebugEvent) -> Self {
+        Self::Event(event)
     }
 }

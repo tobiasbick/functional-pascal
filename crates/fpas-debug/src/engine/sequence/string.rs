@@ -1,23 +1,27 @@
-//! JSONL mapping for string character replacement.
-
-use serde_json::{Map, Value};
+//! String character replacement.
 
 use super::*;
-use crate::jsonl::protocol::{session_error, success};
+use crate::engine::DebugEngine;
+use crate::engine::record::{DebugRecord, ResponseBody};
+use crate::engine::reply::{invalid_state, ok, session_error};
 
 impl DebugEngine {
     pub(in crate::engine) fn replace_string_character(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        target: String,
+        index: String,
+        expression: String,
+        frame_id: Option<u64>,
+    ) -> Vec<DebugRecord> {
         let request = match parse_request(
             request_id,
             command,
-            arguments,
-            &["index", "expression"],
             self.status,
+            &target,
+            &[index, expression],
+            frame_id,
         ) {
             Ok(request) => request,
             Err(response) => return vec![response],
@@ -32,19 +36,11 @@ impl DebugEngine {
             request.frame_id,
             request.limits,
         ) {
-            Ok(result) => {
-                let mut body = evaluation_body(result.string);
-                body.insert("index".to_string(), Value::from(result.index));
-                body.insert(
-                    "old_character".to_string(),
-                    Value::String(result.old_character),
-                );
-                body.insert(
-                    "new_character".to_string(),
-                    Value::String(result.new_character),
-                );
-                vec![success(request_id, command, Value::Object(body))]
-            }
+            Ok(result) => vec![ok(
+                request_id,
+                command,
+                ResponseBody::StringCharacter(result),
+            )],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }

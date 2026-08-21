@@ -1,5 +1,6 @@
 //! Protocol-neutral debugger execution and asynchronous event delivery.
 
+pub(crate) mod actor;
 mod breakpoints;
 mod command;
 mod completed_result;
@@ -7,6 +8,7 @@ mod completion;
 mod data_breakpoints;
 mod dictionary;
 mod dispatch;
+mod error;
 mod evaluation;
 mod forced_return;
 mod frame_restart;
@@ -19,6 +21,8 @@ mod location;
 mod mutation;
 mod record;
 mod recording;
+mod reply;
+mod request;
 mod runtime_failures;
 mod sequence;
 mod storage;
@@ -28,17 +32,20 @@ mod variant;
 
 use std::collections::{HashMap, HashSet};
 
-use serde_json::{Map, Value, json};
-
 use crate::breakpoints::{BreakpointPolicy, RuntimeFailurePolicy};
-use crate::jsonl::actor::{ResumeCommand, SessionActor};
-use crate::jsonl::encode::*;
-use crate::jsonl::protocol::{event, failure, session_error, success};
 use crate::target::DebugReloadProvider;
 use crate::{DebugSourceContent, PreparedDebugTarget};
 
-pub(crate) use command::{DebugCommand, DebugRequest};
-pub(crate) use record::DebugRecord;
+use self::actor::{ResumeCommand, SessionActor};
+use self::reply::{event, fail, invalid_state, ok, session_error};
+
+pub(crate) use command::DebugCommand;
+pub(crate) use error::EngineFailure;
+pub(crate) use record::{DebugEvent, DebugRecord, ResponseBody};
+pub(crate) use request::{AssignOp, DataBreakpointOp, DebugOp, DebugRequest, FunctionBreakpointOp};
+
+#[cfg(test)]
+mod tests;
 
 /// Coarse debugger lifecycle visible to protocol adapters.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,7 +75,7 @@ pub(crate) struct DebugEngine {
     data_breakpoint_ids: Vec<u64>,
     runtime_failure_policy: RuntimeFailurePolicy,
     log_output_bytes: usize,
-    pending_evaluation: Option<(u64, String)>,
+    pending_evaluation: Option<(u64, DebugCommand)>,
     reloader: Option<DebugReloadProvider>,
     sources: Vec<DebugSourceContent>,
     previous_sources: Option<Vec<DebugSourceContent>>,
@@ -136,41 +143,31 @@ impl DebugEngine {
     /// Execute one validated typed request.
     #[must_use]
     pub(crate) fn execute(&mut self, request: DebugRequest) -> Vec<DebugRecord> {
+        let command = request.command();
         if self.status == DebugStatus::Terminated {
-            return vec![DebugRecord::from_jsonl(event(
-                "protocol_error",
-                error_body(
-                    "invalid_state",
-                    "The debugger session is terminated.",
-                    "Start a new `fpas debug` process.",
-                ),
+            return vec![event(DebugEvent::ProtocolError(
+                EngineFailure::terminated_session(),
             ))];
         }
         if !self.request_ids.insert(request.id) {
-            return vec![DebugRecord::from_jsonl(failure(
+            return vec![fail(
                 request.id,
-                request.command.name(),
-                "invalid_request",
-                format!("Request ID {} was already used.", request.id),
-                "Use a new positive request ID for every request.",
-            ))];
-        };
-        let mut records =
-            self.handle_request(request.id, request.command.name(), &request.arguments);
+                command.name(),
+                EngineFailure::duplicate_request(request.id),
+            )];
+        }
+        let mut records = self.handle_request(request.id, request.op);
         records.extend(self.poll_values());
-        records.into_iter().map(DebugRecord::from_jsonl).collect()
+        records
     }
 
     /// Poll for records caused by an asynchronous continue or step operation.
     #[must_use]
     pub(crate) fn poll(&mut self) -> Vec<DebugRecord> {
         self.poll_values()
-            .into_iter()
-            .map(DebugRecord::from_jsonl)
-            .collect()
     }
 
-    fn poll_values(&mut self) -> Vec<Value> {
+    fn poll_values(&mut self) -> Vec<DebugRecord> {
         self.actor
             .poll()
             .map_or_else(Vec::new, |completion| self.complete_actor(completion))
@@ -180,12 +177,9 @@ impl DebugEngine {
     #[must_use]
     pub(crate) fn wait(&mut self) -> Vec<DebugRecord> {
         self.wait_values()
-            .into_iter()
-            .map(DebugRecord::from_jsonl)
-            .collect()
     }
 
-    fn wait_values(&mut self) -> Vec<Value> {
+    fn wait_values(&mut self) -> Vec<DebugRecord> {
         self.actor
             .wait()
             .map_or_else(Vec::new, |completion| self.complete_actor(completion))
@@ -195,65 +189,40 @@ impl DebugEngine {
     pub(crate) fn fatal_protocol_error(&mut self, message: impl Into<String>) -> Vec<DebugRecord> {
         self.status = DebugStatus::Terminated;
         self.fatal_termination = true;
-        vec![DebugRecord::from_jsonl(event(
-            "protocol_error",
-            error_body(
-                "invalid_request",
-                message,
-                "Send one valid UTF-8 JSON request object per line.",
-            ),
-        ))]
+        vec![event(DebugEvent::ProtocolError(EngineFailure::new(
+            "invalid_request",
+            message,
+            "Send one valid UTF-8 JSON request object per line.",
+        )))]
     }
 
-    fn initialize(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+    fn initialize(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Created {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let version = arguments
-            .get("version")
-            .and_then(Value::as_u64)
-            .unwrap_or(2);
-        if version != 2 {
-            return vec![failure(
+        self.status = DebugStatus::Initialized;
+        vec![
+            ok(
                 request_id,
                 command,
-                "unsupported_protocol_version",
-                format!("Protocol version {version} is unsupported."),
-                "Request version 2.",
-            )];
-        }
-        self.status = DebugStatus::Initialized;
-        initialize_records(
-            request_id,
-            command,
-            self.execution_limits,
-            self.reloader.is_some(),
-        )
+                ResponseBody::Initialize {
+                    execution: self.execution_limits,
+                    hot_reload: self.reloader.is_some(),
+                },
+            ),
+            event(DebugEvent::Initialized),
+        ]
     }
 
-    fn launch(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+    fn launch(&mut self, request_id: u64, command: &str, stop_on_entry: bool) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Initialized {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let stop_on_entry = arguments
-            .get("stop_on_entry")
-            .and_then(Value::as_bool)
-            .unwrap_or(true);
-        let mut records = vec![success(request_id, command, json!({"accepted": true}))];
+        let mut records = vec![ok(request_id, command, ResponseBody::Accepted)];
         if stop_on_entry {
             self.status = DebugStatus::Stopped;
             if let Some(session) = self.actor.session() {
-                records.push(stopped_event(session.last_stop()));
+                records.push(event(DebugEvent::Stopped(session.last_stop().clone())));
             }
         } else {
             self.status = DebugStatus::Running;
@@ -265,7 +234,12 @@ impl DebugEngine {
         records
     }
 
-    fn resume(&mut self, request_id: u64, command: &str, resume: ResumeCommand) -> Vec<Value> {
+    fn resume(
+        &mut self,
+        request_id: u64,
+        command: &str,
+        resume: ResumeCommand,
+    ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
@@ -281,86 +255,58 @@ impl DebugEngine {
         match self.actor.resume(resume) {
             Ok(()) => {
                 self.status = DebugStatus::Running;
-                vec![success(request_id, command, json!({"accepted": true}))]
+                vec![ok(request_id, command, ResponseBody::Accepted)]
             }
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
 
-    fn task_resume(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-        resume: fn(Option<u64>) -> ResumeCommand,
-    ) -> Vec<Value> {
-        match optional_u64_argument(request_id, command, arguments, "task_id") {
-            Ok(task_id) => self.resume(request_id, command, resume(task_id)),
-            Err(error) => vec![error],
-        }
-    }
-
-    fn pause(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    fn pause(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Running {
             return vec![invalid_state(request_id, command, self.status)];
         }
         self.actor.pause();
-        vec![success(request_id, command, json!({"requested": true}))]
+        vec![ok(request_id, command, ResponseBody::Requested)]
     }
 
     fn stack(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        start: usize,
+        count: usize,
+        task_id: Option<u64>,
+    ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let start = index_argument(arguments, "start", 0);
-        let count = index_argument(arguments, "count", 64);
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
-        let task_id = match optional_u64_argument(request_id, command, arguments, "task_id") {
-            Ok(task_id) => task_id.unwrap_or_else(|| session.last_stop().task_id),
-            Err(error) => return vec![error],
-        };
+        let task_id = task_id.unwrap_or_else(|| session.last_stop().task_id);
         match session.stack_for_task(task_id, start, count) {
-            Ok(frames) => vec![success(
+            Ok(frames) => vec![ok(
                 request_id,
                 command,
-                json!({
-                    "frames": frames.items.iter().map(frame_body).collect::<Vec<_>>(),
-                    "total": frames.total,
-                    "task_id": task_id
-                }),
+                ResponseBody::Stack {
+                    frames: frames.items,
+                    total: frames.total,
+                    task_id,
+                },
             )],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
 
-    fn scopes(
-        &mut self,
-        request_id: u64,
-        command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+    fn scopes(&mut self, request_id: u64, command: &str, frame_id: u64) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let Some(frame_id) = arguments.get("frame_id").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "frame_id")];
-        };
         let Some(session) = self.actor.session() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
         match session.scopes(frame_id) {
-            Ok(scopes) => vec![success(
-                request_id,
-                command,
-                json!({"scopes": scopes.iter().map(scope_body).collect::<Vec<_>>() }),
-            )],
+            Ok(scopes) => vec![ok(request_id, command, ResponseBody::Scopes { scopes })],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
@@ -369,68 +315,62 @@ impl DebugEngine {
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        reference: u64,
+        start: usize,
+        count: usize,
+    ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let Some(reference) = arguments.get("variables_reference").and_then(Value::as_u64) else {
-            return vec![missing_argument(request_id, command, "variables_reference")];
-        };
-        let start = index_argument(arguments, "start", 0);
-        let count = index_argument(arguments, "count", 100);
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
         match session.variables(reference, start, count) {
-            Ok(variables) => vec![success(
+            Ok(variables) => vec![ok(
                 request_id,
                 command,
-                json!({
-                    "variables": variables.items.iter().map(variable_body).collect::<Vec<_>>(),
-                    "total": variables.total
-                }),
+                ResponseBody::Variables {
+                    variables: variables.items,
+                    total: variables.total,
+                },
             )],
             Err(error) => vec![session_error(request_id, command, error)],
         }
     }
 
-    fn disconnect(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    fn disconnect(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {
+        let terminated = event(DebugEvent::Terminated {
+            reason: "disconnect",
+            exit_code: 0,
+            diagnostic_code: None,
+            instruction_count: None,
+        });
         if self.actor.is_evaluating() {
             self.actor.cancel_evaluation();
             let mut records = self.wait_values();
             records.extend(self.disconnect_session_events());
-            records.push(success(request_id, command, json!({"terminated": true})));
+            records.push(ok(request_id, command, ResponseBody::TerminatedAck));
             self.status = DebugStatus::Terminated;
-            records.push(event(
-                "terminated",
-                json!({"reason": "disconnect", "exit_code": 0}),
-            ));
+            records.push(terminated);
             return records;
         }
         if self.status == DebugStatus::Running {
             self.actor.pause();
-            let mut records = vec![success(request_id, command, json!({"terminated": true}))];
+            let mut records = vec![ok(request_id, command, ResponseBody::TerminatedAck)];
             records.extend(self.wait_values());
             records.extend(self.disconnect_session_events());
             self.status = DebugStatus::Terminated;
-            records.push(event(
-                "terminated",
-                json!({"reason": "disconnect", "exit_code": 0}),
-            ));
+            records.push(terminated);
             return records;
         }
-        let mut records = vec![success(request_id, command, json!({"terminated": true}))];
+        let mut records = vec![ok(request_id, command, ResponseBody::TerminatedAck)];
         records.extend(self.disconnect_session_events());
         self.status = DebugStatus::Terminated;
-        records.push(event(
-            "terminated",
-            json!({"reason": "disconnect", "exit_code": 0}),
-        ));
+        records.push(terminated);
         records
     }
 
-    fn disconnect_session_events(&mut self) -> Vec<Value> {
+    fn disconnect_session_events(&mut self) -> Vec<DebugRecord> {
         let Some(session) = self.actor.session_mut() else {
             return Vec::new();
         };
@@ -438,16 +378,16 @@ impl DebugEngine {
         session
             .take_task_events()
             .into_iter()
-            .map(task_event)
+            .map(crate::engine::reply::task_event)
             .collect()
     }
 
-    fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<Value> {
+    fn cancel_evaluation(&mut self, request_id: u64, command: &str) -> Vec<DebugRecord> {
         let cancelled = self.actor.cancel_evaluation();
-        vec![success(
+        vec![ok(
             request_id,
             command,
-            json!({"cancelled": cancelled}),
+            ResponseBody::Cancelled { cancelled },
         )]
     }
 }

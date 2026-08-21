@@ -1,35 +1,31 @@
-//! JSONL task catalog requests.
+//! Task catalog requests.
 
-use serde_json::{Map, Value, json};
-
+use super::record::{DebugRecord, ResponseBody};
+use super::reply::{invalid_state, ok, session_error};
 use super::{DebugEngine, DebugStatus};
-use crate::jsonl::encode::{index_argument, invalid_state, task_body};
-use crate::jsonl::protocol::{session_error, success};
 
 impl DebugEngine {
-    /// Returns a page of tasks from the stopped debug session.
     pub(super) fn tasks(
         &mut self,
         request_id: u64,
         command: &str,
-        arguments: &Map<String, Value>,
-    ) -> Vec<Value> {
+        start: usize,
+        count: usize,
+    ) -> Vec<DebugRecord> {
         if self.status != DebugStatus::Stopped {
             return vec![invalid_state(request_id, command, self.status)];
         }
-        let start = index_argument(arguments, "start", 0);
-        let count = index_argument(arguments, "count", 64);
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
         };
         match session.tasks(start, count) {
-            Ok(tasks) => vec![success(
+            Ok(tasks) => vec![ok(
                 request_id,
                 command,
-                json!({
-                    "tasks": tasks.items.iter().map(task_body).collect::<Vec<_>>(),
-                    "total": tasks.total
-                }),
+                ResponseBody::Tasks {
+                    tasks: tasks.items,
+                    total: tasks.total,
+                },
             )],
             Err(error) => vec![session_error(request_id, command, error)],
         }

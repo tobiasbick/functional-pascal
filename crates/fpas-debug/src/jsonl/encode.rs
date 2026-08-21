@@ -1,16 +1,8 @@
 //! JSONL response and event body encoding.
 
-use serde_json::{Map, Value, json};
+use serde_json::{Value, json};
 
-use super::protocol::{event, failure, success};
-use crate::engine::DebugStatus;
-
-pub(crate) fn initialize_records(
-    request_id: u64,
-    command: &str,
-    execution: fpas_vm::DebugExecutionLimits,
-    hot_reload: bool,
-) -> Vec<Value> {
+pub(crate) fn initialize_body(execution: fpas_vm::DebugExecutionLimits, hot_reload: bool) -> Value {
     let inspection = fpas_vm::DebugInspectionLimits::default();
     let evaluation = fpas_vm::DebugEvaluationLimits::default();
     let breakpoints = fpas_vm::DebugBreakpointLimits::default();
@@ -72,73 +64,38 @@ pub(crate) fn initialize_records(
         capabilities.insert("reload_classify".into(), json!(true));
         capabilities.insert("reload_rollback".into(), json!(true));
     }
-    vec![
-        success(
-            request_id,
-            command,
-            json!({
-                "protocol": "fpas-debug-jsonl",
-                "version": 2,
-                "capabilities": capabilities,
-                "limits": {
-                    "stack_frames": inspection.max_frames,
-                    "variables": inspection.max_children,
-                    "value_depth": inspection.max_depth,
-                    "string_characters": inspection.max_string_chars,
-                    "retained_handles": inspection.max_handles,
-                    "breakpoints": breakpoints.max_breakpoints,
-                    "function_breakpoint_bindings": breakpoints.max_function_bindings,
-                    "function_name_bytes": breakpoints.max_function_name_bytes,
-                    "runtime_failure_filters": crate::breakpoints::MAX_RUNTIME_FAILURE_FILTERS,
-                    "expression_bytes": evaluation.max_expression_bytes,
-                    "expression_depth": evaluation.max_depth,
-                    "expression_operations": evaluation.max_operations,
-                    "expression_traversals": evaluation.max_traversals,
-                    "expression_output_bytes": evaluation.max_output_bytes,
-                    "evaluation_calls": evaluation.max_calls,
-                    "evaluation_call_depth": evaluation.max_call_depth,
-                    "evaluation_call_instructions": evaluation.max_call_instructions,
-                    "evaluation_detached_values": evaluation.max_detached_values,
-                    "evaluation_call_timeout_milliseconds": evaluation.call_timeout.as_millis(),
-                    "captured_output_bytes": execution.max_output_bytes,
-                    "debuggee_input_bytes": execution.max_input_bytes,
-                    "recording_events": fpas_vm::MAX_RECORDING_EVENTS,
-                    "recording_snapshots": 0,
-                    "instructions": execution.max_instructions,
-                    "timeout_milliseconds": execution.timeout.as_millis()
-                }
-            }),
-        ),
-        event("initialized", json!({})),
-    ]
-}
-
-pub(crate) fn invalid_state(request_id: u64, command: &str, state: DebugStatus) -> Value {
-    failure(
-        request_id,
-        command,
-        "invalid_state",
-        format!("Command `{command}` is invalid while the protocol is {state:?}."),
-        "Wait for the required lifecycle event before retrying.",
-    )
-}
-
-pub(crate) fn missing_argument(request_id: u64, command: &str, argument: &str) -> Value {
-    failure(
-        request_id,
-        command,
-        "invalid_request",
-        format!("Command `{command}` requires argument `{argument}`."),
-        "Add the required field to the request `arguments` object.",
-    )
-}
-
-pub(crate) fn index_argument(arguments: &Map<String, Value>, name: &str, default: usize) -> usize {
-    arguments
-        .get(name)
-        .and_then(Value::as_u64)
-        .and_then(|value| usize::try_from(value).ok())
-        .unwrap_or(default)
+    json!({
+        "protocol": "fpas-debug-jsonl",
+        "version": 2,
+        "capabilities": capabilities,
+        "limits": {
+            "stack_frames": inspection.max_frames,
+            "variables": inspection.max_children,
+            "value_depth": inspection.max_depth,
+            "string_characters": inspection.max_string_chars,
+            "retained_handles": inspection.max_handles,
+            "breakpoints": breakpoints.max_breakpoints,
+            "function_breakpoint_bindings": breakpoints.max_function_bindings,
+            "function_name_bytes": breakpoints.max_function_name_bytes,
+            "runtime_failure_filters": crate::breakpoints::MAX_RUNTIME_FAILURE_FILTERS,
+            "expression_bytes": evaluation.max_expression_bytes,
+            "expression_depth": evaluation.max_depth,
+            "expression_operations": evaluation.max_operations,
+            "expression_traversals": evaluation.max_traversals,
+            "expression_output_bytes": evaluation.max_output_bytes,
+            "evaluation_calls": evaluation.max_calls,
+            "evaluation_call_depth": evaluation.max_call_depth,
+            "evaluation_call_instructions": evaluation.max_call_instructions,
+            "evaluation_detached_values": evaluation.max_detached_values,
+            "evaluation_call_timeout_milliseconds": evaluation.call_timeout.as_millis(),
+            "captured_output_bytes": execution.max_output_bytes,
+            "debuggee_input_bytes": execution.max_input_bytes,
+            "recording_events": fpas_vm::MAX_RECORDING_EVENTS,
+            "recording_snapshots": 0,
+            "instructions": execution.max_instructions,
+            "timeout_milliseconds": execution.timeout.as_millis()
+        }
+    })
 }
 
 pub(crate) fn breakpoint_body(breakpoint: &fpas_vm::BoundBreakpoint) -> Value {
@@ -169,52 +126,6 @@ pub(crate) fn function_breakpoint_body(breakpoint: &fpas_vm::BoundFunctionBreakp
     })
 }
 
-pub(crate) fn stopped_event(stop: &fpas_vm::DebugStop) -> Value {
-    event(
-        "stopped",
-        json!({"reason":stop_reason(stop.reason),"task_id":stop.task_id,"all_tasks_stopped":true,"location":stop.location.as_ref().map(location_body),"instruction":stop.instruction,"call_depth":stop.call_depth,"breakpoint_id":stop.breakpoint_id,"breakpoint_ids":stop.breakpoint_ids}),
-    )
-}
-
-/// Parses an optional non-negative integer request argument.
-pub(crate) fn optional_u64_argument(
-    request_id: u64,
-    command: &str,
-    arguments: &Map<String, Value>,
-    name: &str,
-) -> Result<Option<u64>, Value> {
-    match arguments.get(name) {
-        None | Some(Value::Null) => Ok(None),
-        Some(value) => value.as_u64().map(Some).ok_or_else(|| {
-            let help = if name == "task_id" {
-                "Pass a task ID returned by `tasks` as `task_id`.".to_string()
-            } else {
-                format!(
-                    "Pass a non-negative ID returned by the matching inspection request as `{name}`."
-                )
-            };
-            failure(
-                request_id,
-                command,
-                "invalid_request",
-                format!("Command `{command}` argument `{name}` must be a non-negative integer."),
-                help,
-            )
-        }),
-    }
-}
-
-/// Parses a required non-negative integer request argument.
-pub(crate) fn required_u64_argument(
-    request_id: u64,
-    command: &str,
-    arguments: &Map<String, Value>,
-    name: &str,
-) -> Result<u64, Value> {
-    optional_u64_argument(request_id, command, arguments, name)?
-        .ok_or_else(|| missing_argument(request_id, command, name))
-}
-
 pub(crate) fn task_body(task: &fpas_vm::DebugTask) -> Value {
     json!({
         "task_id": task.id,
@@ -223,14 +134,6 @@ pub(crate) fn task_body(task: &fpas_vm::DebugTask) -> Value {
         "inspectable": task.inspectable,
         "paused": task.paused
     })
-}
-
-pub(crate) fn task_event(change: fpas_vm::DebugTaskEvent) -> Value {
-    let reason = match change.kind {
-        fpas_vm::DebugTaskEventKind::Started => "started",
-        fpas_vm::DebugTaskEventKind::Exited => "exited",
-    };
-    event("task", json!({"reason": reason, "task_id": change.task_id}))
 }
 
 pub(crate) fn data_breakpoint_body(breakpoint: &fpas_vm::BoundDataBreakpoint) -> Value {
@@ -260,10 +163,6 @@ pub(crate) fn identity_body(identity: fpas_vm::DebugDataLocationIdentity) -> Val
     }
 }
 
-fn stop_reason(reason: fpas_vm::DebugStopReason) -> &'static str {
-    reason.as_str()
-}
-
 fn location_body(location: &fpas_vm::SourceLocation) -> Value {
     json!({"source":location.source,"line":location.line,"column":location.column})
 }
@@ -278,83 +177,4 @@ pub(crate) fn scope_body(scope: &fpas_vm::DebugScope) -> Value {
 
 pub(crate) fn variable_body(variable: &fpas_vm::DebugVariable) -> Value {
     json!({"name":variable.name,"value":variable.value,"type_name":variable.type_name,"variables_reference":variable.variables_reference,"named_variables":variable.named_variables,"indexed_variables":variable.indexed_variables,"presentation_hint":variable.presentation_hint})
-}
-
-pub(crate) fn output_events(session: &fpas_vm::DebugSession, cursor: &mut usize) -> Vec<Value> {
-    let output = session.output();
-    let records=output.lines.iter().skip(*cursor).enumerate().map(|(index,line)| event("output",json!({"category":"stdout","text":format!("{line}\n"),"sequence":cursor.saturating_add(index).saturating_add(1)}))).collect();
-    *cursor = output.lines.len();
-    records
-}
-
-pub(crate) fn diagnostic_body(diagnostic: &fpas_diagnostics::Diagnostic, task_id: u64) -> Value {
-    json!({"code":format!("F{:04}",diagnostic.code.value()),"message":diagnostic.message,"help":diagnostic.help,"line":diagnostic.span.line(),"column":diagnostic.span.column(),"source_id":diagnostic.span.source_id(),"task_id":task_id})
-}
-
-pub(crate) fn error_body(code: &str, message: impl Into<String>, help: impl Into<String>) -> Value {
-    json!({"code":code,"message":message.into(),"help":help.into()})
-}
-
-pub(crate) fn error_code(kind: fpas_vm::DebugErrorKind) -> &'static str {
-    match kind {
-        fpas_vm::DebugErrorKind::InvalidState => "invalid_state",
-        fpas_vm::DebugErrorKind::UnknownTask => "unknown_task",
-        fpas_vm::DebugErrorKind::UnknownBreakpoint => "unknown_breakpoint",
-        fpas_vm::DebugErrorKind::BreakpointLimit => "breakpoint_limit",
-        fpas_vm::DebugErrorKind::UnknownFrame => "unknown_frame",
-        fpas_vm::DebugErrorKind::FrameRestartUnsupported => "frame_restart_unsupported",
-        fpas_vm::DebugErrorKind::InstructionChangeUnsupported => "instruction_change_unsupported",
-        fpas_vm::DebugErrorKind::TaskCreateUnsupported => "task_create_unsupported",
-        fpas_vm::DebugErrorKind::TaskRestartUnsupported => "task_restart_unsupported",
-        fpas_vm::DebugErrorKind::LiveInputUnsupported => "live_input_unsupported",
-        fpas_vm::DebugErrorKind::DebuggeeInputLimit => "debuggee_input_limit",
-        fpas_vm::DebugErrorKind::DebuggeeInputClosed => "debuggee_input_closed",
-        fpas_vm::DebugErrorKind::FrameReturnUnsupported => "frame_return_unsupported",
-        fpas_vm::DebugErrorKind::FrameReturnValueRequired => "frame_return_value_required",
-        fpas_vm::DebugErrorKind::FrameReturnValueUnexpected => "frame_return_value_unexpected",
-        fpas_vm::DebugErrorKind::FrameReturnType => "frame_return_type",
-        fpas_vm::DebugErrorKind::TaskResultReplacementUnsupported => {
-            "task_result_replacement_unsupported"
-        }
-        fpas_vm::DebugErrorKind::TaskResultReplacementType => "task_result_replacement_type",
-        fpas_vm::DebugErrorKind::VariantUnknown => "variant_unknown",
-        fpas_vm::DebugErrorKind::VariantFieldSet => "variant_field_set",
-        fpas_vm::DebugErrorKind::StorageAlreadyInitialized => "storage_already_initialized",
-        fpas_vm::DebugErrorKind::UnknownVariablesReference => "unknown_variables_reference",
-        fpas_vm::DebugErrorKind::VariableTargetUnknown => "variable_target_unknown",
-        fpas_vm::DebugErrorKind::VariableTargetExpired => "variable_target_expired",
-        fpas_vm::DebugErrorKind::VariableNotMutable => "variable_not_mutable",
-        fpas_vm::DebugErrorKind::VariablePathUnsupported => "variable_path_unsupported",
-        fpas_vm::DebugErrorKind::VariableUninitialized => "variable_uninitialized",
-        fpas_vm::DebugErrorKind::VariableValueType => "variable_value_type",
-        fpas_vm::DebugErrorKind::VariableUnavailable => "variable_unavailable",
-        fpas_vm::DebugErrorKind::DictionaryKeyExists => "dictionary_key_exists",
-        fpas_vm::DebugErrorKind::DictionaryKeyMissing => "dictionary_key_missing",
-        fpas_vm::DebugErrorKind::DictionaryKeyUnchanged => "dictionary_key_unchanged",
-        fpas_vm::DebugErrorKind::SequenceIndexOutOfBounds => "sequence_index_out_of_bounds",
-        fpas_vm::DebugErrorKind::StringCharacterRequired => "string_character_required",
-        fpas_vm::DebugErrorKind::StringCharacterUnchanged => "string_character_unchanged",
-        fpas_vm::DebugErrorKind::InspectionLimit => "limit_exceeded",
-        fpas_vm::DebugErrorKind::UnknownName => "unknown_name",
-        fpas_vm::DebugErrorKind::UninitializedValue => "uninitialized_value",
-        fpas_vm::DebugErrorKind::EvaluationType => "evaluation_type",
-        fpas_vm::DebugErrorKind::EvaluationDomain => "evaluation_domain",
-        fpas_vm::DebugErrorKind::EvaluationLimit => "evaluation_limit",
-        fpas_vm::DebugErrorKind::UnavailableValue => "unavailable_value",
-        fpas_vm::DebugErrorKind::UnknownCallable => "call_target_unknown",
-        fpas_vm::DebugErrorKind::AmbiguousCallable => "call_ambiguous",
-        fpas_vm::DebugErrorKind::CallArity => "call_arity",
-        fpas_vm::DebugErrorKind::ForbiddenCallEffect => "call_effect_forbidden",
-        fpas_vm::DebugErrorKind::CallLimit => "call_limit",
-        fpas_vm::DebugErrorKind::CallTimeout => "call_timeout",
-        fpas_vm::DebugErrorKind::CallCancelled => "call_cancelled",
-        fpas_vm::DebugErrorKind::CallRuntime => "call_runtime",
-        fpas_vm::DebugErrorKind::ExecutionTimeout => "timeout",
-        fpas_vm::DebugErrorKind::InstructionLimit => "instruction_limit",
-        fpas_vm::DebugErrorKind::OutputLimit => "output_limit",
-        fpas_vm::DebugErrorKind::RecordingHostPath => "recording_host_path",
-        fpas_vm::DebugErrorKind::LiveImageIncompatible => "live_image_incompatible",
-        fpas_vm::DebugErrorKind::LiveImageBuildFailed => "live_image_build_failed",
-        fpas_vm::DebugErrorKind::LiveImageRollbackUnavailable => "live_image_rollback_unavailable",
-    }
 }

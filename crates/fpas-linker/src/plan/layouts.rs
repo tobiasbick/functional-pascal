@@ -5,10 +5,10 @@ use std::collections::BTreeMap;
 use fpas_bytecode::{EnumTypeId, EnumVariantId, RecordTypeId};
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
+use super::SymbolTable;
 use crate::LinkError;
-use crate::symbols::SymbolTable;
 
-pub(super) struct LayoutIds {
+pub(crate) struct LayoutIds {
     pub records: Vec<Vec<Option<RecordTypeId>>>,
     pub record_order: Vec<(usize, usize)>,
     pub enums: Vec<Vec<Option<EnumTypeId>>>,

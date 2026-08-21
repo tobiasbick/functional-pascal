@@ -6,15 +6,17 @@ use fpas_unit::object::{
     DefinitionTarget, ImportShape, ObjectDefinition, RelocatableObject, SymbolKind, SymbolReference,
 };
 
-use crate::{LinkError, debug_types};
+use crate::LinkError;
+
+use super::debug_types;
 
 #[derive(Debug, Clone, Copy)]
-pub(super) struct ResolvedTarget {
+pub(crate) struct ResolvedTarget {
     pub object: usize,
     pub target: DefinitionTarget,
 }
 
-pub(super) struct SymbolTable {
+pub(crate) struct SymbolTable {
     definitions: BTreeMap<String, (usize, usize)>,
     imports: Vec<Vec<ResolvedTarget>>,
 }
@@ -105,7 +107,7 @@ impl SymbolTable {
         })
     }
 
-    pub(super) fn resolve(
+    pub(crate) fn resolve(
         &self,
         object: usize,
         reference: SymbolReference,

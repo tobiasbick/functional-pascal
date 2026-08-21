@@ -3,12 +3,12 @@
 //! Spec: `docs/pascal/program-structure/projects.md`
 
 use super::exports::validate_library_exports;
-use crate::common::{qualified_id_to_string, validate_non_empty, validate_user_unit_name};
 use crate::loading::parse_cache::ParsedSourceCache;
 use crate::model::{LibraryExportPolicy, ProjectKind};
 use crate::paths::{
     resolve_explicit_file_path, resolve_source_files, same_file, validate_source_extension,
 };
+use crate::source::{qualified_id_to_string, validate_non_empty, validate_user_unit_name};
 use crate::test_manifest::{TestManifest, TestSectionRaw, parse_test_section};
 use fpas_parser::CompilationUnit;
 use serde::Deserialize;

@@ -7,15 +7,16 @@ use fpas_unit::object::{DefinitionTarget, ObjectDebugType, RelocatableObject, Sy
 
 use crate::LinkError;
 use crate::plan::LinkIds;
-use crate::symbols::{ResolvedTarget, SymbolTable};
 
-pub(super) struct DebugTypeIds {
+use super::symbols::{ResolvedTarget, SymbolTable};
+
+pub(crate) struct DebugTypeIds {
     bases: Vec<u32>,
     lengths: Vec<usize>,
 }
 
 impl DebugTypeIds {
-    pub(super) fn translate(&self, object: usize, local: u32) -> Result<DebugTypeId, LinkError> {
+    pub(crate) fn translate(&self, object: usize, local: u32) -> Result<DebugTypeId, LinkError> {
         if local as usize >= self.lengths[object] {
             return Err(LinkError::Overflow("debug type reference"));
         }

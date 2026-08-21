@@ -4,11 +4,11 @@
 //! - `docs/pascal/program-structure/units.md`
 //! - `docs/pascal/program-structure/projects.md`
 
-mod common;
 mod dependencies;
 mod loading;
 mod model;
 mod paths;
+mod source;
 mod standard_library;
 mod test_manifest;
 mod test_sources;

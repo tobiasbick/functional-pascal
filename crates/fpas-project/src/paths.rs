@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf, absolute};
 
-use crate::common::validate_non_empty;
+use crate::source::validate_non_empty;
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 

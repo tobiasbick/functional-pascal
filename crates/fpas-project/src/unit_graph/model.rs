@@ -7,8 +7,8 @@ use std::sync::Arc;
 use fpas_parser::{QualifiedId, Unit};
 use fpas_unit::Digest;
 
-use crate::common::qualified_id_to_string;
 use crate::model::{ProjectLinkMeta, SourceOrigin};
+use crate::source::qualified_id_to_string;
 
 /// One source unit and its project ownership metadata, parsed only when required.
 #[derive(Debug, Clone)]
@@ -113,7 +113,7 @@ impl UnitNode {
     /// different unit name than the graph node.
     pub fn parse_source_snapshot(&self, source: &[u8]) -> Result<Unit, String> {
         let (parsed, _) =
-            crate::common::parse_compilation_unit_source(&self.path, source, self.source_id)?;
+            crate::source::parse_compilation_unit_source(&self.path, source, self.source_id)?;
         let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
             return Err(format!(
                 "Source file `{}` no longer declares a unit.",

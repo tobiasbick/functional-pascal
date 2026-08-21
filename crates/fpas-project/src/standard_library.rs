@@ -132,7 +132,7 @@ fn validate_intrinsic_collisions(
         let fpas_parser::CompilationUnit::Unit(unit) = parsed else {
             unreachable!("standard-library source validation accepts units only")
         };
-        let name = crate::common::qualified_id_to_string(&unit.name);
+        let name = crate::source::qualified_id_to_string(&unit.name);
         if STD_UNITS_INTRINSIC
             .iter()
             .any(|intrinsic| intrinsic.eq_ignore_ascii_case(&name))

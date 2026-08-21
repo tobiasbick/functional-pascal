@@ -6,9 +6,9 @@ use fpas_unit::object::{
 };
 
 use crate::LinkError;
-use crate::constants::ConstantIds;
-use crate::plan::LinkIds;
-use crate::symbols::SymbolTable;
+use crate::plan::{LinkIds, SymbolTable};
+
+use super::constants::ConstantIds;
 
 /// Relocates one object instruction into the final executable tables.
 #[expect(

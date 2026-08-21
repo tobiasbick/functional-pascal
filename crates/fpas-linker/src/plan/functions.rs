@@ -4,9 +4,10 @@ use fpas_bytecode::FunctionId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
 use crate::LinkError;
-use crate::symbols::SymbolTable;
 
-pub(super) struct FunctionIds {
+use super::SymbolTable;
+
+pub(crate) struct FunctionIds {
     pub maps: Vec<Vec<Option<FunctionId>>>,
     pub order: Vec<(usize, usize)>,
 }

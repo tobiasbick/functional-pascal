@@ -1,14 +1,22 @@
 //! Canonical linker planning before executable materialization.
 
+mod debug_types;
+mod functions;
+mod globals;
+mod layouts;
+mod symbols;
+
 use fpas_bytecode::{DebugType, FunctionId};
 use fpas_unit::object::RelocatableObject;
 
 use crate::LinkError;
-use crate::debug_types::DebugTypeIds;
-use crate::functions::FunctionIds;
-use crate::globals::GlobalIds;
-use crate::layouts::LayoutIds;
-use crate::symbols::SymbolTable;
+
+use self::functions::FunctionIds;
+use self::globals::GlobalIds;
+use self::layouts::LayoutIds;
+
+pub(crate) use self::debug_types::DebugTypeIds;
+pub(crate) use self::symbols::SymbolTable;
 
 /// Object-local identifiers translated into canonical executable identifiers.
 pub(super) struct LinkIds {
@@ -56,12 +64,11 @@ impl<'a> LinkPlan<'a> {
             .ok_or(LinkError::MissingProgramEntry)?;
         let symbols = SymbolTable::build(&objects)?;
         let ids = LinkIds {
-            functions: crate::functions::assign(&objects, program_index, entry, &symbols)?,
-            globals: crate::globals::assign(&objects, &symbols)?,
-            layouts: crate::layouts::assign(&objects, &symbols)?,
+            functions: functions::assign(&objects, program_index, entry, &symbols)?,
+            globals: globals::assign(&objects, &symbols)?,
+            layouts: layouts::assign(&objects, &symbols)?,
         };
-        let (debug_type_ids, linked_debug_types) =
-            crate::debug_types::merge(&objects, &ids, &symbols)?;
+        let (debug_type_ids, linked_debug_types) = debug_types::merge(&objects, &ids, &symbols)?;
         let initializer_targets = initializer_targets(units, &ids)?;
         let code_layout =
             CodeLayout::build(&objects, &ids.functions.order, initializer_targets.len())?;

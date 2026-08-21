@@ -14,10 +14,10 @@ use std::path::{Path, PathBuf};
 
 use fpas_parser::{CompilationUnit, QualifiedId, Unit};
 
-use crate::common::{
+use crate::model::ProjectLinkMeta;
+use crate::source::{
     display_unit_key, qualified_id_to_string, read_compilation_unit_file, validate_user_unit_name,
 };
-use crate::model::ProjectLinkMeta;
 use crate::{StandardLibrary, is_test_source_file};
 use source_map::apply_unit_source_id;
 

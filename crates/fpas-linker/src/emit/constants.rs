@@ -6,9 +6,9 @@ use fpas_bytecode::{Constant, ConstantId, FunctionId};
 use fpas_unit::object::{DefinitionTarget, ObjectConstant, RelocatableObject, SymbolKind};
 
 use crate::LinkError;
-use crate::plan::LinkIds;
-use crate::strings::StringInterner;
-use crate::symbols::SymbolTable;
+use crate::plan::{LinkIds, SymbolTable};
+
+use super::strings::StringInterner;
 
 pub(super) struct ConstantIds {
     pub maps: Vec<Vec<ConstantId>>,

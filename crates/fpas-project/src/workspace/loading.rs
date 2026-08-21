@@ -1,8 +1,8 @@
 //! Loads `.fpasworkspace` manifests (`docs/pascal/program-structure/workspaces.md`).
 
 use crate::ProjectKind;
-use crate::common::validate_non_empty;
 use crate::paths::resolve_explicit_file_path;
+use crate::source::validate_non_empty;
 use serde::Deserialize;
 use std::fs;
 use std::path::{Path, PathBuf};

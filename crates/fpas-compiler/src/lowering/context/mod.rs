@@ -3,104 +3,28 @@
 mod bindings;
 mod blocks;
 mod debug;
+mod descriptors;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use fpas_ir::{
-    BasicBlock, BlockId, BlockTarget, FunctionId, GlobalId, Instruction, Local, LocalId, Operation,
-    TypeId, ValueDefinition, ValueId,
+    BasicBlock, BlockId, BlockTarget, FunctionId, Instruction, Local, LocalId, Operation, TypeId,
+    ValueDefinition, ValueId,
 };
 use fpas_lexer::Span;
-use fpas_sema::{AnalysisMetadata, ExprTypeMap, ScalarCaseBindingMap, Ty};
+use fpas_sema::{ExprTypeMap, ScalarCaseBindingMap, Ty};
 
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
 use super::types;
 
-#[derive(Debug, Clone)]
-struct Binding {
-    name: String,
-    storage: BindingStorage,
-    ty: TypeId,
-    depth: u32,
-    cell: bool,
-}
+use self::descriptors::{Binding, BindingStorage};
 
-#[derive(Debug, Clone, Copy)]
-enum BindingStorage {
-    Local(LocalId),
-}
-
-#[derive(Debug, Clone)]
-pub(super) struct Callable {
-    pub function: FunctionId,
-    pub parameters: Vec<TypeId>,
-    pub result: TypeId,
-    pub value_type: TypeId,
-    pub captures: Vec<CaptureInput>,
-}
-
-#[derive(Debug, Clone)]
-/// One lexical capture and the source declaration that selected it.
-pub(super) struct CaptureInput {
-    /// Source-level binding name.
-    pub name: String,
-    /// Value type exposed to the nested routine.
-    pub ty: TypeId,
-    /// Storage type used by the closure environment.
-    pub storage_ty: TypeId,
-    /// Capture representation used by the runtime.
-    pub kind: fpas_ir::CaptureKind,
-    /// Exact source declaration when the capture originates in user code.
-    pub declaration: Option<fpas_ir::SourceSpan>,
-}
-
-#[derive(Debug, Clone)]
-/// One lowered parameter and its optional source declaration identity.
-pub(super) struct ParameterInput {
-    /// Source-level parameter name.
-    pub name: String,
-    /// Lowered parameter type.
-    pub ty: TypeId,
-    /// Exact source declaration when the parameter originates in user code.
-    pub declaration: Option<fpas_ir::SourceSpan>,
-}
-
-#[derive(Debug, Clone)]
-pub(super) struct ClosureTarget {
-    pub function: FunctionId,
-    pub value_type: TypeId,
-    pub captures: Vec<CaptureInput>,
-}
-
-#[derive(Debug, Clone)]
-pub(super) struct BoundMethodTarget {
-    pub function: FunctionId,
-    pub value_type: TypeId,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub(super) struct LoopTargets {
-    pub break_block: BlockId,
-    pub continue_block: BlockId,
-}
-
-pub(super) struct FunctionInput<'a> {
-    pub name: &'a str,
-    pub id: FunctionId,
-    pub result: TypeId,
-    pub parameters: &'a [ParameterInput],
-    pub captures: &'a [CaptureInput],
-    pub globals: BTreeMap<String, GlobalBinding>,
-    pub constants: BTreeMap<String, fpas_ir::Constant>,
-    pub metadata: &'a AnalysisMetadata,
-    pub callables: BTreeMap<String, Callable>,
-    pub closure_targets: HashMap<usize, ClosureTarget>,
-    pub bound_method_targets: HashMap<usize, BoundMethodTarget>,
-    pub cell_names: BTreeSet<String>,
-    pub type_table: types::TypeTable,
-}
+pub(crate) use self::descriptors::{
+    BoundMethodTarget, Callable, CaptureInput, ClosureTarget, FunctionInput, GlobalBinding,
+    LoopTargets, ParameterInput,
+};
 
 pub(super) struct LoweringContext {
     program_name: String,
@@ -138,12 +62,6 @@ pub(super) struct LoweringContext {
     next_value: u32,
     max_call_arguments: u32,
     pub(super) can_spawn_tasks: bool,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub(super) struct GlobalBinding {
-    pub id: GlobalId,
-    pub ty: TypeId,
 }
 
 impl LoweringContext {

@@ -1,4 +1,4 @@
-//! Bounded input primitive shared by debugger transports.
+//! Bounded debugger transport I/O.
 
 use std::io::{self, BufRead};
 

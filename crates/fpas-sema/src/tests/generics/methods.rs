@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/language/types/generics.md` (Generic record methods)
 
-use super::{check_errors, check_ok};
+use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::{SEMA_CONSTRAINT_VIOLATION, SEMA_TYPE_MISMATCH};
 
 // ---------------------------------------------------------------------------

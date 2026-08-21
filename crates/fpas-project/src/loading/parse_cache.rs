@@ -3,8 +3,8 @@
 //! Avoids lexing and parsing the same `.fpas` file multiple times during manifest
 //! validation (`[exports]`, unit checks, main validation, merged source validation).
 
-use crate::common::parse_compilation_unit_file;
 use crate::paths::canonical_source_path;
+use crate::source::parse_compilation_unit_file;
 use fpas_parser::CompilationUnit;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};

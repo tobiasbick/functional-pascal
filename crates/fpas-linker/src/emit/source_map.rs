@@ -10,8 +10,9 @@ use fpas_bytecode::{
 use fpas_unit::object::{ObjectDebugBindingKind, ObjectDebugLocation, RelocatableObject};
 
 use crate::LinkError;
-use crate::debug_types::DebugTypeIds;
-use crate::strings::StringInterner;
+use crate::plan::DebugTypeIds;
+
+use super::strings::StringInterner;
 
 pub(super) fn merge(
     objects: &[&RelocatableObject],

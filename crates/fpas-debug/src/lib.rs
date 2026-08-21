@@ -8,6 +8,6 @@ mod engine;
 mod evaluation;
 mod target;
 mod target_reload;
-mod transport_input;
+mod transport;
 
 pub use target::{DebugSourceContent, PreparedDebugTarget, ReloadedDebugTarget};

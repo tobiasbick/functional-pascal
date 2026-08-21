@@ -7,7 +7,7 @@ use std::time::Duration;
 use serde_json::Value;
 
 use super::{JsonlServer, ServerStatus};
-use crate::transport_input::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
+use crate::transport::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
 
 /// Serve JSONL requests until input closes or the debugger terminates.
 ///

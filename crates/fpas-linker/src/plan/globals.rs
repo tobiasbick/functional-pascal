@@ -4,9 +4,10 @@ use fpas_bytecode::GlobalId;
 use fpas_unit::object::{DefinitionTarget, RelocatableObject};
 
 use crate::LinkError;
-use crate::symbols::SymbolTable;
 
-pub(super) struct GlobalIds {
+use super::SymbolTable;
+
+pub(crate) struct GlobalIds {
     pub maps: Vec<Vec<Option<GlobalId>>>,
     pub order: Vec<(usize, usize)>,
 }

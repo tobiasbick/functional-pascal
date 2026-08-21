@@ -2,8 +2,8 @@
 //!
 //! Documentation: `docs/pascal/program-structure/projects.md`
 
-use crate::common::{display_unit_key, qualified_id_to_string, validate_non_empty_entry};
 use crate::loading::parse_cache::ParsedSourceCache;
+use crate::source::{display_unit_key, qualified_id_to_string, validate_non_empty_entry};
 use fpas_parser::CompilationUnit;
 use std::collections::HashSet;
 use std::path::PathBuf;

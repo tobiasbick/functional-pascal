@@ -1,3 +1,5 @@
+//! Source reading, unit-name display, and manifest string validation.
+
 use fpas_diagnostics::Diagnostic;
 use fpas_lexer::lex_with_source_id;
 use fpas_parser::{CompilationUnit, QualifiedId, parse_tokens_compilation_unit};

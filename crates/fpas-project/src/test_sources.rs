@@ -6,8 +6,8 @@ use std::path::Path;
 
 use fpas_parser::CompilationUnit;
 
-use crate::common::{qualified_id_to_string, validate_user_unit_name};
 use crate::loading::parse_cache::ParsedSourceCache;
+use crate::source::{qualified_id_to_string, validate_user_unit_name};
 use std::collections::HashMap;
 use std::path::PathBuf;
 

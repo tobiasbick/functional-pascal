@@ -7,7 +7,7 @@ use std::time::Duration;
 use serde_json::Value;
 
 use super::DapServer;
-use crate::transport_input::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
+use crate::transport::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
 
 const MAX_HEADER_LINE_BYTES: usize = 8 * 1024;
 const MAX_HEADER_BYTES: usize = 64 * 1024;

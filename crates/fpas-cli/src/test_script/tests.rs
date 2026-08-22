@@ -37,7 +37,7 @@ type = "teleport"
 "#,
         Path::new("bad.script.toml"),
     )
-    .unwrap_err();
+    .expect_err("unknown event types must be rejected");
     assert!(err.contains("Unknown event type `teleport`"));
 }
 
@@ -51,7 +51,7 @@ kind = "Escape"
 "#,
         Path::new("bad.script.toml"),
     )
-    .unwrap_err();
+    .expect_err("removed console event script types must be rejected");
     assert!(err.contains("Unknown event type `console_key`"));
 }
 
@@ -76,82 +76,8 @@ line = "Alice"
         Path::new("readln.script.toml"),
     )
     .expect("parse");
-    apply_script_to_vm(&mut vm, &script).expect("apply");
+    apply_script_to_vm(&mut vm, &script);
     vm.run().expect("run");
-}
-
-#[test]
-fn graph_event_without_headless_flag_is_rejected_on_apply() {
-    let script = parse_script_text(
-        r#"
-[[event]]
-type = "graph_key"
-kind = "Escape"
-"#,
-        Path::new("graph.script.toml"),
-    )
-    .expect("parse");
-    let source = "program T; begin end.";
-    let (program, _) = parse(source);
-    let executable = compile(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(executable);
-    let err = apply_script_to_vm(&mut vm, &script).unwrap_err();
-    assert!(err.contains("headless_graph"));
-}
-
-#[test]
-fn apply_graph_escape_script_runs_headless_graph_test_program() {
-    let source = "\
-program T;
-uses Std.Console, Std.Graph, Std.Test;
-
-mutable var QuitSeen: boolean := false;
-
-procedure OnPaint(App: Application);
-begin
-  Application.Clear(App, $00102030);
-  Application.Present(App)
-end;
-
-function OnKeyPressed(App: Application; Key: KeyEvent): boolean;
-begin
-  if Key.kind = KeyKind.Escape then
-  begin
-    QuitSeen := true;
-    Application.HostRequestQuit(App);
-    return true
-  end;
-  return false
-end;
-
-begin
-  var App: Application := Application.Open(32, 24, 'Graph smoke');
-  var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
-    OnKeyPressed := Some(OnKeyPressed);
-  end;
-  Application.Configure(App, Handlers);
-  Application.Run(App);
-  AssertTrue(QuitSeen)
-end.";
-    let (program, _) = parse(source);
-    let executable = compile(&program).expect("compile");
-    let mut vm = fpas_vm::Vm::new(executable);
-
-    let script = parse_script_text(
-        r#"
-[config]
-headless_graph = true
-
-[[event]]
-type = "graph_key"
-kind = "Escape"
-"#,
-        Path::new("graph_smoke.script.toml"),
-    )
-    .expect("parse");
-    apply_script_to_vm(&mut vm, &script).expect("apply");
-    fpas_std::with_headless_graph_backend_for_tests(|| vm.run()).expect("run");
 }
 
 #[test]
@@ -185,7 +111,7 @@ line = "third"
         Path::new("order.script.toml"),
     )
     .expect("parse");
-    apply_script_to_vm(&mut vm, &script).expect("apply");
+    apply_script_to_vm(&mut vm, &script);
     vm.run().expect("run");
 }
 

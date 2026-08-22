@@ -1,3 +1,5 @@
+//! Integration tests for resolving navigation targets.
+
 #![allow(
     clippy::expect_used,
     reason = "navigation fixtures use explicit source offsets"

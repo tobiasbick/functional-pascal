@@ -3,6 +3,27 @@
 //! **Documentation:** `docs/pascal/std/README.md` (from the repository root); each `Std.*` unit page maps API names to these variants.
 //! **Maintenance:** When adding or renumbering variants, update that documentation and the affected implementation crates.
 
+macro_rules! documented_intrinsic_enum {
+    (
+        $(#[$enum_meta:meta])*
+        pub enum $name:ident {
+            $(
+                $(#[$variant_meta:meta])*
+                $variant:ident = $value:literal,
+            )*
+        }
+    ) => {
+        $(#[$enum_meta])*
+        pub enum $name {
+            $(
+                $(#[$variant_meta])*
+                #[doc = concat!("Intrinsic selector `", stringify!($variant), "`.")]
+                $variant = $value,
+            )*
+        }
+    };
+}
+
 pub mod args;
 pub mod array;
 pub mod console;
@@ -10,7 +31,6 @@ pub mod conv;
 pub mod dict;
 pub mod env;
 pub mod fs;
-pub mod graph;
 pub mod json;
 pub mod math;
 pub mod option;
@@ -32,7 +52,6 @@ pub use conv::ConvIntrinsic;
 pub use dict::DictIntrinsic;
 pub use env::EnvIntrinsic;
 pub use fs::FsIntrinsic;
-pub use graph::GraphIntrinsic;
 pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
 pub use option::OptionIntrinsic;
@@ -52,26 +71,45 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Process-argument operation.
     Args(ArgsIntrinsic),
+    /// Console operation.
     Console(ConsoleIntrinsic),
+    /// String operation.
     Str(StrIntrinsic),
+    /// Scalar conversion operation.
     Conv(ConvIntrinsic),
+    /// Fallible text-parsing operation.
     Parse(ParseIntrinsic),
+    /// Mathematical operation.
     Math(MathIntrinsic),
+    /// Pseudorandom-number operation.
     Random(RandomIntrinsic),
+    /// Array operation.
     Array(ArrayIntrinsic),
+    /// Dictionary operation.
     Dict(DictIntrinsic),
+    /// Environment-variable operation.
     Env(EnvIntrinsic),
+    /// Host-path operation.
     Path(PathIntrinsic),
+    /// Host-process operation.
     Proc(ProcIntrinsic),
+    /// Filesystem operation.
     Fs(FsIntrinsic),
-    Graph(GraphIntrinsic),
+    /// JSON operation.
     Json(JsonIntrinsic),
+    /// Result operation.
     Result(ResultIntrinsic),
+    /// Option operation.
     Option(OptionIntrinsic),
+    /// Task operation.
     Task(TaskIntrinsic),
+    /// Time operation.
     Time(TimeIntrinsic),
+    /// TOML operation.
     Toml(TomlIntrinsic),
+    /// Test-support operation.
     Test(TestIntrinsic),
 }
 
@@ -91,11 +129,6 @@ impl Intrinsic {
     pub fn debugger_name(self) -> String {
         match self {
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
-            Self::Graph(operation) => {
-                let member = format!("{operation:?}");
-                let member = member.strip_prefix("Application").unwrap_or(&member);
-                format!("Std.Graph.Application.{member}")
-            }
             Self::Test(
                 TestIntrinsic::AssertEqualsInteger
                 | TestIntrinsic::AssertEqualsBoolean
@@ -149,7 +182,6 @@ intrinsic_wire_ops!(
     Path(PathIntrinsic),
     Proc(ProcIntrinsic),
     Fs(FsIntrinsic),
-    Graph(GraphIntrinsic),
     Json(JsonIntrinsic),
     Result(ResultIntrinsic),
     Option(OptionIntrinsic),

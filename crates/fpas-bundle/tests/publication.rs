@@ -1,4 +1,6 @@
-#![expect(
+//! Integration tests for publishing executable application bundles.
+
+#![allow(
     clippy::expect_used,
     reason = "application publication fixtures use direct filesystem assertions"
 )]

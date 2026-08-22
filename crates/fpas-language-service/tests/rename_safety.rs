@@ -1,3 +1,5 @@
+//! Integration tests for rename validation and edit safety.
+
 #![allow(
     clippy::expect_used,
     reason = "rename fixtures use explicit source offsets"

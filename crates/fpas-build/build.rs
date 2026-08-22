@@ -1,3 +1,5 @@
+//! Emits the compiler identity consumed by incremental build artifacts.
+
 #[path = "build/compiler_identity.rs"]
 mod compiler_identity;
 

@@ -6,7 +6,6 @@ mod entry;
 mod expr;
 mod name_resolution;
 mod record_visibility;
-pub(crate) mod spans;
 mod stmt;
 
 pub use closures::CaptureBinding;

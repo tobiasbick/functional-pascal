@@ -17,7 +17,7 @@ impl DebugEffectSet {
     pub const EMPTY: Self = Self(0);
     /// Mutation of globals, cells, or aggregates inside the detached sandbox.
     pub const SANDBOX_WRITE: Self = Self(1 << 0);
-    /// Console, file-system, process, graphics, or other externally observable host access.
+    /// Console, file-system, process, or other externally observable host access.
     pub const HOST_IO: Self = Self(1 << 1);
     /// Time, randomness, arguments, environment, or another nondeterministic observation.
     pub const NONDETERMINISTIC: Self = Self(1 << 2);
@@ -166,9 +166,7 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
         Intrinsic::Args(_) => DebugEffectSet::NONDETERMINISTIC,
         Intrinsic::Random(_) => DebugEffectSet::NONDETERMINISTIC,
         Intrinsic::Env(_) => DebugEffectSet::HOST_IO.union(DebugEffectSet::NONDETERMINISTIC),
-        Intrinsic::Fs(_) | Intrinsic::Graph(_) | Intrinsic::Console(_) | Intrinsic::Test(_) => {
-            DebugEffectSet::HOST_IO
-        }
+        Intrinsic::Fs(_) | Intrinsic::Console(_) | Intrinsic::Test(_) => DebugEffectSet::HOST_IO,
         Intrinsic::Proc(_) => DebugEffectSet::HOST_IO
             .union(DebugEffectSet::BLOCKING)
             .union(DebugEffectSet::NONDETERMINISTIC),

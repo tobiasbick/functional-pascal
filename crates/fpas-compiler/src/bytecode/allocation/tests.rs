@@ -123,18 +123,13 @@ fn non_overlapping_temporaries_reuse_registers() {
         max_call_arguments: 0,
         can_spawn_tasks: false,
     };
-    let allocation = match Allocation::build(&function) {
-        Ok(allocation) => allocation,
-        Err(_) => panic!("allocate reused temporaries"),
-    };
-    let first_register = match allocation.value(first.id) {
-        Ok(register) => register,
-        Err(_) => panic!("missing first temporary"),
-    };
-    let second_register = match allocation.value(second.id) {
-        Ok(register) => register,
-        Err(_) => panic!("missing second temporary"),
-    };
+    let allocation = Allocation::build(&function).expect("allocate reused temporaries");
+    let first_register = allocation
+        .value(first.id)
+        .expect("first temporary must have a register");
+    let second_register = allocation
+        .value(second.id)
+        .expect("second temporary must have a register");
     assert_eq!(
         first_register, second_register,
         "an interior jump cannot assume a temporary still has its earlier type"

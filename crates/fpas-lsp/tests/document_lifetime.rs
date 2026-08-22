@@ -1,3 +1,5 @@
+//! Protocol tests for opening, updating, and closing LSP documents.
+
 #![allow(
     clippy::expect_used,
     reason = "protocol fixtures use explicit assertions for hard-coded LSP transcripts"

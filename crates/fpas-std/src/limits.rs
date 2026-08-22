@@ -15,9 +15,6 @@ pub(crate) const MAX_READ_TEXT_BYTES: u64 = 64 * 1024 * 1024;
 /// Maximum number of matching files returned by one `Std.Fs.Glob` call.
 pub(crate) const MAX_GLOB_MATCHES: usize = 1_000_000;
 
-/// Maximum `Width * Height` pixels for one `Std.Graph` surface / backbuffer.
-pub(crate) const MAX_GRAPH_PIXELS: usize = 64 * 1024 * 1024;
-
 /// Maximum nesting depth accepted by `Std.Json.Parse` and `Std.Json.Stringify`.
 pub(crate) const MAX_JSON_DEPTH: usize = 256;
 

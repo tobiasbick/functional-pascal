@@ -327,7 +327,7 @@ mod tests {
             &mut stack,
             test_location(),
         )
-        .unwrap_err();
+        .expect_err("Abs must reject integer overflow");
 
         assert!(error.message.contains("Abs overflow"), "{}", error.message);
     }
@@ -341,7 +341,7 @@ mod tests {
             &mut stack,
             test_location(),
         )
-        .unwrap_err();
+        .expect_err("Floor must reject a non-finite result");
 
         assert!(error.message.contains("Floor result"), "{}", error.message);
     }
@@ -355,7 +355,7 @@ mod tests {
             &mut stack,
             test_location(),
         )
-        .unwrap_err();
+        .expect_err("Trunc must reject an out-of-range result");
 
         assert!(error.message.contains("Trunc result"), "{}", error.message);
     }

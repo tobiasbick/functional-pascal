@@ -52,7 +52,6 @@ intrinsic API or handbook change with
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
 | Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
 | Terminal UI | [tui/](tui/README.md) | MVU element trees, deterministic headless routing and snapshots |
-| Graphics | [graph/](graph/README.md) | Window, drawing, hosted dispatch |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 | Version | [version.md](version.md) | Compiler and library version constants |
 

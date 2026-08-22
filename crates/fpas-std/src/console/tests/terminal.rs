@@ -4,13 +4,17 @@ use super::*;
 fn console_sound_rejects_non_positive_frequencies() {
     let mut c = Console::new();
 
-    let zero = c.sound(0, test_location()).unwrap_err();
+    let zero = c
+        .sound(0, test_location())
+        .expect_err("Sound must reject zero hertz");
     assert_eq!(
         zero.message,
         "Sound expects a positive frequency in Hz, got 0"
     );
 
-    let negative = c.sound(-5, test_location()).unwrap_err();
+    let negative = c
+        .sound(-5, test_location())
+        .expect_err("Sound must reject negative frequencies");
     assert_eq!(
         negative.message,
         "Sound expects a positive frequency in Hz, got -5"

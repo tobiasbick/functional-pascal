@@ -177,7 +177,9 @@ fn console_cursor_big_forces_visible_block_cursor() {
 #[test]
 fn console_text_mode_rejects_negative_values() {
     let mut c = Console::new();
-    let error = c.text_mode(-1, test_location()).unwrap_err();
+    let error = c
+        .text_mode(-1, test_location())
+        .expect_err("TextMode must reject a negative mode");
     assert_eq!(
         error.message,
         "TextMode expects a non-negative mode value, got -1"

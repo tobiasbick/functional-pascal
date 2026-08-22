@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use fpas_bytecode::{
-    CodeRange, Constant, Executable, FunctionFlags, FunctionId, FunctionInfo, GraphIntrinsic,
-    Instruction, InstructionAddress, Intrinsic, Opcode, RecordLayout, ReturnConvention, SourceId,
-    SourceLocation, SourceMap, SourceRun, StringId, StringTable, Value,
+    CodeRange, Constant, Executable, FunctionFlags, FunctionId, FunctionInfo, Instruction,
+    InstructionAddress, Opcode, ReturnConvention, SourceId, SourceMap, SourceRun, StringId,
+    StringTable, Value,
 };
 use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
 
-use crate::vm::{CallbackSession, hosted::HostedOutcome, worker::Worker};
+use crate::vm::{CallbackSession, worker::Worker};
 
 use super::calls::{FunctionSpec, abc, image};
 
@@ -60,15 +60,9 @@ fn callback_image() -> fpas_bytecode::VerifiedExecutable {
             "fail".into(),
             "boom".into(),
             "callbacks.fpas".into(),
-            "Std.Graph.Application".into(),
         ]),
         globals: Vec::new(),
-        records: vec![RecordLayout {
-            name: StringId::new(5),
-            fields: Vec::new(),
-            properties: Vec::new(),
-            methods: Vec::new(),
-        }],
+        records: Vec::new(),
         enums: Vec::new(),
         enum_variants: Vec::new(),
         debug_types: vec![fpas_bytecode::DebugType::Dynamic],
@@ -232,67 +226,4 @@ fn hosted_callback_worker_keeps_the_owner_task_when_reused() {
             .expect("reused same-task callback"),
         Value::Unit
     );
-}
-
-#[test]
-fn graph_run_callback_failure_closes_and_releases_the_session() {
-    let worker = Worker::new(Arc::new(callback_image())).expect("worker");
-    let location = SourceLocation::new(1, 1);
-    let opened = worker
-        .execute_hosted_intrinsic(
-            Intrinsic::Graph(GraphIntrinsic::OpenForTest),
-            &[Value::Integer(8), Value::Integer(6)],
-            location,
-        )
-        .expect("open graph");
-    let HostedOutcome::Complete(Some(application)) = opened else {
-        panic!("OpenForTest must return an application")
-    };
-    worker
-        .hosted
-        .graph
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .on_paint = Some(Value::function(
-        FunctionId::new(2),
-        "fail".to_string(),
-        Vec::new(),
-    ));
-
-    let error = match worker.execute_hosted_intrinsic(
-        Intrinsic::Graph(GraphIntrinsic::ApplicationRun),
-        std::slice::from_ref(&application),
-        location,
-    ) {
-        Ok(_) => panic!("OnPaint callback arity must fail"),
-        Err(error) => error,
-    };
-    assert!(error.message.contains("argument"), "{error:?}");
-    let graph = worker
-        .hosted
-        .graph
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    assert!(!graph.run_active);
-    assert!(!graph.session.is_open());
-    assert!(!graph.headless_test_open);
-    drop(graph);
-
-    let reopened = worker
-        .execute_hosted_intrinsic(
-            Intrinsic::Graph(GraphIntrinsic::OpenForTest),
-            &[Value::Integer(8), Value::Integer(6)],
-            location,
-        )
-        .expect("second graph acquire must succeed");
-    let HostedOutcome::Complete(Some(reopened_application)) = reopened else {
-        panic!("second OpenForTest must return an application")
-    };
-    worker
-        .execute_hosted_intrinsic(
-            Intrinsic::Graph(GraphIntrinsic::ApplicationClose),
-            &[reopened_application],
-            location,
-        )
-        .expect("close reopened graph");
 }

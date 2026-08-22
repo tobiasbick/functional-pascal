@@ -33,6 +33,7 @@ use std::io::Write;
 /// Captured output from program execution (for testing).
 #[derive(Debug, Clone, Default)]
 pub struct CapturedOutput {
+    /// Complete logical lines emitted by the program.
     pub lines: Vec<String>,
 }
 
@@ -61,6 +62,7 @@ impl Default for Console {
 }
 
 impl Console {
+    /// Creates a headless console that captures output without streaming it.
     pub fn new() -> Self {
         Self {
             captured: CapturedOutput::default(),
@@ -74,6 +76,7 @@ impl Console {
         }
     }
 
+    /// Creates a console that captures output and also streams it to `writer`.
     pub fn with_writer(writer: Box<dyn Write + Send>) -> Self {
         let (width, height) =
             crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT));

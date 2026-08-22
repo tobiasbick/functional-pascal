@@ -1,4 +1,6 @@
-#![expect(
+//! End-to-end serialization round trips for executable FPAS programs.
+
+#![allow(
     clippy::expect_used,
     reason = "program execution round trips use direct fixture assertions"
 )]

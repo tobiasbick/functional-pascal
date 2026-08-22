@@ -39,7 +39,7 @@ projects = ["../my-lib/my-lib.fpasprj"]
   Requires `main` pointing to a file with a `program` declaration. The entry
   point is exactly one main program file per project.
 - **`library`** — reusable code as `unit` files. Other projects consume libraries via `[dependencies].projects`. Run library code through a `program` project that depends on it (`fpas check` type-checks a library manifest directly).
-- **`test`** — a test bundle for `fpas test`. Lists `unit` helpers and `*_test.fpas` program entry files in `[sources]`. Optional `[test.overrides."<file>_test.fpas"]` tables set per-test `script` and `headless_graph` for the runner. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
+- **`test`** — a test bundle for `fpas test`. Lists `unit` helpers and `*_test.fpas` program entry files in `[sources]`. Optional `[test.overrides."<file>_test.fpas"]` tables select a per-test `script` for the runner. In a workspace, `fpas test` with no path runs tests from all `kind = "test"` members only.
 
 Library dependencies remain manifest- and source-based: projects identify libraries by
 `.fpasprj` path or workspace member name. Their units are compiled independently into

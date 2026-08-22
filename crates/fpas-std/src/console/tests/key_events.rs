@@ -251,7 +251,9 @@ fn debugger_key_input_never_polls_the_terminal() {
     let mut input = KeyInput::without_os_events();
     assert!(!input.event_pending(test_location()).unwrap());
     assert!(input.poll_event(test_location()).unwrap().is_none());
-    let error = input.read_event(test_location()).unwrap_err();
+    let error = input
+        .read_event(test_location())
+        .expect_err("debugger input must not poll an empty process terminal");
     assert!(error.message.contains("no input available"));
     input.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
         key_kind_index("Escape"),

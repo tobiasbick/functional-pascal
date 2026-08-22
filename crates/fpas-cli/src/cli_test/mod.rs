@@ -4,7 +4,6 @@
 //! [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
 
 mod discover;
-mod expect_pixels;
 mod expect_stdout;
 mod hooks;
 mod image;

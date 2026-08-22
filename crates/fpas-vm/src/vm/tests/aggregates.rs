@@ -53,10 +53,10 @@ fn array_index_updates_reject_out_of_bounds_indexes() {
     worker.dispatch_one().expect("array element");
     worker.dispatch_one().expect("invalid index");
     worker.dispatch_one().expect("array construction");
-    let error = match worker.dispatch_one() {
-        Err(error) => error,
-        Ok(_) => panic!("out-of-bounds array update must fail"),
-    };
+    let error = worker
+        .dispatch_one()
+        .err()
+        .expect("out-of-bounds array update must fail");
     assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     assert_eq!(
         worker.registers[2],

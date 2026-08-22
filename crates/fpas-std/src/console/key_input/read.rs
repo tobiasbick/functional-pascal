@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 const MAX_READY_EVENTS_PER_READ: usize = 256;
 
 impl KeyInput {
+    /// Returns whether a key can be read without waiting.
     pub fn key_pressed(&mut self, location: SourceLocation) -> Result<bool, StdError> {
         if !self.pending.is_empty()
             || !self.test_queue.is_empty()
@@ -48,6 +49,7 @@ impl KeyInput {
         }
     }
 
+    /// Reads the next CRT-style key character, waiting when necessary.
     pub fn read_key(&mut self, location: SourceLocation) -> Result<char, StdError> {
         if let Some(c) = self.pending.pop_front() {
             return Ok(c);
@@ -87,6 +89,7 @@ impl KeyInput {
         Ok(map_crossterm_key(&key))
     }
 
+    /// Returns whether a unified console event can be read without waiting.
     pub fn event_pending(&mut self, location: SourceLocation) -> Result<bool, StdError> {
         if !self.console_event_queue.is_empty() || !self.live_console_queue.is_empty() {
             return Ok(true);
@@ -120,6 +123,7 @@ impl KeyInput {
         }
     }
 
+    /// Reads the next unified console event, waiting when necessary.
     pub fn read_event(
         &mut self,
         location: SourceLocation,

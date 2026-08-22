@@ -1,3 +1,5 @@
+//! Protocol tests for LSP IntelliSense requests and responses.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

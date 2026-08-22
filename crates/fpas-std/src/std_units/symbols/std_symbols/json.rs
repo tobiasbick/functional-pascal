@@ -1,14 +1,14 @@
 //! `Std.Json` symbol names and registry group.
 
-pub const STD_JSON_VALUE: &str = std_json!("JsonValue");
-pub const STD_JSON_VALUE_NULL: &str = std_json!("JsonValue.Null");
-pub const STD_JSON_VALUE_BOOL: &str = std_json!("JsonValue.Bool");
-pub const STD_JSON_VALUE_NUMBER: &str = std_json!("JsonValue.Number");
-pub const STD_JSON_VALUE_STRING: &str = std_json!("JsonValue.String");
-pub const STD_JSON_VALUE_ARRAY: &str = std_json!("JsonValue.Array");
-pub const STD_JSON_VALUE_OBJECT: &str = std_json!("JsonValue.Object");
-pub const STD_JSON_PARSE: &str = std_json!("Parse");
-pub const STD_JSON_STRINGIFY: &str = std_json!("Stringify");
+std_symbol!(STD_JSON_VALUE = std_json!("JsonValue"));
+std_symbol!(STD_JSON_VALUE_NULL = std_json!("JsonValue.Null"));
+std_symbol!(STD_JSON_VALUE_BOOL = std_json!("JsonValue.Bool"));
+std_symbol!(STD_JSON_VALUE_NUMBER = std_json!("JsonValue.Number"));
+std_symbol!(STD_JSON_VALUE_STRING = std_json!("JsonValue.String"));
+std_symbol!(STD_JSON_VALUE_ARRAY = std_json!("JsonValue.Array"));
+std_symbol!(STD_JSON_VALUE_OBJECT = std_json!("JsonValue.Object"));
+std_symbol!(STD_JSON_PARSE = std_json!("Parse"));
+std_symbol!(STD_JSON_STRINGIFY = std_json!("Stringify"));
 
 pub(in crate::std_units) const STD_JSON_SYMBOLS: &[&str] = &[
     STD_JSON_VALUE,

@@ -53,7 +53,7 @@ pub(crate) use diagnostics::runtime_error;
 /// Captured console output produced by the virtual machine.
 pub type VmOutput = fpas_std::CapturedOutput;
 
-pub(crate) use shared::{GraphState, TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers};
+pub(crate) use shared::{TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers};
 
 const TIMESLICE: u32 = 256;
 
@@ -199,22 +199,6 @@ impl Vm {
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .push_console_event(event);
-    }
-
-    /// Queue one hosted graph event, retaining it until a session opens when necessary.
-    pub fn push_graph_event(&mut self, event: fpas_std::GraphEvent) {
-        let mut graph = self
-            .hosted
-            .graph
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        if graph
-            .session
-            .push_event(event.clone(), fpas_bytecode::SourceLocation::new(1, 1))
-            .is_err()
-        {
-            graph.pending_test_events.push(event);
-        }
     }
 
     /// Return the currently captured console output.

@@ -4,6 +4,7 @@
 
 use crate::key_event::{ConsoleKeyEvent, key_kind_index};
 
+/// Ordered names whose indices encode `Std.Console.EventKind` values.
 pub const EVENT_KIND_VARIANTS: &[&str] = &[
     "Key",
     "Mouse",
@@ -13,6 +14,7 @@ pub const EVENT_KIND_VARIANTS: &[&str] = &[
     "FocusLost",
 ];
 
+/// Ordered names whose indices encode `Std.Console.MouseAction` values.
 pub const MOUSE_ACTION_VARIANTS: &[&str] = &[
     "Unknown",
     "Down",
@@ -25,39 +27,58 @@ pub const MOUSE_ACTION_VARIANTS: &[&str] = &[
     "ScrollRight",
 ];
 
+/// Ordered names whose indices encode `Std.Console.MouseButton` values.
 pub const MOUSE_BUTTON_VARIANTS: &[&str] = &["None", "Left", "Right", "Middle"];
 
+/// Returns the event-kind discriminant for `name`.
 pub fn event_kind_index(name: &str) -> usize {
     // EventKind has no Unknown variant; fall back to FocusLost (last) rather than Key (first).
     crate::variant_index(EVENT_KIND_VARIANTS, name).unwrap_or(EVENT_KIND_VARIANTS.len() - 1)
 }
 
+/// Returns the mouse-action discriminant for `name`, or `Unknown`.
 pub fn mouse_action_index(name: &str) -> usize {
     crate::variant_index(MOUSE_ACTION_VARIANTS, name).unwrap_or(0)
 }
 
+/// Returns the mouse-button discriminant for `name`, or `None`.
 pub fn mouse_button_index(name: &str) -> usize {
     crate::variant_index(MOUSE_BUTTON_VARIANTS, name).unwrap_or(0)
 }
 
+/// Unified key, mouse, resize, paste, or focus event exposed by `Std.Console`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ConsoleEvent {
+    /// Index into [`EVENT_KIND_VARIANTS`].
     pub kind: usize,
+    /// Key data when [`Self::kind`] denotes a key event.
     pub key: ConsoleKeyEvent,
+    /// Index into [`MOUSE_ACTION_VARIANTS`] for mouse events.
     pub mouse_action: usize,
+    /// Index into [`MOUSE_BUTTON_VARIANTS`] for mouse events.
     pub mouse_button: usize,
+    /// One-based mouse column for mouse events.
     pub mouse_x: i64,
+    /// One-based mouse row for mouse events.
     pub mouse_y: i64,
+    /// Terminal width for resize events.
     pub width: i64,
+    /// Terminal height for resize events.
     pub height: i64,
+    /// Pasted text for paste events.
     pub text: String,
+    /// Whether the Shift modifier was active.
     pub shift: bool,
+    /// Whether the Control modifier was active.
     pub ctrl: bool,
+    /// Whether the Alt modifier was active.
     pub alt: bool,
+    /// Whether the platform Meta modifier was active.
     pub meta: bool,
 }
 
 impl ConsoleEvent {
+    /// Creates a unified key event.
     pub fn key(key: ConsoleKeyEvent) -> Self {
         Self {
             kind: event_kind_index("Key"),
@@ -82,6 +103,7 @@ impl ConsoleEvent {
         clippy::too_many_arguments,
         reason = "8 args represent discrete mouse-event fields; grouping into a Modifiers struct is a future refactor"
     )]
+    /// Creates a unified mouse event.
     pub fn mouse(
         action: usize,
         button: usize,
@@ -109,6 +131,7 @@ impl ConsoleEvent {
         }
     }
 
+    /// Creates a terminal-resize event.
     pub fn resize(width: i64, height: i64) -> Self {
         Self {
             kind: event_kind_index("Resize"),
@@ -127,6 +150,7 @@ impl ConsoleEvent {
         }
     }
 
+    /// Creates a bracketed-paste event.
     pub fn paste(text: String) -> Self {
         Self {
             kind: event_kind_index("Paste"),
@@ -145,6 +169,7 @@ impl ConsoleEvent {
         }
     }
 
+    /// Creates a terminal-focus-gained event.
     pub fn focus_gained() -> Self {
         Self {
             kind: event_kind_index("FocusGained"),
@@ -163,6 +188,7 @@ impl ConsoleEvent {
         }
     }
 
+    /// Creates a terminal-focus-lost event.
     pub fn focus_lost() -> Self {
         Self {
             kind: event_kind_index("FocusLost"),

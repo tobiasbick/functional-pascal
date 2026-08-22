@@ -1,10 +1,10 @@
 //! `Std.Path` symbol names and registry group.
 
-pub const STD_PATH_JOIN: &str = std_path!("Join");
-pub const STD_PATH_BASE_NAME: &str = std_path!("BaseName");
-pub const STD_PATH_DIR_NAME: &str = std_path!("DirName");
-pub const STD_PATH_EXTENSION: &str = std_path!("Extension");
-pub const STD_PATH_NORMALIZE: &str = std_path!("Normalize");
+std_symbol!(STD_PATH_JOIN = std_path!("Join"));
+std_symbol!(STD_PATH_BASE_NAME = std_path!("BaseName"));
+std_symbol!(STD_PATH_DIR_NAME = std_path!("DirName"));
+std_symbol!(STD_PATH_EXTENSION = std_path!("Extension"));
+std_symbol!(STD_PATH_NORMALIZE = std_path!("Normalize"));
 
 pub(in crate::std_units) const STD_PATH_SYMBOLS: &[&str] = &[
     STD_PATH_JOIN,

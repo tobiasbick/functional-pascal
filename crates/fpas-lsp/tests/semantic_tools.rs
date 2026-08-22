@@ -1,3 +1,5 @@
+//! Protocol tests for semantic tokens, inlay hints, and related tools.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

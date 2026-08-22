@@ -1,15 +1,12 @@
+//! Semantic analysis, type resolution, and standard-library registration for FPAS.
+
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
-        reason = "semantic analysis tests use expect to keep diagnostic assertions short"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::panic,
-        reason = "semantic analysis tests use explicit panic for structural mismatches"
+        clippy::unwrap_used,
+        reason = "semantic analysis tests use unwrap/expect/panic to keep fixture assertions compact"
     )
 )]
 

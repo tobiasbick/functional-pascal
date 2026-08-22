@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Proc.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/proc.md`
@@ -22,4 +23,5 @@ pub enum ProcIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/proc.md`
     RunCapture = 345,
+}
 }

@@ -1,6 +1,6 @@
 //! Smoke-runs for repository examples that exit on their own.
 //!
-//! **Do not** batch-run every file under `examples/` (many demos are interactive TUI/graph
+//! **Do not** batch-run every file under `examples/` (many demos are interactive TUI
 //! programs). Add a new `example_*` test below when adding a console example, then run:
 //! `cargo test -p fpas-cli example_`
 //! or `scripts/run-non-interactive-examples.ps1` / `scripts/run-non-interactive-examples.sh`.

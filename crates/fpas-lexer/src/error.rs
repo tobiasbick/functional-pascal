@@ -1,6 +1,7 @@
 use crate::Span;
 use fpas_diagnostics::{Diagnostic, DiagnosticCode};
 
+/// Diagnostic emitted by the lexer.
 pub type LexError = Diagnostic;
 
 #[must_use]

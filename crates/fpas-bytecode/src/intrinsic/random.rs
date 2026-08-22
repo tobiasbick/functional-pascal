@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Random.*`.
 ///
 /// **Documentation:** `docs/pascal/std/numeric/random.md`
@@ -22,4 +23,5 @@ pub enum RandomIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/numeric/random.md`
     Randomize = 233,
+}
 }

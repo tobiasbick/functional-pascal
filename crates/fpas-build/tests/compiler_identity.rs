@@ -1,4 +1,6 @@
-#![expect(
+//! Integration tests for compiler identity emitted by the build script.
+
+#![allow(
     clippy::expect_used,
     reason = "the build-script fixture has a required static declaration"
 )]

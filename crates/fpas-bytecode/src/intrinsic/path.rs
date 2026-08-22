@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Path.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/path.md`
@@ -30,4 +31,5 @@ pub enum PathIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/path.md`
     Normalize = 314,
+}
 }

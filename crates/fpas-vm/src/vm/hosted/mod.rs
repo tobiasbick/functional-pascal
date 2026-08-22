@@ -4,8 +4,6 @@ use std::sync::Mutex;
 
 use fpas_std::{Console, KeyInput, TextInput};
 
-use crate::vm::GraphState;
-
 pub(super) mod console_cell_records;
 pub(super) mod console_records;
 
@@ -13,7 +11,6 @@ mod args;
 mod callbacks;
 mod console;
 mod console_args;
-mod graph;
 mod test_host;
 
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
@@ -42,9 +39,6 @@ impl Worker {
         if let Some(value) = self.execute_callback_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
         }
-        if let Some(value) = self.execute_graph_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
         if let Some(value) = self.execute_test_host_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
         }
@@ -52,13 +46,12 @@ impl Worker {
     }
 }
 
-/// Console, input, process-argument, and graph state for one VM instance.
+/// Console, input, and process-argument state for one VM instance.
 pub(super) struct HostedState {
     pub program_args: Vec<String>,
     pub console: Mutex<Console>,
     pub text_input: Mutex<TextInput>,
     pub key_input: Mutex<KeyInput>,
-    pub graph: Mutex<GraphState>,
 }
 
 impl HostedState {
@@ -68,7 +61,6 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
-            graph: Mutex::new(GraphState::default()),
         }
     }
 
@@ -79,7 +71,6 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::without_os_stdin()),
             key_input: Mutex::new(KeyInput::without_os_events()),
-            graph: Mutex::new(GraphState::default()),
         }
     }
 }

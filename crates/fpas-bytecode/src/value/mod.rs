@@ -16,9 +16,13 @@ pub use string::SharedStr;
 /// Runtime value in the VM.
 #[derive(Debug, Clone)]
 pub enum Value {
+    /// Signed integer value.
     Integer(i64),
+    /// Double-precision floating-point value.
     Real(f64),
+    /// Boolean value.
     Boolean(bool),
+    /// Shared UTF-8 string value.
     Str(SharedStr),
     /// Enum variant with optional associated data.
     ///

@@ -1,3 +1,13 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Thin host-native runner for bundled Functional Pascal bytecode.
 
 use std::env;

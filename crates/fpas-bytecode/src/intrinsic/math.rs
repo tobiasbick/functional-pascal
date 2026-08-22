@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Math.*`.
 ///
 /// **Documentation:** `docs/pascal/std/numeric/math.md`
@@ -69,4 +70,5 @@ pub enum MathIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/numeric/math.md`
     Clamp = 230,
+}
 }

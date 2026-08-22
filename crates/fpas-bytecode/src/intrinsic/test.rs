@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Test.*`.
 ///
 /// **Documentation:** `docs/pascal/std/testing/test.md`
@@ -46,4 +47,5 @@ pub enum TestIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/testing/test.md`
     PushReadLn = 378,
+}
 }

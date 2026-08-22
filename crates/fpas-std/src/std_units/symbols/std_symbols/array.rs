@@ -1,24 +1,24 @@
 //! `Std.Array` symbol names and registry group.
 
-pub const STD_ARRAY_LENGTH: &str = std_array!("Length");
-pub const STD_ARRAY_SORT: &str = std_array!("Sort");
-pub const STD_ARRAY_REVERSE: &str = std_array!("Reverse");
-pub const STD_ARRAY_CONTAINS: &str = std_array!("Contains");
-pub const STD_ARRAY_INDEX_OF: &str = std_array!("IndexOf");
-pub const STD_ARRAY_SLICE: &str = std_array!("Slice");
-pub const STD_ARRAY_PUSH: &str = std_array!("Push");
-pub const STD_ARRAY_POP: &str = std_array!("Pop");
-pub const STD_ARRAY_MAP: &str = std_array!("Map");
-pub const STD_ARRAY_FILTER: &str = std_array!("Filter");
-pub const STD_ARRAY_REDUCE: &str = std_array!("Reduce");
-pub const STD_ARRAY_CONCAT: &str = std_array!("Concat");
-pub const STD_ARRAY_FILL: &str = std_array!("Fill");
-pub const STD_ARRAY_FIND: &str = std_array!("Find");
-pub const STD_ARRAY_FIND_INDEX: &str = std_array!("FindIndex");
-pub const STD_ARRAY_ANY: &str = std_array!("Any");
-pub const STD_ARRAY_ALL: &str = std_array!("All");
-pub const STD_ARRAY_FLAT_MAP: &str = std_array!("FlatMap");
-pub const STD_ARRAY_FOR_EACH: &str = std_array!("ForEach");
+std_symbol!(STD_ARRAY_LENGTH = std_array!("Length"));
+std_symbol!(STD_ARRAY_SORT = std_array!("Sort"));
+std_symbol!(STD_ARRAY_REVERSE = std_array!("Reverse"));
+std_symbol!(STD_ARRAY_CONTAINS = std_array!("Contains"));
+std_symbol!(STD_ARRAY_INDEX_OF = std_array!("IndexOf"));
+std_symbol!(STD_ARRAY_SLICE = std_array!("Slice"));
+std_symbol!(STD_ARRAY_PUSH = std_array!("Push"));
+std_symbol!(STD_ARRAY_POP = std_array!("Pop"));
+std_symbol!(STD_ARRAY_MAP = std_array!("Map"));
+std_symbol!(STD_ARRAY_FILTER = std_array!("Filter"));
+std_symbol!(STD_ARRAY_REDUCE = std_array!("Reduce"));
+std_symbol!(STD_ARRAY_CONCAT = std_array!("Concat"));
+std_symbol!(STD_ARRAY_FILL = std_array!("Fill"));
+std_symbol!(STD_ARRAY_FIND = std_array!("Find"));
+std_symbol!(STD_ARRAY_FIND_INDEX = std_array!("FindIndex"));
+std_symbol!(STD_ARRAY_ANY = std_array!("Any"));
+std_symbol!(STD_ARRAY_ALL = std_array!("All"));
+std_symbol!(STD_ARRAY_FLAT_MAP = std_array!("FlatMap"));
+std_symbol!(STD_ARRAY_FOR_EACH = std_array!("ForEach"));
 
 pub(in crate::std_units) const STD_ARRAY_SYMBOLS: &[&str] = &[
     STD_ARRAY_LENGTH,

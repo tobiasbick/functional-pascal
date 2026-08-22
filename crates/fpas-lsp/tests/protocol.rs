@@ -1,3 +1,5 @@
+//! Protocol tests for LSP initialization, shutdown, and request validation.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

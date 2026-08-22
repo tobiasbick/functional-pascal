@@ -94,10 +94,10 @@ fn task_owned_closure_rejects_call_value_from_a_foreign_task() {
     assert_eq!(function.owner_task, Some(0));
 
     worker.task_id = 5;
-    let error = match worker.dispatch_one() {
-        Err(error) => error,
-        Ok(_) => panic!("foreign task"),
-    };
+    let error = worker
+        .dispatch_one()
+        .err()
+        .expect("a foreign task must not invoke the closure");
 
     assert_eq!(error.code, RUNTIME_INVALID_TASK);
     assert!(error.message.contains("foreign task"), "{}", error.message);

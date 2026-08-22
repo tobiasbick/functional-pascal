@@ -1,3 +1,5 @@
+//! Integration tests for language-service document state.
+
 #![allow(
     clippy::expect_used,
     reason = "integration fixtures use expect to keep source-state assertions focused"

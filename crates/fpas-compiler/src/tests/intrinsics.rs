@@ -31,29 +31,14 @@ fn object_retains_layouts_constructed_by_runtime_intrinsics() {
     let program = parse_ok(
         "\
 program RuntimeLayouts;
-uses Std.Graph, Std.Json;
+uses Std.Json;
 begin
-  var App: Application := Application.OpenForTest(4, 3);
-  var Size: Std.Graph.Size := Application.Size(App);
-  var Parsed: result of JsonValue, string := Parse('null');
-  Application.Close(App)
+  var Parsed: result of JsonValue, string := Parse('null')
 end.",
     );
     let object = crate::compile_program_object_with_support(&program, &[], &[])
         .expect("runtime aggregate layouts must compile");
 
-    assert!(
-        object
-            .records
-            .iter()
-            .any(|layout| layout.name.eq_ignore_ascii_case("Std.Graph.Application"))
-    );
-    assert!(
-        object
-            .records
-            .iter()
-            .any(|layout| layout.name.eq_ignore_ascii_case("Std.Graph.Size"))
-    );
     assert!(
         object
             .enums

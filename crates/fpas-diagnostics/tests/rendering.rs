@@ -1,3 +1,5 @@
+//! Rendering tests for structured diagnostics.
+
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceSpan, render, render_without_path};
 
 fn error(message: &str, help: Option<&str>) -> Diagnostic {

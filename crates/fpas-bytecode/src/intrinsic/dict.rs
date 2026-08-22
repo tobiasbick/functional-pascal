@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Dict.*`.
 ///
 /// **Documentation:** `docs/pascal/std/collections/dict.md`
@@ -32,4 +33,5 @@ pub enum DictIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/collections/dict.md`
     Filter = 128,
+}
 }

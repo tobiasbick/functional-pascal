@@ -4,7 +4,7 @@ Functional Pascal samples aligned with the **current** compiler and standard lib
 
 ## Automated smoke test (non-interactive only)
 
-Many examples under `examples/` are **interactive** (TUI alternate screen, native graph window, key loops). **Do not** glob-run all `*.fpas` files in a shell loop or batch script — that will hang on demos such as `math/mandelbrot/mandelbrot.fpasprj`.
+Many examples under `examples/` are **interactive** (TUI alternate screen and key loops). **Do not** glob-run all `*.fpas` files in a shell loop or batch script — that will hang on demos such as `math/mandelbrot/mandelbrot.fpasprj`.
 
 Use the curated allowlist in [`crates/fpas-cli/src/main_tests/examples.rs`](../crates/fpas-cli/src/main_tests/examples.rs):
 
@@ -23,7 +23,7 @@ When you add a new **console** example that exits on its own, append it to `NON_
 
 ## Stdlib regression suite (`tests/`)
 
-The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` files with optional golden sidecars (`*.expect.stdout`, `*.expect.pixels`). Layout:
+The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` files with optional golden sidecars. Layout:
 
 | Directory | Contents |
 |-----------|----------|
@@ -31,7 +31,6 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
-| `tests/graph/` | Headless graph smoke + pixel golden |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
 Run via:
@@ -63,7 +62,6 @@ fpas run examples/pascal/std/str_basics.fpas
 fpas run examples/pascal/std/console_cells_basics.fpas
 fpas run examples/pascal/std/dict_basics.fpas
 fpas run examples/pascal/std/json_basics.fpas
-fpas run examples/pascal/std/graph_basics.fpas
 fpas run examples/pascal/std/task_basics.fpas
 ```
 
@@ -181,7 +179,6 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/dict_basics.fpas` | `Std.Dict` — literals, `Get`, `Merge`, `Map`/`Filter` (qualified when also using `Std.Array` / `Std.Option`) |
 | `pascal/std/env_basics.fpas` | `Std.Env` — environment lookup and missing values |
 | `pascal/std/fs_basics.fpas` | `Std.Fs` — create directories, write/read UTF-8 text, path checks |
-| `pascal/std/graph_basics.fpas` | `Std.Graph` — hosted `Configure` + `Run`, draw on `OnPaint`, quit on Escape |
 | `pascal/std/json_basics.fpas` | `Std.Json` — parse, inspect, and stringify JSON trees |
 | `pascal/std/parse_basics.fpas` | `Std.Parse` — `Result`-based integer, real, and boolean parsing |
 | `pascal/std/path_basics.fpas` | `Std.Path` — join, normalize, basename, dirname, extension |
@@ -220,4 +217,4 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |
 | `math/newton/newton.fpasprj` | Fullscreen terminal Newton basins for `z^3-1` |
 
-Graph apps use `Application.Configure(App, Handlers)` and `Application.Run(App)`; see `docs/pascal/std/graph/app/README.md`. Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.
+Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.

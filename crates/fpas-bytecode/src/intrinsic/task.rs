@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Task.*`.
 ///
 /// **Documentation:** `docs/pascal/std/concurrency/task.md`
@@ -18,4 +19,5 @@ pub enum TaskIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     WaitAll = 111,
+}
 }

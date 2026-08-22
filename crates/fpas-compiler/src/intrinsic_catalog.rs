@@ -2,9 +2,9 @@
 
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, GraphIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic,
-    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
-    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic, ParseIntrinsic,
+    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic, TaskIntrinsic,
+    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -88,7 +88,6 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Glob,
             ]
         ),
-        "Graph" => resolve_graph(member),
         "Json" => family!(member, Json, JsonIntrinsic, [Parse, Stringify]),
         "Result" => family!(
             member,
@@ -261,42 +260,6 @@ fn resolve_array(member: &str) -> Option<Intrinsic> {
     )
 }
 
-fn resolve_graph(member: &str) -> Option<Intrinsic> {
-    let member = member.strip_prefix("Application.")?;
-    let intrinsic = match member {
-        "Open" => GraphIntrinsic::ApplicationOpen,
-        "Close" => GraphIntrinsic::ApplicationClose,
-        "Size" => GraphIntrinsic::ApplicationSize,
-        "RequestRedraw" => GraphIntrinsic::ApplicationRequestRedraw,
-        "Configure" => GraphIntrinsic::ApplicationConfigure,
-        "Run" => GraphIntrinsic::ApplicationRun,
-        "UploadFrame" => GraphIntrinsic::ApplicationUploadFrame,
-        "Clear" => GraphIntrinsic::ApplicationClear,
-        "PutPixel" => GraphIntrinsic::ApplicationPutPixel,
-        "Present" => GraphIntrinsic::ApplicationPresent,
-        "DrawLine" => GraphIntrinsic::ApplicationDrawLine,
-        "DrawRect" => GraphIntrinsic::ApplicationDrawRect,
-        "FillRect" => GraphIntrinsic::ApplicationFillRect,
-        "DrawCircle" => GraphIntrinsic::ApplicationDrawCircle,
-        "DrawText" => GraphIntrinsic::ApplicationDrawText,
-        "HostRequestQuit" => GraphIntrinsic::HostRequestQuit,
-        "HostRegisterOnKeyPressed" => GraphIntrinsic::HostRegisterOnKeyPressed,
-        "HostRegisterOnResize" => GraphIntrinsic::HostRegisterOnResize,
-        "HostProcessNext" => GraphIntrinsic::HostProcessNext,
-        "HostRegisterOnPaint" => GraphIntrinsic::HostRegisterOnPaint,
-        "HostDispatchRedraw" => GraphIntrinsic::HostDispatchRedraw,
-        "HostRegisterOnIdle" => GraphIntrinsic::HostRegisterOnIdle,
-        "HostRegisterOnExit" => GraphIntrinsic::HostRegisterOnExit,
-        "HostRegisterOnMouse" => GraphIntrinsic::HostRegisterOnMouse,
-        "HostRegisterOnWheel" => GraphIntrinsic::HostRegisterOnWheel,
-        "HostRegisterOnCloseRequested" => GraphIntrinsic::HostRegisterOnCloseRequested,
-        "OpenForTest" => GraphIntrinsic::OpenForTest,
-        "TestSendKey" => GraphIntrinsic::TestSendKey,
-        _ => return None,
-    };
-    Some(Intrinsic::Graph(intrinsic))
-}
-
 fn resolve_test(member: &str, first_argument: Option<&Ty>) -> Option<Intrinsic> {
     let intrinsic = match member {
         "AssertTrue" => TestIntrinsic::AssertTrue,
@@ -336,11 +299,6 @@ mod tests {
     fn canonical_test_call(intrinsic: Intrinsic) -> (String, Option<Ty>) {
         match intrinsic {
             Intrinsic::Str(StrIntrinsic::Repeat) => ("Std.Str.RepeatStr".into(), None),
-            Intrinsic::Graph(operation) => {
-                let member = format!("{operation:?}");
-                let member = member.strip_prefix("Application").unwrap_or(&member);
-                (format!("Std.Graph.Application.{member}"), None)
-            }
             Intrinsic::Test(TestIntrinsic::AssertEqualsInteger) => {
                 ("Std.Test.AssertEquals".into(), Some(Ty::Integer))
             }

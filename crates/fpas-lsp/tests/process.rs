@@ -1,3 +1,5 @@
+//! End-to-end tests for the LSP process transport and message lifecycle.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

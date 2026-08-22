@@ -1,4 +1,6 @@
-#![expect(
+//! Wire-format tests for FPAS application bundles.
+
+#![allow(
     clippy::expect_used,
     clippy::panic,
     clippy::unwrap_used,
@@ -74,11 +76,13 @@ fn encoder_rejects_empty_and_oversized_names() {
     let program = encoded_program();
 
     assert_eq!(
-        fpas_bundle::encode(b"runner", &program, " ").unwrap_err(),
+        fpas_bundle::encode(b"runner", &program, " ")
+            .expect_err("an empty application name must be rejected"),
         fpas_bundle::BundleError::EmptyName
     );
     assert_eq!(
-        fpas_bundle::encode(b"runner", &program, &"x".repeat(4097)).unwrap_err(),
+        fpas_bundle::encode(b"runner", &program, &"x".repeat(4097))
+            .expect_err("an oversized application name must be rejected"),
         fpas_bundle::BundleError::NameTooLong(4097)
     );
 }
@@ -97,7 +101,8 @@ fn name_length_boundary_is_measured_in_utf8_bytes() {
         maximum_name
     );
     assert_eq!(
-        fpas_bundle::encode(b"runner", &program, &format!("{}é", "x".repeat(4095))).unwrap_err(),
+        fpas_bundle::encode(b"runner", &program, &format!("{}é", "x".repeat(4095)))
+            .expect_err("the UTF-8 byte-length limit must be enforced"),
         fpas_bundle::BundleError::NameTooLong(4097)
     );
 }

@@ -16,9 +16,6 @@ pub const RUNTIME_AGGREGATE_TYPES: &[&str] = &[
     "Std.Console.Event",
     "Std.Console.Color",
     "Std.Console.Cell",
-    "Std.Graph.Application",
-    "Std.Graph.Size",
-    "Std.Graph.Event",
 ];
 
 /// Constructs aggregate values against the layouts of the executing program.

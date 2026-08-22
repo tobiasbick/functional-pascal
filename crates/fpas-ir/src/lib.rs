@@ -1,10 +1,19 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Target-independent typed control-flow IR for Functional Pascal.
 //!
 //! This crate models compiler-owned meaning before register-bytecode selection. It deliberately has
 //! no dependency on the VM, bytecode codec, host ABI, or platform-specific runtime state.
 
 #![forbid(unsafe_code)]
-#![deny(missing_docs)]
 
 mod debug;
 mod function;

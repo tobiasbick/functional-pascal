@@ -1,22 +1,12 @@
+//! Command-line entry point for building, checking, running, and testing FPAS projects.
+
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
-        reason = "CLI tests use expect to keep command-path assertions compact"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::panic,
-        reason = "CLI tests use explicit panic for structural mismatches"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::unwrap_used,
-        reason = "CLI tests use unwrap to keep fixture path setup compact"
+        reason = "CLI tests use unwrap/expect/panic to keep fixture assertions compact"
     )
 )]
 mod cli_build;

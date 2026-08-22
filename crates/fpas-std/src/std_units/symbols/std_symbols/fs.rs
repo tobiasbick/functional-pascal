@@ -1,13 +1,13 @@
 //! `Std.Fs` symbol names and registry group.
 
-pub const STD_FS_READ_TEXT: &str = std_fs!("ReadText");
-pub const STD_FS_WRITE_TEXT: &str = std_fs!("WriteText");
-pub const STD_FS_WRITE_TEXT_ATOMIC: &str = std_fs!("WriteTextAtomic");
-pub const STD_FS_EXISTS: &str = std_fs!("Exists");
-pub const STD_FS_IS_FILE: &str = std_fs!("IsFile");
-pub const STD_FS_IS_DIR: &str = std_fs!("IsDir");
-pub const STD_FS_CREATE_DIR: &str = std_fs!("CreateDir");
-pub const STD_FS_GLOB: &str = std_fs!("Glob");
+std_symbol!(STD_FS_READ_TEXT = std_fs!("ReadText"));
+std_symbol!(STD_FS_WRITE_TEXT = std_fs!("WriteText"));
+std_symbol!(STD_FS_WRITE_TEXT_ATOMIC = std_fs!("WriteTextAtomic"));
+std_symbol!(STD_FS_EXISTS = std_fs!("Exists"));
+std_symbol!(STD_FS_IS_FILE = std_fs!("IsFile"));
+std_symbol!(STD_FS_IS_DIR = std_fs!("IsDir"));
+std_symbol!(STD_FS_CREATE_DIR = std_fs!("CreateDir"));
+std_symbol!(STD_FS_GLOB = std_fs!("Glob"));
 
 pub(in crate::std_units) const STD_FS_SYMBOLS: &[&str] = &[
     STD_FS_READ_TEXT,

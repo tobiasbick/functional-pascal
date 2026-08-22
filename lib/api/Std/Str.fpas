@@ -145,7 +145,7 @@ end;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-// - `Width`: Width in cells or pixels as documented by the operation.
+// - `Width`: Width in cells as documented by the operation.
 // - `PadChar`: `string` input value used by `PadCenter`.
 public function PadCenter(S: string; Width: integer; PadChar: string): string;
 begin
@@ -156,7 +156,7 @@ end;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-// - `Width`: Width in cells or pixels as documented by the operation.
+// - `Width`: Width in cells as documented by the operation.
 // - `PadChar`: `string` input value used by `PadLeft`.
 public function PadLeft(S: string; Width: integer; PadChar: string): string;
 begin
@@ -167,7 +167,7 @@ end;
 //
 // Parameters:
 // - `S`: UTF-8 text processed by the operation.
-// - `Width`: Width in cells or pixels as documented by the operation.
+// - `Width`: Width in cells as documented by the operation.
 // - `PadChar`: `string` input value used by `PadRight`.
 public function PadRight(S: string; Width: integer; PadChar: string): string;
 begin

@@ -114,7 +114,7 @@ Run `fpas test` from the **repository root**. Relative filesystem fixtures writt
 Before workers start, the runner builds shared project and standard-library units through the
 normal `.fpascu` pipeline and precompiles each test entry into its own in-memory executable image.
 This prevents parallel workers from racing to publish the same unit sidecar. Each test receives a
-fresh VM, globals, console, graph state, timeout, and golden-file evaluation. If precompilation
+fresh VM, globals, console state, timeout, and golden-file evaluation. If precompilation
 fails, the test falls back to the normal single-test path so its diagnostic remains test-local.
 
 With `--timeout <secs>`, each Setup hook, test body, and Teardown hook executes in a private worker
@@ -136,19 +136,15 @@ Rust unit tests that need temporary files should keep using `std::env::temp_dir(
 
 ## Runner-side project configuration
 
-`fpas test` accepts optional `<test>.script.toml` sidecars for project overrides
-(`--script`, `[test.overrides]`). Test event input and screen assertions use FPAS test APIs:
+`fpas test` accepts optional `<test>.script.toml` sidecars selected directly,
+with `--script`, or through `[test.overrides]`. Test input and screen assertions use:
 
 | Need | Native API |
 | ---- | ---------- |
 | `ReadLn` input | `Std.Test.PushReadLn` |
-| Headless graph input | `Application.OpenForTest`, `Application.TestSendKey` |
 | Screen output | `AssertScreenLine`, `AssertScreenCell` |
 
-`*.script.toml` contains only project runner configuration such as `[test.overrides]`;
-event input belongs in native FPAS APIs (`PushReadLn`, `TestSendKey`, graph test injectors).
-
-Graph golden pixel checks (`*.expect.pixels`) run runner-side after `Application.OpenForTest` + `Present`.
+`*.script.toml` can queue `readln` and `readkey_chars` events before the VM starts.
 
 ---
 
@@ -160,7 +156,6 @@ After a successful test run, `fpas test` may compare optional golden files besid
 |---------|----------|-------------|
 | `<test>.expect.stdout` | Captured `WriteLn` lines | Console output |
 | `<test>.expect.screen` | Compact CRT screen rows | `Std.Console` paint |
-| `<test>.expect.pixels` | Headless graph frame spot checks (`x y 0xRRGGBB`) | `Std.Graph` after `Present` |
 
 Golden sidecars are documented here because they are runner-side checks, not `Std.Test`
 procedures.
@@ -176,7 +171,6 @@ procedures.
 | [`console/readln_order_test.fpas`](../../../../tests/console/readln_order_test.fpas) | Multiple `PushReadLn` lines in order |
 | [`runner/skip_test.fpas`](../../../../tests/runner/skip_test.fpas) | `Skip` + runner `SKIP` reporting |
 | [`runner/stdout_echo_test.fpas`](../../../../tests/runner/stdout_echo_test.fpas) | `*.expect.stdout` |
-| [`graph/graph_smoke_test.fpas`](../../../../tests/graph/graph_smoke_test.fpas) | Headless graph (`OpenForTest` + `TestSendKey`) + `*.expect.pixels` |
 | [`suite.fpasprj`](../../../../tests/suite.fpasprj) | `kind = "test"` project bundle |
 
 Manual failure demo (not auto-discovered): [`manual/assert_fail_demo.fpas`](../../../../tests/manual/assert_fail_demo.fpas).

@@ -1,4 +1,6 @@
-#![expect(
+//! Integration tests for semantic editor tooling and diagnostics.
+
+#![allow(
     clippy::expect_used,
     reason = "semantic tooling fixtures use explicit source offsets and diagnostics"
 )]

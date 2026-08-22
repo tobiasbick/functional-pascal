@@ -1,3 +1,5 @@
+//! Integration tests for incremental document analysis.
+
 #![allow(
     clippy::expect_used,
     reason = "integration fixtures use expect to keep analysis assertions focused"

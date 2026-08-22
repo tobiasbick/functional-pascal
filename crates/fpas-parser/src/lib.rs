@@ -16,7 +16,6 @@
 //! assert_eq!(program.name, "Hello");
 //! ```
 
-#![deny(missing_docs)]
 #![cfg_attr(
     test,
     expect(
@@ -26,26 +25,13 @@
 )]
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
-        reason = "parser tests use expect to fail fast on missing diagnostics"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::panic,
-        reason = "parser tests use explicit pattern mismatch panics to keep AST assertions readable"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::unwrap_used,
-        reason = "parser tests use unwrap in a few direct diagnostic assertions"
+        reason = "parser tests use unwrap/expect/panic to keep AST assertions readable"
     )
 )]
-
 mod ast;
 mod error;
 mod parser;

@@ -2,7 +2,7 @@
 
 > Deferred. Planned for future versions.
 
-Functional Pascal already has a useful `Std.*` surface for console programs, TUI experiments, graphics, strings, math, arrays, dictionaries, options, results, and tasks. The next standard-library work should keep that unit-based shape and add focused units instead of merging unrelated APIs into larger buckets.
+Functional Pascal already has a useful `Std.*` surface for console programs, TUI experiments, strings, math, arrays, dictionaries, options, results, and tasks. The next standard-library work should keep that unit-based shape and add focused units instead of merging unrelated APIs into larger buckets.
 
 ## Direction
 

@@ -107,7 +107,7 @@ fn cell_operations_reject_standalone_zero_width_glyphs() {
 
     let error = console
         .put_cell(1, 1, crt_cell('\u{0301}', 7, 0), test_location())
-        .unwrap_err();
+        .expect_err("PutCell must reject a zero-width grapheme");
 
     assert_eq!(
         error.message,

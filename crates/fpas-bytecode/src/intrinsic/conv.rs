@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Conv.*`.
 ///
 /// **Documentation:** `docs/pascal/std/text/conv.md`
@@ -31,4 +32,5 @@ pub enum ConvIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/conv.md`
     HexToInt = 218,
+}
 }

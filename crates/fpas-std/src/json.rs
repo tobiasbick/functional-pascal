@@ -362,7 +362,8 @@ mod tests {
             "Array",
             vec![Value::Array(vec![test_variant("Null", vec![])].into())],
         );
-        let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH).unwrap_err();
+        let err = fpas_to_json_at_depth(value, loc(), MAX_JSON_DEPTH)
+            .expect_err("JSON conversion must enforce its nesting limit");
         assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
     }
 }

@@ -1,3 +1,5 @@
+//! Invariant tests for diagnostic codes, locations, and spans.
+
 use fpas_diagnostics::{
     DiagnosticCode, DiagnosticStage, SourceLocation, SourceLocationError, SourceSpan,
     SourceSpanError,

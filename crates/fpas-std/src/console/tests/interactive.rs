@@ -71,7 +71,7 @@ fn acquire_interactive_terminal_without_writer_is_exclusive_and_idempotent_on_re
 
     let second = console
         .acquire_interactive_terminal(&mut key_input, test_location())
-        .unwrap_err();
+        .expect_err("a second interactive terminal acquisition must fail");
     assert!(
         second
             .message
@@ -116,7 +116,7 @@ fn acquire_interactive_terminal_rolls_back_owned_state_after_output_failure() {
 
     let error = console
         .acquire_interactive_terminal(&mut key_input, test_location())
-        .unwrap_err();
+        .expect_err("terminal acquisition must report writer failures");
 
     assert!(error.message.contains("terminal"));
     assert!(!console.interactive_terminal_acquired());

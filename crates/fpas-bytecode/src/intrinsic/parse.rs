@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Parse.*`.
 ///
 /// **Documentation:** `docs/pascal/std/text/parse.md`
@@ -22,4 +23,5 @@ pub enum ParseIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/parse.md`
     TryBool = 329,
+}
 }

@@ -8,6 +8,7 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Console {
+    /// Clears the active console window.
     pub fn clr_scr(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -15,6 +16,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Clears from the cursor to the end of its line.
     pub fn clr_eol(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -34,6 +36,7 @@ impl Console {
         self.state.wind_max()
     }
 
+    /// Deletes the cursor row and shifts following rows upward.
     pub fn del_line(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -41,6 +44,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Inserts a blank cursor row and shifts following rows downward.
     pub fn ins_line(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -48,6 +52,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Selects the inclusive one-based rectangle used by window-relative operations.
     pub fn window(
         &mut self,
         x1: i64,
@@ -106,15 +111,18 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Returns the most recently selected CRT text mode.
     pub fn last_mode(&self) -> i64 {
         self.state.last_mode
     }
 
+    /// Returns the current terminal width in cells.
     pub fn screen_width(&mut self) -> i64 {
         self.sync_terminal_size();
         self.state.screen_width()
     }
 
+    /// Returns the current terminal height in cells.
     pub fn screen_height(&mut self) -> i64 {
         self.sync_terminal_size();
         self.state.screen_height()

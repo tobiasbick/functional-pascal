@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Time.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/time.md`
@@ -26,4 +27,5 @@ pub enum TimeIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/time.md`
     Sleep = 324,
+}
 }

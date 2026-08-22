@@ -9,18 +9,22 @@ use std::io::{self, BufRead};
 pub struct ReadLnQueue(VecDeque<String>);
 
 impl ReadLnQueue {
+    /// Creates an empty line queue.
     pub fn new() -> Self {
         Self(VecDeque::new())
     }
 
+    /// Appends one line for a future buffered read.
     pub fn push_line(&mut self, line: &str) {
         self.0.push_back(line.to_string());
     }
 
+    /// Returns whether no queued lines remain.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// Removes the oldest line or returns a located input diagnostic.
     pub fn pop_line(&mut self, location: SourceLocation) -> Result<String, StdError> {
         self.0.pop_front().ok_or_else(|| {
             std_runtime_error(
@@ -69,6 +73,7 @@ impl Default for TextInput {
 }
 
 impl TextInput {
+    /// Creates a text stream backed by queued lines and process standard input.
     pub fn new() -> Self {
         Self {
             line_queue: ReadLnQueue::new(),
@@ -86,6 +91,7 @@ impl TextInput {
         }
     }
 
+    /// Appends one line for a future `Read` or `ReadLn` operation.
     pub fn push_line(&mut self, line: &str) {
         self.line_queue.push_line(line);
     }

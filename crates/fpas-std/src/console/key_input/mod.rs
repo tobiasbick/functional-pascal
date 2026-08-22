@@ -49,6 +49,7 @@ impl Default for KeyInput {
 }
 
 impl KeyInput {
+    /// Creates an input buffer that may poll the process terminal.
     pub fn new() -> Self {
         Self {
             test_queue: VecDeque::new(),
@@ -82,6 +83,7 @@ impl KeyInput {
         self.os_events && !self.test_mode
     }
 
+    /// Queues characters and switches the buffer to deterministic test mode.
     pub fn push_chars(&mut self, s: &str) {
         self.test_mode = true;
         for c in s.chars() {
@@ -95,6 +97,7 @@ impl KeyInput {
         self.event_queue.push_back(ev);
     }
 
+    /// Queues a unified console event and switches to deterministic test mode.
     pub fn push_console_event(&mut self, ev: ConsoleEvent) {
         self.test_mode = true;
         self.console_event_queue.push_back(ev);
@@ -190,6 +193,7 @@ impl KeyInput {
         }
     }
 
+    /// Enables terminal raw mode for an explicit `Std.Console` request.
     pub fn enable_raw_mode_explicit(
         &mut self,
         location: SourceLocation,
@@ -197,6 +201,7 @@ impl KeyInput {
         self.ensure_raw_mode(location)
     }
 
+    /// Disables terminal raw mode for an explicit `Std.Console` request.
     pub fn disable_raw_mode_explicit(
         &mut self,
         location: SourceLocation,

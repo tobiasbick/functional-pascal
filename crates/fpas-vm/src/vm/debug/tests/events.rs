@@ -1,7 +1,7 @@
-//! TUI and graph handlers run only as bytecode; stopped inspection does not dispatch them.
+//! TUI events remain queued while debugger inspection is stopped.
 
 use super::*;
-use fpas_std::{ConsoleEvent, ConsoleKeyEvent, GraphEvent, key_kind_index};
+use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_kind_index};
 
 fn compile_session(source: &str) -> DebugSession {
     let (program, diagnostics) = fpas_parser::parse(source);
@@ -63,38 +63,4 @@ end.
     );
     let _ = session.continue_execution().expect("resume");
     assert!(session.output().lines.is_empty());
-}
-
-#[test]
-fn graph_handlers_do_not_run_while_stopped() {
-    let mut session = compile_session(
-        r#"program GraphOwnership;
-
-uses Std.Console, Std.Graph;
-
-procedure OnPaint(App: Application);
-begin
-  WriteLn('painted');
-  Application.HostRequestQuit(App)
-end;
-
-begin
-  var App: Application := Application.OpenForTest(32, 24);
-  var Handlers: ApplicationHandlers := record
-    OnPaint := OnPaint;
-    OnIdleMilliseconds := 0;
-  end;
-  Application.Configure(App, Handlers);
-  Application.Run(App)
-end.
-"#,
-    );
-    session.test_push_graph_event(GraphEvent::Key(escape_key()));
-    let _ = session
-        .evaluate(&DebugExpression::Integer(1), None)
-        .expect("evaluate");
-    let _ = session.stack(0, 8).expect("stack");
-    assert!(session.output().lines.is_empty());
-    let _ = session.continue_execution().expect("resume");
-    assert_eq!(session.output().lines, vec!["painted".to_string()]);
 }

@@ -4,7 +4,7 @@
     clippy::expect_used,
     reason = "integration fixtures use expect to keep graph assertions focused"
 )]
-#![expect(
+#![allow(
     clippy::panic,
     reason = "fixture helper panics only when its hard-coded source has the wrong compilation-unit shape"
 )]

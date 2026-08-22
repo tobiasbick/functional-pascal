@@ -1,3 +1,5 @@
+//! Integration tests for incremental project and unit builds.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

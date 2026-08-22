@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Args.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/args.md`
@@ -18,4 +19,5 @@ pub enum ArgsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/args.md`
     ParamStr = 307,
+}
 }

@@ -1,3 +1,5 @@
+//! Integration tests for repository discovery and source context.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,
@@ -219,9 +221,10 @@ include = ["shared.fpas"]
     let source = temp.write("repository/shared/shared.fpas", "unit Demo.Shared;\n");
     let mut service = LanguageService::load(&temp.join("repository"));
 
-    let Err(error) = service.analyze_document(&source) else {
-        panic!("overlapping direct project ownership must fail");
-    };
+    let error = service
+        .analyze_document(&source)
+        .err()
+        .expect("overlapping direct project ownership must fail");
 
     let message = error.to_string();
     assert!(message.contains("multiple FPAS projects"), "{message}");

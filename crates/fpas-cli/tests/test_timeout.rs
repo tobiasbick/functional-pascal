@@ -1,4 +1,6 @@
-#![expect(
+//! Integration tests for enforcing FPAS test-process timeouts.
+
+#![allow(
     clippy::expect_used,
     reason = "timeout integration fixtures require direct process and filesystem assertions"
 )]

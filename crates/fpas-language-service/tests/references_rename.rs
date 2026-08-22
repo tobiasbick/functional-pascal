@@ -1,3 +1,5 @@
+//! Integration tests for reference discovery and safe renaming.
+
 #![allow(
     clippy::expect_used,
     reason = "navigation fixtures use explicit source offsets"

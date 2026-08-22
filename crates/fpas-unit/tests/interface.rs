@@ -1,3 +1,5 @@
+//! Integration tests for compiled-unit interface encoding and decoding.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

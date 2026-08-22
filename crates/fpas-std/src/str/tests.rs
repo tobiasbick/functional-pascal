@@ -36,7 +36,8 @@ fn repeat_str_rejects_count_above_limit() {
         Value::Str("x".into()),
         Value::Integer(MAX_COLLECTION_LEN + 1),
     ];
-    let err = run_str(StrIntrinsic::Repeat, &mut stack).unwrap_err();
+    let err = run_str(StrIntrinsic::Repeat, &mut stack)
+        .expect_err("RepeatStr must reject a count above the collection limit");
     assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }
 
@@ -47,7 +48,8 @@ fn substring_rejects_overflowing_range() {
         Value::Integer(1),
         Value::Integer(i64::MAX),
     ];
-    let err = run_str(StrIntrinsic::Substring, &mut stack).unwrap_err();
+    let err = run_str(StrIntrinsic::Substring, &mut stack)
+        .expect_err("Substring must reject an overflowing range");
     assert_eq!(err.code, RUNTIME_STRING_INDEX_OUT_OF_BOUNDS);
 }
 
@@ -58,7 +60,8 @@ fn delete_rejects_overflowing_range() {
         Value::Integer(1),
         Value::Integer(i64::MAX),
     ];
-    let err = run_str(StrIntrinsic::Delete, &mut stack).unwrap_err();
+    let err = run_str(StrIntrinsic::Delete, &mut stack)
+        .expect_err("Delete must reject an overflowing range");
     assert_eq!(err.code, RUNTIME_STRING_INDEX_OUT_OF_BOUNDS);
 }
 
@@ -77,7 +80,8 @@ fn from_char_rejects_count_above_limit() {
         Value::Str("x".into()),
         Value::Integer(MAX_COLLECTION_LEN + 1),
     ];
-    let err = run_str(StrIntrinsic::FromChar, &mut stack).unwrap_err();
+    let err = run_str(StrIntrinsic::FromChar, &mut stack)
+        .expect_err("FromChar must reject a count above the collection limit");
     assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }
 
@@ -88,7 +92,8 @@ fn padding_rejects_width_above_limit() {
         Value::Integer(MAX_COLLECTION_LEN + 1),
         Value::Str(" ".into()),
     ];
-    let err = run_str(StrIntrinsic::PadLeft, &mut stack).unwrap_err();
+    let err = run_str(StrIntrinsic::PadLeft, &mut stack)
+        .expect_err("PadLeft must reject a width above the collection limit");
     assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }
 
@@ -142,7 +147,8 @@ fn character_apis_reject_empty_and_multiple_scalars() {
         (StrIntrinsic::Ord, vec![Value::Str("ab".into())]),
     ] {
         let mut stack = stack;
-        let err = run_str(intrinsic, &mut stack).unwrap_err();
+        let err = run_str(intrinsic, &mut stack)
+            .expect_err("character APIs must reject invalid scalar payloads");
         assert_eq!(err.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
     }
 }

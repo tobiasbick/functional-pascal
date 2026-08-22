@@ -2,7 +2,7 @@
 //!
 //! Spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
@@ -16,8 +16,6 @@ use crate::test_sources::is_test_source_file;
 pub struct TestFileOverride {
     /// Optional script path relative to the project root.
     pub script: Option<PathBuf>,
-    /// When set, overrides `[config] headless_graph` from the loaded script.
-    pub headless_graph: Option<bool>,
 }
 
 /// Parsed `[test]` section for a `kind = "test"` project.
@@ -44,9 +42,9 @@ pub(super) struct TestSectionRaw {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct TestFileOverrideRaw {
     script: Option<String>,
-    headless_graph: Option<bool>,
 }
 
 /// Parses and validates an optional `[test]` section for the given project sources.
@@ -70,6 +68,16 @@ pub(super) fn parse_test_section(
 
     if section.overrides.is_empty() {
         return Ok(TestManifest::default());
+    }
+
+    let mut normalized_names = HashSet::with_capacity(section.overrides.len());
+    for key in section.overrides.keys() {
+        let normalized = key.trim();
+        if !normalized_names.insert(normalized.to_ascii_lowercase()) {
+            return Err(format!(
+                "Duplicate `[test.overrides]` entry for `{normalized}`.\n  help: Define each test file override once."
+            ));
+        }
     }
 
     let mut overrides = HashMap::new();
@@ -100,9 +108,9 @@ pub(super) fn parse_test_section(
             ));
         }
 
-        if raw.script.is_none() && raw.headless_graph.is_none() {
+        if raw.script.is_none() {
             return Err(format!(
-                "`[test.overrides.{normalized}]` must set `script` and/or `headless_graph`.\n  help: Remove empty override tables or add at least one field."
+                "`[test.overrides.{normalized}]` must set `script`.\n  help: Remove empty override tables or add a script path."
             ));
         }
 
@@ -115,20 +123,7 @@ pub(super) fn parse_test_section(
             )?),
         };
 
-        if overrides
-            .insert(
-                lookup_key,
-                TestFileOverride {
-                    script,
-                    headless_graph: raw.headless_graph,
-                },
-            )
-            .is_some()
-        {
-            return Err(format!(
-                "Duplicate `[test.overrides]` entry for `{normalized}`.\n  help: Define each test file override once."
-            ));
-        }
+        overrides.insert(lookup_key, TestFileOverride { script });
     }
 
     Ok(TestManifest { overrides })
@@ -149,8 +144,7 @@ mod tests {
             overrides: HashMap::from([(
                 "alpha_test.fpas".to_string(),
                 TestFileOverride {
-                    script: None,
-                    headless_graph: Some(true),
+                    script: Some(PathBuf::from("alpha.script.toml")),
                 },
             )]),
         };
@@ -158,8 +152,8 @@ mod tests {
         assert_eq!(
             manifest
                 .override_for(Path::new("dir/ALPHA_test.fpas"))
-                .and_then(|value| value.headless_graph),
-            Some(true)
+                .and_then(|value| value.script.as_deref()),
+            Some(Path::new("alpha.script.toml"))
         );
     }
 
@@ -203,15 +197,13 @@ mod tests {
                     (
                         "alpha_test.fpas".to_string(),
                         TestFileOverrideRaw {
-                            script: None,
-                            headless_graph: Some(true),
+                            script: Some("alpha.script.toml".to_string()),
                         },
                     ),
                     (
                         "ALPHA_TEST.FPAS".to_string(),
                         TestFileOverrideRaw {
-                            script: None,
-                            headless_graph: Some(false),
+                            script: Some("alpha.script.toml".to_string()),
                         },
                     ),
                 ]),

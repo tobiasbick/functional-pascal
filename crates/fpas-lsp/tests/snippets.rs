@@ -1,6 +1,6 @@
 //! Validates the VS Code snippets against the parser and formatter.
 
-#![expect(
+#![allow(
     clippy::expect_used,
     reason = "snippet fixtures fail immediately when repository assets are missing or malformed"
 )]

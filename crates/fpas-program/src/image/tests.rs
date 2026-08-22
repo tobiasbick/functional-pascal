@@ -1,4 +1,4 @@
-#![expect(
+#![allow(
     clippy::expect_used,
     clippy::unwrap_used,
     reason = "program image tests use verified fixture construction"

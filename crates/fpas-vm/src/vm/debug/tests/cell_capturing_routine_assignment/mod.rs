@@ -86,7 +86,7 @@ pub(super) fn rendered(
 ) -> String {
     session
         .evaluate(&expression, Some(frame))
-        .unwrap_or_else(|error| panic!("evaluate: {error:?}"))
+        .expect("debug evaluation must succeed")
         .value
 }
 

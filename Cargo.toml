@@ -11,6 +11,7 @@ repository = "https://github.com/tobiasbick/functional-pascal"
 description = "A modern, function-first programming language built on Pascal's readable syntax"
 
 [workspace.lints.rust]
+missing_docs = "deny"
 unsafe_code = "forbid"
 
 [workspace.lints.clippy]
@@ -26,8 +27,6 @@ glob = "0.3"
 rand = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-softbuffer = "0.4"
 toml = "0.9"
 unicode-width = "0.2"
 unicode-segmentation = "1"
-winit = "0.30"

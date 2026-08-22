@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Str.*`.
 ///
 /// **Documentation:** `docs/pascal/std/text/str/README.md`
@@ -90,4 +91,5 @@ pub enum StrIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/str/README.md`
     Format = 242,
+}
 }

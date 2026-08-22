@@ -1,3 +1,5 @@
+//! Integration tests for symbol navigation within a document.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

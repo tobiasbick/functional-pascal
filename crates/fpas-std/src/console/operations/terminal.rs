@@ -15,35 +15,43 @@ impl Console {
         self.state.crt_mode = true;
     }
 
+    /// Enters the terminal's alternate screen buffer.
     pub fn enter_alt_screen(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.enable_crt_mode();
         self.run_writer_command(EnterAlternateScreen, "EnterAltScreen failed", location)
     }
 
+    /// Leaves the terminal's alternate screen buffer.
     pub fn leave_alt_screen(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(LeaveAlternateScreen, "LeaveAltScreen failed", location)
     }
 
+    /// Enables terminal mouse-event reporting.
     pub fn enable_mouse(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(EnableMouseCapture, "EnableMouse failed", location)
     }
 
+    /// Disables terminal mouse-event reporting.
     pub fn disable_mouse(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(DisableMouseCapture, "DisableMouse failed", location)
     }
 
+    /// Enables terminal focus-event reporting.
     pub fn enable_focus(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(EnableFocusChange, "EnableFocus failed", location)
     }
 
+    /// Disables terminal focus-event reporting.
     pub fn disable_focus(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(DisableFocusChange, "DisableFocus failed", location)
     }
 
+    /// Enables bracketed-paste event reporting.
     pub fn enable_paste(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(EnableBracketedPaste, "EnablePaste failed", location)
     }
 
+    /// Disables bracketed-paste event reporting.
     pub fn disable_paste(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.run_writer_command(DisableBracketedPaste, "DisablePaste failed", location)
     }

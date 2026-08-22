@@ -15,7 +15,6 @@ include = ["*.fpas"]
 
 [test.overrides."alpha_test.fpas"]
 script = "alpha.script.toml"
-headless_graph = true
 "#,
     );
     write_text(
@@ -33,7 +32,6 @@ headless_graph = true
         .override_for(&dir.join("alpha_test.fpas"))
         .expect("override must exist");
     assert_eq!(override_cfg.script, Some(dir.join("alpha.script.toml")));
-    assert_eq!(override_cfg.headless_graph, Some(true));
 
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
 }
@@ -83,7 +81,7 @@ include = ["*.fpas"]
 
     let error = load_project_error(&project_file, "empty test override must fail");
     fs::remove_dir_all(&dir).expect("temp directory must be removed");
-    assert!(error.contains("must set `script` and/or `headless_graph`"));
+    assert!(error.contains("must set `script`"));
 }
 
 #[test]
@@ -100,7 +98,7 @@ kind = "test"
 include = ["*.fpas"]
 
 [test.overrides."missing_test.fpas"]
-headless_graph = true
+script = "missing.script.toml"
 "#,
     );
     write_text(&dir.join("alpha_test.fpas"), "program A;\nbegin\nend.\n");

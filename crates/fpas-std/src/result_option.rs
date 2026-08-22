@@ -139,7 +139,7 @@ mod tests {
             &mut stack,
             test_location(),
         )
-        .unwrap_err();
+        .expect_err("Result.UnwrapOr must reject a non-Result value");
 
         assert!(
             error.message.contains("expects a Result value"),
@@ -157,7 +157,7 @@ mod tests {
             &mut stack,
             test_location(),
         )
-        .unwrap_err();
+        .expect_err("Option.UnwrapOr must reject a non-Option value");
 
         assert!(
             error.message.contains("expects an Option value"),

@@ -144,14 +144,16 @@ mod tests {
     #[test]
     fn str_to_int_rejects_invalid_text() {
         let mut stack = vec![Value::Str("not-a-number".into())];
-        let err = run_conv(ConvIntrinsic::StrToInt, &mut stack).unwrap_err();
+        let err = run_conv(ConvIntrinsic::StrToInt, &mut stack)
+            .expect_err("StrToInt must reject invalid input");
         assert_eq!(err.code, RUNTIME_CONVERSION_FAILURE);
     }
 
     #[test]
     fn int_to_hex_rejects_digits_above_limit() {
         let mut stack = vec![Value::Integer(1), Value::Integer(MAX_COLLECTION_LEN + 1)];
-        let err = run_conv(ConvIntrinsic::IntToHex, &mut stack).unwrap_err();
+        let err = run_conv(ConvIntrinsic::IntToHex, &mut stack)
+            .expect_err("IntToHex must reject a width above the limit");
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 }

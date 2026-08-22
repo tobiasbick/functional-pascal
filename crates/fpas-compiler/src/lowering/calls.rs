@@ -62,15 +62,6 @@ impl LoweringContext {
         let qualified =
             qualified.ok_or_else(|| unsupported(designator.span, "method or qualified call"))?;
         let name = qualified.as_str();
-        if name
-            .strip_prefix("Application.")
-            .map(|member| format!("Std.Graph.Application.{member}"))
-            .filter(|canonical| crate::intrinsic_catalog::resolve(canonical, None).is_some())
-            .is_some()
-        {
-            let canonical = format!("Std.Graph.{name}");
-            return self.lower_intrinsic_call(&canonical, arguments, result, span);
-        }
         if self.has_binding(name) || self.has_global(name) {
             let callee = if self.has_binding(name) {
                 self.read_named_local(name, designator.span)?

@@ -87,7 +87,7 @@ fn assignment_target_parser_preserves_named_stored_selector_order() {
         "Outcome.Error.value",
     ] {
         parse_debug_assignment_target(source, DebugEvaluationLimits::default())
-            .unwrap_or_else(|error| panic!("valid target {source}: {error:?}"));
+            .expect("fixture must be a valid assignment target");
     }
 
     let nested_reserved = parse_debug_assignment_target(

@@ -1,3 +1,5 @@
+//! End-to-end tests for the benchmark command-line interface.
+
 use std::error::Error;
 use std::fs;
 use std::io;

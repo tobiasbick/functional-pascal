@@ -5,11 +5,17 @@ use crate::{DiagnosticCode, SourceSpan};
 /// The compiler or runtime stage that emitted a diagnostic.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DiagnosticStage {
+    /// Lexical analysis.
     Lex,
+    /// Syntax parsing.
     Parse,
+    /// Semantic analysis.
     Sema,
+    /// Bytecode compilation.
     Compile,
+    /// Program execution.
     Runtime,
+    /// An invariant failure inside the toolchain.
     Internal,
 }
 

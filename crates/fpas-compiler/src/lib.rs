@@ -1,8 +1,12 @@
+//! Lowers semantically analyzed FPAS syntax into executable bytecode.
+
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
-        reason = "compiler tests use expect to keep bytecode assertions focused on behavior"
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "compiler tests use unwrap/expect/panic to keep bytecode assertions focused on behavior"
     )
 )]
 mod bytecode;

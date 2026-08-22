@@ -1,4 +1,4 @@
-#![expect(
+#![allow(
     clippy::expect_used,
     reason = "program codec fixtures use direct construction assertions"
 )]

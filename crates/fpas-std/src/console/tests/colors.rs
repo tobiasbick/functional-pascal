@@ -37,13 +37,17 @@ fn console_text_attr_and_video_helpers() {
 fn console_set_text_attr_rejects_values_outside_byte_range() {
     let mut c = Console::new();
 
-    let negative = c.set_text_attr(-1, test_location()).unwrap_err();
+    let negative = c
+        .set_text_attr(-1, test_location())
+        .expect_err("SetTextAttr must reject negative attributes");
     assert_eq!(
         negative.message,
         "SetTextAttr expects an attribute from 0 to 255, got -1"
     );
 
-    let overflow = c.set_text_attr(256, test_location()).unwrap_err();
+    let overflow = c
+        .set_text_attr(256, test_location())
+        .expect_err("SetTextAttr must reject attributes above one byte");
     assert_eq!(
         overflow.message,
         "SetTextAttr expects an attribute from 0 to 255, got 256"

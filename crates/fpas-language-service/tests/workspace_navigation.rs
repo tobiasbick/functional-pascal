@@ -1,3 +1,5 @@
+//! Integration tests for navigation across workspace members.
+
 #![allow(
     clippy::expect_used,
     reason = "navigation fixtures use explicit source offsets and readable assertions"

@@ -11,7 +11,7 @@ begin
 end.
 ```
 
-`Std.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, graph, and background-task programs can import it when they need environment values.
+`Std.Env` reads the environment visible to the host process. It is UI-independent: console, TUI, and background-task programs can import it when they need environment values.
 
 
 ## Importing and names

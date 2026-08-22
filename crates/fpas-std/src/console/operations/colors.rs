@@ -51,6 +51,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Returns the packed CRT foreground/background attribute.
     pub fn text_attr(&self) -> i64 {
         i64::from((self.state.bg << 4) | (self.state.fg & 0x0F))
     }

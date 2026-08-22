@@ -1,3 +1,5 @@
+//! Integration tests for reusable compiled-program artifacts.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

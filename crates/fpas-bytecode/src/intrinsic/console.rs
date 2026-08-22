@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Console.*`.
 ///
 /// **Documentation:** `docs/pascal/std/console/README.md`
@@ -121,4 +122,5 @@ pub enum ConsoleIntrinsic {
     Write = 398,
     /// Writes one value followed by a newline through the hosted console.
     WriteLn = 399,
+}
 }

@@ -1,4 +1,6 @@
-#![expect(
+//! Integration tests for native executable generation and invocation.
+
+#![allow(
     clippy::expect_used,
     reason = "native executable integration fixtures require direct filesystem and process assertions"
 )]

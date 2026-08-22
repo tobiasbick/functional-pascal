@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Result.*`.
 ///
 /// **Documentation:** `docs/pascal/std/result/result.md`
@@ -26,4 +27,5 @@ pub enum ResultIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/result/result.md`
     OrElse = 132,
+}
 }

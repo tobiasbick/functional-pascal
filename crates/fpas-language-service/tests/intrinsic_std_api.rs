@@ -1,3 +1,5 @@
+//! Integration tests for editor metadata generated from intrinsic standard APIs.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

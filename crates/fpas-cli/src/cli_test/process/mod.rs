@@ -43,7 +43,6 @@ struct WorkerRequest {
 #[derive(Serialize, Deserialize)]
 struct ManifestOverride {
     script: Option<PathBuf>,
-    headless_graph: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -173,7 +172,6 @@ fn write_worker_inputs(files: &WorkerFiles, prepared: &PreparedProgram) -> Resul
         .as_ref()
         .map(|value| ManifestOverride {
             script: value.script.clone(),
-            headless_graph: value.headless_graph,
         });
     let request = WorkerRequest {
         test_path: prepared.test_path.clone(),
@@ -372,7 +370,6 @@ fn worker_main(files: &WorkerFiles) -> Result<(), String> {
         .manifest_override
         .map(|value| fpas_project::TestFileOverride {
             script: value.script,
-            headless_graph: value.headless_graph,
         });
     let prepared = PreparedProgram {
         test_path: request.test_path,

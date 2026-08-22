@@ -1,3 +1,5 @@
+//! Integration tests for workspace manifests and member context.
+
 #![allow(
     clippy::expect_used,
     reason = "integration fixtures use expect to keep manifest assertions focused"

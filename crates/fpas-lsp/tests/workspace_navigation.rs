@@ -1,3 +1,5 @@
+//! Protocol tests for LSP navigation across workspace projects.
+
 #![allow(
     clippy::expect_used,
     reason = "protocol fixtures use explicit assertions for hard-coded LSP transcripts"

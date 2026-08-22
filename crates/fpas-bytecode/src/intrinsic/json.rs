@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Json.*`.
 ///
 /// **Documentation:** `docs/pascal/std/text/json.md`
@@ -18,4 +19,5 @@ pub enum JsonIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/json.md`
     Stringify = 326,
+}
 }

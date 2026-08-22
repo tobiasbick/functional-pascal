@@ -60,7 +60,8 @@ mod tests {
     #[test]
     fn random_int_rejects_inverted_bounds() {
         let mut stack = vec![Value::Integer(5), Value::Integer(1)];
-        let err = run_random(RandomIntrinsic::RandomInt, &mut stack).unwrap_err();
+        let err = run_random(RandomIntrinsic::RandomInt, &mut stack)
+            .expect_err("RandomInt must reject inverted bounds");
         assert_eq!(err.code, RUNTIME_NUMERIC_DOMAIN_ERROR);
     }
 

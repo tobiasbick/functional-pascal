@@ -1,3 +1,5 @@
+//! Integration tests for completion, hover, signature help, and related IntelliSense features.
+
 #![allow(
     clippy::expect_used,
     reason = "IntelliSense fixtures use explicit source offsets and readable assertions"

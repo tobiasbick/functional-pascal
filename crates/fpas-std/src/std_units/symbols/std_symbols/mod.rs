@@ -33,11 +33,6 @@ macro_rules! std_time {
         concat!("Std.Time.", $suffix)
     };
 }
-macro_rules! std_graph {
-    ($suffix:literal) => {
-        concat!("Std.Graph.", $suffix)
-    };
-}
 macro_rules! std_str {
     ($suffix:literal) => {
         concat!("Std.Str.", $suffix)
@@ -104,6 +99,13 @@ macro_rules! std_test {
     };
 }
 
+macro_rules! std_symbol {
+    ($name:ident = $value:expr) => {
+        #[doc = concat!("Fully qualified standard-library symbol `", stringify!($name), "`.")]
+        pub const $name: &str = $value;
+    };
+}
+
 mod args;
 mod array;
 mod console;
@@ -111,7 +113,6 @@ mod conv;
 mod dict;
 mod env;
 mod fs;
-mod graph;
 mod json;
 mod math;
 mod option;
@@ -133,7 +134,6 @@ pub use conv::*;
 pub use dict::*;
 pub use env::*;
 pub use fs::*;
-pub use graph::*;
 pub use json::*;
 pub use math::*;
 pub use option::*;

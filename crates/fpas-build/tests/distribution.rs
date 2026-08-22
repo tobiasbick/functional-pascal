@@ -1,3 +1,5 @@
+//! Integration tests for assembling redistributable application directories.
+
 #![allow(
     clippy::expect_used,
     reason = "distribution filesystem fixtures use direct assertions for diagnostic clarity"

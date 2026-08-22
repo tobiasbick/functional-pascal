@@ -1,15 +1,15 @@
 //! `Std.Toml` symbol names and registry group.
 
-pub const STD_TOML_VALUE: &str = std_toml!("TomlValue");
-pub const STD_TOML_VALUE_STRING: &str = std_toml!("TomlValue.String");
-pub const STD_TOML_VALUE_INTEGER: &str = std_toml!("TomlValue.Integer");
-pub const STD_TOML_VALUE_FLOAT: &str = std_toml!("TomlValue.Float");
-pub const STD_TOML_VALUE_BOOLEAN: &str = std_toml!("TomlValue.Boolean");
-pub const STD_TOML_VALUE_DATETIME: &str = std_toml!("TomlValue.Datetime");
-pub const STD_TOML_VALUE_ARRAY: &str = std_toml!("TomlValue.Array");
-pub const STD_TOML_VALUE_TABLE: &str = std_toml!("TomlValue.Table");
-pub const STD_TOML_PARSE: &str = std_toml!("Parse");
-pub const STD_TOML_STRINGIFY: &str = std_toml!("Stringify");
+std_symbol!(STD_TOML_VALUE = std_toml!("TomlValue"));
+std_symbol!(STD_TOML_VALUE_STRING = std_toml!("TomlValue.String"));
+std_symbol!(STD_TOML_VALUE_INTEGER = std_toml!("TomlValue.Integer"));
+std_symbol!(STD_TOML_VALUE_FLOAT = std_toml!("TomlValue.Float"));
+std_symbol!(STD_TOML_VALUE_BOOLEAN = std_toml!("TomlValue.Boolean"));
+std_symbol!(STD_TOML_VALUE_DATETIME = std_toml!("TomlValue.Datetime"));
+std_symbol!(STD_TOML_VALUE_ARRAY = std_toml!("TomlValue.Array"));
+std_symbol!(STD_TOML_VALUE_TABLE = std_toml!("TomlValue.Table"));
+std_symbol!(STD_TOML_PARSE = std_toml!("Parse"));
+std_symbol!(STD_TOML_STRINGIFY = std_toml!("Stringify"));
 
 pub(in crate::std_units) const STD_TOML_SYMBOLS: &[&str] = &[
     STD_TOML_VALUE,

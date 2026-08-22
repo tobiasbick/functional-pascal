@@ -1,3 +1,5 @@
+//! Integration tests for indexing project symbols and dependencies.
+
 #![allow(
     clippy::expect_used,
     reason = "integration fixtures use expect to keep index assertions focused"

@@ -1,3 +1,13 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Curated FPAS end-to-end benchmark harness.
 //!
 //! See [`docs/bench/README.md`](../../../docs/bench/README.md).

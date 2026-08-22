@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Option.*`.
 ///
 /// **Documentation:** `docs/pascal/std/result/option.md`
@@ -26,4 +27,5 @@ pub enum OptionIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/result/option.md`
     OrElse = 135,
+}
 }

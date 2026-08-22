@@ -7,7 +7,7 @@ use fpas_diagnostics::DiagnosticSeverity;
 use fpas_parser::{CompilationUnit, parse_compilation_unit};
 use fpas_project as project;
 
-use crate::test_script::{ScriptConfig, apply_script_to_vm, load_script, sidecar_path_for_test};
+use crate::test_script::{apply_script_to_vm, load_script, sidecar_path_for_test};
 
 use super::LinkContext;
 
@@ -67,10 +67,10 @@ pub(super) fn apply_test_script(
     cli_script: Option<&Path>,
     manifest_override: Option<&project::TestFileOverride>,
     vm: &mut fpas_vm::Vm,
-) -> Result<ScriptConfig, String> {
+) -> Result<(), String> {
     let script_path = resolve_script_path(test_path, cli_script, manifest_override)?;
 
-    let mut config = if let Some(script_path) = script_path {
+    if let Some(script_path) = script_path {
         if !script_path.is_file() {
             return Err(format!(
                 "Script file not found: `{}`.\n  help: Pass an existing `.script.toml` path with `--script` or fix `[test.overrides]` in the project file.",
@@ -79,19 +79,9 @@ pub(super) fn apply_test_script(
         }
 
         let script = load_script(&script_path)?;
-        apply_script_to_vm(vm, &script)?;
-        script.config
-    } else {
-        ScriptConfig::default()
-    };
-
-    if let Some(manifest) = manifest_override
-        && let Some(headless_graph) = manifest.headless_graph
-    {
-        config.headless_graph = headless_graph;
+        apply_script_to_vm(vm, &script);
     }
-
-    Ok(config)
+    Ok(())
 }
 
 fn resolve_script_path(

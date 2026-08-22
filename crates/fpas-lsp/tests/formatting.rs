@@ -1,3 +1,5 @@
+//! Protocol tests for LSP document and range formatting.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

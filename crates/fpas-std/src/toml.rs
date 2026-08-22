@@ -365,7 +365,8 @@ value = "ok"
             )],
         );
 
-        let error = fpas_to_toml_at_depth(value, loc(), MAX_TOML_DEPTH).unwrap_err();
+        let error = fpas_to_toml_at_depth(value, loc(), MAX_TOML_DEPTH)
+            .expect_err("TOML conversion must enforce its nesting limit");
 
         assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
     }
@@ -374,7 +375,8 @@ value = "ok"
     fn stringify_rejects_invalid_datetime() {
         let value = test_variant("Datetime", vec![Value::Str("not-a-date".into())]);
 
-        let error = fpas_to_toml(value, loc()).unwrap_err();
+        let error = fpas_to_toml(value, loc())
+            .expect_err("TOML conversion must reject an invalid datetime");
 
         assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
         assert!(error.message.contains("Datetime is invalid"));

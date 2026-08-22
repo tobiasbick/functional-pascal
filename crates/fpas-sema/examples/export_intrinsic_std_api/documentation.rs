@@ -66,11 +66,10 @@ pub(super) fn parameter_description(parameter: &str, routine: &str, ty: Option<&
         "milliseconds" => "Non-negative duration in milliseconds",
         "command" => "Executable name or path to start",
         "args" => "Command-line arguments in invocation order",
-        "app" => "Graphics application session receiving the operation",
-        "width" => "Width in cells or pixels as documented by the operation",
-        "height" => "Height in cells or pixels as documented by the operation",
-        "x" | "x1" | "x2" | "centerx" => "Horizontal coordinate",
-        "y" | "y1" | "y2" | "centery" => "Vertical coordinate",
+        "width" => "Width in cells as documented by the operation",
+        "height" => "Height in cells as documented by the operation",
+        "x" | "x1" | "x2" => "Horizontal coordinate",
+        "y" | "y1" | "y2" => "Vertical coordinate",
         "color" | "fg" | "bg" => "Color value used by the operation",
         "value" | "default" | "expected" | "actual" => {
             "Value consumed or returned by the operation"

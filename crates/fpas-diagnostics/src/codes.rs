@@ -26,6 +26,7 @@ macro_rules! define_codes {
     }) => {
         $(
             $(#[$meta])*
+            #[doc = concat!("Stable diagnostic code `", stringify!($name), "`.")]
             pub const $name: DiagnosticCode = DiagnosticCode::new($value);
         )*
 

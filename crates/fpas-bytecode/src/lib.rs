@@ -1,3 +1,15 @@
+//! Portable register bytecode, executable metadata, and runtime values for Functional Pascal.
+
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 mod debug;
 mod executable;
 mod function;
@@ -22,9 +34,9 @@ pub use instruction::{
 };
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, GraphIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic,
-    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
-    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic, ParseIntrinsic,
+    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic, TaskIntrinsic,
+    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,

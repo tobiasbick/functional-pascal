@@ -1,3 +1,5 @@
+//! Protocol-level integration tests for LSP diagnostics and document updates.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

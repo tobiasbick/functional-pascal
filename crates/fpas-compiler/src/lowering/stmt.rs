@@ -98,11 +98,7 @@ impl LoweringContext {
                             })
                             .collect::<Option<Vec<_>>>()?
                             .join(".");
-                        self.call_result_type(&qualified).or_else(|| {
-                            let canonical = format!("Std.Graph.{qualified}");
-                            crate::intrinsic_catalog::resolve(&canonical, None)
-                                .map(|_| super::types::UNIT)
-                        })
+                        self.call_result_type(&qualified)
                     })
                 }
                 .ok_or_else(|| unsupported(designator.span, "unresolved procedure call"))?;

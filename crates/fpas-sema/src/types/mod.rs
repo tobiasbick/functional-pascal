@@ -60,9 +60,13 @@ pub struct GenericParamDef {
 /// **Documentation:** `docs/pascal/language/types/generics.md`
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ty {
+    /// Signed integer value.
     Integer,
+    /// Double-precision real value.
     Real,
+    /// Boolean value.
     Boolean,
+    /// UTF-8 string value.
     String,
     /// Procedure / void result (e.g. `Std.Array.Push`).
     Unit,
@@ -97,13 +101,16 @@ pub enum Ty {
     Error,
 }
 
+/// Resolved record shape, ownership, members, and callable metadata.
 #[derive(Debug, Clone, PartialEq)]
 pub struct RecordTy {
+    /// Case-preserving qualified record name.
     pub name: String,
     /// Exact source unit that declared the record, or `None` for local and intrinsic records.
     pub owner_unit: Option<String>,
     /// Case-preserving names of members not declared `public`.
     pub private_members: Vec<String>,
+    /// Declared record fields in source order.
     pub fields: Vec<(String, Ty)>,
     /// Instance methods (require implicit `Self`).
     pub methods: Vec<(String, MethodKind)>,
@@ -163,7 +170,9 @@ pub enum MethodKind {
 /// **Documentation:** `docs/pascal/language/types/enums.md`
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumTy {
+    /// Case-preserving qualified enum name.
     pub name: String,
+    /// Declared variants in source order.
     pub variants: Vec<EnumVariantTy>,
 }
 
@@ -188,8 +197,11 @@ impl EnumTy {
 /// Resolved function signature used by semantic analysis and editor tooling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct FunctionTy {
+    /// Generic parameters declared by the function.
     pub type_params: Vec<GenericParamDef>,
+    /// Function parameters in source order.
     pub params: Vec<ParamTy>,
+    /// Resolved function return type.
     pub return_type: Box<Ty>,
     /// Accept any number of arguments beyond the declared params (e.g. `Std.Str.Format`).
     pub variadic: bool,
@@ -198,7 +210,9 @@ pub struct FunctionTy {
 /// Resolved procedure signature used by semantic analysis and editor tooling.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ProcedureTy {
+    /// Generic parameters declared by the procedure.
     pub type_params: Vec<GenericParamDef>,
+    /// Procedure parameters in source order.
     pub params: Vec<ParamTy>,
     /// Accept any number of arguments at the call site (e.g. `Std.Console.WriteLn`).
     pub variadic: bool,
@@ -207,8 +221,11 @@ pub struct ProcedureTy {
 /// One resolved callable parameter.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ParamTy {
+    /// Whether the parameter may be mutated by the callee.
     pub mutable: bool,
+    /// Case-preserving parameter name.
     pub name: String,
+    /// Resolved parameter type.
     pub ty: Ty,
 }
 

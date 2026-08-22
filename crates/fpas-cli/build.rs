@@ -1,3 +1,5 @@
+//! Synchronizes generated standard-library metadata before building the CLI.
+
 use std::io;
 use std::path::Path;
 

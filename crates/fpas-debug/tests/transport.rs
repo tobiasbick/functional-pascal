@@ -261,13 +261,11 @@ fn protocol_stdin_eof_does_not_inject_debuggee_bytes() {
 }
 
 #[test]
-fn tui_and_graph_event_commands_are_unsupported() {
+fn tui_event_commands_are_unsupported() {
     let mut server = server();
     let _ = server.handle_line(&request(1, "initialize", json!({"version":2})));
     let _ = server.handle_line(&request(2, "launch", json!({"stop_on_entry":true})));
     let tui = server.handle_line(&request(3, "io.event", json!({"text":"x"})));
     assert_eq!(tui[0]["error"]["code"], "unsupported_capability");
-    let graph = server.handle_line(&request(4, "graph.event", json!({})));
-    assert_eq!(graph[0]["error"]["code"], "unsupported_capability");
     assert_eq!(server.status(), ServerStatus::Stopped);
 }

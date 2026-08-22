@@ -51,7 +51,6 @@ const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str
         Intrinsic::Fs(_) => Some("Std.Fs"),
         Intrinsic::Env(_) => Some("Std.Env"),
         Intrinsic::Proc(_) => Some("Std.Proc"),
-        Intrinsic::Graph(_) => Some("Std.Graph"),
         Intrinsic::Args(_) => Some("Std.Args"),
         Intrinsic::Console(
             ConsoleIntrinsic::Read

@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Array.*`.
 ///
 /// **Documentation:** `docs/pascal/std/collections/array/README.md`
@@ -51,4 +52,5 @@ pub enum ArrayIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/collections/array/README.md`
     ForEach = 241,
+}
 }

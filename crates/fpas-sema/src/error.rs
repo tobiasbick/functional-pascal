@@ -1,6 +1,7 @@
 use fpas_diagnostics::{Diagnostic, DiagnosticCode};
 use fpas_lexer::Span;
 
+/// Diagnostic returned when semantic analysis rejects a program.
 pub type SemaError = Diagnostic;
 
 #[must_use]

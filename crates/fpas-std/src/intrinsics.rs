@@ -23,8 +23,8 @@ use crate::str;
 use crate::time;
 use crate::toml;
 use fpas_bytecode::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, GraphIntrinsic, Intrinsic,
-    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
+    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic,
+    ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
 };
 
 type StdUnitDispatch =
@@ -128,35 +128,9 @@ fn dispatch_intrinsic(
             | Intrinsic::Console(ConsoleIntrinsic::SplitGraphemes)
             | Intrinsic::Console(ConsoleIntrinsic::Write)
             | Intrinsic::Console(ConsoleIntrinsic::WriteLn)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationOpen)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationClose)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationSize)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationRequestRedraw)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationConfigure)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationRun)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationUploadFrame)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationClear)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationPutPixel)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationPresent)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationDrawLine)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationDrawRect)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationFillRect)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationDrawCircle)
-            | Intrinsic::Graph(GraphIntrinsic::ApplicationDrawText)
-            | Intrinsic::Graph(GraphIntrinsic::HostRequestQuit)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnKeyPressed)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnResize)
-            | Intrinsic::Graph(GraphIntrinsic::HostProcessNext)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnPaint)
-            | Intrinsic::Graph(GraphIntrinsic::HostDispatchRedraw)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnIdle)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnExit)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnMouse)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnWheel)
-            | Intrinsic::Graph(GraphIntrinsic::HostRegisterOnCloseRequested)
     ) {
         return Err(std_internal_error(
-            "internal: Std.Args, Std.Console, and Std.Graph intrinsics are handled in the VM",
+            "internal: Std.Args and Std.Console intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));
@@ -328,8 +302,8 @@ mod vm_only_guard_tests {
 
     use super::{TEST_AGGREGATES, execute_test_intrinsic, run_intrinsic_borrowed};
     use fpas_bytecode::{
-        ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, GraphIntrinsic, Intrinsic, SourceLocation,
-        StrIntrinsic, TaskIntrinsic, Value,
+        ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, Intrinsic, SourceLocation, StrIntrinsic,
+        TaskIntrinsic, Value,
     };
 
     fn loc() -> SourceLocation {
@@ -356,22 +330,7 @@ mod vm_only_guard_tests {
         )
         .expect_err("expected internal error");
         assert!(
-            err.message.contains("Std.Console, and Std.Graph"),
-            "message={}",
-            err.message
-        );
-    }
-
-    #[test]
-    fn graph_open_is_vm_only() {
-        let err = execute_test_intrinsic(
-            Intrinsic::Graph(GraphIntrinsic::ApplicationOpen),
-            &mut Vec::new(),
-            loc(),
-        )
-        .expect_err("expected internal error");
-        assert!(
-            err.message.contains("Std.Console, and Std.Graph"),
+            err.message.contains("Std.Args and Std.Console"),
             "message={}",
             err.message
         );

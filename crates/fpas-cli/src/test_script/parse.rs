@@ -5,54 +5,16 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Optional script-wide defaults from `[config]`.
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct ScriptConfig {
-    /// When true, graph events are allowed (Phase 4 runner integration).
-    pub headless_graph: bool,
-}
-
 /// One scripted input event before `vm.run()`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ScriptEvent {
-    Readln {
-        line: String,
-    },
-    ReadkeyChars {
-        chars: String,
-    },
-    GraphKey {
-        kind: String,
-        ch: Option<char>,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    GraphMouse {
-        action: String,
-        button: String,
-        x: i64,
-        y: i64,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
-    GraphWheel {
-        delta_x: i64,
-        delta_y: i64,
-        shift: bool,
-        ctrl: bool,
-        alt: bool,
-        meta: bool,
-    },
+    Readln { line: String },
+    ReadkeyChars { chars: String },
 }
 
 /// Parsed sidecar script contents.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ScriptFile {
-    pub config: ScriptConfig,
     pub events: Vec<ScriptEvent>,
 }
 
@@ -81,33 +43,15 @@ pub fn parse_script_text(text: &str, path: &Path) -> Result<ScriptFile, String> 
         )
     })?;
 
-    let config = parse_config(root.get("config"), path)?;
-    let events = parse_events(root.get("event"), path)?;
-    Ok(ScriptFile { config, events })
-}
-
-fn parse_config(value: Option<&toml::Value>, path: &Path) -> Result<ScriptConfig, String> {
-    let Some(value) = value else {
-        return Ok(ScriptConfig::default());
-    };
-    let table = value.as_table().ok_or_else(|| {
-        format!(
-            "Invalid `[config]` in `{}`: expected a table.\n  help: Use `[config] headless_graph = false`.",
+    if let Some(key) = root.keys().find(|key| key.as_str() != "event") {
+        return Err(format!(
+            "Unknown script section or field `{key}` in `{}`.\n  help: Sidecar scripts only support `[[event]]` entries.",
             path.display()
-        )
-    })?;
-    let headless_graph = table
-        .get("headless_graph")
-        .map(parse_bool_field)
-        .transpose()
-        .map_err(|error| {
-            format!(
-                "Invalid `[config].headless_graph` in `{}`: {error}",
-                path.display()
-            )
-        })?
-        .unwrap_or(false);
-    Ok(ScriptConfig { headless_graph })
+        ));
+    }
+
+    let events = parse_events(root.get("event"), path)?;
+    Ok(ScriptFile { events })
 }
 
 fn parse_events(value: Option<&toml::Value>, path: &Path) -> Result<Vec<ScriptEvent>, String> {
@@ -147,34 +91,8 @@ fn parse_event_table(
         "readkey_chars" => Ok(ScriptEvent::ReadkeyChars {
             chars: required_string(table, "chars", index, path)?,
         }),
-        "graph_key" => Ok(ScriptEvent::GraphKey {
-            kind: required_string(table, "kind", index, path)?,
-            ch: optional_char(table, "ch", index, path)?,
-            shift: optional_bool(table, "shift").unwrap_or(false),
-            ctrl: optional_bool(table, "ctrl").unwrap_or(false),
-            alt: optional_bool(table, "alt").unwrap_or(false),
-            meta: optional_bool(table, "meta").unwrap_or(false),
-        }),
-        "graph_mouse" => Ok(ScriptEvent::GraphMouse {
-            action: required_string(table, "action", index, path)?,
-            button: required_string(table, "button", index, path)?,
-            x: required_i64(table, "x", index, path)?,
-            y: required_i64(table, "y", index, path)?,
-            shift: optional_bool(table, "shift").unwrap_or(false),
-            ctrl: optional_bool(table, "ctrl").unwrap_or(false),
-            alt: optional_bool(table, "alt").unwrap_or(false),
-            meta: optional_bool(table, "meta").unwrap_or(false),
-        }),
-        "graph_wheel" => Ok(ScriptEvent::GraphWheel {
-            delta_x: optional_i64(table, "delta_x").unwrap_or(0),
-            delta_y: optional_i64(table, "delta_y").unwrap_or(0),
-            shift: optional_bool(table, "shift").unwrap_or(false),
-            ctrl: optional_bool(table, "ctrl").unwrap_or(false),
-            alt: optional_bool(table, "alt").unwrap_or(false),
-            meta: optional_bool(table, "meta").unwrap_or(false),
-        }),
         other => Err(format!(
-            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types include `readln`, `readkey_chars`, and graph events (`graph_key`, `graph_mouse`, `graph_wheel`).",
+            "Unknown event type `{other}` in `[[event]]` #{index} of `{}`.\n  help: Supported types are `readln` and `readkey_chars`.",
             path.display()
         )),
     }
@@ -198,81 +116,4 @@ fn required_string(
             path.display()
         )
     })
-}
-
-fn required_i64(
-    table: &toml::Table,
-    field: &str,
-    index: usize,
-    path: &Path,
-) -> Result<i64, String> {
-    let value = table.get(field).ok_or_else(|| {
-        format!(
-            "Missing `{field}` in `[[event]]` #{index} of `{}`.",
-            path.display()
-        )
-    })?;
-    parse_i64_field(value).map_err(|error| {
-        format!(
-            "Invalid `{field}` in `[[event]]` #{index} of `{}`: {error}",
-            path.display()
-        )
-    })
-}
-
-fn optional_i64(table: &toml::Table, field: &str) -> Option<i64> {
-    table
-        .get(field)
-        .and_then(|value| parse_i64_field(value).ok())
-}
-
-fn optional_bool(table: &toml::Table, field: &str) -> Option<bool> {
-    table
-        .get(field)
-        .and_then(|value| parse_bool_field(value).ok())
-}
-
-fn optional_char(
-    table: &toml::Table,
-    field: &str,
-    index: usize,
-    path: &Path,
-) -> Result<Option<char>, String> {
-    let Some(value) = table.get(field) else {
-        return Ok(None);
-    };
-    let text = value.as_str().ok_or_else(|| {
-        format!(
-            "Invalid `{field}` in `[[event]]` #{index} of `{}`: expected a string.",
-            path.display()
-        )
-    })?;
-    let mut chars = text.chars();
-    let ch = chars.next().ok_or_else(|| {
-        format!(
-            "Invalid `{field}` in `[[event]]` #{index} of `{}`: string must not be empty.",
-            path.display()
-        )
-    })?;
-    if chars.next().is_some() {
-        return Err(format!(
-            "Invalid `{field}` in `[[event]]` #{index} of `{}`: expected a single character.",
-            path.display()
-        ));
-    }
-    Ok(Some(ch))
-}
-
-fn parse_i64_field(value: &toml::Value) -> Result<i64, String> {
-    match value {
-        toml::Value::Integer(value) => Ok(*value),
-        toml::Value::Float(value) if value.fract() == 0.0 => Ok(*value as i64),
-        _ => Err("expected an integer".to_string()),
-    }
-}
-
-fn parse_bool_field(value: &toml::Value) -> Result<bool, String> {
-    value
-        .as_bool()
-        .ok_or_else(|| "expected true or false".to_string())
 }

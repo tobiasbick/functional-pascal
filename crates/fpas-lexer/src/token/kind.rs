@@ -1,3 +1,25 @@
+macro_rules! documented_token_enum {
+    (
+        $(#[$enum_meta:meta])*
+        pub enum $name:ident {
+            $(
+                $(#[$variant_meta:meta])*
+                $variant:ident $(($payload:ty))?,
+            )*
+        }
+    ) => {
+        $(#[$enum_meta])*
+        pub enum $name {
+            $(
+                $(#[$variant_meta])*
+                #[doc = concat!("Lexical token `", stringify!($variant), "`.")]
+                $variant $(($payload))?,
+            )*
+        }
+    };
+}
+
+documented_token_enum! {
 /// Lexical token produced by the Functional Pascal lexer.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -104,4 +126,5 @@ pub enum Token {
 
     // End of file
     Eof,
+}
 }

@@ -1,4 +1,6 @@
-#![expect(
+//! Wire-format compatibility tests for serialized FPAS programs.
+
+#![allow(
     clippy::expect_used,
     clippy::unwrap_used,
     reason = "program wire-format tests use exact fixture assertions"
@@ -13,7 +15,7 @@ use fpas_program::{FormatError, PROGRAM_FORMAT_VERSION, decode, encode};
 use common::{payload_start, program_image, refresh_payload_digest};
 
 fn decode_error(bytes: &[u8]) -> FormatError {
-    decode(bytes).unwrap_err()
+    decode(bytes).expect_err("malformed program bytes must be rejected")
 }
 
 #[test]

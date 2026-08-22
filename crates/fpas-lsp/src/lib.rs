@@ -1,10 +1,18 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Standard-LSP transport for the Functional Pascal language service.
 //!
 //! This crate owns protocol lifecycle, URI and UTF-16 conversion, and full-text document
 //! synchronization plus diagnostic publication and formatting edits. Language behavior remains in
 //! `fpas-language-service` and its compiler crates.
-
-#![deny(missing_docs)]
 
 mod capabilities;
 pub mod convert;

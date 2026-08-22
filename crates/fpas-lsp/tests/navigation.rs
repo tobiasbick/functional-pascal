@@ -1,3 +1,5 @@
+//! Protocol tests for LSP definition and symbol navigation.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

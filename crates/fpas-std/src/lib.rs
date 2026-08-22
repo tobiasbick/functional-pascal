@@ -1,16 +1,10 @@
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
         clippy::panic,
-        reason = "runtime tests use expect/panic to keep fixture assertions compact"
-    )
-)]
-#![cfg_attr(
-    test,
-    expect(
         clippy::unwrap_used,
-        reason = "runtime tests use unwrap to keep console fixture assertions compact"
+        reason = "runtime tests use unwrap/expect/panic to keep fixture assertions compact"
     )
 )]
 
@@ -28,7 +22,6 @@ mod dict;
 mod env;
 mod error;
 mod fs;
-mod graph;
 mod intrinsic_args;
 mod intrinsics;
 mod json;
@@ -47,7 +40,6 @@ mod test;
 mod text;
 mod time;
 mod toml;
-mod ui;
 
 pub use aggregate_factory::{AggregateFactory, RUNTIME_AGGREGATE_TYPES};
 pub use console::{
@@ -60,26 +52,19 @@ pub use console_event::{
     event_kind_index, mouse_action_index, mouse_button_index,
 };
 pub use error::StdError;
-pub use graph::{
-    GRAPH_EVENT_KIND_VARIANTS, GRAPH_EXIT_REASON_VARIANTS, GraphEvent, GraphEventKind, GraphHost,
-    GraphSession, HeadlessGraphTestModeGuard, UploadedFrame, headless_graph_test_depth_for_tests,
-    last_headless_graph_frame_for_tests, pop_headless_graph_test_mode,
-    push_headless_graph_test_mode, with_headless_graph_backend_for_tests,
-};
 #[cfg(test)]
 pub(crate) use intrinsics::execute_test_intrinsic;
 pub use intrinsics::run_intrinsic_borrowed;
 pub use key_event::{ConsoleKeyEvent, KEY_KIND_VARIANTS, key_kind_index};
 pub use std_units::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
-    STD_UNIT_FS, STD_UNIT_GRAPH, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE,
-    STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK,
-    STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_INTRINSIC,
-    STD_UNITS_KNOWN, canonical_std_unit_from_segments, canonical_std_unit_from_tail,
-    is_std_root_segment, std_symbols, std_unit_symbols, std_units_list_for_hint,
+    STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH,
+    STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST,
+    STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
+    canonical_std_unit_from_segments, canonical_std_unit_from_tail, is_std_root_segment,
+    std_symbols, std_unit_symbols, std_units_list_for_hint,
 };
 pub use test::{assert_screen_cell, assert_screen_line, reset_test_skip_state, test_was_skipped};
-pub use ui::{UiEvent, UiHost, UiHostSurface, UiModifiers, UiMouse, UiResize, UiWheel};
 
 /// Returns the index of `name` in `variants`, or `None` if not found.
 pub(crate) fn variant_index(variants: &[&str], name: &str) -> Option<usize> {

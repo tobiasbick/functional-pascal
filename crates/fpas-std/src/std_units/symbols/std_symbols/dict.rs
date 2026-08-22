@@ -1,14 +1,14 @@
 //! `Std.Dict` symbol names and registry group.
 
-pub const STD_DICT_LENGTH: &str = std_dict!("Length");
-pub const STD_DICT_CONTAINS_KEY: &str = std_dict!("ContainsKey");
-pub const STD_DICT_KEYS: &str = std_dict!("Keys");
-pub const STD_DICT_VALUES: &str = std_dict!("Values");
-pub const STD_DICT_REMOVE: &str = std_dict!("Remove");
-pub const STD_DICT_GET: &str = std_dict!("Get");
-pub const STD_DICT_MERGE: &str = std_dict!("Merge");
-pub const STD_DICT_MAP: &str = std_dict!("Map");
-pub const STD_DICT_FILTER: &str = std_dict!("Filter");
+std_symbol!(STD_DICT_LENGTH = std_dict!("Length"));
+std_symbol!(STD_DICT_CONTAINS_KEY = std_dict!("ContainsKey"));
+std_symbol!(STD_DICT_KEYS = std_dict!("Keys"));
+std_symbol!(STD_DICT_VALUES = std_dict!("Values"));
+std_symbol!(STD_DICT_REMOVE = std_dict!("Remove"));
+std_symbol!(STD_DICT_GET = std_dict!("Get"));
+std_symbol!(STD_DICT_MERGE = std_dict!("Merge"));
+std_symbol!(STD_DICT_MAP = std_dict!("Map"));
+std_symbol!(STD_DICT_FILTER = std_dict!("Filter"));
 
 pub(in crate::std_units) const STD_DICT_SYMBOLS: &[&str] = &[
     STD_DICT_LENGTH,

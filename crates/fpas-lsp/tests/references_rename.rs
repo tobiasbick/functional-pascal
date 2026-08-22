@@ -1,3 +1,5 @@
+//! Protocol tests for LSP references and rename operations.
+
 #![allow(
     clippy::expect_used,
     clippy::panic,

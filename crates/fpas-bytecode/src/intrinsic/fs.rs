@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Fs.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/fs.md`
@@ -42,4 +43,5 @@ pub enum FsIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/fs.md`
     WriteTextAtomic = 517,
+}
 }

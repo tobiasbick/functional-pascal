@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Toml.*`.
 ///
 /// **Documentation:** `docs/pascal/std/text/toml.md`
@@ -18,4 +19,5 @@ pub enum TomlIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/text/toml.md`
     Stringify = 516,
+}
 }

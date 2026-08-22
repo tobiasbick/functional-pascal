@@ -168,11 +168,9 @@ fn cancel_input_clears_unread_lines() {
 }
 
 #[test]
-fn tui_and_graph_event_requests_are_unsupported() {
+fn tui_event_requests_are_unsupported() {
     let mut adapter = server();
     stop_on_entry(&mut adapter);
     let tui = adapter.handle(request(4, "fpas/event", json!({})));
     assert_eq!(tui[0]["success"], false, "{tui:?}");
-    let graph = adapter.handle(request(5, "fpas/graphEvent", json!({})));
-    assert_eq!(graph[0]["success"], false, "{graph:?}");
 }

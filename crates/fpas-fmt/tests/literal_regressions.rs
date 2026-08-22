@@ -1,3 +1,5 @@
+//! Regression tests for formatting literal values without changing their meaning.
+
 #![allow(clippy::expect_used)]
 
 mod common;

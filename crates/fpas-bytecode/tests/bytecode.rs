@@ -1,6 +1,6 @@
 //! Register-bytecode representation and verifier integration tests.
 
-#![expect(
+#![allow(
     clippy::expect_used,
     reason = "test-only executable builders fail fast when a fixture is malformed"
 )]

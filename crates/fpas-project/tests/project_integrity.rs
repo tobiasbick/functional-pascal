@@ -4,7 +4,7 @@
     clippy::expect_used,
     reason = "integration fixtures use expect to keep assertions focused"
 )]
-#![expect(
+#![allow(
     clippy::panic,
     reason = "the parser fixture panics only when its hard-coded source has the wrong shape"
 )]

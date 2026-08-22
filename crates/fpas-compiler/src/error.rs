@@ -1,6 +1,7 @@
 use fpas_diagnostics::Diagnostic;
 use fpas_diagnostics::codes::INTERNAL_COMPILER_INVARIANT_FAILURE;
 
+/// Diagnostic returned when bytecode compilation fails.
 pub type CompileError = Diagnostic;
 
 #[must_use]

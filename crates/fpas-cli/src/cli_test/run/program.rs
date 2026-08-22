@@ -6,11 +6,9 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_diagnostics::codes::RUNTIME_TEST_ASSERTION_FAILED;
-use fpas_std::UploadedFrame;
 use fpas_vm::VmError;
 use serde::{Deserialize, Serialize};
 
-use super::super::expect_pixels;
 use super::super::expect_stdout;
 use super::super::process;
 use super::super::report::TestOutcome;
@@ -199,20 +197,17 @@ pub(in crate::cli_test) fn run_prepared_program(
         output,
     } = prepared;
     let mut vm = fpas_vm::Vm::new(executable);
-    let script_config = match apply_test_script(
+    if let Err(message) = apply_test_script(
         &test_path,
         script_override.as_deref(),
         manifest_override.as_ref(),
         &mut vm,
     ) {
-        Ok(config) => config,
-        Err(message) => {
-            render_compile_error(stderr, &display, output, &message);
-            return Ok(TestOutcome::CompileError);
-        }
-    };
+        render_compile_error(stderr, &display, output, &message);
+        return Ok(TestOutcome::CompileError);
+    }
     gate()?;
-    let execution = execute_vm(vm, script_config.headless_graph);
+    let execution = execute_vm(vm);
     Ok(classify_execution(
         &test_path,
         source_paths.as_deref(),
@@ -226,7 +221,6 @@ pub(in crate::cli_test) fn run_prepared_program(
 struct VmExecution {
     result: Result<(), VmError>,
     stdout_lines: Vec<String>,
-    headless_frame: Option<UploadedFrame>,
     skipped: bool,
 }
 
@@ -242,20 +236,13 @@ fn classify_execution(
         VmExecution {
             result: Ok(()),
             ref stdout_lines,
-            ref headless_frame,
             skipped,
         } => {
-            if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass) {
-                if let Err(message) = expect_stdout::compare_stdout(path, stdout_lines) {
-                    render_assertion_error(stderr, display, output, &message);
-                    return TestOutcome::AssertFailed;
-                }
-                if let Some(frame) = headless_frame.as_ref()
-                    && let Err(message) = expect_pixels::compare_pixels(path, frame)
-                {
-                    render_assertion_error(stderr, display, output, &message);
-                    return TestOutcome::AssertFailed;
-                }
+            if matches!(output, RunOutput::Test | RunOutput::TestDeferredPass)
+                && let Err(message) = expect_stdout::compare_stdout(path, stdout_lines)
+            {
+                render_assertion_error(stderr, display, output, &message);
+                return TestOutcome::AssertFailed;
             }
             if skipped {
                 if output.emit_pass() {
@@ -271,7 +258,6 @@ fn classify_execution(
         VmExecution {
             result: Err(diagnostic),
             stdout_lines: _,
-            headless_frame: _,
             skipped: _,
         } => {
             if output.emit_fail_banner() {
@@ -304,22 +290,13 @@ fn render_assertion_error(stderr: &mut dyn Write, display: &str, output: RunOutp
     let _ = writeln!(stderr, "        {message}");
 }
 
-fn execute_vm(mut vm: fpas_vm::Vm, headless_graph: bool) -> VmExecution {
+fn execute_vm(mut vm: fpas_vm::Vm) -> VmExecution {
     fpas_std::reset_test_skip_state();
 
-    let mut run = || {
-        let result = vm.run().map(|_| ());
-        VmExecution {
-            result,
-            stdout_lines: vm.output().lines,
-            headless_frame: fpas_std::last_headless_graph_frame_for_tests(),
-            skipped: fpas_std::test_was_skipped(),
-        }
-    };
-
-    if headless_graph {
-        fpas_std::with_headless_graph_backend_for_tests(run)
-    } else {
-        run()
+    let result = vm.run().map(|_| ());
+    VmExecution {
+        result,
+        stdout_lines: vm.output().lines,
+        skipped: fpas_std::test_was_skipped(),
     }
 }

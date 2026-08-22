@@ -1,10 +1,18 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Editor-oriented Functional Pascal source snapshots and analysis.
 //!
 //! This crate owns no editor protocol types and performs no compilation, execution, or
 //! compiled-unit writes. It composes the parser, semantic analyzer, formatter, and project loader
 //! into reusable immutable results for a later language-server transport.
-
-#![deny(missing_docs)]
 
 mod analysis;
 mod cancellation;

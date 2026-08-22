@@ -1,3 +1,5 @@
+//! Validation tests for typed control-flow IR programs.
+
 use fpas_ir::{
     BasicBlock, BinaryOperation, BlockId, BlockParameter, BlockTarget, CaptureDeclaration,
     CaptureKind, Constant, EnumLayout, EnumLayoutId, EnumVariant, FieldId, Function, FunctionId,

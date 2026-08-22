@@ -3,7 +3,15 @@
 //! Normative style: [`docs/pascal/tools/fmt-style.md`](../../../docs/pascal/tools/fmt-style.md).
 //! Language reference: [`docs/pascal/`](../../../docs/pascal/).
 
-#![cfg_attr(test, allow(clippy::expect_used, clippy::panic))]
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "formatter tests use unwrap/expect/panic to keep fixture assertions focused"
+    )
+)]
 
 mod comments;
 mod emit;

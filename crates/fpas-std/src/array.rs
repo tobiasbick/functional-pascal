@@ -150,7 +150,8 @@ mod tests {
     #[test]
     fn fill_rejects_count_above_limit() {
         let mut stack = vec![Value::Integer(1), Value::Integer(MAX_COLLECTION_LEN + 1)];
-        let err = run_array(ArrayIntrinsic::Fill, &mut stack).unwrap_err();
+        let err = run_array(ArrayIntrinsic::Fill, &mut stack)
+            .expect_err("Fill must reject a count above the collection limit");
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 
@@ -161,7 +162,8 @@ mod tests {
             Value::Integer(0),
             Value::Integer(3),
         ];
-        let err = run_array(ArrayIntrinsic::Slice, &mut stack).unwrap_err();
+        let err = run_array(ArrayIntrinsic::Slice, &mut stack)
+            .expect_err("Slice must reject an out-of-bounds interval");
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 
@@ -172,7 +174,8 @@ mod tests {
             Value::Integer(1),
             Value::Integer(i64::MAX),
         ];
-        let err = run_array(ArrayIntrinsic::Slice, &mut stack).unwrap_err();
+        let err = run_array(ArrayIntrinsic::Slice, &mut stack)
+            .expect_err("Slice must reject an overflowing end index");
         assert_eq!(err.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
     }
 }

@@ -7,6 +7,7 @@ use std::thread;
 use std::time::Duration;
 
 impl Console {
+    /// Updates the logical screen dimensions from the attached terminal.
     pub fn sync_terminal_size(&mut self) {
         if self.writer.is_none() {
             return;
@@ -24,6 +25,7 @@ impl Console {
         crossterm::terminal::size().ok()
     }
 
+    /// Resizes the logical console buffer.
     pub fn resize(&mut self, width: u16, height: u16) {
         self.state.resize(width, height);
     }
@@ -102,6 +104,7 @@ impl Console {
         Ok(())
     }
 
+    /// Starts a console tone at `hz` when the platform supports it.
     pub fn sound(&mut self, hz: i64, location: SourceLocation) -> Result<(), StdError> {
         if hz <= 0 {
             return Err(std_runtime_error(
@@ -132,10 +135,12 @@ impl Console {
         Ok(())
     }
 
+    /// Stops a tone previously started with [`Self::sound`].
     pub fn no_sound(&mut self) -> Result<(), StdError> {
         Ok(())
     }
 
+    /// Initializes CRT-compatible console state.
     pub fn assign_crt(&mut self) -> Result<(), StdError> {
         self.enable_crt_mode();
         Ok(())

@@ -4,6 +4,7 @@
 
 use num_enum::TryFromPrimitive;
 
+documented_intrinsic_enum! {
 /// Intrinsics for `Std.Env.*`.
 ///
 /// **Documentation:** `docs/pascal/std/host/env.md`
@@ -18,4 +19,5 @@ pub enum EnvIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/host/env.md`
     Exists = 309,
+}
 }

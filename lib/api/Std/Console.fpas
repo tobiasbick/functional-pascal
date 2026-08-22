@@ -5,7 +5,7 @@ public const
   // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
   // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
-  // Text-mode compatibility constants.
+  // Text-mode constants.
   BW40: integer := 0;
   // Intrinsic `BW80` constant.
   BW80: integer := 0;

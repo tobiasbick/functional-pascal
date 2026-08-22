@@ -50,7 +50,6 @@ fpas_suite_tests! {
     (fpas_suite_stdlib_toml, "tests/stdlib/toml/"),
     (fpas_suite_concurrency, "tests/concurrency/"),
     (fpas_suite_console, "tests/console/"),
-    (fpas_suite_graph, "tests/graph/"),
 }
 
 #[test]

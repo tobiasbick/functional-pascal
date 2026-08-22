@@ -1,12 +1,12 @@
 //! `Std.Result` symbol names and registry group.
 
-pub const STD_RESULT_UNWRAP: &str = std_result!("Unwrap");
-pub const STD_RESULT_UNWRAP_OR: &str = std_result!("UnwrapOr");
-pub const STD_RESULT_IS_OK: &str = std_result!("IsOk");
-pub const STD_RESULT_IS_ERR: &str = std_result!("IsError");
-pub const STD_RESULT_MAP: &str = std_result!("Map");
-pub const STD_RESULT_AND_THEN: &str = std_result!("AndThen");
-pub const STD_RESULT_OR_ELSE: &str = std_result!("OrElse");
+std_symbol!(STD_RESULT_UNWRAP = std_result!("Unwrap"));
+std_symbol!(STD_RESULT_UNWRAP_OR = std_result!("UnwrapOr"));
+std_symbol!(STD_RESULT_IS_OK = std_result!("IsOk"));
+std_symbol!(STD_RESULT_IS_ERR = std_result!("IsError"));
+std_symbol!(STD_RESULT_MAP = std_result!("Map"));
+std_symbol!(STD_RESULT_AND_THEN = std_result!("AndThen"));
+std_symbol!(STD_RESULT_OR_ELSE = std_result!("OrElse"));
 
 pub(in crate::std_units) const STD_RESULT_SYMBOLS: &[&str] = &[
     STD_RESULT_UNWRAP,

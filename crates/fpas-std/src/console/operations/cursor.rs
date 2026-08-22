@@ -4,6 +4,7 @@ use fpas_bytecode::SourceLocation;
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
 
 impl Console {
+    /// Moves the cursor to one-based coordinates within the active window.
     pub fn goto_xy(&mut self, x: i64, y: i64, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -22,14 +23,17 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Returns the cursor column relative to the active window.
     pub fn where_x(&self) -> i64 {
         i64::from(self.state.cursor_x)
     }
 
+    /// Returns the cursor row relative to the active window.
     pub fn where_y(&self) -> i64 {
         i64::from(self.state.cursor_y)
     }
 
+    /// Makes the terminal cursor visible.
     pub fn cursor_on(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -38,6 +42,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Hides the terminal cursor.
     pub fn cursor_off(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();
@@ -45,6 +50,7 @@ impl Console {
         self.render_if_ready(location)
     }
 
+    /// Selects the large cursor shape when supported.
     pub fn cursor_big(&mut self, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         self.enable_crt_mode();

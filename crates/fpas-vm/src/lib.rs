@@ -1,8 +1,11 @@
+//! Bytecode execution and source-level debugging for compiled FPAS programs.
+
 #![cfg_attr(
     test,
-    expect(
+    allow(
         clippy::expect_used,
         clippy::panic,
+        clippy::unwrap_used,
         reason = "VM tests use unwrap/expect/panic to keep low-level bytecode assertions focused on behavior"
     )
 )]

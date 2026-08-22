@@ -42,9 +42,8 @@ positive hit conditions, logpoints, and structured program output. Debug Console
 input is read-only evaluation, not program stdin. **Debug: Send Program Input**
 queues one `Read`/`ReadLn` line on the stopped session; **Debug: Signal Program
 Input EOF** and **Debug: Cancel Queued Program Input** map onto the matching
-DAP custom requests. The extension does not create a second debug terminal. TUI and graph
-handlers run only after continue; Debug Console evaluation does not dispatch
-them.
+DAP custom requests. The extension does not create a second debug terminal. TUI events are
+processed only after continue; Debug Console evaluation does not dispatch them.
 
 Programs using `go`, `Std.Task.Wait`, `WaitAll`, and task-local `Sleep` appear
 as stable entries in VS Code's Threads view. Selecting a task selects its call
@@ -217,7 +216,7 @@ Project**, **Format Project**, **Check Project Formatting**, **Run Project in
 Terminal**, and **Cancel Active Operation**. Non-interactive commands invoke the
 bundled CLI without a shell, so paths and arguments containing spaces remain
 separate. Cancellation terminates the owned CLI process. Run uses an editor
-terminal because interactive console, TUI, and graphical programs retain their
+terminal because interactive console and TUI programs retain their
 normal host interaction; program arguments are entered as a JSON string array
 and forwarded after `--`.
 

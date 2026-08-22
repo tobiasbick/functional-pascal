@@ -7,6 +7,7 @@
 use fpas_diagnostics::codes::INTERNAL_VM_INVARIANT_FAILURE;
 use fpas_diagnostics::{Diagnostic, DiagnosticCode, SourceLocation, SourceSpan};
 
+/// Diagnostic returned when a standard-library operation fails.
 pub type StdError = Diagnostic;
 
 #[must_use]
@@ -43,6 +44,7 @@ pub fn std_runtime_error(
 }
 
 #[must_use]
+/// Creates an internal-runtime diagnostic for an invariant violation.
 pub fn std_internal_error(
     message: impl Into<String>,
     help: impl Into<String>,

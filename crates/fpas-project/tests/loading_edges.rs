@@ -1,3 +1,5 @@
+//! Integration tests for project-loading edge cases and diagnostics.
+
 #![allow(
     clippy::expect_used,
     reason = "project loading fixtures use expect for compact setup"

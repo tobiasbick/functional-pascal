@@ -1,6 +1,5 @@
 use fpas_bytecode::{
-    ArgsIntrinsic, ConsoleIntrinsic, Constant, GraphIntrinsic, Instruction, Intrinsic, Opcode,
-    TestIntrinsic, Value,
+    ArgsIntrinsic, ConsoleIntrinsic, Constant, Instruction, Intrinsic, Opcode, TestIntrinsic, Value,
 };
 
 use super::{abx, return_unit};
@@ -90,59 +89,6 @@ fn queued_key_input_is_available_to_console_intrinsics() {
     vm.push_readkey_input("Z");
     vm.run().expect("hosted key input");
     assert_eq!(vm.output().lines, vec!["Z"]);
-}
-
-#[test]
-fn headless_graph_open_size_and_close_are_deterministic() {
-    let mut executable = super::unverified(
-        vec![
-            abx(Opcode::LoadConstant, 0, 0),
-            abx(Opcode::LoadConstant, 1, 1),
-            intrinsic(2, Intrinsic::Graph(GraphIntrinsic::OpenForTest), 0, 2),
-            intrinsic(3, Intrinsic::Graph(GraphIntrinsic::ApplicationSize), 2, 1),
-            intrinsic(
-                fpas_bytecode::NO_REGISTER,
-                Intrinsic::Graph(GraphIntrinsic::ApplicationClose),
-                2,
-                1,
-            ),
-            return_unit(),
-        ],
-        vec![Constant::Integer(16), Constant::Integer(9)],
-        vec![
-            "main",
-            "graph.fpas",
-            "Std.Graph.Application",
-            "Std.Graph.Size",
-            "width",
-            "height",
-        ],
-        4,
-    );
-    executable.records.push(fpas_bytecode::RecordLayout {
-        name: fpas_bytecode::StringId::new(2),
-        fields: Vec::new(),
-        properties: Vec::new(),
-        methods: Vec::new(),
-    });
-    executable.records.push(fpas_bytecode::RecordLayout {
-        name: fpas_bytecode::StringId::new(3),
-        fields: vec![
-            fpas_bytecode::RecordField {
-                name: fpas_bytecode::StringId::new(4),
-                ty: fpas_bytecode::DebugTypeId::new(0),
-            },
-            fpas_bytecode::RecordField {
-                name: fpas_bytecode::StringId::new(5),
-                ty: fpas_bytecode::DebugTypeId::new(0),
-            },
-        ],
-        properties: Vec::new(),
-        methods: Vec::new(),
-    });
-    let executable = executable.verify().expect("graph layout must verify");
-    let execution = Vm::new(executable).run().expect("headless graph lifecycle");
-    assert_eq!(execution.value, Value::Unit);
 }
 
 #[test]

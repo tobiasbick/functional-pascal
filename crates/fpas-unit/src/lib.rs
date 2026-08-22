@@ -1,3 +1,13 @@
+#![cfg_attr(
+    test,
+    allow(
+        clippy::expect_used,
+        clippy::panic,
+        clippy::unwrap_used,
+        reason = "tests use explicit failures to keep fixture assertions focused"
+    )
+)]
+
 //! Compiled-unit identities, binary format, and `.fpascu` sidecar management.
 //!
 //! Documentation: `docs/pascal/program-structure/units.md` and

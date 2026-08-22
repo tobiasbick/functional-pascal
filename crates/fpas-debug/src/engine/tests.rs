@@ -24,13 +24,17 @@ fn engine() -> DebugEngine {
 }
 
 fn failure_code(records: &[DebugRecord]) -> &str {
-    match records.first() {
-        Some(DebugRecord::Response {
-            outcome: Err(EngineFailure { code, .. }),
-            ..
-        }) => code,
-        other => panic!("expected engine failure, got {other:?}"),
-    }
+    let failure_message = format!("expected engine failure response, got {records:?}");
+    records
+        .first()
+        .and_then(|record| match record {
+            DebugRecord::Response {
+                outcome: Err(EngineFailure { code, .. }),
+                ..
+            } => Some(code.as_str()),
+            _ => None,
+        })
+        .expect(&failure_message)
 }
 
 #[test]

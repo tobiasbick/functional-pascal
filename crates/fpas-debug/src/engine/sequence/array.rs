@@ -24,7 +24,7 @@ impl DebugEngine {
             frame_id,
         ) {
             Ok(request) => request,
-            Err(response) => return vec![response],
+            Err(response) => return vec![*response],
         };
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];
@@ -58,7 +58,7 @@ impl DebugEngine {
             frame_id,
         ) {
             Ok(request) => request,
-            Err(response) => return vec![response],
+            Err(response) => return vec![*response],
         };
         let Some(session) = self.actor.session_mut() else {
             return vec![invalid_state(request_id, command, self.status)];

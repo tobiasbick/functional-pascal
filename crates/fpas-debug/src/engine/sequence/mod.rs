@@ -21,18 +21,20 @@ fn parse_request(
     target_source: &str,
     expression_sources: &[String],
     frame_id: Option<u64>,
-) -> Result<SequenceRequest, super::record::DebugRecord> {
+) -> Result<SequenceRequest, Box<super::record::DebugRecord>> {
     if status != DebugStatus::Stopped {
-        return Err(super::reply::invalid_state(request_id, command, status));
+        return Err(Box::new(super::reply::invalid_state(
+            request_id, command, status,
+        )));
     }
     let limits = fpas_vm::DebugEvaluationLimits::default();
     let target = parse_debug_assignment_target(target_source, limits)
-        .map_err(|error| parse_error(request_id, command, error))?;
+        .map_err(|error| Box::new(parse_error(request_id, command, error)))?;
     let mut expressions = Vec::with_capacity(expression_sources.len());
     for source in expression_sources {
         expressions.push(
             parse_debug_expression(source, limits)
-                .map_err(|error| parse_error(request_id, command, error))?,
+                .map_err(|error| Box::new(parse_error(request_id, command, error)))?,
         );
     }
     Ok(SequenceRequest {

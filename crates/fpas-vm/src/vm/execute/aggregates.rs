@@ -80,8 +80,10 @@ impl Worker {
             .ok_or_else(|| self.bad_slot("dictionary window", u32::from(o.c)))?;
         let values = self.window(o.b, count)?;
         let pairs = values
-            .chunks_exact(2)
-            .map(|pair| (pair[0].clone(), pair[1].clone()))
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|[key, value]| (key.clone(), value.clone()))
             .collect();
         self.write(register(o.a)?, Value::dict(pairs))
     }
@@ -202,17 +204,17 @@ impl Worker {
             return Err(self.type_mismatch("record", &record));
         }
         let overrides = self.window(o.b, usize::from(o.c) * 2)?;
-        for pair in overrides.chunks_exact(2) {
-            let Value::Integer(field) = pair[0] else {
-                return Err(self.type_mismatch("integer record field slot", &pair[0]));
+        for [field, value] in overrides.as_chunks::<2>().0 {
+            let Value::Integer(field) = field else {
+                return Err(self.type_mismatch("integer record field slot", field));
             };
             let field =
-                usize::try_from(field).map_err(|_| self.bad_slot("record field", u32::MAX))?;
+                usize::try_from(*field).map_err(|_| self.bad_slot("record field", u32::MAX))?;
             match &mut record {
                 Value::Record(record) => {
                     *record.values_mut().get_mut(field).ok_or_else(|| {
                         self.bad_slot("record field", u32::try_from(field).unwrap_or(u32::MAX))
-                    })? = pair[1].clone()
+                    })? = value.clone()
                 }
                 _ => return Err(self.type_mismatch("record", &record)),
             }

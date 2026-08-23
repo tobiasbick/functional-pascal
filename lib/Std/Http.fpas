@@ -1,0 +1,29 @@
+unit Std.Http;
+
+uses Std.Http.Client, Std.Http.Headers, Std.Http.Types, Std.Net.Utf8;
+
+public type
+  // One HTTP field name and value.
+  Header = Std.Http.Types.Header;
+  // One complete non-streaming HTTP request.
+  Request = Std.Http.Types.Request;
+  // One complete non-streaming HTTP response.
+  Response = Std.Http.Types.Response;
+
+// Sends one HTTP/1.1 request over a new TCP connection.
+public function Send(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.Response, string;
+begin
+  return Std.Http.Client.Send(RequestValue)
+end;
+
+// Finds the first response header with a case-insensitive name.
+public function HeaderValue(ResponseValue: Std.Http.Types.Response; Name: string): option of string;
+begin
+  return Std.Http.Headers.Find(ResponseValue.Headers, Name)
+end;
+
+// Decodes a response body as validated UTF-8 text.
+public function BodyText(ResponseValue: Std.Http.Types.Response): result of string, string;
+begin
+  return Std.Net.Utf8.Decode(ResponseValue.Body)
+end;

@@ -23,8 +23,8 @@ use crate::str;
 use crate::time;
 use crate::toml;
 use fpas_bytecode::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic,
-    ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
+    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, NetIntrinsic,
+    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
 };
 
 type StdUnitDispatch =
@@ -131,6 +131,23 @@ fn dispatch_intrinsic(
     ) {
         return Err(std_internal_error(
             "internal: Std.Args and Std.Console intrinsics are handled in the VM",
+            "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
+            location,
+        ));
+    }
+
+    if matches!(
+        intrinsic,
+        Intrinsic::Net(
+            NetIntrinsic::Connect
+                | NetIntrinsic::SetTimeout
+                | NetIntrinsic::Read
+                | NetIntrinsic::Write
+                | NetIntrinsic::Close
+        )
+    ) {
+        return Err(std_internal_error(
+            "internal: Std.Net intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));

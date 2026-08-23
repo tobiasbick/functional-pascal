@@ -1,0 +1,8 @@
+program LocalChat;
+
+uses LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Console, Std.Tui;
+
+begin
+  var Initial: LocalChatModel := LocalChatModelCreate(Std.Console.ScreenWidth(), Std.Console.ScreenHeight());
+  TuiApplication.RunWithPalette(Initial, LocalChatUpdate, LocalChatView, LocalChatPalette())
+end.

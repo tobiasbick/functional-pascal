@@ -11,7 +11,10 @@ mod args;
 mod callbacks;
 mod console;
 mod console_args;
+mod net;
 mod test_host;
+
+use net::TcpConnections;
 
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
@@ -36,6 +39,9 @@ impl Worker {
         if let Some(value) = self.execute_console_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
         }
+        if let Some(value) = self.execute_net_intrinsic(intrinsic, arguments, location)? {
+            return Ok(HostedOutcome::Complete(value));
+        }
         if let Some(value) = self.execute_callback_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
         }
@@ -46,12 +52,13 @@ impl Worker {
     }
 }
 
-/// Console, input, and process-argument state for one VM instance.
+/// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
     pub program_args: Vec<String>,
     pub console: Mutex<Console>,
     pub text_input: Mutex<TextInput>,
     pub key_input: Mutex<KeyInput>,
+    pub(in crate::vm::hosted) tcp_connections: TcpConnections,
 }
 
 impl HostedState {
@@ -61,6 +68,7 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
+            tcp_connections: TcpConnections::new(),
         }
     }
 
@@ -71,6 +79,7 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::without_os_stdin()),
             key_input: Mutex::new(KeyInput::without_os_events()),
+            tcp_connections: TcpConnections::new(),
         }
     }
 }

@@ -53,6 +53,11 @@ macro_rules! std_math {
         concat!("Std.Math.", $suffix)
     };
 }
+macro_rules! std_net {
+    ($suffix:literal) => {
+        concat!("Std.Net.", $suffix)
+    };
+}
 macro_rules! std_random {
     ($suffix:literal) => {
         concat!("Std.Random.", $suffix)
@@ -115,6 +120,7 @@ mod env;
 mod fs;
 mod json;
 mod math;
+mod net;
 mod option;
 mod parse;
 mod path;
@@ -136,6 +142,7 @@ pub use env::*;
 pub use fs::*;
 pub use json::*;
 pub use math::*;
+pub use net::*;
 pub use option::*;
 pub use parse::*;
 pub use path::*;

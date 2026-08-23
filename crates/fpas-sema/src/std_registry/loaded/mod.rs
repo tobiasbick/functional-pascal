@@ -8,6 +8,7 @@ mod env;
 mod fs;
 mod json;
 mod math;
+mod net;
 mod parse;
 mod path;
 mod proc;
@@ -22,9 +23,9 @@ mod type_registration;
 use crate::check::Checker;
 use fpas_std::{
     STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV, STD_UNIT_DICT, STD_UNIT_ENV,
-    STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH,
-    STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST,
-    STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_KNOWN,
+    STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET, STD_UNIT_OPTION, STD_UNIT_PARSE,
+    STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM, STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK,
+    STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML, STD_UNIT_TUI, STD_UNITS_KNOWN,
 };
 
 const SOURCE_STD_UNIT_VERSION: &str = "Std.Version";
@@ -50,6 +51,7 @@ pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
         STD_UNIT_CONV => conv::register_std_conv(checker),
         STD_UNIT_PARSE => parse::register_std_parse(checker),
         STD_UNIT_MATH => math::register_std_math(checker),
+        STD_UNIT_NET => net::register_std_net(checker),
         STD_UNIT_RANDOM => random::register_std_random(checker),
         STD_UNIT_ARRAY => array::register_std_array(checker),
         STD_UNIT_RESULT => result_option::register_std_result(checker),

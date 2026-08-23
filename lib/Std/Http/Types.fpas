@@ -1,0 +1,44 @@
+unit Std.Http.Types;
+
+public type
+  // One HTTP field name and value.
+  Header = record
+    public Name: string;
+    public Value: string;
+
+    public static function Create(Name: string; Value: string): Header;
+    begin
+      return record
+        Name := Name;
+        Value := Value;
+      end
+    end;
+  end;
+  // One complete non-streaming HTTP request.
+  Request = record
+    public Method: string;
+    public Url: string;
+    public Headers: array of Header;
+    public Body: array of integer;
+    public TimeoutMillis: integer;
+    public MaxResponseBytes: integer;
+
+    public static function Create(Method: string; Url: string): Request;
+    begin
+      return record
+        Method := Method;
+        Url := Url;
+        Headers := [];
+        Body := [];
+        TimeoutMillis := 30000;
+        MaxResponseBytes := 16777216;
+      end
+    end;
+  end;
+  // One complete non-streaming HTTP response.
+  Response = record
+    public StatusCode: integer;
+    public ReasonPhrase: string;
+    public Headers: array of Header;
+    public Body: array of integer;
+  end;

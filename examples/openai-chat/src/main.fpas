@@ -1,0 +1,50 @@
+program OpenAiChat;
+
+uses Std.Ai.OpenAi, Std.Args, Std.Array, Std.Console, Std.Env;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    WriteLn('Usage: fpas run examples/openai-chat/openai-chat.fpasprj -- <base-url> <model>');
+    WriteLn('Example: ... -- http://127.0.0.1:8080/v1 local-model');
+    return
+  end;
+  mutable var ClientValue: Client := Client.Create(ParamStr(0), ParamStr(1));
+  case Std.Env.Get('OPENAI_API_KEY') of
+    Some(Value):
+    begin
+      ClientValue.ApiKey := Some(Value)
+    end;
+    None:
+    begin
+    end
+  end;
+  mutable var Messages: array of ChatMessage := [];
+  var Options: ChatOptions := ChatOptions.Default();
+  WriteLn('OpenAI-compatible FPAS chat. Enter /exit to quit.');
+  while true do
+  begin
+    Write('you> ');
+    var Prompt: string := ReadLn();
+    if Prompt = '/exit' then
+    begin
+      break
+    end;
+
+    if Prompt <> '' then
+    begin
+      Std.Array.Push(Messages, ChatMessage.User(Prompt));
+      case Complete(ClientValue, Messages, Options) of
+        Ok(Content):
+        begin
+          WriteLn('assistant> ' + Content);
+          Std.Array.Push(Messages, ChatMessage.Assistant(Content))
+        end;
+        Error(Message):
+        begin
+          WriteLn('error> ' + Message)
+        end
+      end
+    end
+  end
+end.

@@ -107,6 +107,14 @@ architecture build it there.
 
 ## Applications
 
+[Local Chat](apps/local-chat/README.md) is a small `Std.Tui` client for the
+fixed local OpenAI-compatible llama.cpp endpoint used during early networking
+development.
+
+```sh
+fpas run apps/local-chat/local-chat.fpasprj
+```
+
 [Notes](apps/notes/README.md) is a complete modern `Std.Tui` note-taking
 application with local human-readable `.note` files, responsive layouts,
 keyboard and mouse control, a command palette, and headless workflow tests.

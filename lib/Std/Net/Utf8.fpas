@@ -1,0 +1,137 @@
+unit Std.Net.Utf8;
+
+uses Std.Array, Std.Conv, Std.Str;
+
+// Encodes one FPAS string as UTF-8 bytes.
+public function Encode(Text: string): array of integer;
+begin
+  mutable var Bytes: array of integer := [];
+  for Index: integer := 0 to Std.Str.Length(Text) - 1 do
+  begin
+    var CodePoint: integer := Std.Str.Ord(Std.Str.CharAt(Text, Index));
+    if CodePoint <= 127 then
+    begin
+      Std.Array.Push(Bytes, CodePoint)
+    end
+    else if CodePoint <= 2047 then
+    begin
+      Std.Array.Push(Bytes, 192 + CodePoint div 64);
+      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+    end
+    else if CodePoint <= 65535 then
+    begin
+      Std.Array.Push(Bytes, 224 + CodePoint div 4096);
+      Std.Array.Push(Bytes, 128 + (CodePoint div 64) mod 64);
+      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+    end
+    else
+    begin
+      Std.Array.Push(Bytes, 240 + CodePoint div 262144);
+      Std.Array.Push(Bytes, 128 + (CodePoint div 4096) mod 64);
+      Std.Array.Push(Bytes, 128 + (CodePoint div 64) mod 64);
+      Std.Array.Push(Bytes, 128 + CodePoint mod 64)
+    end
+  end;
+
+  return Bytes
+end;
+
+function Invalid(Index: integer; Message: string): result of string, string;
+begin
+  return Error((('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index)) + ': ') + Message)
+end;
+
+function IsContinuation(ByteValue: integer): boolean;
+begin
+  return (ByteValue >= 128) and (ByteValue <= 191)
+end;
+
+// Decodes validated UTF-8 bytes into one FPAS string.
+public function Decode(Bytes: array of integer): result of string, string;
+begin
+  mutable var Text: string := '';
+  mutable var Index: integer := 0;
+  while Index < Std.Array.Length(Bytes) do
+  begin
+    var First: integer := Bytes[Index];
+    if (First < 0) or (First > 255) then
+    begin
+      return Invalid(Index, 'byte must be in 0..255')
+    end;
+    mutable var CodePoint: integer := 0;
+    mutable var Width: integer := 0;
+    if First <= 127 then
+    begin
+      CodePoint := First;
+      Width := 1
+    end
+    else if (First >= 194) and (First <= 223) then
+    begin
+      Width := 2
+    end
+    else if (First >= 224) and (First <= 239) then
+    begin
+      Width := 3
+    end
+    else if (First >= 240) and (First <= 244) then
+    begin
+      Width := 4
+    end
+    else
+    begin
+      return Invalid(Index, 'invalid leading byte')
+    end;
+
+    if Index + Width > Std.Array.Length(Bytes) then
+    begin
+      return Invalid(Index, 'truncated sequence')
+    end;
+
+    if Width >= 2 then
+    begin
+      var Second: integer := Bytes[Index + 1];
+      if not IsContinuation(Second) then
+      begin
+        return Invalid(Index + 1, 'expected continuation byte')
+      end;
+
+      CodePoint := ((First - 192) * 64 + Second) - 128
+    end;
+
+    if Width >= 3 then
+    begin
+      var Third: integer := Bytes[Index + 2];
+      if not IsContinuation(Third) then
+      begin
+        return Invalid(Index + 2, 'expected continuation byte')
+      end;
+
+      CodePoint := (((First - 224) * 4096 + (Bytes[Index + 1] - 128) * 64) + Third) - 128;
+      if (CodePoint < 2048) or ((CodePoint >= 55296) and (CodePoint <= 57343)) then
+      begin
+        return Invalid(Index, 'overlong or surrogate sequence')
+      end
+    end;
+
+    if Width = 4 then
+    begin
+      var Fourth: integer := Bytes[Index + 3];
+      if not IsContinuation(Fourth) then
+      begin
+        return Invalid(Index + 3, 'expected continuation byte')
+      end;
+
+      CodePoint := ((((First - 240) * 262144 + (Bytes[Index + 1] - 128) * 4096) + (Bytes[Index + 2] - 128) * 64) + Fourth) -
+                   128;
+      if (CodePoint < 65536) or (CodePoint > 1114111) then
+      begin
+        return Invalid(Index, 'overlong or out-of-range sequence')
+      end
+    end;
+
+    Text := Text + Std.Str.Chr(CodePoint);
+    Index := Index + Width
+  end;
+
+  return Ok(Text)
+end;

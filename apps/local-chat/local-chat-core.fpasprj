@@ -1,0 +1,16 @@
+[project]
+name = "local-chat-core"
+kind = "library"
+
+[exports]
+units = [
+  "LocalChat.Config",
+  "LocalChat.Model",
+  "LocalChat.Service",
+  "LocalChat.Theme",
+  "LocalChat.Update",
+  "LocalChat.View",
+]
+
+[sources]
+include = ["src/LocalChat/**/*.fpas"]

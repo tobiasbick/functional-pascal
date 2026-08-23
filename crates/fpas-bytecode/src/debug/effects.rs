@@ -170,6 +170,9 @@ pub const fn intrinsic_debug_effects(intrinsic: Intrinsic) -> DebugEffectSet {
         Intrinsic::Proc(_) => DebugEffectSet::HOST_IO
             .union(DebugEffectSet::BLOCKING)
             .union(DebugEffectSet::NONDETERMINISTIC),
+        Intrinsic::Net(_) => DebugEffectSet::HOST_IO
+            .union(DebugEffectSet::BLOCKING)
+            .union(DebugEffectSet::NONDETERMINISTIC),
         Intrinsic::Task(_) => DebugEffectSet::TASK.union(DebugEffectSet::BLOCKING),
         Intrinsic::Time(_) => DebugEffectSet::NONDETERMINISTIC.union(DebugEffectSet::BLOCKING),
     }

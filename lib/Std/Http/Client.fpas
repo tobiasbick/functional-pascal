@@ -1,0 +1,164 @@
+unit Std.Http.Client;
+
+uses Std.Array, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
+
+function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
+begin
+  mutable var Offset: integer := 0;
+  while Offset < Std.Array.Length(Bytes) do
+  begin
+    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Std.Array.Length(Bytes) -
+                                                                      Offset);
+    case Std.Net.Write(Connection, Remaining) of
+      Ok(Count):
+      begin
+        if Count <= 0 then
+        begin
+          return Error('TCP connection stopped while writing the HTTP request')
+        end;
+
+        Offset := Offset + Count
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Ok(true)
+end;
+
+function ReadAll(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
+begin
+  if Maximum < 1 then
+  begin
+    return Error('HTTP MaxResponseBytes must be positive')
+  end;
+  mutable var Bytes: array of integer := [];
+  while true do
+  begin
+    case Std.Net.Read(Connection, 65536) of
+      Ok(Chunk):
+      begin
+        if Std.Array.Length(Chunk) = 0 then
+        begin
+          return Ok(Bytes)
+        end;
+
+        if Std.Array.Length(Bytes) + Std.Array.Length(Chunk) > Maximum then
+        begin
+          return Error('HTTP response exceeds MaxResponseBytes')
+        end;
+
+        Bytes := Std.Array.Concat(Bytes, Chunk)
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Ok(Bytes)
+end;
+
+procedure CloseQuietly(Connection: Std.Net.Connection);
+begin
+  case Std.Net.Close(Connection) of
+    Ok(_):
+    begin
+    end;
+    Error(_):
+    begin
+    end
+  end
+end;
+
+public function Send(RequestValue: Request): result of Response, string;
+begin
+  mutable var UriValue: Uri := record
+    Scheme := '';
+    Host := '';
+    Port := 0;
+    Path := '';
+  end;
+
+  case Std.Net.Uri.Parse(RequestValue.Url) of
+    Ok(Value):
+    begin
+      UriValue := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+
+  if UriValue.Scheme <> 'http' then
+  begin
+    return Error('Std.Http currently supports http:// URLs; HTTPS transport is not implemented')
+  end;
+  mutable var Encoded: array of integer := [];
+  case Std.Http.Wire.EncodeRequest(RequestValue, UriValue) of
+    Ok(Value):
+    begin
+      Encoded := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+
+  case Std.Net.Connect(UriValue.Host, UriValue.Port, RequestValue.TimeoutMillis) of
+    Ok(Connection):
+    begin
+      case Std.Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
+        Ok(Configured):
+        begin
+          if not Configured then
+          begin
+            CloseQuietly(Connection);
+            return Error('TCP timeout configuration failed')
+          end
+        end;
+        Error(Message):
+        begin
+          CloseQuietly(Connection);
+          return Error(Message)
+        end
+      end;
+
+      case WriteAll(Connection, Encoded) of
+        Ok(Written):
+        begin
+        end;
+        Error(Message):
+        begin
+          CloseQuietly(Connection);
+          return Error(Message)
+        end
+      end;
+      mutable var ResponseBytes: array of integer := [];
+      case ReadAll(Connection, RequestValue.MaxResponseBytes) of
+        Ok(Value):
+        begin
+          ResponseBytes := Value
+        end;
+        Error(Message):
+        begin
+          CloseQuietly(Connection);
+          return Error(Message)
+        end
+      end;
+
+      CloseQuietly(Connection);
+      return Std.Http.Wire.ParseResponse(ResponseBytes)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;

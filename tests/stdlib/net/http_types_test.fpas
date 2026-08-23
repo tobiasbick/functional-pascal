@@ -1,0 +1,37 @@
+program HttpTypesTest;
+
+uses Std.Http, Std.Net.Utf8, Std.Test;
+
+begin
+  var RequestValue: Request := Request.Create('POST', 'http://localhost:8080/v1/chat');
+  AssertEquals('POST', RequestValue.Method);
+  AssertEquals(30000, RequestValue.TimeoutMillis);
+  var ResponseValue: Response := record
+    StatusCode := 200;
+    ReasonPhrase := 'OK';
+    Headers := [Header.Create('Content-Type', 'application/json')];
+    Body := Std.Net.Utf8.Encode('{"ok":true}');
+  end;
+
+  case BodyText(ResponseValue) of
+    Ok(Text):
+    begin
+      AssertEquals('{"ok":true}', Text)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case HeaderValue(ResponseValue, 'content-type') of
+    Some(Value):
+    begin
+      AssertEquals('application/json', Value)
+    end;
+    None:
+    begin
+      Fail('header lookup failed')
+    end
+  end
+end.

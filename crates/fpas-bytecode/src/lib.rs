@@ -34,9 +34,9 @@ pub use instruction::{
 };
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic, ParseIntrinsic,
-    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic,
+    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,

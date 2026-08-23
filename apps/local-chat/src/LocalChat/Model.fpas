@@ -1,0 +1,172 @@
+unit LocalChat.Model;
+
+uses Std.Array, Std.Console, Std.Str, Std.Tui;
+
+public type
+  // Origin of one visible local chat entry.
+  ChatRole = enum
+    User;
+    Assistant;
+    Failure;
+  end;
+  // One entry retained for display during the current process.
+  ChatEntry = record
+    public Role: ChatRole;
+    public Text: string;
+
+    // Creates a user entry.
+    public static function User(Text: string): ChatEntry;
+    begin
+      return record
+        Role := ChatRole.User;
+        Text := Text;
+      end
+    end;
+
+    // Creates an assistant entry.
+    public static function Assistant(Text: string): ChatEntry;
+    begin
+      return record
+        Role := ChatRole.Assistant;
+        Text := Text;
+      end
+    end;
+
+    // Creates a failed-request entry.
+    public static function Failure(Text: string): ChatEntry;
+    begin
+      return record
+        Role := ChatRole.Failure;
+        Text := Text;
+      end
+    end;
+  end;
+  // Complete immutable state supplied to the Local Chat MVU view.
+  LocalChatModel = record
+    public Entries: array of ChatEntry;
+    public Draft: string;
+    public DraftCaret: integer;
+    public TranscriptCaret: integer;
+    public TranscriptOffset: TuiPoint;
+    public Focus: integer;
+    public Status: string;
+    public Width: integer;
+    public Height: integer;
+  end;
+
+// Creates an empty Local Chat model for the supplied terminal size.
+public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
+begin
+  return record
+    Entries := [];
+    Draft := '';
+    DraftCaret := 0;
+    TranscriptCaret := 0;
+    TranscriptOffset := TuiPoint.Create(0, 0);
+    Focus := 1;
+    Status := 'Ready';
+    Width := Width;
+    Height := Height;
+  end
+end;
+
+function WrapText(Text: string; MaximumWidth: integer): string;
+begin
+  if MaximumWidth <= 0 then
+  begin
+    return ''
+  end;
+  mutable var Wrapped: string := '';
+  mutable var LineWidth: integer := 0;
+  var NewLine: string := Std.Str.Chr(10);
+  for Grapheme: string in Std.Console.SplitGraphemes(Text) do
+  begin
+    if Grapheme = NewLine then
+    begin
+      Wrapped := Wrapped + NewLine;
+      LineWidth := 0
+    end
+    else
+    begin
+      var GraphemeWidth: integer := Std.Console.DisplayWidth(Grapheme);
+      if (LineWidth > 0) and (LineWidth + GraphemeWidth > MaximumWidth) then
+      begin
+        Wrapped := Wrapped + NewLine;
+        LineWidth := 0
+      end;
+
+      Wrapped := Wrapped + Grapheme;
+      LineWidth := LineWidth + GraphemeWidth
+    end
+  end;
+
+  return Wrapped
+end;
+
+function RoleLabel(Role: ChatRole): string;
+begin
+  case Role of
+    ChatRole.User:
+    begin
+      return 'YOU'
+    end;
+    ChatRole.Assistant:
+    begin
+      return 'ASSISTANT'
+    end;
+    ChatRole.Failure:
+    begin
+      return 'ERROR'
+    end
+  end
+end;
+
+// Builds the width-bounded transcript displayed by the read-only transcript area.
+public function LocalChatTranscript(State: LocalChatModel): string;
+begin
+  if Std.Array.Length(State.Entries) = 0 then
+  begin
+    return ('No messages yet.' + Std.Str.Chr(10)) + 'Type below and press Enter.'
+  end;
+  mutable var MaximumWidth: integer := State.Width - 6;
+  if MaximumWidth < 1 then
+  begin
+    MaximumWidth := 1
+  end;
+  mutable var Transcript: string := '';
+  var NewLine: string := Std.Str.Chr(10);
+  for Index: integer := 0 to Std.Array.Length(State.Entries) - 1 do
+  begin
+    if Transcript <> '' then
+    begin
+      Transcript := (Transcript + NewLine) + NewLine
+    end;
+
+    Transcript := ((Transcript + RoleLabel(State.Entries[Index].Role)) + NewLine) +
+                  WrapText(State.Entries[Index].Text, MaximumWidth)
+  end;
+
+  return Transcript
+end;
+
+// Moves the transcript caret and viewport to the latest visible entry.
+public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
+begin
+  mutable var Next: LocalChatModel := State;
+  var Transcript: string := LocalChatTranscript(Next);
+  Next.TranscriptCaret := Std.Str.Length(Transcript);
+  mutable var VisibleLines: integer := Next.Height - 7;
+  if VisibleLines < 1 then
+  begin
+    VisibleLines := 1
+  end;
+  var LineCount: integer := Std.Array.Length(Std.Str.Split(Transcript, Std.Str.Chr(10)));
+  mutable var OffsetY: integer := LineCount - VisibleLines;
+  if OffsetY < 0 then
+  begin
+    OffsetY := 0
+  end;
+
+  Next.TranscriptOffset := TuiPoint.Create(0, OffsetY);
+  return Next
+end;

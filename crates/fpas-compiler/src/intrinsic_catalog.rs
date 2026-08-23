@@ -2,9 +2,9 @@
 
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, OptionIntrinsic, ParseIntrinsic,
-    PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic, TaskIntrinsic,
-    TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic,
+    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
+    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -37,6 +37,12 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
         ),
         "Parse" => family!(member, Parse, ParseIntrinsic, [TryInt, TryReal, TryBool]),
         "Math" => resolve_math(member),
+        "Net" => family!(
+            member,
+            Net,
+            NetIntrinsic,
+            [Connect, SetTimeout, Read, Write, Close]
+        ),
         "Random" => family!(
             member,
             Random,

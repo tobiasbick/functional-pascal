@@ -1,0 +1,21 @@
+unit Std.Ai.OpenAi;
+
+uses Std.Ai.OpenAi.Client, Std.Ai.OpenAi.Types;
+
+public type
+  // One role-tagged chat message.
+  ChatMessage = Std.Ai.OpenAi.Types.ChatMessage;
+  // Connection and model settings for an OpenAI-compatible endpoint.
+  Client = Std.Ai.OpenAi.Types.Client;
+  // Optional generation controls for one completion.
+  ChatOptions = Std.Ai.OpenAi.Types.ChatOptions;
+
+// Sends one non-streaming OpenAI-compatible chat completion.
+public function Complete(
+  ClientValue: Std.Ai.OpenAi.Types.Client;
+  Messages: array of Std.Ai.OpenAi.Types.ChatMessage;
+  Options: Std.Ai.OpenAi.Types.ChatOptions
+): result of string, string;
+begin
+  return Std.Ai.OpenAi.Client.Complete(ClientValue, Messages, Options)
+end;

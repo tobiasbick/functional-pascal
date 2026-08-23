@@ -1,0 +1,30 @@
+program Utf8RoundtripTest;
+
+uses Std.Array, Std.Net.Utf8, Std.Str, Std.Test;
+
+begin
+  var Text: string := 'Hello, Grüße 🌍';
+  var Bytes: array of integer := Encode(Text);
+  AssertEquals(19, Std.Array.Length(Bytes));
+  case Decode(Bytes) of
+    Ok(Decoded):
+    begin
+      AssertEquals(Text, Decoded)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case Decode([240, 40, 140, 188]) of
+    Ok(Decoded):
+    begin
+      Fail('invalid UTF-8 decoded as ' + Decoded)
+    end;
+    Error(Message):
+    begin
+      AssertTrue(Std.Str.Contains(Message, 'continuation'))
+    end
+  end
+end.

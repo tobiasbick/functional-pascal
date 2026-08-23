@@ -3,7 +3,10 @@ name = "fpas-regression-tests"
 kind = "test"
 
 [dependencies]
-projects = ["../apps/notes/notes-core.fpasprj"]
+projects = [
+  "../apps/local-chat/local-chat-core.fpasprj",
+  "../apps/notes/notes-core.fpasprj",
+]
 
 [sources]
 include = [

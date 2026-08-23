@@ -1,0 +1,10 @@
+[project]
+name = "local-chat"
+kind = "program"
+main = "src/local_chat.fpas"
+
+[dependencies]
+projects = ["local-chat-core.fpasprj"]
+
+[sources]
+include = ["src/local_chat.fpas"]

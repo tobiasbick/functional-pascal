@@ -15,6 +15,7 @@ mod examples;
 mod fmt;
 mod init;
 mod input;
+mod network;
 mod output;
 mod projects;
 mod standard_library;

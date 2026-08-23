@@ -3,7 +3,14 @@ name = "fpas-standard-library"
 kind = "library"
 
 [exports]
-units = ["Std.Version", "Std.Tui"]
+units = [
+  "Std.Version",
+  "Std.Tui",
+  "Std.Net.Uri",
+  "Std.Net.Utf8",
+  "Std.Http",
+  "Std.Ai.OpenAi",
+]
 
 [sources]
 include = ["Std/**/*.fpas"]

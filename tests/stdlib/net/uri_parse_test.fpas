@@ -1,0 +1,31 @@
+program UriParseTest;
+
+uses Std.Net.Uri, Std.Test;
+
+begin
+  case Std.Net.Uri.Parse('http://127.0.0.1:8080/v1/chat?stream=false') of
+    Ok(Value):
+    begin
+      AssertEquals('http', Value.Scheme);
+      AssertEquals('127.0.0.1', Value.Host);
+      AssertEquals(8080, Value.Port);
+      AssertEquals('/v1/chat?stream=false', Value.Path)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case Std.Net.Uri.Parse('https://example.test') of
+    Ok(Value):
+    begin
+      AssertEquals(443, Value.Port);
+      AssertEquals('/', Value.Path)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end
+end.

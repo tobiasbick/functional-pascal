@@ -1,0 +1,23 @@
+program OpenAiTypesTest;
+
+uses Std.Ai.OpenAi, Std.Test;
+
+begin
+  var ClientValue: Client := Client.Create('http://localhost:8080/v1', 'local-model');
+  AssertEquals('http://localhost:8080/v1', ClientValue.BaseUrl);
+  AssertEquals('local-model', ClientValue.Model);
+  var MessageValue: ChatMessage := ChatMessage.User('Hello');
+  AssertEquals('user', MessageValue.Role);
+  AssertEquals('Hello', MessageValue.Content);
+  var Options: ChatOptions := ChatOptions.Default();
+  case Options.MaxTokens of
+    Some(Value):
+    begin
+      Fail('unexpected max tokens')
+    end;
+    None:
+    begin
+      AssertTrue(true)
+    end
+  end
+end.

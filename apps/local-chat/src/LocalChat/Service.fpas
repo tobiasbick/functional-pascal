@@ -1,0 +1,10 @@
+unit LocalChat.Service;
+
+uses LocalChat.Config, Std.Ai.OpenAi;
+
+// Sends one independent prompt to the fixed local llama.cpp model.
+public function LocalChatRequest(Prompt: string): result of string, string;
+begin
+  var ClientValue: Client := Client.Create(LocalChatBaseUrl, LocalChatModelName);
+  return Complete(ClientValue, [ChatMessage.User(Prompt)], ChatOptions.Default())
+end;

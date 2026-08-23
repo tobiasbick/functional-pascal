@@ -211,6 +211,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 
 | Path | Notes |
 |------|--------|
+| `openai-chat/openai-chat.fpasprj` | Line-oriented chat against a configurable OpenAI-compatible HTTP endpoint |
 | `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with truecolor `TuiCellGrid`, gauges, and overlay |
 | `math/julia/julia.fpasprj` | Fullscreen terminal Julia explorer; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |

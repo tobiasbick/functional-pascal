@@ -33,6 +33,7 @@ pub mod env;
 pub mod fs;
 pub mod json;
 pub mod math;
+pub mod net;
 pub mod option;
 pub mod parse;
 pub mod path;
@@ -54,6 +55,7 @@ pub use env::EnvIntrinsic;
 pub use fs::FsIntrinsic;
 pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
+pub use net::NetIntrinsic;
 pub use option::OptionIntrinsic;
 pub use parse::ParseIntrinsic;
 pub use path::PathIntrinsic;
@@ -83,6 +85,8 @@ pub enum Intrinsic {
     Parse(ParseIntrinsic),
     /// Mathematical operation.
     Math(MathIntrinsic),
+    /// Hosted TCP networking operation.
+    Net(NetIntrinsic),
     /// Pseudorandom-number operation.
     Random(RandomIntrinsic),
     /// Array operation.
@@ -175,6 +179,7 @@ intrinsic_wire_ops!(
     Conv(ConvIntrinsic),
     Parse(ParseIntrinsic),
     Math(MathIntrinsic),
+    Net(NetIntrinsic),
     Random(RandomIntrinsic),
     Array(ArrayIntrinsic),
     Dict(DictIntrinsic),

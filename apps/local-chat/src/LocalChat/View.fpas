@@ -1,0 +1,68 @@
+unit LocalChat.View;
+
+uses LocalChat.Model, Std.Option, Std.Tui;
+
+const
+  PromptControl: integer := 1;
+  TranscriptControl: integer := 2;
+  PromptChangedAction: integer := 1;
+  TranscriptChangedAction: integer := 2;
+  SendAction: integer := 10;
+
+function Expanding(Child: TuiElement; Stretch: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), Stretch), Child)
+end;
+
+function Header(): TuiElement;
+begin
+  return TuiElementBuilders.MakeRule(' LOCAL CHAT  ·  llama.cpp  ·  one prompt per request ')
+end;
+
+function Transcript(State: LocalChatModel): TuiElement;
+begin
+  var Content: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(TranscriptControl), LocalChatTranscript(State), State.TranscriptCaret, State.TranscriptOffset, TuiAction.Create(TranscriptChangedAction));
+  return TuiElementBuilders.MakePanel('Conversation', [Expanding(Content, 1)])
+end;
+
+function Composer(State: LocalChatModel): TuiElement;
+begin
+  var Prompt: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(PromptControl), State.Draft, State.DraftCaret, 'Message the local model…', TuiAction.Create(PromptChangedAction));
+  var Send: TuiElement := TuiElementBuilders.MakeDefaultButton(TuiControlId.Create(3), 'Send', 'S', TuiAction.Create(SendAction));
+  return TuiElementBuilders.MakePanel('Message', [
+                                                   TuiElementBuilders.MakeRow([Expanding(Prompt, 1), Send])
+                                                 ])
+end;
+
+function Status(State: LocalChatModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeStatusLine([
+                                             TuiStatusItemBuilders.MakeHint(State.Status),
+                                             TuiStatusItemBuilders.MakeKeyHint('Enter', 'send'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Tab', 'focus'),
+                                             TuiStatusItemBuilders.MakeKeyHint('Alt+X', 'quit')
+                                           ])
+end;
+
+// Builds the responsive Local Chat element tree for one model state.
+public function LocalChatView(State: LocalChatModel): TuiElement;
+begin
+  if (State.Width < 50) or (State.Height < 14) then
+  begin
+    return TuiElementBuilders.MakeDesktop(None, [
+                                                  TuiElementBuilders.MakePanel('Local Chat', [
+                                                                                               TuiElementBuilders.MakeLabel('Terminal too small'),
+                                                                                               TuiElementBuilders.MakeLabel('Use at least 50 × 14 cells.')
+                                                                                             ])
+                                                ])
+  end;
+
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakeColumn([
+                                                                                                                  Header(),
+                                                                                                                  Expanding(Transcript(State), 1),
+                                                                                                                  Composer(State),
+                                                                                                                  Status(State)
+                                                                                                                ])
+                                                                                ])
+end;

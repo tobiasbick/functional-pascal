@@ -1,0 +1,115 @@
+unit Std.Http.Head;
+
+uses Std.Array, Std.Http.Types, Std.Http.Wire, Std.Net;
+
+const
+  MaxInterimResponses: integer := 8;
+
+public type
+  // One final response head plus bytes already read from its body.
+  FinalHead = record
+    public Head: ResponseHead;
+    public InitialBody: array of integer;
+    public BytesReceived: integer;
+  end;
+
+// Reads bounded response heads and skips supported informational responses.
+public function ReadFinal(
+  Connection: Std.Net.Connection;
+  MaxHeaderBytes: integer;
+  MaxResponseBytes: integer
+): result of FinalHead, string;
+begin
+  mutable var Buffer: array of integer := [];
+  mutable var BytesReceived: integer := 0;
+  mutable var InterimResponses: integer := 0;
+  while true do
+  begin
+    mutable var Separator: integer := Std.Http.Wire.FindSeparator(Buffer, 0);
+    while Separator < 0 do
+    begin
+      if Std.Array.Length(Buffer) >= MaxHeaderBytes then
+      begin
+        return Error('HTTP response headers exceed MaxHeaderBytes')
+      end;
+      var ResponseAvailable: integer := MaxResponseBytes - BytesReceived;
+      if ResponseAvailable < 1 then
+      begin
+        return Error('HTTP response exceeds MaxResponseBytes')
+      end;
+      mutable var ReadMaximum: integer := MaxHeaderBytes - Std.Array.Length(Buffer);
+      if ResponseAvailable < ReadMaximum then
+      begin
+        ReadMaximum := ResponseAvailable
+      end;
+
+      if ReadMaximum > 65536 then
+      begin
+        ReadMaximum := 65536
+      end;
+
+      case Std.Net.Read(Connection, ReadMaximum) of
+        Ok(Bytes):
+        begin
+          if Std.Array.Length(Bytes) = 0 then
+          begin
+            return Error('HTTP response is missing the header terminator')
+          end;
+
+          BytesReceived := BytesReceived + Std.Array.Length(Bytes);
+          Buffer := Std.Array.Concat(Buffer, Bytes)
+        end;
+        Error(Message):
+        begin
+          return Error(Message)
+        end
+      end;
+
+      Separator := Std.Http.Wire.FindSeparator(Buffer, 0)
+    end;
+
+    if Separator + 4 > MaxHeaderBytes then
+    begin
+      return Error('HTTP response headers exceed MaxHeaderBytes')
+    end;
+
+    case Std.Http.Wire.ParseResponseHead(Buffer) of
+      Ok(Head):
+      begin
+        if (Head.StatusCode >= 100) and (Head.StatusCode < 200) then
+        begin
+          if Head.StatusCode = 101 then
+          begin
+            return Error('HTTP 101 Switching Protocols is not supported')
+          end;
+
+          InterimResponses := InterimResponses + 1;
+          if InterimResponses > MaxInterimResponses then
+          begin
+            return Error('HTTP response contains too many informational responses')
+          end;
+
+          Buffer := Std.Array.Slice(Buffer, Head.BodyOffset, Std.Array.Length(Buffer) -
+                                                             Head.BodyOffset)
+        end
+        else
+        begin
+          var Output: FinalHead := record
+            Head := Head;
+            InitialBody := Std.Array.Slice(Buffer, Head.BodyOffset, Std.Array.Length(Buffer) -
+                                                                    Head.BodyOffset);
+            BytesReceived := BytesReceived;
+          end;
+
+          return Ok(Output)
+        end
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Error('HTTP response head loop ended unexpectedly')
+end;

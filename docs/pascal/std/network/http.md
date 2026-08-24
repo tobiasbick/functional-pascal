@@ -8,7 +8,7 @@ An HTTP/1.1 and HTTPS client with buffered and pull-based response bodies, imple
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `Header` | field `Name`, field `Value`, and `Create` constructor |
-| type | `Request` | method, URL, headers, byte body, timeout, and response limit |
+| type | `Request` | method, URL, headers, byte body, timeout, header/response limits, and redirect limit |
 | static function | `Request.Get/Post/Put/Patch/Delete/Head/Options(Url)` | standard-method request constructors |
 | type | `Response` | status, reason, headers, and byte body |
 | function | `Send(Request): Result of Response, string` | sends and buffers one response |
@@ -48,17 +48,27 @@ WebDAV request can use `Request.Create('PROPFIND', 'http://127.0.0.1:8080/docume
 must be non-empty RFC 9110 tokens; whitespace, control characters, and token separators are rejected
 before a connection is opened.
 
-`Request.Create` defaults to a 30-second timeout and a 16 MiB maximum response. Requests write
-`Host`, `Content-Length`, and `Connection: close`; callers cannot override those fields. Header
-injection through CR or LF is rejected.
+`Request.Create` defaults to a 30-second timeout, a 64 KiB response-head limit, a 16 MiB maximum
+response, and five redirects. Set `MaxHeaderBytes`, `MaxResponseBytes`, or `MaxRedirects` on the
+request to tighten those limits. Requests write `Host`, `Content-Length`, and `Connection: close`;
+callers cannot override those fields or `Transfer-Encoding`. Invalid header-name tokens and control
+characters in header values are rejected.
 
 Plain TCP is selected for `http://` URLs and verified TLS for `https://` URLs. HTTPS certificate and
 hostname validation follows the operating system trust policy and cannot be disabled through
 `Std.Http`.
 
 Responses to `HEAD` have an empty body, even when `Content-Length` describes the body that an
-equivalent `GET` would have returned. Informational responses and status codes `204` and `304` are
-also treated as bodyless.
+equivalent `GET` would have returned. The client skips at most eight informational responses before
+the final response; protocol switching with `101` is rejected. Status codes `204` and `304` are
+bodyless.
+
+The client follows `301`, `302`, `303`, `307`, and `308` when a `Location` header is present.
+Absolute, network-path, absolute-path, query-only, and relative references are resolved against the
+current URL. `303` changes every method except `HEAD` to `GET`; `301` and `302` change `POST` to
+`GET`; `307` and `308` preserve the method and body. A method change drops body representation
+headers. Redirects to another scheme, host, or port also drop `Authorization`,
+`Proxy-Authorization`, and `Cookie`.
 
 ## Streaming responses
 
@@ -85,8 +95,11 @@ case OpenStream(Request.Get('https://example.test/events')) of
 end
 ```
 
-`MaxResponseBytes` bounds all bytes received for either API, including response headers and chunk
-framing. `Send` is implemented by opening and draining the same streaming reader.
+`MaxHeaderBytes` bounds each response head, while `MaxResponseBytes` bounds all bytes received for
+either API, including informational responses, response headers, and chunk framing. Responses with
+both `Transfer-Encoding` and `Content-Length`, conflicting `Content-Length` fields, repeated
+`Transfer-Encoding`, or an unsupported transfer coding are rejected. `Send` is implemented by
+opening and draining the same streaming reader.
 
 ## Server-Sent Events
 
@@ -98,8 +111,8 @@ final event and rejects later input. The `retry` field is currently ignored beca
 not part of this client.
 
 Only origin-form request targets are implemented. `OPTIONS` addresses a normal URL path;
-`OPTIONS *` and `CONNECT` authority-form targets are not implemented. Redirects, compression,
-proxies, persistent connections, and interim-response processing are not handled.
+`OPTIONS *` and `CONNECT` authority-form targets are not implemented. Compression, proxies, and
+persistent connections are not handled.
 
 ## Implementation (contributors)
 
@@ -107,11 +120,15 @@ proxies, persistent connections, and interim-response processing are not handled
 |---------|----------|
 | Public facade | [`Http.fpas`](../../../../lib/Std/Http.fpas) |
 | Connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
+| Bounded response-head processing | [`Head.fpas`](../../../../lib/Std/Http/Head.fpas) |
+| Redirect policy and URL resolution | [`Redirect.fpas`](../../../../lib/Std/Http/Redirect.fpas) |
+| Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Http/BodyFraming.fpas) |
 | Streaming body framing | [`Stream.fpas`](../../../../lib/Std/Http/Stream.fpas) |
 | Server-Sent Events decoder | [`Sse.fpas`](../../../../lib/Std/Http/Sse.fpas) |
 | HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Http/Wire.fpas) |
 | Buffered end-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |
+| Redirect and hostile-response fixtures | [`network_hardening.rs`](../../../../crates/fpas-cli/src/main_tests/network_hardening.rs) |
 | HTTPS rejection fixture | [`network_tls.rs`](../../../../crates/fpas-cli/src/main_tests/network_tls.rs) |
 
 ## See also

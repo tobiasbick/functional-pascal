@@ -23,7 +23,9 @@ public type
     public Headers: array of Header;
     public Body: array of integer;
     public TimeoutMillis: integer;
+    public MaxHeaderBytes: integer;
     public MaxResponseBytes: integer;
+    public MaxRedirects: integer;
 
     public static function Create(Method: string; Url: string): Request;
     begin
@@ -33,7 +35,9 @@ public type
         Headers := [];
         Body := [];
         TimeoutMillis := 30000;
+        MaxHeaderBytes := 65536;
         MaxResponseBytes := 16777216;
+        MaxRedirects := 5;
       end
     end;
 

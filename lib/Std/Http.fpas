@@ -18,13 +18,13 @@ public type
   // Opaque incremental Server-Sent Events decoder.
   SseDecoder = Std.Http.Types.SseDecoder;
 
-// Sends one HTTP/1.1 request over a new TCP connection.
+// Sends one HTTP/1.1 request and follows bounded redirects.
 public function Send(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.Response, string;
 begin
   return Std.Http.Client.Send(RequestValue)
 end;
 
-// Sends one HTTP/1.1 request and returns after reading the response headers.
+// Sends one HTTP/1.1 request, follows bounded redirects, and returns the final response stream.
 public function OpenStream(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.StreamResponse, string;
 begin
   return Std.Http.Client.OpenStream(RequestValue)

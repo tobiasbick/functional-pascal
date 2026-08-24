@@ -17,8 +17,8 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 
 ## Networking follow-up
 
-`Std.Net` TCP/TLS connections and the buffered/streaming HTTP/HTTPS client with SSE decoding are
-implemented. Client hardening, HTTP serving, WebDAV, and FTP are tracked in the focused
+`Std.Net` TCP/TLS connections and the hardened buffered/streaming HTTP/HTTPS client with SSE
+decoding are implemented. HTTP/HTTPS serving, WebDAV, and FTP/FTPS are tracked in the focused
 [networking plan](networking.md) instead of being treated as unstarted standard-library candidates.
 
 ## Later candidates

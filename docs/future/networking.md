@@ -26,15 +26,20 @@ reader. The FPAS SSE decoder accepts fragmented byte input, carries event IDs, c
 and enforces a per-event limit. Focused fixtures cover fragmented chunked SSE delivery, truncated
 bodies, decoder fragmentation, finish behavior, and the event-size limit.
 
+## Completed HTTP client hardening
+
+The FPAS client now follows a bounded set of HTTP redirects, resolves relative `Location` values,
+applies status-specific method rewriting, and strips credentials when the origin changes. Separate
+response-head and total-response limits, bounded informational responses, strict response fields,
+and unambiguous body framing reject hostile or malformed inputs. Focused fixtures cover these paths.
+
 ## Following work
 
-1. Harden the client with bounded redirects, explicit interim-response processing, separate header
-   limits, and focused hostile-input tests.
-2. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
+1. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
    transport for HTTPS serving.
-3. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
+2. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
    as `PROPFIND` already work through `Request.Create`.
-4. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
+3. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
 
 Each phase requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
 after implementation, and the standard workspace verification gates.

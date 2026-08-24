@@ -1,0 +1,14 @@
+program HttpRequestLimitsTest;
+
+uses Std.Http, Std.Test;
+
+begin
+  mutable var RequestValue: Request := Request.Get('http://localhost/');
+  AssertEquals(65536, RequestValue.MaxHeaderBytes);
+  AssertEquals(16777216, RequestValue.MaxResponseBytes);
+  AssertEquals(5, RequestValue.MaxRedirects);
+  RequestValue.MaxHeaderBytes := 1024;
+  RequestValue.MaxRedirects := 0;
+  AssertEquals(1024, RequestValue.MaxHeaderBytes);
+  AssertEquals(0, RequestValue.MaxRedirects)
+end.

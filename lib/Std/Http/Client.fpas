@@ -1,6 +1,8 @@
 unit Std.Http.Client;
 
-uses Std.Array, Std.Http.Stream, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
+uses
+  Std.Array, Std.Http.Head, Std.Http.Headers, Std.Http.Redirect, Std.Http.Stream, Std.Http.Types,
+  Std.Http.Wire, Std.Net, Std.Net.Uri;
 
 function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
@@ -27,40 +29,6 @@ begin
   end;
 
   return Ok(true)
-end;
-
-function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
-begin
-  if Maximum < 1 then
-  begin
-    return Error('HTTP MaxResponseBytes must be positive')
-  end;
-  mutable var Bytes: array of integer := [];
-  while Std.Http.Wire.FindSeparator(Bytes, 0) < 0 do
-  begin
-    case Std.Net.Read(Connection, 65536) of
-      Ok(Chunk):
-      begin
-        if Std.Array.Length(Chunk) = 0 then
-        begin
-          return Error('HTTP response is missing the header terminator')
-        end;
-
-        if Std.Array.Length(Bytes) + Std.Array.Length(Chunk) > Maximum then
-        begin
-          return Error('HTTP response exceeds MaxResponseBytes')
-        end;
-
-        Bytes := Std.Array.Concat(Bytes, Chunk)
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
-
-  return Ok(Bytes)
 end;
 
 function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Net.Connection, string;
@@ -90,12 +58,8 @@ begin
   end
 end;
 
-public function OpenStream(RequestValue: Request): result of StreamResponse, string;
+function OpenOnce(RequestValue: Request): result of StreamResponse, string;
 begin
-  if RequestValue.MaxResponseBytes < 1 then
-  begin
-    return Error('HTTP MaxResponseBytes must be positive')
-  end;
   mutable var UriValue: Uri := record
     Scheme := '';
     Host := '';
@@ -154,31 +118,17 @@ begin
           return Error(Message)
         end
       end;
-      mutable var ResponseBytes: array of integer := [];
-      case ReadHead(Connection, RequestValue.MaxResponseBytes) of
-        Ok(Value):
-        begin
-          ResponseBytes := Value
-        end;
-        Error(Message):
-        begin
-          CloseQuietly(Connection);
-          return Error(Message)
-        end
-      end;
 
-      case Std.Http.Wire.ParseResponseHead(ResponseBytes) of
-        Ok(Head):
+      case Std.Http.Head.ReadFinal(Connection, RequestValue.MaxHeaderBytes, RequestValue.MaxResponseBytes) of
+        Ok(FinalHead):
         begin
-          var InitialBody: array of integer := Std.Array.Slice(ResponseBytes, Head.BodyOffset, Std.Array.Length(ResponseBytes) -
-                                                                                               Head.BodyOffset);
-          case Std.Http.Stream.CreateBody(Connection, InitialBody, Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, Head.StatusCode), Std.Array.Length(ResponseBytes), RequestValue.MaxResponseBytes) of
+          case Std.Http.Stream.CreateBody(Connection, FinalHead.InitialBody, FinalHead.Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, FinalHead.Head.StatusCode), FinalHead.BytesReceived, RequestValue.MaxResponseBytes) of
             Ok(Body):
             begin
               return Ok(record
-                StatusCode := Head.StatusCode;
-                ReasonPhrase := Head.ReasonPhrase;
-                Headers := Head.Headers;
+                StatusCode := FinalHead.Head.StatusCode;
+                ReasonPhrase := FinalHead.Head.ReasonPhrase;
+                Headers := FinalHead.Head.Headers;
                 Body := Body;
               end)
             end;
@@ -200,6 +150,102 @@ begin
       return Error(Message)
     end
   end
+end;
+
+// Opens the final response body after following bounded HTTP redirects.
+public function OpenStream(RequestValue: Request): result of StreamResponse, string;
+begin
+  if RequestValue.MaxHeaderBytes < 1 then
+  begin
+    return Error('HTTP MaxHeaderBytes must be positive')
+  end;
+
+  if RequestValue.MaxResponseBytes < 1 then
+  begin
+    return Error('HTTP MaxResponseBytes must be positive')
+  end;
+
+  if RequestValue.MaxRedirects < 0 then
+  begin
+    return Error('HTTP MaxRedirects must not be negative')
+  end;
+  mutable var Current: Request := RequestValue;
+  mutable var Redirects: integer := 0;
+  while true do
+  begin
+    case OpenOnce(Current) of
+      Ok(ResponseValue):
+      begin
+        if Std.Http.Redirect.IsStatus(ResponseValue.StatusCode) then
+        begin
+          case Std.Http.Headers.Find(ResponseValue.Headers, 'Location') of
+            Some(Location):
+            begin
+              if Redirects >= RequestValue.MaxRedirects then
+              begin
+                case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                  Ok(_):
+                  begin
+                  end;
+                  Error(_):
+                  begin
+                  end
+                end;
+
+                return Error('HTTP redirect count exceeds MaxRedirects')
+              end;
+              mutable var Next: Request := Current;
+              case Std.Http.Redirect.NextRequest(Current, ResponseValue.StatusCode, Location) of
+                Ok(Value):
+                begin
+                  Next := Value
+                end;
+                Error(Message):
+                begin
+                  case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                    Ok(_):
+                    begin
+                    end;
+                    Error(_):
+                    begin
+                    end
+                  end;
+
+                  return Error(Message)
+                end
+              end;
+
+              case Std.Http.Stream.CloseBody(ResponseValue.Body) of
+                Ok(_):
+                begin
+                end;
+                Error(_):
+                begin
+                end
+              end;
+
+              Current := Next;
+              Redirects := Redirects + 1
+            end;
+            None:
+            begin
+              return Ok(ResponseValue)
+            end
+          end
+        end
+        else
+        begin
+          return Ok(ResponseValue)
+        end
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Error('HTTP redirect loop ended unexpectedly')
 end;
 
 public function Send(RequestValue: Request): result of Response, string;

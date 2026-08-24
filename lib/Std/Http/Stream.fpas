@@ -1,8 +1,8 @@
 unit Std.Http.Stream;
 
 uses
-  Std.Array, Std.Http.Handles, Std.Http.Headers, Std.Http.Types, Std.Http.Wire, Std.Net,
-  Std.Net.Utf8, Std.Parse, Std.Str;
+  Std.Array, Std.Http.BodyFraming, Std.Http.Handles, Std.Http.Types, Std.Http.Wire, Std.Net,
+  Std.Net.Utf8;
 
 type
   StreamState = record
@@ -331,47 +331,6 @@ begin
   return Ok([])
 end;
 
-function BodyMode(Headers: array of Header): result of array of integer, string;
-begin
-  case Std.Http.Headers.Find(Headers, 'Transfer-Encoding') of
-    Some(Value):
-    begin
-      if Std.Str.Contains(Std.Str.ToLower(Value), 'chunked') then
-      begin
-        return Ok([2, 0])
-      end
-    end;
-    None:
-    begin
-    end
-  end;
-
-  case Std.Http.Headers.Find(Headers, 'Content-Length') of
-    Some(Value):
-    begin
-      case Std.Parse.TryInt(Value) of
-        Ok(Length):
-        begin
-          if Length < 0 then
-          begin
-            return Error('HTTP Content-Length must not be negative')
-          end;
-
-          return Ok([1, Length])
-        end;
-        Error(Message):
-        begin
-          return Error('Invalid HTTP Content-Length: ' + Message)
-        end
-      end
-    end;
-    None:
-    begin
-      return Ok([3, 0])
-    end
-  end
-end;
-
 // Creates one body stream after the response head has been parsed.
 public function CreateBody(
   Connection: Std.Net.Connection;
@@ -386,11 +345,11 @@ begin
   mutable var Remaining: integer := 0;
   if HasBody then
   begin
-    case BodyMode(Headers) of
-      Ok(Values):
+    case Std.Http.BodyFraming.Select(Headers) of
+      Ok(Value):
       begin
-        Mode := Values[0];
-        Remaining := Values[1]
+        Mode := Value.Mode;
+        Remaining := Value.Remaining
       end;
       Error(Message):
       begin

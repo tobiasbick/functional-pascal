@@ -140,6 +140,7 @@ fn dispatch_intrinsic(
         intrinsic,
         Intrinsic::Net(
             NetIntrinsic::Connect
+                | NetIntrinsic::ConnectTls
                 | NetIntrinsic::SetTimeout
                 | NetIntrinsic::Read
                 | NetIntrinsic::Write

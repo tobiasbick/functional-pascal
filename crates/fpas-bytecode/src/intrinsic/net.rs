@@ -1,13 +1,13 @@
 //! `Std.Net` intrinsic discriminants.
 //!
-//! **Documentation:** `docs/pascal/std/host/net.md` (from the repository root).
+//! **Documentation:** `docs/pascal/std/network/net.md` (from the repository root).
 
 use num_enum::TryFromPrimitive;
 
 documented_intrinsic_enum! {
 /// Intrinsics for `Std.Net.*`.
 ///
-/// **Documentation:** `docs/pascal/std/host/net.md`
+/// **Documentation:** `docs/pascal/std/network/net.md`
 #[derive(Debug, Clone, Copy, PartialEq, Eq, TryFromPrimitive)]
 #[repr(u16)]
 pub enum NetIntrinsic {
@@ -21,5 +21,7 @@ pub enum NetIntrinsic {
     Write = 521,
     /// `Std.Net.Close(Connection)` - close and invalidate one connection.
     Close = 522,
+    /// `Std.Net.ConnectTls(Host, Port, TimeoutMillis)` - open one verified TLS connection.
+    ConnectTls = 523,
 }
 }

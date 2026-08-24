@@ -10,10 +10,13 @@ repository.workspace = true
 fpas-bytecode = { path = "../fpas-bytecode" }
 fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }
+rustls.workspace = true
+rustls-platform-verifier.workspace = true
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-parser = { path = "../fpas-parser" }
+rcgen.workspace = true
 
 [lints]
 workspace = true

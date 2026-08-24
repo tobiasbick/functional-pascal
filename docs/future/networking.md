@@ -1,17 +1,33 @@
 # Networking follow-up
 
-## Current foundation
+## Completed foundation
 
-The implemented slice provides VM-owned TCP client connections, FPAS URI/UTF-8/HTTP modules, and an OpenAI-compatible non-streaming chat client. Current behavior is documented under [`docs/pascal/std/network/`](../pascal/std/network/README.md) and [`docs/pascal/std/ai/`](../pascal/std/ai/README.md).
+The implemented foundation provides VM-owned TCP client connections, URI and UTF-8 helpers, a
+non-streaming FPAS HTTP/1.1 client with standard and extension methods, and an OpenAI-compatible
+local chat client. Current behavior is documented under
+[`docs/pascal/std/network/`](../pascal/std/network/README.md) and
+[`docs/pascal/std/ai/`](../pascal/std/ai/README.md).
 
-## Planned order
+## Completed HTTPS transport
 
-1. Add a native TLS transport with certificate and hostname verification; select TCP or TLS from the URI scheme inside `Std.Http`.
-2. Add streaming response support and an FPAS Server-Sent Events decoder for streamed chat tokens.
-3. Add TCP listener handles and HTTP request/response server modules in FPAS.
-4. Build WebDAV request methods and XML handling on the HTTP client/server modules.
-5. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS if required.
+`Std.Net.ConnectTls` and automatic `https://` selection in `Std.Http.Send` are implemented with
+mandatory platform certificate and hostname verification. TCP and TLS share the opaque connection
+handle and byte-I/O API; URI handling and the HTTP wire format remain FPAS code.
 
-Cryptography, certificate stores, sockets, and other OS resources remain native. URI handling, message framing, headers, protocol state, WebDAV methods, FTP commands, and model-specific JSON remain FPAS code.
+Verification covers a trusted local TLS round trip, hostname mismatch, untrusted certificates, the
+FPAS HTTPS call path, a live public HTTPS request, formatting, Clippy, the workspace build and test
+suite, and the complete FPAS regression suite.
 
-Each phase requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only after implementation, and the standard workspace verification gates.
+## Following work
+
+1. Add streaming response reads and an FPAS Server-Sent Events decoder for streamed chat tokens.
+2. Harden the client with bounded redirects, explicit interim-response processing, separate header
+   limits, and focused hostile-input tests.
+3. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
+   transport for HTTPS serving.
+4. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
+   as `PROPFIND` already work through `Request.Create`.
+5. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
+
+Each phase requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
+after implementation, and the standard workspace verification gates.

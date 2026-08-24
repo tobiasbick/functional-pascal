@@ -24,6 +24,16 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_NET_CONNECT_TLS,
+        vec![
+            p("Host", Ty::String, false),
+            p("Port", Ty::Integer, false),
+            p("TimeoutMillis", Ty::Integer, false),
+        ],
+        Ty::Result(Box::new(connection.clone()), error.clone()),
+    );
+    define_func(
+        checker,
         s::STD_NET_SET_TIMEOUT,
         vec![
             p("Connection", connection.clone(), false),

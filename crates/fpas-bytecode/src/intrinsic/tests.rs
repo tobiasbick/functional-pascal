@@ -165,6 +165,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Net(NetIntrinsic::Read),
     Intrinsic::Net(NetIntrinsic::Write),
     Intrinsic::Net(NetIntrinsic::Close),
+    Intrinsic::Net(NetIntrinsic::ConnectTls),
     Intrinsic::Random(RandomIntrinsic::Random),
     Intrinsic::Random(RandomIntrinsic::RandomInt),
     Intrinsic::Random(RandomIntrinsic::Randomize),

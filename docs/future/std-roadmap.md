@@ -2,7 +2,10 @@
 
 > Deferred. Planned for future versions.
 
-Functional Pascal already has a useful `Std.*` surface for console programs, TUI experiments, strings, math, arrays, dictionaries, options, results, and tasks. The next standard-library work should keep that unit-based shape and add focused units instead of merging unrelated APIs into larger buckets.
+Functional Pascal already has a useful `Std.*` surface for console programs, TUI experiments,
+strings, math, arrays, dictionaries, options, results, tasks, filesystem access, processes, TCP,
+HTTP, and OpenAI-compatible chat. The next standard-library work should keep that unit-based shape
+and add focused units instead of merging unrelated APIs into larger buckets.
 
 ## Direction
 
@@ -12,12 +15,16 @@ Functional Pascal already has a useful `Std.*` surface for console programs, TUI
 - Keep pure helpers separate from effectful APIs.
 - Avoid adding memory-management APIs as a standard unit for now.
 
-## Later Candidates
+## Networking follow-up
+
+`Std.Net` TCP/TLS connections and the non-streaming HTTP/HTTPS client are implemented. Streaming,
+HTTP serving, WebDAV, and FTP are tracked in the focused
+[networking plan](networking.md) instead of being treated as unstarted standard-library candidates.
+
+## Later candidates
 
 These should wait until the runtime and capability model need them:
 
-- `Std.Net` for sockets or low-level networking.
-- `Std.Http` for request/response workflows.
 - `Std.Crypto` for hashing and cryptographic primitives.
 - binary buffers and codecs, once byte-array conventions are stable.
 

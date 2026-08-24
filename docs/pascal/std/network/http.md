@@ -1,6 +1,6 @@
 # `Std.Http`
 
-A non-streaming HTTP/1.1 client implemented in FPAS over `Std.Net`.
+A non-streaming HTTP/1.1 and HTTPS client implemented in FPAS over `Std.Net`.
 
 ## Quick reference
 
@@ -42,14 +42,17 @@ separators are rejected before a connection is opened.
 
 `Request.Create` defaults to a 30-second timeout and a 16 MiB maximum response. `Send` writes `Host`, `Content-Length`, and `Connection: close`; callers cannot override those fields. It accepts `Content-Length`, chunked, or connection-delimited response bodies. Header injection through CR or LF is rejected.
 
+`Send` selects plain TCP for `http://` URLs and verified TLS for `https://` URLs. HTTPS certificate
+and hostname validation follows the operating system trust policy and cannot be disabled through
+`Std.Http`.
+
 Responses to `HEAD` have an empty `Body`, even when `Content-Length` describes
 the body that an equivalent `GET` would have returned. Informational responses
 and status codes `204` and `304` are also treated as bodyless.
 
-Only `http://` transport and origin-form request targets are implemented.
-`OPTIONS` addresses a normal URL path; `OPTIONS *` and `CONNECT` authority-form
-targets are not implemented. Redirects, compression, proxies, persistent
-connections, interim-response processing, streaming, and HTTPS are not handled.
+Only origin-form request targets are implemented. `OPTIONS` addresses a normal URL path;
+`OPTIONS *` and `CONNECT` authority-form targets are not implemented. Redirects, compression,
+proxies, persistent connections, interim-response processing, and streaming are not handled.
 
 ## Implementation (contributors)
 
@@ -59,6 +62,7 @@ connections, interim-response processing, streaming, and HTTPS are not handled.
 | Connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
 | HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Http/Wire.fpas) |
 | End-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
+| HTTPS rejection fixture | [`network_tls.rs`](../../../../crates/fpas-cli/src/main_tests/network_tls.rs) |
 
 ## See also
 

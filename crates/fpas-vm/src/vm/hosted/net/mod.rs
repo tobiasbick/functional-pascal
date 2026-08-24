@@ -1,8 +1,10 @@
 //! Hosted `Std.Net` intrinsic dispatch.
 
 mod connections;
+mod tls;
+mod transport;
 
-pub(super) use connections::TcpConnections;
+pub(super) use connections::NetworkConnections;
 
 use fpas_bytecode::{Intrinsic, NetIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -30,8 +32,20 @@ impl Worker {
                 let timeout = integer(self, &arguments[2], "TimeoutMillis")?;
                 result(
                     self.hosted
-                        .tcp_connections
-                        .connect(host, port, timeout)
+                        .network_connections
+                        .connect_tcp(host, port, timeout)
+                        .map(Value::OpaqueHandle),
+                )
+            }
+            NetIntrinsic::ConnectTls => {
+                require_count(self, arguments, 3)?;
+                let host = string(self, &arguments[0], "Host")?;
+                let port = integer(self, &arguments[1], "Port")?;
+                let timeout = integer(self, &arguments[2], "TimeoutMillis")?;
+                result(
+                    self.hosted
+                        .network_connections
+                        .connect_tls(host, port, timeout)
                         .map(Value::OpaqueHandle),
                 )
             }
@@ -41,7 +55,7 @@ impl Worker {
                 let timeout = integer(self, &arguments[1], "TimeoutMillis")?;
                 result(
                     self.hosted
-                        .tcp_connections
+                        .network_connections
                         .set_timeout(handle, timeout)
                         .map(|()| Value::Boolean(true)),
                 )
@@ -52,7 +66,7 @@ impl Worker {
                 let max_bytes = integer(self, &arguments[1], "MaxBytes")?;
                 result(
                     self.hosted
-                        .tcp_connections
+                        .network_connections
                         .read(handle, max_bytes)
                         .map(|bytes| {
                             Value::Array(
@@ -70,7 +84,7 @@ impl Worker {
                 let bytes = bytes(self, &arguments[1])?;
                 result(
                     self.hosted
-                        .tcp_connections
+                        .network_connections
                         .write(handle, &bytes)
                         .and_then(|count| {
                             i64::try_from(count).map(Value::Integer).map_err(|_| {
@@ -84,7 +98,7 @@ impl Worker {
                 let handle = connection(self, &arguments[0])?;
                 result(
                     self.hosted
-                        .tcp_connections
+                        .network_connections
                         .close(handle)
                         .map(|()| Value::Boolean(true)),
                 )

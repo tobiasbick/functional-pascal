@@ -1,13 +1,14 @@
 # Networking
 
-Blocking TCP and protocol clients whose parsing and serialization are mostly implemented in FPAS.
+Blocking TCP/TLS transports and protocol clients whose parsing and serialization are mostly
+implemented in FPAS.
 
 | Unit | Description |
 |------|-------------|
-| [`Std.Net`](net.md) | Hosted TCP connections and byte I/O |
+| [`Std.Net`](net.md) | Hosted TCP/TLS connections and byte I/O |
 | [`Std.Net.Uri`](uri.md) | Absolute HTTP/HTTPS URI parsing |
 | [`Std.Net.Utf8`](utf8.md) | UTF-8 encoding and validated decoding |
-| [`Std.Http`](http.md) | Non-streaming HTTP/1.1 client |
+| [`Std.Http`](http.md) | Non-streaming HTTP/1.1 and HTTPS client |
 
 ## See also
 

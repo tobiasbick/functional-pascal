@@ -30,6 +30,17 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Resolves, connects, and completes a verified TLS handshake.
+//
+// Parameters:
+// - `Host`: `string` input value used by `ConnectTls`.
+// - `Port`: `integer` input value used by `ConnectTls`.
+// - `TimeoutMillis`: `integer` input value used by `ConnectTls`.
+public function ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Empty array means EOF.
 //
 // Parameters:

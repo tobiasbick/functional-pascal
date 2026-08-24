@@ -14,7 +14,7 @@ mod console_args;
 mod net;
 mod test_host;
 
-use net::TcpConnections;
+use net::NetworkConnections;
 
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
@@ -58,7 +58,7 @@ pub(super) struct HostedState {
     pub console: Mutex<Console>,
     pub text_input: Mutex<TextInput>,
     pub key_input: Mutex<KeyInput>,
-    pub(in crate::vm::hosted) tcp_connections: TcpConnections,
+    pub(in crate::vm::hosted) network_connections: NetworkConnections,
 }
 
 impl HostedState {
@@ -68,7 +68,7 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
             key_input: Mutex::new(KeyInput::new()),
-            tcp_connections: TcpConnections::new(),
+            network_connections: NetworkConnections::new(),
         }
     }
 
@@ -79,7 +79,7 @@ impl HostedState {
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::without_os_stdin()),
             key_input: Mutex::new(KeyInput::without_os_events()),
-            tcp_connections: TcpConnections::new(),
+            network_connections: NetworkConnections::new(),
         }
     }
 }

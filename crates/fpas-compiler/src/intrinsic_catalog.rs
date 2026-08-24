@@ -41,7 +41,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             member,
             Net,
             NetIntrinsic,
-            [Connect, SetTimeout, Read, Write, Close]
+            [Connect, ConnectTls, SetTimeout, Read, Write, Close]
         ),
         "Random" => family!(
             member,

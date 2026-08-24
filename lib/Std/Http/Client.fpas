@@ -14,7 +14,7 @@ begin
       begin
         if Count <= 0 then
         begin
-          return Error('TCP connection stopped while writing the HTTP request')
+          return Error('Network connection stopped while writing the HTTP request')
         end;
 
         Offset := Offset + Count
@@ -63,6 +63,21 @@ begin
   return Ok(Bytes)
 end;
 
+function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Net.Connection, string;
+begin
+  if UriValue.Scheme = 'http' then
+  begin
+    return Std.Net.Connect(UriValue.Host, UriValue.Port, TimeoutMillis)
+  end;
+
+  if UriValue.Scheme = 'https' then
+  begin
+    return Std.Net.ConnectTls(UriValue.Host, UriValue.Port, TimeoutMillis)
+  end;
+
+  return Error('Std.Http supports only http:// and https:// URLs')
+end;
+
 procedure CloseQuietly(Connection: Std.Net.Connection);
 begin
   case Std.Net.Close(Connection) of
@@ -94,11 +109,6 @@ begin
       return Error(Message)
     end
   end;
-
-  if UriValue.Scheme <> 'http' then
-  begin
-    return Error('Std.Http currently supports http:// URLs; HTTPS transport is not implemented')
-  end;
   mutable var Encoded: array of integer := [];
   case Std.Http.Wire.EncodeRequest(RequestValue, UriValue) of
     Ok(Value):
@@ -111,7 +121,7 @@ begin
     end
   end;
 
-  case Std.Net.Connect(UriValue.Host, UriValue.Port, RequestValue.TimeoutMillis) of
+  case OpenConnection(UriValue, RequestValue.TimeoutMillis) of
     Ok(Connection):
     begin
       case Std.Net.SetTimeout(Connection, RequestValue.TimeoutMillis) of
@@ -120,7 +130,7 @@ begin
           if not Configured then
           begin
             CloseQuietly(Connection);
-            return Error('TCP timeout configuration failed')
+            return Error('Network timeout configuration failed')
           end
         end;
         Error(Message):

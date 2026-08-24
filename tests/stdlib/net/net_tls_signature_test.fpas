@@ -1,0 +1,12 @@
+program NetTlsSignatureTest;
+
+uses Std.Net, Std.Test;
+
+function ConnectTlsSignatureOnly(): result of Connection, string;
+begin
+  return ConnectTls('localhost', 443, 1000)
+end;
+
+begin
+  AssertTrue(true)
+end.

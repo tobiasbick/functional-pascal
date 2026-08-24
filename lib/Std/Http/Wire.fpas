@@ -1,8 +1,8 @@
 unit Std.Http.Wire;
 
 uses
-  Std.Array, Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse,
-  Std.Str;
+  Std.Array, Std.Conv, Std.Http.Headers, Std.Http.Method, Std.Http.Types, Std.Net.Uri, Std.Net.Utf8,
+  Std.Parse, Std.Str;
 
 function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
@@ -181,8 +181,24 @@ begin
   return Error('HTTP chunked body is missing its final zero chunk')
 end;
 
-function ResponseBody(Headers: array of Header; Bytes: array of integer): result of array of integer, string;
+function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
 begin
+  if RequestMethod = 'HEAD' then
+  begin
+    return false
+  end;
+
+  return ((StatusCode < 100) or (StatusCode > 199)) and
+         ((StatusCode <> 204) and (StatusCode <> 304))
+end;
+
+function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of array of integer, string;
+begin
+  if not HasBody then
+  begin
+    return Ok([])
+  end;
+
   case Std.Http.Headers.Find(Headers, 'Transfer-Encoding') of
     Some(Value):
     begin
@@ -227,7 +243,7 @@ begin
   end
 end;
 
-public function ParseResponse(Bytes: array of integer): result of Response, string;
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
 begin
   var Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
@@ -286,7 +302,7 @@ begin
   end;
   var RawBody: array of integer := Std.Array.Slice(Bytes, Separator + 4, (Std.Array.Length(Bytes) - Separator) -
                                                                          4);
-  case ResponseBody(Headers, RawBody) of
+  case ResponseBody(Headers, RawBody, ResponseHasBody(RequestMethod, StatusCode)) of
     Ok(Body):
     begin
       return Ok(record
@@ -326,10 +342,9 @@ end;
 
 public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of array of integer, string;
 begin
-  if ((RequestValue.Method = '') or Std.Str.Contains(RequestValue.Method, ' ')) or
-     ContainsUnsafeText(RequestValue.Method) then
+  if not Std.Http.Method.IsValidToken(RequestValue.Method) then
   begin
-    return Error('HTTP method is empty or contains unsafe characters')
+    return Error('HTTP method must be a non-empty RFC 9110 token')
   end;
 
   if ContainsUnsafeText(UriValue.Path) then

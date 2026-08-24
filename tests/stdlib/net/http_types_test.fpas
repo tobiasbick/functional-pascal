@@ -6,6 +6,14 @@ begin
   var RequestValue: Request := Request.Create('POST', 'http://localhost:8080/v1/chat');
   AssertEquals('POST', RequestValue.Method);
   AssertEquals(30000, RequestValue.TimeoutMillis);
+  AssertEquals('GET', Request.Get('http://localhost/get').Method);
+  AssertEquals('POST', Request.Post('http://localhost/post').Method);
+  AssertEquals('PUT', Request.Put('http://localhost/put').Method);
+  AssertEquals('PATCH', Request.Patch('http://localhost/patch').Method);
+  AssertEquals('DELETE', Request.Delete('http://localhost/delete').Method);
+  AssertEquals('HEAD', Request.Head('http://localhost/head').Method);
+  AssertEquals('OPTIONS', Request.Options('http://localhost/options').Method);
+  AssertEquals('PROPFIND', Request.Create('PROPFIND', 'http://localhost/webdav').Method);
   var ResponseValue: Response := record
     StatusCode := 200;
     ReasonPhrase := 'OK';

@@ -154,7 +154,7 @@ begin
       end;
 
       CloseQuietly(Connection);
-      return Std.Http.Wire.ParseResponse(ResponseBytes)
+      return Std.Http.Wire.ParseResponse(ResponseBytes, RequestValue.Method)
     end;
     Error(Message):
     begin

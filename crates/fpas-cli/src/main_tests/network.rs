@@ -1,8 +1,34 @@
 use std::io::{Read, Write};
-use std::net::TcpListener;
+use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 
 use super::*;
+
+fn read_http_request(stream: &mut TcpStream) -> Vec<u8> {
+    let mut request = Vec::new();
+    loop {
+        let mut chunk = [0_u8; 2048];
+        let count = stream.read(&mut chunk).expect("read HTTP request");
+        if count == 0 {
+            return request;
+        }
+        request.extend_from_slice(&chunk[..count]);
+        let Some(header_end) = request.windows(4).position(|window| window == b"\r\n\r\n") else {
+            continue;
+        };
+        let headers = String::from_utf8_lossy(&request[..header_end]);
+        let content_length = headers
+            .lines()
+            .find_map(|line| {
+                line.strip_prefix("Content-Length: ")
+                    .and_then(|value| value.parse::<usize>().ok())
+            })
+            .expect("content length");
+        if request.len() >= header_end + 4 + content_length {
+            return request;
+        }
+    }
+}
 
 #[test]
 fn http_client_sends_request_and_decodes_chunked_response() {
@@ -10,19 +36,7 @@ fn http_client_sends_request_and_decodes_chunked_response() {
     let port = listener.local_addr().expect("fixture address").port();
     let server = std::thread::spawn(move || {
         let (mut stream, _) = listener.accept().expect("accept HTTP client");
-        let mut request = Vec::new();
-        loop {
-            let mut chunk = [0_u8; 1024];
-            let count = stream.read(&mut chunk).expect("read HTTP request");
-            if count == 0 {
-                break;
-            }
-            request.extend_from_slice(&chunk[..count]);
-            if request.windows(4).any(|window| window == b"\r\n\r\n") && request.ends_with(b"ping")
-            {
-                break;
-            }
-        }
+        let request = read_http_request(&mut stream);
         let request = String::from_utf8(request).expect("HTTP request is UTF-8");
         assert!(request.starts_with("POST /v1/chat HTTP/1.1\r\n"));
         assert!(request.contains("Content-Length: 4\r\n"));
@@ -90,35 +104,129 @@ end.
 }
 
 #[test]
+fn http_client_supports_standard_extension_and_head_methods() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind local HTTP method fixture");
+    let port = listener.local_addr().expect("fixture address").port();
+    let server = std::thread::spawn(move || {
+        let expected = [
+            ("GET", "/get"),
+            ("POST", "/post"),
+            ("PUT", "/put"),
+            ("PATCH", "/patch"),
+            ("DELETE", "/delete"),
+            ("HEAD", "/head"),
+            ("OPTIONS", "/options"),
+            ("PROPFIND", "/webdav"),
+        ];
+        for (method, path) in expected {
+            let (mut stream, _) = listener.accept().expect("accept HTTP method client");
+            let request = read_http_request(&mut stream);
+            let request = String::from_utf8(request).expect("HTTP method request is UTF-8");
+            assert!(
+                request.starts_with(&format!("{method} {path} HTTP/1.1\r\n")),
+                "request: {request:?}"
+            );
+            if method == "HEAD" {
+                stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 7\r\nConnection: close\r\n\r\n")
+                    .expect("write HEAD response");
+            } else {
+                stream
+                    .write_all(
+                        b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok",
+                    )
+                    .expect("write method response");
+            }
+        }
+    });
+
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(Path::parent)
+        .expect("workspace root");
+    let cwd = create_temp_dir("http-client-methods");
+    let source = cwd.join("main.fpas");
+    write_text(
+        &source,
+        &format!(
+            r#"program HttpClientMethods;
+
+uses Std.Array, Std.Console, Std.Http, Std.Str;
+
+procedure Expect(RequestValue: Request; ExpectedBodyLength: integer);
+begin
+  case Send(RequestValue) of
+    Ok(ResponseValue):
+    begin
+      if ResponseValue.StatusCode <> 200 then
+      begin
+        panic('unexpected HTTP status')
+      end;
+
+      if Std.Array.Length(ResponseValue.Body) <> ExpectedBodyLength then
+      begin
+        panic('unexpected HTTP body length')
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end;
+
+begin
+  var BaseUrl: string := 'http://127.0.0.1:{port}';
+  Expect(Request.Get(BaseUrl + '/get'), 2);
+  Expect(Request.Post(BaseUrl + '/post'), 2);
+  Expect(Request.Put(BaseUrl + '/put'), 2);
+  Expect(Request.Patch(BaseUrl + '/patch'), 2);
+  Expect(Request.Delete(BaseUrl + '/delete'), 2);
+  Expect(Request.Head(BaseUrl + '/head'), 0);
+  Expect(Request.Options(BaseUrl + '/options'), 2);
+  Expect(Request.Create('PROPFIND', BaseUrl + '/webdav'), 2);
+  case Send(Request.Create('BAD@METHOD', BaseUrl + '/invalid')) of
+    Ok(ResponseValue):
+    begin
+      panic('invalid HTTP method was accepted')
+    end;
+    Error(Message):
+    begin
+      if not Std.Str.Contains(Message, 'RFC 9110 token') then
+      begin
+        panic(Message)
+      end
+    end
+  end;
+  WriteLn('ok')
+end.
+"#
+        ),
+    );
+
+    let (exit, stdout, stderr) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("run"),
+            String::from("--std-lib"),
+            root.join("lib").to_string_lossy().into_owned(),
+            source.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    std::fs::remove_dir_all(&cwd).expect("temporary directory must be removed");
+    server.join().expect("HTTP method fixture must finish");
+
+    assert_eq!(exit, 0, "stderr: {stderr}");
+    assert_eq!(stdout, "ok\n");
+}
+
+#[test]
 fn openai_compatible_client_sends_configured_chat_completion() {
     let listener = TcpListener::bind("127.0.0.1:0").expect("bind local OpenAI fixture");
     let port = listener.local_addr().expect("fixture address").port();
     let server = std::thread::spawn(move || {
         let (mut stream, _) = listener.accept().expect("accept OpenAI client");
-        let mut request = Vec::new();
-        loop {
-            let mut chunk = [0_u8; 2048];
-            let count = stream.read(&mut chunk).expect("read chat request");
-            if count == 0 {
-                break;
-            }
-            request.extend_from_slice(&chunk[..count]);
-            let Some(header_end) = request.windows(4).position(|window| window == b"\r\n\r\n")
-            else {
-                continue;
-            };
-            let headers = String::from_utf8_lossy(&request[..header_end]);
-            let content_length = headers
-                .lines()
-                .find_map(|line| {
-                    line.strip_prefix("Content-Length: ")
-                        .and_then(|value| value.parse::<usize>().ok())
-                })
-                .expect("content length");
-            if request.len() >= header_end + 4 + content_length {
-                break;
-            }
-        }
+        let request = read_http_request(&mut stream);
 
         let header_end = request
             .windows(4)

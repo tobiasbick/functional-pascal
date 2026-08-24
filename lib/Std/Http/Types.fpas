@@ -34,6 +34,48 @@ public type
         MaxResponseBytes := 16777216;
       end
     end;
+
+    // Creates a GET request with default transport limits.
+    public static function Get(Url: string): Request;
+    begin
+      return Request.Create('GET', Url)
+    end;
+
+    // Creates a POST request with default transport limits.
+    public static function Post(Url: string): Request;
+    begin
+      return Request.Create('POST', Url)
+    end;
+
+    // Creates a PUT request with default transport limits.
+    public static function Put(Url: string): Request;
+    begin
+      return Request.Create('PUT', Url)
+    end;
+
+    // Creates a PATCH request with default transport limits.
+    public static function Patch(Url: string): Request;
+    begin
+      return Request.Create('PATCH', Url)
+    end;
+
+    // Creates a DELETE request with default transport limits.
+    public static function Delete(Url: string): Request;
+    begin
+      return Request.Create('DELETE', Url)
+    end;
+
+    // Creates a HEAD request with default transport limits.
+    public static function Head(Url: string): Request;
+    begin
+      return Request.Create('HEAD', Url)
+    end;
+
+    // Creates an OPTIONS request with default transport limits.
+    public static function Options(Url: string): Request;
+    begin
+      return Request.Create('OPTIONS', Url)
+    end;
   end;
   // One complete non-streaming HTTP response.
   Response = record

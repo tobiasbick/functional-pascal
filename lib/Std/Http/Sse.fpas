@@ -1,0 +1,227 @@
+unit Std.Http.Sse;
+
+uses Std.Array, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
+
+type
+  DecoderState = record
+    Buffer: array of integer;
+    Data: string;
+    EventType: string;
+    LastEventId: string;
+    EventBytes: integer;
+    Maximum: integer;
+    Finished: boolean;
+  end;
+  DecoderProcess = record
+    State: DecoderState;
+    Events: array of SseEvent;
+  end;
+
+mutable var
+  DecoderStates: array of DecoderState := [];
+
+function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of integer, string;
+begin
+  var Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
+  if (Slot < 1) or (Slot > Std.Array.Length(DecoderStates)) then
+  begin
+    return Error('SSE decoder handle is invalid')
+  end;
+
+  return Ok(Slot - 1)
+end;
+
+function LineEnd(Bytes: array of integer): array of integer;
+begin
+  for Index: integer := 0 to Std.Array.Length(Bytes) - 1 do
+  begin
+    if Bytes[Index] = 10 then
+    begin
+      return [Index, 1]
+    end;
+
+    if Bytes[Index] = 13 then
+    begin
+      if Index + 1 >= Std.Array.Length(Bytes) then
+      begin
+        return [-1, 0]
+      end;
+
+      if Bytes[Index + 1] = 10 then
+      begin
+        return [Index, 2]
+      end;
+
+      return [Index, 1]
+    end
+  end;
+
+  return [-1, 0]
+end;
+
+function Process(mutable State: DecoderState): result of DecoderProcess, string;
+begin
+  mutable var Events: array of SseEvent := [];
+  mutable var EndValue: array of integer := LineEnd(State.Buffer);
+  while EndValue[0] >= 0 do
+  begin
+    var LineBytes: array of integer := Std.Array.Slice(State.Buffer, 0, EndValue[0]);
+    State.EventBytes := (State.EventBytes + EndValue[0]) + EndValue[1];
+    if State.EventBytes > State.Maximum then
+    begin
+      return Error('SSE event exceeds MaxEventBytes')
+    end;
+
+    State.Buffer := Std.Array.Slice(State.Buffer, EndValue[0] + EndValue[1], (Std.Array.Length(State.Buffer) - EndValue[0]) -
+                                                                             EndValue[1]);
+    case Std.Net.Utf8.Decode(LineBytes) of
+      Ok(Line):
+      begin
+        if Line = '' then
+        begin
+          if State.Data <> '' then
+          begin
+            mutable var EventType: string := State.EventType;
+            if EventType = '' then
+            begin
+              EventType := 'message'
+            end;
+
+            Std.Array.Push(Events, record
+              EventType := EventType;
+              Data := Std.Str.Substring(State.Data, 0, Std.Str.Length(State.Data) - 1);
+              Id := State.LastEventId;
+            end)
+          end;
+
+          State.Data := '';
+          State.EventType := '';
+          State.EventBytes := 0
+        end
+        else if not Std.Str.StartsWith(Line, ':') then
+        begin
+          mutable var Name: string := Line;
+          mutable var Value: string := '';
+          var Colon: integer := Std.Str.IndexOf(Line, ':');
+          if Colon >= 0 then
+          begin
+            Name := Std.Str.Substring(Line, 0, Colon);
+            Value := Std.Str.Substring(Line, Colon + 1, (Std.Str.Length(Line) - Colon) - 1);
+            if Std.Str.StartsWith(Value, ' ') then
+            begin
+              Value := Std.Str.Substring(Value, 1, Std.Str.Length(Value) - 1)
+            end
+          end;
+
+          if Name = 'data' then
+          begin
+            State.Data := (State.Data + Value) + #10
+          end
+          else if Name = 'event' then
+          begin
+            State.EventType := Value
+          end
+          else if (Name = 'id') and (not Std.Str.Contains(Value, #0)) then
+          begin
+            State.LastEventId := Value
+          end
+        end
+      end;
+      Error(Message):
+      begin
+        return Error('SSE line is not valid UTF-8: ' + Message)
+      end
+    end;
+
+    EndValue := LineEnd(State.Buffer)
+  end;
+
+  if State.EventBytes + Std.Array.Length(State.Buffer) > State.Maximum then
+  begin
+    return Error('SSE event exceeds MaxEventBytes')
+  end;
+  var Output: DecoderProcess := record
+    State := State;
+    Events := Events;
+  end;
+
+  return Ok(Output)
+end;
+
+public function Create(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
+begin
+  if MaxEventBytes < 1 then
+  begin
+    return Error('SSE MaxEventBytes must be positive')
+  end;
+  var State: DecoderState := record
+    Buffer := [];
+    Data := '';
+    EventType := '';
+    LastEventId := '';
+    EventBytes := 0;
+    Maximum := MaxEventBytes;
+    Finished := false;
+  end;
+
+  DecoderStates := Std.Array.Concat(DecoderStates, [State]);
+  return Ok(Std.Http.Handles.NewSseDecoder(Std.Array.Length(DecoderStates)))
+end;
+
+public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
+begin
+  case DecoderIndex(Decoder) of
+    Ok(Index):
+    begin
+      mutable var State: DecoderState := DecoderStates[Index];
+      if State.Finished then
+      begin
+        return Error('SSE decoder is already finished')
+      end;
+
+      State.Buffer := Std.Array.Concat(State.Buffer, Bytes);
+      case Process(State) of
+        Ok(Output):
+        begin
+          DecoderStates[Index] := Output.State;
+          return Ok(Output.Events)
+        end;
+        Error(Message):
+        begin
+          DecoderStates[Index] := State;
+          return Error(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
+begin
+  case Feed(Decoder, [10, 10]) of
+    Ok(Events):
+    begin
+      case DecoderIndex(Decoder) of
+        Ok(Index):
+        begin
+          mutable var State: DecoderState := DecoderStates[Index];
+          State.Finished := true;
+          DecoderStates[Index] := State;
+          return Ok(Events)
+        end;
+        Error(Message):
+        begin
+          return Error(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;

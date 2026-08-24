@@ -1,0 +1,97 @@
+program HttpStreamingTest;
+
+uses Std.Array, Std.Http, Std.Net.Utf8, Std.Str, Std.Test;
+
+begin
+  case CreateSseDecoder(1024) of
+    Ok(Decoder):
+    begin
+      case FeedSse(Decoder, Std.Net.Utf8.Encode(((((('id: 7' + #13) + #10) + 'event: token') + #13) + #10) +
+                                                'data: hel')) of
+        Ok(Events):
+        begin
+          AssertEquals(0, Std.Array.Length(Events))
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FeedSse(Decoder, Std.Net.Utf8.Encode((((((('lo' + #13) + #10) + 'data: world') + #13) + #10) + #13) +
+                                                #10)) of
+        Ok(Events):
+        begin
+          AssertEquals(1, Std.Array.Length(Events));
+          AssertEquals('token', Events[0].EventType);
+          AssertEquals(('hello' + #10) + 'world', Events[0].Data);
+          AssertEquals('7', Events[0].Id)
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FeedSse(Decoder, Std.Net.Utf8.Encode((': keepalive' + #10) + 'data: final')) of
+        Ok(Events):
+        begin
+          AssertEquals(0, Std.Array.Length(Events))
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FinishSse(Decoder) of
+        Ok(Events):
+        begin
+          AssertEquals(1, Std.Array.Length(Events));
+          AssertEquals('message', Events[0].EventType);
+          AssertEquals('final', Events[0].Data);
+          AssertEquals('7', Events[0].Id)
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FeedSse(Decoder, []) of
+        Ok(_):
+        begin
+          panic('finished SSE decoder accepted more input')
+        end;
+        Error(Message):
+        begin
+          AssertTrue(Std.Str.Contains(Message, 'already finished'))
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end;
+
+  case CreateSseDecoder(8) of
+    Ok(Decoder):
+    begin
+      case FeedSse(Decoder, Std.Net.Utf8.Encode('data: too long' + #10)) of
+        Ok(_):
+        begin
+          panic('oversized SSE event was accepted')
+        end;
+        Error(Message):
+        begin
+          AssertTrue(Std.Str.Contains(Message, 'MaxEventBytes'))
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

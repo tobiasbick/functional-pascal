@@ -1,6 +1,6 @@
 unit Std.Http.Client;
 
-uses Std.Array, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
+uses Std.Array, Std.Http.Stream, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
 
 function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
@@ -29,21 +29,21 @@ begin
   return Ok(true)
 end;
 
-function ReadAll(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
+function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
 begin
   if Maximum < 1 then
   begin
     return Error('HTTP MaxResponseBytes must be positive')
   end;
   mutable var Bytes: array of integer := [];
-  while true do
+  while Std.Http.Wire.FindSeparator(Bytes, 0) < 0 do
   begin
     case Std.Net.Read(Connection, 65536) of
       Ok(Chunk):
       begin
         if Std.Array.Length(Chunk) = 0 then
         begin
-          return Ok(Bytes)
+          return Error('HTTP response is missing the header terminator')
         end;
 
         if Std.Array.Length(Bytes) + Std.Array.Length(Chunk) > Maximum then
@@ -90,8 +90,12 @@ begin
   end
 end;
 
-public function Send(RequestValue: Request): result of Response, string;
+public function OpenStream(RequestValue: Request): result of StreamResponse, string;
 begin
+  if RequestValue.MaxResponseBytes < 1 then
+  begin
+    return Error('HTTP MaxResponseBytes must be positive')
+  end;
   mutable var UriValue: Uri := record
     Scheme := '';
     Host := '';
@@ -151,7 +155,7 @@ begin
         end
       end;
       mutable var ResponseBytes: array of integer := [];
-      case ReadAll(Connection, RequestValue.MaxResponseBytes) of
+      case ReadHead(Connection, RequestValue.MaxResponseBytes) of
         Ok(Value):
         begin
           ResponseBytes := Value
@@ -163,8 +167,81 @@ begin
         end
       end;
 
-      CloseQuietly(Connection);
-      return Std.Http.Wire.ParseResponse(ResponseBytes, RequestValue.Method)
+      case Std.Http.Wire.ParseResponseHead(ResponseBytes) of
+        Ok(Head):
+        begin
+          var InitialBody: array of integer := Std.Array.Slice(ResponseBytes, Head.BodyOffset, Std.Array.Length(ResponseBytes) -
+                                                                                               Head.BodyOffset);
+          case Std.Http.Stream.CreateBody(Connection, InitialBody, Head.Headers, Std.Http.Wire.ResponseHasBody(RequestValue.Method, Head.StatusCode), Std.Array.Length(ResponseBytes), RequestValue.MaxResponseBytes) of
+            Ok(Body):
+            begin
+              return Ok(record
+                StatusCode := Head.StatusCode;
+                ReasonPhrase := Head.ReasonPhrase;
+                Headers := Head.Headers;
+                Body := Body;
+              end)
+            end;
+            Error(Message):
+            begin
+              return Error(Message)
+            end
+          end
+        end;
+        Error(Message):
+        begin
+          CloseQuietly(Connection);
+          return Error(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
+
+public function Send(RequestValue: Request): result of Response, string;
+begin
+  case OpenStream(RequestValue) of
+    Ok(StreamResponseValue):
+    begin
+      mutable var Body: array of integer := [];
+      while true do
+      begin
+        case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
+          Ok(Bytes):
+          begin
+            if Std.Array.Length(Bytes) = 0 then
+            begin
+              return Ok(record
+                StatusCode := StreamResponseValue.StatusCode;
+                ReasonPhrase := StreamResponseValue.ReasonPhrase;
+                Headers := StreamResponseValue.Headers;
+                Body := Body;
+              end)
+            end;
+
+            Body := Std.Array.Concat(Body, Bytes)
+          end;
+          Error(Message):
+          begin
+            case Std.Http.Stream.CloseBody(StreamResponseValue.Body) of
+              Ok(_):
+              begin
+              end;
+              Error(_):
+              begin
+              end
+            end;
+
+            return Error(Message)
+          end
+        end
+      end;
+
+      return Error('HTTP response stream ended unexpectedly')
     end;
     Error(Message):
     begin

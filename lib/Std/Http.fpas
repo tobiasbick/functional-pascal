@@ -1,6 +1,6 @@
 unit Std.Http;
 
-uses Std.Http.Client, Std.Http.Headers, Std.Http.Types, Std.Net.Utf8;
+uses Std.Http.Client, Std.Http.Headers, Std.Http.Sse, Std.Http.Stream, Std.Http.Types, Std.Net.Utf8;
 
 public type
   // One HTTP field name and value.
@@ -9,11 +9,55 @@ public type
   Request = Std.Http.Types.Request;
   // One complete non-streaming HTTP response.
   Response = Std.Http.Types.Response;
+  // Status, headers, and a pull-based response body.
+  StreamResponse = Std.Http.Types.StreamResponse;
+  // Opaque pull-based HTTP response body.
+  BodyStream = Std.Http.Types.BodyStream;
+  // One decoded Server-Sent Events message.
+  SseEvent = Std.Http.Types.SseEvent;
+  // Opaque incremental Server-Sent Events decoder.
+  SseDecoder = Std.Http.Types.SseDecoder;
 
 // Sends one HTTP/1.1 request over a new TCP connection.
 public function Send(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.Response, string;
 begin
   return Std.Http.Client.Send(RequestValue)
+end;
+
+// Sends one HTTP/1.1 request and returns after reading the response headers.
+public function OpenStream(RequestValue: Std.Http.Types.Request): result of Std.Http.Types.StreamResponse, string;
+begin
+  return Std.Http.Client.OpenStream(RequestValue)
+end;
+
+// Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
+public function ReadStream(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of array of integer, string;
+begin
+  return Std.Http.Stream.ReadBody(StreamValue, MaxBytes)
+end;
+
+// Closes a streaming response body before end of stream.
+public function CloseStream(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
+begin
+  return Std.Http.Stream.CloseBody(StreamValue)
+end;
+
+// Creates an incremental Server-Sent Events decoder with one bounded event buffer.
+public function CreateSseDecoder(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
+begin
+  return Std.Http.Sse.Create(MaxEventBytes)
+end;
+
+// Feeds one byte fragment and returns every complete event decoded from it.
+public function FeedSse(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of Std.Http.Types.SseEvent, string;
+begin
+  return Std.Http.Sse.Feed(Decoder, Bytes)
+end;
+
+// Flushes the final SSE line and prevents further input.
+public function FinishSse(Decoder: Std.Http.Types.SseDecoder): result of array of Std.Http.Types.SseEvent, string;
+begin
+  return Std.Http.Sse.Finish(Decoder)
 end;
 
 // Finds the first response header with a case-insensitive name.

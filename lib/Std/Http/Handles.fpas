@@ -1,0 +1,39 @@
+unit Std.Http.Handles;
+
+public type
+  // Opaque pull-based HTTP response body.
+  BodyStream = record
+    Slot: integer;
+  end;
+  // Opaque incremental Server-Sent Events decoder.
+  SseDecoder = record
+    Slot: integer;
+  end;
+
+// Creates an HTTP body handle for the streaming implementation.
+public function NewBodyStream(Slot: integer): BodyStream;
+begin
+  return record
+    Slot := Slot;
+  end
+end;
+
+// Returns the backing slot for an HTTP body handle.
+public function BodyStreamSlot(StreamValue: BodyStream): integer;
+begin
+  return StreamValue.Slot
+end;
+
+// Creates an SSE decoder handle for the decoder implementation.
+public function NewSseDecoder(Slot: integer): SseDecoder;
+begin
+  return record
+    Slot := Slot;
+  end
+end;
+
+// Returns the backing slot for an SSE decoder handle.
+public function SseDecoderSlot(Decoder: SseDecoder): integer;
+begin
+  return Decoder.Slot
+end;

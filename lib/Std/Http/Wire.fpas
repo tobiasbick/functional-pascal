@@ -4,7 +4,7 @@ uses
   Std.Array, Std.Conv, Std.Http.Headers, Std.Http.Method, Std.Http.Types, Std.Net.Uri, Std.Net.Utf8,
   Std.Parse, Std.Str;
 
-function FindSeparator(Bytes: array of integer; Start: integer): integer;
+public function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
   for Index: integer := Start to Std.Array.Length(Bytes) - 4 do
   begin
@@ -18,7 +18,7 @@ begin
   return -1
 end;
 
-function FindLineEnd(Bytes: array of integer; Start: integer): integer;
+public function FindLineEnd(Bytes: array of integer; Start: integer): integer;
 begin
   for Index: integer := Start to Std.Array.Length(Bytes) - 2 do
   begin
@@ -93,7 +93,7 @@ begin
   return -1
 end;
 
-function ParseChunkSize(Line: string): result of integer, string;
+public function ParseChunkSize(Line: string): result of integer, string;
 begin
   mutable var SizeText: string := Line;
   var Extension: integer := Std.Str.IndexOf(SizeText, ';');
@@ -181,7 +181,7 @@ begin
   return Error('HTTP chunked body is missing its final zero chunk')
 end;
 
-function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
+public function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
 begin
   if RequestMethod = 'HEAD' then
   begin
@@ -243,7 +243,7 @@ begin
   end
 end;
 
-public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
+public function ParseResponseHead(Bytes: array of integer): result of ResponseHead, string;
 begin
   var Separator: integer := FindSeparator(Bytes, 0);
   if Separator < 0 then
@@ -300,17 +300,37 @@ begin
       return Error(Message)
     end
   end;
-  var RawBody: array of integer := Std.Array.Slice(Bytes, Separator + 4, (Std.Array.Length(Bytes) - Separator) -
-                                                                         4);
-  case ResponseBody(Headers, RawBody, ResponseHasBody(RequestMethod, StatusCode)) of
-    Ok(Body):
+
+  return Ok(record
+    StatusCode := StatusCode;
+    ReasonPhrase := Status[1];
+    Headers := Headers;
+    BodyOffset := Separator + 4;
+  end)
+end;
+
+public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
+begin
+  case ParseResponseHead(Bytes) of
+    Ok(Head):
     begin
-      return Ok(record
-        StatusCode := StatusCode;
-        ReasonPhrase := Status[1];
-        Headers := Headers;
-        Body := Body;
-      end)
+      var RawBody: array of integer := Std.Array.Slice(Bytes, Head.BodyOffset, Std.Array.Length(Bytes) -
+                                                                               Head.BodyOffset);
+      case ResponseBody(Head.Headers, RawBody, ResponseHasBody(RequestMethod, Head.StatusCode)) of
+        Ok(Body):
+        begin
+          return Ok(record
+            StatusCode := Head.StatusCode;
+            ReasonPhrase := Head.ReasonPhrase;
+            Headers := Head.Headers;
+            Body := Body;
+          end)
+        end;
+        Error(Message):
+        begin
+          return Error(Message)
+        end
+      end
     end;
     Error(Message):
     begin

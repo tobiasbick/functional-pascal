@@ -9,7 +9,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Plan | Scope |
 |------|------|-------|
 | Standard library | [Standard library roadmap](std-roadmap.md) | Future `Std.*` units and longer-term stdlib direction |
-| Networking | [Networking follow-up](networking.md) | Streaming, HTTP server, WebDAV, FTP |
+| Networking | [Networking follow-up](networking.md) | Client hardening, HTTP server, WebDAV, FTP |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
 

@@ -21,6 +21,10 @@ end
 
 `Complete` posts JSON to `<BaseUrl>/chat/completions` with `stream: false`. When `ApiKey` is `Some(nonEmpty)`, it sends an `Authorization: Bearer` header. Successful responses must contain text at `choices[0].message.content`. Non-2xx responses and malformed response shapes return `Error(message)`.
 
+`Complete` remains buffered. Callers that need token delivery can build a streaming request with
+[`Std.Http.OpenStream` and its SSE decoder](../network/http.md#streaming-responses); a dedicated
+OpenAI-compatible streaming facade is not implemented yet.
+
 The runnable chat project keeps user and assistant messages in memory:
 
 ```text

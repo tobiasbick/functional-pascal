@@ -16,6 +16,7 @@ mod fmt;
 mod init;
 mod input;
 mod network;
+mod network_streaming;
 mod network_tls;
 mod output;
 mod projects;

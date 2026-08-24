@@ -3,8 +3,8 @@
 ## Completed foundation
 
 The implemented foundation provides VM-owned TCP client connections, URI and UTF-8 helpers, a
-non-streaming FPAS HTTP/1.1 client with standard and extension methods, and an OpenAI-compatible
-local chat client. Current behavior is documented under
+buffered FPAS HTTP/1.1 client with standard and extension methods, and an OpenAI-compatible local
+chat client. Current behavior is documented under
 [`docs/pascal/std/network/`](../pascal/std/network/README.md) and
 [`docs/pascal/std/ai/`](../pascal/std/ai/README.md).
 
@@ -18,16 +18,23 @@ Verification covers a trusted local TLS round trip, hostname mismatch, untrusted
 FPAS HTTPS call path, a live public HTTPS request, formatting, Clippy, the workspace build and test
 suite, and the complete FPAS regression suite.
 
+## Completed response streaming and SSE
+
+`Std.Http.OpenStream`, `ReadStream`, and `CloseStream` provide bounded pull-based response bodies for
+`Content-Length`, chunked, and connection-delimited HTTP/HTTPS responses. `Send` drains the same
+reader. The FPAS SSE decoder accepts fragmented byte input, carries event IDs, combines data lines,
+and enforces a per-event limit. Focused fixtures cover fragmented chunked SSE delivery, truncated
+bodies, decoder fragmentation, finish behavior, and the event-size limit.
+
 ## Following work
 
-1. Add streaming response reads and an FPAS Server-Sent Events decoder for streamed chat tokens.
-2. Harden the client with bounded redirects, explicit interim-response processing, separate header
+1. Harden the client with bounded redirects, explicit interim-response processing, separate header
    limits, and focused hostile-input tests.
-3. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
+2. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
    transport for HTTPS serving.
-4. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
+3. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
    as `PROPFIND` already work through `Request.Create`.
-5. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
+4. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
 
 Each phase requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
 after implementation, and the standard workspace verification gates.

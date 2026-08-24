@@ -1,5 +1,7 @@
 unit Std.Http.Types;
 
+uses Std.Http.Handles;
+
 public type
   // One HTTP field name and value.
   Header = record
@@ -14,7 +16,7 @@ public type
       end
     end;
   end;
-  // One complete non-streaming HTTP request.
+  // One HTTP request with transport limits shared by buffered and streaming sends.
   Request = record
     public Method: string;
     public Url: string;
@@ -84,3 +86,27 @@ public type
     public Headers: array of Header;
     public Body: array of integer;
   end;
+  // Opaque pull-based HTTP response body.
+  BodyStream = Std.Http.Handles.BodyStream;
+  // Status and headers returned before a streaming response body is consumed.
+  StreamResponse = record
+    public StatusCode: integer;
+    public ReasonPhrase: string;
+    public Headers: array of Header;
+    public Body: BodyStream;
+  end;
+  // Parsed response metadata used by the HTTP client modules.
+  ResponseHead = record
+    public StatusCode: integer;
+    public ReasonPhrase: string;
+    public Headers: array of Header;
+    public BodyOffset: integer;
+  end;
+  // One decoded Server-Sent Events message.
+  SseEvent = record
+    public EventType: string;
+    public Data: string;
+    public Id: string;
+  end;
+  // Opaque incremental Server-Sent Events decoder.
+  SseDecoder = Std.Http.Handles.SseDecoder;

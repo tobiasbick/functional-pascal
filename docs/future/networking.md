@@ -44,9 +44,12 @@ POST bodies, response writing, listener lifecycle, and malformed request framing
 
 1. Add reusable server-loop and concurrent-dispatch helpers, then add certificate-configured TLS
    listeners for HTTPS serving.
-2. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
-   as `PROPFIND` already work through `Request.Create`.
-3. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.
 
-Each phase requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
+WebDAV and FTP/FTPS are not part of the active networking sequence. They have separate deferred
+plans so either protocol can be reconsidered later without coupling it to HTTP/HTTPS server work:
+
+- [WebDAV](webdav.md)
+- [FTP and FTPS](ftp.md)
+
+Server work requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
 after implementation, and the standard workspace verification gates.

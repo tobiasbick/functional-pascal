@@ -8,7 +8,7 @@ implemented in FPAS.
 | [`Std.Net`](net.md) | Hosted TCP/TLS connections, TCP listeners, and byte I/O |
 | [`Std.Net.Uri`](uri.md) | Absolute HTTP/HTTPS URI parsing |
 | [`Std.Net.Utf8`](utf8.md) | UTF-8 encoding and validated decoding |
-| [`Std.Http`](http.md) | HTTP/HTTPS client, HTTP/1.x server helpers, and SSE decoding |
+| [`Std.Http`](http.md) | HTTP/HTTPS client, HTTP/1.x server loop and helpers, and SSE decoding |
 
 ## See also
 

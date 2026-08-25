@@ -5,6 +5,8 @@ use std::time::{Duration, Instant};
 
 use super::*;
 
+mod server_loop;
+
 fn unused_port() -> u16 {
     let listener = TcpListener::bind("127.0.0.1:0").expect("reserve server fixture port");
     listener.local_addr().expect("reserved address").port()

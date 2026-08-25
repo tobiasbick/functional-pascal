@@ -24,8 +24,11 @@ An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented i
 | function | `BodyText(Response): Result of string, string` | validated UTF-8 decoding |
 | type | `ServerRequest` | accepted method, origin-form target, headers, and body |
 | type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
+| type | `ServerOptions` | request limits, connection timeout, concurrency, and optional request count |
+| type | `RequestHandler` | maps one `ServerRequest` to one `ServerResponse` |
 | function | `ReadRequest(Connection; MaxHeaderBytes; MaxBodyBytes)` | reads one bounded request |
 | function | `WriteResponse(Connection; ServerResponse)` | writes one complete response |
+| function | `Serve(Listener; ServerOptions; RequestHandler)` | accepts and dispatches requests in bounded concurrent batches |
 
 Create a request with defaults, then replace the fields needed by the caller:
 
@@ -167,12 +170,51 @@ end
 
 `WriteResponse` emits HTTP/1.1 with managed `Content-Length` and `Connection: close` fields. It does
 not close the connection. The caller owns connection and listener lifetimes and decides whether to
-accept another request. Automatic server loops, persistent connections, concurrent dispatch, and
-HTTPS listeners are not part of this first server layer.
+accept another request.
+
+For a reusable loop, pass the listener and a handler to `Serve`:
+
+```pascal
+uses Std.Http, Std.Net, Std.Net.Utf8;
+
+function Handle(RequestValue: ServerRequest): ServerResponse;
+begin
+  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  ResponseValue.Body := Std.Net.Utf8.Encode('Path: ' + RequestValue.Target);
+  return ResponseValue
+end;
+
+case Listen('127.0.0.1', 8080) of
+  Ok(ListenerValue):
+  begin
+    mutable var Options: ServerOptions := ServerOptions.Create();
+    Options.MaxConcurrentRequests := 16;
+    case Serve(ListenerValue, Options, Handle) of
+      Ok(_):
+      begin
+      end;
+      Error(Message): panic(Message)
+    end
+  end;
+  Error(Message): panic(Message)
+end
+```
+
+`ServerOptions.Create` defaults to a 64 KiB request-head limit, a 1 MiB request-body limit, a
+30-second connection timeout, and eight concurrent requests. `MaxRequests = 0` keeps accepting;
+a positive value returns after that many accepted connections. `MaxConcurrentRequests` sets the
+batch size. Each connection runs on a `go` task, so handlers must obey the normal task-transfer
+rules. Named routines and closures with immutable captures are suitable; task-bound closures with
+mutable captures are rejected by the existing task semantics.
+
+`Serve` owns accepted connections and closes each one after its response. It leaves the listener
+open. A malformed request receives an empty `400 Bad Request`, and connection-level read or write
+failures do not stop other workers. An accept failure returns `Error`. A handler panic follows the
+normal task-failure path and stops the server loop.
 
 Client requests use only origin-form targets. `OPTIONS` addresses a normal URL path;
 `OPTIONS *` and `CONNECT` authority-form targets are not implemented. Compression, proxies, and
-persistent connections are not handled.
+persistent connections are not handled. HTTPS listeners are not implemented.
 
 ## Implementation (contributors)
 
@@ -181,6 +223,7 @@ persistent connections are not handled.
 | Public facade | [`Http.fpas`](../../../../lib/Std/Http.fpas) |
 | Client connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
 | Server request/response handling | [`Server.fpas`](../../../../lib/Std/Http/Server.fpas) |
+| Server loop and concurrent dispatch | [`ServerLoop.fpas`](../../../../lib/Std/Http/ServerLoop.fpas) |
 | Shared field validation | [`Fields.fpas`](../../../../lib/Std/Http/Fields.fpas) |
 | Complete connection writes | [`Io.fpas`](../../../../lib/Std/Http/Io.fpas) |
 | Bounded response-head processing | [`Head.fpas`](../../../../lib/Std/Http/Head.fpas) |
@@ -193,6 +236,7 @@ persistent connections are not handled.
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |
 | Redirect and hostile-response fixtures | [`network_hardening.rs`](../../../../crates/fpas-cli/src/main_tests/network_hardening.rs) |
 | HTTP server fixtures | [`network_server.rs`](../../../../crates/fpas-cli/src/main_tests/network_server.rs) |
+| Server-loop fixtures | [`server_loop.rs`](../../../../crates/fpas-cli/src/main_tests/network_server/server_loop.rs) |
 | HTTPS rejection fixture | [`network_tls.rs`](../../../../crates/fpas-cli/src/main_tests/network_tls.rs) |
 
 ## See also

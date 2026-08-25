@@ -130,6 +130,27 @@ public type
       end
     end;
   end;
+  // Limits and concurrency used by the HTTP server loop.
+  ServerOptions = record
+    public MaxHeaderBytes: integer;
+    public MaxBodyBytes: integer;
+    public ConnectionTimeoutMillis: integer;
+    public MaxConcurrentRequests: integer;
+    public MaxRequests: integer;
+
+    public static function Create(): ServerOptions;
+    begin
+      return record
+        MaxHeaderBytes := 65536;
+        MaxBodyBytes := 1048576;
+        ConnectionTimeoutMillis := 30000;
+        MaxConcurrentRequests := 8;
+        MaxRequests := 0;
+      end
+    end;
+  end;
+  // Maps one accepted request to its complete response.
+  RequestHandler = function(RequestValue: ServerRequest): ServerResponse;
   // One decoded Server-Sent Events message.
   SseEvent = record
     public EventType: string;

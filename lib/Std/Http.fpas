@@ -1,8 +1,8 @@
 unit Std.Http;
 
 uses
-  Std.Http.Client, Std.Http.Headers, Std.Http.Server, Std.Http.Sse, Std.Http.Stream, Std.Http.Types,
-  Std.Net, Std.Net.Utf8;
+  Std.Http.Client, Std.Http.Headers, Std.Http.Server, Std.Http.ServerLoop, Std.Http.Sse,
+  Std.Http.Stream, Std.Http.Types, Std.Net, Std.Net.Utf8;
 
 public type
   // One HTTP field name and value.
@@ -17,6 +17,10 @@ public type
   ServerRequest = Std.Http.Types.ServerRequest;
   // One complete response written by the HTTP server helpers.
   ServerResponse = Std.Http.Types.ServerResponse;
+  // Limits and concurrency used by the HTTP server loop.
+  ServerOptions = Std.Http.Types.ServerOptions;
+  // Maps one accepted request to its complete response.
+  RequestHandler = Std.Http.Types.RequestHandler;
   // Opaque pull-based HTTP response body.
   BodyStream = Std.Http.Types.BodyStream;
   // One decoded Server-Sent Events message.
@@ -58,6 +62,16 @@ end;
 public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: Std.Http.Types.ServerResponse): result of boolean, string;
 begin
   return Std.Http.Server.WriteResponse(Connection, ResponseValue)
+end;
+
+// Accepts requests in bounded concurrent batches and dispatches each one to Handler.
+public function Serve(
+  Listener: Std.Net.Listener;
+  Options: Std.Http.Types.ServerOptions;
+  Handler: Std.Http.Types.RequestHandler
+): result of boolean, string;
+begin
+  return Std.Http.ServerLoop.Serve(Listener, Options, Handler)
 end;
 
 // Creates an incremental Server-Sent Events decoder with one bounded event buffer.

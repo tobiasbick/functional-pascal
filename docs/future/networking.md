@@ -40,10 +40,16 @@ modules parse bounded HTTP/1.0 and HTTP/1.1 requests and serialize complete HTTP
 the runtime remains responsible only for sockets and bytes. Local fixtures cover GET, fragmented
 POST bodies, response writing, listener lifecycle, and malformed request framing.
 
+## Completed server loop and concurrent dispatch
+
+`Std.Http.Serve` accepts connections in bounded batches and dispatches each request through a
+caller-supplied handler on a `go` task. `ServerOptions` controls request limits, connection timeout,
+batch concurrency, and an optional request count. The loop owns accepted connections, isolates
+malformed requests and connection failures, and leaves the listener under caller ownership.
+
 ## Following work
 
-1. Add reusable server-loop and concurrent-dispatch helpers, then add certificate-configured TLS
-   listeners for HTTPS serving.
+1. Add certificate-configured TLS listeners for HTTPS serving.
 
 WebDAV and FTP/FTPS are not part of the active networking sequence. They have separate deferred
 plans so either protocol can be reconsidered later without coupling it to HTTP/HTTPS server work:

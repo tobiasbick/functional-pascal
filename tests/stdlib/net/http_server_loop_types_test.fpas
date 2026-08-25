@@ -1,0 +1,26 @@
+program HttpServerLoopTypesTest;
+
+uses Std.Http, Std.Test;
+
+function Handle(RequestValue: ServerRequest): ServerResponse;
+begin
+  return ServerResponse.Create(200, RequestValue.Method)
+end;
+
+begin
+  var Options: ServerOptions := ServerOptions.Create();
+  AssertEquals(65536, Options.MaxHeaderBytes);
+  AssertEquals(1048576, Options.MaxBodyBytes);
+  AssertEquals(30000, Options.ConnectionTimeoutMillis);
+  AssertEquals(8, Options.MaxConcurrentRequests);
+  AssertEquals(0, Options.MaxRequests);
+  var HandlerValue: RequestHandler := Handle;
+  var RequestValue: ServerRequest := record
+    Method := 'OK';
+    Target := '/';
+    Headers := [];
+    Body := [];
+  end;
+
+  AssertEquals(200, HandlerValue(RequestValue).StatusCode)
+end.

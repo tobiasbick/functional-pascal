@@ -1,3 +1,4 @@
+// Covers OpenAI-compatible client, message, and option defaults.
 program OpenAiTypesTest;
 
 uses Std.Ai.OpenAi, Std.Test;

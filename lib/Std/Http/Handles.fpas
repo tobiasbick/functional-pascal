@@ -1,16 +1,22 @@
+// Opaque handle wrappers shared by HTTP implementation units.
 unit Std.Http.Handles;
 
 public type
   // Opaque pull-based HTTP response body.
   BodyStream = record
+    // Private index into the streaming body registry.
     Slot: integer;
   end;
   // Opaque incremental Server-Sent Events decoder.
   SseDecoder = record
+    // Private index into the SSE decoder registry.
     Slot: integer;
   end;
 
 // Creates an HTTP body handle for the streaming implementation.
+//
+// Parameters:
+// - `Slot`: Index of the backing stream state.
 public function NewBodyStream(Slot: integer): BodyStream;
 begin
   return record
@@ -19,12 +25,18 @@ begin
 end;
 
 // Returns the backing slot for an HTTP body handle.
+//
+// Parameters:
+// - `StreamValue`: Body handle to inspect.
 public function BodyStreamSlot(StreamValue: BodyStream): integer;
 begin
   return StreamValue.Slot
 end;
 
 // Creates an SSE decoder handle for the decoder implementation.
+//
+// Parameters:
+// - `Slot`: Index of the backing decoder state.
 public function NewSseDecoder(Slot: integer): SseDecoder;
 begin
   return record
@@ -33,6 +45,9 @@ begin
 end;
 
 // Returns the backing slot for an SSE decoder handle.
+//
+// Parameters:
+// - `Decoder`: SSE decoder handle to inspect.
 public function SseDecoderSlot(Decoder: SseDecoder): integer;
 begin
   return Decoder.Slot

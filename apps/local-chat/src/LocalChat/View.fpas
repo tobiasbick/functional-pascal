@@ -1,30 +1,50 @@
+// Responsive TUI element construction for the Local Chat application.
 unit LocalChat.View;
 
 uses LocalChat.Model, Std.Option, Std.Tui;
 
 const
+  // Identifier of the prompt input control.
   PromptControl: integer := 1;
+  // Identifier of the transcript text area.
   TranscriptControl: integer := 2;
+  // Action emitted when the prompt text changes.
   PromptChangedAction: integer := 1;
+  // Action emitted when the transcript viewport changes.
   TranscriptChangedAction: integer := 2;
+  // Action emitted by the send button.
   SendAction: integer := 10;
 
+// Wraps one child in an expanding layout element.
+//
+// Parameters:
+// - `Child`: Element placed inside the layout wrapper.
+// - `Stretch`: Relative space assigned by the parent layout.
 function Expanding(Child: TuiElement; Stretch: integer): TuiElement;
 begin
   return TuiElementBuilders.MakeLayout(TuiLayoutSettings.Create(TuiMargins.Uniform(0), TuiSizePolicy.Expanding(), TuiAlignment.Fill(), Stretch), Child)
 end;
 
+// Builds the application header rule.
 function Header(): TuiElement;
 begin
   return TuiElementBuilders.MakeRule(' LOCAL CHAT  ·  llama.cpp  ·  one prompt per request ')
 end;
 
+// Builds the read-only transcript panel.
+//
+// Parameters:
+// - `State`: Current application state rendered by the panel.
 function Transcript(State: LocalChatModel): TuiElement;
 begin
   var Content: TuiElement := TuiElementBuilders.MakeTextArea(TuiControlId.Create(TranscriptControl), LocalChatTranscript(State), State.TranscriptCaret, State.TranscriptOffset, TuiAction.Create(TranscriptChangedAction));
   return TuiElementBuilders.MakePanel('Conversation', [Expanding(Content, 1)])
 end;
 
+// Builds the prompt input and send-button panel.
+//
+// Parameters:
+// - `State`: Current application state rendered by the composer.
 function Composer(State: LocalChatModel): TuiElement;
 begin
   var Prompt: TuiElement := TuiElementBuilders.MakeInputWithHint(TuiControlId.Create(PromptControl), State.Draft, State.DraftCaret, 'Message the local model…', TuiAction.Create(PromptChangedAction));
@@ -34,6 +54,10 @@ begin
                                                  ])
 end;
 
+// Builds the footer status line and keyboard hints.
+//
+// Parameters:
+// - `State`: Current application state providing status text.
 function Status(State: LocalChatModel): TuiElement;
 begin
   return TuiElementBuilders.MakeStatusLine([
@@ -45,6 +69,9 @@ begin
 end;
 
 // Builds the responsive Local Chat element tree for one model state.
+//
+// Parameters:
+// - `State`: Current application state to render.
 public function LocalChatView(State: LocalChatModel): TuiElement;
 begin
   if (State.Width < 50) or (State.Height < 14) then

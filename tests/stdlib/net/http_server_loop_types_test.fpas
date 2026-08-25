@@ -1,7 +1,12 @@
+// Covers HTTP server-loop defaults and request-handler typing.
 program HttpServerLoopTypesTest;
 
 uses Std.Http, Std.Test;
 
+// Returns a response whose reason phrase mirrors the request method.
+//
+// Parameters:
+// - `RequestValue`: Request supplied through the handler type.
 function Handle(RequestValue: ServerRequest): ServerResponse;
 begin
   return ServerResponse.Create(200, RequestValue.Method)

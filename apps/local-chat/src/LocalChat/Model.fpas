@@ -1,3 +1,4 @@
+// Immutable state and transcript formatting for the Local Chat application.
 unit LocalChat.Model;
 
 uses Std.Array, Std.Console, Std.Str, Std.Tui;
@@ -5,16 +6,24 @@ uses Std.Array, Std.Console, Std.Str, Std.Tui;
 public type
   // Origin of one visible local chat entry.
   ChatRole = enum
+    // Prompt submitted by the user.
     User;
+    // Text returned by the local model.
     Assistant;
+    // Error returned while processing a request.
     Failure;
   end;
   // One entry retained for display during the current process.
   ChatEntry = record
+    // Origin used to label the entry.
     public Role: ChatRole;
+    // Entry text displayed in the transcript.
     public Text: string;
 
     // Creates a user entry.
+    //
+    // Parameters:
+    // - `Text`: Prompt text submitted by the user.
     public static function User(Text: string): ChatEntry;
     begin
       return record
@@ -24,6 +33,9 @@ public type
     end;
 
     // Creates an assistant entry.
+    //
+    // Parameters:
+    // - `Text`: Completion text returned by the model.
     public static function Assistant(Text: string): ChatEntry;
     begin
       return record
@@ -33,6 +45,9 @@ public type
     end;
 
     // Creates a failed-request entry.
+    //
+    // Parameters:
+    // - `Text`: Error text returned by the request service.
     public static function Failure(Text: string): ChatEntry;
     begin
       return record
@@ -43,18 +58,31 @@ public type
   end;
   // Complete immutable state supplied to the Local Chat MVU view.
   LocalChatModel = record
+    // Conversation entries in display order.
     public Entries: array of ChatEntry;
+    // Current prompt editor contents.
     public Draft: string;
+    // Caret position inside `Draft`.
     public DraftCaret: integer;
+    // Caret position inside the read-only transcript.
     public TranscriptCaret: integer;
+    // Current transcript viewport offset.
     public TranscriptOffset: TuiPoint;
+    // Identifier of the focused control.
     public Focus: integer;
+    // Short status text shown in the footer.
     public Status: string;
+    // Current terminal width in cells.
     public Width: integer;
+    // Current terminal height in cells.
     public Height: integer;
   end;
 
 // Creates an empty Local Chat model for the supplied terminal size.
+//
+// Parameters:
+// - `Width`: Initial terminal width in cells.
+// - `Height`: Initial terminal height in cells.
 public function LocalChatModelCreate(Width: integer; Height: integer): LocalChatModel;
 begin
   return record
@@ -70,6 +98,11 @@ begin
   end
 end;
 
+// Wraps text at grapheme boundaries for a cell-width limit.
+//
+// Parameters:
+// - `Text`: Text to wrap without splitting grapheme clusters.
+// - `MaximumWidth`: Maximum display width of each output line.
 function WrapText(Text: string; MaximumWidth: integer): string;
 begin
   if MaximumWidth <= 0 then
@@ -103,6 +136,10 @@ begin
   return Wrapped
 end;
 
+// Returns the transcript label for one chat role.
+//
+// Parameters:
+// - `Role`: Entry origin to label.
 function RoleLabel(Role: ChatRole): string;
 begin
   case Role of
@@ -122,6 +159,9 @@ begin
 end;
 
 // Builds the width-bounded transcript displayed by the read-only transcript area.
+//
+// Parameters:
+// - `State`: Current application state containing entries and terminal dimensions.
 public function LocalChatTranscript(State: LocalChatModel): string;
 begin
   if Std.Array.Length(State.Entries) = 0 then
@@ -150,6 +190,9 @@ begin
 end;
 
 // Moves the transcript caret and viewport to the latest visible entry.
+//
+// Parameters:
+// - `State`: Current application state to scroll.
 public function LocalChatScrollToEnd(State: LocalChatModel): LocalChatModel;
 begin
   mutable var Next: LocalChatModel := State;

@@ -1,3 +1,4 @@
+// Public OpenAI-compatible non-streaming chat API.
 unit Std.Ai.OpenAi;
 
 uses Std.Ai.OpenAi.Client, Std.Ai.OpenAi.Types;
@@ -11,6 +12,11 @@ public type
   ChatOptions = Std.Ai.OpenAi.Types.ChatOptions;
 
 // Sends one non-streaming OpenAI-compatible chat completion.
+//
+// Parameters:
+// - `ClientValue`: Endpoint, model, authorization, and response-limit settings.
+// - `Messages`: Conversation messages sent in order.
+// - `Options`: Optional generation controls for this completion.
 public function Complete(
   ClientValue: Std.Ai.OpenAi.Types.Client;
   Messages: array of Std.Ai.OpenAi.Types.ChatMessage;

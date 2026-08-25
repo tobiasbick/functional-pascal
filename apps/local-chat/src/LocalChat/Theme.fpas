@@ -1,3 +1,4 @@
+// Color palette used by the Local Chat TUI.
 unit LocalChat.Theme;
 
 uses Std.Tui;

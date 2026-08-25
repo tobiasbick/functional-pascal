@@ -1,8 +1,12 @@
+// HTTP method and field-name token validation.
 unit Std.Http.Method;
 
 uses Std.Str;
 
 // Reports whether a method is a non-empty RFC 9110 token.
+//
+// Parameters:
+// - `Method`: Method or field-name token to validate.
 public function IsValidToken(Method: string): boolean;
 begin
   if Method = '' then

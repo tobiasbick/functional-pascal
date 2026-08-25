@@ -1,3 +1,4 @@
+// Starts the fixed-endpoint Local Chat terminal application.
 program LocalChat;
 
 uses LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Console, Std.Tui;

@@ -1,8 +1,12 @@
+// Shared HTTP field validation and parsing.
 unit Std.Http.Fields;
 
 uses Std.Array, Std.Http.Method, Std.Http.Types, Std.Str;
 
 // Reports whether an HTTP field value contains only permitted text characters.
+//
+// Parameters:
+// - `Value`: Field value to validate.
 public function IsValidValue(Value: string): boolean;
 begin
   for Index: integer := 0 to Std.Str.Length(Value) - 1 do
@@ -18,6 +22,10 @@ begin
 end;
 
 // Parses validated HTTP fields after the first start-line in a text block.
+//
+// Parameters:
+// - `Text`: Complete decoded message head.
+// - `MessageKind`: Message label used in diagnostics.
 public function Parse(Text: string; MessageKind: string): result of array of Header, string;
 begin
   var Lines: array of string := Std.Str.Split(Text, #13 + #10);

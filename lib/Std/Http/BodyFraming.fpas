@@ -1,3 +1,4 @@
+// Strict HTTP message-body framing selection.
 unit Std.Http.BodyFraming;
 
 uses Std.Array, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
@@ -5,11 +6,16 @@ uses Std.Array, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
 public type
   // Selected HTTP message-body framing mode and remaining fixed length.
   Framing = record
+    // Internal framing mode identifier.
     public Mode: integer;
+    // Bytes remaining for fixed-length framing.
     public Remaining: integer;
   end;
 
 // Selects one unambiguous HTTP message-body framing mode.
+//
+// Parameters:
+// - `Headers`: Parsed message fields used to determine framing.
 public function Select(Headers: array of Header): result of Framing, string;
 begin
   mutable var TransferEncoding: string := '';

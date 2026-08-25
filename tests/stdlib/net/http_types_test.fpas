@@ -1,3 +1,4 @@
+// Covers HTTP request constructors, buffered responses, and header lookup.
 program HttpTypesTest;
 
 uses Std.Http, Std.Net.Utf8, Std.Test;

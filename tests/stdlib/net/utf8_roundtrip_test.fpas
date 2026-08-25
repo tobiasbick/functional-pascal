@@ -1,3 +1,4 @@
+// Covers UTF-8 round trips and rejection of invalid continuation bytes.
 program Utf8RoundtripTest;
 
 uses Std.Array, Std.Net.Utf8, Std.Str, Std.Test;

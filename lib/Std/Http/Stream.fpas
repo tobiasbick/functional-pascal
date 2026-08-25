@@ -1,3 +1,4 @@
+// Pull-based decoded HTTP response-body streaming.
 unit Std.Http.Stream;
 
 uses
@@ -5,22 +6,38 @@ uses
   Std.Net.Utf8;
 
 type
+  // Mutable network and framing state retained for one body handle.
   StreamState = record
+    // Underlying TCP or TLS connection.
     Connection: Std.Net.Connection;
+    // Decoded or framing bytes already read from the connection.
     Buffer: array of integer;
+    // Internal body-framing mode identifier.
     Mode: integer;
+    // Bytes remaining for fixed-length framing.
     Remaining: integer;
+    // Bytes remaining in the current chunk.
     ChunkRemaining: integer;
+    // Whether the current chunk payload still requires its terminating CRLF.
     NeedChunkTerminator: boolean;
+    // Total network bytes consumed for response limits.
     BytesReceived: integer;
+    // Maximum total response bytes.
     Maximum: integer;
+    // Whether the body has reached its framing-defined end.
     Finished: boolean;
+    // Whether the backing connection remains available.
     Open: boolean;
   end;
 
 mutable var
+  // Process-local body-stream registry addressed by opaque handles.
   StreamStates: array of StreamState := [];
 
+// Resolves and validates an opaque body-stream handle.
+//
+// Parameters:
+// - `StreamValue`: Body-stream handle to resolve.
 function StateIndex(StreamValue: Std.Http.Types.BodyStream): result of integer, string;
 begin
   var Slot: integer := Std.Http.Handles.BodyStreamSlot(StreamValue);
@@ -32,6 +49,10 @@ begin
   return Ok(Slot - 1)
 end;
 
+// Closes one indexed stream state and its backing connection.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
 procedure CloseAt(Index: integer);
 begin
   mutable var State: StreamState := StreamStates[Index];
@@ -53,6 +74,10 @@ begin
   StreamStates[Index] := State
 end;
 
+// Reads another bounded fragment into an open stream buffer.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
 function ReadNetwork(Index: integer): result of boolean, string;
 begin
   mutable var State: StreamState := StreamStates[Index];
@@ -93,6 +118,11 @@ begin
   end
 end;
 
+// Reads until the buffer contains a requested number of bytes or reaches EOF.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
+// - `Count`: Required buffered byte count.
 function EnsureBytes(Index: integer; Count: integer): result of boolean, string;
 begin
   while Std.Array.Length(StreamStates[Index].Buffer) < Count do
@@ -115,6 +145,11 @@ begin
   return Ok(true)
 end;
 
+// Removes and returns at most a requested number of buffered bytes.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
+// - `Maximum`: Maximum bytes to remove.
 function TakeBuffer(Index: integer; Maximum: integer): array of integer;
 begin
   mutable var State: StreamState := StreamStates[Index];
@@ -129,6 +164,11 @@ begin
   return Bytes
 end;
 
+// Reads one fragment from a fixed-length body.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
+// - `Maximum`: Maximum decoded bytes to return.
 function ReadFixed(Index: integer; Maximum: integer): result of array of integer, string;
 begin
   if StreamStates[Index].Remaining = 0 then
@@ -171,6 +211,11 @@ begin
   return Ok(Bytes)
 end;
 
+// Reads one fragment from a connection-delimited body.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
+// - `Maximum`: Maximum decoded bytes to return.
 function ReadUntilClose(Index: integer; Maximum: integer): result of array of integer, string;
 begin
   if Std.Array.Length(StreamStates[Index].Buffer) = 0 then
@@ -194,6 +239,10 @@ begin
   return Ok(TakeBuffer(Index, Maximum))
 end;
 
+// Reads and consumes the next chunk-size line.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
 function ReadChunkSize(Index: integer): result of integer, string;
 begin
   mutable var LineEnd: integer := Std.Http.Wire.FindLineEnd(StreamStates[Index].Buffer, 0);
@@ -233,6 +282,11 @@ begin
   end
 end;
 
+// Reads one decoded fragment from a chunked body.
+//
+// Parameters:
+// - `Index`: Zero-based stream-state index.
+// - `Maximum`: Maximum decoded bytes to return.
 function ReadChunked(Index: integer; Maximum: integer): result of array of integer, string;
 begin
   while true do
@@ -332,6 +386,14 @@ begin
 end;
 
 // Creates one body stream after the response head has been parsed.
+//
+// Parameters:
+// - `Connection`: Open connection positioned after the response head.
+// - `InitialBody`: Body bytes already read with the response head.
+// - `Headers`: Parsed response fields used to select framing.
+// - `HasBody`: Whether request method and response status permit a body.
+// - `BytesReceived`: Network bytes already counted against the limit.
+// - `Maximum`: Maximum total response bytes.
 public function CreateBody(
   Connection: Std.Net.Connection;
   InitialBody: array of integer;
@@ -390,6 +452,10 @@ begin
 end;
 
 // Reads at most MaxBytes decoded body bytes. An empty array means end of stream.
+//
+// Parameters:
+// - `StreamValue`: Open response-body handle.
+// - `MaxBytes`: Maximum decoded bytes to return.
 public function ReadBody(StreamValue: Std.Http.Types.BodyStream; MaxBytes: integer): result of array of integer, string;
 begin
   if MaxBytes < 1 then
@@ -425,6 +491,9 @@ begin
 end;
 
 // Closes a body stream before end of stream.
+//
+// Parameters:
+// - `StreamValue`: Open response-body handle to close.
 public function CloseBody(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
 begin
   case StateIndex(StreamValue) of

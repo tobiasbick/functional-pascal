@@ -1,8 +1,12 @@
+// OpenAI-compatible request boundary for the Local Chat application.
 unit LocalChat.Service;
 
 uses LocalChat.Config, Std.Ai.OpenAi;
 
 // Sends one independent prompt to the fixed local llama.cpp model.
+//
+// Parameters:
+// - `Prompt`: User prompt sent as the sole chat message.
 public function LocalChatRequest(Prompt: string): result of string, string;
 begin
   var ClientValue: Client := Client.Create(LocalChatBaseUrl, LocalChatModelName);

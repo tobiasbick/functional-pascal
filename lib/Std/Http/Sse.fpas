@@ -1,25 +1,42 @@
+// Incremental bounded Server-Sent Events decoding.
 unit Std.Http.Sse;
 
 uses Std.Array, Std.Http.Handles, Std.Http.Types, Std.Net.Utf8, Std.Str;
 
 type
+  // Mutable parsing state retained for one decoder handle.
   DecoderState = record
+    // Incomplete input bytes not yet terminated by a line ending.
     Buffer: array of integer;
+    // Joined data fields for the current event.
     Data: string;
+    // Optional event field for the current event.
     EventType: string;
+    // Most recently observed event identifier.
     LastEventId: string;
+    // Bytes accumulated for the current event.
     EventBytes: integer;
+    // Maximum bytes allowed for one event.
     Maximum: integer;
+    // Whether the decoder has consumed its final input.
     Finished: boolean;
   end;
+  // Result of processing every complete line currently buffered.
   DecoderProcess = record
+    // Updated decoder state.
     State: DecoderState;
+    // Complete events emitted while processing.
     Events: array of SseEvent;
   end;
 
 mutable var
+  // Process-local decoder registry addressed by opaque handles.
   DecoderStates: array of DecoderState := [];
 
+// Resolves and validates an opaque decoder handle.
+//
+// Parameters:
+// - `Decoder`: Decoder handle to resolve.
 function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of integer, string;
 begin
   var Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
@@ -31,6 +48,10 @@ begin
   return Ok(Slot - 1)
 end;
 
+// Finds the next supported line ending and its byte width.
+//
+// Parameters:
+// - `Bytes`: Buffered bytes to scan from the beginning.
 function LineEnd(Bytes: array of integer): array of integer;
 begin
   for Index: integer := 0 to Std.Array.Length(Bytes) - 1 do
@@ -59,6 +80,10 @@ begin
   return [-1, 0]
 end;
 
+// Consumes complete SSE lines and returns updated state plus emitted events.
+//
+// Parameters:
+// - `State`: Decoder state updated while parsing buffered lines.
 function Process(mutable State: DecoderState): result of DecoderProcess, string;
 begin
   mutable var Events: array of SseEvent := [];
@@ -148,6 +173,10 @@ begin
   return Ok(Output)
 end;
 
+// Creates an incremental decoder with a bounded event buffer.
+//
+// Parameters:
+// - `MaxEventBytes`: Maximum buffered bytes for one incomplete event.
 public function Create(MaxEventBytes: integer): result of Std.Http.Types.SseDecoder, string;
 begin
   if MaxEventBytes < 1 then
@@ -168,6 +197,11 @@ begin
   return Ok(Std.Http.Handles.NewSseDecoder(Std.Array.Length(DecoderStates)))
 end;
 
+// Feeds one byte fragment and returns every complete decoded event.
+//
+// Parameters:
+// - `Decoder`: Open incremental SSE decoder.
+// - `Bytes`: Next response-body byte fragment.
 public function Feed(Decoder: Std.Http.Types.SseDecoder; Bytes: array of integer): result of array of SseEvent, string;
 begin
   case DecoderIndex(Decoder) of
@@ -200,6 +234,10 @@ begin
   end
 end;
 
+// Flushes the final SSE line and prevents further input.
+//
+// Parameters:
+// - `Decoder`: Open incremental SSE decoder to finish.
 public function Finish(Decoder: Std.Http.Types.SseDecoder): result of array of SseEvent, string;
 begin
   case Feed(Decoder, [10, 10]) of

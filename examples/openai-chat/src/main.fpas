@@ -1,3 +1,4 @@
+// Runs an interactive chat against a configured OpenAI-compatible endpoint.
 program OpenAiChat;
 
 uses Std.Ai.OpenAi, Std.Args, Std.Array, Std.Console, Std.Env;

@@ -1,12 +1,15 @@
+// Keeps the public TLS client and server listener signatures type-checked.
 program NetTlsSignatureTest;
 
 uses Std.Net, Std.Test;
 
+// Type-checks the verified TLS client constructor.
 function ConnectTlsSignatureOnly(): result of Connection, string;
 begin
   return ConnectTls('localhost', 443, 1000)
 end;
 
+// Type-checks the certificate-configured TLS listener constructor.
 function ListenTlsSignatureOnly(): result of Listener, string;
 begin
   return ListenTls('127.0.0.1', 443, 'certificate.pem', 'private-key.pem', 1000)

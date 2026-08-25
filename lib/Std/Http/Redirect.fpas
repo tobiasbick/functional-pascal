@@ -1,7 +1,12 @@
+// Redirect URL resolution, header filtering, and method rewriting.
 unit Std.Http.Redirect;
 
 uses Std.Array, Std.Conv, Std.Http.Headers, Std.Http.Types, Std.Net.Uri, Std.Str;
 
+// Formats a URI authority with a non-default port when required.
+//
+// Parameters:
+// - `UriValue`: Parsed absolute URI.
 function Authority(UriValue: Uri): string;
 begin
   mutable var Host: string := UriValue.Host;
@@ -19,11 +24,19 @@ begin
   return (Host + ':') + Std.Conv.IntToStr(UriValue.Port)
 end;
 
+// Formats the scheme and authority portion of a URI.
+//
+// Parameters:
+// - `UriValue`: Parsed absolute URI.
 function Origin(UriValue: Uri): string;
 begin
   return ((UriValue.Scheme + '://') + Authority(UriValue))
 end;
 
+// Removes a fragment from a URI reference.
+//
+// Parameters:
+// - `Text`: URI reference that may contain a fragment.
 function WithoutFragment(Text: string): string;
 begin
   var Fragment: integer := Std.Str.IndexOf(Text, '#');
@@ -35,6 +48,10 @@ begin
   return Std.Str.Substring(Text, 0, Fragment)
 end;
 
+// Removes the query from a path-and-query value.
+//
+// Parameters:
+// - `Path`: URI path that may contain a query.
 function PathWithoutQuery(Path: string): string;
 begin
   var Query: integer := Std.Str.IndexOf(Path, '?');
@@ -46,6 +63,10 @@ begin
   return Std.Str.Substring(Path, 0, Query)
 end;
 
+// Resolves dot segments in an absolute path while preserving its query.
+//
+// Parameters:
+// - `PathAndQuery`: Absolute path with an optional query.
 function NormalizePath(PathAndQuery: string): string;
 begin
   mutable var Path: string := PathAndQuery;
@@ -91,6 +112,11 @@ begin
   return Output + Query
 end;
 
+// Resolves a redirect location against an absolute base URI.
+//
+// Parameters:
+// - `Base`: Parsed URI of the current request.
+// - `Location`: Location field value from the redirect response.
 function Resolve(Base: Uri; Location: string): result of string, string;
 begin
   if Std.Http.Headers.ContainsUnsafeText(Location) then
@@ -144,12 +170,23 @@ begin
   end
 end;
 
+// Reports whether two URIs have the same scheme, host, and port.
+//
+// Parameters:
+// - `Left`: First parsed URI.
+// - `Right`: Second parsed URI.
 function SameOrigin(Left: Uri; Right: Uri): boolean;
 begin
   return ((Std.Str.ToLower(Left.Scheme) = Std.Str.ToLower(Right.Scheme)) and (Std.Str.ToLower(Left.Host) = Std.Str.ToLower(Right.Host))) and
          (Left.Port = Right.Port)
 end;
 
+// Removes sensitive or entity fields required by redirect policy.
+//
+// Parameters:
+// - `Headers`: Current request fields.
+// - `CrossOrigin`: Whether the redirect changes origin.
+// - `DropBody`: Whether redirect semantics discard the request body.
 function FilterHeaders(Headers: array of Header; CrossOrigin: boolean; DropBody: boolean): array of Header;
 begin
   mutable var Output: array of Header := [];
@@ -175,6 +212,9 @@ begin
 end;
 
 // Reports whether a status code uses the automatic redirect policy.
+//
+// Parameters:
+// - `StatusCode`: HTTP response status code.
 public function IsStatus(StatusCode: integer): boolean;
 begin
   return (((StatusCode = 301) or (StatusCode = 302)) or (StatusCode = 303)) or
@@ -182,6 +222,11 @@ begin
 end;
 
 // Builds the next request from one redirect response.
+//
+// Parameters:
+// - `Current`: Request that received the redirect response.
+// - `StatusCode`: Redirect response status code.
+// - `Location`: Location field value from the redirect response.
 public function NextRequest(Current: Request; StatusCode: integer; Location: string): result of Request, string;
 begin
   mutable var Base: Uri := record

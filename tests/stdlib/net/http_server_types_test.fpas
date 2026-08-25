@@ -1,3 +1,4 @@
+// Covers HTTP server response construction and mutable fields.
 program HttpServerTypesTest;
 
 uses Std.Array, Std.Http, Std.Net.Utf8, Std.Test;

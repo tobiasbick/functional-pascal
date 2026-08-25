@@ -1,8 +1,13 @@
+// Complete-write helpers for HTTP transports.
 unit Std.Http.Io;
 
 uses Std.Array, Std.Net;
 
 // Writes every byte or reports when the connection stops making progress.
+//
+// Parameters:
+// - `Connection`: Open TCP or TLS connection.
+// - `Bytes`: Complete byte sequence to write.
 public function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
 begin
   mutable var Offset: integer := 0;

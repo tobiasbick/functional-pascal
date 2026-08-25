@@ -1,3 +1,4 @@
+// Covers default and mutable HTTP request limits.
 program HttpRequestLimitsTest;
 
 uses Std.Http, Std.Test;

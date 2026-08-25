@@ -1,3 +1,4 @@
+// HTTP request, response, server, streaming, and SSE data types.
 unit Std.Http.Types;
 
 uses Std.Http.Handles;
@@ -5,9 +6,16 @@ uses Std.Http.Handles;
 public type
   // One HTTP field name and value.
   Header = record
+    // Field name with original casing.
     public Name: string;
+    // Field value without surrounding whitespace.
     public Value: string;
 
+    // Creates one HTTP field.
+    //
+    // Parameters:
+    // - `Name`: HTTP field name.
+    // - `Value`: HTTP field value.
     public static function Create(Name: string; Value: string): Header;
     begin
       return record
@@ -18,15 +26,28 @@ public type
   end;
   // One HTTP request with transport limits shared by buffered and streaming sends.
   Request = record
+    // HTTP method token.
     public Method: string;
+    // Absolute HTTP or HTTPS URL.
     public Url: string;
+    // Request fields in wire order.
     public Headers: array of Header;
+    // Complete request-body bytes.
     public Body: array of integer;
+    // Network timeout in milliseconds.
     public TimeoutMillis: integer;
+    // Maximum response-head size in bytes.
     public MaxHeaderBytes: integer;
+    // Maximum complete response size in bytes.
     public MaxResponseBytes: integer;
+    // Maximum number of redirects to follow.
     public MaxRedirects: integer;
 
+    // Creates a request with explicit method and default limits.
+    //
+    // Parameters:
+    // - `Method`: HTTP method token.
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Create(Method: string; Url: string): Request;
     begin
       return record
@@ -42,42 +63,63 @@ public type
     end;
 
     // Creates a GET request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Get(Url: string): Request;
     begin
       return Request.Create('GET', Url)
     end;
 
     // Creates a POST request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Post(Url: string): Request;
     begin
       return Request.Create('POST', Url)
     end;
 
     // Creates a PUT request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Put(Url: string): Request;
     begin
       return Request.Create('PUT', Url)
     end;
 
     // Creates a PATCH request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Patch(Url: string): Request;
     begin
       return Request.Create('PATCH', Url)
     end;
 
     // Creates a DELETE request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Delete(Url: string): Request;
     begin
       return Request.Create('DELETE', Url)
     end;
 
     // Creates a HEAD request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Head(Url: string): Request;
     begin
       return Request.Create('HEAD', Url)
     end;
 
     // Creates an OPTIONS request with default transport limits.
+    //
+    // Parameters:
+    // - `Url`: Absolute HTTP or HTTPS URL.
     public static function Options(Url: string): Request;
     begin
       return Request.Create('OPTIONS', Url)
@@ -85,41 +127,66 @@ public type
   end;
   // One complete non-streaming HTTP response.
   Response = record
+    // Three-digit HTTP status code.
     public StatusCode: integer;
+    // HTTP reason phrase from the response line.
     public ReasonPhrase: string;
+    // Response fields in wire order.
     public Headers: array of Header;
+    // Complete decoded response-body bytes.
     public Body: array of integer;
   end;
   // Opaque pull-based HTTP response body.
   BodyStream = Std.Http.Handles.BodyStream;
   // Status and headers returned before a streaming response body is consumed.
   StreamResponse = record
+    // Three-digit HTTP status code.
     public StatusCode: integer;
+    // HTTP reason phrase from the response line.
     public ReasonPhrase: string;
+    // Response fields in wire order.
     public Headers: array of Header;
+    // Pull-based decoded response-body handle.
     public Body: BodyStream;
   end;
   // Parsed response metadata used by the HTTP client modules.
   ResponseHead = record
+    // Three-digit HTTP status code.
     public StatusCode: integer;
+    // HTTP reason phrase from the response line.
     public ReasonPhrase: string;
+    // Parsed response fields.
     public Headers: array of Header;
+    // Byte offset immediately after the response head.
     public BodyOffset: integer;
   end;
   // One request accepted by the HTTP server helpers.
   ServerRequest = record
+    // Validated HTTP method token.
     public Method: string;
+    // Origin-form request target.
     public Target: string;
+    // Request fields in wire order.
     public Headers: array of Header;
+    // Complete request-body bytes.
     public Body: array of integer;
   end;
   // One complete response written by the HTTP server helpers.
   ServerResponse = record
+    // Three-digit HTTP status code.
     public StatusCode: integer;
+    // HTTP reason phrase written in the status line.
     public ReasonPhrase: string;
+    // Caller-supplied response fields.
     public Headers: array of Header;
+    // Complete response-body bytes.
     public Body: array of integer;
 
+    // Creates an empty response with an explicit status.
+    //
+    // Parameters:
+    // - `StatusCode`: Three-digit HTTP status code.
+    // - `ReasonPhrase`: HTTP reason phrase written in the status line.
     public static function Create(StatusCode: integer; ReasonPhrase: string): ServerResponse;
     begin
       return record
@@ -132,12 +199,18 @@ public type
   end;
   // Limits and concurrency used by the HTTP server loop.
   ServerOptions = record
+    // Maximum request-head size in bytes.
     public MaxHeaderBytes: integer;
+    // Maximum request-body size in bytes.
     public MaxBodyBytes: integer;
+    // Per-connection read and write timeout in milliseconds.
     public ConnectionTimeoutMillis: integer;
+    // Maximum requests dispatched in one concurrent batch.
     public MaxConcurrentRequests: integer;
+    // Accepted-connection limit, or zero for no limit.
     public MaxRequests: integer;
 
+    // Returns the default bounded server-loop configuration.
     public static function Create(): ServerOptions;
     begin
       return record
@@ -150,11 +223,17 @@ public type
     end;
   end;
   // Maps one accepted request to its complete response.
+  //
+  // Parameters:
+  // - `RequestValue`: Complete accepted request supplied to the handler.
   RequestHandler = function(RequestValue: ServerRequest): ServerResponse;
   // One decoded Server-Sent Events message.
   SseEvent = record
+    // Event type, defaulting to `message` when omitted.
     public EventType: string;
+    // Joined event data lines.
     public Data: string;
+    // Most recent event identifier.
     public Id: string;
   end;
   // Opaque incremental Server-Sent Events decoder.

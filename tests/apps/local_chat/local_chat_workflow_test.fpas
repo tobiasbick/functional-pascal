@@ -1,9 +1,15 @@
+// Covers Local Chat rendering, editing, resizing, transcript, and quit behavior.
 program LocalChatWorkflowTest;
 
 uses
   LocalChat.Model, LocalChat.Theme, LocalChat.Update, LocalChat.View, Std.Option, Std.Str, Std.Test,
   Std.Tui;
 
+// Reports whether any rendered row contains text.
+//
+// Parameters:
+// - `Snapshot`: Rendered surface to inspect.
+// - `Text`: Text fragment to find.
 function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
@@ -17,6 +23,7 @@ begin
   return false
 end;
 
+// Creates the Alt+X key event used by the application quit shortcut.
 function QuitKey(): TuiKeyEvent;
 begin
   return record

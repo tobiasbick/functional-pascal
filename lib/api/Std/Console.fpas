@@ -221,6 +221,7 @@ public type
   end;
   // Opaque one-shot saved-region handle.
   SavedRegion = record
+    // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
   end;
 

@@ -1,11 +1,19 @@
+// Data types used by the OpenAI-compatible chat client.
 unit Std.Ai.OpenAi.Types;
 
 public type
   // One role-tagged message in an OpenAI-compatible chat conversation.
   ChatMessage = record
+    // OpenAI-compatible message role such as `system`, `user`, or `assistant`.
     public Role: string;
+    // Text content of the message.
     public Content: string;
 
+    // Creates a message with an explicit role.
+    //
+    // Parameters:
+    // - `Role`: OpenAI-compatible role name.
+    // - `Content`: Text content of the message.
     public static function Create(Role: string; Content: string): ChatMessage;
     begin
       return record
@@ -14,16 +22,28 @@ public type
       end
     end;
 
+    // Creates a system instruction message.
+    //
+    // Parameters:
+    // - `Content`: System instruction text.
     public static function System(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('system', Content)
     end;
 
+    // Creates a user message.
+    //
+    // Parameters:
+    // - `Content`: User message text.
     public static function User(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('user', Content)
     end;
 
+    // Creates an assistant message.
+    //
+    // Parameters:
+    // - `Content`: Assistant message text.
     public static function Assistant(Content: string): ChatMessage;
     begin
       return ChatMessage.Create('assistant', Content)
@@ -31,12 +51,22 @@ public type
   end;
   // Connection and model settings for an OpenAI-compatible endpoint.
   Client = record
+    // Base API URL, normally ending in `/v1`.
     public BaseUrl: string;
+    // Model identifier sent with each request.
     public Model: string;
+    // Optional bearer token used for authorization.
     public ApiKey: option of string;
+    // TCP, TLS, and response-read timeout in milliseconds.
     public TimeoutMillis: integer;
+    // Maximum complete response size in bytes.
     public MaxResponseBytes: integer;
 
+    // Creates client settings with default limits and no API key.
+    //
+    // Parameters:
+    // - `BaseUrl`: Base URL of the OpenAI-compatible API.
+    // - `Model`: Model identifier sent with chat requests.
     public static function Create(BaseUrl: string; Model: string): Client;
     begin
       return record
@@ -50,9 +80,12 @@ public type
   end;
   // Optional generation controls sent with a chat completion.
   ChatOptions = record
+    // Optional sampling temperature.
     public Temperature: option of real;
+    // Optional maximum number of generated tokens.
     public MaxTokens: option of integer;
 
+    // Returns options that omit every optional generation control.
     public static function Default(): ChatOptions;
     begin
       return record

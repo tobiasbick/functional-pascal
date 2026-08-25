@@ -1,3 +1,4 @@
+// Absolute HTTP and HTTPS URI parsing for network clients.
 unit Std.Net.Uri;
 
 uses Std.Parse, Std.Str;
@@ -5,12 +6,20 @@ uses Std.Parse, Std.Str;
 public type
   // Parsed absolute network URI used by protocol clients.
   Uri = record
+    // Lowercase URI scheme.
     public Scheme: string;
+    // Host name or unbracketed IPv6 address.
     public Host: string;
+    // Explicit or scheme-default TCP port.
     public Port: integer;
+    // Origin-form path including an optional query.
     public Path: string;
   end;
 
+// Returns the default port for a supported URI scheme.
+//
+// Parameters:
+// - `Scheme`: Lowercase URI scheme.
 function DefaultPort(Scheme: string): result of integer, string;
 begin
   if Scheme = 'http' then
@@ -26,6 +35,10 @@ begin
   return Error('Unsupported URI scheme: ' + Scheme)
 end;
 
+// Parses and validates a decimal TCP port.
+//
+// Parameters:
+// - `Text`: Decimal port text.
 function ParsePort(Text: string): result of integer, string;
 begin
   case Std.Parse.TryInt(Text) of
@@ -45,6 +58,12 @@ begin
   end
 end;
 
+// Parses one authority and constructs the final URI value.
+//
+// Parameters:
+// - `Scheme`: Lowercase supported URI scheme.
+// - `Authority`: Host and optional port text.
+// - `Path`: Origin-form path including an optional query.
 function BuildUri(Scheme: string; Authority: string; Path: string): result of Uri, string;
 begin
   if Authority = '' then
@@ -130,6 +149,9 @@ begin
 end;
 
 // Parses an absolute HTTP or HTTPS URI.
+//
+// Parameters:
+// - `Text`: Absolute URI text to parse.
 public function Parse(Text: string): result of Uri, string;
 begin
   var SchemeEnd: integer := Std.Str.IndexOf(Text, '://');

@@ -1,9 +1,15 @@
+// HTTP/1.1 wire parsing and request serialization.
 unit Std.Http.Wire;
 
 uses
   Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method,
   Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
 
+// Finds the next HTTP head terminator.
+//
+// Parameters:
+// - `Bytes`: Byte sequence to scan.
+// - `Start`: First byte index to inspect.
 public function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
   for Index: integer := Start to Std.Array.Length(Bytes) - 4 do
@@ -18,6 +24,11 @@ begin
   return -1
 end;
 
+// Finds the next CRLF line ending.
+//
+// Parameters:
+// - `Bytes`: Byte sequence to scan.
+// - `Start`: First byte index to inspect.
 public function FindLineEnd(Bytes: array of integer; Start: integer): integer;
 begin
   for Index: integer := Start to Std.Array.Length(Bytes) - 2 do
@@ -31,6 +42,10 @@ begin
   return -1
 end;
 
+// Parses a supported HTTP response status line.
+//
+// Parameters:
+// - `Line`: Decoded response status line.
 function ParseStatus(Line: string): result of array of string, string;
 begin
   if (not Std.Str.StartsWith(Line, 'HTTP/1.0 ')) and (not Std.Str.StartsWith(Line, 'HTTP/1.1 ')) then
@@ -57,6 +72,10 @@ begin
             ])
 end;
 
+// Reports whether text is exactly three decimal digits.
+//
+// Parameters:
+// - `Text`: Candidate HTTP status code.
 function IsStatusCode(Text: string): boolean;
 begin
   if Std.Str.Length(Text) <> 3 then
@@ -76,6 +95,10 @@ begin
   return true
 end;
 
+// Converts one hexadecimal character to its value or minus one.
+//
+// Parameters:
+// - `Character`: Single hexadecimal character.
 function HexDigit(Character: string): integer;
 begin
   var Code: integer := Std.Str.Ord(Std.Str.ToUpper(Character));
@@ -92,6 +115,10 @@ begin
   return -1
 end;
 
+// Parses one hexadecimal chunk-size line and ignores extensions.
+//
+// Parameters:
+// - `Line`: Decoded chunk-size line.
 public function ParseChunkSize(Line: string): result of integer, string;
 begin
   mutable var SizeText: string := Line;
@@ -121,6 +148,10 @@ begin
   return Ok(Size)
 end;
 
+// Decodes one complete chunked body.
+//
+// Parameters:
+// - `Bytes`: Complete chunked body bytes.
 function DecodeChunked(Bytes: array of integer): result of array of integer, string;
 begin
   mutable var Position: integer := 0;
@@ -180,6 +211,11 @@ begin
   return Error('HTTP chunked body is missing its final zero chunk')
 end;
 
+// Reports whether response semantics permit a message body.
+//
+// Parameters:
+// - `RequestMethod`: Method used by the matching request.
+// - `StatusCode`: HTTP response status code.
 public function ResponseHasBody(RequestMethod: string; StatusCode: integer): boolean;
 begin
   if RequestMethod = 'HEAD' then
@@ -191,6 +227,12 @@ begin
          ((StatusCode <> 204) and (StatusCode <> 304))
 end;
 
+// Applies selected framing to one complete raw response body.
+//
+// Parameters:
+// - `Headers`: Parsed response fields.
+// - `Bytes`: Raw bytes following the response head.
+// - `HasBody`: Whether response semantics permit a body.
 function ResponseBody(Headers: array of Header; Bytes: array of integer; HasBody: boolean): result of array of integer, string;
 begin
   if not HasBody then
@@ -225,6 +267,10 @@ begin
   end
 end;
 
+// Parses one complete response head and returns its body offset.
+//
+// Parameters:
+// - `Bytes`: Response bytes containing a complete head.
 public function ParseResponseHead(Bytes: array of integer): result of ResponseHead, string;
 begin
   var Separator: integer := FindSeparator(Bytes, 0);
@@ -296,6 +342,11 @@ begin
   end)
 end;
 
+// Parses one complete buffered HTTP response.
+//
+// Parameters:
+// - `Bytes`: Complete HTTP response bytes.
+// - `RequestMethod`: Method used by the matching request.
 public function ParseResponse(Bytes: array of integer; RequestMethod: string): result of Response, string;
 begin
   case ParseResponseHead(Bytes) of
@@ -326,6 +377,10 @@ begin
   end
 end;
 
+// Formats the Host field value for a parsed URI.
+//
+// Parameters:
+// - `UriValue`: Parsed request URI.
 function HostHeader(UriValue: Uri): string;
 begin
   mutable var Host: string := UriValue.Host;
@@ -347,6 +402,11 @@ begin
   return (Host + ':') + Std.Conv.IntToStr(UriValue.Port)
 end;
 
+// Validates and serializes one HTTP/1.1 request.
+//
+// Parameters:
+// - `RequestValue`: Complete request to encode.
+// - `UriValue`: Parsed absolute request URI.
 public function EncodeRequest(RequestValue: Request; UriValue: Uri): result of array of integer, string;
 begin
   if not Std.Http.Method.IsValidToken(RequestValue.Method) then

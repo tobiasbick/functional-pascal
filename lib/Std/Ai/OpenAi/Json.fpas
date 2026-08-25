@@ -1,7 +1,14 @@
+// JSON encoding and decoding for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Json;
 
 uses Std.Ai.OpenAi.Types, Std.Array, Std.Conv, Std.Dict, Std.Json, Std.Option;
 
+// Encodes one non-streaming chat-completion request body.
+//
+// Parameters:
+// - `Model`: Model identifier placed in the request.
+// - `Messages`: Conversation messages encoded in order.
+// - `Options`: Optional generation controls to include.
 public function EncodeRequest(Model: string; Messages: array of ChatMessage; Options: ChatOptions): string;
 begin
   mutable var MessageValues: array of JsonValue := [];
@@ -33,6 +40,11 @@ begin
   return Std.Json.Stringify(JsonValue.Object(Fields))
 end;
 
+// Returns a required object field or an actionable error.
+//
+// Parameters:
+// - `Fields`: JSON object fields to inspect.
+// - `Name`: Required field name.
 function RequiredField(Fields: dict of string to JsonValue; Name: string): result of JsonValue, string;
 begin
   case Std.Dict.Get(Fields, Name) of
@@ -47,6 +59,10 @@ begin
   end
 end;
 
+// Decodes the first assistant content value from a completion response.
+//
+// Parameters:
+// - `Text`: Complete JSON response text.
 public function DecodeResponse(Text: string): result of string, string;
 begin
   case Std.Json.Parse(Text) of

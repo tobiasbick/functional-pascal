@@ -1,8 +1,12 @@
+// Validated conversion between FPAS strings and UTF-8 byte arrays.
 unit Std.Net.Utf8;
 
 uses Std.Array, Std.Conv, Std.Str;
 
 // Encodes one FPAS string as UTF-8 bytes.
+//
+// Parameters:
+// - `Text`: String to encode.
 public function Encode(Text: string): array of integer;
 begin
   mutable var Bytes: array of integer := [];
@@ -36,17 +40,29 @@ begin
   return Bytes
 end;
 
+// Builds a byte-indexed UTF-8 validation error.
+//
+// Parameters:
+// - `Index`: Byte offset where validation failed.
+// - `Message`: Reason the byte sequence is invalid.
 function Invalid(Index: integer; Message: string): result of string, string;
 begin
   return Error((('Invalid UTF-8 at byte ' + Std.Conv.IntToStr(Index)) + ': ') + Message)
 end;
 
+// Reports whether an integer is a UTF-8 continuation byte.
+//
+// Parameters:
+// - `ByteValue`: Integer byte value to inspect.
 function IsContinuation(ByteValue: integer): boolean;
 begin
   return (ByteValue >= 128) and (ByteValue <= 191)
 end;
 
 // Decodes validated UTF-8 bytes into one FPAS string.
+//
+// Parameters:
+// - `Bytes`: Integer byte values in `0..255`.
 public function Decode(Bytes: array of integer): result of string, string;
 begin
   mutable var Text: string := '';

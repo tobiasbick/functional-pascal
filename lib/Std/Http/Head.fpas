@@ -1,19 +1,29 @@
+// Bounded HTTP response-head reading and informational-response handling.
 unit Std.Http.Head;
 
 uses Std.Array, Std.Http.Types, Std.Http.Wire, Std.Net;
 
 const
+  // Maximum informational responses accepted before the final response.
   MaxInterimResponses: integer := 8;
 
 public type
   // One final response head plus bytes already read from its body.
   FinalHead = record
+    // Parsed final response metadata.
     public Head: ResponseHead;
+    // Body bytes read together with the response head.
     public InitialBody: array of integer;
+    // Total network bytes consumed so far.
     public BytesReceived: integer;
   end;
 
 // Reads bounded response heads and skips supported informational responses.
+//
+// Parameters:
+// - `Connection`: Open HTTP transport connection.
+// - `MaxHeaderBytes`: Maximum size of each response head.
+// - `MaxResponseBytes`: Maximum total response bytes.
 public function ReadFinal(
   Connection: Std.Net.Connection;
   MaxHeaderBytes: integer;

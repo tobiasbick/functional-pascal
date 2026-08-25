@@ -1,3 +1,4 @@
+// Covers fragmented, final, bounded, and closed SSE decoder behavior.
 program HttpStreamingTest;
 
 uses Std.Array, Std.Http, Std.Net.Utf8, Std.Str, Std.Test;

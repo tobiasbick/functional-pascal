@@ -1,7 +1,12 @@
+// HTTP orchestration for OpenAI-compatible chat completions.
 unit Std.Ai.OpenAi.Client;
 
 uses Std.Ai.OpenAi.Json, Std.Ai.OpenAi.Types, Std.Array, Std.Conv, Std.Http, Std.Net.Utf8, Std.Str;
 
+// Appends the chat-completions path to a base API URL.
+//
+// Parameters:
+// - `BaseUrl`: Base API URL with or without a trailing slash.
 function CompletionUrl(BaseUrl: string): string;
 begin
   if Std.Str.EndsWith(BaseUrl, '/') then
@@ -12,6 +17,12 @@ begin
   return BaseUrl + '/chat/completions'
 end;
 
+// Validates, sends, and decodes one non-streaming chat completion.
+//
+// Parameters:
+// - `ClientValue`: Endpoint, model, authorization, and response-limit settings.
+// - `Messages`: Conversation messages sent in order.
+// - `Options`: Optional generation controls for this completion.
 public function Complete(ClientValue: Client; Messages: array of ChatMessage; Options: ChatOptions): result of string, string;
 begin
   if ClientValue.BaseUrl = '' then

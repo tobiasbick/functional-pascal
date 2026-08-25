@@ -1,13 +1,23 @@
+// MVU update logic for the Local Chat application.
 unit LocalChat.Update;
 
 uses LocalChat.Model, LocalChat.Service, Std.Array, Std.Console, Std.Option, Std.Str, Std.Tui;
 
 const
+  // Identifier of the prompt input control.
   PromptControl: integer := 1;
+  // Action emitted when the prompt text changes.
   PromptChangedAction: integer := 1;
+  // Action emitted when the transcript viewport changes.
   TranscriptChangedAction: integer := 2;
+  // Action emitted by the send button.
   SendAction: integer := 10;
 
+// Appends one entry without mutating the supplied model value.
+//
+// Parameters:
+// - `State`: Current application state.
+// - `Entry`: Entry to append to the conversation.
 function AppendEntry(State: LocalChatModel; Entry: ChatEntry): LocalChatModel;
 begin
   mutable var Next: LocalChatModel := State;
@@ -17,6 +27,10 @@ begin
   return Next
 end;
 
+// Sends the current non-empty draft and records its result.
+//
+// Parameters:
+// - `State`: Current application state containing the draft.
 function SendPrompt(State: LocalChatModel): LocalChatModel;
 begin
   var Prompt: string := Std.Str.Trim(State.Draft);
@@ -47,6 +61,10 @@ begin
   return LocalChatScrollToEnd(Next)
 end;
 
+// Reports whether a key event is the Alt+X quit shortcut.
+//
+// Parameters:
+// - `Key`: Key event to inspect.
 function IsQuitShortcut(Key: TuiKeyEvent): boolean;
 begin
   return ((((Key.kind = Std.Console.KeyKind.Character) and Key.alt) and (not Key.ctrl)) and (not Key.meta)) and
@@ -54,6 +72,11 @@ begin
 end;
 
 // Applies one routed TUI message to the Local Chat application model.
+//
+// Parameters:
+// - `State`: Current immutable application state.
+// - `Msg`: Routed TUI message to process.
+// - `Cmd`: Command output updated when the message requests a host action.
 public function LocalChatUpdate(State: LocalChatModel; Msg: TuiMsg; Cmd: TuiCmdOutput): LocalChatModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);

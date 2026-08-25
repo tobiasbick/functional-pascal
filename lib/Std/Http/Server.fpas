@@ -1,9 +1,15 @@
+// Bounded HTTP/1.x request parsing and HTTP/1.1 response writing.
 unit Std.Http.Server;
 
 uses
   Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Io,
   Std.Http.Method, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8, Std.Str;
 
+// Reads through the HTTP head terminator within a byte limit.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `Maximum`: Maximum request-head size in bytes.
 function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
 begin
   mutable var Bytes: array of integer := [];
@@ -39,6 +45,10 @@ begin
   return Ok(Bytes)
 end;
 
+// Parses and validates an HTTP/1.0 or HTTP/1.1 request line.
+//
+// Parameters:
+// - `Line`: Decoded request line.
 function ParseRequestLine(Line: string): result of array of string, string;
 begin
   var Parts: array of string := Std.Str.Split(Line, ' ');
@@ -66,6 +76,11 @@ begin
   return Ok(Parts)
 end;
 
+// Counts fields with a case-insensitive name.
+//
+// Parameters:
+// - `Headers`: Parsed request fields.
+// - `Name`: Case-insensitive field name to count.
 function HeaderCount(Headers: array of Header; Name: string): integer;
 begin
   mutable var Count: integer := 0;
@@ -80,6 +95,12 @@ begin
   return Count
 end;
 
+// Reads exactly one Content-Length request body.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `Initial`: Body bytes already read with the request head.
+// - `Length`: Declared complete body length.
 function ReadBody(Connection: Std.Net.Connection; Initial: array of integer; Length: integer): result of array of integer, string;
 begin
   mutable var InitialLength: integer := Std.Array.Length(Initial);
@@ -117,6 +138,11 @@ begin
 end;
 
 // Reads and validates one bounded HTTP/1.x request from a connected client.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `MaxHeaderBytes`: Maximum request-head size in bytes.
+// - `MaxBodyBytes`: Maximum request-body size in bytes.
 public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of ServerRequest, string;
 begin
   if MaxHeaderBytes < 1 then
@@ -247,6 +273,10 @@ begin
   return Ok(Output)
 end;
 
+// Validates and serializes one complete HTTP/1.1 response.
+//
+// Parameters:
+// - `ResponseValue`: Complete response to encode.
 function EncodeResponse(ResponseValue: ServerResponse): result of array of integer, string;
 begin
   if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
@@ -286,6 +316,10 @@ begin
 end;
 
 // Writes one complete HTTP/1.1 response without closing the connection.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `ResponseValue`: Complete response to serialize and write.
 public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: ServerResponse): result of boolean, string;
 begin
   case EncodeResponse(ResponseValue) of

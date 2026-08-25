@@ -262,6 +262,7 @@ fn render_record(
 ) -> Result<(), String> {
     let _ = writeln!(output, "  {name} = record");
     if value.fields.is_empty() && member_names.is_empty() {
+        output.push_str("    // Compiler-owned storage for this opaque handle.\n");
         output.push_str("    _IntrinsicHandle: integer;\n");
     } else {
         for (field, ty) in &value.fields {

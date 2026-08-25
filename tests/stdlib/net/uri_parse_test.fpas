@@ -1,3 +1,4 @@
+// Covers explicit ports, default HTTPS ports, paths, and queries.
 program UriParseTest;
 
 uses Std.Net.Uri, Std.Test;

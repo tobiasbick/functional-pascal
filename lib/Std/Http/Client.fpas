@@ -1,9 +1,15 @@
+// Buffered and streaming HTTP client orchestration.
 unit Std.Http.Client;
 
 uses
   Std.Array, Std.Http.Head, Std.Http.Headers, Std.Http.Io, Std.Http.Redirect, Std.Http.Stream,
   Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
 
+// Opens a TCP or verified TLS connection selected by URI scheme.
+//
+// Parameters:
+// - `UriValue`: Parsed absolute request URI.
+// - `TimeoutMillis`: Connection and TLS handshake timeout.
 function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Net.Connection, string;
 begin
   if UriValue.Scheme = 'http' then
@@ -19,6 +25,10 @@ begin
   return Error('Std.Http supports only http:// and https:// URLs')
 end;
 
+// Closes a connection while deliberately ignoring close errors.
+//
+// Parameters:
+// - `Connection`: Connection to close.
 procedure CloseQuietly(Connection: Std.Net.Connection);
 begin
   case Std.Net.Close(Connection) of
@@ -31,6 +41,10 @@ begin
   end
 end;
 
+// Sends one request without applying redirect policy.
+//
+// Parameters:
+// - `RequestValue`: Complete request and its transport limits.
 function OpenOnce(RequestValue: Request): result of StreamResponse, string;
 begin
   mutable var UriValue: Uri := record
@@ -126,6 +140,9 @@ begin
 end;
 
 // Opens the final response body after following bounded HTTP redirects.
+//
+// Parameters:
+// - `RequestValue`: Complete request and its transport limits.
 public function OpenStream(RequestValue: Request): result of StreamResponse, string;
 begin
   if RequestValue.MaxHeaderBytes < 1 then
@@ -221,6 +238,10 @@ begin
   return Error('HTTP redirect loop ended unexpectedly')
 end;
 
+// Sends one request, follows bounded redirects, and buffers the final body.
+//
+// Parameters:
+// - `RequestValue`: Complete request and its transport limits.
 public function Send(RequestValue: Request): result of Response, string;
 begin
   case OpenStream(RequestValue) of

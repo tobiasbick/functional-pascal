@@ -1,7 +1,12 @@
+// Bounded concurrent HTTP server-loop orchestration.
 unit Std.Http.ServerLoop;
 
 uses Std.Array, Std.Http.Server, Std.Http.Types, Std.Net, Std.Task;
 
+// Validates all server-loop limits before accepting a connection.
+//
+// Parameters:
+// - `Options`: Server-loop limits to validate.
 function ValidateOptions(Options: ServerOptions): result of boolean, string;
 begin
   if Options.MaxHeaderBytes < 1 then
@@ -32,6 +37,10 @@ begin
   return Ok(true)
 end;
 
+// Closes a connection while deliberately ignoring close errors.
+//
+// Parameters:
+// - `Connection`: Connection to close.
 procedure CloseQuietly(Connection: Std.Net.Connection);
 begin
   case Std.Net.Close(Connection) of
@@ -44,6 +53,10 @@ begin
   end
 end;
 
+// Attempts to write an empty 400 response without propagating failures.
+//
+// Parameters:
+// - `Connection`: Connection that supplied a malformed request.
 procedure WriteBadRequestQuietly(Connection: Std.Net.Connection);
 begin
   var ResponseValue: ServerResponse := ServerResponse.Create(400, 'Bad Request');
@@ -57,6 +70,12 @@ begin
   end
 end;
 
+// Serves and closes one accepted connection.
+//
+// Parameters:
+// - `Connection`: Accepted TCP or TLS connection.
+// - `Options`: Request and connection limits.
+// - `Handler`: Callback that maps the parsed request to a response.
 function ServeConnection(
   Connection: Std.Net.Connection;
   Options: ServerOptions;
@@ -108,6 +127,12 @@ begin
   return Succeeded
 end;
 
+// Reports whether the current batch may accept another connection.
+//
+// Parameters:
+// - `Options`: Server-loop concurrency and request limits.
+// - `Accepted`: Total accepted connections.
+// - `BatchLength`: Connections already present in the current batch.
 function HasCapacity(Options: ServerOptions; Accepted: integer; BatchLength: integer): boolean;
 begin
   return (BatchLength < Options.MaxConcurrentRequests) and
@@ -115,6 +140,11 @@ begin
 end;
 
 // Accepts requests in bounded concurrent batches and dispatches each one to Handler.
+//
+// Parameters:
+// - `Listener`: Open TCP or TLS listener.
+// - `Options`: Request limits and server-loop bounds.
+// - `Handler`: Callback that maps each accepted request to a response.
 public function Serve(Listener: Std.Net.Listener; Options: ServerOptions; Handler: RequestHandler): result of boolean, string;
 begin
   case ValidateOptions(Options) of

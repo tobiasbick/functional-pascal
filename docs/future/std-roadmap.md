@@ -15,17 +15,6 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 - Keep pure helpers separate from effectful APIs.
 - Avoid adding memory-management APIs as a standard unit for now.
 
-## Networking follow-up
-
-`Std.Net` TCP/TLS connections and listeners, the hardened buffered/streaming HTTP/HTTPS client,
-HTTP/HTTPS server primitives, the concurrent server loop, and SSE decoding are implemented. WebDAV
-and FTP/FTPS remain separate deferred plans instead of being treated as unstarted standard-library
-candidates:
-
-- [HTTP/HTTPS server follow-up](networking.md)
-- [WebDAV](webdav.md)
-- [FTP and FTPS](ftp.md)
-
 ## Later candidates
 
 These should wait until the runtime and capability model need them:

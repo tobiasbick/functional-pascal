@@ -7,10 +7,12 @@ public type
 
   // Opaque VM-owned TCP or TLS connection.
   Connection = record
+    // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
   end;
   // Opaque VM-owned TCP or TLS listener.
   Listener = record
+    // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
   end;
 

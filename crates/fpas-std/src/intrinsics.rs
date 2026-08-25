@@ -141,6 +141,9 @@ fn dispatch_intrinsic(
         Intrinsic::Net(
             NetIntrinsic::Connect
                 | NetIntrinsic::ConnectTls
+                | NetIntrinsic::Listen
+                | NetIntrinsic::Accept
+                | NetIntrinsic::CloseListener
                 | NetIntrinsic::SetTimeout
                 | NetIntrinsic::Read
                 | NetIntrinsic::Write

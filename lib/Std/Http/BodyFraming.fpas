@@ -3,13 +3,13 @@ unit Std.Http.BodyFraming;
 uses Std.Array, Std.Http.Headers, Std.Http.Types, Std.Parse, Std.Str;
 
 public type
-  // Selected HTTP response body framing mode and remaining fixed length.
+  // Selected HTTP message-body framing mode and remaining fixed length.
   Framing = record
     public Mode: integer;
     public Remaining: integer;
   end;
 
-// Selects one unambiguous response-body framing mode.
+// Selects one unambiguous HTTP message-body framing mode.
 public function Select(Headers: array of Header): result of Framing, string;
 begin
   mutable var TransferEncoding: string := '';
@@ -36,7 +36,7 @@ begin
 
           if (ContentLengthCount > 0) and (Length <> ContentLength) then
           begin
-            return Error('HTTP response contains conflicting Content-Length headers')
+            return Error('HTTP message contains conflicting Content-Length headers')
           end;
 
           ContentLength := Length;
@@ -52,12 +52,12 @@ begin
 
   if TransferEncodingCount > 1 then
   begin
-    return Error('HTTP response contains multiple Transfer-Encoding headers')
+    return Error('HTTP message contains multiple Transfer-Encoding headers')
   end;
 
   if (TransferEncodingCount > 0) and (ContentLengthCount > 0) then
   begin
-    return Error('HTTP response contains both Transfer-Encoding and Content-Length')
+    return Error('HTTP message contains both Transfer-Encoding and Content-Length')
   end;
 
   if TransferEncodingCount > 0 then

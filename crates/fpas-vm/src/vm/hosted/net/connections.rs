@@ -43,6 +43,11 @@ impl NetworkConnections {
         Ok(self.insert(Transport::tcp(stream)))
     }
 
+    /// Store an accepted TCP connection and return its opaque runtime handle.
+    pub(super) fn insert_tcp(&self, stream: TcpStream) -> u64 {
+        self.insert(Transport::tcp(stream))
+    }
+
     /// Open a verified TLS connection and return its opaque runtime handle.
     pub(super) fn connect_tls(
         &self,

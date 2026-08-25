@@ -1,6 +1,6 @@
 # `Std.Http`
 
-An HTTP/1.1 and HTTPS client with buffered and pull-based response bodies, implemented in FPAS over
+An HTTP/1.1 and HTTPS client plus bounded HTTP/1.x server helpers, implemented in FPAS over
 `Std.Net`.
 
 ## Quick reference
@@ -22,6 +22,10 @@ An HTTP/1.1 and HTTPS client with buffered and pull-based response bodies, imple
 | function | `FinishSse(Decoder)` | flushes the final line and finishes the decoder |
 | function | `HeaderValue(Response; Name: string): Option of string` | case-insensitive first match |
 | function | `BodyText(Response): Result of string, string` | validated UTF-8 decoding |
+| type | `ServerRequest` | accepted method, origin-form target, headers, and body |
+| type | `ServerResponse` | status, reason, headers, body, and `Create` constructor |
+| function | `ReadRequest(Connection; MaxHeaderBytes; MaxBodyBytes)` | reads one bounded request |
+| function | `WriteResponse(Connection; ServerResponse)` | writes one complete response |
 
 Create a request with defaults, then replace the fields needed by the caller:
 
@@ -110,7 +114,63 @@ unknown fields. `MaxEventBytes` bounds buffered input for one event. `FinishSse`
 final event and rejects later input. The `retry` field is currently ignored because reconnection is
 not part of this client.
 
-Only origin-form request targets are implemented. `OPTIONS` addresses a normal URL path;
+## HTTP server helpers
+
+Create a TCP listener with `Std.Net.Listen`, accept a connection, and pass that connection to
+`ReadRequest`. The helper accepts HTTP/1.0 and HTTP/1.1 origin-form requests, requires exactly one
+`Host` field for HTTP/1.1, validates field names and values, and reads a `Content-Length` body.
+`MaxHeaderBytes` and `MaxBodyBytes` are caller-selected protection limits. Chunked request bodies,
+ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
+
+```pascal
+uses Std.Http, Std.Net, Std.Net.Utf8;
+
+case Listen('127.0.0.1', 8080) of
+  Ok(ListenerValue):
+  begin
+    case Accept(ListenerValue) of
+      Ok(Connection):
+      begin
+        case SetTimeout(Connection, 30000) of
+          Ok(_):
+          begin
+          end;
+          Error(Message): panic(Message)
+        end;
+        case ReadRequest(Connection, 65536, 1048576) of
+          Ok(RequestValue):
+          begin
+            mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+            ResponseValue.Body := Std.Net.Utf8.Encode('Hello');
+            case WriteResponse(Connection, ResponseValue) of
+              Ok(_):
+              begin
+              end;
+              Error(Message): panic(Message)
+            end
+          end;
+          Error(Message): panic(Message)
+        end;
+        case Close(Connection) of
+          Ok(_):
+          begin
+          end;
+          Error(Message): panic(Message)
+        end
+      end;
+      Error(Message): panic(Message)
+    end
+  end;
+  Error(Message): panic(Message)
+end
+```
+
+`WriteResponse` emits HTTP/1.1 with managed `Content-Length` and `Connection: close` fields. It does
+not close the connection. The caller owns connection and listener lifetimes and decides whether to
+accept another request. Automatic server loops, persistent connections, concurrent dispatch, and
+HTTPS listeners are not part of this first server layer.
+
+Client requests use only origin-form targets. `OPTIONS` addresses a normal URL path;
 `OPTIONS *` and `CONNECT` authority-form targets are not implemented. Compression, proxies, and
 persistent connections are not handled.
 
@@ -119,7 +179,10 @@ persistent connections are not handled.
 | Concern | Location |
 |---------|----------|
 | Public facade | [`Http.fpas`](../../../../lib/Std/Http.fpas) |
-| Connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
+| Client connection orchestration | [`Client.fpas`](../../../../lib/Std/Http/Client.fpas) |
+| Server request/response handling | [`Server.fpas`](../../../../lib/Std/Http/Server.fpas) |
+| Shared field validation | [`Fields.fpas`](../../../../lib/Std/Http/Fields.fpas) |
+| Complete connection writes | [`Io.fpas`](../../../../lib/Std/Http/Io.fpas) |
 | Bounded response-head processing | [`Head.fpas`](../../../../lib/Std/Http/Head.fpas) |
 | Redirect policy and URL resolution | [`Redirect.fpas`](../../../../lib/Std/Http/Redirect.fpas) |
 | Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Http/BodyFraming.fpas) |
@@ -129,6 +192,7 @@ persistent connections are not handled.
 | Buffered end-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |
 | Redirect and hostile-response fixtures | [`network_hardening.rs`](../../../../crates/fpas-cli/src/main_tests/network_hardening.rs) |
+| HTTP server fixtures | [`network_server.rs`](../../../../crates/fpas-cli/src/main_tests/network_server.rs) |
 | HTTPS rejection fixture | [`network_tls.rs`](../../../../crates/fpas-cli/src/main_tests/network_tls.rs) |
 
 ## See also

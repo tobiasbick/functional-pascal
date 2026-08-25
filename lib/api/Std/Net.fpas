@@ -5,16 +5,38 @@ public type
   // Edit the Rust registry and `docs/pascal/std/`, then regenerate this editor declaration surface.
   // Runtime behavior is implemented by the compiler, VM, or Rust standard-library crate.
 
-  // Opaque VM-owned TCP connection.
+  // Opaque VM-owned TCP or TLS connection.
   Connection = record
     _IntrinsicHandle: integer;
   end;
+  // Opaque VM-owned TCP listener.
+  Listener = record
+    _IntrinsicHandle: integer;
+  end;
+
+// Blocks until one client connects.
+//
+// Parameters:
+// - `Listener`: `Std.Net.Listener` input value used by `Accept`.
+public function Accept(Listener: Std.Net.Listener): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
 
 // Invalidates the handle.
 //
 // Parameters:
 // - `Connection`: `Std.Net.Connection` input value used by `Close`.
 public function Close(Connection: Std.Net.Connection): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Invalidates the listener handle.
+//
+// Parameters:
+// - `Listener`: `Std.Net.Listener` input value used by `CloseListener`.
+public function CloseListener(Listener: Std.Net.Listener): result of boolean, string;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -37,6 +59,16 @@ end;
 // - `Port`: `integer` input value used by `ConnectTls`.
 // - `TimeoutMillis`: `integer` input value used by `ConnectTls`.
 public function ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Binds one TCP listener.
+//
+// Parameters:
+// - `Host`: `string` input value used by `Listen`.
+// - `Port`: `integer` input value used by `Listen`.
+public function Listen(Host: string; Port: integer): result of Std.Net.Listener, string;
 begin
   panic('Intrinsic API declaration')
 end;

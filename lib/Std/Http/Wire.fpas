@@ -1,8 +1,8 @@
 unit Std.Http.Wire;
 
 uses
-  Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Headers, Std.Http.Method, Std.Http.Types,
-  Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
+  Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method,
+  Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
 
 public function FindSeparator(Bytes: array of integer; Start: integer): integer;
 begin
@@ -74,50 +74,6 @@ begin
   end;
 
   return true
-end;
-
-function IsValidHeaderValue(Value: string): boolean;
-begin
-  for Index: integer := 0 to Std.Str.Length(Value) - 1 do
-  begin
-    var Code: integer := Std.Str.Ord(Std.Str.CharAt(Value, Index));
-    if (((Code < 32) and (Code <> 9)) or (Code = 127)) then
-    begin
-      return false
-    end
-  end;
-
-  return true
-end;
-
-function ParseHeaders(Text: string): result of array of Header, string;
-begin
-  var Lines: array of string := Std.Str.Split(Text, #13 + #10);
-  mutable var Headers: array of Header := [];
-  for Index: integer := 1 to Std.Array.Length(Lines) - 1 do
-  begin
-    var Colon: integer := Std.Str.IndexOf(Lines[Index], ':');
-    if Colon <= 0 then
-    begin
-      return Error('Invalid HTTP response header: ' + Lines[Index])
-    end;
-    var Name: string := Std.Str.Substring(Lines[Index], 0, Colon);
-    var Value: string := Std.Str.Trim(Std.Str.Substring(Lines[Index], Colon + 1, (Std.Str.Length(Lines[Index]) - Colon) -
-                                                                                 1));
-    if not Std.Http.Method.IsValidToken(Name) then
-    begin
-      return Error('Invalid HTTP response header name: ' + Name)
-    end;
-
-    if not IsValidHeaderValue(Value) then
-    begin
-      return Error('HTTP response header contains an invalid control character')
-    end;
-
-    Std.Array.Push(Headers, Header.Create(Name, Value))
-  end;
-
-  return Ok(Headers)
 end;
 
 function HexDigit(Character: string): integer;
@@ -321,7 +277,7 @@ begin
     end
   end;
   mutable var Headers: array of Header := [];
-  case ParseHeaders(HeaderText) of
+  case Std.Http.Fields.Parse(HeaderText, 'response') of
     Ok(Value):
     begin
       Headers := Value
@@ -408,7 +364,7 @@ begin
   begin
     var HeaderValue: Header := RequestValue.Headers[Index];
     if (not Std.Http.Method.IsValidToken(HeaderValue.Name)) or
-       (ContainsUnsafeText(HeaderValue.Value) or (not IsValidHeaderValue(HeaderValue.Value))) then
+       (ContainsUnsafeText(HeaderValue.Value) or (not Std.Http.Fields.IsValidValue(HeaderValue.Value))) then
     begin
       return Error('HTTP request contains an invalid header')
     end;

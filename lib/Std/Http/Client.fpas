@@ -1,35 +1,8 @@
 unit Std.Http.Client;
 
 uses
-  Std.Array, Std.Http.Head, Std.Http.Headers, Std.Http.Redirect, Std.Http.Stream, Std.Http.Types,
-  Std.Http.Wire, Std.Net, Std.Net.Uri;
-
-function WriteAll(Connection: Std.Net.Connection; Bytes: array of integer): result of boolean, string;
-begin
-  mutable var Offset: integer := 0;
-  while Offset < Std.Array.Length(Bytes) do
-  begin
-    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Std.Array.Length(Bytes) -
-                                                                      Offset);
-    case Std.Net.Write(Connection, Remaining) of
-      Ok(Count):
-      begin
-        if Count <= 0 then
-        begin
-          return Error('Network connection stopped while writing the HTTP request')
-        end;
-
-        Offset := Offset + Count
-      end;
-      Error(Message):
-      begin
-        return Error(Message)
-      end
-    end
-  end;
-
-  return Ok(true)
-end;
+  Std.Array, Std.Http.Head, Std.Http.Headers, Std.Http.Io, Std.Http.Redirect, Std.Http.Stream,
+  Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Uri;
 
 function OpenConnection(UriValue: Uri; TimeoutMillis: integer): result of Std.Net.Connection, string;
 begin
@@ -108,7 +81,7 @@ begin
         end
       end;
 
-      case WriteAll(Connection, Encoded) of
+      case Std.Http.Io.WriteAll(Connection, Encoded) of
         Ok(Written):
         begin
         end;

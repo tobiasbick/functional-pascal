@@ -1,0 +1,301 @@
+unit Std.Http.Server;
+
+uses
+  Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Io,
+  Std.Http.Method, Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8, Std.Str;
+
+function ReadHead(Connection: Std.Net.Connection; Maximum: integer): result of array of integer, string;
+begin
+  mutable var Bytes: array of integer := [];
+  while Std.Http.Wire.FindSeparator(Bytes, 0) < 0 do
+  begin
+    if Std.Array.Length(Bytes) >= Maximum then
+    begin
+      return Error('HTTP request headers exceed MaxHeaderBytes')
+    end;
+    mutable var ReadMaximum: integer := Maximum - Std.Array.Length(Bytes);
+    if ReadMaximum > 65536 then
+    begin
+      ReadMaximum := 65536
+    end;
+
+    case Std.Net.Read(Connection, ReadMaximum) of
+      Ok(Chunk):
+      begin
+        if Std.Array.Length(Chunk) = 0 then
+        begin
+          return Error('HTTP request is missing the header terminator')
+        end;
+
+        Bytes := Std.Array.Concat(Bytes, Chunk)
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Ok(Bytes)
+end;
+
+function ParseRequestLine(Line: string): result of array of string, string;
+begin
+  var Parts: array of string := Std.Str.Split(Line, ' ');
+  if Std.Array.Length(Parts) <> 3 then
+  begin
+    return Error('HTTP request line must contain method, target, and version')
+  end;
+
+  if not Std.Http.Method.IsValidToken(Parts[0]) then
+  begin
+    return Error('HTTP request method must be a non-empty RFC 9110 token')
+  end;
+
+  if ((((not Std.Str.StartsWith(Parts[1], '/')) or Std.Http.Headers.ContainsUnsafeText(Parts[1])) or Std.Str.Contains(Parts[1], #9)) or Std.Str.Contains(Parts[1], '#')) or
+     (not Std.Http.Fields.IsValidValue(Parts[1])) then
+  begin
+    return Error('HTTP server supports only safe origin-form request targets')
+  end;
+
+  if (Parts[2] <> 'HTTP/1.0') and (Parts[2] <> 'HTTP/1.1') then
+  begin
+    return Error('HTTP server supports only HTTP/1.0 and HTTP/1.1 requests')
+  end;
+
+  return Ok(Parts)
+end;
+
+function HeaderCount(Headers: array of Header; Name: string): integer;
+begin
+  mutable var Count: integer := 0;
+  for Index: integer := 0 to Std.Array.Length(Headers) - 1 do
+  begin
+    if Std.Http.Headers.IsName(Headers[Index].Name, Name) then
+    begin
+      Count := Count + 1
+    end
+  end;
+
+  return Count
+end;
+
+function ReadBody(Connection: Std.Net.Connection; Initial: array of integer; Length: integer): result of array of integer, string;
+begin
+  mutable var InitialLength: integer := Std.Array.Length(Initial);
+  if Length < InitialLength then
+  begin
+    InitialLength := Length
+  end;
+  mutable var Body: array of integer := Std.Array.Slice(Initial, 0, InitialLength);
+  while Std.Array.Length(Body) < Length do
+  begin
+    mutable var ReadMaximum: integer := Length - Std.Array.Length(Body);
+    if ReadMaximum > 1048576 then
+    begin
+      ReadMaximum := 1048576
+    end;
+
+    case Std.Net.Read(Connection, ReadMaximum) of
+      Ok(Chunk):
+      begin
+        if Std.Array.Length(Chunk) = 0 then
+        begin
+          return Error('HTTP request body is shorter than Content-Length')
+        end;
+
+        Body := Std.Array.Concat(Body, Chunk)
+      end;
+      Error(Message):
+      begin
+        return Error(Message)
+      end
+    end
+  end;
+
+  return Ok(Body)
+end;
+
+// Reads and validates one bounded HTTP/1.x request from a connected client.
+public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of ServerRequest, string;
+begin
+  if MaxHeaderBytes < 1 then
+  begin
+    return Error('HTTP server MaxHeaderBytes must be positive')
+  end;
+
+  if MaxBodyBytes < 0 then
+  begin
+    return Error('HTTP server MaxBodyBytes must not be negative')
+  end;
+  mutable var Bytes: array of integer := [];
+  case ReadHead(Connection, MaxHeaderBytes) of
+    Ok(Value):
+    begin
+      Bytes := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  var Separator: integer := Std.Http.Wire.FindSeparator(Bytes, 0);
+  var HeadBytes: array of integer := Std.Array.Slice(Bytes, 0, Separator);
+  mutable var HeadText: string := '';
+  case Std.Net.Utf8.Decode(HeadBytes) of
+    Ok(Value):
+    begin
+      HeadText := Value
+    end;
+    Error(Message):
+    begin
+      return Error('HTTP request headers are not valid UTF-8: ' + Message)
+    end
+  end;
+  var Lines: array of string := Std.Str.Split(HeadText, #13 + #10);
+  if Std.Array.Length(Lines) = 0 then
+  begin
+    return Error('HTTP request line is missing')
+  end;
+  mutable var RequestLine: array of string := [];
+  case ParseRequestLine(Lines[0]) of
+    Ok(Value):
+    begin
+      RequestLine := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  mutable var Headers: array of Header := [];
+  case Std.Http.Fields.Parse(HeadText, 'request') of
+    Ok(Value):
+    begin
+      Headers := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+
+  if (RequestLine[2] = 'HTTP/1.1') and (HeaderCount(Headers, 'Host') <> 1) then
+  begin
+    return Error('HTTP/1.1 request must contain exactly one Host header')
+  end;
+
+  if RequestLine[2] = 'HTTP/1.1' then
+  begin
+    case Std.Http.Headers.Find(Headers, 'Host') of
+      Some(Value):
+      begin
+        if Std.Str.Trim(Value) = '' then
+        begin
+          return Error('HTTP/1.1 Host header must not be empty')
+        end
+      end;
+      None:
+      begin
+      end
+    end
+  end;
+  mutable var BodyLength: integer := 0;
+  case Std.Http.BodyFraming.Select(Headers) of
+    Ok(Framing):
+    begin
+      if Framing.Mode = 2 then
+      begin
+        return Error('HTTP server does not support chunked request bodies')
+      end;
+
+      if Framing.Mode = 1 then
+      begin
+        BodyLength := Framing.Remaining
+      end
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+
+  if BodyLength > MaxBodyBytes then
+  begin
+    return Error('HTTP request body exceeds MaxBodyBytes')
+  end;
+  var InitialBody: array of integer := Std.Array.Slice(Bytes, Separator + 4, (Std.Array.Length(Bytes) - Separator) -
+                                                                             4);
+  mutable var Body: array of integer := [];
+  case ReadBody(Connection, InitialBody, BodyLength) of
+    Ok(Value):
+    begin
+      Body := Value
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end;
+  var Output: ServerRequest := record
+    Method := RequestLine[0];
+    Target := RequestLine[1];
+    Headers := Headers;
+    Body := Body;
+  end;
+
+  return Ok(Output)
+end;
+
+function EncodeResponse(ResponseValue: ServerResponse): result of array of integer, string;
+begin
+  if (ResponseValue.StatusCode < 100) or (ResponseValue.StatusCode > 599) then
+  begin
+    return Error('HTTP response status code must be in 100..599')
+  end;
+
+  if (not Std.Http.Fields.IsValidValue(ResponseValue.ReasonPhrase)) or
+     Std.Http.Headers.ContainsUnsafeText(ResponseValue.ReasonPhrase) then
+  begin
+    return Error('HTTP response reason phrase contains an invalid control character')
+  end;
+  mutable var Head: string := (((('HTTP/1.1 ' + Std.Conv.IntToStr(ResponseValue.StatusCode)) + ' ') + ResponseValue.ReasonPhrase) + #13) +
+                              #10;
+  Head := ((Head + 'Connection: close') + #13) + #10;
+  Head := (((Head + 'Content-Length: ') + Std.Conv.IntToStr(Std.Array.Length(ResponseValue.Body))) + #13) +
+          #10;
+  for Index: integer := 0 to Std.Array.Length(ResponseValue.Headers) - 1 do
+  begin
+    var Field: Header := ResponseValue.Headers[Index];
+    if (not Std.Http.Method.IsValidToken(Field.Name)) or
+       (not Std.Http.Fields.IsValidValue(Field.Value)) then
+    begin
+      return Error('HTTP response contains an invalid header')
+    end;
+
+    if ((Std.Http.Headers.IsName(Field.Name, 'Content-Length') or Std.Http.Headers.IsName(Field.Name, 'Transfer-Encoding')) or Std.Http.Headers.IsName(Field.Name, 'Connection')) then
+    begin
+      return Error('Content-Length, Transfer-Encoding, and Connection are managed by Std.Http')
+    end;
+
+    Head := ((((Head + Field.Name) + ': ') + Field.Value) + #13) + #10
+  end;
+
+  Head := (Head + #13) + #10;
+  return Ok(Std.Array.Concat(Std.Net.Utf8.Encode(Head), ResponseValue.Body))
+end;
+
+// Writes one complete HTTP/1.1 response without closing the connection.
+public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: ServerResponse): result of boolean, string;
+begin
+  case EncodeResponse(ResponseValue) of
+    Ok(Bytes):
+    begin
+      return Std.Http.Io.WriteAll(Connection, Bytes)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;

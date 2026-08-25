@@ -33,10 +33,17 @@ applies status-specific method rewriting, and strips credentials when the origin
 response-head and total-response limits, bounded informational responses, strict response fields,
 and unambiguous body framing reject hostile or malformed inputs. Focused fixtures cover these paths.
 
+## Completed plain HTTP server foundation
+
+`Std.Net` now owns TCP listener handles with explicit bind, accept, and close operations. FPAS
+modules parse bounded HTTP/1.0 and HTTP/1.1 requests and serialize complete HTTP/1.1 responses while
+the runtime remains responsible only for sockets and bytes. Local fixtures cover GET, fragmented
+POST bodies, response writing, listener lifecycle, and malformed request framing.
+
 ## Following work
 
-1. Add TCP listener handles and HTTP request/response server modules in FPAS, then reuse the TLS
-   transport for HTTPS serving.
+1. Add reusable server-loop and concurrent-dispatch helpers, then add certificate-configured TLS
+   listeners for HTTPS serving.
 2. Build WebDAV helpers and XML handling on the HTTP client/server modules; extension methods such
    as `PROPFIND` already work through `Request.Create`.
 3. Build FTP control and data connections on `Std.Net`; reuse TLS for explicit or implicit FTPS.

@@ -1,10 +1,12 @@
 //! Hosted `Std.Net` intrinsic dispatch.
 
 mod connections;
+mod listeners;
 mod tls;
 mod transport;
 
 pub(super) use connections::NetworkConnections;
+pub(super) use listeners::NetworkListeners;
 
 use fpas_bytecode::{Intrinsic, NetIntrinsic, SourceLocation, Value};
 use fpas_diagnostics::codes::{
@@ -47,6 +49,38 @@ impl Worker {
                         .network_connections
                         .connect_tls(host, port, timeout)
                         .map(Value::OpaqueHandle),
+                )
+            }
+            NetIntrinsic::Listen => {
+                require_count(self, arguments, 2)?;
+                let host = string(self, &arguments[0], "Host")?;
+                let port = integer(self, &arguments[1], "Port")?;
+                result(
+                    self.hosted
+                        .network_listeners
+                        .listen(host, port)
+                        .map(Value::OpaqueHandle),
+                )
+            }
+            NetIntrinsic::Accept => {
+                require_count(self, arguments, 1)?;
+                let handle = listener(self, &arguments[0])?;
+                result(
+                    self.hosted
+                        .network_listeners
+                        .accept(handle)
+                        .map(|stream| self.hosted.network_connections.insert_tcp(stream))
+                        .map(Value::OpaqueHandle),
+                )
+            }
+            NetIntrinsic::CloseListener => {
+                require_count(self, arguments, 1)?;
+                let handle = listener(self, &arguments[0])?;
+                result(
+                    self.hosted
+                        .network_listeners
+                        .close(handle)
+                        .map(|()| Value::Boolean(true)),
                 )
             }
             NetIntrinsic::SetTimeout => {
@@ -152,6 +186,13 @@ fn connection(worker: &Worker, value: &Value) -> Result<u64, VmError> {
             "Std.Net.Connection",
             actual,
         )),
+    }
+}
+
+fn listener(worker: &Worker, value: &Value) -> Result<u64, VmError> {
+    match value {
+        Value::OpaqueHandle(handle) => Ok(*handle),
+        actual => Err(type_error(worker, "Listener", "Std.Net.Listener", actual)),
     }
 }
 

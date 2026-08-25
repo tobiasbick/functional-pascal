@@ -1,6 +1,8 @@
 unit Std.Http;
 
-uses Std.Http.Client, Std.Http.Headers, Std.Http.Sse, Std.Http.Stream, Std.Http.Types, Std.Net.Utf8;
+uses
+  Std.Http.Client, Std.Http.Headers, Std.Http.Server, Std.Http.Sse, Std.Http.Stream, Std.Http.Types,
+  Std.Net, Std.Net.Utf8;
 
 public type
   // One HTTP field name and value.
@@ -11,6 +13,10 @@ public type
   Response = Std.Http.Types.Response;
   // Status, headers, and a pull-based response body.
   StreamResponse = Std.Http.Types.StreamResponse;
+  // One request accepted by the HTTP server helpers.
+  ServerRequest = Std.Http.Types.ServerRequest;
+  // One complete response written by the HTTP server helpers.
+  ServerResponse = Std.Http.Types.ServerResponse;
   // Opaque pull-based HTTP response body.
   BodyStream = Std.Http.Types.BodyStream;
   // One decoded Server-Sent Events message.
@@ -40,6 +46,18 @@ end;
 public function CloseStream(StreamValue: Std.Http.Types.BodyStream): result of boolean, string;
 begin
   return Std.Http.Stream.CloseBody(StreamValue)
+end;
+
+// Reads one bounded HTTP/1.x request from a connected client.
+public function ReadRequest(Connection: Std.Net.Connection; MaxHeaderBytes: integer; MaxBodyBytes: integer): result of Std.Http.Types.ServerRequest, string;
+begin
+  return Std.Http.Server.ReadRequest(Connection, MaxHeaderBytes, MaxBodyBytes)
+end;
+
+// Writes one complete HTTP/1.1 response without closing the connection.
+public function WriteResponse(Connection: Std.Net.Connection; ResponseValue: Std.Http.Types.ServerResponse): result of boolean, string;
+begin
+  return Std.Http.Server.WriteResponse(Connection, ResponseValue)
 end;
 
 // Creates an incremental Server-Sent Events decoder with one bounded event buffer.

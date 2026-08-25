@@ -1,6 +1,7 @@
 # `Std.Net`
 
-Hosted blocking TCP and verified TLS connections with explicit timeouts and byte arrays.
+Hosted blocking TCP listeners, TCP connections, and verified TLS client connections with explicit
+timeouts and byte arrays.
 
 ```pascal
 uses Std.Net;
@@ -19,8 +20,12 @@ end
 | Kind | Name | Notes |
 |------|------|-------|
 | type | `Connection` | opaque VM-owned TCP or TLS connection |
+| type | `Listener` | opaque VM-owned TCP listener |
 | function | `Connect(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves and connects |
 | function | `ConnectTls(Host: string; Port: integer; TimeoutMillis: integer): Result of Connection, string` | resolves, connects, and completes a verified TLS handshake |
+| function | `Listen(Host: string; Port: integer): Result of Listener, string` | binds one TCP listener |
+| function | `Accept(Listener): Result of Connection, string` | blocks until one client connects |
+| function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
 | function | `Read(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
 | function | `Write(Connection; Data: array of integer): Result of integer, string` | returns bytes written; partial writes are possible |
@@ -33,11 +38,17 @@ same `Read`, `Write`, `SetTimeout`, and `Close` functions as a plain TCP connect
 The connect timeout bounds TCP establishment and, for `ConnectTls`, the TLS handshake. Call
 `SetTimeout` to configure subsequent byte reads and writes.
 
-Byte values must be in `0..255`. A single `Read` or `Write` is limited to 1 MiB. Timeouts are limited
-to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout. Ports must be in
-`1..65535`.
+`Listen` binds the requested local host and port. `Accept` returns an ordinary TCP `Connection`, so
+the same `SetTimeout`, `Read`, `Write`, and `Close` operations apply to accepted clients. Listener
+handles are closed separately with `CloseListener`. Both `Accept` and connection I/O block the VM
+worker that executes them.
 
-Calls block their VM worker thread. Connections belong to one VM, are shared safely with its tasks, and are released when that VM ends. A closed connection cannot be reused.
+Byte values must be in `0..255`. A single `Read` or `Write` is limited to 1 MiB. Timeouts are limited
+to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout. Client and listener
+ports must be in `1..65535`.
+
+Calls block their VM worker thread. Connections and listeners belong to one VM, are shared safely
+with its tasks, and are released when that VM ends. Closed handles cannot be reused.
 
 FPAS code runs with the host process's network permissions. `Std.Net` does not sandbox destinations.
 
@@ -46,6 +57,7 @@ FPAS code runs with the host process's network permissions. `Std.Net` does not s
 | Concern | Location |
 |---------|----------|
 | VM connection registry | [`connections.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections.rs) |
+| VM listener registry | [`listeners.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/listeners.rs) |
 | TCP/TLS transport | [`transport.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/transport.rs) |
 | TLS verification and handshake | [`tls.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/tls.rs) |
 | Hosted dispatch | [`net/mod.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/mod.rs) |

@@ -1,4 +1,4 @@
-//! Semantic registration for the hosted `Std.Net` TCP interface.
+//! Semantic registration for the hosted `Std.Net` network interface.
 
 use super::super::{define_func, p};
 use crate::check::Checker;
@@ -10,6 +10,8 @@ use fpas_std::std_symbols as s;
 pub(super) fn register_std_net(checker: &mut Checker) {
     let connection =
         type_registration::register_record_type(checker, s::STD_NET_CONNECTION, Vec::new());
+    let listener =
+        type_registration::register_record_type(checker, s::STD_NET_LISTENER, Vec::new());
     let error = Box::new(Ty::String);
 
     define_func(
@@ -31,6 +33,24 @@ pub(super) fn register_std_net(checker: &mut Checker) {
             p("TimeoutMillis", Ty::Integer, false),
         ],
         Ty::Result(Box::new(connection.clone()), error.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_NET_LISTEN,
+        vec![p("Host", Ty::String, false), p("Port", Ty::Integer, false)],
+        Ty::Result(Box::new(listener.clone()), error.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_NET_ACCEPT,
+        vec![p("Listener", listener.clone(), false)],
+        Ty::Result(Box::new(connection.clone()), error.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_NET_CLOSE_LISTENER,
+        vec![p("Listener", listener, false)],
+        Ty::Result(Box::new(Ty::Boolean), error.clone()),
     );
     define_func(
         checker,

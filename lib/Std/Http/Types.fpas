@@ -106,6 +106,30 @@ public type
     public Headers: array of Header;
     public BodyOffset: integer;
   end;
+  // One request accepted by the HTTP server helpers.
+  ServerRequest = record
+    public Method: string;
+    public Target: string;
+    public Headers: array of Header;
+    public Body: array of integer;
+  end;
+  // One complete response written by the HTTP server helpers.
+  ServerResponse = record
+    public StatusCode: integer;
+    public ReasonPhrase: string;
+    public Headers: array of Header;
+    public Body: array of integer;
+
+    public static function Create(StatusCode: integer; ReasonPhrase: string): ServerResponse;
+    begin
+      return record
+        StatusCode := StatusCode;
+        ReasonPhrase := ReasonPhrase;
+        Headers := [];
+        Body := [];
+      end
+    end;
+  end;
   // One decoded Server-Sent Events message.
   SseEvent = record
     public EventType: string;

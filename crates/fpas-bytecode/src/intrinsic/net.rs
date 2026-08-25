@@ -23,5 +23,11 @@ pub enum NetIntrinsic {
     Close = 522,
     /// `Std.Net.ConnectTls(Host, Port, TimeoutMillis)` - open one verified TLS connection.
     ConnectTls = 523,
+    /// `Std.Net.Listen(Host, Port)` - bind one TCP listener.
+    Listen = 524,
+    /// `Std.Net.Accept(Listener)` - accept one TCP connection.
+    Accept = 525,
+    /// `Std.Net.CloseListener(Listener)` - close and invalidate one listener.
+    CloseListener = 526,
 }
 }

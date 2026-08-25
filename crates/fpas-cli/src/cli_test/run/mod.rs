@@ -24,10 +24,9 @@ use program::{ProgramRunOptions, RunOutput, run_test_program};
 #[derive(Clone)]
 pub(super) struct LinkContext {
     pub source_files: Vec<PathBuf>,
-    pub link_meta: project::ProjectLinkMeta,
+    pub program_graph: Arc<project::ProgramUnitGraph>,
     pub test_manifest: project::TestManifest,
     pub hooks: TestHooks,
-    pub standard_library: Option<Arc<project::StandardLibrary>>,
 }
 
 pub(super) fn test_display_path(path: &Path) -> std::borrow::Cow<'_, str> {

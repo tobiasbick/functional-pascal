@@ -40,27 +40,30 @@ pub(super) fn compile_image_batches(batches: Vec<ImageBatch>) -> Vec<ImageAssign
 }
 
 fn compile_image_batch(mut batch: ImageBatch) -> Vec<ImageAssignment> {
-    let default_link_meta = fpas_project::ProjectLinkMeta::default();
-    let (source_files, link_meta) = batch.link.as_ref().map_or_else(
-        || (&[][..], &default_link_meta),
-        |link| (link.source_files.as_slice(), &link.link_meta),
-    );
-    let standard_library = batch
-        .link
-        .as_ref()
-        .and_then(|link| link.standard_library.as_deref());
-
     batch
         .candidates
         .drain(..)
         .filter_map(|candidate| {
-            let built = crate::project_build::build_test_program(
-                &candidate.path,
-                source_files,
-                link_meta,
-                standard_library,
-            )
-            .ok()?;
+            let built = batch
+                .link
+                .as_ref()
+                .map_or_else(
+                    || {
+                        crate::project_build::build_test_program(
+                            &candidate.path,
+                            &[],
+                            &fpas_project::ProjectLinkMeta::default(),
+                            None,
+                        )
+                    },
+                    |link| {
+                        crate::project_build::build_test_program_with_graph(
+                            &candidate.path,
+                            &link.program_graph,
+                        )
+                    },
+                )
+                .ok()?;
             Some(ImageAssignment {
                 prepared_index: candidate.prepared_index,
                 compiled: CompiledTestProgram {

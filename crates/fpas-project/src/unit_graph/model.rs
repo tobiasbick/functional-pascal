@@ -196,6 +196,12 @@ impl UnitGraph {
     pub(crate) fn link_meta(&self) -> &ProjectLinkMeta {
         &self.link_meta
     }
+
+    pub(super) fn with_program_source_path(&self, main_path: &Path) -> Self {
+        let mut graph = self.clone();
+        graph.source_paths[0] = main_path.to_path_buf();
+        graph
+    }
 }
 
 /// A deterministic dependency-first selection of units from a [`UnitGraph`].

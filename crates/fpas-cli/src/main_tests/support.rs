@@ -62,6 +62,47 @@ pub(super) fn run_cli_args_and_capture_output(
     (exit_code, stdout_output, stderr_output)
 }
 
+pub(super) fn run_program_with_graph_and_capture_output(
+    path: &Path,
+    program_graph: &fpas_project::ProgramUnitGraph,
+) -> (i32, String, String) {
+    let stdout = SharedWriter::default();
+    let mut stderr = Vec::<u8>::new();
+    let built = match crate::project_build::build_test_program_with_graph(path, program_graph) {
+        Ok(built) => built,
+        Err(message) => {
+            let _ = writeln!(stderr, "{message}");
+            return (
+                1,
+                stdout.into_string(),
+                String::from_utf8(stderr).expect("stderr must be valid UTF-8"),
+            );
+        }
+    };
+    let mut vm = fpas_vm::Vm::with_writer(built.executable, Box::new(stdout.clone()));
+    let exit_code = match vm.run() {
+        Ok(_) => 0,
+        Err(diagnostic) => {
+            let path_text = path.to_string_lossy();
+            let _ = writeln!(
+                stderr,
+                "{}",
+                crate::cli_run::render_cli_diagnostic_with_sources(
+                    path_text.as_ref(),
+                    Some(&built.source_paths),
+                    &diagnostic,
+                )
+            );
+            2
+        }
+    };
+    (
+        exit_code,
+        stdout.into_string(),
+        String::from_utf8(stderr).expect("stderr must be valid UTF-8"),
+    )
+}
+
 pub(super) fn run_source_and_capture_output(path: &str, source: &str) -> (i32, String, String) {
     let stdout = SharedWriter::default();
     let mut stderr = Vec::<u8>::new();

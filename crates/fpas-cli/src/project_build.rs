@@ -100,6 +100,26 @@ pub(crate) fn build_test_program(
     })
 }
 
+pub(crate) fn build_test_program_with_graph(
+    main: &Path,
+    program_graph: &fpas_project::ProgramUnitGraph,
+) -> Result<ProjectProgram, String> {
+    let (_, program) = parse_program(main)?;
+    let graph = program_graph.instantiate(main);
+    let selection = fpas_project::resolve_program_units(&graph, &program.uses)?;
+    let built = fpas_build::build_program(
+        &graph,
+        &selection,
+        &program,
+        &fpas_build::BuildOptions::default(),
+    )
+    .map_err(|error| format!("Cannot build test program `{}`: {error}", main.display()))?;
+    Ok(ProjectProgram {
+        executable: built.executable,
+        source_paths: graph.source_paths().to_vec(),
+    })
+}
+
 /// Checks a standalone program against sibling source units without publishing sidecars.
 pub(crate) fn check_source_program(
     main: &Path,

@@ -1,5 +1,6 @@
 use super::*;
 use fpas_std::{ConsoleEvent, ConsoleKeyEvent, key_kind_index};
+use std::sync::OnceLock;
 
 #[test]
 fn terminal_renderer_skips_unchanged_frames_and_flushes_damage() {
@@ -91,16 +92,16 @@ end.
 "#,
     );
 
+    let standard_library = fpas_project::load_standard_library(&library)
+        .expect("terminal renderer standard library must load");
+    let program_graph = fpas_project::prepare_program_unit_graph(
+        &[],
+        &fpas_project::ProjectLinkMeta::default(),
+        Some(&standard_library),
+    )
+    .expect("terminal renderer program graph must build");
     let run = |program: &Path| {
-        support::run_cli_args_and_capture_output(
-            &[
-                String::from("run"),
-                String::from("--std-lib"),
-                library.to_string_lossy().into_owned(),
-                program.to_string_lossy().into_owned(),
-            ],
-            &cwd,
-        )
+        support::run_program_with_graph_and_capture_output(program, &program_graph)
     };
     let (once_exit, once_stdout, once_stderr) = run(&once);
     let (unchanged_exit, unchanged_stdout, unchanged_stderr) = run(&unchanged);
@@ -128,10 +129,6 @@ end.
 
 #[test]
 fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .expect("workspace root");
     let cwd = create_temp_dir("tui-event-driven-idle");
     let program = cwd.join("event_driven_idle.fpas");
     write_text(
@@ -175,15 +172,9 @@ begin
 end.
 "#,
     );
-    let standard_library =
-        fpas_project::load_standard_library(&root.join("lib")).expect("standard library must load");
-    let built = crate::project_build::build_test_program(
-        &program,
-        &[],
-        &fpas_project::ProjectLinkMeta::default(),
-        Some(&standard_library),
-    )
-    .expect("Tui idle regression program must build");
+    let built =
+        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
+            .expect("Tui idle regression program must build");
     let mut vm = fpas_vm::Vm::new(built.executable);
     vm.push_console_event(ConsoleEvent::focus_gained());
     vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
@@ -211,15 +202,25 @@ fn run_repo_std_program(rel_path: &str) -> (i32, String, String) {
         .and_then(Path::parent)
         .expect("workspace root");
     let program = root.join(rel_path);
-    support::run_cli_args_and_capture_output(
-        &[
-            String::from("run"),
-            String::from("--std-lib"),
-            root.join("lib").to_string_lossy().into_owned(),
-            program.to_string_lossy().into_owned(),
-        ],
-        root,
-    )
+    support::run_program_with_graph_and_capture_output(&program, repo_tui_program_graph())
+}
+
+fn repo_tui_program_graph() -> &'static fpas_project::ProgramUnitGraph {
+    static GRAPH: OnceLock<fpas_project::ProgramUnitGraph> = OnceLock::new();
+    GRAPH.get_or_init(|| {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .and_then(Path::parent)
+            .expect("workspace root");
+        let standard_library = fpas_project::load_standard_library(&root.join("lib"))
+            .expect("standard library must load");
+        fpas_project::prepare_program_unit_graph(
+            &[],
+            &fpas_project::ProjectLinkMeta::default(),
+            Some(&standard_library),
+        )
+        .expect("Tui test program graph must build")
+    })
 }
 
 #[test]

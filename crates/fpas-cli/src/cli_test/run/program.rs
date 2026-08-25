@@ -116,18 +116,14 @@ fn prepare_test_program(
             render_compile_error(stderr, display, output, &message);
             return Err(TestOutcome::CompileError);
         }
-        let built = match crate::project_build::build_test_program(
-            path,
-            &link.source_files,
-            &link.link_meta,
-            link.standard_library.as_deref(),
-        ) {
-            Ok(built) => built,
-            Err(message) => {
-                render_compile_error(stderr, display, output, &message);
-                return Err(TestOutcome::CompileError);
-            }
-        };
+        let built =
+            match crate::project_build::build_test_program_with_graph(path, &link.program_graph) {
+                Ok(built) => built,
+                Err(message) => {
+                    render_compile_error(stderr, display, output, &message);
+                    return Err(TestOutcome::CompileError);
+                }
+            };
         (built.executable, Some(Arc::new(built.source_paths)))
     } else {
         let (program, source_paths) = match load_program(path) {

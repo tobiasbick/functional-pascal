@@ -6,6 +6,7 @@
 mod model;
 mod order;
 mod parsed;
+mod program;
 mod resolve;
 mod source_map;
 
@@ -25,6 +26,7 @@ pub use model::{ResolvedUnitGraph, UnitGraph, UnitNode};
 pub use parsed::{
     build_unit_graph_for_program_from_parsed_sources, build_unit_graph_from_parsed_sources,
 };
+pub use program::{ProgramUnitGraph, prepare_program_unit_graph};
 pub(crate) use resolve::ImportPolicy;
 
 use order::resolve_order;
@@ -53,7 +55,8 @@ pub fn build_unit_graph_for_program(
     source_files: &[PathBuf],
     link_meta: &ProjectLinkMeta,
 ) -> Result<UnitGraph, String> {
-    build_unit_graph_with_base(source_files, link_meta, None, vec![main_path.to_path_buf()])
+    prepare_program_unit_graph(source_files, link_meta, None)
+        .map(|graph| graph.instantiate(main_path))
 }
 
 /// Builds a program unit graph including source-defined standard-library units.
@@ -63,12 +66,8 @@ pub fn build_unit_graph_for_program_with_standard_library(
     link_meta: &ProjectLinkMeta,
     standard_library: &StandardLibrary,
 ) -> Result<UnitGraph, String> {
-    build_unit_graph_with_base(
-        source_files,
-        link_meta,
-        Some(standard_library),
-        vec![main_path.to_path_buf()],
-    )
+    prepare_program_unit_graph(source_files, link_meta, Some(standard_library))
+        .map(|graph| graph.instantiate(main_path))
 }
 
 pub(crate) fn build_unit_graph_with_base(

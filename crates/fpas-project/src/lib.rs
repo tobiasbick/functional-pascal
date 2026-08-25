@@ -31,10 +31,11 @@ pub use standard_library::{StandardLibrary, load_standard_library, load_standard
 pub use test_manifest::{TestFileOverride, TestManifest};
 pub use test_sources::is_test_source_file;
 pub use unit_graph::{
-    ResolvedUnitGraph, UnitGraph, UnitNode, build_unit_graph, build_unit_graph_for_program,
-    build_unit_graph_for_program_from_parsed_sources,
+    ProgramUnitGraph, ResolvedUnitGraph, UnitGraph, UnitNode, build_unit_graph,
+    build_unit_graph_for_program, build_unit_graph_for_program_from_parsed_sources,
     build_unit_graph_for_program_with_standard_library, build_unit_graph_from_parsed_sources,
-    build_unit_graph_with_standard_library, resolve_library_units, resolve_program_units,
+    build_unit_graph_with_standard_library, prepare_program_unit_graph, resolve_library_units,
+    resolve_program_units,
 };
 pub use workspace::{
     LoadedWorkspace, discover_run_project_in_workspace, discover_test_projects_in_workspace,

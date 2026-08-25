@@ -15,6 +15,7 @@ use fpas_project as project;
 #[derive(Default)]
 pub(super) struct LinkContextCache {
     contexts: HashMap<PathBuf, LinkContext>,
+    unscoped: Option<LinkContext>,
     standard_library: Option<Arc<project::StandardLibrary>>,
 }
 
@@ -23,6 +24,7 @@ impl LinkContextCache {
     pub(super) fn new(standard_library: Option<Arc<project::StandardLibrary>>) -> Self {
         Self {
             contexts: HashMap::new(),
+            unscoped: None,
             standard_library,
         }
     }
@@ -30,16 +32,25 @@ impl LinkContextCache {
     /// Returns the enclosing project context for `path`, loading each project at most once.
     pub(super) fn context_for_test(&mut self, path: &Path) -> Result<Option<LinkContext>, String> {
         let Some(project_file) = find_enclosing_project(path)? else {
-            return Ok(self
-                .standard_library
-                .as_ref()
-                .map(|standard_library| LinkContext {
-                    source_files: Vec::new(),
-                    link_meta: project::ProjectLinkMeta::default(),
-                    test_manifest: project::TestManifest::default(),
-                    hooks: hooks::TestHooks::default(),
-                    standard_library: Some(Arc::clone(standard_library)),
-                }));
+            if let Some(context) = &self.unscoped {
+                return Ok(Some(context.clone()));
+            }
+            let Some(standard_library) = &self.standard_library else {
+                return Ok(None);
+            };
+            let program_graph = project::prepare_program_unit_graph(
+                &[],
+                &project::ProjectLinkMeta::default(),
+                Some(standard_library),
+            )?;
+            let context = LinkContext {
+                source_files: Vec::new(),
+                program_graph: Arc::new(program_graph),
+                test_manifest: project::TestManifest::default(),
+                hooks: hooks::TestHooks::default(),
+            };
+            self.unscoped = Some(context.clone());
+            return Ok(Some(context));
         };
         if let Some(context) = self.contexts.get(&project_file) {
             return Ok(Some(context.clone()));
@@ -53,12 +64,16 @@ impl LinkContextCache {
             .filter(|path| !project::is_test_source_file(path))
             .collect::<Vec<_>>();
         let hooks = hooks::discover_test_hooks(&source_files)?;
+        let program_graph = project::prepare_program_unit_graph(
+            &source_files,
+            &loaded.link_meta,
+            self.standard_library.as_deref(),
+        )?;
         let context = LinkContext {
             source_files,
-            link_meta: loaded.link_meta,
+            program_graph: Arc::new(program_graph),
             test_manifest: loaded.test_manifest,
             hooks,
-            standard_library: self.standard_library.clone(),
         };
         self.contexts.insert(project_file, context.clone());
         Ok(Some(context))
@@ -128,12 +143,21 @@ mod tests {
         write_text(&second_test, "program Second;\nbegin end.");
         write_text(&helper, "unit Tests.Fixture;\n");
 
-        let context = LinkContextCache::new(None)
+        let mut contexts = LinkContextCache::new(None);
+        let context = contexts
             .context_for_test(&first_test)
             .expect("test project must load")
             .expect("test project must provide a link context");
+        let second_context = contexts
+            .context_for_test(&second_test)
+            .expect("test project must stay loaded")
+            .expect("test project must keep its link context");
 
         assert_eq!(context.source_files, vec![helper]);
+        assert!(Arc::ptr_eq(
+            &context.program_graph,
+            &second_context.program_graph
+        ));
         std::fs::remove_dir_all(dir).ok();
     }
 }

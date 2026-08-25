@@ -9,7 +9,7 @@ public type
   Connection = record
     _IntrinsicHandle: integer;
   end;
-  // Opaque VM-owned TCP listener.
+  // Opaque VM-owned TCP or TLS listener.
   Listener = record
     _IntrinsicHandle: integer;
   end;
@@ -69,6 +69,25 @@ end;
 // - `Host`: `string` input value used by `Listen`.
 // - `Port`: `integer` input value used by `Listen`.
 public function Listen(Host: string; Port: integer): result of Std.Net.Listener, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Loads PEM credentials and binds one TLS listener.
+//
+// Parameters:
+// - `Host`: `string` input value used by `ListenTls`.
+// - `Port`: `integer` input value used by `ListenTls`.
+// - `CertificatePath`: `string` input value used by `ListenTls`.
+// - `PrivateKeyPath`: `string` input value used by `ListenTls`.
+// - `HandshakeTimeoutMillis`: `integer` input value used by `ListenTls`.
+public function ListenTls(
+  Host: string;
+  Port: integer;
+  CertificatePath: string;
+  PrivateKeyPath: string;
+  HandshakeTimeoutMillis: integer
+): result of Std.Net.Listener, string;
 begin
   panic('Intrinsic API declaration')
 end;

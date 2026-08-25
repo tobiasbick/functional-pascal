@@ -7,6 +7,11 @@ begin
   return ConnectTls('localhost', 443, 1000)
 end;
 
+function ListenTlsSignatureOnly(): result of Listener, string;
+begin
+  return ListenTls('127.0.0.1', 443, 'certificate.pem', 'private-key.pem', 1000)
+end;
+
 begin
   AssertTrue(true)
 end.

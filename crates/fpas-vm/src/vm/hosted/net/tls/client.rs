@@ -10,7 +10,7 @@ use rustls_platform_verifier::BuilderVerifierExt;
 static CLIENT_CONFIG: OnceLock<Result<Arc<ClientConfig>, String>> = OnceLock::new();
 
 /// Complete a TLS handshake using the operating system trust policy.
-pub(super) fn connect(
+pub(in crate::vm::hosted::net) fn connect(
     socket: TcpStream,
     server_name: &str,
 ) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
@@ -60,7 +60,7 @@ mod tests {
     use rustls::pki_types::PrivatePkcs8KeyDer;
     use rustls::{ClientConfig, RootCertStore, ServerConfig, ServerConnection, StreamOwned};
 
-    use super::super::transport::Transport;
+    use super::super::super::transport::Transport;
     use super::connect_with_config;
 
     struct TlsFixture {
@@ -123,7 +123,7 @@ mod tests {
         let fixture = TlsFixture::new("localhost");
         let (port, server) = fixture.spawn_server();
         let socket = TcpStream::connect(("127.0.0.1", port)).expect("connect TLS socket");
-        let mut transport = Transport::tls(
+        let mut transport = Transport::tls_client(
             connect_with_config(socket, "localhost", fixture.client_config())
                 .expect("complete TLS handshake"),
         );

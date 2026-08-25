@@ -142,6 +142,7 @@ fn dispatch_intrinsic(
             NetIntrinsic::Connect
                 | NetIntrinsic::ConnectTls
                 | NetIntrinsic::Listen
+                | NetIntrinsic::ListenTls
                 | NetIntrinsic::Accept
                 | NetIntrinsic::CloseListener
                 | NetIntrinsic::SetTimeout

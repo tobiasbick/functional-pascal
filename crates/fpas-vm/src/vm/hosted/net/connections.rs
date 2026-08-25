@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use super::tls;
+use super::tls::client;
 use super::transport::Transport;
 
 const HANDLE_TAG: u64 = 0x4E45_0000_0000_0000;
@@ -43,9 +43,9 @@ impl NetworkConnections {
         Ok(self.insert(Transport::tcp(stream)))
     }
 
-    /// Store an accepted TCP connection and return its opaque runtime handle.
-    pub(super) fn insert_tcp(&self, stream: TcpStream) -> u64 {
-        self.insert(Transport::tcp(stream))
+    /// Store an accepted TCP or TLS connection and return its opaque runtime handle.
+    pub(super) fn insert_accepted(&self, transport: Transport) -> u64 {
+        self.insert(transport)
     }
 
     /// Open a verified TLS connection and return its opaque runtime handle.
@@ -60,13 +60,13 @@ impl NetworkConnections {
             .set_read_timeout(Some(timeout))
             .and_then(|()| stream.set_write_timeout(Some(timeout)))
             .map_err(|error| format!("Could not configure TLS timeout: {error}"))?;
-        let stream = tls::connect(stream, host)?;
+        let stream = client::connect(stream, host)?;
         stream
             .sock
             .set_read_timeout(None)
             .and_then(|()| stream.sock.set_write_timeout(None))
             .map_err(|error| format!("Could not clear TLS handshake timeout: {error}"))?;
-        Ok(self.insert(Transport::tls(stream)))
+        Ok(self.insert(Transport::tls_client(stream)))
     }
 
     /// Set both read and write timeouts; zero disables them.

@@ -119,9 +119,10 @@ not part of this client.
 
 ## HTTP server helpers
 
-Create a TCP listener with `Std.Net.Listen`, accept a connection, and pass that connection to
-`ReadRequest`. The helper accepts HTTP/1.0 and HTTP/1.1 origin-form requests, requires exactly one
-`Host` field for HTTP/1.1, validates field names and values, and reads a `Content-Length` body.
+Create a TCP listener with `Std.Net.Listen` or a TLS listener with `Std.Net.ListenTls`, accept a
+connection, and pass that connection to `ReadRequest`. The helper accepts HTTP/1.0 and HTTP/1.1
+origin-form requests, requires exactly one `Host` field for HTTP/1.1, validates field names and
+values, and reads a `Content-Length` body.
 `MaxHeaderBytes` and `MaxBodyBytes` are caller-selected protection limits. Chunked request bodies,
 ambiguous framing, unsupported transfer codings, and truncated bodies are rejected.
 
@@ -212,9 +213,31 @@ open. A malformed request receives an empty `400 Bad Request`, and connection-le
 failures do not stop other workers. An accept failure returns `Error`. A handler panic follows the
 normal task-failure path and stops the server loop.
 
+For HTTPS, replace `Listen` with a certificate-configured TLS listener; the handler and server loop
+remain unchanged:
+
+```pascal
+case ListenTls('127.0.0.1', 8443, 'certificate.pem', 'private-key.pem', 10000) of
+  Ok(ListenerValue):
+  begin
+    mutable var Options: ServerOptions := ServerOptions.Create();
+    case Serve(ListenerValue, Options, Handle) of
+      Ok(_):
+      begin
+      end;
+      Error(Message): panic(Message)
+    end
+  end;
+  Error(Message): panic(Message)
+end
+```
+
+The certificate chain and private key must be PEM files. The handshake timeout bounds clients that
+connect without completing TLS. See [`Std.Net`](net.md) for listener limitations.
+
 Client requests use only origin-form targets. `OPTIONS` addresses a normal URL path;
 `OPTIONS *` and `CONNECT` authority-form targets are not implemented. Compression, proxies, and
-persistent connections are not handled. HTTPS listeners are not implemented.
+persistent connections are not handled.
 
 ## Implementation (contributors)
 
@@ -237,6 +260,7 @@ persistent connections are not handled. HTTPS listeners are not implemented.
 | Redirect and hostile-response fixtures | [`network_hardening.rs`](../../../../crates/fpas-cli/src/main_tests/network_hardening.rs) |
 | HTTP server fixtures | [`network_server.rs`](../../../../crates/fpas-cli/src/main_tests/network_server.rs) |
 | Server-loop fixtures | [`server_loop.rs`](../../../../crates/fpas-cli/src/main_tests/network_server/server_loop.rs) |
+| HTTPS server fixture | [`https.rs`](../../../../crates/fpas-cli/src/main_tests/network_server/https.rs) |
 | HTTPS rejection fixture | [`network_tls.rs`](../../../../crates/fpas-cli/src/main_tests/network_tls.rs) |
 
 ## See also

@@ -169,6 +169,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Net(NetIntrinsic::Listen),
     Intrinsic::Net(NetIntrinsic::Accept),
     Intrinsic::Net(NetIntrinsic::CloseListener),
+    Intrinsic::Net(NetIntrinsic::ListenTls),
     Intrinsic::Random(RandomIntrinsic::Random),
     Intrinsic::Random(RandomIntrinsic::RandomInt),
     Intrinsic::Random(RandomIntrinsic::Randomize),

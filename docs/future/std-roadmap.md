@@ -17,10 +17,10 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 
 ## Networking follow-up
 
-`Std.Net` TCP/TLS connections and TCP listeners, the hardened buffered/streaming HTTP/HTTPS client,
-plain HTTP server primitives, the concurrent server loop, and SSE decoding are implemented. HTTPS
-serving, WebDAV, and FTP/FTPS are tracked in separate future plans instead of being treated as
-unstarted standard-library candidates:
+`Std.Net` TCP/TLS connections and listeners, the hardened buffered/streaming HTTP/HTTPS client,
+HTTP/HTTPS server primitives, the concurrent server loop, and SSE decoding are implemented. WebDAV
+and FTP/FTPS remain separate deferred plans instead of being treated as unstarted standard-library
+candidates:
 
 - [HTTP/HTTPS server follow-up](networking.md)
 - [WebDAV](webdav.md)

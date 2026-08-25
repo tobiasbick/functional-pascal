@@ -47,15 +47,17 @@ caller-supplied handler on a `go` task. `ServerOptions` controls request limits,
 batch concurrency, and an optional request count. The loop owns accepted connections, isolates
 malformed requests and connection failures, and leaves the listener under caller ownership.
 
-## Following work
+## Completed HTTPS serving
 
-1. Add certificate-configured TLS listeners for HTTPS serving.
+`Std.Net.ListenTls` loads a PEM certificate chain and private key before binding, bounds the TLS
+handshake, and returns the same listener handle used by `Accept` and `Std.Http.Serve`. Failed TLS
+handshakes are isolated from the server loop. A verified local HTTPS fixture covers certificate
+loading, TLS negotiation, FPAS request handling, response serialization, and clean TLS shutdown.
+
+## Deferred protocols
 
 WebDAV and FTP/FTPS are not part of the active networking sequence. They have separate deferred
 plans so either protocol can be reconsidered later without coupling it to HTTP/HTTPS server work:
 
 - [WebDAV](webdav.md)
 - [FTP and FTPS](ftp.md)
-
-Server work requires focused protocol tests, hostile-input limits, docs under `docs/pascal/` only
-after implementation, and the standard workspace verification gates.

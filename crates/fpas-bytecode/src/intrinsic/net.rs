@@ -29,5 +29,8 @@ pub enum NetIntrinsic {
     Accept = 525,
     /// `Std.Net.CloseListener(Listener)` - close and invalidate one listener.
     CloseListener = 526,
+    /// `Std.Net.ListenTls(Host, Port, CertificatePath, PrivateKeyPath,
+    /// HandshakeTimeoutMillis)` - bind one TLS listener.
+    ListenTls = 527,
 }
 }

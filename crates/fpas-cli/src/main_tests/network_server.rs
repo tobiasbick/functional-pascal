@@ -5,6 +5,7 @@ use std::time::{Duration, Instant};
 
 use super::*;
 
+mod https;
 mod server_loop;
 
 fn unused_port() -> u16 {
@@ -16,16 +17,21 @@ fn start_server(
     name: &str,
     source_text: String,
 ) -> (PathBuf, std::thread::JoinHandle<(i32, String, String)>) {
+    let cwd = create_temp_dir(name);
+    let server = spawn_server(&cwd, source_text);
+    (cwd, server)
+}
+
+fn spawn_server(cwd: &Path, source_text: String) -> std::thread::JoinHandle<(i32, String, String)> {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(Path::parent)
         .expect("workspace root")
         .to_path_buf();
-    let cwd = create_temp_dir(name);
     let source = cwd.join("main.fpas");
     write_text(&source, &source_text);
-    let thread_cwd = cwd.clone();
-    let server = std::thread::spawn(move || {
+    let thread_cwd = cwd.to_path_buf();
+    std::thread::spawn(move || {
         support::run_cli_args_and_capture_output(
             &[
                 String::from("run"),
@@ -35,8 +41,7 @@ fn start_server(
             ],
             &thread_cwd,
         )
-    });
-    (cwd, server)
+    })
 }
 
 fn connect_when_ready(port: u16) -> TcpStream {

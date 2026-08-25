@@ -42,6 +42,18 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_NET_LISTEN_TLS,
+        vec![
+            p("Host", Ty::String, false),
+            p("Port", Ty::Integer, false),
+            p("CertificatePath", Ty::String, false),
+            p("PrivateKeyPath", Ty::String, false),
+            p("HandshakeTimeoutMillis", Ty::Integer, false),
+        ],
+        Ty::Result(Box::new(listener.clone()), error.clone()),
+    );
+    define_func(
+        checker,
         s::STD_NET_ACCEPT,
         vec![p("Listener", listener.clone(), false)],
         Ty::Result(Box::new(connection.clone()), error.clone()),

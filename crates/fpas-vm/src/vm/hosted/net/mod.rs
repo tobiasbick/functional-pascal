@@ -62,6 +62,20 @@ impl Worker {
                         .map(Value::OpaqueHandle),
                 )
             }
+            NetIntrinsic::ListenTls => {
+                require_count(self, arguments, 5)?;
+                let host = string(self, &arguments[0], "Host")?;
+                let port = integer(self, &arguments[1], "Port")?;
+                let certificate_path = string(self, &arguments[2], "CertificatePath")?;
+                let private_key_path = string(self, &arguments[3], "PrivateKeyPath")?;
+                let timeout = integer(self, &arguments[4], "HandshakeTimeoutMillis")?;
+                result(
+                    self.hosted
+                        .network_listeners
+                        .listen_tls(host, port, certificate_path, private_key_path, timeout)
+                        .map(Value::OpaqueHandle),
+                )
+            }
             NetIntrinsic::Accept => {
                 require_count(self, arguments, 1)?;
                 let handle = listener(self, &arguments[0])?;
@@ -69,7 +83,7 @@ impl Worker {
                     self.hosted
                         .network_listeners
                         .accept(handle)
-                        .map(|stream| self.hosted.network_connections.insert_tcp(stream))
+                        .map(|transport| self.hosted.network_connections.insert_accepted(transport))
                         .map(Value::OpaqueHandle),
                 )
             }

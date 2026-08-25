@@ -4,12 +4,13 @@ use std::io::{self, Read, Write};
 use std::net::{Shutdown, TcpStream};
 use std::time::Duration;
 
-use rustls::{ClientConnection, StreamOwned};
+use rustls::{ClientConnection, ServerConnection, StreamOwned};
 
 /// One connected TCP or TLS byte stream.
 pub(super) enum Transport {
     Tcp(TcpStream),
-    Tls(Box<StreamOwned<ClientConnection, TcpStream>>),
+    TlsClient(Box<StreamOwned<ClientConnection, TcpStream>>),
+    TlsServer(Box<StreamOwned<ServerConnection, TcpStream>>),
 }
 
 impl Transport {
@@ -19,15 +20,20 @@ impl Transport {
     }
 
     /// Wrap a connected and verified TLS stream.
-    pub(super) fn tls(stream: StreamOwned<ClientConnection, TcpStream>) -> Self {
-        Self::Tls(Box::new(stream))
+    pub(super) fn tls_client(stream: StreamOwned<ClientConnection, TcpStream>) -> Self {
+        Self::TlsClient(Box::new(stream))
+    }
+
+    /// Wrap an accepted TLS server stream.
+    pub(super) fn tls_server(stream: StreamOwned<ServerConnection, TcpStream>) -> Self {
+        Self::TlsServer(Box::new(stream))
     }
 
     /// Return the protocol name used in diagnostics.
     pub(super) fn name(&self) -> &'static str {
         match self {
             Self::Tcp(_) => "TCP",
-            Self::Tls(_) => "TLS",
+            Self::TlsClient(_) | Self::TlsServer(_) => "TLS",
         }
     }
 
@@ -41,8 +47,16 @@ impl Transport {
 
     /// Shut down the underlying socket.
     pub(super) fn shutdown(&mut self) -> io::Result<()> {
-        if let Self::Tls(stream) = self {
-            stream.conn.send_close_notify();
+        match self {
+            Self::TlsClient(stream) => {
+                stream.conn.send_close_notify();
+                stream.flush()?;
+            }
+            Self::TlsServer(stream) => {
+                stream.conn.send_close_notify();
+                stream.flush()?;
+            }
+            Self::Tcp(_) => {}
         }
         self.socket().shutdown(Shutdown::Both).or_else(|error| {
             if error.kind() == io::ErrorKind::NotConnected {
@@ -56,7 +70,8 @@ impl Transport {
     fn socket(&self) -> &TcpStream {
         match self {
             Self::Tcp(stream) => stream,
-            Self::Tls(stream) => &stream.sock,
+            Self::TlsClient(stream) => &stream.sock,
+            Self::TlsServer(stream) => &stream.sock,
         }
     }
 }
@@ -65,7 +80,8 @@ impl Read for Transport {
     fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
         match self {
             Self::Tcp(stream) => stream.read(bytes),
-            Self::Tls(stream) => stream.read(bytes),
+            Self::TlsClient(stream) => stream.read(bytes),
+            Self::TlsServer(stream) => stream.read(bytes),
         }
     }
 }
@@ -74,14 +90,16 @@ impl Write for Transport {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         match self {
             Self::Tcp(stream) => stream.write(bytes),
-            Self::Tls(stream) => stream.write(bytes),
+            Self::TlsClient(stream) => stream.write(bytes),
+            Self::TlsServer(stream) => stream.write(bytes),
         }
     }
 
     fn flush(&mut self) -> io::Result<()> {
         match self {
             Self::Tcp(stream) => stream.flush(),
-            Self::Tls(stream) => stream.flush(),
+            Self::TlsClient(stream) => stream.flush(),
+            Self::TlsServer(stream) => stream.flush(),
         }
     }
 }

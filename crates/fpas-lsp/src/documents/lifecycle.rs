@@ -1,5 +1,6 @@
 //! Workspace loading and ordered editor document mutations.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use fpas_language_service::{
@@ -61,8 +62,13 @@ impl SynchronizedDocuments {
         let task_cancellation = cancellation.clone();
         let _cancel_on_drop = tasks::CancelOnDrop(cancellation);
         let (refreshed, documents) = tokio::task::spawn_blocking(move || {
+            let mut affected_paths = affected_open_paths(&refreshed, &paths);
             refreshed.refresh_paths(&paths, &task_cancellation)?;
-            let documents = synchronized_open_documents(&refreshed);
+            affected_paths.extend(affected_open_paths(&refreshed, &paths));
+            let documents = synchronized_open_documents(&refreshed)
+                .into_iter()
+                .filter(|document| affected_paths.contains(&document.path))
+                .collect();
             Ok::<_, LanguageServiceError>((refreshed, documents))
         })
         .await
@@ -213,6 +219,55 @@ fn synchronized_open_documents(service: &LanguageService) -> Vec<SynchronizedDoc
                 version: editor_version(snapshot.version())?,
             })
         })
+        .collect()
+}
+
+fn affected_open_paths(service: &LanguageService, changed_paths: &[PathBuf]) -> HashSet<PathBuf> {
+    let open_snapshots = service.documents().open_snapshots();
+    if service
+        .workspace()
+        .manifest_path()
+        .is_some_and(|manifest| changed_paths.iter().any(|path| path == manifest))
+    {
+        return open_snapshots
+            .into_iter()
+            .map(|snapshot| snapshot.path().to_path_buf())
+            .collect();
+    }
+
+    let changed_project_sources = service
+        .workspace()
+        .projects()
+        .iter()
+        .filter(|project| {
+            changed_paths
+                .iter()
+                .any(|path| path == project.manifest_path())
+        })
+        .flat_map(|project| {
+            project
+                .source_files()
+                .iter()
+                .map(PathBuf::as_path)
+                .chain(project.main())
+        })
+        .collect::<Vec<_>>();
+
+    open_snapshots
+        .into_iter()
+        .filter(|snapshot| {
+            changed_paths.iter().any(|path| path == snapshot.path())
+                || service.workspace().projects().iter().any(|project| {
+                    project.contains_source(snapshot.path())
+                        && (changed_paths
+                            .iter()
+                            .any(|path| project.contains_source(path))
+                            || changed_project_sources
+                                .iter()
+                                .any(|path| project.contains_source(path)))
+                })
+        })
+        .map(|snapshot| snapshot.path().to_path_buf())
         .collect()
 }
 

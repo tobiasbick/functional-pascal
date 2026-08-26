@@ -12,6 +12,7 @@ use crate::document::normalized_path;
 pub struct ProjectContext {
     manifest_path: PathBuf,
     project: LoadedProject,
+    is_source_standard_library: bool,
     source_paths: HashSet<PathBuf>,
     owned_source_paths: HashSet<PathBuf>,
     source_origins: HashMap<PathBuf, SourceOrigin>,
@@ -19,6 +20,18 @@ pub struct ProjectContext {
 
 impl ProjectContext {
     pub(super) fn new(manifest_path: &Path, project: LoadedProject) -> Self {
+        Self::from_loaded_project(manifest_path, project, false)
+    }
+
+    pub(super) fn new_standard_library(manifest_path: &Path, project: LoadedProject) -> Self {
+        Self::from_loaded_project(manifest_path, project, true)
+    }
+
+    fn from_loaded_project(
+        manifest_path: &Path,
+        project: LoadedProject,
+        is_source_standard_library: bool,
+    ) -> Self {
         let manifest_path = normalized_path(manifest_path);
         let source_origins = project
             .link_meta
@@ -50,6 +63,7 @@ impl ProjectContext {
         Self {
             manifest_path,
             project,
+            is_source_standard_library,
             source_paths,
             owned_source_paths,
             source_origins,
@@ -94,6 +108,10 @@ impl ProjectContext {
 
     pub(crate) fn owns_source(&self, path: &Path) -> bool {
         self.owned_source_paths.contains(&normalized_path(path))
+    }
+
+    pub(crate) fn is_source_standard_library(&self) -> bool {
+        self.is_source_standard_library
     }
 
     pub(crate) fn loaded(&self) -> &LoadedProject {

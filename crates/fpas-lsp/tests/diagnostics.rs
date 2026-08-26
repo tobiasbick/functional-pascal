@@ -306,8 +306,22 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
-fn repository_root_discovers_a_nested_standard_library_before_diagnostics() {
+fn configured_standard_library_does_not_duplicate_a_nested_standard_library() {
     let temp = TempDirectory::new("nested-standard-library");
+    temp.write(
+        "bundle/stdlib.fpasprj",
+        r#"[project]
+name = "bundled-stdlib"
+kind = "library"
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+    );
+    temp.write(
+        "bundle/Std/Point.fpas",
+        "unit Std.Point;\n\npublic type Point = integer;\n",
+    );
     temp.write(
         "repository/lib/stdlib.fpasprj",
         r#"[project]
@@ -335,9 +349,22 @@ public type FacadePoint = Std.Point.Point;
 "#;
     temp.write("repository/lib/Std/Facade.fpas", facade_source);
     let root_uri = temp.uri("repository");
+    let standard_library_uri = temp.uri("bundle");
     let facade_uri = temp.uri("repository/lib/Std/Facade.fpas");
     let transcript = run_script(&[
-        TranscriptStep::Message(initialize_with_root(1, Some(&root_uri))),
+        TranscriptStep::Message(json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "processId": null,
+                "rootUri": root_uri,
+                "capabilities": {},
+                "initializationOptions": {
+                    "standardLibraryUri": standard_library_uri
+                }
+            }
+        })),
         TranscriptStep::Message(initialized()),
         TranscriptStep::Message(open(&facade_uri, 1, facade_source)),
         TranscriptStep::Wait(ANALYSIS_WAIT),

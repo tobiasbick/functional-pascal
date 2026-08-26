@@ -45,12 +45,12 @@ function runCommand(command, args) {
 export async function runTests() {
   runCommand("cargo", ["build", "-p", "fpas-lsp", "-p", "fpas-cli"]);
   runCommand(process.execPath, [path.join(extensionRoot, "scripts", "compile.mjs")]);
-  await verifyManifest();
-  await verifyContracts();
-  await verifyPackaging();
-  await verifyGrammar();
   cleanupTransientFixtures();
   try {
+    await verifyManifest();
+    await verifyContracts();
+    await verifyPackaging();
+    await verifyGrammar();
     await runExtensionTests({
       extensionDevelopmentPath: extensionRoot,
       extensionTestsPath: path.join(

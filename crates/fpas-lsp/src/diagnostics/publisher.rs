@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fpas_language_service::{LanguageServiceError, diagnostics_for_document};
-use tokio::sync::{Mutex, mpsc};
+use tokio::sync::{Mutex, OwnedSemaphorePermit, Semaphore, mpsc};
 use tower_lsp_server::Client;
 use tower_lsp_server::ls_types::{Diagnostic, DiagnosticSeverity, NumberOrString, Range, Uri};
 
@@ -18,6 +18,7 @@ const ANALYSIS_DEBOUNCE: Duration = Duration::from_millis(120);
 pub(crate) struct DiagnosticPublisher {
     documents: Arc<SynchronizedDocuments>,
     generations: Arc<Mutex<GenerationState>>,
+    analysis_slots: Arc<Semaphore>,
     publications: mpsc::UnboundedSender<Publication>,
 }
 
@@ -33,6 +34,7 @@ impl DiagnosticPublisher {
         Self {
             documents,
             generations,
+            analysis_slots: Arc::new(Semaphore::new(1)),
             publications,
         }
     }
@@ -44,12 +46,20 @@ impl DiagnosticPublisher {
     pub(crate) fn schedule(&self, document: SynchronizedDocument, generation: u64) {
         let documents = Arc::clone(&self.documents);
         let generations = Arc::clone(&self.generations);
+        let analysis_slots = Arc::clone(&self.analysis_slots);
         let publications = self.publications.clone();
         tokio::spawn(async move {
             tokio::time::sleep(ANALYSIS_DEBOUNCE).await;
-            if !is_current(&generations, &document.path, generation).await {
+            let Some(_analysis_permit) = acquire_current_analysis_slot(
+                &generations,
+                analysis_slots,
+                &document.path,
+                generation,
+            )
+            .await
+            else {
                 return;
-            }
+            };
             let analysis = match documents
                 .analyze_diagnostics_if_current(&document.path, document.version)
                 .await
@@ -120,6 +130,21 @@ fn analysis_failure_diagnostic(error: &LanguageServiceError) -> Diagnostic {
 
 async fn is_current(generations: &Mutex<GenerationState>, path: &Path, generation: u64) -> bool {
     generations.lock().await.is_current(path, generation)
+}
+
+async fn acquire_current_analysis_slot(
+    generations: &Mutex<GenerationState>,
+    analysis_slots: Arc<Semaphore>,
+    path: &Path,
+    generation: u64,
+) -> Option<OwnedSemaphorePermit> {
+    if !is_current(generations, path, generation).await {
+        return None;
+    }
+    let permit = analysis_slots.acquire_owned().await.ok()?;
+    is_current(generations, path, generation)
+        .await
+        .then_some(permit)
 }
 
 async fn dispatch_publications(
@@ -200,10 +225,11 @@ mod tests {
     use std::path::{Path, PathBuf};
     use std::sync::Arc;
 
+    use tokio::sync::{Mutex, Semaphore};
     use tower_lsp_server::ls_types::{InitializeParams, InitializeResult, Uri};
     use tower_lsp_server::{Client, LanguageServer, LspService};
 
-    use super::{DiagnosticPublisher, GenerationState};
+    use super::{DiagnosticPublisher, GenerationState, acquire_current_analysis_slot};
     use crate::documents::SynchronizedDocuments;
 
     struct TestServer {
@@ -246,6 +272,40 @@ mod tests {
 
         assert!(!state.is_current(path, generation));
         assert_eq!(state.invalidate(path), None);
+    }
+
+    #[tokio::test]
+    async fn queued_analysis_rechecks_generation_after_acquiring_slot() {
+        let path = PathBuf::from("versioned.fpas");
+        let generations = Arc::new(Mutex::new(GenerationState::default()));
+        let generation = generations
+            .lock()
+            .await
+            .invalidate(&path)
+            .expect("generation");
+        let analysis_slots = Arc::new(Semaphore::new(1));
+        let occupied_slot = Arc::clone(&analysis_slots)
+            .acquire_owned()
+            .await
+            .expect("analysis slot");
+        let queued_generations = Arc::clone(&generations);
+        let queued_slots = Arc::clone(&analysis_slots);
+        let queued_path = path.clone();
+        let queued = tokio::spawn(async move {
+            acquire_current_analysis_slot(
+                &queued_generations,
+                queued_slots,
+                &queued_path,
+                generation,
+            )
+            .await
+        });
+        tokio::task::yield_now().await;
+
+        generations.lock().await.invalidate(&path);
+        drop(occupied_slot);
+
+        assert!(queued.await.expect("queued analysis completes").is_none());
     }
 
     #[tokio::test]

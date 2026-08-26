@@ -7,6 +7,7 @@ export const REPLACE_TASK_RESULT_COMMAND = "functionalPascal.debug.replaceTaskRe
 
 /** Optional arguments used by command links and Extension Host tests. */
 export interface TaskResultInput {
+  readonly session?: vscode.DebugSession;
   readonly taskId?: number;
   readonly frameId?: number;
   readonly expression?: string;
@@ -18,7 +19,7 @@ export function registerTaskResultCommand(context: vscode.ExtensionContext): voi
     vscode.commands.registerCommand(
       REPLACE_TASK_RESULT_COMMAND,
       async (input?: TaskResultInput) => {
-        const session = vscode.debug.activeDebugSession;
+        const session = input?.session ?? vscode.debug.activeDebugSession;
         if (session?.type !== "fpas") {
           void vscode.window.showWarningMessage(
             "Start and stop a Functional Pascal debug session before replacing a task result."

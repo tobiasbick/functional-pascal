@@ -23,7 +23,7 @@ impl StandardLibraryContext {
         collect_editor_api_sources(&root.join("api/Std"), &mut editor_api_sources)?;
         editor_api_sources.sort();
         Ok(Self {
-            project: ProjectContext::new(&root.join("stdlib.fpasprj"), project),
+            project: ProjectContext::new_standard_library(&root.join("stdlib.fpasprj"), project),
             editor_api_sources,
         })
     }
@@ -33,7 +33,9 @@ impl StandardLibraryContext {
     }
 
     pub(crate) fn compose(&self, project: &ProjectContext) -> ProjectContext {
-        if project.manifest_path() == self.project.manifest_path() {
+        if project.is_source_standard_library()
+            || project.manifest_path() == self.project.manifest_path()
+        {
             return project.clone();
         }
 

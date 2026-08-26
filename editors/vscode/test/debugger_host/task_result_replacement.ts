@@ -91,6 +91,7 @@ export async function verifyTaskResultReplacement(
       .slice(marker.sent)
       .filter((message) => message.event === "invalidated").length;
     await vscode.commands.executeCommand(REPLACE_TASK_RESULT_COMMAND, {
+      session,
       taskId: 1,
       frameId: rootFrame.id,
       expression: "9"

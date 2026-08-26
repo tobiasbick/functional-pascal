@@ -38,6 +38,41 @@ fn repository_root_discovers_the_nested_source_standard_library() {
 }
 
 #[test]
+fn configured_standard_library_does_not_duplicate_a_discovered_standard_library() {
+    let temp = TempDirectory::new("configured-and-discovered-standard-library");
+    for root in ["bundle", "repository/lib"] {
+        temp.write(
+            format!("{root}/stdlib.fpasprj"),
+            r#"[project]
+name = "test-stdlib"
+kind = "library"
+
+[sources]
+include = ["Std/**/*.fpas"]
+"#,
+        );
+        temp.write(
+            format!("{root}/Std/Shared.fpas"),
+            "unit Std.Shared;\n\npublic type SharedValue = integer;\n",
+        );
+    }
+    let source = temp.join("repository/lib/Std/Shared.fpas");
+    let mut service =
+        LanguageService::load_with_standard_library(&temp.join("repository"), &temp.join("bundle"))
+            .expect("configured standard library");
+
+    let analysis = service
+        .analyze_document(&source)
+        .expect("discovered standard library analysis");
+
+    assert!(
+        analysis.diagnostics().is_empty(),
+        "{:?}",
+        analysis.diagnostics()
+    );
+}
+
+#[test]
 fn repository_project_analysis_resolves_the_source_standard_library() {
     let repository_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let source = repository_root.join("apps/notes/src/Notes/Theme.fpas");

@@ -92,7 +92,16 @@ export function smokePackagedCli({
     );
     const debugged = invoke(
       cli,
-      ["debug", manifest, "--protocol", "jsonl", "--commands", commands, "--report", "jsonl", "--std-lib", standardLibrary],
+      [
+        "debug",
+        manifest,
+        "--protocol",
+        "jsonl",
+        "--commands",
+        commands,
+        "--std-lib",
+        standardLibrary
+      ],
       projectRoot
     );
     assert.equal(debugged.status, 0, debugged.stderr);

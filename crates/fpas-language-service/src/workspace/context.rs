@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
-use fpas_project::{LoadedProject, load_project, load_standard_library_project, load_workspace};
+use fpas_project::{load_project, load_standard_library_project, load_workspace};
 
 use super::ProjectContext;
 use super::catalog::load_folder;
@@ -201,7 +201,7 @@ impl WorkspaceContext {
                     .unwrap_or_else(|| path.to_path_buf()),
                 manifest_path: Some(path.to_path_buf()),
                 kind: WorkspaceKind::Project,
-                projects: vec![ProjectContext::new(path, project)],
+                projects: vec![project],
                 issues: Vec::new(),
             },
             Err(message) => Self::unavailable(path, message),
@@ -217,7 +217,7 @@ impl WorkspaceContext {
         let mut issues = Vec::new();
         for member in workspace.member_projects {
             match load_editor_project(&member) {
-                Ok(project) => projects.push(ProjectContext::new(&member, project)),
+                Ok(project) => projects.push(project),
                 Err(message) => issues.push(WorkspaceIssue {
                     path: normalized_path(&member),
                     message,
@@ -292,7 +292,7 @@ fn ambiguous_source_issue(source: &Path, manifests: &[&Path]) -> WorkspaceIssue 
     }
 }
 
-fn load_editor_project(path: &Path) -> Result<LoadedProject, String> {
+fn load_editor_project(path: &Path) -> Result<ProjectContext, String> {
     let is_standard_library = path
         .file_name()
         .and_then(|name| name.to_str())
@@ -300,7 +300,8 @@ fn load_editor_project(path: &Path) -> Result<LoadedProject, String> {
     if is_standard_library {
         let root = path.parent().unwrap_or(path);
         load_standard_library_project(root)
+            .map(|project| ProjectContext::new_standard_library(path, project))
     } else {
-        load_project(path)
+        load_project(path).map(|project| ProjectContext::new(path, project))
     }
 }

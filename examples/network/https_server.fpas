@@ -1,0 +1,62 @@
+// Serves one HTTPS response using caller-supplied PEM credentials.
+program NetworkHttpsServer;
+
+uses Std.Args, Std.Conv, Std.Console, Std.Http, Std.Net, Std.Net.Utf8;
+
+// Creates the single response returned by this bounded demo server.
+//
+// Parameters:
+// - `_RequestValue`: Validated request accepted over TLS.
+function Handle(_RequestValue: ServerRequest): ServerResponse;
+begin
+  mutable var ResponseValue: ServerResponse := ServerResponse.Create(200, 'OK');
+  ResponseValue.Headers := [Header.Create('Content-Type', 'text/plain; charset=utf-8')];
+  ResponseValue.Body := Std.Net.Utf8.Encode('Hello over HTTPS from FPAS');
+  return ResponseValue
+end;
+
+begin
+  if (ParamCount() < 2) or (ParamCount() > 3) then
+  begin
+    panic('usage: https_server.fpas -- CERTIFICATE_PEM PRIVATE_KEY_PEM [PORT]')
+  end;
+  mutable var Port: integer := 18443;
+  if ParamCount() = 3 then
+  begin
+    Port := StrToInt(ParamStr(2))
+  end;
+
+  case ListenTls('127.0.0.1', Port, ParamStr(0), ParamStr(1), 10000) of
+    Ok(ListenerValue):
+    begin
+      WriteLn('HTTPS server listening on https://127.0.0.1:' + IntToStr(Port));
+      mutable var Options: ServerOptions := ServerOptions.Create();
+      Options.MaxConcurrentRequests := 1;
+      Options.MaxRequests := 1;
+      case Serve(ListenerValue, Options, Handle) of
+        Ok(_):
+        begin
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case CloseListener(ListenerValue) of
+        Ok(_):
+        begin
+          WriteLn('HTTPS server handled 1 request')
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

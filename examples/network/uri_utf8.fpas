@@ -1,0 +1,31 @@
+// Parses one network URI and round-trips Unicode text through UTF-8 bytes.
+program NetworkUriUtf8;
+
+uses Std.Console, Std.Conv, Std.Net.Uri, Std.Net.Utf8;
+
+begin
+  case Std.Net.Uri.Parse('https://example.com:8443/api/items?limit=2') of
+    Ok(UriValue):
+    begin
+      WriteLn('scheme: ' + UriValue.Scheme);
+      WriteLn('host: ' + UriValue.Host);
+      WriteLn('port: ' + IntToStr(UriValue.Port));
+      WriteLn('path: ' + UriValue.Path)
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end;
+  var Bytes: array of integer := Std.Net.Utf8.Encode('Grüße aus FPAS');
+  case Std.Net.Utf8.Decode(Bytes) of
+    Ok(Text):
+    begin
+      WriteLn('UTF-8: ' + Text)
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

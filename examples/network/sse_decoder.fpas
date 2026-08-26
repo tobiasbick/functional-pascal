@@ -1,0 +1,63 @@
+// Decodes one Server-Sent Event split across arbitrary byte fragments.
+program NetworkSseDecoder;
+
+uses Std.Array, Std.Console, Std.Http, Std.Net.Utf8;
+
+// Prints all complete events returned by one decoder operation.
+//
+// Parameters:
+// - `Events`: Complete SSE events to display.
+procedure PrintEvents(Events: array of SseEvent);
+begin
+  for Index: integer := 0 to Std.Array.Length(Events) - 1 do
+  begin
+    WriteLn('event: ' + Events[Index].EventType);
+    WriteLn('id: ' + Events[Index].Id);
+    WriteLn('data: ' + Events[Index].Data)
+  end
+end;
+
+begin
+  case CreateSseDecoder(1024) of
+    Ok(Decoder):
+    begin
+      case FeedSse(Decoder, Std.Net.Utf8.Encode(((('id: 42' + #10) + 'event: greeting') + #10) +
+                                                'data: hel')) of
+        Ok(Events):
+        begin
+          PrintEvents(Events)
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FeedSse(Decoder, Std.Net.Utf8.Encode(('lo from FPAS' + #10) + #10)) of
+        Ok(Events):
+        begin
+          PrintEvents(Events)
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      case FinishSse(Decoder) of
+        Ok(Events):
+        begin
+          PrintEvents(Events)
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

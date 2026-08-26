@@ -1,0 +1,118 @@
+// Sends one LF-delimited TCP request to the local echo server.
+program NetworkTcpEchoClient;
+
+uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
+
+// Writes every byte even when the transport reports a partial write.
+//
+// Parameters:
+// - `ConnectionValue`: Open TCP connection.
+// - `Bytes`: Complete byte sequence to write.
+procedure WriteAll(ConnectionValue: Connection; Bytes: array of integer);
+begin
+  mutable var Offset: integer := 0;
+  while Offset < Std.Array.Length(Bytes) do
+  begin
+    var Remaining: array of integer := Std.Array.Slice(Bytes, Offset, Std.Array.Length(Bytes) -
+                                                                      Offset);
+    case Std.Net.Write(ConnectionValue, Remaining) of
+      Ok(Count):
+      begin
+        if Count <= 0 then
+        begin
+          panic('TCP connection stopped while writing')
+        end;
+
+        Offset := Offset + Count
+      end;
+      Error(Message):
+      begin
+        panic(Message)
+      end
+    end
+  end
+end;
+
+// Reads response fragments until the server closes its side of the connection.
+//
+// Parameters:
+// - `ConnectionValue`: Open TCP connection.
+function ReadToEnd(ConnectionValue: Connection): string;
+begin
+  mutable var Bytes: array of integer := [];
+  mutable var Reading: boolean := true;
+  while Reading do
+  begin
+    case Std.Net.Read(ConnectionValue, 4096) of
+      Ok(Part):
+      begin
+        if Std.Array.Length(Part) = 0 then
+        begin
+          Reading := false
+        end
+        else
+        begin
+          Bytes := Std.Array.Concat(Bytes, Part)
+        end
+      end;
+      Error(Message):
+      begin
+        panic(Message)
+      end
+    end
+  end;
+
+  case Std.Net.Utf8.Decode(Bytes) of
+    Ok(Text):
+    begin
+      return Text
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end;
+
+begin
+  mutable var Port: integer := 18081;
+  if ParamCount() = 1 then
+  begin
+    Port := StrToInt(ParamStr(0))
+  end
+  else if ParamCount() <> 0 then
+  begin
+    panic('usage: tcp_echo_client.fpas -- [PORT]')
+  end;
+
+  case Connect('127.0.0.1', Port, 5000) of
+    Ok(ConnectionValue):
+    begin
+      case SetTimeout(ConnectionValue, 5000) of
+        Ok(_):
+        begin
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end;
+
+      WriteAll(ConnectionValue, Std.Net.Utf8.Encode('hello over TCP' + #10));
+      WriteLn(ReadToEnd(ConnectionValue));
+      case Close(ConnectionValue) of
+        Ok(_):
+        begin
+        end;
+        Error(Message):
+        begin
+          panic(Message)
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      panic(Message)
+    end
+  end
+end.

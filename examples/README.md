@@ -65,6 +65,14 @@ fpas run examples/pascal/std/json_basics.fpas
 fpas run examples/pascal/std/task_basics.fpas
 ```
 
+### Network examples
+
+The [`network/`](network/README.md) examples include paired HTTP and raw TCP
+clients and servers, HTTPS programs with explicit trust and PEM requirements,
+an incremental SSE decoder, and URI/UTF-8 helpers. The local pairs accept a
+port after `--`, so client and server can run in separate terminals without
+changing source files.
+
 ### Performance benchmarks
 
 Prefer the curated harness (before/after save/compare). Full steps: [`docs/bench/README.md`](../docs/bench/README.md).
@@ -187,6 +195,11 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/task_basics.fpas` | `Std.Task` — `go`, `Wait`, `WaitAll` |
 | `pascal/std/time_basics.fpas` | `Std.Time` — monotonic time, elapsed time, timestamp, sleep |
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
+| `network/http_server.fpas` + `network/http_client.fpas` | Local HTTP server plus buffered and streaming client |
+| `network/tcp_echo_server.fpas` + `network/tcp_echo_client.fpas` | Raw TCP lifecycle, timeouts, UTF-8, and partial writes |
+| `network/https_server.fpas` + `network/https_client.fpas` | TLS listener credentials and verified HTTPS requests |
+| `network/sse_decoder.fpas` | Incremental Server-Sent Events decoding across fragments |
+| `network/uri_utf8.fpas` | Absolute URI parsing and UTF-8 conversion |
 
 All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table below.
 

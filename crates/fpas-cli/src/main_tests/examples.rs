@@ -56,6 +56,17 @@ macro_rules! example_run_tests {
     };
 }
 
+macro_rules! example_check_tests {
+    ($(($name:ident, $path:expr)),+ $(,)?) => {
+        $(
+            #[test]
+            fn $name() {
+                check_example($path);
+            }
+        )+
+    };
+}
+
 #[test]
 fn example_check_library_deps_mylib() {
     check_example("examples/pascal/library-deps/mylib/mylib.fpasprj");
@@ -64,6 +75,15 @@ fn example_check_library_deps_mylib() {
 #[test]
 fn example_check_monorepo_workspace() {
     check_example("examples/pascal/monorepo/monorepo.fpasworkspace");
+}
+
+example_check_tests! {
+    (example_check_network_http_server, "examples/network/http_server.fpas"),
+    (example_check_network_http_client, "examples/network/http_client.fpas"),
+    (example_check_network_tcp_echo_server, "examples/network/tcp_echo_server.fpas"),
+    (example_check_network_tcp_echo_client, "examples/network/tcp_echo_client.fpas"),
+    (example_check_network_https_server, "examples/network/https_server.fpas"),
+    (example_check_network_https_client, "examples/network/https_client.fpas"),
 }
 
 example_run_tests! {
@@ -106,6 +126,8 @@ example_run_tests! {
     (example_str_basics, "examples/pascal/std/str_basics.fpas"),
     (example_task_basics, "examples/pascal/std/task_basics.fpas"),
     (example_time_basics, "examples/pascal/std/time_basics.fpas"),
+    (example_network_sse_decoder, "examples/network/sse_decoder.fpas"),
+    (example_network_uri_utf8, "examples/network/uri_utf8.fpas"),
     (example_units_basic, "examples/pascal/units-basic/units-basic.fpasprj"),
     (example_library_deps_app, "examples/pascal/library-deps/app/app.fpasprj"),
     (example_monorepo_hello, "examples/pascal/monorepo/apps/hello/hello.fpasprj"),

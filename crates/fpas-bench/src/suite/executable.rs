@@ -9,30 +9,15 @@ struct CargoMetadata {
     target_directory: PathBuf,
 }
 
-/// Return the release `fpas` executable, building it when it is absent.
+/// Build and return the release `fpas` executable.
 pub fn ensure_release_fpas(repo_root: &Path) -> Result<PathBuf, String> {
-    ensure_release_fpas_with_target_override(repo_root, None)
-}
-
-fn ensure_release_fpas_with_target_override(
-    repo_root: &Path,
-    target_dir_override: Option<&Path>,
-) -> Result<PathBuf, String> {
-    let target_dir = query_cargo_target_dir(repo_root, target_dir_override)?;
+    let target_dir = query_cargo_target_dir(repo_root)?;
     let fpas = release_fpas_path(&target_dir);
-    if fpas.is_file() {
-        return Ok(fpas);
-    }
 
-    eprintln!("release fpas not found; building fpas-cli --release…");
-    let mut command = Command::new("cargo");
-    command
+    eprintln!("building fpas-cli --release…");
+    let status = Command::new("cargo")
         .args(["build", "--release", "-p", "fpas-cli"])
-        .current_dir(repo_root);
-    if let Some(target_dir) = target_dir_override {
-        command.env("CARGO_TARGET_DIR", target_dir);
-    }
-    let status = command
+        .current_dir(repo_root)
         .status()
         .map_err(|error| format!("failed to run cargo build: {error}"))?;
     if !status.success() {
@@ -49,18 +34,10 @@ fn ensure_release_fpas_with_target_override(
     Ok(fpas)
 }
 
-fn query_cargo_target_dir(
-    repo_root: &Path,
-    target_dir_override: Option<&Path>,
-) -> Result<PathBuf, String> {
-    let mut command = Command::new("cargo");
-    command
+fn query_cargo_target_dir(repo_root: &Path) -> Result<PathBuf, String> {
+    let output = Command::new("cargo")
         .args(["metadata", "--format-version", "1", "--no-deps"])
-        .current_dir(repo_root);
-    if let Some(target_dir) = target_dir_override {
-        command.env("CARGO_TARGET_DIR", target_dir);
-    }
-    let output = command
+        .current_dir(repo_root)
         .output()
         .map_err(|error| format!("failed to run cargo metadata: {error}"))?;
     if !output.status.success() {
@@ -85,38 +62,52 @@ fn release_fpas_path(target_dir: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_release_fpas_with_target_override, release_fpas_path};
+    use super::{ensure_release_fpas, release_fpas_path};
     use std::error::Error;
     use std::fs;
     use std::io;
-    use std::path::Path;
     use std::sync::atomic::{AtomicU64, Ordering};
 
-    fn repo_root() -> Result<&'static Path, io::Error> {
-        Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(Path::parent)
-            .ok_or_else(|| io::Error::other("crate directory should have a workspace root"))
-    }
-
     #[test]
-    fn executable_discovery_honors_custom_target_directory() -> Result<(), Box<dyn Error>> {
+    fn existing_release_executable_is_rebuilt_in_configured_target_directory()
+    -> Result<(), Box<dyn Error>> {
         static NEXT_ID: AtomicU64 = AtomicU64::new(1);
         let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
-        let target_dir = std::env::temp_dir().join(format!(
-            "fpas-bench-custom-target-{}-{id}",
+        let workspace = std::env::temp_dir().join(format!(
+            "fpas-bench-rebuild-existing-{}-{id}",
             std::process::id()
         ));
-        let executable = release_fpas_path(&target_dir);
+        fs::create_dir_all(workspace.join("fpas-cli/src"))?;
+        fs::create_dir_all(workspace.join(".cargo"))?;
+        fs::write(
+            workspace.join("Cargo.toml"),
+            "[workspace]\nresolver = \"3\"\nmembers = [\"fpas-cli\"]\n",
+        )?;
+        fs::write(
+            workspace.join(".cargo/config.toml"),
+            "[build]\ntarget-dir = \"custom-target\"\n",
+        )?;
+        fs::write(
+            workspace.join("fpas-cli/Cargo.toml"),
+            "[package]\nname = \"fpas-cli\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[[bin]]\nname = \"fpas\"\npath = \"src/main.rs\"\n",
+        )?;
+        fs::write(workspace.join("fpas-cli/src/main.rs"), "fn main() {}\n")?;
+        let executable = release_fpas_path(&workspace.join("custom-target"));
         let parent = executable
             .parent()
             .ok_or_else(|| io::Error::other("release executable should have a parent"))?;
         fs::create_dir_all(parent)?;
         fs::write(&executable, [])?;
-        let resolved = ensure_release_fpas_with_target_override(repo_root()?, Some(&target_dir));
-        fs::remove_dir_all(&target_dir)?;
+
+        let resolved = ensure_release_fpas(&workspace);
+        let executable_len = fs::metadata(&executable)?.len();
+        fs::remove_dir_all(&workspace)?;
 
         assert_eq!(resolved, Ok(executable));
+        assert!(
+            executable_len > 0,
+            "Cargo must replace the stale executable"
+        );
         Ok(())
     }
 }

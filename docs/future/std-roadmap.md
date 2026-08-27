@@ -19,8 +19,16 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 
 These should wait until the runtime and capability model need them:
 
-- `Std.Crypto` for hashing and cryptographic primitives.
+- [`Std.Crypto`](networked-applications/cryptography.md) for secure randomness, password hashing,
+  message authentication, and signatures.
+- [`Std.Sqlite`](networked-applications/sqlite.md) for embedded transactional storage.
+- [Channels, cancellation, and task supervision](networked-applications/concurrency.md).
+- [WebSocket client and server support](networked-applications/websocket.md).
+- [UDP sockets](networked-applications/udp.md) when a concrete datagram use case exists.
 - binary buffers and codecs, once byte-array conventions are stable.
+
+The cross-cutting order and acceptance gates for these capabilities are tracked in the
+[networked application platform plan](networked-applications/README.md).
 
 ## Implementation Checklist
 

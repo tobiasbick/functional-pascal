@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::instruction::{TypeCategory, binary_categories, unary_categories};
 use crate::{
     BasicBlock, BinaryOperation, BlockId, Constant, EnumLayoutId, Function, FunctionId, IrType,
-    Operation, Program, RecordLayoutId, Terminator, TypeId, ValueDefinition, ValueId,
+    Operation, Program, RecordLayoutId, Terminator, TypeId, ValueDefinition, ValueId, checked_count,
 };
 
 use super::{EntityKind, ValidationError, ValidationErrorKind, function_error, program_error};
@@ -14,7 +14,15 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
         program.types.iter().map(|item| item.id.get()),
         EntityKind::Type,
     )?;
+    validate_positional(
+        program.types.iter().map(|item| item.id.get()),
+        EntityKind::Type,
+    )?;
     validate_unique(
+        program.globals.iter().map(|item| item.id.get()),
+        EntityKind::Global,
+    )?;
+    validate_positional(
         program.globals.iter().map(|item| item.id.get()),
         EntityKind::Global,
     )?;
@@ -22,7 +30,15 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
         program.record_layouts.iter().map(|item| item.id.get()),
         EntityKind::RecordLayout,
     )?;
+    validate_positional(
+        program.record_layouts.iter().map(|item| item.id.get()),
+        EntityKind::RecordLayout,
+    )?;
     validate_unique(
+        program.enum_layouts.iter().map(|item| item.id.get()),
+        EntityKind::EnumLayout,
+    )?;
+    validate_positional(
         program.enum_layouts.iter().map(|item| item.id.get()),
         EntityKind::EnumLayout,
     )?;
@@ -31,6 +47,10 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
         EntityKind::Intrinsic,
     )?;
     validate_unique(
+        program.functions.iter().map(|item| item.id.get()),
+        EntityKind::Function,
+    )?;
+    validate_positional(
         program.functions.iter().map(|item| item.id.get()),
         EntityKind::Function,
     )?;
@@ -46,12 +66,20 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
             layout.fields.iter().map(|field| field.id.get()),
             EntityKind::Field,
         )?;
+        validate_positional(
+            layout.fields.iter().map(|field| field.id.get()),
+            EntityKind::Field,
+        )?;
         for field in &layout.fields {
             require_type(program, field.ty)?;
         }
     }
     for layout in &program.enum_layouts {
         validate_unique(
+            layout.variants.iter().map(|variant| variant.id.get()),
+            EntityKind::Variant,
+        )?;
+        validate_positional(
             layout.variants.iter().map(|variant| variant.id.get()),
             EntityKind::Variant,
         )?;
@@ -63,6 +91,24 @@ pub(crate) fn validate_program_tables(program: &Program) -> Result<(), Validatio
     }
     for intrinsic in &program.intrinsics {
         validate_signature_types(program, &intrinsic.parameters, intrinsic.result)?;
+    }
+    Ok(())
+}
+
+fn validate_positional(
+    ids: impl Iterator<Item = u32>,
+    entity: EntityKind,
+) -> Result<(), ValidationError> {
+    for (index, actual) in ids.enumerate() {
+        let expected = checked_count("positional table index", index)
+            .map_err(|error| program_error(ValidationErrorKind::Conversion(error)))?;
+        if actual != expected {
+            return Err(program_error(ValidationErrorKind::PositionalId {
+                entity,
+                expected,
+                actual,
+            }));
+        }
     }
     Ok(())
 }

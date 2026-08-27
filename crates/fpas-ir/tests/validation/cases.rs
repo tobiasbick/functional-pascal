@@ -489,24 +489,3 @@ fn maximum_block_identifier_is_valid() {
 
     assert!(program.validate().is_ok());
 }
-
-#[test]
-fn validation_preserves_declared_function_and_block_order() {
-    let mut program = all_operations_program();
-    program.functions.swap(0, 1);
-    program.entry = FunctionId::new(0);
-    let function_ids = program
-        .functions
-        .iter()
-        .map(|function| function.id.get())
-        .collect::<Vec<_>>();
-    assert!(program.validate().is_ok());
-    assert_eq!(
-        function_ids,
-        program
-            .functions
-            .iter()
-            .map(|function| function.id.get())
-            .collect::<Vec<_>>()
-    );
-}

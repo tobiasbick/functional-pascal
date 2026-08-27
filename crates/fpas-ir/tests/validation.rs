@@ -18,3 +18,4 @@ use support::*;
 include!("validation/cases.rs");
 include!("validation/cell_cases.rs");
 include!("validation/p5_cases.rs");
+include!("validation/table_cases.rs");

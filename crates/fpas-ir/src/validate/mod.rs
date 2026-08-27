@@ -72,6 +72,15 @@ pub enum ValidationErrorKind {
         /// Duplicate raw identifier.
         id: u32,
     },
+    /// An identifier does not match its positional table index.
+    PositionalId {
+        /// Positional entity table containing the mismatch.
+        entity: EntityKind,
+        /// Identifier required at this table index.
+        expected: u32,
+        /// Identifier stored at this table index.
+        actual: u32,
+    },
     /// An instruction or declaration references an identifier that is not present.
     UnknownId {
         /// Referenced entity namespace.

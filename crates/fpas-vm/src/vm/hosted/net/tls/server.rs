@@ -3,13 +3,14 @@
 use std::net::TcpStream;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use rustls::pki_types::pem::PemObject;
 use rustls::pki_types::{CertificateDer, PrivateKeyDer};
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 
 const MAX_HANDSHAKE_TIMEOUT_MILLIS: u64 = 300_000;
+const HANDSHAKE_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 /// TLS configuration retained by one listener.
 #[derive(Clone)]
@@ -53,25 +54,39 @@ impl TlsServer {
     /// Complete one server-side TLS handshake.
     pub(in crate::vm::hosted::net) fn accept(
         &self,
-        socket: TcpStream,
+        mut socket: TcpStream,
+        is_cancelled: impl Fn() -> bool,
     ) -> Result<StreamOwned<ServerConnection, TcpStream>, String> {
+        let poll_interval = self.handshake_timeout.min(HANDSHAKE_POLL_INTERVAL);
         socket
-            .set_read_timeout(Some(self.handshake_timeout))
-            .and_then(|()| socket.set_write_timeout(Some(self.handshake_timeout)))
+            .set_read_timeout(Some(poll_interval))
+            .and_then(|()| socket.set_write_timeout(Some(poll_interval)))
             .map_err(|error| format!("Could not configure TLS handshake timeout: {error}"))?;
-        let connection = ServerConnection::new(Arc::clone(&self.config))
+        let mut connection = ServerConnection::new(Arc::clone(&self.config))
             .map_err(|error| format!("Could not create TLS server connection: {error}"))?;
-        let mut stream = StreamOwned::new(connection, socket);
-        stream
-            .conn
-            .complete_io(&mut stream.sock)
-            .map_err(|error| format!("TLS server handshake failed: {error}"))?;
-        stream
-            .sock
+        let deadline = Instant::now() + self.handshake_timeout;
+        while connection.is_handshaking() {
+            if is_cancelled() {
+                return Err("Network listener closed during TLS handshake".to_string());
+            }
+            match connection.complete_io(&mut socket) {
+                Ok(_) => {}
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        std::io::ErrorKind::WouldBlock | std::io::ErrorKind::TimedOut
+                    ) && Instant::now() < deadline => {}
+                Err(error) => return Err(format!("TLS server handshake failed: {error}")),
+            }
+            if connection.is_handshaking() && Instant::now() >= deadline {
+                return Err("TLS server handshake timed out".to_string());
+            }
+        }
+        socket
             .set_read_timeout(None)
-            .and_then(|()| stream.sock.set_write_timeout(None))
+            .and_then(|()| socket.set_write_timeout(None))
             .map_err(|error| format!("Could not clear TLS handshake timeout: {error}"))?;
-        Ok(stream)
+        Ok(StreamOwned::new(connection, socket))
     }
 }
 

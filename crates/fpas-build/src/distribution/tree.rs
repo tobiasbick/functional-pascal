@@ -18,7 +18,8 @@ pub(super) fn validate_separate_trees(source: &Path, destination: &Path) -> io::
 pub(super) fn remove_compiled_unit_artifacts(root: &Path) -> io::Result<()> {
     for entry in fs::read_dir(root)? {
         let path = entry?.path();
-        if path.is_dir() {
+        let metadata = distribution_entry_metadata(&path)?;
+        if metadata.is_dir() {
             remove_compiled_unit_artifacts(&path)?;
         } else if is_compiled_unit_artifact(&path) {
             fs::remove_file(path)?;
@@ -32,7 +33,8 @@ pub(super) fn copy_tree_contents(source: &Path, destination: &Path) -> io::Resul
         let entry = entry?;
         let source_path = entry.path();
         let destination_path = destination.join(entry.file_name());
-        if source_path.is_dir() {
+        let metadata = distribution_entry_metadata(&source_path)?;
+        if metadata.is_dir() {
             fs::create_dir(&destination_path)?;
             copy_tree_contents(&source_path, &destination_path)?;
         } else {
@@ -40,6 +42,37 @@ pub(super) fn copy_tree_contents(source: &Path, destination: &Path) -> io::Resul
         }
     }
     Ok(())
+}
+
+fn distribution_entry_metadata(path: &Path) -> io::Result<fs::Metadata> {
+    let metadata = fs::symlink_metadata(path)?;
+    if is_link_or_reparse_point(&metadata) {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!(
+                "standard-library distribution trees must not contain symbolic links or reparse points: `{}`",
+                path.display()
+            ),
+        ));
+    }
+    Ok(metadata)
+}
+
+fn is_link_or_reparse_point(metadata: &fs::Metadata) -> bool {
+    if metadata.file_type().is_symlink() {
+        return true;
+    }
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+
+        const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x400;
+        metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0
+    }
+
+    #[cfg(not(windows))]
+    false
 }
 
 fn is_compiled_unit_artifact(path: &Path) -> bool {

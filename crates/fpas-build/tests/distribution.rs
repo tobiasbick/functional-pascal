@@ -27,6 +27,37 @@ fn write(path: &Path, contents: &str) {
     fs::write(path, contents).expect("fixture file must be written");
 }
 
+#[cfg(unix)]
+fn create_directory_link(target: &Path, link: &Path) -> std::io::Result<()> {
+    std::os::unix::fs::symlink(target, link)
+}
+
+#[cfg(windows)]
+fn create_directory_link(target: &Path, link: &Path) -> std::io::Result<()> {
+    let output = std::process::Command::new("cmd")
+        .args(["/c", "mklink", "/J"])
+        .arg(link)
+        .arg(target)
+        .output()?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(std::io::Error::other(
+            String::from_utf8_lossy(&output.stderr).into_owned(),
+        ))
+    }
+}
+
+#[cfg(unix)]
+fn remove_directory_link(link: &Path) -> std::io::Result<()> {
+    fs::remove_file(link)
+}
+
+#[cfg(windows)]
+fn remove_directory_link(link: &Path) -> std::io::Result<()> {
+    fs::remove_dir(link)
+}
+
 #[test]
 fn staging_recompiles_every_unit_and_exactly_replaces_the_distribution() {
     let root = temp_dir();
@@ -145,4 +176,51 @@ include = ["Std/**/*.fpas"]
         "previous distribution"
     );
     fs::remove_dir_all(root).expect("temp directory must be removed");
+}
+
+#[test]
+fn staging_rejects_external_directory_links_without_cleaning_target() {
+    let root = temp_dir();
+    let outside = temp_dir();
+    let staging = root.join("staging");
+    let distribution = root.join("distribution");
+    let victim = outside.join("External.fpascu");
+    fs::create_dir_all(&staging).expect("staging directory must be created");
+    write(&victim, "external sidecar");
+    let link = staging.join("linked");
+    create_directory_link(&outside, &link).expect("directory link fixture must be created");
+
+    let result = stage_standard_library(&staging, &distribution, &BuildOptions::default());
+    let victim_contents = fs::read_to_string(&victim).ok();
+
+    remove_directory_link(&link).expect("directory symlink must be removed");
+    fs::remove_dir_all(root).expect("temp directory must be removed");
+    fs::remove_dir_all(outside).expect("outside directory must be removed");
+
+    let error = result.expect_err("directory symlink must be rejected");
+    assert_eq!(
+        (
+            error.to_string().contains("symbolic link"),
+            victim_contents.as_deref()
+        ),
+        (true, Some("external sidecar"))
+    );
+}
+
+#[test]
+fn staging_rejects_cyclic_directory_links() {
+    let root = temp_dir();
+    let staging = root.join("staging");
+    let distribution = root.join("distribution");
+    fs::create_dir_all(&staging).expect("staging directory must be created");
+    let link = staging.join("cycle");
+    create_directory_link(&staging, &link).expect("cyclic directory link must be created");
+
+    let result = stage_standard_library(&staging, &distribution, &BuildOptions::default());
+
+    remove_directory_link(&link).expect("cyclic directory link must be removed");
+    fs::remove_dir_all(root).expect("temp directory must be removed");
+
+    let error = result.expect_err("cyclic directory link must be rejected");
+    assert!(error.to_string().contains("symbolic link"));
 }

@@ -2,9 +2,9 @@
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::net::{TcpStream, ToSocketAddrs};
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::net::{Shutdown, TcpStream, ToSocketAddrs};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, Mutex, TryLockError};
 use std::time::Duration;
 
 use super::tls::client;
@@ -15,12 +15,48 @@ const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
 const MAX_IO_BYTES: usize = 1024 * 1024;
 const MAX_TIMEOUT_MILLIS: u64 = 300_000;
 
-type SharedTransport = Arc<Mutex<Transport>>;
+type SharedConnection = Arc<Connection>;
+
+struct Connection {
+    transport: Mutex<Transport>,
+    interrupt: TcpStream,
+}
+
+impl Connection {
+    fn new(transport: Transport) -> Result<Self, String> {
+        let interrupt = transport
+            .try_clone_socket()
+            .map_err(|error| format!("Could not prepare network connection shutdown: {error}"))?;
+        Ok(Self {
+            transport: Mutex::new(transport),
+            interrupt,
+        })
+    }
+
+    fn interrupt(&self) -> std::io::Result<()> {
+        self.interrupt.shutdown(Shutdown::Both).or_else(|error| {
+            if error.kind() == std::io::ErrorKind::NotConnected {
+                Ok(())
+            } else {
+                Err(error)
+            }
+        })
+    }
+
+    fn close(&self) -> std::io::Result<()> {
+        match self.transport.try_lock() {
+            Ok(mut transport) => transport.shutdown(),
+            Err(TryLockError::WouldBlock) => self.interrupt(),
+            Err(TryLockError::Poisoned(poisoned)) => poisoned.into_inner().shutdown(),
+        }
+    }
+}
 
 /// Thread-safe TCP and TLS resources owned by one VM.
 pub(in crate::vm::hosted) struct NetworkConnections {
     next_handle: AtomicU64,
-    transports: Mutex<HashMap<u64, SharedTransport>>,
+    connections: Mutex<HashMap<u64, SharedConnection>>,
+    shutdown: AtomicBool,
 }
 
 impl NetworkConnections {
@@ -28,7 +64,8 @@ impl NetworkConnections {
     pub(in crate::vm::hosted) fn new() -> Self {
         Self {
             next_handle: AtomicU64::new(HANDLE_TAG | 1),
-            transports: Mutex::new(HashMap::new()),
+            connections: Mutex::new(HashMap::new()),
+            shutdown: AtomicBool::new(false),
         }
     }
 
@@ -40,11 +77,11 @@ impl NetworkConnections {
         timeout_millis: i64,
     ) -> Result<u64, String> {
         let (stream, _) = connect_socket(host, port, timeout_millis)?;
-        Ok(self.insert(Transport::tcp(stream)))
+        self.insert(Transport::tcp(stream))
     }
 
     /// Store an accepted TCP or TLS connection and return its opaque runtime handle.
-    pub(super) fn insert_accepted(&self, transport: Transport) -> u64 {
+    pub(super) fn insert_accepted(&self, transport: Transport) -> Result<u64, String> {
         self.insert(transport)
     }
 
@@ -66,14 +103,15 @@ impl NetworkConnections {
             .set_read_timeout(None)
             .and_then(|()| stream.sock.set_write_timeout(None))
             .map_err(|error| format!("Could not clear TLS handshake timeout: {error}"))?;
-        Ok(self.insert(Transport::tls_client(stream)))
+        self.insert(Transport::tls_client(stream))
     }
 
     /// Set both read and write timeouts; zero disables them.
     pub(super) fn set_timeout(&self, handle: u64, timeout_millis: i64) -> Result<(), String> {
         let duration = timeout(timeout_millis, true)?;
-        let transport = self.transport(handle)?;
-        let transport = transport
+        let connection = self.connection(handle)?;
+        let transport = connection
+            .transport
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         transport
@@ -89,8 +127,9 @@ impl NetworkConnections {
             .ok_or_else(|| {
                 format!("Network read size must be in 1..={MAX_IO_BYTES}, got {max_bytes}")
             })?;
-        let transport = self.transport(handle)?;
-        let mut transport = transport
+        let connection = self.connection(handle)?;
+        let mut transport = connection
+            .transport
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         let mut bytes = vec![0; max_bytes];
@@ -109,8 +148,9 @@ impl NetworkConnections {
                 bytes.len()
             ));
         }
-        let transport = self.transport(handle)?;
-        let mut transport = transport
+        let connection = self.connection(handle)?;
+        let mut transport = connection
+            .transport
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         transport
@@ -121,33 +161,53 @@ impl NetworkConnections {
     /// Close and invalidate one connection handle.
     pub(super) fn close(&self, handle: u64) -> Result<(), String> {
         validate_handle(handle)?;
-        let transport = self
-            .transports
+        let connection = self
+            .connections
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .remove(&handle)
             .ok_or_else(|| {
                 "Network connection is closed or does not belong to this VM".to_string()
             })?;
-        transport
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .shutdown()
+        connection
+            .close()
             .map_err(|error| format!("Network connection close failed: {error}"))
     }
 
-    fn insert(&self, transport: Transport) -> u64 {
-        let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
-        self.transports
+    /// Interrupt and invalidate every connection owned by the VM.
+    pub(in crate::vm::hosted) fn shutdown(&self) {
+        self.shutdown.store(true, Ordering::Release);
+        let connections = self
+            .connections
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(handle, Arc::new(Mutex::new(transport)));
-        handle
+            .drain()
+            .map(|(_, connection)| connection)
+            .collect::<Vec<_>>();
+        for connection in connections {
+            drop(connection.interrupt());
+        }
     }
 
-    fn transport(&self, handle: u64) -> Result<SharedTransport, String> {
+    fn insert(&self, transport: Transport) -> Result<u64, String> {
+        let connection = Arc::new(Connection::new(transport)?);
+        let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
+        let mut connections = self
+            .connections
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if self.shutdown.load(Ordering::Acquire) {
+            drop(connections);
+            drop(connection.interrupt());
+            return Err("Network connection cannot be opened after VM shutdown".to_string());
+        }
+        connections.insert(handle, connection);
+        Ok(handle)
+    }
+
+    fn connection(&self, handle: u64) -> Result<SharedConnection, String> {
         validate_handle(handle)?;
-        self.transports
+        self.connections
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .get(&handle)
@@ -212,6 +272,8 @@ fn timeout(millis: i64, allow_zero: bool) -> Result<Duration, String> {
 mod tests {
     use std::io::{Read, Write};
     use std::net::TcpListener;
+    use std::sync::Arc;
+    use std::time::{Duration, Instant};
 
     use super::NetworkConnections;
 
@@ -250,5 +312,31 @@ mod tests {
         connections.close(handle).expect("close");
         assert!(connections.read(handle, 1).is_err());
         drop(server.join().expect("join server"));
+    }
+
+    #[test]
+    fn close_interrupts_a_blocked_read() {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind local listener");
+        let address = listener.local_addr().expect("listener address");
+        let connections = Arc::new(NetworkConnections::new());
+        let handle = connections
+            .connect_tcp("127.0.0.1", i64::from(address.port()), 1_000)
+            .expect("connect client");
+        let (_server, _) = listener.accept().expect("accept client");
+        connections.set_timeout(handle, 500).expect("set timeout");
+
+        let reader_connections = Arc::clone(&connections);
+        let reader = std::thread::spawn(move || reader_connections.read(handle, 1));
+        std::thread::sleep(Duration::from_millis(50));
+
+        let started = Instant::now();
+        connections.close(handle).expect("close");
+        let close_elapsed = started.elapsed();
+        let _ = reader.join().expect("join reader");
+
+        assert!(
+            close_elapsed < Duration::from_millis(200),
+            "close waited {close_elapsed:?} for the blocked read"
+        );
     }
 }

@@ -34,6 +34,7 @@ impl std::error::Error for DistributionError {}
 ///
 /// The source root is a disposable staging tree. Existing compiled-unit files are
 /// removed before graph loading so every sidecar is produced by the current compiler.
+/// Symbolic links and reparse points in that tree are rejected before cleanup or copying.
 pub fn stage_standard_library(
     source_root: &Path,
     destination_root: &Path,

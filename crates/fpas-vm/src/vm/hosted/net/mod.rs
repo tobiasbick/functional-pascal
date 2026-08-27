@@ -83,7 +83,9 @@ impl Worker {
                     self.hosted
                         .network_listeners
                         .accept(handle)
-                        .map(|transport| self.hosted.network_connections.insert_accepted(transport))
+                        .and_then(|transport| {
+                            self.hosted.network_connections.insert_accepted(transport)
+                        })
                         .map(Value::OpaqueHandle),
                 )
             }

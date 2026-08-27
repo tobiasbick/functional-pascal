@@ -1,9 +1,11 @@
 //! VM-owned TCP listener registry.
 
 use std::collections::HashMap;
+use std::io;
 use std::net::TcpListener;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use super::tls::server::TlsServer;
 use super::transport::Transport;
@@ -15,11 +17,23 @@ const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
 pub(in crate::vm::hosted) struct NetworkListeners {
     next_handle: AtomicU64,
     listeners: Mutex<HashMap<u64, Arc<Listener>>>,
+    shutdown: AtomicBool,
 }
 
 struct Listener {
     socket: TcpListener,
     mode: ListenerMode,
+    closed: AtomicBool,
+}
+
+impl Listener {
+    fn close(&self) {
+        self.closed.store(true, Ordering::Release);
+    }
+
+    fn is_closed(&self) -> bool {
+        self.closed.load(Ordering::Acquire)
+    }
 }
 
 enum ListenerMode {
@@ -33,6 +47,7 @@ impl NetworkListeners {
         Self {
             next_handle: AtomicU64::new(HANDLE_TAG | 1),
             listeners: Mutex::new(HashMap::new()),
+            shutdown: AtomicBool::new(false),
         }
     }
 
@@ -63,11 +78,23 @@ impl NetworkListeners {
         let socket = TcpListener::bind((host, port)).map_err(|error| {
             format!("Could not bind network listener on {host}:{port}: {error}")
         })?;
+        socket
+            .set_nonblocking(true)
+            .map_err(|error| format!("Could not configure network listener: {error}"))?;
         let handle = self.next_handle.fetch_add(1, Ordering::Relaxed);
-        self.listeners
+        let listener = Arc::new(Listener {
+            socket,
+            mode,
+            closed: AtomicBool::new(false),
+        });
+        let mut listeners = self
+            .listeners
             .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(handle, Arc::new(Listener { socket, mode }));
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if self.shutdown.load(Ordering::Acquire) {
+            return Err("Network listener cannot be opened after VM shutdown".to_string());
+        }
+        listeners.insert(handle, listener);
         Ok(handle)
     }
 
@@ -75,17 +102,27 @@ impl NetworkListeners {
     pub(super) fn accept(&self, handle: u64) -> Result<Transport, String> {
         let listener = self.listener(handle)?;
         loop {
-            let (stream, _) = listener
-                .socket
-                .accept()
-                .map_err(|error| format!("Network listener accept failed: {error}"))?;
+            if listener.is_closed() {
+                return Err("Network listener is closed or does not belong to this VM".to_string());
+            }
+            let (stream, _) = match listener.socket.accept() {
+                Ok(accepted) => accepted,
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                    std::thread::park_timeout(Duration::from_millis(10));
+                    continue;
+                }
+                Err(error) => return Err(format!("Network listener accept failed: {error}")),
+            };
+            if listener.is_closed() {
+                return Err("Network listener is closed or does not belong to this VM".to_string());
+            }
             stream
                 .set_nodelay(true)
                 .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
             match &listener.mode {
                 ListenerMode::Tcp => return Ok(Transport::tcp(stream)),
                 ListenerMode::Tls(tls) => {
-                    if let Ok(stream) = tls.accept(stream) {
+                    if let Ok(stream) = tls.accept(stream, || listener.is_closed()) {
                         return Ok(Transport::tls_server(stream));
                     }
                 }
@@ -96,14 +133,31 @@ impl NetworkListeners {
     /// Close and invalidate one listener handle.
     pub(super) fn close(&self, handle: u64) -> Result<(), String> {
         validate_handle(handle)?;
-        self.listeners
+        let listener = self
+            .listeners
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .remove(&handle)
             .ok_or_else(|| {
                 "Network listener is closed or does not belong to this VM".to_string()
             })?;
+        listener.close();
         Ok(())
+    }
+
+    /// Interrupt and invalidate every listener owned by the VM.
+    pub(in crate::vm::hosted) fn shutdown(&self) {
+        self.shutdown.store(true, Ordering::Release);
+        let listeners = self
+            .listeners
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .drain()
+            .map(|(_, listener)| listener)
+            .collect::<Vec<_>>();
+        for listener in listeners {
+            listener.close();
+        }
     }
 
     fn listener(&self, handle: u64) -> Result<Arc<Listener>, String> {
@@ -136,6 +190,8 @@ fn validate_handle(handle: u64) -> Result<(), String> {
 mod tests {
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
+    use std::sync::{Arc, mpsc};
+    use std::time::Duration;
 
     use super::NetworkListeners;
 
@@ -199,5 +255,35 @@ mod tests {
         assert!(error.contains("certificate"));
         TcpListener::bind(("127.0.0.1", port))
             .expect("invalid TLS configuration must not bind the socket");
+    }
+
+    #[test]
+    fn close_interrupts_a_blocked_accept() {
+        let port = unused_port();
+        let listeners = Arc::new(NetworkListeners::new());
+        let handle = listeners
+            .listen("127.0.0.1", i64::from(port))
+            .expect("listen");
+        let accept_listeners = Arc::clone(&listeners);
+        let (result_sender, result_receiver) = mpsc::channel();
+        let accept = std::thread::spawn(move || {
+            result_sender
+                .send(accept_listeners.accept(handle))
+                .expect("send accept result");
+        });
+        std::thread::sleep(Duration::from_millis(50));
+
+        listeners.close(handle).expect("close");
+        let result = result_receiver.recv_timeout(Duration::from_millis(200));
+        if result.is_err() {
+            drop(TcpStream::connect(("127.0.0.1", port)));
+        }
+        accept.join().expect("join accept");
+
+        let error = match result.expect("close must interrupt the blocked accept") {
+            Ok(_) => panic!("closed listener must not accept a connection"),
+            Err(error) => error,
+        };
+        assert!(error.contains("closed"), "unexpected error: {error}");
     }
 }

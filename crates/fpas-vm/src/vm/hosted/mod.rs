@@ -85,4 +85,10 @@ impl HostedState {
             network_listeners: NetworkListeners::new(),
         }
     }
+
+    /// Interrupt blocking network operations during VM shutdown.
+    pub(super) fn shutdown_network(&self) {
+        self.network_listeners.shutdown();
+        self.network_connections.shutdown();
+    }
 }

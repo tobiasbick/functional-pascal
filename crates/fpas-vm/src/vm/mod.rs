@@ -227,6 +227,7 @@ impl Vm {
     pub fn shutdown_handle(&self) -> ShutdownHandle {
         ShutdownHandle {
             scheduler: Arc::clone(&self.scheduler),
+            hosted: Arc::clone(&self.hosted),
         }
     }
 
@@ -275,6 +276,7 @@ impl Vm {
             } else {
                 scheduler.finish_main();
             }
+            self.hosted.shutdown_network();
             let mut pool_error = None;
             for handle in handles {
                 match handle.join() {
@@ -338,11 +340,13 @@ impl Vm {
 #[derive(Clone)]
 pub struct ShutdownHandle {
     scheduler: Arc<TaskScheduler>,
+    hosted: Arc<HostedState>,
 }
 
 impl ShutdownHandle {
-    /// Request cancellation. The main and spawned tasks stop at their next instruction boundary.
+    /// Request cancellation and interrupt blocking hosted network operations.
     pub fn shutdown(&self) {
         self.scheduler.request_cancel();
+        self.hosted.shutdown_network();
     }
 }

@@ -45,7 +45,12 @@ impl Transport {
             .and_then(|()| socket.set_write_timeout(timeout))
     }
 
-    /// Shut down the underlying socket.
+    /// Clone the underlying socket for out-of-band shutdown.
+    pub(super) fn try_clone_socket(&self) -> io::Result<TcpStream> {
+        self.socket().try_clone()
+    }
+
+    /// Send a TLS close notification when applicable, then close the socket.
     pub(super) fn shutdown(&mut self) -> io::Result<()> {
         match self {
             Self::TlsClient(stream) => {

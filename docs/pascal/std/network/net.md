@@ -53,7 +53,10 @@ to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout.
 ports must be in `1..65535`.
 
 Calls block their VM worker thread. Connections and listeners belong to one VM, are shared safely
-with its tasks, and are released when that VM ends. Closed handles cannot be reused.
+with its tasks, and are released when that VM ends. `Close` interrupts a blocked `Read` or `Write`
+on the connection, and `CloseListener` interrupts an active `Accept`, including a pending TLS
+handshake. VM cancellation interrupts all blocking network operations before joining task workers.
+Closed handles cannot be reused.
 
 FPAS code runs with the host process's network permissions. `Std.Net` does not sandbox destinations.
 

@@ -2,7 +2,7 @@
 
 use std::path::Path;
 
-pub(super) fn contains(root: &Path, path: &Path) -> bool {
+pub(crate) fn contains(root: &Path, path: &Path) -> bool {
     if cfg!(windows) {
         starts_with_components(path, root, |left, right| left.eq_ignore_ascii_case(right))
     } else {

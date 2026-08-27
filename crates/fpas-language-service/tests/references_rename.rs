@@ -163,3 +163,34 @@ fn rename_rejects_compilation_units_and_dependencies_outside_the_editor_root() {
         .expect_err("external dependency rename must be rejected");
     assert!(matches!(outside, RenameError::OutsideWorkspace { .. }));
 }
+
+#[test]
+fn rename_rejects_reverse_consumers_outside_the_editor_root() {
+    let temp = TempDirectory::new("rename-reverse-consumer-boundary");
+    let library = temp.write(
+        "lib/lib.fpasprj",
+        "[project]\nname = \"lib\"\nkind = \"library\"\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    let unit_source =
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    let unit = temp.write("lib/src/math.fpas", unit_source);
+    temp.write(
+        "app/app.fpasprj",
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"src/main.fpas\"\n\n[dependencies]\nprojects = [\"../lib/lib.fpasprj\"]\n\n[sources]\ninclude = [\"src/**/*.fpas\"]\n",
+    );
+    let main = temp.write(
+        "app/src/main.fpas",
+        "program App;\n\nuses Demo.Math;\n\nbegin\n  var Value: integer := Answer()\nend.\n",
+    );
+    let mut service = LanguageService::load(&library);
+    service
+        .analyze_document(&main)
+        .expect("external consumer analysis");
+    let declaration = unit_source.find("Answer").expect("function declaration");
+
+    let outside = service
+        .rename(&unit, declaration, "Updated")
+        .expect_err("rename must not edit an external reverse consumer");
+
+    assert!(matches!(outside, RenameError::OutsideWorkspace { .. }));
+}

@@ -10,6 +10,7 @@ use fpas_lexer::{Token, lex};
 
 use super::NavigationDocument;
 use super::references::{ResolvedTarget, find_references, resolve_target};
+use crate::workspace::path_containment;
 use crate::{CancellationToken, LanguageServiceError, SymbolKind};
 
 /// The source token selected by a successful prepare-rename query.
@@ -43,9 +44,9 @@ pub enum RenameError {
     CompilationUnit,
     /// Generated intrinsic API declarations are read-only editor metadata.
     EditorApi,
-    /// The declaration is outside the opened editor root.
+    /// A declaration or reference that would be edited is outside the opened editor root.
     OutsideWorkspace {
-        /// Declaration source that would otherwise be edited.
+        /// Source that would otherwise be edited.
         path: PathBuf,
     },
     /// The replacement is not an ordinary Functional Pascal identifier.
@@ -75,7 +76,7 @@ impl fmt::Display for RenameError {
             ),
             Self::OutsideWorkspace { path } => write!(
                 formatter,
-                "Cannot rename a declaration outside the opened editor folder: `{}`.",
+                "Cannot rename because an affected source is outside the opened editor folder: `{}`.",
                 path.display()
             ),
             Self::InvalidIdentifier { name } => write!(
@@ -135,6 +136,7 @@ pub(crate) fn rename_symbol(
     let target = resolve_target(documents, target_index, offset).ok_or(RenameError::NoSymbol)?;
     renameable_target(documents, &target, workspace_root)?;
     let references = find_references(documents, &target, true, cancellation)?;
+    reject_outside_references(&references, workspace_root)?;
     conflicts::reject_resolution_conflicts(
         documents,
         &target,
@@ -171,9 +173,24 @@ fn renameable_target(
         return Err(RenameError::EditorApi);
     }
     let declaration_path = &documents[target.document_index].path;
-    if !declaration_path.starts_with(workspace_root) {
+    if !path_containment::contains(workspace_root, declaration_path) {
         return Err(RenameError::OutsideWorkspace {
             path: declaration_path.clone(),
+        });
+    }
+    Ok(())
+}
+
+fn reject_outside_references(
+    references: &[super::ReferenceLocation],
+    workspace_root: &Path,
+) -> Result<(), RenameError> {
+    if let Some(reference) = references
+        .iter()
+        .find(|reference| !path_containment::contains(workspace_root, &reference.path))
+    {
+        return Err(RenameError::OutsideWorkspace {
+            path: reference.path.clone(),
         });
     }
     Ok(())

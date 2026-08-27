@@ -3,7 +3,7 @@
 mod catalog;
 mod context;
 mod discovery;
-mod path_containment;
+pub(crate) mod path_containment;
 mod project;
 mod standard_library;
 

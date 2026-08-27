@@ -347,11 +347,12 @@ closed files are explicitly unversioned. Clients that cannot apply versioned
 `documentChanges` receive no rename edit, preventing stale ranges from being
 applied through an unsafe fallback.
 Program and unit names are excluded because a correct rename would also have to
-rename source files or manifests. A declaration outside the opened editor
-folder, including a standard library bundled with an installed VSIX, is never
-modified. Generated intrinsic declarations under `lib/api/Std/` are also
-read-only rename targets, even when the Functional Pascal repository itself is
-open.
+rename source files or manifests. Rename is rejected atomically when either the
+declaration or any resolved usage is outside the opened editor folder, so no
+workspace edit can cross that boundary. This includes a standard library
+bundled with an installed VSIX. Generated intrinsic declarations under
+`lib/api/Std/` are also read-only rename targets, even when the Functional
+Pascal repository itself is open.
 
 Completion lists parameters, locals, visible unit declarations, record and enum
 members, and keywords appropriate to the recovered source context. Each item

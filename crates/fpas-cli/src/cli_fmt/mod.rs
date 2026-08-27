@@ -3,6 +3,7 @@
 //! Documentation: `docs/pascal/tools/fmt-style.md`, `docs/pascal/program-structure/projects.md`
 
 mod paths;
+mod publication;
 
 use std::fs;
 use std::io::Write;
@@ -114,7 +115,7 @@ fn format_source_file(
 
     if changed
         && !config.check_only
-        && let Err(error) = fs::write(path, &formatted)
+        && let Err(error) = publication::write_source(path, &formatted)
     {
         let _ = writeln!(stderr, "Error writing `{}`: {error}", path.display());
         return Err(1);

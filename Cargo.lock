@@ -392,6 +392,7 @@ dependencies = [
 name = "fpas-cli"
 version = "0.0.1"
 dependencies = [
+ "atomic-write-file",
  "fpas-build",
  "fpas-bundle",
  "fpas-bytecode",

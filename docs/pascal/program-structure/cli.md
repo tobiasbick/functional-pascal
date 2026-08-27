@@ -204,6 +204,10 @@ fpas fmt --stdout src/main.fpas
 
 Formatting never builds or runs the project. Parser diagnostics retain the
 source path, stable code, and location used by editor Problems integration.
+In-place formatting writes the complete result to a temporary file beside the
+source and atomically replaces the source only after the write succeeds. A
+write or commit failure leaves the original source unchanged, including its
+existing file permissions.
 `--stdout` accepts exactly one `.fpas` file, writes only the formatted source to
 stdout, and leaves that file unchanged. It cannot be combined with `--check`;
 use `--check --list` to list formatting drift instead.

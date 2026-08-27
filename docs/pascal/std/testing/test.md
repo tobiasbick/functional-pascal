@@ -118,10 +118,11 @@ fresh VM, globals, console state, timeout, and golden-file evaluation. If precom
 fails, the test falls back to the normal single-test path so its diagnostic remains test-local.
 
 With `--timeout <secs>`, each Setup hook, test body, and Teardown hook executes in a private worker
-process after compilation. The timeout starts only when that worker is ready to enter the VM. On
-expiry, the runner terminates the worker and its host-process descendants, waits for cleanup, and
-reports `TIMEOUT` with exit code `3`. This also bounds blocking host calls such as `Std.Time.Sleep`
-and `Std.Proc.Run`; no cooperative VM shutdown is required.
+process after compilation. Its timeout budget starts immediately before that worker is spawned and
+covers worker startup, request decoding, scripted-input preparation, and VM execution. On expiry,
+the runner terminates the worker and its host-process descendants, waits for cleanup, and reports
+`TIMEOUT` with exit code `3`. This also bounds blocking host calls such as `Std.Time.Sleep` and
+`Std.Proc.Run`; no cooperative VM shutdown is required.
 
 Executable test images exist only for the current `fpas test` process. Reusable unit objects are
 the source-adjacent `.fpascu` files documented under [Units](../../program-structure/units.md).

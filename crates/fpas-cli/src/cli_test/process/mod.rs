@@ -3,6 +3,7 @@
 //! **Documentation:** [`docs/pascal/std/testing/test.md`](../../../../docs/pascal/std/testing/test.md)
 
 mod output;
+mod readiness;
 #[cfg(test)]
 mod tests;
 #[cfg(unix)]
@@ -125,13 +126,33 @@ fn run_with_files(
         return worker_failure(stderr, &prepared, &message);
     }
 
+    let deadline = Instant::now() + timeout;
     let mut child = match spawn_worker(files) {
         Ok(child) => child,
         Err(message) => return worker_failure(stderr, &prepared, &message),
     };
-    if let Err(message) = wait_until_ready(&mut child, files) {
-        terminate_process_tree(&mut child);
-        return worker_failure(stderr, &prepared, &message);
+    match readiness::wait_until_ready(&mut child, &files.ready(), deadline) {
+        Ok(readiness::WaitOutcome::Ready) => {}
+        Ok(readiness::WaitOutcome::Exited(status)) => {
+            terminate_process_tree(&mut child);
+            return worker_failure(
+                stderr,
+                &prepared,
+                &format!("Isolated test process exited before execution with status {status}."),
+            );
+        }
+        Ok(readiness::WaitOutcome::TimedOut) => {
+            terminate_process_tree(&mut child);
+            return timed_out(stderr, &prepared, timeout);
+        }
+        Err(error) => {
+            terminate_process_tree(&mut child);
+            return worker_failure(
+                stderr,
+                &prepared,
+                &format!("Error waiting for isolated test process: {error}"),
+            );
+        }
     }
 
     if let Err(error) = fs::write(files.start(), []) {
@@ -143,7 +164,6 @@ fn run_with_files(
         );
     }
 
-    let deadline = Instant::now() + timeout;
     loop {
         match child.try_wait() {
             Ok(Some(status)) => {
@@ -253,23 +273,6 @@ fn worker_executable() -> Result<PathBuf, String> {
         }
     }
     Ok(current)
-}
-
-fn wait_until_ready(child: &mut Child, files: &WorkerFiles) -> Result<(), String> {
-    loop {
-        if files.ready().is_file() {
-            return Ok(());
-        }
-        match child.try_wait() {
-            Ok(Some(status)) => {
-                return Err(format!(
-                    "Isolated test process exited before execution with status {status}."
-                ));
-            }
-            Ok(None) => thread::sleep(POLL_INTERVAL),
-            Err(error) => return Err(format!("Error waiting for isolated test process: {error}")),
-        }
-    }
 }
 
 fn read_worker_result(

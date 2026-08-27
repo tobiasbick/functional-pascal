@@ -5,6 +5,10 @@ use fpas_lexer::Token;
 
 impl Parser {
     pub(crate) fn parse_type_expr(&mut self) -> TypeExpr {
+        self.with_nesting(Self::parse_type_expr_inner)
+    }
+
+    fn parse_type_expr_inner(&mut self) -> TypeExpr {
         match self.current_token() {
             Token::Array => {
                 let start = self.current_span();

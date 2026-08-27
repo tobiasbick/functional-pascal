@@ -177,6 +177,10 @@ together, and every program is checked against those sibling units. Directory di
 deterministic, skips `target` directories and symbolic links, and aborts with the affected path when a
 directory entry cannot be read. `fpas fmt` and `fpas test` use the same traversal policy.
 
+The parser shares a nesting budget of 128 levels across expressions, statements, type expressions,
+and routine declarations. Source that exceeds the budget stops parsing with diagnostic `F1009`
+instead of exhausting the compiler's native stack.
+
 ## Terminal diagnostics
 
 Compiler and runtime diagnostics use the stable form

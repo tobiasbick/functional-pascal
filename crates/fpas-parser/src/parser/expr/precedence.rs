@@ -107,6 +107,10 @@ impl Parser {
     }
 
     pub(super) fn parse_unary(&mut self) -> Expr {
+        self.with_nesting(Self::parse_unary_inner)
+    }
+
+    fn parse_unary_inner(&mut self) -> Expr {
         let start = self.current_span();
 
         if self.check(&Token::Not) {

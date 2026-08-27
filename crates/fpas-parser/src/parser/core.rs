@@ -17,6 +17,8 @@ impl Parser {
             tokens: ensure_trailing_eof(tokens),
             pos: 0,
             errors: Vec::new(),
+            nesting_depth: 0,
+            nesting_limit_reached: false,
         }
     }
 
@@ -107,6 +109,9 @@ impl Parser {
         hint: &str,
         span: Span,
     ) {
+        if self.nesting_limit_reached {
+            return;
+        }
         self.errors.push(parse_error(code, message, hint, span));
     }
 

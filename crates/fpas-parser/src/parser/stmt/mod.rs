@@ -73,6 +73,10 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Stmt {
+        self.with_nesting(Self::parse_statement_inner)
+    }
+
+    fn parse_statement_inner(&mut self) -> Stmt {
         match self.current_token() {
             Token::Begin => self.parse_block(),
             Token::Var => self.parse_var_stmt(false),

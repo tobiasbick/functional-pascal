@@ -66,6 +66,10 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     PARSE_INVALID_VISIBILITY = 1007;
     /// `static` used outside a supported static record routine.
     PARSE_INVALID_STATIC_PLACEMENT = 1008;
+    /// Parser recursion exceeded the compiler's shared nesting budget.
+    ///
+    /// **Documentation:** `docs/pascal/program-structure/cli.md` (Checking without running)
+    PARSE_NESTING_LIMIT_EXCEEDED = 1009;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {

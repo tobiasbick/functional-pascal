@@ -47,6 +47,10 @@ impl Parser {
     }
 
     pub(super) fn parse_function_decl(&mut self, visibility: Visibility) -> FunctionDecl {
+        self.with_nesting(|parser| parser.parse_function_decl_inner(visibility))
+    }
+
+    fn parse_function_decl_inner(&mut self, visibility: Visibility) -> FunctionDecl {
         let (name, type_params, params, return_type, start) = self.parse_function_header();
         let body = self.parse_func_body();
         FunctionDecl {
@@ -61,6 +65,10 @@ impl Parser {
     }
 
     pub(super) fn parse_procedure_decl(&mut self, visibility: Visibility) -> ProcedureDecl {
+        self.with_nesting(|parser| parser.parse_procedure_decl_inner(visibility))
+    }
+
+    fn parse_procedure_decl_inner(&mut self, visibility: Visibility) -> ProcedureDecl {
         let (name, type_params, params, start) = self.parse_procedure_header();
         let body = self.parse_func_body();
         ProcedureDecl {

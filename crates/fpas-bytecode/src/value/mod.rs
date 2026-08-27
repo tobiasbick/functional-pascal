@@ -1,5 +1,6 @@
 mod aggregate;
 mod array;
+mod display;
 mod equal;
 mod function;
 mod string;
@@ -118,74 +119,6 @@ impl Value {
             Value::Cell(_) => "cell",
             Value::Task(_) => "task",
             Value::OpaqueHandle(_) => "opaque handle",
-        }
-    }
-}
-
-impl std::fmt::Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Value::Integer(n) => write!(f, "{n}"),
-            Value::Real(n) => write!(f, "{n}"),
-            Value::Boolean(b) => write!(f, "{b}"),
-            Value::Str(s) => write!(f, "{s}"),
-            Value::Enum(value) => {
-                let body = value.body();
-                write!(f, "{}.{}", body.layout.type_name, body.layout.variant)?;
-                if !body.values.is_empty() {
-                    write!(f, "(")?;
-                    for (i, v) in body.values.iter().enumerate() {
-                        if i > 0 {
-                            write!(f, ", ")?;
-                        }
-                        write!(f, "{v}")?;
-                    }
-                    write!(f, ")")?;
-                }
-                Ok(())
-            }
-            Value::Array(elems) => {
-                write!(f, "[")?;
-                for (i, e) in elems.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{e}")?;
-                }
-                write!(f, "]")
-            }
-            Value::Dict(pairs) => {
-                write!(f, "{{")?;
-                for (i, (k, v)) in pairs.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{k}: {v}")?;
-                }
-                write!(f, "}}")
-            }
-            Value::Record(record) => {
-                let body = record.body();
-                write!(f, "{}{{", body.layout.type_name)?;
-                for (index, (name, value)) in
-                    body.layout.fields.iter().zip(&body.values).enumerate()
-                {
-                    if index > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "{name}: {value}")?;
-                }
-                write!(f, "}}")
-            }
-            Value::Unit => write!(f, "()"),
-            Value::ResultOk(v) => write!(f, "Ok({v})"),
-            Value::ResultError(v) => write!(f, "Error({v})"),
-            Value::OptionSome(v) => write!(f, "Some({v})"),
-            Value::OptionNone => write!(f, "None"),
-            Value::Function(function) => write!(f, "<function {}>", function.name),
-            Value::Cell(_) => write!(f, "<cell>"),
-            Value::Task(id) => write!(f, "<task {id}>"),
-            Value::OpaqueHandle(_) => write!(f, "<opaque handle>"),
         }
     }
 }

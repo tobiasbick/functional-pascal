@@ -260,10 +260,13 @@ manifest remains a loose file, while overlapping direct owners produce an
 actionable ambiguity error. Open dependency units are analyzed with their own
 URI and source ranges.
 
-The extension watches `.fpas`, `.fpasprj`, and `.fpasworkspace` files inside
-the opened folder. Create, change, rename, and delete notifications rebuild the
+After initialization, the language server dynamically registers recursive
+watchers for `.fpas`, `.fpasprj`, and `.fpasworkspace` files with compatible
+LSP clients. Create, change, rename, and delete notifications rebuild the
 manifest catalog and invalidate affected analysis results without restarting
-the server. Unsaved open buffers remain authoritative over disk changes.
+the server. The VS Code extension uses this server-owned registration rather
+than installing duplicate watchers. Unsaved open buffers remain authoritative
+over disk changes.
 
 The VSIX supplies its bundled source standard library to every loaded project
 and loose document. Source-defined units such as `Std.Tui` therefore work even

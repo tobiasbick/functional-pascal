@@ -26,21 +26,26 @@ use crate::documents::{SynchronizedDocument, SynchronizedDocuments};
 use crate::formatting::whole_document_edit;
 use crate::server::errors;
 use crate::server::initialization::InitializationPaths;
+use crate::server::watched_files;
 
 /// Functional Pascal LSP backend with full-text synchronized documents.
 pub struct Backend {
+    client: Client,
     pub(super) documents: Arc<SynchronizedDocuments>,
     diagnostics: DiagnosticPublisher,
     document_changes: AtomicBool,
+    watched_files_dynamic_registration: AtomicBool,
 }
 
 impl Backend {
     pub(crate) fn new(initial_root: PathBuf, client: Client) -> Self {
         let documents = Arc::new(SynchronizedDocuments::new(initial_root));
         Self {
-            diagnostics: DiagnosticPublisher::new(client, Arc::clone(&documents)),
+            diagnostics: DiagnosticPublisher::new(client.clone(), Arc::clone(&documents)),
+            client,
             documents,
             document_changes: AtomicBool::new(false),
+            watched_files_dynamic_registration: AtomicBool::new(false),
         }
     }
 
@@ -89,12 +94,28 @@ impl LanguageServer for Backend {
             .unwrap_or(false);
         self.document_changes
             .store(supports_document_changes, Ordering::Release);
+        let supports_watched_file_registration = params
+            .capabilities
+            .workspace
+            .as_ref()
+            .and_then(|workspace| workspace.did_change_watched_files.as_ref())
+            .and_then(|watched_files| watched_files.dynamic_registration)
+            .unwrap_or(false);
+        self.watched_files_dynamic_registration
+            .store(supports_watched_file_registration, Ordering::Release);
         self.configure_workspace(&params).await?;
         tracing::info!("language server initialized");
         Ok(capabilities::initialize_result())
     }
 
     async fn initialized(&self, _params: InitializedParams) {
+        if self
+            .watched_files_dynamic_registration
+            .load(Ordering::Acquire)
+            && let Err(error) = watched_files::register(&self.client).await
+        {
+            tracing::warn!(%error, "cannot register watched Functional Pascal files");
+        }
         tracing::info!("language client acknowledged initialization");
     }
 

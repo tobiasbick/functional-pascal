@@ -40,13 +40,6 @@ export class LanguageClientController {
     };
     const clientOptions: LanguageClientOptions = {
       documentSelector: [{ scheme: "file", language: "fpas" }],
-      synchronize: {
-        fileEvents: [
-          vscode.workspace.createFileSystemWatcher("**/*.fpas"),
-          vscode.workspace.createFileSystemWatcher("**/*.fpasprj"),
-          vscode.workspace.createFileSystemWatcher("**/*.fpasworkspace")
-        ]
-      },
       initializationOptions: {
         standardLibraryUri: vscode.Uri.file(standardLibraryPath).toString()
       },

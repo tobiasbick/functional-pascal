@@ -237,3 +237,53 @@ fn server_rejects_malformed_request_parameters_and_continues() {
         serde_json::Value::Null
     );
 }
+
+#[test]
+fn initialized_registers_source_and_manifest_file_watchers() {
+    let initialize = serde_json::json!({
+        "jsonrpc": "2.0",
+        "id": 1,
+        "method": "initialize",
+        "params": {
+            "processId": null,
+            "rootUri": "file:///phase4",
+            "capabilities": {
+                "workspace": {
+                    "didChangeWatchedFiles": {"dynamicRegistration": true}
+                }
+            }
+        }
+    });
+    let transcript = run(&[initialize, initialized(), shutdown(2), exit()]);
+
+    assert!(transcript.output.status.success());
+    let registration = transcript
+        .messages
+        .iter()
+        .find(|message| {
+            message.get("method") == Some(&serde_json::json!("client/registerCapability"))
+        })
+        .expect("watched-file capability registration");
+    assert_eq!(
+        registration["params"]["registrations"][0]["method"],
+        serde_json::json!("workspace/didChangeWatchedFiles")
+    );
+    assert_eq!(
+        registration["params"]["registrations"][0]["registerOptions"]["watchers"],
+        serde_json::json!([
+            {"globPattern": "**/*.fpas"},
+            {"globPattern": "**/*.fpasprj"},
+            {"globPattern": "**/*.fpasworkspace"}
+        ])
+    );
+}
+
+#[test]
+fn initialized_skips_file_watchers_for_clients_without_dynamic_registration() {
+    let transcript = run(&[initialize(1), initialized(), shutdown(2), exit()]);
+
+    assert!(transcript.output.status.success());
+    assert!(transcript.messages.iter().all(|message| {
+        message.get("method") != Some(&serde_json::json!("client/registerCapability"))
+    }));
+}

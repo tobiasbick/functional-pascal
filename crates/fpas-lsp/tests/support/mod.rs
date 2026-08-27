@@ -124,7 +124,17 @@ impl RunningServer {
     fn read_through_response(&mut self, expected_id: &Value, messages: &mut Vec<Value>) {
         loop {
             let message = self.read_message();
-            let is_response = message.get("id") == Some(expected_id);
+            let is_response =
+                message.get("method").is_none() && message.get("id") == Some(expected_id);
+            if message.get("method").is_some()
+                && let Some(id) = message.get("id")
+            {
+                self.send(&serde_json::json!({
+                    "jsonrpc": "2.0",
+                    "id": id,
+                    "result": null
+                }));
+            }
             messages.push(message);
             if is_response {
                 break;

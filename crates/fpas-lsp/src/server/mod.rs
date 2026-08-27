@@ -6,5 +6,6 @@ mod initialization;
 mod intellisense;
 mod navigation;
 mod semantic_tools;
+mod watched_files;
 
 pub use backend::Backend;

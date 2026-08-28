@@ -103,6 +103,56 @@ fn positions_convert_ascii_crlf_unicode_and_document_boundaries() {
 }
 
 #[test]
+fn positions_roundtrip_bare_cr_unicode_and_eof() {
+    let snapshot = snapshot("a\r🙂z\r");
+
+    assert_eq!(
+        position_to_byte_offset(
+            &snapshot,
+            Position {
+                line: 1,
+                character: 0,
+            },
+        ),
+        Ok(2)
+    );
+    assert_eq!(
+        position_to_byte_offset(
+            &snapshot,
+            Position {
+                line: 1,
+                character: 2,
+            },
+        ),
+        Ok(6)
+    );
+    assert_eq!(
+        byte_offset_to_position(&snapshot, 6),
+        Ok(Position {
+            line: 1,
+            character: 2,
+        })
+    );
+    assert_eq!(
+        position_to_byte_offset(
+            &snapshot,
+            Position {
+                line: 2,
+                character: 0,
+            },
+        ),
+        Ok(8)
+    );
+    assert_eq!(
+        byte_offset_to_position(&snapshot, 8),
+        Ok(Position {
+            line: 2,
+            character: 0,
+        })
+    );
+}
+
+#[test]
 fn positions_reject_surrogate_splits_and_out_of_range_values() {
     let snapshot = snapshot("abc\r\né𝄞z\n");
 

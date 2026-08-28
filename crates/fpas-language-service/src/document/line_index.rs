@@ -37,19 +37,28 @@ impl LineIndex {
     pub fn new(source: impl Into<Arc<str>>) -> Self {
         let source = source.into();
         let mut line_starts = vec![0];
-        line_starts.extend(
-            source
-                .bytes()
-                .enumerate()
-                .filter_map(|(index, byte)| (byte == b'\n').then_some(index + 1)),
-        );
+        let bytes = source.as_bytes();
+        let mut index = 0;
+        while index < bytes.len() {
+            match bytes[index] {
+                b'\r' => {
+                    if bytes.get(index + 1) == Some(&b'\n') {
+                        index += 1;
+                    }
+                    line_starts.push(index + 1);
+                }
+                b'\n' => line_starts.push(index + 1),
+                _ => {}
+            }
+            index += 1;
+        }
         Self {
             line_starts,
             source,
         }
     }
 
-    /// Returns the number of logical lines, including a trailing empty line after `\n`.
+    /// Returns the number of logical lines, including a trailing empty line after a line ending.
     #[must_use]
     pub fn line_count(&self) -> usize {
         self.line_starts.len()
@@ -61,7 +70,7 @@ impl LineIndex {
         self.line_starts.get(line).copied()
     }
 
-    /// Returns the content byte range for a line, excluding `\n` and an optional preceding `\r`.
+    /// Returns the content byte range for a line, excluding its CR, LF, or CRLF ending.
     #[must_use]
     pub fn line_range(&self, line: usize) -> Option<Range<usize>> {
         let start = self.line_start(line)?;

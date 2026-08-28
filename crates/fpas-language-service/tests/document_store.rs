@@ -52,6 +52,40 @@ fn line_index_handles_empty_crlf_unicode_and_trailing_line() {
 }
 
 #[test]
+fn line_index_handles_bare_cr_unicode_and_trailing_line() {
+    let source = "α\r🙂x\r";
+    let index = LineIndex::new(source);
+
+    assert_eq!(index.line_count(), 3);
+    assert_eq!(index.line_range(0), Some(0.."α".len()));
+    assert_eq!(index.line_range(1), Some(3..8));
+    assert_eq!(index.line_range(2), Some(source.len()..source.len()));
+
+    let emoji_offset = source.find('🙂').expect("emoji offset");
+    assert_eq!(
+        index.position(emoji_offset),
+        Some(TextPosition {
+            line: 1,
+            byte_column: 0
+        })
+    );
+    assert_eq!(
+        index.offset(TextPosition {
+            line: 1,
+            byte_column: "🙂".len()
+        }),
+        Some(emoji_offset + "🙂".len())
+    );
+    assert_eq!(
+        index.position(source.len()),
+        Some(TextPosition {
+            line: 2,
+            byte_column: 0
+        })
+    );
+}
+
+#[test]
 fn line_index_is_bound_to_its_source_layout_and_roundtrips_utf8_boundaries() {
     let first_source = "a\nb";
     let second_source = "ab\n";

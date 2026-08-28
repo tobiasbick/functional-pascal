@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-28 — after indexed compiler metadata interning
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 7787 | throughput: 6420958 iters/s |
+| global_access | 654 | throughput: 7645259 global updates/s |
+| record_field_access | 1828 | throughput: 6564551 field accesses/s |
+| closure_call | 512 | throughput: 5859375 closure calls/s |
+| branch_dispatch | 4132 | throughput: 4840271 branches/s |
+| dynamic_numeric | 953 | throughput: 5246589 dynamic numeric ops/s |
+| array_push | 250 | throughput: 8000000 pushes/s |
+| array_length | 92 | throughput: 5434782 lengths/s |
+| string_concat | 2744 | throughput: 1822157 concats/s |
+| string_length | 90 | throughput: 5555555 lengths/s |
+| function_call | 761 | throughput: 7884362 calls/s |
+| array_callbacks | 1254 | throughput: 7655502 callbacks/s |
+| record_update | 470 | throughput: 2127659 updates/s |
+| unicode_char_at | 1479 | throughput: 2028397 chars/s |
+| task_spawn_wait | 644 | throughput: 155279 tasks/s |
+| tui_headless | 4288 | throughput: 116 frames/s |
+
 ## 2026-08-10 — after debugger metadata and controlled session
 
 - Group: `vm`

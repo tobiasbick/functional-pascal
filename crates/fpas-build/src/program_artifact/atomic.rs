@@ -6,25 +6,9 @@ use std::path::{Path, PathBuf};
 
 use atomic_write_file::AtomicWriteFile;
 
-pub(super) fn read(path: &Path) -> Result<Option<Vec<u8>>, String> {
-    match fs::read(path) {
-        Ok(bytes) => Ok(Some(bytes)),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(io_error("read", path, error)),
-    }
-}
-
+#[cfg(test)]
 pub(super) fn replace(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    validate_image(path, bytes)?;
-    let _lock = PublicationLock::acquire(path)?;
-    let mut replacement = AtomicWriteFile::open(path)
-        .map_err(|error| io_error("create temporary for", path, error))?;
-    replacement
-        .write_all(bytes)
-        .map_err(|error| io_error("write temporary for", path, error))?;
-    replacement
-        .commit()
-        .map_err(|error| io_error("replace", path, error))
+    PublicationLock::acquire(path)?.prepare(bytes)?.commit()
 }
 
 fn validate_image(path: &Path, bytes: &[u8]) -> Result<(), String> {
@@ -43,12 +27,15 @@ fn io_error(operation: &str, path: &Path, error: io::Error) -> String {
     )
 }
 
-struct PublicationLock {
+/// Exclusive transaction guard for one compiled program image path.
+pub(super) struct PublicationLock {
+    path: PathBuf,
     _file: File,
 }
 
 impl PublicationLock {
-    fn acquire(path: &Path) -> Result<Self, String> {
+    /// Acquires the persistent sidecar lock associated with `path`.
+    pub(super) fn acquire(path: &Path) -> Result<Self, String> {
         let lock_path = append_suffix(path, ".lock");
         let file = OpenOptions::new()
             .read(true)
@@ -59,7 +46,48 @@ impl PublicationLock {
             .map_err(|error| io_error("open publication lock for", &lock_path, error))?;
         file.lock()
             .map_err(|error| io_error("lock", &lock_path, error))?;
-        Ok(Self { _file: file })
+        Ok(Self {
+            path: path.to_path_buf(),
+            _file: file,
+        })
+    }
+
+    /// Reads the current image while retaining exclusive publication ownership.
+    pub(super) fn read(&self) -> Result<Option<Vec<u8>>, String> {
+        match fs::read(&self.path) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(io_error("read", &self.path, error)),
+        }
+    }
+
+    /// Validates and writes a temporary image while retaining the lock.
+    pub(super) fn prepare(&self, bytes: &[u8]) -> Result<PendingReplacement<'_>, String> {
+        validate_image(&self.path, bytes)?;
+        let mut replacement = AtomicWriteFile::open(&self.path)
+            .map_err(|error| io_error("create temporary for", &self.path, error))?;
+        replacement
+            .write_all(bytes)
+            .map_err(|error| io_error("write temporary for", &self.path, error))?;
+        Ok(PendingReplacement {
+            publication: self,
+            replacement,
+        })
+    }
+}
+
+/// Fully written temporary image awaiting its atomic commit.
+pub(super) struct PendingReplacement<'a> {
+    publication: &'a PublicationLock,
+    replacement: AtomicWriteFile,
+}
+
+impl PendingReplacement<'_> {
+    /// Atomically commits the prepared image while its publication lock is held.
+    pub(super) fn commit(self) -> Result<(), String> {
+        self.replacement
+            .commit()
+            .map_err(|error| io_error("replace", &self.publication.path, error))
     }
 }
 

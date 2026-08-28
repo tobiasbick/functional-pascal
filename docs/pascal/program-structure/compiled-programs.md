@@ -3,7 +3,9 @@
 Program projects produce a derived `.fpascp` image containing linked executable bytecode, build
 identity, reachable Unit identities, and relative source paths for diagnostics. Project manifests
 and `.fpas` sources remain authoritative; a source-backed build replaces a missing, stale,
-incompatible, or corrupt image.
+incompatible, or corrupt image. Immediately before reuse or publication, the build revalidates the
+complete source snapshot while holding the image's publication lock. If any source changed during
+the build, that builder fails instead of replacing an image produced from newer sources.
 
 ## Identity and paths
 

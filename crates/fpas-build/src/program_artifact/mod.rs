@@ -3,10 +3,12 @@
 mod atomic;
 mod identity;
 mod source;
+#[cfg(test)]
+mod tests;
 
 use std::path::Path;
 
-use fpas_program::{ProgramIdentity, ProgramImage};
+use fpas_program::{Digest, ProgramIdentity, ProgramImage};
 use fpas_project::UnitGraph;
 
 use crate::engine::link_program;
@@ -43,24 +45,38 @@ pub fn build_program_artifact(
     target: ProgramArtifactTarget<'_>,
     options: &BuildOptions,
 ) -> Result<BuiltProgram, BuildError> {
+    build_program_artifact_before_publish(graph, target, options, || {})
+}
+
+fn build_program_artifact_before_publish(
+    graph: &UnitGraph,
+    target: ProgramArtifactTarget<'_>,
+    options: &BuildOptions,
+    before_publish: impl FnOnce(),
+) -> Result<BuiltProgram, BuildError> {
     let program = source::parse(target.source, target.source_paths)?;
     let selection =
         fpas_project::resolve_program_units(graph, &program.uses).map_err(BuildError::new)?;
     let units = build_library_units(graph, &selection, options)?;
     let expected = identity::expected(target.source, &units, options);
+    let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;
 
-    if let Some(executable) = reusable_executable(target.path, &expected, target.source_paths)? {
-        let mut events = units.events;
-        events.push(BuildEvent {
-            owner: program.name.clone(),
-            kind: BuildEventKind::ProgramImageReused,
-        });
-        return Ok(BuiltProgram { executable, events });
+    {
+        let publication = publication_lock(target.path)?;
+        if let Some(executable) = reusable_executable(&publication, &expected, target.source_paths)?
+        {
+            source::ensure_current(graph, Digest::of(target.source))?;
+            let mut events = units.events;
+            events.push(BuildEvent {
+                owner: program.name.clone(),
+                kind: BuildEventKind::ProgramImageReused,
+            });
+            return Ok(BuiltProgram { executable, events });
+        }
     }
 
     let built = link_program(units, &program)?;
     let BuiltProgram { executable, events } = built;
-    let source_hashes = source_hashes(graph, target.source, target.source_paths.len())?;
     let image = ProgramImage::new(
         expected,
         target.source_paths.to_vec(),
@@ -69,12 +85,15 @@ pub fn build_program_artifact(
     )
     .map_err(|error| BuildError::new(error.to_string()))?;
     let bytes = fpas_program::encode(&image).map_err(|error| BuildError::new(error.to_string()))?;
-    atomic::replace(target.path, &bytes).map_err(|error| {
-        BuildError::new(format!(
-            "cannot publish compiled program `{}`: {error}",
-            target.path.display()
-        ))
-    })?;
+    before_publish();
+    let publication = publication_lock(target.path)?;
+    let replacement = publication
+        .prepare(&bytes)
+        .map_err(|error| publication_error(target.path, error))?;
+    source::ensure_current(graph, Digest::of(target.source))?;
+    replacement
+        .commit()
+        .map_err(|error| publication_error(target.path, error))?;
     Ok(BuiltProgram {
         executable: image.into_executable(),
         events,
@@ -119,11 +138,11 @@ fn source_hashes(
 }
 
 fn reusable_executable(
-    path: &Path,
+    publication: &atomic::PublicationLock,
     expected: &ProgramIdentity,
     source_paths: &[String],
 ) -> Result<Option<fpas_bytecode::VerifiedExecutable>, BuildError> {
-    let Some(bytes) = atomic::read(path).map_err(BuildError::new)? else {
+    let Some(bytes) = publication.read().map_err(BuildError::new)? else {
         return Ok(None);
     };
     let image = match fpas_program::decode(&bytes) {
@@ -139,4 +158,15 @@ fn reusable_executable(
         return Ok(None);
     }
     Ok(Some(image.into_executable()))
+}
+
+fn publication_lock(path: &Path) -> Result<atomic::PublicationLock, BuildError> {
+    atomic::PublicationLock::acquire(path).map_err(|error| publication_error(path, error))
+}
+
+fn publication_error(path: &Path, error: String) -> BuildError {
+    BuildError::new(format!(
+        "cannot publish compiled program `{}`: {error}",
+        path.display()
+    ))
 }

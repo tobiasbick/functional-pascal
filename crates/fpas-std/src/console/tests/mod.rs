@@ -17,6 +17,7 @@ mod frames;
 mod input;
 mod interactive;
 mod key_events;
+mod output;
 mod regions;
 mod screen;
 mod terminal;

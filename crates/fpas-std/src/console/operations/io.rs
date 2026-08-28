@@ -1,4 +1,4 @@
-use super::super::Console;
+use super::super::{CaptureMode, Console};
 use crate::error::{StdError, std_runtime_error};
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_CONSOLE_STATE_ERROR;
@@ -55,7 +55,9 @@ impl Console {
                 )
             })?;
         }
-        self.capture_line_buf.push_str(&s);
+        if self.capture_mode == CaptureMode::Full {
+            self.capture_line_buf.push_str(&s);
+        }
         Ok(())
     }
 
@@ -63,9 +65,11 @@ impl Console {
     pub fn write_ln(&mut self, value: &Value, location: SourceLocation) -> Result<(), StdError> {
         self.sync_terminal_size();
         let s = format!("{value}");
-        self.capture_line_buf.push_str(&s);
-        let line = std::mem::take(&mut self.capture_line_buf);
-        self.captured.lines.push(line);
+        if self.capture_mode == CaptureMode::Full {
+            self.capture_line_buf.push_str(&s);
+            let line = std::mem::take(&mut self.capture_line_buf);
+            self.captured.lines.push(line);
+        }
         self.state.write_text(&s, true);
         if self.state.crt_mode {
             self.render_if_ready(location)?;

@@ -40,10 +40,11 @@ pub struct CapturedOutput {
 /// Standard console I/O.
 ///
 /// Handles `Std.Console.Write` and `Std.Console.WriteLn`.
-/// Output is always captured (for test assertions). When a writer
-/// is attached it is also streamed there (for CLI / real execution).
+/// Headless output is captured for test assertions. A console constructed
+/// with a writer streams output without retaining it.
 pub struct Console {
     captured: CapturedOutput,
+    capture_mode: CaptureMode,
     /// Fragments from `Write` not yet ended by `WriteLn`; one logical line for capture.
     capture_line_buf: String,
     state: ConsoleState,
@@ -53,6 +54,12 @@ pub struct Console {
     frame_depth: u32,
     /// Modes owned by `AcquireInteractiveTerminal` / `ReleaseInteractiveTerminal`.
     interactive: InteractiveTerminalOwnership,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CaptureMode {
+    Disabled,
+    Full,
 }
 
 impl Default for Console {
@@ -66,6 +73,7 @@ impl Console {
     pub fn new() -> Self {
         Self {
             captured: CapturedOutput::default(),
+            capture_mode: CaptureMode::Full,
             capture_line_buf: String::new(),
             state: ConsoleState::new(DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT),
             writer: None,
@@ -76,12 +84,13 @@ impl Console {
         }
     }
 
-    /// Creates a console that captures output and also streams it to `writer`.
+    /// Creates a console that streams output to `writer` without retaining it.
     pub fn with_writer(writer: Box<dyn Write + Send>) -> Self {
         let (width, height) =
             crossterm::terminal::size().unwrap_or((DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT));
         Self {
             captured: CapturedOutput::default(),
+            capture_mode: CaptureMode::Disabled,
             capture_line_buf: String::new(),
             state: ConsoleState::new(width, height),
             writer: Some(writer),
@@ -92,7 +101,9 @@ impl Console {
         }
     }
 
-    /// Access captured output (for test assertions).
+    /// Access captured output from a headless console.
+    ///
+    /// Streaming consoles return an empty capture.
     pub fn output(&self) -> &CapturedOutput {
         &self.captured
     }

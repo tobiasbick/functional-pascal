@@ -56,35 +56,12 @@ fn runner_path() -> Result<PathBuf, String> {
 }
 
 pub(crate) fn validate_application_name(name: &str) -> Result<(), String> {
-    if name.trim().is_empty()
-        || matches!(name, "." | "..")
-        || name.contains('/')
-        || name.contains('\\')
-        || name.contains('\0')
-        || windows_name_is_invalid(name)
-    {
+    if !crate::artifact_filename::is_valid(name) {
         return Err(format!(
-            "Application name `{name}` cannot be used as an executable filename.\n  help: Use a non-empty name without path separators."
+            "Application name `{name}` cannot be used as an executable filename.\n  help: Use a non-empty name without path separators or Windows-reserved filename syntax."
         ));
     }
     Ok(())
-}
-
-fn windows_name_is_invalid(name: &str) -> bool {
-    if !cfg!(windows) {
-        return false;
-    }
-    if name.contains(['<', '>', ':', '"', '|', '?', '*']) || name.ends_with(['.', ' ']) {
-        return true;
-    }
-    let stem = name.split('.').next().unwrap_or(name).to_ascii_uppercase();
-    matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
-        || stem
-            .strip_prefix("COM")
-            .or_else(|| stem.strip_prefix("LPT"))
-            .is_some_and(|number| {
-                matches!(number, "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")
-            })
 }
 
 fn native_filename(name: &str) -> String {

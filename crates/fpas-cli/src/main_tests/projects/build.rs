@@ -260,6 +260,37 @@ include = ["main.fpas"]
     assert!(!escaped_artifact_exists);
 }
 
+#[cfg(windows)]
+#[test]
+fn build_cli_rejects_windows_reserved_program_artifact_name_before_io() {
+    let cwd = create_temp_dir("build-windows-reserved-project-name");
+    let project_file = cwd.join("app.fpasprj");
+    write_text(
+        &project_file,
+        r#"[project]
+name = "NUL"
+kind = "program"
+main = "main.fpas"
+
+[sources]
+include = ["main.fpas"]
+"#,
+    );
+    write_text(&cwd.join("main.fpas"), "program Main;\nbegin\nend.\n");
+
+    let (exit_code, _, stderr) = support::run_cli_args_and_capture_output(
+        &[
+            String::from("build"),
+            project_file.to_string_lossy().into_owned(),
+        ],
+        &cwd,
+    );
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(exit_code, 1);
+    assert!(stderr.contains("cannot be used as an artifact filename"));
+}
+
 #[test]
 fn build_executable_rejects_non_program_project_before_runner_lookup() {
     let cwd = create_temp_dir("build-native-library");

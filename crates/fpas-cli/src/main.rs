@@ -9,6 +9,7 @@
         reason = "CLI tests use unwrap/expect/panic to keep fixture assertions compact"
     )
 )]
+mod artifact_filename;
 mod cli_build;
 mod cli_check;
 mod cli_debug;

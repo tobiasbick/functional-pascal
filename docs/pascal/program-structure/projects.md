@@ -90,6 +90,11 @@ creating one shared program image. Both artifact types are derived outputs and
 are ignored by Git. See [Compiled program images](compiled-programs.md) for the
 `.fpascp` identity, validation limits, and format-version policy.
 
+Names used for program images or native applications must form one non-empty
+filename component. On Windows, reserved device names such as `NUL`, `CON`,
+`COM1`, and `LPT1`, reserved filename characters, and trailing dots or spaces
+are rejected before artifact I/O begins.
+
 Concurrent program builds coordinate through a persistent `hello.fpascp.lock`
 file beside the image. The lock file contains no program data, is ignored by
 Git, and may remain after the build; the operating system releases ownership

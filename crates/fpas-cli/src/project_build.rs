@@ -317,12 +317,9 @@ fn parse_program(path: &Path) -> Result<(String, fpas_parser::Program), String> 
 }
 
 fn program_artifact_path(project_path: &Path, project_name: &str) -> Result<PathBuf, String> {
-    if matches!(project_name, "." | "..")
-        || project_name.contains('/')
-        || project_name.contains('\\')
-    {
+    if !crate::artifact_filename::is_valid(project_name) {
         return Err(format!(
-            "`project.name` `{project_name}` cannot be used as an artifact filename.\n  help: Use a name without path separators."
+            "`project.name` `{project_name}` cannot be used as an artifact filename.\n  help: Use a non-empty name without path separators or Windows-reserved filename syntax."
         ));
     }
     let project_root = project_path.parent().ok_or_else(|| {

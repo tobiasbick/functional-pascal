@@ -17,6 +17,8 @@ pub enum EntityKind {
     Block,
     /// A value identifier.
     Value,
+    /// An instruction index within a basic block.
+    Instruction,
     /// A local identifier.
     Local,
     /// A type identifier.
@@ -185,6 +187,24 @@ pub enum ValidationErrorKind {
     },
     /// A fixed-width identifier or collection count would overflow.
     Conversion(IdConversionError),
+    /// Initializer metadata identifies an instruction with the wrong operation.
+    InvalidInitializerOperation {
+        /// Entity whose initializer metadata is invalid.
+        owner: EntityKind,
+        /// Operation required at the initializer location.
+        expected: &'static str,
+    },
+    /// Initializer metadata identifies a store to the wrong target.
+    InvalidInitializerTarget {
+        /// Entity whose initializer metadata is invalid.
+        owner: EntityKind,
+        /// Namespace of the store target.
+        target: EntityKind,
+        /// Required raw target identifier.
+        expected: u32,
+        /// Raw target identifier used by the store.
+        actual: u32,
+    },
     /// Debugger capture provenance is incomplete, ordered wrongly, or refers to an invalid owner.
     CaptureProvenance {
         /// Human-readable invariant that failed.
@@ -224,6 +244,7 @@ impl Program {
     pub fn validate(&self) -> Result<(), ValidationError> {
         validate_program_counts(self)?;
         operands::validate_program_tables(self)?;
+        debug::validate_program(self)?;
         for function in &self.functions {
             control_flow::validate_function(function)?;
             operands::validate_function(self, function)?;

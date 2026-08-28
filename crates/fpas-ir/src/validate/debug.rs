@@ -3,7 +3,55 @@
 use std::collections::HashSet;
 
 use crate::validate::{EntityKind, ValidationError, ValidationErrorKind, function_error};
-use crate::{CaptureKind, Function, Program};
+use crate::{CaptureKind, DebugInstructionLocation, Function, Operation, Program};
+
+pub(super) fn validate_program(program: &Program) -> Result<(), ValidationError> {
+    for global in &program.globals {
+        let Some(initializer) = global.initializer else {
+            continue;
+        };
+        let function = program.function(initializer.function).ok_or_else(|| {
+            function_error(
+                initializer.function,
+                None,
+                None,
+                ValidationErrorKind::UnknownId {
+                    entity: EntityKind::Function,
+                    id: initializer.function.get(),
+                },
+            )
+        })?;
+        let operation = operation_at(function, initializer.location)?;
+        match operation {
+            Operation::StoreGlobal { global: target, .. } if *target == global.id => {}
+            Operation::StoreGlobal { global: target, .. } => {
+                return Err(function_error(
+                    function.id,
+                    Some(initializer.location.block),
+                    Some(initializer.location.instruction),
+                    ValidationErrorKind::InvalidInitializerTarget {
+                        owner: EntityKind::Global,
+                        target: EntityKind::Global,
+                        expected: global.id.get(),
+                        actual: target.get(),
+                    },
+                ));
+            }
+            _ => {
+                return Err(function_error(
+                    function.id,
+                    Some(initializer.location.block),
+                    Some(initializer.location.instruction),
+                    ValidationErrorKind::InvalidInitializerOperation {
+                        owner: EntityKind::Global,
+                        expected: "StoreGlobal",
+                    },
+                ));
+            }
+        }
+    }
+    Ok(())
+}
 
 pub(super) fn validate_function(
     program: &Program,
@@ -56,34 +104,49 @@ pub(super) fn validate_function(
             ));
         }
         validate_scope(function, binding.scope)?;
+        if let Some(initializer) = binding.initializer {
+            let operation = operation_at(function, initializer)?;
+            match operation {
+                Operation::WriteLocal { local, .. } if *local == binding.local => {}
+                Operation::WriteLocal { local, .. } => {
+                    return Err(function_error(
+                        function.id,
+                        Some(initializer.block),
+                        Some(initializer.instruction),
+                        ValidationErrorKind::InvalidInitializerTarget {
+                            owner: EntityKind::DebugBinding,
+                            target: EntityKind::Local,
+                            expected: binding.local.get(),
+                            actual: local.get(),
+                        },
+                    ));
+                }
+                _ => {
+                    return Err(function_error(
+                        function.id,
+                        Some(initializer.block),
+                        Some(initializer.instruction),
+                        ValidationErrorKind::InvalidInitializerOperation {
+                            owner: EntityKind::DebugBinding,
+                            expected: "WriteLocal",
+                        },
+                    ));
+                }
+            }
+        }
     }
 
     validate_capture_provenance(program, function)?;
 
     let mut points = HashSet::with_capacity(function.debug.sequence_points.len());
     for point in &function.debug.sequence_points {
-        let Some(block) = function.block(point.block) else {
-            return Err(function_error(
-                function.id,
-                Some(point.block),
-                Some(point.instruction),
-                ValidationErrorKind::UnknownId {
-                    entity: EntityKind::Block,
-                    id: point.block.get(),
-                },
-            ));
-        };
-        if point.instruction >= block.instructions.len() {
-            return Err(function_error(
-                function.id,
-                Some(point.block),
-                Some(point.instruction),
-                ValidationErrorKind::UnknownId {
-                    entity: EntityKind::Value,
-                    id: u32::try_from(point.instruction).unwrap_or(u32::MAX),
-                },
-            ));
-        }
+        operation_at(
+            function,
+            DebugInstructionLocation {
+                block: point.block,
+                instruction: point.instruction,
+            },
+        )?;
         if !points.insert((point.block, point.instruction)) {
             return Err(function_error(
                 function.id,
@@ -98,6 +161,38 @@ pub(super) fn validate_function(
         validate_scope(function, point.scope)?;
     }
     Ok(())
+}
+
+fn operation_at(
+    function: &Function,
+    location: DebugInstructionLocation,
+) -> Result<&Operation, ValidationError> {
+    let block = function.block(location.block).ok_or_else(|| {
+        function_error(
+            function.id,
+            Some(location.block),
+            Some(location.instruction),
+            ValidationErrorKind::UnknownId {
+                entity: EntityKind::Block,
+                id: location.block.get(),
+            },
+        )
+    })?;
+    block
+        .instructions
+        .get(location.instruction)
+        .map(|instruction| &instruction.operation)
+        .ok_or_else(|| {
+            function_error(
+                function.id,
+                Some(location.block),
+                Some(location.instruction),
+                ValidationErrorKind::UnknownId {
+                    entity: EntityKind::Instruction,
+                    id: u32::try_from(location.instruction).unwrap_or(u32::MAX),
+                },
+            )
+        })
 }
 
 fn validate_capture_provenance(

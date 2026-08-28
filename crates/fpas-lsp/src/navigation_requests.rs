@@ -3,14 +3,15 @@
 use std::path::Path;
 
 use fpas_language_service::{
-    DocumentHighlight, DocumentSymbol, HoverInfo, NavigationResult, RenameTarget,
+    DocumentHighlight, DocumentSymbol, HoverInfo, NavigationResult, ReferenceLocation, RenameEdit,
+    RenameTarget,
 };
 use tower_lsp_server::ls_types::Position;
 
 use crate::convert::position_to_byte_offset;
 use crate::documents::{
-    DefinitionDocument, DocumentRequestError, ReferenceDocument, RenameDocument, SelectionDocument,
-    SynchronizedDocuments, WorkspaceSymbolDocument, require_open, tasks,
+    DefinitionDocument, DocumentRequestError, SelectionDocument, SynchronizedDocuments,
+    WorkspaceSymbolDocument, require_open, tasks,
 };
 
 impl SynchronizedDocuments {
@@ -150,7 +151,7 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
         include_declaration: bool,
-    ) -> Result<Vec<ReferenceDocument>, DocumentRequestError> {
+    ) -> Result<Vec<ReferenceLocation>, DocumentRequestError> {
         let path = path.to_path_buf();
         tasks::run(&self.service, move |service, cancellation| {
             let snapshot = require_open(service, &path)?;
@@ -161,15 +162,8 @@ impl SynchronizedDocuments {
                 include_declaration,
                 cancellation,
             )?;
-            let mut references = Vec::with_capacity(result.value.len());
-            for location in result.value {
-                cancellation.check()?;
-                references.push(ReferenceDocument {
-                    snapshot: service.snapshot(&location.path)?,
-                    location,
-                });
-            }
-            Ok(references)
+            cancellation.check()?;
+            Ok(result.value)
         })
         .await
     }
@@ -196,7 +190,7 @@ impl SynchronizedDocuments {
         path: &Path,
         position: Position,
         new_name: &str,
-    ) -> Result<Vec<RenameDocument>, DocumentRequestError> {
+    ) -> Result<Vec<RenameEdit>, DocumentRequestError> {
         let path = path.to_path_buf();
         let new_name = new_name.to_owned();
         tasks::run(&self.service, move |service, cancellation| {
@@ -204,15 +198,8 @@ impl SynchronizedDocuments {
             let offset = position_to_byte_offset(&snapshot, position)?;
             let result =
                 service.rename_with_cancellation(&path, offset, &new_name, cancellation)?;
-            let mut edits = Vec::with_capacity(result.value.len());
-            for edit in result.value {
-                cancellation.check()?;
-                edits.push(RenameDocument {
-                    snapshot: service.snapshot(&edit.path)?,
-                    edit,
-                });
-            }
-            Ok(edits)
+            cancellation.check()?;
+            Ok(result.value)
         })
         .await
     }

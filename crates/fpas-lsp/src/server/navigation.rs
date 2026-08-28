@@ -154,9 +154,7 @@ impl Backend {
             .map_err(errors::request)?;
         let locations = references
             .iter()
-            .map(|reference| {
-                navigation::reference_location(&reference.snapshot, &reference.location)
-            })
+            .map(navigation::reference_location)
             .collect::<std::result::Result<Vec<_>, _>>()
             .map_err(conversion_error)?;
         Ok(Some(locations))
@@ -196,7 +194,7 @@ impl Backend {
         let mut changes = BTreeMap::<String, (Uri, Option<i32>, Vec<TextEdit>)>::new();
         for edit in edits {
             let (uri, version, text_edit) =
-                navigation::rename_edit(&edit.snapshot, edit.edit).map_err(conversion_error)?;
+                navigation::rename_edit(edit).map_err(conversion_error)?;
             changes
                 .entry(uri.to_string())
                 .or_insert_with(|| (uri, version, Vec::new()))

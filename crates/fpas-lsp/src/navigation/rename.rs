@@ -16,17 +16,16 @@ pub(crate) fn prepare_rename(
 }
 
 pub(crate) fn rename_edit(
-    snapshot: &DocumentSnapshot,
     edit: RenameEdit,
 ) -> Result<(Uri, Option<i32>, TextEdit), NavigationConversionError> {
     let uri = Uri::from_file_path(&edit.path).ok_or(NavigationConversionError::InvalidPath)?;
-    let version = match snapshot.version() {
+    let version = match edit.snapshot.version() {
         SourceVersion::Editor(version) => i32::try_from(version).ok(),
         SourceVersion::Disk(_) => None,
     };
     Ok((
         uri,
         version,
-        TextEdit::new(span_range(snapshot, edit.range)?, edit.new_text),
+        TextEdit::new(span_range(&edit.snapshot, edit.range)?, edit.new_text),
     ))
 }

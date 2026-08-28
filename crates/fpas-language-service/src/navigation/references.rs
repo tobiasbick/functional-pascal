@@ -1,14 +1,15 @@
 //! Project-aware reference discovery for resolved declarations.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::{NavigationDocument, resolve, token_name};
-use crate::DocumentSymbol;
 use crate::{CancellationToken, LanguageServiceError};
+use crate::{DocumentSnapshot, DocumentSymbol};
 use fpas_diagnostics::SourceSpan;
 
 /// One declaration or usage location for a resolved symbol.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct ReferenceLocation {
     /// Source containing the declaration or usage.
     pub path: PathBuf,
@@ -16,7 +17,19 @@ pub struct ReferenceLocation {
     pub span: SourceSpan,
     /// Whether this location is the defining declaration.
     pub is_declaration: bool,
+    /// Exact source snapshot from which `span` was computed.
+    pub snapshot: Arc<DocumentSnapshot>,
 }
+
+impl PartialEq for ReferenceLocation {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path
+            && self.span == other.span
+            && self.is_declaration == other.is_declaration
+    }
+}
+
+impl Eq for ReferenceLocation {}
 
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedTarget {
@@ -52,6 +65,7 @@ pub(crate) fn find_references(
             path: declaration_document.path.clone(),
             span: target.symbol.selection_span,
             is_declaration: true,
+            snapshot: Arc::clone(&declaration_document.snapshot),
         });
     }
 
@@ -86,6 +100,7 @@ pub(crate) fn find_references(
                     path: document.path.clone(),
                     span: resolved.occurrence_span,
                     is_declaration: false,
+                    snapshot: Arc::clone(&document.snapshot),
                 });
             }
         }

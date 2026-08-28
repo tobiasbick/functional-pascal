@@ -13,8 +13,8 @@ use tokio::sync::Mutex;
 
 pub(crate) use errors::{DocumentRequestError, DocumentSyncError};
 pub(crate) use results::{
-    CodeActionResult, DefinitionDocument, FormattedDocument, ReferenceDocument, RenameDocument,
-    SelectionDocument, SynchronizedDocument, WorkspaceSymbolDocument,
+    CodeActionResult, DefinitionDocument, FormattedDocument, SelectionDocument,
+    SynchronizedDocument, WorkspaceSymbolDocument,
 };
 
 /// Primary editor state shared by lifecycle notifications and snapshot capture.

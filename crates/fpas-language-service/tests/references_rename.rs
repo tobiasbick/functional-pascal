@@ -82,6 +82,53 @@ fn rename_produces_cross_unit_edits_for_declaration_and_uses() {
 }
 
 #[test]
+fn reference_and_rename_spans_keep_the_snapshot_used_by_navigation() {
+    let temp = TempDirectory::new("navigation-snapshot-binding");
+    let (manifest, main, unit) = write_program_project(&temp);
+    let unit_source =
+        "unit Demo.Math;\n\npublic function Answer(): integer;\nbegin return 42 end;\n";
+    let main_source =
+        "program App;\n\nuses Demo.Math;\n\nbegin var Value: integer := Answer() end.\n";
+    std::fs::write(&unit, unit_source).expect("write unit");
+    std::fs::write(&main, main_source).expect("write program");
+    let mut service = LanguageService::load(&manifest);
+    let offset = main_source.find("Answer").expect("function reference");
+
+    let references = service
+        .references(&main, offset, true)
+        .expect("references")
+        .value;
+    let edits = service
+        .rename(&main, offset, "Updated")
+        .expect("rename")
+        .value;
+
+    std::fs::write(&unit, format!("\n{unit_source}")).expect("change disk source after navigation");
+    service.snapshot(&unit).expect("refresh disk snapshot");
+
+    let declaration = references
+        .iter()
+        .find(|location| location.path == unit)
+        .expect("unit declaration reference");
+    assert_eq!(declaration.snapshot.source(), unit_source);
+    assert_eq!(
+        &declaration.snapshot.source()[declaration.span.offset()..declaration.span.end()],
+        "Answer"
+    );
+
+    let declaration_edit = edits
+        .iter()
+        .find(|edit| edit.path == unit)
+        .expect("unit declaration edit");
+    assert_eq!(declaration_edit.snapshot.source(), unit_source);
+    assert_eq!(
+        &declaration_edit.snapshot.source()
+            [declaration_edit.range.offset()..declaration_edit.range.end()],
+        "Answer"
+    );
+}
+
+#[test]
 fn rename_rejects_keywords_and_same_scope_conflicts() {
     let temp = TempDirectory::new("rename-validation");
     let source = "program Validation;\n\nvar Value: integer := 1;\nvar Other: integer := 2;\n\nbegin\n  var Result: integer := Value\nend.\n";

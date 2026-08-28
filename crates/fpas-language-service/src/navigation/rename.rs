@@ -4,6 +4,7 @@ mod conflicts;
 
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use fpas_diagnostics::SourceSpan;
 use fpas_lexer::{Token, lex};
@@ -11,7 +12,7 @@ use fpas_lexer::{Token, lex};
 use super::NavigationDocument;
 use super::references::{ResolvedTarget, find_references, resolve_target};
 use crate::workspace::path_containment;
-use crate::{CancellationToken, LanguageServiceError, SymbolKind};
+use crate::{CancellationToken, DocumentSnapshot, LanguageServiceError, SymbolKind};
 
 /// The source token selected by a successful prepare-rename query.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,7 +24,7 @@ pub struct RenameTarget {
 }
 
 /// One protocol-independent source edit produced by rename.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct RenameEdit {
     /// Source file to edit.
     pub path: PathBuf,
@@ -31,7 +32,17 @@ pub struct RenameEdit {
     pub range: SourceSpan,
     /// Validated replacement identifier.
     pub new_text: String,
+    /// Exact source snapshot from which `range` was computed.
+    pub snapshot: Arc<DocumentSnapshot>,
 }
+
+impl PartialEq for RenameEdit {
+    fn eq(&self, other: &Self) -> bool {
+        self.path == other.path && self.range == other.range && self.new_text == other.new_text
+    }
+}
+
+impl Eq for RenameEdit {}
 
 /// A recoverable reason why a requested rename cannot be performed safely.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -151,6 +162,7 @@ pub(crate) fn rename_symbol(
             path: location.path,
             range: location.span,
             new_text: new_name.to_owned(),
+            snapshot: location.snapshot,
         })
         .collect::<Vec<_>>();
     edits.sort_by(|left, right| {

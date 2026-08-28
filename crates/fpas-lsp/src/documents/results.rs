@@ -3,10 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use fpas_language_service::{
-    DocumentSnapshot, ReferenceLocation, RenameEdit, SelectionRange, SemanticCodeAction,
-    SymbolLocation,
-};
+use fpas_language_service::{DocumentSnapshot, SelectionRange, SemanticCodeAction, SymbolLocation};
 use tower_lsp_server::ls_types::{Diagnostic, Uri};
 
 #[derive(Clone)]
@@ -24,16 +21,6 @@ pub(crate) struct FormattedDocument {
 pub(crate) struct DefinitionDocument {
     pub(crate) snapshot: Arc<DocumentSnapshot>,
     pub(crate) location: SymbolLocation,
-}
-
-pub(crate) struct ReferenceDocument {
-    pub(crate) snapshot: Arc<DocumentSnapshot>,
-    pub(crate) location: ReferenceLocation,
-}
-
-pub(crate) struct RenameDocument {
-    pub(crate) snapshot: Arc<DocumentSnapshot>,
-    pub(crate) edit: RenameEdit,
 }
 
 pub(crate) struct WorkspaceSymbolDocument {

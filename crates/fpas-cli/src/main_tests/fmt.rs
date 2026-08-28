@@ -2,6 +2,8 @@ use super::support::run_cli_args_and_capture_output;
 use super::{create_temp_dir, write_text};
 use crate::cli_fmt::EXIT_WOULD_CHANGE;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::ffi::OsStringExt;
 
 #[test]
 fn fmt_cli_formats_source_file_in_place() {
@@ -209,6 +211,37 @@ fn fmt_cli_expands_glob_pattern() {
 
     assert_eq!(exit_code, 0, "stderr: {stderr_output}");
     assert!(formatted.contains("program Nested;\n\nuses Std.Console;\n\nbegin\n"));
+}
+
+#[cfg(unix)]
+#[test]
+fn fmt_cli_expands_glob_below_non_utf8_working_directory() {
+    let mut directory_name = format!("fpas-fmt-non-utf8-{}-", std::process::id()).into_bytes();
+    directory_name.push(0xff);
+    let cwd = std::env::temp_dir().join(std::ffi::OsString::from_vec(directory_name));
+    let source = cwd.join("src/nested.fpas");
+    fs::create_dir_all(source.parent().expect("source must have a parent"))
+        .expect("source directory must be created");
+    write_text(
+        &source,
+        "program Nested; uses Std.Console; begin WriteLn('nested') end.",
+    );
+
+    let (exit_code, _, stderr_output) = run_cli_args_and_capture_output(
+        &[String::from("fmt"), String::from("src/**/*.fpas")],
+        &cwd,
+    );
+    let formatted = fs::read_to_string(&source).expect("source must remain readable");
+    fs::remove_dir_all(&cwd).expect("fixture must be removed");
+
+    assert_eq!(
+        (
+            exit_code,
+            formatted.contains("program Nested;\n\nuses Std.Console;\n\nbegin\n")
+        ),
+        (0, true),
+        "stderr: {stderr_output}"
+    );
 }
 
 #[test]

@@ -1,9 +1,9 @@
-use glob::glob;
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf, absolute};
 
 use crate::source::validate_non_empty;
+use crate::{PathGlobError, expand_path_glob};
 
 const SOURCE_FILE_EXTENSION: &str = "fpas";
 
@@ -82,22 +82,18 @@ fn expand_source_pattern(
     }
 
     if is_glob_pattern(entry) {
-        let pattern_text = resolved_path.to_string_lossy().replace('\\', "/");
-        let mut matches = Vec::<PathBuf>::new();
-        for matched in glob(&pattern_text).map_err(|e| {
-            format!(
-                "Invalid glob pattern `{entry}` in `{field_name}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {e}"
-            )
-        })? {
-            let matched = matched.map_err(|e| {
-                format!(
-                    "Error while evaluating glob pattern `{entry}` in `{field_name}`.\n  details: {e}"
-                )
-            })?;
-            if matched.is_file() {
-                matches.push(matched);
+        let normalized_entry = entry.replace('\\', "/");
+        let mut matches = expand_path_glob(root_dir, &normalized_entry).map_err(|error| {
+            match error {
+                PathGlobError::InvalidPattern(error) => format!(
+                    "Invalid glob pattern `{entry}` in `{field_name}`.\n  help: Use a valid glob such as `src/**/*.fpas`.\n  details: {error}"
+                ),
+                error => format!(
+                    "Error while evaluating glob pattern `{entry}` in `{field_name}`.\n  details: {error}"
+                ),
             }
-        }
+        })?;
+        matches.retain(|matched| matched.is_file());
 
         if require_glob_match && matches.is_empty() {
             return Err(format!(
@@ -105,7 +101,6 @@ fn expand_source_pattern(
             ));
         }
 
-        matches.sort();
         return Ok(matches);
     }
 
@@ -259,6 +254,12 @@ fn canonical_or_original(path: &Path) -> PathBuf {
 #[cfg(test)]
 mod tests {
     use super::canonical_or_original;
+    #[cfg(unix)]
+    use super::expand_source_pattern;
+    #[cfg(unix)]
+    use std::fs;
+    #[cfg(unix)]
+    use std::os::unix::ffi::OsStringExt;
     use std::path::Path;
 
     #[test]
@@ -266,5 +267,23 @@ mod tests {
         let fallback = canonical_or_original(Path::new("missing-path-for-tests/example.fpas"));
 
         assert!(fallback.is_absolute());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn source_glob_matches_below_non_utf8_project_directory() {
+        let mut directory_name =
+            format!("fpas-project-non-utf8-{}-", std::process::id()).into_bytes();
+        directory_name.push(0xff);
+        let root = std::env::temp_dir().join(std::ffi::OsString::from_vec(directory_name));
+        let source = root.join("src/nested.fpas");
+        fs::create_dir_all(source.parent().expect("source must have a parent"))
+            .expect("source directory must be created");
+        fs::write(&source, "program Nested; begin end.").expect("source fixture must be written");
+
+        let result = expand_source_pattern("sources.include", "src/**/*.fpas", &root, true);
+        fs::remove_dir_all(&root).expect("fixture must be removed");
+
+        assert_eq!(result, Ok(vec![source]));
     }
 }

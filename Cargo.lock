@@ -406,7 +406,6 @@ dependencies = [
  "fpas-project",
  "fpas-std",
  "fpas-vm",
- "glob",
  "rcgen",
  "rustls",
  "serde",

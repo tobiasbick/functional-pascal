@@ -9,7 +9,7 @@ use crate::cli_paths::{
     collect_fpas_files_in_dir, has_extension, normalize_input_path,
 };
 use fpas_project as project;
-use glob::glob;
+use fpas_project::{PathGlobError, expand_path_glob};
 
 /// Collects `.fpas` paths from explicit CLI arguments, or from discovery when `args` is empty.
 pub(super) fn collect_format_paths(
@@ -134,18 +134,16 @@ fn resolve_fmt_arg(arg: &str, cwd: &Path, stderr: &mut dyn Write) -> Result<Vec<
 }
 
 fn expand_glob(pattern: &str, cwd: &Path) -> Result<Vec<PathBuf>, String> {
-    let pattern_path = normalize_input_path(pattern, cwd);
-    let pattern_text = pattern_path.to_string_lossy();
     let mut matches = Vec::new();
 
-    for entry in glob(&pattern_text).map_err(|error| {
-        format!(
+    for entry in expand_path_glob(cwd, pattern).map_err(|error| match error {
+        PathGlobError::InvalidPattern(error) => format!(
             "Invalid glob pattern `{pattern}`.\n  help: Use a pattern such as `src/**/*.fpas`.\n  details: {error}"
-        )
-    })? {
-        let entry = entry.map_err(|error| {
+        ),
+        error => {
             format!("Error while evaluating glob pattern `{pattern}`.\n  details: {error}")
-        })?;
+        }
+    })? {
         let metadata = std::fs::symlink_metadata(&entry).map_err(|error| {
             format!(
                 "Cannot inspect glob result `{}`.\n  details: {error}",

@@ -126,6 +126,26 @@ end.",
 }
 
 #[test]
+fn ambiguous_length_hint_has_canonical_candidate_order() {
+    let source = "\
+program T;
+uses Std.Str, Std.Array;
+begin
+  var L: integer := Length('hi')
+end.";
+    let expected = "`Length` exists in multiple imported units: Std.Array.Length, Std.Str.Length. Use the fully qualified name to disambiguate.";
+
+    for _ in 0..64 {
+        let errors = check_errors(source);
+        let help = errors
+            .iter()
+            .find_map(|error| error.help.as_deref())
+            .expect("ambiguous name help");
+        assert_eq!(help, expected);
+    }
+}
+
+#[test]
 fn ambiguous_contains_error() {
     let errs = check_errors(
         "\

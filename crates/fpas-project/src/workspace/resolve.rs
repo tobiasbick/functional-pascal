@@ -5,6 +5,7 @@
 use super::loading::discover_workspace_file;
 use super::loading::{load_workspace, read_member_project_name};
 use crate::paths::absolute_project_path;
+use caseless::default_case_fold_str;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -57,7 +58,7 @@ pub fn resolve_workspace_dependency_paths(
             );
         }
 
-        let key = name.trim().to_ascii_lowercase();
+        let key = canonical_project_name(name.trim());
         let Some(path) = name_index.get(&key) else {
             let available = sorted_workspace_names(&name_index);
             return Err(format!(
@@ -77,7 +78,7 @@ fn build_workspace_project_name_index(
 
     for member_path in member_projects {
         let project_name = read_member_project_name(member_path)?;
-        let key = project_name.to_ascii_lowercase();
+        let key = canonical_project_name(&project_name);
         if let Some(first_path) = index.get(&key) {
             return Err(format!(
                 "Duplicate workspace project name `{project_name}` in `{}` and `{}`.\n  help: Use unique `project.name` values across workspace members.",
@@ -89,6 +90,10 @@ fn build_workspace_project_name_index(
     }
 
     Ok(index)
+}
+
+fn canonical_project_name(name: &str) -> String {
+    default_case_fold_str(name)
 }
 
 fn sorted_workspace_names(index: &HashMap<String, PathBuf>) -> String {

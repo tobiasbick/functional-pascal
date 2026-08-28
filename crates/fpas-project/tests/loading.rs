@@ -227,6 +227,35 @@ include = ["src/**/*.fpas"]
 }
 
 #[test]
+fn workspace_dependency_names_use_unicode_case_folding() {
+    let dir = temp_dir("workspace-unicode-dep");
+    let workspace = dir.join("suite.fpasworkspace");
+    let library = dir.join("library.fpasprj");
+    let app = dir.join("app.fpasprj");
+
+    write(
+        &workspace,
+        "[workspace]\nname = \"suite\"\nmembers = [\"library.fpasprj\", \"app.fpasprj\"]\n",
+    );
+    write(
+        &library,
+        "[project]\nname = \"Straße Äpfel\"\nkind = \"library\"\n\n[sources]\ninclude = [\"library.fpas\"]\n",
+    );
+    write(&dir.join("library.fpas"), "unit Demo.Library;\n");
+    write(
+        &app,
+        "[project]\nname = \"app\"\nkind = \"program\"\nmain = \"main.fpas\"\n\n[sources]\ninclude = [\"main.fpas\"]\n",
+    );
+    write(&dir.join("main.fpas"), "program App;\nbegin\nend.\n");
+
+    let paths = resolve_workspace_dependency_paths(&app, &["STRASSE äPFEL".to_string()])
+        .expect("resolve Unicode-folded dependency");
+    fs::remove_dir_all(&dir).ok();
+
+    assert_eq!(paths, vec![library]);
+}
+
+#[test]
 fn discover_run_project_in_workspace_returns_single_program() {
     let dir = temp_dir("discover-run");
     let workspace = dir.join("suite.fpasworkspace");

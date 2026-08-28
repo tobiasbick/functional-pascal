@@ -60,7 +60,11 @@ pub fn register_short_aliases(checker: &mut Checker) {
                 checker.std_short_alias_keys.insert(short_key);
             }
         } else {
-            let qualified_names: Vec<String> = entries.into_iter().map(|(q, _)| q).collect();
+            let mut qualified_names: Vec<String> = entries
+                .into_iter()
+                .map(|(qualified, _)| qualified)
+                .collect();
+            qualified_names.sort();
             checker.ambiguous_imports.insert(short_key, qualified_names);
         }
     }

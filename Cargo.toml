@@ -22,6 +22,7 @@ todo = "warn"
 
 [workspace.dependencies]
 blake3 = "1.8.5"
+caseless = "0.2.2"
 crossterm = "0.29"
 glob = "0.3"
 rand = "0.9"
@@ -31,5 +32,5 @@ rustls-platform-verifier = "0.7.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "0.9"
-unicode-width = "0.2"
 unicode-segmentation = "1"
+unicode-width = "0.2"

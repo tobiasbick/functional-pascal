@@ -99,7 +99,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` file relative to the repo root
 - `args` — arguments after `--` (usually iteration count)
-- `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps the process while retaining captured stdout/stderr in the diagnostic
+- `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 
 The curated suite currently uses 120 seconds per entry. Give intentionally longer workloads an explicit larger value instead of disabling the bound.
 

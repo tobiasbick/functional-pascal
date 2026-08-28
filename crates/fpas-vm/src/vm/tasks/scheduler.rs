@@ -1,14 +1,17 @@
 //! Register-task queue, retained results, timers, and shutdown coordination.
 
+mod completion_ranges;
 #[cfg(test)]
 mod tests;
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Condvar, Mutex};
 
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
+
+use completion_ranges::CompletionRanges;
 
 use crate::vm::{
     TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers, VmError, runtime_error,
@@ -37,7 +40,7 @@ pub(in crate::vm) struct TaskScheduler {
     timers: TaskTimers<TaskState>,
     accepting_timers: AtomicBool,
     results: Mutex<HashMap<u64, TaskResultState>>,
-    completions: Mutex<HashSet<u64>>,
+    completions: Mutex<CompletionRanges>,
     results_available: Condvar,
     next_id: AtomicU64,
     shutdown: AtomicBool,
@@ -53,7 +56,7 @@ impl TaskScheduler {
             timers: TaskTimers::new(),
             accepting_timers: AtomicBool::new(true),
             results: Mutex::new(HashMap::new()),
-            completions: Mutex::new(HashSet::new()),
+            completions: Mutex::new(CompletionRanges::default()),
             results_available: Condvar::new(),
             next_id: AtomicU64::new(1),
             shutdown: AtomicBool::new(false),
@@ -249,6 +252,13 @@ impl TaskScheduler {
         } else {
             TaskBatchPoll::Complete
         }
+    }
+    #[cfg(test)]
+    fn consumed_completion_storage_len(&self) -> usize {
+        self.completions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .range_count()
     }
     pub fn wait_for_result(&self, id: u64) {
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());

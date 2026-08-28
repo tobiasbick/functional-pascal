@@ -4,7 +4,7 @@ use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
 
 use super::TaskScheduler;
-use crate::vm::{TaskResultPoll, runtime_error};
+use crate::vm::{TaskBatchPoll, TaskResultPoll, runtime_error};
 
 fn failure(message: &str) -> crate::vm::VmError {
     runtime_error(
@@ -82,5 +82,38 @@ fn late_success_does_not_replace_a_shutdown_failure() {
     assert!(matches!(
         scheduler.poll_result(3),
         TaskResultPoll::Failed(error) if error.code == RUNTIME_VM_SHUTDOWN
+    ));
+}
+
+#[test]
+fn sequential_consumed_task_ids_use_one_completion_range() {
+    let scheduler = TaskScheduler::new();
+
+    for _ in 0..10_000 {
+        let task_id = scheduler.alloc_id();
+        scheduler.register_result(task_id);
+        scheduler.store_result(task_id, Value::Unit);
+        assert!(matches!(
+            scheduler.poll_result(task_id),
+            TaskResultPoll::Available(Value::Unit)
+        ));
+    }
+
+    assert_eq!(scheduler.consumed_completion_storage_len(), 1);
+}
+
+#[test]
+fn consumed_task_id_remains_complete_for_wait_all() {
+    let scheduler = TaskScheduler::new();
+    scheduler.register_result(1);
+    scheduler.store_result(1, Value::Unit);
+    assert!(matches!(
+        scheduler.poll_result(1),
+        TaskResultPoll::Available(Value::Unit)
+    ));
+
+    assert!(matches!(
+        scheduler.poll_batch(&[1]),
+        TaskBatchPoll::Complete
     ));
 }

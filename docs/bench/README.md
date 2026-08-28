@@ -10,7 +10,7 @@ Committed progress over time lives in [`history.md`](history.md). Agent workflow
 
 - Quiet machine (avoid heavy background load).
 - Same power settings when comparing runs.
-- Release CLI: before every benchmark command, the harness asks `cargo metadata` for the effective target directory and runs `cargo build --release -p fpas-cli`. Cargo decides incrementally whether work is required, so an existing but stale `release/fpas` executable is never reused unchecked. This honors `CARGO_TARGET_DIR` and Cargo configuration.
+- Release CLI: before every benchmark command, the harness runs `cargo build --release -p fpas-cli` and reads the resulting executable path from Cargo's artifact messages. Cargo decides incrementally whether work is required, so an existing but stale release executable is never reused unchecked. This honors `CARGO_TARGET_DIR`, configured target triples, and other Cargo configuration.
 
 Do not treat absolute times as portable across machines. Compare before/after on one machine.
 

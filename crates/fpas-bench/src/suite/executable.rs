@@ -1,71 +1,80 @@
-//! Locate the release FPAS executable through Cargo metadata.
+//! Locate the release FPAS executable through Cargo build artifacts.
 
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 #[derive(Debug, Deserialize)]
-struct CargoMetadata {
-    target_directory: PathBuf,
+struct CargoMessage {
+    reason: String,
+    target: Option<CargoTarget>,
+    executable: Option<PathBuf>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CargoTarget {
+    name: String,
+    kind: Vec<String>,
 }
 
 /// Build and return the release `fpas` executable.
 pub fn ensure_release_fpas(repo_root: &Path) -> Result<PathBuf, String> {
-    let target_dir = query_cargo_target_dir(repo_root)?;
-    let fpas = release_fpas_path(&target_dir);
-
     eprintln!("building fpas-cli --release…");
-    let status = Command::new("cargo")
-        .args(["build", "--release", "-p", "fpas-cli"])
+    let output = Command::new("cargo")
+        .args([
+            "build",
+            "--release",
+            "-p",
+            "fpas-cli",
+            "--message-format=json-render-diagnostics",
+        ])
         .current_dir(repo_root)
-        .status()
+        .stderr(Stdio::inherit())
+        .output()
         .map_err(|error| format!("failed to run cargo build: {error}"))?;
-    if !status.success() {
+    if !output.status.success() {
         return Err(format!(
-            "cargo build --release -p fpas-cli failed ({status})"
+            "cargo build --release -p fpas-cli failed ({})",
+            output.status
         ));
     }
+    let fpas = release_fpas_from_messages(&output.stdout)?;
     if !fpas.is_file() {
         return Err(format!(
-            "expected release binary at {} after build",
+            "cargo reported release binary at {}, but it is missing after build",
             fpas.display()
         ));
     }
     Ok(fpas)
 }
 
-fn query_cargo_target_dir(repo_root: &Path) -> Result<PathBuf, String> {
-    let output = Command::new("cargo")
-        .args(["metadata", "--format-version", "1", "--no-deps"])
-        .current_dir(repo_root)
-        .output()
-        .map_err(|error| format!("failed to run cargo metadata: {error}"))?;
-    if !output.status.success() {
-        return Err(format!(
-            "cargo metadata failed ({})\n{}",
-            output.status,
-            String::from_utf8_lossy(&output.stderr)
-        ));
+fn release_fpas_from_messages(stdout: &[u8]) -> Result<PathBuf, String> {
+    let stdout = std::str::from_utf8(stdout)
+        .map_err(|error| format!("cargo build emitted non-UTF-8 JSON: {error}"))?;
+    for line in stdout.lines().filter(|line| !line.trim().is_empty()) {
+        let message: CargoMessage = serde_json::from_str(line)
+            .map_err(|error| format!("failed to parse cargo build message: {error}"))?;
+        let Some(target) = message.target else {
+            continue;
+        };
+        if message.reason == "compiler-artifact"
+            && target.name == "fpas"
+            && target.kind.iter().any(|kind| kind == "bin")
+            && let Some(executable) = message.executable
+        {
+            return Ok(executable);
+        }
     }
-    let metadata: CargoMetadata = serde_json::from_slice(&output.stdout)
-        .map_err(|error| format!("failed to parse cargo metadata: {error}"))?;
-    Ok(metadata.target_directory)
-}
-
-fn release_fpas_path(target_dir: &Path) -> PathBuf {
-    let mut path = target_dir.join("release/fpas");
-    if cfg!(windows) {
-        path.set_extension("exe");
-    }
-    path
+    Err("cargo build did not report the `fpas` executable artifact".to_owned())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ensure_release_fpas, release_fpas_path};
+    use super::ensure_release_fpas;
     use std::error::Error;
     use std::fs;
     use std::io;
+    use std::process::Command;
     use std::sync::atomic::{AtomicU64, Ordering};
 
     #[test]
@@ -85,14 +94,23 @@ mod tests {
         )?;
         fs::write(
             workspace.join(".cargo/config.toml"),
-            "[build]\ntarget-dir = \"custom-target\"\n",
+            format!(
+                "[build]\ntarget-dir = \"custom-target\"\ntarget = \"{}\"\n",
+                host_target()?
+            ),
         )?;
         fs::write(
             workspace.join("fpas-cli/Cargo.toml"),
             "[package]\nname = \"fpas-cli\"\nversion = \"0.0.0\"\nedition = \"2024\"\n\n[[bin]]\nname = \"fpas\"\npath = \"src/main.rs\"\n",
         )?;
         fs::write(workspace.join("fpas-cli/src/main.rs"), "fn main() {}\n")?;
-        let executable = release_fpas_path(&workspace.join("custom-target"));
+        let mut executable = workspace
+            .join("custom-target")
+            .join(host_target()?)
+            .join("release/fpas");
+        if cfg!(windows) {
+            executable.set_extension("exe");
+        }
         let parent = executable
             .parent()
             .ok_or_else(|| io::Error::other("release executable should have a parent"))?;
@@ -109,5 +127,14 @@ mod tests {
             "Cargo must replace the stale executable"
         );
         Ok(())
+    }
+
+    fn host_target() -> Result<String, Box<dyn Error>> {
+        let output = Command::new("rustc").arg("-vV").output()?;
+        let stdout = String::from_utf8(output.stdout)?;
+        stdout
+            .lines()
+            .find_map(|line| line.strip_prefix("host: ").map(str::to_owned))
+            .ok_or_else(|| io::Error::other("rustc did not report its host target").into())
     }
 }

@@ -1,6 +1,10 @@
 //! Bounded debugger transport I/O.
 
+mod reader;
+
 use std::io::{self, BufRead};
+
+pub(crate) use reader::ControlledReader;
 
 pub(crate) const MAX_DEBUGGER_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
 

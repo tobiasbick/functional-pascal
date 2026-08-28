@@ -5,8 +5,11 @@
     reason = "DAP transcript fixtures use direct assertions"
 )]
 
+mod support;
+
 use std::io::{BufReader, Cursor};
 use std::path::PathBuf;
+use std::sync::atomic::Ordering;
 
 use fpas_debug::{
     DebugSourceContent, PreparedDebugTarget,
@@ -179,6 +182,22 @@ fn supported_lifecycle_and_unsupported_request_are_explicit() {
         messages
             .windows(2)
             .all(|pair| pair[0]["seq"].as_u64() < pair[1]["seq"].as_u64())
+    );
+}
+
+#[test]
+fn disconnect_drops_an_input_that_stays_open() {
+    let mut input = Vec::new();
+    write_message(&mut input, &request(1, "initialize", json!({}))).expect("frame initialize");
+    write_message(&mut input, &request(2, "disconnect", json!({}))).expect("frame disconnect");
+    let (reader, dropped, _keep_open) = support::open_reader(input);
+
+    serve(reader, Vec::new(), server("program Main; begin end."))
+        .expect("disconnect open DAP input");
+
+    assert!(
+        dropped.load(Ordering::Acquire),
+        "DAP reader remained owned by a detached thread"
     );
 }
 

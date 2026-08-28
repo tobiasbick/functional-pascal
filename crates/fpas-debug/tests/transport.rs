@@ -5,7 +5,10 @@
     reason = "protocol tests use expect to keep fixture failures local"
 )]
 
+mod support;
+
 use std::io::Cursor;
+use std::sync::atomic::Ordering;
 
 use fpas_debug::{
     PreparedDebugTarget,
@@ -138,6 +141,23 @@ fn clean_disconnect_remains_successful() {
     ]
     .join("\n");
     serve_script(script.as_bytes(), Vec::new(), server()).expect("clean disconnect");
+}
+
+#[test]
+fn live_disconnect_drops_an_input_that_stays_open() {
+    let script = [
+        request(1, "initialize", json!({"version":2})),
+        request(2, "disconnect", json!({})),
+    ]
+    .join("\n");
+    let (reader, dropped, _keep_open) = support::open_reader(format!("{script}\n").into_bytes());
+
+    serve(reader, Vec::new(), server()).expect("disconnect open JSONL input");
+
+    assert!(
+        dropped.load(Ordering::Acquire),
+        "JSONL reader remained owned by a detached thread"
+    );
 }
 
 #[test]

@@ -1,13 +1,13 @@
 //! Standard DAP `Content-Length` message framing.
 
 use std::io::{self, BufRead, Read, Write};
-use std::sync::mpsc::{self, RecvTimeoutError};
+use std::sync::mpsc::RecvTimeoutError;
 use std::time::Duration;
 
 use serde_json::Value;
 
 use super::DapServer;
-use crate::transport::{MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
+use crate::transport::{ControlledReader, MAX_DEBUGGER_MESSAGE_BYTES, read_bounded_line};
 
 const MAX_HEADER_LINE_BYTES: usize = 8 * 1024;
 const MAX_HEADER_BYTES: usize = 64 * 1024;
@@ -102,38 +102,31 @@ pub fn serve<R: Read + Send + 'static, W: Write>(
     mut writer: W,
     mut server: DapServer,
 ) -> io::Result<()> {
-    let (sender, receiver) = mpsc::channel();
-    std::thread::spawn(move || {
-        let mut reader = io::BufReader::new(reader);
-        loop {
-            match read_message(&mut reader) {
-                Ok(Some(message)) => {
-                    if sender.send(Ok(message)).is_err() {
-                        break;
-                    }
-                }
-                Ok(None) => break,
-                Err(error) => {
-                    let _ = sender.send(Err(error));
-                    break;
-                }
-            }
-        }
-    });
+    let reader = ControlledReader::spawn(reader, read_message);
     loop {
-        match receiver.recv_timeout(Duration::from_millis(10)) {
-            Ok(Ok(request)) => write_messages(&mut writer, server.handle(request))?,
-            Ok(Err(error)) => return Err(error),
+        match reader.recv_timeout(Duration::from_millis(10)) {
+            Ok(Ok(request)) => {
+                let write_result = write_messages(&mut writer, server.handle(request));
+                if write_result.is_err() || server.is_terminated() {
+                    reader.stop_and_join()?;
+                    return write_result;
+                }
+                reader.continue_reading();
+            }
+            Ok(Err(error)) => {
+                reader.join()?;
+                return Err(error);
+            }
             Err(RecvTimeoutError::Timeout) => write_messages(&mut writer, server.poll())?,
             Err(RecvTimeoutError::Disconnected) => {
-                if server.is_running() {
-                    write_messages(&mut writer, server.wait())?;
-                }
-                return Ok(());
+                let write_result = if server.is_running() {
+                    write_messages(&mut writer, server.wait())
+                } else {
+                    Ok(())
+                };
+                reader.join()?;
+                return write_result;
             }
-        }
-        if server.is_terminated() {
-            return Ok(());
         }
     }
 }

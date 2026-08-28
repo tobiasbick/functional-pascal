@@ -110,3 +110,141 @@ fn changed_unit_is_rejected_by_final_snapshot_validation() {
     assert!(error.to_string().contains("changed during the build"));
     fs::remove_dir_all(root).ok();
 }
+
+#[test]
+fn reordered_source_ids_keep_correct_portable_path_bindings() {
+    let root = temp_dir();
+    fs::create_dir_all(&root).expect("temporary directory");
+    let main = root.join("main.fpas");
+    let first = root.join("first.fpas");
+    let second = root.join("second.fpas");
+    let artifact = root.join("sources.fpascp");
+    let main_source = b"program Sources; uses Race.First, Race.Second; begin end.";
+    fs::write(&main, main_source).expect("main source");
+    fs::write(
+        &first,
+        "unit Race.First; public function Value(): integer; begin return 1 end;",
+    )
+    .expect("first unit source");
+    fs::write(
+        &second,
+        "unit Race.Second; public function Value(): integer; begin return 2 end;",
+    )
+    .expect("second unit source");
+
+    let initial_graph = graph_for(&main, &[first.clone(), second.clone()]);
+    let initial_paths = vec![
+        "main.fpas".to_string(),
+        "first.fpas".to_string(),
+        "second.fpas".to_string(),
+    ];
+    build_program_artifact(
+        &initial_graph,
+        ProgramArtifactTarget {
+            path: &artifact,
+            source: main_source,
+            source_paths: &initial_paths,
+        },
+        &BuildOptions::default(),
+    )
+    .expect("initial program image");
+
+    let reordered_graph = graph_for(&main, &[second, first]);
+    let reordered_paths = vec![
+        "main.fpas".to_string(),
+        "second.fpas".to_string(),
+        "first.fpas".to_string(),
+    ];
+    let reordered_graph_paths = reordered_graph
+        .source_paths()
+        .iter()
+        .map(|path| path.file_name().expect("source file name").to_owned())
+        .collect::<Vec<_>>();
+    let reused = build_program_artifact(
+        &reordered_graph,
+        ProgramArtifactTarget {
+            path: &artifact,
+            source: main_source,
+            source_paths: &reordered_paths,
+        },
+        &BuildOptions::default(),
+    )
+    .expect("reordered program image");
+    let published = fpas_program::decode(&fs::read(&artifact).expect("published image"))
+        .expect("valid published image");
+    let bindings_are_current = published
+        .source_paths()
+        .iter()
+        .zip(published.source_hashes())
+        .all(|(path, hash)| {
+            fs::read(root.join(path)).is_ok_and(|source| Digest::of(source) == *hash)
+        });
+
+    assert_eq!(
+        (
+            reordered_graph_paths,
+            reused.counters().program_image_reused,
+            bindings_are_current
+        ),
+        (
+            vec![
+                "main.fpas".into(),
+                "second.fpas".into(),
+                "first.fpas".into()
+            ],
+            1,
+            true
+        )
+    );
+    fs::remove_dir_all(root).ok();
+}
+
+#[test]
+fn changed_source_hash_rebuilds_the_program_image() {
+    let root = temp_dir();
+    fs::create_dir_all(&root).expect("temporary directory");
+    let main = root.join("main.fpas");
+    let unit = root.join("unit.fpas");
+    let artifact = root.join("hash.fpascp");
+    let main_source = b"program Sources; uses Race.Work; begin end.";
+    let initial_unit = b"unit Race.Work; public function Value(): integer; begin return 1 end;";
+    fs::write(&main, main_source).expect("main source");
+    fs::write(&unit, initial_unit).expect("initial unit source");
+    let source_paths = vec!["main.fpas".to_string(), "unit.fpas".to_string()];
+    let initial_graph = graph_for(&main, std::slice::from_ref(&unit));
+    build_program_artifact(
+        &initial_graph,
+        ProgramArtifactTarget {
+            path: &artifact,
+            source: main_source,
+            source_paths: &source_paths,
+        },
+        &BuildOptions::default(),
+    )
+    .expect("initial program image");
+
+    let changed_unit = [initial_unit.as_slice(), b"\n// source-only change"].concat();
+    fs::write(&unit, &changed_unit).expect("changed unit source");
+    let changed_graph = graph_for(&main, std::slice::from_ref(&unit));
+    let rebuilt = build_program_artifact(
+        &changed_graph,
+        ProgramArtifactTarget {
+            path: &artifact,
+            source: main_source,
+            source_paths: &source_paths,
+        },
+        &BuildOptions::default(),
+    )
+    .expect("changed-source program image");
+    let published = fpas_program::decode(&fs::read(&artifact).expect("published image"))
+        .expect("valid published image");
+
+    assert_eq!(
+        (
+            rebuilt.counters().program_image_reused,
+            published.source_hashes()[1]
+        ),
+        (0, Digest::of(&changed_unit))
+    );
+    fs::remove_dir_all(root).ok();
+}

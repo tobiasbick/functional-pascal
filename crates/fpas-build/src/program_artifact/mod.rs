@@ -63,7 +63,8 @@ fn build_program_artifact_before_publish(
 
     {
         let publication = publication_lock(target.path)?;
-        if let Some(executable) = reusable_executable(&publication, &expected, target.source_paths)?
+        if let Some(executable) =
+            reusable_executable(&publication, &expected, target.source_paths, &source_hashes)?
         {
             source::ensure_current(graph, Digest::of(target.source))?;
             let mut events = units.events;
@@ -141,6 +142,7 @@ fn reusable_executable(
     publication: &atomic::PublicationLock,
     expected: &ProgramIdentity,
     source_paths: &[String],
+    source_hashes: &[Digest],
 ) -> Result<Option<fpas_bytecode::VerifiedExecutable>, BuildError> {
     let Some(bytes) = publication.read().map_err(BuildError::new)? else {
         return Ok(None);
@@ -149,15 +151,28 @@ fn reusable_executable(
         Ok(image) => image,
         Err(_) => return Ok(None),
     };
-    if image.identity() != expected
-        || image
-            .source_paths()
-            .iter()
-            .any(|path| !source_paths.contains(path))
-    {
+    if image.identity() != expected || !source_table_matches(&image, source_paths, source_hashes) {
         return Ok(None);
     }
     Ok(Some(image.into_executable()))
+}
+
+fn source_table_matches(
+    image: &ProgramImage,
+    source_paths: &[String],
+    source_hashes: &[Digest],
+) -> bool {
+    image
+        .source_paths()
+        .iter()
+        .zip(image.source_hashes())
+        .all(|(path, hash)| {
+            source_paths
+                .iter()
+                .position(|expected| expected == path)
+                .and_then(|index| source_hashes.get(index))
+                == Some(hash)
+        })
 }
 
 fn publication_lock(path: &Path) -> Result<atomic::PublicationLock, BuildError> {

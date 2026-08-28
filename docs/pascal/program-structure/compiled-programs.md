@@ -18,6 +18,11 @@ Source paths must be relative. Validation recognizes Unix roots, Windows drive r
 root-relative paths, and UNC paths independently of the host operating system. Relative paths may
 use either slash style because images can be produced and inspected on different hosts.
 
+Artifact reuse requires every source path retained by the image to have the same content digest in
+the current build snapshot. The build matches these digests by portable path because the image has
+already replaced compiler-local source identifiers with concrete paths. Reordering the wider project
+source list therefore remains reusable when all retained path-to-content bindings are unchanged.
+
 ## Register executable payload
 
 The payload is a deterministic sectioned binary representation of the verified register

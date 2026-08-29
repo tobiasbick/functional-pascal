@@ -307,6 +307,14 @@ fn insert_out_of_bounds() {
 }
 
 #[test]
+fn set_char_at_out_of_bounds_reports_index_and_length() {
+    run_file_expect_failure(
+        "tests/stdlib/str/set_char_at_out_of_bounds_runtime_error.fpas",
+        Some("error[F4021]: SetCharAt index 10 out of range (length 2)"),
+    );
+}
+
+#[test]
 fn chr_invalid_codepoint() {
     run_file_expect_failure(
         "tests/stdlib/str/chr_invalid_codepoint_runtime_error.fpas",

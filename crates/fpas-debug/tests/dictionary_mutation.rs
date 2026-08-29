@@ -9,7 +9,7 @@
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use serde_json::{Value, json};
 
-const SOURCE: &str = r#"program DictionaryMutation;
+const SOURCE: &str = r#"program JsonlDictionaryMutation;
 
 uses Std.Console;
 

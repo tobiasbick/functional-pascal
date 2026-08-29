@@ -109,7 +109,7 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         .expect("NotesUpdate references")
         .value;
 
-    assert_eq!(references.len(), 23, "{references:?}");
+    assert_eq!(references.len(), 24, "{references:?}");
     assert!(
         references.iter().any(|reference| reference.path.ends_with(
             program
@@ -124,6 +124,16 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
             .filter(|reference| reference.path.ends_with("note_tui_workflow_test.fpas"))
             .count(),
         22,
+        "{references:?}"
+    );
+    assert_eq!(
+        references
+            .iter()
+            .filter(|reference| reference
+                .path
+                .ends_with("note_selection_after_save_test.fpas"))
+            .count(),
+        1,
         "{references:?}"
     );
 }

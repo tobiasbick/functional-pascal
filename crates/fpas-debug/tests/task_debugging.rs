@@ -11,7 +11,7 @@ use fpas_debug::{
 };
 use serde_json::{Value, json};
 
-const SOURCE: &str = r#"program TaskDebugging;
+const SOURCE: &str = r#"program JsonlTaskDebugging;
 
 uses Std.Console, Std.Task;
 

@@ -73,6 +73,12 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Runner-owned empty directory for this test.
+public function ScratchDir(): string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`).
 //
 // Parameters:

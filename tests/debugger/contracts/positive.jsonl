@@ -1,6 +1,5 @@
 {"type":"request","id":1,"command":"initialize","arguments":{"version":2}}
-{"type":"request","id":2,"command":"breakpoint.set","arguments":{"source":"tests/debugger/fixtures/debugger_target.fpas","line":32}}
-{"type":"request","id":3,"command":"launch","arguments":{"stop_on_entry":true,"args":[]}}
+{"type":"request","id":2,"command":"breakpoint.set","arguments":{"source":"<memory>","line":32}}
+{"type":"request","id":3,"command":"launch","arguments":{"stop_on_entry":false,"args":[]}}
 {"type":"request","id":4,"command":"stack","arguments":{"start":0,"count":8}}
 {"type":"request","id":5,"command":"continue","arguments":{}}
-{"type":"request","id":6,"command":"disconnect","arguments":{"terminate":true}}

@@ -53,6 +53,44 @@ begin
   return Tick
 end;
 
+function ResultValue(Item: result of integer, string): integer;
+begin
+  case Item of
+    Ok(Value):
+    begin
+      return Value
+    end;
+    Error(Message):
+    begin
+      return -1
+    end
+  end
+end;
+
+function WrappedChoiceValue(Item: result of Choice, string): integer;
+begin
+  case Item of
+    Ok(Value):
+    begin
+      return ChoiceValue(Value)
+    end;
+    Error(Message):
+    begin
+      return -1
+    end
+  end
+end;
+
+function OuterChoiceValue(Item: Outer): integer;
+begin
+  case Item of
+    Outer.First(Value), Outer.Second(Value):
+    begin
+      return ChoiceValue(Value)
+    end
+  end
+end;
+
 begin
   mutable var Origin: Point := record
     X := 4;
@@ -81,5 +119,9 @@ begin
   WriteLn(ChoiceValue(Items[0]));
   WriteLn(ChoiceValue(Scores['blue']));
   WriteLn(ChoiceValue(GlobalChoice));
+  WriteLn(ResultValue(Failed));
+  WriteLn(WrappedChoiceValue(WrappedChoice));
+  WriteLn(WrappedChoiceValue(WrappedChoices[0]));
+  WriteLn(OuterChoiceValue(OuterValue));
   WriteLn(ChoiceValue(Fixed))
 end.

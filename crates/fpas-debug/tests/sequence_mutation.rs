@@ -9,7 +9,7 @@
 use fpas_debug::{PreparedDebugTarget, jsonl::JsonlServer};
 use serde_json::{Value, json};
 
-const SOURCE: &str = r#"program SequenceMutation;
+const SOURCE: &str = r#"program JsonlSequenceMutation;
 
 uses Std.Console;
 

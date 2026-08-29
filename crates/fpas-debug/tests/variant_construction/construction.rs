@@ -64,37 +64,55 @@ fn jsonl_variant_construct_commits_and_continues() {
         &mut server,
         &mut id,
         "PackedHolder.Item",
+        "PackedHolder.Item",
         "Choice.Count",
         json!({"Value": "4"}),
+        "Choice.Count",
     );
-    construct(&mut server, &mut id, "Failed", "Ok", json!({"value": "9"}));
+    construct(
+        &mut server,
+        &mut id,
+        "Failed",
+        "Failed",
+        "Ok",
+        json!({"value": "9"}),
+        "Ok(...)",
+    );
     construct(
         &mut server,
         &mut id,
         "Scores['blue']",
+        "Scores['blue']",
         "Choice.Count",
         json!({"Value": "5"}),
+        "Choice.Count",
     );
     construct(
         &mut server,
         &mut id,
         "WrappedChoice.value",
+        "WrappedChoice",
         "Choice.Pair",
         json!({"Left": "6", "Right": "7"}),
+        "Ok(...)",
     );
     construct(
         &mut server,
         &mut id,
         "WrappedChoices[0].value",
+        "WrappedChoices[0]",
         "Choice.Count",
         json!({"Value": "8"}),
+        "Ok(...)",
     );
     construct(
         &mut server,
         &mut id,
         "OuterValue.Item",
+        "OuterValue",
         "Choice.Count",
         json!({"Value": "9"}),
+        "Outer.First",
     );
 
     let _ = send(&mut server, &mut id, "continue", json!({}));
@@ -104,17 +122,18 @@ fn jsonl_variant_construct_commits_and_continues() {
         .filter(|record| record["event"] == "output")
         .map(|record| record["body"]["text"].as_str().unwrap_or_default())
         .collect::<String>();
-    assert!(
-        output.contains("3\n"),
-        "continuation observed constructed pair: {output:?}"
-    );
-    assert!(
-        output.contains("5\n"),
-        "continuation observed dictionary construction: {output:?}"
-    );
+    assert_eq!(output, "3\n4\n0\n5\n0\n9\n13\n8\n9\n99\n");
 }
 
-fn construct(server: &mut JsonlServer, id: &mut u64, target: &str, variant: &str, fields: Value) {
+fn construct(
+    server: &mut JsonlServer,
+    id: &mut u64,
+    target: &str,
+    observed_expression: &str,
+    variant: &str,
+    fields: Value,
+    expected: &str,
+) {
     let current = frame(server, id);
     let result = send(
         server,
@@ -128,4 +147,15 @@ fn construct(server: &mut JsonlServer, id: &mut u64, target: &str, variant: &str
         }),
     );
     assert_eq!(result[0]["success"], true, "{target}: {result:?}");
+    let current = frame(server, id);
+    let observed = send(
+        server,
+        id,
+        "evaluate",
+        json!({"frame_id": current, "expression": observed_expression}),
+    );
+    assert_eq!(
+        observed[0]["body"]["result"], expected,
+        "{target}: {observed:?}"
+    );
 }

@@ -320,6 +320,10 @@ impl LoweringContext {
         let callable = self
             .resolve_callable(name)
             .ok_or_else(|| unsupported(designator.span, "unresolved call"))?;
+        let intrinsic_name = format!("{}.{}", self.source_name, name);
+        if crate::intrinsic_catalog::resolve(&intrinsic_name, None).is_some() {
+            return self.lower_intrinsic_call(&intrinsic_name, arguments, callable.result, span);
+        }
         let values = self.lower_call_arguments(arguments, span)?;
         if callable.captures.is_empty() {
             return self.emit_value(

@@ -28,6 +28,7 @@ pub(crate) use self::descriptors::{
 
 pub(super) struct LoweringContext {
     program_name: String,
+    pub(super) source_name: String,
     function_id: FunctionId,
     result_type: TypeId,
     parameters: Vec<ValueDefinition>,
@@ -68,6 +69,7 @@ impl LoweringContext {
     pub(super) fn new(input: FunctionInput<'_>) -> Result<Self, CompileError> {
         let FunctionInput {
             name,
+            source_name,
             id,
             result,
             parameters: parameter_types,
@@ -191,6 +193,7 @@ impl LoweringContext {
         }
         Ok(Self {
             program_name: name.to_ascii_lowercase(),
+            source_name: source_name.to_string(),
             function_id: id,
             result_type: result,
             parameters,

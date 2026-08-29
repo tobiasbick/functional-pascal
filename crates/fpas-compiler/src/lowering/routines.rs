@@ -23,6 +23,7 @@ pub(super) enum Routine<'a> {
 pub(super) struct LoweringInput<'a> {
     pub id: FunctionId,
     pub runtime_name: &'a str,
+    pub source_name: &'a str,
     pub metadata: &'a AnalysisMetadata,
     pub callables: &'a BTreeMap<String, Callable>,
     pub globals: &'a BTreeMap<String, super::context::GlobalBinding>,
@@ -265,6 +266,7 @@ pub(super) fn lower(
     let LoweringInput {
         id,
         runtime_name,
+        source_name,
         metadata,
         callables,
         globals,
@@ -293,6 +295,7 @@ pub(super) fn lower(
         .collect::<Result<Vec<_>, _>>()?;
     let mut context = LoweringContext::new(FunctionInput {
         name: &runtime_name,
+        source_name,
         id,
         result: routine.result(types)?,
         parameters: &parameters,

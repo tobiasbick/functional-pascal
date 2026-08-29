@@ -43,11 +43,12 @@ pub(super) struct ClosureRegistry<'a> {
     pub bound_targets: HashMap<usize, BoundMethodTarget>,
     pub cell_names: HashMap<FunctionId, BTreeSet<String>>,
     callables: BTreeMap<String, Callable>,
+    source_name: String,
     pub(super) next_id: u32,
 }
 
 impl<'a> ClosureRegistry<'a> {
-    pub fn new(first_id: u32, callables: BTreeMap<String, Callable>) -> Self {
+    pub fn new(first_id: u32, callables: BTreeMap<String, Callable>, source_name: &str) -> Self {
         Self {
             routines: Vec::new(),
             targets: HashMap::new(),
@@ -55,6 +56,7 @@ impl<'a> ClosureRegistry<'a> {
             bound_targets: HashMap::new(),
             cell_names: HashMap::new(),
             callables,
+            source_name: source_name.to_string(),
             next_id: first_id,
         }
     }
@@ -124,6 +126,7 @@ impl<'a> ClosureRegistry<'a> {
             .unwrap_or(types::UNIT);
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,
+            source_name: &self.source_name,
             id: routine.id,
             result,
             parameters: &parameters,

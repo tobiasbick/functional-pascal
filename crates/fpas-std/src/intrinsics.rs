@@ -23,8 +23,8 @@ use crate::str;
 use crate::time;
 use crate::toml;
 use fpas_bytecode::{
-    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, Intrinsic, NetIntrinsic,
-    OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
+    ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, DictIntrinsic, HttpIntrinsic, Intrinsic,
+    NetIntrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation, TaskIntrinsic, Value,
 };
 
 type StdUnitDispatch =
@@ -153,6 +153,26 @@ fn dispatch_intrinsic(
     ) {
         return Err(std_internal_error(
             "internal: Std.Net intrinsics are handled in the VM",
+            "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
+            location,
+        ));
+    }
+
+    if matches!(
+        intrinsic,
+        Intrinsic::Http(
+            HttpIntrinsic::ReserveBodyStreamState
+                | HttpIntrinsic::HasBodyStreamState
+                | HttpIntrinsic::LoadBodyStreamState
+                | HttpIntrinsic::StoreBodyStreamState
+                | HttpIntrinsic::ReserveSseDecoderState
+                | HttpIntrinsic::HasSseDecoderState
+                | HttpIntrinsic::LoadSseDecoderState
+                | HttpIntrinsic::StoreSseDecoderState
+        )
+    ) {
+        return Err(std_internal_error(
+            "internal: Std.Http handle intrinsics are handled in the VM",
             "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",
             location,
         ));

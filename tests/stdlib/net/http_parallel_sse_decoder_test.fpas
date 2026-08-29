@@ -1,0 +1,58 @@
+program HttpParallelSseDecoderTest;
+
+uses Std.Array, Std.Conv, Std.Http, Std.Net.Utf8, Std.Task, Std.Test;
+
+function CreateDecoder(Index: integer): SseDecoder;
+begin
+  case CreateSseDecoder(1024) of
+    Ok(Decoder):
+    begin
+      return Decoder
+    end;
+    Error(Message):
+    begin
+      panic((('decoder ' + IntToStr(Index)) + ' failed: ') + Message)
+    end
+  end
+end;
+
+begin
+  mutable var Tasks: array of task := [];
+  for Index: integer := 1 to 128 do
+  begin
+    Push(Tasks, go CreateDecoder(Index))
+  end;
+
+  WaitAll(Tasks);
+  mutable var Decoders: array of SseDecoder := [];
+  for Index: integer := 0 to Length(Tasks) - 1 do
+  begin
+    Push(Decoders, Wait(Tasks[Index]))
+  end;
+
+  for Index: integer := 0 to Length(Decoders) - 1 do
+  begin
+    var Expected: string := IntToStr(Index);
+    case FeedSse(Decoders[Index], Std.Net.Utf8.Encode((('data: ' + Expected) + #10) + #10)) of
+      Ok(Events):
+      begin
+        AssertEquals(1, Length(Events));
+        AssertEquals(Expected, Events[0].Data)
+      end;
+      Error(Message):
+      begin
+        panic(Message)
+      end
+    end;
+
+    case FinishSse(Decoders[Index]) of
+      Ok(_):
+      begin
+      end;
+      Error(Message):
+      begin
+        panic(Message)
+      end
+    end
+  end
+end.

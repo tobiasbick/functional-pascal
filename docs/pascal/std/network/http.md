@@ -85,6 +85,9 @@ connection-delimited bodies incrementally and returns at most the requested numb
 the same `BodyStream` handle through each call until an empty array reports EOF. Call `CloseStream`
 when abandoning a response early.
 
+Independent streams may be opened and consumed by different tasks. Calls that mutate the same
+`BodyStream` handle must remain serialized.
+
 ```pascal
 case OpenStream(Request.Get('https://example.test/events')) of
   Ok(ResponseValue):
@@ -116,6 +119,9 @@ with LF; carries the last `id`; defaults an empty event type to `message`; and i
 unknown fields. `MaxEventBytes` bounds buffered input for one event. `FinishSse` dispatches a pending
 final event and rejects later input. The `retry` field is currently ignored because reconnection is
 not part of this client.
+
+Independent SSE decoders may be created and consumed by different tasks. Calls that mutate the same
+`SseDecoder` handle must remain serialized.
 
 ## HTTP server helpers
 
@@ -254,6 +260,7 @@ persistent connections are not handled.
 | Response body-framing selection | [`BodyFraming.fpas`](../../../../lib/Std/Http/BodyFraming.fpas) |
 | Streaming body framing | [`Stream.fpas`](../../../../lib/Std/Http/Stream.fpas) |
 | Server-Sent Events decoder | [`Sse.fpas`](../../../../lib/Std/Http/Sse.fpas) |
+| Synchronized stream and decoder state | [`http_handles.rs`](../../../../crates/fpas-vm/src/vm/hosted/http_handles.rs) |
 | HTTP wire format | [`Wire.fpas`](../../../../lib/Std/Http/Wire.fpas) |
 | Buffered end-to-end fixture | [`network.rs`](../../../../crates/fpas-cli/src/main_tests/network.rs) |
 | Streaming fixtures | [`network_streaming.rs`](../../../../crates/fpas-cli/src/main_tests/network_streaming.rs) |

@@ -42,6 +42,7 @@ impl ClosureRegistry<'_> {
         }];
         let mut context = LoweringContext::new(FunctionInput {
             name: &routine.name,
+            source_name: &self.source_name,
             id: routine.id,
             result: routine.result,
             parameters: &parameters,

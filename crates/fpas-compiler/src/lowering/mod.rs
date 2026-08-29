@@ -175,7 +175,7 @@ fn lower_analyzed_root(
                 .map_err(|_| vec![context::unsupported(span, "function identifier overflow")])?,
         )
         .ok_or_else(|| vec![context::unsupported(span, "function identifier overflow")])?;
-    let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone());
+    let mut closures = closures::ClosureRegistry::new(first_closure_id, callables.clone(), name);
     closures.seed_named_nested_cells(&routine_owners, &runtime_names, &callables);
     closures
         .discover_declaration_initializers(
@@ -199,6 +199,7 @@ fn lower_analyzed_root(
     }
     let mut context = LoweringContext::new(FunctionInput {
         name,
+        source_name: name,
         id: FunctionId::new(0),
         result: types::UNIT,
         parameters: &[],
@@ -268,6 +269,7 @@ fn lower_analyzed_root(
             routines::LoweringInput {
                 id,
                 runtime_name: runtime_names.get(index).map(String::as_str).unwrap_or(""),
+                source_name: name,
                 metadata: &metadata,
                 callables: &callables,
                 globals: &global_bindings,

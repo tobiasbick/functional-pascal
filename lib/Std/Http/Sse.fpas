@@ -29,9 +29,28 @@ type
     Events: array of SseEvent;
   end;
 
-mutable var
-  // Process-local decoder registry addressed by opaque handles.
-  DecoderStates: array of DecoderState := [];
+// Reserves and stores one state in the hosted HTTP registry.
+function ReserveState(State: DecoderState): integer;
+begin
+  return 0
+end;
+
+// Tests whether one hosted SSE-decoder state exists.
+function HasState(Slot: integer): boolean;
+begin
+  return false
+end;
+
+// Loads one state from the hosted HTTP registry.
+function LoadState(Slot: integer): DecoderState;
+begin
+  panic('internal SSE decoder state intrinsic was not lowered')
+end;
+
+// Replaces one state in the hosted HTTP registry.
+procedure StoreState(Slot: integer; State: DecoderState);
+begin
+end;
 
 // Resolves and validates an opaque decoder handle.
 //
@@ -40,12 +59,12 @@ mutable var
 function DecoderIndex(Decoder: Std.Http.Types.SseDecoder): result of integer, string;
 begin
   var Slot: integer := Std.Http.Handles.SseDecoderSlot(Decoder);
-  if (Slot < 1) or (Slot > Std.Array.Length(DecoderStates)) then
+  if (Slot < 1) or (not HasState(Slot)) then
   begin
     return Error('SSE decoder handle is invalid')
   end;
 
-  return Ok(Slot - 1)
+  return Ok(Slot)
 end;
 
 // Finds the next supported line ending and its byte width.
@@ -192,9 +211,8 @@ begin
     Maximum := MaxEventBytes;
     Finished := false;
   end;
-
-  DecoderStates := Std.Array.Concat(DecoderStates, [State]);
-  return Ok(Std.Http.Handles.NewSseDecoder(Std.Array.Length(DecoderStates)))
+  var Slot: integer := ReserveState(State);
+  return Ok(Std.Http.Handles.NewSseDecoder(Slot))
 end;
 
 // Feeds one byte fragment and returns every complete decoded event.
@@ -207,7 +225,7 @@ begin
   case DecoderIndex(Decoder) of
     Ok(Index):
     begin
-      mutable var State: DecoderState := DecoderStates[Index];
+      mutable var State: DecoderState := LoadState(Index);
       if State.Finished then
       begin
         return Error('SSE decoder is already finished')
@@ -217,12 +235,12 @@ begin
       case Process(State) of
         Ok(Output):
         begin
-          DecoderStates[Index] := Output.State;
+          StoreState(Index, Output.State);
           return Ok(Output.Events)
         end;
         Error(Message):
         begin
-          DecoderStates[Index] := State;
+          StoreState(Index, State);
           return Error(Message)
         end
       end
@@ -246,9 +264,9 @@ begin
       case DecoderIndex(Decoder) of
         Ok(Index):
         begin
-          mutable var State: DecoderState := DecoderStates[Index];
+          mutable var State: DecoderState := LoadState(Index);
           State.Finished := true;
-          DecoderStates[Index] := State;
+          StoreState(Index, State);
           return Ok(Events)
         end;
         Error(Message):

@@ -31,6 +31,7 @@ pub mod conv;
 pub mod dict;
 pub mod env;
 pub mod fs;
+pub mod http;
 pub mod json;
 pub mod math;
 pub mod net;
@@ -53,6 +54,7 @@ pub use conv::ConvIntrinsic;
 pub use dict::DictIntrinsic;
 pub use env::EnvIntrinsic;
 pub use fs::FsIntrinsic;
+pub use http::HttpIntrinsic;
 pub use json::JsonIntrinsic;
 pub use math::MathIntrinsic;
 pub use net::NetIntrinsic;
@@ -87,6 +89,8 @@ pub enum Intrinsic {
     Math(MathIntrinsic),
     /// Hosted TCP networking operation.
     Net(NetIntrinsic),
+    /// Internal hosted HTTP operation.
+    Http(HttpIntrinsic),
     /// Pseudorandom-number operation.
     Random(RandomIntrinsic),
     /// Array operation.
@@ -133,6 +137,30 @@ impl Intrinsic {
     pub fn debugger_name(self) -> String {
         match self {
             Self::Str(StrIntrinsic::Repeat) => "Std.Str.RepeatStr".to_string(),
+            Self::Http(HttpIntrinsic::ReserveBodyStreamState) => {
+                "Std.Http.Stream.ReserveState".to_string()
+            }
+            Self::Http(HttpIntrinsic::HasBodyStreamState) => {
+                "Std.Http.Stream.HasState".to_string()
+            }
+            Self::Http(HttpIntrinsic::LoadBodyStreamState) => {
+                "Std.Http.Stream.LoadState".to_string()
+            }
+            Self::Http(HttpIntrinsic::StoreBodyStreamState) => {
+                "Std.Http.Stream.StoreState".to_string()
+            }
+            Self::Http(HttpIntrinsic::ReserveSseDecoderState) => {
+                "Std.Http.Sse.ReserveState".to_string()
+            }
+            Self::Http(HttpIntrinsic::HasSseDecoderState) => {
+                "Std.Http.Sse.HasState".to_string()
+            }
+            Self::Http(HttpIntrinsic::LoadSseDecoderState) => {
+                "Std.Http.Sse.LoadState".to_string()
+            }
+            Self::Http(HttpIntrinsic::StoreSseDecoderState) => {
+                "Std.Http.Sse.StoreState".to_string()
+            }
             Self::Test(
                 TestIntrinsic::AssertEqualsInteger
                 | TestIntrinsic::AssertEqualsBoolean
@@ -180,6 +208,7 @@ intrinsic_wire_ops!(
     Parse(ParseIntrinsic),
     Math(MathIntrinsic),
     Net(NetIntrinsic),
+    Http(HttpIntrinsic),
     Random(RandomIntrinsic),
     Array(ArrayIntrinsic),
     Dict(DictIntrinsic),

@@ -77,6 +77,8 @@ pub(crate) struct LoopTargets {
 
 pub(crate) struct FunctionInput<'a> {
     pub name: &'a str,
+    /// Program or unit name that owns this function's source.
+    pub source_name: &'a str,
     pub id: FunctionId,
     pub result: TypeId,
     pub parameters: &'a [ParameterInput],

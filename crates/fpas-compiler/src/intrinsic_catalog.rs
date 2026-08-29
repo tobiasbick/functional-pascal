@@ -2,9 +2,9 @@
 
 use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic, OptionIntrinsic,
-    ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic, ResultIntrinsic, StrIntrinsic,
-    TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic,
+    OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
+    ResultIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -54,6 +54,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Close,
             ]
         ),
+        "Http" => resolve_http(member),
         "Random" => family!(
             member,
             Random,
@@ -127,6 +128,20 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
         ),
         "Toml" => family!(member, Toml, TomlIntrinsic, [Parse, Stringify]),
         "Test" => resolve_test(member, first_argument),
+        _ => None,
+    }
+}
+
+fn resolve_http(member: &str) -> Option<Intrinsic> {
+    match member {
+        "Stream.ReserveState" => Some(Intrinsic::Http(HttpIntrinsic::ReserveBodyStreamState)),
+        "Stream.HasState" => Some(Intrinsic::Http(HttpIntrinsic::HasBodyStreamState)),
+        "Stream.LoadState" => Some(Intrinsic::Http(HttpIntrinsic::LoadBodyStreamState)),
+        "Stream.StoreState" => Some(Intrinsic::Http(HttpIntrinsic::StoreBodyStreamState)),
+        "Sse.ReserveState" => Some(Intrinsic::Http(HttpIntrinsic::ReserveSseDecoderState)),
+        "Sse.HasState" => Some(Intrinsic::Http(HttpIntrinsic::HasSseDecoderState)),
+        "Sse.LoadState" => Some(Intrinsic::Http(HttpIntrinsic::LoadSseDecoderState)),
+        "Sse.StoreState" => Some(Intrinsic::Http(HttpIntrinsic::StoreSseDecoderState)),
         _ => None,
     }
 }
@@ -327,6 +342,30 @@ mod tests {
             }
             Intrinsic::Test(TestIntrinsic::AssertEqualsReal) => {
                 ("Std.Test.AssertEquals".into(), Some(Ty::Real))
+            }
+            Intrinsic::Http(HttpIntrinsic::ReserveBodyStreamState) => {
+                ("Std.Http.Stream.ReserveState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::HasBodyStreamState) => {
+                ("Std.Http.Stream.HasState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::LoadBodyStreamState) => {
+                ("Std.Http.Stream.LoadState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::StoreBodyStreamState) => {
+                ("Std.Http.Stream.StoreState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::ReserveSseDecoderState) => {
+                ("Std.Http.Sse.ReserveState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::HasSseDecoderState) => {
+                ("Std.Http.Sse.HasState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::LoadSseDecoderState) => {
+                ("Std.Http.Sse.LoadState".into(), None)
+            }
+            Intrinsic::Http(HttpIntrinsic::StoreSseDecoderState) => {
+                ("Std.Http.Sse.StoreState".into(), None)
             }
             intrinsic => {
                 let debug = format!("{intrinsic:?}");

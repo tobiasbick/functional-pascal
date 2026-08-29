@@ -11,8 +11,7 @@ begin
     Tags := ['fpas', 'tui'];
     Pinned := true;
     Archived := false;
-    Body := ('Human-readable body' + '
-') + 'with Markdown.';
+    Body := ('Human-readable body' + Std.Str.Chr(10)) + 'with Markdown.';
     Path := '';
   end;
   var Encoded: string := NoteStringify(Source);

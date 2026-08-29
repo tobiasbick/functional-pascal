@@ -67,10 +67,10 @@ fn array_index_out_of_bounds_is_runtime_error() {
 }
 
 #[test]
-fn flat_map_rejects_scalar_mapper_result() {
+fn flat_map_rejects_scalar_mapper_result_is_compile_error() {
     run_file_expect_failure(
-        "tests/stdlib/array/flat_map_rejects_scalar_mapper_result_runtime_error.fpas",
-        None,
+        "tests/stdlib/array/flat_map_rejects_scalar_mapper_result_compile_error.fpas",
+        Some("error[F2006]: `Std.Array.FlatMap` mapper must return an array"),
     );
 }
 
@@ -91,10 +91,10 @@ fn slice_out_of_bounds_is_runtime_error() {
 }
 
 #[test]
-fn writeln_without_uses_is_error() {
+fn writeln_without_uses_is_compile_error() {
     run_file_expect_failure(
-        "tests/stdlib/console/writeln_without_uses_is_error_runtime_error.fpas",
-        None,
+        "tests/stdlib/console/writeln_without_uses_is_error_compile_error.fpas",
+        Some("error[F2003]: Unknown procedure `WriteLn`"),
     );
 }
 
@@ -355,10 +355,10 @@ fn pad_center_negative_width_is_runtime_error() {
 }
 
 #[test]
-fn result_and_option_unqualified_unwrap_is_ambiguous() {
+fn result_and_option_unqualified_unwrap_is_ambiguous_compile_error() {
     run_file_expect_failure(
-        "tests/stdlib/result/result_and_option_unqualified_unwrap_is_ambiguous_runtime_error.fpas",
-        None,
+        "tests/stdlib/result/result_and_option_unqualified_unwrap_is_ambiguous_compile_error.fpas",
+        Some("error[F2004]: Ambiguous imported symbol `Unwrap`"),
     );
 }
 

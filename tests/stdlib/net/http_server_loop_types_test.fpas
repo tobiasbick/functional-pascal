@@ -26,6 +26,7 @@ begin
     Headers := [];
     Body := [];
   end;
-
-  AssertEquals(200, HandlerValue(RequestValue).StatusCode)
+  var ResponseValue: ServerResponse := HandlerValue(RequestValue);
+  AssertEquals(200, ResponseValue.StatusCode);
+  AssertEquals('OK', ResponseValue.ReasonPhrase)
 end.

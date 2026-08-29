@@ -128,6 +128,76 @@ end.
 }
 
 #[test]
+fn theme_switch_repaints_unchanged_terminal_cells() {
+    let cwd = create_temp_dir("tui-theme-switch");
+    let program = cwd.join("theme_switch.fpas");
+    write_text(
+        &program,
+        r#"program ThemeSwitch;
+
+uses Std.Console, Std.Option, Std.Test, Std.Tui;
+
+function UpdateTheme(State: integer; Msg: TuiMsg; Cmd: TuiCmdOutput): integer;
+begin
+  case Msg of
+    TuiMsg.Resize(Size):
+    begin
+      Cmd.SetPalette(TuiPalette.Default()
+                       .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(1, 2, 3), TuiColor.FromRgb(4, 5, 6))));
+      return State + 1
+    end;
+    TuiMsg.QuitRequested:
+    begin
+      Cmd.Set(TuiCmd.Quit);
+      return State
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function ViewTheme(State: integer): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('theme')
+end;
+
+begin
+  var Initial: TuiPalette := TuiPalette.Default()
+                               .WithRole(TuiStyleRole.Normal, TuiStyle.FromColors(TuiColor.FromRgb(10, 20, 30), TuiColor.FromRgb(40, 50, 60)));
+  AssertEquals(1, TuiApplication.RunWithPalette(0, UpdateTheme, ViewTheme, Initial));
+  var Painted: Cell := Unwrap(GetCell(1, 1));
+  AssertTrue(Painted.foreground.kind = ColorKind.Rgb);
+  AssertEquals(1, Painted.foreground.red);
+  AssertEquals(2, Painted.foreground.green);
+  AssertEquals(3, Painted.foreground.blue);
+  AssertEquals(4, Painted.background.red);
+  AssertEquals(5, Painted.background.green);
+  AssertEquals(6, Painted.background.blue)
+end.
+"#,
+    );
+    let built =
+        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
+            .expect("Tui theme-switch regression program must build");
+    let mut vm = fpas_vm::Vm::new(built.executable);
+    vm.push_console_event(ConsoleEvent::resize(10, 2));
+    vm.push_console_event(ConsoleEvent::key(ConsoleKeyEvent::new(
+        key_kind_index("Escape"),
+        '\0',
+        false,
+        false,
+        false,
+        false,
+    )));
+
+    vm.run()
+        .expect("Tui theme-switch regression program must run");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn interactive_host_does_not_emit_ticks_without_explicit_timer_input() {
     let cwd = create_temp_dir("tui-event-driven-idle");
     let program = cwd.join("event_driven_idle.fpas");

@@ -6,7 +6,7 @@ begin
   PushReadLn('first');
   PushReadLn('second');
   PushReadLn('third');
-  AssertEquals(ReadLn(), 'first');
-  AssertEquals(ReadLn(), 'second');
-  AssertEquals(ReadLn(), 'third')
+  AssertEquals('first', ReadLn());
+  AssertEquals('second', ReadLn());
+  AssertEquals('third', ReadLn())
 end.

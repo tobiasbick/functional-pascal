@@ -1,6 +1,6 @@
 program GoWait;
 
-uses Std.Console, Std.Task;
+uses Std.Task, Std.Test;
 
 function Worker(): integer;
 begin
@@ -9,5 +9,5 @@ end;
 
 begin
   var T: task := go Worker();
-  WriteLn(Std.Task.Wait(T))
+  AssertEquals(42, Std.Task.Wait(T))
 end.

@@ -1,6 +1,6 @@
 program GoStr;
 
-uses Std.Console, Std.Task;
+uses Std.Task, Std.Test;
 
 function Greet(): string;
 begin
@@ -9,5 +9,5 @@ end;
 
 begin
   var T: task := go Greet();
-  WriteLn(Std.Task.Wait(T))
+  AssertEquals('hello', Std.Task.Wait(T))
 end.

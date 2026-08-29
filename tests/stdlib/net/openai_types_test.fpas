@@ -18,7 +18,6 @@ begin
     end;
     None:
     begin
-      AssertTrue(true)
     end
   end
 end.

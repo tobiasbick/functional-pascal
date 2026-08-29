@@ -13,19 +13,19 @@ end;
 
 begin
   var Next: function(): integer := Counter();
-  AssertEquals(IntToStr(Next()), '1');
-  AssertEquals(IntToStr(Next()), '2');
+  AssertEquals('1', IntToStr(Next()));
+  AssertEquals('2', IntToStr(Next()));
   mutable var Count: integer := 0;
   var Inc: procedure() := procedure() begin
     Count := Count + 1
   end;
 
   Inc();
-  AssertEquals(IntToStr(Count), '1');
+  AssertEquals('1', IntToStr(Count));
   var Base: integer := 10;
   var Add: function(Value: integer): integer := function(Value: integer): integer begin
     return Base + Value
   end;
 
-  AssertEquals(IntToStr(Add(5)), '15')
+  AssertEquals('15', IntToStr(Add(5)))
 end.

@@ -4,37 +4,72 @@ uses Std.Test, Std.Tui;
 
 type
   DemoModel = record
-    Confirming: boolean;
+    Focus: integer;
   end;
+
+function Key(Kind: TuiKeyKind): TuiKeyEvent;
+begin
+  return record
+    kind := Kind;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
 
 function UpdateDemo(State: DemoModel; Msg: TuiMsg; Cmd: TuiCmdOutput): DemoModel;
 begin
   Cmd.Set(TuiCmd.NoCommand);
-  return State
+  case Msg of
+    TuiMsg.FocusChanged(Previous, Current):
+    begin
+      case Current of
+        Some(Id):
+        begin
+          return record
+            Focus := Id.Value;
+          end
+        end;
+        None:
+        begin
+          return State
+        end
+      end
+    end
+    else
+    begin
+      return State
+    end
+  end
 end;
 
 function ViewDemo(State: DemoModel): TuiElement;
 begin
-  var Input: TuiElement := TuiElementBuilders.MakeInput(TuiControlId.Create(1), '', 0, TuiAction.Create(1));
-  var Quit: TuiElement := TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'Quit', TuiAction.Create(3));
-  mutable var Content: array of TuiElement := [Input, Quit];
-  mutable var Focused: option of TuiControlId := Some(TuiControlId.Create(1));
-  if State.Confirming then
-  begin
-    Content := [
-                 TuiElementBuilders.MakeOverlay('Confirm', [TuiElementBuilders.MakeLabel('done'), Quit])
-               ];
-    Focused := Some(TuiControlId.Create(3))
-  end;
-
-  return TuiElementBuilders.MakeDesktop(Focused, [TuiElementBuilders.MakePanel('Host', Content)])
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(State.Focus)), [
+                                                                                  TuiElementBuilders.MakePanel('Host', [
+                                                                                                                         TuiElementBuilders.MakeInput(TuiControlId.Create(1), '', 0, TuiAction.Create(1))
+                                                                                                                       ]),
+                                                                                  TuiElementBuilders.MakeOverlay('Confirm', [
+                                                                                                                              TuiElementBuilders.MakeButton(TuiControlId.Create(2), 'Yes', TuiAction.Create(2)),
+                                                                                                                              TuiElementBuilders.MakeButton(TuiControlId.Create(3), 'No', TuiAction.Create(3))
+                                                                                                                            ])
+                                                                                ])
 end;
 
 begin
   mutable var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(40, 12));
-  var Model: DemoModel := App.RunIterations(record
-    Confirming := true;
-  end, UpdateDemo, ViewDemo, 0, 0);
-  AssertTrue(Model.Confirming);
+  mutable var Model: DemoModel := record
+    Focus := 2;
+  end;
+
+  Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 0, 0);
+  App.InjectKeyForTest(Key(TuiKeyKind.Tab));
+  Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 1, 0);
+  AssertEquals(3, Model.Focus);
+  App.InjectKeyForTest(Key(TuiKeyKind.Tab));
+  Model := App.RunIterations(Model, UpdateDemo, ViewDemo, 1, 0);
+  AssertEquals(2, Model.Focus);
   App.Close()
 end.

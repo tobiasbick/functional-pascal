@@ -10,9 +10,9 @@ type
 
 function ViewButton(State: ButtonPointerModel): TuiElement;
 begin
-  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
-                                                                        TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
-                                                                      ])
+  return TuiElementBuilders.MakeDesktop(None, [
+                                                TuiElementBuilders.MakeButtonWithMnemonic(TuiControlId.Create(1), 'Go', 'G', TuiAction.Create(10))
+                                              ])
 end;
 
 function UpdateButton(State: ButtonPointerModel; Msg: TuiMsg; Cmd: TuiCmdOutput): ButtonPointerModel;
@@ -55,21 +55,25 @@ begin
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 0, 0);
   var GoX: integer := Std.Str.IndexOf(App.SurfaceSnapshot().LineAt(0), 'G');
   var Inside: TuiPoint := TuiPoint.Create(GoX, 0);
+  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonShortcut);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Down, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
   AssertEquals(0, Model.Actions);
   AssertEquals(1, Model.PointerEvents);
+  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonSelectedShortcut);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonShortcut);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Up, TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(0, Model.Actions);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Down, Inside));
-  Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  Model := App.RunIterations(Model, UpdateButton, ViewButton, 2, 0);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, TuiPoint.Create(15, 3)));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Drag, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
+  AssertTrue(App.SurfaceSnapshot().CellAt(GoX, 0).Role = TuiStyleRole.ButtonSelectedShortcut);
   App.InjectPointerForTest(Pointer(TuiPointerAction.Up, Inside));
   Model := App.RunIterations(Model, UpdateButton, ViewButton, 1, 0);
   AssertEquals(1, Model.Actions);

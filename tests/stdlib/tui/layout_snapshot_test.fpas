@@ -32,7 +32,10 @@ begin
                                                   TuiElementBuilders.MakeOverlay('Dlg', [TuiElementBuilders.MakeLabel('Body')])
                                                 ])
   end, 0, 0);
-  AssertTrue(Std.Str.Contains(Wide.SurfaceSnapshot().LineAt(3), 'Dlg'));
-  AssertTrue(Std.Str.Contains(Wide.SurfaceSnapshot().LineAt(4), 'Body'));
+  var Overlay: TuiSurfaceSnapshot := Wide.SurfaceSnapshot();
+  AssertEquals(18, Std.Str.IndexOf(Overlay.LineAt(3), 'Dlg'));
+  AssertEquals(16, Std.Str.IndexOf(Overlay.LineAt(4), 'Body'));
+  AssertEquals('╭', Overlay.CellAt(15, 3).Glyph);
+  AssertEquals('╮', Overlay.CellAt(23, 3).Glyph);
   Wide.Close()
 end.

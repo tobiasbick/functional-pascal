@@ -1,7 +1,7 @@
 // Keeps the public TLS client and server listener signatures type-checked.
 program NetTlsSignatureTest;
 
-uses Std.Net, Std.Test;
+uses Std.Net;
 
 // Type-checks the verified TLS client constructor.
 function ConnectTlsSignatureOnly(): result of Connection, string;
@@ -16,5 +16,4 @@ begin
 end;
 
 begin
-  AssertTrue(true)
 end.

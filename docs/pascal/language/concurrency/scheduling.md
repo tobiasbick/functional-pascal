@@ -21,6 +21,11 @@ by millisecond deadline in a shared timer queue. One timer-driver thread moves e
 ready queue, so sleeping tasks do not occupy pool workers. `Sleep` on the main task remains a blocking
 host wait.
 
+Synchronous hosted callbacks execute as part of their owner task. If callback bytecode reaches
+`Yield` or `Std.Time.Sleep`, the VM saves both the callback frame and the partially completed hosted
+operation, releases the pool worker, and resumes the same owner later. Already completed callback
+elements are not invoked again, and no separate task identity is created for the callback.
+
 ## Shared runtime state
 
 Worker threads and the main execution thread share one runtime state: immutable bytecode, a mutex-protected **ready queue** of suspended tasks paired with a **condition variable** so idle workers block instead of spinning, the cooperative **timer queue**, **task id** allocation, **task result** storage for handles used with `Wait`, a **shutdown** flag, and mutex-protected **console**, **input**, and **TUI** state so concurrent tasks do not corrupt I/O. Hosted TUI `On*` handlers run on the **main** thread only.

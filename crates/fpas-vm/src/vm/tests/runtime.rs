@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use fpas_bytecode::{
-    CodeRange, Constant, FunctionFlags, FunctionId, FunctionInfo, Instruction, InstructionAddress,
-    Intrinsic, Opcode, ReturnConvention, SourceId, SourceRun, StringId, TaskIntrinsic,
-    TimeIntrinsic, Value,
+    ArrayIntrinsic, CodeRange, Constant, FunctionFlags, FunctionId, FunctionInfo, Instruction,
+    InstructionAddress, Intrinsic, Opcode, ReturnConvention, SourceId, SourceRun, StringId,
+    TaskIntrinsic, TimeIntrinsic, Value,
 };
 use fpas_diagnostics::codes::{
     RUNTIME_DIVISION_BY_ZERO, RUNTIME_MODULO_BY_ZERO, RUNTIME_NUMERIC_DOMAIN_ERROR,
@@ -238,6 +238,170 @@ fn shutdown_while_waiting_on_pending_task_returns_in_bounded_time() {
     let error = result.expect_err("shutdown must fail the run");
     assert_eq!(error.code, RUNTIME_VM_SHUTDOWN);
     runner.join().expect("VM runner");
+}
+
+#[test]
+fn callback_sleep_suspends_its_owner_and_releases_the_only_worker() {
+    run_callback_suspension(
+        abx(Opcode::LoadConstant, 1, 4),
+        Instruction::abc(
+            Opcode::Intrinsic,
+            fpas_bytecode::NO_REGISTER,
+            u16::from(Intrinsic::Time(TimeIntrinsic::Sleep)),
+            1,
+            1,
+        )
+        .expect("callback sleep"),
+    );
+}
+
+#[test]
+fn callback_yield_suspends_its_owner_and_releases_the_only_worker() {
+    run_callback_suspension(abc(Opcode::Yield, 0, 0, 0), abc(Opcode::LoadUnit, 1, 0, 0));
+}
+
+fn run_callback_suspension(first_callback_step: Instruction, second_callback_step: Instruction) {
+    let mut mapper = task_function(2, 7, 12, 4, false);
+    mapper.return_convention = ReturnConvention::Value;
+    let mut callback = task_function(3, 12, 15, 2, false);
+    callback.arity = 1;
+    callback.return_convention = ReturnConvention::Value;
+    let mut peer = task_function(4, 15, 17, 1, false);
+    peer.return_convention = ReturnConvention::Value;
+    let executable = task_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
+            abx(Opcode::LoadConstant, 2, 1),
+            abc_aux(Opcode::SpawnTask, 3, 2, 0, 0),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                4,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                3,
+                1,
+            )
+            .expect("peer wait"),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                5,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                1,
+                1,
+            )
+            .expect("mapper wait"),
+            return_unit(),
+            abx(Opcode::LoadConstant, 0, 3),
+            abc(Opcode::MakeArray, 1, 0, 1),
+            abx(Opcode::LoadConstant, 2, 2),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                3,
+                u16::from(Intrinsic::Array(ArrayIntrinsic::Map)),
+                1,
+                2,
+            )
+            .expect("array map"),
+            abc(Opcode::Return, 3, 0, 0),
+            first_callback_step,
+            second_callback_step,
+            abc(Opcode::Return, 0, 0, 0),
+            abx(Opcode::LoadConstant, 0, 5),
+            abc(Opcode::Return, 0, 0, 0),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Function {
+                function: FunctionId::new(3),
+                task_bound: false,
+            },
+            Constant::Function {
+                function: FunctionId::new(2),
+                task_bound: false,
+            },
+            Constant::Integer(7),
+            Constant::Integer(25),
+            Constant::Integer(42),
+        ],
+        vec!["root", "test.fpas", "mapper", "callback", "peer"],
+        vec![task_function(0, 0, 7, 6, true), mapper, callback, peer],
+    );
+    let mut vm = Vm::new(executable);
+    vm.pool_size = 1;
+
+    vm.run()
+        .expect("callback suspension must resume the owner after the peer completes");
+}
+
+#[test]
+fn callback_failure_is_retained_for_the_owner_without_a_ghost_task() {
+    let mut mapper = task_function(2, 4, 9, 4, false);
+    mapper.return_convention = ReturnConvention::Value;
+    let mut callback = task_function(3, 9, 12, 2, false);
+    callback.arity = 1;
+    callback.return_convention = ReturnConvention::Value;
+    let executable = task_image(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::SpawnTask, 1, 0, 0, 0),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                2,
+                u16::from(Intrinsic::Task(TaskIntrinsic::Wait)),
+                1,
+                1,
+            )
+            .expect("mapper wait"),
+            return_unit(),
+            abx(Opcode::LoadConstant, 0, 2),
+            abc(Opcode::MakeArray, 1, 0, 1),
+            abx(Opcode::LoadConstant, 2, 1),
+            Instruction::abc(
+                Opcode::Intrinsic,
+                3,
+                u16::from(Intrinsic::Array(ArrayIntrinsic::Map)),
+                1,
+                2,
+            )
+            .expect("array map"),
+            abc(Opcode::Return, 3, 0, 0),
+            abx(Opcode::LoadConstant, 1, 3),
+            abc(Opcode::Panic, 1, 0, 0),
+            abc(Opcode::Return, 0, 0, 0),
+        ],
+        vec![
+            Constant::Function {
+                function: FunctionId::new(1),
+                task_bound: false,
+            },
+            Constant::Function {
+                function: FunctionId::new(2),
+                task_bound: false,
+            },
+            Constant::Integer(7),
+            Constant::String(StringId::new(4)),
+        ],
+        vec!["root", "test.fpas", "mapper", "callback", "boom"],
+        vec![task_function(0, 0, 4, 3, true), mapper, callback],
+    );
+    let mut vm = Vm::new(executable);
+    vm.pool_size = 1;
+    let scheduler = Arc::clone(&vm.scheduler);
+
+    let error = vm.run().expect_err("callback panic must fail its owner");
+
+    assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
+    assert!(matches!(
+        scheduler.poll_result(1),
+        crate::vm::TaskResultPoll::Failed(retained) if retained == error
+    ));
+    assert!(matches!(
+        scheduler.poll_result(2),
+        crate::vm::TaskResultPoll::Unknown
+    ));
 }
 
 #[test]

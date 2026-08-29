@@ -247,7 +247,7 @@ Options:
   --strict            Treat skipped tests as a failure
   --filter <pattern>  Run matching test paths only
   --report json        Write a machine-readable report to stdout
-  --timeout <secs>    Fail a test after a positive number of seconds
+  --timeout <secs>    Per-test timeout in seconds (default: 300)
   --jobs <n>          Run up to n tests in parallel; 0 uses available CPUs
   --script <path>     Apply test-script overrides
   -h, --help          Print this help

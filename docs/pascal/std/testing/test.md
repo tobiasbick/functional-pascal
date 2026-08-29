@@ -113,6 +113,7 @@ fpas test tests/suite.fpasprj
 fpas test --filter tui_escape
 fpas test --report json
 fpas test --strict
+fpas test --timeout 30 tests/
 ```
 
 Flags and discovery rules: [CLI](../../program-structure/cli.md).
@@ -125,12 +126,13 @@ This prevents parallel workers from racing to publish the same unit sidecar. Eac
 fresh VM, globals, console state, timeout, and golden-file evaluation. If precompilation
 fails, the test falls back to the normal single-test path so its diagnostic remains test-local.
 
-With `--timeout <secs>`, each Setup hook, test body, and Teardown hook executes in a private worker
-process after compilation. Its timeout budget starts immediately before that worker is spawned and
-covers worker startup, request decoding, scripted-input preparation, and VM execution. On expiry,
-the runner terminates the worker and its host-process descendants, waits for cleanup, and reports
-`TIMEOUT` with exit code `3`. This also bounds blocking host calls such as `Std.Time.Sleep` and
-`Std.Proc.Run`; no cooperative VM shutdown is required.
+Each Setup hook, test body, and Teardown hook executes in a private worker process after compilation.
+The per-test timeout defaults to 300 seconds; `--timeout <secs>` overrides it. Its budget starts
+immediately before that worker is spawned and covers worker startup, request decoding,
+scripted-input preparation, and VM execution. On expiry, the runner terminates the worker and its
+host-process descendants, waits for cleanup, and reports `TIMEOUT` with exit code `3`. This also
+bounds blocking host calls such as `Std.Time.Sleep` and `Std.Proc.Run`; no cooperative VM shutdown
+is required.
 
 Executable test images exist only for the current `fpas test` process. Reusable unit objects are
 the source-adjacent `.fpascu` files documented under [Units](../../program-structure/units.md).

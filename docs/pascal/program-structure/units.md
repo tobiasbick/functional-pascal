@@ -123,7 +123,11 @@ invalidates consuming units.
 For an exported record, the semantic interface also stores its declaring unit
 and the names of non-public record members. Consumers therefore receive the
 complete runtime layout needed for linking while semantic analysis still
-enforces record member visibility.
+enforces record member visibility. Before emitting that interface, semantic
+analysis rejects any public declaration whose signature or complete exported
+type layout refers to a type that is private to the same unit. The diagnostic
+identifies the declaration and private type and recommends making the type
+public or no longer exporting the declaration.
 
 The final executable bytecode image links only reachable unit objects in dependency order.
 Existing top-level constant and variable initializers run in that same dependency order before

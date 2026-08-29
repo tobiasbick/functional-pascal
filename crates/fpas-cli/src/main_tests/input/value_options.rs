@@ -148,6 +148,20 @@ fn resolve_cli_config_parses_test_timeout_flag() {
 }
 
 #[test]
+fn resolve_cli_config_uses_300_second_test_timeout_by_default() {
+    let cwd = test_project("test-timeout-default");
+    let result = resolve_cli_config(&[String::from("test"), String::from("demo.fpasprj")], &cwd);
+
+    match result {
+        Ok(ResolvedCli::Test(config)) => {
+            assert_eq!(config.timeout, Some(std::time::Duration::from_secs(300)));
+        }
+        other => panic!("expected test config, got {other:?}"),
+    }
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}
+
+#[test]
 fn resolve_cli_config_parses_test_report_json_flag() {
     let cwd = test_project("test-report-json");
     let result = resolve_cli_config(

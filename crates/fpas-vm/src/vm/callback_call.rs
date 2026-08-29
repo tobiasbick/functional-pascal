@@ -15,6 +15,17 @@ impl Worker {
         callback: &Value,
         arguments: impl AsRef<[Value]>,
     ) -> Result<Value, VmError> {
+        let arguments = arguments.as_ref();
+        let function = self.resolve_callback(callback, arguments.len())?;
+        self.call_numeric_function(&function, arguments)
+    }
+
+    /// Validate and clone a callback for a call with the given visible arity.
+    pub(super) fn resolve_callback(
+        &self,
+        callback: &Value,
+        argument_count: usize,
+    ) -> Result<SharedFunction, VmError> {
         let Value::Function(function) = callback else {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
@@ -25,14 +36,6 @@ impl Worker {
             ));
         };
         self.require_function_task_owner(function)?;
-        self.call_numeric_function(function, arguments.as_ref())
-    }
-
-    fn call_numeric_function(
-        &self,
-        function: &SharedFunction,
-        arguments: &[Value],
-    ) -> Result<Value, VmError> {
         let target = function.function;
         let info = self
             .executable
@@ -55,20 +58,28 @@ impl Worker {
                     "Bound callback target has no receiver parameter",
                 )
             })?;
-        if arguments.len() != visible_arity {
+        if argument_count != visible_arity {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
                 self.current_address,
                 RUNTIME_WRONG_CALL_ARITY,
                 format!(
                     "Function `{}` expects {} arguments, got {}",
-                    function.name,
-                    visible_arity,
-                    arguments.len()
+                    function.name, visible_arity, argument_count
                 ),
                 "Check the callback signature and the intrinsic's callback contract.",
             ));
         }
+        Ok(function.clone())
+    }
+
+    fn call_numeric_function(
+        &self,
+        function: &SharedFunction,
+        arguments: &[Value],
+    ) -> Result<Value, VmError> {
+        let target = function.function;
+        let info = &self.executable.executable().functions[usize::from(target.get())];
 
         let call_arguments = function
             .bound_receiver

@@ -53,6 +53,9 @@ pub fn analyze_unit_with_interface_support(
 ) -> Result<UnitAnalysis, InterfaceConversionError> {
     let mut checker = check::Checker::new();
     checker.check_unit_with_interfaces(unit, interfaces, supporting_interfaces)?;
+    checker
+        .errors
+        .extend(super::public_signatures::validate(unit));
     let interface = if checker.errors.is_empty() {
         Some(checker.extract_unit_interface(unit)?)
     } else {

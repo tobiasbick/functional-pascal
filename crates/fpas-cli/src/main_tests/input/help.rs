@@ -58,3 +58,19 @@ fn run_cli_subcommand_help_is_focused_and_includes_examples() {
 
     fs::remove_dir_all(&cwd).expect("temp directory must be removed");
 }
+
+#[test]
+fn test_help_displays_300_second_default_timeout() {
+    let cwd = create_temp_dir("test-help-timeout-default");
+
+    let (exit_code, stdout, stderr) =
+        run_cli_args_and_capture_output(&[String::from("test"), String::from("--help")], &cwd);
+
+    assert_eq!(exit_code, 0, "test help must succeed: {stderr}");
+    assert!(
+        stdout.contains("--timeout <secs>") && stdout.contains("default: 300"),
+        "test help must expose the timeout default: {stdout}"
+    );
+    assert!(stderr.is_empty());
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+}

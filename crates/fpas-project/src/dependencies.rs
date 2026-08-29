@@ -19,7 +19,8 @@ use std::path::{Path, PathBuf};
 /// Loads a project together with transitive library dependencies.
 ///
 /// Library dependency paths are resolved relative to the consuming project's root
-/// or as absolute paths. Cycles and non-library dependencies are rejected.
+/// or as absolute paths. Cycles, non-library dependencies, and source ownership
+/// conflicts between different projects are rejected.
 pub(super) fn load_project_with_dependencies(
     path: &Path,
     visiting: &mut Vec<PathBuf>,
@@ -50,7 +51,7 @@ pub(super) fn load_project_with_dependencies(
         let dependency_loaded =
             load_project_with_dependencies(&dependency_path, visiting, cache, parse_cache)?;
         ensure_library_dependency(&dependency_path, &dependency_loaded)?;
-        merge_dependency_link_meta(&mut link_meta, &dependency_path, &dependency_loaded);
+        merge_dependency_link_meta(&mut link_meta, &dependency_path, &dependency_loaded)?;
         merge_source_files(
             &mut source_files,
             dependency_loaded.source_files,
@@ -58,6 +59,7 @@ pub(super) fn load_project_with_dependencies(
         );
     }
 
+    reject_own_source_overlap(path, &own.source_files, &link_meta)?;
     let own_source_paths = own.source_files.clone();
     merge_source_files(&mut source_files, own.source_files, &mut warnings);
     source_files = match own.kind {
@@ -135,7 +137,7 @@ fn merge_dependency_link_meta(
     consumer: &mut ProjectLinkMeta,
     dependency_path: &Path,
     dependency_loaded: &LoadedProject,
-) {
+) -> Result<(), String> {
     let dependency_canonical = canonical_project_path(dependency_path);
     consumer.library_export_policies.insert(
         dependency_canonical.clone(),
@@ -158,10 +160,85 @@ fn merge_dependency_link_meta(
             SourceOrigin::Own => SourceOrigin::Library(dependency_canonical.clone()),
             SourceOrigin::Library(path) => SourceOrigin::Library(path),
         };
+        reject_library_source_overlap(consumer, source_path, &remapped)?;
         consumer
             .source_origins
             .insert(canonical_source_path(source_path), remapped);
     }
+
+    Ok(())
+}
+
+fn reject_library_source_overlap(
+    link_meta: &ProjectLinkMeta,
+    source_path: &Path,
+    incoming_origin: &SourceOrigin,
+) -> Result<(), String> {
+    let SourceOrigin::Library(incoming_owner) = incoming_origin else {
+        return Ok(());
+    };
+    let Some(existing_owner) = library_owner_for_source(link_meta, source_path) else {
+        return Ok(());
+    };
+    if same_file(existing_owner, incoming_owner) {
+        return Ok(());
+    }
+
+    Err(source_ownership_conflict_error(
+        source_path,
+        existing_owner,
+        incoming_owner,
+    ))
+}
+
+fn reject_own_source_overlap(
+    project_path: &Path,
+    own_source_paths: &[PathBuf],
+    link_meta: &ProjectLinkMeta,
+) -> Result<(), String> {
+    for source_path in own_source_paths {
+        let Some(library_owner) = library_owner_for_source(link_meta, source_path) else {
+            continue;
+        };
+        return Err(source_ownership_conflict_error(
+            source_path,
+            library_owner,
+            project_path,
+        ));
+    }
+
+    Ok(())
+}
+
+fn library_owner_for_source<'a>(
+    link_meta: &'a ProjectLinkMeta,
+    source_path: &Path,
+) -> Option<&'a Path> {
+    link_meta
+        .source_origins
+        .iter()
+        .find_map(|(recorded_path, origin)| {
+            if !same_file(recorded_path, source_path) {
+                return None;
+            }
+            match origin {
+                SourceOrigin::Library(project_path) => Some(project_path.as_path()),
+                SourceOrigin::Own => None,
+            }
+        })
+}
+
+fn source_ownership_conflict_error(
+    source_path: &Path,
+    first_project: &Path,
+    conflicting_project: &Path,
+) -> String {
+    format!(
+        "Source file `{}` is owned by more than one project.\n  first project: `{}`\n  conflicting project: `{}`\n  help: Keep the file in one project's `[sources]`; consume it from other projects through that library dependency.",
+        canonical_source_path(source_path).to_string_lossy(),
+        first_project.to_string_lossy(),
+        conflicting_project.to_string_lossy()
+    )
 }
 
 fn ensure_library_dependency(path: &Path, loaded: &LoadedProject) -> Result<(), String> {

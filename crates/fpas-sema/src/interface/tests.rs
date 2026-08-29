@@ -3,6 +3,8 @@ use fpas_unit::interface::{InterfaceType, SymbolKind};
 
 use super::analyze_unit;
 
+mod public_signatures;
+
 fn parse_unit(source: &str) -> fpas_parser::Unit {
     let (parsed, errors) = parse_compilation_unit(source);
     assert!(errors.is_empty(), "unexpected parse errors: {errors:#?}");

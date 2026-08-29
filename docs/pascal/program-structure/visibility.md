@@ -46,6 +46,14 @@ See [Records](../language/types/records.md#field-visibility),
 [Record properties](../language/types/record-properties.md#visibility), and
 [Record events](../language/types/record-events.md#visibility).
 
+Every type referenced by a public unit declaration must also be public when it
+is declared in that unit. This applies recursively to parameters, results,
+constants, variables, aliases, collection and callable types, and exported
+record or enum layouts. Because a compiled record interface contains its
+complete runtime layout, the rule also covers private members of an exported
+record. A violation is reported at the private type reference with a hint to
+make that type public or stop exporting the declaration.
+
 The `public` modifier is invalid in `program` files, including inside record
 types. The word `private` is an ordinary identifier.
 

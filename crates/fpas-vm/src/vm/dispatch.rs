@@ -16,6 +16,9 @@ pub(super) enum DispatchStep {
 
 impl Worker {
     pub fn dispatch_one(&mut self) -> Result<DispatchStep, VmError> {
+        if self.resume_callback_continuation()? {
+            return Ok(DispatchStep::Continue);
+        }
         self.current_address = InstructionAddress::try_from_index(self.ip).map_err(|error| {
             diagnostics::internal(
                 self.executable.executable(),

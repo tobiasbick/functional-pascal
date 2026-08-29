@@ -49,6 +49,7 @@ impl DebugTaskRuntime {
             retain_result: false,
             instruction_count: 0,
             suppressed_initializers: Vec::new(),
+            callback_continuations: Vec::new(),
         });
     }
 }

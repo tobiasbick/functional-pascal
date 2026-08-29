@@ -29,22 +29,29 @@ impl Worker {
         let arguments = self
             .registers
             .get(start..end)
-            .ok_or_else(|| self.intrinsic_window_error(operands))?;
+            .ok_or_else(|| self.intrinsic_window_error(operands))?
+            .to_vec();
         let location = self.intrinsic_location();
-        let result = if matches!(intrinsic, Intrinsic::Task(_) | Intrinsic::Time(_)) {
-            let owned_arguments = arguments.to_vec();
+        let destination = (operands.a != NO_REGISTER)
+            .then(|| register(operands.a))
+            .transpose()?;
+        let outcome = if matches!(intrinsic, Intrinsic::Task(_) | Intrinsic::Time(_)) {
             let destination = (operands.a != NO_REGISTER)
                 .then(|| register(operands.a))
                 .transpose()?;
-            if let Some(result) = self.task_intrinsic(intrinsic, &owned_arguments, destination)? {
+            if let Some(result) = self.task_intrinsic(intrinsic, &arguments, destination)? {
                 if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
                     self.write(register(operands.a)?, value)?;
                 }
                 return Ok(());
             }
-            self.execute_borrowed_intrinsic(intrinsic, &owned_arguments, location)?
+            self.execute_borrowed_intrinsic(intrinsic, &arguments, location, destination)?
         } else {
-            self.execute_borrowed_intrinsic(intrinsic, arguments, location)?
+            self.execute_borrowed_intrinsic(intrinsic, &arguments, location, destination)?
+        };
+        let HostedOutcome::Complete(result) = outcome else {
+            debug_assert!(matches!(outcome, HostedOutcome::Deferred));
+            return Ok(());
         };
         if operands.a == NO_REGISTER {
             return Ok(());
@@ -95,21 +102,28 @@ impl Worker {
     }
 
     fn execute_borrowed_intrinsic(
-        &self,
+        &mut self,
         intrinsic: Intrinsic,
         arguments: &[Value],
         location: SourceLocation,
-    ) -> Result<Option<Value>, VmError> {
-        let result = match self.execute_hosted_intrinsic(intrinsic, arguments, location)? {
-            HostedOutcome::Complete(result) => result,
-            HostedOutcome::Unhandled => fpas_std::run_intrinsic_borrowed(
-                intrinsic,
-                arguments,
-                location,
-                self.layouts.as_ref(),
-            )?,
-        };
-        Ok(result)
+        destination: Option<fpas_bytecode::Register>,
+    ) -> Result<HostedOutcome, VmError> {
+        match self.execute_hosted_intrinsic(
+            intrinsic,
+            arguments,
+            location,
+            destination.map(|register| self.base + usize::from(register.get())),
+        )? {
+            HostedOutcome::Unhandled => {
+                Ok(HostedOutcome::Complete(fpas_std::run_intrinsic_borrowed(
+                    intrinsic,
+                    arguments,
+                    location,
+                    self.layouts.as_ref(),
+                )?))
+            }
+            outcome => Ok(outcome),
+        }
     }
 
     fn intrinsic_location(&self) -> SourceLocation {

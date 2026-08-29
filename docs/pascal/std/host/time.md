@@ -48,7 +48,9 @@ Requires `uses Std.Time;`.
 `Sleep` blocks the main program thread when called by the main task. When called from a spawned
 `go` task, the VM suspends that task in its cooperative timer queue and immediately releases the
 pool worker to run other ready tasks. After the deadline, the timer driver places the suspended task
-back on the shared ready queue.
+back on the shared ready queue. The same rule applies inside synchronous hosted callbacks such as
+`Std.Array.Map`: the VM retains the callback and collection-operation state as part of the owner task,
+suspends that owner, and resumes the callback without repeating completed elements.
 
 ---
 
@@ -86,8 +88,9 @@ WriteLn(ElapsedMillis(Start))
 
 ## `procedure Sleep(Milliseconds: integer)`
 
-Waits for the given number of milliseconds. Spawned tasks wait cooperatively without pinning a pool
-worker. Negative values produce a runtime error.
+Waits for the given number of milliseconds. Spawned tasks, including their active synchronous
+callbacks, wait cooperatively without pinning a pool worker. Negative values produce a runtime
+error.
 
 ```pascal
 Sleep(250)

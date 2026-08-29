@@ -1,0 +1,27 @@
+program CallbackSleepTest;
+
+uses Std.Array, Std.Task, Std.Test, Std.Time;
+
+function SleepAndDouble(Value: integer): integer;
+begin
+  Sleep(25);
+  return Value * 2
+end;
+
+function MapValue(): integer;
+begin
+  var Values: array of integer := Map([21], SleepAndDouble);
+  return Values[0]
+end;
+
+function PeerValue(): integer;
+begin
+  return 7
+end;
+
+begin
+  var Mapper: task := go MapValue();
+  var Peer: task := go PeerValue();
+  AssertEquals(7, Wait(Peer));
+  AssertEquals(42, Wait(Mapper))
+end.

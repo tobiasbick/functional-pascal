@@ -1,16 +1,15 @@
-//! Higher-order collection, result, and option intrinsics for numeric callbacks.
+//! Immediate higher-order intrinsic execution for the main task.
 
 use fpas_bytecode::{
     ArrayIntrinsic, DictIntrinsic, Intrinsic, OptionIntrinsic, ResultIntrinsic, SourceLocation,
     Value,
 };
-use fpas_diagnostics::codes::RUNTIME_VM_OPERAND_TYPE_MISMATCH;
 
-use super::super::worker::Worker;
-use super::super::{VmError, diagnostics};
+use super::Worker;
+use crate::vm::VmError;
 
 impl Worker {
-    pub(super) fn execute_callback_intrinsic(
+    pub(super) fn execute_callback_intrinsic_sync(
         &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
@@ -239,37 +238,5 @@ impl Worker {
             Value::Boolean(value) => Ok(value),
             other => Err(self.callback_type_error("boolean callback result", Some(&other))),
         }
-    }
-
-    fn array_argument<'a>(
-        &self,
-        value: Option<&'a Value>,
-        _context: &str,
-    ) -> Result<&'a [Value], VmError> {
-        match value {
-            Some(Value::Array(values)) => Ok(values),
-            other => Err(self.callback_type_error("array", other)),
-        }
-    }
-
-    fn arity_error(&self, context: &str) -> VmError {
-        diagnostics::internal(
-            self.executable.executable(),
-            self.current_address,
-            format!("Verified {context} arguments are incomplete"),
-        )
-    }
-
-    fn callback_type_error(&self, expected: &str, actual: Option<&Value>) -> VmError {
-        diagnostics::at_address(
-            self.executable.executable(),
-            self.current_address,
-            RUNTIME_VM_OPERAND_TYPE_MISMATCH,
-            format!(
-                "Expected {expected}, got {}",
-                actual.map_or("missing argument", Value::type_name)
-            ),
-            format!("Pass a {expected} value to this intrinsic."),
-        )
     }
 }

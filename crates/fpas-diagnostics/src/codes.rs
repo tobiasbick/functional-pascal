@@ -107,6 +107,11 @@ define_codes!(SEMA_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/language/types/enums.md`
     SEMA_ENUM_BACKING_VALUE_EXHAUSTED = 2018;
+
+    /// A public unit declaration refers to a type that is private to that unit.
+    ///
+    /// **Documentation:** `docs/pascal/program-structure/visibility.md`
+    SEMA_PRIVATE_TYPE_IN_PUBLIC_SIGNATURE = 2019;
 });
 
 define_codes!(COMPILE_ALLOCATED_CODES => {

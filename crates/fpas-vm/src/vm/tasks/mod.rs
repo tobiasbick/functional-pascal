@@ -146,6 +146,7 @@ impl Worker {
             retain_result: !detached,
             instruction_count: 0,
             suppressed_initializers: Vec::new(),
+            callback_continuations: Vec::new(),
         });
         Ok(())
     }

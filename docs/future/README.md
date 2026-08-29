@@ -20,7 +20,6 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Area | Document | Scope |
 |------|----------|-------|
 | Compiler | [Panic and language-limit follow-ups](compiler-panic-followups.md) | Intake for newly discovered compiler panics and language limitations |
-| Workspace crates | [Crate review follow-ups (2026-08)](crate-review-2026-08/README.md) | Defect list and one-task-at-a-time implementation plan |
 
 ## Rules
 

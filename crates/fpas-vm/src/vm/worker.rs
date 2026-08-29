@@ -9,6 +9,7 @@ use super::debug::initializer_suppression::SourceInitializerTarget;
 use super::dispatch::DispatchStep;
 use super::frame::CallFrame;
 use super::hosted::HostedState;
+use super::hosted::callbacks::CallbackContinuation;
 use super::layouts::RuntimeLayouts;
 use super::tasks::{DebugClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
 use super::{Execution, VmError, diagnostics};
@@ -29,6 +30,7 @@ pub(super) struct Worker {
     pub instruction_count: u64,
     pub(super) callback_instruction_count: Cell<u64>,
     pub(super) callback_worker: RefCell<Option<Box<Worker>>>,
+    pub(super) callback_continuations: Vec<CallbackContinuation>,
     pub current_address: InstructionAddress,
     pub scheduler: Option<Arc<TaskScheduler>>,
     pub task_id: u64,
@@ -149,6 +151,7 @@ impl Worker {
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
+            callback_continuations: Vec::new(),
             current_address: start,
             scheduler: None,
             task_id: 0,
@@ -203,6 +206,7 @@ impl Worker {
             instruction_count: 0,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
+            callback_continuations: Vec::new(),
             current_address: self.current_address,
             scheduler: self.scheduler.clone(),
             task_id: 0,
@@ -239,6 +243,7 @@ impl Worker {
             instruction_count: task.instruction_count,
             callback_instruction_count: Cell::new(0),
             callback_worker: RefCell::new(None),
+            callback_continuations: task.callback_continuations,
             current_address: self.current_address,
             scheduler: self.scheduler.clone(),
             task_id: task.id,
@@ -268,6 +273,7 @@ impl Worker {
             retain_result: self.retain_result,
             instruction_count: self.instruction_count,
             suppressed_initializers: std::mem::take(&mut self.suppressed_initializers),
+            callback_continuations: std::mem::take(&mut self.callback_continuations),
         }
     }
 

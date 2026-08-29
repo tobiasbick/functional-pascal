@@ -12,6 +12,8 @@ mod types;
 use std::path::Path;
 use std::time::Duration;
 
+const DEFAULT_TEST_TIMEOUT: Duration = Duration::from_secs(300);
+
 pub(crate) use discovery::discover_check_input;
 pub(crate) use help::help_text;
 pub(crate) use types::{
@@ -233,7 +235,7 @@ pub(crate) fn resolve_cli_config(args: &[String], cwd: &Path) -> Result<Resolved
             script_path: options.script_path,
             filter: options.filter,
             report: options.report,
-            timeout: options.timeout,
+            timeout: Some(options.timeout.unwrap_or(DEFAULT_TEST_TIMEOUT)),
             jobs: options.jobs.unwrap_or(1),
             strict: options.strict,
             standard_library: options.standard_library,

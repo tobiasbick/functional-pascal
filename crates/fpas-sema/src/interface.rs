@@ -4,6 +4,7 @@ mod analysis;
 mod conversion;
 mod export;
 mod install;
+mod public_signatures;
 #[cfg(test)]
 mod tests;
 

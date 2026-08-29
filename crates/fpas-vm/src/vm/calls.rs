@@ -122,6 +122,7 @@ impl Worker {
     }
 
     pub(super) fn return_from_call(&mut self, value: Value) -> Result<DispatchStep, VmError> {
+        let callback_return = self.callback_accepts_return();
         let Some(frame) = self.call_stack.pop() else {
             return Ok(DispatchStep::Return(value));
         };
@@ -129,7 +130,9 @@ impl Worker {
         self.function = frame.function;
         self.ip = frame.ip;
         self.base = frame.base;
-        if let Some(destination) = frame.return_destination {
+        if callback_return {
+            self.accept_callback_return(value);
+        } else if let Some(destination) = frame.return_destination {
             self.store_register(destination, value)?;
         }
         Ok(DispatchStep::Continue)
@@ -144,6 +147,42 @@ impl Worker {
         prefix_arguments: &[Value],
         captures: &[Value],
     ) -> Result<(), VmError> {
+        let arguments = self.clone_window(argument_base, argument_count)?;
+        let arguments = prefix_arguments
+            .iter()
+            .chain(&arguments)
+            .cloned()
+            .collect::<Vec<_>>();
+        self.enter_call_with_values(target, destination, &arguments, captures)
+    }
+
+    /// Enter a hosted callback on this worker so its task can suspend and resume normally.
+    pub(super) fn enter_callback_inline(
+        &mut self,
+        function: &SharedFunction,
+        arguments: &[Value],
+    ) -> Result<(), VmError> {
+        let arguments = function
+            .bound_receiver
+            .iter()
+            .chain(arguments)
+            .cloned()
+            .collect::<Vec<_>>();
+        self.enter_call_with_values(
+            function.function,
+            fpas_bytecode::NO_REGISTER,
+            &arguments,
+            &function.captures,
+        )
+    }
+
+    fn enter_call_with_values(
+        &mut self,
+        target: FunctionId,
+        destination: u16,
+        arguments: &[Value],
+        captures: &[Value],
+    ) -> Result<(), VmError> {
         let image = self.executable.executable();
         let info = image
             .functions
@@ -155,8 +194,7 @@ impl Worker {
                     "Call target is outside the function table",
                 )
             })?;
-        let actual_argument_count =
-            usize::from(argument_count).saturating_add(prefix_arguments.len());
+        let actual_argument_count = arguments.len();
         if actual_argument_count != usize::from(info.arity) {
             return Err(diagnostics::internal(
                 image,
@@ -213,26 +251,6 @@ impl Worker {
                 "Callee address does not fit this host",
             )
         })?;
-        let argument_start = self
-            .base
-            .checked_add(usize::from(argument_base))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    image,
-                    self.current_address,
-                    "Call argument window overflowed the active frame",
-                )
-            })?;
-        let argument_end = argument_start
-            .checked_add(usize::from(argument_count))
-            .filter(|end| *end <= self.active_register_count)
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    image,
-                    self.current_address,
-                    "Call argument window left the active frame",
-                )
-            })?;
         self.call_stack.push(CallFrame {
             function: self.function,
             ip: self.ip,
@@ -241,14 +259,8 @@ impl Worker {
         });
         self.base = self.active_register_count;
         self.activate_registers(new_len);
-        for (index, value) in prefix_arguments.iter().enumerate() {
+        for (index, value) in arguments.iter().enumerate() {
             self.store_register(self.base + index, value.clone())?;
-        }
-        for (index, source) in (argument_start..argument_end).enumerate() {
-            self.store_register(
-                self.base + prefix_arguments.len() + index,
-                self.registers[source].clone(),
-            )?;
         }
         for (index, value) in captures.iter().enumerate() {
             self.store_register(self.base + actual_argument_count + index, value.clone())?;

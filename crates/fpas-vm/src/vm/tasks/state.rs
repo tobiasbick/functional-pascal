@@ -4,6 +4,7 @@ use fpas_bytecode::{FunctionId, Value};
 
 use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 use crate::vm::frame::CallFrame;
+use crate::vm::hosted::callbacks::CallbackContinuation;
 
 /// Complete mutable register-machine state transferable between pool workers.
 pub(in crate::vm) struct TaskState {
@@ -18,4 +19,6 @@ pub(in crate::vm) struct TaskState {
     pub retain_result: bool,
     pub instruction_count: u64,
     pub suppressed_initializers: Vec<SourceInitializerTarget>,
+    /// Partially completed hosted operations whose callbacks run on this task.
+    pub callback_continuations: Vec<CallbackContinuation>,
 }

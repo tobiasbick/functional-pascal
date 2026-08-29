@@ -29,9 +29,7 @@ impl Checker {
         context: &str,
         span: fpas_lexer::Span,
     ) {
-        if !expected.assignment_compatible_with(actual)
-            && !self.private_records_are_compatible_inside_owner(expected, actual)
-        {
+        if !expected.assignment_compatible_with(actual) {
             self.error_with_code(
                 SEMA_TYPE_MISMATCH,
                 format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
@@ -39,27 +37,6 @@ impl Checker {
                 span,
             );
         }
-    }
-
-    fn private_records_are_compatible_inside_owner(&self, expected: &Ty, actual: &Ty) -> bool {
-        let (Ty::Record(expected), Ty::Record(actual)) = (expected, actual) else {
-            return false;
-        };
-        if expected.private_members.is_empty() && actual.private_members.is_empty() {
-            return false;
-        }
-        let current_owner = self
-            .scopes
-            .function_ctx
-            .as_ref()
-            .and_then(|context| context.owner_unit.as_deref());
-        let private_records_are_owned_here = [expected.as_ref(), actual.as_ref()]
-            .into_iter()
-            .filter(|record| !record.private_members.is_empty())
-            .all(|record| record.owner_unit.as_deref() == current_owner);
-
-        private_records_are_owned_here
-            && Ty::record_fields_assignment_compatible(&expected.fields, &actual.fields)
     }
 
     fn report_duplicate_declaration(&mut self, kind: &str, name: &str, span: fpas_lexer::Span) {

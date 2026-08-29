@@ -104,9 +104,18 @@ impl Checker {
         }
 
         let inferred = self.validate_routine_constraints(type_params, params, &arg_types, span);
-        for (index, (param, arg_ty)) in params.iter().zip(&arg_types).enumerate() {
+        for (index, ((param, arg_ty), arg)) in params.iter().zip(&arg_types).zip(args).enumerate() {
             let expected = Self::substitute_type_params(&param.ty, &inferred);
-            self.check_type_compat(&expected, arg_ty, &format!("argument {}", index + 1), span);
+            let actual = if matches!(
+                (&expected, arg_ty),
+                (Ty::Record(expected), Ty::Record(actual))
+                    if expected.name != "<anonymous>" && actual.name == "<anonymous>"
+            ) {
+                self.check_expr_with_expected_record_literals(arg, &expected)
+            } else {
+                arg_ty.clone()
+            };
+            self.check_type_compat(&expected, &actual, &format!("argument {}", index + 1), span);
         }
         inferred
     }
@@ -231,6 +240,14 @@ impl Checker {
                             ),
                             span,
                         );
+                    } else if matches!(
+                        (previous, actual_ty),
+                        (Ty::Record(previous), Ty::Record(actual))
+                            if previous.name == "<anonymous>" && actual.name != "<anonymous>"
+                    ) {
+                        // A later argument can supply the declaration identity that an earlier
+                        // generic record literal did not have context to infer.
+                        inferred.insert(key, actual_ty.clone());
                     }
                 } else {
                     inferred.insert(key, actual_ty.clone());

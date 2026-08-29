@@ -12,7 +12,6 @@ the task before changing code or current user-facing documentation.
 
 | Task | Decision |
 |---|---|
-| [14 named record identity](tasks/14-sema-named-records.md) | Nominal or structural compatibility for distinct named records |
 | [18 public API using a private type](tasks/18-sema-export-private-type.md) | Reject the declaration or support opaque public use |
 | [21 Sleep/Yield in synchronous callbacks](tasks/21-vm-callback-sleep.md) | Cooperatively suspend the owner or block the current worker |
 | [23 overlapping consumer/library source](tasks/23-project-origin.md) | Reject overlap or define which project owns the source |

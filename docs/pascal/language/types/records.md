@@ -32,6 +32,39 @@ Each field may appear at most once in a record literal. Field names are
 case-insensitive, so `X` and `x` identify the same field and cannot both be
 specified.
 
+## Type identity and compatibility
+
+Each named record declaration defines a distinct type. Two records are not compatible merely
+because they contain fields with the same names and types. Assignments, arguments, and return
+values must use the same record declaration or an alias of that declaration.
+
+```pascal
+type
+  Point = record
+    X: integer;
+    Y: integer;
+  end;
+
+  Size = record
+    X: integer;
+    Y: integer;
+  end;
+
+  PointAlias = Point;
+
+var
+  P: Point := record
+    X := 1;
+    Y := 2;
+  end;
+  A: PointAlias := P;  // Valid: PointAlias names the Point declaration.
+  S: Size := P;        // Error: Point and Size are distinct declarations.
+```
+
+An anonymous record literal receives the expected named record type from its assignment, argument,
+array element, constant, or return context. This keeps direct construction concise without making
+separately declared record types interchangeable.
+
 ## Accessing fields
 
 ```pascal

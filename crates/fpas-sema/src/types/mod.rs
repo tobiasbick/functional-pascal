@@ -307,12 +307,19 @@ impl Ty {
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)
             }
-            // Records: structural compatibility (ignore name)
+            // Named records are nominal. Anonymous literals remain structural until their
+            // surrounding expression supplies a declaration identity.
+            // Documentation: docs/pascal/language/types/records.md
             (Ty::Record(a), Ty::Record(b)) => {
-                if !a.private_members.is_empty() || !b.private_members.is_empty() {
-                    a.name.eq_ignore_ascii_case(&b.name)
-                } else {
+                if a.name == "<anonymous>" || b.name == "<anonymous>" {
                     Self::record_fields_compatible_with_mode(&a.fields, &b.fields, generic_wildcard)
+                } else {
+                    a.name.eq_ignore_ascii_case(&b.name)
+                        && match (&a.owner_unit, &b.owner_unit) {
+                            (Some(a_owner), Some(b_owner)) => a_owner.eq_ignore_ascii_case(b_owner),
+                            (None, None) => true,
+                            _ => false,
+                        }
                 }
             }
             // Enums: same name is sufficient (type-erased generics).
@@ -387,14 +394,6 @@ impl Ty {
     /// True for ordinal types (integer, boolean, simple enum without data).
     pub fn is_ordinal(&self) -> bool {
         matches!(self, Ty::Integer | Ty::Boolean) || matches!(self, Ty::Enum(e) if !e.has_data())
-    }
-
-    /// Compare record fields under ordinary assignment rules.
-    pub(crate) fn record_fields_assignment_compatible(
-        fields: &[(String, Ty)],
-        other_fields: &[(String, Ty)],
-    ) -> bool {
-        Self::record_fields_compatible_with_mode(fields, other_fields, false)
     }
 
     fn record_fields_compatible_with_mode(

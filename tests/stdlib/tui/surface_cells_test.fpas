@@ -34,5 +34,16 @@ begin
   Other.PutGlyph(0, 0, 'X');
   Surface.PutGlyph(0, 0, 'Y');
   AssertEquals('Y', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
+  AssertEquals('X', Std.Option.Unwrap(Other.TryCellAt(TuiPoint.Create(0, 0))).Glyph);
+  var SurfaceSlot: integer := Surface.Slot;
+  for ResizeIndex: integer := 1 to 64 do
+  begin
+    Surface.Resize(TuiSize.Create(3 + (ResizeIndex mod 5), 2 + (ResizeIndex mod 3)));
+    AssertEquals(SurfaceSlot, Surface.Slot);
+    AssertEquals(' ', Std.Option.Unwrap(Surface.TryCellAt(TuiPoint.Create(0, 0))).Glyph)
+  end;
+
+  AssertEquals(7, Surface.Size().Width);
+  AssertEquals(3, Surface.Size().Height);
   AssertEquals('X', Std.Option.Unwrap(Other.TryCellAt(TuiPoint.Create(0, 0))).Glyph)
 end.

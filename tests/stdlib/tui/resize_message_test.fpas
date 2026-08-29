@@ -78,5 +78,7 @@ begin
   AssertEquals(10, Model.HostHeightAtResize);
   AssertEquals(32, App.SurfaceSnapshot().Width);
   AssertEquals(10, App.SurfaceSnapshot().Height);
-  App.Close()
+  App.Close();
+  var Probe: TuiWorkingSurface := TuiWorkingSurface.Create(TuiSize.Create(1, 1));
+  AssertEquals(2, Probe.Slot)
 end.

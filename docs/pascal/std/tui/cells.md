@@ -22,6 +22,10 @@ lookup. This is useful inside `TuiCellGrid` for plots and images whose colors
 are data rather than theme roles. Continuation cells for wide glyphs remain
 private surface state and are not part of the public cell value.
 
+`TuiWorkingSurface.Resize(Size)` replaces the mutable grid with a blank grid of
+the requested size while preserving the surface handle. Existing snapshots stay
+immutable, and resizing one surface does not affect other surfaces.
+
 ## `TuiPalette`
 
 `TuiPalette.Default()` provides the standard semantic colors. `ForRole` resolves

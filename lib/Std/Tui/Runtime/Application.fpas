@@ -69,7 +69,7 @@ end;
 
 procedure TuiAppApplyResize(ApplicationId: integer; Size: TuiSize);
 begin
-  TuiAppSurfaces[ApplicationId - 1] := TuiWorkingSurface.Create(Size)
+  TuiAppSurfaces[ApplicationId - 1].Resize(Size)
 end;
 
 procedure TuiAppRouteInput(ApplicationId: integer; Input: TuiHostInput);

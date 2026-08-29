@@ -60,7 +60,8 @@ pub(crate) fn run(
         }
         TestIntrinsic::AssertScreenLine
         | TestIntrinsic::AssertScreenCell
-        | TestIntrinsic::PushReadLn => {
+        | TestIntrinsic::PushReadLn
+        | TestIntrinsic::ScratchDir => {
             return Err(std_internal_error(
                 "internal: Std.Test input/screen/view assertions are handled in the VM",
                 "This indicates a VM dispatch bug. Please report this as a compiler/runtime bug.",

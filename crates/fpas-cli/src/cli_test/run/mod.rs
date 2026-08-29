@@ -15,8 +15,9 @@ use fpas_project as project;
 
 use super::hooks::TestHooks;
 use super::report::TestOutcome;
+use super::scratch::TestScratch;
 
-use hook_exec::{run_optional_teardown, run_test_hook};
+use hook_exec::{HookRunContext, run_optional_teardown, run_test_hook};
 pub(super) use program::CompiledTestProgram;
 use program::{ProgramRunOptions, RunOutput, run_test_program};
 
@@ -69,14 +70,33 @@ pub(super) fn run_single_test_prepared(
     compiled: Option<&CompiledTestProgram>,
 ) -> TestOutcome {
     let display = test_display_path(path);
+    let scratch = match TestScratch::create(path) {
+        Ok(scratch) => scratch,
+        Err(message) => {
+            let _ = writeln!(stderr, "  FAIL  {display}");
+            let _ = writeln!(stderr, "        {message}");
+            return TestOutcome::RuntimeError;
+        }
+    };
     let has_teardown = link.is_some_and(|context| context.hooks.teardown.is_some());
 
     if let Some(link) = link
         && let Some(hook) = link.hooks.setup.as_ref()
     {
-        let outcome = run_test_hook(hook, "Setup", path, link, timeout, stderr, &display);
+        let outcome = run_test_hook(
+            hook,
+            "Setup",
+            HookRunContext {
+                test_path: path,
+                link,
+                timeout,
+                display: &display,
+                scratch_dir: scratch.path(),
+            },
+            stderr,
+        );
         if outcome.is_failure() {
-            let _ = run_optional_teardown(link, path, timeout, stderr, &display);
+            let _ = run_optional_teardown(link, path, timeout, stderr, &display, scratch.path());
             return outcome;
         }
     }
@@ -98,11 +118,13 @@ pub(super) fn run_single_test_prepared(
             display: &display,
             output: body_output,
             compiled,
+            scratch_dir: scratch.path(),
         },
     );
 
     if let Some(link) = link
-        && let Some(teardown_outcome) = run_optional_teardown(link, path, timeout, stderr, &display)
+        && let Some(teardown_outcome) =
+            run_optional_teardown(link, path, timeout, stderr, &display, scratch.path())
         && outcome == TestOutcome::Pass
         && teardown_outcome.is_failure()
     {

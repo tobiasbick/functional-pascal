@@ -33,6 +33,7 @@ Requires `uses Std.Test;`.
 | procedure | `Fail(Msg: string)` | unconditional failure |
 | procedure | `Skip(Msg: string)` | mark the current test skipped; runner reports `SKIP` (exit `0` unless `fpas test --strict`) |
 | procedure | `PushReadLn(Line: string)` | queue one line for the next `Std.Console.ReadLn` (native tests) |
+| function | `ScratchDir(): string` | runner-owned empty directory for this test |
 | procedure | `AssertScreenLine(Expected: string; Y: integer)` | fail when CRT row `Y` text differs (headless/TUI back buffer) |
 | procedure | `AssertScreenCell(X, Y: integer; Ch: string; Fg, Bg: integer)` | fail when one CRT cell differs (`Fg`/`Bg` are packed colors `0..=15`) |
 
@@ -63,6 +64,13 @@ Mark the current test as skipped and continue. Does not raise **F4023**. The `fp
 ### `procedure PushReadLn(Line: string)`
 
 Queue one input line for the next blocking `Std.Console.ReadLn` (or line-buffered `Read`). Call before `ReadLn` in native tests instead of a `*.script.toml` readln sidecar.
+
+### `function ScratchDir(): string`
+
+Returns an existing, empty directory owned by the current test run. The same path is visible to the
+test project's `Setup`, test body, and `Teardown`. Parallel tests receive different directories.
+The runner removes the directory after `Teardown`, including when the test fails. A program run
+directly with `fpas run` receives `.temp-data` as the fallback and manages its own files there.
 
 ### `procedure AssertScreenLine(Expected: string; Y: integer)`
 
@@ -129,7 +137,10 @@ the source-adjacent `.fpascu` files documented under [Units](../../program-struc
 
 ### Scratch files (`.temp-data/`)
 
-Tests that create real files or directories must write under `.temp-data/` at the repository root (for example `.temp-data/_fpas_glob_tree_/…`). That directory is gitignored. Do not create scratch trees beside `tests/`, under `crates/`, or with bare `_fpas_*` names in the cwd root.
+Tests that create real files or directories must use `Std.Test.ScratchDir()`. Under `fpas test`,
+the runner creates a unique child below the gitignored repository-local `.temp-data/` root and
+removes that child after the test and its hooks finish. Do not create scratch trees beside
+`tests/`, under `crates/`, or with bare `_fpas_*` names in the cwd root.
 
 Rust unit tests that need temporary files should keep using `std::env::temp_dir()` (or the crate `create_temp_dir` helpers); `.temp-data/` is only for FPAS programs that exercise `Std.Fs` against the process cwd.
 

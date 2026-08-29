@@ -18,6 +18,23 @@ impl Worker {
             return Ok(None);
         };
         match operation {
+            TestIntrinsic::ScratchDir => {
+                argument_count(arguments, 0, self)?;
+                let path = self
+                    .hosted
+                    .test_scratch_dir
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                    .clone();
+                std::fs::create_dir_all(&path).map_err(|error| {
+                    self.test_host_error(&format!(
+                        "Cannot create test scratch directory `{}`: {error}",
+                        path.display()
+                    ))
+                })?;
+                let path = path.to_string_lossy().replace('\\', "/");
+                return Ok(Some(Some(Value::Str(path.into()))));
+            }
             TestIntrinsic::AssertScreenLine => {
                 let expected = string(arguments, 0, 2, self)?;
                 let row = coordinate(integer(arguments, 1, 2, self)?, "row", self)?;
@@ -110,6 +127,14 @@ fn argument<'a>(
     arguments
         .get(index)
         .ok_or_else(|| worker.test_host_error("Hosted test intrinsic argument is missing"))
+}
+
+fn argument_count(arguments: &[Value], count: usize, worker: &Worker) -> Result<(), VmError> {
+    if arguments.len() == count {
+        Ok(())
+    } else {
+        Err(worker.test_host_error("Hosted test intrinsic argument count mismatch"))
+    }
 }
 
 fn coordinate(value: i64, label: &str, worker: &Worker) -> Result<u16, VmError> {

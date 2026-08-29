@@ -2,35 +2,8 @@ program FsReadWriteRoundtripTest;
 
 uses Std.Fs, Std.Test;
 
-const
-  Scratch: string := '.temp-data';
-  Path: string := Scratch + '/_fpas_fs_roundtrip.txt';
-
-procedure EnsureDir(Dir: string);
 begin
-  if Exists(Dir) then
-  begin
-    if not IsDir(Dir) then
-    begin
-      Fail(('Expected directory: ') + Dir)
-    end;
-
-    return
-  end;
-
-  case CreateDir(Dir) of
-    Ok(_):
-    begin
-    end;
-    Error(Message):
-    begin
-      Fail(Message)
-    end
-  end
-end;
-
-begin
-  EnsureDir(Scratch);
+  var Path: string := ScratchDir() + '/roundtrip.txt';
   case WriteText(Path, 'hello fs') of
     Ok(_):
     begin

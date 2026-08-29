@@ -2,26 +2,6 @@ program NoteTuiWorkflowTest;
 
 uses Notes.Model, Notes.Update, Notes.View, Std.Array, Std.Fs, Std.Str, Std.Test, Std.Tui;
 
-const
-  Root: string := '.temp-data';
-  Directory: string := Root + '/notes-tui-test';
-
-procedure EnsureRoot();
-begin
-  if not Std.Fs.Exists(Root) then
-  begin
-    case Std.Fs.CreateDir(Root) of
-      Ok(Created):
-      begin
-      end;
-      Error(Message):
-      begin
-        Fail(Message)
-      end
-    end
-  end
-end;
-
 function ScreenContains(Snapshot: TuiSurfaceSnapshot; Text: string): boolean;
 begin
   for Row: integer := 0 to Snapshot.Height - 1 do
@@ -72,7 +52,7 @@ begin
 end;
 
 begin
-  EnsureRoot();
+  var Directory: string := ScratchDir() + '/notes';
   var EmptyLoaded: NotesLoad := record
     Notes := [];
     Issues := [];
@@ -145,8 +125,8 @@ begin
   AssertTrue(DirtyQuit.Overlay = NotesOverlay.QuitConfirmation);
   mutable var NoteValue: Note := NoteCreate('tui-workflow', 1700000000000);
   NoteValue.Title := 'A very long note title that must never resize the notes sidebar';
-  NoteValue.Body := ((('first off-screen line' + Std.Str.Chr(10)) + 'second off-screen line') +
-                     Std.Str.Chr(10)) + (Std.Str.Chr(65279) + 'visible body text');
+  NoteValue.Body := ((('first off-screen line' + Std.Str.Chr(10)) + 'second off-screen line') + Std.Str.Chr(10)) +
+                    (Std.Str.Chr(65279) + 'visible body text');
   var Issue: NoteIssue := record
     Path := 'broken.note';
     Message := 'invalid header';

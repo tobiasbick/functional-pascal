@@ -1,5 +1,6 @@
 //! Isolated hosted-runtime state shared by one VM and its callbacks.
 
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 use fpas_std::{Console, KeyInput, TextInput};
@@ -66,6 +67,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) network_connections: NetworkConnections,
     pub(in crate::vm::hosted) network_listeners: NetworkListeners,
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
+    pub(super) test_scratch_dir: Mutex<PathBuf>,
 }
 
 impl HostedState {
@@ -78,6 +80,7 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }
 
@@ -91,6 +94,7 @@ impl HostedState {
             network_connections: NetworkConnections::new(),
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
+            test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }
 

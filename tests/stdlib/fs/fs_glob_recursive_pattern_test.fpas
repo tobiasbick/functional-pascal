@@ -2,10 +2,6 @@ program FsGlobRecursivePatternTest;
 
 uses Std.Array, Std.Fs, Std.Test;
 
-const
-  Scratch: string := '.temp-data';
-  Root: string := Scratch + '/_fpas_glob_tree_';
-
 procedure EnsureDir(Path: string);
 begin
   if Exists(Path) then
@@ -30,7 +26,7 @@ begin
 end;
 
 begin
-  EnsureDir(Scratch);
+  var Root: string := ScratchDir() + '/glob-tree';
   EnsureDir(Root);
   EnsureDir(Root + '/src');
   EnsureDir(Root + '/src/ui');

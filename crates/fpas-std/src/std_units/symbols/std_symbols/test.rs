@@ -8,6 +8,7 @@ std_symbol!(STD_TEST_SKIP = std_test!("Skip"));
 std_symbol!(STD_TEST_ASSERT_SCREEN_LINE = std_test!("AssertScreenLine"));
 std_symbol!(STD_TEST_ASSERT_SCREEN_CELL = std_test!("AssertScreenCell"));
 std_symbol!(STD_TEST_PUSH_READLN = std_test!("PushReadLn"));
+std_symbol!(STD_TEST_SCRATCH_DIR = std_test!("ScratchDir"));
 
 pub(in crate::std_units) const STD_TEST_SYMBOLS: &[&str] = &[
     STD_TEST_ASSERT_TRUE,
@@ -18,4 +19,5 @@ pub(in crate::std_units) const STD_TEST_SYMBOLS: &[&str] = &[
     STD_TEST_ASSERT_SCREEN_LINE,
     STD_TEST_ASSERT_SCREEN_CELL,
     STD_TEST_PUSH_READLN,
+    STD_TEST_SCRATCH_DIR,
 ];

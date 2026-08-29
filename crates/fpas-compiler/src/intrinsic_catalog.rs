@@ -307,6 +307,7 @@ fn resolve_test(member: &str, first_argument: Option<&Ty>) -> Option<Intrinsic> 
         "AssertScreenLine" => TestIntrinsic::AssertScreenLine,
         "AssertScreenCell" => TestIntrinsic::AssertScreenCell,
         "PushReadLn" => TestIntrinsic::PushReadLn,
+        "ScratchDir" => TestIntrinsic::ScratchDir,
         _ => return None,
     };
     Some(Intrinsic::Test(intrinsic))

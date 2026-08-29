@@ -13,6 +13,7 @@ mod process;
 mod report;
 mod run;
 mod runner;
+mod scratch;
 
 #[cfg(test)]
 mod tests;

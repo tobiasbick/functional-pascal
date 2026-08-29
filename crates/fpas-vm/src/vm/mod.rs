@@ -174,6 +174,15 @@ impl Vm {
             .push_line(line);
     }
 
+    /// Sets the directory returned by `Std.Test.ScratchDir()` for this VM.
+    pub fn set_test_scratch_dir(&mut self, path: std::path::PathBuf) {
+        *self
+            .hosted
+            .test_scratch_dir
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = path;
+    }
+
     /// Queue characters for hosted `Std.Console.ReadKey` calls.
     pub fn push_readkey_input(&mut self, characters: &str) {
         self.hosted

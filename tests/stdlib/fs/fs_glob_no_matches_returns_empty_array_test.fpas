@@ -3,7 +3,7 @@ program FsGlobNoMatchesReturnsEmptyArrayTest;
 uses Std.Array, Std.Fs, Std.Test;
 
 begin
-  case Glob('.temp-data/__fpas_glob_no_match__/**/*.fpas') of
+  case Glob(ScratchDir() + '/no-match/**/*.fpas') of
     Ok(Paths):
     begin
       AssertEquals(0, Std.Array.Length(Paths))

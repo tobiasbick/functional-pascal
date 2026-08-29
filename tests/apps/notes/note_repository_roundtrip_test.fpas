@@ -1,29 +1,9 @@
 program NoteRepositoryRoundtripTest;
 
-uses Notes.Model, Notes.Repository, Std.Array, Std.Fs, Std.Test;
-
-const
-  Root: string := '.temp-data';
-  Directory: string := Root + '/notes-repository-test';
-
-procedure EnsureRoot();
-begin
-  if not Std.Fs.Exists(Root) then
-  begin
-    case Std.Fs.CreateDir(Root) of
-      Ok(Created):
-      begin
-      end;
-      Error(Message):
-      begin
-        Fail(Message)
-      end
-    end
-  end
-end;
+uses Notes.Model, Notes.Repository, Std.Array, Std.Test;
 
 begin
-  EnsureRoot();
+  var Directory: string := ScratchDir() + '/notes';
   mutable var NoteValue: Note := NoteCreate('repository-roundtrip', 1700000000000);
   NoteValue.Title := 'Repository roundtrip';
   NoteValue.Tags := ['storage'];

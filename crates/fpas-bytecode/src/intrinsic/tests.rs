@@ -238,6 +238,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Test(TestIntrinsic::AssertScreenLine),
     Intrinsic::Test(TestIntrinsic::AssertScreenCell),
     Intrinsic::Test(TestIntrinsic::PushReadLn),
+    Intrinsic::Test(TestIntrinsic::ScratchDir),
 ];
 
 #[test]

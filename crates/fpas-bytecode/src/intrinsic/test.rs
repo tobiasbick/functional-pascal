@@ -47,5 +47,9 @@ pub enum TestIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/testing/test.md`
     PushReadLn = 378,
+    /// `Std.Test.ScratchDir()` — return the runner-owned directory for this test.
+    ///
+    /// **Documentation:** `docs/pascal/std/testing/test.md`
+    ScratchDir = 379,
 }
 }

@@ -58,6 +58,8 @@ pub(super) struct ProgramRunOptions<'a> {
     pub output: RunOutput,
     /// Optional entry in a shared in-memory image.
     pub compiled: Option<&'a CompiledTestProgram>,
+    /// Runner-owned directory shared by the test body and its hooks.
+    pub scratch_dir: &'a Path,
 }
 
 /// Fully compiled test input transferable to an isolated worker process.
@@ -69,6 +71,7 @@ pub(in crate::cli_test) struct PreparedProgram {
     pub manifest_override: Option<fpas_project::TestFileOverride>,
     pub display: String,
     pub output: RunOutput,
+    pub scratch_dir: PathBuf,
 }
 
 pub(super) fn run_test_program(
@@ -104,6 +107,7 @@ fn prepare_test_program(
         display,
         output,
         compiled,
+        scratch_dir,
     } = options;
     let path_text = path.to_string_lossy();
     let (executable, source_paths) = if let Some(compiled) = compiled {
@@ -167,6 +171,7 @@ fn prepare_test_program(
             .cloned(),
         display: display.to_string(),
         output,
+        scratch_dir: scratch_dir.to_path_buf(),
     })
 }
 
@@ -191,8 +196,10 @@ pub(in crate::cli_test) fn run_prepared_program(
         manifest_override,
         display,
         output,
+        scratch_dir,
     } = prepared;
     let mut vm = fpas_vm::Vm::new(executable);
+    vm.set_test_scratch_dir(scratch_dir);
     if let Err(message) = apply_test_script(
         &test_path,
         script_override.as_deref(),

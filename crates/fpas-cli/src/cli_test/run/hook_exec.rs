@@ -10,28 +10,57 @@ use super::super::report::TestOutcome;
 use super::LinkContext;
 use super::program::{ProgramRunOptions, RunOutput, run_test_program};
 
+/// Shared execution inputs for one setup or teardown hook.
+pub(super) struct HookRunContext<'a> {
+    /// Test entry whose hook is running.
+    pub test_path: &'a Path,
+    /// Linked project context containing the hook unit.
+    pub link: &'a LinkContext,
+    /// Optional wall-clock limit.
+    pub timeout: Option<Duration>,
+    /// User-facing test label.
+    pub display: &'a str,
+    /// Runner-owned directory shared with the test body.
+    pub scratch_dir: &'a Path,
+}
+
 pub(super) fn run_optional_teardown(
     link: &LinkContext,
     path: &Path,
     timeout: Option<Duration>,
     stderr: &mut dyn Write,
     display: &str,
+    scratch_dir: &Path,
 ) -> Option<TestOutcome> {
-    link.hooks
-        .teardown
-        .as_ref()
-        .map(|hook| run_test_hook(hook, "Teardown", path, link, timeout, stderr, display))
+    link.hooks.teardown.as_ref().map(|hook| {
+        run_test_hook(
+            hook,
+            "Teardown",
+            HookRunContext {
+                test_path: path,
+                link,
+                timeout,
+                display,
+                scratch_dir,
+            },
+            stderr,
+        )
+    })
 }
 
 pub(super) fn run_test_hook(
     hook: &TestHook,
     label: &str,
-    test_path: &Path,
-    link: &LinkContext,
-    timeout: Option<Duration>,
+    context: HookRunContext<'_>,
     stderr: &mut dyn Write,
-    display: &str,
 ) -> TestOutcome {
+    let HookRunContext {
+        test_path,
+        link,
+        timeout,
+        display,
+        scratch_dir,
+    } = context;
     let hook_path = match write_temp_hook_program(test_path, &hook_program_source(hook)) {
         Ok(path) => path,
         Err(message) => {
@@ -51,6 +80,7 @@ pub(super) fn run_test_hook(
             display,
             output: RunOutput::Hook,
             compiled: None,
+            scratch_dir,
         },
     );
     let _ = fs::remove_file(&hook_path);

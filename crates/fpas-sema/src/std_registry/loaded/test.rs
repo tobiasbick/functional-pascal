@@ -3,7 +3,7 @@
 //! **Documentation:** `docs/pascal/std/testing/test.md` (from the repository root).
 
 use super::super::builtins::register_assert_equals_builtin;
-use super::super::{define_proc, p};
+use super::super::{define_func, define_proc, p};
 use crate::check::Checker;
 use crate::types::Ty;
 use fpas_std::std_symbols as s;
@@ -44,4 +44,5 @@ pub(super) fn register_std_test(checker: &mut Checker) {
         s::STD_TEST_PUSH_READLN,
         vec![p("Line", Ty::String, false)],
     );
+    define_func(checker, s::STD_TEST_SCRATCH_DIR, vec![], Ty::String);
 }

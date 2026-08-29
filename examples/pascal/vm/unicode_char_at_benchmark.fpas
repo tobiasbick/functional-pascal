@@ -61,7 +61,7 @@ begin
   var Started: integer := MonotonicMillis();
   Matches := RunCharAt(Text, Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
-  mutable var OpsPerSecond: integer := Iterations;
+  mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
@@ -69,7 +69,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', text length: ') + IntToStr(TextLength));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' chars/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' chars/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('matches: ' + IntToStr(Matches));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

@@ -54,8 +54,8 @@ begin
   var Started: integer := MonotonicMillis();
   Checksum := RunAccess(Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
-  var FieldAccesses: integer := Iterations * 4;
-  mutable var OpsPerSecond: integer := FieldAccesses;
+  var FieldAccesses: integer := Iterations * 5;
+  mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     OpsPerSecond := (FieldAccesses * 1000) div Elapsed
@@ -63,7 +63,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', field accesses: ') + IntToStr(FieldAccesses));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' field accesses/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' field accesses/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('checksum: ' + IntToStr(Checksum));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

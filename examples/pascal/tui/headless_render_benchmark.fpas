@@ -114,7 +114,7 @@ begin
   Model := App.RunIterations(Model, UpdateBenchmark, ViewBenchmark, Iterations, DeltaMillis);
   var Elapsed: integer := ElapsedMillis(Started);
   App.Close();
-  mutable var FramesPerSecond: integer := Iterations * 1000;
+  mutable var FramesPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     FramesPerSecond := (Iterations * 1000) div Elapsed
@@ -122,7 +122,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(FramesPerSecond)) + ' frames/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('final state: ' + IntToStr(Model));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

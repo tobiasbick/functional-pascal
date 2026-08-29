@@ -43,7 +43,7 @@ begin
   var Started: integer := MonotonicMillis();
   Acc := RunLoop(Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
-  mutable var OpsPerSecond: integer := Iterations;
+  mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     OpsPerSecond := (Iterations * 1000) div Elapsed
@@ -51,7 +51,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', warm-up: ') + IntToStr(WarmupIterations));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' iters/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' iters/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('accumulator: ' + IntToStr(Acc));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

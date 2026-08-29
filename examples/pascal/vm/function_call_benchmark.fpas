@@ -58,7 +58,7 @@ begin
   Value := RunCalls(Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
   var Calls: integer := Iterations * 2;
-  mutable var OpsPerSecond: integer := Calls;
+  mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     OpsPerSecond := (Calls * 1000) div Elapsed
@@ -66,7 +66,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', calls: ') + IntToStr(Calls));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' calls/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' calls/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('final value: ' + IntToStr(Value));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

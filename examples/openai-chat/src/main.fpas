@@ -34,11 +34,13 @@ begin
 
     if Prompt <> '' then
     begin
-      Std.Array.Push(Messages, ChatMessage.User(Prompt));
-      case Complete(ClientValue, Messages, Options) of
+      mutable var RequestMessages: array of ChatMessage := Messages;
+      Std.Array.Push(RequestMessages, ChatMessage.User(Prompt));
+      case Complete(ClientValue, RequestMessages, Options) of
         Ok(Content):
         begin
           WriteLn('assistant> ' + Content);
+          Std.Array.Push(Messages, ChatMessage.User(Prompt));
           Std.Array.Push(Messages, ChatMessage.Assistant(Content))
         end;
         Error(Message):

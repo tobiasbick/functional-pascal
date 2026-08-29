@@ -221,7 +221,7 @@ begin
       end;
       '1':
       begin
-        State.Palette := PaletteKind.Ember;
+        State.Palette := PaletteKind.DeepOcean;
         RequestRedraw();
         return true
       end;
@@ -251,7 +251,8 @@ end;
 
 procedure HandleMouse(Event: Event);
 begin
-  var InView: boolean := Event.mouse_x >= 1;
+  var InView: boolean := (((Event.mouse_x >= 1) and (Event.mouse_x <= RenderW)) and (Event.mouse_y >= 1)) and
+                         (Event.mouse_y <= RenderH);
   if Event.mouse_action = MouseAction.ScrollUp then
   begin
     State.SpanY := Max(State.SpanY * 0.88, 0.000001);

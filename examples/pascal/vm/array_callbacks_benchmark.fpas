@@ -75,7 +75,7 @@ begin
   Total := RunCallbacks(Values, Iterations);
   var Elapsed: integer := ElapsedMillis(Started);
   var Callbacks: integer := (Iterations * ArraySize) * CallbacksPerElement;
-  mutable var OpsPerSecond: integer := Callbacks;
+  mutable var OpsPerSecond: integer := 0;
   if Elapsed > 0 then
   begin
     OpsPerSecond := (Callbacks * 1000) div Elapsed
@@ -83,7 +83,15 @@ begin
 
   WriteLn((('iterations: ' + IntToStr(Iterations)) + ', callbacks: ') + IntToStr(Callbacks));
   WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
-  WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s');
+  if Elapsed > 0 then
+  begin
+    WriteLn(('throughput: ' + IntToStr(OpsPerSecond)) + ' callbacks/s')
+  end
+  else
+  begin
+    WriteLn('throughput: unavailable (elapsed time is 0 ms)')
+  end;
+
   WriteLn('checksum: ' + IntToStr(Total));
   if (MaxMillis > 0) and (Elapsed > MaxMillis) then
   begin

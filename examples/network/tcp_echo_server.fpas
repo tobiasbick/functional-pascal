@@ -3,21 +3,21 @@ program NetworkTcpEchoServer;
 
 uses Std.Args, Std.Array, Std.Conv, Std.Console, Std.Net, Std.Net.Utf8;
 
-// Reports whether one byte fragment contains an LF delimiter.
+// Returns the first LF delimiter index or minus one.
 //
 // Parameters:
 // - `Bytes`: Network bytes to inspect.
-function ContainsLineFeed(Bytes: array of integer): boolean;
+function LineFeedIndex(Bytes: array of integer): integer;
 begin
   for Index: integer := 0 to Std.Array.Length(Bytes) - 1 do
   begin
     if Bytes[Index] = 10 then
     begin
-      return true
+      return Index
     end
   end;
 
-  return false
+  return -1
 end;
 
 // Reads byte fragments until the client sends an LF delimiter.
@@ -27,8 +27,8 @@ end;
 function ReadLine(ConnectionValue: Connection): string;
 begin
   mutable var Bytes: array of integer := [];
-  mutable var Reading: boolean := true;
-  while Reading do
+  mutable var LineEnd: integer := -1;
+  while LineEnd < 0 do
   begin
     case Std.Net.Read(ConnectionValue, 4096) of
       Ok(Part):
@@ -39,7 +39,7 @@ begin
         end;
 
         Bytes := Std.Array.Concat(Bytes, Part);
-        Reading := not ContainsLineFeed(Part)
+        LineEnd := LineFeedIndex(Bytes)
       end;
       Error(Message):
       begin
@@ -47,7 +47,12 @@ begin
       end
     end
   end;
-  var TextBytes: array of integer := Std.Array.Slice(Bytes, 0, Std.Array.Length(Bytes) - 1);
+
+  if LineEnd + 1 <> Std.Array.Length(Bytes) then
+  begin
+    panic('TCP echo server accepts exactly one LF-delimited request per connection')
+  end;
+  var TextBytes: array of integer := Std.Array.Slice(Bytes, 0, LineEnd);
   case Std.Net.Utf8.Decode(TextBytes) of
     Ok(Text):
     begin

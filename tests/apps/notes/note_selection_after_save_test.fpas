@@ -1,0 +1,18 @@
+program NoteSelectionAfterSaveTest;
+
+uses Notes.Model, Notes.Update, Std.Test, Std.Tui;
+
+begin
+  var Target: Note := NoteCreate('target', 2);
+  var Edited: Note := NoteCreate('edited', 1);
+  var Loaded: NotesLoad := record
+    Notes := [Target, Edited];
+    Issues := [];
+  end;
+  mutable var Model: NotesModel := NotesModelCreate(ScratchDir() + '/notes', Loaded);
+  Model.Selected := 1;
+  Model.Dirty := true;
+  var Cmd: TuiCmdOutput := TuiCmdOutput.Create();
+  Model := NotesUpdate(Model, TuiMsgSelectionChanged(TuiControlId.Create(2), TuiAction.Create(2), 0), Cmd);
+  AssertEquals('target', Model.Notes[Model.Selected].Id)
+end.

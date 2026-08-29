@@ -108,8 +108,9 @@ end
 `MaxHeaderBytes` bounds each response head, while `MaxResponseBytes` bounds all bytes received for
 either API, including informational responses, response headers, and chunk framing. Responses with
 both `Transfer-Encoding` and `Content-Length`, conflicting `Content-Length` fields, repeated
-`Transfer-Encoding`, or an unsupported transfer coding are rejected. `Send` is implemented by
-opening and draining the same streaming reader.
+`Transfer-Encoding`, an unsupported transfer coding, or a chunk size outside the signed 64-bit
+integer range are rejected. `Send` is implemented by opening and draining the same streaming
+reader.
 
 ## Server-Sent Events
 

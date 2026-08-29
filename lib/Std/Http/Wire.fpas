@@ -5,6 +5,9 @@ uses
   Std.Array, Std.Conv, Std.Http.BodyFraming, Std.Http.Fields, Std.Http.Headers, Std.Http.Method,
   Std.Http.Types, Std.Net.Uri, Std.Net.Utf8, Std.Parse, Std.Str;
 
+const
+  MaximumChunkSize: integer := 9223372036854775807;
+
 // Finds the next HTTP head terminator.
 //
 // Parameters:
@@ -140,6 +143,12 @@ begin
     if Digit < 0 then
     begin
       return Error('Invalid HTTP chunk size: ' + SizeText)
+    end;
+
+    if (Size > MaximumChunkSize div 16) or
+       ((Size = MaximumChunkSize div 16) and (Digit > MaximumChunkSize mod 16)) then
+    begin
+      return Error('HTTP chunk size exceeds the integer range: ' + SizeText)
     end;
 
     Size := Size * 16 + Digit

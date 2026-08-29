@@ -160,7 +160,13 @@ begin
     return Error('URI must be absolute and include ://')
   end;
   var Scheme: string := Std.Str.ToLower(Std.Str.Substring(Text, 0, SchemeEnd));
-  var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) - 3);
+  mutable var Rest: string := Std.Str.Substring(Text, SchemeEnd + 3, (Std.Str.Length(Text) - SchemeEnd) -
+                                                                     3);
+  var FragmentStart: integer := Std.Str.IndexOf(Rest, '#');
+  if FragmentStart >= 0 then
+  begin
+    Rest := Std.Str.Substring(Rest, 0, FragmentStart)
+  end;
   mutable var PathStart: integer := Std.Str.IndexOf(Rest, '/');
   var QueryStart: integer := Std.Str.IndexOf(Rest, '?');
   if (PathStart < 0) or ((QueryStart >= 0) and (QueryStart < PathStart)) then

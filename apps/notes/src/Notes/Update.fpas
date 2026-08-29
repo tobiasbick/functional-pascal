@@ -39,20 +39,24 @@ begin
   return Next
 end;
 
+function NoteIndexById(Notes: array of Note; Id: string): integer;
+begin
+  for Index: integer := 0 to Std.Array.Length(Notes) - 1 do
+  begin
+    if Notes[Index].Id = Id then
+    begin
+      return Index
+    end
+  end;
+
+  return -1
+end;
+
 function ResortSelected(State: NotesModel; SelectedId: string): NotesModel;
 begin
   mutable var Next: NotesModel := State;
   Next.Notes := NotesSort(State.Notes);
-  Next.Selected := -1;
-  for Index: integer := 0 to Std.Array.Length(Next.Notes) - 1 do
-  begin
-    if Next.Notes[Index].Id = SelectedId then
-    begin
-      Next.Selected := Index;
-      return Next
-    end
-  end;
-
+  Next.Selected := NoteIndexById(Next.Notes, SelectedId);
   return Next
 end;
 
@@ -133,12 +137,13 @@ begin
   begin
     return State
   end;
+  var TargetId: string := State.Notes[Indices[Position]].Id;
   var Saved: NotesModel := NotesPersistCurrent(State);
   if Saved.Dirty or (Saved.Overlay = NotesOverlay.SaveFailure) then
   begin
     return Saved
   end;
-  mutable var Next: NotesModel := WithEditorFields(Saved, Indices[Position]);
+  mutable var Next: NotesModel := WithEditorFields(Saved, NoteIndexById(Saved.Notes, TargetId));
   Next.Pane := NotesPane.List;
   Next.Focus := ListControl;
   return Next

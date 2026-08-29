@@ -28,5 +28,29 @@ begin
     begin
       Fail(Message)
     end
+  end;
+
+  case Std.Net.Uri.Parse('http://example.test/path?q=1#section') of
+    Ok(Value):
+    begin
+      AssertEquals('example.test', Value.Host);
+      AssertEquals('/path?q=1', Value.Path)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case Std.Net.Uri.Parse('https://example.test#section') of
+    Ok(Value):
+    begin
+      AssertEquals('example.test', Value.Host);
+      AssertEquals('/', Value.Path)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
   end
 end.

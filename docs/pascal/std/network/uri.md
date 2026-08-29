@@ -9,7 +9,9 @@ Pure FPAS parsing of absolute HTTP and HTTPS URIs.
 | type | `Uri` | `Scheme`, `Host`, `Port`, and request `Path` |
 | function | `Parse(Text: string): Result of Uri, string` | parses an absolute URI |
 
-`Parse` recognizes `http` and `https`, applies default ports 80 and 443, accepts bracketed IPv6 hosts, retains query text in `Path`, and rejects user information and invalid ports. Recognition of `https` does not imply that `Std.Http` can transport it yet.
+`Parse` recognizes `http` and `https`, applies default ports 80 and 443, accepts bracketed IPv6
+hosts, retains query text in `Path`, discards URI fragments before producing an HTTP request
+target, and rejects user information and invalid ports.
 
 ## Implementation (contributors)
 

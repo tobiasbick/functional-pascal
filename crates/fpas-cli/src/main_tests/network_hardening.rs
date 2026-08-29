@@ -305,3 +305,53 @@ end.
     assert_eq!(exit, 0, "stderr: {stderr}");
     assert_eq!(stdout, "ok\n");
 }
+
+#[test]
+fn http_client_rejects_chunk_size_integer_overflow() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind chunk overflow fixture");
+    let port = listener
+        .local_addr()
+        .expect("chunk overflow address")
+        .port();
+    let server = std::thread::spawn(move || {
+        for size in ["8000000000000000", "10000000000000000"] {
+            let (mut stream, _) = listener.accept().expect("accept chunk overflow request");
+            read_request(&mut stream);
+            write!(
+                stream,
+                "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n{size}\r\n"
+            )
+            .expect("write overflowing chunk size");
+        }
+    });
+
+    let (exit, stdout, stderr) = run_program(
+        "http-chunk-size-overflow",
+        &format!(
+            r#"program HttpChunkSizeOverflow;
+
+uses Std.Console, Std.Http, Std.Str;
+
+procedure ExpectOverflow(Path: string);
+begin
+  case Send(Request.Get('http://127.0.0.1:{port}/' + Path)) of
+    Ok(_): panic('overflowing HTTP chunk size was accepted');
+    Error(Message):
+    begin
+      if not Std.Str.Contains(Message, 'exceeds the integer range') then panic(Message)
+    end
+  end
+end;
+
+begin
+  ExpectOverflow('negative');
+  ExpectOverflow('zero');
+  WriteLn('ok')
+end.
+"#
+        ),
+    );
+    server.join().expect("chunk overflow fixture must finish");
+    assert_eq!(exit, 0, "stderr: {stderr}");
+    assert_eq!(stdout, "ok\n");
+}

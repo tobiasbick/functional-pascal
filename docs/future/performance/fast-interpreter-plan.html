@@ -17,11 +17,11 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Stages 1, 3a, 3b, 4, and 5a complete · Stage 5b next · rejected probes recorded</div>
+  <div class="stamp">Stages 1, 3a, 3b, 4, and 5a complete · Stages 2 and 5b rejected · Stage 6 next</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
-  <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split, borrowed scalar operands, direct typed integer handlers, direct intrinsic ownership routing, and allocation-free cached callback setup. The next measured slice should run synchronous callbacks as ordinary frames on the current worker, where re-entrancy permits. Do not repeat callback resolution caching in isolation: that controlled probe was slower.</div>
+  <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split, borrowed scalar operands, direct typed integer handlers, direct intrinsic ownership routing, and allocation-free cached callback setup. Stage 2 found no broad gain from trusted branch targets, a predecoded opcode mirror, or an infallible fetch path; all three probes were rolled back. Stage 5b likewise rejected two slower current-worker callback designs. Stage 6, isolated single-worker global storage, is the next measured slice. A compact or quickened execution image remains a separate deferred rewrite.</div>
 
   <h2 id="status">Current work status</h2>
   <p>This table is the canonical progress record for the interpreter plan. <strong>Complete</strong> means implemented and accepted by controlled benchmarks. <strong>Partial</strong> separates accepted work from a remaining independently measured slice. <strong>Rejected</strong> means a concrete probe was measured and rolled back. <strong>Deferred</strong> means no implementation should start until its stated evidence gate exists.</p>
@@ -30,12 +30,12 @@
     <tbody>
       <tr><td>Stage 0 · Current profile</td><td><strong>Partial</strong></td><td>Controlled baselines, full-suite comparisons, and isolated A/B probes are complete. Native self-time and allocation sampling was unavailable without administrator privileges.</td><td>Defer privileged sampling. Retry with a non-privileged profiler only when a later decision cannot be resolved by controlled A/B evidence.</td></tr>
       <tr><td>Stage 1 · Fast/debug policy split</td><td><strong>Complete</strong></td><td>Normal execution no longer performs the debugger initializer lookup. The change produced a small broad win and no stable regression.</td><td>Retain.</td></tr>
-      <tr><td>Stage 2 · Trusted execution image</td><td><strong>Open</strong></td><td>A narrow probe that trusted branch targets alone missed the 5% gate and was rejected. The broader private execution-image design has not been implemented or rejected.</td><td>Revisit after Stage 5b with an isolated dispatch-cost benchmark and verifier coverage.</td></tr>
+      <tr><td>Stage 2 · Trusted execution image</td><td><strong>Rejected · bounded safe slice</strong></td><td>Trusted branch targets, a verifier-built opcode mirror, and an infallible safe fetch path all missed the broad 5% gate. The opcode mirror moved <code>integer_loop</code> by −1.0%/+0.3% and <code>branch_dispatch</code> by −1.3%/−1.3%. The fetch probe moved those rows by −1.1%/−0.1% and −0.3%/−0.4%, while <code>dynamic_numeric</code> regressed by 3.5–3.9%.</td><td>Do not repeat these probes unchanged. Treat typed operand images, resolved quickening, or compact instructions as deferred Option A rather than incremental cleanup.</td></tr>
       <tr><td>Stage 3 · Typed operations</td><td><strong>Partial</strong></td><td>Stages 3a and 3b are complete. Typed integer operations improved measured scalar and branch workloads.</td><td>Typed real handlers and superinstructions are deferred until a benchmark isolates a worthwhile gain.</td></tr>
       <tr><td>Stage 4 · Direct intrinsic routing</td><td><strong>Complete</strong></td><td>Direct ownership routing improved mixed intrinsic dispatch by 14.0–14.1%. Separate length-specific VM fast paths were unnecessary.</td><td>Retain; do not add duplicate family routers.</td></tr>
-      <tr><td>Stage 5 · Calls and callbacks</td><td><strong>Partial · 5a complete</strong></td><td>Allocation-free cached argument loading improved <code>array_callbacks</code> by 23.9–24.1%. Callback-resolution caching alone was slower and rejected.</td><td>Stage 5b is next: run synchronous callbacks as frames on the current worker. Result-capacity preallocation remains deferred as a separate measured candidate.</td></tr>
-      <tr><td>Stage 6 · Globals and safepoints</td><td><strong>Open</strong></td><td>No implementation has been attempted. Locking on every global access remains a confirmed mechanism whose share still needs isolation.</td><td>Measure only after Stage 5b and Stage 2 are reviewed.</td></tr>
-      <tr><td>One-variable probes</td><td><strong>Rejected</strong></td><td>Trusting branch targets missed the 5% gate; forced dispatch inlining was neutral; checking cancellation every 256 instructions regressed the branch workload by 2.9%; callback-resolution caching was slower by 1.7% and 3.6%.</td><td>All four probes were rolled back. Do not repeat them unchanged.</td></tr>
+      <tr><td>Stage 5 · Calls and callbacks</td><td><strong>5a complete · 5b rejected</strong></td><td>Allocation-free cached argument loading improved <code>array_callbacks</code> by 23.9–24.1%. An allocation-free task-continuation frame path was 21.5% slower; a direct synchronous frame loop was 41.4% slower. Both were rolled back.</td><td>Retain the cached nested worker. Result-capacity preallocation remains deferred as a separate measured candidate.</td></tr>
+      <tr><td>Stage 6 · Globals and safepoints</td><td><strong>Open · next</strong></td><td>No implementation has been attempted. Locking on every global access remains a confirmed mechanism whose share still needs isolation.</td><td>Isolate the single-worker global-store cost before changing ownership or synchronization.</td></tr>
+      <tr><td>One-variable probes</td><td><strong>Rejected</strong></td><td>Trusted branch targets, an opcode mirror, infallible fetch, forced dispatch inlining, coarser cancellation checks, callback-resolution caching, and two current-worker callback designs all failed their gates.</td><td>All probes were rolled back. Do not repeat them unchanged.</td></tr>
       <tr><td>Compact VM, managed heap, or JIT</td><td><strong>Deferred</strong></td><td>Architecture options only; none is an active implementation backlog.</td><td>Enter only through the evidence gates in the runtime-rewrite report.</td></tr>
     </tbody>
   </table>
@@ -70,6 +70,17 @@
     </tbody>
   </table>
   <p>Three rejected probes were rolled back: trusting branch targets during execution produced only −1.0% and −4.4% in the branch row and missed the 5% gate; forced dispatch inlining was neutral; checking scheduler cancellation every 256 instructions regressed the branch row by 2.9%. Windows sampling with <code>samply</code> could not run without administrator privileges, so no system configuration was changed.</p>
+
+  <h2>Stage 2 result — bounded trusted execution probes</h2>
+  <p>The safe incremental version of a trusted execution image was tested in two additional one-variable designs. The first stored one verifier-built opcode per packed instruction and fetched both by the same instruction index. The second kept packed decoding unchanged but trusted the verified portable instruction range for address conversion, code fetch, and IP increment. Both designs exercised the production VM and automatically followed debugger live-image replacement because the prepared data belonged to the verified image or current worker.</p>
+  <table>
+    <thead><tr><th>Probe</th><th>Two controlled VM comparisons</th><th>Decision</th></tr></thead>
+    <tbody>
+      <tr><td>Predecoded opcode mirror</td><td><code>integer_loop</code> −1.0% / +0.3%; <code>branch_dispatch</code> −1.3% / −1.3%; no stable broad win</td><td>Rejected and rolled back; the extra instruction-side memory did not clear the 5% gate.</td></tr>
+      <tr><td>Trusted safe fetch</td><td><code>integer_loop</code> −1.1% / −0.1%; <code>branch_dispatch</code> −0.3% / −0.4%; <code>dynamic_numeric</code> +3.5% / +3.9%</td><td>Rejected and rolled back; a narrow call-row win did not compensate for absent broad improvement and a repeated dynamic regression.</td></tr>
+    </tbody>
+  </table>
+  <p>Together with the earlier branch-target probe, this is enough to reject Stage 2 as a bounded safe cleanup. It does not prove that a compact typed instruction image can never help; that design also changes instruction width, operand representation, resolution, and cache locality, so it belongs to deferred runtime-rewrite Option A and must enter through its profiling and prototype gates.</p>
 
   <h2>Stage 3b result — direct typed integer handlers</h2>
   <p>Typed integer arithmetic, bitwise, shift, and comparison opcodes now enter a focused execution handler instead of rediscovering their operation and runtime tags in the generic value layer. Pure integer primitives remain shared with dynamic and debugger evaluation, preserving overflow, type-error, and domain-error behavior. Unexpected operand tags still fall back to the generic path so malformed-bytecode diagnostics do not change.</p>
@@ -168,7 +179,7 @@ crates/fpas-std/src/dispatch/
     <h3>Stage 2 — Trust verified code once</h3>
     <p>Convert admitted bytecode into a private execution image whose instruction addresses, opcode forms, register windows, branch targets, call arities, constant references, and layout references are already proven. Keep detailed validation at load/link time. In the hot loop use infallible internal register IDs and direct payload decoding.</p>
     <p>Keep memory safety without immediately introducing <code>unsafe</code>: safe indexing and compact internal newtypes can remove error construction and repeated conversions first. If bounds checks remain measurable later, isolate any unchecked access in one tiny audited module backed by verifier fuzzing.</p>
-    <p class="gate">Status: open. Trusting branch targets alone was measured, missed the improvement gate, and was rejected; that narrow result does not reject a private verified execution image. Exit gate: malformed artifacts are still rejected before execution, verifier/property tests cover every trusted invariant, and profiles show reduced dispatch self time.</p>
+    <p class="gate">Status: bounded safe slice rejected on 30 August 2026. Trusted branch targets, a predecoded opcode mirror, and an infallible fetch path all missed the broad 5% gate and were rolled back. A wider compact, typed, or quickened instruction image is deferred to runtime-rewrite Option A; it is not an unfinished incremental Stage-2 patch.</p>
   </section>
 
   <section class="phase">
@@ -187,8 +198,8 @@ crates/fpas-std/src/dispatch/
 
   <section class="phase">
     <h3>Stage 5 — Deepen calls and callbacks</h3>
-    <p>The first accepted slice removed the temporary argument buffer from cached worker resets while preserving receiver, argument, capture, and task-owner ordering. A standalone attempt to resolve callback metadata once per higher-order operation did not help and was rolled back. The remaining architectural step is to run synchronous callbacks as ordinary frames on the current worker where re-entrancy permits, instead of resetting a nested worker per element. Result-capacity preallocation remains a separate candidate for Map and other known-size transforms.</p>
-    <p class="gate">Status: partial. Stage 5a completed on 30 August 2026 with a repeatable 23.9–24.1% <code>array_callbacks</code> improvement and a regression test for reused bound receivers. Callback-resolution caching alone was rejected after two slower comparisons. Stage 5b is next; result-capacity preallocation is deferred as a separate candidate. Exit gate: callback throughput improves again, recursive callbacks and hosted re-entrancy remain correct, and spawned-task suspension semantics are unchanged.</p>
+    <p>The first accepted slice removed the temporary argument buffer from cached worker resets while preserving receiver, argument, capture, and task-owner ordering. A standalone attempt to resolve callback metadata once per higher-order operation did not help and was rolled back. Stage 5b then tested ordinary frames on the current worker. Reusing the task-continuation machinery was initially 76.0% slower and remained 21.5% slower after removing its per-call argument allocation and full array copy. A separate direct synchronous frame loop was 41.4% slower. All variants were rolled back. Result-capacity preallocation remains a separate candidate for Map and other known-size transforms.</p>
+    <p class="gate">Status: Stage 5a complete; Stage 5b rejected on 30 August 2026. Stage 5a retains its repeatable 23.9–24.1% <code>array_callbacks</code> improvement and regression test for reused bound receivers. The cached nested worker remains because both current-worker frame designs failed the improvement gate without providing a compensating semantic benefit.</p>
   </section>
 
   <section class="phase">
@@ -198,10 +209,10 @@ crates/fpas-std/src/dispatch/
   </section>
 
   <h2>Expected order of leverage</h2>
-  <ol><li>Execution-policy split and trusted execution image.</li><li>Direct typed scalar handlers.</li><li>Direct intrinsic family routing.</li><li>Callback frames on the current worker.</li><li>Single-worker globals and explicit safepoints.</li><li>Only then reconsider bytecode width, managed heap, or native compilation.</li></ol>
+  <ol><li>Retain the execution-policy split; the bounded trusted-image slice was rejected.</li><li>Retain direct typed integer handlers and direct intrinsic family routing.</li><li>Retain the measured cached callback worker; current-worker frames were rejected.</li><li>Measure single-worker globals, then consider explicit safepoints separately.</li><li>Only then reconsider compact or quickened instructions, a managed heap, or native compilation through their evidence gates.</li></ol>
 
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>The <a href="#status">status table</a> is the canonical progress record. Stages 1, 3a, 3b, 4, and 5a are implemented and measured with <code>cargo bench-fpas</code>; rejected probes were rolled back. Stage 5b is next. Stage 2, the remaining part of Stage 3, and Stage 6 stay independent proposals. For larger deferred choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>The <a href="#status">status table</a> is the canonical progress record. Stages 1, 3a, 3b, 4, and 5a are implemented and measured with <code>cargo bench-fpas</code>; the bounded Stage-2 slice, rejected one-variable probes, and both Stage-5b frame designs were rolled back. Stage 6 is next. The remaining part of Stage 3 stays independent, and larger choices remain behind the gates in <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

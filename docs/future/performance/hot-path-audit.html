@@ -30,7 +30,7 @@
     <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
-  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>.</div>
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; single-worker globals are next.</div>
 
   <h2>Benchmark signal</h2>
   <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
@@ -62,7 +62,7 @@
     <h3>Normal execution pays debugger bookkeeping on every instruction</h3>
     <p><a href="../../../crates/fpas-vm/src/vm/dispatch.rs"><code>vm/dispatch.rs</code></a> performs callback-continuation checks, address conversion, code bounds checks, checked IP and instruction-counter increments, and opcode validation before reaching the opcode match. Initializer suppression now uses a statically selected debugger specialization, so normal execution does not perform that debugger-only lookup.</p>
     <p><strong>Why it matters:</strong> a 50-million-iteration loop executes several bytecodes per iteration. Nanoseconds added to every bytecode become seconds. The broad regression shape is consistent with common dispatch overhead.</p>
-    <p><strong>Status:</strong> the controlled execution-policy split produced a small repeatable improvement but did not explain most of the broad historical regression.</p>
+    <p><strong>Status:</strong> the controlled execution-policy split produced a small repeatable improvement but did not explain most of the broad historical regression. Later trusted branch-target, opcode-mirror, and infallible-fetch probes also missed the broad 5% gate and were rolled back; a wider compact instruction image is deferred rather than an open cleanup.</p>
   </section>
 
   <section class="rank">
@@ -73,10 +73,10 @@
   </section>
 
   <section class="rank">
-    <span class="badge high">Priority 3 · partially addressed and measured</span>
+    <span class="badge high">Priority 3 · cached path improved; frame replacement rejected</span>
     <h3>Higher-order array operations still cross a callback seam per element</h3>
     <p><a href="../../../crates/fpas-vm/src/vm/callback_call.rs"><code>callback_call.rs</code></a> still resolves and revalidates the callback, clones a <code>SharedFunction</code>, borrows a <code>RefCell</code>, resets a nested <code>Worker</code>, copies values into registers, runs a second dispatch loop, and returns the worker to the cache. The cached reset no longer collects an intermediate argument vector: it loads the optional receiver, visible arguments, and captures directly. <a href="../../../crates/fpas-vm/src/vm/hosted/callbacks/synchronous.rs"><code>callbacks/synchronous.rs</code></a> repeats the remaining seam for every Map, Filter, and Reduce element.</p>
-    <p><strong>Measured evidence:</strong> removing the per-callback argument allocation improved <code>array_callbacks</code> by 24.1% and 23.9% in two full-suite comparisons. The workload performs 9.6 million callbacks, so small fixed costs dominate. Caching callback resolution alone was slower by 1.7% and 3.6% and was rolled back; ordinary frames on the current worker remain the next distinct hypothesis.</p>
+    <p><strong>Measured evidence:</strong> removing the per-callback argument allocation improved <code>array_callbacks</code> by 24.1% and 23.9% in two full-suite comparisons. The workload performs 9.6 million callbacks, so small fixed costs dominate. Caching callback resolution alone was slower by 1.7% and 3.6%. An allocation-free current-worker continuation was 21.5% slower, and a direct synchronous frame loop was 41.4% slower. All three alternatives were rolled back; the cached nested worker remains the measured fast path.</p>
   </section>
 
   <section class="rank">

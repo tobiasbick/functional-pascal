@@ -35,7 +35,7 @@
     <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
   </header>
 
-  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed five interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands removed reference-count churn; direct typed integer handlers improved <code>branch_dispatch</code> by 10.2–12.8%; direct intrinsic ownership routing improved mixed intrinsic dispatch by 14.0–14.1%; and direct cached callback loading improved <code>array_callbacks</code> by 23.9–24.1%. The next measured slice is running synchronous callbacks as frames on the current worker.</div>
+  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed five interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands removed reference-count churn; direct typed integer handlers improved <code>branch_dispatch</code> by 10.2–12.8%; direct intrinsic ownership routing improved mixed intrinsic dispatch by 14.0–14.1%; and direct cached callback loading improved <code>array_callbacks</code> by 23.9–24.1%. Two current-worker callback-frame designs were slower by 21.5% and 41.4%. The bounded trusted-image probes also missed the broad 5% gate. All failed designs were rolled back; Stage 6 single-worker globals are next.</div>
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
@@ -53,7 +53,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work, rejected probes, and remaining proposals. Continue with callback frames on the current worker; do not repeat callback-resolution caching as an isolated change. Return to typed real operations only after adding a benchmark that isolates them. Consider heap or JIT work only after those interpreter costs are quantified.</p>
+  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work, rejected probes, and remaining proposals. Continue with Stage 6 global-storage isolation. Do not repeat trusted branch targets, the opcode mirror, infallible fetch, callback-resolution caching, or current-worker callback frames unchanged. Return to typed real operations only after adding a benchmark that isolates them. Consider compact bytecode, heap, or JIT work only through the rewrite evidence gates.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

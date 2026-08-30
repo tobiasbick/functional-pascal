@@ -14,6 +14,28 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-30 — after separating normal and debug dispatch
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 7727 | throughput: 6470816 iters/s |
+| global_access | 615 | throughput: 8130081 global updates/s |
+| record_field_access | 1772 | throughput: 8465011 field accesses/s |
+| closure_call | 495 | throughput: 6060606 closure calls/s |
+| branch_dispatch | 3912 | throughput: 5112474 branches/s |
+| dynamic_numeric | 890 | throughput: 5617977 dynamic numeric ops/s |
+| array_push | 238 | throughput: 8403361 pushes/s |
+| array_length | 92 | throughput: 5434782 lengths/s |
+| string_concat | 2652 | throughput: 1885369 concats/s |
+| string_length | 87 | throughput: 5747126 lengths/s |
+| function_call | 723 | throughput: 8298755 calls/s |
+| array_callbacks | 1292 | throughput: 7430340 callbacks/s |
+| record_update | 443 | throughput: 2257336 updates/s |
+| unicode_char_at | 1469 | throughput: 2042205 chars/s |
+
 ## 2026-08-30 — restore borrowed VM hot paths and add Notes TUI benchmark
 
 - Group: `all`

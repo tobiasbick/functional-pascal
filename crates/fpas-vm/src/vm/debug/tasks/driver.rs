@@ -231,7 +231,7 @@ impl DebugTaskRuntime {
         slot.state = DebugTaskState::Running;
         slot.failure = None;
         self.last_dispatched = task_id;
-        let dispatch = slot.worker.dispatch_one().map_err(|error| {
+        let dispatch = slot.worker.dispatch_debug_one().map_err(|error| {
             slot.state = DebugTaskState::Failed;
             slot.failure = Some(error.clone());
             if slot.worker.retain_result {

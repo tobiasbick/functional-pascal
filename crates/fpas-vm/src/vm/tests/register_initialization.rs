@@ -3,13 +3,59 @@
 use std::sync::Arc;
 
 use fpas_bytecode::{
-    ArgsIntrinsic, FunctionId, Intrinsic, Opcode, Register, ReturnConvention, Value,
+    ArgsIntrinsic, FunctionId, InstructionAddress, Intrinsic, Opcode, Register, ReturnConvention,
+    Value,
 };
 
 use super::calls::{FunctionSpec, abc, image};
 use super::support::{abx, verified};
+use crate::vm::debug::initializer_suppression::SourceInitializerTarget;
 use crate::vm::dispatch::DispatchStep;
 use crate::vm::worker::Worker;
+
+#[test]
+fn normal_dispatch_ignores_debug_initializer_suppression() {
+    let executable = verified(
+        vec![abc(Opcode::LoadUnit, 0, 0, 0, 0), super::return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        1,
+    );
+    let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+    worker.suppress_source_initializer(SourceInitializerTarget {
+        function: FunctionId::new(0),
+        base: 0,
+        instruction: InstructionAddress::new(0),
+    });
+
+    assert!(matches!(
+        worker.dispatch_one().expect("normal dispatch"),
+        DispatchStep::Continue
+    ));
+    assert!(worker.register_is_initialized(0));
+}
+
+#[test]
+fn debug_dispatch_applies_initializer_suppression() {
+    let executable = verified(
+        vec![abc(Opcode::LoadUnit, 0, 0, 0, 0), super::return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        1,
+    );
+    let mut worker = Worker::new(Arc::new(executable)).expect("worker");
+    worker.suppress_source_initializer(SourceInitializerTarget {
+        function: FunctionId::new(0),
+        base: 0,
+        instruction: InstructionAddress::new(0),
+    });
+
+    assert!(matches!(
+        worker.dispatch_debug_one().expect("debug dispatch"),
+        DispatchStep::Continue
+    ));
+    assert!(!worker.register_is_initialized(0));
+}
 
 #[test]
 fn writes_takes_and_unit_stores_update_initialization_bits() {

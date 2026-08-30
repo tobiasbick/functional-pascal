@@ -17,11 +17,26 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Proposed solution · no implementation</div>
+  <div class="stamp">Stage 1 implemented and measured · later stages proposed</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
-  <div class="callout"><strong>Recommendation:</strong> begin with execution-policy separation. It is the smallest change that can explain the broad current regression and it creates a clean seam for later optimization. Do not start with computed goto, a garbage collector, or Cranelift.</div>
+  <div class="callout"><strong>Current recommendation:</strong> retain the measured execution-policy split, then profile the remaining dispatch and typed-operation costs before starting Stage 2. The split recovered a small but reproducible part of the broad regression; it did not explain most of it.</div>
+
+  <h2>Stage 1 result — 30 August 2026</h2>
+  <p>The normal dispatcher now uses a statically specialized path without debugger initializer suppression. Debugger-owned task execution selects the corresponding debug specialization. Both paths share the same Rust opcode implementation, so there is no runtime <code>if debugging</code> in normal execution and no duplicated source-level opcode match.</p>
+  <table>
+    <thead><tr><th>Benchmark</th><th>Two controlled VM comparisons</th><th>Interpretation</th></tr></thead>
+    <tbody>
+      <tr><td><code>integer_loop</code></td><td>−1.6%, −1.3%</td><td>Small stable dispatch win.</td></tr>
+      <tr><td><code>branch_dispatch</code></td><td>+0.1%, −2.9%</td><td>Neutral to slightly faster; no repeatable loss.</td></tr>
+      <tr><td><code>dynamic_numeric</code></td><td>−3.2%, −4.4%</td><td>Repeatable improvement.</td></tr>
+      <tr><td><code>array_push</code></td><td>−6.4%, −6.8%</td><td>Largest stable non-call improvement.</td></tr>
+      <tr><td><code>closure_call</code></td><td>−8.9%, −8.1%</td><td>Largest stable measured improvement.</td></tr>
+      <tr><td><code>function_call</code></td><td>−5.8%, −5.2%</td><td>Repeatable improvement.</td></tr>
+    </tbody>
+  </table>
+  <p>Across the two final VM comparisons, no row regressed beyond +0.1%. Two full-suite comparisons kept both TUI rows within ±1%; isolated <code>task_spawn_wait</code> comparisons were faster in all three repetitions, though their absolute timings were noisy. The settled VM snapshot is recorded in <a href="../../bench/history.md">benchmark history</a>.</p>
 
   <h2>Design target</h2>
   <div class="grid">
@@ -72,7 +87,7 @@ crates/fpas-std/src/dispatch/
     <h3>Stage 1 — Split fast and debug execution policies</h3>
     <p>Move initializer suppression, data-breakpoint tracking, debug task clocks, and debugger-only stop logic into a debug executor. The normal executor should not own or scan those collections. Shared instruction semantics can be generated from one internal opcode definition or factored into cold helpers, but the hot loops themselves should remain independently optimizable.</p>
     <p>A safe first design uses monomorphized policy types or two concrete loops. Avoid one <code>if debugging</code> inside every iteration.</p>
-    <p class="gate">Exit gate: all debugger tests pass; normal VM geometric mean improves reproducibly; no benchmark row regresses beyond the agreed threshold. Otherwise revert.</p>
+    <p class="gate">Status: passed on 30 August 2026. All 382 <code>fpas-vm</code> tests passed, the VM improvements repeated, and the full-suite follow-up found no stable collateral regression.</p>
   </section>
 
   <section class="phase">
@@ -114,5 +129,5 @@ crates/fpas-std/src/dispatch/
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>This plan intentionally stops at architecture and gates. No speedup is claimed until measured with <code>cargo bench-fpas</code>. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>Stage 1 is implemented and measured with <code>cargo bench-fpas</code>. Stages 2–6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

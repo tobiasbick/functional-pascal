@@ -15,7 +15,19 @@ pub(super) enum DispatchStep {
 }
 
 impl Worker {
+    /// Execute one instruction without debugger-only initializer suppression.
     pub fn dispatch_one(&mut self) -> Result<DispatchStep, VmError> {
+        self.dispatch_one_with_initializer_suppression::<false>()
+    }
+
+    /// Execute one instruction for debugger-owned execution.
+    pub(in crate::vm) fn dispatch_debug_one(&mut self) -> Result<DispatchStep, VmError> {
+        self.dispatch_one_with_initializer_suppression::<true>()
+    }
+
+    fn dispatch_one_with_initializer_suppression<const SUPPRESS_INITIALIZERS: bool>(
+        &mut self,
+    ) -> Result<DispatchStep, VmError> {
         if !self.callback_continuations.is_empty() && self.resume_callback_continuation()? {
             return Ok(DispatchStep::Continue);
         }
@@ -53,7 +65,7 @@ impl Worker {
                 "Instruction counter overflowed",
             )
         })?;
-        if self.take_suppressed_source_initializer(self.current_address) {
+        if SUPPRESS_INITIALIZERS && self.take_suppressed_source_initializer(self.current_address) {
             return Ok(DispatchStep::Continue);
         }
         let opcode = instruction.opcode().map_err(|error| {

@@ -17,11 +17,11 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Stage 1 implemented and measured · later stages proposed</div>
+  <div class="stamp">Stages 1 and 3a implemented and measured · later stages proposed</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
-  <div class="callout"><strong>Current recommendation:</strong> retain the measured execution-policy split, then profile the remaining dispatch and typed-operation costs before starting Stage 2. The split recovered a small but reproducible part of the broad regression; it did not explain most of it.</div>
+  <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split and borrowed scalar operands. Next, specialize typed integer and comparison handlers without changing FPAS syntax or the bytecode format. Do not prioritize branch-target checks, forced dispatch inlining, or per-instruction cancellation polling: controlled probes did not show useful gains.</div>
 
   <h2>Stage 1 result — 30 August 2026</h2>
   <p>The normal dispatcher now uses a statically specialized path without debugger initializer suppression. Debugger-owned task execution selects the corresponding debug specialization. Both paths share the same Rust opcode implementation, so there is no runtime <code>if debugging</code> in normal execution and no duplicated source-level opcode match.</p>
@@ -37,6 +37,22 @@
     </tbody>
   </table>
   <p>Across the two final VM comparisons, no row regressed beyond +0.1%. Two full-suite comparisons kept both TUI rows within ±1%; isolated <code>task_spawn_wait</code> comparisons were faster in all three repetitions, though their absolute timings were noisy. The settled VM snapshot is recorded in <a href="../../bench/history.md">benchmark history</a>.</p>
+
+  <h2>Stage 3a result — borrow scalar operands</h2>
+  <p><code>execute_value_binary</code> previously cloned both source <code>Value</code> instances before calling read-only value operations; the unary path cloned its source as well. The result is now computed directly from borrowed register values and written only after those borrows end. Existing aliasing tests cover destinations that overlap the left or right source, including strings.</p>
+  <table>
+    <thead><tr><th>Benchmark</th><th>Two controlled full-suite comparisons</th><th>Interpretation</th></tr></thead>
+    <tbody>
+      <tr><td><code>integer_loop</code></td><td>−11.3%, −9.9%</td><td>Large repeatable scalar-loop improvement.</td></tr>
+      <tr><td><code>branch_dispatch</code></td><td>−9.4%, −10.1%</td><td>Large repeatable branch-workload improvement.</td></tr>
+      <tr><td><code>dynamic_numeric</code></td><td>−6.3%, −7.5%</td><td>The generic dynamic path benefits without specialization.</td></tr>
+      <tr><td><code>string_concat</code></td><td>−6.7%, −4.5%</td><td>Borrowing avoids source reference-count churn.</td></tr>
+      <tr><td><code>task_spawn_wait</code></td><td>−4.8%, −1.0%</td><td>No concurrency regression; absolute timing remains noisy.</td></tr>
+      <tr><td><code>tui_headless</code></td><td>−2.8%, −2.0%</td><td>No collateral TUI loss.</td></tr>
+      <tr><td><code>notes_headless</code></td><td>−1.8%, −3.1%</td><td>No collateral application loss.</td></tr>
+    </tbody>
+  </table>
+  <p>Three rejected probes were rolled back: trusting branch targets during execution produced only −1.0% and −4.4% in the branch row and missed the 5% gate; forced dispatch inlining was neutral; checking scheduler cancellation every 256 instructions regressed the branch row by 2.9%. Windows sampling with <code>samply</code> could not run without administrator privileges, so no system configuration was changed.</p>
 
   <h2>Design target</h2>
   <div class="grid">
@@ -99,9 +115,9 @@ crates/fpas-std/src/dispatch/
 
   <section class="phase">
     <h3>Stage 3 — Execute typed opcodes directly</h3>
-    <p><code>AddInteger</code> should read two integer slots, perform the operation, and write an integer slot. It should not clone two generic values, route through <code>BinaryOperation</code>, and rediscover both tags. Keep <code>*Dynamic</code> opcodes on the generic slow path. Add direct comparison and branch forms as profiles justify them.</p>
+    <p><code>AddInteger</code> should read two integer slots, perform the operation, and write an integer slot. Stage 3a has already removed generic source-value cloning while retaining the shared <code>BinaryOperation</code> route. The next slice should remove repeated tag discovery for typed opcodes. Keep <code>*Dynamic</code> opcodes on the generic slow path. Add direct comparison and branch forms as profiles justify them.</p>
     <p>Candidate superinstructions include common counted-loop steps, compare-and-branch, load-field-and-use, and call/return patterns. Lua's integer <code>FORLOOP</code> is evidence that fusing language-neutral runtime work can pay without changing source syntax.</p>
-    <p class="gate">Exit gate: integer and branch rows improve, dynamic behavior remains correct, bytecode-size and compile-time changes are recorded, and the full suite has no collateral loss.</p>
+    <p class="gate">Status: Stage 3a passed on 30 August 2026. Integer and branch rows improved by roughly 10%, dynamic behavior remained correct, and two full-suite comparisons had no collateral regression. Direct typed handlers remain proposed.</p>
   </section>
 
   <section class="phase">
@@ -129,5 +145,5 @@ crates/fpas-std/src/dispatch/
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>Stage 1 is implemented and measured with <code>cargo bench-fpas</code>. Stages 2–6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>Stages 1 and 3a are implemented and measured with <code>cargo bench-fpas</code>. Stage 2 and the remaining parts of Stages 3–6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

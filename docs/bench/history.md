@@ -14,6 +14,31 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-30 — after borrowing scalar operands
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6607 | throughput: 7567731 iters/s |
+| global_access | 554 | throughput: 9025270 global updates/s |
+| record_field_access | 1684 | throughput: 8907363 field accesses/s |
+| closure_call | 463 | throughput: 6479481 closure calls/s |
+| branch_dispatch | 3548 | throughput: 5636978 branches/s |
+| dynamic_numeric | 833 | throughput: 6002400 dynamic numeric ops/s |
+| array_push | 216 | throughput: 9259259 pushes/s |
+| array_length | 87 | throughput: 5747126 lengths/s |
+| string_concat | 2414 | throughput: 2071251 concats/s |
+| string_length | 82 | throughput: 6097560 lengths/s |
+| function_call | 680 | throughput: 8823529 calls/s |
+| array_callbacks | 1241 | throughput: 7735697 callbacks/s |
+| record_update | 431 | throughput: 2320185 updates/s |
+| unicode_char_at | 1351 | throughput: 2220577 chars/s |
+| task_spawn_wait | 551 | throughput: 181488 tasks/s |
+| tui_headless | 4112 | throughput: 121 frames/s |
+| notes_headless | 8791 | throughput: 28 frames/s |
+
 ## 2026-08-30 — after separating normal and debug dispatch
 
 - Group: `vm`

@@ -13,10 +13,12 @@ impl Worker {
         operation: BinaryOperation,
     ) -> Result<(), VmError> {
         let destination = register(operands.a)?;
-        let left = self.read(register(operands.b)?)?.clone();
-        let right = self.read(register(operands.c)?)?.clone();
-        let result = value_ops::binary(operation, &left, &right)
-            .map_err(|error| self.value_operation_error(error))?;
+        let result = value_ops::binary(
+            operation,
+            self.read(register(operands.b)?)?,
+            self.read(register(operands.c)?)?,
+        )
+        .map_err(|error| self.value_operation_error(error))?;
         self.write(destination, result)
     }
 
@@ -26,8 +28,7 @@ impl Worker {
         operation: UnaryOperation,
     ) -> Result<(), VmError> {
         let destination = register(operands.a)?;
-        let value = self.read(register(operands.b)?)?.clone();
-        let result = value_ops::unary(operation, &value)
+        let result = value_ops::unary(operation, self.read(register(operands.b)?)?)
             .map_err(|error| self.value_operation_error(error))?;
         self.write(destination, result)
     }

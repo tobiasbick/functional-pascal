@@ -30,12 +30,12 @@
 <body>
 <main>
   <header>
-    <div class="stamp">Future design note · 30 August 2026</div>
+    <div class="stamp">Audit plus measured follow-up · 30 August 2026</div>
     <h1>Where FPAS spends its time</h1>
     <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
   </header>
 
-  <div class="callout"><strong>Outcome first:</strong> the strongest current candidate is not one expensive algorithm. It is work repeated for every instruction: debug-only bookkeeping, trusted-bytecode checks, generic value routing, and function boundaries around the dispatch loop. The current benchmark record is 19–79% slower than the 10 August VM record across all comparable rows. That correlation is strong enough to prioritize a controlled re-measurement, but it is not a current sampling profile.</div>
+  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed two interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands instead of cloning them improved <code>integer_loop</code> by 9.9–11.3% and <code>branch_dispatch</code> by 9.4–10.1% in two full-suite comparisons. The next measured slice is direct typed integer and comparison handling.</div>
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
@@ -45,17 +45,17 @@
 
   <h2>Scope and constraints</h2>
   <ul>
-    <li>No Rust or FPAS implementation was changed.</li>
-    <li>No build, test, benchmark, or profiler was run for this investigation.</li>
-    <li>The benchmark evidence comes from committed project records and prior recorded profiles. Absolute times are machine-specific.</li>
+    <li>The initial audit was read-only; follow-up work changed only Rust VM internals and performance documentation.</li>
+    <li>The accepted changes passed release builds, the complete workspace test suite, and controlled full-suite benchmarks.</li>
+    <li>Absolute benchmark times are machine-specific; the reported improvements use same-checkout before/after comparisons.</li>
     <li>FPAS syntax and semantics are held fixed. Rust internals, bytecode, runtime values, compiler/runtime seams, and artifact formats may be replaced.</li>
     <li>Every speed claim in the solution reports is a hypothesis until it passes the project workflow: save baseline, change one variable, release build, compare the full relevant suite, then record only a settled win.</li>
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit. Its first recommendation is deliberately smaller than a VM rewrite: separate fast execution from debugger execution and re-measure. If that does not recover the broad regression, continue with direct typed operations and intrinsic routing. Consider heap or JIT work only after those interpreter costs are quantified.</p>
+  <p>Start with the audit for the original evidence, then read the fast-interpreter report for implemented results and rejected probes. Continue with direct typed integer and comparison operations, followed by intrinsic routing. Consider heap or JIT work only after those interpreter costs are quantified.</p>
 
-  <footer>Planning material only. Current implemented behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
+  <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>
 </body>
 </html>

@@ -21,14 +21,16 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="fast-interpreter-plan.html">Fast interpreter plan</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Read-only audit · current checkout 0134972e</div>
+  <div class="stamp">Initial read-only audit · measured follow-up added 30 August 2026</div>
   <h1>Rust hot paths: evidence before architecture</h1>
   <p class="lede">This report ranks where execution time is most likely being consumed. “Confirmed” means the code is unavoidably executed at the stated frequency or an existing project profile names it. “Candidate” means the mechanism is visible in source and matches benchmark behavior, but needs a current sampling profile before a speed claim.</p>
 
   <div class="summary">
-    <div class="panel"><div class="big">14 / 14</div><p>Comparable VM rows in the 30 August record are slower than the 10 August record. The spread is +18.9% to +79.4% elapsed time.</p></div>
-    <div class="panel"><strong>Best first experiment</strong><p>Make debug initializer suppression a debug-only execution policy, then compare the complete VM group. It was added to the ordinary dispatch loop after the faster 10 August record.</p></div>
+    <div class="panel"><div class="big">14 / 14</div><p>The initial historical comparison found every comparable VM row slower than the 10 August record, with a spread of +18.9% to +79.4% elapsed time.</p></div>
+    <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Removing read-only scalar operand clones then improved integer and branch workloads by roughly 10% without a full-suite regression.</p></div>
   </div>
+
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>.</div>
 
   <h2>Benchmark signal</h2>
   <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
@@ -58,16 +60,16 @@
   <section class="rank">
     <span class="badge high">Priority 1 · high confidence</span>
     <h3>Normal execution pays debugger bookkeeping on every instruction</h3>
-    <p><a href="../../../crates/fpas-vm/src/vm/dispatch.rs"><code>vm/dispatch.rs:18–65</code></a> performs callback-continuation checks, address conversion, code bounds checks, checked IP and instruction-counter increments, initializer suppression, and opcode validation before reaching the opcode match. The initializer suppression call is especially notable: <a href="../../../crates/fpas-vm/src/vm/debug/initializer_suppression.rs"><code>initializer_suppression.rs:22–43</code></a> retains and searches a vector, including call-stack liveness checks when entries exist. It was added to ordinary dispatch after the 10 August record.</p>
+    <p><a href="../../../crates/fpas-vm/src/vm/dispatch.rs"><code>vm/dispatch.rs</code></a> performs callback-continuation checks, address conversion, code bounds checks, checked IP and instruction-counter increments, and opcode validation before reaching the opcode match. Initializer suppression now uses a statically selected debugger specialization, so normal execution does not perform that debugger-only lookup.</p>
     <p><strong>Why it matters:</strong> a 50-million-iteration loop executes several bytecodes per iteration. Nanoseconds added to every bytecode become seconds. The broad regression shape is consistent with common dispatch overhead.</p>
-    <p><strong>Limit:</strong> no benchmark immediately before and after that single commit exists, so this is a high-priority regression hypothesis, not proven causation.</p>
+    <p><strong>Status:</strong> the controlled execution-policy split produced a small repeatable improvement but did not explain most of the broad historical regression.</p>
   </section>
 
   <section class="rank">
     <span class="badge high">Priority 2 · confirmed hot path</span>
     <h3>Typed opcodes still execute through generic Value machinery</h3>
-    <p>The bytecode distinguishes <code>AddInteger</code>, <code>AddReal</code>, and <code>AddDynamic</code>, but <a href="../../../crates/fpas-vm/src/vm/execute/scalar.rs"><code>execute/scalar.rs:10–32</code></a> clones both operands and forwards all variants to <code>value_ops</code>. <a href="../../../crates/fpas-vm/src/vm/value_ops/scalar.rs"><code>value_ops/scalar.rs:36–84</code></a> then branches on the abstract operation and matches the runtime tags again. Register IDs, reads, and writes are fallible even after executable verification.</p>
-    <p><strong>Existing evidence:</strong> the accepted register-VM profile already named dispatch, numeric calls, and value destruction as remaining costs. The current integer and branch rows are each about 53% slower than the 10 August record.</p>
+    <p>The bytecode distinguishes <code>AddInteger</code>, <code>AddReal</code>, and <code>AddDynamic</code>. <a href="../../../crates/fpas-vm/src/vm/execute/scalar.rs"><code>execute/scalar.rs</code></a> now borrows source values instead of cloning them, but typed opcodes still route through <code>BinaryOperation</code>. <a href="../../../crates/fpas-vm/src/vm/value_ops/scalar.rs"><code>value_ops/scalar.rs:36–84</code></a> then branches on the abstract operation and rediscovers runtime tags. Register IDs, reads, and writes remain fallible after executable verification.</p>
+    <p><strong>Measured evidence:</strong> borrowing operands improved <code>integer_loop</code> by 9.9–11.3%, <code>branch_dispatch</code> by 9.4–10.1%, and <code>dynamic_numeric</code> by 6.3–7.5% in two full-suite comparisons. Direct typed handlers remain the next hypothesis.</p>
   </section>
 
   <section class="rank">
@@ -107,18 +109,18 @@
   <h2>What the existing profile already ruled down</h2>
   <div class="callout">The accepted register-VM investigation measured a 43-element TUI view tree at only 11–12 ms for 500 builds, below 0.4% of the then 3,458 ms render workload. It also showed that reusable register storage removed the earlier <code>Vec&lt;Value&gt;::resize</code>/<code>extend_with</code> call-profile bottleneck. Repeating those optimizations first would ignore the newer evidence.</div>
 
-  <h2>Required measurement before any implementation claim</h2>
+  <h2>Measurement protocol and completed probes</h2>
   <ol>
-    <li>Save a current all-suite baseline with the project harness.</li>
-    <li>Collect sampling profiles for <code>integer_loop</code>, <code>branch_dispatch</code>, <code>array_callbacks</code>, <code>global_access</code>, and <code>notes_headless</code>. Record inclusive and self time, allocation count/bytes, and branch misses if available.</li>
-    <li>Run a one-variable A/B for debug-policy separation. Do not combine it with bytecode, Value, or router changes.</li>
-    <li>Compare the complete suite and reject any variant that merely transfers cost to tasks or TUI.</li>
+    <li>Current VM and full-suite baselines were saved with the project harness.</li>
+    <li>Windows sampling was attempted, but <code>samply</code> required administrator privileges; no system configuration was changed.</li>
+    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, and scalar operand cloning.</li>
+    <li>The complete suite was compared twice for the accepted operand-borrowing change; variants below the improvement gate or with regressions were rolled back.</li>
     <li>Add microbenchmarks only for a hotspot that the end-to-end suite cannot isolate; keep end-to-end rows authoritative.</li>
   </ol>
 
   <h2>Audit limits</h2>
   <ul>
-    <li>No fresh profiler was run, so this report does not assign CPU percentages to current functions.</li>
+    <li>No fresh sampling profile was captured, so this report does not assign CPU percentages to current functions.</li>
     <li>Historical records can drift with compiler, hardware load, and unrelated code. Only controlled before/after comparisons can establish a win.</li>
     <li>Source inspection can identify frequency and allocation mechanisms, but not whether LLVM already optimized a check away.</li>
     <li>The reports deliberately avoid syntax or semantic changes.</li>

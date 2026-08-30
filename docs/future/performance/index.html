@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FPAS performance investigation</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f4f1e8; --panel:#fffdf7; --ink:#18201d; --muted:#5f6963; --line:#c9d0c8; --accent:#075c4b; --accent2:#b94f2b; --soft:#e5eee8; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#111713; --panel:#18211c; --ink:#edf4ee; --muted:#abb8af; --line:#3b4b40; --accent:#64d2b3; --accent2:#ff9a74; --soft:#22332a; } }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.58 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1080px; margin:auto; padding:48px 24px 72px; }
+    header { border-top:8px solid var(--accent); padding-top:30px; }
+    h1 { max-width:820px; margin:.1em 0 .25em; font:700 clamp(2.35rem,7vw,5.3rem)/.94 Georgia,serif; letter-spacing:-.045em; }
+    h2 { margin:2.2em 0 .55em; font:700 1.65rem/1.15 Georgia,serif; }
+    p { max-width:78ch; }
+    .lede { color:var(--muted); font-size:1.18rem; max-width:70ch; }
+    .stamp { color:var(--accent); font-weight:700; letter-spacing:.08em; text-transform:uppercase; font-size:.78rem; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin:32px 0; }
+    .card { display:block; padding:22px; background:var(--panel); border:1px solid var(--line); border-radius:12px; color:inherit; text-decoration:none; }
+    .card:hover { border-color:var(--accent); transform:translateY(-2px); }
+    .card strong { display:block; color:var(--accent); font-size:1.06rem; }
+    .card span { color:var(--muted); }
+    .callout { margin:26px 0; padding:18px 20px; background:var(--soft); border-left:5px solid var(--accent); }
+    code { font-family:"Cascadia Code",Consolas,monospace; font-size:.92em; }
+    ul { max-width:78ch; }
+    footer { margin-top:64px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); font-size:.9rem; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="stamp">Future design note · 30 August 2026</div>
+    <h1>Where FPAS spends its time</h1>
+    <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
+  </header>
+
+  <div class="callout"><strong>Outcome first:</strong> the strongest current candidate is not one expensive algorithm. It is work repeated for every instruction: debug-only bookkeeping, trusted-bytecode checks, generic value routing, and function boundaries around the dispatch loop. The current benchmark record is 19–79% slower than the 10 August VM record across all comparable rows. That correlation is strong enough to prioritize a controlled re-measurement, but it is not a current sampling profile.</div>
+
+  <section class="cards" aria-label="Reports">
+    <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
+    <a class="card" href="fast-interpreter-plan.html"><strong>2 · Fast interpreter</strong><span>A staged plan to remove normal-run overhead while retaining verification, diagnostics, tasks, and debugging.</span></a>
+    <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and an optional tiered compiler.</span></a>
+  </section>
+
+  <h2>Scope and constraints</h2>
+  <ul>
+    <li>No Rust or FPAS implementation was changed.</li>
+    <li>No build, test, benchmark, or profiler was run for this investigation.</li>
+    <li>The benchmark evidence comes from committed project records and prior recorded profiles. Absolute times are machine-specific.</li>
+    <li>FPAS syntax and semantics are held fixed. Rust internals, bytecode, runtime values, compiler/runtime seams, and artifact formats may be replaced.</li>
+    <li>Every speed claim in the solution reports is a hypothesis until it passes the project workflow: save baseline, change one variable, release build, compare the full relevant suite, then record only a settled win.</li>
+  </ul>
+
+  <h2>Recommended reading</h2>
+  <p>Start with the audit. Its first recommendation is deliberately smaller than a VM rewrite: separate fast execution from debugger execution and re-measure. If that does not recover the broad regression, continue with direct typed operations and intrinsic routing. Consider heap or JIT work only after those interpreter costs are quantified.</p>
+
+  <footer>Planning material only. Current implemented behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
+</main>
+</body>
+</html>

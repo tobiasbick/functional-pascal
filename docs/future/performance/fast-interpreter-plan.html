@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FPAS fast interpreter plan</title>
+  <style>
+    :root { color-scheme:light dark; --bg:#f4f1e8; --panel:#fffdf7; --ink:#18201d; --muted:#5f6963; --line:#c9d0c8; --accent:#075c4b; --accent2:#b94f2b; --soft:#e5eee8; }
+    @media(prefers-color-scheme:dark){:root{--bg:#111713;--panel:#18211c;--ink:#edf4ee;--muted:#abb8af;--line:#3b4b40;--accent:#64d2b3;--accent2:#ff9a74;--soft:#22332a;}}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.56 system-ui,-apple-system,"Segoe UI",sans-serif} main{max-width:1180px;margin:auto;padding:32px 24px 80px} nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:46px;font-size:.92rem} a{color:var(--accent)}
+    h1{max-width:900px;margin:.15em 0 .3em;font:700 clamp(2.25rem,6vw,4.9rem)/.96 Georgia,serif;letter-spacing:-.04em} h2{margin:2.2em 0 .6em;font:700 1.75rem/1.15 Georgia,serif} h3{margin:1.5em 0 .4em}.lede{max-width:76ch;color:var(--muted);font-size:1.15rem}.stamp{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:.76rem}
+    .callout{padding:17px 20px;margin:24px 0;background:var(--soft);border-left:5px solid var(--accent)} .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:24px 0}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.card b{color:var(--accent)}
+    table{width:100%;border-collapse:collapse;margin:18px 0 28px;background:var(--panel);font-size:.93rem}th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:var(--soft)}
+    code{font-family:"Cascadia Code",Consolas,monospace;font-size:.9em}pre{overflow:auto;padding:16px;background:#0f1713;color:#eaf5ed;border-radius:9px}.phase{margin:28px 0;padding:22px;background:var(--panel);border:1px solid var(--line);border-radius:12px}.phase h3{margin-top:0}.gate{color:var(--accent2);font-weight:700}ul,ol{max-width:92ch}footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+    @media(max-width:760px){table{display:block;overflow-x:auto}}
+  </style>
+</head>
+<body><main>
+  <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
+  <div class="stamp">Proposed solution · no implementation</div>
+  <h1>Recover a fast interpreter before replacing it</h1>
+  <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
+
+  <div class="callout"><strong>Recommendation:</strong> begin with execution-policy separation. It is the smallest change that can explain the broad current regression and it creates a clean seam for later optimization. Do not start with computed goto, a garbage collector, or Cranelift.</div>
+
+  <h2>Design target</h2>
+  <div class="grid">
+    <div class="card"><b>Small interface</b><p><code>run_until_event()</code>, <code>resume()</code>, and state inspection only through an explicit debug adapter.</p></div>
+    <div class="card"><b>Deep implementation</b><p>Instruction fetch, frame transitions, safepoints, task yielding, diagnostics, counters, and debug hooks stay behind the execution seam.</p></div>
+    <div class="card"><b>Two real adapters</b><p>A normal fast executor and a debugger executor justify the seam. Normal execution must not branch on debug state for every instruction.</p></div>
+  </div>
+
+  <h2>Proposed module shape</h2>
+  <pre>crates/fpas-vm/src/vm/execution/
+  mod.rs                 — narrow run/resume interface and shared outcomes
+  fast.rs                — normal execution loop; no debugger collections
+  debug.rs               — debugger policy, stops, initializer suppression
+  fetch.rs               — trusted instruction fetch/decode
+  safepoint.rs           — bounded cancellation, task yield, and host polling
+
+crates/fpas-vm/src/vm/operations/
+  integer.rs             — direct typed integer handlers
+  real.rs                — direct typed real handlers
+  dynamic.rs             — generic slow path only where required
+  calls.rs               — verified frame transition fast path
+
+crates/fpas-std/src/dispatch/
+  mod.rs                 — direct Intrinsic family dispatch
+  hosted.rs              — explicit VM-owned classification</pre>
+  <p>This is a planning layout, not a requirement to preserve existing files. The key ownership rule is that debugger state belongs to <code>execution/debug.rs</code>, not to every normal <code>Worker</code> instruction.</p>
+
+  <h2>External designs worth borrowing</h2>
+  <table>
+    <thead><tr><th>Runtime</th><th>What it does</th><th>Useful FPAS lesson</th><th>Do not copy blindly</th></tr></thead>
+    <tbody>
+      <tr><td>Lua 5.4</td><td>Uses a register VM, 32-bit instructions, specialized arithmetic forms, an integer loop implemented directly in the interpreter, and a jump table by default on compatible compilers. Its fetch path checks hooks only through a trap flag.</td><td>Keep the common fetch path tiny; use direct typed handlers and fused loop operations; keep slow hooks behind a cheap uncommon condition.</td><td>Rust has no stable portable computed-goto primitive. A large <code>match</code> may already lower to a jump table; measure generated behavior before replacing it.</td></tr>
+      <tr><td>Perl 5</td><td>The normal runops loop repeatedly calls the current op's function pointer and receives the next op. Debug execution uses a separate loop. Frequently used operations are grouped in <code>pp_hot.c</code> for locality.</td><td>The debug/non-debug split is directly applicable. Hot/cold code layout and keeping diagnostic construction out of hot modules are also useful.</td><td>Function-pointer threading can hurt modern branch prediction and Rust inlining. Treat Perl as a separation/locality example, not a target dispatch mechanism.</td></tr>
+      <tr><td>OpenJDK HotSpot</td><td>Verifies bytecode at link time so many structural checks do not repeat at runtime. Its template interpreter emits machine-code templates per bytecode; hot methods later move through tiered compilation.</td><td>Turn <code>VerifiedExecutable</code> into a genuinely trusted execution representation; resolve and quicken metadata once; leave tiering for later.</td><td>HotSpot's complexity, deoptimization machinery, and GC are far beyond the first hobby-project step.</td></tr>
+    </tbody>
+  </table>
+  <p>Primary references: <a href="https://www.lua.org/source/5.4/lvm.c.html">Lua 5.4 <code>lvm.c</code></a>, <a href="https://www.lua.org/source/5.4/ljumptab.h.html">Lua jump table</a>, <a href="https://github.com/Perl/perl5/blob/blead/run.c">Perl <code>run.c</code></a>, <a href="https://github.com/Perl/perl5/blob/blead/pp_hot.c">Perl <code>pp_hot.c</code></a>, <a href="https://docs.oracle.com/javase/specs/jvms/se21/html/jvms-4.html">JVM verification</a>, and <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp">HotSpot template interpreter generator</a>.</p>
+
+  <h2>Staged work with exit gates</h2>
+
+  <section class="phase">
+    <h3>Stage 0 — Establish a current profile</h3>
+    <ul><li>Save the full suite baseline.</li><li>Profile the five audit workloads and capture allocation evidence.</li><li>Add an instruction-family counter outside timed production runs if sampling cannot distinguish handlers.</li></ul>
+    <p class="gate">Exit gate: current inclusive/self-time evidence names the top three runtime costs; no implementation starts from historical timing alone.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 1 — Split fast and debug execution policies</h3>
+    <p>Move initializer suppression, data-breakpoint tracking, debug task clocks, and debugger-only stop logic into a debug executor. The normal executor should not own or scan those collections. Shared instruction semantics can be generated from one internal opcode definition or factored into cold helpers, but the hot loops themselves should remain independently optimizable.</p>
+    <p>A safe first design uses monomorphized policy types or two concrete loops. Avoid one <code>if debugging</code> inside every iteration.</p>
+    <p class="gate">Exit gate: all debugger tests pass; normal VM geometric mean improves reproducibly; no benchmark row regresses beyond the agreed threshold. Otherwise revert.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 2 — Trust verified code once</h3>
+    <p>Convert admitted bytecode into a private execution image whose instruction addresses, opcode forms, register windows, branch targets, call arities, constant references, and layout references are already proven. Keep detailed validation at load/link time. In the hot loop use infallible internal register IDs and direct payload decoding.</p>
+    <p>Keep memory safety without immediately introducing <code>unsafe</code>: safe indexing and compact internal newtypes can remove error construction and repeated conversions first. If bounds checks remain measurable later, isolate any unchecked access in one tiny audited module backed by verifier fuzzing.</p>
+    <p class="gate">Exit gate: malformed artifacts are still rejected before execution; verifier/property tests cover every trusted invariant; profiles show reduced dispatch self time.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 3 — Execute typed opcodes directly</h3>
+    <p><code>AddInteger</code> should read two integer slots, perform the operation, and write an integer slot. It should not clone two generic values, route through <code>BinaryOperation</code>, and rediscover both tags. Keep <code>*Dynamic</code> opcodes on the generic slow path. Add direct comparison and branch forms as profiles justify them.</p>
+    <p>Candidate superinstructions include common counted-loop steps, compare-and-branch, load-field-and-use, and call/return patterns. Lua's integer <code>FORLOOP</code> is evidence that fusing language-neutral runtime work can pay without changing source syntax.</p>
+    <p class="gate">Exit gate: integer and branch rows improve, dynamic behavior remains correct, bytecode-size and compile-time changes are recorded, and the full suite has no collateral loss.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 4 — Replace router chains with direct intrinsic dispatch</h3>
+    <p>Dispatch directly on the top-level <code>Intrinsic</code> family and call exactly one owning module. Encode “hosted”, “suspending”, and “callback” ownership as generated metadata beside the intrinsic declaration instead of repeating large <code>matches!</code> lists across crates. This centralizes the invariant and removes up to 16 indirect probes.</p>
+    <p>Specialize tiny pure intrinsics such as array/string length at the VM seam only if the direct router remains visible in profiles.</p>
+    <p class="gate">Exit gate: intrinsic ownership has one source of truth; array/string length and TUI improve; all intrinsic coverage tests still prove complete routing.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 5 — Deepen calls and callbacks</h3>
+    <p>Resolve callback target, visible arity, capture count, and task ownership when a function value is created or when a higher-order operation begins, not for every element. Run synchronous callbacks as ordinary frames on the current worker where re-entrancy permits, instead of resetting a nested worker per element. Preallocate result capacity for Map and known-size transforms.</p>
+    <p class="gate">Exit gate: callback throughput improves materially, recursive callbacks and hosted re-entrancy remain correct, and spawned-task suspension semantics are unchanged.</p>
+  </section>
+
+  <section class="phase">
+    <h3>Stage 6 — Specialize globals and safepoints</h3>
+    <p>Use an unlocked global store while the VM is provably single-worker. Promote to shared storage before the first parallel task can observe it, or place synchronization at task scheduling/safepoints rather than every access. Poll cancellation and debug traps at bounded safepoints—calls, returns, backward branches, intrinsic transitions, and a countdown—rather than running all control checks per instruction.</p>
+    <p class="gate">Exit gate: global access improves, the task row does not regress, data races remain impossible under Loom/model tests or equivalent stress tests, and cancellation latency stays bounded.</p>
+  </section>
+
+  <h2>Expected order of leverage</h2>
+  <ol><li>Execution-policy split and trusted execution image.</li><li>Direct typed scalar handlers.</li><li>Direct intrinsic family routing.</li><li>Callback frames on the current worker.</li><li>Single-worker globals and explicit safepoints.</li><li>Only then reconsider bytecode width, managed heap, or native compilation.</li></ol>
+
+  <h2>Risks</h2>
+  <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
+
+  <footer>This plan intentionally stops at architecture and gates. No speedup is claimed until measured with <code>cargo bench-fpas</code>. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+</main></body></html>

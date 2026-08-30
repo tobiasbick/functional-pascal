@@ -14,6 +14,7 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | FTP | [FTP and FTPS](ftp.md) | Deferred FTP and FTPS ideas |
 | Dictionaries | [Dictionary decision](09-remove-dict.md) | Decide whether `Std.Dict` stays, changes, or is removed |
 | Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
+| Performance | [Rust hot-path investigation](performance/index.html) | Evidence-backed runtime hot paths, fast-interpreter stages, and replacement options |
 
 ## Architecture records and development intake
 

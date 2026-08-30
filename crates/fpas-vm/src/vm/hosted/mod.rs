@@ -27,16 +27,14 @@ use super::worker::Worker;
 pub(super) enum HostedOutcome {
     Unhandled,
     Complete(Option<Value>),
-    Deferred,
 }
 
 impl Worker {
     pub(super) fn execute_hosted_intrinsic(
-        &mut self,
+        &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
         location: SourceLocation,
-        destination: Option<usize>,
     ) -> Result<HostedOutcome, VmError> {
         if let Some(value) = self.execute_args_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
@@ -50,13 +48,8 @@ impl Worker {
         if let Some(value) = self.execute_http_state_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));
         }
-        if let Some(outcome) =
-            self.execute_callback_intrinsic(intrinsic, arguments, location, destination)?
-        {
-            return Ok(match outcome {
-                callbacks::CallbackOutcome::Complete(value) => HostedOutcome::Complete(Some(value)),
-                callbacks::CallbackOutcome::Deferred => HostedOutcome::Deferred,
-            });
+        if let Some(value) = self.execute_callback_intrinsic_sync(intrinsic, arguments, location)? {
+            return Ok(HostedOutcome::Complete(value));
         }
         if let Some(value) = self.execute_test_host_intrinsic(intrinsic, arguments, location)? {
             return Ok(HostedOutcome::Complete(value));

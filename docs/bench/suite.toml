@@ -114,3 +114,10 @@ group = "tui"
 path = "examples/pascal/tui/headless_render_benchmark.fpas"
 args = ["500"]
 timeout_ms = 120000
+
+[[bench]]
+id = "notes_headless"
+group = "tui"
+path = "examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj"
+args = ["250"]
+timeout_ms = 120000

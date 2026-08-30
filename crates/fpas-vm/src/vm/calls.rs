@@ -12,6 +12,14 @@ use super::frame::{CallFrame, MAX_CALL_DEPTH, MAX_REGISTER_SLOTS};
 use super::worker::Worker;
 use super::{VmError, diagnostics};
 
+struct PreparedCall {
+    target: FunctionId,
+    new_register_count: usize,
+    return_destination: Option<usize>,
+    instruction_pointer: usize,
+    argument_count: usize,
+}
+
 impl Worker {
     pub(super) fn call_direct(&mut self, operands: AbcOperands) -> Result<(), VmError> {
         let target = FunctionId::new(operands.b);
@@ -147,13 +155,46 @@ impl Worker {
         prefix_arguments: &[Value],
         captures: &[Value],
     ) -> Result<(), VmError> {
-        let arguments = self.clone_window(argument_base, argument_count)?;
-        let arguments = prefix_arguments
-            .iter()
-            .chain(&arguments)
-            .cloned()
-            .collect::<Vec<_>>();
-        self.enter_call_with_values(target, destination, &arguments, captures)
+        let argument_start = self
+            .base
+            .checked_add(usize::from(argument_base))
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Call argument window overflowed the active frame",
+                )
+            })?;
+        let argument_end = argument_start
+            .checked_add(usize::from(argument_count))
+            .filter(|end| *end <= self.active_register_count)
+            .ok_or_else(|| {
+                diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    "Call argument window left the active frame",
+                )
+            })?;
+        let actual_argument_count =
+            usize::from(argument_count).saturating_add(prefix_arguments.len());
+        let prepared =
+            self.prepare_call(target, destination, actual_argument_count, captures.len())?;
+        self.activate_call(&prepared);
+        for (index, value) in prefix_arguments.iter().enumerate() {
+            self.store_register(self.base + index, value.clone())?;
+        }
+        for (index, source) in (argument_start..argument_end).enumerate() {
+            self.store_register(
+                self.base + prefix_arguments.len() + index,
+                self.registers[source].clone(),
+            )?;
+        }
+        for (index, value) in captures.iter().enumerate() {
+            self.store_register(self.base + prepared.argument_count + index, value.clone())?;
+        }
+        self.function = prepared.target;
+        self.ip = prepared.instruction_pointer;
+        Ok(())
     }
 
     /// Enter a hosted callback on this worker so its task can suspend and resume normally.
@@ -183,6 +224,26 @@ impl Worker {
         arguments: &[Value],
         captures: &[Value],
     ) -> Result<(), VmError> {
+        let prepared = self.prepare_call(target, destination, arguments.len(), captures.len())?;
+        self.activate_call(&prepared);
+        for (index, value) in arguments.iter().enumerate() {
+            self.store_register(self.base + index, value.clone())?;
+        }
+        for (index, value) in captures.iter().enumerate() {
+            self.store_register(self.base + prepared.argument_count + index, value.clone())?;
+        }
+        self.function = prepared.target;
+        self.ip = prepared.instruction_pointer;
+        Ok(())
+    }
+
+    fn prepare_call(
+        &self,
+        target: FunctionId,
+        destination: u16,
+        argument_count: usize,
+        capture_count: usize,
+    ) -> Result<PreparedCall, VmError> {
         let image = self.executable.executable();
         let info = image
             .functions
@@ -194,25 +255,23 @@ impl Worker {
                     "Call target is outside the function table",
                 )
             })?;
-        let actual_argument_count = arguments.len();
-        if actual_argument_count != usize::from(info.arity) {
+        if argument_count != usize::from(info.arity) {
             return Err(diagnostics::internal(
                 image,
                 self.current_address,
                 format!(
                     "Call arity mismatch: expected {}, got {}",
-                    info.arity, actual_argument_count
+                    info.arity, argument_count
                 ),
             ));
         }
-        if captures.len() != usize::from(info.capture_count) {
+        if capture_count != usize::from(info.capture_count) {
             return Err(diagnostics::internal(
                 image,
                 self.current_address,
                 format!(
                     "Closure capture mismatch: expected {}, got {}",
-                    info.capture_count,
-                    captures.len()
+                    info.capture_count, capture_count
                 ),
             ));
         }
@@ -226,7 +285,7 @@ impl Worker {
             ));
         }
         let frame_size = usize::from(info.register_count);
-        let new_len = self
+        let new_register_count = self
             .active_register_count
             .checked_add(frame_size)
             .filter(|len| *len <= MAX_REGISTER_SLOTS)
@@ -244,30 +303,31 @@ impl Worker {
         } else {
             Some(self.base + usize::from(destination))
         };
-        let start = usize::try_from(info.code.start.get()).map_err(|_| {
+        let instruction_pointer = usize::try_from(info.code.start.get()).map_err(|_| {
             diagnostics::internal(
                 image,
                 self.current_address,
                 "Callee address does not fit this host",
             )
         })?;
+        Ok(PreparedCall {
+            target,
+            new_register_count,
+            return_destination,
+            instruction_pointer,
+            argument_count,
+        })
+    }
+
+    fn activate_call(&mut self, prepared: &PreparedCall) {
         self.call_stack.push(CallFrame {
             function: self.function,
             ip: self.ip,
             base: self.base,
-            return_destination,
+            return_destination: prepared.return_destination,
         });
         self.base = self.active_register_count;
-        self.activate_registers(new_len);
-        for (index, value) in arguments.iter().enumerate() {
-            self.store_register(self.base + index, value.clone())?;
-        }
-        for (index, value) in captures.iter().enumerate() {
-            self.store_register(self.base + actual_argument_count + index, value.clone())?;
-        }
-        self.function = target;
-        self.ip = start;
-        Ok(())
+        self.activate_registers(prepared.new_register_count);
     }
 
     pub(super) fn clone_window(&self, base: u16, count: u8) -> Result<Vec<Value>, VmError> {

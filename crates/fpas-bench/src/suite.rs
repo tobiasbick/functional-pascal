@@ -18,7 +18,7 @@ pub struct BenchSpec {
     pub id: String,
     /// Filter group configured by the suite (`vm`, `concurrency`, or `tui`).
     pub group: String,
-    /// Path to the `.fpas` program, relative to the repository root.
+    /// Path to the `.fpas` program or `.fpasprj` project, relative to the repository root.
     pub path: String,
     /// Arguments passed after `fpas run <path> --`.
     pub args: Vec<String>,

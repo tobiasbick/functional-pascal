@@ -14,6 +14,31 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-30 — restore borrowed VM hot paths and add Notes TUI benchmark
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 7945 | throughput: 6293266 iters/s |
+| global_access | 619 | throughput: 8077544 global updates/s |
+| record_field_access | 1838 | throughput: 8161044 field accesses/s |
+| closure_call | 507 | throughput: 5917159 closure calls/s |
+| branch_dispatch | 4093 | throughput: 4886391 branches/s |
+| dynamic_numeric | 938 | throughput: 5330490 dynamic numeric ops/s |
+| array_push | 253 | throughput: 7905138 pushes/s |
+| array_length | 95 | throughput: 5263157 lengths/s |
+| string_concat | 2761 | throughput: 1810938 concats/s |
+| string_length | 89 | throughput: 5617977 lengths/s |
+| function_call | 755 | throughput: 7947019 calls/s |
+| array_callbacks | 1286 | throughput: 7465007 callbacks/s |
+| record_update | 471 | throughput: 2123142 updates/s |
+| unicode_char_at | 1453 | throughput: 2064693 chars/s |
+| task_spawn_wait | 578 | throughput: 173010 tasks/s |
+| tui_headless | 4446 | throughput: 112 frames/s |
+| notes_headless | 9335 | throughput: 26 frames/s |
+
 ## 2026-08-28 — after indexed compiler metadata interning
 
 - Group: `all`

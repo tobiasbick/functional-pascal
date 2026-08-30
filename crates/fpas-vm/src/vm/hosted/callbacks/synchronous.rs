@@ -9,7 +9,7 @@ use super::Worker;
 use crate::vm::VmError;
 
 impl Worker {
-    pub(super) fn execute_callback_intrinsic_sync(
+    pub(in crate::vm) fn execute_callback_intrinsic_sync(
         &self,
         intrinsic: Intrinsic,
         arguments: &[Value],

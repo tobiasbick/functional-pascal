@@ -1,0 +1,10 @@
+[project]
+name = "notes-headless-benchmark"
+kind = "program"
+main = "notes_headless_benchmark.fpas"
+
+[dependencies]
+projects = ["../../../../apps/notes/notes-core.fpasprj"]
+
+[sources]
+include = ["notes_headless_benchmark.fpas"]

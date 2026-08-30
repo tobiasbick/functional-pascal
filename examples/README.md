@@ -95,6 +95,7 @@ Manual single-file runs still work. Build the release CLI first so compiler debu
 ```sh
 cargo build --release -p fpas-cli
 target/release/fpas run examples/pascal/tui/headless_render_benchmark.fpas -- 500
+target/release/fpas run examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj -- 250
 target/release/fpas run examples/pascal/vm/integer_loop_benchmark.fpas -- 50000000
 target/release/fpas run examples/pascal/vm/array_push_benchmark.fpas -- 2000000
 target/release/fpas run examples/pascal/vm/array_length_benchmark.fpas -- 500000
@@ -167,6 +168,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/concurrency/task_spawn_wait_benchmark.fpas` | Spawn plus `WaitAll` task-scheduling throughput |
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
+| `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |

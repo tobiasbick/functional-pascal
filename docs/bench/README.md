@@ -97,7 +97,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
-- `path` — `.fpas` file relative to the repo root
+- `path` — `.fpas` program or `.fpasprj` project relative to the repo root
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 
@@ -112,6 +112,7 @@ You can still invoke one program directly:
 ```sh
 cargo build --release -p fpas-cli
 target/release/fpas run examples/pascal/vm/string_length_benchmark.fpas -- 500000
+target/release/fpas run examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj -- 250
 ```
 
 On Windows use `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` turns a slowdown into a panic (see comments at the top of each `*_benchmark.fpas`).

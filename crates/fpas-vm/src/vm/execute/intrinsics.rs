@@ -1,9 +1,13 @@
 //! Borrowed register-window execution for non-hosted standard-library intrinsics.
 
-use fpas_bytecode::{AbcOperands, Intrinsic, NO_REGISTER, SourceLocation, Value};
+use fpas_bytecode::{
+    AbcOperands, Intrinsic, NO_REGISTER, Register, SourceLocation, TaskIntrinsic, TimeIntrinsic,
+    Value,
+};
 
 use super::scalar::register;
 use crate::vm::hosted::HostedOutcome;
+use crate::vm::hosted::callbacks::{CallbackOutcome, is_callback_intrinsic};
 use crate::vm::worker::Worker;
 use crate::vm::{VmError, diagnostics};
 
@@ -26,44 +30,47 @@ impl Worker {
         let end = start
             .checked_add(usize::from(operands.auxiliary))
             .ok_or_else(|| self.intrinsic_window_error(operands))?;
-        let arguments = self
-            .registers
-            .get(start..end)
-            .ok_or_else(|| self.intrinsic_window_error(operands))?
-            .to_vec();
+        if self.registers.get(start..end).is_none() {
+            return Err(self.intrinsic_window_error(operands));
+        }
         let location = self.intrinsic_location();
         let destination = (operands.a != NO_REGISTER)
             .then(|| register(operands.a))
             .transpose()?;
-        let outcome = if matches!(intrinsic, Intrinsic::Task(_) | Intrinsic::Time(_)) {
-            let destination = (operands.a != NO_REGISTER)
-                .then(|| register(operands.a))
-                .transpose()?;
+        if requires_mutable_dispatch(intrinsic) {
+            let arguments = self.registers[start..end].to_vec();
             if let Some(result) = self.task_intrinsic(intrinsic, &arguments, destination)? {
-                if let (Some(value), false) = (result, operands.a == NO_REGISTER) {
-                    self.write(register(operands.a)?, value)?;
+                if let (Some(value), Some(destination)) = (result, destination) {
+                    self.write(destination, value)?;
                 }
                 return Ok(());
             }
-            self.execute_borrowed_intrinsic(intrinsic, &arguments, location, destination)?
-        } else {
-            self.execute_borrowed_intrinsic(intrinsic, &arguments, location, destination)?
-        };
-        let HostedOutcome::Complete(result) = outcome else {
-            debug_assert!(matches!(outcome, HostedOutcome::Deferred));
-            return Ok(());
-        };
-        if operands.a == NO_REGISTER {
-            return Ok(());
+            let result = self.execute_borrowed_intrinsic(intrinsic, &arguments, location)?;
+            return self.store_intrinsic_result(intrinsic, destination, result);
         }
-        let value = result.ok_or_else(|| {
-            diagnostics::internal(
-                self.executable.executable(),
-                self.current_address,
-                format!("Intrinsic {intrinsic:?} did not produce its verified result"),
-            )
-        })?;
-        self.write(register(operands.a)?, value)
+        if self.task_id != 0 && is_callback_intrinsic(intrinsic) {
+            let arguments = self.registers[start..end].to_vec();
+            let absolute_destination =
+                destination.map(|register| self.base + usize::from(register.get()));
+            if let Some(outcome) = self.execute_callback_intrinsic(
+                intrinsic,
+                &arguments,
+                location,
+                absolute_destination,
+            )? {
+                return match outcome {
+                    CallbackOutcome::Complete(value) => {
+                        self.store_intrinsic_result(intrinsic, destination, Some(value))
+                    }
+                    CallbackOutcome::Deferred => Ok(()),
+                };
+            }
+            let result = self.execute_borrowed_intrinsic(intrinsic, &arguments, location)?;
+            return self.store_intrinsic_result(intrinsic, destination, result);
+        }
+        let result =
+            self.execute_borrowed_intrinsic(intrinsic, &self.registers[start..end], location)?;
+        self.store_intrinsic_result(intrinsic, destination, result)
     }
 
     pub(in crate::vm) fn execute_debug_intrinsic(
@@ -102,28 +109,39 @@ impl Worker {
     }
 
     fn execute_borrowed_intrinsic(
-        &mut self,
+        &self,
         intrinsic: Intrinsic,
         arguments: &[Value],
         location: SourceLocation,
-        destination: Option<fpas_bytecode::Register>,
-    ) -> Result<HostedOutcome, VmError> {
-        match self.execute_hosted_intrinsic(
-            intrinsic,
-            arguments,
-            location,
-            destination.map(|register| self.base + usize::from(register.get())),
-        )? {
-            HostedOutcome::Unhandled => {
-                Ok(HostedOutcome::Complete(fpas_std::run_intrinsic_borrowed(
-                    intrinsic,
-                    arguments,
-                    location,
-                    self.layouts.as_ref(),
-                )?))
-            }
-            outcome => Ok(outcome),
+    ) -> Result<Option<Value>, VmError> {
+        match self.execute_hosted_intrinsic(intrinsic, arguments, location)? {
+            HostedOutcome::Unhandled => fpas_std::run_intrinsic_borrowed(
+                intrinsic,
+                arguments,
+                location,
+                self.layouts.as_ref(),
+            ),
+            HostedOutcome::Complete(result) => Ok(result),
         }
+    }
+
+    fn store_intrinsic_result(
+        &mut self,
+        intrinsic: Intrinsic,
+        destination: Option<Register>,
+        result: Option<Value>,
+    ) -> Result<(), VmError> {
+        let Some(destination) = destination else {
+            return Ok(());
+        };
+        let value = result.ok_or_else(|| {
+            diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                format!("Intrinsic {intrinsic:?} did not produce its verified result"),
+            )
+        })?;
+        self.write(destination, value)
     }
 
     fn intrinsic_location(&self) -> SourceLocation {
@@ -146,5 +164,36 @@ impl Worker {
                 operands.c, operands.auxiliary
             ),
         )
+    }
+}
+
+fn requires_mutable_dispatch(intrinsic: Intrinsic) -> bool {
+    matches!(
+        intrinsic,
+        Intrinsic::Task(TaskIntrinsic::Wait | TaskIntrinsic::WaitAll)
+            | Intrinsic::Time(TimeIntrinsic::Sleep)
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use fpas_bytecode::{Intrinsic, TaskIntrinsic, TimeIntrinsic};
+
+    use super::requires_mutable_dispatch;
+
+    #[test]
+    fn only_suspending_intrinsics_require_mutable_dispatch() {
+        assert!(requires_mutable_dispatch(Intrinsic::Task(
+            TaskIntrinsic::Wait
+        )));
+        assert!(requires_mutable_dispatch(Intrinsic::Task(
+            TaskIntrinsic::WaitAll
+        )));
+        assert!(requires_mutable_dispatch(Intrinsic::Time(
+            TimeIntrinsic::Sleep
+        )));
+        assert!(!requires_mutable_dispatch(Intrinsic::Time(
+            TimeIntrinsic::TimestampMillis
+        )));
     }
 }

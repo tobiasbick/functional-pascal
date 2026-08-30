@@ -17,11 +17,28 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Stages 1, 3a, 3b, 4, and 5a implemented and measured · later stages proposed</div>
+  <div class="stamp">Stages 1, 3a, 3b, 4, and 5a complete · Stage 5b next · rejected probes recorded</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
   <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split, borrowed scalar operands, direct typed integer handlers, direct intrinsic ownership routing, and allocation-free cached callback setup. The next measured slice should run synchronous callbacks as ordinary frames on the current worker, where re-entrancy permits. Do not repeat callback resolution caching in isolation: that controlled probe was slower.</div>
+
+  <h2 id="status">Current work status</h2>
+  <p>This table is the canonical progress record for the interpreter plan. <strong>Complete</strong> means implemented and accepted by controlled benchmarks. <strong>Partial</strong> separates accepted work from a remaining independently measured slice. <strong>Rejected</strong> means a concrete probe was measured and rolled back. <strong>Deferred</strong> means no implementation should start until its stated evidence gate exists.</p>
+  <table>
+    <thead><tr><th>Work</th><th>Status</th><th>Recorded outcome</th><th>Next decision</th></tr></thead>
+    <tbody>
+      <tr><td>Stage 0 · Current profile</td><td><strong>Partial</strong></td><td>Controlled baselines, full-suite comparisons, and isolated A/B probes are complete. Native self-time and allocation sampling was unavailable without administrator privileges.</td><td>Defer privileged sampling. Retry with a non-privileged profiler only when a later decision cannot be resolved by controlled A/B evidence.</td></tr>
+      <tr><td>Stage 1 · Fast/debug policy split</td><td><strong>Complete</strong></td><td>Normal execution no longer performs the debugger initializer lookup. The change produced a small broad win and no stable regression.</td><td>Retain.</td></tr>
+      <tr><td>Stage 2 · Trusted execution image</td><td><strong>Open</strong></td><td>A narrow probe that trusted branch targets alone missed the 5% gate and was rejected. The broader private execution-image design has not been implemented or rejected.</td><td>Revisit after Stage 5b with an isolated dispatch-cost benchmark and verifier coverage.</td></tr>
+      <tr><td>Stage 3 · Typed operations</td><td><strong>Partial</strong></td><td>Stages 3a and 3b are complete. Typed integer operations improved measured scalar and branch workloads.</td><td>Typed real handlers and superinstructions are deferred until a benchmark isolates a worthwhile gain.</td></tr>
+      <tr><td>Stage 4 · Direct intrinsic routing</td><td><strong>Complete</strong></td><td>Direct ownership routing improved mixed intrinsic dispatch by 14.0–14.1%. Separate length-specific VM fast paths were unnecessary.</td><td>Retain; do not add duplicate family routers.</td></tr>
+      <tr><td>Stage 5 · Calls and callbacks</td><td><strong>Partial · 5a complete</strong></td><td>Allocation-free cached argument loading improved <code>array_callbacks</code> by 23.9–24.1%. Callback-resolution caching alone was slower and rejected.</td><td>Stage 5b is next: run synchronous callbacks as frames on the current worker. Result-capacity preallocation remains deferred as a separate measured candidate.</td></tr>
+      <tr><td>Stage 6 · Globals and safepoints</td><td><strong>Open</strong></td><td>No implementation has been attempted. Locking on every global access remains a confirmed mechanism whose share still needs isolation.</td><td>Measure only after Stage 5b and Stage 2 are reviewed.</td></tr>
+      <tr><td>One-variable probes</td><td><strong>Rejected</strong></td><td>Trusting branch targets missed the 5% gate; forced dispatch inlining was neutral; checking cancellation every 256 instructions regressed the branch workload by 2.9%; callback-resolution caching was slower by 1.7% and 3.6%.</td><td>All four probes were rolled back. Do not repeat them unchanged.</td></tr>
+      <tr><td>Compact VM, managed heap, or JIT</td><td><strong>Deferred</strong></td><td>Architecture options only; none is an active implementation backlog.</td><td>Enter only through the evidence gates in the runtime-rewrite report.</td></tr>
+    </tbody>
+  </table>
 
   <h2>Stage 1 result — 30 August 2026</h2>
   <p>The normal dispatcher now uses a statically specialized path without debugger initializer suppression. Debugger-owned task execution selects the corresponding debug specialization. Both paths share the same Rust opcode implementation, so there is no runtime <code>if debugging</code> in normal execution and no duplicated source-level opcode match.</p>
@@ -137,47 +154,47 @@ crates/fpas-std/src/dispatch/
   <section class="phase">
     <h3>Stage 0 — Establish a current profile</h3>
     <ul><li>Save the full suite baseline.</li><li>Profile the five audit workloads and capture allocation evidence.</li><li>Add an instruction-family counter outside timed production runs if sampling cannot distinguish handlers.</li></ul>
-    <p class="gate">Exit gate: current inclusive/self-time evidence names the top three runtime costs; no implementation starts from historical timing alone.</p>
+    <p class="gate">Status: partial. Controlled baselines and A/B probes are complete. Native self-time and allocation sampling remains deferred because the available profiler required administrator privileges; no system configuration was changed.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 1 — Split fast and debug execution policies</h3>
     <p>Move initializer suppression, data-breakpoint tracking, debug task clocks, and debugger-only stop logic into a debug executor. The normal executor should not own or scan those collections. Shared instruction semantics can be generated from one internal opcode definition or factored into cold helpers, but the hot loops themselves should remain independently optimizable.</p>
     <p>A safe first design uses monomorphized policy types or two concrete loops. Avoid one <code>if debugging</code> inside every iteration.</p>
-    <p class="gate">Status: passed on 30 August 2026. All 382 <code>fpas-vm</code> tests passed, the VM improvements repeated, and the full-suite follow-up found no stable collateral regression.</p>
+    <p class="gate">Status: complete on 30 August 2026. The complete <code>fpas-vm</code> suite passed, the VM improvements repeated, and the full-suite follow-up found no stable collateral regression.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 2 — Trust verified code once</h3>
     <p>Convert admitted bytecode into a private execution image whose instruction addresses, opcode forms, register windows, branch targets, call arities, constant references, and layout references are already proven. Keep detailed validation at load/link time. In the hot loop use infallible internal register IDs and direct payload decoding.</p>
     <p>Keep memory safety without immediately introducing <code>unsafe</code>: safe indexing and compact internal newtypes can remove error construction and repeated conversions first. If bounds checks remain measurable later, isolate any unchecked access in one tiny audited module backed by verifier fuzzing.</p>
-    <p class="gate">Exit gate: malformed artifacts are still rejected before execution; verifier/property tests cover every trusted invariant; profiles show reduced dispatch self time.</p>
+    <p class="gate">Status: open. Trusting branch targets alone was measured, missed the improvement gate, and was rejected; that narrow result does not reject a private verified execution image. Exit gate: malformed artifacts are still rejected before execution, verifier/property tests cover every trusted invariant, and profiles show reduced dispatch self time.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 3 — Execute typed opcodes directly</h3>
     <p><code>AddInteger</code> now reads two integer values, performs the operation through a shared integer primitive, and writes the result without passing through the generic operation router. Stage 3a removed generic source-value cloning; Stage 3b specialized typed integer arithmetic, comparisons, bitwise operations, and shifts. <code>*Dynamic</code> opcodes remain on the generic slow path. Typed real handlers and fused compare-and-branch forms should be added only when a benchmark isolates a worthwhile gain.</p>
     <p>Candidate superinstructions include common counted-loop steps, compare-and-branch, load-field-and-use, and call/return patterns. Lua's integer <code>FORLOOP</code> is evidence that fusing language-neutral runtime work can pay without changing source syntax.</p>
-    <p class="gate">Status: Stages 3a and 3b passed on 30 August 2026. Direct integer comparisons improved the branch workload by 10.2–12.8%; the arithmetic loop improved by 2.9–3.0%. All 382 VM tests passed, including aliasing and integer-domain edges, and the full-suite follow-up had no collateral regression.</p>
+    <p class="gate">Status: partial. Stages 3a and 3b completed on 30 August 2026. Direct integer comparisons improved the branch workload by 10.2–12.8%; the arithmetic loop improved by 2.9–3.0%. The complete VM suite passed, including aliasing and integer-domain edges, and the full-suite follow-up had no collateral regression. Typed real handlers and superinstructions are deferred until isolated benchmarks justify them.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 4 — Replace router chains with direct intrinsic dispatch</h3>
     <p>Dispatch now starts from the top-level <code>Intrinsic</code> family and calls exactly one owning subsystem. Standard, hosted, callback, task, and mutable-dispatch classification lives beside the intrinsic declaration instead of being repeated as large <code>matches!</code> lists across crates. This centralizes the invariant and removes up to 16 indirect probes.</p>
     <p>Tiny pure intrinsics did not need VM-specific fast paths: direct family routing alone produced the measured gain.</p>
-    <p class="gate">Status: passed on 30 August 2026. Intrinsic dispatch improved by 14.0–14.1%, array length by 14.1–15.3%, and string length by 8.8–10.0%. No full-suite row crossed the 5% regression gate, and ownership coverage has one source of truth with exhaustive tests.</p>
+    <p class="gate">Status: complete on 30 August 2026. Intrinsic dispatch improved by 14.0–14.1%, array length by 14.1–15.3%, and string length by 8.8–10.0%. No full-suite row crossed the 5% regression gate, and ownership coverage has one source of truth with exhaustive tests.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 5 — Deepen calls and callbacks</h3>
     <p>The first accepted slice removed the temporary argument buffer from cached worker resets while preserving receiver, argument, capture, and task-owner ordering. A standalone attempt to resolve callback metadata once per higher-order operation did not help and was rolled back. The remaining architectural step is to run synchronous callbacks as ordinary frames on the current worker where re-entrancy permits, instead of resetting a nested worker per element. Result-capacity preallocation remains a separate candidate for Map and other known-size transforms.</p>
-    <p class="gate">Status: Stage 5a passed on 30 August 2026 with a repeatable 23.9–24.1% <code>array_callbacks</code> improvement and a regression test for reused bound receivers. Exit gate for the remaining stage: callback throughput improves again, recursive callbacks and hosted re-entrancy remain correct, and spawned-task suspension semantics are unchanged.</p>
+    <p class="gate">Status: partial. Stage 5a completed on 30 August 2026 with a repeatable 23.9–24.1% <code>array_callbacks</code> improvement and a regression test for reused bound receivers. Callback-resolution caching alone was rejected after two slower comparisons. Stage 5b is next; result-capacity preallocation is deferred as a separate candidate. Exit gate: callback throughput improves again, recursive callbacks and hosted re-entrancy remain correct, and spawned-task suspension semantics are unchanged.</p>
   </section>
 
   <section class="phase">
     <h3>Stage 6 — Specialize globals and safepoints</h3>
     <p>Use an unlocked global store while the VM is provably single-worker. Promote to shared storage before the first parallel task can observe it, or place synchronization at task scheduling/safepoints rather than every access. Poll cancellation and debug traps at bounded safepoints—calls, returns, backward branches, intrinsic transitions, and a countdown—rather than running all control checks per instruction.</p>
-    <p class="gate">Exit gate: global access improves, the task row does not regress, data races remain impossible under Loom/model tests or equivalent stress tests, and cancellation latency stays bounded.</p>
+    <p class="gate">Status: open and unattempted. Exit gate: global access improves, the task row does not regress, data races remain impossible under Loom/model tests or equivalent stress tests, and cancellation latency stays bounded.</p>
   </section>
 
   <h2>Expected order of leverage</h2>
@@ -186,5 +203,5 @@ crates/fpas-std/src/dispatch/
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>Stages 1, 3a, 3b, 4, and 5a are implemented and measured with <code>cargo bench-fpas</code>. Stage 2 and the remaining parts of Stages 3, 5, and 6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>The <a href="#status">status table</a> is the canonical progress record. Stages 1, 3a, 3b, 4, and 5a are implemented and measured with <code>cargo bench-fpas</code>; rejected probes were rolled back. Stage 5b is next. Stage 2, the remaining part of Stage 3, and Stage 6 stay independent proposals. For larger deferred choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

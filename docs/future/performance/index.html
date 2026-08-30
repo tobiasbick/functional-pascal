@@ -39,7 +39,7 @@
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
-    <a class="card" href="fast-interpreter-plan.html"><strong>2 · Fast interpreter</strong><span>A staged plan to remove normal-run overhead while retaining verification, diagnostics, tasks, and debugging.</span></a>
+    <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter</strong><span>The canonical complete, partial, open, rejected, and deferred status for every measured stage.</span></a>
     <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and an optional tiered compiler.</span></a>
   </section>
 
@@ -53,7 +53,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit for the original evidence, then read the fast-interpreter report for implemented results and rejected probes. Continue with callback frames on the current worker; do not repeat callback-resolution caching as an isolated change. Return to typed real operations only after adding a benchmark that isolates them. Consider heap or JIT work only after those interpreter costs are quantified.</p>
+  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work, rejected probes, and remaining proposals. Continue with callback frames on the current worker; do not repeat callback-resolution caching as an isolated change. Return to typed real operations only after adding a benchmark that isolates them. Consider heap or JIT work only after those interpreter costs are quantified.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

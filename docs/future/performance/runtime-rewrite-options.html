@@ -15,11 +15,11 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="fast-interpreter-plan.html">Fast interpreter plan</a></nav>
-  <div class="stamp">Alternative architectures · no implementation</div>
+  <div class="stamp">Deferred architecture options · no implementation</div>
   <h1>If the interpreter is still too slow, replace the right layer</h1>
   <p class="lede">FPAS is free to replace its bytecode and runtime internals. That freedom is valuable only after the common overhead is measured. These options are deliberately more invasive and should compete against a restored fast-interpreter baseline.</p>
 
-  <div class="callout"><strong>Strong recommendation:</strong> use a two-horizon strategy. First recover the interpreter. In parallel, design a compact managed runtime image behind the same execution interface. Add tiered native compilation only if stable hot workloads still miss explicit performance targets.</div>
+  <div class="callout"><strong>Strong recommendation:</strong> continue the measured interpreter work first. Stage 5b, synchronous callbacks as ordinary frames on the current worker, is the next bounded slice. Keep a compact runtime image, managed heap, and tiered compilation as deferred options until their evidence gates are met.</div>
 
   <h2>Three options</h2>
   <section class="options">
@@ -93,7 +93,7 @@
       <tr><td>Debugger disruption</td><td>Low if seam is correct</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Portability</td><td>Excellent</td><td>Excellent</td><td>Excellent</td><td>Backend-dependent</td></tr>
       <tr><td>Rollback size</td><td>One stage</td><td>Runtime-image loader</td><td>Whole value runtime</td><td>Backend can remain optional</td></tr>
-      <tr><td>Recommended now</td><td>Yes</td><td>Design after Stage 2</td><td>Prototype only</td><td>Deferred until re-entry gates pass</td></tr>
+      <tr><td>Recommended now</td><td>Continue through Stage 5b</td><td>Design only after Stage 2 isolates repeated validation cost</td><td>Prototype only after allocation evidence passes the gate</td><td>Deferred until re-entry gates pass</td></tr>
     </tbody>
   </table>
 
@@ -114,5 +114,5 @@
     <li><a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp">OpenJDK template interpreter generator</a> and <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/cpu/x86/templateTable_x86.cpp">x86 bytecode templates and resolution paths</a>.</li>
   </ul>
 
-  <footer>These are competing designs, not a backlog to implement all at once. Stages 1 and 3a of the <a href="fast-interpreter-plan.html">fast interpreter plan</a> have passed their measurement gates. The recommended next action is a bounded direct typed integer/comparison slice, followed by another review pause.</footer>
+  <footer>These are competing deferred designs, not a backlog to implement all at once. Stages 1, 3a, 3b, 4, and 5a in the <a href="fast-interpreter-plan.html#status">fast-interpreter status</a> are complete and measured. Stage 5b is the next bounded slice; Stage 2 and Stage 6 remain open. No runtime rewrite has entered implementation.</footer>
 </main></body></html>

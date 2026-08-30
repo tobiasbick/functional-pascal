@@ -104,6 +104,7 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 - Use Rust edition 2024 conventions.
 - There is no backward compatibility requirement. Implement the current spec only.
 - All code, comments, documentation, and identifiers must be in English.
+- Write every planning document in English, including every file under `docs/future/`.
 - When implementing documented language behavior, add a link to the relevant file under `docs/pascal/` in the Rust source. User-facing docs live under `docs/pascal/`; plans under `docs/future/` only.
 - Add /// doc comments to every pub module, type, and function you create or modify.
 - Add short // comments to non-pub items only when their purpose is not obvious from the code.

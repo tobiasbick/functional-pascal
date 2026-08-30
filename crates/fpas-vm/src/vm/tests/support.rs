@@ -89,6 +89,22 @@ pub(super) fn execute(executable: VerifiedExecutable) -> Result<(Value, Vec<Valu
     }
 }
 
+/// Execute a fixture through the worker-local global-storage path.
+pub(super) fn execute_with_local_globals(
+    executable: VerifiedExecutable,
+) -> Result<(Value, Vec<Value>, u64), VmError> {
+    let mut worker = Worker::new_with_local_globals(Arc::new(executable))?;
+    loop {
+        match worker.dispatch_one()? {
+            DispatchStep::Continue => {}
+            DispatchStep::Suspend => panic!("test execution suspended without a scheduler"),
+            DispatchStep::Return(value) => {
+                return Ok((value, worker.registers, worker.instruction_count));
+            }
+        }
+    }
+}
+
 pub(super) fn return_unit() -> Instruction {
     abc(Opcode::Return, fpas_bytecode::NO_REGISTER, 0, 0)
 }

@@ -15,9 +15,7 @@ impl Worker {
     pub fn load_global(&mut self, o: AbxOperands) -> Result<(), VmError> {
         let index = usize::try_from(o.bx).map_err(|_| self.bad_slot("global", o.bx))?;
         let value = self
-            .globals
-            .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .global_slots()
             .get(index)
             .cloned()
             .flatten()
@@ -40,21 +38,32 @@ impl Worker {
             .get(index)
             .ok_or_else(|| self.bad_slot("global", o.bx))?
             .mutable;
-        let mut globals = self
-            .globals
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        if !mutable && globals.get(index).is_some_and(Option::is_some) {
-            return Err(self.aggregate_error(
-                format!("Immutable global slot {} was assigned more than once", o.bx),
-                "Assign immutable globals only during initialization.",
-            ));
+        enum StoreOutcome {
+            Stored,
+            Immutable,
+            Missing,
         }
-        let Some(slot) = globals.get_mut(index) else {
-            return Err(self.bad_slot("global", o.bx));
+        let outcome = {
+            let mut globals = self.global_slots_mut();
+            if !mutable && globals.get(index).is_some_and(Option::is_some) {
+                StoreOutcome::Immutable
+            } else if let Some(slot) = globals.get_mut(index) {
+                *slot = Some(value);
+                StoreOutcome::Stored
+            } else {
+                StoreOutcome::Missing
+            }
         };
-        *slot = Some(value);
-        drop(globals);
+        match outcome {
+            StoreOutcome::Stored => {}
+            StoreOutcome::Immutable => {
+                return Err(self.aggregate_error(
+                    format!("Immutable global slot {} was assigned more than once", o.bx),
+                    "Assign immutable globals only during initialization.",
+                ));
+            }
+            StoreOutcome::Missing => return Err(self.bad_slot("global", o.bx)),
+        }
         self.note_debug_global_store(index);
         Ok(())
     }

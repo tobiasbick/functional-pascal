@@ -44,30 +44,47 @@ impl Worker {
         }
 
         let mut root = self.take(root_register)?;
-        let mut globals = self
-            .globals
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        let Some(slot) = globals.get_mut(global_index) else {
-            return Err(self.bad_global_path_slot(o.b));
-        };
-        let Some(current) = slot.take() else {
-            return Err(self.aggregate_error(
-                format!("Global slot {} was read before initialization", o.b),
-                "Initialize every global before its first read.",
-            ));
-        };
-        drop(current);
-        if !replace_resolved_path(&mut root, &path, value.clone()) {
-            *slot = Some(root);
-            drop(globals);
-            return Err(self.aggregate_error(
-                "Resolved global index path no longer matches its aggregate",
-                "Recompile the program and report this internal VM invariant failure.",
-            ));
+        enum StoreOutcome {
+            Stored,
+            Missing,
+            Uninitialized,
+            PathMismatch,
         }
-        *slot = Some(root);
-        drop(globals);
+        let outcome = {
+            let mut globals = self.global_slots_mut();
+            match globals.get_mut(global_index) {
+                None => StoreOutcome::Missing,
+                Some(slot) => match slot.take() {
+                    None => StoreOutcome::Uninitialized,
+                    Some(current) => {
+                        drop(current);
+                        if !replace_resolved_path(&mut root, &path, value.clone()) {
+                            *slot = Some(root);
+                            StoreOutcome::PathMismatch
+                        } else {
+                            *slot = Some(root);
+                            StoreOutcome::Stored
+                        }
+                    }
+                },
+            }
+        };
+        match outcome {
+            StoreOutcome::Stored => {}
+            StoreOutcome::Missing => return Err(self.bad_global_path_slot(o.b)),
+            StoreOutcome::Uninitialized => {
+                return Err(self.aggregate_error(
+                    format!("Global slot {} was read before initialization", o.b),
+                    "Initialize every global before its first read.",
+                ));
+            }
+            StoreOutcome::PathMismatch => {
+                return Err(self.aggregate_error(
+                    "Resolved global index path no longer matches its aggregate",
+                    "Recompile the program and report this internal VM invariant failure.",
+                ));
+            }
+        }
         self.note_debug_global_store(global_index);
         Ok(())
     }

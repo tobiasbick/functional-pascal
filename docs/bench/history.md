@@ -14,6 +14,32 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-30 — after worker-local globals
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 7497 | throughput: 6669334 iters/s |
+| global_access | 487 | throughput: 10266940 global updates/s |
+| record_field_access | 1723 | throughput: 8705745 field accesses/s |
+| closure_call | 462 | throughput: 6493506 closure calls/s |
+| branch_dispatch | 3187 | throughput: 6275494 branches/s |
+| dynamic_numeric | 849 | throughput: 5889281 dynamic numeric ops/s |
+| array_push | 212 | throughput: 9433962 pushes/s |
+| array_length | 73 | throughput: 6849315 lengths/s |
+| string_concat | 2242 | throughput: 2230151 concats/s |
+| string_length | 71 | throughput: 7042253 lengths/s |
+| intrinsic_dispatch | 1768 | throughput: 8484162 intrinsic calls/s |
+| function_call | 675 | throughput: 8888888 calls/s |
+| array_callbacks | 894 | throughput: 10738255 callbacks/s |
+| record_update | 429 | throughput: 2331002 updates/s |
+| unicode_char_at | 1264 | throughput: 2373417 chars/s |
+| task_spawn_wait | 583 | throughput: 171526 tasks/s |
+| tui_headless | 4209 | throughput: 118 frames/s |
+| notes_headless | 9006 | throughput: 27 frames/s |
+
 ## 2026-08-30 — after cached callback direct argument loading
 
 - Group: `all`

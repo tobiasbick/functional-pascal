@@ -24,6 +24,7 @@ pub(super) struct Worker {
     pub(super) active_register_count: usize,
     pub(super) register_initialized: Vec<bool>,
     pub globals: Arc<RwLock<Vec<Option<Value>>>>,
+    pub(super) local_globals: Option<Vec<Option<Value>>>,
     pub layouts: Arc<RuntimeLayouts>,
     pub hosted: Arc<HostedState>,
     pub call_stack: Vec<CallFrame>,
@@ -67,6 +68,12 @@ impl Worker {
         )?);
         let hosted = Arc::new(HostedState::new(fpas_std::Console::new(), Vec::new()));
         Self::for_function_with_state(executable, entry, Vec::new(), globals, layouts, hosted)
+    }
+
+    #[cfg(test)]
+    /// Construct a test worker with worker-owned global slots.
+    pub fn new_with_local_globals(executable: Arc<VerifiedExecutable>) -> Result<Self, VmError> {
+        Self::new(executable).map(|worker| worker.with_local_globals(true))
     }
 
     pub fn for_function_with_state(
@@ -145,6 +152,7 @@ impl Worker {
             active_register_count: usize::from(register_count),
             register_initialized,
             globals,
+            local_globals: None,
             layouts,
             hosted,
             call_stack: Vec::new(),
@@ -200,6 +208,7 @@ impl Worker {
             active_register_count: 0,
             register_initialized: Vec::new(),
             globals: Arc::clone(&self.globals),
+            local_globals: None,
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
             call_stack: Vec::new(),
@@ -237,6 +246,7 @@ impl Worker {
             active_register_count,
             register_initialized: task.register_initialized,
             globals: Arc::clone(&self.globals),
+            local_globals: None,
             layouts: Arc::clone(&self.layouts),
             hosted: Arc::clone(&self.hosted),
             call_stack: task.frames,

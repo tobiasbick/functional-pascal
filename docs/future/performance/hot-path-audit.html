@@ -30,7 +30,7 @@
     <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
-  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; single-worker globals are next.</div>
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; worker-local globals passed their isolated A/B gate.</div>
 
   <h2>Benchmark signal</h2>
   <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
@@ -94,10 +94,10 @@
   </section>
 
   <section class="rank">
-    <span class="badge medium">Priority 6 · confirmed mechanism</span>
-    <h3>Every global read and write locks the entire global vector</h3>
-    <p><a href="../../../crates/fpas-vm/src/vm/execute/aggregates.rs"><code>execute/aggregates.rs:15–60</code></a> takes an <code>RwLock</code> for every global load/store, clones values, and checks mutability and initialization at runtime. The lock is necessary for the current cross-task representation, but it is paid by the common single-root-task case too.</p>
-    <p><strong>Signal:</strong> the dedicated global benchmark is 34.9% slower than 10 August. This mechanism is certainly exercised; its percentage share needs sampling or an isolated A/B design.</p>
+    <span class="badge medium">Priority 6 · addressed and measured</span>
+    <h3>Eligible normal runs no longer lock the global vector</h3>
+    <p><a href="../../../crates/fpas-vm/src/vm/globals.rs"><code>vm/globals.rs</code></a> selects worker-owned slots for verified normal images without task-spawning functions or callback-owned intrinsics. <a href="../../../crates/fpas-vm/src/vm/execute/aggregates.rs"><code>execute/aggregates.rs</code></a> and the indexed-global update path use that local vector without locking. Debugger, task, callback-session, and callback-intrinsic execution retain the shared <code>RwLock</code> representation.</p>
+    <p><strong>Measured result:</strong> a back-to-back reverse A/B saved Local at 485 ms and measured Shared at 554 ms (+14.2%); restoring Local produced 508 ms. Three task measurements overlapped recent history rather than showing a stable regression, and all VM task/callback/debugger tests passed.</p>
   </section>
 
   <section class="rank">

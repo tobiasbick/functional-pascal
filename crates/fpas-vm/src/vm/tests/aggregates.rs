@@ -1,12 +1,66 @@
 use fpas_bytecode::{
-    Constant, EnumLayout, EnumTypeId, EnumVariant, GlobalInfo, Opcode, RecordField, RecordLayout,
-    StringId, Value,
+    ArrayIntrinsic, Constant, EnumLayout, EnumTypeId, EnumVariant, FunctionId, GlobalInfo,
+    Intrinsic, Opcode, RecordField, RecordLayout, StringId, Value,
 };
 use fpas_diagnostics::codes::{
     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_DICT_KEY_NOT_FOUND, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
 use super::*;
+
+#[test]
+fn normal_execution_can_use_local_globals() {
+    let executable = verified(
+        vec![return_unit()],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        0,
+    );
+
+    assert!(crate::vm::globals::can_use_local_globals(&executable));
+}
+
+#[test]
+fn task_execution_keeps_shared_globals() {
+    let mut image = unverified(
+        vec![
+            abx(Opcode::LoadConstant, 0, 0),
+            abc_aux(Opcode::SpawnDetachedTask, 0, 1, 0, 0),
+            return_unit(),
+        ],
+        vec![Constant::Function {
+            function: FunctionId::new(0),
+            task_bound: false,
+        }],
+        vec!["root", "test.fpas"],
+        1,
+    );
+    image.functions[0].flags.uses_spawn_tasks = true;
+    let executable = image.verify().expect("task image must verify");
+
+    assert!(!crate::vm::globals::can_use_local_globals(&executable));
+}
+
+#[test]
+fn callback_intrinsics_keep_shared_globals() {
+    let executable = verified(
+        vec![
+            abc_aux(
+                Opcode::Intrinsic,
+                fpas_bytecode::NO_REGISTER,
+                u16::from(Intrinsic::Array(ArrayIntrinsic::Map)),
+                0,
+                0,
+            ),
+            return_unit(),
+        ],
+        Vec::new(),
+        vec!["root", "test.fpas"],
+        0,
+    );
+
+    assert!(!crate::vm::globals::can_use_local_globals(&executable));
+}
 
 #[test]
 fn array_index_updates_preserve_value_semantics() {
@@ -134,8 +188,9 @@ fn globals_are_dense_and_immutable_slots_initialize_once() {
         mutable: false,
         initializer: None,
     }];
-    let (_, registers, _) = execute(image.verify().expect("global image must verify"))
-        .expect("global program must run");
+    let (_, registers, _) =
+        execute_with_local_globals(image.verify().expect("global image must verify"))
+            .expect("global program must run");
     assert_eq!(registers[1], Value::Integer(42));
 }
 
@@ -235,7 +290,7 @@ fn immutable_global_rejects_a_second_store() {
         mutable: false,
         initializer: None,
     }];
-    let error = execute(image.verify().expect("global image must verify"))
+    let error = execute_with_local_globals(image.verify().expect("global image must verify"))
         .expect_err("second immutable store must fail");
     assert_eq!(error.code, RUNTIME_VM_OPERAND_TYPE_MISMATCH);
     assert!(error.message.contains("assigned more than once"));

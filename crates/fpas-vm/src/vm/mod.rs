@@ -9,6 +9,7 @@ mod diagnostics;
 mod dispatch;
 mod execute;
 mod frame;
+mod globals;
 mod hosted;
 mod layouts;
 mod register_stack;
@@ -77,6 +78,7 @@ pub struct Vm {
     layouts: Result<Arc<RuntimeLayouts>, VmError>,
     hosted: Arc<HostedState>,
     pool_size: usize,
+    use_local_globals: bool,
     scheduler: Arc<TaskScheduler>,
 }
 
@@ -154,6 +156,7 @@ impl Vm {
         } else {
             0
         };
+        let use_local_globals = pool_size == 0 && globals::can_use_local_globals(&executable);
         Self {
             executable,
             has_run: false,
@@ -161,6 +164,7 @@ impl Vm {
             layouts,
             hosted: Arc::new(HostedState::new(console, arguments)),
             pool_size,
+            use_local_globals,
             scheduler: Arc::new(TaskScheduler::new()),
         }
     }
@@ -265,6 +269,7 @@ impl Vm {
             self.layouts.clone()?,
             Arc::clone(&self.hosted),
         )?
+        .with_local_globals(self.use_local_globals)
         .with_scheduler(Some(Arc::clone(&scheduler)));
         if self.pool_size == 0 {
             return worker.run();

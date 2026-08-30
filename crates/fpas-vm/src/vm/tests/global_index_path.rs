@@ -40,8 +40,9 @@ fn global_index_path_updates_nested_arrays_and_preserves_aliases() {
         mutable: true,
         initializer: None,
     }];
-    let (_, registers, _) = execute(image.verify().expect("global path image must verify"))
-        .expect("global path update must run");
+    let (_, registers, _) =
+        execute_with_local_globals(image.verify().expect("global path image must verify"))
+            .expect("global path update must run");
     assert_eq!(registers[12], Value::Integer(1));
     assert_eq!(registers[14], Value::Integer(9));
 }
@@ -70,7 +71,7 @@ fn global_index_path_rejects_out_of_bounds_indexes() {
         mutable: true,
         initializer: None,
     }];
-    let error = execute(image.verify().expect("global path image must verify"))
+    let error = execute_with_local_globals(image.verify().expect("global path image must verify"))
         .expect_err("out-of-bounds global update must fail");
     assert_eq!(error.code, RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS);
 }

@@ -74,6 +74,13 @@ args = ["500000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "intrinsic_dispatch"
+group = "vm"
+path = "examples/pascal/vm/intrinsic_dispatch_benchmark.fpas"
+args = ["5000000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "function_call"
 group = "vm"
 path = "examples/pascal/vm/function_call_benchmark.fpas"

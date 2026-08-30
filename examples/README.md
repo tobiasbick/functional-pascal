@@ -174,6 +174,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |
 | `pascal/vm/string_concat_benchmark.fpas` | Short string concat + `IntToStr` for VM string ops |
 | `pascal/vm/string_length_benchmark.fpas` | Repeated `Std.Str.Length` on a long live string |
+| `pascal/vm/intrinsic_dispatch_benchmark.fpas` | Mixed array, string, and dictionary length calls for intrinsic-routing throughput |
 | `pascal/vm/function_call_benchmark.fpas` | Direct and captured function-call throughput |
 | `pascal/vm/array_callbacks_benchmark.fpas` | `Map`, `Filter`, and `Reduce` callback throughput |
 | `pascal/vm/record_update_benchmark.fpas` | Record construction, field access, and `with` update throughput |

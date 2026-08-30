@@ -34,8 +34,8 @@ pub use instruction::{
 };
 pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
-    FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic,
-    OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
+    FsIntrinsic, HttpIntrinsic, Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic,
+    NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
     ResultIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
 };
 pub use metadata::{

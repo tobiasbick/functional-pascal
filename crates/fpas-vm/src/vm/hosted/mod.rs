@@ -21,13 +21,8 @@ use net::{NetworkConnections, NetworkListeners};
 
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
-use super::VmError;
 use super::worker::Worker;
-
-pub(super) enum HostedOutcome {
-    Unhandled,
-    Complete(Option<Value>),
-}
+use super::{VmError, diagnostics};
 
 impl Worker {
     pub(super) fn execute_hosted_intrinsic(
@@ -35,26 +30,28 @@ impl Worker {
         intrinsic: Intrinsic,
         arguments: &[Value],
         location: SourceLocation,
-    ) -> Result<HostedOutcome, VmError> {
-        if let Some(value) = self.execute_args_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        if let Some(value) = self.execute_console_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        if let Some(value) = self.execute_net_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        if let Some(value) = self.execute_http_state_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        if let Some(value) = self.execute_callback_intrinsic_sync(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        if let Some(value) = self.execute_test_host_intrinsic(intrinsic, arguments, location)? {
-            return Ok(HostedOutcome::Complete(value));
-        }
-        Ok(HostedOutcome::Unhandled)
+    ) -> Result<Option<Value>, VmError> {
+        let result = match intrinsic {
+            Intrinsic::Args(_) => self.execute_args_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Net(_) => self.execute_net_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Http(_) => self.execute_http_state_intrinsic(intrinsic, arguments, location),
+            Intrinsic::Test(_) => self.execute_test_host_intrinsic(intrinsic, arguments, location),
+            _ => {
+                return Err(diagnostics::internal(
+                    self.executable.executable(),
+                    self.current_address,
+                    format!("Intrinsic {intrinsic:?} is not owned by hosted VM dispatch"),
+                ));
+            }
+        }?;
+        result.ok_or_else(|| {
+            diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                format!("Hosted intrinsic {intrinsic:?} was not handled by its owning module"),
+            )
+        })
     }
 }
 

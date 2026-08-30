@@ -80,10 +80,10 @@
   </section>
 
   <section class="rank">
-    <span class="badge medium">Priority 4 · strong static candidate</span>
-    <h3>Intrinsic dispatch is a chain of routers and indirect function calls</h3>
-    <p>Every intrinsic first visits up to six hosted routers in <a href="../../../crates/fpas-vm/src/vm/hosted/mod.rs"><code>hosted/mod.rs:33–57</code></a>. A non-hosted intrinsic then enters <a href="../../../crates/fpas-std/src/intrinsics.rs"><code>fpas-std/intrinsics.rs:52–229</code></a>, checks several large “VM-only” classifiers, and iterates over 16 function pointers until a unit accepts it. This prevents a simple direct top-level enum dispatch and can inhibit inlining.</p>
-    <p><strong>Signal:</strong> <code>array_length</code> and cached <code>string_length</code> do almost no useful work yet are 26.7% and 30.9% slower than the earlier record. That makes surrounding routing disproportionately important. A profile is still required to quantify it.</p>
+    <span class="badge medium">Priority 4 · addressed and measured</span>
+    <h3>Intrinsic dispatch no longer probes router chains</h3>
+    <p><a href="../../../crates/fpas-bytecode/src/intrinsic/execution.rs"><code>intrinsic/execution.rs</code></a> now assigns each intrinsic to its standard-library, VM-hosted, callback, or task owner. <a href="../../../crates/fpas-vm/src/vm/execute/intrinsics.rs"><code>execute/intrinsics.rs</code></a> selects that owner once; hosted and standard operations then use a direct top-level family match instead of visiting six hosted routers and up to 16 standard-library function pointers.</p>
+    <p><strong>Measured result:</strong> the new mixed <code>intrinsic_dispatch</code> benchmark improved by 14.0–14.1% in two full-suite comparisons. <code>array_length</code> improved by 14.1–15.3% and <code>string_length</code> by 8.8–10.0%, with no row crossing the 5% regression gate. Length-specific VM fast paths were unnecessary.</p>
   </section>
 
   <section class="rank">
@@ -113,8 +113,8 @@
   <ol>
     <li>Current VM and full-suite baselines were saved with the project harness.</li>
     <li>Windows sampling was attempted, but <code>samply</code> required administrator privileges; no system configuration was changed.</li>
-    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, scalar operand cloning, and direct typed integer handling.</li>
-    <li>The complete suite was compared twice for the accepted operand-borrowing change; variants below the improvement gate or with regressions were rolled back.</li>
+    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, scalar operand cloning, direct typed integer handling, and direct intrinsic ownership routing.</li>
+    <li>The complete suite was compared twice for accepted operand-borrowing and intrinsic-routing changes; variants below the improvement gate or with regressions were rolled back.</li>
     <li>Add microbenchmarks only for a hotspot that the end-to-end suite cannot isolate; keep end-to-end rows authoritative.</li>
   </ol>
 

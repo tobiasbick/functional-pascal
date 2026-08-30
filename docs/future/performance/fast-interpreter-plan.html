@@ -17,11 +17,11 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Stages 1, 3a, and 3b implemented and measured · later stages proposed</div>
+  <div class="stamp">Stages 1, 3a, 3b, and 4 implemented and measured · later stages proposed</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
-  <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split, borrowed scalar operands, and direct typed integer handlers. The next measured slice should address intrinsic routing, where tiny operations still cross several routers. Do not prioritize branch-target checks, forced dispatch inlining, or per-instruction cancellation polling: controlled probes did not show useful gains.</div>
+  <div class="callout"><strong>Current recommendation:</strong> retain the execution-policy split, borrowed scalar operands, direct typed integer handlers, and direct intrinsic ownership routing. The next measured slice should deepen synchronous callbacks, where each array element still crosses a nested-worker seam. Do not prioritize branch-target checks, forced dispatch inlining, or per-instruction cancellation polling: controlled probes did not show useful gains.</div>
 
   <h2>Stage 1 result — 30 August 2026</h2>
   <p>The normal dispatcher now uses a statically specialized path without debugger initializer suppression. Debugger-owned task execution selects the corresponding debug specialization. Both paths share the same Rust opcode implementation, so there is no runtime <code>if debugging</code> in normal execution and no duplicated source-level opcode match.</p>
@@ -66,6 +66,21 @@
     </tbody>
   </table>
   <p>No VM row regressed by 5%. A full-suite follow-up against the baseline preceding Stages 3a and 3b showed cumulative improvements of 9.5% for <code>integer_loop</code>, 17.8% for <code>branch_dispatch</code>, 5.1% for <code>tui_headless</code>, and 5.7% for <code>notes_headless</code>, with no regression.</p>
+
+  <h2>Stage 4 result — direct intrinsic ownership routing</h2>
+  <p>Each intrinsic now has one bytecode-owned execution classification: standard-library, VM-hosted, callback, or task. The VM selects that owner once. Hosted operations dispatch directly to their family, while <code>fpas-std</code> uses one top-level family match instead of probing 16 function pointers. Mutable task and sleep handling is derived from the same classification seam.</p>
+  <table>
+    <thead><tr><th>Benchmark</th><th>Two controlled full-suite comparisons</th><th>Interpretation</th></tr></thead>
+    <tbody>
+      <tr><td><code>intrinsic_dispatch</code></td><td>−14.1%, −14.0%</td><td>Large repeatable routing win across array, string, and dictionary length calls.</td></tr>
+      <tr><td><code>array_length</code></td><td>−14.1%, −15.3%</td><td>The tiny intrinsic benefits directly from removing router probes.</td></tr>
+      <tr><td><code>string_length</code></td><td>−8.8%, −10.0%</td><td>Repeatable improvement without a length-specific VM fast path.</td></tr>
+      <tr><td><code>string_concat</code></td><td>−5.3%, −5.3%</td><td>Common intrinsic routing also helps a workload with allocation.</td></tr>
+      <tr><td><code>tui_headless</code></td><td>+2.1%, +0.8%</td><td>Within noise and below the 5% regression gate.</td></tr>
+      <tr><td><code>notes_headless</code></td><td>+2.4%, +2.5%</td><td>No material application-level regression.</td></tr>
+    </tbody>
+  </table>
+  <p>No full-suite row regressed by 5%. Exhaustive ownership tests cover every intrinsic family and the mutable-dispatch subset; the existing standard-library and VM suites continue to cover the routed behavior. The settled snapshot is recorded in <a href="../../bench/history.md">benchmark history</a>.</p>
 
   <h2>Design target</h2>
   <div class="grid">
@@ -135,9 +150,9 @@ crates/fpas-std/src/dispatch/
 
   <section class="phase">
     <h3>Stage 4 — Replace router chains with direct intrinsic dispatch</h3>
-    <p>Dispatch directly on the top-level <code>Intrinsic</code> family and call exactly one owning module. Encode “hosted”, “suspending”, and “callback” ownership as generated metadata beside the intrinsic declaration instead of repeating large <code>matches!</code> lists across crates. This centralizes the invariant and removes up to 16 indirect probes.</p>
-    <p>Specialize tiny pure intrinsics such as array/string length at the VM seam only if the direct router remains visible in profiles.</p>
-    <p class="gate">Exit gate: intrinsic ownership has one source of truth; array/string length and TUI improve; all intrinsic coverage tests still prove complete routing.</p>
+    <p>Dispatch now starts from the top-level <code>Intrinsic</code> family and calls exactly one owning subsystem. Standard, hosted, callback, task, and mutable-dispatch classification lives beside the intrinsic declaration instead of being repeated as large <code>matches!</code> lists across crates. This centralizes the invariant and removes up to 16 indirect probes.</p>
+    <p>Tiny pure intrinsics did not need VM-specific fast paths: direct family routing alone produced the measured gain.</p>
+    <p class="gate">Status: passed on 30 August 2026. Intrinsic dispatch improved by 14.0–14.1%, array length by 14.1–15.3%, and string length by 8.8–10.0%. No full-suite row crossed the 5% regression gate, and ownership coverage has one source of truth with exhaustive tests.</p>
   </section>
 
   <section class="phase">
@@ -158,5 +173,5 @@ crates/fpas-std/src/dispatch/
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>Stages 1, 3a, and 3b are implemented and measured with <code>cargo bench-fpas</code>. Stage 2 and the remaining parts of Stages 3–6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>Stages 1, 3a, 3b, and 4 are implemented and measured with <code>cargo bench-fpas</code>. Stage 2 and the remaining parts of Stages 3, 5, and 6 remain proposals with independent rollback gates. For larger replacement choices, see <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

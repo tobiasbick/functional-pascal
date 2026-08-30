@@ -1,13 +1,11 @@
 //! Borrowed register-window execution for non-hosted standard-library intrinsics.
 
 use fpas_bytecode::{
-    AbcOperands, Intrinsic, NO_REGISTER, Register, SourceLocation, TaskIntrinsic, TimeIntrinsic,
-    Value,
+    AbcOperands, Intrinsic, IntrinsicOwner, NO_REGISTER, Register, SourceLocation, Value,
 };
 
 use super::scalar::register;
-use crate::vm::hosted::HostedOutcome;
-use crate::vm::hosted::callbacks::{CallbackOutcome, is_callback_intrinsic};
+use crate::vm::hosted::callbacks::CallbackOutcome;
 use crate::vm::worker::Worker;
 use crate::vm::{VmError, diagnostics};
 
@@ -23,6 +21,7 @@ impl Worker {
                 format!("Verified intrinsic identifier {} is unknown", operands.b),
             )
         })?;
+        let owner = intrinsic.owner();
         let start = self
             .base
             .checked_add(usize::from(operands.c))
@@ -37,7 +36,7 @@ impl Worker {
         let destination = (operands.a != NO_REGISTER)
             .then(|| register(operands.a))
             .transpose()?;
-        if requires_mutable_dispatch(intrinsic) {
+        if intrinsic.requires_mutable_dispatch() {
             let arguments = self.registers[start..end].to_vec();
             if let Some(result) = self.task_intrinsic(intrinsic, &arguments, destination)? {
                 if let (Some(value), Some(destination)) = (result, destination) {
@@ -45,10 +44,10 @@ impl Worker {
                 }
                 return Ok(());
             }
-            let result = self.execute_borrowed_intrinsic(intrinsic, &arguments, location)?;
+            let result = self.execute_borrowed_intrinsic(intrinsic, owner, &arguments, location)?;
             return self.store_intrinsic_result(intrinsic, destination, result);
         }
-        if self.task_id != 0 && is_callback_intrinsic(intrinsic) {
+        if self.task_id != 0 && owner == IntrinsicOwner::Callback {
             let arguments = self.registers[start..end].to_vec();
             let absolute_destination =
                 destination.map(|register| self.base + usize::from(register.get()));
@@ -65,11 +64,15 @@ impl Worker {
                     CallbackOutcome::Deferred => Ok(()),
                 };
             }
-            let result = self.execute_borrowed_intrinsic(intrinsic, &arguments, location)?;
+            let result = self.execute_borrowed_intrinsic(intrinsic, owner, &arguments, location)?;
             return self.store_intrinsic_result(intrinsic, destination, result);
         }
-        let result =
-            self.execute_borrowed_intrinsic(intrinsic, &self.registers[start..end], location)?;
+        let result = self.execute_borrowed_intrinsic(
+            intrinsic,
+            owner,
+            &self.registers[start..end],
+            location,
+        )?;
         self.store_intrinsic_result(intrinsic, destination, result)
     }
 
@@ -111,17 +114,34 @@ impl Worker {
     fn execute_borrowed_intrinsic(
         &self,
         intrinsic: Intrinsic,
+        owner: IntrinsicOwner,
         arguments: &[Value],
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
-        match self.execute_hosted_intrinsic(intrinsic, arguments, location)? {
-            HostedOutcome::Unhandled => fpas_std::run_intrinsic_borrowed(
+        match owner {
+            IntrinsicOwner::Standard => fpas_std::run_intrinsic_borrowed(
                 intrinsic,
                 arguments,
                 location,
                 self.layouts.as_ref(),
             ),
-            HostedOutcome::Complete(result) => Ok(result),
+            IntrinsicOwner::Hosted => self.execute_hosted_intrinsic(intrinsic, arguments, location),
+            IntrinsicOwner::Callback => self
+                .execute_callback_intrinsic_sync(intrinsic, arguments, location)?
+                .ok_or_else(|| {
+                    diagnostics::internal(
+                        self.executable.executable(),
+                        self.current_address,
+                        format!(
+                            "Callback intrinsic {intrinsic:?} was not handled by its owning module"
+                        ),
+                    )
+                }),
+            IntrinsicOwner::Task => Err(diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                format!("Task intrinsic {intrinsic:?} bypassed mutable dispatch"),
+            )),
         }
     }
 
@@ -164,36 +184,5 @@ impl Worker {
                 operands.c, operands.auxiliary
             ),
         )
-    }
-}
-
-fn requires_mutable_dispatch(intrinsic: Intrinsic) -> bool {
-    matches!(
-        intrinsic,
-        Intrinsic::Task(TaskIntrinsic::Wait | TaskIntrinsic::WaitAll)
-            | Intrinsic::Time(TimeIntrinsic::Sleep)
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use fpas_bytecode::{Intrinsic, TaskIntrinsic, TimeIntrinsic};
-
-    use super::requires_mutable_dispatch;
-
-    #[test]
-    fn only_suspending_intrinsics_require_mutable_dispatch() {
-        assert!(requires_mutable_dispatch(Intrinsic::Task(
-            TaskIntrinsic::Wait
-        )));
-        assert!(requires_mutable_dispatch(Intrinsic::Task(
-            TaskIntrinsic::WaitAll
-        )));
-        assert!(requires_mutable_dispatch(Intrinsic::Time(
-            TimeIntrinsic::Sleep
-        )));
-        assert!(!requires_mutable_dispatch(Intrinsic::Time(
-            TimeIntrinsic::TimestampMillis
-        )));
     }
 }

@@ -67,6 +67,12 @@ pub(super) enum Advance {
     Complete(Value),
 }
 
+/// Failure while advancing a hosted callback operation.
+pub(super) enum AdvanceError {
+    UnexpectedResult(Value),
+    InvalidState(&'static str),
+}
+
 impl CallbackContinuation {
     /// Create a continuation before its first callback invocation.
     pub(super) fn new(
@@ -89,13 +95,16 @@ impl CallbackContinuation {
     }
 
     /// Retain a completed callback value for the next operation step.
-    pub(super) fn accept(&mut self, value: Value) {
-        debug_assert!(self.awaiting_depth.take().is_some());
+    pub(super) fn accept(&mut self, value: Value) -> Result<(), &'static str> {
+        if self.awaiting_depth.take().is_none() {
+            return Err("Callback result arrived without an awaited call");
+        }
         self.pending = Some(value);
+        Ok(())
     }
 
     /// Consume a pending result and choose the next invocation or final value.
-    pub(super) fn advance(&mut self) -> Result<Advance, Value> {
+    pub(super) fn advance(&mut self) -> Result<Advance, AdvanceError> {
         match &mut self.operation {
             CallbackOperation::ArrayMap(sequence) => {
                 sequence.push_pending(self.pending.take());
@@ -209,11 +218,18 @@ impl CallbackContinuation {
                 if let Some(value) = self.pending.take() {
                     return Ok(Advance::Complete(wrapper.wrap(value)));
                 }
-                Ok(Advance::Call(
-                    arguments.take().expect("single callback runs once"),
-                ))
+                let arguments = arguments.take().ok_or(AdvanceError::InvalidState(
+                    "Single callback operation was advanced more than once",
+                ))?;
+                Ok(Advance::Call(arguments))
             }
         }
+    }
+}
+
+impl From<Value> for AdvanceError {
+    fn from(value: Value) -> Self {
+        Self::UnexpectedResult(value)
     }
 }
 
@@ -322,5 +338,32 @@ fn boolean(value: Value) -> Result<bool, Value> {
     match value {
         Value::Boolean(value) => Ok(value),
         other => Err(other),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use fpas_bytecode::FunctionId;
+
+    use super::*;
+
+    #[test]
+    fn single_callback_reports_repeated_advance_without_a_result() {
+        let mut continuation = CallbackContinuation::new(
+            SharedFunction::unbound(FunctionId::new(0), "callback".to_owned(), Vec::new()),
+            None,
+            CallbackOperation::Single {
+                arguments: Some(Vec::new()),
+                wrapper: SingleWrapper::Direct,
+            },
+        );
+
+        assert!(matches!(continuation.advance(), Ok(Advance::Call(_))));
+        assert!(matches!(
+            continuation.advance(),
+            Err(AdvanceError::InvalidState(
+                "Single callback operation was advanced more than once"
+            ))
+        ));
     }
 }

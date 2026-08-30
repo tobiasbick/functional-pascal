@@ -156,7 +156,7 @@ fn hosted_callback_rejects_a_task_owned_function_from_a_foreign_task() {
 }
 
 #[test]
-fn hosted_callback_prepends_a_bound_receiver() {
+fn reused_hosted_callback_keeps_bound_receiver_before_visible_arguments() {
     let worker = Worker::new(Arc::new(callback_image())).expect("worker");
     let function = Value::bound_function(
         FunctionId::new(1),
@@ -164,12 +164,16 @@ fn hosted_callback_prepends_a_bound_receiver() {
         Value::Integer(3),
     );
 
-    assert_eq!(
+    let output = [
         worker
             .call_callback_sync(&function, &[])
             .expect("bound callback"),
-        Value::Integer(6)
-    );
+        worker
+            .call_callback_sync(&function, &[])
+            .expect("reused bound callback"),
+    ];
+
+    assert_eq!(output, [Value::Integer(6), Value::Integer(6)]);
 }
 
 #[test]

@@ -27,7 +27,7 @@
 
   <div class="summary">
     <div class="panel"><div class="big">14 / 14</div><p>The initial historical comparison found every comparable VM row slower than the 10 August record, with a spread of +18.9% to +79.4% elapsed time.</p></div>
-    <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers then produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload.</p></div>
+    <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
   <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>.</div>
@@ -73,10 +73,10 @@
   </section>
 
   <section class="rank">
-    <span class="badge high">Priority 3 · high confidence</span>
-    <h3>Higher-order array operations cross an expensive callback seam per element</h3>
-    <p><a href="../../../crates/fpas-vm/src/vm/callback_call.rs"><code>callback_call.rs:13–155</code></a> resolves and revalidates the callback, clones a <code>SharedFunction</code>, collects a new argument vector, borrows a <code>RefCell</code>, resets a nested <code>Worker</code>, copies arguments/captures, runs a second dispatch loop, and returns the worker to the cache. <a href="../../../crates/fpas-vm/src/vm/hosted/callbacks/synchronous.rs"><code>callbacks/synchronous.rs:28–131</code></a> repeats that for every Map, Filter, and Reduce element.</p>
-    <p><strong>Evidence:</strong> <code>array_callbacks</code> is the largest regression (+79.4%). Its workload performs 9.6 million callbacks, so even small fixed callback costs dominate.</p>
+    <span class="badge high">Priority 3 · partially addressed and measured</span>
+    <h3>Higher-order array operations still cross a callback seam per element</h3>
+    <p><a href="../../../crates/fpas-vm/src/vm/callback_call.rs"><code>callback_call.rs</code></a> still resolves and revalidates the callback, clones a <code>SharedFunction</code>, borrows a <code>RefCell</code>, resets a nested <code>Worker</code>, copies values into registers, runs a second dispatch loop, and returns the worker to the cache. The cached reset no longer collects an intermediate argument vector: it loads the optional receiver, visible arguments, and captures directly. <a href="../../../crates/fpas-vm/src/vm/hosted/callbacks/synchronous.rs"><code>callbacks/synchronous.rs</code></a> repeats the remaining seam for every Map, Filter, and Reduce element.</p>
+    <p><strong>Measured evidence:</strong> removing the per-callback argument allocation improved <code>array_callbacks</code> by 24.1% and 23.9% in two full-suite comparisons. The workload performs 9.6 million callbacks, so small fixed costs dominate. Caching callback resolution alone was slower by 1.7% and 3.6% and was rolled back; ordinary frames on the current worker remain the next distinct hypothesis.</p>
   </section>
 
   <section class="rank">
@@ -113,8 +113,8 @@
   <ol>
     <li>Current VM and full-suite baselines were saved with the project harness.</li>
     <li>Windows sampling was attempted, but <code>samply</code> required administrator privileges; no system configuration was changed.</li>
-    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, scalar operand cloning, direct typed integer handling, and direct intrinsic ownership routing.</li>
-    <li>The complete suite was compared twice for accepted operand-borrowing and intrinsic-routing changes; variants below the improvement gate or with regressions were rolled back.</li>
+    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, scalar operand cloning, direct typed integer handling, direct intrinsic ownership routing, callback preparation caching, and cached callback argument loading.</li>
+    <li>The complete suite was compared twice for accepted operand-borrowing, intrinsic-routing, and callback-loading changes; variants below the improvement gate or with regressions were rolled back.</li>
     <li>Add microbenchmarks only for a hotspot that the end-to-end suite cannot isolate; keep end-to-end rows authoritative.</li>
   </ol>
 

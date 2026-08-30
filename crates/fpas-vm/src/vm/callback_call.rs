@@ -8,6 +8,12 @@ use fpas_diagnostics::codes::{RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CA
 use super::worker::Worker;
 use super::{VmError, diagnostics};
 
+struct CallbackInputs<'a> {
+    bound_receiver: Option<&'a Value>,
+    arguments: &'a [Value],
+    captures: &'a [Value],
+}
+
 impl Worker {
     /// Invoke a first-class function synchronously through its numeric register target.
     pub(super) fn call_callback_sync(
@@ -81,23 +87,26 @@ impl Worker {
         let target = function.function;
         let info = &self.executable.executable().functions[usize::from(target.get())];
 
-        let call_arguments = function
-            .bound_receiver
-            .iter()
-            .chain(arguments)
-            .cloned()
-            .collect::<Vec<_>>();
         let mut callback = if let Some(mut callback) = self.callback_worker.borrow_mut().take() {
             callback.reset_for_callback(
                 target,
                 info.code.start,
                 info.register_count,
-                &call_arguments,
-                &function.captures,
+                CallbackInputs {
+                    bound_receiver: function.bound_receiver.as_ref(),
+                    arguments,
+                    captures: &function.captures,
+                },
                 self.task_id,
             )?;
             callback
         } else {
+            let call_arguments = function
+                .bound_receiver
+                .iter()
+                .chain(arguments)
+                .cloned()
+                .collect::<Vec<_>>();
             let mut callback = Self::for_function_with_captures(
                 Arc::clone(&self.executable),
                 target,
@@ -127,8 +136,7 @@ impl Worker {
         target: FunctionId,
         start: InstructionAddress,
         register_count: u16,
-        arguments: &[Value],
-        captures: &[Value],
+        inputs: CallbackInputs<'_>,
         task_id: u64,
     ) -> Result<(), VmError> {
         self.function = target;
@@ -141,7 +149,13 @@ impl Worker {
         })?;
         self.base = 0;
         self.reset_registers(usize::from(register_count));
-        for (index, value) in arguments.iter().chain(captures).enumerate() {
+        for (index, value) in inputs
+            .bound_receiver
+            .into_iter()
+            .chain(inputs.arguments)
+            .chain(inputs.captures)
+            .enumerate()
+        {
             self.store_register(index, value.clone())?;
         }
         self.call_stack.clear();

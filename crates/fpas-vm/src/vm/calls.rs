@@ -139,7 +139,7 @@ impl Worker {
         self.ip = frame.ip;
         self.base = frame.base;
         if callback_return {
-            self.accept_callback_return(value);
+            self.accept_callback_return(value)?;
         } else if let Some(destination) = frame.return_destination {
             self.store_register(destination, value)?;
         }

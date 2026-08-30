@@ -49,12 +49,13 @@ impl Worker {
     }
 
     /// Save one callback result for the next hosted-operation step.
-    pub(in crate::vm) fn accept_callback_return(&mut self, value: Value) {
-        let continuation = self
-            .callback_continuations
-            .last_mut()
-            .expect("callback return requires a continuation");
-        continuation.accept(value);
+    pub(in crate::vm) fn accept_callback_return(&mut self, value: Value) -> Result<(), VmError> {
+        let Some(continuation) = self.callback_continuations.last_mut() else {
+            return Err(self.callback_state_error("Callback return has no active continuation"));
+        };
+        continuation
+            .accept(value)
+            .map_err(|message| self.callback_state_error(message))
     }
 
     fn array_argument<'a>(
@@ -87,5 +88,9 @@ impl Worker {
             ),
             format!("Pass a {expected} value to this intrinsic."),
         )
+    }
+
+    fn callback_state_error(&self, message: &str) -> VmError {
+        diagnostics::internal(self.executable.executable(), self.current_address, message)
     }
 }

@@ -2,7 +2,7 @@
 
 use fpas_bytecode::{Intrinsic, Value};
 
-use super::operation::{Advance, CallbackContinuation};
+use super::operation::{Advance, AdvanceError, CallbackContinuation};
 use super::{CallbackOutcome, Worker, plan};
 use crate::vm::VmError;
 
@@ -38,22 +38,29 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
         }
         (continuation.advance(), continuation.callback.clone())
     };
-    let action = action
-        .map_err(|value| worker.callback_type_error("boolean callback result", Some(&value)))?;
+    let action = action.map_err(|error| match error {
+        AdvanceError::UnexpectedResult(value) => {
+            worker.callback_type_error("boolean callback result", Some(&value))
+        }
+        AdvanceError::InvalidState(message) => worker.callback_state_error(message),
+    })?;
     match action {
         Advance::Call(arguments) => {
             worker.enter_callback_inline(&callback, &arguments)?;
-            worker
-                .callback_continuations
-                .last_mut()
-                .expect("callback continuation remains active")
-                .awaiting_depth = Some(worker.call_stack.len());
+            let awaiting_depth = worker.call_stack.len();
+            let Some(continuation) = worker.callback_continuations.last_mut() else {
+                return Err(worker.callback_state_error(
+                    "Callback continuation disappeared while entering its call",
+                ));
+            };
+            continuation.awaiting_depth = Some(awaiting_depth);
         }
         Advance::Complete(value) => {
-            let continuation = worker
-                .callback_continuations
-                .pop()
-                .expect("completed callback continuation exists");
+            let Some(continuation) = worker.callback_continuations.pop() else {
+                return Err(worker.callback_state_error(
+                    "Completed callback operation has no active continuation",
+                ));
+            };
             if let Some(destination) = continuation.destination {
                 worker.store_register(destination, value)?;
             }

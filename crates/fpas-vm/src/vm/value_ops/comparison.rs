@@ -11,6 +11,11 @@ pub(super) fn binary(
     left: &Value,
     right: &Value,
 ) -> Result<Value, ValueOperationError> {
+    if let (Value::Integer(left), Value::Integer(right)) = (left, right)
+        && operation != BinaryOperation::In
+    {
+        return super::integer::binary(operation, *left, *right);
+    }
     let result = match operation {
         BinaryOperation::Equal => equality(left, right),
         BinaryOperation::NotEqual => !equality(left, right),

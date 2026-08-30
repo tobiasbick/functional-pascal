@@ -14,6 +14,28 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-08-30 — after direct typed integer handlers
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6389 | throughput: 7825950 iters/s |
+| global_access | 542 | throughput: 9225092 global updates/s |
+| record_field_access | 1698 | throughput: 8833922 field accesses/s |
+| closure_call | 451 | throughput: 6651884 closure calls/s |
+| branch_dispatch | 3134 | throughput: 6381620 branches/s |
+| dynamic_numeric | 821 | throughput: 6090133 dynamic numeric ops/s |
+| array_push | 211 | throughput: 9478672 pushes/s |
+| array_length | 85 | throughput: 5882352 lengths/s |
+| string_concat | 2440 | throughput: 2049180 concats/s |
+| string_length | 79 | throughput: 6329113 lengths/s |
+| function_call | 663 | throughput: 9049773 calls/s |
+| array_callbacks | 1152 | throughput: 8333333 callbacks/s |
+| record_update | 428 | throughput: 2336448 updates/s |
+| unicode_char_at | 1327 | throughput: 2260738 chars/s |
+
 ## 2026-08-30 — after borrowing scalar operands
 
 - Group: `all`

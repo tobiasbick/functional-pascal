@@ -27,7 +27,7 @@
 
   <div class="summary">
     <div class="panel"><div class="big">14 / 14</div><p>The initial historical comparison found every comparable VM row slower than the 10 August record, with a spread of +18.9% to +79.4% elapsed time.</p></div>
-    <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Removing read-only scalar operand clones then improved integer and branch workloads by roughly 10% without a full-suite regression.</p></div>
+    <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers then produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload.</p></div>
   </div>
 
   <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>.</div>
@@ -67,9 +67,9 @@
 
   <section class="rank">
     <span class="badge high">Priority 2 · confirmed hot path</span>
-    <h3>Typed opcodes still execute through generic Value machinery</h3>
-    <p>The bytecode distinguishes <code>AddInteger</code>, <code>AddReal</code>, and <code>AddDynamic</code>. <a href="../../../crates/fpas-vm/src/vm/execute/scalar.rs"><code>execute/scalar.rs</code></a> now borrows source values instead of cloning them, but typed opcodes still route through <code>BinaryOperation</code>. <a href="../../../crates/fpas-vm/src/vm/value_ops/scalar.rs"><code>value_ops/scalar.rs:36–84</code></a> then branches on the abstract operation and rediscovers runtime tags. Register IDs, reads, and writes remain fallible after executable verification.</p>
-    <p><strong>Measured evidence:</strong> borrowing operands improved <code>integer_loop</code> by 9.9–11.3%, <code>branch_dispatch</code> by 9.4–10.1%, and <code>dynamic_numeric</code> by 6.3–7.5% in two full-suite comparisons. Direct typed handlers remain the next hypothesis.</p>
+    <h3>Typed integer opcodes now bypass generic Value routing</h3>
+    <p>The bytecode distinguishes <code>AddInteger</code>, <code>AddReal</code>, and <code>AddDynamic</code>. <a href="../../../crates/fpas-vm/src/vm/execute/integer.rs"><code>execute/integer.rs</code></a> now handles typed integer arithmetic, bitwise, shift, and comparison opcodes directly, while <a href="../../../crates/fpas-vm/src/vm/value_ops/integer.rs"><code>value_ops/integer.rs</code></a> keeps their pure semantics shared with generic evaluation. Typed real opcodes and register reads remain generic and fallible after executable verification.</p>
+    <p><strong>Measured evidence:</strong> direct integer handling improved <code>branch_dispatch</code> by 10.2–12.8% and <code>integer_loop</code> by 2.9–3.0% in two VM comparisons. Together with borrowed operands, the full-suite follow-up measured cumulative improvements of 17.8% and 9.5% respectively, with no collateral regression.</p>
   </section>
 
   <section class="rank">
@@ -113,7 +113,7 @@
   <ol>
     <li>Current VM and full-suite baselines were saved with the project harness.</li>
     <li>Windows sampling was attempted, but <code>samply</code> required administrator privileges; no system configuration was changed.</li>
-    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, and scalar operand cloning.</li>
+    <li>One-variable A/B probes covered debug-policy separation, branch-target revalidation, forced dispatch inlining, scheduler polling cadence, scalar operand cloning, and direct typed integer handling.</li>
     <li>The complete suite was compared twice for the accepted operand-borrowing change; variants below the improvement gate or with regressions were rolled back.</li>
     <li>Add microbenchmarks only for a hotspot that the end-to-end suite cannot isolate; keep end-to-end rows authoritative.</li>
   </ol>

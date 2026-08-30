@@ -9,14 +9,7 @@ pub(super) fn unary(
     value: &Value,
 ) -> Result<Value, ValueOperationError> {
     match (operation, value) {
-        (UnaryOperation::Negate, Value::Integer(value)) => {
-            value.checked_neg().map(Value::Integer).ok_or_else(|| {
-                ValueOperationError::domain(
-                    "Integer negation overflow",
-                    "Avoid negating the minimum integer value.",
-                )
-            })
-        }
+        (UnaryOperation::Negate, Value::Integer(value)) => super::integer::unary(operation, *value),
         (UnaryOperation::Negate, Value::Real(value)) => Ok(Value::Real(-value)),
         (UnaryOperation::Not, Value::Boolean(value)) => Ok(Value::Boolean(!value)),
         (UnaryOperation::Negate, actual) => Err(ValueOperationError::type_mismatch(
@@ -64,12 +57,9 @@ fn arithmetic(
         return Ok(Value::Str(SharedStr::concat(left, right)));
     }
     match (left, right) {
-        (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(match operation {
-            BinaryOperation::Add => left.wrapping_add(*right),
-            BinaryOperation::Subtract => left.wrapping_sub(*right),
-            BinaryOperation::Multiply => left.wrapping_mul(*right),
-            _ => unreachable!("arithmetic operation checked by caller"),
-        })),
+        (Value::Integer(left), Value::Integer(right)) => {
+            super::integer::binary(operation, *left, *right)
+        }
         _ => {
             let (Some(left), Some(right)) = (numeric(left), numeric(right)) else {
                 return Err(numeric_type_error(left, right));
@@ -101,36 +91,14 @@ fn integer_divide(left: &Value, right: &Value) -> Result<Value, ValueOperationEr
     let (Value::Integer(left), Value::Integer(right)) = (left, right) else {
         return Err(integer_type_error("`div`", left, right));
     };
-    if *right == 0 {
-        return Err(ValueOperationError::division_by_zero(
-            "Division by zero",
-            "Check the right-hand side before using `div` or `/`.",
-        ));
-    }
-    left.checked_div(*right).map(Value::Integer).ok_or_else(|| {
-        ValueOperationError::domain(
-            "Integer division overflow",
-            "Avoid dividing the minimum integer value by `-1`.",
-        )
-    })
+    super::integer::binary(BinaryOperation::IntegerDivide, *left, *right)
 }
 
 fn modulo(left: &Value, right: &Value) -> Result<Value, ValueOperationError> {
     let (Value::Integer(left), Value::Integer(right)) = (left, right) else {
         return Err(integer_type_error("`mod`", left, right));
     };
-    if *right == 0 {
-        return Err(ValueOperationError::modulo_by_zero(
-            "Modulo by zero",
-            "Check the right-hand side before using `mod`.",
-        ));
-    }
-    left.checked_rem(*right).map(Value::Integer).ok_or_else(|| {
-        ValueOperationError::domain(
-            "Integer modulo overflow",
-            "Avoid applying `mod` with the minimum integer value and `-1`.",
-        )
-    })
+    super::integer::binary(BinaryOperation::Modulo, *left, *right)
 }
 
 fn boolean_or_bitwise(
@@ -145,12 +113,9 @@ fn boolean_or_bitwise(
             BinaryOperation::Xor => *left ^ *right,
             _ => unreachable!("Boolean operation checked by caller"),
         })),
-        (Value::Integer(left), Value::Integer(right)) => Ok(Value::Integer(match operation {
-            BinaryOperation::And => *left & *right,
-            BinaryOperation::Or => *left | *right,
-            BinaryOperation::Xor => *left ^ *right,
-            _ => unreachable!("bitwise operation checked by caller"),
-        })),
+        (Value::Integer(left), Value::Integer(right)) => {
+            super::integer::binary(operation, *left, *right)
+        }
         _ => Err(ValueOperationError::type_mismatch(
             format!(
                 "Operator requires two Boolean or two integer operands, got {} and {}",
@@ -170,20 +135,7 @@ fn shift(
     let (Value::Integer(value), Value::Integer(amount)) = (left, right) else {
         return Err(integer_type_error("shift", left, right));
     };
-    let amount = u32::try_from(*amount)
-        .ok()
-        .filter(|amount| *amount < 64)
-        .ok_or_else(|| {
-            ValueOperationError::domain(
-                format!("Shift amount {amount} is out of range (0..63)"),
-                "Use a shift amount between 0 and 63 inclusive.",
-            )
-        })?;
-    Ok(Value::Integer(match operation {
-        BinaryOperation::ShiftLeft => value.wrapping_shl(amount),
-        BinaryOperation::ShiftRight => value.wrapping_shr(amount),
-        _ => unreachable!("shift operation checked by caller"),
-    }))
+    super::integer::binary(operation, *value, *amount)
 }
 
 fn numeric(value: &Value) -> Option<f64> {

@@ -2,6 +2,7 @@
 
 mod comparison;
 mod index;
+mod integer;
 mod scalar;
 
 use fpas_bytecode::Value;
@@ -128,6 +129,25 @@ pub(crate) fn binary(
         | BinaryOperation::In => comparison::binary(operation, left, right),
         _ => scalar::binary(operation, left, right),
     }
+}
+
+/// Apply a unary operation to a known integer value.
+#[inline]
+pub(crate) fn integer_unary(
+    operation: UnaryOperation,
+    value: i64,
+) -> Result<Value, ValueOperationError> {
+    integer::unary(operation, value)
+}
+
+/// Apply a binary operation to two known integer values.
+#[inline]
+pub(crate) fn integer_binary(
+    operation: BinaryOperation,
+    left: i64,
+    right: i64,
+) -> Result<Value, ValueOperationError> {
+    integer::binary(operation, left, right)
 }
 
 pub(crate) fn field(value: &Value, name: &str) -> Result<Value, ValueOperationError> {

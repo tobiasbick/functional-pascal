@@ -35,7 +35,7 @@
     <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
   </header>
 
-  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed two interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands instead of cloning them improved <code>integer_loop</code> by 9.9–11.3% and <code>branch_dispatch</code> by 9.4–10.1% in two full-suite comparisons. The next measured slice is direct typed integer and comparison handling.</div>
+  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed three interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands removed reference-count churn; direct typed integer handlers then improved <code>branch_dispatch</code> by 10.2–12.8% and <code>integer_loop</code> by 2.9–3.0% in two VM comparisons. The next measured slice is direct intrinsic routing.</div>
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
@@ -53,7 +53,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit for the original evidence, then read the fast-interpreter report for implemented results and rejected probes. Continue with direct typed integer and comparison operations, followed by intrinsic routing. Consider heap or JIT work only after those interpreter costs are quantified.</p>
+  <p>Start with the audit for the original evidence, then read the fast-interpreter report for implemented results and rejected probes. Continue with intrinsic routing; return to typed real operations only after adding a benchmark that isolates them. Consider heap or JIT work only after those interpreter costs are quantified.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

@@ -9,6 +9,7 @@ mod register_initialization;
 mod register_stack;
 mod runtime;
 mod scalar;
+mod shutdown;
 mod support;
 mod task_owned_functions;
 

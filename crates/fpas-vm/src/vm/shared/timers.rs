@@ -7,6 +7,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Condvar, Mutex};
 use std::time::{Duration, Instant};
 
+#[cfg(test)]
+mod tests;
+
 /// Millisecond-bucketed task timer queue driven by one runtime thread.
 pub(crate) struct TaskTimers<T> {
     origin: Instant,
@@ -95,8 +98,9 @@ impl<T> TaskTimers<T> {
             .collect()
     }
 
-    /// Wake the timer driver so it can observe runtime shutdown.
+    /// Wake the timer driver while synchronizing with its predicate-to-wait transition.
     pub(crate) fn notify_shutdown(&self) {
+        let _sleeping = self.sleeping.lock().unwrap_or_else(|e| e.into_inner());
         self.changed.notify_all();
     }
 

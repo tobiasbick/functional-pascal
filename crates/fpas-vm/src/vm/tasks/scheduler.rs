@@ -2,6 +2,8 @@
 
 mod completion_ranges;
 #[cfg(test)]
+mod shutdown_tests;
+#[cfg(test)]
 mod tests;
 
 use std::collections::{HashMap, VecDeque};
@@ -313,6 +315,7 @@ impl TaskScheduler {
             }
         }) {}
     }
+    /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
         self.accepting_timers.store(false, Ordering::Release);
         for task in self.timers.cancel_all() {
@@ -321,7 +324,11 @@ impl TaskScheduler {
         self.shutdown.store(true, Ordering::Release);
         self.complete_pending_results();
         self.timers.notify_shutdown();
-        self.available.notify_all();
+        {
+            // Serialize notification with the worker's predicate-to-wait transition.
+            let _queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
+            self.available.notify_all();
+        }
         self.results_available.notify_all();
     }
     /// Complete one retained task with the standard runtime-shutdown diagnostic.

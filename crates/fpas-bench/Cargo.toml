@@ -11,6 +11,8 @@ name = "fpas-bench"
 path = "src/main.rs"
 
 [dependencies]
+fpas-compiler = { path = "../fpas-compiler" }
+fpas-parser = { path = "../fpas-parser" }
 fpas-language-service = { path = "../fpas-language-service" }
 atomic-write-file = "0.3.0"
 serde = { workspace = true, features = ["derive"] }

@@ -1,10 +1,11 @@
 //! Native tooling workloads run in the harness's bounded child processes.
 
+mod compiler;
 mod language_service;
 
 use std::process::ExitCode;
 
-const USAGE: &str = "Usage: cargo bench-fpas native language-service <queries> <functions>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas save analysis-before --group tooling";
+const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas save tooling-before --group tooling";
 
 /// Executes one native workload, or prints its usage.
 pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
@@ -12,13 +13,16 @@ pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
         println!("{USAGE}");
         return Ok(ExitCode::SUCCESS);
     }
-    let [driver, queries, functions] = args else {
+    let [driver, iterations, width] = args else {
         return Err(USAGE.to_owned());
     };
-    if driver != "language-service" {
-        return Err(format!("Unknown native workload `{driver}`.\n{USAGE}"));
+    match driver.as_str() {
+        "language-service" => {
+            language_service::run(positive_count(iterations)?, positive_count(width)?)?
+        }
+        "compiler-lowering" => compiler::run(positive_count(iterations)?, positive_count(width)?)?,
+        _ => return Err(format!("Unknown native workload `{driver}`.\n{USAGE}")),
     }
-    language_service::run(positive_count(queries)?, positive_count(functions)?)?;
     Ok(ExitCode::SUCCESS)
 }
 

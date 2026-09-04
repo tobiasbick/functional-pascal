@@ -1,7 +1,7 @@
 # Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
 # Paths are relative to the repository root.
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
-# `tui` (headless Std.Tui), and `tooling` (native editor workloads).
+# `tui` (headless Std.Tui), and `tooling` (native editor and compiler workloads).
 # FPAS rows run through the production `fpas run` path.
 
 [[bench]]
@@ -156,3 +156,9 @@ group = "vm"
 path = "examples/pascal/vm/string_search_benchmark.fpas"
 args = ["500000"]
 timeout_ms = 120000
+[[bench]]
+id = "compiler_lowering"
+group = "tooling"
+driver = "compiler-lowering"
+args = ["30", "1000"]
+timeout_ms = 60000

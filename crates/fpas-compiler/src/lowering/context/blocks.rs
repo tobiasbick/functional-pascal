@@ -6,9 +6,11 @@ use fpas_lexer::Span;
 use crate::CompileError;
 use crate::error::internal_compiler_error;
 
-use super::{LoopTargets, LoweringContext, reverse_postorder, target};
+use super::block_order::reverse_postorder;
+use super::{LoopTargets, LoweringContext, target};
 
 impl LoweringContext {
+    /// Appends a construction block whose ID equals its vector index.
     pub(in crate::lowering) fn new_block(&mut self, span: Span) -> Result<BlockId, CompileError> {
         let id = BlockId::try_from_index(self.blocks.len()).map_err(|error| {
             internal_compiler_error(
@@ -95,6 +97,7 @@ impl LoweringContext {
         })
     }
 
+    /// Removes only the final block, preserving dense construction indices.
     pub(in crate::lowering) fn remove_last_block_if(&mut self, id: BlockId) {
         if self.blocks.last().is_some_and(|block| block.id == id) {
             let _ = self.blocks.pop();
@@ -146,11 +149,12 @@ impl LoweringContext {
         Ok((function, self.type_table))
     }
 
+    /// Looks up the current block by its construction index.
     pub(super) fn current_block_mut(&mut self) -> Result<&mut BasicBlock, CompileError> {
         let id = self.current;
         self.blocks
-            .iter_mut()
-            .find(|block| block.id == id)
+            .get_mut(id.get() as usize)
+            .filter(|block| block.id == id)
             .ok_or_else(|| {
                 internal_compiler_error(
                     format!("Register IR current block {} is missing.", id.get()),
@@ -162,6 +166,8 @@ impl LoweringContext {
     }
 
     fn block(&self, id: BlockId) -> Option<&BasicBlock> {
-        self.blocks.iter().find(|block| block.id == id)
+        self.blocks
+            .get(id.get() as usize)
+            .filter(|block| block.id == id)
     }
 }

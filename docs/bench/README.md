@@ -4,12 +4,17 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`).
 
-The `tooling` group measures native editor workloads in release harness child
+The `tooling` group measures native editor and compiler workloads in release harness child
 processes, with the same timeout, save, compare, and record handling. The
 `analysis_queries` workload parses one generated editor buffer, warms its semantic
 analysis, then creates a fresh query service for each measured analysis request.
 Its arguments select the number of queries and declared functions. Parsing and
 warmup are excluded from the elapsed time.
+
+`compiler_lowering` parses a generated program with sequential branches, then
+measures repeated semantic analysis and IR lowering of the same AST. Its arguments
+select the iteration and branch counts. Parsing, warmup, bytecode emission, and
+VM execution are excluded, so it measures compiler work directly.
 
 ```sh
 cargo bench-fpas save analysis-before --group tooling
@@ -111,7 +116,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service` runs the native analysis workload and omits `path`
+- `driver` — defaults to `fpas`; `language-service` and `compiler-lowering` run native tooling workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

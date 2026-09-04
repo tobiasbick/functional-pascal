@@ -1,4 +1,4 @@
-//! Suite definition loading and running FPAS benchmark programs.
+//! Suite definition loading for FPAS programs and native tooling workloads.
 
 mod command;
 mod executable;
@@ -25,7 +25,7 @@ pub struct BenchSpec {
     /// Path to the `.fpas` program or `.fpasprj` project, relative to the repository root.
     #[serde(default)]
     pub path: String,
-    /// Arguments passed after `fpas run <path> --`.
+    /// Arguments passed to the selected workload driver.
     pub args: Vec<String>,
     /// Maximum wall-clock runtime before the process is terminated.
     pub timeout_ms: u64,
@@ -40,6 +40,8 @@ pub enum BenchDriver {
     Fpas,
     /// Measure repeated editor analysis using fresh query snapshots.
     LanguageService,
+    /// Measure semantic analysis and IR lowering of branch-heavy programs.
+    CompilerLowering,
 }
 
 #[derive(Debug, Deserialize)]

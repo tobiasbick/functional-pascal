@@ -1,9 +1,13 @@
 //! Mutable CFG, lexical-scope, local, and loop lowering state.
 
 mod bindings;
+mod block_order;
 mod blocks;
 mod debug;
 mod descriptors;
+
+#[cfg(test)]
+mod block_order_tests;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
@@ -454,35 +458,4 @@ fn empty_block(id: BlockId) -> BasicBlock {
         instructions: Vec::new(),
         terminators: Vec::new(),
     }
-}
-
-fn reverse_postorder(blocks: &[BasicBlock], entry: BlockId) -> Vec<BasicBlock> {
-    fn visit(
-        id: BlockId,
-        blocks: &[BasicBlock],
-        seen: &mut Vec<BlockId>,
-        postorder: &mut Vec<BlockId>,
-    ) {
-        if seen.contains(&id) {
-            return;
-        }
-        seen.push(id);
-        if let Some(block) = blocks.iter().find(|block| block.id == id)
-            && let Some(terminator) = block.terminators.first()
-        {
-            for successor in terminator.targets().into_iter().rev() {
-                visit(successor.block, blocks, seen, postorder);
-            }
-        }
-        postorder.push(id);
-    }
-
-    let mut seen = Vec::new();
-    let mut postorder = Vec::new();
-    visit(entry, blocks, &mut seen, &mut postorder);
-    postorder
-        .into_iter()
-        .rev()
-        .filter_map(|id| blocks.iter().find(|block| block.id == id).cloned())
-        .collect()
 }

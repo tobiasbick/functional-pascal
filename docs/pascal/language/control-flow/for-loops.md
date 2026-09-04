@@ -32,7 +32,11 @@ no iterations. After the last iteration, including one ending with `continue`, t
 loop exits before incrementing or decrementing the counter. This also applies when
 the terminal bound is the minimum or maximum integer value.
 
-Counting `for` lowers to explicit IR blocks and typed integer register instructions.
+Boolean counters follow the order `false`, `true`; both directions and empty
+ranges use the same inclusive-bound rules. The counter retains its Boolean type
+inside the body. Simple enum counters follow their declared ordinal order.
+
+Counting `for` lowers to explicit IR blocks and typed register instructions.
 The initial comparison rejects empty ranges; the loop back edge checks equality
 with the saved end bound before advancing the counter. `for-in` uses a saved
 collection and an integer index checked against its length.

@@ -1,6 +1,7 @@
 use super::*;
 
 mod counting;
+mod ordinal;
 mod repetition;
 
 #[test]

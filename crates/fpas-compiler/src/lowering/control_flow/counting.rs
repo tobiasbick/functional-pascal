@@ -2,7 +2,7 @@
 //!
 //! Documentation: `docs/pascal/language/control-flow/for-loops.md`.
 
-use fpas_ir::{BinaryOperation, Constant, Operation, Terminator};
+use fpas_ir::{BinaryOperation, Constant, Operation, Terminator, UnaryOperation};
 use fpas_parser::{Expr, ForDirection, Stmt};
 
 use crate::CompileError;
@@ -21,12 +21,13 @@ impl LoweringContext {
         body: &Stmt,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
+        let counter_type = self.expression_ir_type(start)?;
         let start_value = self.lower_expression(start)?;
         let end_value = self.lower_expression(end)?;
         self.begin_scope();
-        let variable_local = self.declare_local(variable, types::INTEGER, true, span)?;
+        let variable_local = self.declare_local(variable, counter_type, true, span)?;
         self.write_local(variable_local, start_value, span)?;
-        let end_local = self.declare_hidden_local(types::INTEGER, span)?;
+        let end_local = self.declare_hidden_local(counter_type, span)?;
         self.write_local(end_local, end_value, span)?;
 
         let condition_block = self.new_block(span)?;
@@ -37,12 +38,13 @@ impl LoweringContext {
         self.jump(condition_block)?;
 
         self.switch_to(condition_block);
-        let current =
-            self.emit_value(Operation::ReadLocal(variable_local), types::INTEGER, span)?;
-        let bound = self.emit_value(Operation::ReadLocal(end_local), types::INTEGER, span)?;
-        let comparison = match direction {
-            ForDirection::To => BinaryOperation::LessEqualInteger,
-            ForDirection::Downto => BinaryOperation::GreaterEqualInteger,
+        let current = self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
+        let bound = self.emit_value(Operation::ReadLocal(end_local), counter_type, span)?;
+        let comparison = match (direction, counter_type == types::BOOLEAN) {
+            (ForDirection::To, true) => BinaryOperation::LessEqualDynamic,
+            (ForDirection::Downto, true) => BinaryOperation::GreaterEqualDynamic,
+            (ForDirection::To, false) => BinaryOperation::LessEqualInteger,
+            (ForDirection::Downto, false) => BinaryOperation::GreaterEqualInteger,
         };
         let condition = self.emit_binary(comparison, current, bound, types::BOOLEAN, span)?;
         self.terminate(Terminator::Branch {
@@ -62,9 +64,8 @@ impl LoweringContext {
         }
 
         self.switch_to(terminal_block);
-        let current =
-            self.emit_value(Operation::ReadLocal(variable_local), types::INTEGER, span)?;
-        let bound = self.emit_value(Operation::ReadLocal(end_local), types::INTEGER, span)?;
+        let current = self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
+        let bound = self.emit_value(Operation::ReadLocal(end_local), counter_type, span)?;
         let finished =
             self.emit_binary(BinaryOperation::Equal, current, bound, types::BOOLEAN, span)?;
         self.terminate(Terminator::Branch {
@@ -74,14 +75,25 @@ impl LoweringContext {
         })?;
 
         self.switch_to(increment_block);
-        let current =
-            self.emit_value(Operation::ReadLocal(variable_local), types::INTEGER, span)?;
-        let one = self.emit_value(Operation::Const(Constant::Integer(1)), types::INTEGER, span)?;
-        let operation = match direction {
-            ForDirection::To => BinaryOperation::AddInteger,
-            ForDirection::Downto => BinaryOperation::SubtractInteger,
+        let current = self.emit_value(Operation::ReadLocal(variable_local), counter_type, span)?;
+        let updated = if counter_type == types::BOOLEAN {
+            self.emit_value(
+                Operation::Unary {
+                    operation: UnaryOperation::NotBoolean,
+                    operand: current,
+                },
+                counter_type,
+                span,
+            )?
+        } else {
+            let one =
+                self.emit_value(Operation::Const(Constant::Integer(1)), types::INTEGER, span)?;
+            let operation = match direction {
+                ForDirection::To => BinaryOperation::AddInteger,
+                ForDirection::Downto => BinaryOperation::SubtractInteger,
+            };
+            self.emit_binary(operation, current, one, counter_type, span)?
         };
-        let updated = self.emit_binary(operation, current, one, types::INTEGER, span)?;
         self.write_local(variable_local, updated, span)?;
         self.jump(body_block)?;
         self.pop_loop();

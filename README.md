@@ -14,7 +14,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
-- **Standard library** — Built-in `Std.*` units for console I/O, TUI, native graphics, strings, math, arrays, tasks, and more.
+- **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, and integrated tests.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.

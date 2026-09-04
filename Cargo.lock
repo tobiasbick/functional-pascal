@@ -393,8 +393,6 @@ version = "0.0.1"
 dependencies = [
  "fpas-diagnostics",
  "num_enum",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -448,7 +446,6 @@ dependencies = [
  "fpas-lexer",
  "fpas-parser",
  "fpas-vm",
- "serde",
  "serde_json",
 ]
 

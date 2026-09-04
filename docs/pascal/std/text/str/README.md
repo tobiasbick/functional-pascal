@@ -68,9 +68,13 @@ Requires `uses Std.Str;`.
 
 ## Implementation (contributors)
 
+Search predicates, `IndexOf`, `LastIndexOf`, `IsNumeric`, and `CharAt` borrow
+their input strings. They do not copy the complete input before querying it.
+Character indices retain their Unicode scalar semantics.
+
 | Concern | Location |
 |---------|-----------|
-| Algorithms | [`str.rs`](../../../../../crates/fpas-std/src/str.rs) |
+| Algorithms | [`str/mod.rs`](../../../../../crates/fpas-std/src/str/mod.rs) |
 | Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
 | String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-vm/src/vm/value_ops/scalar.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |

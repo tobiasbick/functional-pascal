@@ -1,3 +1,5 @@
+mod search;
+
 use super::*;
 use crate::limits::MAX_COLLECTION_LEN;
 use fpas_diagnostics::codes::{

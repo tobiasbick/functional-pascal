@@ -44,19 +44,19 @@ pub(crate) fn run(
             call.push(Value::Str(s.trim().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::Contains) => {
-            let sub = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Boolean(s.contains(&sub)));
+            let sub = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(s.contains(sub.as_ref())));
         }
         Intrinsic::Str(StrIntrinsic::StartsWith) => {
-            let pre = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Boolean(s.starts_with(&pre)));
+            let pre = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(s.starts_with(pre.as_ref())));
         }
         Intrinsic::Str(StrIntrinsic::EndsWith) => {
-            let suf = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Boolean(s.ends_with(&suf)));
+            let suf = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(s.ends_with(suf.as_ref())));
         }
         Intrinsic::Str(StrIntrinsic::Substring) => {
             let len = pop_int(pop_value(call, location)?, location)?;
@@ -77,10 +77,10 @@ pub(crate) fn run(
             call.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::IndexOf) => {
-            let sub = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let sub = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let idx = s
-                .find(&sub)
+                .find(sub.as_ref())
                 .map(|b| s[..b].chars().count() as i64)
                 .unwrap_or(-1);
             call.push(Value::Integer(idx));
@@ -122,8 +122,8 @@ pub(crate) fn run(
             call.push(Value::Str(out.into()));
         }
         Intrinsic::Str(StrIntrinsic::IsNumeric) => {
-            let s = pop_string(pop_value(call, location)?, location)?;
-            call.push(Value::Boolean(is_pascal_numeric(&s)));
+            let s = expect_str(pop_value(call, location)?, location)?;
+            call.push(Value::Boolean(is_pascal_numeric(s)));
         }
         Intrinsic::Str(StrIntrinsic::Repeat) => {
             let n = pop_int(pop_value(call, location)?, location)?;
@@ -195,7 +195,7 @@ pub(crate) fn run(
         }
         Intrinsic::Str(StrIntrinsic::CharAt) => {
             let idx = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let character = usize::try_from(idx)
                 .ok()
                 .and_then(|index| s.chars().nth(index));
@@ -299,10 +299,10 @@ pub(crate) fn run(
             call.push(Value::Str(s.trim_end().to_string().into()));
         }
         Intrinsic::Str(StrIntrinsic::LastIndexOf) => {
-            let sub = pop_string(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
+            let sub = expect_str(pop_value(call, location)?, location)?;
+            let s = expect_str(pop_value(call, location)?, location)?;
             let idx = s
-                .rfind(&sub)
+                .rfind(sub.as_ref())
                 .map(|b| s[..b].chars().count() as i64)
                 .unwrap_or(-1);
             call.push(Value::Integer(idx));

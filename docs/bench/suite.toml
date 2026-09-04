@@ -149,3 +149,10 @@ group = "tooling"
 driver = "language-service"
 args = ["1000", "500"]
 timeout_ms = 60000
+
+[[bench]]
+id = "string_search"
+group = "vm"
+path = "examples/pascal/vm/string_search_benchmark.fpas"
+args = ["500000"]
+timeout_ms = 120000

@@ -14,6 +14,31 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-04 — Borrow string inputs for search and character queries
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6704 | throughput: 7458233 iters/s |
+| global_access | 491 | throughput: 10183299 global updates/s |
+| record_field_access | 1489 | throughput: 10073875 field accesses/s |
+| closure_call | 453 | throughput: 6622516 closure calls/s |
+| branch_dispatch | 3203 | throughput: 6244146 branches/s |
+| dynamic_numeric | 850 | throughput: 5882352 dynamic numeric ops/s |
+| array_push | 207 | throughput: 9661835 pushes/s |
+| array_length | 73 | throughput: 6849315 lengths/s |
+| string_concat | 2096 | throughput: 2385496 concats/s |
+| string_length | 71 | throughput: 7042253 lengths/s |
+| intrinsic_dispatch | 1741 | throughput: 8615738 intrinsic calls/s |
+| function_call | 663 | throughput: 9049773 calls/s |
+| array_callbacks | 898 | throughput: 10690423 callbacks/s |
+| record_update | 364 | throughput: 2747252 updates/s |
+| unicode_char_at | 1125 | throughput: 2666666 chars/s |
+| wrapper_payload | 1439 | throughput: 6949270 wrappers/s |
+| string_search | 295 | - |
+
 ## 2026-09-04 — Reuse immutable analysis across editor query snapshots
 
 - Group: `tooling`

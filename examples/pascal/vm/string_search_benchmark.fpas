@@ -1,0 +1,68 @@
+// Measures short searches on long strings without including input construction.
+program VmStringSearchBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+
+function RunSearch(Text: string; Iterations: integer): integer;
+begin
+  mutable var Matches: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    if Std.Str.StartsWith(Text, 'é') then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.EndsWith(Text, '😀') then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.Contains(Text, 'é') then
+    begin
+      Matches := Matches + 1
+    end
+  end;
+
+  return Matches
+end;
+
+begin
+  if (ParamCount() < 1) or (ParamCount() > 2) then
+  begin
+    panic('usage: string_search_benchmark.fpas -- ITERATIONS [MAX_MILLIS]')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  mutable var MaxMillis: integer := 0;
+  if ParamCount() = 2 then
+  begin
+    MaxMillis := StrToInt(ParamStr(1));
+    if MaxMillis < 1 then
+    begin
+      panic('MAX_MILLIS must be positive')
+    end
+  end;
+  var Text: string := ('é' + Std.Str.RepeatStr('x', 32768)) + '😀';
+  if RunSearch(Text, 1000) <> 3000 then
+  begin
+    panic('warmup search mismatch')
+  end;
+  var Started: integer := MonotonicMillis();
+  var Matches: integer := RunSearch(Text, Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  if Matches <> Iterations * 3 then
+  begin
+    panic('search result mismatch')
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('matches: ' + IntToStr(Matches));
+  if (MaxMillis > 0) and (Elapsed > MaxMillis) then
+  begin
+    panic('string search benchmark exceeded MAX_MILLIS')
+  end
+end.

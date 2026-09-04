@@ -1,5 +1,7 @@
 use super::*;
 
+mod counting;
+
 #[test]
 fn for_in_array_and_dictionary_execute() {
     assert_succeeds(

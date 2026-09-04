@@ -101,6 +101,7 @@ impl LoweringContext {
         }
     }
 
+    /// Finalizes reachable code and its source sequence points into one IR function.
     pub(in crate::lowering) fn finish(
         mut self,
         span: Span,
@@ -117,6 +118,11 @@ impl LoweringContext {
                 span.column,
             ));
         }
+        let reachable: std::collections::BTreeSet<_> =
+            blocks.iter().map(|block| block.id).collect();
+        self.debug
+            .sequence_points
+            .retain(|point| reachable.contains(&point.block));
         let function = Function {
             id: self.function_id,
             name: self.program_name,

@@ -5,6 +5,7 @@ use fpas_bytecode::{
 };
 
 use super::Worker;
+use super::arguments::CallbackArguments;
 use super::operation::{CallbackOperation, Cursor, Dictionary, Sequence, SingleWrapper};
 use crate::vm::VmError;
 
@@ -137,13 +138,15 @@ fn result_operation(
         .ok_or_else(|| worker.arity_error("result callback"))?;
     let callback = require_callback_argument(worker, arguments, "result callback")?.clone();
     let (arguments, wrapper) = match (operation, value) {
-        (ResultIntrinsic::Map, Value::ResultOk(inner)) => {
-            (vec![(**inner).clone()], SingleWrapper::ResultOk)
-        }
+        (ResultIntrinsic::Map, Value::ResultOk(inner)) => (
+            CallbackArguments::one((**inner).clone()),
+            SingleWrapper::ResultOk,
+        ),
         (ResultIntrinsic::AndThen, Value::ResultOk(inner))
-        | (ResultIntrinsic::OrElse, Value::ResultError(inner)) => {
-            (vec![(**inner).clone()], SingleWrapper::Direct)
-        }
+        | (ResultIntrinsic::OrElse, Value::ResultError(inner)) => (
+            CallbackArguments::one((**inner).clone()),
+            SingleWrapper::Direct,
+        ),
         (_, Value::ResultOk(_) | Value::ResultError(_)) => return Ok(None),
         _ => return Err(worker.callback_type_error("result", Some(value))),
     };
@@ -169,13 +172,17 @@ fn option_operation(
         .ok_or_else(|| worker.arity_error("option callback"))?;
     let callback = require_callback_argument(worker, arguments, "option callback")?.clone();
     let (arguments, wrapper) = match (operation, value) {
-        (OptionIntrinsic::Map, Value::OptionSome(inner)) => {
-            (vec![(**inner).clone()], SingleWrapper::OptionSome)
+        (OptionIntrinsic::Map, Value::OptionSome(inner)) => (
+            CallbackArguments::one((**inner).clone()),
+            SingleWrapper::OptionSome,
+        ),
+        (OptionIntrinsic::AndThen, Value::OptionSome(inner)) => (
+            CallbackArguments::one((**inner).clone()),
+            SingleWrapper::Direct,
+        ),
+        (OptionIntrinsic::OrElse, Value::OptionNone) => {
+            (CallbackArguments::empty(), SingleWrapper::Direct)
         }
-        (OptionIntrinsic::AndThen, Value::OptionSome(inner)) => {
-            (vec![(**inner).clone()], SingleWrapper::Direct)
-        }
-        (OptionIntrinsic::OrElse, Value::OptionNone) => (Vec::new(), SingleWrapper::Direct),
         (_, Value::OptionSome(_) | Value::OptionNone) => return Ok(None),
         _ => return Err(worker.callback_type_error("option", Some(value))),
     };

@@ -153,7 +153,7 @@ impl Worker {
             match operation {
                 DictIntrinsic::Map => result.push((
                     key.clone(),
-                    self.call_callback_sync(callback, vec![value.clone()])?,
+                    self.call_callback_sync(callback, std::slice::from_ref(value))?,
                 )),
                 DictIntrinsic::Filter => {
                     let arguments = [key.clone(), value.clone()];
@@ -186,13 +186,13 @@ impl Worker {
             .ok_or_else(|| self.arity_error("result callback"))?;
         let result = match (operation, value) {
             (ResultIntrinsic::Map, Value::ResultOk(inner)) => Value::ResultOk(Box::new(
-                self.call_callback_sync(callback, vec![(**inner).clone()])?,
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?,
             )),
             (ResultIntrinsic::AndThen, Value::ResultOk(inner)) => {
-                self.call_callback_sync(callback, vec![(**inner).clone()])?
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }
             (ResultIntrinsic::OrElse, Value::ResultError(inner)) => {
-                self.call_callback_sync(callback, vec![(**inner).clone()])?
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }
             (_, Value::ResultOk(_) | Value::ResultError(_)) => value.clone(),
             _ => return Err(self.callback_type_error("result", Some(value))),
@@ -219,13 +219,13 @@ impl Worker {
             .ok_or_else(|| self.arity_error("option callback"))?;
         let result = match (operation, value) {
             (OptionIntrinsic::Map, Value::OptionSome(inner)) => Value::OptionSome(Box::new(
-                self.call_callback_sync(callback, vec![(**inner).clone()])?,
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?,
             )),
             (OptionIntrinsic::AndThen, Value::OptionSome(inner)) => {
-                self.call_callback_sync(callback, vec![(**inner).clone()])?
+                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }
             (OptionIntrinsic::OrElse, Value::OptionNone) => {
-                self.call_callback_sync(callback, Vec::new())?
+                self.call_callback_sync(callback, [])?
             }
             (_, Value::OptionSome(_) | Value::OptionNone) => value.clone(),
             _ => return Err(self.callback_type_error("option", Some(value))),

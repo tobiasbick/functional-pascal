@@ -116,6 +116,13 @@ args = ["100000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "task_array_callbacks"
+group = "concurrency"
+path = "examples/pascal/concurrency/task_array_callbacks_benchmark.fpas"
+args = ["20000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "tui_headless"
 group = "tui"
 path = "examples/pascal/tui/headless_render_benchmark.fpas"

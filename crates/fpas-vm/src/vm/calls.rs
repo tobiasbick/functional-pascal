@@ -203,33 +203,25 @@ impl Worker {
         function: &SharedFunction,
         arguments: &[Value],
     ) -> Result<(), VmError> {
-        let arguments = function
-            .bound_receiver
-            .iter()
-            .chain(arguments)
-            .cloned()
-            .collect::<Vec<_>>();
-        self.enter_call_with_values(
+        let argument_count = arguments
+            .len()
+            .saturating_add(usize::from(function.bound_receiver.is_some()));
+        let prepared = self.prepare_call(
             function.function,
             fpas_bytecode::NO_REGISTER,
-            &arguments,
-            &function.captures,
-        )
-    }
-
-    fn enter_call_with_values(
-        &mut self,
-        target: FunctionId,
-        destination: u16,
-        arguments: &[Value],
-        captures: &[Value],
-    ) -> Result<(), VmError> {
-        let prepared = self.prepare_call(target, destination, arguments.len(), captures.len())?;
+            argument_count,
+            function.captures.len(),
+        )?;
         self.activate_call(&prepared);
-        for (index, value) in arguments.iter().enumerate() {
-            self.store_register(self.base + index, value.clone())?;
+        let mut next = 0;
+        if let Some(receiver) = &function.bound_receiver {
+            self.store_register(self.base, receiver.clone())?;
+            next = 1;
         }
-        for (index, value) in captures.iter().enumerate() {
+        for (index, value) in arguments.iter().enumerate() {
+            self.store_register(self.base + next + index, value.clone())?;
+        }
+        for (index, value) in function.captures.iter().enumerate() {
             self.store_register(self.base + prepared.argument_count + index, value.clone())?;
         }
         self.function = prepared.target;

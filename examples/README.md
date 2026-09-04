@@ -106,6 +106,7 @@ target/release/fpas run examples/pascal/vm/array_callbacks_benchmark.fpas -- 500
 target/release/fpas run examples/pascal/vm/record_update_benchmark.fpas -- 1000000
 target/release/fpas run examples/pascal/vm/unicode_char_at_benchmark.fpas -- 3000000
 target/release/fpas run examples/pascal/concurrency/task_spawn_wait_benchmark.fpas -- 100000
+target/release/fpas run examples/pascal/concurrency/task_array_callbacks_benchmark.fpas -- 20000
 ```
 
 On Windows, invoke `target/release/fpas.exe`. Optional second argument `MAX_MILLIS` turns a slowdown into a panic. Compare several runs on the same machine with the same release binary and power settings; do not share one fixed threshold across unlike machines.
@@ -167,6 +168,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/concurrency/task_spawn_wait_benchmark.fpas` | Spawn plus `WaitAll` task-scheduling throughput |
+| `pascal/concurrency/task_array_callbacks_benchmark.fpas` | Resumable `Map`, `Filter`, and `Reduce` callback throughput inside a spawned task |
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
 | `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |

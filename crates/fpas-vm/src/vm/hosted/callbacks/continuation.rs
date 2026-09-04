@@ -46,7 +46,7 @@ pub(super) fn resume(worker: &mut Worker) -> Result<bool, VmError> {
     })?;
     match action {
         Advance::Call(arguments) => {
-            worker.enter_callback_inline(&callback, &arguments)?;
+            worker.enter_callback_inline(&callback, arguments.as_slice())?;
             let awaiting_depth = worker.call_stack.len();
             let Some(continuation) = worker.callback_continuations.last_mut() else {
                 return Err(worker.callback_state_error(

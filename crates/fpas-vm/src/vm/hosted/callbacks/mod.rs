@@ -1,5 +1,6 @@
 //! Higher-order collection, result, and option intrinsics.
 
+mod arguments;
 mod continuation;
 mod operation;
 mod plan;

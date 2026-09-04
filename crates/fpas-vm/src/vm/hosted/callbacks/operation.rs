@@ -2,6 +2,8 @@
 
 use fpas_bytecode::{SharedFunction, Value};
 
+use super::arguments::CallbackArguments;
+
 /// Complete resumable state for one higher-order intrinsic owned by a task.
 pub(in crate::vm) struct CallbackContinuation {
     pub(super) callback: SharedFunction,
@@ -29,7 +31,7 @@ pub(super) enum CallbackOperation {
     DictMap(Dictionary),
     DictFilter(Dictionary),
     Single {
-        arguments: Option<Vec<Value>>,
+        arguments: Option<CallbackArguments>,
         wrapper: SingleWrapper,
     },
 }
@@ -63,7 +65,7 @@ pub(super) enum SingleWrapper {
 
 /// Next action requested by the hosted-operation state machine.
 pub(super) enum Advance {
-    Call(Vec<Value>),
+    Call(CallbackArguments),
     Complete(Value),
 }
 
@@ -128,7 +130,10 @@ impl CallbackContinuation {
                 }
                 if let Some(value) = values.get(*next).cloned() {
                     *next += 1;
-                    Ok(Advance::Call(vec![accumulator.clone(), value]))
+                    Ok(Advance::Call(CallbackArguments::two(
+                        accumulator.clone(),
+                        value,
+                    )))
                 } else {
                     Ok(Advance::Complete(accumulator.clone()))
                 }
@@ -144,7 +149,7 @@ impl CallbackContinuation {
                 Ok(cursor
                     .next()
                     .map_or(Advance::Complete(Value::OptionNone), |value| {
-                        Advance::Call(vec![value])
+                        Advance::Call(CallbackArguments::one(value))
                     }))
             }
             CallbackOperation::ArrayFindIndex(cursor) => {
@@ -156,7 +161,7 @@ impl CallbackContinuation {
                 Ok(cursor
                     .next()
                     .map_or(Advance::Complete(Value::Integer(-1)), |value| {
-                        Advance::Call(vec![value])
+                        Advance::Call(CallbackArguments::one(value))
                     }))
             }
             CallbackOperation::ArrayAny(cursor) => {
@@ -168,7 +173,7 @@ impl CallbackContinuation {
                 Ok(cursor
                     .next()
                     .map_or(Advance::Complete(Value::Boolean(false)), |value| {
-                        Advance::Call(vec![value])
+                        Advance::Call(CallbackArguments::one(value))
                     }))
             }
             CallbackOperation::ArrayAll(cursor) => {
@@ -180,7 +185,7 @@ impl CallbackContinuation {
                 Ok(cursor
                     .next()
                     .map_or(Advance::Complete(Value::Boolean(true)), |value| {
-                        Advance::Call(vec![value])
+                        Advance::Call(CallbackArguments::one(value))
                     }))
             }
             CallbackOperation::ArrayFlatMap(sequence) => {
@@ -197,7 +202,7 @@ impl CallbackContinuation {
                 Ok(cursor
                     .next()
                     .map_or(Advance::Complete(Value::Unit), |value| {
-                        Advance::Call(vec![value])
+                        Advance::Call(CallbackArguments::one(value))
                     }))
             }
             CallbackOperation::DictMap(dictionary) => {
@@ -238,7 +243,7 @@ impl CallbackOperation {
     pub(super) fn first_arity(&self) -> usize {
         match self {
             Self::ArrayReduce { .. } | Self::DictFilter(_) => 2,
-            Self::Single { arguments, .. } => arguments.as_ref().map_or(0, Vec::len),
+            Self::Single { arguments, .. } => arguments.as_ref().map_or(0, CallbackArguments::len),
             _ => 1,
         }
     }
@@ -281,7 +286,7 @@ impl Sequence {
     fn next_or_array(&mut self) -> Advance {
         self.cursor.next().map_or_else(
             || Advance::Complete(Value::Array(std::mem::take(&mut self.output).into())),
-            |value| Advance::Call(vec![value]),
+            |value| Advance::Call(CallbackArguments::one(value)),
         )
     }
 }
@@ -308,7 +313,7 @@ impl Dictionary {
     fn next_map(&mut self) -> Advance {
         if let Some((_, value)) = self.entries.get(self.next) {
             self.next += 1;
-            Advance::Call(vec![value.clone()])
+            Advance::Call(CallbackArguments::one(value.clone()))
         } else {
             Advance::Complete(Value::dict(std::mem::take(&mut self.output)))
         }
@@ -317,7 +322,7 @@ impl Dictionary {
     fn next_filter(&mut self) -> Advance {
         if let Some((key, value)) = self.entries.get(self.next) {
             self.next += 1;
-            Advance::Call(vec![key.clone(), value.clone()])
+            Advance::Call(CallbackArguments::two(key.clone(), value.clone()))
         } else {
             Advance::Complete(Value::dict(std::mem::take(&mut self.output)))
         }
@@ -353,7 +358,7 @@ mod tests {
             SharedFunction::unbound(FunctionId::new(0), "callback".to_owned(), Vec::new()),
             None,
             CallbackOperation::Single {
-                arguments: Some(Vec::new()),
+                arguments: Some(CallbackArguments::empty()),
                 wrapper: SingleWrapper::Direct,
             },
         );

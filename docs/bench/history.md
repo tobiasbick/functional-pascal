@@ -14,6 +14,16 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-04 — after inline task callback arguments
+
+- Group: `concurrency`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| task_spawn_wait | 630 | throughput: 158730 tasks/s |
+| task_array_callbacks | 981 | throughput: 3914373 callbacks/s |
+
 ## 2026-09-04 — managed aggregate and string buffer reuse
 
 - Group: `all`

@@ -3,6 +3,7 @@ mod array;
 mod display;
 mod equal;
 mod function;
+mod managed_heap;
 mod string;
 
 pub use aggregate::{
@@ -12,6 +13,7 @@ pub use aggregate::{
 pub use array::SharedArray;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
+pub use managed_heap::managed_value_buffer;
 pub use string::SharedStr;
 
 /// Runtime value in the VM.

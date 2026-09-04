@@ -3,11 +3,30 @@
 use std::ops::Deref;
 use std::sync::Arc;
 
+use super::managed_heap::{managed_string_buffer, recycle_string};
+
 /// UTF-8 payload plus a cached Unicode scalar count for O(1) [`SharedStr::char_len`].
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct StrBody {
     data: String,
     char_len: usize,
+}
+
+impl Clone for StrBody {
+    fn clone(&self) -> Self {
+        let mut data = managed_string_buffer(self.data.len());
+        data.push_str(&self.data);
+        Self {
+            data,
+            char_len: self.char_len,
+        }
+    }
+}
+
+impl Drop for StrBody {
+    fn drop(&mut self) {
+        recycle_string(&mut self.data);
+    }
 }
 
 impl PartialEq for StrBody {
@@ -54,7 +73,7 @@ impl SharedStr {
 
     /// Concatenate two shared strings, summing cached character lengths.
     pub fn concat(left: &Self, right: &Self) -> Self {
-        let mut data = String::with_capacity(left.len() + right.len());
+        let mut data = managed_string_buffer(left.len() + right.len());
         data.push_str(left);
         data.push_str(right);
         Self(Arc::new(StrBody {
@@ -85,21 +104,34 @@ impl From<String> for SharedStr {
 
 impl From<&str> for SharedStr {
     fn from(value: &str) -> Self {
-        Self::from(value.to_owned())
+        let mut data = managed_string_buffer(value.len());
+        data.push_str(value);
+        Self::from_parts(data, count_chars(value))
     }
 }
 
 impl From<SharedStr> for String {
     fn from(value: SharedStr) -> Self {
-        Arc::unwrap_or_clone(value.0).data
+        match Arc::try_unwrap(value.0) {
+            Ok(mut body) => std::mem::take(&mut body.data),
+            Err(body) => {
+                let mut data = managed_string_buffer(body.data.len());
+                data.push_str(&body.data);
+                data
+            }
+        }
     }
 }
 
 impl FromIterator<char> for SharedStr {
     fn from_iter<T: IntoIterator<Item = char>>(iter: T) -> Self {
-        let chars: Vec<char> = iter.into_iter().collect();
-        let char_len = chars.len();
-        Self::from_parts(chars.into_iter().collect(), char_len)
+        let mut data = managed_string_buffer(0);
+        let mut char_len = 0;
+        for character in iter {
+            data.push(character);
+            char_len += 1;
+        }
+        Self::from_parts(data, char_len)
     }
 }
 

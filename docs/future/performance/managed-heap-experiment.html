@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FPAS managed heap experiment</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#f4f1e8;--panel:#fffdf7;--ink:#18201d;--muted:#5f6963;--line:#c9d0c8;--accent:#075c4b;--good:#16724f;--warn:#b94f2b;--soft:#e5eee8}
+    @media(prefers-color-scheme:dark){:root{--bg:#111713;--panel:#18211c;--ink:#edf4ee;--muted:#abb8af;--line:#3b4b40;--accent:#64d2b3;--good:#70d5a5;--warn:#ff9a74;--soft:#22332a}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.56 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1160px;margin:auto;padding:32px 24px 80px}nav{display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:46px;font-size:.92rem}a{color:var(--accent)}
+    h1{max-width:920px;margin:.15em 0 .3em;font:700 clamp(2.25rem,6vw,4.9rem)/.96 Georgia,serif;letter-spacing:-.04em}h2{margin:2.2em 0 .6em;font:700 1.75rem/1.15 Georgia,serif}h3{margin:1.5em 0 .4em}.lede{max-width:78ch;color:var(--muted);font-size:1.15rem}.stamp{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.09em;font-size:.76rem}
+    .callout{padding:17px 20px;margin:24px 0;background:var(--soft);border-left:5px solid var(--good)}.warning{border-left-color:var(--warn)}.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:28px 0}.metric{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}.metric strong{display:block;color:var(--good);font-size:1.55rem}.metric span{color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin:18px 0 28px;background:var(--panel);font-size:.93rem}th,td{padding:10px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}th{background:var(--soft)}.gain{color:var(--good);font-weight:700}code{font-family:"Cascadia Code",Consolas,monospace;font-size:.9em}pre{overflow:auto;padding:16px;background:#0f1713;color:#eaf5ed;border-radius:9px}ul,ol{max-width:92ch}footer{margin-top:60px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}@media(max-width:760px){table{display:block;overflow-x:auto}}
+  </style>
+</head>
+<body><main>
+  <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="fast-interpreter-plan.html">Fast interpreter</a><a href="runtime-rewrite-options.html">Runtime rewrites</a></nav>
+  <div class="stamp">Production-path experiment · accepted 4 September 2026</div>
+  <h1>A bounded managed heap helps FPAS</h1>
+  <p class="lede">The experiment retains FPAS value semantics and the existing bytecode while reusing aggregate and string buffers on the thread that releases them. Repeated A/B measurements show material gains in both end-to-end TUI workloads, so the implementation is retained.</p>
+
+  <div class="callout"><strong>Decision: retain.</strong> The fresh A/B median improved <code>tui_headless</code> by 7.0% and <code>notes_headless</code> by 7.2%. Record-heavy microbenchmarks improved by roughly 14%, and string concatenation by roughly 6%. No long-running guard workload showed a repeatable regression.</div>
+
+  <section class="metrics" aria-label="Measured gains">
+    <div class="metric"><strong>−7.0%</strong><span>TUI median, 4102 → 3814 ms</span></div>
+    <div class="metric"><strong>−7.2%</strong><span>Notes median, 8688 → 8062 ms</span></div>
+    <div class="metric"><strong>≈−14%</strong><span>record field access and update</span></div>
+    <div class="metric"><strong>≈−6%</strong><span>string concatenation</span></div>
+  </section>
+
+  <h2>What “managed heap” means here</h2>
+  <p>A managed heap is runtime-owned storage for dynamically allocated values. Instead of asking the system allocator to create and destroy every array, record, string, or object independently, the runtime controls allocation and reclamation. Large VMs often combine compact handles or tagged slots with tracing garbage collection. Region systems instead free many short-lived objects together.</p>
+  <p>This experiment deliberately tests a smaller production seam first. FPAS still stores aggregate bodies behind <code>Arc</code> and preserves copy-on-write behavior. When the final array, record, enum, dictionary, or string owner disappears, an eligible cleared buffer enters a bounded thread-local pool. A later aggregate construction can take that buffer without another allocator round trip.</p>
+  <pre>FPAS Value (unchanged 16-byte ceiling)
+  └─ Arc/COW body (unchanged ownership semantics)
+       ├─ Vec&lt;Value&gt;          arrays, records, enums
+       ├─ Vec&lt;(Value,Value)&gt; dictionaries
+       └─ String              UTF-8 payloads
+             ↓ final owner drops
+       bounded thread-local capacity buckets
+             ↓ next matching construction
+       cleared buffer reused</pre>
+
+  <div class="callout warning"><strong>Not a tracing garbage collector:</strong> this does not introduce handles, root maps, safepoints, barriers, cycle collection, object movement, or stop-the-world pauses. Atomic <code>Arc</code> reference counts and one small body allocation per shared object remain. “Managed heap” in this report means a bounded runtime-managed reuse layer.</div>
+
+  <h2>Implementation</h2>
+  <table>
+    <thead><tr><th>Area</th><th>Change</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><code>fpas-bytecode/value/managed_heap.rs</code></td><td>Three thread-local pools with logarithmic capacity buckets.</td><td>Reuse value, key/value-pair, and string buffers with constant-time removal from a matching bucket.</td></tr>
+      <tr><td>Arrays, records, enums, dictionaries</td><td>Final COW owners clear and recycle eligible backing vectors; detach clones request managed buffers.</td><td>Targets short-lived render trees and aggregate updates without changing public value behavior.</td></tr>
+      <tr><td>Strings</td><td>Concatenation, cloning, and character collection request reusable string storage.</td><td>Targets the measured concatenation workload and repeated UI text construction.</td></tr>
+      <tr><td>VM aggregate construction</td><td>Verified register windows are built in managed value buffers.</td><td>Connects the pool to a real high-frequency producer rather than a synthetic Rust-only loop.</td></tr>
+      <tr><td>Bounds</td><td>Maximum reusable capacity 4096 items/bytes; at most 4 MiB retained per pool and thread; at most 1024 buffers per bucket.</td><td>Prevents one unusual program or frame from turning reuse into unbounded retention.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Benchmark method and evidence</h2>
+  <p>The first complete baseline run was cold and visibly inconsistent with later TUI measurements, so it was not used. The saved baseline was replaced with a stable warm full-suite run. The candidate was then measured twice, stashed completely, the unchanged <code>HEAD</code> was rebuilt and measured twice, and the exact candidate was restored, rebuilt, and measured twice more. The table uses the median of the two fresh unchanged runs and the four candidate runs surrounding that A/B switch.</p>
+  <table>
+    <thead><tr><th>Benchmark</th><th>Unchanged runs, ms</th><th>Managed runs, ms</th><th>Compared medians</th><th>Result</th></tr></thead>
+    <tbody>
+      <tr><td><code>record_field_access</code></td><td>1716, 1713</td><td>1507, 1477, 1449, 1469</td><td>1715 → 1473</td><td class="gain">−14.1%</td></tr>
+      <tr><td><code>record_update</code></td><td>432, 427</td><td>375, 366, 363, 370</td><td>430 → 368</td><td class="gain">−14.4%</td></tr>
+      <tr><td><code>string_concat</code></td><td>2235, 2188</td><td>2076, 2091, 2127, 2091</td><td>2212 → 2091</td><td class="gain">−5.5%</td></tr>
+      <tr><td><code>tui_headless</code></td><td>4141, 4062</td><td>3922, 3823, 3805, 3752</td><td>4102 → 3814</td><td class="gain">−7.0%</td></tr>
+      <tr><td><code>notes_headless</code></td><td>8643, 8733</td><td>8087, 8074, 8050, 7960</td><td>8688 → 8062</td><td class="gain">−7.2%</td></tr>
+    </tbody>
+  </table>
+  <p>The accepted history run recorded 1483 ms for record field access, 365 ms for record update, 2096 ms for string concatenation, 3767 ms for TUI, and 8079 ms for Notes. Very short unrelated rows occasionally produced isolated outliers on both unchanged and managed builds. They did not repeat across the switch and are not attributed to this change.</p>
+
+  <h2>Correctness and implementation finding</h2>
+  <p>The first pool version found an important destruction-order hazard: it cleared nested <code>Value</code>s while holding a mutable borrow of the thread-local pool. Dropping a nested aggregate could re-enter the same pool and abort the process. The final design takes and clears the buffer before borrowing the pool, and uses fallible thread-local access during thread shutdown. Regression tests cover clearing and reuse, oversized-buffer rejection, string reuse, and recycling on the thread that performs the final drop.</p>
+  <ul>
+    <li>FPAS syntax, semantics, bytecode, value-size ceiling, debugger protocol, and artifact format are unchanged.</li>
+    <li>Copy-on-write tests for arrays, records, enums, and dictionaries continue to pass.</li>
+    <li>The bytecode and VM test suites passed during development; final workspace verification is required by the commit gate.</li>
+  </ul>
+
+  <h2>What this result does and does not justify</h2>
+  <p>The result proves that allocator traffic and backing-buffer destruction were material in the measured aggregate and TUI paths. It justifies retaining this bounded layer. It does not prove that replacing every <code>Arc</code> with handles and adding a tracing collector would provide a proportional gain: the accepted layer already removes part of that cost, while a collector would add root tracking, safepoints, barriers, task-sharing policy, debugger integration, and pause behavior.</p>
+  <p>A full tagged-slot or tracing heap remains deferred. Re-enter that design only when allocation/self-time evidence attributes at least 25% of a target workload to costs still present after buffer reuse, and when a second production prototype can beat this new baseline in at least two end-to-end workloads without regressing startup or tasks.</p>
+
+  <h2>Possible next refinements</h2>
+  <ol>
+    <li>Add low-overhead counters in a benchmark-only build to measure pool hit rate, retained bytes, and rejected oversized buffers.</li>
+    <li>Profile remaining <code>Arc</code> allocation/reference-count and recursive-drop cost after the accepted reuse layer.</li>
+    <li>If evidence is strong, prototype compact heap handles for one isolated immutable aggregate type before designing collection.</li>
+    <li>Do not add a collector merely to rename the existing buffer pool; the extra machinery must remove measured remaining cost.</li>
+  </ol>
+
+  <footer>This is a measured implementation report under <code>docs/future/</code>, not a language specification. Current user-visible FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark history remains under <code>docs/bench/history.md</code>.</footer>
+</main></body></html>

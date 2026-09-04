@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use super::Value;
+use super::managed_heap::{clone_pairs, clone_values, recycle_pairs, recycle_values};
 use crate::{EnumTypeId, EnumVariantId, RecordTypeId};
 
 /// Shared immutable metadata for one runtime record layout.
@@ -18,12 +19,27 @@ pub struct RuntimeRecordLayout {
 }
 
 /// Stored record body with copy-on-write values.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct RecordValue {
     /// Shared layout metadata.
     pub layout: Arc<RuntimeRecordLayout>,
     /// Values in layout order.
     pub values: Vec<Value>,
+}
+
+impl Clone for RecordValue {
+    fn clone(&self) -> Self {
+        Self {
+            layout: Arc::clone(&self.layout),
+            values: clone_values(&self.values),
+        }
+    }
+}
+
+impl Drop for RecordValue {
+    fn drop(&mut self) {
+        recycle_values(&mut self.values);
+    }
 }
 
 /// Compact copy-on-write record value.
@@ -65,12 +81,27 @@ pub struct RuntimeEnumLayout {
 }
 
 /// Stored enum body.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct EnumValue {
     /// Shared variant layout metadata.
     pub layout: Arc<RuntimeEnumLayout>,
     /// Associated values in declaration order.
     pub values: Vec<Value>,
+}
+
+impl Clone for EnumValue {
+    fn clone(&self) -> Self {
+        Self {
+            layout: Arc::clone(&self.layout),
+            values: clone_values(&self.values),
+        }
+    }
+}
+
+impl Drop for EnumValue {
+    fn drop(&mut self) {
+        recycle_values(&mut self.values);
+    }
 }
 
 /// Compact shared enum value.
@@ -96,19 +127,43 @@ impl SharedEnum {
     }
 }
 
+#[derive(Debug)]
+struct DictValue {
+    pairs: Vec<(Value, Value)>,
+}
+
+impl Clone for DictValue {
+    fn clone(&self) -> Self {
+        Self {
+            pairs: clone_pairs(&self.pairs),
+        }
+    }
+}
+
+impl Drop for DictValue {
+    fn drop(&mut self) {
+        recycle_pairs(&mut self.pairs);
+    }
+}
+
 /// Copy-on-write storage for ordered dictionary pairs.
+///
+/// Final owners recycle bounded pair buffers through the current thread's managed runtime heap.
 #[derive(Debug, Clone)]
-pub struct SharedDict(Arc<Vec<(Value, Value)>>);
+pub struct SharedDict(Arc<DictValue>);
 
 impl From<Vec<(Value, Value)>> for SharedDict {
     fn from(pairs: Vec<(Value, Value)>) -> Self {
-        Self(Arc::new(pairs))
+        Self(Arc::new(DictValue { pairs }))
     }
 }
 
 impl From<SharedDict> for Vec<(Value, Value)> {
     fn from(pairs: SharedDict) -> Self {
-        Arc::unwrap_or_clone(pairs.0)
+        match Arc::try_unwrap(pairs.0) {
+            Ok(mut body) => std::mem::take(&mut body.pairs),
+            Err(body) => clone_pairs(&body.pairs),
+        }
     }
 }
 
@@ -116,13 +171,13 @@ impl Deref for SharedDict {
     type Target = Vec<(Value, Value)>;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        &self.0.pairs
     }
 }
 
 impl DerefMut for SharedDict {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        Arc::make_mut(&mut self.0)
+        &mut Arc::make_mut(&mut self.0).pairs
     }
 }
 

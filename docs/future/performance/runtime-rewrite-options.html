@@ -15,16 +15,16 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="fast-interpreter-plan.html">Fast interpreter plan</a></nav>
-  <div class="stamp">Deferred architecture options · no implementation</div>
+  <div class="stamp">Architecture options · bounded heap slice accepted</div>
   <h1>If the interpreter is still too slow, replace the right layer</h1>
   <p class="lede">FPAS is free to replace its bytecode and runtime internals. That freedom is valuable only after the common overhead is measured. These options are deliberately more invasive and should compete against a restored fast-interpreter baseline.</p>
 
-  <div class="callout"><strong>Strong recommendation:</strong> stop incremental interpreter work at the measured baseline. Stage 2 rejected branch-target, opcode-mirror, and fetch optimizations; Stage 5b rejected synchronous callback frames; result-capacity preallocation produced only a 1.0% longer-run median gain; Stage 6b rejected both cancellation-polling variants; typed-real arithmetic and comparisons gained only 0.8% and 0.5%; and runtime compare/branch fusion slowed its target by 3.5%. Retain the six accepted changes. Compact execution images, a managed heap, and tiered compilation remain deferred because their re-entry gates are not met.</div>
+  <div class="callout"><strong>Strong recommendation:</strong> retain the six accepted interpreter changes and the accepted <a href="managed-heap-experiment.html">bounded managed buffer heap</a>. Fresh A/B medians improved both end-to-end TUI workloads by about 7%, record operations by about 14%, and string concatenation by about 6%. This validates runtime-managed reuse, not a full tracing collector. Compact execution images, tagged heap handles/tracing collection, and tiered compilation remain deferred until evidence identifies material cost still present after buffer reuse.</div>
 
   <h2>Three options</h2>
   <section class="options">
     <article class="option"><h3>A · Compact quickened VM</h3><p>Keep interpretation, replace 64-bit transport instructions with a compact or predecoded runtime format, resolve metadata once, and introduce profile-backed superinstructions.</p><p class="score">Cost: medium · Risk: medium · Best near-term rewrite</p></article>
-    <article class="option"><h3>B · Managed heap runtime</h3><p>Replace per-value <code>Arc</code>/COW ownership with tagged slots and handles into a VM-owned heap. Use tracing collection or regions to reclaim object graphs in batches.</p><p class="score">Cost: high · Risk: high · Best for TUI/aggregate allocation</p></article>
+    <article class="option"><h3>B · Managed heap runtime</h3><p>A bounded buffer-reuse layer is now implemented and retained. A later major rewrite could replace per-value <code>Arc</code>/COW ownership with tagged slots and handles into a VM-owned tracing heap.</p><p class="score">Bounded slice: accepted · Full heap: high cost and risk</p></article>
     <article class="option"><h3>C · Tiered native execution</h3><p>Interpret cold code, count method/back-edge heat, compile selected functions or loops from the existing typed IR, and retain interpreter fallback.</p><p class="score">Cost: very high · Risk: very high · Highest eventual ceiling</p></article>
   </section>
 
@@ -66,7 +66,8 @@
   </ol>
 
   <h3>FPAS-specific recommendation</h3>
-  <p>Prototype an epoch arena only for one measured allocation-heavy TUI path before committing to a whole-runtime collector. If it proves that aggregate construction/drop dominates, design a compact slot and managed heap together. Do not replace <code>Arc</code> globally based only on aesthetic preference: the earlier compact shared-value change produced major regressions before later optimizations recovered them.</p>
+  <p>The bounded production-path prototype is complete. It preserves the 16-byte <code>Value</code> ceiling and <code>Arc</code>/COW semantics while recycling eligible value, pair, and string buffers through bounded thread-local capacity buckets. Fresh A/B medians improved <code>tui_headless</code> by 7.0%, <code>notes_headless</code> by 7.2%, record operations by roughly 14%, and string concatenation by roughly 6%. See the <a href="managed-heap-experiment.html">full experiment report</a>.</p>
+  <p>Keep this layer. Do not infer that a tracing collector will produce the same additional gain: body allocations, atomic reference counts, recursive drops, roots, task sharing, and debugger access still need separate measurement. Design compact slots and a full heap together only when post-reuse profiles show that at least 25% of a target workload is spent in costs that design directly removes.</p>
 
   <h2>Option C — tiered compilation from typed IR</h2>
   <p>The repository already has target-independent typed IR, but production execution does not use it. A tiered design can retain the interpreter for startup and debugging, collect cheap counters at method entries and backward branches, then compile only hot functions with Cranelift or another backend.</p>
@@ -82,29 +83,29 @@
   <ul><li>Count calls and backward branches with saturating counters sampled at safepoints.</li><li>Compile whole functions first; avoid loop OSR until function compilation is stable.</li><li>Support integer/real scalars, branches, direct calls, and simple records first.</li><li>Bail out to the interpreter for unsupported intrinsics, dynamic values, debugger mutation, and tasks.</li><li>Use the same <code>RuntimeImage</code> layouts and helper-call interface as the interpreter.</li></ul>
 
   <h3>Hard parts</h3>
-  <ul><li>Precise value/root maps if a managed heap is introduced.</li><li>Debugger stepping, live-image updates, forced return, and variable mutation.</li><li>Exceptions/runtime diagnostics with accurate FPAS source locations.</li><li>Task suspension across compiled frames.</li><li>Code-cache invalidation and deterministic testing.</li></ul>
+  <ul><li>Precise value/root maps if tagged handles and tracing collection are introduced.</li><li>Debugger stepping, live-image updates, forced return, and variable mutation.</li><li>Exceptions/runtime diagnostics with accurate FPAS source locations.</li><li>Task suspension across compiled frames.</li><li>Code-cache invalidation and deterministic testing.</li></ul>
 
   <h2>Decision matrix</h2>
   <table>
     <thead><tr><th>Criterion</th><th>Fast interpreter</th><th>Compact quickened VM</th><th>Managed heap</th><th>Tiered compiler</th></tr></thead>
     <tbody>
-      <tr><td>Likely benefit for current broad regression</td><td>High</td><td>Medium–high</td><td>Low–medium</td><td>High for long hot runs</td></tr>
-      <tr><td>Likely benefit for Notes/TUI allocation</td><td>Medium</td><td>Medium</td><td>High</td><td>Medium unless allocation changes</td></tr>
+      <tr><td>Likely benefit for current broad regression</td><td>High</td><td>Medium–high</td><td>Bounded reuse measured positive; full heap unknown</td><td>High for long hot runs</td></tr>
+      <tr><td>Likely benefit for Notes/TUI allocation</td><td>Medium</td><td>Medium</td><td>Bounded reuse measured about 7%; further gain unknown</td><td>Medium unless allocation changes</td></tr>
       <tr><td>Implementation effort</td><td>Low–medium</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Debugger disruption</td><td>Low if seam is correct</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Portability</td><td>Excellent</td><td>Excellent</td><td>Excellent</td><td>Backend-dependent</td></tr>
       <tr><td>Rollback size</td><td>One stage</td><td>Runtime-image loader</td><td>Whole value runtime</td><td>Backend can remain optional</td></tr>
-      <tr><td>Recommended now</td><td>Stop at the retained measured baseline; no bounded item remains open</td><td>Deferred; trusted-image and compare/branch probes did not isolate a gain</td><td>Deferred; no allocation profile satisfies the prototype gate</td><td>Deferred; re-entry gates are not met</td></tr>
+      <tr><td>Recommended now</td><td>Stop at the retained measured baseline; no bounded item remains open</td><td>Deferred; trusted-image and compare/branch probes did not isolate a gain</td><td>Retain bounded reuse; defer tagged slots and tracing collection</td><td>Deferred; re-entry gates are not met</td></tr>
     </tbody>
   </table>
 
   <h2>Re-entry gates for a major rewrite</h2>
   <ol>
-    <li>The restored fast interpreter has a stable three-run baseline and no known common-path regression.</li>
-    <li>Sampling profiles show at least 25% of target workload time in costs the proposed rewrite directly removes.</li>
-    <li>A small prototype exercises the real production seam, not a synthetic Rust-only loop.</li>
-    <li>The prototype improves at least two end-to-end workloads and does not regress startup, tasks, or TUI beyond the agreed threshold.</li>
-    <li>Debugger and artifact compatibility impacts are explicitly accepted; FPAS syntax and semantics remain unchanged.</li>
+    <li>The retained interpreter and managed-buffer implementation have a stable current baseline and no known common-path regression.</li>
+    <li>Sampling profiles show at least 25% of target workload time in costs still present after buffer reuse and directly removed by the proposed rewrite.</li>
+    <li>A second prototype exercises a real production seam with heap handles or collection, not another buffer-pool variation or synthetic Rust-only loop.</li>
+    <li>The prototype improves at least two end-to-end workloads beyond the new managed-buffer baseline and does not regress startup, tasks, or TUI beyond the agreed threshold.</li>
+    <li>Debugger, task sharing, pause behavior, and artifact compatibility impacts are explicitly accepted; FPAS syntax and semantics remain unchanged.</li>
   </ol>
 
   <h2>External primary sources</h2>
@@ -115,5 +116,5 @@
     <li><a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp">OpenJDK template interpreter generator</a> and <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/cpu/x86/templateTable_x86.cpp">x86 bytecode templates and resolution paths</a>.</li>
   </ul>
 
-  <footer>These are competing deferred designs, not a backlog to implement all at once. Stages 1, 3a, 3b, 4, 5a, and 6a in the <a href="fast-interpreter-plan.html#status">fast-interpreter status</a> are complete and measured; the bounded Stage-2 slice, typed-real work, compare/branch fusion, Stage 5b, result-capacity preallocation, and Stage 6b were measured and rejected. No runtime rewrite has entered implementation, and no re-entry gate is currently met.</footer>
+  <footer>These are competing designs, not a backlog to implement all at once. The bounded managed-buffer slice is implemented, measured, and retained; its result is the baseline for future allocation work. The compact execution image, tagged-slot/tracing heap, and native tier remain deferred, and no major-rewrite re-entry gate is currently met.</footer>
 </main></body></html>

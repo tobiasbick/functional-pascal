@@ -1,6 +1,8 @@
 //! Dense global and positional aggregate operations.
 
-use fpas_bytecode::{AbcOperands, AbxOperands, SharedEnum, SharedRecord, Value};
+use fpas_bytecode::{
+    AbcOperands, AbxOperands, SharedEnum, SharedRecord, Value, managed_value_buffer,
+};
 use fpas_diagnostics::DiagnosticCode;
 use fpas_diagnostics::codes::{
     RUNTIME_ARRAY_INDEX_OUT_OF_BOUNDS, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
@@ -307,20 +309,22 @@ impl Worker {
 
     /// Clones one verified contiguous register window.
     pub(super) fn window(&self, base: u16, count: usize) -> Result<Vec<Value>, VmError> {
-        (0..count)
-            .map(|offset| {
-                let slot = usize::from(base)
-                    .checked_add(offset)
-                    .ok_or_else(|| self.bad_slot("register window", u32::from(base)))?;
-                self.registers
-                    .get(..self.active_register_count)
-                    .and_then(|registers| registers.get(self.base + slot))
-                    .cloned()
-                    .ok_or_else(|| {
-                        self.bad_slot("register window", u32::try_from(slot).unwrap_or(u32::MAX))
-                    })
-            })
-            .collect()
+        let mut values = managed_value_buffer(count);
+        for offset in 0..count {
+            let slot = usize::from(base)
+                .checked_add(offset)
+                .ok_or_else(|| self.bad_slot("register window", u32::from(base)))?;
+            let value = self
+                .registers
+                .get(..self.active_register_count)
+                .and_then(|registers| registers.get(self.base + slot))
+                .cloned()
+                .ok_or_else(|| {
+                    self.bad_slot("register window", u32::try_from(slot).unwrap_or(u32::MAX))
+                })?;
+            values.push(value);
+        }
+        Ok(values)
     }
     fn bad_slot(&self, kind: &str, slot: u32) -> VmError {
         self.aggregate_error(

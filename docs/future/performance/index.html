@@ -35,12 +35,13 @@
     <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
   </header>
 
-  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed six interpreter improvements. Separating normal and debug dispatch produced a smaller broad win; borrowing scalar operands removed reference-count churn; direct typed integer handlers improved <code>branch_dispatch</code> by 10.2–12.8%; direct intrinsic ownership routing improved mixed intrinsic dispatch by 14.0–14.1%; direct cached callback loading improved <code>array_callbacks</code> by 23.9–24.1%; and worker-local globals made the isolated global workload 14.2% faster than the Shared control. Task, callback, and debugger execution remain Shared. Cancellation-poll removal, task-owned <code>Array.Map</code> result capacity, typed-real handlers, and normal-run compare/branch fusion all missed the 5% gate and were rolled back.</div>
+  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed six interpreter improvements and one bounded managed-allocation improvement. The retained thread-local buffer heap made both end-to-end TUI workloads about 7% faster, record-heavy microbenchmarks about 14% faster, and string concatenation about 6% faster. It preserves <code>Arc</code>/COW value semantics and is not a tracing collector. Cancellation-poll removal, task-owned <code>Array.Map</code> result capacity, typed-real handlers, and normal-run compare/branch fusion all missed their gates and were rolled back.</div>
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
     <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter</strong><span>The canonical complete, partial, open, rejected, and deferred status for every measured stage.</span></a>
     <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and an optional tiered compiler.</span></a>
+    <a class="card" href="managed-heap-experiment.html"><strong>4 · Managed heap experiment</strong><span>The accepted bounded buffer-reuse layer, repeated A/B evidence, limitations, and the gate for any full tracing heap.</span></a>
   </section>
 
   <h2>Scope and constraints</h2>
@@ -53,7 +54,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work and rejected probes. Retain the six accepted improvements. Do not repeat the rejected one-variable variants unchanged, including normal-run compare/branch look-ahead, which slowed the branch workload by 3.5% despite roughly 40 million dynamic candidate pairs. No bounded interpreter candidate remains open. Compact bytecode, a managed heap, and native compilation remain deferred because their sampling and production-prototype gates are not met.</p>
+  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work and rejected probes. The <a href="managed-heap-experiment.html">managed-heap experiment</a> is the current allocation baseline: retain its bounded buffer reuse. Do not repeat the rejected one-variable interpreter variants unchanged. No bounded interpreter candidate remains open. Compact bytecode, a full handle/tracing heap, and native compilation remain deferred until their remaining-cost evidence gates are met.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

@@ -30,7 +30,7 @@
     <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
-  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; worker-local globals passed their isolated A/B gate; Stage 6b cancellation-poll removal, task-owned <code>Array.Map</code> result capacity, typed-real arithmetic, and typed-real comparisons missed their gates and were rolled back.</div>
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected; worker-local globals passed their isolated A/B gate; cancellation-poll removal, task-owned <code>Array.Map</code> result capacity, typed-real handlers, and compare/branch fusion missed their gates and were rolled back. No bounded interpreter candidate remains open.</div>
 
   <h2>Benchmark signal</h2>
   <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
@@ -108,7 +108,14 @@
   </section>
 
   <section class="rank">
-    <span class="badge low">Priority 8 · known non-runtime cost</span>
+    <span class="badge low">Priority 8 · measured and rejected</span>
+    <h3>Runtime compare/branch look-ahead costs more than a second dispatch</h3>
+    <p>The existing <code>branch_dispatch</code> workload executes an integer comparison followed immediately by a conditional branch for both its parity test and loop condition: roughly 40 million dynamic candidate pairs. A prototype recognized all six integer comparison opcodes followed by a branch on their destination register, but only in scheduler-free normal execution. It preserved the Boolean register result and logical instruction count; task, debugger, and cancellable paths remained unchanged.</p>
+    <p><strong>Measured result:</strong> the complete VM comparison slowed <code>branch_dispatch</code> from 3147 to 3258 ms (+3.5%). No row crossed the 5% regression threshold, but the target moved in the wrong direction. The look-ahead handler and regression test were removed. Wider fused bytecode is not an incremental follow-up; it belongs to deferred compact-VM Option A.</p>
+  </section>
+
+  <section class="rank">
+    <span class="badge low">Priority 9 · known non-runtime cost</span>
     <h3>Multi-program tests still repeat program parsing and compile/link work</h3>
     <p>The measured TUI-test bottleneck was repeated parsing of 120 standard-library sources and unit-graph construction. <code>ProgramUnitGraph</code> now reuses that graph and reduced the warm FPAS TUI group from 53.20 s to about 37.8 s. However, <a href="../../../crates/fpas-cli/src/project_build.rs"><code>project_build.rs:103–120</code></a> still parses, resolves, builds, verifies, and links each program independently. This is a separate startup/test-throughput problem, not part of the in-program benchmark timer.</p>
   </section>
@@ -133,5 +140,5 @@
     <li>The reports deliberately avoid syntax or semantic changes.</li>
   </ul>
 
-  <footer>Sources inside this repository: <code>docs/bench/history.md</code>, <code>docs/bench/portable-register-vm.md</code>, and the linked Rust files. Continue with the <a href="fast-interpreter-plan.html">fast interpreter plan</a>.</footer>
+  <footer>Sources inside this repository: <code>docs/bench/history.md</code>, <code>docs/bench/portable-register-vm.md</code>, and the linked Rust files. The <a href="fast-interpreter-plan.html">fast interpreter plan</a> records every bounded stage as accepted or rejected; major rewrites remain gated.</footer>
 </main></body></html>

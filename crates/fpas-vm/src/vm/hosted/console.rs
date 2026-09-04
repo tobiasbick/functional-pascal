@@ -318,9 +318,7 @@ impl Worker {
                 let y = integer(arguments, 1, 2, self)?;
                 let cell = self.with_console(|console| console.get_cell(x, y));
                 Some(match cell {
-                    Some(cell) => {
-                        Value::OptionSome(Box::new(console_cell_record(self, cell, location)?))
-                    }
+                    Some(cell) => Value::option_some(console_cell_record(self, cell, location)?),
                     None => Value::OptionNone,
                 })
             }

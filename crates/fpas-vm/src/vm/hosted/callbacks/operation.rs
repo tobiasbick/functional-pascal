@@ -142,9 +142,9 @@ impl CallbackContinuation {
                 if let Some(value) = self.pending.take()
                     && boolean(value)?
                 {
-                    return Ok(Advance::Complete(Value::OptionSome(Box::new(
+                    return Ok(Advance::Complete(Value::option_some(
                         cursor.previous().clone(),
-                    ))));
+                    )));
                 }
                 Ok(cursor
                     .next()
@@ -333,8 +333,8 @@ impl SingleWrapper {
     fn wrap(self, value: Value) -> Value {
         match self {
             Self::Direct => value,
-            Self::OptionSome => Value::OptionSome(Box::new(value)),
-            Self::ResultOk => Value::ResultOk(Box::new(value)),
+            Self::OptionSome => Value::option_some(value),
+            Self::ResultOk => Value::result_ok(value),
         }
     }
 }

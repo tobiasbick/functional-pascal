@@ -173,14 +173,14 @@ mod tests {
             crate::vm::debug::types::DebugErrorKind::VariableUnavailable
         );
 
-        let ok = Value::ResultOk(Box::new(Value::Integer(1)));
+        let ok = Value::result_ok(Value::Integer(1));
         let replaced = descendant(ok.clone(), &[MutationPath::ResultOk], Value::Integer(4))
             .expect("ok payload");
-        assert_eq!(replaced, Value::ResultOk(Box::new(Value::Integer(4))));
-        assert_eq!(ok, Value::ResultOk(Box::new(Value::Integer(1))));
+        assert_eq!(replaced, Value::result_ok(Value::Integer(4)));
+        assert_eq!(ok, Value::result_ok(Value::Integer(1)));
 
         let branch = descendant(
-            Value::ResultError(Box::new(Value::Str("old".into()))),
+            Value::result_error(Value::Str("old".into())),
             &[MutationPath::ResultOk],
             Value::Integer(4),
         )

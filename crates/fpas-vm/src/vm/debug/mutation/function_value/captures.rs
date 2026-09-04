@@ -279,7 +279,7 @@ mod tests {
                 Value::Array(vec![Value::Boolean(true)].into()),
                 Value::dict(vec![(
                     Value::Str("k".into()),
-                    Value::OptionSome(Box::new(Value::Integer(2))),
+                    Value::option_some(Value::Integer(2)),
                 )]),
                 nested,
             ],
@@ -356,9 +356,7 @@ mod tests {
         let diamond = function(vec![shared.clone(), shared], false);
         require_eligible(&diamond, 8, 8).expect("shared nodes");
 
-        let deep = (0..6).fold(Value::Integer(1), |inner, _| {
-            Value::OptionSome(Box::new(inner))
-        });
+        let deep = (0..6).fold(Value::Integer(1), |inner, _| Value::option_some(inner));
         let overflow = function(vec![deep], false);
         let depth = require_eligible(&overflow, 3, 64).expect_err("depth");
         assert_eq!(depth.kind, DebugErrorKind::EvaluationLimit);

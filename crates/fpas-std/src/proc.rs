@@ -47,21 +47,19 @@ fn pop_string_array(value: &Value, location: SourceLocation) -> Result<Vec<Strin
 fn run_process(command: &str, args: &[String]) -> Value {
     match Command::new(command).args(args).status() {
         Ok(status) => match status.code() {
-            Some(code) => Value::ResultOk(Box::new(Value::Integer(i64::from(code)))),
-            None => Value::ResultError(Box::new(Value::Str(
-                "process terminated without an exit code".into(),
-            ))),
+            Some(code) => Value::result_ok(Value::Integer(i64::from(code))),
+            None => {
+                Value::result_error(Value::Str("process terminated without an exit code".into()))
+            }
         },
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
+        Err(error) => Value::result_error(Value::Str(error.to_string().into())),
     }
 }
 
 fn current_executable() -> Value {
     match env::current_exe() {
-        Ok(path) => Value::ResultOk(Box::new(Value::Str(
-            path.to_string_lossy().into_owned().into(),
-        ))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
+        Ok(path) => Value::result_ok(Value::Str(path.to_string_lossy().into_owned().into())),
+        Err(error) => Value::result_error(Value::Str(error.to_string().into())),
     }
 }
 
@@ -73,7 +71,7 @@ fn run_process_capture(
 ) -> Result<Value, StdError> {
     match Command::new(command).args(args).output() {
         Ok(output) => match output.status.code() {
-            Some(code) => Ok(Value::ResultOk(Box::new(call.record(
+            Some(code) => Ok(Value::result_ok(call.record(
                 s::STD_PROC_PROCESS_OUTPUT,
                 vec![
                     Value::Integer(i64::from(code)),
@@ -81,14 +79,12 @@ fn run_process_capture(
                     Value::Str(String::from_utf8_lossy(&output.stderr).into_owned().into()),
                 ],
                 location,
-            )?))),
-            None => Ok(Value::ResultError(Box::new(Value::Str(
+            )?)),
+            None => Ok(Value::result_error(Value::Str(
                 "process terminated without an exit code".into(),
-            )))),
+            ))),
         },
-        Err(error) => Ok(Value::ResultError(Box::new(Value::Str(
-            error.to_string().into(),
-        )))),
+        Err(error) => Ok(Value::result_error(Value::Str(error.to_string().into()))),
     }
 }
 
@@ -121,7 +117,7 @@ mod tests {
 
         run_proc(&mut stack);
 
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Integer(0)))]);
+        assert_eq!(stack, vec![Value::result_ok(Value::Integer(0))]);
     }
 
     #[cfg(windows)]
@@ -157,7 +153,7 @@ mod tests {
         let Value::ResultOk(path) = current_executable() else {
             panic!("current executable lookup must succeed");
         };
-        let Value::Str(path) = *path else {
+        let Value::Str(path) = path.into_inner() else {
             panic!("current executable must be a string");
         };
 

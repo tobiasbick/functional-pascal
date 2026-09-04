@@ -14,7 +14,7 @@ const VALUE_DEPTH: usize = 50_000;
 
 fn nested_option(mut value: Value) -> Value {
     for _ in 0..VALUE_DEPTH {
-        value = Value::OptionSome(Box::new(value));
+        value = Value::option_some(value);
     }
     value
 }

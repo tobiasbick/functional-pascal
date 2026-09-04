@@ -100,9 +100,9 @@ pub(in crate::vm::debug) fn construct(
         limits.max_depth,
     )?;
     match spec.kind {
-        TransitionKind::ResultOk => Ok(Value::ResultOk(Box::new(payload))),
-        TransitionKind::ResultError => Ok(Value::ResultError(Box::new(payload))),
-        TransitionKind::OptionSome => Ok(Value::OptionSome(Box::new(payload))),
+        TransitionKind::ResultOk => Ok(Value::result_ok(payload)),
+        TransitionKind::ResultError => Ok(Value::result_error(payload)),
+        TransitionKind::OptionSome => Ok(Value::option_some(payload)),
         TransitionKind::Enum { layout } => super::super::construct_enum_payload(
             executable,
             layout,

@@ -4,6 +4,7 @@ mod display;
 mod equal;
 mod function;
 mod managed_heap;
+mod payload;
 mod string;
 
 pub use aggregate::{
@@ -14,6 +15,7 @@ pub use array::SharedArray;
 use equal::values_equal;
 pub use function::{FunctionValue, SharedFunction};
 pub use managed_heap::managed_value_buffer;
+pub use payload::ValuePayload;
 pub use string::SharedStr;
 
 /// Runtime value in the VM.
@@ -42,11 +44,11 @@ pub enum Value {
     /// Unit / void — result of procedures, statements.
     Unit,
     /// Result::Ok wrapped value.
-    ResultOk(Box<Value>),
+    ResultOk(ValuePayload),
     /// Result::Error wrapped value.
-    ResultError(Box<Value>),
+    ResultError(ValuePayload),
     /// Option::Some wrapped value.
-    OptionSome(Box<Value>),
+    OptionSome(ValuePayload),
     /// Option::None sentinel.
     OptionNone,
     /// First-class function value (named or anonymous).
@@ -72,6 +74,24 @@ pub enum Value {
 }
 
 impl Value {
+    /// Create a successful result with a managed payload box.
+    #[must_use]
+    pub fn result_ok(value: Value) -> Self {
+        Self::ResultOk(ValuePayload::new(value))
+    }
+
+    /// Create a failed result with a managed payload box.
+    #[must_use]
+    pub fn result_error(value: Value) -> Self {
+        Self::ResultError(ValuePayload::new(value))
+    }
+
+    /// Create a present option with a managed payload box.
+    #[must_use]
+    pub fn option_some(value: Value) -> Self {
+        Self::OptionSome(ValuePayload::new(value))
+    }
+
     /// Create an ordered dictionary value with copy-on-write storage.
     pub fn dict(pairs: Vec<(Value, Value)>) -> Self {
         Self::Dict(pairs.into())

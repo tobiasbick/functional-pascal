@@ -16,9 +16,9 @@ pub(super) fn optional_event(
     location: SourceLocation,
 ) -> Result<Value, VmError> {
     event.map_or(Ok(Value::OptionNone), |event| {
-        Ok(Value::OptionSome(Box::new(console_event_record(
+        Ok(Value::option_some(console_event_record(
             worker, event, location,
-        )?)))
+        )?))
     })
 }
 

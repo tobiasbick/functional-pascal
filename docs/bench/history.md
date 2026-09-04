@@ -14,6 +14,30 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-04 — after managed Result and Option payload boxes
+
+- Group: `vm`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6810 | throughput: 7342143 iters/s |
+| global_access | 490 | throughput: 10204081 global updates/s |
+| record_field_access | 1505 | throughput: 9966777 field accesses/s |
+| closure_call | 463 | throughput: 6479481 closure calls/s |
+| branch_dispatch | 3232 | throughput: 6188118 branches/s |
+| dynamic_numeric | 847 | throughput: 5903187 dynamic numeric ops/s |
+| array_push | 214 | throughput: 9345794 pushes/s |
+| array_length | 72 | throughput: 6944444 lengths/s |
+| string_concat | 2168 | throughput: 2306273 concats/s |
+| string_length | 75 | throughput: 6666666 lengths/s |
+| intrinsic_dispatch | 1759 | throughput: 8527572 intrinsic calls/s |
+| function_call | 679 | throughput: 8836524 calls/s |
+| array_callbacks | 913 | throughput: 10514786 callbacks/s |
+| record_update | 368 | throughput: 2717391 updates/s |
+| unicode_char_at | 1232 | throughput: 2435064 chars/s |
+| wrapper_payload | 1452 | throughput: 6887052 wrappers/s |
+
 ## 2026-09-04 — after inline task callback arguments
 
 - Group: `concurrency`

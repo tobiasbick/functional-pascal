@@ -8,6 +8,7 @@ use super::Value;
 const MAX_BUFFER_CAPACITY: usize = 4096;
 const MAX_RETAINED_BYTES: usize = 4 * 1024 * 1024;
 const MAX_BUFFERS_PER_BUCKET: usize = 1024;
+const MAX_PAYLOAD_BOXES: usize = 4096;
 const BUCKET_COUNT: usize = 13;
 
 struct BufferPool<T> {
@@ -154,6 +155,31 @@ thread_local! {
     static VALUE_BUFFERS: RefCell<BufferPool<Value>> = RefCell::new(BufferPool::new());
     static PAIR_BUFFERS: RefCell<BufferPool<(Value, Value)>> = RefCell::new(BufferPool::new());
     static STRING_BUFFERS: RefCell<StringPool> = RefCell::new(StringPool::new());
+    #[allow(
+        clippy::vec_box,
+        reason = "the pool intentionally retains individual allocations for payload reuse"
+    )]
+    static PAYLOAD_BOXES: RefCell<Vec<Box<Value>>> = const { RefCell::new(Vec::new()) };
+}
+
+pub(super) fn managed_payload_box(value: Value) -> Box<Value> {
+    let mut payload = PAYLOAD_BOXES
+        .try_with(|pool| pool.borrow_mut().pop())
+        .ok()
+        .flatten()
+        .unwrap_or_else(|| Box::new(Value::Unit));
+    *payload = value;
+    payload
+}
+
+pub(super) fn recycle_payload_box(payload: Box<Value>) {
+    debug_assert!(matches!(*payload, Value::Unit));
+    let _ = PAYLOAD_BOXES.try_with(move |pool| {
+        let mut pool = pool.borrow_mut();
+        if pool.len() < MAX_PAYLOAD_BOXES {
+            pool.push(payload);
+        }
+    });
 }
 
 /// Take a cleared value buffer from the current thread's bounded runtime heap.

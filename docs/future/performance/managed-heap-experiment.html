@@ -17,7 +17,7 @@
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="fast-interpreter-plan.html">Fast interpreter</a><a href="runtime-rewrite-options.html">Runtime rewrites</a></nav>
   <div class="stamp">Production-path experiment · accepted 4 September 2026</div>
   <h1>A bounded managed heap helps FPAS</h1>
-  <p class="lede">The experiment retains FPAS value semantics and the existing bytecode while reusing aggregate and string buffers on the thread that releases them. Repeated A/B measurements show material gains in both end-to-end TUI workloads, so the implementation is retained.</p>
+  <p class="lede">The experiment retains FPAS value semantics and the existing bytecode while reusing aggregate buffers, strings, and small wrapper boxes on the thread that releases them. Repeated A/B measurements show material gains in end-to-end and focused production workloads, so the successful layers are retained.</p>
 
   <div class="callout"><strong>Decision: retain.</strong> The fresh A/B median improved <code>tui_headless</code> by 7.0% and <code>notes_headless</code> by 7.2%. Record-heavy microbenchmarks improved by roughly 14%, and string concatenation by roughly 6%. No long-running guard workload showed a repeatable regression.</div>
 
@@ -35,7 +35,8 @@
   └─ Arc/COW body (unchanged ownership semantics)
        ├─ Vec&lt;Value&gt;          arrays, records, enums
        ├─ Vec&lt;(Value,Value)&gt; dictionaries
-       └─ String              UTF-8 payloads
+       ├─ String              UTF-8 payloads
+       └─ Box&lt;Value&gt;          Result/Option payloads
              ↓ final owner drops
        bounded thread-local capacity buckets
              ↓ next matching construction
@@ -47,11 +48,12 @@
   <table>
     <thead><tr><th>Area</th><th>Change</th><th>Reason</th></tr></thead>
     <tbody>
-      <tr><td><code>fpas-bytecode/value/managed_heap.rs</code></td><td>Three thread-local pools with logarithmic capacity buckets.</td><td>Reuse value, key/value-pair, and string buffers with constant-time removal from a matching bucket.</td></tr>
+      <tr><td><code>fpas-bytecode/value/managed_heap.rs</code></td><td>Four bounded thread-local pools; variable-capacity buffers use logarithmic buckets.</td><td>Reuse value, key/value-pair, string, and wrapper-payload storage without a system allocator round trip.</td></tr>
       <tr><td>Arrays, records, enums, dictionaries</td><td>Final COW owners clear and recycle eligible backing vectors; detach clones request managed buffers.</td><td>Targets short-lived render trees and aggregate updates without changing public value behavior.</td></tr>
       <tr><td>Strings</td><td>Concatenation, cloning, and character collection request reusable string storage.</td><td>Targets the measured concatenation workload and repeated UI text construction.</td></tr>
+      <tr><td><code>Result</code> and <code>Option</code></td><td>Present payloads use a uniquely owned <code>ValuePayload</code>; final drop clears and returns its box to the current thread.</td><td>Preserves deep-copy semantics while removing repeated wrapper-box allocation.</td></tr>
       <tr><td>VM aggregate construction</td><td>Verified register windows are built in managed value buffers.</td><td>Connects the pool to a real high-frequency producer rather than a synthetic Rust-only loop.</td></tr>
-      <tr><td>Bounds</td><td>Maximum reusable capacity 4096 items/bytes; at most 4 MiB retained per pool and thread; at most 1024 buffers per bucket.</td><td>Prevents one unusual program or frame from turning reuse into unbounded retention.</td></tr>
+      <tr><td>Bounds</td><td>Maximum reusable capacity 4096 items/bytes; at most 4 MiB retained per variable-capacity pool and thread; at most 1024 buffers per bucket; at most 4096 payload boxes per thread.</td><td>Prevents one unusual program or frame from turning reuse into unbounded retention.</td></tr>
     </tbody>
   </table>
 
@@ -88,7 +90,7 @@
     <tbody>
       <tr><td>1</td><td>Prepare reusable runtime values for string and non-task-bound function constants.</td><td>Rejected; implementation reverted</td><td>A controlled VM comparison changed <code>string_concat</code> from 2204 to 2173 ms (−1.4%), below the acceptance threshold. Other VM rows ranged from unchanged to 5.9% slower. TUI runs were bimodal in both the wider baseline series and candidate series, so they did not provide attributable evidence. The cache added an indirect lookup to every constant load and was not retained.</td></tr>
       <tr><td>2</td><td>Remove heap allocation from callback argument vectors.</td><td>Accepted</td><td>A new production-path benchmark runs <code>Map</code>, <code>Filter</code>, and <code>Reduce</code> inside a spawned task, where callbacks use the resumable state machine. Fresh unchanged runs measured 1360 and 1219 ms; fresh inline-argument runs measured 1098 and 1030 ms. Their medians improve from 1290 to 1064 ms (−17.5%). Inline packs now hold zero, one, or two visible arguments, bound receivers enter the frame without a temporary vector, and synchronous dictionary/result/option callbacks borrow slices. VM guards stayed within ±4%; TUI measured −1.0% and Notes −5.9%. Retained.</td></tr>
-      <tr><td>3</td><td>Reduce allocation for boxed <code>Result</code> and <code>Option</code> payloads.</td><td>Pending</td><td>Add a focused production-path benchmark before changing the representation.</td></tr>
+      <tr><td>3</td><td>Reduce allocation for boxed <code>Result</code> and <code>Option</code> payloads.</td><td>Accepted</td><td>A new benchmark constructs and unwraps ten million alternating result/option payloads. Four direct unchanged runs had a 2096 ms median; four managed-box runs had a 1442 ms median (−31.2%). A reverse A/B TUI check measured 4019 → 4009 ms (−0.3%) and Notes 8659 → 8708 ms (+0.6%), both inside noise. The retained owner remains one pointer wide, preserves deep clones and mutable debugger payload access, and bounds retention to 4096 cleared boxes per thread.</td></tr>
       <tr><td>4</td><td>Store small records and enums inline, or otherwise remove their remaining body allocation.</td><td>Pending</td><td>Compare record microbenchmarks plus both TUI workloads against the accepted reuse heap.</td></tr>
       <tr><td>5</td><td>Prototype a handle, tracing, or epoch heap only if remaining allocation evidence clears the design gate.</td><td>Pending; evidence-gated</td><td>Require at least 25% attributable remaining cost and wins in two end-to-end workloads before retaining a collector-scale design.</td></tr>
     </tbody>

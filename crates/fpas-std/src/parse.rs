@@ -58,11 +58,11 @@ fn parse_bool_result(text: &str) -> Value {
 }
 
 fn ok(value: Value) -> Value {
-    Value::ResultOk(Box::new(value))
+    Value::result_ok(value)
 }
 
 fn err(message: String) -> Value {
-    Value::ResultError(Box::new(Value::Str(message.into())))
+    Value::result_error(Value::Str(message.into()))
 }
 
 #[cfg(test)]
@@ -80,7 +80,7 @@ mod tests {
         crate::execute_test_intrinsic(Intrinsic::Parse(ParseIntrinsic::TryInt), &mut stack, loc())
             .unwrap();
 
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Integer(1024)))]);
+        assert_eq!(stack, vec![Value::result_ok(Value::Integer(1024))]);
     }
 
     #[test]
@@ -100,6 +100,6 @@ mod tests {
         crate::execute_test_intrinsic(Intrinsic::Parse(ParseIntrinsic::TryBool), &mut stack, loc())
             .unwrap();
 
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
+        assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
     }
 }

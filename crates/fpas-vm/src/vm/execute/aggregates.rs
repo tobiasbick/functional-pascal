@@ -272,13 +272,9 @@ impl Worker {
         self.write(register(o.a)?, value)
     }
 
-    pub fn wrap(
-        &mut self,
-        o: AbcOperands,
-        constructor: fn(Box<Value>) -> Value,
-    ) -> Result<(), VmError> {
+    pub fn wrap(&mut self, o: AbcOperands, constructor: fn(Value) -> Value) -> Result<(), VmError> {
         let value = self.read(register(o.b)?)?.clone();
-        self.write(register(o.a)?, constructor(Box::new(value)))
+        self.write(register(o.a)?, constructor(value))
     }
     pub fn none(&mut self, o: AbcOperands) -> Result<(), VmError> {
         self.write(register(o.a)?, Value::OptionNone)

@@ -71,9 +71,9 @@ impl ValueDetacher {
                     .map(|value| self.detach(value))
                     .collect::<Result<Vec<_>, _>>()?,
             ))),
-            Value::ResultOk(value) => Ok(Value::ResultOk(Box::new(self.detach(value)?))),
-            Value::ResultError(value) => Ok(Value::ResultError(Box::new(self.detach(value)?))),
-            Value::OptionSome(value) => Ok(Value::OptionSome(Box::new(self.detach(value)?))),
+            Value::ResultOk(value) => Ok(Value::result_ok(self.detach(value)?)),
+            Value::ResultError(value) => Ok(Value::result_error(self.detach(value)?)),
+            Value::OptionSome(value) => Ok(Value::option_some(self.detach(value)?)),
             Value::OptionNone => Ok(Value::OptionNone),
             Value::Function(function) => {
                 let bound_receiver = function

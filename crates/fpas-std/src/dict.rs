@@ -43,7 +43,7 @@ pub(crate) fn run(
             let pairs = pop_dict(pop_value(call, location)?, location)?;
             let found = pairs.into_iter().find(|(k, _)| k == key);
             match found {
-                Some((_, v)) => call.push(Value::OptionSome(Box::new(v))),
+                Some((_, v)) => call.push(Value::option_some(v)),
                 None => call.push(Value::OptionNone),
             }
         }
@@ -86,7 +86,7 @@ mod tests {
             Value::Str("b".into()),
         ];
         run_dict(DictIntrinsic::Get, &mut stack).unwrap();
-        assert_eq!(stack, vec![Value::OptionSome(Box::new(Value::Integer(2)))]);
+        assert_eq!(stack, vec![Value::option_some(Value::Integer(2))]);
     }
 
     #[test]

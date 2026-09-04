@@ -105,6 +105,7 @@ target/release/fpas run examples/pascal/vm/function_call_benchmark.fpas -- 30000
 target/release/fpas run examples/pascal/vm/array_callbacks_benchmark.fpas -- 50000
 target/release/fpas run examples/pascal/vm/record_update_benchmark.fpas -- 1000000
 target/release/fpas run examples/pascal/vm/unicode_char_at_benchmark.fpas -- 3000000
+target/release/fpas run examples/pascal/vm/wrapper_payload_benchmark.fpas -- 5000000
 target/release/fpas run examples/pascal/concurrency/task_spawn_wait_benchmark.fpas -- 100000
 target/release/fpas run examples/pascal/concurrency/task_array_callbacks_benchmark.fpas -- 20000
 ```
@@ -181,6 +182,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/vm/array_callbacks_benchmark.fpas` | `Map`, `Filter`, and `Reduce` callback throughput |
 | `pascal/vm/record_update_benchmark.fpas` | Record construction, field access, and `with` update throughput |
 | `pascal/vm/unicode_char_at_benchmark.fpas` | `Std.Str.CharAt` throughput over multi-byte Unicode text |
+| `pascal/vm/wrapper_payload_benchmark.fpas` | `Result` and `Option` payload construction and unwrap throughput |
 | `pascal/generics/generic_functions.fpas` | Generic functions |
 | `pascal/generics/generic_record_methods.fpas` | Method-level generics and constraints on record methods |
 | `pascal/pattern-matching/` | Guards and exhaustiveness |

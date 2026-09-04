@@ -96,9 +96,9 @@ pub(in crate::vm::debug) fn complete_value(
     }
     match &variant.kind {
         VariantKind::OptionNone => Ok(Value::OptionNone),
-        VariantKind::OptionSome => Ok(Value::OptionSome(Box::new(take_single(&mut values)?))),
-        VariantKind::ResultOk => Ok(Value::ResultOk(Box::new(take_single(&mut values)?))),
-        VariantKind::ResultError => Ok(Value::ResultError(Box::new(take_single(&mut values)?))),
+        VariantKind::OptionSome => Ok(Value::option_some(take_single(&mut values)?)),
+        VariantKind::ResultOk => Ok(Value::result_ok(take_single(&mut values)?)),
+        VariantKind::ResultError => Ok(Value::result_error(take_single(&mut values)?)),
         VariantKind::Enum { layout } => crate::vm::debug::construct_enum(
             executable,
             Arc::clone(layout),

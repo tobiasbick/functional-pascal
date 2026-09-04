@@ -198,34 +198,19 @@ fn evaluate_with_qualified_fallback(
             }
             Value::Record(record)
         }
-        DebugExpression::ResultOk(value) => Value::ResultOk(Box::new(evaluate(
-            value,
-            depth + 1,
-            limits,
-            budget,
-            resolve,
-            invoke,
-        )?)),
-        DebugExpression::ResultError(value) => Value::ResultError(Box::new(evaluate(
-            value,
-            depth + 1,
-            limits,
-            budget,
-            resolve,
-            invoke,
-        )?)),
-        DebugExpression::OptionSome(value) => Value::OptionSome(Box::new(evaluate(
-            value,
-            depth + 1,
-            limits,
-            budget,
-            resolve,
-            invoke,
-        )?)),
+        DebugExpression::ResultOk(value) => {
+            Value::result_ok(evaluate(value, depth + 1, limits, budget, resolve, invoke)?)
+        }
+        DebugExpression::ResultError(value) => {
+            Value::result_error(evaluate(value, depth + 1, limits, budget, resolve, invoke)?)
+        }
+        DebugExpression::OptionSome(value) => {
+            Value::option_some(evaluate(value, depth + 1, limits, budget, resolve, invoke)?)
+        }
         DebugExpression::OptionNone => Value::OptionNone,
         DebugExpression::Try(value) => {
             match evaluate(value, depth + 1, limits, budget, resolve, invoke)? {
-                Value::ResultOk(value) | Value::OptionSome(value) => *value,
+                Value::ResultOk(value) | Value::OptionSome(value) => value.into_inner(),
                 Value::ResultError(_) => {
                     return Err(operation_error(ValueOperationError::domain(
                         "debug `try` encountered Result.Error",

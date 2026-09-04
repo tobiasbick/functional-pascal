@@ -94,7 +94,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
     let ok = resolve(
         &executable,
         DebugTypeId::new(3),
-        &Value::ResultOk(Box::new(Value::Integer(1))),
+        &Value::result_ok(Value::Integer(1)),
         "value",
     )
     .expect("ok payload");
@@ -103,7 +103,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
     let error = resolve(
         &executable,
         DebugTypeId::new(3),
-        &Value::ResultError(Box::new(Value::Str("e".into()))),
+        &Value::result_error(Value::Str("e".into())),
         "VaLuE",
     )
     .expect("error payload");
@@ -112,7 +112,7 @@ fn resolves_each_result_branch_some_and_enum_field_positions() {
     let some = resolve(
         &executable,
         DebugTypeId::new(4),
-        &Value::OptionSome(Box::new(Value::Integer(2))),
+        &Value::option_some(Value::Integer(2)),
         "value",
     )
     .expect("some payload");
@@ -176,7 +176,7 @@ fn rejects_none_unknown_names_and_inconsistent_metadata() {
         resolve(
             &executable,
             DebugTypeId::new(3),
-            &Value::ResultOk(Box::new(Value::Integer(1))),
+            &Value::result_ok(Value::Integer(1)),
             "count"
         ),
         Err(PayloadError::UnknownField { active }) if active == "Result.Ok"
@@ -194,7 +194,7 @@ fn rejects_none_unknown_names_and_inconsistent_metadata() {
         resolve(
             &executable,
             DebugTypeId::new(0),
-            &Value::ResultOk(Box::new(Value::Integer(1))),
+            &Value::result_ok(Value::Integer(1)),
             "value"
         ),
         Err(PayloadError::UnavailableMetadata { .. })

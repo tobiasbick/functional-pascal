@@ -68,27 +68,27 @@ pub(crate) fn run(
 
 fn result_string(result: Result<String, String>) -> Value {
     match result {
-        Ok(value) => Value::ResultOk(Box::new(Value::Str(value.into()))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.into()))),
+        Ok(value) => Value::result_ok(Value::Str(value.into())),
+        Err(error) => Value::result_error(Value::Str(error.into())),
     }
 }
 
 fn result_bool(result: io::Result<()>) -> Value {
     match result {
-        Ok(()) => Value::ResultOk(Box::new(Value::Boolean(true))),
-        Err(error) => Value::ResultError(Box::new(Value::Str(error.to_string().into()))),
+        Ok(()) => Value::result_ok(Value::Boolean(true)),
+        Err(error) => Value::result_error(Value::Str(error.to_string().into())),
     }
 }
 
 fn result_string_array(result: Result<Vec<String>, String>) -> Value {
     match result {
-        Ok(paths) => Value::ResultOk(Box::new(Value::Array(
+        Ok(paths) => Value::result_ok(Value::Array(
             paths
                 .into_iter()
                 .map(|path| Value::Str(path.into()))
                 .collect(),
-        ))),
-        Err(message) => Value::ResultError(Box::new(Value::Str(message.into()))),
+        )),
+        Err(message) => Value::result_error(Value::Str(message.into())),
     }
 }
 
@@ -128,7 +128,7 @@ mod tests {
 
         run_fs(FsIntrinsic::WriteText, &mut stack);
 
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
+        assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
         assert_eq!(fs::read_to_string(&path).expect("read"), "written");
         let _ = fs::remove_file(path);
     }
@@ -190,7 +190,7 @@ mod tests {
 
         run_fs(FsIntrinsic::CreateDir, &mut stack);
 
-        assert_eq!(stack, vec![Value::ResultOk(Box::new(Value::Boolean(true)))]);
+        assert_eq!(stack, vec![Value::result_ok(Value::Boolean(true))]);
         assert!(Path::new(&nested).is_dir());
         let _ = fs::remove_dir(nested);
     }

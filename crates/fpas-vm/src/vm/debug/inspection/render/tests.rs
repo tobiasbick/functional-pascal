@@ -98,9 +98,9 @@ fn summaries_cover_scalars_wrappers_aggregates_functions_and_opaque_values() {
     );
 
     for wrapper in [
-        Value::ResultOk(Box::new(Value::Integer(1))),
-        Value::ResultError(Box::new(Value::Str("error".into()))),
-        Value::OptionSome(Box::new(Value::Boolean(true))),
+        Value::result_ok(Value::Integer(1)),
+        Value::result_error(Value::Str("error".into())),
+        Value::option_some(Value::Boolean(true)),
     ] {
         assert_eq!(render(&retained(wrapper), limits).named_children, 1);
     }
@@ -272,10 +272,7 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
     assert_eq!(rendered.children[1].debug_type, Some(DebugTypeId::new(0)));
 
     let ok = super::render_with_executable(
-        &writable(
-            Value::ResultOk(Box::new(Value::Integer(6))),
-            DebugTypeId::new(3),
-        ),
+        &writable(Value::result_ok(Value::Integer(6)), DebugTypeId::new(3)),
         limits,
         Some(&executable),
     );
@@ -285,7 +282,7 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
 
     let error = super::render_with_executable(
         &writable(
-            Value::ResultError(Box::new(Value::Str("old".into()))),
+            Value::result_error(Value::Str("old".into())),
             DebugTypeId::new(3),
         ),
         limits,
@@ -295,10 +292,7 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
     assert_eq!(error.children[0].debug_type, Some(DebugTypeId::new(1)));
 
     let some = super::render_with_executable(
-        &writable(
-            Value::OptionSome(Box::new(Value::Integer(7))),
-            DebugTypeId::new(4),
-        ),
+        &writable(Value::option_some(Value::Integer(7)), DebugTypeId::new(4)),
         limits,
         Some(&executable),
     );
@@ -313,10 +307,7 @@ fn payload_children_are_writable_only_through_writable_typed_roots() {
 
     let immutable = super::render_with_executable(
         &{
-            let mut value = writable(
-                Value::OptionSome(Box::new(Value::Integer(7))),
-                DebugTypeId::new(4),
-            );
+            let mut value = writable(Value::option_some(Value::Integer(7)), DebugTypeId::new(4));
             value.mutation = super::MutationAccess::NotMutable;
             value
         },

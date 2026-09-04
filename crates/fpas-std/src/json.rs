@@ -272,12 +272,10 @@ pub(crate) fn run(
             let text = pop_string(pop_value(call, location)?, location)?;
             match serde_json::from_str::<JsonValue>(&text).map_err(|err| err.to_string()) {
                 Ok(value) => match json_to_fpas(call, value, location) {
-                    Ok(value) => call.push(Value::ResultOk(Box::new(value))),
-                    Err(error) => call.push(Value::ResultError(Box::new(Value::Str(
-                        error.message.into(),
-                    )))),
+                    Ok(value) => call.push(Value::result_ok(value)),
+                    Err(error) => call.push(Value::result_error(Value::Str(error.message.into()))),
                 },
-                Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
+                Err(message) => call.push(Value::result_error(Value::Str(message.into()))),
             }
         }
         Intrinsic::Json(JsonIntrinsic::Stringify) => {

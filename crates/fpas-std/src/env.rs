@@ -16,9 +16,9 @@ pub(crate) fn run(
         Intrinsic::Env(EnvIntrinsic::Get) => {
             let name = pop_string(pop_value(call, location)?, location)?;
             match std::env::var_os(name) {
-                Some(value) => call.push(Value::OptionSome(Box::new(Value::Str(
+                Some(value) => call.push(Value::option_some(Value::Str(
                     value.to_string_lossy().into_owned().into(),
-                )))),
+                ))),
                 None => call.push(Value::OptionNone),
             }
         }

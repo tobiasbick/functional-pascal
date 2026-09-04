@@ -160,8 +160,8 @@ impl Worker {
 
 fn result(value: Result<Value, String>) -> Value {
     match value {
-        Ok(value) => Value::ResultOk(Box::new(value)),
-        Err(message) => Value::ResultError(Box::new(Value::Str(message.into()))),
+        Ok(value) => Value::result_ok(value),
+        Err(message) => Value::result_error(Value::Str(message.into())),
     }
 }
 

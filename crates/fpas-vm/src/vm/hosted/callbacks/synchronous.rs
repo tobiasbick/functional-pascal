@@ -74,7 +74,7 @@ impl Worker {
                 let mut found = Value::OptionNone;
                 for value in values {
                     if self.callback_is_true(callback, std::slice::from_ref(value))? {
-                        found = Value::OptionSome(Box::new(value.clone()));
+                        found = Value::option_some(value.clone());
                         break;
                     }
                 }
@@ -185,9 +185,9 @@ impl Worker {
             .get(1)
             .ok_or_else(|| self.arity_error("result callback"))?;
         let result = match (operation, value) {
-            (ResultIntrinsic::Map, Value::ResultOk(inner)) => Value::ResultOk(Box::new(
-                self.call_callback_sync(callback, std::slice::from_ref(&**inner))?,
-            )),
+            (ResultIntrinsic::Map, Value::ResultOk(inner)) => {
+                Value::result_ok(self.call_callback_sync(callback, std::slice::from_ref(&**inner))?)
+            }
             (ResultIntrinsic::AndThen, Value::ResultOk(inner)) => {
                 self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }
@@ -218,9 +218,9 @@ impl Worker {
             .get(1)
             .ok_or_else(|| self.arity_error("option callback"))?;
         let result = match (operation, value) {
-            (OptionIntrinsic::Map, Value::OptionSome(inner)) => Value::OptionSome(Box::new(
+            (OptionIntrinsic::Map, Value::OptionSome(inner)) => Value::option_some(
                 self.call_callback_sync(callback, std::slice::from_ref(&**inner))?,
-            )),
+            ),
             (OptionIntrinsic::AndThen, Value::OptionSome(inner)) => {
                 self.call_callback_sync(callback, std::slice::from_ref(&**inner))?
             }

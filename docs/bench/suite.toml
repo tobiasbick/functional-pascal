@@ -109,6 +109,13 @@ args = ["3000000"]
 timeout_ms = 120000
 
 [[bench]]
+id = "wrapper_payload"
+group = "vm"
+path = "examples/pascal/vm/wrapper_payload_benchmark.fpas"
+args = ["5000000"]
+timeout_ms = 120000
+
+[[bench]]
 id = "task_spawn_wait"
 group = "concurrency"
 path = "examples/pascal/concurrency/task_spawn_wait_benchmark.fpas"

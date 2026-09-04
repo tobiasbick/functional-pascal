@@ -247,12 +247,10 @@ pub(crate) fn run(
             let text = pop_string(pop_value(call, location)?, location)?;
             match toml::from_str::<TomlValue>(&text).map_err(|error| error.to_string()) {
                 Ok(value) => match toml_to_fpas(call, value, location) {
-                    Ok(value) => call.push(Value::ResultOk(Box::new(value))),
-                    Err(error) => call.push(Value::ResultError(Box::new(Value::Str(
-                        error.message.into(),
-                    )))),
+                    Ok(value) => call.push(Value::result_ok(value)),
+                    Err(error) => call.push(Value::result_error(Value::Str(error.message.into()))),
                 },
-                Err(message) => call.push(Value::ResultError(Box::new(Value::Str(message.into())))),
+                Err(message) => call.push(Value::result_error(Value::Str(message.into()))),
             }
         }
         Intrinsic::Toml(TomlIntrinsic::Stringify) => {
@@ -392,7 +390,7 @@ value = "ok"
         let Value::ResultOk(value) = stack.pop().expect("parse result") else {
             panic!("expected a parsed TOML value");
         };
-        let mut stringify_stack = vec![*value];
+        let mut stringify_stack = vec![value.into_inner()];
 
         crate::execute_test_intrinsic(
             Intrinsic::Toml(TomlIntrinsic::Stringify),

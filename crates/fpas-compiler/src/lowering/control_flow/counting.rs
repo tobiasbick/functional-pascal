@@ -21,11 +21,11 @@ impl LoweringContext {
         body: &Stmt,
         span: fpas_lexer::Span,
     ) -> Result<(), CompileError> {
-        self.begin_scope();
         let start_value = self.lower_expression(start)?;
+        let end_value = self.lower_expression(end)?;
+        self.begin_scope();
         let variable_local = self.declare_local(variable, types::INTEGER, true, span)?;
         self.write_local(variable_local, start_value, span)?;
-        let end_value = self.lower_expression(end)?;
         let end_local = self.declare_hidden_local(types::INTEGER, span)?;
         self.write_local(end_local, end_value, span)?;
 

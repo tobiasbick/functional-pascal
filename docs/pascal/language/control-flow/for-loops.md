@@ -22,6 +22,11 @@ end;
 
 ## Implementation (contributors)
 
+The start and end expressions are evaluated once, in that order, in the enclosing
+scope. The loop variable is introduced afterward and is visible only inside the
+loop. A same-named outer variable can therefore supply either bound and remains
+unchanged by the loop counter.
+
 Counting loops include both bounds. An empty ascending or descending range executes
 no iterations. After the last iteration, including one ending with `continue`, the
 loop exits before incrementing or decrementing the counter. This also applies when

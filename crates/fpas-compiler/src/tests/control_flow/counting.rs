@@ -3,6 +3,60 @@
 use super::super::assert_succeeds;
 
 #[test]
+fn counting_loop_bounds_use_the_outer_binding() {
+    assert_succeeds(
+        "program OuterBounds; begin
+          var I: integer := 3;
+          mutable var Count: integer := 0;
+          for I: integer := 1 to I do Count := Count + 1;
+          if Count <> 3 then panic('ascending end used the inner binding');
+          var J: integer := 1;
+          for J: integer := 3 downto J do Count := Count + 1;
+          if Count <> 6 then panic('descending end used the inner binding');
+          if (I <> 3) or (J <> 1) then panic('outer bindings were changed')
+        end.",
+    );
+}
+
+#[test]
+fn nested_counting_loop_bounds_use_the_enclosing_counter() {
+    assert_succeeds(
+        "program NestedBounds; begin
+          mutable var Count: integer := 0;
+          for I: integer := 1 to 3 do
+          begin
+            for I: integer := 1 to I do Count := Count + 1;
+            Count := Count + I
+          end;
+          if Count <> 12 then panic('nested bound or outer counter changed')
+        end.",
+    );
+}
+
+#[test]
+fn counting_loop_bounds_are_evaluated_once_in_source_order() {
+    assert_succeeds(
+        "program BoundOrder;
+        mutable var Trace: integer := 0;
+        function Start(): integer;
+        begin
+          Trace := Trace * 10 + 1;
+          return 1
+        end;
+        function Finish(): integer;
+        begin
+          Trace := Trace * 10 + 2;
+          return 3
+        end;
+        begin
+          mutable var Count: integer := 0;
+          for I: integer := Start() to Finish() do Count := Count + 1;
+          if (Trace <> 12) or (Count <> 3) then panic('bounds evaluated out of order or repeatedly')
+        end.",
+    );
+}
+
+#[test]
 fn counting_loops_stop_at_integer_extremes() {
     for (start, direction, end, expected) in [
         ("9223372036854775807", "to", "9223372036854775807", 1),

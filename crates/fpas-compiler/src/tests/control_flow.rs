@@ -1,6 +1,7 @@
 use super::*;
 
 mod counting;
+mod repetition;
 
 #[test]
 fn for_in_array_and_dictionary_execute() {

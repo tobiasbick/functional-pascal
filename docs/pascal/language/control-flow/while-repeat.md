@@ -17,6 +17,11 @@ end;
 
 ## Repeat-until loop
 
+The `until` condition uses the enclosing scope. Variables declared inside the
+repeat body are not visible in that condition. If a body-local variable shadows
+an outer name, the condition still uses the outer binding, including after
+`continue`.
+
 The body executes at least once:
 
 ```pascal

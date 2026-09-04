@@ -1,4 +1,6 @@
 //! Structured scalar control flow lowered to explicit CFG blocks.
+//!
+//! Documentation: `docs/pascal/language/control-flow/while-repeat.md`.
 
 mod counting;
 
@@ -163,6 +165,8 @@ impl LoweringContext {
         if !self.is_terminated() {
             self.jump(condition_block)?;
         }
+        self.pop_loop();
+        self.end_scope();
         self.switch_to(condition_block);
         let condition = self.lower_expression(condition)?;
         self.terminate(Terminator::Branch {
@@ -170,8 +174,6 @@ impl LoweringContext {
             then_target: target(after_block),
             else_target: target(body_block),
         })?;
-        self.pop_loop();
-        self.end_scope();
         self.switch_to(after_block);
         Ok(())
     }

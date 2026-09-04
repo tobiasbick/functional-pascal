@@ -4,6 +4,19 @@ End-to-end performance measurements use Functional Pascal programs under `exampl
 
 The curated suite lives in [`suite.toml`](suite.toml). Run it with the `fpas-bench` harness (cargo alias `bench-fpas`).
 
+The `tooling` group measures native editor workloads in release harness child
+processes, with the same timeout, save, compare, and record handling. The
+`analysis_queries` workload parses one generated editor buffer, warms its semantic
+analysis, then creates a fresh query service for each measured analysis request.
+Its arguments select the number of queries and declared functions. Parsing and
+warmup are excluded from the elapsed time.
+
+```sh
+cargo bench-fpas save analysis-before --group tooling
+cargo bench-fpas compare analysis-before --group tooling
+cargo bench-fpas native --help
+```
+
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
 ## Prerequisites
@@ -69,7 +82,7 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 | Command | Meaning |
 |---------|---------|
 | `cargo bench-fpas --help` | Print usage, configured groups, and copyable examples |
-| `cargo bench-fpas run` | Run the full suite (`vm` + `concurrency` + `tui`) |
+| `cargo bench-fpas run` | Run the full configured suite |
 | `cargo bench-fpas run --group vm` | VM microbenches only |
 | `cargo bench-fpas run --group concurrency` | Task scheduling and resumable callback benchmarks |
 | `cargo bench-fpas run --group tui` | Headless TUI bench only |
@@ -98,6 +111,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
+- `driver` — defaults to `fpas`; `language-service` runs the native analysis workload and omits `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

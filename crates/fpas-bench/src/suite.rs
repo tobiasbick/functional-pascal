@@ -1,5 +1,6 @@
 //! Suite definition loading and running FPAS benchmark programs.
 
+mod command;
 mod executable;
 mod runner;
 
@@ -16,14 +17,29 @@ pub use runner::run_suite;
 pub struct BenchSpec {
     /// Short identifier used in tables and JSON results.
     pub id: String,
-    /// Filter group configured by the suite (`vm`, `concurrency`, or `tui`).
+    /// Filter group configured by the suite.
     pub group: String,
+    /// Workload driver; omitted entries run an FPAS program.
+    #[serde(default)]
+    pub driver: BenchDriver,
     /// Path to the `.fpas` program or `.fpasprj` project, relative to the repository root.
+    #[serde(default)]
     pub path: String,
     /// Arguments passed after `fpas run <path> --`.
     pub args: Vec<String>,
     /// Maximum wall-clock runtime before the process is terminated.
     pub timeout_ms: u64,
+}
+
+/// Supported benchmark processes.
+#[derive(Debug, Clone, Copy, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum BenchDriver {
+    /// Run an FPAS program through the release CLI.
+    #[default]
+    Fpas,
+    /// Measure repeated editor analysis using fresh query snapshots.
+    LanguageService,
 }
 
 #[derive(Debug, Deserialize)]
@@ -59,6 +75,16 @@ pub fn load_suite(repo_root: &Path) -> Result<Vec<BenchSpec>, String> {
 }
 
 fn validate_specs(path: &Path, specs: &[BenchSpec]) -> Result<(), String> {
+    if let Some(spec) = specs
+        .iter()
+        .find(|spec| matches!(spec.driver, BenchDriver::Fpas) && spec.path.is_empty())
+    {
+        return Err(format!(
+            "{} benchmark `{}` requires an FPAS source path",
+            path.display(),
+            spec.id
+        ));
+    }
     if let Some(spec) = specs.iter().find(|spec| spec.timeout_ms == 0) {
         return Err(format!(
             "{} benchmark `{}` has invalid timeout_ms 0",
@@ -128,6 +154,13 @@ mod tests {
     }
 
     #[test]
+    fn fpas_driver_requires_a_source_path() {
+        let mut spec = spec("vm");
+        spec.path.clear();
+        assert!(validate_specs(Path::new("suite.toml"), &[spec]).is_err());
+    }
+
+    #[test]
     fn suite_rejects_zero_timeout() {
         let mut spec = spec("vm");
         spec.timeout_ms = 0;
@@ -141,6 +174,7 @@ mod tests {
         BenchSpec {
             id: format!("{group}_bench"),
             group: group.to_owned(),
+            driver: super::BenchDriver::Fpas,
             path: "unused.fpas".to_owned(),
             args: Vec::new(),
             timeout_ms: 1,

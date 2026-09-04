@@ -393,7 +393,11 @@ or incomplete syntax can still provide candidates when its lexical and symbol
 context is reliable. Document notifications are applied in received order
 before dependent requests. Analysis-heavy queries use isolated immutable
 snapshots on blocking workers and cooperate with request cancellation, so they
-do not hold the primary editor-state lock while running.
+do not hold the primary editor-state lock while running. Completed analyses are
+shared across requests when every source revision and the loaded project context
+match. Open-buffer changes remain isolated from requests already in progress;
+late results from older buffers or project configurations cannot satisfy queries
+for the new state.
 
 ## Semantic highlighting and quick fixes
 

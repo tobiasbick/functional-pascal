@@ -13,6 +13,7 @@
 //! See [`docs/bench/README.md`](../../../docs/bench/README.md).
 
 mod arguments;
+mod native;
 mod results;
 mod suite;
 
@@ -29,6 +30,9 @@ use suite::{
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.first().is_some_and(|argument| argument == "native") {
+        return finish(native::run(&args[1..]));
+    }
     match parse_args(&args) {
         Ok(ParseOutcome::Help) => {
             println!("{}", usage(&configured_group_names()));

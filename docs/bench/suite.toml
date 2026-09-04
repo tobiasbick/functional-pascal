@@ -1,7 +1,8 @@
 # Curated FPAS end-to-end benchmarks for `cargo bench-fpas`.
 # Paths are relative to the repository root.
 # Groups: `vm` (interpreter hot paths), `concurrency` (task scheduling), and
-# `tui` (headless Std.Tui). Every row runs through the production `fpas run` path.
+# `tui` (headless Std.Tui), and `tooling` (native editor workloads).
+# FPAS rows run through the production `fpas run` path.
 
 [[bench]]
 id = "integer_loop"
@@ -142,3 +143,9 @@ group = "tui"
 path = "examples/pascal/tui/notes-headless/notes-headless-benchmark.fpasprj"
 args = ["250"]
 timeout_ms = 120000
+[[bench]]
+id = "analysis_queries"
+group = "tooling"
+driver = "language-service"
+args = ["1000", "500"]
+timeout_ms = 60000

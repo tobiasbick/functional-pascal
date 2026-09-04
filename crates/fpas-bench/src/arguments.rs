@@ -122,7 +122,7 @@ pub fn usage(groups: &[String]) -> String {
         groups.join("|")
     };
     format!(
-        "Usage:\n  cargo bench-fpas run [--group {groups}]\n  cargo bench-fpas save <label> [--group {groups}]\n  cargo bench-fpas compare <label> [--group {groups}] [--fail-on-regression] [--threshold-pct N]\n  cargo bench-fpas record <title…> [--group {groups}]\n\nExamples:\n  cargo bench-fpas run --group vm\n  cargo bench-fpas save before --group concurrency\n  cargo bench-fpas compare before --group vm --fail-on-regression --threshold-pct 10\n  cargo bench-fpas record \"after runtime change\" --group tui\n\nSee docs/bench/README.md."
+        "Usage:\n  cargo bench-fpas run [--group {groups}]\n  cargo bench-fpas save <label> [--group {groups}]\n  cargo bench-fpas compare <label> [--group {groups}] [--fail-on-regression] [--threshold-pct N]\n  cargo bench-fpas record <title…> [--group {groups}]\n  cargo bench-fpas native --help\n\nExamples:\n  cargo bench-fpas run --group vm\n  cargo bench-fpas save before --group concurrency\n  cargo bench-fpas compare before --group vm --fail-on-regression --threshold-pct 10\n  cargo bench-fpas record \"after runtime change\" --group tui\n\nSee docs/bench/README.md."
     )
 }
 

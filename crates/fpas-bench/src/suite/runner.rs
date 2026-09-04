@@ -28,22 +28,10 @@ struct PipeReader {
 
 /// Run one suite entry and parse its elapsed time.
 pub fn run_bench(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result<BenchRun, String> {
-    let program = repo_root.join(&spec.path);
-    if !program.is_file() {
-        return Err(format!("benchmark source missing: {}", program.display()));
-    }
-
-    let mut command = Command::new(fpas);
-    command
-        .arg("run")
-        .arg(&program)
-        .arg("--")
-        .args(&spec.args)
-        .current_dir(repo_root)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+    let mut command = super::command::command(repo_root, fpas, spec)?;
+    command.stdout(Stdio::piped()).stderr(Stdio::piped());
     let child = spawn_benchmark(&mut command)
-        .map_err(|error| format!("failed to spawn {}: {error}", fpas.display()))?;
+        .map_err(|error| format!("failed to spawn benchmark `{}`: {error}", spec.id))?;
     let output = wait_for_output(child, Duration::from_millis(spec.timeout_ms), &spec.id)?;
     let stdout = String::from_utf8_lossy(&output.stdout).into_owned();
     let stderr = String::from_utf8_lossy(&output.stderr).into_owned();

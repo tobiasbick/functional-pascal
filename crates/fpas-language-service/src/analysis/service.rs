@@ -53,15 +53,16 @@ impl LanguageService {
 
     /// Creates an isolated query service over the current immutable source snapshots.
     ///
-    /// The returned service shares parsed snapshots but owns an independent document map and
-    /// analysis cache. Later editor mutations on either service do not affect the other.
+    /// The returned service owns an independent document map and shares immutable parsed
+    /// snapshots and completed analyses. Cache reuse requires matching source revisions and
+    /// project context. Later editor mutations do not change the other service's open buffers.
     #[must_use]
     pub fn fork_for_queries(&self) -> Self {
         Self {
             documents: self.documents.clone(),
             workspace: self.workspace.clone(),
             standard_library: self.standard_library.clone(),
-            analysis_cache: AnalysisCache::default(),
+            analysis_cache: self.analysis_cache.clone(),
         }
     }
 
@@ -171,7 +172,8 @@ impl LanguageService {
             return self.analyze_loose(target);
         };
         let snapshots = self.project_snapshots(&project)?;
-        let fingerprint = AnalysisFingerprint::new(project_identity(&project), &snapshots);
+        let fingerprint =
+            AnalysisFingerprint::new(project_identity(&project), &snapshots, Some(&project));
         let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
             cached
         } else {
@@ -307,7 +309,7 @@ impl LanguageService {
         &mut self,
         snapshot: Arc<DocumentSnapshot>,
     ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
-        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)]);
+        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)], None);
         let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
             cached
         } else {
@@ -327,7 +329,7 @@ impl LanguageService {
         &mut self,
         snapshot: Arc<DocumentSnapshot>,
     ) -> Result<Arc<DocumentAnalysis>, LanguageServiceError> {
-        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)]);
+        let fingerprint = AnalysisFingerprint::new(snapshot.path(), &[Arc::clone(&snapshot)], None);
         let set = if let Some(cached) = self.analysis_cache.get(&fingerprint) {
             cached
         } else {

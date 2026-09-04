@@ -81,6 +81,19 @@
   <p>The result proves that allocator traffic and backing-buffer destruction were material in the measured aggregate and TUI paths. It justifies retaining this bounded layer. It does not prove that replacing every <code>Arc</code> with handles and adding a tracing collector would provide a proportional gain: the accepted layer already removes part of that cost, while a collector would add root tracking, safepoints, barriers, task-sharing policy, debugger integration, and pause behavior.</p>
   <p>A full tagged-slot or tracing heap remains deferred. Re-enter that design only when allocation/self-time evidence attributes at least 25% of a target workload to costs still present after buffer reuse, and when a second production prototype can beat this new baseline in at least two end-to-end workloads without regressing startup or tasks.</p>
 
+  <h2>Follow-up allocation experiments</h2>
+  <p>The remaining ideas are evaluated one at a time. Each experiment keeps its implementation only when a reproducible affected benchmark improves by roughly 5% or more without a material regression elsewhere. Rejected implementations are removed, but their result remains here so the same path is not repeated without new evidence.</p>
+  <table>
+    <thead><tr><th>Step</th><th>Experiment</th><th>Status</th><th>Evidence and decision</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Prepare reusable runtime values for string and non-task-bound function constants.</td><td>Rejected; implementation reverted</td><td>A controlled VM comparison changed <code>string_concat</code> from 2204 to 2173 ms (−1.4%), below the acceptance threshold. Other VM rows ranged from unchanged to 5.9% slower. TUI runs were bimodal in both the wider baseline series and candidate series, so they did not provide attributable evidence. The cache added an indirect lookup to every constant load and was not retained.</td></tr>
+      <tr><td>2</td><td>Remove heap allocation from callback argument vectors.</td><td>Pending</td><td>Measure <code>array_callbacks</code> and the end-to-end guards before deciding.</td></tr>
+      <tr><td>3</td><td>Reduce allocation for boxed <code>Result</code> and <code>Option</code> payloads.</td><td>Pending</td><td>Add a focused production-path benchmark before changing the representation.</td></tr>
+      <tr><td>4</td><td>Store small records and enums inline, or otherwise remove their remaining body allocation.</td><td>Pending</td><td>Compare record microbenchmarks plus both TUI workloads against the accepted reuse heap.</td></tr>
+      <tr><td>5</td><td>Prototype a handle, tracing, or epoch heap only if remaining allocation evidence clears the design gate.</td><td>Pending; evidence-gated</td><td>Require at least 25% attributable remaining cost and wins in two end-to-end workloads before retaining a collector-scale design.</td></tr>
+    </tbody>
+  </table>
+
   <h2>Possible next refinements</h2>
   <ol>
     <li>Add low-overhead counters in a benchmark-only build to measure pool hit rate, retained bytes, and rejected oversized buffers.</li>

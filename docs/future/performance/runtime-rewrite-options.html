@@ -19,7 +19,7 @@
   <h1>If the interpreter is still too slow, replace the right layer</h1>
   <p class="lede">FPAS is free to replace its bytecode and runtime internals. That freedom is valuable only after the common overhead is measured. These options are deliberately more invasive and should compete against a restored fast-interpreter baseline.</p>
 
-  <div class="callout"><strong>Strong recommendation:</strong> continue the measured interpreter work first. Stage 2 rejected bounded branch-target, opcode-mirror, and fetch optimizations; Stage 5b rejected synchronous callback frames and retained the cached nested worker; Stage 6a accepted worker-local globals. Measure current safepoint/control-check cost before Stage 6b. Keep a compact execution-image rewrite, managed heap, and tiered compilation deferred until their evidence gates are met.</div>
+  <div class="callout"><strong>Strong recommendation:</strong> continue bounded measured interpreter work first. Stage 2 rejected branch-target, opcode-mirror, and fetch optimizations; Stage 5b rejected synchronous callback frames and retained the cached nested worker; Stage 6a accepted worker-local globals; Stage 6b rejected both fixed-cadence and disabled normal-run cancellation polling. Measure known-size result-capacity preallocation next. Keep a compact execution-image rewrite, managed heap, and tiered compilation deferred until their evidence gates are met.</div>
 
   <h2>Three options</h2>
   <section class="options">
@@ -93,7 +93,7 @@
       <tr><td>Debugger disruption</td><td>Low if seam is correct</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Portability</td><td>Excellent</td><td>Excellent</td><td>Excellent</td><td>Backend-dependent</td></tr>
       <tr><td>Rollback size</td><td>One stage</td><td>Runtime-image loader</td><td>Whole value runtime</td><td>Backend can remain optional</td></tr>
-      <tr><td>Recommended now</td><td>Retain Stage 6a; profile before Stage 6b safepoints</td><td>Deferred; bounded Stage 2 probes did not isolate enough repeated validation cost</td><td>Prototype only after allocation evidence passes the gate</td><td>Deferred until re-entry gates pass</td></tr>
+      <tr><td>Recommended now</td><td>Retain Stage 6a; measure known-size result-capacity preallocation; do not revisit Stage 6b without new profile evidence</td><td>Deferred; bounded Stage 2 probes did not isolate enough repeated validation cost</td><td>Prototype only after allocation evidence passes the gate</td><td>Deferred until re-entry gates pass</td></tr>
     </tbody>
   </table>
 
@@ -114,5 +114,5 @@
     <li><a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/share/interpreter/templateInterpreterGenerator.cpp">OpenJDK template interpreter generator</a> and <a href="https://github.com/openjdk/jdk/blob/master/src/hotspot/cpu/x86/templateTable_x86.cpp">x86 bytecode templates and resolution paths</a>.</li>
   </ul>
 
-  <footer>These are competing deferred designs, not a backlog to implement all at once. Stages 1, 3a, 3b, 4, 5a, and 6a in the <a href="fast-interpreter-plan.html#status">fast-interpreter status</a> are complete and measured; the bounded Stage-2 slice and Stage 5b were measured and rejected. Stage 6b remains evidence-gated. No runtime rewrite has entered implementation.</footer>
+  <footer>These are competing deferred designs, not a backlog to implement all at once. Stages 1, 3a, 3b, 4, 5a, and 6a in the <a href="fast-interpreter-plan.html#status">fast-interpreter status</a> are complete and measured; the bounded Stage-2 slice, Stage 5b, and Stage 6b were measured and rejected. No runtime rewrite has entered implementation.</footer>
 </main></body></html>

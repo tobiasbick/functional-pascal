@@ -21,7 +21,7 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="fast-interpreter-plan.html">Fast interpreter plan</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Initial read-only audit · measured follow-up added 30 August 2026</div>
+  <div class="stamp">Initial read-only audit · measured follow-up through 4 September 2026</div>
   <h1>Rust hot paths: evidence before architecture</h1>
   <p class="lede">This report ranks where execution time is most likely being consumed. “Confirmed” means the code is unavoidably executed at the stated frequency or an existing project profile names it. “Candidate” means the mechanism is visible in source and matches benchmark behavior, but needs a current sampling profile before a speed claim.</p>
 
@@ -30,7 +30,7 @@
     <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
-  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; worker-local globals passed their isolated A/B gate.</div>
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The bounded trusted-image slice was rejected after branch-target, opcode-mirror, and fetch probes; worker-local globals passed their isolated A/B gate; Stage 6b cancellation-poll removal missed its gate and was rolled back.</div>
 
   <h2>Benchmark signal</h2>
   <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
@@ -101,7 +101,14 @@
   </section>
 
   <section class="rank">
-    <span class="badge low">Priority 7 · known non-runtime cost</span>
+    <span class="badge low">Priority 7 · measured and rejected</span>
+    <h3>Per-instruction cancellation polling is not a material normal-run bottleneck</h3>
+    <p><a href="../../../crates/fpas-vm/src/vm/worker.rs"><code>vm/worker.rs</code></a> checks scheduler cancellation at each root instruction boundary. Stage 6b tested a statically specialized no-poll loop for normal runs without tasks or a retained shutdown handle while preserving polling for task-capable, cancelled, and externally controlled execution.</p>
+    <p><strong>Measured result:</strong> reverse A/B medians for polling-to-no-poll were <code>integer_loop</code> 6566→6601 ms (+0.5%), <code>branch_dispatch</code> 3161→3257 ms (+3.0%), <code>function_call</code> 699→686 ms (−1.9%), and <code>intrinsic_dispatch</code> 1766→1793 ms (+1.5%). The candidate was slower in three workloads, missed the 5% gate, and was removed. Exact instruction-boundary cancellation remains.</p>
+  </section>
+
+  <section class="rank">
+    <span class="badge low">Priority 8 · known non-runtime cost</span>
     <h3>Multi-program tests still repeat program parsing and compile/link work</h3>
     <p>The measured TUI-test bottleneck was repeated parsing of 120 standard-library sources and unit-graph construction. <code>ProgramUnitGraph</code> now reuses that graph and reduced the warm FPAS TUI group from 53.20 s to about 37.8 s. However, <a href="../../../crates/fpas-cli/src/project_build.rs"><code>project_build.rs:103–120</code></a> still parses, resolves, builds, verifies, and links each program independently. This is a separate startup/test-throughput problem, not part of the in-program benchmark timer.</p>
   </section>

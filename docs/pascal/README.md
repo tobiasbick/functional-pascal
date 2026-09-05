@@ -15,9 +15,9 @@ language specification.
 ## Design Principles
 
 - **Function First** — Functions are the primary abstraction. No classical classes or object hierarchies.
-- **Immutable by Default** — Variables require `mutable var` block to allow reassignment.
+- **Immutable by Default** — Variables require `mutable var` declarations to allow reassignment.
 - **Safe by Design** — No pointers, no unsafe operations. The VM handles memory.
-- **Explicit Types** — Every binding explicitly states its type.
+- **Explicit Types** — Variable and parameter declarations explicitly state their types.
 - **Case-Insensitive** — Keywords and identifiers are case-insensitive, as in classical Pascal.
 - **Familiar Syntax** — Pascal's `begin`, `end`, `:=`, `downto`, and other well-known constructs.
 
@@ -52,7 +52,3 @@ Ordered learning path for newcomers:
 12. [Standard library](std/README.md) — `Std.*` built-in units
 13. [Formatter style](tools/fmt-style.md) — normative rules for `fpas fmt`
 14. [Editor integration](tools/editor-integration.md) — highlighting, diagnostics, formatting, navigation
-
-## Future Features
-
-Features planned for later versions are documented in [docs/future/](../future/).

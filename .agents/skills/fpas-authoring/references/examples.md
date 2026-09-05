@@ -81,7 +81,7 @@ Expected behavior:
 User request:
 
 ```text
-add a test that Application.Run quits on CM_QUIT
+add a test that the TuiApplication host quits when an update sets TuiCmd.Quit
 ```
 
 Expected behavior:

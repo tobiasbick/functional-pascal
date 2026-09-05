@@ -57,12 +57,12 @@ external hub as part of a normal code contribution.
 
 - **`examples/`** — demos and tutorials. Do not put `*_test.fpas` here.
 - **`tests/`** — FPAS regression suite (`*_test.fpas`). Run with `fpas test tests/`
-  or `cargo test -p fpas-cli fpas_suite_`.
+  or `fpas test tests/suite.fpasprj`.
 
 When validating examples, use the curated allowlists in
 [`crates/fpas-cli/src/main_tests/examples.rs`](crates/fpas-cli/src/main_tests/examples.rs)
 (see also [`examples/README.md`](examples/README.md)). Never batch-run every file under
-`examples/` — interactive TUI and graph demos block until quit.
+`examples/` — interactive TUI demos block until quit.
 
 ## Pull requests
 

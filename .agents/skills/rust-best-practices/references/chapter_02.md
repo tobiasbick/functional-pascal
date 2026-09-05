@@ -1,6 +1,6 @@
 # Chapter 2 - Clippy and Linting Discipline
 
-Be sure to have `cargo clippy` installed with your rust compiler, run `cargo clippy -V` in your terminal for a rust project and you should get something like this `clippy 0.1.86 (05f9846f89 2025-03-31)`. If terminal fails to show a clippy version, please run the following code `rustup update && rustup component add clippy`.
+Use the Clippy component of the configured Rust toolchain (`cargo clippy -V`).
 
 Clippy documentation can be found [here](https://doc.rust-lang.org/clippy/usage.html).
 
@@ -22,19 +22,14 @@ $ cargo clippy --all-targets --all-features --locked -- -D warnings
 ```
 
 * `--all-targets`: checks library, tests, benches and examples.
-* `--all-features`: checks code for all features enabled, auto solves conflicting features.
-* `--locked`: Requires `Cargo.lock` to be up-to-date, can be solved with `$ cargo update`.
+* `--all-features`: checks code with all features enabled; inspect feature compatibility first.
+* `--locked`: requires the existing `Cargo.lock` to satisfy the manifests. Investigate a mismatch before changing dependencies.
 * `-D warnings`: treats warnings as errors
 
 Potential additions elements to add:
 
 * `-- -W clippy::pedantic`: lints which are rather strict or have occasional false positives.
 * `-- -W clippy::nursery`: Optionally can be added to check for new lints that are still under development.
-* ❗ Add this to your Makefile, Justfile, xtask or CI Pipeline.
-
-> Example at ApolloGraphQL
->
-> In the `Router` project there is a `xtask` configured for linting that can be executed with `cargo xtask lint`. 
 
 ## 2.3 Important Clippy Lints to Respect
 

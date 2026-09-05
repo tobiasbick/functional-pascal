@@ -386,7 +386,6 @@ fn q_rsqrt(number: f32 ) -> f32 {
 * Clear code beats comments. However, when the why isn't obvious, say it plainly - or link to where:
 ```rust
 // PERF: Generating the root store per subgraph caused high TLS startup latency on MacOS
-// This works as a caching alternative. See: [ADR-123](link/to/adr-123)
 let subgraph_tls_root_store: RootCertStore = configuration
     .tls
     .subgraph
@@ -545,15 +544,7 @@ use super::update::convert_publish_payload;
 use crate::models::Event;
 ```
 
-One way of not having to manually control this is using the following arguments in your `rustfmt.toml`:
-
-```toml
-reorder_imports = true
-imports_granularity = "Crate"
-group_imports = "StdExternalCrate"
-```
-
-> As of Rust version 1.88, it is necessary to execute rustfmt in nightly to correctly reorder code `cargo +nightly fmt`.
+Run `cargo fmt` using the repository toolchain and configuration.
 
 ## 1.8 When to Extract a Function (and When Not To)
 

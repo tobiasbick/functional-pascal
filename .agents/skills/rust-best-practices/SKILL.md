@@ -9,16 +9,18 @@ description: >
   (5) optimizing Rust code for performance,
   (6) writing tests or documentation for Rust projects.
 license: MIT
-compatibility: Rust 1.70+, Cargo
 metadata:
   author: apollographql
   version: "1.1.1"
-allowed-tools: Bash(cargo:*) Bash(rustc:*) Bash(rustfmt:*) Bash(clippy:*) Read Write Edit Glob Grep
 ---
 
 # Rust Best Practices
 
 Apply these guidelines when writing or reviewing Rust code. Based on Apollo GraphQL's [Rust Best Practices Handbook](https://github.com/apollographql/rust-best-practices).
+
+Project rules and verification are defined in [AGENTS.md](../../../AGENTS.md) and
+[Cargo.toml](../../../Cargo.toml). They take precedence over the general handbook
+examples. Use [fpas-bench](../fpas-bench/SKILL.md) to measure FPAS performance.
 
 ## Best Practices Reference
 
@@ -49,9 +51,9 @@ Before reviewing, familiarize yourself with Apollo's Rust best practices. Read A
 - Prefer `?` operator over match chains for error propagation
 
 ### Performance
-- Always benchmark with `--release` flag
+- Measure FPAS workloads with `cargo bench-fpas`; follow the project benchmark skill
 - Run `cargo clippy -- -D clippy::perf` for performance hints
-- Avoid cloning in loops; use `.iter()` instead of `.into_iter()` for Copy types
+- Borrow with `.iter()` when retaining the collection; consume it with `.into_iter()` when ownership is available. Avoid redundant clones.
 - Prefer iterators over manual loops; avoid intermediate `.collect()` calls
 
 ### Linting
@@ -68,7 +70,6 @@ Use `#[expect(clippy::lint)]` over `#[allow(...)]` with justification comment.
 - Name tests descriptively: `process_should_return_error_when_input_empty()`
 - One assertion per test when possible
 - Use doc tests (`///`) for public API examples
-- Consider `cargo insta` for snapshot testing generated output
 
 ### Generics & Dispatch
 - Prefer generics (static dispatch) for performance-critical code
@@ -91,4 +92,4 @@ impl Connection<Connected> {
 - `//` comments explain *why* (safety, workarounds, design rationale)
 - `///` doc comments explain *what* and *how* for public APIs
 - Every `TODO` needs a linked issue: `// TODO(#42): ...`
-- Enable `#![deny(missing_docs)]` for libraries
+- Follow the workspace lint configuration, including `missing_docs = "deny"`

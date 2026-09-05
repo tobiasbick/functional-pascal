@@ -64,7 +64,6 @@ Expected behavior:
 ```text
 fpas test tests/
 fpas test tests/suite.fpasprj
-cargo test -p fpas-cli fpas_suite_
 ```
 
 Pick one full-suite command; use targeted `fpas test tests/<theme>/` when iterating.
@@ -74,16 +73,16 @@ Pick one full-suite command; use targeted `fpas test tests/<theme>/` when iterat
 User request:
 
 ```text
-verify ide project compiles
+verify Notes project compiles
 ```
 
 Expected behavior:
 
 ```text
-fpas check apps/ide/ide.fpasprj
+fpas check apps/notes/notes.fpasprj
 ```
 
-Do not `fpas run` interactive TUI/graph demos in batch — they block until quit. Use check + targeted tests.
+Do not `fpas run` interactive TUI demos in batch — they block until quit. Use check + targeted tests.
 
 ## Example 6: Extend test bundle glob
 

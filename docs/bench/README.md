@@ -12,9 +12,7 @@ Its arguments select the number of queries and declared functions. Parsing and
 warmup are excluded from the elapsed time.
 
 The loose-buffer fixture directory exists before timing so manifest discovery stays
-inside it. Earlier records used a missing directory and also scanned the changing
-parent scratch directory; those absolute timings are not comparable to the isolated
-fixture. This harness correction is not a language-service runtime speedup.
+inside it.
 
 `compiler_lowering` parses a generated program with sequential branches, then
 measures repeated semantic analysis and IR lowering of the same AST. Its arguments
@@ -156,7 +154,7 @@ Use this while iterating on a change. JSON under `.temp-data/bench/` is **not** 
 | `cargo bench-fpas compare <label>` | Re-run and print Δ vs a saved label |
 | `cargo bench-fpas record <title…>` | Run and prepend a dated entry to [`history.md`](history.md) |
 
-Saved snapshots record whether they contain the complete suite or one `--group`. A comparison must use the same group selection and must find exactly one baseline result for every current benchmark. Re-run `save` for snapshots created before group metadata was introduced or after the selected suite changes.
+Saved snapshots record whether they contain the complete suite or one `--group`. A comparison must use the same group selection and must find exactly one baseline result for every current benchmark. Save a new baseline when the selected suite changes or snapshot group metadata is missing.
 
 Compare is **advisory** by default (exit 0 when all benches complete). To fail the process when any bench is slower by more than a percent threshold:
 
@@ -175,9 +173,9 @@ Snapshot JSON and committed history are written to a flushed same-directory stag
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `vm`, `concurrency`, `tui`, `tooling`, or `startup` (filter with `--group`)
+- `group` — `vm`, `concurrency`, `tui`, `tooling`, `startup`, or `review` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
+- `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

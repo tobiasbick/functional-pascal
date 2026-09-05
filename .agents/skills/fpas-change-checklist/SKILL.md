@@ -24,7 +24,7 @@ Never commit hostnames, usernames, home paths, or other machine-identifying meta
 | **Std unit** | `docs/pascal/std/<area>/…`, `fpas-sema` `std_registry`, `fpas-compiler` intrinsic catalog/lowering, `fpas-bytecode` `intrinsic`, `fpas-std`, `fpas-vm` |
 | **CLI / projects** | `docs/pascal/program-structure/…`, `fpas-cli`, `fpas-project` |
 | **Refactor only** | No spec change; confirm docs unchanged; all existing tests pass |
-| **Docs only** | `docs/pascal/` only; no code tests unless fixing examples |
+| **Docs only** | Documentation and agent guidance; validate links and commands, and check corrected examples |
 
 Start from the area hub: [`docs/pascal/README.md`](../../../docs/pascal/README.md). For std work: [`docs/pascal/std/README.md`](../../../docs/pascal/std/README.md).
 
@@ -35,7 +35,7 @@ Ask: **Would a user reading the current spec get the wrong idea?**
 If yes, update docs **in the same change**:
 
 - **Language** — page under `docs/pascal/language/<topic>/`
-- **Std API** — unit page or split hub (`text/str/`, `tui/`, `collections/array/`, `graph/app/`, `console/`, …)
+- **Std API** — unit page or split hub (`text/str/`, `tui/`, `collections/array/`, `console/`, …)
 - **Unit page shape** — quick reference, per-symbol sections, `## Implementation (contributors)` (table), `## See also` (area index + std index)
 - **Rust sources** — add or update `///` links to the matching `docs/pascal/…` path (grep for old paths after moves)
 - **Examples** — update or add under `examples/` when the feature is teachable (not `*_test.fpas` in examples)
@@ -52,7 +52,7 @@ Ask: **What would break if this regressed?**
 |--------|--------|
 | Parser / sema / compile error | Rust tests in the owning crate (`fpas-parser`, `fpas-sema`, `fpas-compiler`) |
 | Runtime / VM / std intrinsic | Crate tests + often `tests/<theme>/*_test.fpas` |
-| End-to-end std behavior | `tests/stdlib/`, `tests/console/`, `tests/graph/`, etc. |
+| End-to-end std behavior | `tests/stdlib/`, `tests/console/`, etc. |
 | CLI / runner | `fpas-cli` tests; runner tests under `tests/runner/` |
 
 Rules:
@@ -60,7 +60,7 @@ Rules:
 - FPAS regression tests live in [`tests/`](../../../tests/), not `examples/`
 - Bundle the suite via [`tests/suite.fpasprj`](../../../tests/suite.fpasprj)
 - Name: `*_test.fpas`, use `Std.Test` where asserting output — spec: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md)
-- After FPAS test edits: `fpas test tests/`, `fpas test tests/suite.fpasprj`, or `cargo test -p fpas-cli fpas_suite_`
+- After FPAS test edits: `fpas test tests/` or `fpas test tests/suite.fpasprj`
 - Add tests only for meaningful behavior — skip trivial or duplicate coverage
 
 If no new test is warranted, state **why** (e.g. refactor-only, covered by existing test X).
@@ -77,8 +77,12 @@ When changing a `Std.*` symbol or adding one, scan this list and update every la
 5. **Runtime** — `crates/fpas-std/src/…` and/or `crates/fpas-vm/src/…`
 6. **Tests** — Rust integration tests + optional `tests/*_test.fpas`
 
-Hosted units (`Std.Tui`, `Std.Graph`) also touch VM host modules under
-`fpas-vm/src/vm/hosted/…`.
+Source units such as `Std.Tui` live under `lib/Std/`. Update their exported source API
+and FPAS tests directly. Console, network, and test host integration lives under
+`crates/fpas-vm/src/vm/hosted/`.
+
+Regenerate intrinsic editor declarations under `lib/api/Std/` with
+`cargo run -p fpas-sema --example export_intrinsic_std_api` when their API or handbook changes.
 
 ## Step 5 — Verify
 

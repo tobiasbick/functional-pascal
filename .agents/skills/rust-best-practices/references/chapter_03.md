@@ -6,64 +6,13 @@ The **golden rule** of performance work:
 
 Rust code is often already pretty fast - don't "optimize" without evidence. Optimize only after finding bottlenecks.
 
-### A good first steps
-* Use `--release` flag on you builds (might sound dummy, but it is quite common to hear people complaining that their Rust code is slower than their X language code, and 99% of the time is because they didn't use the `--release` flag).
-* `$ cargo clippy -- -D clippy::perf` gives you important tips on best practices for performance.
-* [`cargo bench`](https://doc.rust-lang.org/cargo/commands/cargo-bench.html) is a cargo tool to create micro-benchmarks and test different code solutions. Write a test scenario and bench you solution against the original code, if your improvement is larger than 5%, might be a good performance improvement.
-* [`cargo flamegraph`](https://github.com/flamegraph-rs/flamegraph) a powerful profiler for Rust code. For MacOS, [samply](https://github.com/mstange/samply) might be a better DX option.
+## 3.1 Measure FPAS workloads
 
-> #### Further reading on Benchmarking:
-> - [How to build a Custom Benchmarking Harness in Rust](https://bencher.dev/learn/benchmarking/rust/custom-harness/)
-
-
-## 3.1 Flamegraph
-
-Flamegraph helps you visualize how much time CPU spent on each task.
-
-```shell
-# Installing flamegraph
-cargo install flamegraph
-
-# cargo support provided through the cargo-flamegraph binary!
-# defaults to profiling cargo run --release
-cargo flamegraph
-
-# by default, `--release` profile is used,
-# but you can override this:
-cargo flamegraph --dev
-
-# if you'd like to profile a specific binary:
-cargo flamegraph --bin=stress2
-
-# Profile unit tests.
-# Note that a separating `--` is necessary if `--unit-test` is the last flag.
-cargo flamegraph --unit-test -- test::in::package::with::single::crate
-cargo flamegraph --unit-test crate_name -- test::in::package::with::multiple:crate
-
-# Profile integration tests.
-cargo flamegraph --test test_name
-
-# Run criterion benchmark
-# Note that the last --bench is required for `criterion 0.3` to run in benchmark mode, instead of test mode.
-cargo flamegraph --bench some_benchmark --features some_features -- --bench
-
-# Run workspace example
-cargo flamegraph --example some_example --features some_features
-```
-
-> ❗ Always run your profiles with `--release` enabled, the `--dev` flag isn't realistic as it doesn't have optimizations enabled.
-
-The result will look like a flame graph where:
-
-* The `y-axis` shows the **stack depth number**. When looking at a flamegraph, the main function of your program will be closer to the bottom, and the called functions will be stacked on top, with the functions that they call stacked on top of them.
-
-* The `width of each box` shows the **total time that that function** is on the CPU or is part of the call stack. If a function's box is wider than others, that means that it consumes more CPU per execution than other functions, or that it is called more than other functions.
-
-> ❗ The **color of each box** isn't significant, and **is chosen at random**.
-
-### 🚨 Remember
-* Thick stacks: heavy CPU usage
-* Thin stacks: low intensity (cheap)
+Use the [FPAS benchmark skill](../../fpas-bench/SKILL.md) and the configured
+[suite](../../../../docs/bench/suite.toml). Save a baseline before editing, compare
+the same workload in release mode, and record settled results. Attribute CPU and
+allocation costs to the current implementation before choosing a substantial
+runtime rewrite. A microbenchmark result does not establish whole-app throughput.
 
 ## 3.2 Avoid Redundant Cloning
 

@@ -57,9 +57,9 @@ end.
 ### Unit (shared code)
 
 ```pascal
-unit MyApp.Utils;
+unit MyApp.Bounds;
 
-function Clamp(Value: integer; Min: integer; Max: integer): integer;
+public function Clamp(Value: integer; Min: integer; Max: integer): integer;
 begin
   if Value < Min then
     return Min

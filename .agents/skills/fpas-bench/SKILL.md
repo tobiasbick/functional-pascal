@@ -99,7 +99,7 @@ If the change is not obviously isolated to one group, run without `--group` befo
 
 ```sh
 cargo bench-fpas record "after SharedStr char_len cache"
-cargo bench-fpas record "after flat VM Op dispatch" --group vm
+cargo bench-fpas record "Borrow dictionary read arguments" --group vm
 ```
 
 - Prepends a dated section to `docs/bench/history.md` (date, group, note, timings only — **no host/user/path**)
@@ -118,10 +118,13 @@ Include:
 
 | Command | Purpose |
 |---------|---------|
-| `cargo bench-fpas run [--group vm\|concurrency\|tui]` | One-shot suite |
+| `cargo bench-fpas run [--group <name>]` | One-shot suite |
 | `cargo bench-fpas save <label>` | Local JSON baseline |
 | `cargo bench-fpas compare <label>` | Δ vs local baseline |
-| `cargo bench-fpas record "<note>"` | Append to `docs/bench/history.md` |
+| `cargo bench-fpas record "<note>"` | Prepend to `docs/bench/history.md` |
+
+Use `cargo bench-fpas --help` for configured groups and `cargo bench-fpas native --help`
+for native drivers. Compare the same group and benchmark IDs as the saved baseline.
 
 ## Rules
 

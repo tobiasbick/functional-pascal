@@ -15,7 +15,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
-- **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, and integrated tests.
+- **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.
 - **Explicit types** — Every variable and parameter declares its type.
@@ -108,8 +108,7 @@ architecture build it there.
 ## Applications
 
 [Local Chat](apps/local-chat/README.md) is a small `Std.Tui` client for the
-fixed local OpenAI-compatible llama.cpp endpoint used during early networking
-development.
+fixed local OpenAI-compatible llama.cpp endpoint.
 
 ```sh
 fpas run apps/local-chat/local-chat.fpasprj
@@ -194,7 +193,7 @@ end;
 
 begin
   var Op: function(X: integer): integer := Double;
-  WriteLn(Apply(Op, 10));  { 20 }
+  WriteLn(Apply(Op, 10)) // 20
 end.
 ```
 
@@ -224,7 +223,7 @@ More examples in the [`examples/`](examples/) directory.
 
 ### Tests
 
-Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `graph/`). Run the full suite with `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
+Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `apps/`). Run the full suite with `fpas test tests/` or `fpas test tests/suite.fpasprj`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).
 
 ### Local model training data
 
@@ -266,7 +265,7 @@ The full language specification lives in [`docs/pascal/`](docs/pascal/). Start w
 | Getting started | [getting-started/](docs/pascal/getting-started/README.md) |
 | Language | [language/](docs/pascal/language/README.md) |
 | Program structure | [program-structure/](docs/pascal/program-structure/README.md) |
-| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/`, `graph/app/`, …) |
+| Standard library | [std/](docs/pascal/std/README.md) — themed subdirs (`host/`, `text/str/`, `console/`, `tui/`, `network/`, …) |
 | Tools | [tools/](docs/pascal/tools/README.md) — formatter and editor integration |
 | Formal grammar | [grammar.ebnf](docs/specs/grammar.ebnf) |
 
@@ -309,10 +308,11 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-project` | Project/workspace loading and unit-graph resolution |
 | `fpas-build` | Incremental compiled-unit build engine |
 | `fpas-sema` | Semantic analysis and type checking |
-| `fpas-compiler` | AST-to-bytecode compilation |
-| `fpas-bytecode` | Bytecode definitions and chunk format |
+| `fpas-ir` | Typed control-flow intermediate representation |
+| `fpas-compiler` | AST lowering through typed IR to register bytecode |
+| `fpas-bytecode` | Register-bytecode definitions and executable verification |
 | `fpas-unit` | Compiled-unit identities, format, and sidecar lifecycle |
-| `fpas-linker` | Deterministic linker from unit objects to executable chunks |
+| `fpas-linker` | Deterministic linker from unit objects to verified executables |
 | `fpas-program` | Persistent executable `.fpascp` program images |
 | `fpas-bundle` | Host-native runner bundle format and publication |
 | `fpas-vm` | Virtual machine / bytecode interpreter |
@@ -321,6 +321,8 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Short pointers:
 | `fpas-diagnostics` | Error codes and diagnostic utilities |
 | `fpas-language-service` | Compiler-backed editor analysis and language features |
 | `fpas-lsp` | Language Server Protocol transport |
+| `fpas-debug` | Source debug engine with JSONL and DAP adapters |
+| `fpas-bench` | Bounded performance harness, baselines, and comparisons |
 | `editors/vscode` | VS Code-compatible extension, packaging, and Extension Host tests |
 
 ## Status

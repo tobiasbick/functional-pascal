@@ -124,7 +124,9 @@ Workspace lists members; **each consumer still declares its own** `[dependencies
 
 Useful `fpas test` flags: `--list`, `--fail-fast`, `--strict`, `--filter <pattern>`, `--timeout <secs>`, `--jobs <n>`.
 
-Sidecars (optional, beside a test file): `<test>.expect.stdout`, `<test>.expect.screen`, `<test>.expect.pixels`, `<test>.script.toml`.
+Optional sidecars beside a test are `<test>.expect.stdout` and `<test>.script.toml`.
+Explicit `--script <path>` takes precedence over project `[test.overrides]`,
+which takes precedence over the script sidecar.
 
 Full CLI spec: [`docs/pascal/program-structure/cli.md`](../../../docs/pascal/program-structure/cli.md). Test runner: [`docs/pascal/std/testing/test.md`](../../../docs/pascal/std/testing/test.md).
 
@@ -160,7 +162,7 @@ Discovery with no path:
 
 1. Write `*_test.fpas` under `tests/<theme>/` (`fpas-authoring` skill).
 2. Ensure `tests/suite.fpasprj` `[sources].include` covers the path (extend glob if needed).
-3. Run `fpas test <new-file>` then `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`.
+3. Run `fpas test <new-file>` then `fpas test tests/` or `fpas test tests/suite.fpasprj`.
 
 ## Common mistakes
 

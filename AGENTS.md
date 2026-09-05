@@ -66,9 +66,9 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 ## FPAS sources (`examples/` vs `tests/`)
 
 - **`examples/`** — runnable demos and tutorials. Do not add `*_test.fpas` here.
-- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `graph/`). `Std.Tui` tests live under `tests/stdlib/tui/`. Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
+- **`tests/`** — FPAS regression and integration tests (`*_test.fpas`, optional golden sidecars). Group by theme (`stdlib/`, `concurrency/`, `runner/`, `console/`, `apps/`). `Std.Tui` tests live under `tests/stdlib/tui/`. Bundle via [`tests/suite.fpasprj`](tests/suite.fpasprj).
 - **`.temp-data/`** — gitignored scratch root for FPAS tests/demos that create files via `Std.Fs`. Run those from the repository root; do not write fixtures under `crates/` or as bare `_fpas_*` names in the cwd.
-- After FPAS test changes, run `fpas test tests/` or `cargo test -p fpas-cli fpas_suite_`. Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
+- After FPAS test changes, run `fpas test tests/` or `fpas test tests/suite.fpasprj`. Spec: [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md).
 
 ## CI and automation
 
@@ -118,7 +118,7 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 ## Projects and libraries
 
 - **Compiled units are source-adjacent.** Libraries are `kind = "library"` projects consumed via `[dependencies].projects` (relative or absolute `.fpasprj` paths) or `[dependencies].workspace` (member `project.name` in an enclosing `.fpasworkspace`). Imported units compile independently into derived `.fpascu` sidecars. Spec: [`docs/pascal/program-structure/projects.md`](docs/pascal/program-structure/projects.md).
-- **Keep sources and manifests authoritative.** `fpas-build` validates, reuses, or rebuilds compatible sidecars automatically; `fpas-linker` produces the final executable chunk. Do not hand-edit or commit `.fpascu` files.
+- **Keep sources and manifests authoritative.** `fpas-build` validates, reuses, or rebuilds compatible sidecars automatically; `fpas-linker` produces the final verified executable. Do not hand-edit or commit `.fpascu` files.
 - **Do not add package managers, registries, semver dependency pins, `.fpaslib` containers, or a global artifact cache** as part of library work; path/workspace references and source-adjacent sidecars are the current model.
 - Loading and graph resolution live in `fpas-project`; unit builds in `fpas-build`; final linking in `fpas-linker`; CLI discovery/check/run in `fpas-cli`.
 - Library projects may list public units in `[exports].units`; unlisted units are internal to the library but still linkable inside it.
@@ -127,26 +127,4 @@ Do not describe unimplemented behavior in `docs/pascal/`. Plans belong in `docs/
 
 When planning file changes, show the intended layout before implementation.
 
-Example:
-
-```text
-crates/fpas-compiler/src/lowering/
-  ├── calls.rs          — call lowering (exists)
-  ├── case.rs           — case lowering (exists)
-  ├── control_flow.rs   — MODIFY: retain branch orchestration
-  └── loops.rs          — NEW: loop lowering split from control_flow.rs
-```
-
-If you are reorganizing existing files, call that out explicitly.
-
-Example:
-
-```text
-crates/fpas-vm/src/vm/hosted/
-  ├── console.rs               — MODIFY: retain intrinsic dispatch
-  └── console/
-      ├── input.rs             — NEW: extracted input handling
-      └── terminal.rs          — NEW: extracted terminal lifecycle
-```
-
-Then proceed with the implementation.
+List the actual paths to create, modify, move, split, or remove, with a short purpose for each. Call out reorganizations explicitly, then proceed with implementation.

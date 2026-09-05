@@ -15,7 +15,7 @@ Human-oriented CLIs often block agents: interactive prompts, huge upfront docs, 
 ## Non-interactive first
 
 - Every input should be expressible as a flag or flag value. Do not require arrow keys, menus, or timed prompts.
-- If flags are missing, **then** fall back to interactive mode—not the other way around.
+- Missing required arguments should produce an actionable error and nonzero exit. Only explicitly interactive commands should prompt.
 
 **Bad:** `mycli deploy` → `? Which environment? (use arrow keys)`
 

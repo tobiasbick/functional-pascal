@@ -31,6 +31,8 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | `tests/concurrency/` | `go` / task concurrency |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
+| `tests/apps/` | Application workflow tests |
+| `tests/debugger/` | Source debugger fixtures |
 | `tests/manual/` | Manual demos (not auto-discovered) |
 
 Run via:
@@ -39,7 +41,6 @@ Run via:
 fpas test tests/
 fpas test tests/suite.fpasprj
 fpas test tests/runner/assert_basics_test.fpas
-cargo test -p fpas-cli fpas_suite_
 ```
 
 Test files are named `*_test.fpas`. `Skip` tests are reported as skipped (use `--strict` to fail the run). See [`docs/pascal/std/testing/test.md`](../docs/pascal/std/testing/test.md).
@@ -223,7 +224,7 @@ All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table b
 | `math/tricorn/` | `tricorn.fpasprj`, program `TricornShowcase`, units `Tricorn.Color` / `Tricorn.Render` |
 | `math/newton/` | `newton.fpasprj`, program `NewtonShowcase`, units `Newton.Color` / `Newton.Render` |
 
-Helper units under those folders are built only through the project; see the one-line `{ ... }` comment at the top of each unit file.
+Build the helper units through their project manifests.
 
 ## Interactive demos (terminal)
 

@@ -299,91 +299,12 @@ assert_matches!(error, MyError::BadInput(_));
     * [`rstest`](https://crates.io/crates/rstest): fixture based test framework with procedural macros.
     * [`pretty_assertions`](https://crates.io/crates/pretty_assertions): overrides `assert_eq` and `assert_ne`, and creates colorful diffs between them.
 
-## 5.5 Snapshot Testing with `cargo insta`
+## 5.5 Golden output
 
-> When correctness is visual or structural, snapshots tell the story better than asserts.
+FPAS CLI tests support `<test>.expect.stdout` beside a test source. Follow the
+[test runner reference](../../../../docs/pascal/std/testing/test.md) and existing
+[golden-output tests](../../../../crates/fpas-cli/src/cli_test/tests/golden.rs).
+Headless TUI tests assert surface snapshots through the source library API.
 
-1. Add to your dependencies:
-```toml
-insta = { version = "1.42.2", features = ["yaml"] }
-```
-> For most real world applications the recommendation is to use YAML snapshots of serializable values. This is because they look best under version control and the diff viewer and support redaction. To use this enable the yaml feature of insta.
-
-2. For a better review experience, add the CLI `cargo install cargo-insta`.
-
-3. Writing a simple test:
-```rust
-fn split_words(s: &str) -> Vec<&str> {
-    s.split_whitespace().collect()
-}
-
-#[test]
-fn test_split_words() {
-    let words = split_words("hello from the other side");
-    insta::assert_yaml_snapshot!(words);
-}
-```
-
-4. Run `cargo insta test` to execute, and `cargo insta review` to review conflicts.
-
-To learn more about `cargo insta` check out its [documentation](https://insta.rs/docs/quickstart/) as it is a very complete and well documented tool.
-
-### What is snapshot testing?
-
-Snapshot testing compares your output (text, Json, HTML, YAML, etc) against a saved "golden" version. On future runs, the test fails if the output changes, unless humanly approved. It is perfect for:
-* Generate code.
-* Serializing complex data.
-* Rendered HTML.
-* CLI output.
-
-#### ❌ What not to test with snapshot
-* Very stable, numeric-only or small structured data associated logic (prefer `assert_eq!`).
-* Critical path logic (prefer precise unit tests).
-* Flaky tests, randomly generated output, unless redacted.
-* Snapshots of external resources, use mocks and stubs.
-
-## 5.6 ✅ Snapshot Best Practices
-
-* Named snapshots, it gives meaningful snapshot files names, e.g. `snapshots/this_is_a_named_snapshot.snap`
-```rust
-assert_snapshot!("this_is_a_named_snapshot", output);
-```
-
-* Keep snapshots small and clear. 
-```rust
-// ✅ Best case:
-assert_snapshot!("app_config/http", whole_app_config.http);
-
-// ❌ Worst case:
-assert_snapshot!("app_config", whole_app_config); // Huge object
-```
-
-> #### 🚨 Avoid snapshotting huge objects 
-> Huge objects become hard to review and reason about.
-
-* Avoid snapshotting simple types (primitives, flat enums, small structs):
-```rust
-// ✅ Better:
-assert_eq!(meaning_of_life, 42);
-
-// ❌ OVERKILL:
-assert_snapshot!("the_meaning_of_life", meaning_of_life); // meaning_of_life == 42
-```
-
-* Use [redactions](https://insta.rs/docs/redactions/) for unstable fields (randomly generated, timestamps, uuid, etc):
-```rust
-use insta::assert_json_snapshot;
-
-#[test]
-fn endpoint_get_user_data() {
-    let data = http::client.get_user_data();
-    assert_json_snapshot!(
-        "endpoints/subroute/get_user_data",
-        data,
-        ".created_at" => "[timestamp]",
-        ".id" => "[uuid]"
-    );
-}
-```
-* Commit your snapshots into git. They will be stored in `snapshots/` alongside your tests.
-* Review changes carefully before accepting.
+Keep expected output small and deterministic. Review changes against intended
+behavior; use precise assertions for scalar values and error conditions.

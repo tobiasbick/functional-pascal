@@ -11,10 +11,24 @@ analysis, then creates a fresh query service for each measured analysis request.
 Its arguments select the number of queries and declared functions. Parsing and
 warmup are excluded from the elapsed time.
 
+The loose-buffer fixture directory exists before timing so manifest discovery stays
+inside it. Earlier records used a missing directory and also scanned the changing
+parent scratch directory; those absolute timings are not comparable to the isolated
+fixture. This harness correction is not a language-service runtime speedup.
+
 `compiler_lowering` parses a generated program with sequential branches, then
 measures repeated semantic analysis and IR lowering of the same AST. Its arguments
 select the iteration and branch counts. Parsing, warmup, bytecode emission, and
 VM execution are excluded, so it measures compiler work directly.
+
+The project query workloads generate a manifest and twenty unopened sibling units,
+open the main buffer, and load the real source standard library. One complete analysis
+warms each process before timing. `project_queries` measures unchanged queries;
+`project_edits` applies three editor revisions and analyzes each; and
+`project_overlapping_queries` runs pairs of concurrent warm requests, including
+thread creation. They check semantic success and snapshot/cache identity. An untimed
+cancelled-refresh guard verifies rejection before work. They do not measure cancellation
+of a running semantic analysis or the LSP transport/queue.
 
 ```sh
 cargo bench-fpas save analysis-before --group tooling
@@ -120,7 +134,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service` and `compiler-lowering` run native tooling workloads and omit `path`
+- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, and `compiler-lowering` run native tooling workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

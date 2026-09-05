@@ -17,11 +17,14 @@ pub(super) fn command(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result
             command.arg("run").arg(program).arg("--");
             command
         }
-        BenchDriver::LanguageService | BenchDriver::CompilerLowering => {
+        BenchDriver::LanguageService
+        | BenchDriver::LanguageServiceProject
+        | BenchDriver::CompilerLowering => {
             let executable = std::env::current_exe().map_err(|error| error.to_string())?;
             let mut command = Command::new(executable);
             let driver = match spec.driver {
                 BenchDriver::CompilerLowering => "compiler-lowering",
+                BenchDriver::LanguageServiceProject => "language-service-project",
                 _ => "language-service",
             };
             command.args(["native", driver]);

@@ -40,6 +40,8 @@ pub enum BenchDriver {
     Fpas,
     /// Measure repeated editor analysis using fresh query snapshots.
     LanguageService,
+    /// Measure project, standard-library, and disk-backed editor queries.
+    LanguageServiceProject,
     /// Measure semantic analysis and IR lowering of branch-heavy programs.
     CompilerLowering,
 }

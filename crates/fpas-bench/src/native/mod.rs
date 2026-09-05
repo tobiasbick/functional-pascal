@@ -2,15 +2,22 @@
 
 mod compiler;
 mod language_service;
+mod project_queries;
 
 use std::process::ExitCode;
 
-const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas save tooling-before --group tooling";
+const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas save tooling-before --group tooling";
 
 /// Executes one native workload, or prints its usage.
 pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
     if args.iter().any(|arg| arg == "--help" || arg == "-h") {
         println!("{USAGE}");
+        return Ok(ExitCode::SUCCESS);
+    }
+    if let [driver, queries, units, mode] = args
+        && driver == "language-service-project"
+    {
+        project_queries::run(positive_count(queries)?, positive_count(units)?, mode)?;
         return Ok(ExitCode::SUCCESS);
     }
     let [driver, iterations, width] = args else {
@@ -45,6 +52,9 @@ mod tests {
             vec!["missing", "1", "1"],
             vec!["language-service", "0", "1"],
             vec!["language-service", "1", "-1"],
+            vec!["language-service-project", "1", "2", "unknown"],
+            vec!["language-service-project", "0", "2", "warm"],
+            vec!["language-service-project", "1", "2"],
         ] {
             assert!(run(&args.into_iter().map(str::to_owned).collect::<Vec<_>>()).is_err());
         }

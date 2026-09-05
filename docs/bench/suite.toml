@@ -176,3 +176,24 @@ group = "vm"
 path = "examples/pascal/vm/string_substring_benchmark.fpas"
 args = ["10000", "unicode"]
 timeout_ms = 120000
+
+[[bench]]
+id = "project_queries"
+group = "tooling"
+driver = "language-service-project"
+args = ["40", "20", "warm"]
+timeout_ms = 120000
+
+[[bench]]
+id = "project_edits"
+group = "tooling"
+driver = "language-service-project"
+args = ["3", "20", "edits"]
+timeout_ms = 120000
+
+[[bench]]
+id = "project_overlapping_queries"
+group = "tooling"
+driver = "language-service-project"
+args = ["20", "20", "overlap"]
+timeout_ms = 120000

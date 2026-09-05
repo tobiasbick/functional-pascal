@@ -97,7 +97,7 @@
   </table>
 
   <h2>Conditional refinements, not queued work</h2>
-  <p>No allocation experiment above remains open. The <a href="fast-interpreter-plan.html#next-work">Substring follow-up</a> has measured gains; project-aware LSP measurement is next; full-heap work stays behind the <a href="runtime-rewrite-options.html">major-rewrite gates</a>.</p>
+  <p>No allocation experiment above remains open. The <a href="fast-interpreter-plan.html#next-work">Substring follow-up</a> has measured gains; project-aware LSP composition also improved, and startup/test measurement is next; full-heap work stays behind the <a href="runtime-rewrite-options.html">major-rewrite gates</a>.</p>
   <ol>
     <li>Add low-overhead benchmark-only pool counters only when tuning pool bounds or investigating a concrete workload regression.</li>
     <li>Do not retry synchronized per-object slots: their measured access cost dominates the allocator saving.</li>

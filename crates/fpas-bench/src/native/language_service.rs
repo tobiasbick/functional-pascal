@@ -11,6 +11,8 @@ pub(super) fn run(queries: usize, functions: usize) -> Result<(), String> {
     let root = std::env::current_dir()
         .map_err(|error| error.to_string())?
         .join(".temp-data/bench/native-analysis");
+    // Keep discovery inside this fixture rather than scanning changing sibling benchmarks.
+    std::fs::create_dir_all(&root).map_err(|error| error.to_string())?;
     let path = root.join("query.fpas");
     let mut source = String::from("program QueryBenchmark;\n");
     for index in 0..functions {

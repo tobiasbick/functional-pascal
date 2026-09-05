@@ -1,5 +1,6 @@
 //! Source-standard-library composition for editor analysis.
 
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use fpas_project::{
@@ -9,6 +10,9 @@ use fpas_project::{
 
 use super::ProjectContext;
 use crate::document::normalized_path;
+
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug, Clone)]
 pub(crate) struct StandardLibraryContext {
@@ -127,13 +131,16 @@ fn merge_standard_library(
             .map(|source| normalized_path(source)),
     );
 
+    // Normalizing a path may access the filesystem. Do it once per source,
+    // rather than once per pair of user and standard-library sources.
+    let mut source_paths = target
+        .source_files
+        .iter()
+        .map(|source| normalized_path(source))
+        .collect::<HashSet<_>>();
     for source in &standard_library.source_files {
         let source = normalized_path(source);
-        if !target
-            .source_files
-            .iter()
-            .any(|existing| normalized_path(existing) == source)
-        {
+        if source_paths.insert(source.clone()) {
             target.source_files.push(source.clone());
         }
         target

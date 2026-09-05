@@ -14,6 +14,19 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Deduplicate normalized standard-library paths once per project composition
+
+- Group: `tooling`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| analysis_queries | 238 | - |
+| compiler_lowering | 1324 | - |
+| project_queries | 923 | - |
+| project_edits | 2507 | - |
+| project_overlapping_queries | 615 | - |
+
 ## 2026-09-05 — Borrow scalar substring ranges without full input copies
 
 - Group: `all`

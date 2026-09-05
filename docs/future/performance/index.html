@@ -30,7 +30,7 @@
 <body>
 <main>
   <header>
-    <div class="stamp">Plan reviewed · 5 September 2026 · Substring follow-up</div>
+    <div class="stamp">Plan reviewed · 5 September 2026 · Substring and project-query follow-up</div>
     <h1>Where FPAS spends its time</h1>
     <p class="lede">An evidence ledger for Rust runtime and tooling performance: retained improvements, rejected experiments, remaining measurement gaps, and the conditions for a larger rewrite.</p>
   </header>
@@ -54,7 +54,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">next measurement candidates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP workloads and startup/test phase measurements follow, one at a time. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
+  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">next measurement candidates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP composition now also has a measured improvement: roughly 89% for warm and overlapping requests and 22% for edits. Startup/test phase measurement is next. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

@@ -2,6 +2,7 @@
 
 use std::net::TcpStream;
 use std::sync::{Arc, OnceLock};
+use std::time::Duration;
 
 use rustls::pki_types::ServerName;
 use rustls::{ClientConfig, ClientConnection, StreamOwned};
@@ -13,8 +14,10 @@ static CLIENT_CONFIG: OnceLock<Result<Arc<ClientConfig>, String>> = OnceLock::ne
 pub(in crate::vm::hosted::net) fn connect(
     socket: TcpStream,
     server_name: &str,
+    timeout: Duration,
+    is_cancelled: impl Fn() -> bool,
 ) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
-    connect_with_config(socket, server_name, client_config()?)
+    connect_with_config(socket, server_name, client_config()?, timeout, is_cancelled)
 }
 
 fn client_config() -> Result<Arc<ClientConfig>, String> {
@@ -37,16 +40,18 @@ fn connect_with_config(
     socket: TcpStream,
     server_name: &str,
     config: Arc<ClientConfig>,
+    timeout: Duration,
+    is_cancelled: impl Fn() -> bool,
 ) -> Result<StreamOwned<ClientConnection, TcpStream>, String> {
     let server_name = ServerName::try_from(server_name.to_owned())
         .map_err(|error| format!("Invalid TLS server name '{server_name}': {error}"))?;
     let connection = ClientConnection::new(config, server_name)
         .map_err(|error| format!("Could not create TLS client: {error}"))?;
     let mut stream = StreamOwned::new(connection, socket);
-    stream
-        .conn
-        .complete_io(&mut stream.sock)
-        .map_err(|error| format!("TLS handshake failed: {error}"))?;
+    super::handshake::complete(&mut stream.sock, timeout, is_cancelled, |socket| {
+        stream.conn.complete_io(socket)?;
+        Ok(!stream.conn.is_handshaking())
+    })?;
     Ok(stream)
 }
 
@@ -124,8 +129,14 @@ mod tests {
         let (port, server) = fixture.spawn_server();
         let socket = TcpStream::connect(("127.0.0.1", port)).expect("connect TLS socket");
         let mut transport = Transport::tls_client(
-            connect_with_config(socket, "localhost", fixture.client_config())
-                .expect("complete TLS handshake"),
+            connect_with_config(
+                socket,
+                "localhost",
+                fixture.client_config(),
+                std::time::Duration::from_secs(5),
+                || false,
+            )
+            .expect("complete TLS handshake"),
         );
 
         transport.write_all(b"ping").expect("write TLS request");
@@ -145,8 +156,14 @@ mod tests {
         let (port, server) = fixture.spawn_server();
         let socket = TcpStream::connect(("127.0.0.1", port)).expect("connect TLS socket");
 
-        let error = connect_with_config(socket, "wrong.example", fixture.client_config())
-            .expect_err("hostname mismatch must fail");
+        let error = connect_with_config(
+            socket,
+            "wrong.example",
+            fixture.client_config(),
+            std::time::Duration::from_secs(5),
+            || false,
+        )
+        .expect_err("hostname mismatch must fail");
 
         assert!(error.contains("certificate not valid for name"), "{error}");
         server.join().expect("join TLS server");
@@ -164,8 +181,14 @@ mod tests {
             .with_root_certificates(RootCertStore::empty())
             .with_no_client_auth();
 
-        let error = connect_with_config(socket, "localhost", Arc::new(config))
-            .expect_err("untrusted certificate must fail");
+        let error = connect_with_config(
+            socket,
+            "localhost",
+            Arc::new(config),
+            std::time::Duration::from_secs(5),
+            || false,
+        )
+        .expect_err("untrusted certificate must fail");
 
         assert!(error.contains("UnknownIssuer"), "{error}");
         server.join().expect("join TLS server");

@@ -105,6 +105,7 @@ pub(super) fn validate_abc(
             )
         }
         Opcode::Move
+        | Opcode::ArrayPop
         | Opcode::NegateInteger
         | Opcode::NegateReal
         | Opcode::NegateDynamic

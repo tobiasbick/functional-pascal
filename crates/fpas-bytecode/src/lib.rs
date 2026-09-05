@@ -54,4 +54,4 @@ pub use value::{
 };
 
 /// Persistent register instruction-set version recorded in compiled artifacts.
-pub const BYTECODE_VERSION: u32 = 14;
+pub const BYTECODE_VERSION: u32 = 15;

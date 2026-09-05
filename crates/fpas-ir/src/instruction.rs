@@ -194,6 +194,11 @@ pub enum Operation {
         /// Value appended to the array.
         value: ValueId,
     },
+    /// Removes and returns the last element of a local array with copy-on-write isolation.
+    ArrayPop {
+        /// Local array updated by the operation.
+        local: LocalId,
+    },
     /// Constructs an insertion-ordered dictionary.
     MakeDictionary(Vec<(ValueId, ValueId)>),
     /// Reads an array element or dictionary value.
@@ -360,6 +365,7 @@ impl Operation {
                 | Self::LoadGlobal(_)
                 | Self::MakeArray(_)
                 | Self::ArrayPush { .. }
+                | Self::ArrayPop { .. }
                 | Self::MakeDictionary(_)
                 | Self::IndexGet { .. }
                 | Self::IndexSet { .. }

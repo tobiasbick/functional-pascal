@@ -1,0 +1,42 @@
+// Scaling workload driven by cargo bench-fpas. Setup is outside the timer.
+program DictionaryReadsBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Array, Std.Dict, Std.Option;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    panic('expected ITERATIONS SIZE')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  var Size: integer := StrToInt(ParamStr(1));
+  if (Iterations < 1) or (Size < 1) then
+  begin
+    panic('arguments must be positive')
+  end;
+  mutable var Values: dict of integer to integer := [0: 0];
+  for Index: integer := 0 to Size - 1 do
+  begin
+    Values[Index] := Index
+  end;
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    if Std.Dict.Length(Values) <> Size then
+    begin
+      panic('dictionary length')
+    end;
+
+    if not Std.Dict.ContainsKey(Values, 0) then
+    begin
+      panic('first key')
+    end;
+
+    if Std.Option.Unwrap(Std.Dict.Get(Values, 0)) <> 0 then
+    begin
+      panic('first value')
+    end
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
+end.

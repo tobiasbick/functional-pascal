@@ -14,6 +14,51 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Review fixes: borrowed dictionary reads, scalar equality, local array pop and text/body processing
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 8344 | throughput: 5992329 iters/s |
+| global_access | 486 | throughput: 10288065 global updates/s |
+| record_field_access | 1453 | throughput: 10323468 field accesses/s |
+| closure_call | 454 | throughput: 6607929 closure calls/s |
+| branch_dispatch | 3335 | throughput: 5997001 branches/s |
+| dynamic_numeric | 840 | throughput: 5952380 dynamic numeric ops/s |
+| array_push | 208 | throughput: 9615384 pushes/s |
+| array_length | 71 | throughput: 7042253 lengths/s |
+| string_concat | 2096 | throughput: 2385496 concats/s |
+| string_length | 73 | throughput: 6849315 lengths/s |
+| intrinsic_dispatch | 1621 | throughput: 9253547 intrinsic calls/s |
+| function_call | 669 | throughput: 8968609 calls/s |
+| array_callbacks | 916 | throughput: 10480349 callbacks/s |
+| record_update | 356 | throughput: 2808988 updates/s |
+| unicode_char_at | 1058 | throughput: 2835538 chars/s |
+| wrapper_payload | 1422 | throughput: 7032348 wrappers/s |
+| task_spawn_wait | 503 | throughput: 198807 tasks/s |
+| task_array_callbacks | 819 | throughput: 4688644 callbacks/s |
+| tui_headless | 5000 | throughput: 100 frames/s |
+| notes_headless | 11658 | throughput: 21 frames/s |
+| analysis_queries | 247 | - |
+| string_search | 294 | - |
+| compiler_lowering | 1220 | - |
+| substring_ascii | 11 | - |
+| substring_unicode | 399 | - |
+| project_queries | 892 | - |
+| project_edits | 2500 | - |
+| project_overlapping_queries | 561 | - |
+| project_build_cold | 1528 | - |
+| project_build_warm | 1258 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+| dictionary_reads | 9 | - |
+| scalar_membership | 27 | - |
+| array_pop | 5 | - |
+| text_area_locate | 2232 | - |
+| http_body_accumulation | 208 | - |
+
 ## 2026-09-05 — Reuse complete program debugger subgraph depths on a cold validation path
 
 - Group: `startup`

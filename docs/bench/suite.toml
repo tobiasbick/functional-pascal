@@ -225,3 +225,38 @@ group = "startup"
 driver = "program-artifact"
 args = ["500", "16"]
 timeout_ms = 120000
+
+[[bench]]
+id = "dictionary_reads"
+group = "review"
+path = "examples/pascal/vm/dictionary_reads_benchmark.fpas"
+args = ["20000", "1024"]
+timeout_ms = 120000
+
+[[bench]]
+id = "scalar_membership"
+group = "review"
+path = "examples/pascal/vm/scalar_membership_benchmark.fpas"
+args = ["4000", "4096"]
+timeout_ms = 120000
+
+[[bench]]
+id = "array_pop"
+group = "review"
+path = "examples/pascal/vm/array_pop_benchmark.fpas"
+args = ["4", "12000"]
+timeout_ms = 120000
+
+[[bench]]
+id = "text_area_locate"
+group = "review"
+path = "examples/pascal/tui/text_area_locate_benchmark.fpas"
+args = ["80", "8192"]
+timeout_ms = 120000
+
+[[bench]]
+id = "http_body_accumulation"
+group = "review"
+driver = "http-body"
+args = ["40", "1024"]
+timeout_ms = 120000

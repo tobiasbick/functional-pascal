@@ -50,11 +50,14 @@ impl<'a> ClosureRegistry<'a> {
         types: &mut types::TypeTable,
     ) -> Result<(), CompileError> {
         match statement {
-            Stmt::Block(statements, _)
-            | Stmt::Repeat {
-                body: statements, ..
-            } => {
+            Stmt::Block(statements, _) => {
                 self.discover_statements(statements, owner, metadata, types)?;
+            }
+            Stmt::Repeat {
+                body, condition, ..
+            } => {
+                self.discover_statements(body, owner, metadata, types)?;
+                self.visit_expression(condition, owner, metadata, types)?;
             }
             Stmt::Var(definition) | Stmt::MutableVar(definition) => {
                 self.visit_expression(&definition.value, owner, metadata, types)?;

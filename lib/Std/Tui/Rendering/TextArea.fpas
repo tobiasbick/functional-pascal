@@ -1,8 +1,8 @@
 unit Std.Tui.Rendering.TextArea;
 
 uses
-  Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point, Std.Tui.Geometry.Rect,
-  Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
+  Std.Array, Std.Str, Std.Tui.Cells.Cell, Std.Tui.Cells.StyleRole, Std.Tui.Geometry.Point,
+  Std.Tui.Geometry.Rect, Std.Tui.Rendering.Canvas, Std.Tui.Text.TextArea;
 
 // Paints clipped text-area lines and a focused visible caret.
 //
@@ -31,13 +31,14 @@ begin
     return
   end;
   var Area: TuiCanvas := Canvas.Child(Bounds);
-  var LineCount: integer := TuiTextAreaLineCount(Text);
+  var Lines: array of string := Std.Str.Split(Text, Std.Str.Chr(10));
+  var LineCount: integer := Std.Array.Length(Lines);
   for Row: integer := 0 to Bounds.Height - 1 do
   begin
     var Line: integer := Offset.Y + Row;
     if Line < LineCount then
     begin
-      Area.WriteText(TuiPoint.Create(- Offset.X, Row), TuiTextAreaLineText(Text, Line), NormalRole)
+      Area.WriteText(TuiPoint.Create(- Offset.X, Row), Lines[Line], NormalRole)
     end
   end;
 

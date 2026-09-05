@@ -52,6 +52,10 @@ Requires `uses Std.Math;`.
 
 ---
 
+`Floor`, `Ceil`, `Round`, and `Trunc` report a runtime error when the rounded
+result is non-finite or outside the signed 64-bit integer range. In particular,
+`9223372036854775808.0` (2^63) is outside that range; -2^63 is valid.
+
 ## Constant `Pi`
 
 - **Type:** `real`

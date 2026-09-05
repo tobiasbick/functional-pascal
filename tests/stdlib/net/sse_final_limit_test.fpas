@@ -1,0 +1,45 @@
+program SseFinalLimitTest;
+
+uses Std.Array, Std.Http, Std.Net.Utf8, Std.Result, Std.Str, Std.Test;
+
+procedure CheckFinal(Text: string; Maximum: integer; Expected: string);
+begin
+  var Decoder: SseDecoder := Std.Result.Unwrap(CreateSseDecoder(Maximum));
+  var Before: array of SseEvent := Std.Result.Unwrap(FeedSse(Decoder, Std.Net.Utf8.Encode(Text)));
+  AssertEquals(0, Std.Array.Length(Before));
+  var Events: array of SseEvent := Std.Result.Unwrap(FinishSse(Decoder));
+  AssertEquals(1, Std.Array.Length(Events));
+  AssertEquals(Expected, Events[0].Data);
+  case FeedSse(Decoder, []) of
+    Ok(_):
+    begin
+      panic('finished decoder accepted input')
+    end;
+    Error(_):
+    begin
+    end
+  end
+end;
+
+begin
+  for Maximum: integer := 7 to 9 do
+  begin
+    CheckFinal('data: x', Maximum, 'x')
+  end;
+
+  CheckFinal('data: x' + #13, 8, 'x');
+  CheckFinal('data: x' + #10, 8, 'x');
+  var Small: SseDecoder := Std.Result.Unwrap(CreateSseDecoder(6));
+  case FeedSse(Small, Std.Net.Utf8.Encode('data: x')) of
+    Ok(_):
+    begin
+      panic('oversized event accepted')
+    end;
+    Error(_):
+    begin
+    end
+  end;
+  var Empty: SseDecoder := Std.Result.Unwrap(CreateSseDecoder(1));
+  var Events: array of SseEvent := Std.Result.Unwrap(FinishSse(Empty));
+  AssertEquals(0, Std.Array.Length(Events))
+end.

@@ -1,0 +1,36 @@
+// Local stack drain; each timed iteration includes array construction.
+program ArrayPopBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Time, Std.Array;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    panic('expected ITERATIONS SIZE')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  var Size: integer := StrToInt(ParamStr(1));
+  if (Iterations < 1) or (Size < 1) then
+  begin
+    panic('arguments must be positive')
+  end;
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    mutable var Values: array of integer := Std.Array.Fill(7, Size);
+    for Index: integer := 1 to Size do
+    begin
+      if Std.Array.Pop(Values) <> 7 then
+      begin
+        panic('popped value')
+      end
+    end;
+
+    if Std.Array.Length(Values) <> 0 then
+    begin
+      panic('drain length')
+    end
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms')
+end.

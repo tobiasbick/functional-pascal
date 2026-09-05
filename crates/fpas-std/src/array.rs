@@ -2,7 +2,7 @@
 //!
 //! **Documentation:** `docs/pascal/std/collections/array/README.md` (from the repository root).
 //! **Maintenance:** Keep that Markdown file aligned with this file, `intrinsics.rs`,
-//! `fpas-vm` (`ArrayPushLocal` / `ArrayPopLocal`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
+//! `fpas-vm` (`ArrayPush` / `ArrayPop`), `fpas-compiler`, and `fpas-sema` `std_registry.rs`.
 
 use crate::error::{StdError, std_runtime_error};
 use crate::intrinsic_args::{IntrinsicCall, expect_array, pop_array, pop_int, pop_value};

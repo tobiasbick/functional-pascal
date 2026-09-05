@@ -1,0 +1,52 @@
+// Long-document caret rendering through the public headless TUI.
+program TextAreaLocateBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time, Std.Tui;
+
+function View(Text: string): TuiElement;
+begin
+  return TuiElementBuilders.MakeDesktop(Some(TuiControlId.Create(1)), [
+                                                                        TuiElementBuilders.MakeTextArea(TuiControlId.Create(1), Text, Std.Str.Length(Text), TuiPoint.Create(0, 0), TuiAction.Create(1))
+                                                                      ])
+end;
+
+function Update(Text: string; Msg: TuiMsg; Cmd: TuiCmdOutput): string;
+begin
+  return Text
+end;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    panic('expected ITERATIONS SIZE')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  var Size: integer := StrToInt(ParamStr(1));
+  if (Iterations < 1) or (Size < 1) then
+  begin
+    panic('arguments must be positive')
+  end;
+  var Text: string := Std.Str.RepeatStr('é', Size);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(80, 24));
+  App.RunIterations(Text, Update, View, 0, 0);
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    App.RunIterations(Text, Update, View, 0, 0)
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(ElapsedMillis(Started))) + ' ms');
+  mutable var Visible: integer := Size;
+  if Visible > 80 then
+  begin
+    Visible := 80
+  end;
+
+  if Std.Str.Substring(App.SurfaceSnapshot().LineAt(0), 0, Visible) <>
+     Std.Str.RepeatStr('é', Visible) then
+  begin
+    panic('rendered text')
+  end;
+
+  App.Close()
+end.

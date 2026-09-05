@@ -5,6 +5,8 @@ use std::time::Duration;
 
 use super::*;
 
+mod limits;
+
 fn read_request_head(stream: &mut TcpStream) {
     let mut request = Vec::new();
     while !request.windows(4).any(|window| window == b"\r\n\r\n") {

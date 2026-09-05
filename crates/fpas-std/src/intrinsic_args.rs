@@ -2,7 +2,7 @@
 
 use crate::AggregateFactory;
 use crate::error::{StdError, std_runtime_error};
-use fpas_bytecode::{SharedArray, SharedStr, SourceLocation, Value};
+use fpas_bytecode::{SharedArray, SharedDict, SharedStr, SourceLocation, Value};
 use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
@@ -152,12 +152,18 @@ pub(crate) fn pop_bool(v: &Value, location: SourceLocation) -> Result<bool, StdE
     }
 }
 
+/// Copies dictionary entries for operations that construct a modified dictionary.
 pub(crate) fn pop_dict(
     v: &Value,
     location: SourceLocation,
 ) -> Result<Vec<(Value, Value)>, StdError> {
+    Ok(expect_dict(v, location)?.iter().cloned().collect())
+}
+
+/// Borrows dictionary entries without copying keys or values.
+pub(crate) fn expect_dict(v: &Value, location: SourceLocation) -> Result<&SharedDict, StdError> {
     match v {
-        Value::Dict(pairs) => Ok(pairs.iter().cloned().collect()),
+        Value::Dict(pairs) => Ok(pairs),
         other => Err(std_runtime_error(
             RUNTIME_VM_OPERAND_TYPE_MISMATCH,
             format!("Expected dictionary argument, got {}", other.type_name()),

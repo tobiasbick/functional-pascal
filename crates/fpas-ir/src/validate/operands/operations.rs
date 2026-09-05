@@ -206,6 +206,7 @@ fn validate_operation(
         ),
         Operation::MakeArray(_)
         | Operation::ArrayPush { .. }
+        | Operation::ArrayPop { .. }
         | Operation::MakeDictionary(_)
         | Operation::IndexGet { .. }
         | Operation::IndexSet { .. }

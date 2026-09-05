@@ -1,5 +1,7 @@
 //! Dense global and positional aggregate operations.
 
+mod arrays;
+
 use fpas_bytecode::{
     AbcOperands, AbxOperands, SharedEnum, SharedRecord, Value, managed_value_buffer,
 };
@@ -68,21 +70,6 @@ impl Worker {
         }
         self.note_debug_global_store(index);
         Ok(())
-    }
-
-    pub fn make_array(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let values = self.window(o.b, usize::from(o.c))?;
-        self.write(register(o.a)?, Value::Array(values.into()))
-    }
-
-    pub fn array_push(&mut self, o: AbcOperands) -> Result<(), VmError> {
-        let value = self.read(register(o.c)?)?.clone();
-        let array = self.take(register(o.b)?)?;
-        let Value::Array(mut array) = array else {
-            return Err(self.type_mismatch("array", &array));
-        };
-        array.push(value);
-        self.write(register(o.a)?, Value::Array(array))
     }
 
     pub fn make_dictionary(&mut self, o: AbcOperands) -> Result<(), VmError> {
@@ -194,19 +181,25 @@ impl Worker {
         self.write(register(o.a)?, value)
     }
 
+    /// Updates a validated field, reusing uniquely owned record storage.
     pub fn store_field(&mut self, o: AbcOperands) -> Result<(), VmError> {
         let value = self.read(register(o.c)?)?.clone();
-        let record = match self.read(register(o.a)?)?.clone() {
-            Value::Record(mut record) => {
-                *record
-                    .values_mut()
-                    .get_mut(usize::from(o.b))
-                    .ok_or_else(|| self.bad_slot("record field", u32::from(o.b)))? = value;
-                Value::Record(record)
-            }
-            other => return Err(self.type_mismatch("record", &other)),
+        let destination = register(o.a)?;
+        let field = usize::from(o.b);
+        match self.read(destination)? {
+            Value::Record(record) if field < record.body().values.len() => {}
+            Value::Record(_) => return Err(self.bad_slot("record field", u32::from(o.b))),
+            other => return Err(self.type_mismatch("record", other)),
+        }
+        let Value::Record(mut record) = self.take(destination)? else {
+            return Err(diagnostics::internal(
+                self.executable.executable(),
+                self.current_address,
+                "Validated StoreField destination changed type before commit",
+            ));
         };
-        self.write(register(o.a)?, record)
+        record.values_mut()[field] = value;
+        self.write(destination, Value::Record(record))
     }
 
     pub fn update_record(&mut self, o: AbcOperands) -> Result<(), VmError> {

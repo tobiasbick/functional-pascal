@@ -2,33 +2,8 @@
 unit Std.Http.Stream;
 
 uses
-  Std.Array, Std.Http.BodyFraming, Std.Http.Handles, Std.Http.Types, Std.Http.Wire, Std.Net,
-  Std.Net.Utf8;
-
-type
-  // Mutable network and framing state retained for one body handle.
-  StreamState = record
-    // Underlying TCP or TLS connection.
-    Connection: Std.Net.Connection;
-    // Decoded or framing bytes already read from the connection.
-    Buffer: array of integer;
-    // Internal body-framing mode identifier.
-    Mode: integer;
-    // Bytes remaining for fixed-length framing.
-    Remaining: integer;
-    // Bytes remaining in the current chunk.
-    ChunkRemaining: integer;
-    // Whether the current chunk payload still requires its terminating CRLF.
-    NeedChunkTerminator: boolean;
-    // Total network bytes consumed for response limits.
-    BytesReceived: integer;
-    // Maximum total response bytes.
-    Maximum: integer;
-    // Whether the body has reached its framing-defined end.
-    Finished: boolean;
-    // Whether the backing connection remains available.
-    Open: boolean;
-  end;
+  Std.Array, Std.Http.Stream.Types, Std.Http.Io, Std.Http.BodyFraming, Std.Http.Handles,
+  Std.Http.Types, Std.Http.Wire, Std.Net, Std.Net.Utf8;
 
 // Reserves and stores one state in the hosted HTTP registry.
 function ReserveState(State: StreamState): integer;
@@ -104,19 +79,8 @@ begin
   begin
     return Ok(false)
   end;
-  var Available: integer := State.Maximum - State.BytesReceived;
-  if Available < 1 then
-  begin
-    CloseAt(Index);
-    return Error('HTTP response exceeds MaxResponseBytes')
-  end;
-  mutable var Count: integer := 65536;
-  if Available < Count then
-  begin
-    Count := Available
-  end;
 
-  case Std.Net.Read(State.Connection, Count) of
+  case Std.Http.Io.ReadResponseBytes(State.Connection, State.Maximum - State.BytesReceived) of
     Ok(Bytes):
     begin
       if Std.Array.Length(Bytes) = 0 then

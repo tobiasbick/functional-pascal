@@ -81,6 +81,18 @@ fn validate_p5(
                 TypeCategory::Unit,
             )
         }
+        Operation::ArrayPop { local } => {
+            let local = function.local(*local).ok_or_else(|| {
+                unknown(function, block, instruction, EntityKind::Local, local.get())
+            })?;
+            if !local.mutable {
+                return invalid_p5_result(function, block, instruction, local.ty);
+            }
+            let Some(IrType::Array(element)) = program.ty(local.ty).map(|definition| &definition.kind) else {
+                return invalid_p5_result(function, block, instruction, local.ty);
+            };
+            require_exact(function, block, instruction, "popped array element", *element, result.ty)
+        }
         Operation::MakeDictionary(pairs) => {
             match program.ty(result.ty).map(|definition| &definition.kind) {
                 Some(IrType::Dictionary { key, value }) => {

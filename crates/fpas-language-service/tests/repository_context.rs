@@ -109,7 +109,7 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
         .expect("NotesUpdate references")
         .value;
 
-    assert_eq!(references.len(), 26, "{references:?}");
+    assert_eq!(references.len(), 31, "{references:?}");
     assert!(
         references.iter().any(|reference| reference.path.ends_with(
             program
@@ -135,6 +135,14 @@ fn repository_references_find_notes_update_in_the_consuming_program() {
             .count(),
         1,
         "{references:?}"
+    );
+    assert_eq!(
+        references
+            .iter()
+            .filter(|reference| reference.path.ends_with("note_navigation_dirty_test.fpas"))
+            .count(),
+        5,
+        "new navigation regression references"
     );
     assert_eq!(
         references

@@ -538,31 +538,7 @@ end.",
     );
 }
 
-#[test]
-fn array_push_uses_direct_opcode_and_preserves_value_aliases() {
-    let source = "\
-program RegisterArrayPush;
-uses Std.Array;
-begin
-  mutable var A: array of integer := [1];
-  var Original: array of integer := A;
-  Push(A, 2);
-  if Length(Original) <> 1 then panic('array alias changed');
-  if Length(A) <> 2 then panic('array push length mismatch');
-  if A[1] <> 2 then panic('array push value mismatch')
-end.";
-    assert_succeeds(source);
-
-    let program = super::parse_ok(source);
-    let executable = crate::compile(&program).expect("compilation should succeed");
-    assert!(
-        executable
-            .executable()
-            .code
-            .iter()
-            .any(|instruction| { instruction.opcode() == Ok(fpas_bytecode::Opcode::ArrayPush) })
-    );
-}
+mod arrays;
 
 #[test]
 fn global_nested_index_write_uses_direct_path_and_preserves_value_aliases() {

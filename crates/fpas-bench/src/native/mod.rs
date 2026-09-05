@@ -2,6 +2,7 @@
 
 mod compiler;
 mod fixture_directory;
+mod http_body;
 mod language_service;
 mod program_artifact;
 mod project_build;
@@ -10,7 +11,7 @@ mod unit_artifact;
 
 use std::process::ExitCode;
 
-const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n  cargo bench-fpas native project-build <iterations> <cold|warm>\n  cargo bench-fpas native unit-artifact <iterations> <depth>\n  cargo bench-fpas native program-artifact <iterations> <depth>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas native project-build 3 warm\n  cargo bench-fpas save tooling-before --group tooling";
+const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native http-body <iterations> <fragment-bytes>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n  cargo bench-fpas native project-build <iterations> <cold|warm>\n  cargo bench-fpas native unit-artifact <iterations> <depth>\n  cargo bench-fpas native program-artifact <iterations> <depth>\n\nExamples:\n  cargo bench-fpas run --group review\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas native project-build 3 warm\n  cargo bench-fpas save tooling-before --group tooling";
 
 /// Executes one native workload, or prints its usage.
 pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
@@ -28,6 +29,7 @@ pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
         return Err(USAGE.to_owned());
     };
     match driver.as_str() {
+        "http-body" => http_body::run(positive_count(iterations)?, positive_count(width)?)?,
         "language-service" => {
             language_service::run(positive_count(iterations)?, positive_count(width)?)?
         }
@@ -59,6 +61,8 @@ mod tests {
         for args in [
             vec![],
             vec!["missing", "1", "1"],
+            vec!["http-body", "0", "1024"],
+            vec!["http-body", "1", "65537"],
             vec!["language-service", "0", "1"],
             vec!["language-service", "1", "-1"],
             vec!["language-service-project", "1", "2", "unknown"],

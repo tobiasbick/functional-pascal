@@ -78,3 +78,31 @@ fn deep_value_child() {
         }
     }
 }
+
+#[test]
+fn scalar_and_nested_equality_preserve_identity_rules() {
+    let nan = f64::from_bits(0x7ff8_0000_0000_0001);
+    assert_eq!(Value::Real(nan), Value::Real(nan));
+    assert_ne!(
+        Value::Real(nan),
+        Value::Real(f64::from_bits(0x7ff8_0000_0000_0002))
+    );
+    assert_eq!(Value::Real(-0.0), Value::Real(0.0));
+    assert_ne!(Value::Integer(1), Value::Real(1.0));
+    let first = (
+        Value::Str("a".into()),
+        Value::option_some(Value::Integer(1)),
+    );
+    let second = (
+        Value::Str("b".into()),
+        Value::Array(vec![Value::Boolean(true)].into()),
+    );
+    assert_eq!(
+        Value::dict(vec![first.clone(), second.clone()]),
+        Value::dict(vec![first.clone(), second.clone()])
+    );
+    assert_ne!(
+        Value::dict(vec![first.clone(), second.clone()]),
+        Value::dict(vec![second, first])
+    );
+}

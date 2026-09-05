@@ -1,5 +1,7 @@
 //! Direct and first-class call lowering.
 
+mod arrays;
+
 use fpas_ir::{Constant, IntrinsicId, Operation, TypeId, ValueId};
 use fpas_parser::{Designator, DesignatorPart, Expr};
 
@@ -143,113 +145,6 @@ impl LoweringContext {
             result,
             span,
         )
-    }
-
-    fn lower_array_push(
-        &mut self,
-        arguments: &[Expr],
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let [Expr::Designator(target), value] = arguments else {
-            return Err(unsupported(span, "Std.Array.Push arguments"));
-        };
-        let array_ty = self.mutable_array_target_type(target)?;
-        let element_ty = match self.type_kind(array_ty) {
-            Some(fpas_ir::IrType::Array(element)) => element,
-            _ => return Err(unsupported(target.span, "mutable array target type")),
-        };
-        let value = match value {
-            Expr::RecordLiteral { fields, span } => {
-                self.lower_record_literal_as(fields, element_ty, *span)?
-            }
-            _ => self.lower_expression(value)?,
-        };
-        let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
-            return Err(unsupported(target.span, "mutable array target"));
-        };
-        if let Some(local) = self.direct_local(name) {
-            return self.emit_value(
-                Operation::ArrayPush { local, value },
-                super::types::UNIT,
-                span,
-            );
-        }
-
-        let array = self.lower_designator_read(target)?;
-        let appended = self.emit_value(Operation::MakeArray(vec![value]), array_ty, span)?;
-        self.record_call_arguments(2, span)?;
-        let updated = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Concat),
-            vec![array, appended],
-            array_ty,
-            span,
-        )?;
-        self.lower_designator_write(target, updated, span)?;
-        self.emit_value(Operation::Const(Constant::Unit), super::types::UNIT, span)
-    }
-
-    fn lower_array_pop(
-        &mut self,
-        arguments: &[Expr],
-        result: TypeId,
-        span: fpas_lexer::Span,
-    ) -> Result<ValueId, CompileError> {
-        let [Expr::Designator(target)] = arguments else {
-            return Err(unsupported(span, "Std.Array.Pop argument"));
-        };
-        let array_ty = self.mutable_array_target_type(target)?;
-        let array = self.lower_designator_read(target)?;
-        self.record_call_arguments(1, span)?;
-        let length = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Length),
-            vec![array],
-            super::types::INTEGER,
-            span,
-        )?;
-        let one = self.emit_value(
-            Operation::Const(Constant::Integer(1)),
-            super::types::INTEGER,
-            span,
-        )?;
-        let last_index = self.emit_value(
-            Operation::Binary {
-                operation: fpas_ir::BinaryOperation::SubtractInteger,
-                left: length,
-                right: one,
-            },
-            super::types::INTEGER,
-            span,
-        )?;
-        let popped = self.emit_value(
-            Operation::IndexGet {
-                collection: array,
-                index: last_index,
-            },
-            result,
-            span,
-        )?;
-        let zero = self.emit_value(
-            Operation::Const(Constant::Integer(0)),
-            super::types::INTEGER,
-            span,
-        )?;
-        self.record_call_arguments(3, span)?;
-        let shortened = self.emit_intrinsic_value(
-            fpas_bytecode::Intrinsic::Array(fpas_bytecode::ArrayIntrinsic::Slice),
-            vec![array, zero, last_index],
-            array_ty,
-            span,
-        )?;
-        self.lower_designator_write(target, shortened, span)?;
-        Ok(popped)
-    }
-
-    fn mutable_array_target_type(&self, target: &Designator) -> Result<TypeId, CompileError> {
-        let [DesignatorPart::Ident(name, _)] = target.parts.as_slice() else {
-            return Err(unsupported(target.span, "mutable array target"));
-        };
-        self.root_type(name)
-            .ok_or_else(|| unsupported(target.span, "mutable array target type"))
     }
 
     fn lower_console_write(

@@ -1,0 +1,123 @@
+// Controlled text proposals and selection updates for Notes.
+unit Notes.Editing;
+
+uses Notes.Model, Std.Array, Std.Conv, Std.Tui;
+
+const
+  SearchChangedAction: integer := 1;
+  TitleChangedAction: integer := 3;
+  TagsChangedAction: integer := 4;
+  BodyChangedAction: integer := 5;
+
+// Reports whether the selection refers to an existing note.
+public function NotesHasSelection(State: NotesModel): boolean;
+begin
+  return (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))
+end;
+
+// Replaces one note while preserving the remaining model state.
+public function NotesWithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
+begin
+  mutable var Notes: array of Note := State.Notes;
+  Notes[Index] := NoteValue;
+  mutable var Next: NotesModel := State;
+  Next.Notes := Notes;
+  return Next
+end;
+
+function SameTags(Left: array of string; Right: array of string): boolean;
+begin
+  if Std.Array.Length(Left) <> Std.Array.Length(Right) then
+  begin
+    return false
+  end;
+
+  for Index: integer := 0 to Std.Array.Length(Left) - 1 do
+  begin
+    if Left[Index] <> Right[Index] then
+    begin
+      return false
+    end
+  end;
+
+  return true
+end;
+
+// Applies a single-line proposal, preserving clean state for caret-only changes.
+public function NotesEditText(State: NotesModel; Action: integer; Text: string; Caret: integer): NotesModel;
+begin
+  mutable var Next: NotesModel := State;
+  if Action = SearchChangedAction then
+  begin
+    Next.Search := Text;
+    Next.SearchCaret := Caret;
+    Next.Status := IntToStr(Std.Array.Length(NotesFilteredIndices(Next.Notes, Text))) +
+                   ' matching note(s)';
+    return Next
+  end;
+
+  if (Action = TitleChangedAction) and NotesHasSelection(Next) then
+  begin
+    mutable var NoteValue: Note := Next.Notes[Next.Selected];
+    Next.TitleCaret := Caret;
+    if NoteValue.Title = Text then
+    begin
+      return Next
+    end;
+
+    NoteValue.Title := Text;
+    Next := NotesWithNote(Next, Next.Selected, NoteValue);
+    Next.Dirty := true;
+    Next.Status := 'Unsaved changes';
+    return Next
+  end;
+
+  if (Action = TagsChangedAction) and NotesHasSelection(Next) then
+  begin
+    Next.TagsText := Text;
+    Next.TagsCaret := Caret;
+    mutable var NoteValue: Note := Next.Notes[Next.Selected];
+    var Tags: array of string := NoteTagsFromText(Text);
+    if SameTags(NoteValue.Tags, Tags) then
+    begin
+      return Next
+    end;
+
+    NoteValue.Tags := Tags;
+    Next := NotesWithNote(Next, Next.Selected, NoteValue);
+    Next.Dirty := true;
+    Next.Status := 'Unsaved changes';
+    return Next
+  end;
+
+  return Next
+end;
+
+// Applies body text, caret and viewport changes independently.
+public function NotesEditBody(
+  State: NotesModel;
+  Action: integer;
+  Text: string;
+  Caret: integer;
+  Offset: TuiPoint
+): NotesModel;
+begin
+  mutable var Next: NotesModel := State;
+  if (Action = BodyChangedAction) and NotesHasSelection(Next) then
+  begin
+    mutable var NoteValue: Note := Next.Notes[Next.Selected];
+    Next.BodyCaret := Caret;
+    Next.BodyOffset := Offset;
+    if NoteValue.Body = Text then
+    begin
+      return Next
+    end;
+
+    NoteValue.Body := Text;
+    Next := NotesWithNote(Next, Next.Selected, NoteValue);
+    Next.Dirty := true;
+    Next.Status := 'Unsaved changes'
+  end;
+
+  return Next
+end;

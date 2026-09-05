@@ -2,8 +2,10 @@ use super::Value;
 
 /// Structural equality for runtime values.
 pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
-    let mut pending = vec![(a, b)];
-    while let Some((a, b)) = pending.pop() {
+    let mut pending = Vec::new();
+    let mut current = (a, b);
+    loop {
+        let (a, b) = current;
         match (a, b) {
             (Value::Integer(x), Value::Integer(y)) if x == y => {}
             (Value::Real(x), Value::Real(y))
@@ -68,8 +70,11 @@ pub(super) fn values_equal(a: &Value, b: &Value) -> bool {
             (Value::OpaqueHandle(a), Value::OpaqueHandle(b)) if a == b => {}
             _ => return false,
         }
+        let Some(next) = pending.pop() else {
+            return true;
+        };
+        current = next;
     }
-    true
 }
 
 fn push_pairs<'a>(

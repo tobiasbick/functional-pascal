@@ -1,3 +1,5 @@
+mod repeat;
+
 use fpas_ir::{
     BasicBlock, BinaryOperation, BlockId, BlockTarget, CaptureDeclaration, CaptureKind, Constant,
     DebugBinding, DebugBindingId, DebugBindingKind, DebugCaptureSource, DebugScope, Function,

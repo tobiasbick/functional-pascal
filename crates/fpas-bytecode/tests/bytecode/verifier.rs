@@ -804,3 +804,18 @@ fn spawn_flags_and_canonical_unused_operands_must_match_code() {
         }
     ));
 }
+
+#[test]
+fn array_pop_checks_both_registers_and_unused_operands() {
+    for (a, b, c, auxiliary) in [
+        (NO_REGISTER, 0, 0, 0),
+        (0, NO_REGISTER, 0, 0),
+        (0, 1, 1, 0),
+        (0, 1, 0, 1),
+    ] {
+        let mut image = all_opcodes_executable();
+        let index = opcode_index(&image, Opcode::ArrayPop);
+        image.code[index] = abc(Opcode::ArrayPop, a, b, c, auxiliary);
+        assert!(image.verify().is_err());
+    }
+}

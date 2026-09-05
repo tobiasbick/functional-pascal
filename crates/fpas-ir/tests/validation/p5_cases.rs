@@ -131,3 +131,17 @@ fn p5_record_and_enum_slots_reject_unknown_fields() {
     };
     assert!(enumeration.validate().is_err());
 }
+
+#[test]
+#[expect(clippy::expect_used, reason = "fixture shape failures should stop the test")]
+fn array_pop_requires_mutable_array_and_matching_result() {
+    for (local, result_type, mutable, valid) in [(1, INTEGER, true, true), (0, INTEGER, true, false), (99, INTEGER, true, false), (1, STRING, true, false), (1, INTEGER, false, false)] {
+        let mut program = all_operations_program();
+        program.functions[0].locals[1].mutable = mutable;
+        let instruction = program.functions[0].blocks[0].instructions.iter_mut()
+            .find(|instruction| matches!(instruction.operation, Operation::ArrayPush { .. })).expect("push fixture");
+        instruction.operation = Operation::ArrayPop { local: LocalId::new(local) };
+        instruction.result = Some(value(34, result_type));
+        assert_eq!(program.validate().is_ok(), valid);
+    }
+}

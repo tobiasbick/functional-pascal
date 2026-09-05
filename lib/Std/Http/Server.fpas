@@ -108,10 +108,11 @@ begin
   begin
     InitialLength := Length
   end;
-  mutable var Body: array of integer := Std.Array.Slice(Initial, 0, InitialLength);
-  while Std.Array.Length(Body) < Length do
+  mutable var Chunks: array of array of integer := [Std.Array.Slice(Initial, 0, InitialLength)];
+  mutable var Received: integer := InitialLength;
+  while Received < Length do
   begin
-    mutable var ReadMaximum: integer := Length - Std.Array.Length(Body);
+    mutable var ReadMaximum: integer := Length - Received;
     if ReadMaximum > 1048576 then
     begin
       ReadMaximum := 1048576
@@ -125,7 +126,8 @@ begin
           return Error('HTTP request body is shorter than Content-Length')
         end;
 
-        Body := Std.Array.Concat(Body, Chunk)
+        Std.Array.Push(Chunks, Chunk);
+        Received := Received + Std.Array.Length(Chunk)
       end;
       Error(Message):
       begin
@@ -134,7 +136,7 @@ begin
     end
   end;
 
-  return Ok(Body)
+  return Ok(Std.Http.Io.JoinChunks(Chunks))
 end;
 
 // Reads and validates one bounded HTTP/1.x request from a connected client.

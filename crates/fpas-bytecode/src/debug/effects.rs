@@ -103,6 +103,7 @@ pub fn analyze_debug_effects(executable: &VerifiedExecutable) -> Vec<FunctionEff
                 | Opcode::IndexSet
                 | Opcode::StoreField
                 | Opcode::UpdateRecord
+                | Opcode::ArrayPop
                 | Opcode::ArrayPush
                 | Opcode::StoreGlobalIndexPath => {
                     local[index] = local[index].union(DebugEffectSet::SANDBOX_WRITE);

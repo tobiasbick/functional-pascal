@@ -154,7 +154,7 @@ fn unknown_group_lists_every_configured_group() -> Result<(), Box<dyn Error>> {
         (
             Some(1),
             String::new(),
-            "error: no benchmarks in group `missing` (known groups: vm, concurrency, tui, tooling, startup)"
+            "error: no benchmarks in group `missing` (known groups: vm, concurrency, tui, tooling, startup, review)"
                 .to_owned()
         )
     );

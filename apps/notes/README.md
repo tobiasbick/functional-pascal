@@ -53,6 +53,10 @@ shortcut accents, amber warnings, and coral failures. Modal overlays provide
 the command palette, keyboard help, save errors, and the unsaved-change exit
 flow.
 
+Moving the caret or scrolling the editor does not mark a clean note as modified
+or change its saved timestamp. Changes to the persisted title, tags, or body
+mark the note as unsaved.
+
 ## Keyboard
 
 | Key | Action |

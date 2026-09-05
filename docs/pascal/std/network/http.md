@@ -110,7 +110,8 @@ either API, including informational responses, response headers, and chunk frami
 both `Transfer-Encoding` and `Content-Length`, conflicting `Content-Length` fields, repeated
 `Transfer-Encoding`, an unsupported transfer coding, or a chunk size outside the signed 64-bit
 integer range are rejected. `Send` is implemented by opening and draining the same streaming
-reader.
+reader. A close-delimited response may end exactly at `MaxResponseBytes`; the reader
+probes for EOF without accepting an additional body byte.
 
 ## Server-Sent Events
 
@@ -118,7 +119,8 @@ The SSE decoder accepts arbitrary byte fragments, so HTTP read boundaries do not
 characters, lines, or events. It supports LF, CRLF, and CR line endings; joins repeated `data` fields
 with LF; carries the last `id`; defaults an empty event type to `message`; and ignores comments and
 unknown fields. `MaxEventBytes` bounds buffered input for one event. `FinishSse` dispatches a pending
-final event and rejects later input. The `retry` field is currently ignored because reconnection is
+final event and rejects later input. Finalization adds no synthetic bytes to the event
+budget, including when the final line has no line ending. The `retry` field is currently ignored because reconnection is
 not part of this client.
 
 Independent SSE decoders may be created and consumed by different tasks. Calls that mutate the same

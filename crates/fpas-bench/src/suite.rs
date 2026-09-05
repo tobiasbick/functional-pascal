@@ -35,6 +35,8 @@ pub struct BenchSpec {
 #[derive(Debug, Clone, Copy, Default, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum BenchDriver {
+    /// Buffered FPAS HTTP requests against an isolated local fixture.
+    HttpBody,
     /// Run an FPAS program through the release CLI.
     #[default]
     Fpas,

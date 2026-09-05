@@ -1,8 +1,8 @@
 unit Notes.Update;
 
 uses
-  Notes.Model, Notes.Repository, Std.Array, Std.Console, Std.Conv, Std.Option, Std.Str, Std.Time,
-  Std.Tui;
+  Notes.Model, Notes.Editing, Notes.Repository, Std.Array, Std.Console, Std.Conv, Std.Option,
+  Std.Str, Std.Time, Std.Tui;
 
 const
   SearchControl: integer := 1;
@@ -10,11 +10,7 @@ const
   TitleControl: integer := 3;
   TagsControl: integer := 4;
   BodyControl: integer := 5;
-  SearchChangedAction: integer := 1;
   SelectionChangedAction: integer := 2;
-  TitleChangedAction: integer := 3;
-  TagsChangedAction: integer := 4;
-  BodyChangedAction: integer := 5;
   NewNoteAction: integer := 10;
   SaveNoteAction: integer := 11;
   TogglePinAction: integer := 12;
@@ -24,20 +20,6 @@ const
   CloseOverlayAction: integer := 16;
   SaveAndQuitAction: integer := 17;
   DiscardAndQuitAction: integer := 18;
-
-function SelectedExists(State: NotesModel): boolean;
-begin
-  return (State.Selected >= 0) and (State.Selected < Std.Array.Length(State.Notes))
-end;
-
-function WithNote(State: NotesModel; Index: integer; NoteValue: Note): NotesModel;
-begin
-  mutable var Notes: array of Note := State.Notes;
-  Notes[Index] := NoteValue;
-  mutable var Next: NotesModel := State;
-  Next.Notes := Notes;
-  return Next
-end;
 
 function NoteIndexById(Notes: array of Note; Id: string): integer;
 begin
@@ -89,7 +71,7 @@ end;
 // Persists the selected dirty note and returns the resulting UI state.
 public function NotesPersistCurrent(State: NotesModel): NotesModel;
 begin
-  if (not State.Dirty) or (not SelectedExists(State)) then
+  if (not State.Dirty) or (not NotesHasSelection(State)) then
   begin
     return State
   end;
@@ -100,7 +82,7 @@ begin
   case NotesSave(Next.Directory, NoteValue) of
     Ok(Written):
     begin
-      Next := WithNote(Next, Next.Selected, NoteValue);
+      Next := NotesWithNote(Next, Next.Selected, NoteValue);
       Next := ResortSelected(Next, NoteValue.Id);
       Next.Dirty := false;
       Next.Status := 'Saved ' + NoteValue.Title;
@@ -184,14 +166,14 @@ end;
 
 function TogglePin(State: NotesModel): NotesModel;
 begin
-  if not SelectedExists(State) then
+  if not NotesHasSelection(State) then
   begin
     return State
   end;
   mutable var Next: NotesModel := State;
   mutable var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Pinned := not NoteValue.Pinned;
-  Next := WithNote(Next, Next.Selected, NoteValue);
+  Next := NotesWithNote(Next, Next.Selected, NoteValue);
   Next.Dirty := true;
   Next.Status := 'Pin changed';
   return NotesPersistCurrent(Next)
@@ -214,14 +196,14 @@ end;
 
 function ArchiveNote(State: NotesModel): NotesModel;
 begin
-  if not SelectedExists(State) then
+  if not NotesHasSelection(State) then
   begin
     return State
   end;
   mutable var Next: NotesModel := State;
   mutable var NoteValue: Note := Next.Notes[Next.Selected];
   NoteValue.Archived := true;
-  Next := WithNote(Next, Next.Selected, NoteValue);
+  Next := NotesWithNote(Next, Next.Selected, NoteValue);
   Next.Dirty := true;
   Next := NotesPersistCurrent(Next);
   if Next.Dirty or (Next.Overlay = NotesOverlay.SaveFailure) then
@@ -318,7 +300,7 @@ begin
   end;
 
   if ((Key.kind = Std.Console.KeyKind.Enter) and (State.Focus = ListControl)) and
-     SelectedExists(State) then
+     NotesHasSelection(State) then
   begin
     mutable var Next: NotesModel := State;
     Next.Focus := BodyControl;
@@ -418,56 +400,11 @@ begin
     end;
     TuiMsg.TextChanged(Source, Action, Text, Caret):
     begin
-      mutable var Next: NotesModel := State;
-      if Action.Value = SearchChangedAction then
-      begin
-        Next.Search := Text;
-        Next.SearchCaret := Caret;
-        Next.Status := IntToStr(Std.Array.Length(NotesFilteredIndices(Next.Notes, Text))) +
-                       ' matching note(s)';
-        return Next
-      end;
-
-      if (Action.Value = TitleChangedAction) and SelectedExists(Next) then
-      begin
-        mutable var NoteValue: Note := Next.Notes[Next.Selected];
-        NoteValue.Title := Text;
-        Next := WithNote(Next, Next.Selected, NoteValue);
-        Next.TitleCaret := Caret;
-        Next.Dirty := true;
-        Next.Status := 'Unsaved changes';
-        return Next
-      end;
-
-      if (Action.Value = TagsChangedAction) and SelectedExists(Next) then
-      begin
-        Next.TagsText := Text;
-        Next.TagsCaret := Caret;
-        mutable var NoteValue: Note := Next.Notes[Next.Selected];
-        NoteValue.Tags := NoteTagsFromText(Text);
-        Next := WithNote(Next, Next.Selected, NoteValue);
-        Next.Dirty := true;
-        Next.Status := 'Unsaved changes';
-        return Next
-      end;
-
-      return Next
+      return NotesEditText(State, Action.Value, Text, Caret)
     end;
     TuiMsg.TextAreaChanged(Source, Action, Text, Caret, Offset):
     begin
-      mutable var Next: NotesModel := State;
-      if (Action.Value = BodyChangedAction) and SelectedExists(Next) then
-      begin
-        mutable var NoteValue: Note := Next.Notes[Next.Selected];
-        NoteValue.Body := Text;
-        Next := WithNote(Next, Next.Selected, NoteValue);
-        Next.BodyCaret := Caret;
-        Next.BodyOffset := Offset;
-        Next.Dirty := true;
-        Next.Status := 'Unsaved changes'
-      end;
-
-      return Next
+      return NotesEditBody(State, Action.Value, Text, Caret, Offset)
     end;
     TuiMsg.SelectionChanged(Source, Action, Selected):
     begin

@@ -23,6 +23,10 @@ WriteLn(Last);
 WriteLn(Length(A))
 ```
 
+For a directly stored local array, `Pop` reuses uniquely owned storage. If another
+value shares that array, copy-on-write preserves the other value. Global and
+captured variables retain the general read-and-assign implementation.
+
 ## See also
 
 - [Array overview](README.md)

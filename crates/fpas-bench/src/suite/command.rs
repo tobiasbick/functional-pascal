@@ -17,7 +17,8 @@ pub(super) fn command(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result
             command.arg("run").arg(program).arg("--");
             command
         }
-        BenchDriver::LanguageService
+        BenchDriver::HttpBody
+        | BenchDriver::LanguageService
         | BenchDriver::LanguageServiceProject
         | BenchDriver::ProjectBuild
         | BenchDriver::UnitArtifact
@@ -26,6 +27,7 @@ pub(super) fn command(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result
             let executable = std::env::current_exe().map_err(|error| error.to_string())?;
             let mut command = Command::new(executable);
             let driver = match spec.driver {
+                BenchDriver::HttpBody => "http-body",
                 BenchDriver::CompilerLowering => "compiler-lowering",
                 BenchDriver::LanguageServiceProject => "language-service-project",
                 BenchDriver::ProjectBuild => "project-build",

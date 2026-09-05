@@ -216,11 +216,13 @@ pub enum Opcode {
     ArrayPush = 93,
     /// Replace a value below an indexed global aggregate snapshot.
     StoreGlobalIndexPath = 94,
+    /// Pops source array B in place and writes its last element to A. C and auxiliary are zero.
+    ArrayPop = 95,
 }
 
 impl Opcode {
     /// Exhaustive opcode inventory used by format and verifier tests.
-    pub const ALL: [Self; 95] = [
+    pub const ALL: [Self; 96] = [
         Self::LoadConstant,
         Self::LoadUnit,
         Self::Move,
@@ -316,6 +318,7 @@ impl Opcode {
         Self::Yield,
         Self::ArrayPush,
         Self::StoreGlobalIndexPath,
+        Self::ArrayPop,
     ];
 
     /// Return the physical payload form assigned to this opcode.

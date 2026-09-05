@@ -1,7 +1,50 @@
-// Complete-write helpers for HTTP transports.
+// Bounded byte transfers for HTTP transports.
 unit Std.Http.Io;
 
 uses Std.Array, Std.Net;
+
+// Materializes ordered response or request fragments as one byte array.
+public function JoinChunks(Chunks: array of array of integer): array of integer;
+begin
+  return Std.Array.FlatMap(Chunks, function(Chunk: array of integer): array of integer begin
+    return Chunk
+  end)
+end;
+
+// Reads within the remaining response budget, probing only for EOF at its boundary.
+public function ReadResponseBytes(Connection: Std.Net.Connection; Available: integer): result of array of integer, string;
+begin
+  if Available < 0 then
+  begin
+    return Error('HTTP response exceeds MaxResponseBytes')
+  end;
+  mutable var Count: integer := Available;
+  if Count > 65536 then
+  begin
+    Count := 65536
+  end;
+
+  if Count = 0 then
+  begin
+    Count := 1
+  end;
+
+  case Std.Net.Read(Connection, Count) of
+    Ok(Bytes):
+    begin
+      if Std.Array.Length(Bytes) > Available then
+      begin
+        return Error('HTTP response exceeds MaxResponseBytes')
+      end;
+
+      return Ok(Bytes)
+    end;
+    Error(Message):
+    begin
+      return Error(Message)
+    end
+  end
+end;
 
 // Writes every byte or reports when the connection stops making progress.
 //

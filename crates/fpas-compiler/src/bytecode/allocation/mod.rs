@@ -234,6 +234,7 @@ fn operation_values(operation: &Operation) -> Vec<ValueId> {
     match operation {
         Operation::Const(_)
         | Operation::ReadLocal(_)
+        | Operation::ArrayPop { .. }
         | Operation::LoadGlobal(_)
         | Operation::MakeNone
         | Operation::Yield => Vec::new(),

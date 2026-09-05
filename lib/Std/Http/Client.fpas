@@ -247,7 +247,7 @@ begin
   case OpenStream(RequestValue) of
     Ok(StreamResponseValue):
     begin
-      mutable var Body: array of integer := [];
+      mutable var Chunks: array of array of integer := [];
       while true do
       begin
         case Std.Http.Stream.ReadBody(StreamResponseValue.Body, 65536) of
@@ -259,11 +259,11 @@ begin
                 StatusCode := StreamResponseValue.StatusCode;
                 ReasonPhrase := StreamResponseValue.ReasonPhrase;
                 Headers := StreamResponseValue.Headers;
-                Body := Body;
+                Body := Std.Http.Io.JoinChunks(Chunks);
               end)
             end;
 
-            Body := Std.Array.Concat(Body, Bytes)
+            Std.Array.Push(Chunks, Bytes)
           end;
           Error(Message):
           begin

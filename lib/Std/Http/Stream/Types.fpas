@@ -1,0 +1,29 @@
+// State stored by the hosted HTTP body registry.
+unit Std.Http.Stream.Types;
+
+uses Std.Net;
+
+public type
+  // Mutable network and framing state retained for one body handle.
+  StreamState = record
+    // Underlying TCP or TLS connection.
+    public Connection: Std.Net.Connection;
+    // Decoded or framing bytes already read from the connection.
+    public Buffer: array of integer;
+    // Internal body-framing mode identifier.
+    public Mode: integer;
+    // Bytes remaining for fixed-length framing.
+    public Remaining: integer;
+    // Bytes remaining in the current chunk.
+    public ChunkRemaining: integer;
+    // Whether the current chunk payload still requires its terminating CRLF.
+    public NeedChunkTerminator: boolean;
+    // Total network bytes consumed for response limits.
+    public BytesReceived: integer;
+    // Maximum total response bytes.
+    public Maximum: integer;
+    // Whether the body has reached its framing-defined end.
+    public Finished: boolean;
+    // Whether the backing connection remains available.
+    public Open: boolean;
+  end;

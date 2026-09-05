@@ -72,6 +72,12 @@ impl Selector<'_> {
                     abc(Opcode::LoadUnit, self.result_register(result)?, 0, 0)?,
                 ]
             }
+            Operation::ArrayPop { local } => vec![abc(
+                Opcode::ArrayPop,
+                self.result_register(result)?,
+                self.allocation.local(*local)?.get(),
+                0,
+            )?],
             Operation::MakeDictionary(pairs) => {
                 let values = pairs
                     .iter()

@@ -36,6 +36,14 @@ cargo bench-fpas compare analysis-before --group tooling
 cargo bench-fpas native --help
 ```
 
+The `review` group covers dictionary reads, scalar membership, local array drains,
+long Unicode text-area frames, and buffered HTTP responses. Run it with
+`cargo bench-fpas save review-before --group review` and compare with the same group.
+The HTTP driver starts a local fixture and invokes the FPAS client. Its elapsed time
+includes transport and body processing, excludes compilation, and does not isolate
+allocation cost. Socket writes are fragments; the transport may coalesce reads.
+The array drain includes array construction within each timed iteration.
+
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
 `substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,

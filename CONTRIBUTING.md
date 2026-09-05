@@ -36,6 +36,16 @@ Agent-oriented detail (file layout, Definition of done, skills) lives in
    For touched `.fpas` under `examples/`, `tests/`, or `apps/`, also run
    `fpas fmt --check` (or `scripts/format-fpas-sources.sh`).
 
+For Windows distribution-script changes, run
+`pwsh -NoProfile -File scripts/tests/dist.ps1` to check Cargo failure handling
+and publication with isolated fixtures, then run `pwsh -NoProfile -File dist.ps1`
+to verify the real release build and standard-library staging.
+
+For POSIX distribution-script changes, run `python3 scripts/tests/dist_sh.py`.
+The test covers build, staging, copy, and permission failures, successful
+publication, and invocation from outside the project. Pass `--shell <path>`
+to select a POSIX shell explicitly. Verify the real Linux release with `sh dist.sh`.
+
 ### Training data
 
 The local-model dataset is maintained under [`training/fpas/`](training/fpas/).

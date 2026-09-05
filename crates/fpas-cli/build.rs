@@ -1,13 +1,15 @@
 //! Synchronizes generated standard-library metadata before building the CLI.
 
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod stdlib_sync;
 mod version_sync;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest_dir = PathBuf::from(
+        std::env::var_os("CARGO_MANIFEST_DIR").ok_or("Cargo must set CARGO_MANIFEST_DIR")?,
+    );
     let source_root = manifest_dir.join("../../lib");
     println!("cargo:rerun-if-changed={}", source_root.display());
     version_sync::validate_std_version(

@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 set -eu
+CDPATH= cd -- "$(dirname -- "$0")"
 
 # Build release binaries and bundled standard-library sources in bin/ (Linux).
 cargo build --release -p fpas-cli

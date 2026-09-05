@@ -40,6 +40,9 @@ Run the compiler directly or add the whole `target/release` directory to your
 To prepare the distributable layout under `bin/`, run `./dist.sh` on Linux or
 `./dist.ps1` on Windows. Both scripts copy `fpas`, `fpas-runner`, and `lib/`
 together.
+Both scripts resolve paths from their own directory and stop on build,
+standard-library staging, or copy failures. They report success only after all
+steps finish.
 
 Alternatively, run without installing:
 

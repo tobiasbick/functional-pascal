@@ -6,7 +6,10 @@ use super::{ValidationError, ValidationErrorKind};
 
 const MAX_DEBUG_TYPE_DEPTH: usize = 64;
 
+/// Validates portable type nodes, shared graph depth, and metadata references.
+#[cold]
 pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(), ValidationError> {
+    let mut depths = vec![Depth::Unknown; executable.debug_types.len()];
     for (index, ty) in executable.debug_types.iter().enumerate() {
         validate_node(executable, ty)?;
         let id = DebugTypeId::try_from_index(index).map_err(|_| {
@@ -16,8 +19,7 @@ pub(super) fn validate_debug_types(executable: &crate::Executable) -> Result<(),
                 maximum: crate::limits::MAX_DEBUG_TYPES,
             })
         })?;
-        let mut visiting = Vec::new();
-        validate_depth(executable, id, 0, &mut visiting)?;
+        validate_depth(executable, id, 0, &mut depths)?;
     }
     for global in &executable.globals {
         validate_type_reference(executable, global.ty, "global type")?;
@@ -98,34 +100,55 @@ fn validate_node(executable: &crate::Executable, ty: &DebugType) -> Result<(), V
     }
 }
 
+#[derive(Clone, Copy)]
+enum Depth {
+    Unknown,
+    Visiting,
+    Known(u8),
+}
+
 fn validate_depth(
     executable: &crate::Executable,
     id: DebugTypeId,
     depth: usize,
-    visiting: &mut Vec<DebugTypeId>,
-) -> Result<(), ValidationError> {
+    depths: &mut [Depth],
+) -> Result<u8, ValidationError> {
+    let too_deep = || {
+        ValidationError::executable(ValidationErrorKind::DebugTypeDepth {
+            actual: MAX_DEBUG_TYPE_DEPTH + 1,
+            maximum: MAX_DEBUG_TYPE_DEPTH,
+        })
+    };
     if depth > MAX_DEBUG_TYPE_DEPTH {
-        return Err(ValidationError::executable(
-            ValidationErrorKind::DebugTypeDepth {
-                actual: depth,
-                maximum: MAX_DEBUG_TYPE_DEPTH,
-            },
-        ));
-    }
-    if visiting.contains(&id) {
-        return Err(ValidationError::executable(
-            ValidationErrorKind::DebugTypeCycle { actual: id.get() },
-        ));
+        return Err(too_deep());
     }
     let Some(ty) = executable.debug_types.get(id.get() as usize) else {
-        return validate_type_reference(executable, id, "debug type");
+        return validate_type_reference(executable, id, "debug type").map(|()| 0);
     };
-    visiting.push(id);
-    for child in direct_children(ty) {
-        validate_depth(executable, child, depth.saturating_add(1), visiting)?;
+    match depths[id.get() as usize] {
+        Depth::Visiting => {
+            return Err(ValidationError::executable(
+                ValidationErrorKind::DebugTypeCycle { actual: id.get() },
+            ));
+        }
+        Depth::Known(height) => {
+            // A shared suffix can be reached later through a longer prefix.
+            return if depth + usize::from(height) <= MAX_DEBUG_TYPE_DEPTH {
+                Ok(height)
+            } else {
+                Err(too_deep())
+            };
+        }
+        Depth::Unknown => {}
     }
-    visiting.pop();
-    Ok(())
+    depths[id.get() as usize] = Depth::Visiting;
+    let mut height = 0;
+    for child in direct_children(ty) {
+        let child_height = validate_depth(executable, child, depth + 1, depths)?;
+        height = height.max(child_height + 1);
+    }
+    depths[id.get() as usize] = Depth::Known(height);
+    Ok(height)
 }
 
 fn direct_children(ty: &DebugType) -> Vec<DebugTypeId> {

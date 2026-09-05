@@ -6,6 +6,7 @@
 )]
 
 mod bytecode {
+    mod debug_types;
     mod effects;
     mod executable;
     mod instruction;

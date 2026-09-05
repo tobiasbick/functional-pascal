@@ -218,3 +218,10 @@ group = "startup"
 driver = "unit-artifact"
 args = ["500", "16"]
 timeout_ms = 120000
+
+[[bench]]
+id = "program_artifact_shared_types"
+group = "startup"
+driver = "program-artifact"
+args = ["500", "16"]
+timeout_ms = 120000

@@ -48,6 +48,8 @@ pub enum BenchDriver {
     ProjectBuild,
     /// Decode and validate unit objects containing shared debugger subtypes.
     UnitArtifact,
+    /// Decode and admit complete program images with shared debugger subtypes.
+    ProgramArtifact,
 }
 
 #[derive(Debug, Deserialize)]

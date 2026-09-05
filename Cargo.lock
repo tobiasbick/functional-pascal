@@ -354,9 +354,11 @@ name = "fpas-bench"
 version = "0.0.1"
 dependencies = [
  "atomic-write-file",
+ "fpas-bytecode",
  "fpas-compiler",
  "fpas-language-service",
  "fpas-parser",
+ "fpas-program",
  "fpas-unit",
  "serde",
  "serde_json",

@@ -61,11 +61,20 @@ shared-graph validation cost and does not measure disk I/O, sidecar envelope has
 or whole-project throughput. This guards against exponentially repeated traversal
 of a small valid graph. Its native arguments are iteration count and graph depth.
 
+`program_artifact_shared_types` applies the same shared-child pattern to a complete
+portable program image. It compiles a minimal program, installs 17 debug type nodes,
+encodes it, and checks one decoded graph before timing 500 production `.fpascp`
+decodes. Timing includes envelope integrity checks, binary payload decoding,
+executable verification, image admission, and destruction. Compilation, encoding,
+warmup, disk I/O, and execution are excluded. Its arguments are iteration count
+and graph depth; it guards the executable verifier separately from unit objects.
+
 ```sh
 cargo bench-fpas save startup-before --group startup
 cargo bench-fpas compare startup-before --group startup
 cargo bench-fpas native project-build 3 warm
 cargo bench-fpas native unit-artifact 500 16
+cargo bench-fpas native program-artifact 500 16
 ```
 
 ## Prerequisites
@@ -160,7 +169,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, `tui`, `tooling`, or `startup` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, and `unit-artifact` run native workloads and omit `path`
+- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

@@ -21,6 +21,7 @@ pub(super) fn command(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result
         | BenchDriver::LanguageServiceProject
         | BenchDriver::ProjectBuild
         | BenchDriver::UnitArtifact
+        | BenchDriver::ProgramArtifact
         | BenchDriver::CompilerLowering => {
             let executable = std::env::current_exe().map_err(|error| error.to_string())?;
             let mut command = Command::new(executable);
@@ -29,6 +30,7 @@ pub(super) fn command(repo_root: &Path, fpas: &Path, spec: &BenchSpec) -> Result
                 BenchDriver::LanguageServiceProject => "language-service-project",
                 BenchDriver::ProjectBuild => "project-build",
                 BenchDriver::UnitArtifact => "unit-artifact",
+                BenchDriver::ProgramArtifact => "program-artifact",
                 _ => "language-service",
             };
             command.args(["native", driver]).env("FPAS_BENCH_CLI", fpas);

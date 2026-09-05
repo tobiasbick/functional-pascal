@@ -3,13 +3,14 @@
 mod compiler;
 mod fixture_directory;
 mod language_service;
+mod program_artifact;
 mod project_build;
 mod project_queries;
 mod unit_artifact;
 
 use std::process::ExitCode;
 
-const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n  cargo bench-fpas native project-build <iterations> <cold|warm>\n  cargo bench-fpas native unit-artifact <iterations> <depth>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas native project-build 3 warm\n  cargo bench-fpas save tooling-before --group tooling";
+const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n  cargo bench-fpas native project-build <iterations> <cold|warm>\n  cargo bench-fpas native unit-artifact <iterations> <depth>\n  cargo bench-fpas native program-artifact <iterations> <depth>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas native project-build 3 warm\n  cargo bench-fpas save tooling-before --group tooling";
 
 /// Executes one native workload, or prints its usage.
 pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
@@ -33,6 +34,9 @@ pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
         "compiler-lowering" => compiler::run(positive_count(iterations)?, positive_count(width)?)?,
         "project-build" => project_build::run(positive_count(iterations)?, width)?,
         "unit-artifact" => unit_artifact::run(positive_count(iterations)?, positive_count(width)?)?,
+        "program-artifact" => {
+            program_artifact::run(positive_count(iterations)?, positive_count(width)?)?
+        }
         _ => return Err(format!("Unknown native workload `{driver}`.\n{USAGE}")),
     }
     Ok(ExitCode::SUCCESS)
@@ -65,6 +69,8 @@ mod tests {
             vec!["project-build", "1"],
             vec!["unit-artifact", "0", "16"],
             vec!["unit-artifact", "1", "65"],
+            vec!["program-artifact", "0", "16"],
+            vec!["program-artifact", "1", "65"],
         ] {
             assert!(run(&args.into_iter().map(str::to_owned).collect::<Vec<_>>()).is_err());
         }

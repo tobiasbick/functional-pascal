@@ -14,6 +14,18 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Reuse complete program debugger subgraph depths on a cold validation path
+
+- Group: `startup`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| project_build_cold | 1527 | - |
+| project_build_warm | 1319 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+
 ## 2026-09-05 — Validate shared unit debugger type subgraphs once per object
 
 - Group: `startup`

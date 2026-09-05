@@ -30,31 +30,31 @@
 <body>
 <main>
   <header>
-    <div class="stamp">Audit plus measured follow-up · through 4 September 2026</div>
+    <div class="stamp">Plan reviewed · 5 September 2026 · Substring follow-up</div>
     <h1>Where FPAS spends its time</h1>
-    <p class="lede">A read-only investigation of the Rust runtime, its measured slow paths, and architectural options ranging from a leaner interpreter to a replaceable runtime core.</p>
+    <p class="lede">An evidence ledger for Rust runtime and tooling performance: retained improvements, rejected experiments, remaining measurement gaps, and the conditions for a larger rewrite.</p>
   </header>
 
-  <div class="callout"><strong>Outcome first:</strong> controlled follow-up work confirmed six interpreter improvements and one bounded managed-allocation improvement. The retained thread-local buffer heap made both end-to-end TUI workloads about 7% faster, record-heavy microbenchmarks about 14% faster, and string concatenation about 6% faster. It preserves <code>Arc</code>/COW value semantics and is not a tracing collector. Cancellation-poll removal, task-owned <code>Array.Map</code> result capacity, typed-real handlers, and normal-run compare/branch fusion all missed their gates and were rolled back.</div>
+  <div class="callout"><strong>Current decision:</strong> retain the six original interpreter improvements, bounded buffer and wrapper-box reuse, and inline task-callback arguments. Later controlled comparisons also retained LSP analysis reuse (−60.6%), borrowed string queries (−71.2%), and compiler block-order improvements (−38.0%) in their specific workloads. These are separate comparisons, not additive application-wide gains. The synchronized Record-slot experiment regressed both TUI workloads and was removed. See the <a href="fast-interpreter-plan.html#recent-follow-up">workload limits and evidence</a>.</div>
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
-    <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter</strong><span>The canonical complete, partial, open, rejected, and deferred status for every measured stage.</span></a>
-    <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and an optional tiered compiler.</span></a>
-    <a class="card" href="managed-heap-experiment.html"><strong>4 · Managed heap experiment</strong><span>The accepted bounded buffer-reuse layer, repeated A/B evidence, limitations, and the gate for any full tracing heap.</span></a>
+    <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter and follow-up</strong><span>Completed stages, rejected probes, deferred rewrites, and the next measurement candidates.</span></a>
+    <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and deferred native compilation.</span></a>
+    <a class="card" href="managed-heap-experiment.html"><strong>4 · Managed heap experiment</strong><span>Retained buffer and payload pools, accepted callback arguments, rejected allocation probes, and the full-heap gate.</span></a>
   </section>
 
   <h2>Scope and constraints</h2>
   <ul>
-    <li>The initial audit was read-only; follow-up work changed only Rust VM internals and performance documentation.</li>
-    <li>The accepted changes passed release builds, the complete workspace test suite, and controlled full-suite benchmarks.</li>
+    <li>The initial runtime audit was followed by Rust runtime, standard-library, compiler, and language-service improvements. The review is followed by three sequential measurement tasks; the Substring implementation passed format, build, complete workspace tests, and repeated benchmark comparisons.</li>
+    <li>Retained changes have recorded build/test and benchmark evidence. Later focused workloads have narrower timing scope than the original full-suite interpreter comparisons; those limits are listed explicitly.</li>
     <li>Absolute benchmark times are machine-specific; the reported improvements use same-checkout before/after comparisons.</li>
     <li>FPAS syntax and semantics are held fixed. Rust internals, bytecode, runtime values, compiler/runtime seams, and artifact formats may be replaced.</li>
-    <li>Every speed claim in the solution reports is a hypothesis until it passes the project workflow: save baseline, change one variable, release build, compare the full relevant suite, then record only a settled win.</li>
+    <li>New speed claims remain hypotheses until they pass the project workflow: save baseline, change one variable, release build, compare the full relevant suite, then record only a settled win.</li>
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the audit for the original evidence, then use the <a href="fast-interpreter-plan.html#status">fast-interpreter status table</a> as the progress record for completed work and rejected probes. The <a href="managed-heap-experiment.html">managed-heap experiment</a> is the current allocation baseline: retain its bounded buffer reuse. Do not repeat the rejected one-variable interpreter variants unchanged. No bounded interpreter candidate remains open. Compact bytecode, a full handle/tracing heap, and native compilation remain deferred until their remaining-cost evidence gates are met.</p>
+  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">next measurement candidates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP workloads and startup/test phase measurements follow, one at a time. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

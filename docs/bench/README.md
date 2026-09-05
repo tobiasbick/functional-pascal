@@ -24,6 +24,10 @@ cargo bench-fpas native --help
 
 Committed progress over time lives in [`history.md`](history.md). Agent workflow: [`.agents/skills/fpas-bench/SKILL.md`](../../.agents/skills/fpas-bench/SKILL.md).
 
+`substring_ascii` and `substring_unicode` measure beginning, middle, end, empty,
+and full-range slices of a 32,768-scalar string. Input construction and warmup
+are excluded; each iteration checks all five results through production FPAS calls.
+
 ## Prerequisites
 
 - Quiet machine (avoid heavy background load).

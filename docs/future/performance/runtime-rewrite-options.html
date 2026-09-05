@@ -21,11 +21,13 @@
 
   <div class="callout"><strong>Strong recommendation:</strong> retain the six accepted interpreter changes and the accepted <a href="managed-heap-experiment.html">bounded managed buffer heap</a>. Fresh A/B medians improved both end-to-end TUI workloads by about 7%, record operations by about 14%, and string concatenation by about 6%. This validates runtime-managed reuse, not a full tracing collector. Compact execution images, tagged heap handles/tracing collection, and tiered compilation remain deferred until evidence identifies material cost still present after buffer reuse.</div>
 
+  <p>Reviewed against <code>77fac915</code> on 5 September 2026. These alternatives have no evidence-backed priority among themselves. The <a href="fast-interpreter-plan.html#next-work">bounded measurement plan</a> comes first; no new CPU profile was collected in this review.</p>
+
   <h2>Three options</h2>
   <section class="options">
-    <article class="option"><h3>A · Compact quickened VM</h3><p>Keep interpretation, replace 64-bit transport instructions with a compact or predecoded runtime format, resolve metadata once, and introduce profile-backed superinstructions.</p><p class="score">Cost: medium · Risk: medium · Best near-term rewrite</p></article>
+    <article class="option"><h3>A · Compact quickened VM</h3><p>Keep interpretation, replace 64-bit transport instructions with a compact or predecoded runtime format, resolve metadata once, and introduce profile-backed superinstructions.</p><p class="score">Cost: medium · Risk: medium · Deferred pending measured cost attribution</p></article>
     <article class="option"><h3>B · Managed heap runtime</h3><p>A bounded buffer-reuse layer is now implemented and retained. A later major rewrite could replace per-value <code>Arc</code>/COW ownership with tagged slots and handles into a VM-owned tracing heap.</p><p class="score">Bounded slice: accepted · Full heap: high cost and risk</p></article>
-    <article class="option"><h3>C · Tiered native execution</h3><p>Interpret cold code, count method/back-edge heat, compile selected functions or loops from the existing typed IR, and retain interpreter fallback.</p><p class="score">Cost: very high · Risk: very high · Highest eventual ceiling</p></article>
+    <article class="option"><h3>C · Native execution</h3><p>Select JIT or AOT only after reopening the backend decision. A possible JIT design compiles hot verified functions and retains interpreter fallback.</p><p class="score">Cost: very high · Risk: very high · Benefit unmeasured in FPAS</p></article>
   </section>
 
   <h2>Option A — compact, quickened interpreter</h2>
@@ -38,8 +40,8 @@
             ├─ resolved call/layout/intrinsic tables
             ├─ cold source/debug metadata
             └─ immutable verifier proof summary</pre>
-  <h3>Advantages</h3>
-  <ul><li>Improves instruction-cache density and removes repeated table validation.</li><li>Keeps startup and implementation complexity far below a JIT.</li><li>Can preserve the existing <code>Value</code> representation initially.</li><li>Creates a clean input for later native compilation.</li></ul>
+  <h3>Potential advantages to validate</h3>
+  <ul><li>Could improve instruction-cache density and remove repeated table validation; the broader effect is unmeasured.</li><li>Keeps startup and implementation complexity far below a JIT.</li><li>Can preserve the existing <code>Value</code> representation initially.</li><li>Creates a clean input for later native compilation.</li></ul>
   <h3>Risks and gates</h3>
   <ul><li>Compact formats need escape instructions or side tables for large programs.</li><li>Quickening must remain deterministic and debugger/source-map aware.</li><li>Measure code size, load time, dispatch throughput, and full-suite performance. Reject if gains come only from synthetic loops.</li></ul>
   <p><strong>Current gate status:</strong> not met. Three trusted-image micro-probes failed, and a later runtime look-ahead prototype slowed a workload containing roughly 40 million compare/branch pairs by 3.5%. A different compact encoding still needs sampling evidence that attributes at least 25% of target time to costs it removes.</p>
@@ -59,28 +61,28 @@
 
   <h3>Design variants</h3>
   <ol>
-    <li><strong>Tracing generational heap:</strong> best general allocation throughput, but requires root maps, barriers, safepoints, and debugger integration.</li>
+    <li><strong>Tracing generational heap:</strong> may improve allocation throughput, but requires root maps, barriers, safepoints, and debugger integration.</li>
     <li><strong>Reference-counted heap with non-atomic local objects:</strong> easier migration; promote objects crossing task boundaries to shared ownership. Complexity moves into promotion and cycles.</li>
     <li><strong>Region/arena plus immutable values:</strong> allocate per call, frame, or TUI render epoch and reclaim in bulk. Excellent when lifetimes align, awkward for globals, closures, and tasks.</li>
-    <li><strong>Hybrid:</strong> compact slots plus generational tracing for ordinary objects and explicit host handles for resources. This is the strongest long-term model, but the largest rewrite.</li>
+    <li><strong>Hybrid:</strong> compact slots plus generational tracing for ordinary objects and explicit host handles for resources. Its suitability is unmeasured, and it requires a large rewrite.</li>
   </ol>
 
   <h3>FPAS-specific recommendation</h3>
-  <p>The bounded production-path prototype is complete. It preserves the 16-byte <code>Value</code> ceiling and <code>Arc</code>/COW semantics while recycling eligible value, pair, and string buffers through bounded thread-local capacity buckets. Fresh A/B medians improved <code>tui_headless</code> by 7.0%, <code>notes_headless</code> by 7.2%, record operations by roughly 14%, and string concatenation by roughly 6%. See the <a href="managed-heap-experiment.html">full experiment report</a>.</p>
-  <p>Keep this layer. Do not infer that a tracing collector will produce the same additional gain: body allocations, atomic reference counts, recursive drops, roots, task sharing, and debugger access still need separate measurement. Design compact slots and a full heap together only when post-reuse profiles show that at least 25% of a target workload is spent in costs that design directly removes.</p>
+  <p>The bounded production-path prototype is complete. It preserves the 16-byte <code>Value</code> ceiling and <code>Arc</code>/COW semantics while recycling eligible value, pair, and string buffers plus wrapper payload boxes through bounded thread-local pools. Fresh A/B medians improved <code>tui_headless</code> by 7.0%, <code>notes_headless</code> by 7.2%, record operations by roughly 14%, and string concatenation by roughly 6%. Later callback argument and wrapper-box improvements were also retained. Constant caching and inline small aggregates failed their gates; synchronized Record slots regressed TUI by 96.6% and Notes by 33.4%. See the <a href="managed-heap-experiment.html">full experiment report</a>.</p>
+  <p>Keep this layer. Do not infer that a tracing collector will produce the same additional gain: body allocations, atomic reference counts, recursive drops, roots, task sharing, and debugger access still need separate measurement. DHAT attributed 37.5% of allocation events in each TUI workload to selected body sites; it did not measure a 37.5% CPU share. Do not retry synchronized per-object slots. Design compact slots and a VM-owned heap together only when post-reuse profiles show that at least 25% of a target workload is spent in costs that design directly removes.</p>
 
-  <h2>Option C — tiered compilation from typed IR</h2>
-  <p>The repository already has target-independent typed IR, but production execution does not use it. A tiered design can retain the interpreter for startup and debugging, collect cheap counters at method entries and backward branches, then compile only hot functions with Cranelift or another backend.</p>
+  <h2>Option C — native compilation from typed IR</h2>
+  <p>Production compilation already uses target-independent typed IR: <a href="../../../crates/fpas-compiler/src/object/mod.rs">program and unit compilation</a> lower to IR and then emit portable bytecode, which the VM executes after verification. A native backend is absent and remains deferred under the <a href="../cranelift-backend.md">Cranelift decision note</a>. Re-entry requires an explicit decision choosing JIT or AOT, a representative release profile, and concrete mappings for verification, values, calls, intrinsics, tasks, and source diagnostics. The tiered sketch below is one possible JIT design if JIT is selected; it is not an agreed implementation plan.</p>
   <pre>FPAS source → checked typed IR → portable artifact
                                ├─ interpreter (cold/default)
                                └─ hot-function compiler
                                     ├─ native code cache
                                     ├─ safepoint maps
                                     └─ deopt/fallback metadata</pre>
-  <p>HotSpot's lesson is not “add C2”. It is that interpretation, profiling, baseline compilation, optimized compilation, and deoptimization are separate tiers with different jobs. For FPAS, one interpreter plus one baseline native tier is enough for a first design.</p>
+  <p>HotSpot's lesson is not “add C2”. It is that interpretation, profiling, baseline compilation, optimized compilation, and deoptimization are separate tiers with different jobs. If JIT is chosen, the first experiment should stay bounded to one native tier; its benefit and integration cost still need measurement.</p>
 
-  <h3>Minimal viable tier</h3>
-  <ul><li>Count calls and backward branches with saturating counters sampled at safepoints.</li><li>Compile whole functions first; avoid loop OSR until function compilation is stable.</li><li>Support integer/real scalars, branches, direct calls, and simple records first.</li><li>Bail out to the interpreter for unsupported intrinsics, dynamic values, debugger mutation, and tasks.</li><li>Use the same <code>RuntimeImage</code> layouts and helper-call interface as the interpreter.</li></ul>
+  <h3>Possible bounded tier, only if JIT is selected</h3>
+  <ul><li>Count calls and backward branches with saturating counters sampled at safepoints.</li><li>Following the Cranelift note, compile one already verified function from the settled register instruction stream; avoid loop OSR in the first slice.</li><li>Start with integer and Boolean constants, register moves, arithmetic, comparisons, branches, and direct calls.</li><li>Keep hosted operations, aggregates, strings, closures, tasks, exceptions, and unsupported instructions behind an explicit interpreter fallback boundary.</li><li>Reuse verifier admission and define the shared value and helper-call interface before generating native code.</li></ul>
 
   <h3>Hard parts</h3>
   <ul><li>Precise value/root maps if tagged handles and tracing collection are introduced.</li><li>Debugger stepping, live-image updates, forced return, and variable mutation.</li><li>Exceptions/runtime diagnostics with accurate FPAS source locations.</li><li>Task suspension across compiled frames.</li><li>Code-cache invalidation and deterministic testing.</li></ul>
@@ -89,13 +91,13 @@
   <table>
     <thead><tr><th>Criterion</th><th>Fast interpreter</th><th>Compact quickened VM</th><th>Managed heap</th><th>Tiered compiler</th></tr></thead>
     <tbody>
-      <tr><td>Likely benefit for current broad regression</td><td>High</td><td>Medium–high</td><td>Bounded reuse measured positive; full heap unknown</td><td>High for long hot runs</td></tr>
-      <tr><td>Likely benefit for Notes/TUI allocation</td><td>Medium</td><td>Medium</td><td>Bounded reuse measured about 7%; further gain unknown</td><td>Medium unless allocation changes</td></tr>
+      <tr><td>Evidence after retained changes</td><td>Original stages measured and closed</td><td>Remaining benefit unknown; bounded probes rejected</td><td>Bounded reuse measured positive; full heap unknown</td><td>No production backend measurement</td></tr>
+      <tr><td>Further Notes/TUI benefit</td><td>Unknown for new candidates</td><td>Unknown</td><td>Initial buffer reuse measured about 7%; further full-heap gain unknown</td><td>Unknown; compilation alone does not remove allocation</td></tr>
       <tr><td>Implementation effort</td><td>Low–medium</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Debugger disruption</td><td>Low if seam is correct</td><td>Medium</td><td>High</td><td>Very high</td></tr>
       <tr><td>Portability</td><td>Excellent</td><td>Excellent</td><td>Excellent</td><td>Backend-dependent</td></tr>
       <tr><td>Rollback size</td><td>One stage</td><td>Runtime-image loader</td><td>Whole value runtime</td><td>Backend can remain optional</td></tr>
-      <tr><td>Recommended now</td><td>Stop at the retained measured baseline; no bounded item remains open</td><td>Deferred; trusted-image and compare/branch probes did not isolate a gain</td><td>Retain bounded reuse; defer tagged slots and tracing collection</td><td>Deferred; re-entry gates are not met</td></tr>
+      <tr><td>Recommended now</td><td>Retain the baseline; measure the separate <a href="fast-interpreter-plan.html#next-work">bounded candidates</a></td><td>Deferred; trusted-image and compare/branch probes did not isolate a gain</td><td>Retain bounded reuse; defer tagged slots and tracing collection</td><td>Deferred; re-entry gates are not met</td></tr>
     </tbody>
   </table>
 
@@ -103,7 +105,7 @@
   <ol>
     <li>The retained interpreter and managed-buffer implementation have a stable current baseline and no known common-path regression.</li>
     <li>Sampling profiles show at least 25% of target workload time in costs still present after buffer reuse and directly removed by the proposed rewrite.</li>
-    <li>A second prototype exercises a real production seam with heap handles or collection, not another buffer-pool variation or synthetic Rust-only loop.</li>
+    <li>A prototype exercises the chosen production seam: a compact execution image for Option A, VM-owned handles/reclamation for Option B, or compiled functions for Option C. A synthetic Rust-only loop is insufficient; heap handles are not a prerequisite for Options A or C.</li>
     <li>The prototype improves at least two end-to-end workloads beyond the new managed-buffer baseline and does not regress startup, tasks, or TUI beyond the agreed threshold.</li>
     <li>Debugger, task sharing, pause behavior, and artifact compatibility impacts are explicitly accepted; FPAS syntax and semantics remain unchanged.</li>
   </ol>

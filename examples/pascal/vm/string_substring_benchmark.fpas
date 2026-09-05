@@ -1,0 +1,77 @@
+// Measures short, empty, and full slices of long ASCII or Unicode strings.
+program VmStringSubstringBenchmark;
+
+uses Std.Args, Std.Console, Std.Conv, Std.Str, Std.Time;
+
+function RunSlices(Text: string; UnitText: string; Iterations: integer): integer;
+begin
+  var Count: integer := Std.Str.Length(Text);
+  var Width: integer := Std.Str.Length(UnitText);
+  mutable var Matches: integer := 0;
+  for Index: integer := 1 to Iterations do
+  begin
+    if Std.Str.Substring(Text, 0, Width) = UnitText then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.Substring(Text, Count div 2, Width) = UnitText then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.Substring(Text, Count - Width, Width) = UnitText then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.Substring(Text, Count, 0) = '' then
+    begin
+      Matches := Matches + 1
+    end;
+
+    if Std.Str.Substring(Text, 0, Count) = Text then
+    begin
+      Matches := Matches + 1
+    end
+  end;
+
+  return Matches
+end;
+
+begin
+  if ParamCount() <> 2 then
+  begin
+    panic('usage: string_substring_benchmark.fpas -- ITERATIONS ascii|unicode')
+  end;
+  var Iterations: integer := StrToInt(ParamStr(0));
+  if Iterations < 1 then
+  begin
+    panic('ITERATIONS must be positive')
+  end;
+  var Mode: string := ParamStr(1);
+  if (Mode <> 'ascii') and (Mode <> 'unicode') then
+  begin
+    panic('mode must be ascii or unicode')
+  end;
+  mutable var UnitText: string := 'abcd';
+  if Mode = 'unicode' then
+  begin
+    UnitText := 'aé😀界'
+  end;
+  var Text: string := Std.Str.RepeatStr(UnitText, 8192);
+  if RunSlices(Text, UnitText, 100) <> 500 then
+  begin
+    panic('warmup substring mismatch')
+  end;
+  var Started: integer := MonotonicMillis();
+  var Matches: integer := RunSlices(Text, UnitText, Iterations);
+  var Elapsed: integer := ElapsedMillis(Started);
+  if Matches <> Iterations * 5 then
+  begin
+    panic('substring result mismatch')
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('matches: ' + IntToStr(Matches))
+end.

@@ -14,6 +14,39 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Borrow scalar substring ranges without full input copies
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| integer_loop | 6449 | throughput: 7753140 iters/s |
+| global_access | 501 | throughput: 9980039 global updates/s |
+| record_field_access | 1510 | throughput: 9933774 field accesses/s |
+| closure_call | 467 | throughput: 6423982 closure calls/s |
+| branch_dispatch | 3176 | throughput: 6297229 branches/s |
+| dynamic_numeric | 829 | throughput: 6031363 dynamic numeric ops/s |
+| array_push | 209 | throughput: 9569377 pushes/s |
+| array_length | 73 | throughput: 6849315 lengths/s |
+| string_concat | 2188 | throughput: 2285191 concats/s |
+| string_length | 73 | throughput: 6849315 lengths/s |
+| intrinsic_dispatch | 1755 | throughput: 8547008 intrinsic calls/s |
+| function_call | 664 | throughput: 9036144 calls/s |
+| array_callbacks | 907 | throughput: 10584343 callbacks/s |
+| record_update | 376 | throughput: 2659574 updates/s |
+| unicode_char_at | 1134 | throughput: 2645502 chars/s |
+| wrapper_payload | 1432 | throughput: 6983240 wrappers/s |
+| task_spawn_wait | 599 | throughput: 166944 tasks/s |
+| task_array_callbacks | 856 | throughput: 4485981 callbacks/s |
+| tui_headless | 3804 | throughput: 131 frames/s |
+| notes_headless | 8126 | throughput: 30 frames/s |
+| analysis_queries | 1206 | - |
+| string_search | 300 | - |
+| compiler_lowering | 1287 | - |
+| substring_ascii | 12 | - |
+| substring_unicode | 404 | - |
+
 ## 2026-09-04 — Index construction blocks and traverse control flow iteratively
 
 - Group: `tooling`

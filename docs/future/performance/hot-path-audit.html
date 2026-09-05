@@ -21,7 +21,7 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="fast-interpreter-plan.html">Fast interpreter plan</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Initial read-only audit · measured follow-up through 4 September 2026</div>
+  <div class="stamp">Historical audit · current-source review 5 September 2026</div>
   <h1>Rust hot paths: evidence before architecture</h1>
   <p class="lede">This report ranks where execution time is most likely being consumed. “Confirmed” means the code is unavoidably executed at the stated frequency or an existing project profile names it. “Candidate” means the mechanism is visible in source and matches benchmark behavior, but needs a current sampling profile before a speed claim.</p>
 
@@ -30,10 +30,10 @@
     <div class="panel"><strong>Measured follow-up</strong><p>The debug-policy split passed with a smaller broad win. Borrowed operands and direct typed integer handlers produced cumulative full-suite improvements of 9.5% for the integer loop and 17.8% for the branch workload. Direct cached callback loading then improved <code>array_callbacks</code> by 23.9–24.1%.</p></div>
   </div>
 
-  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The later <a href="managed-heap-experiment.html">managed-heap experiment</a> confirmed allocation pressure in aggregate/TUI paths: bounded thread-local buffer reuse improved both end-to-end TUI workloads by about 7% and is retained. It does not replace <code>Arc</code>/COW with tracing collection. No bounded interpreter candidate remains open.</div>
+  <div class="callout"><strong>Current status:</strong> the table below preserves the historical signal that motivated the work. Current controlled results and rejected one-variable probes are recorded in the <a href="fast-interpreter-plan.html">fast-interpreter report</a> and <a href="../../bench/history.md">benchmark history</a>. The later <a href="managed-heap-experiment.html">managed-heap experiment</a> confirmed allocation pressure in aggregate/TUI paths: bounded thread-local buffer reuse improved both end-to-end TUI workloads by about 7% and is retained. It does not replace <code>Arc</code>/COW with tracing collection. The original interpreter cycle is closed. Later retained callback, wrapper-payload, string, compiler, and LSP work and the remaining <a href="fast-interpreter-plan.html#next-work">measurement candidates</a> are listed in the current plan.</div>
 
   <h2>Benchmark signal</h2>
-  <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They show a broad runtime regression rather than one isolated feature. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
+  <p>The committed records are same-project measurements but not a fresh controlled comparison for this audit. They motivated the original broad-regression investigation; they do not establish a regression at the current checkout after the retained improvements. The table compares <a href="../../bench/history.md">the recorded 10 August VM row</a> with <a href="../../bench/history.md">the 30 August row</a>.</p>
   <table>
     <thead><tr><th>Benchmark</th><th class="num">10 Aug ms</th><th class="num">30 Aug ms</th><th class="num">Elapsed increase</th><th>Primary exercised path</th></tr></thead>
     <tbody>
@@ -55,13 +55,14 @@
   </table>
   <p>The task row stayed near its older value, while the 30 August TUI row was 4,446 ms versus 3,455 ms on 9 August (+28.7%). The new Notes workload has no older comparison.</p>
 
-  <h2>Ranked hot-path findings</h2>
+  <h2>Original ranked findings, with current status</h2>
+  <p>The priority numbers preserve the original investigation order. They are not a current CPU ranking; use the <a href="fast-interpreter-plan.html#next-work">next-work table</a> for the current order.</p>
 
   <section class="rank">
-    <span class="badge high">Priority 1 · high confidence</span>
-    <h3>Normal execution pays debugger bookkeeping on every instruction</h3>
+    <span class="badge high">Priority 1 · debugger lookup addressed and measured</span>
+    <h3>Normal execution no longer performs debugger initializer lookup</h3>
     <p><a href="../../../crates/fpas-vm/src/vm/dispatch.rs"><code>vm/dispatch.rs</code></a> performs callback-continuation checks, address conversion, code bounds checks, checked IP and instruction-counter increments, and opcode validation before reaching the opcode match. Initializer suppression now uses a statically selected debugger specialization, so normal execution does not perform that debugger-only lookup.</p>
-    <p><strong>Why it matters:</strong> a 50-million-iteration loop executes several bytecodes per iteration. Nanoseconds added to every bytecode become seconds. The broad regression shape is consistent with common dispatch overhead.</p>
+    <p><strong>Why it matters:</strong> a 50-million-iteration loop executes several bytecodes per iteration. Nanoseconds added to every bytecode become seconds. The original broad regression shape was consistent with common dispatch overhead; current remaining costs need fresh attribution.</p>
     <p><strong>Status:</strong> the controlled execution-policy split produced a small repeatable improvement but did not explain most of the broad historical regression. Later trusted branch-target, opcode-mirror, and infallible-fetch probes also missed the broad 5% gate and were rolled back; a wider compact instruction image is deferred rather than an open cleanup.</p>
   </section>
 
@@ -76,7 +77,7 @@
     <span class="badge high">Priority 3 · cached path improved; frame replacement rejected</span>
     <h3>Higher-order array operations still cross a callback seam per element</h3>
     <p><a href="../../../crates/fpas-vm/src/vm/callback_call.rs"><code>callback_call.rs</code></a> still resolves and revalidates the callback, clones a <code>SharedFunction</code>, borrows a <code>RefCell</code>, resets a nested <code>Worker</code>, copies values into registers, runs a second dispatch loop, and returns the worker to the cache. The cached reset no longer collects an intermediate argument vector: it loads the optional receiver, visible arguments, and captures directly. <a href="../../../crates/fpas-vm/src/vm/hosted/callbacks/synchronous.rs"><code>callbacks/synchronous.rs</code></a> repeats the remaining seam for every Map, Filter, and Reduce element.</p>
-    <p><strong>Measured evidence:</strong> removing the per-callback argument allocation improved <code>array_callbacks</code> by 24.1% and 23.9% in two full-suite comparisons. The workload performs 9.6 million callbacks, so small fixed costs dominate. Caching callback resolution alone was slower by 1.7% and 3.6%. An allocation-free current-worker continuation was 21.5% slower, and a direct synchronous frame loop was 41.4% slower. Exact result-capacity preallocation for task-owned <code>Array.Map</code> initially measured −5.8%, but a longer reverse A/B reduced the median from 3014 to 2983 ms, only −1.0%. These alternatives were rolled back; the cached nested worker remains the measured fast path.</p>
+    <p><strong>Measured evidence:</strong> removing the per-callback argument allocation improved <code>array_callbacks</code> by 24.1% and 23.9% in two full-suite comparisons. The workload performs 9.6 million callbacks, so small fixed costs dominate. Caching callback resolution alone was slower by 1.7% and 3.6%. An allocation-free current-worker continuation was 21.5% slower, and a direct synchronous frame loop was 41.4% slower. Exact result-capacity preallocation for task-owned <code>Array.Map</code> initially measured −5.8%, but a longer reverse A/B reduced the median from 3014 to 2983 ms, only −1.0%. These alternatives were rolled back; the cached nested worker remains the measured synchronous fast path. A later distinct change uses <a href="../../../crates/fpas-vm/src/vm/hosted/callbacks/arguments.rs">inline task-callback arguments</a> and improved its production workload by 17.5%; see the <a href="managed-heap-experiment.html">allocation follow-up</a>.</p>
   </section>
 
   <section class="rank">
@@ -89,8 +90,8 @@
   <section class="rank">
     <span class="badge medium">Priority 5 · confirmed mechanism</span>
     <h3>Copy-on-write preserves semantics but turns many updates into heap work</h3>
-    <p><code>Value</code> stores strings, arrays, records, enums, dictionaries, and functions behind <code>Arc</code>. Cloning is cheap until mutation; <a href="../../../crates/fpas-bytecode/src/value/aggregate.rs"><code>value/aggregate.rs:29–49</code></a> and <a href="../../../crates/fpas-bytecode/src/value/array.rs"><code>value/array.rs:7–43</code></a> use <code>Arc::make_mut</code>, which detaches shared bodies. <a href="../../../crates/fpas-vm/src/vm/execute/aggregates.rs"><code>execute/aggregates.rs:201–223</code></a> clones a record before each <code>with</code> update and then mutates through the COW body.</p>
-    <p><strong>Existing evidence:</strong> prior native profiling named value drop and aggregate traversal. This is also a structural explanation for TUI workloads that continually construct and discard immutable trees.</p>
+    <p><code>Value</code> stores strings, arrays, records, enums, dictionaries, and functions behind <code>Arc</code>. Cloning is cheap until mutation; <a href="../../../crates/fpas-bytecode/src/value/aggregate.rs"><code>value/aggregate.rs</code></a> and <a href="../../../crates/fpas-bytecode/src/value/array.rs"><code>value/array.rs</code></a> use <code>Arc::make_mut</code>, which detaches shared bodies. <a href="../../../crates/fpas-vm/src/vm/execute/aggregates.rs"><code>execute/aggregates.rs</code></a> clones a record before each <code>with</code> update and then mutates through the COW body.</p>
+    <p><strong>Measured follow-up:</strong> bounded backing-buffer reuse improved the two TUI workloads by about 7%; wrapper-payload pooling later improved its focused workload by 31.2%. Temporary DHAT instrumentation attributed 37.5% of allocation events in each TUI workload to selected remaining Record/string body sites. That is an event share, not CPU time. A synchronized Record-slot prototype then regressed TUI by 96.6% and Notes by 33.4% and was removed. The remaining ownership mechanism is real, but does not justify a full-heap rewrite without new CPU attribution.</p>
   </section>
 
   <section class="rank">
@@ -117,7 +118,7 @@
   <section class="rank">
     <span class="badge low">Priority 9 · known non-runtime cost</span>
     <h3>Multi-program tests still repeat program parsing and compile/link work</h3>
-    <p>The measured TUI-test bottleneck was repeated parsing of 120 standard-library sources and unit-graph construction. <code>ProgramUnitGraph</code> now reuses that graph and reduced the warm FPAS TUI group from 53.20 s to about 37.8 s. However, <a href="../../../crates/fpas-cli/src/project_build.rs"><code>project_build.rs:103–120</code></a> still parses, resolves, builds, verifies, and links each program independently. This is a separate startup/test-throughput problem, not part of the in-program benchmark timer.</p>
+    <p>The historical TUI-test investigation found repeated parsing of 120 standard-library sources and unit-graph construction; graph reuse reduced that warm group from 53.20 s to about 37.8 s at the time. Those counts and timings are not a current inventory or baseline. <a href="../../../crates/fpas-cli/src/project_build.rs"><code>build_test_program_with_graph</code></a> still parses and prepares each root program, but <a href="../../../crates/fpas-build/src/engine.rs">unit builds</a> can reuse compatible <code>.fpascu</code> sidecars and <a href="../../../crates/fpas-build/src/program_artifact/mod.rs">program artifacts</a> can reuse compatible <code>.fpascp</code> images before linking. Measure cold/warm phase time and reuse hits for the complete group before adding caching. The new <code>compiler_lowering</code> benchmark covers semantic analysis and IR lowering only; it does not close this startup/test-throughput gap.</p>
   </section>
 
   <h2>What the existing profile already ruled down</h2>
@@ -134,7 +135,7 @@
 
   <h2>Audit limits</h2>
   <ul>
-    <li>No fresh sampling profile was captured, so this report does not assign CPU percentages to current functions.</li>
+    <li>No fresh CPU sampling profile was captured in this review, so this report does not assign CPU percentages to current functions. Later DHAT allocation counts are documented separately and are not CPU samples.</li>
     <li>Historical records can drift with compiler, hardware load, and unrelated code. Only controlled before/after comparisons can establish a win.</li>
     <li>Source inspection can identify frequency and allocation mechanisms, but not whether LLVM already optimized a check away.</li>
     <li>The reports deliberately avoid syntax or semantic changes.</li>

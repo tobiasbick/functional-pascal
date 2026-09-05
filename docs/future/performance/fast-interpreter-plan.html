@@ -17,18 +17,18 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="runtime-rewrite-options.html">Runtime rewrite options</a></nav>
-  <div class="stamp">Bounded interpreter work complete · Six wins retained · Failed probes rolled back</div>
+  <div class="stamp">Original interpreter cycle complete · Follow-up reviewed 5 September 2026</div>
   <h1>Recover a fast interpreter before replacing it</h1>
   <p class="lede">The first solution is a staged interpreter cleanup that preserves FPAS behavior and the verified register bytecode. It targets costs already present at instruction, call, intrinsic, and global-access frequency. Every stage has its own rollback point.</p>
 
-  <div class="callout"><strong>Current recommendation:</strong> retain the six accepted interpreter changes and the separately measured <a href="managed-heap-experiment.html">bounded managed buffer heap</a>. The heap improved both end-to-end TUI workloads by about 7% without changing interpreter dispatch, bytecode, or FPAS behavior. The remaining bounded interpreter candidates were measured and removed. No incremental interpreter item remains open; a full handle/tracing heap still requires new evidence about costs left after buffer reuse.</div>
+  <div class="callout"><strong>Current recommendation:</strong> retain the six accepted interpreter changes and the separately measured <a href="managed-heap-experiment.html">bounded managed buffer heap</a>. The heap improved both end-to-end TUI workloads by about 7% without changing interpreter dispatch, bytecode, or FPAS behavior. The original remaining interpreter probes were measured and removed. Later callback, payload, string, LSP, and compiler improvements are also retained; see <a href="#recent-follow-up">follow-up evidence</a>. The Substring follow-up is also retained after two full-suite comparisons; project-aware LSP and startup/test <a href="#next-work">measurement candidates</a> remain. A full handle/tracing heap still requires CPU evidence about costs left after all retained changes.</div>
 
   <h2 id="status">Current work status</h2>
-  <p>This table is the canonical progress record for the interpreter plan. <strong>Complete</strong> means implemented and accepted by controlled benchmarks. <strong>Partial</strong> separates accepted work from a remaining independently measured slice. <strong>Rejected</strong> means a concrete probe was measured and rolled back. <strong>Deferred</strong> means no implementation should start until its stated evidence gate exists.</p>
+  <p>This table is the canonical progress record for the interpreter plan. <strong>Complete</strong> means implemented and accepted by controlled benchmarks. <strong>Open measurement</strong> means a source-backed candidate whose benefit is not yet established. <strong>Rejected</strong> means a concrete probe was measured and rolled back. <strong>Deferred</strong> means no implementation should start until its stated evidence gate exists.</p>
   <table>
     <thead><tr><th>Work</th><th>Status</th><th>Recorded outcome</th><th>Next decision</th></tr></thead>
     <tbody>
-      <tr><td>Stage 0 · Current profile</td><td><strong>Closed for this cycle · sampling deferred</strong></td><td>Controlled baselines, full-suite comparisons, and isolated A/B probes resolved every bounded decision. Native self-time and allocation sampling was unavailable without administrator privileges.</td><td>No action now. Retry non-privileged sampling only when a future decision cannot be resolved by controlled A/B evidence.</td></tr>
+      <tr><td>Stage 0 · Current profile</td><td><strong>Closed for this cycle · sampling deferred</strong></td><td>Controlled comparisons resolved the original bounded decisions. The attempted samply CPU capture required administrator privileges. Later temporary DHAT instrumentation provided allocation counts, but no current CPU-time attribution.</td><td>Use focused A/B evidence for bounded changes. A major rewrite still requires current CPU attribution; allocation counts do not satisfy that gate.</td></tr>
       <tr><td>Stage 1 · Fast/debug policy split</td><td><strong>Complete</strong></td><td>Normal execution no longer performs the debugger initializer lookup. The change produced a small broad win and no stable regression.</td><td>Retain.</td></tr>
       <tr><td>Stage 2 · Trusted execution image</td><td><strong>Rejected · bounded safe slice</strong></td><td>Trusted branch targets, a verifier-built opcode mirror, and an infallible safe fetch path all missed the broad 5% gate. The opcode mirror moved <code>integer_loop</code> by −1.0%/+0.3% and <code>branch_dispatch</code> by −1.3%/−1.3%. The fetch probe moved those rows by −1.1%/−0.1% and −0.3%/−0.4%, while <code>dynamic_numeric</code> regressed by 3.5–3.9%.</td><td>Do not repeat these probes unchanged. Treat typed operand images, resolved quickening, or compact instructions as deferred Option A rather than incremental cleanup.</td></tr>
       <tr><td>Stage 3 · Typed operations</td><td><strong>3a/3b complete · later slices rejected</strong></td><td>Typed integer operations improved measured scalar and branch workloads. Direct typed-real arithmetic and comparisons improved isolated workloads by only 0.8% and 0.5%. Normal-run compare/branch look-ahead slowed <code>branch_dispatch</code> by 3.5%. All three were rolled back.</td><td>Retain typed integer handlers. Treat wider superinstructions as deferred compact-VM design, not unfinished interpreter cleanup.</td></tr>
@@ -37,7 +37,10 @@
       <tr><td>Stage 6 · Globals and safepoints</td><td><strong>6a complete · 6b rejected</strong></td><td>Normal runs without task functions or callback intrinsics use worker-owned global slots; debugger, task, callback-session, and callback-intrinsic paths remain shared. Disabling Local in a back-to-back reverse A/B slowed <code>global_access</code> from 485 ms to 554 ms (+14.2%). A later no-poll normal-run loop changed four repeated median workloads by +0.5%, +3.0%, −1.9%, and +1.5%; it provided no broad gain and was removed.</td><td>Retain 6a and exact instruction-boundary cancellation. Do not repeat either Stage-6b polling probe without new profile evidence.</td></tr>
       <tr><td>One-variable probes</td><td><strong>Rejected</strong></td><td>Trusted branch targets, an opcode mirror, infallible fetch, forced dispatch inlining, fixed-cadence or disabled normal-run cancellation polling, callback-resolution caching, two current-worker callback designs, known-size result capacity, typed-real arithmetic and comparisons, and compare/branch look-ahead all failed their gates.</td><td>All probes were rolled back. Do not repeat them unchanged.</td></tr>
       <tr><td>Bounded managed buffer heap</td><td><strong>Complete · retained</strong></td><td>Thread-local reuse improved fresh A/B medians by 7.0% for TUI, 7.2% for Notes, about 14% for record operations, and about 6% for string concatenation.</td><td>Keep as the allocation baseline; see the <a href="managed-heap-experiment.html">experiment report</a>.</td></tr>
-      <tr><td>Compact VM, full tracing heap, or JIT</td><td><strong>Deferred</strong></td><td>Architecture options only; none is an active implementation backlog.</td><td>Enter only through remaining-cost evidence gates in the runtime-rewrite report.</td></tr>
+      <tr><td>Allocation follow-ups</td><td><strong>Complete · two accepted, three rejected</strong></td><td>Inline task-callback arguments improved their workload by 17.5%; wrapper-box reuse by 31.2%. Constant caching, small inline aggregates, and synchronized Record slots failed their gates.</td><td>Retain accepted layers. Do not repeat rejected designs unchanged; see the <a href="managed-heap-experiment.html">five experiment outcomes</a>.</td></tr>
+      <tr><td>String queries, LSP reuse, compiler block ordering</td><td><strong>Complete · retained</strong></td><td>Later focused comparisons measured −71.2%, −60.6%, and −38.0%, respectively.</td><td>Respect the <a href="#recent-follow-up">workload limits</a>; these do not establish all string, project-query, or startup costs.</td></tr>
+      <tr><td>Project-aware LSP and startup/test phases</td><td><strong>Open measurement</strong></td><td>Source-backed cost mechanisms and coverage gaps; no new speed claim.</td><td>Follow the <a href="#next-work">ordered measurement plan</a>, one candidate at a time.</td></tr>
+      <tr><td>Compact VM, full tracing heap, or native compilation</td><td><strong>Deferred</strong></td><td>Architecture options only; none is an active implementation backlog.</td><td>Enter only through remaining-cost evidence gates in the runtime-rewrite report.</td></tr>
     </tbody>
   </table>
 
@@ -98,7 +101,7 @@
 
   <h2>Stage 3c result — direct typed-real arithmetic</h2>
   <p>A dedicated 20-million-iteration loop exercised three statically typed real operations per iteration. The candidate split <code>AddReal</code>, <code>SubtractReal</code>, <code>MultiplyReal</code>, <code>DivideReal</code>, and <code>NegateReal</code> from the generic numeric router while preserving its fallback diagnostics and division-by-zero behavior.</p>
-  <p>The complete VM-group comparison moved <code>real_loop</code> from 3058 to 3035 ms (−0.8%). Other rows remained below the 5% regression gate, but the target gain was far below the improvement gate. The direct handlers, pure real-operation module, diagnostic test, temporary benchmark, and suite entry were all removed. Real comparison opcodes remain independent because Stage 3b showed a 10.2–12.8% comparison gain versus only 2.9–3.0% for integer arithmetic.</p>
+  <p>The complete VM-group comparison moved <code>real_loop</code> from 3058 to 3035 ms (−0.8%). Other rows remained below the 5% regression gate, but the target gain was far below the improvement gate. The direct handlers, pure real-operation module, diagnostic test, temporary benchmark, and suite entry were all removed. Real comparisons were tested separately in Stage 3d below and also rejected; they are not pending work.</p>
 
   <h2>Stage 3d result — direct typed-real comparisons</h2>
   <p>A second isolated benchmark alternated two real operands and executed equality, inequality, and all four ordering relations on every iteration: 18 million typed comparisons per measured run. The candidate bypassed generic aggregate-aware comparison routing for verified real operands while preserving malformed-image fallback and the existing NaN diagnostic.</p>
@@ -140,31 +143,28 @@
   <p>A dedicated benchmark ran a 64-element <code>Std.Array.Map</code> repeatedly inside one spawned task, exercising the resumable callback state rather than the already optimized synchronous main-task path. The candidate initialized the result vector with the input length, avoiding geometric growth while preserving behavior.</p>
   <p>The first suite comparison measured 776→731 ms (−5.8%), but repeated 50,000-iteration medians measured 790.5→752.0 ms (−4.9%). A less noisy three-run reverse A/B at 200,000 iterations measured 3014→2983 ms (−1.0%). The longer result missed the 5% gate, so the constructor, its implementation test, the temporary benchmark, and its suite entry were all removed. No benchmark-history row was added for the rejected code.</p>
 
-  <h2>Design target</h2>
+  <h2>Original design sketch</h2>
+  <p>The following interface sketch explains the original separation goal. It is not a pending API rename or a requirement to replace the retained dispatcher.</p>
   <div class="grid">
     <div class="card"><b>Small interface</b><p><code>run_until_event()</code>, <code>resume()</code>, and state inspection only through an explicit debug adapter.</p></div>
     <div class="card"><b>Deep implementation</b><p>Instruction fetch, frame transitions, safepoints, task yielding, diagnostics, counters, and debug hooks stay behind the execution seam.</p></div>
     <div class="card"><b>Two real adapters</b><p>A normal fast executor and a debugger executor justify the seam. Normal execution must not branch on debug state for every instruction.</p></div>
   </div>
 
-  <h2>Proposed module shape</h2>
-  <pre>crates/fpas-vm/src/vm/execution/
-  mod.rs                 — narrow run/resume interface and shared outcomes
-  fast.rs                — normal execution loop; no debugger collections
-  debug.rs               — debugger policy, stops, initializer suppression
-  fetch.rs               — trusted instruction fetch/decode
-  safepoint.rs           — bounded cancellation, task yield, and host polling
+  <h2>Current implementation ownership</h2>
+  <pre>crates/fpas-vm/src/vm/
+  dispatch.rs                    — statically selected debugger policy
+  worker.rs                      — root loop and cancellation boundaries
+  execute/integer.rs             — direct typed integer handlers
+  execute/intrinsics.rs          — intrinsic owner routing
+  callback_call.rs               — cached synchronous callback worker
+  hosted/callbacks/arguments.rs  — inline task-callback arguments
+  globals.rs                     — eligible worker-local global slots
 
-crates/fpas-vm/src/vm/operations/
-  integer.rs             — direct typed integer handlers
-  real.rs                — direct typed real handlers
-  dynamic.rs             — generic slow path only where required
-  calls.rs               — verified frame transition fast path
-
-crates/fpas-std/src/dispatch/
-  mod.rs                 — direct Intrinsic family dispatch
-  hosted.rs              — explicit VM-owned classification</pre>
-  <p>This is a planning layout, not a requirement to preserve existing files. The key ownership rule is that debugger state belongs to <code>execution/debug.rs</code>, not to every normal <code>Worker</code> instruction.</p>
+crates/fpas-bytecode/src/value/
+  managed_heap.rs                — bounded thread-local storage pools
+  payload.rs                     — uniquely owned Result/Option payloads</pre>
+  <p>This replaces the obsolete proposed <code>execution/</code>, <code>operations/real.rs</code>, and standard-library hosted-dispatch layout. Rejected fetch, typed-real, and loop-splitting experiments do not create a module backlog.</p>
 
   <h2>External designs worth borrowing</h2>
   <table>
@@ -182,7 +182,7 @@ crates/fpas-std/src/dispatch/
   <section class="phase">
     <h3>Stage 0 — Establish a current profile</h3>
     <ul><li>Save the full suite baseline.</li><li>Profile the five audit workloads and capture allocation evidence.</li><li>Add an instruction-family counter outside timed production runs if sampling cannot distinguish handlers.</li></ul>
-    <p class="gate">Status: closed for this cycle. Controlled baselines and A/B probes resolved every bounded decision. Native self-time and allocation sampling remains deferred because the available profiler required administrator privileges; no system configuration was changed. Re-enter only when a future decision cannot be resolved by controlled A/B evidence.</p>
+    <p class="gate">Status: closed for this cycle. Controlled baselines and A/B probes resolved every bounded decision. The attempted samply CPU capture required administrator privileges; no system configuration was changed. Later temporary DHAT instrumentation measured allocation events successfully and was removed after the heap experiment. Allocation frequency is not CPU self-time. Re-enter only when a future decision cannot be resolved by controlled A/B evidence.</p>
   </section>
 
   <section class="phase">
@@ -216,7 +216,7 @@ crates/fpas-std/src/dispatch/
   <section class="phase">
     <h3>Stage 5 — Deepen calls and callbacks</h3>
     <p>The first accepted slice removed the temporary argument buffer from cached worker resets while preserving receiver, argument, capture, and task-owner ordering. A standalone attempt to resolve callback metadata once per higher-order operation did not help and was rolled back. Stage 5b then tested ordinary frames on the current worker. Reusing the task-continuation machinery was initially 76.0% slower and remained 21.5% slower after removing its per-call argument allocation and full array copy. A separate direct synchronous frame loop was 41.4% slower. Exact result-capacity preallocation for task-owned <code>Array.Map</code> later produced only a 1.0% longer-run median gain. All failed variants were rolled back.</p>
-    <p class="gate">Status: Stage 5a complete; Stage 5b rejected on 30 August 2026; result-capacity preallocation rejected on 4 September 2026. Stage 5a retains its repeatable 23.9–24.1% <code>array_callbacks</code> improvement and regression test for reused bound receivers. The cached nested worker remains because the alternatives failed the improvement gate without providing a compensating semantic benefit.</p>
+    <p class="gate">Status: Stage 5a complete; Stage 5b rejected on 30 August 2026; result-capacity preallocation rejected on 4 September 2026. Stage 5a retains its repeatable 23.9–24.1% <code>array_callbacks</code> improvement and regression test for reused bound receivers. The cached nested worker remains because the alternatives failed the improvement gate. A later distinct allocation change retained inline arguments for resumable task callbacks (−17.5%); it does not revive current-worker frame replacement or result-capacity preallocation.</p>
   </section>
 
   <section class="phase">
@@ -228,11 +228,33 @@ crates/fpas-std/src/dispatch/
     <p class="gate">Status: Stage 6a complete on 30 August 2026; Stage 6b measured and rejected on 4 September 2026. Re-entry gate: a new profile must identify material cancellation-check self-time that neither rejected probe measured.</p>
   </section>
 
-  <h2>Expected order of leverage</h2>
-  <ol><li>Retain the execution-policy split; the bounded trusted-image slice was rejected.</li><li>Retain direct typed integer handlers and direct intrinsic family routing; typed-real and compare/branch fusion were rejected.</li><li>Retain the measured cached callback worker; current-worker frames and result-capacity preallocation were rejected.</li><li>Retain worker-local globals for eligible normal runs.</li><li>Retain the bounded managed buffer heap as the new allocation baseline.</li><li>Do not revisit cancellation polling without new profile evidence; both Stage-6b probes were rejected.</li><li>No bounded interpreter item remains open.</li><li>Resume only when new profile evidence satisfies a compact-VM, full-heap, or native-compilation re-entry gate.</li></ol>
+  <h2 id="recent-follow-up">Retained follow-up and evidence limits</h2>
+  <p>Reviewed on 5 September 2026 against source at <code>77fac915</code>, commit comparison records, and <a href="../../bench/history.md">benchmark history</a>. The initial documentation review ran no benchmarks or profiles. The subsequent Substring implementation below has its own fresh baseline and comparisons. The table reports paired comparisons from separate changes, not a common baseline or cumulative speedup. Later history snapshots are reference runs, not substitutes for the paired measurements.</p>
+  <table>
+    <thead><tr><th>Retained work</th><th>Paired result</th><th>What was measured</th><th>What remains unmeasured</th></tr></thead>
+    <tbody>
+      <tr><td>LSP analysis reuse · <code>7049d106</code></td><td>2829 → 1115 ms (−60.6%)</td><td><a href="../../../crates/fpas-bench/src/native/language_service.rs">1000 fresh query forks</a> on one unchanged, already warmed open buffer with 500 functions; queries share completed analyses.</td><td>Real projects with standard-library context, unopened disk units, edit bursts, and cancellation timing. Cache invalidation correctness has separate regression coverage.</td></tr>
+      <tr><td>Borrowed string queries · <code>57923e19</code></td><td>1036 → 298 ms (−71.2%); recorded follow-up 295 ms</td><td><code>string_search</code>: 500,000 iterations of three successful short-needle searches on a 32 KiB string. The VM-group comparison also measured Unicode CharAt at 1226 → 1131 ms.</td><td>Substring and other string-producing APIs; no equivalent application-wide improvement follows from this search workload.</td></tr>
+      <tr><td>Compiler block indexing and iterative ordering · <code>77fac915</code></td><td>1984 → 1230 ms (−38.0%); recorded follow-up 1242 ms</td><td><a href="../../../crates/fpas-bench/src/native/compiler.rs">30 semantic-analysis and IR-lowering runs</a> on one parsed AST with 1000 sequential branches.</td><td>Parsing, bytecode emission/verification, linking, disk I/O, and execution are outside this timer. It is not an end-to-end build benchmark.</td></tr>
+      <tr><td>Inline task-callback arguments and wrapper payload pools</td><td>−17.5% and −31.2% in separate workloads</td><td>Repeated production-path A/B runs with VM and TUI/Notes guards; full details in the <a href="managed-heap-experiment.html">allocation report</a>.</td><td>Further full-heap benefit. Three other allocation designs were measured and rejected.</td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="next-work">Next work: justified measurement candidates</h2>
+  <p>The original interpreter stages are closed. Source inspection still identifies bounded opportunities outside those rejected designs. The first row is now retained. Continue with project-aware LSP measurement, then startup/test throughput; these gaps do not by themselves justify more caching or a runtime replacement.</p>
+  <table>
+    <thead><tr><th>Order and status</th><th>Current evidence</th><th>Next bounded step</th><th>Acceptance and coverage</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Substring<br><strong>Complete · retained</strong></td><td><a href="../../../crates/fpas-std/src/str/substring.rs">Scalar-range extraction</a> now borrows input, uses cached length for bounds and ASCII detection, scans Unicode boundaries, and shares full-range results.</td><td>Two full-suite comparisons: ASCII 1199 → 13 / 12 ms (−98.9% / −99.0%); Unicode 1931 → 403 / 403 ms (−79.1%). The benchmark checks beginning, middle, end, empty, and full slices of long inputs.</td><td>Four new Rust tests cover all ranges of short ASCII/Unicode strings, empty input, combining characters, negative/extreme/out-of-range indices, argument types/arity, and cached lengths. TUI measured −2.0% / −2.1%, Notes −3.3% / −2.3%. Format, build, and complete workspace tests passed. The history run recorded 12 ms ASCII and 404 ms Unicode. Search and wrapper outliers did not repeat; six alternating old/new TaskSpawnWait runs measured medians 568.5 → 557.5 ms (−1.9%), so no task regression was retained.</td></tr>
+      <tr><td>2 · Project-aware LSP<br><strong>Measurement first</strong></td><td>The retained benchmark covers one warm loose buffer. Disk snapshots still read unopened sources; project construction and cache fingerprints carry project context. Their share of real query latency is unknown.</td><td>Add a representative project with standard-library and disk-backed sibling units. Measure unchanged queries, edits, and overlapping requests; separate snapshot I/O, context/fingerprint work, and semantic analysis.</td><td>Optimize only the measured dominant phase. Preserve cross-fork reuse, disk-change invalidation, source revisions, cancellation, and stale-query isolation. Compare both project and existing loose-buffer workloads.</td></tr>
+      <tr><td>3 · Startup and test throughput<br><strong>Measurement first</strong></td><td>Shared <code>ProgramUnitGraph</code> preparation and compatible unit/program artifact reuse already exist. Per-test root parsing and build orchestration remain; the compiler-lowering benchmark does not measure total startup.</td><td>Time cold/warm project builds and the complete TUI test group by parse, unit reuse/build, lowering, verification, and link/image reuse. Record cache hits and misses before proposing another cache.</td><td>Use reproducible whole-group timings and preserve invalidation/error behavior. The old 53.20 → 37.8 s result is historical evidence, not a current baseline or current cost attribution.</td></tr>
+      <tr><td>4 · Compact VM, full heap, native backend<br><strong>Deferred</strong></td><td>No current CPU profile meets the major-rewrite gate. The synchronized Record-slot probe regressed TUI by 96.6% and Notes by 33.4%.</td><td>Re-enter only through the <a href="runtime-rewrite-options.html">option-specific evidence gates</a>. Pool counters are useful only for concrete pool tuning or a regression investigation.</td><td>At least 25% of target runtime must be attributable to removable costs; require a production prototype and wins in two end-to-end workloads. Allocation-event percentages alone are insufficient.</td></tr>
+    </tbody>
+  </table>
+  <p>For each implementation candidate: save a current baseline with <code>cargo bench-fpas</code>, change one variable, build release, repeat the affected comparison with end-to-end guards, and record only a settled win. Add meaningful negative and boundary regressions before retaining the implementation. No syntax or semantic change is part of this plan.</p>
 
   <h2>Risks</h2>
   <ul><li>Duplicating fast/debug loops can drift. Generate shared opcode coverage and test both executors against the same corpus.</li><li>Moving checks to verification increases the verifier's security responsibility. Fuzz and mutation-test artifact admission.</li><li>Superinstructions can bloat code and harm instruction-cache locality. Add only profile-backed combinations.</li><li>Inlining every operation can make the dispatch function too large. Keep rare operations cold and profile code layout.</li><li>Global-store specialization must preserve the current concurrency semantics exactly.</li></ul>
 
-  <footer>The <a href="#status">status table</a> is the canonical progress record. Stages 1, 3a, 3b, 4, 5a, and 6a are implemented and measured with <code>cargo bench-fpas</code>; rejected probes were rolled back. The separate <a href="managed-heap-experiment.html">managed-buffer experiment</a> is retained as the new allocation baseline. No bounded interpreter work remains; larger choices stay behind the gates in <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
+  <footer>The <a href="#status">status table</a> is the canonical progress record. Stages 1, 3a, 3b, 4, 5a, and 6a are implemented and measured with <code>cargo bench-fpas</code>; rejected probes were rolled back. The separate <a href="managed-heap-experiment.html">managed-buffer experiment</a> is retained as the new allocation baseline. The original interpreter cycle is closed; new bounded work starts with the <a href="#next-work">measurement candidates</a>. Larger choices stay behind the gates in <a href="runtime-rewrite-options.html">runtime rewrite options</a>.</footer>
 </main></body></html>

@@ -18,6 +18,7 @@ use fpas_diagnostics::codes::{
 };
 
 mod format;
+mod substring;
 
 /// Runs a `Std.Str` intrinsic if `intrinsic` matches; leaves stack unchanged and returns `Ok(None)` otherwise.
 pub(crate) fn run(
@@ -61,20 +62,9 @@ pub(crate) fn run(
         Intrinsic::Str(StrIntrinsic::Substring) => {
             let len = pop_int(pop_value(call, location)?, location)?;
             let start = pop_int(pop_value(call, location)?, location)?;
-            let s = pop_string(pop_value(call, location)?, location)?;
-            let chars: Vec<char> = s.chars().collect();
-            let n = chars.len() as i64;
-            if start < 0 || len < 0 || start > n || len > n - start {
-                return Err(std_runtime_error(
-                    RUNTIME_STRING_INDEX_OUT_OF_BOUNDS,
-                    format!("Substring out of range (len={n}, start={start}, len_param={len})"),
-                    "Ensure `start` and `len` select a valid substring range.",
-                    location,
-                ));
-            }
-            let end = start + len;
-            let out: String = chars[start as usize..end as usize].iter().collect();
-            call.push(Value::Str(out.into()));
+            let s = expect_str(pop_value(call, location)?, location)?;
+            let out = substring::extract(s, start, len, location)?;
+            call.push(Value::Str(out));
         }
         Intrinsic::Str(StrIntrinsic::IndexOf) => {
             let sub = expect_str(pop_value(call, location)?, location)?;

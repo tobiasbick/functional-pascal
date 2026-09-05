@@ -1,4 +1,5 @@
 mod search;
+mod substring;
 
 use super::*;
 use crate::limits::MAX_COLLECTION_LEN;

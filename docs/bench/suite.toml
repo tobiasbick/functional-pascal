@@ -162,3 +162,17 @@ group = "tooling"
 driver = "compiler-lowering"
 args = ["30", "1000"]
 timeout_ms = 60000
+
+[[bench]]
+id = "substring_ascii"
+group = "vm"
+path = "examples/pascal/vm/string_substring_benchmark.fpas"
+args = ["10000", "ascii"]
+timeout_ms = 120000
+
+[[bench]]
+id = "substring_unicode"
+group = "vm"
+path = "examples/pascal/vm/string_substring_benchmark.fpas"
+args = ["10000", "unicode"]
+timeout_ms = 120000

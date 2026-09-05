@@ -15,7 +15,7 @@
 </head>
 <body><main>
   <nav><a href="index.html">Performance reports</a><a href="hot-path-audit.html">Hot-path audit</a><a href="fast-interpreter-plan.html">Fast interpreter</a><a href="runtime-rewrite-options.html">Runtime rewrites</a></nav>
-  <div class="stamp">Production-path experiment · accepted 4 September 2026</div>
+  <div class="stamp">Production-path experiments · status reviewed 5 September 2026</div>
   <h1>A bounded managed heap helps FPAS</h1>
   <p class="lede">The experiment retains FPAS value semantics and the existing bytecode while reusing aggregate buffers, strings, and small wrapper boxes on the thread that releases them. Repeated A/B measurements show material gains in end-to-end and focused production workloads, so the successful layers are retained.</p>
 
@@ -32,15 +32,15 @@
   <p>A managed heap is runtime-owned storage for dynamically allocated values. Instead of asking the system allocator to create and destroy every array, record, string, or object independently, the runtime controls allocation and reclamation. Large VMs often combine compact handles or tagged slots with tracing garbage collection. Region systems instead free many short-lived objects together.</p>
   <p>This experiment deliberately tests a smaller production seam first. FPAS still stores aggregate bodies behind <code>Arc</code> and preserves copy-on-write behavior. When the final array, record, enum, dictionary, or string owner disappears, an eligible cleared buffer enters a bounded thread-local pool. A later aggregate construction can take that buffer without another allocator round trip.</p>
   <pre>FPAS Value (unchanged 16-byte ceiling)
-  └─ Arc/COW body (unchanged ownership semantics)
-       ├─ Vec&lt;Value&gt;          arrays, records, enums
-       ├─ Vec&lt;(Value,Value)&gt; dictionaries
-       ├─ String              UTF-8 payloads
-       └─ Box&lt;Value&gt;          Result/Option payloads
-             ↓ final owner drops
-       bounded thread-local capacity buckets
-             ↓ next matching construction
-       cleared buffer reused</pre>
+  ├─ Arc/COW body (unchanged ownership semantics)
+  │    ├─ Vec&lt;Value&gt;          arrays, records, enums
+  │    ├─ Vec&lt;(Value,Value)&gt; dictionaries
+  │    └─ String              UTF-8 payloads
+  └─ uniquely owned Box&lt;Value&gt;  Result/Option payloads
+               ↓ final owner drops
+       bounded thread-local storage pools
+               ↓ next matching construction
+       cleared storage reused</pre>
 
   <div class="callout warning"><strong>Not a tracing garbage collector:</strong> this does not introduce handles, root maps, safepoints, barriers, cycle collection, object movement, or stop-the-world pauses. Atomic <code>Arc</code> reference counts and one small body allocation per shared object remain. “Managed heap” in this report means a bounded runtime-managed reuse layer.</div>
 
@@ -76,15 +76,15 @@
   <ul>
     <li>FPAS syntax, semantics, bytecode, value-size ceiling, debugger protocol, and artifact format are unchanged.</li>
     <li>Copy-on-write tests for arrays, records, enums, and dictionaries continue to pass.</li>
-    <li>The bytecode and VM test suites passed during development; final workspace verification is required by the commit gate.</li>
+    <li>The retained implementation is covered by the successful workspace verification through <code>77fac915</code>. This documentation review adds no code and did not rerun the suite.</li>
   </ul>
 
   <h2>What this result does and does not justify</h2>
   <p>The result proves that allocator traffic and backing-buffer destruction were material in the measured aggregate and TUI paths. It justifies retaining this bounded layer. It does not prove that replacing every <code>Arc</code> with handles and adding a tracing collector would provide a proportional gain: the accepted layer already removes part of that cost, while a collector would add root tracking, safepoints, barriers, task-sharing policy, debugger integration, and pause behavior.</p>
-  <p>A full tagged-slot or tracing heap remains deferred. Heap profiles later cleared the allocation-count side of this gate, but the synchronized reusable-slot prototype failed the runtime side badly. Re-enter the design only with a VM-owned arena that can provide stable handles and safepoint reclamation without a lock on every value access, and still require wins in at least two end-to-end workloads without regressing startup or tasks.</p>
+  <p>A full tagged-slot or tracing heap remains deferred. Later DHAT profiles justified investigating remaining body allocations, but allocation-event counts do not satisfy the major-rewrite gate of at least 25% of target CPU time. The synchronized reusable-slot prototype also failed the runtime comparison badly. Re-enter the design only with a VM-owned arena that can provide stable handles and safepoint reclamation without a lock on every value access, and still require wins in at least two end-to-end workloads without regressing startup or tasks.</p>
 
   <h2>Follow-up allocation experiments</h2>
-  <p>The remaining ideas are evaluated one at a time. Each experiment keeps its implementation only when a reproducible affected benchmark improves by roughly 5% or more without a material regression elsewhere. Rejected implementations are removed, but their result remains here so the same path is not repeated without new evidence.</p>
+  <p>All five experiments below are complete: two accepted and three rejected. Each was evaluated separately; accepted implementations required a reproducible affected-workload improvement of roughly 5% or more without a material regression elsewhere. The table is an outcome ledger, not an open implementation queue. Rejected results remain here so the same designs are not repeated without new evidence.</p>
   <table>
     <thead><tr><th>Step</th><th>Experiment</th><th>Status</th><th>Evidence and decision</th></tr></thead>
     <tbody>
@@ -92,11 +92,12 @@
       <tr><td>2</td><td>Remove heap allocation from callback argument vectors.</td><td>Accepted</td><td>A new production-path benchmark runs <code>Map</code>, <code>Filter</code>, and <code>Reduce</code> inside a spawned task, where callbacks use the resumable state machine. Fresh unchanged runs measured 1360 and 1219 ms; fresh inline-argument runs measured 1098 and 1030 ms. Their medians improve from 1290 to 1064 ms (−17.5%). Inline packs now hold zero, one, or two visible arguments, bound receivers enter the frame without a temporary vector, and synchronous dictionary/result/option callbacks borrow slices. VM guards stayed within ±4%; TUI measured −1.0% and Notes −5.9%. Retained.</td></tr>
       <tr><td>3</td><td>Reduce allocation for boxed <code>Result</code> and <code>Option</code> payloads.</td><td>Accepted</td><td>A new benchmark constructs and unwraps ten million alternating result/option payloads. Four direct unchanged runs had a 2096 ms median; four managed-box runs had a 1442 ms median (−31.2%). A reverse A/B TUI check measured 4019 → 4009 ms (−0.3%) and Notes 8659 → 8708 ms (+0.6%), both inside noise. The retained owner remains one pointer wide, preserves deep clones and mutable debugger payload access, and bounds retention to 4096 cleared boxes per thread.</td></tr>
       <tr><td>4</td><td>Store small records and enums inline, or otherwise remove their remaining body allocation.</td><td>Rejected; implementation reverted</td><td>The prototype stored zero to four fields directly in each record or enum body and kept larger aggregates in the existing managed vector pool. Against the accepted reuse-heap baseline, <code>record_field_access</code> changed from 1484 to 1500 ms (+1.1%) and <code>record_update</code> from 378 to 363 ms (−4.0%), so neither affected benchmark cleared the 5% gate. It also measured slower in <code>array_callbacks</code> (+8.9%), TUI (+3.3%), and Notes (+4.2%). Enlarging every aggregate body outweighed the removed small-vector indirection, so the implementation and its tests were removed.</td></tr>
-      <tr><td>5</td><td>Prototype a handle, tracing, or epoch heap only if remaining allocation evidence clears the design gate.</td><td>Rejected; prototype reverted</td><td>Temporary DHAT profiles found 15,427,822 allocation events in TUI and 26,563,598 in Notes. The explicit <code>SharedRecord::new</code> and <code>SharedStr::from(&amp;str)</code> body sites alone contributed 5,785,494 (37.5%) and 9,952,478 (37.5%) events respectively, so a handle experiment was justified. A production-path reusable Record slot then removed repeated body allocation while preserving FPAS value semantics and the existing <code>Value</code> size. Its synchronized body access changed <code>record_field_access</code> from 1484 to 2005 ms (+35.1%), <code>record_update</code> from 378 to 462 ms (+22.2%), TUI from 3826 to 7521 ms (+96.6%), and Notes from 8161 to 10889 ms (+33.4%). Locks and indirection cost much more than the saved allocation, so all prototype code and profiler instrumentation were removed. A future collector must use VM-owned stable handles and safepoints rather than globally synchronized per-object slots.</td></tr>
+      <tr><td>5</td><td>Prototype a handle, tracing, or epoch heap only if remaining allocation evidence clears the design gate.</td><td>Rejected; prototype reverted</td><td>Temporary DHAT profiles found 15,427,822 allocation events in TUI and 26,563,598 in Notes. The explicit <code>SharedRecord::new</code> and <code>SharedStr::from(&amp;str)</code> body sites alone contributed 5,785,494 (37.5%) and 9,952,478 (37.5%) events respectively, which justified a bounded investigation of body allocation; these counts do not establish its CPU-time share. A production-path reusable Record slot then removed repeated body allocation while preserving FPAS value semantics and the existing <code>Value</code> size. Its synchronized body access changed <code>record_field_access</code> from 1484 to 2005 ms (+35.1%), <code>record_update</code> from 378 to 462 ms (+22.2%), TUI from 3826 to 7521 ms (+96.6%), and Notes from 8161 to 10889 ms (+33.4%). Locks and indirection cost much more than the saved allocation, so all prototype code and profiler instrumentation were removed. A future collector must use VM-owned stable handles and safepoints rather than globally synchronized per-object slots.</td></tr>
     </tbody>
   </table>
 
-  <h2>Possible next refinements</h2>
+  <h2>Conditional refinements, not queued work</h2>
+  <p>No allocation experiment above remains open. The <a href="fast-interpreter-plan.html#next-work">Substring follow-up</a> has measured gains; project-aware LSP measurement is next; full-heap work stays behind the <a href="runtime-rewrite-options.html">major-rewrite gates</a>.</p>
   <ol>
     <li>Add low-overhead benchmark-only pool counters only when tuning pool bounds or investigating a concrete workload regression.</li>
     <li>Do not retry synchronized per-object slots: their measured access cost dominates the allocator saving.</li>

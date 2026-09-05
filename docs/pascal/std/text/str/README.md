@@ -72,9 +72,15 @@ Search predicates, `IndexOf`, `LastIndexOf`, `IsNumeric`, and `CharAt` borrow
 their input strings. They do not copy the complete input before querying it.
 Character indices retain their Unicode scalar semantics.
 
+`Substring` validates against the cached scalar count and copies only the selected
+UTF-8 range. ASCII ranges use byte offsets directly; Unicode ranges scan scalar
+boundaries without allocating a character vector. A full-range result shares the
+immutable input storage.
+
 | Concern | Location |
 |---------|-----------|
 | Algorithms | [`str/mod.rs`](../../../../../crates/fpas-std/src/str/mod.rs) |
+| Scalar substring ranges | [`str/substring.rs`](../../../../../crates/fpas-std/src/str/substring.rs) |
 | Shared string storage (`SharedStr`, cached `char_len` for O(1) `Length`) | [`value/mod.rs`](../../../../../crates/fpas-bytecode/src/value/mod.rs) |
 | String concatenation (sums cached lengths) | [`scalar.rs`](../../../../../crates/fpas-vm/src/vm/value_ops/scalar.rs) |
 | Registration | [`std_registry/mod.rs`](../../../../../crates/fpas-sema/src/std_registry/mod.rs) |

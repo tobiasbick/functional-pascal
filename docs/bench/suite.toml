@@ -197,3 +197,17 @@ group = "tooling"
 driver = "language-service-project"
 args = ["20", "20", "overlap"]
 timeout_ms = 120000
+
+[[bench]]
+id = "project_build_cold"
+group = "startup"
+driver = "project-build"
+args = ["3", "cold"]
+timeout_ms = 120000
+
+[[bench]]
+id = "project_build_warm"
+group = "startup"
+driver = "project-build"
+args = ["10", "warm"]
+timeout_ms = 120000

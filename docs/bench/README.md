@@ -42,6 +42,22 @@ Committed progress over time lives in [`history.md`](history.md). Agent workflow
 and full-range slices of a 32,768-scalar string. Input construction and warmup
 are excluded; each iteration checks all five results through production FPAS calls.
 
+The `startup` group runs complete release CLI project builds. Each iteration copies
+the real source standard library and the headless TUI benchmark program into an
+owned scratch project, excluding compiled artifacts. `project_build_cold` times its
+first build; `project_build_warm` performs an untimed first build and then times a
+second build, checking that the CLI reused the program image. Fixture copying,
+warmup, and cleanup are outside the timer. Process startup, project loading, source
+validation, unit builds or sidecar loading, and program artifact admission/publication
+are included. The resulting program is not executed. These are artifact-cold and
+artifact-warm measurements; neither flushes operating-system filesystem caches.
+
+```sh
+cargo bench-fpas save startup-before --group startup
+cargo bench-fpas compare startup-before --group startup
+cargo bench-fpas native project-build 3 warm
+```
+
 ## Prerequisites
 
 - Quiet machine (avoid heavy background load).
@@ -132,9 +148,9 @@ Snapshot JSON and committed history are written to a flushed same-directory stag
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `vm`, `concurrency`, or `tui` (filter with `--group`)
+- `group` — `vm`, `concurrency`, `tui`, `tooling`, or `startup` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, and `compiler-lowering` run native tooling workloads and omit `path`
+- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, and `project-build` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

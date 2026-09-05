@@ -3,6 +3,7 @@
 use std::fmt::Write;
 use std::path::PathBuf;
 
+use super::super::fixture_directory::FixtureDirectory;
 use fpas_language_service::LanguageService;
 
 /// A project with an open main buffer and unopened disk-backed sibling units.
@@ -10,15 +11,15 @@ pub(super) struct Fixture {
     pub(super) service: LanguageService,
     pub(super) main: PathBuf,
     pub(super) source: String,
-    _directory: ScratchDirectory,
+    _directory: FixtureDirectory,
 }
 
 impl Fixture {
     /// Writes benchmark sources under the workspace scratch root and loads editor context.
     pub(super) fn create(units: usize) -> Result<Self, String> {
         let root = std::env::current_dir().map_err(|error| error.to_string())?;
-        let scratch = ScratchDirectory::create(&root)?;
-        let directory = &scratch.0;
+        let scratch = FixtureDirectory::create(&root)?;
+        let directory = scratch.path();
         let manifest = directory.join("queries.fpasprj");
         std::fs::write(&manifest, "[project]\nname = \"queries\"\nkind = \"program\"\nmain = \"main.fpas\"\n[sources]\ninclude = [\"*.fpas\"]\n").map_err(|error| error.to_string())?;
         let mut source = String::from("program ProjectQueries;\nuses Std.Str");
@@ -52,28 +53,5 @@ impl Fixture {
             source,
             _directory: scratch,
         })
-    }
-}
-
-struct ScratchDirectory(PathBuf);
-
-impl ScratchDirectory {
-    fn create(root: &std::path::Path) -> Result<Self, String> {
-        let parent = root.join(".temp-data/bench/project-queries");
-        std::fs::create_dir_all(&parent).map_err(|error| error.to_string())?;
-        let nonce = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|error| error.to_string())?
-            .as_nanos();
-        let path = parent.join(format!("{}-{nonce}", std::process::id()));
-        // Exclusive creation establishes ownership of this one scratch directory.
-        std::fs::create_dir(&path).map_err(|error| error.to_string())?;
-        Ok(Self(path))
-    }
-}
-
-impl Drop for ScratchDirectory {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
     }
 }

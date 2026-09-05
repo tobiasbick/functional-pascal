@@ -14,6 +14,23 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Compare identical project paths before filesystem canonicalization
+
+- Group: `startup`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| project_build_cold | 2162 | - |
+| project_build_warm | 1421 | - |
+
+Two full-suite comparisons measured cold builds at 1755 → 1692 / 1628 ms and
+warm builds at 1861 → 1402 / 1429 ms. The high cold-build sample above did not
+repeat: a subsequent startup-group comparison measured 1675 ms cold and 1424 ms
+warm against its original 1786 / 1799 ms baseline. Retention rests on the
+repeatable warm-build improvement; no stable cold-build speedup is claimed.
+See the [phase report](../future/performance/fast-interpreter-plan.html#startup-follow-up).
+
 ## 2026-09-05 — Deduplicate normalized standard-library paths once per project composition
 
 - Group: `tooling`

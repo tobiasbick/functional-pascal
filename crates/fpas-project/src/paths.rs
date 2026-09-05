@@ -241,8 +241,9 @@ pub(super) fn canonical_source_path(path: &Path) -> PathBuf {
     canonical_or_original(path)
 }
 
+/// Compares paths directly before resolving filesystem aliases.
 pub(super) fn same_file(left: &Path, right: &Path) -> bool {
-    canonical_or_original(left) == canonical_or_original(right)
+    left == right || canonical_or_original(left) == canonical_or_original(right)
 }
 
 fn canonical_or_original(path: &Path) -> PathBuf {
@@ -253,9 +254,9 @@ fn canonical_or_original(path: &Path) -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::canonical_or_original;
     #[cfg(unix)]
     use super::expand_source_pattern;
+    use super::{canonical_or_original, same_file};
     #[cfg(unix)]
     use std::fs;
     #[cfg(unix)]
@@ -267,6 +268,41 @@ mod tests {
         let fallback = canonical_or_original(Path::new("missing-path-for-tests/example.fpas"));
 
         assert!(fallback.is_absolute());
+    }
+
+    #[test]
+    fn same_file_accepts_identical_existing_and_missing_paths() {
+        for path in ["Cargo.toml", "missing-path-for-tests/example.fpas"] {
+            assert!(same_file(Path::new(path), Path::new(path)));
+        }
+    }
+
+    #[test]
+    fn same_file_resolves_relative_absolute_and_parent_aliases() {
+        let relative = Path::new("Cargo.toml");
+        let absolute = std::env::current_dir().unwrap().join(relative);
+        assert!(same_file(relative, &absolute));
+        assert!(same_file(relative, Path::new("src/../Cargo.toml")));
+    }
+
+    #[test]
+    fn same_file_preserves_missing_path_fallback_without_merging_distinct_paths() {
+        let missing = Path::new("missing-path-for-tests/example.fpas");
+        assert!(same_file(
+            missing,
+            &std::env::current_dir().unwrap().join(missing)
+        ));
+        assert!(!same_file(
+            missing,
+            Path::new("missing-path-for-tests/other.fpas")
+        ));
+        assert!(!same_file(Path::new("Cargo.toml"), Path::new("src/lib.rs")));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn same_file_resolves_case_aliases_on_windows() {
+        assert!(same_file(Path::new("Cargo.toml"), Path::new("CARGO.TOML")));
     }
 
     #[cfg(unix)]

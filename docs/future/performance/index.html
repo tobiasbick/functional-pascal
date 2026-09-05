@@ -30,7 +30,7 @@
 <body>
 <main>
   <header>
-    <div class="stamp">Plan reviewed · 5 September 2026 · Substring and project-query follow-up</div>
+    <div class="stamp">Plan reviewed · 5 September 2026 · Three sequential follow-ups completed</div>
     <h1>Where FPAS spends its time</h1>
     <p class="lede">An evidence ledger for Rust runtime and tooling performance: retained improvements, rejected experiments, remaining measurement gaps, and the conditions for a larger rewrite.</p>
   </header>
@@ -39,14 +39,14 @@
 
   <section class="cards" aria-label="Reports">
     <a class="card" href="hot-path-audit.html"><strong>1 · Hot-path audit</strong><span>Measurements, code locations, ranked hypotheses, confidence levels, and what remains unmeasured.</span></a>
-    <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter and follow-up</strong><span>Completed stages, rejected probes, deferred rewrites, and the next measurement candidates.</span></a>
+    <a class="card" href="fast-interpreter-plan.html#status"><strong>2 · Fast interpreter and follow-up</strong><span>Completed stages, rejected probes, deferred rewrites, and the completed follow-ups and remaining gates.</span></a>
     <a class="card" href="runtime-rewrite-options.html"><strong>3 · Runtime rewrites</strong><span>Compact values, a managed heap, 32-bit or quickened bytecode, and deferred native compilation.</span></a>
     <a class="card" href="managed-heap-experiment.html"><strong>4 · Managed heap experiment</strong><span>Retained buffer and payload pools, accepted callback arguments, rejected allocation probes, and the full-heap gate.</span></a>
   </section>
 
   <h2>Scope and constraints</h2>
   <ul>
-    <li>The initial runtime audit was followed by Rust runtime, standard-library, compiler, and language-service improvements. The review is followed by three sequential measurement tasks; the Substring implementation passed format, build, complete workspace tests, and repeated benchmark comparisons.</li>
+    <li>The initial runtime audit was followed by Rust runtime, standard-library, compiler, and language-service improvements. All three sequential measurement tasks are complete and retained: Substring, project-aware LSP composition, and warm project builds. Each passed format, build, complete workspace tests, and repeated benchmark comparisons.</li>
     <li>Retained changes have recorded build/test and benchmark evidence. Later focused workloads have narrower timing scope than the original full-suite interpreter comparisons; those limits are listed explicitly.</li>
     <li>Absolute benchmark times are machine-specific; the reported improvements use same-checkout before/after comparisons.</li>
     <li>FPAS syntax and semantics are held fixed. Rust internals, bytecode, runtime values, compiler/runtime seams, and artifact formats may be replaced.</li>
@@ -54,7 +54,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">next measurement candidates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP composition now also has a measured improvement: roughly 89% for warm and overlapping requests and 22% for edits. Startup/test phase measurement is next. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
+  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">completed follow-ups and remaining gates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP composition now also has a measured improvement: roughly 89% for warm and overlapping requests and 22% for edits. The startup follow-up now retains a 23–25% warm-build improvement from avoiding redundant path canonicalization. The complete TUI test group passed; headless TUI and Notes timings remained stable. Further candidates are sidecar admission and cold unit compilation, subject to narrower profiles before any new cache or rewrite. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

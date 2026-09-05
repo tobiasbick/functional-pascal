@@ -21,7 +21,7 @@
 
   <div class="callout"><strong>Strong recommendation:</strong> retain the six accepted interpreter changes and the accepted <a href="managed-heap-experiment.html">bounded managed buffer heap</a>. Fresh A/B medians improved both end-to-end TUI workloads by about 7%, record operations by about 14%, and string concatenation by about 6%. This validates runtime-managed reuse, not a full tracing collector. Compact execution images, tagged heap handles/tracing collection, and tiered compilation remain deferred until evidence identifies material cost still present after buffer reuse.</div>
 
-  <p>Reviewed against <code>77fac915</code> on 5 September 2026. These alternatives have no evidence-backed priority among themselves. The <a href="fast-interpreter-plan.html#next-work">bounded measurement plan</a> comes first; no new CPU profile was collected in this review.</p>
+  <p>Reviewed against <code>77fac915</code> on 5 September 2026. These alternatives have no evidence-backed priority among themselves. The subsequent <a href="fast-interpreter-plan.html#next-work">three bounded follow-ups</a> are complete and retained. Their workload timings and startup phase samples do not establish the CPU attribution required by these rewrite gates.</p>
 
   <h2>Three options</h2>
   <section class="options">

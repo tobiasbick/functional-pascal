@@ -1,12 +1,14 @@
 //! Native tooling workloads run in the harness's bounded child processes.
 
 mod compiler;
+mod fixture_directory;
 mod language_service;
+mod project_build;
 mod project_queries;
 
 use std::process::ExitCode;
 
-const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas save tooling-before --group tooling";
+const USAGE: &str = "Usage:\n  cargo bench-fpas native language-service <queries> <functions>\n  cargo bench-fpas native compiler-lowering <iterations> <branches>\n  cargo bench-fpas native language-service-project <queries> <units> <warm|edits|overlap>\n  cargo bench-fpas native project-build <iterations> <cold|warm>\n\nExamples:\n  cargo bench-fpas native language-service 1000 500\n  cargo bench-fpas native compiler-lowering 30 1000\n  cargo bench-fpas native language-service-project 40 20 warm\n  cargo bench-fpas native project-build 3 warm\n  cargo bench-fpas save tooling-before --group tooling";
 
 /// Executes one native workload, or prints its usage.
 pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
@@ -28,6 +30,7 @@ pub(crate) fn run(args: &[String]) -> Result<ExitCode, String> {
             language_service::run(positive_count(iterations)?, positive_count(width)?)?
         }
         "compiler-lowering" => compiler::run(positive_count(iterations)?, positive_count(width)?)?,
+        "project-build" => project_build::run(positive_count(iterations)?, width)?,
         _ => return Err(format!("Unknown native workload `{driver}`.\n{USAGE}")),
     }
     Ok(ExitCode::SUCCESS)
@@ -55,6 +58,9 @@ mod tests {
             vec!["language-service-project", "1", "2", "unknown"],
             vec!["language-service-project", "0", "2", "warm"],
             vec!["language-service-project", "1", "2"],
+            vec!["project-build", "0", "warm"],
+            vec!["project-build", "1", "unknown"],
+            vec!["project-build", "1"],
         ] {
             assert!(run(&args.into_iter().map(str::to_owned).collect::<Vec<_>>()).is_err());
         }

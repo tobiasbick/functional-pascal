@@ -44,6 +44,8 @@ pub enum BenchDriver {
     LanguageServiceProject,
     /// Measure semantic analysis and IR lowering of branch-heavy programs.
     CompilerLowering,
+    /// Measure complete CLI project builds and artifact reuse.
+    ProjectBuild,
 }
 
 #[derive(Debug, Deserialize)]

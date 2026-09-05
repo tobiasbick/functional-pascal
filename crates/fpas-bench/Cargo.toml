@@ -14,6 +14,7 @@ path = "src/main.rs"
 fpas-compiler = { path = "../fpas-compiler" }
 fpas-parser = { path = "../fpas-parser" }
 fpas-language-service = { path = "../fpas-language-service" }
+fpas-unit = { path = "../fpas-unit" }
 atomic-write-file = "0.3.0"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }

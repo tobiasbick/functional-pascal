@@ -14,6 +14,17 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-05 — Validate shared unit debugger type subgraphs once per object
+
+- Group: `startup`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| project_build_cold | 1569 | - |
+| project_build_warm | 1369 | - |
+| unit_artifact_shared_types | 1 | - |
+
 ## 2026-09-05 — Compare identical project paths before filesystem canonicalization
 
 - Group: `startup`

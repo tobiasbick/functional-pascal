@@ -46,6 +46,8 @@ pub enum BenchDriver {
     CompilerLowering,
     /// Measure complete CLI project builds and artifact reuse.
     ProjectBuild,
+    /// Decode and validate unit objects containing shared debugger subtypes.
+    UnitArtifact,
 }
 
 #[derive(Debug, Deserialize)]

@@ -2,6 +2,7 @@
 
 mod codec;
 mod conversion;
+mod debug_types;
 mod error;
 mod from_executable;
 mod function;
@@ -169,7 +170,7 @@ impl RelocatableObject {
                 }
             }
         }
-        validation::validate_debug_types(
+        debug_types::validate_debug_types(
             &self.debug_types,
             &self.globals,
             &self.records,

@@ -30,7 +30,7 @@
 <body>
 <main>
   <header>
-    <div class="stamp">Plan reviewed · 5 September 2026 · Three sequential follow-ups completed</div>
+    <div class="stamp">Plan reviewed · 5 September 2026 · Unit artifact validation follow-up verified</div>
     <h1>Where FPAS spends its time</h1>
     <p class="lede">An evidence ledger for Rust runtime and tooling performance: retained improvements, rejected experiments, remaining measurement gaps, and the conditions for a larger rewrite.</p>
   </header>
@@ -54,7 +54,7 @@
   </ul>
 
   <h2>Recommended reading</h2>
-  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">completed follow-ups and remaining gates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP composition now also has a measured improvement: roughly 89% for warm and overlapping requests and 22% for edits. The startup follow-up now retains a 23–25% warm-build improvement from avoiding redundant path canonicalization. The complete TUI test group passed; headless TUI and Notes timings remained stable. Further candidates are sidecar admission and cold unit compilation, subject to narrower profiles before any new cache or rewrite. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
+  <p>Start with the <a href="fast-interpreter-plan.html#recent-follow-up">retained follow-up results</a> and <a href="fast-interpreter-plan.html#next-work">completed follow-ups and remaining gates</a>. The original interpreter stages and all five allocation follow-ups are closed as accepted or rejected. That closes those experiments, not all performance work. The Substring comparison retained a roughly 99% ASCII and 79% Unicode gain in its focused workloads. Project-aware LSP composition now also has a measured improvement: roughly 89% for warm and overlapping requests and 22% for edits. The startup follow-up now retains a 23–25% warm-build improvement from avoiding redundant path canonicalization. The complete TUI test group passed; headless TUI and Notes timings remained stable. The subsequent <a href="fast-interpreter-plan.html#unit-artifact-follow-up">unit artifact investigation</a> fixed exponential work on shared debugger type graphs: its focused decoder workload improved from 2152 to 1 ms, while ordinary build timings remained stable. The equivalent executable-image traversal is the next bounded candidate; filesystem and JSON costs require a separate measured proposal before a new cache or format change. Compact bytecode, a full tracing heap, and native compilation remain deferred until current remaining-cost evidence meets their gates.</p>
 
   <footer>Architecture proposals remain planning material; measured follow-up results are marked explicitly. Current FPAS behavior remains documented under <code>docs/pascal/</code>; benchmark records remain under <code>docs/bench/</code>.</footer>
 </main>

@@ -211,3 +211,10 @@ group = "startup"
 driver = "project-build"
 args = ["10", "warm"]
 timeout_ms = 120000
+
+[[bench]]
+id = "unit_artifact_shared_types"
+group = "startup"
+driver = "unit-artifact"
+args = ["500", "16"]
+timeout_ms = 120000

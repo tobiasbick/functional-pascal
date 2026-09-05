@@ -42,7 +42,7 @@ Committed progress over time lives in [`history.md`](history.md). Agent workflow
 and full-range slices of a 32,768-scalar string. Input construction and warmup
 are excluded; each iteration checks all five results through production FPAS calls.
 
-The `startup` group runs complete release CLI project builds. Each iteration copies
+The `startup` group includes complete release CLI project builds. Each build iteration copies
 the real source standard library and the headless TUI benchmark program into an
 owned scratch project, excluding compiled artifacts. `project_build_cold` times its
 first build; `project_build_warm` performs an untimed first build and then times a
@@ -52,10 +52,20 @@ validation, unit builds or sidecar loading, and program artifact admission/publi
 are included. The resulting program is not executed. These are artifact-cold and
 artifact-warm measurements; neither flushes operating-system filesystem caches.
 
+`unit_artifact_shared_types` measures production object JSON decoding and validation
+of a valid debugger type graph with repeatedly shared children. The configured
+workload decodes 500 objects with 17 type nodes (16 nested dictionaries referencing
+the same child twice). Fixture construction, encoding, and one checked warmup are
+excluded; decoding, validation, and dropping each result are included. It isolates
+shared-graph validation cost and does not measure disk I/O, sidecar envelope hashes,
+or whole-project throughput. This guards against exponentially repeated traversal
+of a small valid graph. Its native arguments are iteration count and graph depth.
+
 ```sh
 cargo bench-fpas save startup-before --group startup
 cargo bench-fpas compare startup-before --group startup
 cargo bench-fpas native project-build 3 warm
+cargo bench-fpas native unit-artifact 500 16
 ```
 
 ## Prerequisites
@@ -150,7 +160,7 @@ Add or adjust entries in [`suite.toml`](suite.toml):
 - `id` — short name used in tables and JSON
 - `group` — `vm`, `concurrency`, `tui`, `tooling`, or `startup` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
-- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, and `project-build` run native workloads and omit `path`
+- `driver` — defaults to `fpas`; `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, and `unit-artifact` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)
 - `timeout_ms` — required wall-clock limit for the spawned benchmark process; expiry terminates and reaps its entire process tree while retaining captured stdout/stderr in the diagnostic
 

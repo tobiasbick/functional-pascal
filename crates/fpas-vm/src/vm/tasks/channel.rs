@@ -1,5 +1,7 @@
 //! `Std.Task` bounded-channel intrinsic dispatch.
 
+mod blocking;
+mod debug;
 mod non_blocking;
 mod timeout;
 
@@ -10,10 +12,9 @@ use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
-use super::super::channels::{CANCELLATION_POLL_INTERVAL, ReceiveState, SendState};
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
-use super::{TaskSuspension, pool};
+use super::pool;
 
 const CLOSED_ERROR: &str = "Channel is closed";
 const SEND_CANCELLED_ERROR: &str = "Channel send was cancelled";
@@ -126,215 +127,6 @@ impl Worker {
             | TaskIntrinsic::Wait
             | TaskIntrinsic::WaitAll => Ok(None),
         }
-    }
-
-    fn blocking_channel_send(
-        &mut self,
-        handle: u64,
-        mut value: Value,
-        token: Option<u64>,
-    ) -> Result<Value, VmError> {
-        loop {
-            let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .send(handle, value, cancelled, None)
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
-                SendState::Sent => return Ok(ok(Value::Boolean(true))),
-                SendState::Closed => return Ok(error(CLOSED_ERROR)),
-                SendState::Cancelled => return Ok(error(SEND_CANCELLED_ERROR)),
-                SendState::Pending(pending) => value = pending,
-            }
-            if self.help_one_channel_task()? {
-                continue;
-            }
-            if self.channel_scheduler_stopped() {
-                return Ok(error(CLOSED_ERROR));
-            }
-            let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .send(handle, value, cancelled, Some(CANCELLATION_POLL_INTERVAL))
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
-                SendState::Sent => return Ok(ok(Value::Boolean(true))),
-                SendState::Closed => return Ok(error(CLOSED_ERROR)),
-                SendState::Cancelled => return Ok(error(SEND_CANCELLED_ERROR)),
-                SendState::Pending(pending) => value = pending,
-            }
-        }
-    }
-
-    fn blocking_channel_receive(
-        &mut self,
-        handle: u64,
-        token: Option<u64>,
-    ) -> Result<Value, VmError> {
-        loop {
-            let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .receive(handle, cancelled, None)
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
-                ReceiveState::Received(value) => return Ok(ok(value)),
-                ReceiveState::Closed => return Ok(error(CLOSED_ERROR)),
-                ReceiveState::Cancelled => return Ok(error(RECEIVE_CANCELLED_ERROR)),
-                ReceiveState::Pending => {}
-            }
-            if self.help_one_channel_task()? {
-                continue;
-            }
-            if self.channel_scheduler_stopped() {
-                return Ok(error(CLOSED_ERROR));
-            }
-            let cancelled = self.channel_cancelled(token)?;
-            match self
-                .hosted
-                .channels
-                .receive(handle, cancelled, Some(CANCELLATION_POLL_INTERVAL))
-                .map_err(|message| self.channel_runtime_error(message))?
-            {
-                ReceiveState::Received(value) => return Ok(ok(value)),
-                ReceiveState::Closed => return Ok(error(CLOSED_ERROR)),
-                ReceiveState::Cancelled => return Ok(error(RECEIVE_CANCELLED_ERROR)),
-                ReceiveState::Pending => {}
-            }
-        }
-    }
-
-    fn debug_channel_send(
-        &mut self,
-        handle: u64,
-        value: Value,
-        token: Option<u64>,
-        destination: Option<Register>,
-    ) -> Result<Option<Option<Value>>, VmError> {
-        let cancelled = self.channel_cancelled(token)?;
-        match self
-            .hosted
-            .channels
-            .send(handle, value, cancelled, None)
-            .map_err(|message| self.channel_runtime_error(message))?
-        {
-            SendState::Sent => Ok(Some(Some(ok(Value::Boolean(true))))),
-            SendState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            SendState::Cancelled => Ok(Some(Some(error(SEND_CANCELLED_ERROR)))),
-            SendState::Pending(value) => {
-                self.task_suspension = Some(TaskSuspension::ChannelSend {
-                    handle,
-                    value,
-                    token,
-                    destination,
-                });
-                self.suspend_requested = true;
-                Ok(Some(None))
-            }
-        }
-    }
-
-    fn debug_channel_receive(
-        &mut self,
-        handle: u64,
-        token: Option<u64>,
-        destination: Option<Register>,
-    ) -> Result<Option<Option<Value>>, VmError> {
-        let cancelled = self.channel_cancelled(token)?;
-        match self
-            .hosted
-            .channels
-            .receive(handle, cancelled, None)
-            .map_err(|message| self.channel_runtime_error(message))?
-        {
-            ReceiveState::Received(value) => Ok(Some(Some(ok(value)))),
-            ReceiveState::Closed => Ok(Some(Some(error(CLOSED_ERROR)))),
-            ReceiveState::Cancelled => Ok(Some(Some(error(RECEIVE_CANCELLED_ERROR)))),
-            ReceiveState::Pending => {
-                self.task_suspension = Some(TaskSuspension::ChannelReceive {
-                    handle,
-                    token,
-                    destination,
-                });
-                self.suspend_requested = true;
-                Ok(Some(None))
-            }
-        }
-    }
-
-    pub(super) fn poll_debug_channel_send(
-        &mut self,
-        handle: u64,
-        value: Value,
-        token: Option<u64>,
-        destination: Option<Register>,
-    ) -> Result<bool, VmError> {
-        let cancelled = self.channel_cancelled(token)?;
-        let result = match self
-            .hosted
-            .channels
-            .send(handle, value, cancelled, None)
-            .map_err(|message| self.channel_runtime_error(message))?
-        {
-            SendState::Sent => Some(ok(Value::Boolean(true))),
-            SendState::Closed => Some(error(CLOSED_ERROR)),
-            SendState::Cancelled => Some(error(SEND_CANCELLED_ERROR)),
-            SendState::Pending(value) => {
-                self.task_suspension = Some(TaskSuspension::ChannelSend {
-                    handle,
-                    value,
-                    token,
-                    destination,
-                });
-                None
-            }
-        };
-        self.finish_debug_channel_poll(result, destination)
-    }
-
-    pub(super) fn poll_debug_channel_receive(
-        &mut self,
-        handle: u64,
-        token: Option<u64>,
-        destination: Option<Register>,
-    ) -> Result<bool, VmError> {
-        let cancelled = self.channel_cancelled(token)?;
-        let result = match self
-            .hosted
-            .channels
-            .receive(handle, cancelled, None)
-            .map_err(|message| self.channel_runtime_error(message))?
-        {
-            ReceiveState::Received(value) => Some(ok(value)),
-            ReceiveState::Closed => Some(error(CLOSED_ERROR)),
-            ReceiveState::Cancelled => Some(error(RECEIVE_CANCELLED_ERROR)),
-            ReceiveState::Pending => {
-                self.task_suspension = Some(TaskSuspension::ChannelReceive {
-                    handle,
-                    token,
-                    destination,
-                });
-                None
-            }
-        };
-        self.finish_debug_channel_poll(result, destination)
-    }
-
-    fn finish_debug_channel_poll(
-        &mut self,
-        result: Option<Value>,
-        destination: Option<Register>,
-    ) -> Result<bool, VmError> {
-        let Some(value) = result else {
-            return Ok(false);
-        };
-        if let Some(destination) = destination {
-            self.write(destination, value)?;
-        }
-        Ok(true)
     }
 
     pub(super) fn help_one_channel_task(&mut self) -> Result<bool, VmError> {

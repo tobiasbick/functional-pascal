@@ -75,6 +75,40 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Also observes cancellation during TLS handshake I/O.
+//
+// Parameters:
+// - `Host`: `string` input value used by `ConnectTlsWithCancellation`.
+// - `Port`: `integer` input value used by `ConnectTlsWithCancellation`.
+// - `TimeoutMillis`: `integer` input value used by `ConnectTlsWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `ConnectTlsWithCancellation`.
+public function ConnectTlsWithCancellation(
+  Host: string;
+  Port: integer;
+  TimeoutMillis: integer;
+  Token: Std.Task.CancellationToken
+): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Cancellable TCP attempts; OS DNS checked on return.
+//
+// Parameters:
+// - `Host`: `string` input value used by `ConnectWithCancellation`.
+// - `Port`: `integer` input value used by `ConnectWithCancellation`.
+// - `TimeoutMillis`: `integer` input value used by `ConnectWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `ConnectWithCancellation`.
+public function ConnectWithCancellation(
+  Host: string;
+  Port: integer;
+  TimeoutMillis: integer;
+  Token: Std.Task.CancellationToken
+): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Binds one TCP listener.
 //
 // Parameters:
@@ -114,6 +148,21 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Reads a chunk or reports cancellation; leaves the connection open.
+//
+// Parameters:
+// - `Connection`: `Std.Net.Connection` input value used by `ReadWithCancellation`.
+// - `MaxBytes`: `integer` input value used by `ReadWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `ReadWithCancellation`.
+public function ReadWithCancellation(
+  Connection: Std.Net.Connection;
+  MaxBytes: integer;
+  Token: Std.Task.CancellationToken
+): result of array of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Sets read/write timeout; zero disables it.
 //
 // Parameters:
@@ -130,6 +179,21 @@ end;
 // - `Connection`: `Std.Net.Connection` input value used by `Write`.
 // - `Data`: `array of integer` input value used by `Write`.
 public function Write(Connection: Std.Net.Connection; Data: array of integer): result of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Returns accepted bytes or reports cancellation before progress.
+//
+// Parameters:
+// - `Connection`: `Std.Net.Connection` input value used by `WriteWithCancellation`.
+// - `Data`: `array of integer` input value used by `WriteWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `WriteWithCancellation`.
+public function WriteWithCancellation(
+  Connection: Std.Net.Connection;
+  Data: array of integer;
+  Token: Std.Task.CancellationToken
+): result of integer, string;
 begin
   panic('Intrinsic API declaration')
 end;

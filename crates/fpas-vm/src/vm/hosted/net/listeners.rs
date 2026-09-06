@@ -119,12 +119,7 @@ impl NetworkListeners {
     ) -> Result<Transport, String> {
         let listener = self.listener(handle)?;
         loop {
-            if is_cancelled() {
-                return Err("Network accept cancelled".to_string());
-            }
-            if listener.is_closed() {
-                return Err("Network listener is closed or does not belong to this VM".to_string());
-            }
+            ensure_accept_active(&listener, &is_cancelled)?;
             let (stream, _) = match listener.socket.accept() {
                 Ok(accepted) => accepted,
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
@@ -133,21 +128,20 @@ impl NetworkListeners {
                 }
                 Err(error) => return Err(format!("Network listener accept failed: {error}")),
             };
-            if is_cancelled() {
-                return Err("Network accept cancelled".to_string());
-            }
-            if listener.is_closed() {
-                return Err("Network listener is closed or does not belong to this VM".to_string());
-            }
+            ensure_accept_active(&listener, &is_cancelled)?;
             stream
                 .set_nodelay(true)
                 .map_err(|error| format!("Could not configure accepted connection: {error}"))?;
             match &listener.mode {
-                ListenerMode::Tcp => return Ok(Transport::tcp(stream)),
+                ListenerMode::Tcp => {
+                    ensure_accept_active(&listener, &is_cancelled)?;
+                    return Ok(Transport::tcp(stream));
+                }
                 ListenerMode::Tls(tls) => {
                     if let Ok(stream) =
                         tls.accept(stream, || listener.is_closed() || is_cancelled())
                     {
+                        ensure_accept_active(&listener, &is_cancelled)?;
                         return Ok(Transport::tls_server(stream));
                     }
                 }
@@ -194,6 +188,19 @@ impl NetworkListeners {
             .cloned()
             .ok_or_else(|| "Network listener is closed or does not belong to this VM".to_string())
     }
+}
+
+fn ensure_accept_active(
+    listener: &Listener,
+    is_cancelled: impl Fn() -> bool,
+) -> Result<(), String> {
+    if is_cancelled() {
+        return Err("Network accept cancelled".to_string());
+    }
+    if listener.is_closed() {
+        return Err("Network listener is closed or does not belong to this VM".to_string());
+    }
+    Ok(())
 }
 
 fn listener_port(port: i64) -> Result<u16, String> {
@@ -342,6 +349,27 @@ mod tests {
 
         let error = match result {
             Ok(_) => panic!("cancelled accept must fail"),
+            Err(error) => error,
+        };
+        assert_eq!(error, "Network accept cancelled");
+        listeners.close(handle).expect("listener remains open");
+    }
+
+    #[test]
+    fn cancellation_after_tcp_setup_prevents_returning_the_connection() {
+        let port = unused_port();
+        let listeners = NetworkListeners::new();
+        let handle = listeners
+            .listen("127.0.0.1", i64::from(port))
+            .expect("listen");
+        let _client = TcpStream::connect(("127.0.0.1", port)).expect("connect");
+        let checks = std::sync::atomic::AtomicUsize::new(0);
+
+        let result = listeners
+            .accept_with_cancellation(handle, || checks.fetch_add(1, Ordering::Relaxed) >= 2);
+
+        let error = match result {
+            Ok(_) => panic!("final cancellation must win"),
             Err(error) => error,
         };
         assert_eq!(error, "Network accept cancelled");

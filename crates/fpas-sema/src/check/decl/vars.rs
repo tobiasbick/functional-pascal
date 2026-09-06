@@ -185,6 +185,7 @@ impl Checker {
                 self.validate_typed_record_literal_fields(fields, record_ty, *lit_span);
                 let key = Self::expr_lookup_key(expr);
                 self.expr_types.insert(key, Ty::Record(record_ty.clone()));
+                self.propagate_task_bound_expr(expr, key);
                 Some(Ty::Record(record_ty.clone()))
             }
             (Expr::ArrayLiteral(elements, _), Ty::Array(element_ty)) => {
@@ -202,6 +203,7 @@ impl Checker {
                     }
                     let key = Self::expr_lookup_key(expr);
                     self.expr_types.insert(key, resolved.clone());
+                    self.propagate_task_bound_expr(expr, key);
                     Some(resolved)
                 } else {
                     None

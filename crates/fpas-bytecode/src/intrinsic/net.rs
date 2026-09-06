@@ -34,5 +34,13 @@ pub enum NetIntrinsic {
     ListenTls = 527,
     /// `Std.Net.AcceptWithCancellation(Listener, Token)` - accept until cancellation.
     AcceptWithCancellation = 536,
+    /// `Std.Net.ReadWithCancellation(Connection, MaxBytes, Token)` - read until cancellation.
+    ReadWithCancellation = 547,
+    /// `Std.Net.WriteWithCancellation(Connection, Data, Token)` - write until cancellation.
+    WriteWithCancellation = 548,
+    /// `Std.Net.ConnectWithCancellation(Host, Port, TimeoutMillis, Token)`.
+    ConnectWithCancellation = 549,
+    /// `Std.Net.ConnectTlsWithCancellation(Host, Port, TimeoutMillis, Token)`.
+    ConnectTlsWithCancellation = 550,
 }
 }

@@ -209,6 +209,10 @@ fn capacity_error(capacity: i64) -> String {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+
     use super::{CANCELLATION_POLL_INTERVAL, ChannelRegistry, ReceiveState, SendState};
     use fpas_bytecode::Value;
 
@@ -298,6 +302,174 @@ mod tests {
             std::thread::yield_now();
             assert_eq!(registry.close(handle), Ok(true));
             assert!(blocked.join().expect("sender thread"));
+        });
+    }
+
+    #[test]
+    fn concurrent_senders_and_receivers_deliver_every_value_once() {
+        const PRODUCERS: i64 = 4;
+        const VALUES_PER_PRODUCER: i64 = 250;
+
+        let registry = Arc::new(ChannelRegistry::new());
+        let handle = registry.create(8).expect("channel");
+        for value in -8..0 {
+            assert!(matches!(
+                registry.send(handle, Value::Integer(value), false, None),
+                Ok(SendState::Sent)
+            ));
+        }
+        let channel = registry.channel(handle).expect("channel");
+        assert_eq!(
+            channel
+                .state
+                .lock()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .values
+                .len(),
+            8,
+            "the bounded queue must reach, but never exceed, its capacity"
+        );
+        let received = Arc::new(Mutex::new(Vec::new()));
+
+        std::thread::scope(|scope| {
+            let consumers = (0..4)
+                .map(|_| {
+                    let registry = Arc::clone(&registry);
+                    let received = Arc::clone(&received);
+                    scope.spawn(move || {
+                        loop {
+                            match registry
+                                .receive(handle, false, Some(Duration::from_millis(1)))
+                                .expect("receive state")
+                            {
+                                ReceiveState::Received(Value::Integer(value)) => received
+                                    .lock()
+                                    .unwrap_or_else(|poisoned| poisoned.into_inner())
+                                    .push(value),
+                                ReceiveState::Pending => {}
+                                ReceiveState::Closed => break,
+                                ReceiveState::Received(value) => {
+                                    panic!("unexpected channel value: {value:?}")
+                                }
+                                ReceiveState::Cancelled => {
+                                    unreachable!("stress test does not observe cancellation")
+                                }
+                            }
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+            let producers = (0..PRODUCERS)
+                .map(|producer| {
+                    let registry = Arc::clone(&registry);
+                    scope.spawn(move || {
+                        for sequence in 0..VALUES_PER_PRODUCER {
+                            let mut value =
+                                Value::Integer(producer * VALUES_PER_PRODUCER + sequence);
+                            loop {
+                                match registry
+                                    .send(handle, value, false, Some(Duration::from_millis(1)))
+                                    .expect("send state")
+                                {
+                                    SendState::Sent => break,
+                                    SendState::Pending(pending) => value = pending,
+                                    SendState::Closed => panic!("channel closed before send"),
+                                    SendState::Cancelled => {
+                                        unreachable!("stress test does not observe cancellation")
+                                    }
+                                }
+                            }
+                        }
+                    })
+                })
+                .collect::<Vec<_>>();
+
+            for producer in producers {
+                producer.join().expect("producer");
+            }
+            assert_eq!(registry.close(handle), Ok(true));
+            for consumer in consumers {
+                consumer.join().expect("consumer");
+            }
+        });
+
+        let mut received = Arc::try_unwrap(received)
+            .expect("all receiver references were joined")
+            .into_inner()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        received.sort_unstable();
+        let expected = (-8..PRODUCERS * VALUES_PER_PRODUCER).collect::<Vec<_>>();
+        assert_eq!(received, expected);
+        let state = channel
+            .state
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert!(state.values.is_empty());
+    }
+
+    #[test]
+    fn send_notification_wakes_a_waiting_receiver() {
+        let registry = ChannelRegistry::new();
+        let handle = registry.create(1).expect("channel");
+        let channel = registry.channel(handle).expect("channel");
+        let waiting = AtomicBool::new(false);
+
+        std::thread::scope(|scope| {
+            let waiter = scope.spawn(|| {
+                let state = channel
+                    .state
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                waiting.store(true, Ordering::Release);
+                let (_guard, wait) = channel
+                    .can_receive
+                    .wait_timeout(state, Duration::from_secs(2))
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                wait
+            });
+            while !waiting.load(Ordering::Acquire) {
+                std::thread::yield_now();
+            }
+            assert!(matches!(
+                registry.send(handle, Value::Integer(1), false, None),
+                Ok(SendState::Sent)
+            ));
+            assert!(!waiter.join().expect("receiver waiter").timed_out());
+        });
+    }
+
+    #[test]
+    fn receive_notification_wakes_a_waiting_sender() {
+        let registry = ChannelRegistry::new();
+        let handle = registry.create(1).expect("channel");
+        assert!(matches!(
+            registry.send(handle, Value::Integer(1), false, None),
+            Ok(SendState::Sent)
+        ));
+        let channel = registry.channel(handle).expect("channel");
+        let waiting = AtomicBool::new(false);
+
+        std::thread::scope(|scope| {
+            let waiter = scope.spawn(|| {
+                let state = channel
+                    .state
+                    .lock()
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                waiting.store(true, Ordering::Release);
+                let (_guard, wait) = channel
+                    .can_send
+                    .wait_timeout(state, Duration::from_secs(2))
+                    .unwrap_or_else(|poisoned| poisoned.into_inner());
+                wait
+            });
+            while !waiting.load(Ordering::Acquire) {
+                std::thread::yield_now();
+            }
+            assert!(matches!(
+                registry.receive(handle, false, None),
+                Ok(ReceiveState::Received(Value::Integer(1)))
+            ));
+            assert!(!waiter.join().expect("sender waiter").timed_out());
         });
     }
 }

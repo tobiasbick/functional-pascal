@@ -19,6 +19,23 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     let error = Box::new(Ty::String);
 
+    for name in [
+        s::STD_NET_CONNECT_WITH_CANCELLATION,
+        s::STD_NET_CONNECT_TLS_WITH_CANCELLATION,
+    ] {
+        define_func(
+            checker,
+            name,
+            vec![
+                p("Host", Ty::String, false),
+                p("Port", Ty::Integer, false),
+                p("TimeoutMillis", Ty::Integer, false),
+                p("Token", cancellation_token.clone(), false),
+            ],
+            Ty::Result(Box::new(connection.clone()), error.clone()),
+        );
+    }
+
     define_func(
         checker,
         s::STD_NET_CONNECT,
@@ -68,7 +85,7 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         s::STD_NET_ACCEPT_WITH_CANCELLATION,
         vec![
             p("Listener", listener.clone(), false),
-            p("Token", cancellation_token, false),
+            p("Token", cancellation_token.clone(), false),
         ],
         Ty::Result(Box::new(connection.clone()), error.clone()),
     );
@@ -98,10 +115,30 @@ pub(super) fn register_std_net(checker: &mut Checker) {
     );
     define_func(
         checker,
+        s::STD_NET_READ_WITH_CANCELLATION,
+        vec![
+            p("Connection", connection.clone(), false),
+            p("MaxBytes", Ty::Integer, false),
+            p("Token", cancellation_token.clone(), false),
+        ],
+        Ty::Result(Box::new(Ty::Array(Box::new(Ty::Integer))), error.clone()),
+    );
+    define_func(
+        checker,
         s::STD_NET_WRITE,
         vec![
             p("Connection", connection.clone(), false),
             p("Data", Ty::Array(Box::new(Ty::Integer)), false),
+        ],
+        Ty::Result(Box::new(Ty::Integer), error.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_NET_WRITE_WITH_CANCELLATION,
+        vec![
+            p("Connection", connection.clone(), false),
+            p("Data", Ty::Array(Box::new(Ty::Integer)), false),
+            p("Token", cancellation_token, false),
         ],
         Ty::Result(Box::new(Ty::Integer), error.clone()),
     );

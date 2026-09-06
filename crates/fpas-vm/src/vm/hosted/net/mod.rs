@@ -27,6 +27,38 @@ impl Worker {
             return Ok(None);
         };
         let value = match operation {
+            NetIntrinsic::ConnectWithCancellation | NetIntrinsic::ConnectTlsWithCancellation => {
+                require_count(self, arguments, 4)?;
+                let host = string(self, &arguments[0], "Host")?;
+                let port = integer(self, &arguments[1], "Port")?;
+                let timeout = integer(self, &arguments[2], "TimeoutMillis")?;
+                let token = cancellation_token(self, &arguments[3])?;
+                let mode = if operation == NetIntrinsic::ConnectWithCancellation {
+                    connections::ConnectMode::Tcp
+                } else {
+                    connections::ConnectMode::Tls
+                };
+                result(
+                    self.hosted
+                        .cancellations
+                        .is_cancelled(token)
+                        .and_then(|_| {
+                            self.hosted.network_connections.connect_with_cancellation(
+                                host,
+                                port,
+                                timeout,
+                                mode,
+                                || {
+                                    self.hosted
+                                        .cancellations
+                                        .is_cancelled(token)
+                                        .unwrap_or(true)
+                                },
+                            )
+                        })
+                        .map(Value::OpaqueHandle),
+                )
+            }
             NetIntrinsic::Connect => {
                 require_count(self, arguments, 3)?;
                 let host = string(self, &arguments[0], "Host")?;
@@ -111,7 +143,16 @@ impl Worker {
                                 })
                         })
                         .and_then(|transport| {
-                            self.hosted.network_connections.insert_accepted(transport)
+                            if self
+                                .hosted
+                                .cancellations
+                                .is_cancelled(token)
+                                .unwrap_or(true)
+                            {
+                                Err("Network accept cancelled".to_string())
+                            } else {
+                                self.hosted.network_connections.insert_accepted(transport)
+                            }
                         })
                         .map(Value::OpaqueHandle),
                 )
@@ -137,38 +178,64 @@ impl Worker {
                         .map(|()| Value::Boolean(true)),
                 )
             }
-            NetIntrinsic::Read => {
-                require_count(self, arguments, 2)?;
+            NetIntrinsic::Read | NetIntrinsic::ReadWithCancellation => {
+                let cancellable = operation == NetIntrinsic::ReadWithCancellation;
+                require_count(self, arguments, if cancellable { 3 } else { 2 })?;
                 let handle = connection(self, &arguments[0])?;
                 let max_bytes = integer(self, &arguments[1], "MaxBytes")?;
-                result(
-                    self.hosted
-                        .network_connections
-                        .read(handle, max_bytes)
-                        .map(|bytes| {
-                            Value::Array(
-                                bytes
-                                    .into_iter()
-                                    .map(|byte| Value::Integer(i64::from(byte)))
-                                    .collect(),
-                            )
-                        }),
-                )
+                let read = if cancellable {
+                    let token = cancellation_token(self, &arguments[2])?;
+                    self.hosted.cancellations.is_cancelled(token).and_then(|_| {
+                        self.hosted.network_connections.read_with_cancellation(
+                            handle,
+                            max_bytes,
+                            || {
+                                self.hosted
+                                    .cancellations
+                                    .is_cancelled(token)
+                                    .unwrap_or(true)
+                            },
+                        )
+                    })
+                } else {
+                    self.hosted.network_connections.read(handle, max_bytes)
+                };
+                result(read.map(|bytes| {
+                    Value::Array(
+                        bytes
+                            .into_iter()
+                            .map(|byte| Value::Integer(i64::from(byte)))
+                            .collect(),
+                    )
+                }))
             }
-            NetIntrinsic::Write => {
-                require_count(self, arguments, 2)?;
+            NetIntrinsic::Write | NetIntrinsic::WriteWithCancellation => {
+                let cancellable = operation == NetIntrinsic::WriteWithCancellation;
+                require_count(self, arguments, if cancellable { 3 } else { 2 })?;
                 let handle = connection(self, &arguments[0])?;
                 let bytes = bytes(self, &arguments[1])?;
-                result(
-                    self.hosted
-                        .network_connections
-                        .write(handle, &bytes)
-                        .and_then(|count| {
-                            i64::try_from(count).map(Value::Integer).map_err(|_| {
-                                "TCP write count exceeds FPAS integer range".to_string()
-                            })
-                        }),
-                )
+                let write = if cancellable {
+                    let token = cancellation_token(self, &arguments[2])?;
+                    self.hosted.cancellations.is_cancelled(token).and_then(|_| {
+                        self.hosted.network_connections.write_with_cancellation(
+                            handle,
+                            &bytes,
+                            || {
+                                self.hosted
+                                    .cancellations
+                                    .is_cancelled(token)
+                                    .unwrap_or(true)
+                            },
+                        )
+                    })
+                } else {
+                    self.hosted.network_connections.write(handle, &bytes)
+                };
+                result(write.and_then(|count| {
+                    i64::try_from(count)
+                        .map(Value::Integer)
+                        .map_err(|_| "TCP write count exceeds FPAS integer range".to_string())
+                }))
             }
             NetIntrinsic::Close => {
                 require_count(self, arguments, 1)?;

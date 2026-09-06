@@ -12,6 +12,10 @@ fpas-diagnostics = { path = "../fpas-diagnostics" }
 fpas-std = { path = "../fpas-std" }
 rustls.workspace = true
 rustls-platform-verifier.workspace = true
+socket2.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
 
 [dev-dependencies]
 fpas-compiler = { path = "../fpas-compiler" }

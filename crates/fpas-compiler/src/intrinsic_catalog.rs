@@ -44,6 +44,8 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             [
                 Connect,
                 ConnectTls,
+                ConnectWithCancellation,
+                ConnectTlsWithCancellation,
                 Listen,
                 ListenTls,
                 Accept,
@@ -51,7 +53,9 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 CloseListener,
                 SetTimeout,
                 Read,
+                ReadWithCancellation,
                 Write,
+                WriteWithCancellation,
                 Close,
             ]
         ),

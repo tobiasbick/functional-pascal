@@ -1,5 +1,9 @@
 use super::*;
 
+mod network_connect;
+mod network_read;
+mod network_write;
+
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {
     assert_succeeds(

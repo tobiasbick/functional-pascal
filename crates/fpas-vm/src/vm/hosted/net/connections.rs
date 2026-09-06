@@ -7,8 +7,15 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, TryLockError};
 use std::time::Duration;
 
+mod cancellable_read;
+mod cancellable_write;
+mod establishment;
+mod polling;
+#[cfg(test)]
+mod test_connections;
 mod tls;
 use super::transport::Transport;
+pub(super) use establishment::ConnectMode;
 
 const HANDLE_TAG: u64 = 0x4E45_0000_0000_0000;
 const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
@@ -100,12 +107,7 @@ impl NetworkConnections {
 
     /// Read at most `max_bytes`; an empty result means end of stream.
     pub(super) fn read(&self, handle: u64, max_bytes: i64) -> Result<Vec<u8>, String> {
-        let max_bytes = usize::try_from(max_bytes)
-            .ok()
-            .filter(|size| (1..=MAX_IO_BYTES).contains(size))
-            .ok_or_else(|| {
-                format!("Network read size must be in 1..={MAX_IO_BYTES}, got {max_bytes}")
-            })?;
+        let max_bytes = read_size(max_bytes)?;
         let connection = self.connection(handle)?;
         let mut transport = connection
             .transport
@@ -121,12 +123,7 @@ impl NetworkConnections {
 
     /// Write at most one bounded byte chunk and return the number written.
     pub(super) fn write(&self, handle: u64, bytes: &[u8]) -> Result<usize, String> {
-        if bytes.len() > MAX_IO_BYTES {
-            return Err(format!(
-                "Network write size must not exceed {MAX_IO_BYTES} bytes, got {}",
-                bytes.len()
-            ));
-        }
+        write_size(bytes.len())?;
         let connection = self.connection(handle)?;
         let mut transport = connection
             .transport
@@ -200,10 +197,7 @@ fn connect_socket(
     port: i64,
     timeout_millis: i64,
 ) -> Result<(TcpStream, Duration), String> {
-    let port = u16::try_from(port)
-        .ok()
-        .filter(|port| *port != 0)
-        .ok_or_else(|| format!("TCP port must be in 1..=65535, got {port}"))?;
+    let port = connect_port(port)?;
     let timeout = timeout(timeout_millis, false)?;
     let addresses = (host, port)
         .to_socket_addrs()
@@ -228,11 +222,35 @@ fn connect_socket(
     ))
 }
 
+fn read_size(max_bytes: i64) -> Result<usize, String> {
+    usize::try_from(max_bytes)
+        .ok()
+        .filter(|size| (1..=MAX_IO_BYTES).contains(size))
+        .ok_or_else(|| format!("Network read size must be in 1..={MAX_IO_BYTES}, got {max_bytes}"))
+}
+
+fn connect_port(port: i64) -> Result<u16, String> {
+    u16::try_from(port)
+        .ok()
+        .filter(|port| *port != 0)
+        .ok_or_else(|| format!("TCP port must be in 1..=65535, got {port}"))
+}
+
 fn validate_handle(handle: u64) -> Result<(), String> {
     if handle & HANDLE_TAG_MASK == HANDLE_TAG {
         Ok(())
     } else {
         Err("Value is not a network connection handle".to_string())
+    }
+}
+
+fn write_size(size: usize) -> Result<(), String> {
+    if size > MAX_IO_BYTES {
+        Err(format!(
+            "Network write size must not exceed {MAX_IO_BYTES} bytes, got {size}"
+        ))
+    } else {
+        Ok(())
     }
 }
 

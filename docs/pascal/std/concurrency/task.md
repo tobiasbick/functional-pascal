@@ -58,8 +58,8 @@ that may be copied and passed to worker tasks. `Cancel` atomically changes the s
 returns `true`; later calls return `false`. `IsCancellationRequested` is non-blocking.
 
 Cancellation is a request, not forced task termination. A task or hosted blocking operation stops
-only when it checks the token. `Std.Net.AcceptWithCancellation` is the first hosted operation that
-does so.
+only when it checks the token. The cancellation-aware `Std.Net` connect, accept, read, and write
+operations observe tokens while their interruptible network phases are pending.
 
 ```pascal
 var Source: CancellationSource := CreateCancellationSource();

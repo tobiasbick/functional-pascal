@@ -17,7 +17,7 @@ Human-oriented CLIs often block agents: interactive prompts, huge upfront docs, 
 - Every input should be expressible as a flag or flag value. Do not require arrow keys, menus, or timed prompts.
 - If flags are missing, **then** fall back to interactive mode—not the other way around.
 
-**Bad:** `mycli deploy` → `? Which environment? (use arrow keys)`  
+**Bad:** `mycli deploy` → `? Which environment? (use arrow keys)`
 **Good:** `mycli deploy --env staging`
 
 ## Discoverability without dumping context

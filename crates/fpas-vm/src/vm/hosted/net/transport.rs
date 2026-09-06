@@ -45,6 +45,21 @@ impl Transport {
             .and_then(|()| socket.set_write_timeout(timeout))
     }
 
+    /// Return the configured read timeout of the transport socket.
+    pub(super) fn read_timeout(&self) -> io::Result<Option<Duration>> {
+        self.socket().read_timeout()
+    }
+
+    /// Return the configured write timeout of the transport socket.
+    pub(super) fn write_timeout(&self) -> io::Result<Option<Duration>> {
+        self.socket().write_timeout()
+    }
+
+    /// Switch the transport socket between blocking and polling I/O.
+    pub(super) fn set_nonblocking(&self, nonblocking: bool) -> io::Result<()> {
+        self.socket().set_nonblocking(nonblocking)
+    }
+
     /// Clone the underlying socket for out-of-band shutdown.
     pub(super) fn try_clone_socket(&self) -> io::Result<TcpStream> {
         self.socket().try_clone()

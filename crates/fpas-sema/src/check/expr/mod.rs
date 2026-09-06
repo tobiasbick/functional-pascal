@@ -1,7 +1,8 @@
 //! Expression typing.
 //!
 //! **Documentation:** `docs/pascal/language/basics/README.md`, `docs/pascal/language/functions/README.md`,
-//! and `docs/pascal/language/error-handling/README.md` (from the repository root).
+//! `docs/pascal/language/error-handling/README.md`, and
+//! `docs/pascal/language/types/channels.md` (from the repository root).
 
 mod bound_method;
 mod calls;
@@ -11,6 +12,7 @@ mod event_access;
 mod operators;
 mod postfix;
 mod record_fields;
+mod task_bound;
 
 use super::Checker;
 use crate::types::Ty;
@@ -129,18 +131,6 @@ impl Checker {
             );
         }
         Ty::Task(Box::new(inner_ty))
-    }
-
-    fn propagate_task_bound_expr(&mut self, expr: &Expr, key: usize) {
-        match expr {
-            Expr::Paren(inner, _) if self.expr_is_task_bound(Self::expr_lookup_key(inner)) => {
-                self.mark_expr_task_bound(key);
-            }
-            Expr::Designator(designator) if self.designator_refers_to_task_bound(designator) => {
-                self.mark_expr_task_bound(key);
-            }
-            _ => {}
-        }
     }
 
     pub(crate) fn callable_expr_is_task_bound(&self, expr: &Expr) -> bool {

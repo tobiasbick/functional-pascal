@@ -2,4 +2,6 @@
 
 mod registry;
 
-pub(in crate::vm) use registry::{ChannelRegistry, ReceiveState, SendState};
+pub(in crate::vm) use registry::{
+    CANCELLATION_POLL_INTERVAL, ChannelRegistry, ReceiveState, SendState,
+};

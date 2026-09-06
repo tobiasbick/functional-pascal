@@ -439,6 +439,7 @@ mod breakpoint_assign;
 mod breakpoints;
 mod capturing_routine_assignment;
 mod cell_capturing_routine_assignment;
+mod channel_timeout;
 mod data_breakpoints;
 mod empty_storage_construction;
 mod evaluation;

@@ -147,6 +147,31 @@ end.",
 }
 
 #[test]
+fn channel_wait_modes_preserve_element_and_timeout_types() {
+    let errors = check_errors(
+        "\
+program T;
+uses Std.Task;
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  var Pending: result of option of integer, string := TryReceive(Messages);
+  TrySend(Messages, 'wrong');
+  SendWithTimeout(Messages, 1, 'soon');
+  ReceiveWithTimeout(Messages, 'soon')
+end.",
+    );
+
+    assert_eq!(
+        errors
+            .iter()
+            .filter(|error| error.message.contains("Type mismatch"))
+            .count(),
+        3,
+        "errors: {errors:#?}"
+    );
+}
+
+#[test]
 fn channel_send_rejects_task_bound_values() {
     let errors = check_errors(
         "\

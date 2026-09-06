@@ -43,18 +43,34 @@ pub enum TaskIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     Send = 538,
+    /// Try to send one value without blocking.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    TrySend = 543,
     /// Send one value until it succeeds, closes, or is cancelled.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     SendWithCancellation = 539,
+    /// Send one value until it succeeds, closes, or the timeout expires.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    SendWithTimeout = 544,
     /// Receive one value, blocking while the channel is empty and open.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     Receive = 540,
+    /// Try to receive one value without blocking.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    TryReceive = 545,
     /// Receive one value until it succeeds, closes, or is cancelled.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     ReceiveWithCancellation = 541,
+    /// Receive one value until it succeeds, closes, or the timeout expires.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    ReceiveWithTimeout = 546,
     /// Close a channel and report whether this call changed its state.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`

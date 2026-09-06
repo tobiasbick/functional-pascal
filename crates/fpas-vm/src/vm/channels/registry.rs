@@ -10,7 +10,7 @@ use fpas_bytecode::Value;
 const HANDLE_TAG: u64 = 0x4348_0000_0000_0000;
 const HANDLE_TAG_MASK: u64 = 0xFFFF_0000_0000_0000;
 pub(in crate::vm) const MAX_CHANNEL_CAPACITY: usize = 1_048_576;
-const CANCELLATION_POLL_INTERVAL: Duration = Duration::from_millis(10);
+pub(in crate::vm) const CANCELLATION_POLL_INTERVAL: Duration = Duration::from_millis(10);
 
 /// Outcome of one send attempt.
 pub(in crate::vm) enum SendState {
@@ -94,7 +94,7 @@ impl ChannelRegistry {
         handle: u64,
         value: Value,
         cancelled: bool,
-        wait: bool,
+        wait_for: Option<Duration>,
     ) -> Result<SendState, String> {
         let channel = self.channel(handle)?;
         let mut state = channel
@@ -112,10 +112,10 @@ impl ChannelRegistry {
             channel.can_receive.notify_one();
             return Ok(SendState::Sent);
         }
-        if wait {
+        if let Some(wait_for) = wait_for {
             let (guard, _) = channel
                 .can_send
-                .wait_timeout(state, CANCELLATION_POLL_INTERVAL)
+                .wait_timeout(state, wait_for)
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             drop(guard);
         }
@@ -127,7 +127,7 @@ impl ChannelRegistry {
         &self,
         handle: u64,
         cancelled: bool,
-        wait: bool,
+        wait_for: Option<Duration>,
     ) -> Result<ReceiveState, String> {
         let channel = self.channel(handle)?;
         let mut state = channel
@@ -144,10 +144,10 @@ impl ChannelRegistry {
         if state.closed {
             return Ok(ReceiveState::Closed);
         }
-        if wait {
+        if let Some(wait_for) = wait_for {
             let (guard, _) = channel
                 .can_receive
-                .wait_timeout(state, CANCELLATION_POLL_INTERVAL)
+                .wait_timeout(state, wait_for)
                 .unwrap_or_else(|poisoned| poisoned.into_inner());
             drop(guard);
         }
@@ -209,7 +209,7 @@ fn capacity_error(capacity: i64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{ChannelRegistry, ReceiveState, SendState};
+    use super::{CANCELLATION_POLL_INTERVAL, ChannelRegistry, ReceiveState, SendState};
     use fpas_bytecode::Value;
 
     #[test]
@@ -217,23 +217,23 @@ mod tests {
         let registry = ChannelRegistry::new();
         let handle = registry.create(2).expect("channel");
         assert!(matches!(
-            registry.send(handle, Value::Integer(1), false, false),
+            registry.send(handle, Value::Integer(1), false, None),
             Ok(SendState::Sent)
         ));
         assert!(matches!(
-            registry.send(handle, Value::Integer(2), false, false),
+            registry.send(handle, Value::Integer(2), false, None),
             Ok(SendState::Sent)
         ));
         assert!(matches!(
-            registry.send(handle, Value::Integer(3), false, false),
+            registry.send(handle, Value::Integer(3), false, None),
             Ok(SendState::Pending(Value::Integer(3)))
         ));
         assert!(matches!(
-            registry.receive(handle, false, false),
+            registry.receive(handle, false, None),
             Ok(ReceiveState::Received(Value::Integer(1)))
         ));
         assert!(matches!(
-            registry.receive(handle, false, false),
+            registry.receive(handle, false, None),
             Ok(ReceiveState::Received(Value::Integer(2)))
         ));
     }
@@ -243,17 +243,17 @@ mod tests {
         let registry = ChannelRegistry::new();
         let handle = registry.create(1).expect("channel");
         assert!(matches!(
-            registry.send(handle, Value::Integer(7), false, false),
+            registry.send(handle, Value::Integer(7), false, None),
             Ok(SendState::Sent)
         ));
         assert_eq!(registry.close(handle), Ok(true));
         assert_eq!(registry.close(handle), Ok(false));
         assert!(matches!(
-            registry.receive(handle, false, false),
+            registry.receive(handle, false, None),
             Ok(ReceiveState::Received(Value::Integer(7)))
         ));
         assert!(matches!(
-            registry.receive(handle, false, false),
+            registry.receive(handle, false, None),
             Ok(ReceiveState::Closed)
         ));
     }
@@ -264,11 +264,11 @@ mod tests {
         assert!(registry.create(0).is_err());
         let handle = registry.create(1).expect("channel");
         assert!(matches!(
-            registry.send(handle, Value::Unit, true, false),
+            registry.send(handle, Value::Unit, true, None),
             Ok(SendState::Cancelled)
         ));
         assert!(matches!(
-            registry.receive(handle, true, false),
+            registry.receive(handle, true, None),
             Ok(ReceiveState::Cancelled)
         ));
     }
@@ -278,7 +278,7 @@ mod tests {
         let registry = ChannelRegistry::new();
         let handle = registry.create(1).expect("channel");
         assert!(matches!(
-            registry.send(handle, Value::Integer(1), false, false),
+            registry.send(handle, Value::Integer(1), false, None),
             Ok(SendState::Sent)
         ));
 
@@ -287,7 +287,7 @@ mod tests {
                 let mut value = Value::Integer(2);
                 loop {
                     match registry
-                        .send(handle, value, false, true)
+                        .send(handle, value, false, Some(CANCELLATION_POLL_INTERVAL))
                         .expect("send state")
                     {
                         SendState::Pending(pending) => value = pending,

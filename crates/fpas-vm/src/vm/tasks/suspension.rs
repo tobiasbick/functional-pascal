@@ -81,6 +81,19 @@ pub(in crate::vm) enum TaskSuspension {
         token: Option<u64>,
         destination: Option<Register>,
     },
+    /// Resume when a channel accepts a value, closes, or reaches its deadline.
+    ChannelSendTimeout {
+        handle: u64,
+        value: Value,
+        deadline_millis: u64,
+        destination: Option<Register>,
+    },
+    /// Resume when a channel yields a value, closes, or reaches its deadline.
+    ChannelReceiveTimeout {
+        handle: u64,
+        deadline_millis: u64,
+        destination: Option<Register>,
+    },
     /// Resume after the debugger-clock deadline is reached.
     Sleep { deadline_millis: u64 },
 }
@@ -101,6 +114,16 @@ impl TaskSuspension {
             | Self::WaitAll { .. }
             | Self::ChannelSend { .. }
             | Self::ChannelReceive { .. } => TaskSuspensionState::Waiting,
+            Self::ChannelSendTimeout {
+                deadline_millis, ..
+            }
+            | Self::ChannelReceiveTimeout {
+                deadline_millis, ..
+            } => TaskSuspensionState::Sleeping {
+                remaining: Duration::from_millis(
+                    deadline_millis.saturating_sub(clock.now_millis()),
+                ),
+            },
             Self::Sleep { deadline_millis } => TaskSuspensionState::Sleeping {
                 remaining: Duration::from_millis(
                     deadline_millis.saturating_sub(clock.now_millis()),

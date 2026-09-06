@@ -86,6 +86,16 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Receives before a relative monotonic deadline.
+//
+// Parameters:
+// - `Queue`: Input value used by `ReceiveWithTimeout`.
+// - `TimeoutMillis`: Input value used by `ReceiveWithTimeout`.
+public function ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of T, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Blocks while full; returns an error after close.
 //
 // Parameters:
@@ -103,6 +113,36 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 // - `Token`: Input value used by `SendWithCancellation`.
 public function SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Sends before a relative monotonic deadline.
+//
+// Parameters:
+// - `Queue`: Input value used by `SendWithTimeout`.
+// - `Value`: Value consumed or returned by the operation.
+// - `TimeoutMillis`: Input value used by `SendWithTimeout`.
+public function SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Receives immediately; `Ok(None)` means the open channel is empty.
+//
+// Parameters:
+// - `Queue`: Input value used by `TryReceive`.
+public function TryReceive(Queue: channel of T): result of option of T, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Sends immediately; `Ok(false)` means the open channel is full.
+//
+// Parameters:
+// - `Queue`: Input value used by `TrySend`.
+// - `Value`: Value consumed or returned by the operation.
+public function TrySend(Queue: channel of T; Value: T): result of boolean, string;
 begin
   panic('Intrinsic API declaration')
 end;

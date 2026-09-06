@@ -32,6 +32,10 @@ form.
 
 Operations are provided by [`Std.Task`](../../std/concurrency/task.md).
 
+Blocking, cancellation-aware, timeout-bounded, and immediate send and receive operations all
+preserve the same element type and closure rules. Immediate receive represents a temporarily empty
+open channel as `Ok(None)`; it does not use that value for end-of-stream.
+
 ## See also
 
 - [Concurrency](../concurrency/README.md)

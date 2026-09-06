@@ -8,6 +8,22 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
+### 2026-09-06 — non-blocking and timeout-bounded channel operations
+
+- Added `TrySend` and `TryReceive` with explicit full and empty outcomes that remain distinct from
+  channel closure.
+- Added `SendWithTimeout` and `ReceiveWithTimeout` with one monotonic deadline per call, precise
+  zero-timeout behavior, and distinct send and receive timeout errors.
+- Integrated timeout suspension with the deterministic debugger clock and normal task scheduler.
+- Added semantic, compiler/runtime, debugger-clock, and FPAS suite regressions.
+- Verified formatting, the workspace build and test suite, strict Clippy for every affected crate,
+  and the full FPAS suite (407 passed, 1 skipped).
+- Captured and compared a full-suite benchmark baseline after the competing VM stopped. The suite
+  has no channel-specific workload; unrelated rows varied widely in both directions, while
+  `task_spawn_wait` changed from 567 ms to 594 ms (+4.8%). This correctness slice makes no causal
+  performance claim and does not add a benchmark-history entry.
+- Remaining: broader cancellation coverage, multi-wait, task groups, and supervision.
+
 ### 2026-09-06 — typed bounded channels
 
 - Added the approved built-in `channel of T` language type across parsing, formatting, semantic
@@ -23,8 +39,7 @@ waiting, and explicit ownership of child-task failure.
   Clippy for every affected crate, and the full FPAS suite (406 passed, 1 skipped).
 - Performance benchmarks are intentionally omitted because another VM is active on the host; this
   slice makes no performance claim.
-- Remaining: non-blocking and deadline-bounded channel operations, broader cancellation coverage,
-  multi-wait, task groups, and supervision.
+- Remaining: broader cancellation coverage, multi-wait, task groups, and supervision.
 
 ### 2026-09-06 — cooperative cancellation foundation
 
@@ -43,7 +58,6 @@ waiting, and explicit ownership of child-task failure.
 
 ## Proposed scope
 
-- Non-blocking and deadline-bounded send and receive operations.
 - A cancellation source and clonable cancellation token checked by hosted blocking operations.
 - `WaitAny` or an equivalent function-based multi-wait over tasks, channels, timers, and
   cancellation without adding new syntax.
@@ -70,8 +84,7 @@ rather than reaching into scheduler implementation details.
 
 ## Acceptance requirements
 
-- FIFO behavior, closure, full/empty queues, and cancellation have deterministic tests; deadline
-  tests remain gated on deadline-aware operations.
+- FIFO behavior, closure, full/empty queues, deadlines, and cancellation have deterministic tests.
 - Multi-wait returns exactly one winning event and unregisters all losing waits.
 - Task-group shutdown cannot leak workers or wait forever after its deadline.
 - Child panics and ordinary error results follow separately documented paths.

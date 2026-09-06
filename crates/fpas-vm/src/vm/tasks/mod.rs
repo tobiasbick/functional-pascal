@@ -368,6 +368,17 @@ impl Worker {
                 token,
                 destination,
             } => self.poll_debug_channel_receive(handle, token, destination),
+            TaskSuspension::ChannelSendTimeout {
+                handle,
+                value,
+                deadline_millis,
+                destination,
+            } => self.poll_debug_channel_send_timeout(handle, value, deadline_millis, destination),
+            TaskSuspension::ChannelReceiveTimeout {
+                handle,
+                deadline_millis,
+                destination,
+            } => self.poll_debug_channel_receive_timeout(handle, deadline_millis, destination),
             TaskSuspension::Sleep { deadline_millis }
                 if self.debug_clock_ref().now_millis() >= deadline_millis =>
             {

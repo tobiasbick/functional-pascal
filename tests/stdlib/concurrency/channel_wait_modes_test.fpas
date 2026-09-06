@@ -1,0 +1,90 @@
+program ChannelWaitModesTest;
+
+uses Std.Task, Std.Test;
+
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  case TryReceive(Messages) of
+    Ok(MaybeValue):
+    begin
+      case MaybeValue of
+        Some(_):
+        begin
+          Fail('empty channel produced a value')
+        end;
+        None:
+        begin
+        end
+      end
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case TrySend(Messages, 7) of
+    Ok(Sent):
+    begin
+      AssertTrue(Sent)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case TrySend(Messages, 8) of
+    Ok(Sent):
+    begin
+      AssertFalse(Sent)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case ReceiveWithTimeout(Messages, 0) of
+    Ok(Value):
+    begin
+      AssertEquals(7, Value)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case ReceiveWithTimeout(Messages, 1) of
+    Ok(_):
+    begin
+      Fail('empty channel did not time out')
+    end;
+    Error(Message):
+    begin
+      AssertEquals('Channel receive timed out', Message)
+    end
+  end;
+
+  case Send(Messages, 9) of
+    Ok(_):
+    begin
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case SendWithTimeout(Messages, 10, 1) of
+    Ok(_):
+    begin
+      Fail('full channel did not time out')
+    end;
+    Error(Message):
+    begin
+      AssertEquals('Channel send timed out', Message)
+    end
+  end
+end.

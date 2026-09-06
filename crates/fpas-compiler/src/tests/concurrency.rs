@@ -267,6 +267,68 @@ end.",
 }
 
 #[test]
+fn channel_non_blocking_and_timeout_operations_are_distinct() {
+    assert_succeeds(
+        "\
+program ChannelWaitModes;
+uses Std.Task;
+
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  case TryReceive(Messages) of
+    Ok(MaybeValue):
+      case MaybeValue of
+        Some(_): panic('empty channel produced a value');
+        None: begin end
+      end;
+    Error(Message): panic(Message)
+  end;
+  case TrySend(Messages, 1) of
+    Ok(Sent): if not Sent then panic('first try-send did not send');
+    Error(Message): panic(Message)
+  end;
+  case TrySend(Messages, 2) of
+    Ok(Sent): if Sent then panic('full channel accepted a value');
+    Error(Message): panic(Message)
+  end;
+  case ReceiveWithTimeout(Messages, 0) of
+    Ok(Value): if Value <> 1 then panic('timeout receive changed FIFO order');
+    Error(Message): panic(Message)
+  end;
+  case ReceiveWithTimeout(Messages, 1) of
+    Ok(_): panic('empty channel did not time out');
+    Error(Message):
+      if Message <> 'Channel receive timed out' then panic(Message)
+  end;
+  case Send(Messages, 3) of
+    Ok(_): begin end;
+    Error(Message): panic(Message)
+  end;
+  case SendWithTimeout(Messages, 4, 1) of
+    Ok(_): panic('full channel did not time out');
+    Error(Message):
+      if Message <> 'Channel send timed out' then panic(Message)
+  end
+end.",
+    );
+}
+
+#[test]
+fn channel_timeout_rejects_negative_milliseconds() {
+    let error = run_program(
+        "\
+program InvalidChannelTimeout;
+uses Std.Task;
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  ReceiveWithTimeout(Messages, -1)
+end.",
+    )
+    .expect_err("negative channel timeout must fail");
+    assert!(error.message.contains("non-negative timeout"));
+}
+
+#[test]
 fn cancellable_channel_send_and_receive_report_distinct_errors() {
     assert_succeeds(
         "\

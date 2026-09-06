@@ -19,16 +19,34 @@ pub(super) fn check_channel_task_builtin_std_call(
 ) -> Option<Ty> {
     let ty = match name {
         s::STD_TASK_CREATE_CHANNEL => check_create_channel(c, args, span),
-        s::STD_TASK_SEND => check_send(c, args, span, false),
-        s::STD_TASK_SEND_WITH_CANCELLATION => check_send(c, args, span, true),
-        s::STD_TASK_RECEIVE => check_receive(c, args, span, false),
-        s::STD_TASK_RECEIVE_WITH_CANCELLATION => check_receive(c, args, span, true),
+        s::STD_TASK_SEND | s::STD_TASK_TRY_SEND => {
+            check_send(c, args, span, name, ChannelWaitArg::None)
+        }
+        s::STD_TASK_SEND_WITH_CANCELLATION => {
+            check_send(c, args, span, name, ChannelWaitArg::Cancellation)
+        }
+        s::STD_TASK_SEND_WITH_TIMEOUT => check_send(c, args, span, name, ChannelWaitArg::Timeout),
+        s::STD_TASK_RECEIVE => check_receive(c, args, span, name, ChannelWaitArg::None, false),
+        s::STD_TASK_TRY_RECEIVE => check_receive(c, args, span, name, ChannelWaitArg::None, true),
+        s::STD_TASK_RECEIVE_WITH_CANCELLATION => {
+            check_receive(c, args, span, name, ChannelWaitArg::Cancellation, false)
+        }
+        s::STD_TASK_RECEIVE_WITH_TIMEOUT => {
+            check_receive(c, args, span, name, ChannelWaitArg::Timeout, false)
+        }
         s::STD_TASK_CLOSE_CHANNEL => check_close_channel(c, args, span),
         s::STD_TASK_WAIT => check_task_wait(c, args, span),
         s::STD_TASK_WAIT_ALL => check_task_wait_all(c, args, span),
         _ => return None,
     };
     Some(ty)
+}
+
+#[derive(Clone, Copy)]
+enum ChannelWaitArg {
+    None,
+    Cancellation,
+    Timeout,
 }
 
 fn check_create_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
@@ -39,13 +57,17 @@ fn check_create_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     Ty::Channel(Box::new(Ty::Error))
 }
 
-fn check_send(c: &mut Checker, args: &[Expr], span: Span, cancellable: bool) -> Ty {
-    let name = if cancellable {
-        s::STD_TASK_SEND_WITH_CANCELLATION
-    } else {
-        s::STD_TASK_SEND
+fn check_send(
+    c: &mut Checker,
+    args: &[Expr],
+    span: Span,
+    name: &str,
+    wait_arg: ChannelWaitArg,
+) -> Ty {
+    let expected = match wait_arg {
+        ChannelWaitArg::None => 2,
+        ChannelWaitArg::Cancellation | ChannelWaitArg::Timeout => 3,
     };
-    let expected = if cancellable { 3 } else { 2 };
     if !expect_args(c, name, args, expected, span) {
         return Ty::Error;
     }
@@ -70,25 +92,39 @@ fn check_send(c: &mut Checker, args: &[Expr], span: Span, cancellable: bool) -> 
             args[1].span(),
         );
     }
-    if cancellable {
-        expect_cancellation_token(c, &args[2]);
+    match wait_arg {
+        ChannelWaitArg::None => {}
+        ChannelWaitArg::Cancellation => expect_cancellation_token(c, &args[2]),
+        ChannelWaitArg::Timeout => expect_type(c, &args[2], &Ty::Integer, "channel send timeout"),
     }
     channel_result(Ty::Boolean)
 }
 
-fn check_receive(c: &mut Checker, args: &[Expr], span: Span, cancellable: bool) -> Ty {
-    let name = if cancellable {
-        s::STD_TASK_RECEIVE_WITH_CANCELLATION
-    } else {
-        s::STD_TASK_RECEIVE
+fn check_receive(
+    c: &mut Checker,
+    args: &[Expr],
+    span: Span,
+    name: &str,
+    wait_arg: ChannelWaitArg,
+    optional: bool,
+) -> Ty {
+    let expected = match wait_arg {
+        ChannelWaitArg::None => 1,
+        ChannelWaitArg::Cancellation | ChannelWaitArg::Timeout => 2,
     };
-    let expected = if cancellable { 2 } else { 1 };
     if !expect_args(c, name, args, expected, span) {
         return Ty::Error;
     }
-    let element = expect_channel_arg(c, &args[0]).unwrap_or(Ty::Error);
-    if cancellable {
-        expect_cancellation_token(c, &args[1]);
+    let mut element = expect_channel_arg(c, &args[0]).unwrap_or(Ty::Error);
+    match wait_arg {
+        ChannelWaitArg::None => {}
+        ChannelWaitArg::Cancellation => expect_cancellation_token(c, &args[1]),
+        ChannelWaitArg::Timeout => {
+            expect_type(c, &args[1], &Ty::Integer, "channel receive timeout")
+        }
+    }
+    if optional {
+        element = Ty::Option(Box::new(element));
     }
     channel_result(element)
 }

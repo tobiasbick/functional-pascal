@@ -133,9 +133,13 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 IsCancellationRequested,
                 CreateChannel,
                 Send,
+                TrySend,
                 SendWithCancellation,
+                SendWithTimeout,
                 Receive,
+                TryReceive,
                 ReceiveWithCancellation,
+                ReceiveWithTimeout,
                 CloseChannel,
             ]
         ),

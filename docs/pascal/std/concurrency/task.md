@@ -38,9 +38,13 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `IsCancellationRequested(Token: CancellationToken): boolean` | reads the shared cancellation state |
 | function | `CreateChannel(Capacity: integer): channel of T` | creates a VM-owned bounded channel; capacity is `1..=1048576` |
 | function | `Send(Queue: channel of T; Value: T): result of boolean, string` | blocks while full; returns an error after close |
+| function | `TrySend(Queue: channel of T; Value: T): result of boolean, string` | sends immediately; `Ok(false)` means the open channel is full |
 | function | `SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string` | send that also observes cancellation |
+| function | `SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of boolean, string` | sends before a relative monotonic deadline |
 | function | `Receive(Queue: channel of T): result of T, string` | blocks while empty and open |
+| function | `TryReceive(Queue: channel of T): result of option of T, string` | receives immediately; `Ok(None)` means the open channel is empty |
 | function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of T, string` | receive that also observes cancellation |
+| function | `ReceiveWithTimeout(Queue: channel of T; TimeoutMillis: integer): result of T, string` | receives before a relative monotonic deadline |
 | function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
 | procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
@@ -105,6 +109,17 @@ The cancellable variants additionally observe a `CancellationToken`. They return
 does not close the channel. If cancellation is already requested when an operation starts, the
 cancellation result takes precedence.
 
+`TrySend` and `TryReceive` never wait. `TrySend` returns `Ok(false)` when the channel is open but
+full. `TryReceive` returns `Ok(None)` when it is open but empty and `Ok(Some(Value))` after receiving
+a value. A closed channel still returns `Error('Channel is closed')`, so closure is distinct from a
+temporary full or empty state.
+
+`SendWithTimeout` and `ReceiveWithTimeout` take a relative, non-negative millisecond duration. The
+runtime converts it to a monotonic deadline once, so wakeups and scheduler work do not restart the
+timeout. A zero timeout performs one immediate attempt. An available slot or buffered value wins
+that attempt; otherwise the operation returns `Error('Channel send timed out')` or
+`Error('Channel receive timed out')`. A timeout does not close or otherwise change the channel.
+
 Channel handles belong to their creating VM. A channel accepts only its declared element type, and
 task-bound values with mutable captures cannot cross the channel boundary. See
 [Channel types](../../language/types/channels.md).
@@ -153,6 +168,9 @@ An empty array completes immediately.
 - **Closed channel:** sends fail immediately; receives first drain buffered values and then fail.
 - **Cancelled channel operation:** only `SendWithCancellation` and `ReceiveWithCancellation`
   observe their token, and cancellation leaves the channel open.
+- **Invalid channel timeout:** timeout milliseconds must be non-negative.
+- **Timed-out channel operation:** timeout variants return distinct send and receive errors and
+  leave the channel open.
 - **Invalid channel handle:** channel handles must come from the current VM. Forged or foreign
   opaque handles produce a runtime diagnostic.
 

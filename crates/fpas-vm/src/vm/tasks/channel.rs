@@ -1,5 +1,8 @@
 //! `Std.Task` bounded-channel intrinsic dispatch.
 
+mod non_blocking;
+mod timeout;
+
 use std::sync::Arc;
 
 use fpas_bytecode::{Intrinsic, Register, TaskIntrinsic, Value};
@@ -7,7 +10,7 @@ use fpas_diagnostics::codes::{
     RUNTIME_INTRINSIC_STACK_STATE_ERROR, RUNTIME_VM_OPERAND_TYPE_MISMATCH,
 };
 
-use super::super::channels::{ReceiveState, SendState};
+use super::super::channels::{CANCELLATION_POLL_INTERVAL, ReceiveState, SendState};
 use super::super::worker::Worker;
 use super::super::{VmError, diagnostics};
 use super::{TaskSuspension, pool};
@@ -53,6 +56,28 @@ impl Worker {
                         .map(|value| Some(Some(value)))
                 }
             }
+            TaskIntrinsic::TrySend => {
+                self.require_channel_arguments(arguments, 2)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                self.try_channel_send(handle, arguments[1].clone())
+                    .map(|value| Some(Some(value)))
+            }
+            TaskIntrinsic::SendWithTimeout => {
+                self.require_channel_arguments(arguments, 3)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                let timeout = self.channel_timeout(&arguments[2])?;
+                if self.debug_tasks {
+                    self.debug_timeout_channel_send(
+                        handle,
+                        arguments[1].clone(),
+                        timeout,
+                        destination,
+                    )
+                } else {
+                    self.timeout_channel_send(handle, arguments[1].clone(), timeout)
+                        .map(|value| Some(Some(value)))
+                }
+            }
             TaskIntrinsic::Receive | TaskIntrinsic::ReceiveWithCancellation => {
                 let cancellable = operation == TaskIntrinsic::ReceiveWithCancellation;
                 self.require_channel_arguments(arguments, if cancellable { 2 } else { 1 })?;
@@ -64,6 +89,23 @@ impl Worker {
                     self.debug_channel_receive(handle, token, destination)
                 } else {
                     self.blocking_channel_receive(handle, token)
+                        .map(|value| Some(Some(value)))
+                }
+            }
+            TaskIntrinsic::TryReceive => {
+                self.require_channel_arguments(arguments, 1)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                self.try_channel_receive(handle)
+                    .map(|value| Some(Some(value)))
+            }
+            TaskIntrinsic::ReceiveWithTimeout => {
+                self.require_channel_arguments(arguments, 2)?;
+                let handle = self.channel_handle(&arguments[0])?;
+                let timeout = self.channel_timeout(&arguments[1])?;
+                if self.debug_tasks {
+                    self.debug_timeout_channel_receive(handle, timeout, destination)
+                } else {
+                    self.timeout_channel_receive(handle, timeout)
                         .map(|value| Some(Some(value)))
                 }
             }
@@ -97,7 +139,7 @@ impl Worker {
             match self
                 .hosted
                 .channels
-                .send(handle, value, cancelled, false)
+                .send(handle, value, cancelled, None)
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
@@ -115,7 +157,7 @@ impl Worker {
             match self
                 .hosted
                 .channels
-                .send(handle, value, cancelled, true)
+                .send(handle, value, cancelled, Some(CANCELLATION_POLL_INTERVAL))
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 SendState::Sent => return Ok(ok(Value::Boolean(true))),
@@ -136,7 +178,7 @@ impl Worker {
             match self
                 .hosted
                 .channels
-                .receive(handle, cancelled, false)
+                .receive(handle, cancelled, None)
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 ReceiveState::Received(value) => return Ok(ok(value)),
@@ -154,7 +196,7 @@ impl Worker {
             match self
                 .hosted
                 .channels
-                .receive(handle, cancelled, true)
+                .receive(handle, cancelled, Some(CANCELLATION_POLL_INTERVAL))
                 .map_err(|message| self.channel_runtime_error(message))?
             {
                 ReceiveState::Received(value) => return Ok(ok(value)),
@@ -176,7 +218,7 @@ impl Worker {
         match self
             .hosted
             .channels
-            .send(handle, value, cancelled, false)
+            .send(handle, value, cancelled, None)
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Ok(Some(Some(ok(Value::Boolean(true))))),
@@ -205,7 +247,7 @@ impl Worker {
         match self
             .hosted
             .channels
-            .receive(handle, cancelled, false)
+            .receive(handle, cancelled, None)
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Ok(Some(Some(ok(value)))),
@@ -234,7 +276,7 @@ impl Worker {
         let result = match self
             .hosted
             .channels
-            .send(handle, value, cancelled, false)
+            .send(handle, value, cancelled, None)
             .map_err(|message| self.channel_runtime_error(message))?
         {
             SendState::Sent => Some(ok(Value::Boolean(true))),
@@ -263,7 +305,7 @@ impl Worker {
         let result = match self
             .hosted
             .channels
-            .receive(handle, cancelled, false)
+            .receive(handle, cancelled, None)
             .map_err(|message| self.channel_runtime_error(message))?
         {
             ReceiveState::Received(value) => Some(ok(value)),
@@ -295,7 +337,7 @@ impl Worker {
         Ok(true)
     }
 
-    fn help_one_channel_task(&mut self) -> Result<bool, VmError> {
+    pub(super) fn help_one_channel_task(&mut self) -> Result<bool, VmError> {
         let Some(scheduler) = self.scheduler.clone() else {
             return Ok(false);
         };
@@ -306,7 +348,7 @@ impl Worker {
         Ok(true)
     }
 
-    fn channel_scheduler_stopped(&self) -> bool {
+    pub(super) fn channel_scheduler_stopped(&self) -> bool {
         self.scheduler
             .as_ref()
             .is_some_and(|scheduler| scheduler.is_shutdown())

@@ -49,9 +49,13 @@ pub fn register_std_task(c: &mut Checker) {
     for name in [
         s::STD_TASK_CREATE_CHANNEL,
         s::STD_TASK_SEND,
+        s::STD_TASK_TRY_SEND,
         s::STD_TASK_SEND_WITH_CANCELLATION,
+        s::STD_TASK_SEND_WITH_TIMEOUT,
         s::STD_TASK_RECEIVE,
+        s::STD_TASK_TRY_RECEIVE,
         s::STD_TASK_RECEIVE_WITH_CANCELLATION,
+        s::STD_TASK_RECEIVE_WITH_TIMEOUT,
         s::STD_TASK_CLOSE_CHANNEL,
         s::STD_TASK_WAIT,
         s::STD_TASK_WAIT_ALL,

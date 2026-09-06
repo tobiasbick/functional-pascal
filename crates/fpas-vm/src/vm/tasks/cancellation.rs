@@ -54,9 +54,13 @@ impl Worker {
             }
             TaskIntrinsic::CreateChannel
             | TaskIntrinsic::Send
+            | TaskIntrinsic::TrySend
             | TaskIntrinsic::SendWithCancellation
+            | TaskIntrinsic::SendWithTimeout
             | TaskIntrinsic::Receive
+            | TaskIntrinsic::TryReceive
             | TaskIntrinsic::ReceiveWithCancellation
+            | TaskIntrinsic::ReceiveWithTimeout
             | TaskIntrinsic::CloseChannel
             | TaskIntrinsic::Wait
             | TaskIntrinsic::WaitAll => return Ok(None),

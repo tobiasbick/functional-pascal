@@ -141,6 +141,10 @@ mod tests {
                 Intrinsic::Task(TaskIntrinsic::Receive),
                 Intrinsic::Task(TaskIntrinsic::ReceiveWithCancellation),
                 Intrinsic::Task(TaskIntrinsic::CloseChannel),
+                Intrinsic::Task(TaskIntrinsic::TrySend),
+                Intrinsic::Task(TaskIntrinsic::SendWithTimeout),
+                Intrinsic::Task(TaskIntrinsic::TryReceive),
+                Intrinsic::Task(TaskIntrinsic::ReceiveWithTimeout),
             ]
         );
     }

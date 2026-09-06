@@ -8,6 +8,29 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
+### 2026-09-06 — controlled task-completion barriers
+
+- Added `WaitAnyWithTimeout` and `WaitAnyWithCancellation`, returning a completion index or
+  distinct timeout/cancellation Result errors. Invalid identities and task failures remain runtime
+  diagnostics. Neither control outcome consumes results or cancels the underlying tasks.
+- Shared task-list validation and timeout-duration parsing with existing waits. The normal scheduler
+  uses bounded condition-variable parking; debugger waits retain a single debugger-clock deadline.
+  No helper thread per input or persistent source registration is introduced.
+- Defined zero-timeout readiness, pre-cancellation, failure precedence, and late-completion behavior.
+  Scheduler helping remains cooperative: blocking helped work can postpone the next control check,
+  so these APIs do not establish a hard wall-clock shutdown bound.
+- Added focused semantic, compiler/runtime, pending-operation, and deterministic debugger coverage.
+  Updated the current Task reference and editor declarations. All nine new regressions, formatting,
+  workspace build, full workspace tests (including bundled FPAS suites), and strict Clippy for every
+  affected crate passed. Documentation links and the diff were checked. The full test run was
+  repeated successfully in isolation after a concurrent build disrupted generated distribution
+  files during the first run. This correctness slice makes no performance claim.
+- Separately reproduced an IR validation failure using only existing `Wait` calls when a program
+  retains both a procedure task and an integer-returning task. The failure reports an expected Unit
+  result versus an actual Integer result. This compiler issue is not repaired by the controlled-wait
+  slice; its fixtures use integer-returning tasks consistently.
+- Next: settle typed value transfer and atomic winner ownership for mixed task/channel selection.
+
 ### 2026-09-06 — task-only WaitAny completion barrier
 
 - Implemented `Std.Task.WaitAny(Tasks): integer`: a bounded, non-consuming completion barrier

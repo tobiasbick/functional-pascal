@@ -21,6 +21,8 @@ std_symbol!(STD_TASK_CLOSE_CHANNEL = std_task!("CloseChannel"));
 std_symbol!(STD_TASK_WAIT = std_task!("Wait"));
 std_symbol!(STD_TASK_WAIT_ALL = std_task!("WaitAll"));
 std_symbol!(STD_TASK_WAIT_ANY = std_task!("WaitAny"));
+std_symbol!(STD_TASK_WAIT_ANY_WITH_TIMEOUT = std_task!("WaitAnyWithTimeout"));
+std_symbol!(STD_TASK_WAIT_ANY_WITH_CANCELLATION = std_task!("WaitAnyWithCancellation"));
 
 pub(in crate::std_units) const STD_TASK_SYMBOLS: &[&str] = &[
     STD_TASK_CANCELLATION_SOURCE,
@@ -42,4 +44,6 @@ pub(in crate::std_units) const STD_TASK_SYMBOLS: &[&str] = &[
     STD_TASK_WAIT,
     STD_TASK_WAIT_ALL,
     STD_TASK_WAIT_ANY,
+    STD_TASK_WAIT_ANY_WITH_TIMEOUT,
+    STD_TASK_WAIT_ANY_WITH_CANCELLATION,
 ];

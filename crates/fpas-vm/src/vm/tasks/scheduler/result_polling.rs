@@ -94,6 +94,15 @@ impl TaskScheduler {
 
     /// Sleep until a result changes or queued work becomes available to help.
     pub(in crate::vm) fn wait_for_any(&self, ids: &[u64]) {
+        self.wait_for_any_change(ids, None);
+    }
+
+    /// Wait for a result or queued work, with an optional bounded parking interval.
+    pub(in crate::vm) fn wait_for_any_change(
+        &self,
+        ids: &[u64],
+        timeout: Option<std::time::Duration>,
+    ) {
         let results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         if ids
             .iter()
@@ -105,11 +114,22 @@ impl TaskScheduler {
                 .unwrap_or_else(|e| e.into_inner())
                 .is_empty()
         {
-            drop(
-                self.results_available
-                    .wait(results)
-                    .unwrap_or_else(|e| e.into_inner()),
-            );
+            match timeout {
+                Some(timeout) => {
+                    drop(
+                        self.results_available
+                            .wait_timeout(results, timeout)
+                            .unwrap_or_else(|e| e.into_inner()),
+                    );
+                }
+                None => {
+                    drop(
+                        self.results_available
+                            .wait(results)
+                            .unwrap_or_else(|e| e.into_inner()),
+                    );
+                }
+            }
         }
     }
 }

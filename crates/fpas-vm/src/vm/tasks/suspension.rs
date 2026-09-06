@@ -73,6 +73,13 @@ pub(in crate::vm) enum TaskSuspension {
         ids: Vec<u64>,
         destination: Option<Register>,
     },
+    /// Resume on task completion, cancellation, or a debugger-clock deadline.
+    WaitAnyControlled {
+        ids: Vec<u64>,
+        token: Option<u64>,
+        deadline_millis: Option<u64>,
+        destination: Option<Register>,
+    },
     /// Resume after a bounded channel accepts a value, closes, or is cancelled.
     ChannelSend {
         handle: u64,
@@ -114,6 +121,16 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::vm) fn state(&self, clock: &DebugClock) -> TaskSuspensionState {
         match self {
+            Self::WaitAnyControlled {
+                deadline_millis: Some(deadline),
+                ..
+            } => TaskSuspensionState::Sleeping {
+                remaining: Duration::from_millis(deadline.saturating_sub(clock.now_millis())),
+            },
+            Self::WaitAnyControlled {
+                deadline_millis: None,
+                ..
+            } => TaskSuspensionState::Waiting,
             Self::Yield => TaskSuspensionState::Yielded,
             Self::Wait { .. }
             | Self::WaitAll { .. }

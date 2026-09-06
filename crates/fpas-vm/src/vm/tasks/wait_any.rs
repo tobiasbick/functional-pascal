@@ -18,6 +18,7 @@ fn validate_task_count(count: usize) -> Result<(), &'static str> {
     }
 }
 
+mod controlled;
 #[cfg(test)]
 mod tests;
 
@@ -28,27 +29,12 @@ impl Worker {
         arguments: &[Value],
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
-        let [Value::Array(values)] = arguments else {
+        let [Value::Array(_)] = arguments else {
             return Err(
                 self.task_type_error("array of task", arguments.first().unwrap_or(&Value::Unit))
             );
         };
-        if let Err(message) = validate_task_count(values.len()) {
-            return Err(diagnostics::at_address(
-                self.executable.executable(),
-                self.current_address,
-                RUNTIME_INVALID_TASK,
-                message,
-                "Pass a non-empty array of retained task handles.",
-            ));
-        }
-        let ids = values
-            .iter()
-            .map(|value| match value {
-                Value::Task(id) => Ok(*id),
-                other => Err(self.task_type_error("task", other)),
-            })
-            .collect::<Result<Vec<_>, _>>()?;
+        let ids = self.wait_any_ids(&arguments[0])?;
         loop {
             if let Some(value) = self.wait_any_result(&ids)? {
                 return Ok(Some(Some(value)));
@@ -68,6 +54,28 @@ impl Worker {
                 }
             }
         }
+    }
+
+    fn wait_any_ids(&self, value: &Value) -> Result<Vec<u64>, VmError> {
+        let Value::Array(values) = value else {
+            return Err(self.task_type_error("array of task", value));
+        };
+        if let Err(message) = validate_task_count(values.len()) {
+            return Err(diagnostics::at_address(
+                self.executable.executable(),
+                self.current_address,
+                RUNTIME_INVALID_TASK,
+                message,
+                "Pass a non-empty array of retained task handles.",
+            ));
+        }
+        values
+            .iter()
+            .map(|value| match value {
+                Value::Task(id) => Ok(*id),
+                other => Err(self.task_type_error("task", other)),
+            })
+            .collect::<Result<Vec<_>, _>>()
     }
 
     fn wait_any_result(&self, ids: &[u64]) -> Result<Option<Value>, VmError> {

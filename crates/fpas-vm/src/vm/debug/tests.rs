@@ -465,5 +465,6 @@ mod variant_construction;
 mod variant_replacement;
 mod variant_transition;
 mod wait_any;
+mod wait_any_controlled;
 
 use inspection_fixture::inspection_executable;

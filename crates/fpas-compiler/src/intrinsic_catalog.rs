@@ -132,6 +132,8 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Wait,
                 WaitAll,
                 WaitAny,
+                WaitAnyWithTimeout,
+                WaitAnyWithCancellation,
                 CreateCancellationSource,
                 GetCancellationToken,
                 Cancel,

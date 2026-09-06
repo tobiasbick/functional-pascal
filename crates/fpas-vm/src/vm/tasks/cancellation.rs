@@ -64,7 +64,9 @@ impl Worker {
             | TaskIntrinsic::CloseChannel
             | TaskIntrinsic::Wait
             | TaskIntrinsic::WaitAll
-            | TaskIntrinsic::WaitAny => return Ok(None),
+            | TaskIntrinsic::WaitAny
+            | TaskIntrinsic::WaitAnyWithTimeout
+            | TaskIntrinsic::WaitAnyWithCancellation => return Ok(None),
         };
         Ok(Some(Some(value)))
     }
@@ -87,14 +89,20 @@ impl Worker {
         ))
     }
 
-    fn cancellation_handle(&self, value: &Value, expected: &str) -> Result<u64, VmError> {
+    /// Decode an opaque cancellation handle before registry validation.
+    pub(super) fn cancellation_handle(
+        &self,
+        value: &Value,
+        expected: &str,
+    ) -> Result<u64, VmError> {
         match value {
             Value::OpaqueHandle(handle) => Ok(*handle),
             actual => Err(self.task_type_error(expected, actual)),
         }
     }
 
-    fn cancellation_error(&self, message: String) -> VmError {
+    /// Preserve a cancellation-registry failure as a runtime diagnostic.
+    pub(super) fn cancellation_error(&self, message: String) -> VmError {
         diagnostics::at_address(
             self.executable.executable(),
             self.current_address,

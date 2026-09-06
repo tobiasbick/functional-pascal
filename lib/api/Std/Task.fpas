@@ -173,3 +173,23 @@ public function WaitAny(Tasks: array of task): integer;
 begin
   panic('Intrinsic API declaration')
 end;
+
+// Completion index or a distinct cancellation error.
+//
+// Parameters:
+// - `Tasks`: Task handles to wait for.
+// - `Token`: Input value used by `WaitAnyWithCancellation`.
+public function WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Completion index or a distinct timeout error.
+//
+// Parameters:
+// - `Tasks`: Task handles to wait for.
+// - `TimeoutMillis`: Input value used by `WaitAnyWithTimeout`.
+public function WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of integer, string;
+begin
+  panic('Intrinsic API declaration')
+end;

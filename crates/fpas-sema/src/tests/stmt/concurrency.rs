@@ -3,6 +3,20 @@ use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_parser::{ParseDiagnostic, parse};
 
 #[test]
+fn controlled_wait_any_checks_control_types_and_arity() {
+    for call in [
+        "WaitAnyWithTimeout(Tasks, 'bad')",
+        "WaitAnyWithCancellation(Tasks, CreateCancellationSource())",
+        "WaitAnyWithTimeout(Tasks)",
+        "WaitAnyWithCancellation([1, 2], GetCancellationToken(CreateCancellationSource()))",
+    ] {
+        let source =
+            format!("program T; uses Std.Task; begin var Tasks: array of task := []; {call} end.");
+        assert!(!check_errors(&source).is_empty(), "{call}");
+    }
+}
+
+#[test]
 fn wait_any_rejects_non_task_arrays_and_reports_its_own_arity() {
     let errors = check_errors("program T; uses Std.Task; begin WaitAny([1, 2]) end.");
     assert!(

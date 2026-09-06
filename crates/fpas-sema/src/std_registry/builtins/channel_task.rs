@@ -41,6 +41,18 @@ pub(super) fn check_channel_task_builtin_std_call(
             check_task_wait_all(c, args, span, s::STD_TASK_WAIT_ANY);
             Ty::Integer
         }
+        s::STD_TASK_WAIT_ANY_WITH_TIMEOUT | s::STD_TASK_WAIT_ANY_WITH_CANCELLATION => {
+            if !expect_args(c, name, args, 2, span) {
+                return Some(Ty::Error);
+            }
+            check_task_wait_all(c, &args[..1], span, name);
+            if name == s::STD_TASK_WAIT_ANY_WITH_TIMEOUT {
+                expect_type(c, &args[1], &Ty::Integer, "task wait timeout");
+            } else {
+                expect_cancellation_token(c, &args[1]);
+            }
+            Ty::Result(Box::new(Ty::Integer), Box::new(Ty::String))
+        }
         _ => return None,
     };
     Some(ty)
@@ -174,7 +186,7 @@ fn expect_cancellation_token(c: &mut Checker, expr: &Expr) {
     if !valid {
         c.error_with_code(
             SEMA_TYPE_MISMATCH,
-            format!("Type mismatch in cancellable channel operation: expected `Std.Task.CancellationToken`, found `{actual}`"),
+            format!("Type mismatch in cancellable task operation: expected `Std.Task.CancellationToken`, found `{actual}`"),
             "Pass the token returned by `Std.Task.GetCancellationToken`.",
             expr.span(),
         );

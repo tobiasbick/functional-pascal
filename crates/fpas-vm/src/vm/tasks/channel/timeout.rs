@@ -250,15 +250,6 @@ impl Worker {
         self.finish_debug_channel_poll(result, destination)
     }
 
-    pub(super) fn channel_timeout(&self, value: &Value) -> Result<Duration, VmError> {
-        let Value::Integer(milliseconds) = value else {
-            return Err(self.task_type_error("non-negative timeout in milliseconds", value));
-        };
-        let milliseconds = u64::try_from(*milliseconds)
-            .map_err(|_| self.task_type_error("non-negative timeout in milliseconds", value))?;
-        Ok(Duration::from_millis(milliseconds))
-    }
-
     fn channel_deadline(&self, timeout: Duration) -> u64 {
         let timeout_millis = timeout.as_millis().min(u128::from(u64::MAX)) as u64;
         self.debug_clock_ref()

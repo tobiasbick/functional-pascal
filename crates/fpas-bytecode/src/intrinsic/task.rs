@@ -23,6 +23,14 @@ pub enum TaskIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     WaitAny = 116,
+    /// Wait for completion or a relative monotonic timeout.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    WaitAnyWithTimeout = 117,
+    /// Wait for completion or cooperative cancellation.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    WaitAnyWithCancellation = 118,
     /// Create one VM-owned cancellation source.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`

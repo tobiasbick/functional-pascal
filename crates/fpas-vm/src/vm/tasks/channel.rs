@@ -66,7 +66,7 @@ impl Worker {
             TaskIntrinsic::SendWithTimeout => {
                 self.require_channel_arguments(arguments, 3)?;
                 let handle = self.channel_handle(&arguments[0])?;
-                let timeout = self.channel_timeout(&arguments[2])?;
+                let timeout = self.wait_timeout(&arguments[2])?;
                 if self.debug_tasks {
                     self.debug_timeout_channel_send(
                         handle,
@@ -102,7 +102,7 @@ impl Worker {
             TaskIntrinsic::ReceiveWithTimeout => {
                 self.require_channel_arguments(arguments, 2)?;
                 let handle = self.channel_handle(&arguments[0])?;
-                let timeout = self.channel_timeout(&arguments[1])?;
+                let timeout = self.wait_timeout(&arguments[1])?;
                 if self.debug_tasks {
                     self.debug_timeout_channel_receive(handle, timeout, destination)
                 } else {
@@ -126,7 +126,9 @@ impl Worker {
             | TaskIntrinsic::IsCancellationRequested
             | TaskIntrinsic::Wait
             | TaskIntrinsic::WaitAll
-            | TaskIntrinsic::WaitAny => Ok(None),
+            | TaskIntrinsic::WaitAny
+            | TaskIntrinsic::WaitAnyWithTimeout
+            | TaskIntrinsic::WaitAnyWithCancellation => Ok(None),
         }
     }
 

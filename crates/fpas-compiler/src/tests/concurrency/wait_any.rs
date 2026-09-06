@@ -1,6 +1,38 @@
 use super::*;
 
 #[test]
+fn controlled_wait_any_rejects_negative_timeout() {
+    let error = run_program(
+        r#"program BadTimeout;
+uses Std.Task;
+procedure Work();
+begin
+end;
+begin
+  var T: task := go Work();
+  WaitAnyWithTimeout([T], -1)
+end."#,
+    )
+    .expect_err("negative timeout");
+    assert!(error.message.contains("non-negative timeout"));
+}
+
+#[test]
+fn controlled_wait_any_preserves_worker_failure() {
+    for control in [
+        "WithTimeout([T], 1000)",
+        "WithCancellation([T], GetCancellationToken(CreateCancellationSource()))",
+    ] {
+        let source = format!(
+            "program Failure; uses Std.Task; procedure Work(); begin panic('original failure') end; begin var T: task := go Work(); WaitAny{control} end."
+        );
+        let error = run_program(&source).expect_err("task failure");
+        assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_PROGRAM_PANIC);
+        assert!(error.message.contains("original failure"));
+    }
+}
+
+#[test]
 fn wait_any_rejects_an_empty_task_array() {
     let error = run_program("program EmptyWaitAny; uses Std.Task; begin var Tasks: array of task := []; WaitAny(Tasks) end.").expect_err("empty list");
     assert_eq!(error.code, fpas_diagnostics::codes::RUNTIME_INVALID_TASK);

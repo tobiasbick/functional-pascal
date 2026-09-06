@@ -9,6 +9,7 @@ pub(super) mod pool;
 mod scheduler;
 mod state;
 mod suspension;
+mod timeouts;
 mod wait_any;
 
 pub(super) use scheduler::{RetainedResultReplacement, TaskScheduler};
@@ -183,6 +184,10 @@ impl Worker {
         }
         match intrinsic {
             Intrinsic::Task(TaskIntrinsic::WaitAny) => self.wait_any(arguments, destination),
+            Intrinsic::Task(
+                operation @ (TaskIntrinsic::WaitAnyWithTimeout
+                | TaskIntrinsic::WaitAnyWithCancellation),
+            ) => self.controlled_wait_any(operation, arguments, destination),
             Intrinsic::Task(TaskIntrinsic::Wait) => {
                 let [Value::Task(id)] = arguments else {
                     return Err(
@@ -261,6 +266,10 @@ impl Worker {
     ) -> Result<Option<Option<Value>>, VmError> {
         match intrinsic {
             Intrinsic::Task(TaskIntrinsic::WaitAny) => self.wait_any(arguments, destination),
+            Intrinsic::Task(
+                operation @ (TaskIntrinsic::WaitAnyWithTimeout
+                | TaskIntrinsic::WaitAnyWithCancellation),
+            ) => self.controlled_wait_any(operation, arguments, destination),
             Intrinsic::Task(TaskIntrinsic::Wait) => {
                 let [Value::Task(id)] = arguments else {
                     return Err(
@@ -335,6 +344,12 @@ impl Worker {
         };
         let ready = match suspension {
             TaskSuspension::Yield => Ok(true),
+            TaskSuspension::WaitAnyControlled {
+                ids,
+                token,
+                deadline_millis,
+                destination,
+            } => self.poll_debug_controlled_wait_any(ids, token, deadline_millis, destination),
             TaskSuspension::WaitAny { ids, destination } => {
                 self.poll_debug_wait_any(ids, destination)
             }

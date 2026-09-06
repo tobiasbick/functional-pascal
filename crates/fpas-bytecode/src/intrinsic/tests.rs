@@ -220,6 +220,8 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Task(TaskIntrinsic::Wait),
     Intrinsic::Task(TaskIntrinsic::WaitAll),
     Intrinsic::Task(TaskIntrinsic::WaitAny),
+    Intrinsic::Task(TaskIntrinsic::WaitAnyWithTimeout),
+    Intrinsic::Task(TaskIntrinsic::WaitAnyWithCancellation),
     Intrinsic::Task(TaskIntrinsic::CreateCancellationSource),
     Intrinsic::Task(TaskIntrinsic::GetCancellationToken),
     Intrinsic::Task(TaskIntrinsic::Cancel),

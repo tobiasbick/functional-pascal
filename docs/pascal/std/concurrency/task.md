@@ -49,6 +49,8 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
 | procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
 | function | `WaitAny(Tasks: array of task): integer` | returns the lowest completed input index without consuming results |
+| function | `WaitAnyWithTimeout(Tasks: array of task; TimeoutMillis: integer): result of integer, string` | completion index or a distinct timeout error |
+| function | `WaitAnyWithCancellation(Tasks: array of task; Token: CancellationToken): result of integer, string` | completion index or a distinct cancellation error |
 
 ---
 
@@ -184,6 +186,28 @@ Wait(Tb)
 The worker can help queued tasks while waiting; helping may delay its next completion observation.
 There is no per-input helper thread and no busy polling. Debugger execution suspends cooperatively.
 VM shutdown releases pending waits through the existing task-failure path.
+
+## Controlled task-completion waits
+
+`WaitAnyWithTimeout` and `WaitAnyWithCancellation` use the same non-empty bounded task list,
+input ordering, and non-consuming completion policy as `WaitAny`. Success returns `Ok(Index)`.
+Timeout returns `Error('Task wait timed out')`; cancellation returns
+`Error('Task wait was cancelled')`. Neither outcome cancels tasks or consumes their results.
+
+- Timeout milliseconds must be non-negative. One monotonic budget starts after argument validation;
+  wakeups and scheduler helping do not reset it. Zero performs one immediate completion observation.
+- In that initial observation, a ready task wins over timeout. In subsequent observations, an
+  expired budget wins over a successful completion, even if it became available while the worker
+  was busy helping another task. Completions are not timestamped.
+- A cancelled token wins over successful completion, including on entry. Invalid task identities
+  and task failures are checked first; they remain runtime diagnostics, not ordinary Result errors.
+  Invalid tokens and timeouts also produce runtime diagnostics.
+- Pending scheduler waits park for at most 10 ms between checks, shortened to the remaining timeout.
+  This is cooperative, not a hard wall-clock bound: scheduler helping can execute task code that
+  blocks or runs for a long time. Control checks resume after that helped work yields or returns.
+- Debugger waits use its monotonic clock and explicit suspension. No per-input worker or persistent
+  wait registration is created. Completion, timeout, cancellation, failure, and teardown release the
+  suspended wait's task list without changing ownership of the tasks themselves.
 
 ## Runtime errors
 

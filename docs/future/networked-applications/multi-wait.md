@@ -1,7 +1,7 @@
 # Future: Multi-source Waiting
 
-> Partially implemented: the task-only `WaitAny` barrier is implemented. Deadlines, cancellation,
-> and mixed-source selection remain future work.
+> Partially implemented: task-only `WaitAny` and its timeout/cancellation variants are implemented.
+> Mixed-source selection remains future work.
 
 Part of [application concurrency](concurrency.md). Build this in complete, independently tested
 slices. Keep `go`, task result typing, `Wait`, `WaitAll`, and channel ownership unchanged.
@@ -38,8 +38,10 @@ This first slice does not satisfy the mixed-source acceptance requirement by its
 
 ## Second slice: deadlines and cancellation
 
-Add cancellation-aware and timeout-bounded task barriers after the basic completion barrier is
-verified. Choose their exact signatures in that slice; task failure must still retain its diagnostic.
+`WaitAnyWithTimeout(Tasks, TimeoutMillis)` and `WaitAnyWithCancellation(Tasks, Token)` are
+implemented with `Result of integer, string` outcomes. Task failure still retains its diagnostic.
+The current [Task reference](../../pascal/std/concurrency/task.md) owns their exact contract,
+including the cooperative scheduler-helping limitation.
 
 - Distinguish no completed task yet, cancellation, expiry, and task failure.
 - Use one monotonic deadline; scheduler helping and spurious wakeups do not extend it.

@@ -61,6 +61,8 @@ pub fn register_std_task(c: &mut Checker) {
         s::STD_TASK_WAIT,
         s::STD_TASK_WAIT_ALL,
         s::STD_TASK_WAIT_ANY,
+        s::STD_TASK_WAIT_ANY_WITH_TIMEOUT,
+        s::STD_TASK_WAIT_ANY_WITH_CANCELLATION,
     ] {
         define_builtin_std(c, name, placeholder.clone());
     }

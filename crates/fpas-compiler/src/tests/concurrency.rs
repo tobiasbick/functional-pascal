@@ -3,6 +3,7 @@ use super::*;
 mod network_connect;
 mod network_read;
 mod network_write;
+mod task_results;
 mod wait_any;
 
 #[test]

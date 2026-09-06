@@ -12,6 +12,7 @@ mod debug;
 mod expr;
 mod globals;
 mod imports;
+mod intrinsic_signatures;
 mod members;
 mod routines;
 mod stmt;
@@ -23,12 +24,13 @@ pub(crate) use imports::ImportPlan;
 
 use std::collections::{BTreeMap, HashMap};
 
-use fpas_ir::{Function, FunctionId, IntrinsicId, IntrinsicSignature, Operation, Program};
+use fpas_ir::{FunctionId, Operation, Program};
 use fpas_parser::{Decl, Program as AstProgram, Stmt, Unit};
 
 use crate::CompileError;
 
 use self::context::{FunctionInput, LoweringContext};
+use self::intrinsic_signatures::collect_intrinsic_signatures;
 
 pub(crate) struct LoweredUnit {
     pub program: Program,
@@ -350,51 +352,4 @@ fn lower_analyzed_root(
         program: ir,
         imports,
     })
-}
-
-fn collect_intrinsic_signatures(
-    functions: &[Function],
-    types: &types::TypeTable,
-) -> Vec<IntrinsicSignature> {
-    let mut shapes = BTreeMap::<IntrinsicId, (usize, fpas_ir::TypeId)>::new();
-    for function in functions {
-        for instruction in function.blocks.iter().flat_map(|block| &block.instructions) {
-            if let Operation::Intrinsic {
-                intrinsic,
-                arguments,
-            } = &instruction.operation
-                && let Some(result) = instruction.result
-            {
-                shapes
-                    .entry(*intrinsic)
-                    .or_insert((arguments.len(), result.ty));
-            }
-        }
-    }
-    shapes
-        .into_iter()
-        .map(|(id, (arity, result))| {
-            let wire = u16::try_from(id.get()).ok();
-            let variadic = wire.and_then(fpas_bytecode::Intrinsic::from_u16)
-                == Some(fpas_bytecode::Intrinsic::Str(
-                    fpas_bytecode::StrIntrinsic::Format,
-                ));
-            let parameters = if variadic {
-                vec![types::DYNAMIC, types::DYNAMIC]
-            } else {
-                vec![types::DYNAMIC; arity]
-            };
-            let result = if matches!(types.kind(result), Some(fpas_ir::IrType::Unit)) {
-                types::UNIT
-            } else {
-                types::DYNAMIC
-            };
-            IntrinsicSignature {
-                id,
-                parameters,
-                variadic,
-                result,
-            }
-        })
-        .collect()
 }

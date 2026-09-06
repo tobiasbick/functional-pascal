@@ -85,15 +85,11 @@ fn operation_width(
         Operation::SpawnTask { arguments, .. } | Operation::SpawnDetachedTask { arguments, .. } => {
             arguments.len().saturating_add(1)
         }
-        Operation::Intrinsic {
-            intrinsic,
-            arguments,
-        } => {
-            let signature = program.intrinsic(*intrinsic).ok_or_else(address_error)?;
+        Operation::Intrinsic { arguments, .. } => {
+            // Selection emits LoadUnit per call, not per shared polymorphic signature.
+            let result = instruction.result.ok_or_else(address_error)?;
             let unit = matches!(
-                program
-                    .ty(signature.result)
-                    .map(|definition| &definition.kind),
+                program.ty(result.ty).map(|definition| &definition.kind),
                 Some(IrType::Unit)
             );
             arguments.len().saturating_add(1 + usize::from(unit))

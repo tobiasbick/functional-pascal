@@ -8,6 +8,25 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
+### 2026-09-06 — mixed task-result compiler repair
+
+- Reproduced the procedure/integer task failure with local handles and direct `Wait(go ...)` calls.
+  The first Unit-returning call fixed the shared intrinsic signature to Unit, rejecting subsequent
+  value-returning calls. Reversing the call order avoided that validation failure.
+- Extracted signature collection into `lowering/intrinsic_signatures.rs`. Shared signatures now
+  account for every call site while each IR instruction retains its concrete result type. Intrinsics
+  used only for Unit results keep their Unit signature.
+- Corrected bytecode block widths to use each intrinsic call's result type, matching instruction
+  selection's additional `LoadUnit`. Using the shared signature instead miscounted instructions
+  and shifted branch targets after mixed-result calls.
+- Added six compiler regressions covering both call orders, direct spawns, retained handles,
+  routine and loop boundaries, and shared versus concrete IR types. All six regressions, formatting,
+  workspace build, full workspace tests (including bundled FPAS suites), and strict compiler Clippy
+  passed. The diff and the source documentation link were checked.
+- Existing Task and language contracts are unchanged; this repairs their compilation. No new API,
+  syntax, task-array typing rule, or runtime behavior was introduced.
+- Next: settle typed value transfer and atomic winner ownership for mixed task/channel selection.
+
 ### 2026-09-06 — controlled task-completion barriers
 
 - Added `WaitAnyWithTimeout` and `WaitAnyWithCancellation`, returning a completion index or
@@ -27,8 +46,8 @@ waiting, and explicit ownership of child-task failure.
   files during the first run. This correctness slice makes no performance claim.
 - Separately reproduced an IR validation failure using only existing `Wait` calls when a program
   retains both a procedure task and an integer-returning task. The failure reports an expected Unit
-  result versus an actual Integer result. This compiler issue is not repaired by the controlled-wait
-  slice; its fixtures use integer-returning tasks consistently.
+  result versus an actual Integer result. The later mixed task-result compiler repair above resolves
+  this issue; the controlled-wait slice itself kept integer-returning fixtures consistently.
 - Next: settle typed value transfer and atomic winner ownership for mixed task/channel selection.
 
 ### 2026-09-06 — task-only WaitAny completion barrier

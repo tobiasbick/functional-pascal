@@ -160,5 +160,6 @@ pub(super) fn object_debug_type(
         }
         DebugType::Cell(inner) => ObjectDebugType::Cell(id(*inner)),
         DebugType::Task(inner) => ObjectDebugType::Task(id(*inner)),
+        DebugType::Channel(inner) => ObjectDebugType::Channel(id(*inner)),
     })
 }

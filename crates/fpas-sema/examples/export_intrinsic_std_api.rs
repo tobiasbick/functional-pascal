@@ -375,7 +375,9 @@ fn fixed_declaration(name: &str, ty: &Ty, force_procedure: bool) -> String {
 fn contains_error(ty: &Ty) -> bool {
     match ty {
         Ty::Error => true,
-        Ty::Array(inner) | Ty::Option(inner) | Ty::Task(inner) => contains_error(inner),
+        Ty::Array(inner) | Ty::Channel(inner) | Ty::Option(inner) | Ty::Task(inner) => {
+            contains_error(inner)
+        }
         Ty::Result(ok, error) | Ty::Dict(ok, error) => contains_error(ok) || contains_error(error),
         Ty::Function(function) => {
             contains_error(&function.return_type)

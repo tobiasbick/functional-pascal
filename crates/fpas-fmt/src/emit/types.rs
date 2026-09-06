@@ -38,6 +38,10 @@ pub(crate) fn emit_type_expr(emitter: &mut Emitter, ty: &TypeExpr) {
             emitter.write("array of ");
             emit_type_expr(emitter, inner);
         }
+        TypeExpr::Channel(inner, ..) => {
+            emitter.write("channel of ");
+            emit_type_expr(emitter, inner);
+        }
         TypeExpr::FunctionType {
             params,
             return_type,
@@ -159,6 +163,10 @@ mod tests {
         assert_eq!(
             type_from_var("program T; begin var X: dict of string to integer := [:]; end."),
             "dict of string to integer"
+        );
+        assert_eq!(
+            type_from_var("program T; begin var X: channel of string := Value; end."),
+            "channel of string"
         );
     }
 

@@ -8,6 +8,7 @@ Go-inspired lightweight task concurrency. Tasks created with `go` may run on wor
 | [Task handles](task-handles.md) | `task` type, `Wait`, `WaitAll` |
 | [Fork-join](fork-join.md) | Parallel work and collecting results |
 | [Scheduling](scheduling.md) | Thread pool, cooperative preemption, shared runtime |
+| [Channel types](../types/channels.md) | Typed bounded FIFO communication, cancellation, closure |
 
 Per-symbol API: [`Std.Task`](../../std/concurrency/task.md).
 
@@ -24,7 +25,7 @@ The lifetime of spawned work is bounded by the main task. Tasks that are already
 
 ## Keywords
 
-`go` — case-insensitive.
+`go`, `channel` — case-insensitive.
 
 ## See also
 

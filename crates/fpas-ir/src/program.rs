@@ -82,6 +82,8 @@ pub enum IrType {
     Dynamic,
     /// Ordered value-semantic array.
     Array(TypeId),
+    /// Opaque bounded channel with a statically known element type.
+    Channel(TypeId),
     /// Ordered value-semantic dictionary.
     Dictionary {
         /// Key type.

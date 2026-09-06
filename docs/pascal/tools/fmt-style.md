@@ -294,7 +294,7 @@ separate `case` arms. Leading comments stay attached to the following statement 
 
 ## Keywords and builtins
 
-Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `true`, `false`.
+Emit lowercase keywords: `program`, `unit`, `uses`, `begin`, `end`, `function`, `procedure`, `var`, `mutable`, `const`, `type`, `if`, `then`, `else`, `case`, `of`, `for`, `to`, `downto`, `in`, `do`, `while`, `repeat`, `until`, `return`, `panic`, `break`, `continue`, `and`, `or`, `not`, `xor`, `div`, `mod`, `shl`, `shr`, `public`, `record`, `enum`, `array`, `channel`, `dict`, `result`, `option`, `ok`, `error`, `some`, `none`, `try`, `go`, `with`, `true`, `false`.
 
 Boolean and enum variant constructors in expressions: `Ok`, `Error`, `Some`, `None` (Pascal-style mixed case for std-like variants).
 
@@ -451,7 +451,7 @@ type
 
 ## Types (summary)
 
-- `array of T`, `dict of K to V`, `Result of T, E`, `Option of T`.
+- `array of T`, `channel of T`, `dict of K to V`, `Result of T, E`, `Option of T`.
 - Generics: `Box<T>`, usage `Box of string`, multiple params `Pair of integer, string`.
 - Enum variants with data: `Circle(Radius: real);`
 

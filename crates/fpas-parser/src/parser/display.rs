@@ -41,6 +41,7 @@ pub(super) fn token_display(t: &Token) -> Cow<'static, str> {
         Token::Record => "record".into(),
         Token::Enum => "enum".into(),
         Token::Array => "array".into(),
+        Token::Channel => "channel".into(),
         Token::Panic => "panic".into(),
         Token::Break => "break".into(),
         Token::Continue => "continue".into(),

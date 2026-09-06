@@ -8,8 +8,9 @@ networked applications still need durable transactions, security primitives, coo
 background work and interactive hosts, production lifecycle support, and explicit distributed-node
 semantics.
 
-This plan keeps those concerns in separate modules. It does not introduce FPAS syntax or semantic
-changes. Any later language proposal requires its own explicit decision.
+This plan keeps those concerns in separate modules. The first approved language extension is the
+implemented `channel of T` type; any additional syntax or semantic change still requires its own
+explicit decision.
 
 ## Capability plans
 

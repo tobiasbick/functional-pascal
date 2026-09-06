@@ -50,4 +50,6 @@ pub enum DebugType {
     Cell(DebugTypeId),
     /// Task handle result type.
     Task(DebugTypeId),
+    /// Typed channel handle element type.
+    Channel(DebugTypeId),
 }

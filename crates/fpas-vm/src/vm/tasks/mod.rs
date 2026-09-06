@@ -4,6 +4,7 @@
 //! `docs/pascal/language/concurrency/scheduling.md`.
 
 mod cancellation;
+mod channel;
 pub(super) mod pool;
 mod scheduler;
 mod state;
@@ -170,6 +171,9 @@ impl Worker {
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
         if let Some(value) = self.cancellation_intrinsic(intrinsic, arguments)? {
+            return Ok(Some(value));
+        }
+        if let Some(value) = self.channel_intrinsic(intrinsic, arguments, destination)? {
             return Ok(Some(value));
         }
         if self.debug_tasks {
@@ -353,6 +357,17 @@ impl Worker {
                     Ok(false)
                 }
             },
+            TaskSuspension::ChannelSend {
+                handle,
+                value,
+                token,
+                destination,
+            } => self.poll_debug_channel_send(handle, value, token, destination),
+            TaskSuspension::ChannelReceive {
+                handle,
+                token,
+                destination,
+            } => self.poll_debug_channel_receive(handle, token, destination),
             TaskSuspension::Sleep { deadline_millis }
                 if self.debug_clock_ref().now_millis() >= deadline_millis =>
             {

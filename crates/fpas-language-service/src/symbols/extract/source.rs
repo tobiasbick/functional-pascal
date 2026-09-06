@@ -179,6 +179,7 @@ fn type_span(value: &TypeExpr) -> Span {
     match value {
         TypeExpr::Named { span, .. }
         | TypeExpr::Array(_, span)
+        | TypeExpr::Channel(_, span)
         | TypeExpr::FunctionType { span, .. }
         | TypeExpr::ProcedureType { span, .. }
         | TypeExpr::Result { span, .. }

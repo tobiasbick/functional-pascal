@@ -46,7 +46,16 @@ pub fn register_std_task(c: &mut Checker) {
         variadic: false,
     });
 
-    for name in [s::STD_TASK_WAIT, s::STD_TASK_WAIT_ALL] {
+    for name in [
+        s::STD_TASK_CREATE_CHANNEL,
+        s::STD_TASK_SEND,
+        s::STD_TASK_SEND_WITH_CANCELLATION,
+        s::STD_TASK_RECEIVE,
+        s::STD_TASK_RECEIVE_WITH_CANCELLATION,
+        s::STD_TASK_CLOSE_CHANNEL,
+        s::STD_TASK_WAIT,
+        s::STD_TASK_WAIT_ALL,
+    ] {
         define_builtin_std(c, name, placeholder.clone());
     }
 }

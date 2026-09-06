@@ -139,6 +139,8 @@ pub enum ObjectDebugType {
     Cell(u32),
     /// Task result type.
     Task(u32),
+    /// Typed channel element type.
+    Channel(u32),
 }
 
 /// Ordered enum layout.

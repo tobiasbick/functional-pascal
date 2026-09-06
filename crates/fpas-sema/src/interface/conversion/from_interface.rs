@@ -46,6 +46,7 @@ pub fn interface_type_to_ty(ty: &artifact::InterfaceType) -> Result<Ty, Interfac
         Input::String => Ty::String,
         Input::Unit => Ty::Unit,
         Input::Array(inner) => Ty::Array(Box::new(interface_type_to_ty(inner)?)),
+        Input::Channel(inner) => Ty::Channel(Box::new(interface_type_to_ty(inner)?)),
         Input::Dictionary(key, value) => Ty::Dict(
             Box::new(interface_type_to_ty(key)?),
             Box::new(interface_type_to_ty(value)?),

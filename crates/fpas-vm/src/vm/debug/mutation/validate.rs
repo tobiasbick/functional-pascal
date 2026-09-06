@@ -136,13 +136,18 @@ fn validate(
             super::function_value::validate_root(function, max_depth, 65_536)
         }
         (DebugType::Task(_), Value::Task(_)) if depth == 0 => Ok(()),
-        (DebugType::Function { .. } | DebugType::Cell(_) | DebugType::Task(_), _) => {
-            Err(type_error(
-                expected,
-                value,
-                "this target type is not assignable by the debugger",
-            ))
-        }
+        (DebugType::Channel(_), Value::OpaqueHandle(_)) if depth == 0 => Ok(()),
+        (
+            DebugType::Function { .. }
+            | DebugType::Cell(_)
+            | DebugType::Task(_)
+            | DebugType::Channel(_),
+            _,
+        ) => Err(type_error(
+            expected,
+            value,
+            "this target type is not assignable by the debugger",
+        )),
         _ => Err(type_error(
             expected,
             value,

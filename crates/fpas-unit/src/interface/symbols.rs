@@ -93,11 +93,11 @@ pub(super) fn canonical_name(name: &str) -> String {
 
 fn canonicalize_type(ty: &mut InterfaceType) {
     use InterfaceType::{
-        Array, Dictionary, Enum, Function, GenericParameter, Named, Option, Procedure, Record,
-        Result, Task,
+        Array, Channel, Dictionary, Enum, Function, GenericParameter, Named, Option, Procedure,
+        Record, Result, Task,
     };
     match ty {
-        Array(inner) | Option(inner) | Task(inner) => canonicalize_type(inner),
+        Array(inner) | Channel(inner) | Option(inner) | Task(inner) => canonicalize_type(inner),
         Dictionary(key, value) | Result(key, value) => {
             canonicalize_type(key);
             canonicalize_type(value);

@@ -139,11 +139,11 @@ fn qualify_owned_type(
     own_types: &std::collections::HashSet<String>,
 ) {
     use artifact::InterfaceType::{
-        Array, Dictionary, Enum, Function, GenericParameter, Named, Option, Procedure, Record,
-        Result, Task,
+        Array, Channel, Dictionary, Enum, Function, GenericParameter, Named, Option, Procedure,
+        Record, Result, Task,
     };
     match ty {
-        Array(inner) | Option(inner) | Task(inner) => {
+        Array(inner) | Channel(inner) | Option(inner) | Task(inner) => {
             qualify_owned_type(inner, unit_name, own_types);
         }
         Dictionary(left, right) | Result(left, right) => {

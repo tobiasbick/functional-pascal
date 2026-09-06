@@ -41,6 +41,7 @@ fn keyword_token(raw: &str) -> Option<Token> {
         s if s.eq_ignore_ascii_case("record") => Some(Token::Record),
         s if s.eq_ignore_ascii_case("enum") => Some(Token::Enum),
         s if s.eq_ignore_ascii_case("array") => Some(Token::Array),
+        s if s.eq_ignore_ascii_case("channel") => Some(Token::Channel),
         s if s.eq_ignore_ascii_case("panic") => Some(Token::Panic),
         s if s.eq_ignore_ascii_case("break") => Some(Token::Break),
         s if s.eq_ignore_ascii_case("continue") => Some(Token::Continue),

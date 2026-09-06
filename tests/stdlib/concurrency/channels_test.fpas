@@ -1,0 +1,65 @@
+program ChannelsTest;
+
+uses Std.Task, Std.Test;
+
+function SendValues(Messages: channel of integer): boolean;
+begin
+  case Send(Messages, 10) of
+    Ok(Sent):
+    begin
+      AssertTrue(Sent)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  case Send(Messages, 20) of
+    Ok(Sent):
+    begin
+      AssertTrue(Sent)
+    end;
+    Error(Message):
+    begin
+      Fail(Message)
+    end
+  end;
+
+  return CloseChannel(Messages)
+end;
+
+function ReceiveValue(Messages: channel of integer): integer;
+begin
+  case Receive(Messages) of
+    Ok(Value):
+    begin
+      return Value
+    end;
+    Error(Message):
+    begin
+      Fail(Message);
+      return 0
+    end
+  end
+end;
+
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  var Producer: task := go SendValues(Messages);
+  AssertEquals(10, ReceiveValue(Messages));
+  AssertEquals(20, ReceiveValue(Messages));
+  AssertTrue(Wait(Producer));
+  case Receive(Messages) of
+    Ok(_):
+    begin
+      Fail('closed channel returned an extra value')
+    end;
+    Error(Message):
+    begin
+      AssertEquals('Channel is closed', Message)
+    end
+  end;
+
+  AssertFalse(CloseChannel(Messages))
+end.

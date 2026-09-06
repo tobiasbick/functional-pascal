@@ -25,8 +25,26 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Closes and wakes waiters; true only for the first close.
+//
+// Parameters:
+// - `Queue`: Input value used by `CloseChannel`.
+public function CloseChannel(Queue: channel of T): boolean;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Creates an active source.
 public function CreateCancellationSource(): Std.Task.CancellationSource;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Creates a VM-owned bounded channel; capacity is `1..=1048576`.
+//
+// Parameters:
+// - `Capacity`: Input value used by `CreateChannel`.
+public function CreateChannel(Capacity: integer): channel of T;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -45,6 +63,46 @@ end;
 // Parameters:
 // - `Token`: `Std.Task.CancellationToken` input value used by `IsCancellationRequested`.
 public function IsCancellationRequested(Token: Std.Task.CancellationToken): boolean;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Blocks while empty and open.
+//
+// Parameters:
+// - `Queue`: Input value used by `Receive`.
+public function Receive(Queue: channel of T): result of T, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Receive that also observes cancellation.
+//
+// Parameters:
+// - `Queue`: Input value used by `ReceiveWithCancellation`.
+// - `Token`: Input value used by `ReceiveWithCancellation`.
+public function ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of T, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Blocks while full; returns an error after close.
+//
+// Parameters:
+// - `Queue`: Input value used by `Send`.
+// - `Value`: Value consumed or returned by the operation.
+public function Send(Queue: channel of T; Value: T): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Send that also observes cancellation.
+//
+// Parameters:
+// - `Queue`: Input value used by `SendWithCancellation`.
+// - `Value`: Value consumed or returned by the operation.
+// - `Token`: Input value used by `SendWithCancellation`.
+public function SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string;
 begin
   panic('Intrinsic API declaration')
 end;

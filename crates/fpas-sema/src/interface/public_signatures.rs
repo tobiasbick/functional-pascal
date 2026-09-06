@@ -157,6 +157,7 @@ fn private_type_in<'a>(
                 .then_some(PrivateTypeReference { name, span: *span })
         }
         TypeExpr::Array(inner, _)
+        | TypeExpr::Channel(inner, _)
         | TypeExpr::Option {
             inner_type: inner, ..
         } => private_type_in(inner, private_types),

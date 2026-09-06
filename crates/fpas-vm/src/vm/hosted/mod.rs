@@ -22,7 +22,7 @@ use net::{NetworkConnections, NetworkListeners};
 use fpas_bytecode::{Intrinsic, SourceLocation, Value};
 
 use super::worker::Worker;
-use super::{VmError, cancellation::CancellationRegistry, diagnostics};
+use super::{VmError, cancellation::CancellationRegistry, channels::ChannelRegistry, diagnostics};
 
 impl Worker {
     pub(super) fn execute_hosted_intrinsic(
@@ -65,6 +65,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) network_listeners: NetworkListeners,
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::vm) cancellations: CancellationRegistry,
+    pub(in crate::vm) channels: ChannelRegistry,
     pub(super) test_scratch_dir: Mutex<PathBuf>,
 }
 
@@ -79,6 +80,7 @@ impl HostedState {
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
             cancellations: CancellationRegistry::new(),
+            channels: ChannelRegistry::new(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }
@@ -94,12 +96,14 @@ impl HostedState {
             network_listeners: NetworkListeners::new(),
             http_states: HttpStateRegistry::new(),
             cancellations: CancellationRegistry::new(),
+            channels: ChannelRegistry::new(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }
 
-    /// Interrupt blocking network operations during VM shutdown.
-    pub(super) fn shutdown_network(&self) {
+    /// Interrupt blocking hosted operations during VM shutdown.
+    pub(super) fn shutdown_blocking_operations(&self) {
+        self.channels.shutdown();
         self.network_listeners.shutdown();
         self.network_connections.shutdown();
     }

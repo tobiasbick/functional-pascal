@@ -72,6 +72,10 @@ pub enum Ty {
     Unit,
     /// An array whose elements have the enclosed type.
     Array(Box<Ty>),
+    /// A bounded FIFO channel carrying the enclosed type.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/channels.md`
+    Channel(Box<Ty>),
     /// Shared descriptor for a record type.
     Record(Arc<RecordTy>),
     /// Shared descriptor for an enum type.
@@ -238,6 +242,7 @@ impl std::fmt::Display for Ty {
             Ty::String => write!(f, "string"),
             Ty::Unit => write!(f, "unit"),
             Ty::Array(inner) => write!(f, "array of {inner}"),
+            Ty::Channel(inner) => write!(f, "channel of {inner}"),
             Ty::Record(r) => write!(f, "{}", r.name),
             Ty::Enum(e) => write!(f, "{}", e.name),
             Ty::Function(ft) => {
@@ -303,6 +308,7 @@ impl Ty {
             (Ty::Named(a), Ty::Named(b)) => a.eq_ignore_ascii_case(b),
             // Array with Error element type is compatible with any array
             (Ty::Array(a), Ty::Array(b)) => a.compatible_with_mode(b, generic_wildcard),
+            (Ty::Channel(a), Ty::Channel(b)) => a.compatible_with_mode(b, generic_wildcard),
             // Named type matches the concrete record with the same name (recursive records).
             (Ty::Named(n), Ty::Record(r)) | (Ty::Record(r), Ty::Named(n)) => {
                 n.eq_ignore_ascii_case(&r.name)

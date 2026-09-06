@@ -165,6 +165,7 @@ fn lower_type(ty: &IrType) -> Result<DebugType, CompileError> {
         )),
         IrType::Cell(inner) => DebugType::Cell(id(*inner)),
         IrType::Task(inner) => DebugType::Task(id(*inner)),
+        IrType::Channel(inner) => DebugType::Channel(id(*inner)),
     })
 }
 
@@ -235,5 +236,6 @@ fn type_name(program: &Program, ty: TypeId, depth: usize) -> String {
             .map_or_else(|| "enum".to_string(), |layout| layout.name.clone()),
         IrType::Cell(inner) => type_name(program, *inner, depth + 1),
         IrType::Task(inner) => format!("task of {}", type_name(program, *inner, depth + 1)),
+        IrType::Channel(inner) => format!("channel of {}", type_name(program, *inner, depth + 1)),
     }
 }

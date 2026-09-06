@@ -46,3 +46,17 @@ fn array_type() {
         _ => panic!("expected Var"),
     }
 }
+
+#[test]
+fn channel_type() {
+    let p = parse_ok("program T; var Messages: channel of string := Value; begin end.");
+    match &p.declarations[0] {
+        Decl::Var(v) => match &v.type_expr {
+            TypeExpr::Channel(inner, _) => {
+                assert!(matches!(inner.as_ref(), TypeExpr::Named { .. }));
+            }
+            _ => panic!("expected channel type"),
+        },
+        _ => panic!("expected Var"),
+    }
+}

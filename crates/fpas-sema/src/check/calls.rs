@@ -171,6 +171,9 @@ impl Checker {
                 .cloned()
                 .unwrap_or_else(|| ty.clone()),
             Ty::Array(inner) => Ty::Array(Box::new(Self::substitute_type_params(inner, inferred))),
+            Ty::Channel(inner) => {
+                Ty::Channel(Box::new(Self::substitute_type_params(inner, inferred)))
+            }
             Ty::Result(ok, err) => Ty::Result(
                 Box::new(Self::substitute_type_params(ok, inferred)),
                 Box::new(Self::substitute_type_params(err, inferred)),
@@ -254,6 +257,15 @@ impl Checker {
                 }
             }
             (Ty::Array(declared_inner), Ty::Array(actual_inner)) => {
+                self.collect_type_param_bindings(
+                    declared_inner,
+                    actual_inner,
+                    inferred,
+                    visited_record_pairs,
+                    span,
+                );
+            }
+            (Ty::Channel(declared_inner), Ty::Channel(actual_inner)) => {
                 self.collect_type_param_bindings(
                     declared_inner,
                     actual_inner,

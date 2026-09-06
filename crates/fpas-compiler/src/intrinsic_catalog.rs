@@ -131,6 +131,12 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 GetCancellationToken,
                 Cancel,
                 IsCancellationRequested,
+                CreateChannel,
+                Send,
+                SendWithCancellation,
+                Receive,
+                ReceiveWithCancellation,
+                CloseChannel,
             ]
         ),
         "Time" => family!(

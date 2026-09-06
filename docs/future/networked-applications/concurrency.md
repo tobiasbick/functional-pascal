@@ -1,12 +1,30 @@
 # Future: Application Concurrency Primitives
 
-> Deferred. Current `go`, `Wait`, and `WaitAll` behavior remains unchanged.
+> Partially implemented. Current `go`, `Wait`, and `WaitAll` behavior remains unchanged.
 
 Fork-join tasks are sufficient when all work starts together and the caller waits for completion.
 Long-running applications also need bounded communication, cooperative cancellation, multi-source
 waiting, and explicit ownership of child-task failure.
 
 ## Progress
+
+### 2026-09-06 — typed bounded channels
+
+- Added the approved built-in `channel of T` language type across parsing, formatting, semantic
+  analysis, compiled-unit interfaces, typed IR, portable debugger metadata, and language-service
+  source spans.
+- Added VM-owned FIFO channels with a fixed capacity of `1..=1048576`, blocking send and receive,
+  idempotent close, buffered drain after close, and wakeup during close or VM shutdown.
+- Added `CreateChannel`, `Send`, `Receive`, cancellable send/receive variants, and `CloseChannel` to
+  `Std.Task`. Closed and cancelled operations return distinct documented errors.
+- Added static rejection for mismatched element types and task-bound values, plus parser, formatter,
+  semantic, registry, compiler/runtime, and FPAS suite regressions.
+- Verified with `cargo fmt --check`, `cargo build --workspace`, `cargo test --workspace`, strict
+  Clippy for every affected crate, and the full FPAS suite (406 passed, 1 skipped).
+- Performance benchmarks are intentionally omitted because another VM is active on the host; this
+  slice makes no performance claim.
+- Remaining: non-blocking and deadline-bounded channel operations, broader cancellation coverage,
+  multi-wait, task groups, and supervision.
 
 ### 2026-09-06 — cooperative cancellation foundation
 
@@ -25,7 +43,6 @@ waiting, and explicit ownership of child-task failure.
 
 ## Proposed scope
 
-- Typed bounded channels with send, receive, close, and documented end-of-stream behavior.
 - Non-blocking and deadline-bounded send and receive operations.
 - A cancellation source and clonable cancellation token checked by hosted blocking operations.
 - `WaitAny` or an equivalent function-based multi-wait over tasks, channels, timers, and
@@ -35,9 +52,10 @@ waiting, and explicit ownership of child-task failure.
 
 ## Interface rules
 
-- Bounded channels are the default; unbounded queues require a separate explicit decision.
-- Closing is idempotent, blocked senders and receivers wake, and ownership of buffered values is
-  defined.
+- Bounded channels are implemented as the default; unbounded queues require a separate explicit
+  decision.
+- Closing is implemented as idempotent, blocked senders and receivers wake, and buffered values
+  remain owned by the channel until received or VM teardown.
 - Cancellation is cooperative and distinguishable from task failure.
 - Dropping a retained task handle must not silently detach work whose lifetime is still owned by a
   task group.
@@ -52,7 +70,8 @@ rather than reaching into scheduler implementation details.
 
 ## Acceptance requirements
 
-- FIFO behavior, closure, full/empty queues, deadlines, and cancellation have deterministic tests.
+- FIFO behavior, closure, full/empty queues, and cancellation have deterministic tests; deadline
+  tests remain gated on deadline-aware operations.
 - Multi-wait returns exactly one winning event and unregisters all losing waits.
 - Task-group shutdown cannot leak workers or wait forever after its deadline.
 - Child panics and ordinary error results follow separately documented paths.

@@ -78,7 +78,7 @@ line_comment    = '//' { (* any character except CR or LF *) } ;
 (* A contiguous standalone comment block immediately before a       *)
 (* declaration is Markdown documentation; this is a tooling rule.    *)
 
-(* ---- Keywords (56, case-insensitive) --------------------------- *)
+(* ---- Keywords (57, case-insensitive) --------------------------- *)
 
 keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'var'       | 'mutable'   | 'function'  | 'procedure'
@@ -94,7 +94,7 @@ keyword         = 'program'   | 'unit'      | 'uses'      | 'const'
                 | 'ok'        | 'error'     | 'some'      | 'none'
                 | 'try'       | 'public'
                 | 'go'        | 'dict'      | 'with'      | 'static' | 'property'
-                | 'event'     | 'nil' ;
+                | 'event'     | 'nil'       | 'channel' ;
 
 (* ---- Symbols --------------------------------------------------- *)
 
@@ -201,6 +201,7 @@ constraint_name     = 'Comparable' | 'Numeric' | 'Printable' ;
 (* docs/pascal/language/concurrency/README.md.                                  *)
 
 type_expr           = 'array' 'of' type_expr            (* array type     *)
+                    | 'channel' 'of' type_expr          (* channel type   *)
                     | 'dict' 'of' type_expr 'to' type_expr (* dict type    *)
                     | 'result' 'of' type_expr ',' type_expr  (* result type *)
                     | 'option' 'of' type_expr            (* option type    *)

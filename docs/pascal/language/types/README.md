@@ -14,6 +14,7 @@ Formal syntax: [`grammar.ebnf`](../../../specs/grammar.ebnf) (`type_decl`, `type
 | [Result and Option types](result-option-types.md) | `Result of T, E` and `Option of T` type forms |
 | [Enumerations](enums.md) | Plain, backed, and data-carrying enums |
 | [Arrays](arrays.md) | `array of T`, indexing, mutation |
+| [Channels](channels.md) | `channel of T`, bounded FIFO communication and closure |
 | [Dictionaries](dictionaries.md) | `dict of K to V` |
 | [Type aliases](type-aliases.md) | Semantic names for existing types |
 | [Generics](generics.md) | Type parameters on routines and record methods |

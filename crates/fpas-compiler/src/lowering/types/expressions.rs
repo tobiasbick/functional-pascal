@@ -74,6 +74,10 @@ impl TypeTable {
                 let element = self.type_expr_with_generics(element, generics)?;
                 self.intern_kind(IrType::Array(element), *span)
             }
+            TypeExpr::Channel(element, span) => {
+                let element = self.type_expr_with_generics(element, generics)?;
+                self.intern_kind(IrType::Channel(element), *span)
+            }
             TypeExpr::Dict {
                 key_type,
                 value_type,

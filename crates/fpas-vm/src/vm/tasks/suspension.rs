@@ -4,7 +4,7 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use fpas_bytecode::Register;
+use fpas_bytecode::{Register, Value};
 
 enum DebugClockMode {
     Realtime(Instant),
@@ -68,6 +68,19 @@ pub(in crate::vm) enum TaskSuspension {
     },
     /// Resume after all retained task results become available.
     WaitAll { ids: Vec<u64> },
+    /// Resume after a bounded channel accepts a value, closes, or is cancelled.
+    ChannelSend {
+        handle: u64,
+        value: Value,
+        token: Option<u64>,
+        destination: Option<Register>,
+    },
+    /// Resume after a bounded channel yields a value, closes, or is cancelled.
+    ChannelReceive {
+        handle: u64,
+        token: Option<u64>,
+        destination: Option<Register>,
+    },
     /// Resume after the debugger-clock deadline is reached.
     Sleep { deadline_millis: u64 },
 }
@@ -84,7 +97,10 @@ impl TaskSuspension {
     pub(in crate::vm) fn state(&self, clock: &DebugClock) -> TaskSuspensionState {
         match self {
             Self::Yield => TaskSuspensionState::Yielded,
-            Self::Wait { .. } | Self::WaitAll { .. } => TaskSuspensionState::Waiting,
+            Self::Wait { .. }
+            | Self::WaitAll { .. }
+            | Self::ChannelSend { .. }
+            | Self::ChannelReceive { .. } => TaskSuspensionState::Waiting,
             Self::Sleep { deadline_millis } => TaskSuspensionState::Sleeping {
                 remaining: Duration::from_millis(
                     deadline_millis.saturating_sub(clock.now_millis()),

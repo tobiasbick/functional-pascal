@@ -1,8 +1,8 @@
 # `Std.Task`
 
-Blocking helpers for **`task`** handles produced by the `go` expression and cooperative
-cancellation handles shared by tasks. For the `go` keyword, the `task` type, threading model, and
-fork-join patterns, see [Concurrency](../../language/concurrency/README.md).
+Blocking helpers for **`task`** handles produced by the `go` expression, cooperative cancellation,
+and typed bounded channels shared by tasks. For the `go` keyword, the `task` type, threading model,
+and fork-join patterns, see [Concurrency](../../language/concurrency/README.md).
 
 ```pascal
 program Example;
@@ -36,6 +36,12 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `GetCancellationToken(Source: CancellationSource): CancellationToken` | returns a token linked to the source |
 | function | `Cancel(Source: CancellationSource): boolean` | requests cancellation; true only for the first request |
 | function | `IsCancellationRequested(Token: CancellationToken): boolean` | reads the shared cancellation state |
+| function | `CreateChannel(Capacity: integer): channel of T` | creates a VM-owned bounded channel; capacity is `1..=1048576` |
+| function | `Send(Queue: channel of T; Value: T): result of boolean, string` | blocks while full; returns an error after close |
+| function | `SendWithCancellation(Queue: channel of T; Value: T; Token: CancellationToken): result of boolean, string` | send that also observes cancellation |
+| function | `Receive(Queue: channel of T): result of T, string` | blocks while empty and open |
+| function | `ReceiveWithCancellation(Queue: channel of T; Token: CancellationToken): result of T, string` | receive that also observes cancellation |
+| function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
 | procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
 
@@ -62,6 +68,46 @@ end
 ```
 
 Sources and tokens belong to the VM that created them. Their storage is released when that VM ends.
+
+---
+
+## Bounded channels
+
+`CreateChannel` creates a FIFO queue with fixed capacity. The declaration supplies the element type
+because capacity alone cannot infer `T`:
+
+```pascal
+var Messages: channel of string := CreateChannel(16)
+```
+
+`Send` waits until space is available. `Receive` waits until a value is available. Successful sends
+return `Ok(true)`; successful receives return `Ok(Value)`. Values are received in send order.
+
+```pascal
+case Send(Messages, 'ready') of
+  Ok(_): begin end;
+  Error(Message): panic(Message)
+end;
+
+case Receive(Messages) of
+  Ok(Message): WriteLn(Message);
+  Error(Message): panic(Message)
+end
+```
+
+`CloseChannel` is idempotent: the first close returns `true`, and later closes return `false`.
+Buffered values remain receivable after close. Once drained, `Receive` returns
+`Error('Channel is closed')`; `Send` returns that error immediately. Closing or VM shutdown wakes
+blocked senders and receivers.
+
+The cancellable variants additionally observe a `CancellationToken`. They return
+`Error('Channel send was cancelled')` or `Error('Channel receive was cancelled')`. Cancellation
+does not close the channel. If cancellation is already requested when an operation starts, the
+cancellation result takes precedence.
+
+Channel handles belong to their creating VM. A channel accepts only its declared element type, and
+task-bound values with mutable captures cannot cross the channel boundary. See
+[Channel types](../../language/types/channels.md).
 
 ---
 
@@ -103,6 +149,12 @@ An empty array completes immediately.
 - **Main-task teardown:** retained tasks still suspended in `Std.Time.Sleep` are completed with a shutdown diagnostic when the main task finishes. Wait for every required result before leaving the main task. See [Scheduling](../../language/concurrency/scheduling.md).
 - **Invalid cancellation handle:** sources and tokens must come from the current VM and be passed to
   the function matching their static type.
+- **Invalid channel capacity:** `CreateChannel` accepts only `1..=1048576`.
+- **Closed channel:** sends fail immediately; receives first drain buffered values and then fail.
+- **Cancelled channel operation:** only `SendWithCancellation` and `ReceiveWithCancellation`
+  observe their token, and cancellation leaves the channel open.
+- **Invalid channel handle:** channel handles must come from the current VM. Forged or foreign
+  opaque handles produce a runtime diagnostic.
 
 ## Implementation (contributors)
 
@@ -113,6 +165,7 @@ An empty array completes immediately.
 | Bytecode | [`instruction.rs`](../../../../crates/fpas-bytecode/src/instruction.rs), [`intrinsic/task.rs`](../../../../crates/fpas-bytecode/src/intrinsic/task.rs) |
 | VM | [`tasks/mod.rs`](../../../../crates/fpas-vm/src/vm/tasks/mod.rs), [`tasks/scheduler.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler.rs), [`tasks/state.rs`](../../../../crates/fpas-vm/src/vm/tasks/state.rs), [`shared/task_results.rs`](../../../../crates/fpas-vm/src/vm/shared/task_results.rs) |
 | Cancellation | [`cancellation/registry.rs`](../../../../crates/fpas-vm/src/vm/cancellation/registry.rs), [`tasks/cancellation.rs`](../../../../crates/fpas-vm/src/vm/tasks/cancellation.rs) |
+| Channels | [`channels/registry.rs`](../../../../crates/fpas-vm/src/vm/channels/registry.rs), [`tasks/channel.rs`](../../../../crates/fpas-vm/src/vm/tasks/channel.rs) |
 
 ## See also
 

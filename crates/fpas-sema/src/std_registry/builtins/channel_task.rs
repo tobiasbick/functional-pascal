@@ -4,7 +4,9 @@
 
 use crate::check::Checker;
 use crate::types::Ty;
-use fpas_diagnostics::codes::{SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT};
+use fpas_diagnostics::codes::{
+    SEMA_TASK_BOUND_CALLABLE, SEMA_TYPE_MISMATCH, SEMA_WRONG_ARGUMENT_COUNT,
+};
 use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
@@ -16,11 +18,139 @@ pub(super) fn check_channel_task_builtin_std_call(
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
+        s::STD_TASK_CREATE_CHANNEL => check_create_channel(c, args, span),
+        s::STD_TASK_SEND => check_send(c, args, span, false),
+        s::STD_TASK_SEND_WITH_CANCELLATION => check_send(c, args, span, true),
+        s::STD_TASK_RECEIVE => check_receive(c, args, span, false),
+        s::STD_TASK_RECEIVE_WITH_CANCELLATION => check_receive(c, args, span, true),
+        s::STD_TASK_CLOSE_CHANNEL => check_close_channel(c, args, span),
         s::STD_TASK_WAIT => check_task_wait(c, args, span),
         s::STD_TASK_WAIT_ALL => check_task_wait_all(c, args, span),
         _ => return None,
     };
     Some(ty)
+}
+
+fn check_create_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if !expect_args(c, s::STD_TASK_CREATE_CHANNEL, args, 1, span) {
+        return Ty::Error;
+    }
+    expect_type(c, &args[0], &Ty::Integer, "channel capacity");
+    Ty::Channel(Box::new(Ty::Error))
+}
+
+fn check_send(c: &mut Checker, args: &[Expr], span: Span, cancellable: bool) -> Ty {
+    let name = if cancellable {
+        s::STD_TASK_SEND_WITH_CANCELLATION
+    } else {
+        s::STD_TASK_SEND
+    };
+    let expected = if cancellable { 3 } else { 2 };
+    if !expect_args(c, name, args, expected, span) {
+        return Ty::Error;
+    }
+
+    let channel = expect_channel_arg(c, &args[0]);
+    let value = c.check_expr(&args[1]);
+    if c.expr_is_task_bound(crate::expr_lookup_key(&args[1])) {
+        c.error_with_code(
+            SEMA_TASK_BOUND_CALLABLE,
+            "Cannot send a task-bound value through a channel",
+            "Mutable captures make a value task-bound. Send immutable data or a callable with immutable captures instead.",
+            args[1].span(),
+        );
+    }
+    if let Some(element) = &channel
+        && !element.compatible_with(&value)
+    {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("Type mismatch in channel send: expected `{element}`, found `{value}`"),
+            "Send a value matching the channel element type.",
+            args[1].span(),
+        );
+    }
+    if cancellable {
+        expect_cancellation_token(c, &args[2]);
+    }
+    channel_result(Ty::Boolean)
+}
+
+fn check_receive(c: &mut Checker, args: &[Expr], span: Span, cancellable: bool) -> Ty {
+    let name = if cancellable {
+        s::STD_TASK_RECEIVE_WITH_CANCELLATION
+    } else {
+        s::STD_TASK_RECEIVE
+    };
+    let expected = if cancellable { 2 } else { 1 };
+    if !expect_args(c, name, args, expected, span) {
+        return Ty::Error;
+    }
+    let element = expect_channel_arg(c, &args[0]).unwrap_or(Ty::Error);
+    if cancellable {
+        expect_cancellation_token(c, &args[1]);
+    }
+    channel_result(element)
+}
+
+fn check_close_channel(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
+    if !expect_args(c, s::STD_TASK_CLOSE_CHANNEL, args, 1, span) {
+        return Ty::Error;
+    }
+    expect_channel_arg(c, &args[0]);
+    Ty::Boolean
+}
+
+fn channel_result(value: Ty) -> Ty {
+    Ty::Result(Box::new(value), Box::new(Ty::String))
+}
+
+fn expect_channel_arg(c: &mut Checker, expr: &Expr) -> Option<Ty> {
+    match c.check_expr(expr) {
+        Ty::Channel(inner) => Some(*inner),
+        Ty::Error => Some(Ty::Error),
+        other => {
+            c.error_with_code(
+                SEMA_TYPE_MISMATCH,
+                format!("Type mismatch in channel operation: expected a channel, found `{other}`"),
+                "Pass a value declared with `channel of T`.",
+                expr.span(),
+            );
+            None
+        }
+    }
+}
+
+fn expect_cancellation_token(c: &mut Checker, expr: &Expr) {
+    let actual = c.check_expr(expr);
+    let valid = match &actual {
+        Ty::Record(record) => record
+            .name
+            .eq_ignore_ascii_case(s::STD_TASK_CANCELLATION_TOKEN),
+        Ty::Named(name) => name.eq_ignore_ascii_case(s::STD_TASK_CANCELLATION_TOKEN),
+        Ty::Error => true,
+        _ => false,
+    };
+    if !valid {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("Type mismatch in cancellable channel operation: expected `Std.Task.CancellationToken`, found `{actual}`"),
+            "Pass the token returned by `Std.Task.GetCancellationToken`.",
+            expr.span(),
+        );
+    }
+}
+
+fn expect_type(c: &mut Checker, expr: &Expr, expected: &Ty, context: &str) {
+    let actual = c.check_expr(expr);
+    if !expected.compatible_with(&actual) {
+        c.error_with_code(
+            SEMA_TYPE_MISMATCH,
+            format!("Type mismatch in {context}: expected `{expected}`, found `{actual}`"),
+            format!("Pass a value of type `{expected}`."),
+            expr.span(),
+        );
+    }
 }
 
 fn expect_args(c: &mut Checker, name: &str, args: &[Expr], expected: usize, span: Span) -> bool {

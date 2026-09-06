@@ -148,6 +148,8 @@ pub enum InterfaceType {
     Unit,
     /// Homogeneous array.
     Array(Box<Self>),
+    /// Bounded FIFO channel element type.
+    Channel(Box<Self>),
     /// Dictionary key and value types.
     Dictionary(Box<Self>, Box<Self>),
     /// Optional value.

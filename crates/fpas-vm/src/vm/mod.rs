@@ -5,6 +5,7 @@ mod callback;
 mod callback_call;
 mod calls;
 mod cancellation;
+mod channels;
 mod debug;
 mod diagnostics;
 mod dispatch;
@@ -291,7 +292,7 @@ impl Vm {
             } else {
                 scheduler.finish_main();
             }
-            self.hosted.shutdown_network();
+            self.hosted.shutdown_blocking_operations();
             let mut pool_error = None;
             for handle in handles {
                 match handle.join() {
@@ -359,9 +360,9 @@ pub struct ShutdownHandle {
 }
 
 impl ShutdownHandle {
-    /// Request cancellation and interrupt blocking hosted network operations.
+    /// Request cancellation and interrupt blocking hosted operations.
     pub fn shutdown(&self) {
         self.scheduler.request_cancel();
-        self.hosted.shutdown_network();
+        self.hosted.shutdown_blocking_operations();
     }
 }

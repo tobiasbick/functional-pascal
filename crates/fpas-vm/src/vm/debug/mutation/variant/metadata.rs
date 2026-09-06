@@ -222,6 +222,10 @@ pub(super) fn format_debug_type(
             "task of {}",
             format_debug_type(executable, *inner)?
         )),
+        Some(DebugType::Channel(inner)) => Ok(format!(
+            "channel of {}",
+            format_debug_type(executable, *inner)?
+        )),
         None => Err(unsupported_metadata()),
     }
 }

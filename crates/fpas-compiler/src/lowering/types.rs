@@ -108,6 +108,7 @@ impl TypeTable {
     pub fn intern(&mut self, ty: &Ty, line: u32, column: u32) -> Result<TypeId, CompileError> {
         let kind = match ty {
             Ty::Array(element) => IrType::Array(self.intern(element, line, column)?),
+            Ty::Channel(element) => IrType::Channel(self.intern(element, line, column)?),
             Ty::Dict(key, value) => IrType::Dictionary {
                 key: self.intern(key, line, column)?,
                 value: self.intern(value, line, column)?,

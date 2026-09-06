@@ -13,6 +13,10 @@ pub enum TypeExpr {
     },
     /// An `array of T` type, together with its source span.
     Array(Box<TypeExpr>, Span),
+    /// A `channel of T` type, together with its source span.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/channels.md`
+    Channel(Box<TypeExpr>, Span),
     /// A function type with parameter and return types.
     FunctionType {
         /// The formal parameter declarations.

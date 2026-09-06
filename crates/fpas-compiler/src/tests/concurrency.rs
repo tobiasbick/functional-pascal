@@ -195,3 +195,125 @@ end.";
     let error = run_program(source).expect_err("runtime must reject task-bound closure");
     assert!(error.message.contains("task-bound"));
 }
+
+#[test]
+fn bounded_channels_send_receive_close_and_drain_fifo() {
+    assert_succeeds(
+        "\
+program BoundedChannels;
+uses Std.Task;
+
+function Produce(Messages: channel of integer): boolean;
+begin
+  case Send(Messages, 20) of
+    Ok(_): begin end;
+    Error(Message): panic(Message)
+  end;
+  case Send(Messages, 22) of
+    Ok(_): begin end;
+    Error(Message): panic(Message)
+  end;
+  return CloseChannel(Messages)
+end;
+
+function Take(Messages: channel of integer): integer;
+begin
+  case Receive(Messages) of
+    Ok(Value): return Value;
+    Error(Message): panic(Message)
+  end
+end;
+
+begin
+  var Messages: channel of integer := CreateChannel(1);
+  var Producer: task := go Produce(Messages);
+  if Take(Messages) <> 20 then panic('first channel value was not FIFO');
+  if Take(Messages) <> 22 then panic('second channel value was not FIFO');
+  if not Wait(Producer) then panic('channel close was not first');
+  case Receive(Messages) of
+    Ok(_): panic('closed channel produced an extra value');
+    Error(Message):
+      if Message <> 'Channel is closed' then panic(Message)
+  end;
+  if CloseChannel(Messages) then panic('channel close was not idempotent')
+end.",
+    );
+}
+
+#[test]
+fn channel_creation_uses_argument_and_return_type_contexts() {
+    assert_succeeds(
+        "\
+program ContextualChannels;
+uses Std.Task;
+
+function MakeChannel(): channel of integer;
+begin
+  return CreateChannel(1)
+end;
+
+function CloseChannelArgument(Messages: channel of integer): boolean;
+begin
+  return CloseChannel(Messages)
+end;
+
+begin
+  if not CloseChannelArgument(CreateChannel(1)) then
+    panic('direct channel argument was not typed');
+  var Messages: channel of integer := MakeChannel();
+  if not CloseChannel(Messages) then panic('returned channel was not typed')
+end.",
+    );
+}
+
+#[test]
+fn cancellable_channel_send_and_receive_report_distinct_errors() {
+    assert_succeeds(
+        "\
+program CancellableChannels;
+uses Std.Task, Std.Time;
+
+function BlockedSend(
+  Messages: channel of integer;
+  Token: CancellationToken
+): string;
+begin
+  case SendWithCancellation(Messages, 2, Token) of
+    Ok(_): return 'sent';
+    Error(Message): return Message
+  end
+end;
+
+function BlockedReceive(
+  Messages: channel of integer;
+  Token: CancellationToken
+): string;
+begin
+  case ReceiveWithCancellation(Messages, Token) of
+    Ok(_): return 'received';
+    Error(Message): return Message
+  end
+end;
+
+begin
+  var Full: channel of integer := CreateChannel(1);
+  case Send(Full, 1) of
+    Ok(_): begin end;
+    Error(Message): panic(Message)
+  end;
+  var SendSource: CancellationSource := CreateCancellationSource();
+  var Sending: task := go BlockedSend(Full, GetCancellationToken(SendSource));
+  Sleep(20);
+  Cancel(SendSource);
+  if Wait(Sending) <> 'Channel send was cancelled' then panic('send cancellation mismatch');
+
+  var Empty: channel of integer := CreateChannel(1);
+  var ReceiveSource: CancellationSource := CreateCancellationSource();
+  var Receiving: task := go BlockedReceive(Empty, GetCancellationToken(ReceiveSource));
+  Sleep(20);
+  Cancel(ReceiveSource);
+  if Wait(Receiving) <> 'Channel receive was cancelled' then
+    panic('receive cancellation mismatch')
+end.",
+    );
+}

@@ -17,6 +17,13 @@ impl Parser {
                 let inner = self.parse_type_expr();
                 TypeExpr::Array(Box::new(inner), self.span_from(start))
             }
+            Token::Channel => {
+                let start = self.current_span();
+                self.advance();
+                self.expect(&Token::Of);
+                let inner = self.parse_type_expr();
+                TypeExpr::Channel(Box::new(inner), self.span_from(start))
+            }
             Token::Function => {
                 let start = self.current_span();
                 self.advance();

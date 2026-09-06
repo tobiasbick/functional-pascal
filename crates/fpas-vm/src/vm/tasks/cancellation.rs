@@ -52,7 +52,14 @@ impl Worker {
                         .map_err(|message| self.cancellation_error(message))?,
                 )
             }
-            TaskIntrinsic::Wait | TaskIntrinsic::WaitAll => return Ok(None),
+            TaskIntrinsic::CreateChannel
+            | TaskIntrinsic::Send
+            | TaskIntrinsic::SendWithCancellation
+            | TaskIntrinsic::Receive
+            | TaskIntrinsic::ReceiveWithCancellation
+            | TaskIntrinsic::CloseChannel
+            | TaskIntrinsic::Wait
+            | TaskIntrinsic::WaitAll => return Ok(None),
         };
         Ok(Some(Some(value)))
     }

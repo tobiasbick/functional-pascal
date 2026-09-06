@@ -52,7 +52,7 @@ intrinsic API or handbook change with
 | Collections | [collections/](collections/README.md) | Array, Dict |
 | Numeric | [numeric/](numeric/README.md) | Math, Random |
 | Result / Option | [result/](result/README.md) | Result, Option helpers |
-| Concurrency | [concurrency/](concurrency/README.md) | Task (`Wait`, `WaitAll`) |
+| Concurrency | [concurrency/](concurrency/README.md) | Task (cooperative cancellation, `Wait`, `WaitAll`) |
 | Terminal UI | [tui/](tui/README.md) | MVU element trees, deterministic headless routing and snapshots |
 | Testing | [testing/](testing/README.md) | Std.Test assertions |
 | Version | [version.md](version.md) | Compiler and library version constants |

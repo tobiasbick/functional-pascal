@@ -89,6 +89,33 @@ impl Worker {
                         .map(Value::OpaqueHandle),
                 )
             }
+            NetIntrinsic::AcceptWithCancellation => {
+                require_count(self, arguments, 2)?;
+                let handle = listener(self, &arguments[0])?;
+                let token = cancellation_token(self, &arguments[1])?;
+                result(
+                    self.hosted
+                        .cancellations
+                        .is_cancelled(token)
+                        .and_then(|cancelled| {
+                            if cancelled {
+                                return Err("Network accept cancelled".to_string());
+                            }
+                            self.hosted
+                                .network_listeners
+                                .accept_with_cancellation(handle, || {
+                                    self.hosted
+                                        .cancellations
+                                        .is_cancelled(token)
+                                        .unwrap_or(true)
+                                })
+                        })
+                        .and_then(|transport| {
+                            self.hosted.network_connections.insert_accepted(transport)
+                        })
+                        .map(Value::OpaqueHandle),
+                )
+            }
             NetIntrinsic::CloseListener => {
                 require_count(self, arguments, 1)?;
                 let handle = listener(self, &arguments[0])?;
@@ -209,6 +236,18 @@ fn listener(worker: &Worker, value: &Value) -> Result<u64, VmError> {
     match value {
         Value::OpaqueHandle(handle) => Ok(*handle),
         actual => Err(type_error(worker, "Listener", "Std.Net.Listener", actual)),
+    }
+}
+
+fn cancellation_token(worker: &Worker, value: &Value) -> Result<u64, VmError> {
+    match value {
+        Value::OpaqueHandle(handle) => Ok(*handle),
+        actual => Err(type_error(
+            worker,
+            "Token",
+            "Std.Task.CancellationToken",
+            actual,
+        )),
     }
 }
 

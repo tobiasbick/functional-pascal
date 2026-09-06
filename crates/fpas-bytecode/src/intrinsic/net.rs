@@ -32,5 +32,7 @@ pub enum NetIntrinsic {
     /// `Std.Net.ListenTls(Host, Port, CertificatePath, PrivateKeyPath,
     /// HandshakeTimeoutMillis)` - bind one TLS listener.
     ListenTls = 527,
+    /// `Std.Net.AcceptWithCancellation(Listener, Token)` - accept until cancellation.
+    AcceptWithCancellation = 536,
 }
 }

@@ -12,6 +12,11 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         type_registration::register_record_type(checker, s::STD_NET_CONNECTION, Vec::new());
     let listener =
         type_registration::register_record_type(checker, s::STD_NET_LISTENER, Vec::new());
+    let cancellation_token = type_registration::register_record_type(
+        checker,
+        s::STD_TASK_CANCELLATION_TOKEN,
+        Vec::new(),
+    );
     let error = Box::new(Ty::String);
 
     define_func(
@@ -56,6 +61,15 @@ pub(super) fn register_std_net(checker: &mut Checker) {
         checker,
         s::STD_NET_ACCEPT,
         vec![p("Listener", listener.clone(), false)],
+        Ty::Result(Box::new(connection.clone()), error.clone()),
+    );
+    define_func(
+        checker,
+        s::STD_NET_ACCEPT_WITH_CANCELLATION,
+        vec![
+            p("Listener", listener.clone(), false),
+            p("Token", cancellation_token, false),
+        ],
         Ty::Result(Box::new(connection.clone()), error.clone()),
     );
     define_func(

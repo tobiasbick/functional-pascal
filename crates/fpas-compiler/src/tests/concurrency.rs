@@ -105,6 +105,53 @@ end.",
 }
 
 #[test]
+fn cancellation_token_interrupts_network_accept_end_to_end() {
+    let reservation = std::net::TcpListener::bind("127.0.0.1:0").expect("reserve local port");
+    let port = reservation.local_addr().expect("reserved address").port();
+    drop(reservation);
+    let source = format!(
+        "\
+program CancellableAccept;
+
+uses Std.Net, Std.Task, Std.Time;
+
+function WaitForCancellation(
+  ListenerValue: Std.Net.Listener;
+  Token: Std.Task.CancellationToken
+): string;
+begin
+  case Std.Net.AcceptWithCancellation(ListenerValue, Token) of
+    Ok(Connection):
+    begin
+      Std.Net.Close(Connection);
+      return 'accepted'
+    end;
+    Error(Message): return Message
+  end
+end;
+
+begin
+  case Std.Net.Listen('127.0.0.1', {port}) of
+    Ok(ListenerValue):
+    begin
+      var Source: Std.Task.CancellationSource := Std.Task.CreateCancellationSource();
+      var Token: Std.Task.CancellationToken := Std.Task.GetCancellationToken(Source);
+      var Waiting: task := go WaitForCancellation(ListenerValue, Token);
+      Std.Time.Sleep(50);
+      if not Std.Task.Cancel(Source) then panic('first cancellation did not change state');
+      if Std.Task.Wait(Waiting) <> 'Network accept cancelled' then
+        panic('accept did not report cancellation');
+      Std.Net.CloseListener(ListenerValue)
+    end;
+    Error(Message): panic(Message)
+  end
+end."
+    );
+
+    assert_succeeds(&source);
+}
+
+#[test]
 fn wait_all_keeps_register_task_results_available() {
     assert_succeeds(
         "\

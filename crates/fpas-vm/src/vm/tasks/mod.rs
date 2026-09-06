@@ -3,6 +3,7 @@
 //! **Documentation:** `docs/pascal/language/concurrency/README.md`,
 //! `docs/pascal/language/concurrency/scheduling.md`.
 
+mod cancellation;
 pub(super) mod pool;
 mod scheduler;
 mod state;
@@ -168,6 +169,9 @@ impl Worker {
         arguments: &[Value],
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        if let Some(value) = self.cancellation_intrinsic(intrinsic, arguments)? {
+            return Ok(Some(value));
+        }
         if self.debug_tasks {
             return self.debug_task_intrinsic(intrinsic, arguments, destination);
         }

@@ -25,6 +25,7 @@ end
 | function | `Listen(Host: string; Port: integer): Result of Listener, string` | binds one TCP listener |
 | function | `ListenTls(Host: string; Port: integer; CertificatePath: string; PrivateKeyPath: string; HandshakeTimeoutMillis: integer): Result of Listener, string` | loads PEM credentials and binds one TLS listener |
 | function | `Accept(Listener): Result of Connection, string` | blocks until one client connects |
+| function | `AcceptWithCancellation(Listener; Token: Std.Task.CancellationToken): Result of Connection, string` | blocks until one client connects or cancellation is requested |
 | function | `CloseListener(Listener): Result of boolean, string` | invalidates the listener handle |
 | function | `SetTimeout(Connection; TimeoutMillis: integer): Result of boolean, string` | sets read/write timeout; zero disables it |
 | function | `Read(Connection; MaxBytes: integer): Result of array of integer, string` | empty array means EOF |
@@ -42,11 +43,16 @@ The connect timeout bounds TCP establishment and, for `ConnectTls`, the TLS hand
 PEM private key, then binds the requested address. Its positive handshake timeout is limited to five
 minutes. Client certificates and multiple certificates selected through SNI are not supported.
 
-`Accept` returns the same `Connection` type for TCP and TLS listeners, so `SetTimeout`, `Read`,
-`Write`, and `Close` apply to both. A TLS listener completes the handshake before returning and
-discards failed or timed-out handshakes while waiting for a valid client. Listener handles are
-closed separately with `CloseListener`. Both `Accept` and connection I/O block the VM worker that
-executes them.
+`Accept` and `AcceptWithCancellation` return the same `Connection` type for TCP and TLS listeners,
+so `SetTimeout`, `Read`, `Write`, and `Close` apply to both. A TLS listener completes the handshake
+before returning and discards failed or timed-out handshakes while waiting for a valid client.
+Listener handles are closed separately with `CloseListener`. Both accept functions and connection
+I/O block the VM worker that executes them.
+
+`AcceptWithCancellation` observes a `Std.Task.CancellationToken`. If cancellation wins before a
+connection is returned, the function returns `Error('Network accept cancelled')`. It leaves the
+listener open, so another task may accept from it later. `Accept` remains available when the caller
+does not need application-controlled cancellation.
 
 Byte values must be in `0..255`. A single `Read` or `Write` is limited to 1 MiB. Timeouts are limited
 to `300000` milliseconds; `Connect` and `ConnectTls` require a positive timeout. Client and listener
@@ -66,6 +72,7 @@ FPAS code runs with the host process's network permissions. `Std.Net` does not s
 |---------|----------|
 | VM connection registry | [`connections.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/connections.rs) |
 | VM listener registry | [`listeners.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/listeners.rs) |
+| Cancellation registry | [`cancellation/registry.rs`](../../../../crates/fpas-vm/src/vm/cancellation/registry.rs) |
 | TCP/TLS transport | [`transport.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/transport.rs) |
 | TLS client verification | [`client.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/tls/client.rs) |
 | TLS server credentials and handshake | [`server.rs`](../../../../crates/fpas-vm/src/vm/hosted/net/tls/server.rs) |

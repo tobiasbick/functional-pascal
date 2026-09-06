@@ -9,6 +9,7 @@ std_symbol!(STD_NET_CONNECT_TLS = std_net!("ConnectTls"));
 std_symbol!(STD_NET_LISTEN = std_net!("Listen"));
 std_symbol!(STD_NET_LISTEN_TLS = std_net!("ListenTls"));
 std_symbol!(STD_NET_ACCEPT = std_net!("Accept"));
+std_symbol!(STD_NET_ACCEPT_WITH_CANCELLATION = std_net!("AcceptWithCancellation"));
 std_symbol!(STD_NET_CLOSE_LISTENER = std_net!("CloseListener"));
 std_symbol!(STD_NET_SET_TIMEOUT = std_net!("SetTimeout"));
 std_symbol!(STD_NET_READ = std_net!("Read"));
@@ -23,6 +24,7 @@ pub(in crate::std_units) const STD_NET_SYMBOLS: &[&str] = &[
     STD_NET_LISTEN,
     STD_NET_LISTEN_TLS,
     STD_NET_ACCEPT,
+    STD_NET_ACCEPT_WITH_CANCELLATION,
     STD_NET_CLOSE_LISTENER,
     STD_NET_SET_TIMEOUT,
     STD_NET_READ,

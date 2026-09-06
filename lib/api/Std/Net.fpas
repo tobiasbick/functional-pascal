@@ -25,6 +25,16 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Blocks until one client connects or cancellation is requested.
+//
+// Parameters:
+// - `Listener`: `Std.Net.Listener` input value used by `AcceptWithCancellation`.
+// - `Token`: `Std.Task.CancellationToken` input value used by `AcceptWithCancellation`.
+public function AcceptWithCancellation(Listener: Std.Net.Listener; Token: Std.Task.CancellationToken): result of Std.Net.Connection, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Invalidates the handle.
 //
 // Parameters:

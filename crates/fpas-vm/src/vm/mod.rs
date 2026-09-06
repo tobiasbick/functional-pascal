@@ -4,6 +4,7 @@ mod access;
 mod callback;
 mod callback_call;
 mod calls;
+mod cancellation;
 mod debug;
 mod diagnostics;
 mod dispatch;

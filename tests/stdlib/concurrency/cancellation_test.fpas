@@ -1,0 +1,12 @@
+program CancellationTest;
+
+uses Std.Task, Std.Test;
+
+begin
+  var Source: CancellationSource := CreateCancellationSource();
+  var Token: CancellationToken := GetCancellationToken(Source);
+  AssertFalse(IsCancellationRequested(Token));
+  AssertTrue(Cancel(Source));
+  AssertTrue(IsCancellationRequested(Token));
+  AssertFalse(Cancel(Source))
+end.

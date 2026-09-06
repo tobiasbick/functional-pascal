@@ -6,6 +6,23 @@ Fork-join tasks are sufficient when all work starts together and the caller wait
 Long-running applications also need bounded communication, cooperative cancellation, multi-source
 waiting, and explicit ownership of child-task failure.
 
+## Progress
+
+### 2026-09-06 — cooperative cancellation foundation
+
+- Implemented VM-owned `CancellationSource` and clonable `CancellationToken` handles in `Std.Task`.
+- Implemented idempotent `Cancel` and non-blocking `IsCancellationRequested`.
+- Added `Std.Net.AcceptWithCancellation` as the first end-to-end hosted consumer. Cancellation
+  returns a distinct documented error and does not close the listener.
+- Added registry, blocked-accept, and FPAS end-to-end regressions.
+- Verified with `cargo build`, the full Rust workspace test suite, strict Clippy for the affected
+  crates, and the FPAS suite (405 passed, 1 skipped). Whole-workspace strict Clippy remains blocked
+  by pre-existing `unwrap` calls in an unrelated `fpas-build` integration test.
+- Remaining: deadline-aware waits, integration with other blocking hosted operations, bounded
+  channels, multi-wait, task groups, and supervision.
+- Performance benchmarks were intentionally not used for this correctness slice because another VM
+  was active on the host; no performance claim is recorded.
+
 ## Proposed scope
 
 - Typed bounded channels with send, receive, close, and documented end-of-stream behavior.

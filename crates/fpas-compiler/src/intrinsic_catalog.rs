@@ -47,6 +47,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 Listen,
                 ListenTls,
                 Accept,
+                AcceptWithCancellation,
                 CloseListener,
                 SetTimeout,
                 Read,
@@ -119,7 +120,19 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             OptionIntrinsic,
             [Unwrap, UnwrapOr, IsSome, IsNone, Map, AndThen, OrElse]
         ),
-        "Task" => family!(member, Task, TaskIntrinsic, [Wait, WaitAll]),
+        "Task" => family!(
+            member,
+            Task,
+            TaskIntrinsic,
+            [
+                Wait,
+                WaitAll,
+                CreateCancellationSource,
+                GetCancellationToken,
+                Cancel,
+                IsCancellationRequested,
+            ]
+        ),
         "Time" => family!(
             member,
             Time,

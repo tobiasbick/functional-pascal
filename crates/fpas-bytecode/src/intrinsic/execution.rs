@@ -121,7 +121,7 @@ mod tests {
     }
 
     #[test]
-    fn only_task_wait_and_sleep_require_mutable_dispatch() {
+    fn task_intrinsics_and_sleep_require_mutable_dispatch() {
         let actual = Intrinsic::all()
             .filter(|intrinsic| intrinsic.requires_mutable_dispatch())
             .collect::<Vec<_>>();
@@ -130,6 +130,10 @@ mod tests {
             vec![
                 Intrinsic::Task(TaskIntrinsic::Wait),
                 Intrinsic::Task(TaskIntrinsic::WaitAll),
+                Intrinsic::Task(TaskIntrinsic::CreateCancellationSource),
+                Intrinsic::Task(TaskIntrinsic::GetCancellationToken),
+                Intrinsic::Task(TaskIntrinsic::Cancel),
+                Intrinsic::Task(TaskIntrinsic::IsCancellationRequested),
                 Intrinsic::Time(TimeIntrinsic::Sleep),
             ]
         );

@@ -1,0 +1,12 @@
+// Keeps cancellable accept type-checked without opening a network listener.
+program NetCancellationSignatureTest;
+
+uses Std.Net, Std.Task;
+
+function AcceptWithCancellationSignatureOnly(ListenerValue: Listener; Token: CancellationToken): result of Connection, string;
+begin
+  return AcceptWithCancellation(ListenerValue, Token)
+end;
+
+begin
+end.

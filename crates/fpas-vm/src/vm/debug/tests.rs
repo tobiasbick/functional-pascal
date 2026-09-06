@@ -464,5 +464,6 @@ mod uninitialized_assignment;
 mod variant_construction;
 mod variant_replacement;
 mod variant_transition;
+mod wait_any;
 
 use inspection_fixture::inspection_executable;

@@ -9,6 +9,7 @@ pub(super) mod pool;
 mod scheduler;
 mod state;
 mod suspension;
+mod wait_any;
 
 pub(super) use scheduler::{RetainedResultReplacement, TaskScheduler};
 pub(super) use state::TaskState;
@@ -164,6 +165,7 @@ impl Worker {
         }
     }
 
+    /// Dispatch task-aware operations, preserving debugger suspension when enabled.
     pub(super) fn task_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
@@ -180,6 +182,7 @@ impl Worker {
             return self.debug_task_intrinsic(intrinsic, arguments, destination);
         }
         match intrinsic {
+            Intrinsic::Task(TaskIntrinsic::WaitAny) => self.wait_any(arguments, destination),
             Intrinsic::Task(TaskIntrinsic::Wait) => {
                 let [Value::Task(id)] = arguments else {
                     return Err(
@@ -257,6 +260,7 @@ impl Worker {
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
         match intrinsic {
+            Intrinsic::Task(TaskIntrinsic::WaitAny) => self.wait_any(arguments, destination),
             Intrinsic::Task(TaskIntrinsic::Wait) => {
                 let [Value::Task(id)] = arguments else {
                     return Err(
@@ -323,6 +327,7 @@ impl Worker {
         }
     }
 
+    /// Resume a debugger task when its suspended operation becomes ready.
     pub(in crate::vm) fn poll_debug_suspension(&mut self) -> Result<bool, VmError> {
         let Some(suspension) = self.task_suspension.take() else {
             self.suspend_requested = false;
@@ -330,6 +335,9 @@ impl Worker {
         };
         let ready = match suspension {
             TaskSuspension::Yield => Ok(true),
+            TaskSuspension::WaitAny { ids, destination } => {
+                self.poll_debug_wait_any(ids, destination)
+            }
             TaskSuspension::Wait { id, destination } => {
                 match self.scheduler_ref()?.poll_result(id) {
                     TaskResultPoll::Available(value) => {

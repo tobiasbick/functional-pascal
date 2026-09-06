@@ -8,6 +8,38 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
+### 2026-09-06 — task-only WaitAny completion barrier
+
+- Implemented `Std.Task.WaitAny(Tasks): integer`: a bounded, non-consuming completion barrier
+  returning the lowest ready input index. Task-array typing, `Wait`, and `WaitAll` are unchanged.
+- All identities are validated before failure propagation or success selection. Duplicate handles
+  and consumed successful results retain their input positions; losing tasks are not cancelled.
+- Extracted retained-result polling into `scheduler/result_polling.rs`. Added a condition-variable
+  wait that also returns for queued work, synchronized with enqueue notification to avoid losing
+  the transition from predicate inspection to sleep. No per-input worker or registration is created.
+- Added explicit debugger suspension with the same selection policy, scheduler race/cleanup
+  regressions, semantic checks, and end-to-end compiler/runtime tests including a single worker.
+- Updated the current Task reference and regenerated editor declarations. Formatting, workspace
+  build, full workspace tests (including bundled FPAS suites), all twelve new regressions, and
+  strict Clippy for every affected crate passed. Documentation links and the diff were checked.
+  This correctness slice makes no performance claim.
+- Next: timeout and cancellation variants; mixed-source channel operations remain deferred until
+  typed value transfer and atomic winner ownership are specified.
+
+### 2026-09-06 — multi-wait contract and implementation sequence
+
+- Inspected retained-task polling, blocking channel ownership, and debugger suspension. These use
+  distinct state paths; combining blocking receives in helper tasks could consume losing values.
+- Added the [multi-wait design](multi-wait.md): implement a non-consuming task-only `WaitAny`
+  barrier first, then deadlines/cancellation, then atomic mixed-source operations after their
+  typed value-transfer and registration-cleanup contract is settled.
+- Specified winner ordering, invalid-handle/failure precedence, consumed results, input bounds,
+  debugger behavior, source ownership, file layout, and acceptance tests. Existing task typing,
+  `Wait`, and `WaitAll` remain unchanged; no language extension is selected.
+- This step changes future documentation only. No new API or runtime behavior is implemented;
+  current docs, generated declarations, and tests remain unchanged. Checked links and the diff.
+- Next implementation: the task-only completion barrier described in the linked design.
+
 ### 2026-09-06 — OS resolver retained, cancellable TCP attempts
 
 - Selected the investigation's recommendation after the user delegated the choice: retain OS

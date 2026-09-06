@@ -63,7 +63,8 @@ impl Worker {
             | TaskIntrinsic::ReceiveWithTimeout
             | TaskIntrinsic::CloseChannel
             | TaskIntrinsic::Wait
-            | TaskIntrinsic::WaitAll => return Ok(None),
+            | TaskIntrinsic::WaitAll
+            | TaskIntrinsic::WaitAny => return Ok(None),
         };
         Ok(Some(Some(value)))
     }

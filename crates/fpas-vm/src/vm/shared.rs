@@ -3,5 +3,5 @@
 mod task_results;
 mod timers;
 
-pub(crate) use task_results::{TaskBatchPoll, TaskResultPoll, TaskResultState};
+pub(crate) use task_results::{TaskAnyPoll, TaskBatchPoll, TaskResultPoll, TaskResultState};
 pub(crate) use timers::TaskTimers;

@@ -48,6 +48,7 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `CloseChannel(Queue: channel of T): boolean` | closes and wakes waiters; true only for the first close |
 | function | `Wait(Handle: task): T` | blocks until the task finishes; **consumes** the handle’s result once |
 | procedure | `WaitAll(Tasks: array of task)` | blocks until every task has completed; does **not** consume results — you may still `Wait` each handle afterward |
+| function | `WaitAny(Tasks: array of task): integer` | returns the lowest completed input index without consuming results |
 
 ---
 
@@ -156,10 +157,39 @@ An empty array completes immediately.
 
 ---
 
+## `function WaitAny(Tasks: array of task): integer`
+
+Waits for at least one successful task completion and returns its zero-based input position.
+The array must contain between 1 and 1,048,576 retained task handles. It follows the same
+task-array typing rules as `WaitAll`; duplicate handles are allowed.
+
+The runtime validates every identity before selecting a result. Invalid identities take precedence
+over task failures; visible failures take precedence over successful completion. Among failures,
+the first in input order is propagated with its original diagnostic. Among successful completions,
+the lowest input position wins. This ordering describes one synchronized observation, not the
+physical order in which workers finished, and does not promise fairness.
+
+`WaitAny` does not consume results or cancel losing tasks. A successful result already consumed
+by `Wait` still counts as complete, as with `WaitAll`; waiting for its value again remains an error.
+Existing runtime-wide worker-failure handling remains active.
+
+```pascal
+var First: integer := WaitAny([Ta, Tb]);
+// Both results still belong to their task handles.
+WaitAll([Ta, Tb]);
+Wait(Ta);
+Wait(Tb)
+```
+
+The worker can help queued tasks while waiting; helping may delay its next completion observation.
+There is no per-input helper thread and no busy polling. Debugger execution suspends cooperatively.
+VM shutdown releases pending waits through the existing task-failure path.
+
 ## Runtime errors
 
 - **`Wait` after the result was already taken:** wait each task handle at most once for its return value (see VM hint: do not double-await the same completion).
-- **Unknown or detached task handle:** `Wait` and `WaitAll` accept only handles returned by retained `go` expressions in the current VM. Forged handles and statement-form detached tasks produce an invalid-task diagnostic instead of waiting indefinitely.
+- **Unknown or detached task handle:** `Wait`, `WaitAll`, and `WaitAny` accept only handles returned by retained `go` expressions in the current VM. Forged handles and statement-form detached tasks produce an invalid-task diagnostic instead of waiting indefinitely.
+- **Invalid wait-any size:** `WaitAny` requires between 1 and 1,048,576 task handles.
 - **Task failure:** `Wait` and `WaitAll` propagate the spawned task's original diagnostic, including its code and source location. The runtime also enters its **failure** path so other spawned work can stop cooperatively. Fix the reported fault in the spawned task.
 - **Main-task teardown:** retained tasks still suspended in `Std.Time.Sleep` are completed with a shutdown diagnostic when the main task finishes. Wait for every required result before leaving the main task. See [Scheduling](../../language/concurrency/scheduling.md).
 - **Invalid cancellation handle:** sources and tokens must come from the current VM and be passed to
@@ -184,6 +214,7 @@ An empty array completes immediately.
 | VM | [`tasks/mod.rs`](../../../../crates/fpas-vm/src/vm/tasks/mod.rs), [`tasks/scheduler.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler.rs), [`tasks/state.rs`](../../../../crates/fpas-vm/src/vm/tasks/state.rs), [`shared/task_results.rs`](../../../../crates/fpas-vm/src/vm/shared/task_results.rs) |
 | Cancellation | [`cancellation/registry.rs`](../../../../crates/fpas-vm/src/vm/cancellation/registry.rs), [`tasks/cancellation.rs`](../../../../crates/fpas-vm/src/vm/tasks/cancellation.rs) |
 | Channels | [`channels/registry.rs`](../../../../crates/fpas-vm/src/vm/channels/registry.rs), [`tasks/channel.rs`](../../../../crates/fpas-vm/src/vm/tasks/channel.rs) |
+| Completion selection | [`tasks/wait_any.rs`](../../../../crates/fpas-vm/src/vm/tasks/wait_any.rs), [`scheduler/result_polling.rs`](../../../../crates/fpas-vm/src/vm/tasks/scheduler/result_polling.rs) |
 
 ## See also
 

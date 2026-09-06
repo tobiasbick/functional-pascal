@@ -19,6 +19,10 @@ pub enum TaskIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     WaitAll = 111,
+    /// Return the first completed task's input index without consuming its result.
+    ///
+    /// **Documentation:** `docs/pascal/std/concurrency/task.md`
+    WaitAny = 116,
     /// Create one VM-owned cancellation source.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`

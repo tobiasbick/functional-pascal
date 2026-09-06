@@ -164,3 +164,12 @@ public procedure WaitAll(Tasks: array of task);
 begin
   panic('Intrinsic API declaration')
 end;
+
+// Returns the lowest completed input index without consuming results.
+//
+// Parameters:
+// - `Tasks`: Task handles to wait for.
+public function WaitAny(Tasks: array of task): integer;
+begin
+  panic('Intrinsic API declaration')
+end;

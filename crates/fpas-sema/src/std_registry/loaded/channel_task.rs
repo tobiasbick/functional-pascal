@@ -8,6 +8,7 @@ use crate::check::Checker;
 use crate::types::{FunctionTy, Ty};
 use fpas_std::std_symbols as s;
 
+/// Register the Task unit's handles and task-aware intrinsic declarations.
 pub fn register_std_task(c: &mut Checker) {
     let source =
         type_registration::register_record_type(c, s::STD_TASK_CANCELLATION_SOURCE, Vec::new());
@@ -59,6 +60,7 @@ pub fn register_std_task(c: &mut Checker) {
         s::STD_TASK_CLOSE_CHANNEL,
         s::STD_TASK_WAIT,
         s::STD_TASK_WAIT_ALL,
+        s::STD_TASK_WAIT_ANY,
     ] {
         define_builtin_std(c, name, placeholder.clone());
     }

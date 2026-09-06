@@ -1,6 +1,9 @@
 //! Register-task queue, retained results, timers, and shutdown coordination.
 
+#[cfg(test)]
+mod any_tests;
 mod completion_ranges;
+mod result_polling;
 #[cfg(test)]
 mod shutdown_tests;
 #[cfg(test)]
@@ -15,9 +18,7 @@ use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
 use completion_ranges::CompletionRanges;
 
-use crate::vm::{
-    TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers, VmError, runtime_error,
-};
+use crate::vm::{TaskResultState, TaskTimers, VmError, runtime_error};
 
 use super::state::TaskState;
 
@@ -70,12 +71,15 @@ impl TaskScheduler {
     pub fn alloc_id(&self) -> u64 {
         self.next_id.fetch_add(1, Ordering::Relaxed)
     }
+    /// Publish runnable work and wake pool workers and completion-barrier helpers.
     pub fn enqueue(&self, task: TaskState) {
         self.queue
             .lock()
             .unwrap_or_else(|e| e.into_inner())
             .push_back(task);
         self.available.notify_one();
+        // Synchronize queued-work notification with wait-any's predicate-to-sleep transition.
+        let _results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         self.results_available.notify_all();
     }
     pub fn try_dequeue(&self) -> Option<TaskState> {
@@ -161,39 +165,6 @@ impl TaskScheduler {
         }
         matches
     }
-    pub fn poll_result(&self, id: u64) -> TaskResultPoll {
-        let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
-        let state = match results.remove(&id) {
-            Some(TaskResultState::Pending) => {
-                results.insert(id, TaskResultState::Pending);
-                return TaskResultPoll::Pending;
-            }
-            Some(TaskResultState::Failed(error)) => {
-                let copy = (*error).clone();
-                results.insert(id, TaskResultState::Failed(error));
-                return TaskResultPoll::Failed(copy);
-            }
-            Some(state) => state,
-            None if self
-                .completions
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .contains(&id) =>
-            {
-                return TaskResultPoll::Consumed;
-            }
-            None => return TaskResultPoll::Unknown,
-        };
-        self.completions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .insert(id);
-        TaskResultPoll::Available(match state {
-            TaskResultState::Unit => Value::Unit,
-            TaskResultState::Value(value) => *value,
-            _ => unreachable!(),
-        })
-    }
     /// Replace one available successful result without consuming it.
     pub(in crate::vm) fn replace_available_result(
         &self,
@@ -230,30 +201,6 @@ impl TaskScheduler {
             self.results_available.notify_all();
         }
         outcome
-    }
-    pub fn poll_batch(&self, ids: &[u64]) -> TaskBatchPoll {
-        let results = self.results.lock().unwrap_or_else(|e| e.into_inner());
-        let completions = self.completions.lock().unwrap_or_else(|e| e.into_inner());
-        if let Some(id) = ids
-            .iter()
-            .find(|id| !results.contains_key(id) && !completions.contains(id))
-        {
-            return TaskBatchPoll::Unknown(*id);
-        }
-        if let Some(error) = ids.iter().find_map(|id| match results.get(id) {
-            Some(TaskResultState::Failed(e)) => Some((**e).clone()),
-            _ => None,
-        }) {
-            return TaskBatchPoll::Failed(error);
-        }
-        if ids
-            .iter()
-            .any(|id| matches!(results.get(id), Some(TaskResultState::Pending)))
-        {
-            TaskBatchPoll::Pending
-        } else {
-            TaskBatchPoll::Complete
-        }
     }
     #[cfg(test)]
     fn consumed_completion_storage_len(&self) -> usize {

@@ -56,7 +56,7 @@ pub(crate) use diagnostics::runtime_error;
 /// Captured console output produced by the virtual machine.
 pub type VmOutput = fpas_std::CapturedOutput;
 
-pub(crate) use shared::{TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers};
+pub(crate) use shared::{TaskAnyPoll, TaskBatchPoll, TaskResultPoll, TaskResultState, TaskTimers};
 
 const TIMESLICE: u32 = 256;
 

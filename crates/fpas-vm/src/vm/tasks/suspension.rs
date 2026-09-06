@@ -68,6 +68,11 @@ pub(in crate::vm) enum TaskSuspension {
     },
     /// Resume after all retained task results become available.
     WaitAll { ids: Vec<u64> },
+    /// Resume when one retained task completes without consuming its result.
+    WaitAny {
+        ids: Vec<u64>,
+        destination: Option<Register>,
+    },
     /// Resume after a bounded channel accepts a value, closes, or is cancelled.
     ChannelSend {
         handle: u64,
@@ -112,6 +117,7 @@ impl TaskSuspension {
             Self::Yield => TaskSuspensionState::Yielded,
             Self::Wait { .. }
             | Self::WaitAll { .. }
+            | Self::WaitAny { .. }
             | Self::ChannelSend { .. }
             | Self::ChannelReceive { .. } => TaskSuspensionState::Waiting,
             Self::ChannelSendTimeout {

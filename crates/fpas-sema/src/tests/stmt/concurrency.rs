@@ -3,6 +3,18 @@ use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_parser::{ParseDiagnostic, parse};
 
 #[test]
+fn wait_any_rejects_non_task_arrays_and_reports_its_own_arity() {
+    let errors = check_errors("program T; uses Std.Task; begin WaitAny([1, 2]) end.");
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.message.contains("expected `array of task`"))
+    );
+    let errors = check_errors("program T; uses Std.Task; begin WaitAny() end.");
+    assert!(errors.iter().any(|error| error.message.contains("WaitAny")));
+}
+
+#[test]
 fn network_io_cancellation_requires_a_token_not_a_source() {
     let errors = check_errors(
         "\

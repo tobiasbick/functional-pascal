@@ -36,7 +36,11 @@ pub(super) fn check_channel_task_builtin_std_call(
         }
         s::STD_TASK_CLOSE_CHANNEL => check_close_channel(c, args, span),
         s::STD_TASK_WAIT => check_task_wait(c, args, span),
-        s::STD_TASK_WAIT_ALL => check_task_wait_all(c, args, span),
+        s::STD_TASK_WAIT_ALL => check_task_wait_all(c, args, span, s::STD_TASK_WAIT_ALL),
+        s::STD_TASK_WAIT_ANY => {
+            check_task_wait_all(c, args, span, s::STD_TASK_WAIT_ANY);
+            Ty::Integer
+        }
         _ => return None,
     };
     Some(ty)
@@ -234,8 +238,8 @@ fn check_task_wait(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
     expect_task_arg(c, &args[0], "task wait target").unwrap_or(Ty::Error)
 }
 
-fn check_task_wait_all(c: &mut Checker, args: &[Expr], span: Span) -> Ty {
-    if !expect_args(c, s::STD_TASK_WAIT_ALL, args, 1, span) {
+fn check_task_wait_all(c: &mut Checker, args: &[Expr], span: Span, name: &str) -> Ty {
+    if !expect_args(c, name, args, 1, span) {
         return Ty::Error;
     }
 

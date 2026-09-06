@@ -125,7 +125,8 @@ impl Worker {
             | TaskIntrinsic::Cancel
             | TaskIntrinsic::IsCancellationRequested
             | TaskIntrinsic::Wait
-            | TaskIntrinsic::WaitAll => Ok(None),
+            | TaskIntrinsic::WaitAll
+            | TaskIntrinsic::WaitAny => Ok(None),
         }
     }
 

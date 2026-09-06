@@ -4,6 +4,18 @@ use fpas_bytecode::Value;
 
 use crate::vm::VmError;
 
+/// Non-consuming observation of a task-completion race in input order.
+pub(crate) enum TaskAnyPoll {
+    /// Every supplied task is still pending.
+    Pending,
+    /// The lowest completed input position.
+    Complete(usize),
+    /// The first failure in input order.
+    Failed(VmError),
+    /// An input does not identify a retained or consumed task.
+    Unknown(u64),
+}
+
 /// Non-blocking observation of one retained task result.
 pub(crate) enum TaskResultPoll {
     /// The task is registered but has not completed.

@@ -6,7 +6,7 @@ use fpas_diagnostics::codes::{RUNTIME_PROGRAM_PANIC, RUNTIME_VM_SHUTDOWN};
 use super::TaskScheduler;
 use crate::vm::{TaskBatchPoll, TaskResultPoll, runtime_error};
 
-fn failure(message: &str) -> crate::vm::VmError {
+pub(super) fn failure(message: &str) -> crate::vm::VmError {
     runtime_error(
         RUNTIME_PROGRAM_PANIC,
         message,

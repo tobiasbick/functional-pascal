@@ -3,6 +3,7 @@ use super::*;
 mod network_connect;
 mod network_read;
 mod network_write;
+mod wait_any;
 
 #[test]
 fn task_spawn_with_arguments_keeps_loop_branch_addresses_aligned() {

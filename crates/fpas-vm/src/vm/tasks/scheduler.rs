@@ -3,21 +3,27 @@
 #[cfg(test)]
 mod any_tests;
 mod completion_ranges;
+mod group_results;
+#[cfg(test)]
+mod group_tests;
 mod result_polling;
 #[cfg(test)]
 mod shutdown_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod wakeup_tests;
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Condvar, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 
 use fpas_bytecode::{SourceLocation, Value};
 use fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN;
 
 use completion_ranges::CompletionRanges;
 
+use crate::vm::shared::wakeups::{WakeRegistration, WakeSignal, WakeSource};
 use crate::vm::{TaskResultState, TaskTimers, VmError, runtime_error};
 
 use super::state::TaskState;
@@ -45,6 +51,8 @@ pub(in crate::vm) struct TaskScheduler {
     results: Mutex<HashMap<u64, TaskResultState>>,
     completions: Mutex<CompletionRanges>,
     results_available: Condvar,
+    changes: Arc<WakeSource>,
+    pub(in crate::vm) groups: super::groups::GroupRegistry,
     next_id: AtomicU64,
     shutdown: AtomicBool,
     abort: AtomicBool,
@@ -52,6 +60,7 @@ pub(in crate::vm) struct TaskScheduler {
 }
 
 impl TaskScheduler {
+    /// Create an empty scheduler with no retained work or wait registrations.
     pub fn new() -> Self {
         Self {
             queue: Mutex::new(VecDeque::new()),
@@ -61,11 +70,23 @@ impl TaskScheduler {
             results: Mutex::new(HashMap::new()),
             completions: Mutex::new(CompletionRanges::default()),
             results_available: Condvar::new(),
+            changes: Arc::default(),
+            groups: Default::default(),
             next_id: AtomicU64::new(1),
             shutdown: AtomicBool::new(false),
             abort: AtomicBool::new(false),
             first_error: Mutex::new(None),
         }
+    }
+
+    /// Subscribe before probing results or runnable work; the guard owns its registration.
+    pub(in crate::vm) fn subscribe(&self, signal: &Arc<WakeSignal>) -> WakeRegistration {
+        self.changes.subscribe(signal)
+    }
+
+    fn notify_result_change(&self) {
+        self.results_available.notify_all();
+        self.changes.notify();
     }
 
     pub fn alloc_id(&self) -> u64 {
@@ -80,7 +101,7 @@ impl TaskScheduler {
         self.available.notify_one();
         // Synchronize queued-work notification with wait-any's predicate-to-sleep transition.
         let _results = self.results.lock().unwrap_or_else(|e| e.into_inner());
-        self.results_available.notify_all();
+        self.notify_result_change();
     }
     pub fn try_dequeue(&self) -> Option<TaskState> {
         self.queue
@@ -109,25 +130,33 @@ impl TaskScheduler {
             .unwrap_or_else(|e| e.into_inner())
             .insert(id, TaskResultState::Pending);
     }
+    /// Publish a child outcome before exposing its consumable successful result.
     pub fn store_result(&self, id: u64, value: Value) {
+        let failure = super::groups::GroupFailure::returned(id, &value);
         let state = match value {
             Value::Unit => TaskResultState::Unit,
             value => TaskResultState::Value(Box::new(value)),
         };
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
         if matches!(results.get(&id), Some(TaskResultState::Pending)) {
+            self.groups.complete(id, failure);
             results.insert(id, state);
         }
         drop(results);
-        self.results_available.notify_all();
+        self.notify_result_change();
     }
-    pub fn store_failure(&self, id: u64, error: VmError) {
+    /// Publish failure and report whether an explicit group owns its propagation.
+    pub fn store_failure(&self, id: u64, error: VmError) -> bool {
         let mut results = self.results.lock().unwrap_or_else(|e| e.into_inner());
+        let owned = self
+            .groups
+            .complete(id, Some(super::groups::GroupFailure::runtime(id, &error)));
         if matches!(results.get(&id), Some(TaskResultState::Pending)) {
             results.insert(id, TaskResultState::Failed(Box::new(error)));
         }
         drop(results);
-        self.results_available.notify_all();
+        self.notify_result_change();
+        owned
     }
     /// Replace one exact retained failure with a pending result.
     pub(in crate::vm) fn recover_failure(&self, id: u64, expected: &VmError) -> bool {
@@ -141,7 +170,7 @@ impl TaskScheduler {
         }
         drop(results);
         if matches {
-            self.results_available.notify_all();
+            self.notify_result_change();
         }
         matches
     }
@@ -161,7 +190,7 @@ impl TaskScheduler {
         }
         drop(results);
         if matches {
-            self.results_available.notify_all();
+            self.notify_result_change();
         }
         matches
     }
@@ -198,7 +227,7 @@ impl TaskScheduler {
         };
         drop(results);
         if matches!(outcome, RetainedResultReplacement::Replaced) {
-            self.results_available.notify_all();
+            self.notify_result_change();
         }
         outcome
     }
@@ -264,6 +293,7 @@ impl TaskScheduler {
     }
     /// Cancels sleepers and wakes every waiter before the runtime joins its threads.
     pub fn finish_main(&self) {
+        self.groups.shutdown();
         self.accepting_timers.store(false, Ordering::Release);
         for task in self.timers.cancel_all() {
             self.cancel(task);
@@ -276,7 +306,7 @@ impl TaskScheduler {
             let _queue = self.queue.lock().unwrap_or_else(|e| e.into_inner());
             self.available.notify_all();
         }
-        self.results_available.notify_all();
+        self.notify_result_change();
     }
     /// Complete one retained task with the standard runtime-shutdown diagnostic.
     pub(in crate::vm) fn cancel_result(&self, task_id: u64) {
@@ -324,6 +354,10 @@ impl TaskScheduler {
                 let error = first_error
                     .clone()
                     .unwrap_or_else(|| self.shutdown_error(*task_id));
+                self.groups.complete(
+                    *task_id,
+                    Some(super::groups::GroupFailure::runtime(*task_id, &error)),
+                );
                 *state = TaskResultState::Failed(Box::new(error));
             }
         }

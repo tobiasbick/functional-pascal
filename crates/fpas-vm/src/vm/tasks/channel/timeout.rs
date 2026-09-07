@@ -124,13 +124,15 @@ impl Worker {
         }
     }
 
-    pub(super) fn debug_timeout_channel_send(
+    /// Probe once, retaining a single monotonic deadline if the send must suspend.
+    pub(super) fn start_timeout_channel_send(
         &mut self,
         handle: u64,
         value: Value,
         timeout: Duration,
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        let deadline_millis = self.channel_deadline(timeout);
         match self
             .hosted
             .channels
@@ -144,7 +146,7 @@ impl Worker {
                 self.task_suspension = Some(TaskSuspension::ChannelSendTimeout {
                     handle,
                     value,
-                    deadline_millis: self.channel_deadline(timeout),
+                    deadline_millis,
                     destination,
                 });
                 self.suspend_requested = true;
@@ -154,12 +156,14 @@ impl Worker {
         }
     }
 
-    pub(super) fn debug_timeout_channel_receive(
+    /// Probe once, retaining a single monotonic deadline if the receive must suspend.
+    pub(super) fn start_timeout_channel_receive(
         &mut self,
         handle: u64,
         timeout: Duration,
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        let deadline_millis = self.channel_deadline(timeout);
         match self
             .hosted
             .channels
@@ -174,7 +178,7 @@ impl Worker {
             ReceiveState::Pending => {
                 self.task_suspension = Some(TaskSuspension::ChannelReceiveTimeout {
                     handle,
-                    deadline_millis: self.channel_deadline(timeout),
+                    deadline_millis,
                     destination,
                 });
                 self.suspend_requested = true;
@@ -186,7 +190,8 @@ impl Worker {
         }
     }
 
-    pub(in crate::vm::tasks) fn poll_debug_channel_send_timeout(
+    /// Retry a timed send without extending its original deadline.
+    pub(in crate::vm::tasks) fn poll_channel_send_timeout(
         &mut self,
         handle: u64,
         value: Value,
@@ -194,7 +199,7 @@ impl Worker {
         destination: Option<Register>,
     ) -> Result<bool, VmError> {
         if self.channel_deadline_reached(deadline_millis) {
-            return self.finish_debug_channel_poll(Some(error(SEND_TIMEOUT_ERROR)), destination);
+            return self.finish_channel_poll(Some(error(SEND_TIMEOUT_ERROR)), destination);
         }
         let result = match self
             .hosted
@@ -215,17 +220,18 @@ impl Worker {
             }
             SendState::Cancelled => unreachable!("channel timeout does not observe cancellation"),
         };
-        self.finish_debug_channel_poll(result, destination)
+        self.finish_channel_poll(result, destination)
     }
 
-    pub(in crate::vm::tasks) fn poll_debug_channel_receive_timeout(
+    /// Retry a timed receive without extending its original deadline.
+    pub(in crate::vm::tasks) fn poll_channel_receive_timeout(
         &mut self,
         handle: u64,
         deadline_millis: u64,
         destination: Option<Register>,
     ) -> Result<bool, VmError> {
         if self.channel_deadline_reached(deadline_millis) {
-            return self.finish_debug_channel_poll(Some(error(RECEIVE_TIMEOUT_ERROR)), destination);
+            return self.finish_channel_poll(Some(error(RECEIVE_TIMEOUT_ERROR)), destination);
         }
         let result = match self
             .hosted
@@ -247,18 +253,15 @@ impl Worker {
                 unreachable!("channel timeout does not observe cancellation")
             }
         };
-        self.finish_debug_channel_poll(result, destination)
+        self.finish_channel_poll(result, destination)
     }
 
     fn channel_deadline(&self, timeout: Duration) -> u64 {
-        let timeout_millis = timeout.as_millis().min(u128::from(u64::MAX)) as u64;
-        self.debug_clock_ref()
-            .now_millis()
-            .saturating_add(timeout_millis)
+        self.task_clock_ref().deadline_after(timeout)
     }
 
     fn channel_deadline_reached(&self, deadline_millis: u64) -> bool {
-        self.debug_clock_ref().now_millis() >= deadline_millis
+        self.task_clock_ref().now_millis() >= deadline_millis
     }
 }
 

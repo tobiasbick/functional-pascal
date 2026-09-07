@@ -15,6 +15,32 @@ pub enum TaskIntrinsic {
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`
     Wait = 110,
+    /// CreateTaskGroup group ownership operation; see `docs/pascal/std/concurrency/task.md`.
+    CreateTaskGroup = 558,
+    /// StartTaskInGroup group ownership operation; see `docs/pascal/std/concurrency/task.md`.
+    StartTaskInGroup = 559,
+    /// GetTaskGroupToken group ownership operation; see `docs/pascal/std/concurrency/task.md`.
+    GetTaskGroupToken = 560,
+    /// CancelTaskGroup group ownership operation; see `docs/pascal/std/concurrency/task.md`.
+    CancelTaskGroup = 561,
+    /// CloseTaskGroup group ownership operation; see `docs/pascal/std/concurrency/task.md`.
+    CloseTaskGroup = 562,
+    /// Start a group-owned worker with bounded retries; see `docs/pascal/std/concurrency/task.md`.
+    StartSupervisedTask = 563,
+    /// ReceiveCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    ReceiveCase = 551,
+    /// SendCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    SendCase = 552,
+    /// TaskCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    TaskCase = 553,
+    /// TimerCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    TimerCase = 554,
+    /// CancellationCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    CancellationCase = 555,
+    /// Select selection operation; see `docs/pascal/std/concurrency/task.md`.
+    Select = 556,
+    /// CloseWaitCase selection operation; see `docs/pascal/std/concurrency/task.md`.
+    CloseWaitCase = 557,
     /// Wait for all tasks to complete. Pops `array of task`.
     ///
     /// **Documentation:** `docs/pascal/std/concurrency/task.md`

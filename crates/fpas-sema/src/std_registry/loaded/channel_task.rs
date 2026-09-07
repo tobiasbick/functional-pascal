@@ -10,10 +10,60 @@ use fpas_std::std_symbols as s;
 
 /// Register the Task unit's handles and task-aware intrinsic declarations.
 pub fn register_std_task(c: &mut Checker) {
+    let case = type_registration::register_record_type(c, s::STD_TASK_WAIT_CASE, Vec::new());
+    define_func(
+        c,
+        s::STD_TASK_SELECT,
+        vec![p("Cases", Ty::Array(Box::new(case.clone())), false)],
+        Ty::Integer,
+    );
+    define_func(
+        c,
+        s::STD_TASK_CLOSE_WAIT_CASE,
+        vec![p("Handle", case, false)],
+        Ty::Boolean,
+    );
     let source =
         type_registration::register_record_type(c, s::STD_TASK_CANCELLATION_SOURCE, Vec::new());
     let token =
         type_registration::register_record_type(c, s::STD_TASK_CANCELLATION_TOKEN, Vec::new());
+    let group = type_registration::register_record_type(c, s::STD_TASK_TASK_GROUP, Vec::new());
+    let kind = type_registration::register_enum_type(
+        c,
+        s::STD_TASK_TASK_FAILURE_KIND,
+        &["ReturnedError", "Panicked", "RuntimeError", "Cancelled"],
+    );
+    let failure = type_registration::register_record_type(
+        c,
+        s::STD_TASK_TASK_FAILURE,
+        vec![
+            ("TaskId".into(), Ty::Integer),
+            ("Kind".into(), kind),
+            ("Message".into(), Ty::String),
+            ("Code".into(), Ty::Integer),
+            ("Line".into(), Ty::Integer),
+            ("Column".into(), Ty::Integer),
+        ],
+    );
+    define_func(c, s::STD_TASK_CREATE_TASK_GROUP, vec![], group.clone());
+    define_func(
+        c,
+        s::STD_TASK_GET_TASK_GROUP_TOKEN,
+        vec![p("Group", group.clone(), false)],
+        token.clone(),
+    );
+    define_func(
+        c,
+        s::STD_TASK_CANCEL_TASK_GROUP,
+        vec![p("Group", group.clone(), false)],
+        Ty::Boolean,
+    );
+    define_func(
+        c,
+        s::STD_TASK_CLOSE_TASK_GROUP,
+        vec![p("Group", group, false)],
+        Ty::Array(Box::new(failure)),
+    );
 
     define_func(
         c,
@@ -48,6 +98,13 @@ pub fn register_std_task(c: &mut Checker) {
     });
 
     for name in [
+        s::STD_TASK_START_TASK_IN_GROUP,
+        s::STD_TASK_START_SUPERVISED_TASK,
+        s::STD_TASK_RECEIVE_CASE,
+        s::STD_TASK_SEND_CASE,
+        s::STD_TASK_TASK_CASE,
+        s::STD_TASK_TIMER_CASE,
+        s::STD_TASK_CANCELLATION_CASE,
         s::STD_TASK_CREATE_CHANNEL,
         s::STD_TASK_SEND,
         s::STD_TASK_TRY_SEND,

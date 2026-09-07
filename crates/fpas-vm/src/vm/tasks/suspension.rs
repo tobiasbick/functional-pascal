@@ -1,4 +1,7 @@
-//! Explicit cooperative suspension state used by the deterministic debugger driver.
+//! Shared cooperative suspension state for the worker pool and deterministic debugger.
+
+#[cfg(test)]
+mod clock_tests;
 
 #[cfg(test)]
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -6,22 +9,22 @@ use std::time::{Duration, Instant};
 
 use fpas_bytecode::{Register, Value};
 
-enum DebugClockMode {
+enum TaskClockMode {
     Realtime(Instant),
     #[cfg(test)]
     Manual(AtomicU64),
 }
 
-/// Monotonic clock used only by the debugger's deterministic execution lane.
-pub(in crate::vm) struct DebugClock {
-    mode: DebugClockMode,
+/// Monotonic task clock, manually advanced only by deterministic debugger tests.
+pub(in crate::vm) struct TaskClock {
+    mode: TaskClockMode,
 }
 
-impl DebugClock {
+impl TaskClock {
     /// Create a clock backed by host monotonic time.
     pub(in crate::vm) fn realtime() -> Self {
         Self {
-            mode: DebugClockMode::Realtime(Instant::now()),
+            mode: TaskClockMode::Realtime(Instant::now()),
         }
     }
 
@@ -29,27 +32,43 @@ impl DebugClock {
     #[cfg(test)]
     pub(in crate::vm) fn manual() -> Self {
         Self {
-            mode: DebugClockMode::Manual(AtomicU64::new(0)),
+            mode: TaskClockMode::Manual(AtomicU64::new(0)),
         }
     }
 
-    /// Return elapsed debugger-clock milliseconds.
+    /// Return elapsed monotonic milliseconds.
     pub(super) fn now_millis(&self) -> u64 {
         match &self.mode {
-            DebugClockMode::Realtime(origin) => {
+            TaskClockMode::Realtime(origin) => {
                 origin.elapsed().as_millis().min(u128::from(u64::MAX)) as u64
             }
             #[cfg(test)]
-            DebugClockMode::Manual(now) => now.load(Ordering::Acquire),
+            TaskClockMode::Manual(now) => now.load(Ordering::Acquire),
         }
+    }
+
+    /// Round realtime deadlines upward so a relative wait never expires before its budget.
+    pub(super) fn deadline_after(&self, duration: Duration) -> u64 {
+        if duration.is_zero() {
+            return self.now_millis();
+        }
+        let elapsed_nanos = match &self.mode {
+            TaskClockMode::Realtime(origin) => origin.elapsed().as_nanos(),
+            #[cfg(test)]
+            TaskClockMode::Manual(now) => u128::from(now.load(Ordering::Acquire)) * 1_000_000,
+        };
+        elapsed_nanos
+            .saturating_add(duration.as_nanos())
+            .div_ceil(1_000_000)
+            .min(u128::from(u64::MAX)) as u64
     }
 
     /// Wait or deterministically advance by the requested duration.
     pub(in crate::vm) fn wait(&self, duration: Duration) {
         match &self.mode {
-            DebugClockMode::Realtime(_) => std::thread::sleep(duration),
+            TaskClockMode::Realtime(_) => std::thread::sleep(duration),
             #[cfg(test)]
-            DebugClockMode::Manual(now) => {
+            TaskClockMode::Manual(now) => {
                 let milliseconds = duration.as_millis().max(1).min(u128::from(u64::MAX)) as u64;
                 now.fetch_add(milliseconds, Ordering::AcqRel);
             }
@@ -57,8 +76,17 @@ impl DebugClock {
     }
 }
 
-/// Work that must complete before a cooperatively debugged task is runnable again.
+/// Work that must complete before a cooperatively suspended task is runnable again.
 pub(in crate::vm) enum TaskSuspension {
+    /// Retried worker admission waits for a cancellable debugger-clock delay.
+    SupervisionBackoff { deadline_millis: u64 },
+    /// Retain a sealed group until all its children terminate.
+    GroupClose {
+        id: u64,
+        destination: Option<Register>,
+    },
+    /// Own mixed selection cases until one operation commits.
+    Selection(Box<super::selection::SelectionWait>),
     /// Resume after giving another runnable task a scheduling turn.
     Yield,
     /// Resume after one retained task result becomes available.
@@ -73,7 +101,7 @@ pub(in crate::vm) enum TaskSuspension {
         ids: Vec<u64>,
         destination: Option<Register>,
     },
-    /// Resume on task completion, cancellation, or a debugger-clock deadline.
+    /// Resume on task completion, cancellation, or a monotonic task-clock deadline.
     WaitAnyControlled {
         ids: Vec<u64>,
         token: Option<u64>,
@@ -112,15 +140,17 @@ pub(in crate::vm) enum TaskSuspension {
 
 impl TaskSuspension {
     /// Construct a sleep deadline relative to the supplied debugger clock.
-    pub(super) fn sleep(milliseconds: u64, clock: &DebugClock) -> Self {
+    pub(super) fn sleep(milliseconds: u64, clock: &TaskClock) -> Self {
         Self::Sleep {
-            deadline_millis: clock.now_millis().saturating_add(milliseconds),
+            deadline_millis: clock.deadline_after(Duration::from_millis(milliseconds)),
         }
     }
 
     /// Return the current scheduler-visible state using the supplied clock.
-    pub(in crate::vm) fn state(&self, clock: &DebugClock) -> TaskSuspensionState {
+    pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
+            Self::GroupClose { .. } => TaskSuspensionState::Waiting,
+            Self::Selection(wait) => wait.debug_state(clock),
             Self::WaitAnyControlled {
                 deadline_millis: Some(deadline),
                 ..
@@ -147,11 +177,13 @@ impl TaskSuspension {
                     deadline_millis.saturating_sub(clock.now_millis()),
                 ),
             },
-            Self::Sleep { deadline_millis } => TaskSuspensionState::Sleeping {
-                remaining: Duration::from_millis(
-                    deadline_millis.saturating_sub(clock.now_millis()),
-                ),
-            },
+            Self::Sleep { deadline_millis } | Self::SupervisionBackoff { deadline_millis } => {
+                TaskSuspensionState::Sleeping {
+                    remaining: Duration::from_millis(
+                        deadline_millis.saturating_sub(clock.now_millis()),
+                    ),
+                }
+            }
         }
     }
 }

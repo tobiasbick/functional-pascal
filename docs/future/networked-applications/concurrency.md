@@ -1,12 +1,217 @@
 # Future: Application Concurrency Primitives
 
-> Partially implemented. Current `go`, `Wait`, and `WaitAll` behavior remains unchanged.
+> C1-C4 implemented and verified. The hard-shutdown contract (S1) remains open for discussion.
+> Current API behavior is documented in the [Task reference](../../pascal/std/concurrency/task.md).
 
 Fork-join tasks are sufficient when all work starts together and the caller waits for completion.
 Long-running applications also need bounded communication, cooperative cancellation, multi-source
 waiting, and explicit ownership of child-task failure.
 
 ## Progress
+
+### Remaining implementation work (2026-09-07)
+
+The active implementation goal covers all remaining concurrency primitives. The final hard-shutdown
+contract is explicitly reserved for a subsequent user discussion; it is not assumed by these steps.
+Existing cancellation, bounded channels, and task-only completion waits are already implemented.
+
+- [x] C1: Mixed task/channel/timer/cancellation selection with typed value delivery, exactly one
+  committed operation, wait-owned registrations, deterministic debugger support, and race tests.
+  Public case constructors, Select, shared wake registrations, and debugger continuation are
+  implemented and verified, including callback failure and active-wait teardown coverage.
+- [x] C2: Task groups that retain ownership of children, propagate cancellation, collect failures,
+  and join on explicit close. Keep ordinary error results distinct from child panics and preserve
+  the existing behavior of tasks created outside a group.
+- [x] C3: Supervision of restartable workers with bounded retries and backoff, built on task-group
+  ownership. Define successful completion, ordinary errors, panic handling, and cancellation paths.
+  The selected retry contract is in [supervision](supervision.md).
+- [x] C4: End-to-end examples, current documentation, deterministic debugger coverage, and
+  high-contention/lifetime regressions for C1-C3, plus complete workspace verification.
+- [ ] S1 (subsequent discussion): Resolve the original hard-shutdown acceptance requirement,
+  including non-cooperative code, OS DNS, and synchronous certificate verification. Do not claim
+  bounded termination merely because a caller's timeout elapsed.
+
+### 2026-09-07 — C4 compatibility audit and completion
+
+- Completed the ordinary-channel compatibility audit. A capacity-one producer/consumer regression
+  reproduced an inline-help deadlock with a timed send. Child channel operations and task waits
+  now reuse cooperative suspension instead of retaining their waiting parent's stack. The same
+  mechanism covers nested group close; normal sleep retains its existing scheduler timer path.
+- Eight compatibility tests cover ordinary, cancellable, and timed sends and receives, five
+  nested task-wait variants, and nested group close. Each runs with the default pool, one worker,
+  and the deterministic debugger. The combined 1,024-message selection/supervision fixture passes
+  in all three modes as well.
+- Added debugger entry-completion coverage: forcing a supervised Result error terminates that
+  task without executing its body or retrying, and produces exactly one group failure report.
+- Shared task-clock deadlines round positive budgets upward without delaying zero-timeout probes.
+  Three regressions verify real-time minimum budgets, exact manual-clock ticks, and saturation.
+  Requested timer intervals are not hard wall-clock wakeup guarantees.
+- The final `cargo test --workspace` run passed, including all 535 VM tests and the bundled FPAS
+  concurrency suite. Workspace build, strict Clippy for the five affected crates, all three new
+  examples, editor API generation, Rust/FPAS formatting, and diff checks passed.
+- Current Task documentation covers the APIs, cooperative suspension, ownership, retry outcomes,
+  and cancellation limits. C1-C4 are complete. S1 is not implemented: group close has no deadline,
+  and neither non-cooperative workers nor blocking host calls acquire a hard termination guarantee.
+
+### 2026-09-07 — capture lifetime and combined selection integration
+
+- Added five direct capture-lifetime regressions, each repeated 100 times. A weak reference to
+  the captured record's layout verifies retention between attempts and release after success,
+  retry exhaustion, pre-admission cancellation, backoff shutdown, and queued-task teardown.
+- Added a combined FPAS regression with eight supervised producers, a capacity-one channel,
+  and send/receive/timer/cancellation selection. Four groups deliver 1,024 unique messages and
+  close without failures. The same fixture runs with the default pool, one worker, and the
+  deterministic debugger, checking 32 child identities despite retries.
+- This integration exposed an inline-help deadlock: a pending child Select retained the stack
+  of its waiting consumer. A two-message capacity-one regression reproduced it without retries;
+  changing only capacity to two avoided it. Pending child selections now save their state and
+  yield the pool thread, using the shared timer driver to request a new probe after one millisecond.
+  Timer granularity and scheduler load still preclude a wall-clock wakeup guarantee.
+- The original combined fixture and minimal regression pass with this repair. Added another
+  100-iteration weak-reference check for shutdown of a parked selection. Resume-time task failures
+  now pass through the same supervision outcome handling as instruction-time failures; a nested
+  child-panic regression verifies recovery in normal and debugger execution.
+- The full VM run passed all 522 tests before the additional resume-panic regression, which then
+  passed independently. Editor generation, workspace build, the standalone combined FPAS test,
+  and affected-crate strict Clippy passed. The fresh complete workspace verification passed,
+  including all 523 VM tests and the bundled FPAS concurrency suite. Rust/FPAS formatting and
+  the diff check passed. C3's selected supervision contract is implemented and verified.
+- C4 remains open for the final compatibility audit, including combinations with ordinary
+  blocking channel operations and debugger entry completion. No hard-shutdown contract is added.
+
+### 2026-09-07 — supervision implementation and task-start scheduler repair
+
+- Added bounded supervised attempts with one task identity, group membership, and final outcome.
+  Retryable Result errors and Pascal panics restore the original callable inputs; successful
+  values and procedures, exhausted retries, and other runtime errors are terminal. Pending
+  backoff observes cancellation through the existing scheduler timer driver.
+- Added the current Task reference, generated editor API, a standalone FPAS regression, and a
+  runnable retry example. Eleven focused VM tests pass, with execution tests covering default-pool,
+  single-worker, and deterministic-debugger modes.
+- The standalone regression exposed missing spawn metadata: task-group and supervised starts
+  did not activate the default worker pool or timer driver in programs without `go`. Compiler
+  lowering and bytecode validation now share intrinsic task-start metadata. Added exhaustive
+  intrinsic flag validation and a default-pool task-group timer regression; both pass.
+- The previously blocked standalone retry test and example now pass with the rebuilt CLI.
+  The workspace build passed. The earlier full test run was stopped after reproducing the
+  missing-timer failure; the fresh complete workspace run passed, including all 513 VM tests
+  built for that run and the bundled FPAS concurrency suite. The subsequently added nested-child
+  regression passed in the focused eleven-test supervision run. It checks two worker attempts,
+  two ordinary children in the same group, and exactly one supervisor identity. Strict Clippy
+  for the five affected crates, Rust/FPAS formatting, and the diff check passed.
+- C3 remains open pending repeated capture/teardown verification and final
+  checks. C4 combined contention/lifetime coverage remains open. S1 is still reserved for the
+  subsequent hard-shutdown contract discussion.
+
+### 2026-09-07 — task-group completion
+
+- C2 is implemented and verified. The current contract lives in the Task reference; the
+  [task-group plan](task-groups.md) now records completion evidence rather than a proposed API.
+- Added four semantic tests covering invalid handles, worker arity and parameter types, mutable
+  captures, Result error types, and preservation of concrete task result types.
+- Added nested-child lifecycle coverage in both normal single-worker and deterministic debugger
+  execution. It checks discarded task handles, explicit cancellation, cancellation during close,
+  and completion of a grandchild's final side effect before close returns.
+- Added debugger cancellation and exited-child recovery rejection, creator-only close without
+  self-join, explicit Wait failure propagation, and ignored-report metadata coverage. Added a
+  200-iteration registration-versus-close race test with exact membership cleanup assertions.
+- The Task-group slice now has 22 focused VM tests, four semantic tests, a bundled FPAS lifecycle
+  test, and a runnable worker example. All 502 VM tests and the full workspace suite passed in the
+  final run, including bundled FPAS tests. Workspace build, affected-crate strict Clippy, Rust/FPAS
+  formatting, editor generation, the standalone lifecycle test, and the example also passed.
+- Next: implement C3 according to [supervision](supervision.md), then perform C4 combined integration
+  and lifetime verification. S1 remains a subsequent hard-shutdown contract discussion.
+
+### 2026-09-07 — task-group ownership and failure containment in progress
+
+- Added the initial C2 group registry, owned cancellation lifetime, admission bounds, explicit
+  close, and failure collection. Reports retain registration order independently of consumed
+  task results. Close releases retained child results, membership, and group-owned token storage.
+- Connected failure ownership to the normal scheduler and deterministic debugger. Owned child
+  failures publish terminal reports and exit events without stopping unrelated work. Debugger
+  recovery cannot resume an already exited group child. Nongroup failure stops remain unchanged.
+- Corrected failure positions to use diagnostic accessors and payload-free failure kinds to use
+  the existing integer-backed enum representation. Extracted ordinary task spawning into its own
+  module and shared initial register-state construction with group children.
+- Added 14 tests covering owner/member permissions, close and cancellation, resource bounds and
+  cleanup, report ordering, retained-result consumption, close racing failure publication, and
+  normal/debugger execution with mixed child result types. Synthetic shutdown completion cannot
+  certify a successful group join; close instead propagates shutdown or the original fatal error.
+- All 494 VM unit tests passed, including after the spawn extraction in the final full workspace
+  run. The workspace build, strict Clippy for the five affected crates, formatting, and diff
+  checks passed.
+- Added the Task-group API contract to the current Task reference and regenerated editor
+  declarations after the workspace API-coverage test identified their omission. All 12 intrinsic
+  editor-API tests and the repeated full workspace suite passed with those declarations present.
+- C2 remains open: semantic rejection tests, cancellation and nested-worker integration,
+  debugger recovery regressions, examples, and final verification. C3 supervision and C4 combined
+  integration remain pending. No hard shutdown guarantee is added.
+
+### 2026-09-07 — typed mixed-source selection
+
+- Added `WaitCase`, `ReceiveCase`, `SendCase`, `TaskCase`, `TimerCase`, `CancellationCase`,
+  `Select`, and `CloseWaitCase` across semantic checking, intrinsic registration, compilation,
+  VM execution, and generated editor declarations. No language syntax or task typing changed.
+- Cases are single-use, bounded, and owned by their creating VM/task. Whole-array claims reject
+  invalid identities, duplicates, and wrong owners before removing any cases. Process-unique
+  identities prevent cross-VM aliasing; explicit close and teardown release captured references.
+- Selection validates sources before transferring values, scans in input order, and commits only
+  the winner. Task completion is non-consuming; channel closure delivers the existing Result error.
+  Registrations precede probing and are dropped before callbacks or scheduler helping.
+- Winning callbacks use the existing resumable continuation, including on the main task and in
+  the deterministic debugger. Timers share a start at Select entry. Cooperative helping does not
+  introduce a hard shutdown guarantee.
+- Added 16 focused VM tests, two semantic rejection tests, a bundled FPAS regression, and a runnable
+  example. Checks cover heterogeneous channels, nested/suspending callbacks, pending receives,
+  deterministic timers, wrong owners, source-validation precedence, losing sends/receives,
+  case limits, capture release, and four concurrent selectors delivering 1000 values exactly once.
+  Callback panic preserves a committed send, losing captures are released before callback execution,
+  and normal/debugger wait teardown releases owned cases without invoking a callback.
+- The focused tests, example, editor generation, workspace build, affected-crate strict Clippy,
+  Rust/FPAS formatting, documentation links, and diff checks passed. The full workspace suite passed
+  again after moving callback-reference cloning behind the case-capacity check; it includes all
+  480 VM unit tests and bundled FPAS regressions.
+- Current behavior is documented in `docs/pascal/std/concurrency/task.md` and linked from the std
+  indexes. C1 is complete. Next is C2 task-group ownership and failure collection, followed by C3
+  supervision and C4 combined integration. The final hard-shutdown contract remains reserved for discussion.
+
+### 2026-09-07 — shared task and cancellation wake registrations
+
+- Added wait-owned subscriptions to cancellation state and scheduler changes. Task completion,
+  failure, debugger result replacement, runnable-work publication, and shutdown notify shared
+  signals without consuming results or executing callbacks.
+- Controlled `WaitAny` operations register one signal with the scheduler and cancellation source
+  before probing either. They release registrations on return, error, each new observation cycle,
+  and before helping queued work. Existing control precedence, bounded parking, and deterministic
+  debugger suspension remain unchanged. Removed the unused condition-variable timeout branch.
+- Added nine regressions covering pre-park and pre-registration cancellation, registration races,
+  duplicate cleanup, invalid subscriptions, combined task/cancellation sources, runnable work,
+  original failure retention, and shutdown. All 464 VM unit tests and the workspace build passed.
+- The full workspace suite (including bundled FPAS tests), formatting, strict VM Clippy, and diff
+  checks passed. Current API and language documentation remain unchanged because the externally
+  specified contracts are unchanged. C1 still requires public
+  typed cases, exactly-one channel commitment, callback continuation, and debugger integration;
+  task groups, supervision, and C4 remain open.
+
+### 2026-09-07 — wait-owned channel wake registrations
+
+- Added a latched wake signal shared by event sources and RAII-owned subscriptions. Sources keep
+  weak references only; dropping a registration removes precisely that subscription, including
+  duplicate registrations of the same signal. Notifications do not consume values or run callbacks.
+- Existing blocking channel send/receive paths register while holding the channel predicate lock,
+  release it before parking, and remove their subscription before returning. Notifications arriving
+  before parking remain visible. Close and VM teardown notify both operation directions.
+- Extracted channel registry tests from the oversized implementation file. Six signal tests and
+  ten channel tests cover pre-park notification, duplicate and multiple-source subscriptions,
+  timeout/unwind cleanup, concurrent notification/removal, FIFO contention, and close/teardown.
+- Current Task contracts remain unchanged. The public mixed-source operation, task groups, and
+  supervision are still pending; this is their shared wakeup foundation, not C1 completion.
+- Nine new regressions and the existing channel tests passed, as did formatting, the workspace
+  build, strict VM Clippy, and the full workspace test rerun including bundled FPAS suites.
+  The first workspace run was stopped after an HTTP server fixture remained blocked; that test
+  passed both in isolation and in the complete rerun. No channel failure was observed. The exact
+  fixture stall cause is unproven and was not folded into this change. Plan links and the diff were
+  checked. No performance claim is made.
 
 ### 2026-09-06 — mixed task-result compiler repair
 
@@ -237,7 +442,7 @@ waiting, and explicit ownership of child-task failure.
 - Performance benchmarks were intentionally not used for this correctness slice because another VM
   was active on the host; no performance claim is recorded.
 
-## Proposed scope
+## Implemented scope
 
 - A cancellation source and clonable cancellation token checked by hosted blocking operations.
 - `WaitAny` or an equivalent function-based multi-wait over tasks, channels, timers, and
@@ -267,6 +472,8 @@ rather than reaching into scheduler implementation details.
 
 - FIFO behavior, closure, full/empty queues, deadlines, and cancellation have deterministic tests.
 - Multi-wait returns exactly one winning event and unregisters all losing waits.
-- Task-group shutdown cannot leak workers or wait forever after its deadline.
+- **Deferred to S1:** Task-group shutdown cannot leak workers or wait forever after its deadline.
+  The current cooperative close has no deadline; the hard-shutdown contract requires a separate
+  decision and implementation before this requirement can be marked complete.
 - Child panics and ordinary error results follow separately documented paths.
 - High-contention tests demonstrate bounded memory and absence of lost wakeups.

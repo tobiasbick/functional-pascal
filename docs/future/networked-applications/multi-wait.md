@@ -1,7 +1,7 @@
 # Future: Multi-source Waiting
 
-> Partially implemented: task-only `WaitAny` and its timeout/cancellation variants are implemented.
-> Mixed-source selection remains future work.
+> Task-only waits and typed mixed-source selection are implemented and verified.
+> Completion evidence is recorded in [concurrency](concurrency.md).
 
 Part of [application concurrency](concurrency.md). Build this in complete, independently tested
 slices. Keep `go`, task result typing, `Wait`, `WaitAll`, and channel ownership unchanged.
@@ -50,7 +50,11 @@ including the cooperative scheduler-helping limitation.
 - Use the debugger clock for deterministic deadline tests.
 - Remove every wait registration on completion, cancellation, expiry, failure, and shutdown.
 
-## Mixed sources: settle value ownership before adding an API
+## Mixed sources: typed value delivery and winner ownership
+
+The [typed selection implementation notes](selection.md) record the function-based interface,
+ownership, ordering, and verification work. The current [Task reference](../../pascal/std/concurrency/task.md)
+owns the implemented public contract.
 
 Tasks have non-consuming completion state. Channels instead perform ownership-changing send and
 receive operations. A channel-ready notification does not reserve a value: another receiver may
@@ -61,7 +65,7 @@ The mixed-source operation must commit exactly one winning operation. Do not imp
 running ordinary blocking receives in helper tasks and cancelling the losers: a loser may already
 have consumed a value. Likewise, do not erase channel element types into an untyped payload.
 
-Before implementation, specify:
+The implementation addresses these design requirements:
 
 1. How task completion, typed channel operations, timers, and cancellation are represented without
    new syntax or loss of static type checking. If the design requires language changes, obtain

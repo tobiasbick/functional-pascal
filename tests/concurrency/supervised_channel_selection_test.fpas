@@ -1,0 +1,83 @@
+program SupervisedChannelSelectionTest;
+
+uses Std.Task, Std.Array, Std.Result, Std.Test;
+
+begin
+  for Round: integer := 1 to 4 do
+  begin
+    var Group: TaskGroup := CreateTaskGroup();
+    var Token: CancellationToken := GetTaskGroupToken(Group);
+    var Output: channel of integer := CreateChannel(1);
+    mutable var Children: array of task := [];
+    mutable var Seen: array of integer := [];
+    for Item: integer := 0 to 255 do
+    begin
+      Push(Seen, 0)
+    end;
+
+    for Producer: integer := 0 to 7 do
+    begin
+      var Attempts: channel of boolean := CreateChannel(2);
+      Send(Attempts, false);
+      Send(Attempts, true);
+      Push(Children, StartSupervisedTask(Group, function(WorkerToken: CancellationToken): result of integer, string begin
+        if not Unwrap(Receive(Attempts)) then
+        begin
+          return Error('transient startup failure')
+        end;
+
+        CloseChannel(Attempts);
+        for Item: integer := 0 to 31 do
+        begin
+          Select([
+                   SendCase(Output, Producer * 32 + Item, procedure(Outcome: result of boolean, string) begin
+                     AssertTrue(Unwrap(Outcome))
+                   end),
+                   CancellationCase(WorkerToken, procedure() begin
+                     panic('producer cancelled before drain')
+                   end)
+                 ])
+        end;
+
+        return Ok(Producer)
+      end, 1, 1))
+    end;
+
+    for Item: integer := 0 to 255 do
+    begin
+      AssertEquals(0, Select([
+                               ReceiveCase(Output, procedure(Outcome: result of integer, string) begin
+                                 var Number: integer := Unwrap(Outcome);
+                                 AssertTrue((Number >= 0) and (Number < 256));
+                                 Seen[Number] := Seen[Number] + 1
+                               end),
+                               TimerCase(10000, procedure() begin
+                                 panic('producer drain timed out')
+                               end),
+                               CancellationCase(Token, procedure() begin
+                                 panic('consumer cancelled before drain')
+                               end)
+                             ]))
+    end;
+
+    WaitAll(Children);
+    AssertEquals(0, Length(CloseTaskGroup(Group)));
+    AssertEquals(0, Length(CloseTaskGroup(Group)));
+    for Count: integer in Seen do
+    begin
+      AssertEquals(1, Count)
+    end;
+
+    case Unwrap(TryReceive(Output)) of
+      Some(_):
+      begin
+        panic('duplicate delivery after drain')
+      end;
+      None:
+      begin
+      end
+    end;
+
+    CloseChannel(Output)
+  end
+end.

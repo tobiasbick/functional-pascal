@@ -3,6 +3,7 @@
 mod completed_result;
 mod completion;
 mod control;
+mod failure;
 mod lifecycle;
 mod live_image;
 mod quiescence;
@@ -17,7 +18,7 @@ use fpas_bytecode::{FunctionId, Value};
 use super::super::types::{DebugTaskEvent, DebugTaskEventKind, DebugTaskState};
 use crate::vm::VmError;
 use crate::vm::dispatch::DispatchStep;
-use crate::vm::tasks::{DebugClock, TaskScheduler, TaskSuspensionState};
+use crate::vm::tasks::{TaskClock, TaskScheduler, TaskSuspensionState};
 use crate::vm::worker::Worker;
 
 pub(in crate::vm::debug) use completed_result::CompletedResultTargetError;
@@ -71,7 +72,7 @@ pub(in crate::vm::debug) enum DebugDispatch {
     Instruction(u64),
     /// The task cooperatively suspended or yielded.
     Suspended(u64),
-    /// The task returned normally.
+    /// The task returned normally or its failure was contained by its task group.
     Completed {
         /// Runtime task identity.
         task_id: u64,
@@ -83,7 +84,7 @@ pub(in crate::vm::debug) enum DebugDispatch {
 /// Single-lane owner of all workers in one debug session.
 pub(in crate::vm::debug) struct DebugTaskRuntime {
     scheduler: Arc<TaskScheduler>,
-    clock: Arc<DebugClock>,
+    clock: Arc<TaskClock>,
     tasks: BTreeMap<u64, TaskSlot>,
     last_dispatched: u64,
     resumed_at_boundary: BTreeSet<u64>,
@@ -96,7 +97,7 @@ impl DebugTaskRuntime {
     pub(in crate::vm::debug) fn new(
         root: Worker,
         scheduler: Arc<TaskScheduler>,
-        clock: Arc<DebugClock>,
+        clock: Arc<TaskClock>,
     ) -> Self {
         let entry_function = root.function;
         let tasks = BTreeMap::from([(
@@ -231,14 +232,19 @@ impl DebugTaskRuntime {
         slot.state = DebugTaskState::Running;
         slot.failure = None;
         self.last_dispatched = task_id;
-        let dispatch = slot.worker.dispatch_debug_one().map_err(|error| {
-            slot.state = DebugTaskState::Failed;
-            slot.failure = Some(error.clone());
-            if slot.worker.retain_result {
-                self.scheduler.store_failure(task_id, error.clone());
+        let dispatch = match slot.worker.dispatch_supervised_debug_one() {
+            Ok(dispatch) => dispatch,
+            Err(error) => {
+                if failure::record(slot, task_id, &error, &self.scheduler, &mut self.events) {
+                    self.drain_spawned();
+                    return Ok(DebugDispatch::Completed {
+                        task_id,
+                        main: false,
+                    });
+                }
+                return Err((task_id, error));
             }
-            (task_id, error)
-        })?;
+        };
         let result = match dispatch {
             DispatchStep::Continue => {
                 slot.state = DebugTaskState::Runnable;
@@ -329,6 +335,7 @@ impl DebugTaskRuntime {
     pub(in crate::vm::debug) fn cancel(&mut self) {
         self.scheduler.request_cancel();
         for (&task_id, slot) in &mut self.tasks {
+            slot.worker.supervision = None;
             if !matches!(
                 slot.state,
                 DebugTaskState::Completed | DebugTaskState::Failed | DebugTaskState::Cancelled
@@ -354,17 +361,19 @@ impl DebugTaskRuntime {
             {
                 continue;
             }
-            match slot.worker.poll_debug_suspension() {
+            match slot.worker.poll_task_suspension() {
                 Ok(true) => {
                     slot.state = DebugTaskState::Runnable;
                     self.resumed_at_boundary.insert(task_id);
                 }
                 Ok(false) => slot.state = state_from_suspension(&slot.worker),
                 Err(error) => {
-                    slot.state = DebugTaskState::Failed;
-                    slot.failure = Some(error.clone());
-                    if slot.worker.retain_result {
-                        self.scheduler.store_failure(task_id, error.clone());
+                    let Err(error) = slot.worker.supervised_outcome(Err(error)) else {
+                        slot.state = state_from_suspension(&slot.worker);
+                        continue;
+                    };
+                    if failure::record(slot, task_id, &error, &self.scheduler, &mut self.events) {
+                        continue;
                     }
                     return Err((task_id, error));
                 }
@@ -415,6 +424,7 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
+            slot.worker.supervision = None;
             slot.exited = true;
             slot.worker.task_suspension = None;
             if slot.worker.retain_result {

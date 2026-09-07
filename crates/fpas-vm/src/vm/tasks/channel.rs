@@ -1,8 +1,8 @@
 //! `Std.Task` bounded-channel intrinsic dispatch.
 
 mod blocking;
-mod debug;
 mod non_blocking;
+mod suspension;
 mod timeout;
 
 use std::sync::Arc;
@@ -50,8 +50,8 @@ impl Worker {
                 let token = cancellable
                     .then(|| self.cancellation_token(&arguments[2]))
                     .transpose()?;
-                if self.debug_tasks {
-                    self.debug_channel_send(handle, arguments[1].clone(), token, destination)
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_channel_send(handle, arguments[1].clone(), token, destination)
                 } else {
                     self.blocking_channel_send(handle, arguments[1].clone(), token)
                         .map(|value| Some(Some(value)))
@@ -67,8 +67,8 @@ impl Worker {
                 self.require_channel_arguments(arguments, 3)?;
                 let handle = self.channel_handle(&arguments[0])?;
                 let timeout = self.wait_timeout(&arguments[2])?;
-                if self.debug_tasks {
-                    self.debug_timeout_channel_send(
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_timeout_channel_send(
                         handle,
                         arguments[1].clone(),
                         timeout,
@@ -86,8 +86,8 @@ impl Worker {
                 let token = cancellable
                     .then(|| self.cancellation_token(&arguments[1]))
                     .transpose()?;
-                if self.debug_tasks {
-                    self.debug_channel_receive(handle, token, destination)
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_channel_receive(handle, token, destination)
                 } else {
                     self.blocking_channel_receive(handle, token)
                         .map(|value| Some(Some(value)))
@@ -103,8 +103,8 @@ impl Worker {
                 self.require_channel_arguments(arguments, 2)?;
                 let handle = self.channel_handle(&arguments[0])?;
                 let timeout = self.wait_timeout(&arguments[1])?;
-                if self.debug_tasks {
-                    self.debug_timeout_channel_receive(handle, timeout, destination)
+                if self.debug_tasks || self.task_id != 0 {
+                    self.start_timeout_channel_receive(handle, timeout, destination)
                 } else {
                     self.timeout_channel_receive(handle, timeout)
                         .map(|value| Some(Some(value)))
@@ -128,7 +128,20 @@ impl Worker {
             | TaskIntrinsic::WaitAll
             | TaskIntrinsic::WaitAny
             | TaskIntrinsic::WaitAnyWithTimeout
-            | TaskIntrinsic::WaitAnyWithCancellation => Ok(None),
+            | TaskIntrinsic::WaitAnyWithCancellation
+            | TaskIntrinsic::ReceiveCase
+            | TaskIntrinsic::SendCase
+            | TaskIntrinsic::TaskCase
+            | TaskIntrinsic::TimerCase
+            | TaskIntrinsic::CancellationCase
+            | TaskIntrinsic::Select
+            | TaskIntrinsic::CreateTaskGroup
+            | TaskIntrinsic::StartTaskInGroup
+            | TaskIntrinsic::GetTaskGroupToken
+            | TaskIntrinsic::CancelTaskGroup
+            | TaskIntrinsic::CloseTaskGroup
+            | TaskIntrinsic::StartSupervisedTask
+            | TaskIntrinsic::CloseWaitCase => Ok(None),
         }
     }
 

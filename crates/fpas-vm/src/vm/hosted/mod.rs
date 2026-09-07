@@ -66,6 +66,7 @@ pub(super) struct HostedState {
     pub(in crate::vm::hosted) http_states: HttpStateRegistry,
     pub(in crate::vm) cancellations: CancellationRegistry,
     pub(in crate::vm) channels: ChannelRegistry,
+    pub(in crate::vm) cases: super::tasks::selection::CaseRegistry,
     pub(super) test_scratch_dir: Mutex<PathBuf>,
 }
 
@@ -81,6 +82,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
+            cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }
@@ -97,6 +99,7 @@ impl HostedState {
             http_states: HttpStateRegistry::new(),
             cancellations: CancellationRegistry::new(),
             channels: ChannelRegistry::new(),
+            cases: Default::default(),
             test_scratch_dir: Mutex::new(PathBuf::from(".temp-data")),
         }
     }

@@ -1,0 +1,49 @@
+program TaskGroupLifecycleTest;
+
+uses Std.Task, Std.Array, Std.Result, Std.Test;
+
+procedure VerifyClose(RequestFirst: boolean);
+begin
+  var Group: TaskGroup := CreateTaskGroup();
+  var Ready: channel of boolean := CreateChannel(1);
+  var Empty: channel of integer := CreateChannel(1);
+  var Finished: channel of boolean := CreateChannel(1);
+  // Discard both handles: group ownership must retain the child and grandchild.
+  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    StartTaskInGroup(Group, procedure(ChildToken: CancellationToken) begin
+      case ReceiveWithCancellation(Empty, ChildToken) of
+        Ok(_):
+        begin
+          panic('empty channel unexpectedly delivered')
+        end;
+        Error(_):
+        begin
+          AssertTrue(IsCancellationRequested(ChildToken))
+        end
+      end;
+
+      Send(Finished, true)
+    end);
+    Send(Ready, true)
+  end);
+  AssertTrue(Unwrap(Receive(Ready)));
+  if RequestFirst then
+  begin
+    AssertTrue(CancelTaskGroup(Group));
+    AssertFalse(CancelTaskGroup(Group));
+    AssertTrue(IsCancellationRequested(GetTaskGroupToken(Group)))
+  end;
+
+  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  // Close must not return before the grandchild's final side effect.
+  AssertTrue(Unwrap(Receive(Finished)));
+  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  CloseChannel(Ready);
+  CloseChannel(Empty);
+  CloseChannel(Finished)
+end;
+
+begin
+  VerifyClose(false);
+  VerifyClose(true)
+end.

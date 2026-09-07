@@ -1,6 +1,8 @@
 # Future: Networked Application Platform
 
-> Deferred. This is a capability roadmap, not current FPAS behavior.
+> Capability roadmap with implementation progress recorded in each plan.
+> Concurrency foundations C1-C4 are implemented; the hard-shutdown contract remains open.
+> Current behavior is documented under [Std.Task](../../pascal/std/concurrency/task.md).
 
 Functional Pascal already provides blocking TCP/TLS connections and listeners, HTTP client and
 server helpers, tasks, JSON, filesystem access, and a local terminal UI. Long-running secure

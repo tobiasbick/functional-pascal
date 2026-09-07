@@ -2,4 +2,4 @@
 
 mod registry;
 
-pub(in crate::vm) use registry::CancellationRegistry;
+pub(in crate::vm) use registry::{CancellationRegistry, OwnedCancellation};

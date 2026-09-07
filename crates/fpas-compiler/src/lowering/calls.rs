@@ -124,6 +124,7 @@ impl LoweringContext {
         ) {
             return self.lower_console_write(intrinsic, arguments, span);
         }
+        self.can_spawn_tasks |= intrinsic.starts_task();
         let mut values = self.lower_call_arguments(arguments, span)?;
         if matches!(
             intrinsic,

@@ -61,6 +61,8 @@ pub(super) enum SingleWrapper {
     Direct,
     OptionSome,
     ResultOk,
+    /// Ignore the procedure result and return the selected case index.
+    SelectionIndex(i64),
 }
 
 /// Next action requested by the hosted-operation state machine.
@@ -335,6 +337,7 @@ impl SingleWrapper {
             Self::Direct => value,
             Self::OptionSome => Value::option_some(value),
             Self::ResultOk => Value::result_ok(value),
+            Self::SelectionIndex(index) => Value::Integer(index),
         }
     }
 }

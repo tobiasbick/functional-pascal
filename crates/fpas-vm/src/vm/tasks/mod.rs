@@ -5,156 +5,31 @@
 
 mod cancellation;
 mod channel;
+pub(in crate::vm) mod groups;
 pub(super) mod pool;
 mod scheduler;
+pub(in crate::vm) mod selection;
+mod spawn;
 mod state;
+pub(in crate::vm) mod supervision;
 mod suspension;
 mod timeouts;
 mod wait_any;
 
 pub(super) use scheduler::{RetainedResultReplacement, TaskScheduler};
 pub(super) use state::TaskState;
-pub(in crate::vm) use suspension::{DebugClock, TaskSuspension, TaskSuspensionState};
+pub(in crate::vm) use suspension::{TaskClock, TaskSuspension, TaskSuspensionState};
 
 use std::sync::Arc;
 
-use fpas_bytecode::{AbcOperands, Intrinsic, Register, TaskIntrinsic, TimeIntrinsic, Value};
-use fpas_diagnostics::codes::{
-    RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH, RUNTIME_WRONG_CALL_ARITY,
-};
+use fpas_bytecode::{Intrinsic, Register, TaskIntrinsic, TimeIntrinsic, Value};
+use fpas_diagnostics::codes::{RUNTIME_INVALID_TASK, RUNTIME_VM_OPERAND_TYPE_MISMATCH};
 
 use super::worker::Worker;
 use super::{VmError, diagnostics};
 use crate::vm::{TaskBatchPoll, TaskResultPoll};
 
 impl Worker {
-    pub(super) fn spawn_task(
-        &mut self,
-        operands: AbcOperands,
-        detached: bool,
-    ) -> Result<(), VmError> {
-        let scheduler = self
-            .scheduler
-            .as_ref()
-            .ok_or_else(|| {
-                self.unavailable_opcode(if detached {
-                    fpas_bytecode::Opcode::SpawnDetachedTask
-                } else {
-                    fpas_bytecode::Opcode::SpawnTask
-                })
-            })?
-            .clone();
-        let (callee_register, argument_base) = if detached {
-            (operands.a, operands.b)
-        } else {
-            (operands.b, operands.c)
-        };
-        let callee = self
-            .read(Register::new(callee_register).map_err(|e| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    e.to_string(),
-                )
-            })?)?
-            .clone();
-        let Value::Function(function) = callee else {
-            return Err(self.task_type_error("function", &callee));
-        };
-        if function.task_bound {
-            return Err(diagnostics::at_address(
-                self.executable.executable(),
-                self.current_address,
-                RUNTIME_INVALID_TASK,
-                format!(
-                    "Cannot spawn task-bound closure `{}` across a task boundary",
-                    function.name
-                ),
-                "Mutable captures make a closure task-bound. Pass immutable values instead, or invoke the closure on the same task.",
-            ));
-        }
-        let target = function.function;
-        let info = self
-            .executable
-            .executable()
-            .functions
-            .get(usize::from(target.get()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Task target is outside the function table",
-                )
-            })?;
-        let visible_arity = usize::from(info.arity)
-            .checked_sub(usize::from(function.bound_receiver.is_some()))
-            .ok_or_else(|| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Bound task target has no receiver parameter",
-                )
-            })?;
-        if visible_arity != usize::from(operands.auxiliary) {
-            return Err(diagnostics::at_address(
-                self.executable.executable(),
-                self.current_address,
-                RUNTIME_WRONG_CALL_ARITY,
-                format!(
-                    "Function `{}` expects {} arguments, got {}",
-                    function.name, visible_arity, operands.auxiliary
-                ),
-                "Spawn the task with the declared number of arguments.",
-            ));
-        }
-        let register_count = info.register_count;
-        let task_start = info.code.start;
-        let arguments = self.clone_window(argument_base, operands.auxiliary)?;
-        let (registers, register_initialized) = Self::register_window(
-            usize::from(register_count),
-            function
-                .bound_receiver
-                .iter()
-                .cloned()
-                .chain(arguments)
-                .chain(function.captures.iter().cloned()),
-        );
-        let id = scheduler.alloc_id();
-        if !detached {
-            scheduler.register_result(id);
-            self.write(
-                Register::new(operands.a).map_err(|e| {
-                    diagnostics::internal(
-                        self.executable.executable(),
-                        self.current_address,
-                        e.to_string(),
-                    )
-                })?,
-                Value::Task(id),
-            )?;
-        }
-        scheduler.enqueue(TaskState {
-            id,
-            function: target,
-            ip: usize::try_from(task_start.get()).map_err(|_| {
-                diagnostics::internal(
-                    self.executable.executable(),
-                    self.current_address,
-                    "Task address does not fit this host",
-                )
-            })?,
-            base: 0,
-            registers,
-            register_initialized,
-            frames: Vec::new(),
-            retain_result: !detached,
-            instruction_count: 0,
-            suppressed_initializers: Vec::new(),
-            callback_continuations: Vec::new(),
-        });
-        Ok(())
-    }
-
     pub(super) fn yield_task(&mut self) {
         if self.debug_tasks {
             self.task_suspension = Some(TaskSuspension::Yield);
@@ -173,14 +48,33 @@ impl Worker {
         arguments: &[Value],
         destination: Option<Register>,
     ) -> Result<Option<Option<Value>>, VmError> {
+        let result = self.task_intrinsic_inner(intrinsic, arguments, destination)?;
+        if !self.debug_tasks && self.task_id != 0 && self.task_suspension.is_some() {
+            self.park_pool_suspension()?;
+        }
+        Ok(result)
+    }
+
+    fn task_intrinsic_inner(
+        &mut self,
+        intrinsic: Intrinsic,
+        arguments: &[Value],
+        destination: Option<Register>,
+    ) -> Result<Option<Option<Value>>, VmError> {
+        if let Some(value) = self.group_intrinsic(intrinsic, arguments, destination)? {
+            return Ok(Some(value));
+        }
+        if let Some(value) = self.selection_intrinsic(intrinsic, arguments, destination)? {
+            return Ok(Some(value));
+        }
         if let Some(value) = self.cancellation_intrinsic(intrinsic, arguments)? {
             return Ok(Some(value));
         }
         if let Some(value) = self.channel_intrinsic(intrinsic, arguments, destination)? {
             return Ok(Some(value));
         }
-        if self.debug_tasks {
-            return self.debug_task_intrinsic(intrinsic, arguments, destination);
+        if self.debug_tasks || (self.task_id != 0 && matches!(intrinsic, Intrinsic::Task(_))) {
+            return self.cooperative_task_intrinsic(intrinsic, arguments, destination);
         }
         match intrinsic {
             Intrinsic::Task(TaskIntrinsic::WaitAny) => self.wait_any(arguments, destination),
@@ -258,7 +152,7 @@ impl Worker {
         }
     }
 
-    fn debug_task_intrinsic(
+    fn cooperative_task_intrinsic(
         &mut self,
         intrinsic: Intrinsic,
         arguments: &[Value],
@@ -328,7 +222,7 @@ impl Worker {
                     self.task_type_error("non-negative integer", &Value::Integer(*milliseconds))
                 })?;
                 self.task_suspension =
-                    Some(TaskSuspension::sleep(milliseconds, self.debug_clock_ref()));
+                    Some(TaskSuspension::sleep(milliseconds, self.task_clock_ref()));
                 self.suspend_requested = true;
                 Ok(Some(None))
             }
@@ -336,23 +230,26 @@ impl Worker {
         }
     }
 
-    /// Resume a debugger task when its suspended operation becomes ready.
-    pub(in crate::vm) fn poll_debug_suspension(&mut self) -> Result<bool, VmError> {
+    /// Resume a pool or debugger task when its suspended operation becomes ready.
+    pub(in crate::vm) fn poll_task_suspension(&mut self) -> Result<bool, VmError> {
         let Some(suspension) = self.task_suspension.take() else {
             self.suspend_requested = false;
             return Ok(true);
         };
         let ready = match suspension {
+            TaskSuspension::SupervisionBackoff { .. } => self.supervised_ready(),
+            TaskSuspension::GroupClose { id, destination } => {
+                self.poll_group_close(id, destination)
+            }
+            TaskSuspension::Selection(wait) => self.poll_selection(*wait),
             TaskSuspension::Yield => Ok(true),
             TaskSuspension::WaitAnyControlled {
                 ids,
                 token,
                 deadline_millis,
                 destination,
-            } => self.poll_debug_controlled_wait_any(ids, token, deadline_millis, destination),
-            TaskSuspension::WaitAny { ids, destination } => {
-                self.poll_debug_wait_any(ids, destination)
-            }
+            } => self.poll_controlled_wait_any(ids, token, deadline_millis, destination),
+            TaskSuspension::WaitAny { ids, destination } => self.poll_wait_any(ids, destination),
             TaskSuspension::Wait { id, destination } => {
                 match self.scheduler_ref()?.poll_result(id) {
                     TaskResultPoll::Available(value) => {
@@ -385,25 +282,25 @@ impl Worker {
                 value,
                 token,
                 destination,
-            } => self.poll_debug_channel_send(handle, value, token, destination),
+            } => self.poll_channel_send(handle, value, token, destination),
             TaskSuspension::ChannelReceive {
                 handle,
                 token,
                 destination,
-            } => self.poll_debug_channel_receive(handle, token, destination),
+            } => self.poll_channel_receive(handle, token, destination),
             TaskSuspension::ChannelSendTimeout {
                 handle,
                 value,
                 deadline_millis,
                 destination,
-            } => self.poll_debug_channel_send_timeout(handle, value, deadline_millis, destination),
+            } => self.poll_channel_send_timeout(handle, value, deadline_millis, destination),
             TaskSuspension::ChannelReceiveTimeout {
                 handle,
                 deadline_millis,
                 destination,
-            } => self.poll_debug_channel_receive_timeout(handle, deadline_millis, destination),
+            } => self.poll_channel_receive_timeout(handle, deadline_millis, destination),
             TaskSuspension::Sleep { deadline_millis }
-                if self.debug_clock_ref().now_millis() >= deadline_millis =>
+                if self.task_clock_ref().now_millis() >= deadline_millis =>
             {
                 Ok(true)
             }
@@ -445,9 +342,9 @@ impl Worker {
             )
         })
     }
-    fn debug_clock_ref(&self) -> &DebugClock {
-        let Some(clock) = self.debug_clock.as_deref() else {
-            unreachable!("debug task suspension requires a debugger clock")
+    fn task_clock_ref(&self) -> &TaskClock {
+        let Some(clock) = self.task_clock.as_deref() else {
+            unreachable!("task suspension requires a monotonic task clock")
         };
         clock
     }

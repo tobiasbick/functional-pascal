@@ -1,0 +1,26 @@
+program TaskGroupWorkers;
+
+uses Std.Task, Std.Console;
+
+function CheckConfiguration(Token: CancellationToken): result of boolean, string;
+begin
+  return Error('A required setting is missing')
+end;
+
+begin
+  var Workers: TaskGroup := CreateTaskGroup();
+  // Keep the group even when individual task handles are not needed.
+  StartTaskInGroup(Workers, CheckConfiguration);
+  StartTaskInGroup(Workers, procedure(Token: CancellationToken) begin
+    var Stop: WaitCase := CancellationCase(Token, procedure() begin
+      WriteLn('Background worker stopped')
+    end);
+    Select([Stop])
+  end);
+  // Close requests cooperative cancellation and waits for every registered worker.
+  var Failures: array of TaskFailure := CloseTaskGroup(Workers);
+  for Failure: TaskFailure in Failures do
+  begin
+    WriteLn(Failure.Message)
+  end
+end.

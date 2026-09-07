@@ -3,6 +3,7 @@
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
 use super::super::{TaskSuspension, pool};
+use crate::vm::shared::wakeups::WakeSignal;
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Register, TaskIntrinsic, Value};
 use std::sync::Arc;
@@ -39,20 +40,29 @@ impl Worker {
             _ => unreachable!("controlled task wait dispatch"),
         };
         let started = Instant::now();
-        let debug_deadline = if self.debug_tasks {
-            timeout.map(|duration| {
-                self.debug_clock_ref()
-                    .now_millis()
-                    .saturating_add(duration.as_millis() as u64)
-            })
+        let suspended_deadline = if self.debug_tasks || self.task_id != 0 {
+            timeout.map(|duration| self.task_clock_ref().deadline_after(duration))
         } else {
             None
         };
         let mut initial = true;
         loop {
-            let expired = if self.debug_tasks {
-                debug_deadline
-                    .is_some_and(|deadline| self.debug_clock_ref().now_millis() >= deadline)
+            // Main-task waits register before probing. Suspended children use the shared clock
+            // and timer driver instead of keeping the caller's stack while helping other tasks.
+            let wake = if self.debug_tasks || self.task_id != 0 {
+                None
+            } else {
+                let signal = WakeSignal::new();
+                let scheduler_registration = self.scheduler_ref()?.subscribe(&signal);
+                let cancellation_registration = token
+                    .map(|token| self.hosted.cancellations.subscribe(token, &signal))
+                    .transpose()
+                    .map_err(|message| self.cancellation_error(message))?;
+                Some((signal, scheduler_registration, cancellation_registration))
+            };
+            let expired = if self.debug_tasks || self.task_id != 0 {
+                suspended_deadline
+                    .is_some_and(|deadline| self.task_clock_ref().now_millis() >= deadline)
             } else {
                 timeout.is_some_and(|timeout| started.elapsed() >= timeout)
             };
@@ -60,11 +70,11 @@ impl Worker {
                 return Ok(Some(Some(value)));
             }
             initial = false;
-            if self.debug_tasks {
+            if self.debug_tasks || self.task_id != 0 {
                 self.task_suspension = Some(TaskSuspension::WaitAnyControlled {
                     ids,
                     token,
-                    deadline_millis: debug_deadline,
+                    deadline_millis: suspended_deadline,
                     destination,
                 });
                 self.suspend_requested = true;
@@ -76,12 +86,15 @@ impl Worker {
                 continue;
             }
             if let Some(task) = scheduler.try_dequeue() {
+                drop(wake);
                 pool::run_helped(self, task, Arc::clone(&scheduler))?;
             } else {
                 let interval = timeout.map_or(POLL_INTERVAL, |timeout| {
                     timeout.saturating_sub(started.elapsed()).min(POLL_INTERVAL)
                 });
-                scheduler.wait_for_any_change(&ids, Some(interval));
+                if let Some((signal, _, _)) = &wake {
+                    signal.wait(interval);
+                }
             }
         }
     }
@@ -116,8 +129,8 @@ impl Worker {
         Ok(expired.then(|| control_error(TIMED_OUT)))
     }
 
-    /// Poll a controlled debugger wait without resetting its clock deadline.
-    pub(in crate::vm::tasks) fn poll_debug_controlled_wait_any(
+    /// Poll a controlled task wait without resetting its clock deadline.
+    pub(in crate::vm::tasks) fn poll_controlled_wait_any(
         &mut self,
         ids: Vec<u64>,
         token: Option<u64>,
@@ -125,7 +138,7 @@ impl Worker {
         destination: Option<Register>,
     ) -> Result<bool, VmError> {
         let expired =
-            deadline_millis.is_some_and(|deadline| self.debug_clock_ref().now_millis() >= deadline);
+            deadline_millis.is_some_and(|deadline| self.task_clock_ref().now_millis() >= deadline);
         if let Some(value) = self.controlled_wait_result(&ids, token, expired, false)? {
             if let Some(destination) = destination {
                 self.write(destination, value)?;

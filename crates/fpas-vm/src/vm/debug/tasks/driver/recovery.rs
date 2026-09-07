@@ -18,7 +18,8 @@ impl DebugTaskRuntime {
         let Some(slot) = self.tasks.get(&task_id) else {
             return false;
         };
-        if slot.state != DebugTaskState::Failed
+        if slot.exited
+            || slot.state != DebugTaskState::Failed
             || slot.failure.as_ref() != Some(expected)
             || crate::vm::debug::forced_return::prepare_selection(&slot.worker, prepared.depth)
                 .as_ref()
@@ -53,7 +54,8 @@ impl DebugTaskRuntime {
             .map_or((slot.worker.function, slot.worker.base), |frame| {
                 (frame.function, frame.base)
             });
-        if slot.state != DebugTaskState::Failed
+        if slot.exited
+            || slot.state != DebugTaskState::Failed
             || slot.failure.as_ref() != Some(expected)
             || identity != (prepared.function, prepared.base)
             || slot.worker.call_stack.len() != prepared.call_stack_len

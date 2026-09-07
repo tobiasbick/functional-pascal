@@ -36,6 +36,7 @@ impl DebugTaskRuntime {
         let root = task_id == 0;
         let slot = self.tasks.get_mut(&task_id)?;
         slot.state = DebugTaskState::Completed;
+        slot.worker.supervision = None;
         if retain_result {
             self.scheduler.store_result(task_id, value.clone());
         }
@@ -57,10 +58,11 @@ impl DebugTaskRuntime {
 
     pub(super) fn complete_failed_entry(&mut self, task_id: u64, value: Value) -> Option<bool> {
         let slot = self.tasks.get_mut(&task_id)?;
-        if slot.state != DebugTaskState::Failed || slot.failure.is_none() {
+        if slot.exited || slot.state != DebugTaskState::Failed || slot.failure.is_none() {
             return None;
         }
         slot.failure = None;
+        slot.worker.supervision = None;
         slot.state = DebugTaskState::Completed;
         let root = task_id == 0;
         if root {
@@ -90,6 +92,7 @@ impl DebugTaskRuntime {
                 continue;
             }
             slot.state = DebugTaskState::Cancelled;
+            slot.worker.supervision = None;
             slot.worker.task_suspension = None;
             if slot.worker.retain_result {
                 self.scheduler.cancel_result(task_id);

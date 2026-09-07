@@ -1,0 +1,29 @@
+program SupervisedTaskRetryTest;
+
+uses Std.Task, Std.Array, Std.Result, Std.Test;
+
+begin
+  var Group: TaskGroup := CreateTaskGroup();
+  var Attempts: channel of integer := CreateChannel(3);
+  Send(Attempts, 0);
+  Send(Attempts, 1);
+  Send(Attempts, 2);
+  var Child: task := StartSupervisedTask(Group, function(Token: CancellationToken): result of integer, string begin
+    var Attempt: integer := Unwrap(Receive(Attempts));
+    if Attempt = 0 then
+    begin
+      return Error('retryable error')
+    end;
+
+    if Attempt = 1 then
+    begin
+      panic('retryable panic')
+    end;
+
+    return Ok(42)
+  end, 2, 1);
+  AssertEquals(0, WaitAny([Child]));
+  AssertEquals(42, Unwrap(Wait(Child)));
+  AssertEquals(0, Length(CloseTaskGroup(Group)));
+  CloseChannel(Attempts)
+end.

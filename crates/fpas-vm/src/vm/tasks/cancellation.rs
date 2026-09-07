@@ -52,7 +52,20 @@ impl Worker {
                         .map_err(|message| self.cancellation_error(message))?,
                 )
             }
-            TaskIntrinsic::CreateChannel
+            TaskIntrinsic::ReceiveCase
+            | TaskIntrinsic::SendCase
+            | TaskIntrinsic::TaskCase
+            | TaskIntrinsic::TimerCase
+            | TaskIntrinsic::CancellationCase
+            | TaskIntrinsic::Select
+            | TaskIntrinsic::CloseWaitCase
+            | TaskIntrinsic::CreateTaskGroup
+            | TaskIntrinsic::StartTaskInGroup
+            | TaskIntrinsic::GetTaskGroupToken
+            | TaskIntrinsic::CancelTaskGroup
+            | TaskIntrinsic::CloseTaskGroup
+            | TaskIntrinsic::StartSupervisedTask
+            | TaskIntrinsic::CreateChannel
             | TaskIntrinsic::Send
             | TaskIntrinsic::TrySend
             | TaskIntrinsic::SendWithCancellation

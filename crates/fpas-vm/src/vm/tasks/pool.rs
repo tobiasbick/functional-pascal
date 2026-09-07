@@ -2,6 +2,8 @@
 
 use std::sync::Arc;
 
+mod suspension;
+
 use super::{TaskScheduler, TaskState};
 use crate::vm::VmError;
 use crate::vm::worker::Worker;
@@ -25,7 +27,18 @@ pub(super) fn run_helped(
 }
 
 fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<(), VmError> {
-    match worker.run_task() {
+    let attempt = (|| {
+        if !worker.supervised_ready()? || !worker.resume_pool_suspension()? {
+            return Ok(None);
+        }
+        worker.run_task()
+    })();
+    let outcome = match attempt {
+        Ok(Some(value)) => worker.supervised_outcome(Ok(value)),
+        Err(error) => worker.supervised_outcome(Err(error)),
+        Ok(None) => Ok(None),
+    };
+    match outcome {
         Ok(Some(value)) => {
             if worker.retain_result {
                 scheduler.store_result(worker.task_id, value);
@@ -35,7 +48,10 @@ fn run_to_completion(mut worker: Worker, scheduler: &TaskScheduler) -> Result<()
         Ok(None) => Ok(()),
         Err(error) => {
             if worker.retain_result {
-                scheduler.store_failure(worker.task_id, error.clone());
+                let grouped = scheduler.store_failure(worker.task_id, error.clone());
+                if grouped && !scheduler.is_aborted() {
+                    return Ok(());
+                }
             }
             scheduler.fail(error.clone());
             Err(error)

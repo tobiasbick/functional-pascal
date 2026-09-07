@@ -21,6 +21,29 @@ pub(in crate::vm) enum CallbackOutcome {
 }
 
 impl Worker {
+    /// Invoke the winning selection callback through the resumable task-owned path.
+    pub(in crate::vm) fn start_selection_callback(
+        &mut self,
+        callback: fpas_bytecode::SharedFunction,
+        argument: Option<Value>,
+        index: usize,
+        destination: Option<fpas_bytecode::Register>,
+    ) -> Result<(), VmError> {
+        let arguments = argument.map_or_else(
+            arguments::CallbackArguments::empty,
+            arguments::CallbackArguments::one,
+        );
+        self.callback_continuations.push(CallbackContinuation::new(
+            callback,
+            destination.map(|register| self.base + usize::from(register.get())),
+            operation::CallbackOperation::Single {
+                arguments: Some(arguments),
+                wrapper: operation::SingleWrapper::SelectionIndex(index as i64),
+            },
+        ));
+        continuation::resume(self)?;
+        Ok(())
+    }
     /// Execute immediately on the main task or retain resumable state for a spawned task.
     pub(in crate::vm) fn execute_callback_intrinsic(
         &mut self,

@@ -19,6 +19,19 @@ pub enum IntrinsicOwner {
 }
 
 impl Intrinsic {
+    /// Return whether this call can publish a child task to the scheduler.
+    ///
+    /// See `docs/pascal/std/concurrency/task.md` for task-group ownership.
+    #[must_use]
+    pub const fn starts_task(self) -> bool {
+        matches!(
+            self,
+            Self::Task(
+                super::TaskIntrinsic::StartTaskInGroup | super::TaskIntrinsic::StartSupervisedTask
+            )
+        )
+    }
+
     /// Return the single runtime module that owns this intrinsic.
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
@@ -148,6 +161,19 @@ mod tests {
                 Intrinsic::Task(TaskIntrinsic::SendWithTimeout),
                 Intrinsic::Task(TaskIntrinsic::TryReceive),
                 Intrinsic::Task(TaskIntrinsic::ReceiveWithTimeout),
+                Intrinsic::Task(TaskIntrinsic::ReceiveCase),
+                Intrinsic::Task(TaskIntrinsic::SendCase),
+                Intrinsic::Task(TaskIntrinsic::TaskCase),
+                Intrinsic::Task(TaskIntrinsic::TimerCase),
+                Intrinsic::Task(TaskIntrinsic::CancellationCase),
+                Intrinsic::Task(TaskIntrinsic::Select),
+                Intrinsic::Task(TaskIntrinsic::CloseWaitCase),
+                Intrinsic::Task(TaskIntrinsic::CreateTaskGroup),
+                Intrinsic::Task(TaskIntrinsic::StartTaskInGroup),
+                Intrinsic::Task(TaskIntrinsic::GetTaskGroupToken),
+                Intrinsic::Task(TaskIntrinsic::CancelTaskGroup),
+                Intrinsic::Task(TaskIntrinsic::CloseTaskGroup),
+                Intrinsic::Task(TaskIntrinsic::StartSupervisedTask),
             ]
         );
     }

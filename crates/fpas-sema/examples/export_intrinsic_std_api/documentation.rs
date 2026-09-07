@@ -53,6 +53,7 @@ pub(super) fn render_documentation(
     }
 }
 
+/// Describe a generated parameter without confusing observation with result consumption.
 pub(super) fn parameter_description(parameter: &str, routine: &str, ty: Option<&str>) -> String {
     let description = match parameter.to_ascii_lowercase().as_str() {
         "path" => "File or directory path processed by the operation",
@@ -75,6 +76,10 @@ pub(super) fn parameter_description(parameter: &str, routine: &str, ty: Option<&
             "Value consumed or returned by the operation"
         }
         "f" => "Callback invoked by the higher-order operation",
+        "handle" if routine.ends_with("CloseWaitCase") => "Unused selection case to discard",
+        "handle" if routine.ends_with("TaskCase") => {
+            "Task handle whose completion is observed without consuming its result"
+        }
         "handle" => "Task handle whose result is consumed",
         "tasks" => "Task handles to wait for",
         "key" => "Lookup key or keyboard event, according to the operation",

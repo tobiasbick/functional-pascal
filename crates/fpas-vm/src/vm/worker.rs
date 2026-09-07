@@ -11,10 +11,11 @@ use super::frame::CallFrame;
 use super::hosted::HostedState;
 use super::hosted::callbacks::CallbackContinuation;
 use super::layouts::RuntimeLayouts;
-use super::tasks::{DebugClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
+use super::tasks::{TaskClock, TaskScheduler, TaskState, TaskSuspension, TaskSuspensionState};
 use super::{Execution, VmError, diagnostics};
 
 pub(super) struct Worker {
+    pub(in crate::vm) supervision: Option<Box<super::tasks::supervision::SupervisedTask>>,
     pub executable: Arc<VerifiedExecutable>,
     pub function: FunctionId,
     pub ip: usize,
@@ -41,7 +42,7 @@ pub(super) struct Worker {
     pub(in crate::vm) debug_tasks: bool,
     pub(in crate::vm) debug_last_global_store: Option<u32>,
     pub(in crate::vm) task_suspension: Option<TaskSuspension>,
-    pub(in crate::vm) debug_clock: Option<Arc<DebugClock>>,
+    pub(in crate::vm) task_clock: Option<Arc<TaskClock>>,
     pub(in crate::vm) suppressed_initializers: Vec<SourceInitializerTarget>,
 }
 
@@ -144,6 +145,7 @@ impl Worker {
             arguments.iter().chain(captures).cloned(),
         );
         Ok(Self {
+            supervision: None,
             executable,
             function: entry,
             ip,
@@ -169,7 +171,7 @@ impl Worker {
             debug_tasks: false,
             debug_last_global_store: None,
             task_suspension: None,
-            debug_clock: None,
+            task_clock: Some(Arc::new(TaskClock::realtime())),
             suppressed_initializers: Vec::new(),
         })
     }
@@ -180,9 +182,9 @@ impl Worker {
     }
 
     /// Enable cooperative task suspension for debugger-owned execution.
-    pub(in crate::vm) fn with_debug_tasks(mut self, clock: Arc<DebugClock>) -> Self {
+    pub(in crate::vm) fn with_debug_tasks(mut self, clock: Arc<TaskClock>) -> Self {
         self.debug_tasks = true;
-        self.debug_clock = Some(clock);
+        self.task_clock = Some(clock);
         self
     }
 
@@ -200,6 +202,7 @@ impl Worker {
 
     pub(super) fn pool_template(&self) -> Self {
         Self {
+            supervision: None,
             executable: Arc::clone(&self.executable),
             function: self.function,
             ip: self.ip,
@@ -225,7 +228,7 @@ impl Worker {
             debug_tasks: self.debug_tasks,
             debug_last_global_store: None,
             task_suspension: None,
-            debug_clock: self.debug_clock.clone(),
+            task_clock: self.task_clock.clone(),
             suppressed_initializers: Vec::new(),
         }
     }
@@ -238,6 +241,7 @@ impl Worker {
             "task register initialization bits must match saved register values"
         );
         Self {
+            supervision: task.supervision,
             executable: Arc::clone(&self.executable),
             function: task.function,
             ip: task.ip,
@@ -262,8 +266,8 @@ impl Worker {
             suspend_requested: false,
             debug_tasks: self.debug_tasks,
             debug_last_global_store: None,
-            task_suspension: None,
-            debug_clock: self.debug_clock.clone(),
+            task_suspension: task.suspension,
+            task_clock: self.task_clock.clone(),
             suppressed_initializers: task.suppressed_initializers,
         }
     }
@@ -273,6 +277,8 @@ impl Worker {
         self.register_initialized
             .truncate(self.active_register_count);
         TaskState {
+            suspension: self.task_suspension.take(),
+            supervision: self.supervision.take(),
             id: self.task_id,
             function: self.function,
             ip: self.ip,
@@ -298,7 +304,7 @@ impl Worker {
     /// Return the current cooperative suspension kind, when this task is blocked.
     pub(in crate::vm) fn debug_suspension_state(&self) -> Option<TaskSuspensionState> {
         self.task_suspension.as_ref().map(|suspension| {
-            let Some(clock) = self.debug_clock.as_deref() else {
+            let Some(clock) = self.task_clock.as_deref() else {
                 unreachable!("debug task suspension requires a debugger clock")
             };
             suspension.state(clock)

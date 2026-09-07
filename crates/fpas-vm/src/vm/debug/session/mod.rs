@@ -20,7 +20,7 @@ use super::types::{
 };
 use crate::vm::hosted::HostedState;
 use crate::vm::layouts::RuntimeLayouts;
-use crate::vm::tasks::{DebugClock, TaskScheduler};
+use crate::vm::tasks::{TaskClock, TaskScheduler};
 use crate::vm::worker::Worker;
 
 mod breakpoints;
@@ -157,12 +157,12 @@ impl DebugSession {
         inspection_limits: DebugInspectionLimits,
         execution_limits: DebugExecutionLimits,
     ) -> Result<Self, DebugSessionError> {
-        Self::with_debug_clock(
+        Self::with_task_clock(
             executable,
             arguments,
             inspection_limits,
             execution_limits,
-            Arc::new(DebugClock::realtime()),
+            Arc::new(TaskClock::realtime()),
         )
     }
 
@@ -171,21 +171,21 @@ impl DebugSession {
     pub(in crate::vm::debug) fn with_manual_clock(
         executable: VerifiedExecutable,
     ) -> Result<Self, DebugSessionError> {
-        Self::with_debug_clock(
+        Self::with_task_clock(
             executable,
             Vec::new(),
             DebugInspectionLimits::default(),
             DebugExecutionLimits::default(),
-            Arc::new(DebugClock::manual()),
+            Arc::new(TaskClock::manual()),
         )
     }
 
-    fn with_debug_clock(
+    fn with_task_clock(
         executable: VerifiedExecutable,
         arguments: Vec<String>,
         inspection_limits: DebugInspectionLimits,
         execution_limits: DebugExecutionLimits,
-        debug_clock: Arc<DebugClock>,
+        task_clock: Arc<TaskClock>,
     ) -> Result<Self, DebugSessionError> {
         let executable = Arc::new(executable);
         let globals = Arc::new(RwLock::new(vec![
@@ -207,7 +207,7 @@ impl DebugSession {
         )
         .map_err(runtime_initialization_error)?
         .with_scheduler(Some(Arc::clone(&scheduler)))
-        .with_debug_tasks(Arc::clone(&debug_clock));
+        .with_debug_tasks(Arc::clone(&task_clock));
         let pause_requested = Arc::new(AtomicBool::new(false));
         let evaluation_cancelled = Arc::new(AtomicBool::new(false));
         let last_stop = stop_at_worker(
@@ -221,7 +221,7 @@ impl DebugSession {
         let inspection =
             InspectionSnapshot::capture(&worker, inspection_generation, inspection_limits);
         let inspections = BTreeMap::from([(0, inspection)]);
-        let runtime = DebugTaskRuntime::new(worker, scheduler, debug_clock);
+        let runtime = DebugTaskRuntime::new(worker, scheduler, task_clock);
         Ok(Self {
             executable,
             previous_executable: None,

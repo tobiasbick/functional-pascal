@@ -15,6 +15,36 @@ public type
     // Compiler-owned storage for this opaque handle.
     _IntrinsicHandle: integer;
   end;
+  // Child identity, failure kind, message, diagnostic code, and source position.
+  TaskFailure = record
+    public TaskId: integer;
+    public Kind: Std.Task.TaskFailureKind;
+    public Message: string;
+    public Code: integer;
+    public Line: integer;
+    public Column: integer;
+  end;
+  // `ReturnedError`, `Panicked`, `RuntimeError`, or `Cancelled`.
+  TaskFailureKind = enum
+    // `ReturnedError` enum member.
+    ReturnedError;
+    // `Panicked` enum member.
+    Panicked;
+    // `RuntimeError` enum member.
+    RuntimeError;
+    // `Cancelled` enum member.
+    Cancelled;
+  end;
+  // Opaque owner of explicitly registered child tasks.
+  TaskGroup = record
+    // Compiler-owned storage for this opaque handle.
+    _IntrinsicHandle: integer;
+  end;
+  // Opaque single-use selection case owned by its creating task.
+  WaitCase = record
+    // Compiler-owned storage for this opaque handle.
+    _IntrinsicHandle: integer;
+  end;
 
 // Requests cancellation; true only for the first request.
 //
@@ -25,11 +55,48 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Requests cancellation without joining; true only for the first request.
+//
+// Parameters:
+// - `Group`: `Std.Task.TaskGroup` input value used by `CancelTaskGroup`.
+public function CancelTaskGroup(Group: Std.Task.TaskGroup): boolean;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Describes observation of cancellation.
+//
+// Parameters:
+// - `Token`: Input value used by `CancellationCase`.
+// - `Callback`: Input value used by `CancellationCase`.
+public function CancellationCase(Token: CancellationToken; Callback: procedure()): WaitCase;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Closes and wakes waiters; true only for the first close.
 //
 // Parameters:
 // - `Queue`: Input value used by `CloseChannel`.
 public function CloseChannel(Queue: channel of T): boolean;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Cancels, joins registered children, releases their results, and returns failures.
+//
+// Parameters:
+// - `Group`: `Std.Task.TaskGroup` input value used by `CloseTaskGroup`.
+public function CloseTaskGroup(Group: Std.Task.TaskGroup): array of Std.Task.TaskFailure;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Discards an unused case; false when already closed or selected.
+//
+// Parameters:
+// - `Handle`: Unused selection case to discard.
+public function CloseWaitCase(Handle: Std.Task.WaitCase): boolean;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -49,11 +116,26 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Creates a group owned by the calling task.
+public function CreateTaskGroup(): Std.Task.TaskGroup;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Returns a token linked to the source.
 //
 // Parameters:
 // - `Source`: `Std.Task.CancellationSource` input value used by `GetCancellationToken`.
 public function GetCancellationToken(Source: Std.Task.CancellationSource): Std.Task.CancellationToken;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Returns the group-owned cancellation token.
+//
+// Parameters:
+// - `Group`: `Std.Task.TaskGroup` input value used by `GetTaskGroupToken`.
+public function GetTaskGroupToken(Group: Std.Task.TaskGroup): Std.Task.CancellationToken;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -72,6 +154,16 @@ end;
 // Parameters:
 // - `Queue`: Input value used by `Receive`.
 public function Receive(Queue: channel of T): result of T, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Describes one receive and its typed delivery callback.
+//
+// Parameters:
+// - `Queue`: Input value used by `ReceiveCase`.
+// - `Callback`: Input value used by `ReceiveCase`.
+public function ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of T, string)): WaitCase;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -96,12 +188,36 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Commits one operation, runs its callback, then returns its input index.
+//
+// Parameters:
+// - `Cases`: `array of Std.Task.WaitCase` input value used by `Select`.
+public function Select(Cases: array of Std.Task.WaitCase): integer;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Blocks while full; returns an error after close.
 //
 // Parameters:
 // - `Queue`: Input value used by `Send`.
 // - `Value`: Value consumed or returned by the operation.
 public function Send(Queue: channel of T; Value: T): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Describes one send without enqueueing its value.
+//
+// Parameters:
+// - `Queue`: Input value used by `SendCase`.
+// - `Value`: Value consumed or returned by the operation.
+// - `Callback`: Input value used by `SendCase`.
+public function SendCase(
+  Queue: channel of T;
+  Value: T;
+  Callback: procedure(Outcome: result of boolean, string)
+): WaitCase;
 begin
   panic('Intrinsic API declaration')
 end;
@@ -124,6 +240,53 @@ end;
 // - `Value`: Value consumed or returned by the operation.
 // - `TimeoutMillis`: Input value used by `SendWithTimeout`.
 public function SendWithTimeout(Queue: channel of T; Value: T; TimeoutMillis: integer): result of boolean, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Starts one group-owned task with bounded retries; also accepts a procedure.
+//
+// Parameters:
+// - `Group`: Input value used by `StartSupervisedTask`.
+// - `Work`: Input value used by `StartSupervisedTask`.
+// - `RetryLimit`: Input value used by `StartSupervisedTask`.
+// - `BackoffMillis`: Input value used by `StartSupervisedTask`.
+public function StartSupervisedTask(
+  Group: TaskGroup;
+  Work: function(Token: CancellationToken): T;
+  RetryLimit: integer;
+  BackoffMillis: integer
+): task;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Starts a retained child; also accepts a procedure with the same token parameter.
+//
+// Parameters:
+// - `Group`: Input value used by `StartTaskInGroup`.
+// - `Work`: Input value used by `StartTaskInGroup`.
+public function StartTaskInGroup(Group: TaskGroup; Work: function(Token: CancellationToken): T): task;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Describes non-consuming task completion.
+//
+// Parameters:
+// - `Handle`: Task handle whose completion is observed without consuming its result.
+// - `Callback`: Input value used by `TaskCase`.
+public function TaskCase(Handle: task; Callback: procedure()): WaitCase;
+begin
+  panic('Intrinsic API declaration')
+end;
+
+// Describes a timer relative to `Select` entry.
+//
+// Parameters:
+// - `Milliseconds`: Non-negative duration in milliseconds.
+// - `Callback`: Input value used by `TimerCase`.
+public function TimerCase(Milliseconds: integer; Callback: procedure()): WaitCase;
 begin
   panic('Intrinsic API declaration')
 end;

@@ -11,6 +11,9 @@ use fpas_lexer::Span;
 use fpas_parser::Expr;
 use fpas_std::std_symbols as s;
 
+mod groups;
+mod selection;
+
 pub(super) fn check_channel_task_builtin_std_call(
     c: &mut Checker,
     name: &str,
@@ -18,6 +21,14 @@ pub(super) fn check_channel_task_builtin_std_call(
     span: Span,
 ) -> Option<Ty> {
     let ty = match name {
+        s::STD_TASK_START_TASK_IN_GROUP | s::STD_TASK_START_SUPERVISED_TASK => {
+            groups::check_start(c, name, args, span)
+        }
+        s::STD_TASK_RECEIVE_CASE
+        | s::STD_TASK_SEND_CASE
+        | s::STD_TASK_TASK_CASE
+        | s::STD_TASK_TIMER_CASE
+        | s::STD_TASK_CANCELLATION_CASE => selection::check_case(c, name, args, span),
         s::STD_TASK_CREATE_CHANNEL => check_create_channel(c, args, span),
         s::STD_TASK_SEND | s::STD_TASK_TRY_SEND => {
             check_send(c, args, span, name, ChannelWaitArg::None)

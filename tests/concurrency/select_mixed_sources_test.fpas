@@ -1,0 +1,44 @@
+program SelectMixedSourcesTest;
+
+uses Std.Task, Std.Result, Std.Test;
+
+begin
+  var Numbers: channel of integer := CreateChannel(2);
+  var Words: channel of string := CreateChannel(2);
+  Send(Numbers, 42);
+  Send(Words, 'retained');
+  mutable var Seen: integer := 0;
+  var First: WaitCase := ReceiveCase(Numbers, procedure(Outcome: result of integer, string) begin
+    Seen := Unwrap(Outcome)
+  end);
+  var Second: WaitCase := ReceiveCase(Words, procedure(Outcome: result of string, string) begin
+    panic('losing callback ran')
+  end);
+  AssertEquals(0, Select([First, Second]));
+  AssertEquals(42, Seen);
+  AssertEquals('retained', Unwrap(Receive(Words)));
+  AssertFalse(CloseWaitCase(First));
+  AssertFalse(CloseWaitCase(Second));
+  var Unused: WaitCase := TimerCase(0, procedure() begin
+    panic('unused callback ran')
+  end);
+  AssertTrue(CloseWaitCase(Unused));
+  AssertFalse(CloseWaitCase(Unused));
+  var Source: CancellationSource := CreateCancellationSource();
+  Cancel(Source);
+  var Cancelled: WaitCase := CancellationCase(GetCancellationToken(Source), procedure() begin
+    Seen := 7
+  end);
+  var Timer: WaitCase := TimerCase(0, procedure() begin
+    panic('losing timer ran')
+  end);
+  AssertEquals(0, Select([Cancelled, Timer]));
+  AssertEquals(7, Seen);
+  var Timed: WaitCase := TimerCase(1, procedure() begin
+    Seen := 9
+  end);
+  AssertEquals(0, Select([Timed]));
+  AssertEquals(9, Seen);
+  CloseChannel(Numbers);
+  CloseChannel(Words)
+end.

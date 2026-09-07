@@ -32,6 +32,15 @@ impl Worker {
         callback: &Value,
         argument_count: usize,
     ) -> Result<SharedFunction, VmError> {
+        self.validate_callback(callback, argument_count).cloned()
+    }
+
+    /// Validate a callback without retaining its captured references.
+    pub(super) fn validate_callback<'a>(
+        &self,
+        callback: &'a Value,
+        argument_count: usize,
+    ) -> Result<&'a SharedFunction, VmError> {
         let Value::Function(function) = callback else {
             return Err(diagnostics::at_address(
                 self.executable.executable(),
@@ -76,7 +85,7 @@ impl Worker {
                 "Check the callback signature and the intrinsic's callback contract.",
             ));
         }
-        Ok(function.clone())
+        Ok(function)
     }
 
     fn call_numeric_function(

@@ -47,6 +47,7 @@ impl DebugTaskRuntime {
             slot.state = DebugTaskState::Cancelled;
             slot.exited = true;
             slot.worker.task_suspension = None;
+            slot.worker.supervision = None;
             (retain_result, error)
         };
         if retain_result {

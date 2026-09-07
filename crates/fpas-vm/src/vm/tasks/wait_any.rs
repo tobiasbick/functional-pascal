@@ -39,7 +39,7 @@ impl Worker {
             if let Some(value) = self.wait_any_result(&ids)? {
                 return Ok(Some(Some(value)));
             }
-            if self.debug_tasks {
+            if self.debug_tasks || self.task_id != 0 {
                 self.task_suspension = Some(TaskSuspension::WaitAny { ids, destination });
                 self.suspend_requested = true;
                 return Ok(Some(None));
@@ -87,8 +87,8 @@ impl Worker {
         }
     }
 
-    /// Resume a debugger-owned completion barrier or retain its suspension.
-    pub(super) fn poll_debug_wait_any(
+    /// Resume a cooperative completion barrier or retain its suspension.
+    pub(super) fn poll_wait_any(
         &mut self,
         ids: Vec<u64>,
         destination: Option<Register>,

@@ -154,6 +154,14 @@ fn validate_function_code(
         let address = InstructionAddress::new(raw_address);
         let opcode = validate_instruction(executable, function_id, function, address)?;
         emitted_spawn |= matches!(opcode, Opcode::SpawnTask | Opcode::SpawnDetachedTask);
+        if opcode == Opcode::Intrinsic {
+            // Operand shape and intrinsic identity were checked by validate_instruction.
+            emitted_spawn |= executable.code[raw_address as usize]
+                .abc_operands()
+                .ok()
+                .and_then(|operands| crate::Intrinsic::from_u16(operands.b))
+                .is_some_and(crate::Intrinsic::starts_task);
+        }
         raw_address = raw_address.checked_add(1).ok_or_else(|| {
             ValidationError::function(
                 executable,

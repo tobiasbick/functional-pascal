@@ -1,4 +1,4 @@
-//! Debugger suspension and polling for bounded-channel operations.
+//! Cooperative suspension and polling for bounded-channel operations.
 
 use fpas_bytecode::{Register, Value};
 
@@ -9,7 +9,8 @@ use super::super::TaskSuspension;
 use super::{CLOSED_ERROR, RECEIVE_CANCELLED_ERROR, SEND_CANCELLED_ERROR, error, ok};
 
 impl Worker {
-    pub(super) fn debug_channel_send(
+    /// Send immediately or retain the value and destination until readiness changes.
+    pub(super) fn start_channel_send(
         &mut self,
         handle: u64,
         value: Value,
@@ -39,7 +40,8 @@ impl Worker {
         }
     }
 
-    pub(super) fn debug_channel_receive(
+    /// Receive immediately or retain the destination until readiness changes.
+    pub(super) fn start_channel_receive(
         &mut self,
         handle: u64,
         token: Option<u64>,
@@ -67,7 +69,8 @@ impl Worker {
         }
     }
 
-    pub(in crate::vm::tasks) fn poll_debug_channel_send(
+    /// Resume a pending send, observing closure and cancellation on every probe.
+    pub(in crate::vm::tasks) fn poll_channel_send(
         &mut self,
         handle: u64,
         value: Value,
@@ -94,10 +97,11 @@ impl Worker {
                 None
             }
         };
-        self.finish_debug_channel_poll(result, destination)
+        self.finish_channel_poll(result, destination)
     }
 
-    pub(in crate::vm::tasks) fn poll_debug_channel_receive(
+    /// Resume a pending receive, observing closure and cancellation on every probe.
+    pub(in crate::vm::tasks) fn poll_channel_receive(
         &mut self,
         handle: u64,
         token: Option<u64>,
@@ -122,10 +126,11 @@ impl Worker {
                 None
             }
         };
-        self.finish_debug_channel_poll(result, destination)
+        self.finish_channel_poll(result, destination)
     }
 
-    pub(super) fn finish_debug_channel_poll(
+    /// Deliver a completed channel operation to its saved destination register.
+    pub(super) fn finish_channel_poll(
         &mut self,
         result: Option<Value>,
         destination: Option<Register>,

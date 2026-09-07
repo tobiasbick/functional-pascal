@@ -2,6 +2,51 @@ use super::super::{check_errors, check_ok};
 use fpas_diagnostics::codes::SEMA_TASK_BOUND_CALLABLE;
 use fpas_parser::{ParseDiagnostic, parse};
 
+mod groups;
+
+#[test]
+fn selection_send_rejects_task_bound_values() {
+    let errors = check_errors(
+        r#"program T;
+uses Std.Task;
+begin
+  mutable var Count: integer := 0;
+  var Work: procedure() := procedure() begin Count := Count + 1 end;
+  var Q: channel of procedure() := CreateChannel(1);
+  SendCase(Q, Work, procedure(R: result of boolean, string) begin end)
+end."#,
+    );
+    assert!(
+        errors
+            .iter()
+            .any(|error| error.code == SEMA_TASK_BOUND_CALLABLE),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn selection_cases_reject_wrong_payload_callback_and_control_types() {
+    for call in [
+        "ReceiveCase(Q, procedure(R: result of string, string) begin end)",
+        "SendCase(Q, 'wrong', procedure(R: result of boolean, string) begin end)",
+        "SendCase(Q, 1, procedure(R: result of integer, string) begin end)",
+        "TimerCase(0, function(): integer begin return 1 end)",
+        "TimerCase('wrong', procedure() begin end)",
+        "TaskCase(1, procedure() begin end)",
+        "CancellationCase(CreateCancellationSource(), procedure() begin end)",
+        "Select([1])",
+        "CloseWaitCase(CreateCancellationSource())",
+    ] {
+        let source = format!(
+            "program T; uses Std.Task; begin var Q: channel of integer := CreateChannel(1); {call} end."
+        );
+        assert!(
+            !check_errors(&source).is_empty(),
+            "accepted invalid selection: {call}"
+        );
+    }
+}
+
 #[test]
 fn controlled_wait_any_checks_control_types_and_arity() {
     for call in [

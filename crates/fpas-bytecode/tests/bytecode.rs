@@ -11,6 +11,7 @@ mod bytecode {
     mod executable;
     mod instruction;
     mod instruction_change;
+    mod spawn_flags;
     mod support;
     mod verifier;
 }

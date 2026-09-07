@@ -45,7 +45,7 @@ Ordered learning path for newcomers:
 5. [Types](language/types/README.md) — records, enums, arrays, generics
 6. [Pattern matching](language/pattern-matching/README.md) — guards, exhaustiveness
 7. [Error handling](language/error-handling/README.md) — `Result`, `Option`, `try`, `panic`
-8. [Concurrency](language/concurrency/README.md) — `go`, tasks, fork-join
+8. [Concurrency](language/concurrency/README.md) — `go`, tasks, channels, and scheduling; [Std.Task](std/concurrency/task.md) covers cancellation, selection, task groups, supervised retries, and timed close
 9. [Units](program-structure/units.md) — `uses`, namespaces, visibility
 10. [Projects](program-structure/projects.md) — `.fpasprj`, workspaces
 11. [CLI](program-structure/cli.md) — `fpas`, `check`, `test`, `fmt`

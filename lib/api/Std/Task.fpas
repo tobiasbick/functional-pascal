@@ -92,6 +92,16 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Attempts cooperative close with a waiting budget; timeout retains group ownership.
+//
+// Parameters:
+// - `Group`: `Std.Task.TaskGroup` input value used by `CloseTaskGroupWithTimeout`.
+// - `TimeoutMillis`: `integer` input value used by `CloseTaskGroupWithTimeout`.
+public function CloseTaskGroupWithTimeout(Group: Std.Task.TaskGroup; TimeoutMillis: integer): result of array of Std.Task.TaskFailure, string;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Discards an unused case; false when already closed or selected.
 //
 // Parameters:

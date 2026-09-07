@@ -143,6 +143,7 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
                 GetTaskGroupToken,
                 CancelTaskGroup,
                 CloseTaskGroup,
+                CloseTaskGroupWithTimeout,
                 StartSupervisedTask,
                 CloseWaitCase,
                 WaitAnyWithTimeout,

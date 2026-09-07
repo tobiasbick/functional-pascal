@@ -27,6 +27,8 @@ pub enum TaskIntrinsic {
     CloseTaskGroup = 562,
     /// Start a group-owned worker with bounded retries; see `docs/pascal/std/concurrency/task.md`.
     StartSupervisedTask = 563,
+    /// Cooperatively close a group with a waiting budget; see `docs/pascal/std/concurrency/task.md`.
+    CloseTaskGroupWithTimeout = 564,
     /// ReceiveCase selection operation; see `docs/pascal/std/concurrency/task.md`.
     ReceiveCase = 551,
     /// SendCase selection operation; see `docs/pascal/std/concurrency/task.md`.

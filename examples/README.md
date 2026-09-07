@@ -19,7 +19,10 @@ Or:
 pwsh scripts/run-non-interactive-examples.ps1
 ```
 
-When you add a new **console** example that exits on its own, append it to `NON_INTERACTIVE_EXAMPLES` in that file. Library and workspace manifests used only for `fpas check` go in `NON_INTERACTIVE_CHECK_EXAMPLES` in the same file. Interactive demos stay documented in the table below only.
+When you add a new **console** example that exits on its own, add an entry to `example_run_tests!`
+in that file or a dedicated `example_*` test in its submodules when asserting output. Examples and
+manifests used only for `fpas check` use `example_check_tests!` or a dedicated `example_check_*` test.
+Interactive demos are checked without opening their terminal UI.
 
 ## Stdlib regression suite (`tests/`)
 
@@ -28,7 +31,7 @@ The **FPAS regression suite** lives in [`tests/`](../tests/) as `*_test.fpas` fi
 | Directory | Contents |
 |-----------|----------|
 | `tests/stdlib/` | `Std.*` runtime checks, including headless `Std.Tui` coverage |
-| `tests/concurrency/` | `go` / task concurrency |
+| `tests/concurrency/` | Tasks, channels, cancellation, selection, task groups, supervision, and timed close |
 | `tests/runner/` | `Std.Test` basics, `Skip`, stdout golden |
 | `tests/console/` | `PushReadLn` + `ReadLn` |
 | `tests/apps/` | Application workflow tests |
@@ -168,6 +171,11 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/for-in/for_in_example.fpas` | `for V in array` |
 | `pascal/for-in/dict_for_in_example.fpas` | `for K in dict` (key iteration) |
 | `pascal/concurrency/go_statement_example.fpas` | Fire-and-forget `go` (no `task` handle) |
+| [`pascal/concurrency/select_events.fpas`](pascal/concurrency/select_events.fpas) | Typed channel delivery selected against a timer |
+| [`pascal/concurrency/task_group_workers.fpas`](pascal/concurrency/task_group_workers.fpas) | Group-owned workers, cooperative cancellation, and collected failures |
+| [`pascal/concurrency/supervised_worker.fpas`](pascal/concurrency/supervised_worker.fpas) | Bounded worker retries with one task identity |
+| [`pascal/concurrency/worker_pipeline.fpas`](pascal/concurrency/worker_pipeline.fpas) | Three workers, capacity-two queues, concurrent collection, and timed close; prints `650` |
+| [`pascal/concurrency/task_group_close_timeout.fpas`](pascal/concurrency/task_group_close_timeout.fpas) | A deterministic zero-timeout close retains a cleanup gate until release and join |
 | `pascal/concurrency/task_memory_benchmark.fpas` | Parameterized cooperative task-memory benchmark; measure peak RSS externally |
 | `pascal/concurrency/task_spawn_wait_benchmark.fpas` | Spawn plus `WaitAll` task-scheduling throughput |
 | `pascal/concurrency/task_array_callbacks_benchmark.fpas` | Resumable `Map`, `Filter`, and `Reduce` callback throughput inside a spawned task |
@@ -205,6 +213,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
 | `network/http_server.fpas` + `network/http_client.fpas` | Local HTTP server plus buffered and streaming client |
 | `network/tcp_echo_server.fpas` + `network/tcp_echo_client.fpas` | Raw TCP lifecycle, timeouts, UTF-8, and partial writes |
+| [`network/tcp_parallel_echo_server.fpas`](network/tcp_parallel_echo_server.fpas) | Four connection workers, cancellable byte-stream echo, and timed shutdown on loopback |
 | `network/https_server.fpas` + `network/https_client.fpas` | TLS listener credentials and verified HTTPS requests |
 | `network/sse_decoder.fpas` | Incremental Server-Sent Events decoding across fragments |
 | `network/uri_utf8.fpas` | Absolute URI parsing and UTF-8 conversion |
@@ -219,7 +228,7 @@ All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table b
 | `pascal/library-deps/` | Program `LibDemo` + library `MyLib.Core` via `[dependencies].projects` |
 | `pascal/monorepo/` | Workspace + `Demo.Greet` library + `Hello` via `[dependencies].workspace` |
 | `math/mandelbrot/` | `mandelbrot.fpasprj`, program `MandelbrotShowcase`, units `Mandelbrot.Color` / `Mandelbrot.Render` |
-| `math/julia/` | `julia.fpasprj`, program `JuliaShowcase`, units `Julia.Color` / `Julia.Render` |
+| `math/julia/` | `julia.fpasprj` depends on `julia-core.fpasprj`: `Julia.Color`, `Julia.Compute`, and `Julia.Render` |
 | `math/burning_ship/` | `burning_ship.fpasprj`, program `BurningShipShowcase`, units `BurningShip.Color` / `BurningShip.Render` |
 | `math/tricorn/` | `tricorn.fpasprj`, program `TricornShowcase`, units `Tricorn.Color` / `Tricorn.Render` |
 | `math/newton/` | `newton.fpasprj`, program `NewtonShowcase`, units `Newton.Color` / `Newton.Render` |
@@ -234,9 +243,45 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 |------|--------|
 | `openai-chat/openai-chat.fpasprj` | Line-oriented chat against a configurable OpenAI-compatible HTTP endpoint |
 | `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with truecolor `TuiCellGrid`, gauges, and overlay |
-| `math/julia/julia.fpasprj` | Fullscreen terminal Julia explorer; `WASD` adjusts the constant |
+| `math/julia/julia.fpasprj` | Fullscreen Julia explorer with four cancellable render workers; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |
 | `math/newton/newton.fpasprj` | Fullscreen terminal Newton basins for `z^3-1` |
 
 Custom terminal loops use `Std.Console`; see `docs/pascal/std/console/README.md`.
+
+## Concurrency examples in practice
+
+The worker pipeline feeds and collects concurrently. Both queues have capacity two; a slow
+collector blocks workers, which in turn slows the producer. Closing the task group requests
+cancellation, so the collector receives all twelve results before starting close. The separate
+timeout demo deliberately waits on a non-cancellable cleanup gate: timeout is not termination,
+and the owner releases the gate and joins before closing its channel.
+
+Julia starts four workers per view, with a capacity-four row channel. The main task draws at most
+four available rows per event-loop iteration; it does not wait for a whole image. Zoom, resize,
+palette changes, and exit cancel and join the old render before releasing its queue. Workers
+check cancellation between pixels and every 32 fractal iterations, and their result sends are
+cancellable. Each replacement owns a fresh queue, so old rows cannot overwrite the new view.
+This uses the existing Console loop, not a new `Std.Tui` background-message API. No rendering
+speedup is claimed; the change concerns work bounds and event processing.
+
+Run the additional TCP example with an optional port and lifetime in milliseconds:
+
+```sh
+fpas run examples/network/tcp_parallel_echo_server.fpas -- 18082 10000
+```
+
+It echoes raw bytes as they arrive, without an `Echo:` prefix or line framing. Each of four workers
+accepts and owns one connection at a time, processes chunks of at most 4096 bytes, handles partial
+writes, and closes the connection even on an I/O error. Idle reads/writes have a five-second timeout.
+At lifetime expiry the owner cancels accept and connection I/O, tries a one-second group close,
+then retains and joins any unfinished workers before closing the listener. Active requests may be
+interrupted: this is a cancellation demo, not graceful draining or a hard process-exit guarantee.
+Hosted network calls occupy VM workers; actual parallelism also depends on the runtime pool.
+The original single-request TCP tutorial remains unchanged.
+
+`cargo test -p fpas-cli parallel_echo_example` tests the checked-in server with loopback clients,
+including a second client while the first is idle, multi-chunk echo, and cancellation during reads
+and accepts. Julia's row-equivalence and full-queue cancellation tests are part of
+`fpas test tests/suite.fpasprj --filter julia`.

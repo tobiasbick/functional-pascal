@@ -3,6 +3,8 @@
 use super::*;
 use crate::DebugTaskEventKind;
 
+mod timeout;
+
 const LIFECYCLE: &str =
     include_str!("../../../../../../tests/concurrency/task_group_lifecycle_test.fpas");
 

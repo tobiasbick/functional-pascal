@@ -1,0 +1,6 @@
+[project]
+name = "julia-core"
+kind = "library"
+
+[sources]
+include = ["julia_color.fpas", "julia_compute.fpas", "julia_render.fpas"]

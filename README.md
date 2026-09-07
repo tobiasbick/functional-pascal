@@ -13,7 +13,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Pattern matching** — Exhaustive `case` statements with enum, `Result`, and `Option` destructuring.
 - **First-class functions** — Pass named functions as values, store them in variables, and use them with higher-order APIs.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
-- **Concurrency** — Go-inspired `go` tasks with `Wait` and `WaitAll` for fork-join concurrency.
+- **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Task](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
@@ -289,7 +289,7 @@ Ordered learning path:
 13. [Formatter style](docs/pascal/tools/fmt-style.md)
 14. [Editor integration](docs/pascal/tools/editor-integration.md)
 
-Planned work (not current behavior): [`docs/future/`](docs/future/).
+Roadmaps, implementation progress, and deferred work: [`docs/future/`](docs/future/).
 
 ## Contributing
 

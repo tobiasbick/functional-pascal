@@ -174,6 +174,7 @@ mod tests {
                 Intrinsic::Task(TaskIntrinsic::CancelTaskGroup),
                 Intrinsic::Task(TaskIntrinsic::CloseTaskGroup),
                 Intrinsic::Task(TaskIntrinsic::StartSupervisedTask),
+                Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
             ]
         );
     }

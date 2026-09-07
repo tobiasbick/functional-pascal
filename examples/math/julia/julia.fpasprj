@@ -4,4 +4,7 @@ kind = "program"
 main = "julia.fpas"
 
 [sources]
-include = ["julia.fpas", "julia_color.fpas", "julia_render.fpas"]
+include = ["julia.fpas"]
+
+[dependencies]
+projects = ["julia-core.fpasprj"]

@@ -8,6 +8,8 @@
 use super::support;
 use std::path::{Path, PathBuf};
 
+mod concurrency;
+
 fn repo_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
@@ -78,6 +80,8 @@ fn example_check_monorepo_workspace() {
 }
 
 example_check_tests! {
+    (example_check_julia_background_render, "examples/math/julia/julia.fpasprj"),
+    (example_check_network_parallel_tcp_echo, "examples/network/tcp_parallel_echo_server.fpas"),
     (example_check_network_http_server, "examples/network/http_server.fpas"),
     (example_check_network_http_client, "examples/network/http_client.fpas"),
     (example_check_network_tcp_echo_server, "examples/network/tcp_echo_server.fpas"),
@@ -103,6 +107,9 @@ example_run_tests! {
     (example_mutable_nested_functions, "examples/pascal/functions/mutable_nested_functions.fpas"),
     (example_nested_functions, "examples/pascal/functions/nested_functions.fpas"),
     (example_go_statement, "examples/pascal/concurrency/go_statement_example.fpas"),
+    (example_concurrency_select_events, "examples/pascal/concurrency/select_events.fpas"),
+    (example_concurrency_task_group_workers, "examples/pascal/concurrency/task_group_workers.fpas"),
+    (example_concurrency_supervised_worker, "examples/pascal/concurrency/supervised_worker.fpas"),
     (example_generic_functions, "examples/pascal/generics/generic_functions.fpas"),
     (example_generic_record_methods, "examples/pascal/generics/generic_record_methods.fpas"),
     (example_higher_order_functions, "examples/pascal/higher-order-functions/higher_order_functions.fpas"),

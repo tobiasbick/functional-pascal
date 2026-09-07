@@ -1,0 +1,38 @@
+program JuliaRenderTest;
+
+uses Julia.Render, Julia.Compute, Julia.Color, Std.Task, Std.Array, Std.Result, Std.Test;
+
+begin
+  var Job: RenderJob := StartRender(-1.0, 1.0, -1.0, 1.0, 7, 9, 32, PaletteKind.DeepOcean, -0.8, 0.156);
+  mutable var Seen: array of boolean := [
+                                          false,
+                                          false,
+                                          false,
+                                          false,
+                                          false,
+                                          false,
+                                          false,
+                                          false,
+                                          false
+                                        ];
+  for Index: integer := 1 to 9 do
+  begin
+    var Row: RenderRow := Unwrap(ReceiveWithTimeout(Job.Rows, 5000));
+    AssertTrue((Row.Y >= 0) and (Row.Y < 9));
+    AssertFalse(Seen[Row.Y]);
+    Seen[Row.Y] := true;
+    var Expected: array of PixelSample := ComputeRow(Row.Y, 7, 9, -1.0, 1.0, -1.0, 1.0, 32, -0.8, 0.156, GetTaskGroupToken(Job.Group));
+    AssertEquals(7, Length(Row.Samples));
+    for X: integer := 0 to 6 do
+    begin
+      AssertTrue(Row.Samples[X].IsInside = Expected[X].IsInside);
+      AssertTrue(Row.Samples[X].EscapeValue = Expected[X].EscapeValue)
+    end
+  end;
+
+  StopRender(Job);
+  for Found: boolean in Seen do
+  begin
+    AssertTrue(Found)
+  end
+end.

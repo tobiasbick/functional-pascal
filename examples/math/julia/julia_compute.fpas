@@ -1,0 +1,124 @@
+unit Julia.Compute;
+
+uses Std.Task, Std.Math, Std.Conv, Std.Array;
+
+type
+  Complex = record
+    public Re: real;
+    public Im: real;
+
+    public static function Create(Re: real; Im: real): Complex;
+    begin
+      return record
+        Re := Re;
+        Im := Im;
+      end
+    end;
+
+    public function Sq(Self: Complex): Complex;
+    begin
+      return record
+        Re := Self.Re * Self.Re - Self.Im * Self.Im;
+        Im := (2.0 * Self.Re) * Self.Im;
+      end
+    end;
+
+    public function Add(Self: Complex; Other: Complex): Complex;
+    begin
+      return record
+        Re := Self.Re + Other.Re;
+        Im := Self.Im + Other.Im;
+      end
+    end;
+
+    public function MagSq(Self: Complex): real;
+    begin
+      return Self.Re * Self.Re + Self.Im * Self.Im
+    end;
+  end;
+
+public type
+  PixelSample = record
+    public IsInside: boolean;
+    public EscapeValue: real;
+  end;
+
+function Iterate(Z0: Complex; C: Complex; MaxIter: integer; Token: CancellationToken): PixelSample;
+begin
+  var EscapeRadiusSq: real := 256.0;
+  mutable var Z: Complex := Z0;
+  mutable var N: integer := 0;
+  while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
+  begin
+    if (N mod 32 = 0) and IsCancellationRequested(Token) then
+    begin
+      break
+    end;
+
+    Z := Z.Sq().Add(C);
+    N := N + 1
+  end;
+
+  if N >= MaxIter then
+  begin
+    return record
+      IsInside := true;
+      EscapeValue := 0.0;
+    end
+  end;
+  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
+  var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+  return record
+    IsInside := false;
+    EscapeValue := Smooth;
+  end
+end;
+
+// Compute one row, returning an empty array when cancellation is observed.
+public function ComputeRow(
+  Py: integer;
+  Width: integer;
+  Height: integer;
+  XMin: real;
+  XMax: real;
+  YMin: real;
+  YMax: real;
+  MaxIter: integer;
+  Jr: real;
+  Ji: real;
+  Token: CancellationToken
+): array of PixelSample;
+begin
+  mutable var WidthRange: integer := Width - 1;
+  mutable var HeightRange: integer := Height - 1;
+  if WidthRange < 1 then
+  begin
+    WidthRange := 1
+  end;
+
+  if HeightRange < 1 then
+  begin
+    HeightRange := 1
+  end;
+  var Wr: real := IntToReal(WidthRange);
+  var Hr: real := IntToReal(HeightRange);
+  var cy: real := YMax - (Py / Hr) * (YMax - YMin);
+  var C: Complex := Complex.Create(Jr, Ji);
+  mutable var Row: array of PixelSample := [];
+  for Px: integer := 0 to Width - 1 do
+  begin
+    if IsCancellationRequested(Token) then
+    begin
+      return []
+    end;
+    var cx: real := XMin + (Px / Wr) * (XMax - XMin);
+    Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter, Token))
+  end;
+
+  if IsCancellationRequested(Token) then
+  begin
+    return []
+  end;
+
+  return Row
+end;

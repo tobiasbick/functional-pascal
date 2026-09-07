@@ -40,6 +40,7 @@ std_symbol!(STD_TASK_START_SUPERVISED_TASK = std_task!("StartSupervisedTask"));
 std_symbol!(STD_TASK_GET_TASK_GROUP_TOKEN = std_task!("GetTaskGroupToken"));
 std_symbol!(STD_TASK_CANCEL_TASK_GROUP = std_task!("CancelTaskGroup"));
 std_symbol!(STD_TASK_CLOSE_TASK_GROUP = std_task!("CloseTaskGroup"));
+std_symbol!(STD_TASK_CLOSE_TASK_GROUP_WITH_TIMEOUT = std_task!("CloseTaskGroupWithTimeout"));
 std_symbol!(STD_TASK_CLOSE_WAIT_CASE = std_task!("CloseWaitCase"));
 std_symbol!(STD_TASK_WAIT_ALL = std_task!("WaitAll"));
 std_symbol!(STD_TASK_WAIT_ANY = std_task!("WaitAny"));
@@ -58,6 +59,7 @@ pub(in crate::std_units) const STD_TASK_SYMBOLS: &[&str] = &[
     STD_TASK_GET_TASK_GROUP_TOKEN,
     STD_TASK_CANCEL_TASK_GROUP,
     STD_TASK_CLOSE_TASK_GROUP,
+    STD_TASK_CLOSE_TASK_GROUP_WITH_TIMEOUT,
     STD_TASK_RECEIVE_CASE,
     STD_TASK_SEND_CASE,
     STD_TASK_TASK_CASE,

@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 use super::*;
 
 mod https;
+mod parallel_echo;
 mod server_loop;
 
 fn unused_port() -> u16 {

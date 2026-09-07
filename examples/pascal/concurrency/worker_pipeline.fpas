@@ -1,0 +1,69 @@
+// A producer, three workers, and a collector share bounded channels.
+program WorkerPipeline;
+
+uses Std.Task, Std.Result, Std.Console, Std.Array;
+
+begin
+  var Jobs: channel of integer := CreateChannel(2);
+  var Results: channel of integer := CreateChannel(2);
+  var Group: TaskGroup := CreateTaskGroup();
+  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    for Value: integer := 1 to 12 do
+    begin
+      if IsError(SendWithCancellation(Jobs, Value, Token)) then
+      begin
+        return
+      end
+    end;
+
+    CloseChannel(Jobs)
+  end);
+  for Worker: integer := 1 to 3 do
+  begin
+    StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      while not IsCancellationRequested(Token) do
+      begin
+        case ReceiveWithCancellation(Jobs, Token) of
+          Ok(Value):
+          begin
+            if IsError(SendWithCancellation(Results, Value * Value, Token)) then
+            begin
+              return
+            end
+          end;
+          Error(_):
+          begin
+            return
+          end
+        end
+      end
+    end)
+  end;
+  // Collect while the producer runs: filling Jobs first could deadlock the pipeline.
+  mutable var Total: integer := 0;
+  for Index: integer := 1 to 12 do
+  begin
+    Total := Total + Unwrap(Receive(Results))
+  end;
+
+  case CloseTaskGroupWithTimeout(Group, 1000) of
+    Ok(Failures):
+    begin
+      if Length(Failures) <> 0 then
+      begin
+        panic('Worker failed')
+      end
+    end;
+    Error(_):
+    begin
+      // A timeout retains ownership. Joining is still required, not a forced kill.
+      if Length(CloseTaskGroup(Group)) <> 0 then
+      begin
+        panic('Worker failed')
+      end
+    end
+  end;
+
+  CloseChannel(Results);
+  WriteLn(Total)
+end.

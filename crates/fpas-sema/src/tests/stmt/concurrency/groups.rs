@@ -9,6 +9,10 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "GetTaskGroupToken(CreateCancellationSource())",
         "CancelTaskGroup(GetCancellationToken(CreateCancellationSource()))",
         "CloseTaskGroup(1)",
+        "CloseTaskGroupWithTimeout(1, 0)",
+        "CloseTaskGroupWithTimeout(G, true)",
+        "CloseTaskGroupWithTimeout(G)",
+        "CloseTaskGroupWithTimeout(G, 0, 0)",
         "StartTaskInGroup(G)",
         "StartTaskInGroup(1, Work)",
         "StartTaskInGroup(G, 1)",
@@ -85,4 +89,12 @@ begin
 end."#,
     );
     assert!(!errors.is_empty(), "worker result was erased");
+}
+
+#[test]
+fn timed_group_close_preserves_result_and_failure_record_types() {
+    check_ok(
+        "program T; uses Std.Task, Std.Result; begin var G: TaskGroup := CreateTaskGroup(); var R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); var Reports: array of TaskFailure := Unwrap(R) end.",
+    );
+    assert!(!check_errors("program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := CloseTaskGroupWithTimeout(G, 0) end.").is_empty());
 }

@@ -83,6 +83,7 @@ pub(in crate::vm) enum TaskSuspension {
     /// Retain a sealed group until all its children terminate.
     GroupClose {
         id: u64,
+        deadline_millis: Option<u64>,
         destination: Option<Register>,
     },
     /// Own mixed selection cases until one operation commits.
@@ -149,9 +150,16 @@ impl TaskSuspension {
     /// Return the current scheduler-visible state using the supplied clock.
     pub(in crate::vm) fn state(&self, clock: &TaskClock) -> TaskSuspensionState {
         match self {
-            Self::GroupClose { .. } => TaskSuspensionState::Waiting,
+            Self::GroupClose {
+                deadline_millis: None,
+                ..
+            } => TaskSuspensionState::Waiting,
             Self::Selection(wait) => wait.debug_state(clock),
-            Self::WaitAnyControlled {
+            Self::GroupClose {
+                deadline_millis: Some(deadline),
+                ..
+            }
+            | Self::WaitAnyControlled {
                 deadline_millis: Some(deadline),
                 ..
             } => TaskSuspensionState::Sleeping {

@@ -8,7 +8,7 @@ and fork-join patterns, see [Concurrency](../../language/concurrency/README.md).
 
 Waiting blocks the calling FPAS task, not necessarily its operating-system thread. A child waiting
 in `Wait`, `WaitAll`, `WaitAny`, a controlled task wait, a channel operation, `Select`, or
-`CloseTaskGroup` saves its pending operation and releases the pool thread. The shared timer driver
+either group-close operation saves its pending operation and releases the pool thread. The shared timer driver
 requests another readiness probe after one millisecond; platform timer granularity and scheduler
 load can delay the actual probe. This permits producer/consumer work and nested joins with one
 pool worker. Suspended values, destinations, and monotonic deadlines survive each probe.
@@ -17,6 +17,9 @@ The main task may help queued tasks while waiting. Child waits yield back to tha
 than retaining its stack. Hosted blocking I/O and non-cooperative computation can still delay
 progress; this is not a hard shutdown or wall-clock deadline guarantee. Debugger execution uses
 the same pending-operation state with its deterministic scheduling clock.
+
+`CloseTaskGroupWithTimeout` is an exception to main-task helping: it leaves queued child work to
+the pool so arbitrary child code cannot retain the timed caller's stack.
 
 ```pascal
 program Example;
@@ -56,6 +59,7 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `GetTaskGroupToken(Group: TaskGroup): CancellationToken` | returns the group-owned cancellation token |
 | function | `CancelTaskGroup(Group: TaskGroup): boolean` | requests cancellation without joining; true only for the first request |
 | function | `CloseTaskGroup(Group: TaskGroup): array of TaskFailure` | cancels, joins registered children, releases their results, and returns failures |
+| function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of array of TaskFailure, string` | attempts cooperative close with a waiting budget; timeout retains group ownership |
 | function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of T, string)): WaitCase` | describes one receive and its typed delivery callback |
 | function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of boolean, string)): WaitCase` | describes one send without enqueueing its value |
 | function | `TaskCase(Handle: task; Callback: procedure()): WaitCase` | describes non-consuming task completion |
@@ -177,6 +181,39 @@ consumed and copies of the group token are invalid. Repeated close returns an em
 Close is cooperative and has no deadline. A worker that ignores cancellation can delay it
 indefinitely. If VM shutdown interrupts close, the call propagates shutdown or the original fatal
 diagnostic; synthetic shutdown results do not establish that the underlying workers have joined.
+
+### CloseTaskGroupWithTimeout
+
+Only the creating task may call this operation. It validates the non-negative integer timeout,
+seals admission, requests cancellation, and attempts the same join and cleanup as `CloseTaskGroup`.
+Invalid arguments or wrong ownership are runtime diagnostics, not timeout results, and do not
+request cancellation or seal an otherwise open group.
+
+- `Ok(Failures)` means every registered child has a terminal outcome and the group has been
+  closed. Failure ordering, result consumption, and token invalidation match `CloseTaskGroup`.
+- `Error('Task group close timed out')` means the waiting budget expired while the group was
+  observed incomplete. The group remains sealed and cancelled. Its children, retained results,
+  failure reports, and cancellation-token storage remain owned and valid. No worker is detached
+  or reported as terminated by the timeout.
+- Call either close operation again to finish joining. Each timed call has a new budget; retries
+  do not reopen admission or reset cancellation. Successful close is idempotent: later timed
+  closes return `Ok([])` and ordinary closes return `[]`.
+- Zero requests cancellation and performs one immediate completion probe without waiting or
+  executing a queued child inline. An empty or already completed group closes successfully.
+- One monotonic deadline is captured per invocation, before requesting cancellation. Wakeups and
+  scheduler probes do not restart it. At each probe, observed completion wins over timeout; this
+  does not certify that the final child finished before the nominal deadline. VM shutdown or a
+  fatal scheduler error remains a runtime diagnostic, even when the timeout has also elapsed.
+
+The main task waits for notifications without executing queued workers itself. Child tasks save
+the deadline and yield the pool thread; the debugger uses the same suspension with its clock.
+Timer granularity, scheduling delays, and non-cooperative code occupying available execution
+threads can delay observation. This is a cooperative waiting budget, not a real-time guarantee,
+forced worker termination, or a bound on VM teardown. Keep the VM alive and arrange a later join
+after timeout; returning from the main task does not turn the timeout into completed cleanup.
+
+See the [timeout regression](../../../../tests/concurrency/task_group_close_timeout_test.fpas)
+for cancellation, retained ownership, and retrying close after releasing a blocked worker.
 
 ### TaskFailure and TaskFailureKind
 

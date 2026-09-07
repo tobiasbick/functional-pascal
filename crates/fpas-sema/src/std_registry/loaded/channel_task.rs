@@ -61,8 +61,17 @@ pub fn register_std_task(c: &mut Checker) {
     define_func(
         c,
         s::STD_TASK_CLOSE_TASK_GROUP,
-        vec![p("Group", group, false)],
-        Ty::Array(Box::new(failure)),
+        vec![p("Group", group.clone(), false)],
+        Ty::Array(Box::new(failure.clone())),
+    );
+    define_func(
+        c,
+        s::STD_TASK_CLOSE_TASK_GROUP_WITH_TIMEOUT,
+        vec![
+            p("Group", group, false),
+            p("TimeoutMillis", Ty::Integer, false),
+        ],
+        Ty::Result(Box::new(Ty::Array(Box::new(failure))), Box::new(Ty::String)),
     );
 
     define_func(

@@ -238,9 +238,11 @@ impl Worker {
         };
         let ready = match suspension {
             TaskSuspension::SupervisionBackoff { .. } => self.supervised_ready(),
-            TaskSuspension::GroupClose { id, destination } => {
-                self.poll_group_close(id, destination)
-            }
+            TaskSuspension::GroupClose {
+                id,
+                deadline_millis,
+                destination,
+            } => self.poll_group_close(id, deadline_millis, destination),
             TaskSuspension::Selection(wait) => self.poll_selection(*wait),
             TaskSuspension::Yield => Ok(true),
             TaskSuspension::WaitAnyControlled {

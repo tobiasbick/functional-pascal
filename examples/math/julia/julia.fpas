@@ -134,6 +134,7 @@ mutable var
   RenderH: integer := 1;
   NeedsRedraw: boolean := true;
   Quit: boolean := false;
+  ActiveRender: option of RenderJob := None;
 
 procedure RequestRedraw();
 begin
@@ -142,6 +143,16 @@ end;
 
 procedure PaintFrame();
 begin
+  case ActiveRender of
+    Some(Job):
+    begin
+      StopRender(Job)
+    end;
+    None:
+    begin
+    end
+  end;
+
   RenderW := RenderWidth();
   RenderH := RenderHeight();
   BeginFrame();
@@ -155,7 +166,7 @@ begin
     foreground := RgbColor(0, 0, 0);
     background := RgbColor(0, 0, 0);
   end);
-  Render(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji);
+  ActiveRender := Some(StartRender(State.XMin(RenderW, RenderH), State.XMax(RenderW, RenderH), State.YMin(), State.YMax(), RenderW, RenderH, State.MaxIter, State.Palette, State.Jr, State.Ji));
   DrawHud(State, RenderW, RenderH);
   Present()
 end;
@@ -307,7 +318,7 @@ end;
 procedure HandleResize(Width: integer; Height: integer);
 begin
   var NewW: integer := Max(Width, 1);
-  var NewH: integer := Max(Height - 2, 1);
+  var NewH: integer := Max(Height - 3, 1);
   if (NewW <> RenderW) or (NewH <> RenderH) then
   begin
     RenderW := NewW;
@@ -360,6 +371,18 @@ begin
       NeedsRedraw := false
     end;
 
+    case ActiveRender of
+      Some(Job):
+      begin
+        BeginFrame();
+        PollRender(Job);
+        Present()
+      end;
+      None:
+      begin
+      end
+    end;
+
     case ReadEventTimeout(16) of
       Some(E):
       begin
@@ -368,6 +391,16 @@ begin
       None:
       begin
       end
+    end
+  end;
+
+  case ActiveRender of
+    Some(Job):
+    begin
+      StopRender(Job)
+    end;
+    None:
+    begin
     end
   end;
 

@@ -2,16 +2,14 @@
 //!
 //! Documentation: `docs/pascal/std/concurrency/task.md`.
 
+mod close;
 mod registry;
 mod spawn;
 pub(in crate::vm) use registry::{GroupFailure, GroupRegistry};
 
-use super::{TaskSuspension, pool};
-use crate::vm::shared::wakeups::WakeSignal;
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Intrinsic, Register, SourceLocation, TaskIntrinsic, Value};
 use std::sync::Arc;
-use std::time::Duration;
 
 impl Worker {
     /// Route task-group operations through the shared normal/debugger owner state.
@@ -26,7 +24,7 @@ impl Worker {
         };
         let expected = match operation {
             TaskIntrinsic::CreateTaskGroup => 0,
-            TaskIntrinsic::StartTaskInGroup => 2,
+            TaskIntrinsic::StartTaskInGroup | TaskIntrinsic::CloseTaskGroupWithTimeout => 2,
             TaskIntrinsic::StartSupervisedTask => 4,
             TaskIntrinsic::GetTaskGroupToken
             | TaskIntrinsic::CancelTaskGroup
@@ -72,51 +70,17 @@ impl Worker {
                     .map_err(|e| self.group_error(e))?;
                 self.start_group_task(id, &args[1], Some(policy))?
             }
-            TaskIntrinsic::CloseTaskGroup => {
-                scheduler
-                    .groups
-                    .begin_close(id, self.task_id)
-                    .map_err(|e| self.group_error(e))?;
-                loop {
-                    let signal = WakeSignal::new();
-                    let registration = scheduler.subscribe(&signal);
-                    if let Some(failures) = scheduler.poll_group_close(id)? {
-                        return Ok(Some(Some(self.group_report(failures)?)));
-                    }
-                    if self.debug_tasks || self.task_id != 0 {
-                        self.task_suspension = Some(TaskSuspension::GroupClose { id, destination });
-                        self.suspend_requested = true;
-                        return Ok(Some(None));
-                    }
-                    if let Some(task) = scheduler.try_dequeue() {
-                        drop(registration);
-                        pool::run_helped(self, task, Arc::clone(&scheduler))?;
-                    } else {
-                        signal.wait(Duration::from_millis(10));
-                    }
-                }
+            TaskIntrinsic::CloseTaskGroup | TaskIntrinsic::CloseTaskGroupWithTimeout => {
+                let timeout = if operation == TaskIntrinsic::CloseTaskGroupWithTimeout {
+                    Some(self.wait_timeout(&args[1])?)
+                } else {
+                    None
+                };
+                return self.start_group_close(id, timeout, destination).map(Some);
             }
             _ => unreachable!("group intrinsic dispatch"),
         };
         Ok(Some(Some(value)))
-    }
-
-    /// Resume a group close without propagating owned child failures as parent failures.
-    pub(in crate::vm::tasks) fn poll_group_close(
-        &mut self,
-        id: u64,
-        destination: Option<Register>,
-    ) -> Result<bool, VmError> {
-        if let Some(failures) = self.scheduler_ref()?.poll_group_close(id)? {
-            let value = self.group_report(failures)?;
-            if let Some(destination) = destination {
-                self.write(destination, value)?;
-            }
-            Ok(true)
-        } else {
-            self.task_suspension = Some(TaskSuspension::GroupClose { id, destination });
-            Ok(false)
-        }
     }
 
     fn group_report(&self, failures: Vec<GroupFailure>) -> Result<Value, VmError> {

@@ -1,7 +1,8 @@
 # Future: Networked Application Platform
 
 > Capability roadmap with implementation progress recorded in each plan.
-> Concurrency foundations C1-C4 are implemented; the hard-shutdown contract remains open.
+> Concurrency foundations C1-C4 and cooperative timed group close are implemented;
+> process-level shutdown escalation remains planned.
 > Current behavior is documented under [Std.Task](../../pascal/std/concurrency/task.md).
 
 Functional Pascal already provides blocking TCP/TLS connections and listeners, HTTP client and

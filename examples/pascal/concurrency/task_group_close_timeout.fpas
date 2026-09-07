@@ -1,0 +1,33 @@
+// Model a cleanup operation that needs an explicit release after cancellation.
+program TaskGroupCloseTimeout;
+
+uses Std.Task, Std.Result, Std.Console, Std.Array;
+
+begin
+  var Release: channel of integer := CreateChannel(1);
+  var Group: TaskGroup := CreateTaskGroup();
+  StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+    // Intentionally not cancellable: the owner must release this cleanup gate.
+    Unwrap(Receive(Release))
+  end);
+  case CloseTaskGroupWithTimeout(Group, 0) of
+    Error(Message):
+    begin
+      WriteLn(Message)
+    end;
+    Ok(_):
+    begin
+      panic('Cleanup gate was not released')
+    end
+  end;
+
+  Unwrap(Send(Release, 1));
+  var Failures: array of TaskFailure := CloseTaskGroup(Group);
+  CloseChannel(Release);
+  if Length(Failures) <> 0 then
+  begin
+    panic('Cleanup failed')
+  end;
+
+  WriteLn('Cleanup joined; ownership released')
+end.

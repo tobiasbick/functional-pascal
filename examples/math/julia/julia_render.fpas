@@ -1,111 +1,14 @@
-// Built only via julia.fpasprj — not a standalone program.
-
 unit Julia.Render;
 
-uses Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Julia.Color;
+uses
+  Std.Console, Std.Task, Std.Array, Std.Conv, Std.Math, Std.Str, Std.Result, Julia.Color,
+  Julia.Compute;
 
-type
-  Complex = record
-    public Re: real;
-    public Im: real;
-
-    public static function Create(Re: real; Im: real): Complex;
-    begin
-      return record
-        Re := Re;
-        Im := Im;
-      end
-    end;
-
-    public function Sq(Self: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re * Self.Re - Self.Im * Self.Im;
-        Im := (2.0 * Self.Re) * Self.Im;
-      end
-    end;
-
-    public function Add(Self: Complex; Other: Complex): Complex;
-    begin
-      return record
-        Re := Self.Re + Other.Re;
-        Im := Self.Im + Other.Im;
-      end
-    end;
-
-    public function MagSq(Self: Complex): real;
-    begin
-      return Self.Re * Self.Re + Self.Im * Self.Im
-    end;
+public type
+  RenderRow = record
+    public Y: integer;
+    public Samples: array of PixelSample;
   end;
-  PixelSample = record
-    public IsInside: boolean;
-    public EscapeValue: real;
-  end;
-
-function Iterate(Z0: Complex; C: Complex; MaxIter: integer): PixelSample;
-begin
-  var EscapeRadiusSq: real := 256.0;
-  mutable var Z: Complex := Z0;
-  mutable var N: integer := 0;
-  while (N < MaxIter) and (Z.MagSq() <= EscapeRadiusSq) do
-  begin
-    Z := Z.Sq().Add(C);
-    N := N + 1
-  end;
-
-  if N >= MaxIter then
-  begin
-    return record
-      IsInside := true;
-      EscapeValue := 0.0;
-    end
-  end;
-  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  var Smooth: real := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  return record
-    IsInside := false;
-    EscapeValue := Smooth;
-  end
-end;
-
-function ComputeRow(
-  Py: integer;
-  Width: integer;
-  Height: integer;
-  XMin: real;
-  XMax: real;
-  YMin: real;
-  YMax: real;
-  MaxIter: integer;
-  Jr: real;
-  Ji: real
-): array of PixelSample;
-begin
-  mutable var WidthRange: integer := Width - 1;
-  mutable var HeightRange: integer := Height - 1;
-  if WidthRange < 1 then
-  begin
-    WidthRange := 1
-  end;
-
-  if HeightRange < 1 then
-  begin
-    HeightRange := 1
-  end;
-  var Wr: real := IntToReal(WidthRange);
-  var Hr: real := IntToReal(HeightRange);
-  var cy: real := YMax - (Py / Hr) * (YMax - YMin);
-  var C: Complex := Complex.Create(Jr, Ji);
-  mutable var Row: array of PixelSample := [];
-  for Px: integer := 0 to Width - 1 do
-  begin
-    var cx: real := XMin + (Px / Wr) * (XMax - XMin);
-    Push(Row, Iterate(Complex.Create(cx, cy), C, MaxIter))
-  end;
-
-  return Row
-end;
 
 function EscapeGlyph(EscapeValue: real): string;
 begin
@@ -157,7 +60,17 @@ begin
   WriteCells(1, Y, Cells)
 end;
 
-public procedure Render(
+public type
+  // A render owns four workers and at most four queued rows.
+  RenderJob = record
+    public Group: TaskGroup;
+    public Rows: channel of RenderRow;
+    public Width: integer;
+    public Palette: PaletteKind;
+  end;
+
+// Start a bounded render. Each worker owns every fourth row.
+public function StartRender(
   XMin: real;
   XMax: real;
   YMin: real;
@@ -168,20 +81,73 @@ public procedure Render(
   Palette: PaletteKind;
   Jr: real;
   Ji: real
-);
+): RenderJob;
 begin
-  mutable var Tasks: array of task := [];
-  for Py: integer := 0 to Height - 1 do
+  var Group: TaskGroup := CreateTaskGroup();
+  var Rows: channel of RenderRow := CreateChannel(4);
+  for Worker: integer := 0 to 3 do
   begin
-    Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji))
+    StartTaskInGroup(Group, procedure(Token: CancellationToken) begin
+      mutable var Py: integer := Worker;
+      while (Py < Height) and not IsCancellationRequested(Token) do
+      begin
+        var Samples: array of PixelSample := ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter, Jr, Ji, Token);
+        if IsCancellationRequested(Token) then
+        begin
+          return
+        end;
+        var Row: RenderRow := record
+          Y := Py;
+          Samples := Samples;
+        end;
+
+        if IsError(SendWithCancellation(Rows, Row, Token)) then
+        begin
+          return
+        end;
+
+        Py := Py + 4
+      end
+    end)
   end;
 
-  for Py: integer := 0 to Height - 1 do
+  return record
+    Group := Group;
+    Rows := Rows;
+    Width := Width;
+    Palette := Palette;
+  end
+end;
+
+// Draw a bounded batch on the terminal-owning task without waiting for workers.
+public procedure PollRender(Job: RenderJob);
+begin
+  for Index: integer := 1 to 4 do
   begin
-    var Row: array of PixelSample := Wait(Tasks[Py]);
-    if (Py + 1) <= Max(ScreenHeight() - 2, 1) then
-    begin
-      DrawRow(Row, Width, Py + 1, Palette)
+    case Std.Result.Unwrap(TryReceive(Job.Rows)) of
+      Some(Row):
+      begin
+        if (Row.Y + 1) <= Max(ScreenHeight() - 3, 1) then
+        begin
+          DrawRow(Row.Samples, Job.Width, Row.Y + 1, Job.Palette)
+        end
+      end;
+      None:
+      begin
+        return
+      end
     end
+  end
+end;
+
+// Cancel CPU work and blocked sends before releasing the old queue.
+// Joining first prevents old rows from appearing in a replacement render.
+public procedure StopRender(Job: RenderJob);
+begin
+  var Failures: array of TaskFailure := CloseTaskGroup(Job.Group);
+  CloseChannel(Job.Rows);
+  if Std.Array.Length(Failures) <> 0 then
+  begin
+    panic(Failures[0].Message)
   end
 end;

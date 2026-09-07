@@ -6,9 +6,14 @@ The `task` type represents a handle to a running task. Assign the result of a **
 var T: task := go ComputeSomething(Data);
 ```
 
+`Std.Task.StartTaskInGroup` and `StartSupervisedTask` also return typed task handles. Their explicit
+group retains ownership even when the caller discards a handle; see [Task groups](../../std/concurrency/task.md#task-groups).
+
 ## Waiting for a task
 
-`Std.Task.Wait` blocks until the task completes and returns its result type **`T`** (the runtime waits on the same shared condition variable as the task queue — it does not hot-spin):
+`Std.Task.Wait` waits until the task completes and consumes its result of type **`T`**. Child waits
+save their continuation and release the pool thread; the main task may help queued work or wait
+for scheduler notification. See [Waiting and execution](../../std/concurrency/task.md#waiting-and-execution).
 
 ```pascal
 var T: task := go Compute(100);
@@ -19,7 +24,8 @@ For a **procedure** task, `Wait` completes when the procedure finishes; **`T`** 
 
 ## Waiting for multiple tasks
 
-`Std.Task.WaitAll` blocks until all tasks in the array complete (same condvar-based blocking as `Wait`):
+`Std.Task.WaitAll` waits until all tasks in the array complete, using the same cooperative
+child-wait mechanism as `Wait`:
 
 ```pascal
 WaitAll([T1, T2, T3]);
@@ -39,6 +45,9 @@ Per-symbol reference (parameters, edge cases, `Wait` vs `WaitAll`, runtime error
 | `WaitAll` | `(Tasks: array of task)` | Wait for all tasks to complete |
 
 Here, **`T`** is the return type of the spawned call (unit for a procedure).
+
+For non-consuming completion observation, use [WaitAny and its controlled variants](../../std/concurrency/task.md#function-waitanytasks-array-of-task-integer).
+For one event across tasks, channels, timers, and cancellation, use [mixed-source selection](../../std/concurrency/task.md#mixed-source-selection).
 
 ## See also
 

@@ -22,6 +22,10 @@ on creator-only close. Ordinary `go`, task result typing, and nongroup panic han
 - Workspace build and full tests passed, including all 502 VM unit tests and bundled FPAS suites.
   Affected-crate strict Clippy, formatting, editor generation, and the standalone test/example passed.
 
-Group close remains cooperative and has no deadline. Synthetic VM-shutdown results cannot certify
-a successful join. The original hard-shutdown requirement remains S1 in the
-[concurrency plan](concurrency.md), to be discussed separately after C3 and C4.
+Ordinary group close remains cooperative without a deadline. `CloseTaskGroupWithTimeout` adds a
+waiting budget while retaining unfinished work after timeout; see the [Task reference](../../pascal/std/concurrency/task.md#closetaskgroupwithtimeout).
+The timed-close extension adds nine VM tests, semantic coverage, and a bundled FPAS regression;
+the final workspace run passed all 544 VM tests and the full FPAS project suite passed 412 tests
+with one intentional skip. Completion details are in the concurrency worklist.
+Synthetic VM-shutdown results cannot certify a successful join. Process-level escalation remains
+S1b in the [concurrency plan](concurrency.md), under the selected two-stage shutdown policy.

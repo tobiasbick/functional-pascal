@@ -1,6 +1,6 @@
 # Future: Application Concurrency Primitives
 
-> C1-C4 implemented and verified. The hard-shutdown contract (S1) remains open for discussion.
+> C1-C4 implemented and verified. S1 now separates cooperative waiting from process escalation.
 > Current API behavior is documented in the [Task reference](../../pascal/std/concurrency/task.md).
 
 Fork-join tasks are sufficient when all work starts together and the caller waits for completion.
@@ -9,11 +9,11 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
-### Remaining implementation work (2026-09-07)
+### Implementation status (2026-09-07)
 
-The active implementation goal covers all remaining concurrency primitives. The final hard-shutdown
-contract is explicitly reserved for a subsequent user discussion; it is not assumed by these steps.
-Existing cancellation, bounded channels, and task-only completion waits are already implemented.
+The concurrency primitives are implemented. The approved two-stage shutdown policy separates
+timed cooperative group close (S1a) from the remaining process-level lifecycle work (S1b).
+Existing cancellation, bounded channels, and task-only completion waits are also implemented.
 
 - [x] C1: Mixed task/channel/timer/cancellation selection with typed value delivery, exactly one
   committed operation, wait-owned registrations, deterministic debugger support, and race tests.
@@ -27,9 +27,76 @@ Existing cancellation, bounded channels, and task-only completion waits are alre
   The selected retry contract is in [supervision](supervision.md).
 - [x] C4: End-to-end examples, current documentation, deterministic debugger coverage, and
   high-contention/lifetime regressions for C1-C3, plus complete workspace verification.
-- [ ] S1 (subsequent discussion): Resolve the original hard-shutdown acceptance requirement,
-  including non-cooperative code, OS DNS, and synchronous certificate verification. Do not claim
-  bounded termination merely because a caller's timeout elapsed.
+- [x] S1a: Add a timed cooperative group close that retains ownership after timeout, with retry,
+  validation, race, and debugger tests. The two-stage shutdown policy was approved on 2026-09-07.
+- [ ] S1b (lifecycle work): Implement explicit process escalation for non-cooperative code and
+  blocking host calls. The selected policy is in [server lifecycle](server-lifecycle.md#selected-shutdown-policy-2026-09-07).
+  A timeout alone does not establish termination; no in-place forced task-group kill is planned.
+
+### 2026-09-07 — practical concurrency examples
+
+- Added finite worker-pipeline and timeout/retry-close tutorials with exact-output smoke tests.
+  Capacity-two queues demonstrate backpressure without changing existing task benchmarks.
+- Migrated Julia to four group-owned workers and a capacity-four row queue. Extracted the CPU
+  kernel into `Julia.Compute` and shared the units through `julia-core.fpasprj`. The Console
+  event loop draws bounded batches; replacement and exit cancel and join old work. CPU iteration
+  checks and cancellable sends cover both computation and full-queue cancellation.
+- Added a separate four-worker loopback TCP byte-stream echo server with cancellable accept,
+  read, and write, partial-write handling, explicit connection cleanup, and timed close. Its
+  fixed lifetime interrupts active clients; it does not implement graceful draining or S1b.
+- Added Julia row-equivalence/replacement regressions and a real-client TCP test for simultaneous
+  connections, multi-chunk responses, idle-read cancellation, and listener-worker shutdown.
+- Workspace build and the complete Rust workspace suite passed (460 CLI tests, 544 VM tests).
+  The complete FPAS suite passed with 414 passed, 1 intentionally skipped, and 0 failed. All 61
+  example-filtered tests passed. The strengthened TCP first-client handshake regression was
+  rerun successfully after the workspace run. Affected-crate strict Clippy, final CLI Clippy,
+  Rust/FPAS formatting, documentation links, and diff checks passed.
+- An initial overlapping Clippy build replaced the generated standard-library tree while Rust
+  tests were reading it, causing 20 missing-manifest failures. A concurrent rebuild also hit a
+  Windows executable lock. Repeating without overlapping build/check jobs passed; no production
+  change was made for this verification interference. Julia's interactive terminal appearance
+  was not manually inspected; its project and headless computation/cancellation were verified.
+- No benchmark or speedup claim. The other fractal demos, the
+  existing simple TCP tutorial, HTTP Serve, and OpenAI chat remain unchanged. TUI background
+  messages and process escalation remain separate roadmap work.
+
+### 2026-09-07 — selected two-stage shutdown and timed group close
+
+- Committed the completed C1-C4 foundation as `d7a7aa71` with the requested co-author trailer.
+- Added `CloseTaskGroupWithTimeout`: successful close returns the final failure array in Ok;
+  timeout returns a distinct Error while preserving children, results, reports, and token storage.
+  Close remains creator-only, sealed after cancellation, and retryable. Zero performs one probe;
+  completion observed by a probe wins over expiry without claiming a historical completion time.
+- Extracted the shared close path into `tasks/groups/close.rs`. Timed main-task waits do not run
+  arbitrary queued children inline; child waits retain a monotonic deadline in cooperative
+  suspension. Existing unbounded close behavior remains available.
+- Nine new VM tests cover retained ownership through 100 repeated timeouts, 200 completion races,
+  invalid inputs and ownership, deadline preservation, shutdown precedence, queued work, and a
+  running worker that ignores cancellation. Integration tests cover the default pool, one worker,
+  and deterministic debugger execution, including nested groups. Semantic checks cover argument
+  rejection and the concrete Result/TaskFailure array type.
+- `cargo build --workspace`, `cargo test --workspace` (all 544 VM tests), affected-crate strict
+  Clippy, Rust/FPAS formatting, editor generation, documentation links, and the diff check passed.
+  The standalone timeout regression passed. The complete `tests/suite.fpasprj` run passed:
+  412 passed, 1 skipped, 0 failed. S1a is complete.
+- The lifecycle plan records the approved process escalation and isolation policy, its
+  cleanup/data-loss limits, and required future subprocess tests. S1b is not implemented by
+  this Task operation.
+
+### 2026-09-07 — documentation and example-index consistency
+
+- Updated the repository README, Pascal documentation hub, language concurrency overview,
+  scheduling and task-handle references, and standard-library roadmap to match the implemented
+  Task surface. Pool activation uses verified task-start metadata, including group starts;
+  child waits suspend cooperatively, and group-owned failures are contained until observed.
+- Removed stale stack-machine wording from the spawn overview. No language, grammar, or runtime
+  behavior changed. Timed cooperative close remains distinct from planned process escalation.
+- Listed the three selection/group/supervision examples and added each to the existing CLI smoke
+  test macros. Corrected the examples README's obsolete allowlist names.
+- All 56 tests selected by `cargo test -p fpas-cli example_` passed, including the three new
+  entries. Workspace build, Rust formatting, relative documentation links, and diff checks passed.
+  The full workspace and FPAS suites were not repeated for this docs/test-registration-only
+  follow-up; their timed-close verification is recorded above.
 
 ### 2026-09-07 — C4 compatibility audit and completion
 
@@ -472,8 +539,9 @@ rather than reaching into scheduler implementation details.
 
 - FIFO behavior, closure, full/empty queues, deadlines, and cancellation have deterministic tests.
 - Multi-wait returns exactly one winning event and unregisters all losing waits.
-- **Deferred to S1:** Task-group shutdown cannot leak workers or wait forever after its deadline.
-  The current cooperative close has no deadline; the hard-shutdown contract requires a separate
-  decision and implementation before this requirement can be marked complete.
+- **Selected S1 split:** Timed group close stops waiting without releasing unfinished work.
+  Hard termination of non-cooperative work belongs to explicit process-level lifecycle escalation,
+  not forced termination of individual groups in a shared VM. The process-level requirement
+  remains open until S1b is implemented and verified.
 - Child panics and ordinary error results follow separately documented paths.
 - High-contention tests demonstrate bounded memory and absence of lost wakeups.

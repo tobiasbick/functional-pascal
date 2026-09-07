@@ -140,6 +140,7 @@ impl Worker {
             | TaskIntrinsic::GetTaskGroupToken
             | TaskIntrinsic::CancelTaskGroup
             | TaskIntrinsic::CloseTaskGroup
+            | TaskIntrinsic::CloseTaskGroupWithTimeout
             | TaskIntrinsic::StartSupervisedTask
             | TaskIntrinsic::CloseWaitCase => Ok(None),
         }

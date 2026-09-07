@@ -1,0 +1,126 @@
+// Four connection workers echo byte streams for a fixed lifetime, then cancel and join.
+program ParallelTcpEchoServer;
+
+uses Std.Args, Std.Conv, Std.Array, Std.Console, Std.Net, Std.Task, Std.Result, Std.Time;
+
+function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
+begin
+  var Configured: boolean := try SetTimeout(Client, 5000);
+  while not IsCancellationRequested(Token) do
+  begin
+    var Bytes: array of integer := try ReadWithCancellation(Client, 4096, Token);
+    if Length(Bytes) = 0 then
+    begin
+      return Ok(true)
+    end;
+    mutable var Offset: integer := 0;
+    while Offset < Length(Bytes) do
+    begin
+      var Count: integer := try WriteWithCancellation(Client, Slice(Bytes, Offset, Length(Bytes) -
+                                                                                   Offset), Token);
+      if Count <= 0 then
+      begin
+        return Error('TCP write made no progress')
+      end;
+
+      Offset := Offset + Count
+    end
+  end;
+
+  return Ok(true)
+end;
+
+begin
+  mutable var Port: integer := 18082;
+  mutable var LifetimeMillis: integer := 10000;
+  if ParamCount() > 2 then
+  begin
+    panic('usage: tcp_parallel_echo_server.fpas -- [PORT [LIFETIME_MS]]')
+  end;
+
+  if ParamCount() >= 1 then
+  begin
+    Port := StrToInt(ParamStr(0))
+  end;
+
+  if ParamCount() = 2 then
+  begin
+    LifetimeMillis := StrToInt(ParamStr(1))
+  end;
+
+  if (LifetimeMillis < 1) or (LifetimeMillis > 300000) then
+  begin
+    panic('LIFETIME_MS must be 1..300000')
+  end;
+  var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
+  var Workers: TaskGroup := CreateTaskGroup();
+  for Index: integer := 1 to 4 do
+  begin
+    StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
+      while not IsCancellationRequested(Token) do
+      begin
+        case AcceptWithCancellation(ListenerValue, Token) of
+          Ok(Client):
+          begin
+            var Outcome: result of boolean, string := Echo(Client, Token);
+            // Close even on read/write failure. One failed client does not stop admission.
+            var Closed: boolean := try Close(Client);
+            case Outcome of
+              Error(Message):
+              begin
+                if not IsCancellationRequested(Token) then
+                begin
+                  WriteLn(Message)
+                end
+              end;
+              Ok(_):
+              begin
+              end
+            end
+          end;
+          Error(Message):
+          begin
+            if IsCancellationRequested(Token) then
+            begin
+              return Ok(true)
+            end;
+
+            return Error(Message)
+          end
+        end
+      end;
+
+      return Ok(true)
+    end)
+  end;
+
+  WriteLn('Parallel TCP echo ready');
+  // Sleep does not inline-run a blocking accept on the owner task.
+  Sleep(LifetimeMillis);
+  mutable var Failures: array of TaskFailure := [];
+  case CloseTaskGroupWithTimeout(Workers, 1000) of
+    Ok(Reports):
+    begin
+      Failures := Reports
+    end;
+    Error(Message):
+    begin
+      WriteLn(Message);
+      // Retain ownership and join; this is not a hard process shutdown deadline.
+      Failures := CloseTaskGroup(Workers)
+    end
+  end;
+
+  Unwrap(CloseListener(ListenerValue));
+  for Failure: TaskFailure in Failures do
+  begin
+    WriteLn(Failure.Message)
+  end;
+
+  if Length(Failures) <> 0 then
+  begin
+    panic('TCP worker failed')
+  end;
+
+  WriteLn('Parallel TCP echo stopped')
+end.

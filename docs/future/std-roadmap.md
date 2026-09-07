@@ -15,6 +15,13 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 - Keep pure helpers separate from effectful APIs.
 - Avoid adding memory-management APIs as a standard unit for now.
 
+## Implemented concurrency
+
+Bounded channels, cooperative cancellation, mixed-source selection, task groups, supervised
+retries, and timed group close are implemented in [Std.Task](../pascal/std/concurrency/task.md).
+Their [concurrency worklist](networked-applications/concurrency.md) records completion evidence.
+Hard process-level shutdown escalation remains part of [server lifecycle](networked-applications/server-lifecycle.md).
+
 ## Later candidates
 
 These should wait until the runtime and capability model need them:
@@ -22,7 +29,6 @@ These should wait until the runtime and capability model need them:
 - [`Std.Crypto`](networked-applications/cryptography.md) for secure randomness, password hashing,
   message authentication, and signatures.
 - [`Std.Sqlite`](networked-applications/sqlite.md) for embedded transactional storage.
-- [Channels, cancellation, and task supervision](networked-applications/concurrency.md).
 - [WebSocket client and server support](networked-applications/websocket.md).
 - [UDP sockets](networked-applications/udp.md) when a concrete datagram use case exists.
 - binary buffers and codecs, once byte-array conventions are stable.

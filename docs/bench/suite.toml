@@ -5,6 +5,20 @@
 # FPAS rows run through the production `fpas run` path.
 
 [[bench]]
+id = "mandelbrot_render"
+group = "mandelbrot"
+path = "examples/pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj"
+args = ["12", "render"]
+timeout_ms = 120000
+
+[[bench]]
+id = "mandelbrot_paint"
+group = "mandelbrot"
+path = "examples/pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj"
+args = ["12", "paint"]
+timeout_ms = 120000
+
+[[bench]]
 id = "integer_loop"
 group = "vm"
 path = "examples/pascal/vm/integer_loop_benchmark.fpas"

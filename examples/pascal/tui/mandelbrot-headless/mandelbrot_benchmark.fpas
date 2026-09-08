@@ -1,0 +1,82 @@
+// Measures production rendering, optionally including headless grid updates and paint.
+program MandelbrotBenchmark;
+
+uses
+  Mandelbrot.Color, Mandelbrot.Render, Std.Args, Std.Array, Std.Console, Std.Conv, Std.Result,
+  Std.Task, Std.Time, Std.Tui;
+
+function Update(Grid: TuiCellGrid; Msg: TuiMsg; Cmd: TuiCmdOutput): TuiCellGrid;
+begin
+  return Grid
+end;
+
+function View(Grid: TuiCellGrid): TuiElement;
+begin
+  return TuiElementBuilders.MakeCellGrid(Grid)
+end;
+
+function RenderOnce(Paint: boolean): integer;
+begin
+  var Width: integer := 152;
+  var Height: integer := 35;
+  var Request: MandelbrotRenderRequest := record
+    Generation := 1;
+    XMin := -3.355714285714286;
+    XMax := 1.855714285714286;
+    YMin := -1.2;
+    YMax := 1.2;
+    Width := Width;
+    Height := Height;
+    MaxIter := 160;
+    Palette := PaletteKind.DeepOcean;
+  end;
+  var Inbox: channel of MandelbrotRenderFrame := CreateChannel(8);
+  var Source: CancellationSource := CreateCancellationSource();
+  var Worker: task := go RunBackgroundRender(Request, Inbox, GetCancellationToken(Source));
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(Width, Height));
+  mutable var Grid: TuiCellGrid := TuiCellGrid.Create(Width, Height, Std.Array.Fill(TuiCell.Styled(' ', TuiStyle.FromColors(TuiColor.FromRgb(0, 0, 0), TuiColor.FromRgb(0, 0, 0))), Width *
+                                                                                                                                                                                    Height));
+  mutable var Count: integer := 0;
+  while Count < Width * Height do
+  begin
+    var Message: MandelbrotRenderFrame := Unwrap(ReceiveWithTimeout(Inbox, 30000));
+    Count := Count + Std.Array.Length(Message.Cells);
+    if Paint then
+    begin
+      Grid := TuiCellGrid.Create(Width, Height, Message.Cells);
+      Grid := App.RunIterations(Grid, Update, View, 1, 0)
+    end
+  end;
+
+  if not IsOk(Wait(Worker)) then
+  begin
+    panic('render failed')
+  end;
+
+  App.Close();
+  CloseChannel(Inbox);
+  return Count
+end;
+
+begin
+  var Iterations: integer := StrToInt(ParamStr(0));
+  var Paint: boolean := ParamStr(1) = 'paint';
+  if Iterations < 1 then
+  begin
+    panic('iterations must be positive')
+  end;
+  mutable var Checksum: integer := RenderOnce(Paint);
+  var Started: integer := MonotonicMillis();
+  for Iteration: integer := 1 to Iterations do
+  begin
+    Checksum := Checksum + RenderOnce(Paint)
+  end;
+  var Elapsed: integer := ElapsedMillis(Started);
+  if Checksum <> ((Iterations + 1) * 152) * 35 then
+  begin
+    panic('incomplete render')
+  end;
+
+  WriteLn(('elapsed: ' + IntToStr(Elapsed)) + ' ms');
+  WriteLn('checksum: ' + IntToStr(Checksum))
+end.

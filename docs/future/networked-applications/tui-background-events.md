@@ -38,19 +38,44 @@ on the host task.
 - Framework lifecycle and failures use `Started` and `BackgroundFailed` variants on `TuiMsg`.
 - Work uses the fixed `function(Token): result of boolean, string` shape. Its success value is
   ignored; errors are normalized through task-group failure records.
-- Subscription replacement is cancel-and-join before start. Shutdown is cooperative and has no
-  forced process-level escalation.
+- Subscription replacement requests cancellation without blocking the host. The host joins completed
+  sources and starts only the latest pending replacement, preserving stop-before-start ordering.
+  Shutdown discards replacements, joins existing work cooperatively, and has no forced escalation.
 
 ## Acceptance evidence
 
+- The canonical Mandelbrot TUI uses a bounded typed frame inbox and one replaceable render subscription.
+  One task per row uses the VM worker pool; each publication contains a complete image.
+  Cancellation checks use iteration chunks, and the serialized application update ignores stale images.
+  Navigation retains the previous image until its replacement is ready when dimensions are unchanged.
 - The interactive host selects application messages alongside Console input and probes completed
   groups on its bounded 50 ms host timer.
 - Alternating case priority bounds source preference under sustained ready traffic.
-- The host cancels and joins subscriptions and one-shot work on replacement or shutdown.
+- The host requests subscription cancellation without joining on the input/paint path, then reaps
+  completed groups. Shutdown joins subscriptions and one-shot work without admitting replacements.
 - Headless regressions cover FIFO delivery, queue-full rejection, command execution, task failure,
-  replacement cancellation, shutdown cancellation, and late-send rejection.
+  replacement cancellation, shutdown cancellation, and late-send rejection. Additional regressions
+  cover three updates and paint while an old worker is gated, latest-request coalescing, cancellation
+  of pending work, and failure delivery from a stopping source.
 - The complete pre-existing TUI regression group remains the compatibility gate for keyboard,
   pointer, resize, focus, and rendering behavior.
 
-No performance conclusion is attached to this slice; its acceptance gates are behavior and
-lifecycle correctness.
+## Responsiveness correction
+
+The first Mandelbrot migration limited rendering to four tasks and repainted after every row.
+It also exposed synchronous subscription joining on the UI path. These issues are corrected by
+VM-pool row tasks, atomic image updates, and deferred subscription reaping.
+The root `Select` wait also leaves queued computations to pool workers, so a slow row cannot
+take over the waiting input task. A VM regression verifies that queued work stays queued.
+The Console reader yields after every poll. At sixteen-pixel checkpoints, Mandelbrot tasks
+yield after at least eight milliseconds of work.
+An interactive-host regression waits for a background message and exits without terminal input.
+That regression and both Mandelbrot regressions also pass with only one CPU available to the process.
+The complete FPAS suite passes with 425 passed, one intentionally skipped, and no failures.
+The repeatable `mandelbrot` benchmark group covers result delivery with and without headless
+grid painting; measurements and their limits are recorded in [benchmark history](../../bench/history.md).
+
+No public CPU-count or RAM API was added. The existing pool already derives its size from
+available parallelism, leaving one logical processor for the root where possible and retaining
+at least one worker. Broader [hardware information](../hardware-information.md) is recorded only
+as an idea, not an implementation plan.

@@ -1,6 +1,6 @@
 unit Std.Tui.Runtime.Application.Background;
 
-uses Std.Array, Std.Result, Std.Task, Std.Tui.Runtime.Msg;
+uses Std.Array, Std.Option, Std.Result, Std.Task, Std.Tui.Runtime.Msg;
 
 public type
   // Cooperative function executed as host-owned background work.
@@ -9,9 +9,9 @@ public type
   TuiBackgroundCommand = enum
     // Starts one independently owned operation.
     Start(Id: integer; Work: TuiBackgroundWork);
-    // Cancels and joins an existing subscription before starting its replacement.
+    // Requests cancellation and defers the latest replacement until the old source ends.
     ReplaceSubscription(Id: integer; Work: TuiBackgroundWork);
-    // Cancels and joins the subscription with the matching id.
+    // Requests cancellation and clears any pending replacement with the matching id.
     CancelSubscription(Id: integer);
   end;
 
@@ -20,6 +20,8 @@ type
     Id: integer;
     Subscription: boolean;
     Group: TaskGroup;
+    Cancelling: boolean;
+    Replacement: option of TuiBackgroundWork;
   end;
 
 mutable var
@@ -103,20 +105,36 @@ begin
     Id := Id;
     Subscription := Subscription;
     Group := Group;
+    Cancelling := false;
+    Replacement := None;
   end);
   TuiBackgroundWorkItems[ApplicationId - 1] := Items
 end;
 
+procedure TuiBackgroundRequestStop(
+  ApplicationId: integer;
+  Index: integer;
+  Replacement: option of TuiBackgroundWork
+);
+begin
+  mutable var Items: array of TuiOwnedWork := TuiBackgroundWorkItems[ApplicationId - 1];
+  CancelTaskGroup(Items[Index].Group);
+  Items[Index].Cancelling := true;
+  Items[Index].Replacement := Replacement;
+  TuiBackgroundWorkItems[ApplicationId - 1] := Items
+end;
+
+// Allocates the background ownership slot for a new application.
 public procedure TuiBackgroundOpenApplication();
 begin
   TuiBackgroundOpen := Std.Array.Concat(TuiBackgroundOpen, [true]);
   TuiBackgroundWorkItems := Std.Array.Concat(TuiBackgroundWorkItems, [[]])
 end;
 
+// Requests cancellation without joining on the UI path; replacement admission is deferred to reap.
 public function TuiBackgroundApply(ApplicationId: integer; Commands: array of TuiBackgroundCommand): array of TuiMsg;
 begin
   TuiBackgroundRequireOpen(ApplicationId);
-  mutable var Messages: array of TuiMsg := [];
   for Command: TuiBackgroundCommand in Commands do
   begin
     case Command of
@@ -129,23 +147,25 @@ begin
         var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
         if Existing >= 0 then
         begin
-          Messages := Std.Array.Concat(Messages, TuiBackgroundCloseAt(ApplicationId, Existing, false))
-        end;
-
-        TuiBackgroundStart(ApplicationId, Id, true, Work)
+          TuiBackgroundRequestStop(ApplicationId, Existing, Some(Work))
+        end
+        else
+        begin
+          TuiBackgroundStart(ApplicationId, Id, true, Work)
+        end
       end;
       TuiBackgroundCommand.CancelSubscription(Id):
       begin
         var Existing: integer := TuiBackgroundFindSubscription(ApplicationId, Id);
         if Existing >= 0 then
         begin
-          Messages := Std.Array.Concat(Messages, TuiBackgroundCloseAt(ApplicationId, Existing, false))
+          TuiBackgroundRequestStop(ApplicationId, Existing, None)
         end
       end
     end
   end;
 
-  return Messages
+  return []
 end;
 
 // Reports whether an application currently owns any operation.
@@ -155,6 +175,7 @@ begin
   return Std.Array.Length(TuiBackgroundWorkItems[ApplicationId - 1]) > 0
 end;
 
+// Collects completed groups and starts only the latest pending replacement after its predecessor ends.
 public function TuiBackgroundReap(ApplicationId: integer): array of TuiMsg;
 begin
   TuiBackgroundRequireOpen(ApplicationId);
@@ -166,8 +187,17 @@ begin
     case TryCloseCompletedTaskGroup(Item.Group) of
       Some(Failures):
       begin
-        Messages := Std.Array.Concat(Messages, TuiBackgroundFailureMessages(Item.Id, Failures, true));
-        TuiBackgroundRemove(ApplicationId, Index)
+        Messages := Std.Array.Concat(Messages, TuiBackgroundFailureMessages(Item.Id, Failures, not Item.Cancelling));
+        TuiBackgroundRemove(ApplicationId, Index);
+        case Item.Replacement of
+          Some(Work):
+          begin
+            TuiBackgroundStart(ApplicationId, Item.Id, true, Work)
+          end;
+          None:
+          begin
+          end
+        end
       end;
       None:
       begin
@@ -180,6 +210,7 @@ begin
   return Messages
 end;
 
+// Cancels and joins all owned work at shutdown without starting pending replacements.
 public function TuiBackgroundCloseApplication(ApplicationId: integer): array of TuiMsg;
 begin
   if ((ApplicationId < 1) or (ApplicationId > Std.Array.Length(TuiBackgroundOpen))) or

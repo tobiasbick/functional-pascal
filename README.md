@@ -224,6 +224,20 @@ end.
 
 More examples in the [`examples/`](examples/) directory.
 
+### Interactive Mandelbrot TUI
+
+The canonical interactive `Std.Tui` example renders complete Mandelbrot images
+from a cancellable subscription using the VM worker pool. Navigation replaces the active
+generation without blocking terminal input, and only the serialized TUI host
+updates the model and paints frames.
+
+```sh
+fpas run examples/math/mandelbrot/mandelbrot.fpasprj
+```
+
+See the [Mandelbrot example](examples/math/mandelbrot/README.md) for controls
+and its background-work structure.
+
 ### Tests
 
 Author-facing tests are `*_test.fpas` programs under [`tests/`](tests/) (`stdlib/`, including `stdlib/tui/`, `concurrency/`, `runner/`, `console/`, and `apps/`). Run the full suite with `fpas test tests/` or `fpas test tests/suite.fpasprj`. See [`docs/pascal/std/testing/test.md`](docs/pascal/std/testing/test.md) and [`examples/README.md`](examples/README.md).

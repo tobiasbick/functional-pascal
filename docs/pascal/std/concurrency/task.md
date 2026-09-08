@@ -442,10 +442,11 @@ VM teardown releases unused cases. Closing a case never closes or cancels its un
 Pending selection registers with event sources before probing and uses bounded parking, shortened
 for the earliest timer. A pending child selection saves its cases and execution state and releases
 the pool thread; the shared timer driver schedules another probe with a requested one-millisecond
-delay. This is not a wall-clock wakeup guarantee. The main task can help queued tasks without a
-pending child selection retaining the caller's stack. As with other controlled waits, helping remains
-cooperative and can delay observation of deadlines or cancellation; `Select` does not guarantee hard
-wall-clock termination. Debugger selection uses explicit suspension and its deterministic clock.
+delay. This is not a wall-clock wakeup guarantee. The main task leaves queued computations to the
+worker pool while selecting, so it can continue probing events without running an unrelated child
+inline. Selected callbacks still run on the selecting task and may delay its next selection.
+`Select` does not guarantee hard wall-clock termination. Debugger selection uses explicit
+suspension and its deterministic clock.
 
 Runnable example: [`select_events.fpas`](../../../../examples/pascal/concurrency/select_events.fpas).
 

@@ -14,6 +14,69 @@ cargo bench-fpas record "vm-only note" --group vm
 
 Newest entries are prepended below this header.
 
+## 2026-09-08 — Restore Mandelbrot pool parallelism and responsive atomic image updates
+
+The saved four-worker Mandelbrot baseline took 3038 ms for rendering and 72942 ms
+with headless painting. A direct comparison after the correction measured 1134 ms
+(-62.7%) and 2263 ms (-96.9%); the independent full-suite snapshot below measured
+1198 ms and 2371 ms. Each run times twelve 152-by-35 images at 160 iterations after
+one untimed warmup. The workload now publishes one complete image instead of 35 row
+messages and paints once per image instead of once per row; the headless helper
+renders an initial and an update frame per call. This measures the changed application
+pipeline, not terminal I/O, interactive FPS, or a guaranteed input-latency bound.
+
+The contemporaneous TUI baseline compared at 4684 -> 3969 ms (-15.3%) for
+`tui_headless` and 8840 -> 8215 ms (-7.1%) for `notes_headless`. Other groups below
+are an after-state snapshot, not a controlled before/after comparison.
+Regressions cover root selection avoiding inline CPU work, nonblocking subscription
+replacement, latest-request coalescing, cancellation, atomic image equivalence,
+retained images during navigation, and interactive completion on a single available CPU.
+
+- Group: `all`
+- Suite: [`suite.toml`](suite.toml)
+
+| bench | elapsed_ms | throughput |
+|-------|------------|------------|
+| mandelbrot_render | 1198 | - |
+| mandelbrot_paint | 2371 | - |
+| integer_loop | 6361 | throughput: 7860399 iters/s |
+| global_access | 494 | throughput: 10121457 global updates/s |
+| record_field_access | 1477 | throughput: 10155721 field accesses/s |
+| closure_call | 473 | throughput: 6342494 closure calls/s |
+| branch_dispatch | 3283 | throughput: 6091989 branches/s |
+| dynamic_numeric | 847 | throughput: 5903187 dynamic numeric ops/s |
+| array_push | 219 | throughput: 9132420 pushes/s |
+| array_length | 73 | throughput: 6849315 lengths/s |
+| string_concat | 2251 | throughput: 2221235 concats/s |
+| string_length | 72 | throughput: 6944444 lengths/s |
+| intrinsic_dispatch | 1557 | throughput: 9633911 intrinsic calls/s |
+| function_call | 671 | throughput: 8941877 calls/s |
+| array_callbacks | 934 | throughput: 10278372 callbacks/s |
+| record_update | 356 | throughput: 2808988 updates/s |
+| unicode_char_at | 1082 | throughput: 2772643 chars/s |
+| wrapper_payload | 1490 | throughput: 6711409 wrappers/s |
+| task_spawn_wait | 550 | throughput: 181818 tasks/s |
+| task_array_callbacks | 909 | throughput: 4224422 callbacks/s |
+| tui_headless | 3798 | throughput: 131 frames/s |
+| notes_headless | 8258 | throughput: 30 frames/s |
+| analysis_queries | 241 | - |
+| string_search | 295 | - |
+| compiler_lowering | 1410 | - |
+| substring_ascii | 11 | - |
+| substring_unicode | 405 | - |
+| project_queries | 982 | - |
+| project_edits | 2479 | - |
+| project_overlapping_queries | 836 | - |
+| project_build_cold | 1761 | - |
+| project_build_warm | 1456 | - |
+| unit_artifact_shared_types | 1 | - |
+| program_artifact_shared_types | 1 | - |
+| dictionary_reads | 9 | - |
+| scalar_membership | 29 | - |
+| array_pop | 6 | - |
+| text_area_locate | 2212 | - |
+| http_body_accumulation | 220 | - |
+
 ## 2026-09-05 — Review fixes: borrowed dictionary reads, scalar equality, local array pop and text/body processing
 
 - Group: `all`

@@ -83,6 +83,19 @@ cargo bench-fpas native unit-artifact 500 16
 cargo bench-fpas native program-artifact 500 16
 ```
 
+## Mandelbrot workload
+
+The `mandelbrot` group measures the production background renderer at 152 by 35 cells,
+160 iterations per pixel, and twelve images after one untimed warmup.
+`mandelbrot_render` includes row tasks, cancellation checks, and bounded result delivery.
+`mandelbrot_paint` additionally replaces the grid and calls the deterministic
+headless host once per complete image. That helper renders an initial frame plus one update frame
+per call; this is a repeatable paint workload, not an interactive input-latency or terminal-I/O
+measurement. Both cases check the total cell count. They do not benchmark compilation.
+
+Use `cargo bench-fpas save mandelbrot-before --group mandelbrot` and
+`cargo bench-fpas compare mandelbrot-before --group mandelbrot`.
+
 ## Prerequisites
 
 - Quiet machine (avoid heavy background load).
@@ -173,7 +186,7 @@ Snapshot JSON and committed history are written to a flushed same-directory stag
 Add or adjust entries in [`suite.toml`](suite.toml):
 
 - `id` — short name used in tables and JSON
-- `group` — `vm`, `concurrency`, `tui`, `tooling`, `startup`, or `review` (filter with `--group`)
+- `group` — `mandelbrot`, `vm`, `concurrency`, `tui`, `tooling`, `startup`, or `review` (filter with `--group`)
 - `path` — `.fpas` program or `.fpasprj` project relative to the repo root
 - `driver` — defaults to `fpas`; `http-body`, `language-service`, `language-service-project`, `compiler-lowering`, `project-build`, `unit-artifact`, and `program-artifact` run native workloads and omit `path`
 - `args` — arguments after `--` (usually iteration count)

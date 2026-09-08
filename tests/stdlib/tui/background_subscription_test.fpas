@@ -37,6 +37,10 @@ begin
     end;
     TuiMsg.Tick(Delta):
     begin
+      if Delta = 0 then
+      begin
+        return State
+      end;
       var Next: SubscriptionModel := record
         Gate := State.Gate;
         Started := State.Started;
@@ -77,10 +81,11 @@ begin
     Generation := 0;
   end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 10000)));
-  App.Inject(TuiMsg.Tick(0));
+  App.Inject(TuiMsg.Tick(1));
   Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(1, Model.Generation);
   AssertEquals(0, Unwrap(ReceiveWithTimeout(Stopped, 10000)));
+  Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
   AssertEquals(1, Unwrap(ReceiveWithTimeout(Started, 10000)));
   App.CloseWithBackground(Inbox);
   AssertEquals(1, Unwrap(ReceiveWithTimeout(Stopped, 10000)));

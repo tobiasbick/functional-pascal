@@ -1,0 +1,116 @@
+program TuiBackgroundPendingTest;
+
+uses Std.Result, Std.Task, Std.Test, Std.Time, Std.Tui;
+
+type
+  PendingModel = record
+    Gate: channel of boolean;
+    Ready: channel of boolean;
+    Started: channel of boolean;
+    FailOld: boolean;
+    Failures: integer;
+  end;
+
+function Update(State: PendingModel; Msg: TuiMsg; Cmd: TuiCmdOutput): PendingModel;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      var Gate: channel of boolean := State.Gate;
+      var Ready: channel of boolean := State.Ready;
+      var FailOld: boolean := State.FailOld;
+      Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+        Send(Ready, true);
+        if FailOld then
+        begin
+          Receive(Gate);
+          return Error('old source failed')
+        end;
+
+        ReceiveWithCancellation(Gate, Token);
+        return Ok(true)
+      end)
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      if Delta = 1 then
+      begin
+        var Started: channel of boolean := State.Started;
+        Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+          Send(Started, true);
+          return Ok(true)
+        end)
+      end
+      else if Delta = 2 then
+      begin
+        Cmd.CancelSubscription(1)
+      end
+    end;
+    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    begin
+      AssertEquals(1, Id);
+      AssertTrue(Kind = TaskFailureKind.ReturnedError);
+      AssertEquals('old source failed', Message);
+      mutable var Next: PendingModel := State;
+      Next.Failures := State.Failures + 1;
+      return Next
+    end
+    else
+    begin
+    end
+  end;
+
+  return State
+end;
+
+function UpdateMessage(State: PendingModel; Message: integer; Cmd: TuiCmdOutput): PendingModel;
+begin
+  return State
+end;
+
+function View(State: PendingModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('pending cancellation')
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(1);
+  var Gate: channel of boolean := CreateChannel(1);
+  var Ready: channel of boolean := CreateChannel(1);
+  var Started: channel of boolean := CreateChannel(1);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var State: PendingModel := App.RunBackgroundIterations(record
+    Gate := Gate;
+    Ready := Ready;
+    Started := Started;
+    FailOld := true;
+    Failures := 0;
+  end, Inbox, Update, UpdateMessage, View, 1, 0);
+  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 5000)));
+  App.Inject(TuiMsg.Tick(1));
+  App.Inject(TuiMsg.Tick(2));
+  State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 2, 0);
+  Send(Gate, true);
+  var Deadline: integer := MonotonicMillis() + 5000;
+  while (State.Failures = 0) and (MonotonicMillis() < Deadline) do
+  begin
+    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+    Sleep(1)
+  end;
+
+  AssertEquals(1, State.Failures);
+  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  App.CloseWithBackground(Inbox);
+  var SecondInbox: channel of integer := CreateChannel(1);
+  var SecondApp: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  State.FailOld := false;
+  State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
+  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 5000)));
+  SecondApp.Inject(TuiMsg.Tick(1));
+  State := SecondApp.RunBackgroundIterations(State, SecondInbox, Update, UpdateMessage, View, 1, 0);
+  SecondApp.CloseWithBackground(SecondInbox);
+  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  CloseChannel(Gate);
+  CloseChannel(Ready);
+  CloseChannel(Started)
+end.

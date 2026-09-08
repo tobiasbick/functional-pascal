@@ -70,6 +70,7 @@ implementation details.
 
 ## See also
 
+- [Mandelbrot background-rendering example](../../../../examples/math/mandelbrot/README.md)
 - [Notes application](../../../../apps/notes/README.md)
 - [Standard library](../README.md)
 - [Testing](../testing/README.md)

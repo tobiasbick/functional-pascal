@@ -1,0 +1,136 @@
+// Built only via mandelbrot-core.fpasprj — not a standalone program.
+
+unit Mandelbrot.Model;
+
+uses Std.Array, Std.Conv, Std.Math, Std.Task, Std.Tui, Mandelbrot.Color, Mandelbrot.Render;
+
+public type
+  ExplorerState = record
+    public CenterX: real;
+    public CenterY: real;
+    public SpanY: real;
+    public MaxIter: integer;
+    public Palette: PaletteKind;
+
+    public static function Default(): ExplorerState;
+    begin
+      return record
+        CenterX := -0.75;
+        CenterY := 0.0;
+        SpanY := 2.4;
+        MaxIter := 160;
+        Palette := PaletteKind.DeepOcean;
+      end
+    end;
+
+    public function SpanX(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return (Self.SpanY * (IntToReal(Max(Width, 1)) / IntToReal(Max(Height, 1)))) * 0.5
+    end;
+
+    public function XMin(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX - (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    public function XMax(Self: ExplorerState; Width: integer; Height: integer): real;
+    begin
+      return Self.CenterX + (Self.SpanX(Width, Height) * 0.5)
+    end;
+
+    public function YMin(Self: ExplorerState): real;
+    begin
+      return Self.CenterY - (Self.SpanY * 0.5)
+    end;
+
+    public function YMax(Self: ExplorerState): real;
+    begin
+      return Self.CenterY + (Self.SpanY * 0.5)
+    end;
+
+    public function GetZoom(Self: ExplorerState): real;
+    begin
+      return 2.4 / Self.SpanY
+    end;
+
+    public property Zoom: real read GetZoom;
+  end;
+  MandelbrotModel = record
+    public Explorer: ExplorerState;
+    public TerminalWidth: integer;
+    public TerminalHeight: integer;
+    public Grid: TuiCellGrid;
+    public HelpOpen: boolean;
+    public Generation: integer;
+    public RowsRendered: integer;
+    public FailureMessage: string;
+    public Inbox: channel of MandelbrotRenderFrame;
+  end;
+
+public function GridWidth(TerminalWidth: integer): integer;
+begin
+  return Max(TerminalWidth - 2, 1)
+end;
+
+public function GridHeight(TerminalHeight: integer): integer;
+begin
+  return Max(TerminalHeight - 6, 1)
+end;
+
+function BlankGrid(Width: integer; Height: integer): TuiCellGrid;
+begin
+  var Black: TuiColor := TuiColor.FromRgb(0, 0, 0);
+  var Blank: TuiCell := TuiCell.Styled(' ', TuiStyle.FromColors(Black, Black));
+  return TuiCellGrid.Create(Width, Height, Std.Array.Fill(Blank, Width * Height))
+end;
+
+public function CreateMandelbrotModel(
+  Explorer: ExplorerState;
+  TerminalWidth: integer;
+  TerminalHeight: integer;
+  HelpOpen: boolean;
+  Generation: integer;
+  Inbox: channel of MandelbrotRenderFrame
+): MandelbrotModel;
+begin
+  var Width: integer := Max(TerminalWidth, 1);
+  var Height: integer := Max(TerminalHeight, 1);
+  var RenderWidth: integer := GridWidth(Width);
+  var RenderHeight: integer := GridHeight(Height);
+  return record
+    Explorer := Explorer;
+    TerminalWidth := Width;
+    TerminalHeight := Height;
+    Grid := BlankGrid(RenderWidth, RenderHeight);
+    HelpOpen := HelpOpen;
+    Generation := Generation;
+    RowsRendered := 0;
+    FailureMessage := '';
+    Inbox := Inbox;
+  end
+end;
+
+// Creates the initial blank model; TuiMsg.Started schedules its first render.
+public function NewMandelbrotModel(
+  Inbox: channel of MandelbrotRenderFrame;
+  TerminalWidth: integer;
+  TerminalHeight: integer
+): MandelbrotModel;
+begin
+  return CreateMandelbrotModel(ExplorerState.Default(), TerminalWidth, TerminalHeight, false, 1, Inbox)
+end;
+
+public function MandelbrotRequest(State: MandelbrotModel): MandelbrotRenderRequest;
+begin
+  return record
+    Generation := State.Generation;
+    XMin := State.Explorer.XMin(State.Grid.Width, State.Grid.Height);
+    XMax := State.Explorer.XMax(State.Grid.Width, State.Grid.Height);
+    YMin := State.Explorer.YMin();
+    YMax := State.Explorer.YMax();
+    Width := State.Grid.Width;
+    Height := State.Grid.Height;
+    MaxIter := State.Explorer.MaxIter;
+    Palette := State.Explorer.Palette;
+  end
+end;

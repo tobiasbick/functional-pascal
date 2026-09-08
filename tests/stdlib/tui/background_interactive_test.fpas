@@ -1,0 +1,50 @@
+program TuiBackgroundInteractiveTest;
+
+uses Std.Result, Std.Task, Std.Test, Std.Tui;
+
+type
+  InteractiveModel = record
+    Inbox: channel of integer;
+    Received: integer;
+  end;
+
+function Update(State: InteractiveModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InteractiveModel;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      var Inbox: channel of integer := State.Inbox;
+      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+        return SendWithCancellation(Inbox, 42, Token)
+      end)
+    end
+    else
+    begin
+    end
+  end;
+
+  return State
+end;
+
+function UpdateMessage(State: InteractiveModel; Message: integer; Cmd: TuiCmdOutput): InteractiveModel;
+begin
+  Cmd.Set(TuiCmd.Quit);
+  mutable var Next: InteractiveModel := State;
+  Next.Received := Message;
+  return Next
+end;
+
+function View(State: InteractiveModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('background wakeup')
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(1);
+  var Final: InteractiveModel := TuiApplication.RunWithBackground(record
+    Inbox := Inbox;
+    Received := 0;
+  end, Inbox, Update, UpdateMessage, View);
+  AssertEquals(42, Final.Received);
+  AssertTrue(IsError(TrySend(Inbox, 1)))
+end.

@@ -70,7 +70,7 @@ public type
       TuiCommandBackground[Slot - 1] := Commands
     end;
 
-    // Replaces a long-lived source after cancelling and joining the previous operation.
+    // Requests cancellation and starts the latest replacement after the previous operation ends.
     public procedure ReplaceSubscription(Self: TuiCmdOutput; Id: integer; Work: TuiBackgroundWork);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);
@@ -83,7 +83,7 @@ public type
       TuiCommandBackground[Slot - 1] := Commands
     end;
 
-    // Cancels and joins a long-lived source after Update returns.
+    // Requests cancellation after Update returns; the host joins it when complete or at shutdown.
     public procedure CancelSubscription(Self: TuiCmdOutput; Id: integer);
     begin
       var Slot: integer := TuiCmdOutputRequire(Self.Slot);

@@ -1,0 +1,6 @@
+[project]
+name = "mandelbrot-core"
+kind = "library"
+
+[sources]
+include = ["mandelbrot_color.fpas", "mandelbrot_render.fpas", "mandelbrot_model.fpas", "mandelbrot_app.fpas", "mandelbrot_view.fpas"]

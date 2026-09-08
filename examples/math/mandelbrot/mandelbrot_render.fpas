@@ -1,10 +1,11 @@
-// Built only via mandelbrot.fpasprj — not a standalone program.
+// Built only via mandelbrot-core.fpasprj — not a standalone program.
 
 unit Mandelbrot.Render;
 
-uses Std.Array, Std.Conv, Std.Math, Std.Str, Std.Task, Std.Tui, Mandelbrot.Color;
+uses
+  Std.Array, Std.Conv, Std.Math, Std.Result, Std.Str, Std.Task, Std.Time, Std.Tui, Mandelbrot.Color;
 
-type
+public type
   Complex = record
     public Re: real;
     public Im: real;
@@ -50,6 +51,38 @@ type
     public IsInside: boolean;
     public EscapeValue: real;
   end;
+  MandelbrotRenderRequest = record
+    public Generation: integer;
+    public XMin: real;
+    public XMax: real;
+    public YMin: real;
+    public YMax: real;
+    public Width: integer;
+    public Height: integer;
+    public MaxIter: integer;
+    public Palette: PaletteKind;
+  end;
+  MandelbrotRenderFrame = record
+    // One complete row-major image belonging to a render generation.
+    public Generation: integer;
+    public Cells: array of TuiCell;
+  end;
+
+function FinishSample(Z: Complex; Iterations: integer; MaxIter: integer): PixelSample;
+begin
+  if Iterations >= MaxIter then
+  begin
+    return record
+      IsInside := true;
+      EscapeValue := 0.0;
+    end
+  end;
+  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
+  return record
+    IsInside := false;
+    EscapeValue := (IntToReal(Iterations) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
+  end
+end;
 
 function Iterate(C: Complex; MaxIter: integer): PixelSample;
 begin
@@ -61,21 +94,37 @@ begin
     N := N + 1
   end;
 
-  if N >= MaxIter then
-  begin
-    return record
-      IsInside := true;
-      EscapeValue := 0.0;
-    end
-  end;
-  var MagnitudeSq: real := Max(Z.MagSq(), 4.0);
-  return record
-    IsInside := false;
-    EscapeValue := (IntToReal(N) + 1.0) - (Log(Log(MagnitudeSq) * 0.5) / Log(2.0));
-  end
+  return FinishSample(Z, N, MaxIter)
 end;
 
-function ComputeRow(
+function IterateCancellable(
+  C: Complex;
+  MaxIter: integer;
+  HostToken: CancellationToken;
+  WorkerToken: CancellationToken
+): PixelSample;
+begin
+  mutable var Z: Complex := Complex.Zero();
+  mutable var N: integer := 0;
+  while (N < MaxIter) and (Z.MagSq() <= 256.0) do
+  begin
+    if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
+    begin
+      break
+    end;
+    var ChunkEnd: integer := Min(N + 128, MaxIter);
+    while (N < ChunkEnd) and (Z.MagSq() <= 256.0) do
+    begin
+      Z := Z.Sq().Add(C);
+      N := N + 1
+    end
+  end;
+
+  return FinishSample(Z, N, MaxIter)
+end;
+
+// Computes one row without cancellation for reference rendering and tests.
+public function ComputeRow(
   Py: integer;
   Width: integer;
   Height: integer;
@@ -94,6 +143,49 @@ begin
   begin
     var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
     Std.Array.Push(Row, Iterate(Complex.Create(Cx, Cy), MaxIter))
+  end;
+
+  return Row
+end;
+
+function ComputeRowCancellable(
+  Py: integer;
+  Width: integer;
+  Height: integer;
+  XMin: real;
+  XMax: real;
+  YMin: real;
+  YMax: real;
+  MaxIter: integer;
+  HostToken: CancellationToken;
+  WorkerToken: CancellationToken
+): array of PixelSample;
+begin
+  var WidthRange: integer := Max(Width - 1, 1);
+  var HeightRange: integer := Max(Height - 1, 1);
+  var Cy: real := YMax - (Py / IntToReal(HeightRange)) * (YMax - YMin);
+  mutable var Row: array of PixelSample := [];
+  mutable var NextYield: integer := MonotonicMillis() + 8;
+  for Px: integer := 0 to Width - 1 do
+  begin
+    if ((Px > 0) and (Px mod 16 = 0)) and (MonotonicMillis() >= NextYield) then
+    begin
+      // Let the Console reader run even when every pool worker is rendering.
+      Sleep(0);
+      NextYield := MonotonicMillis() + 8
+    end;
+
+    if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
+    begin
+      return []
+    end;
+    var Cx: real := XMin + (Px / IntToReal(WidthRange)) * (XMax - XMin);
+    Std.Array.Push(Row, IterateCancellable(Complex.Create(Cx, Cy), MaxIter, HostToken, WorkerToken))
+  end;
+
+  if IsCancellationRequested(HostToken) or IsCancellationRequested(WorkerToken) then
+  begin
+    return []
   end;
 
   return Row
@@ -119,7 +211,33 @@ begin
   return TuiCell.Styled(EscapeGlyph(Sample.EscapeValue), TuiStyle.FromColors(EscapeColor(Palette, Sample.EscapeValue), Background))
 end;
 
-// Computes a flat row-major truecolor Mandelbrot cell grid.
+function RenderSamples(Samples: array of PixelSample; Palette: PaletteKind): array of TuiCell;
+begin
+  mutable var Cells: array of TuiCell := [];
+  for Sample: PixelSample in Samples do
+  begin
+    Std.Array.Push(Cells, RenderCell(Sample, Palette))
+  end;
+
+  return Cells
+end;
+
+function RenderRowCells(Request: MandelbrotRenderRequest; Py: integer): array of TuiCell;
+begin
+  return RenderSamples(ComputeRow(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter), Request.Palette)
+end;
+
+function RenderRowCellsCancellable(
+  Request: MandelbrotRenderRequest;
+  Py: integer;
+  HostToken: CancellationToken;
+  WorkerToken: CancellationToken
+): array of TuiCell;
+begin
+  return RenderSamples(ComputeRowCancellable(Py, Request.Width, Request.Height, Request.XMin, Request.XMax, Request.YMin, Request.YMax, Request.MaxIter, HostToken, WorkerToken), Request.Palette)
+end;
+
+// Computes a flat row-major grid synchronously as a reference implementation.
 public function RenderGrid(
   XMin: real;
   XMax: real;
@@ -131,20 +249,80 @@ public function RenderGrid(
   Palette: PaletteKind
 ): TuiCellGrid;
 begin
-  mutable var Tasks: array of task := [];
-  for Py: integer := 0 to Height - 1 do
-  begin
-    Std.Array.Push(Tasks, go ComputeRow(Py, Width, Height, XMin, XMax, YMin, YMax, MaxIter))
+  var Request: MandelbrotRenderRequest := record
+    Generation := 0;
+    XMin := XMin;
+    XMax := XMax;
+    YMin := YMin;
+    YMax := YMax;
+    Width := Width;
+    Height := Height;
+    MaxIter := MaxIter;
+    Palette := Palette;
   end;
   mutable var Cells: array of TuiCell := [];
   for Py: integer := 0 to Height - 1 do
   begin
-    var Row: array of PixelSample := Wait(Tasks[Py]);
-    for Px: integer := 0 to Width - 1 do
-    begin
-      Std.Array.Push(Cells, RenderCell(Row[Px], Palette))
-    end
+    var Row: array of TuiCell := RenderRowCells(Request, Py);
+    Cells := Std.Array.Concat(Cells, Row)
   end;
 
   return TuiCellGrid.Create(Width, Height, Cells)
+end;
+
+// Runs one task per row on the VM pool and publishes one complete image.
+public function RunBackgroundRender(
+  Request: MandelbrotRenderRequest;
+  Inbox: channel of MandelbrotRenderFrame;
+  HostToken: CancellationToken
+): result of boolean, string;
+begin
+  var Group: TaskGroup := CreateTaskGroup();
+  mutable var Tasks: array of task := [];
+  for Py: integer := 0 to Request.Height - 1 do
+  begin
+    if IsCancellationRequested(HostToken) then
+    begin
+      break
+    end;
+
+    Std.Array.Push(Tasks, StartTaskInGroup(Group, function(WorkerToken: CancellationToken): array of TuiCell begin
+      return RenderRowCellsCancellable(Request, Py, HostToken, WorkerToken)
+    end))
+  end;
+  mutable var Cells: array of TuiCell := [];
+  for Py: integer := 0 to Std.Array.Length(Tasks) - 1 do
+  begin
+    if IsError(WaitAnyWithCancellation([Tasks[Py]], HostToken)) then
+    begin
+      break
+    end;
+    var Row: array of TuiCell := Wait(Tasks[Py]);
+    if IsCancellationRequested(HostToken) then
+    begin
+      break
+    end;
+
+    Cells := Std.Array.Concat(Cells, Row);
+    if Py = Request.Height - 1 then
+    begin
+      if IsError(SendWithCancellation(Inbox, record
+        Generation := Request.Generation;
+        Cells := Cells;
+      end, HostToken)) then
+      begin
+        break
+      end
+    end
+  end;
+  var Failures: array of TaskFailure := CloseTaskGroup(Group);
+  for Failure: TaskFailure in Failures do
+  begin
+    if Failure.Kind <> TaskFailureKind.Cancelled then
+    begin
+      return Error(Failure.Message)
+    end
+  end;
+
+  return Ok(true)
 end;

@@ -1,0 +1,114 @@
+program TuiBackgroundResponsivenessTest;
+
+uses Std.Result, Std.Task, Std.Test, Std.Time, Std.Tui;
+
+type
+  Model = record
+    Generation: integer;
+    Gate: channel of boolean;
+    Started: channel of integer;
+    Painted: channel of integer;
+  end;
+
+procedure Replace(State: Model; Cmd: TuiCmdOutput);
+begin
+  var Generation: integer := State.Generation;
+  var Gate: channel of boolean := State.Gate;
+  var Started: channel of integer := State.Started;
+  Cmd.ReplaceSubscription(1, function(Token: CancellationToken): result of boolean, string begin
+    Send(Started, Generation);
+    if Generation = 0 then
+    begin
+      // Deliberately defer cooperation to prove that the host remains responsive.
+      Receive(Gate)
+    end;
+
+    return Ok(true)
+  end)
+end;
+
+function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      Replace(State, Cmd)
+    end;
+    TuiMsg.Tick(Delta):
+    begin
+      if Delta > 0 then
+      begin
+        mutable var Next: Model := State;
+        Next.Generation := State.Generation + 1;
+        Replace(Next, Cmd);
+        return Next
+      end
+    end
+    else
+    begin
+    end
+  end;
+
+  return State
+end;
+
+function UpdateMessage(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+begin
+  return State
+end;
+
+function View(State: Model): TuiElement;
+begin
+  if State.Generation = 3 then
+  begin
+    TrySend(State.Painted, 3)
+  end;
+
+  return TuiElementBuilders.MakeLabel('responsive')
+end;
+
+function ReleaseAfterPaint(Painted: channel of integer; Gate: channel of boolean): boolean;
+begin
+  // A timeout releases the gate even on the old blocking implementation.
+  var Paint: result of integer, string := ReceiveWithTimeout(Painted, 3000);
+  Send(Gate, true);
+  return IsOk(Paint)
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(1);
+  var Gate: channel of boolean := CreateChannel(1);
+  var Started: channel of integer := CreateChannel(4);
+  var Painted: channel of integer := CreateChannel(1);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(20, 4));
+  mutable var State: Model := App.RunBackgroundIterations(record
+    Generation := 0;
+    Gate := Gate;
+    Started := Started;
+    Painted := Painted;
+  end, Inbox, Update, UpdateMessage, View, 1, 0);
+  AssertEquals(0, Unwrap(ReceiveWithTimeout(Started, 5000)));
+  var Observer: task := go ReleaseAfterPaint(Painted, Gate);
+  for Index: integer := 1 to 3 do
+  begin
+    App.Inject(TuiMsg.Tick(1));
+    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+    AssertEquals(Index, State.Generation)
+  end;
+
+  AssertTrue(Wait(Observer));
+  mutable var Replacement: result of integer, string := ReceiveWithTimeout(Started, 0);
+  var Deadline: integer := MonotonicMillis() + 5000;
+  while IsError(Replacement) and (MonotonicMillis() < Deadline) do
+  begin
+    State := App.RunBackgroundIterations(State, Inbox, Update, UpdateMessage, View, 1, 0);
+    Replacement := ReceiveWithTimeout(Started, 1)
+  end;
+
+  AssertEquals(3, Unwrap(Replacement));
+  AssertTrue(IsError(ReceiveWithTimeout(Started, 0)));
+  App.CloseWithBackground(Inbox);
+  CloseChannel(Gate);
+  CloseChannel(Started);
+  CloseChannel(Painted)
+end.

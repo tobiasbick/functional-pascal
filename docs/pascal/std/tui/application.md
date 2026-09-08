@@ -75,9 +75,13 @@ function Work(Token: CancellationToken): result of boolean, string
 The success value is not interpreted. `Cmd.StartBackground(Id, Work)` starts an independent
 one-shot operation after `Update` returns. Multiple one-shot operations may use the same id; the id
 correlates failures. `Cmd.ReplaceSubscription(Id, Work)` gives a long-lived source a unique positive
-id. Replacing it cancels and joins the old source before starting the new one.
-`Cmd.CancelSubscription(Id)` cancels and joins it without replacement and is a no-op when that id is
-not active. Each application may own at most 256 simultaneous operations.
+id. Replacement requests cancellation immediately and returns control to the host without waiting
+for the old source. The host joins it once complete, then starts the latest pending replacement.
+Further replacements for that id overwrite the pending work; they do not start intermediate
+operations or overlap the old source. Input, updates, and paint continue while cancellation is pending.
+`Cmd.CancelSubscription(Id)` requests cancellation, clears any pending replacement, and is a no-op
+when that id is not active. Each application may own at most 256 simultaneous operations, including
+sources awaiting cancellation. Each source has at most one pending replacement.
 
 Completed successful operations are reaped silently. A returned `Error`, panic, or runtime error is
 delivered on the main application thread as:
@@ -88,9 +92,9 @@ TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column)
 
 `Kind` is a `TaskFailureKind`. Cancellation caused by replacement, explicit subscription
 cancellation, or shutdown is not reported as a failure. Other failures discovered while replacing
-or cancelling are queued before the new work can produce a message. If a failure is discovered only
-during final shutdown, the host releases the terminal first and then raises that failure because no
-further `Update` call exists.
+or cancelling are delivered before application messages from the replacement are processed. If a
+failure is discovered only during final shutdown, the host releases the terminal first and then raises that failure because no
+further `Update` call exists. Shutdown discards pending replacements and joins existing work.
 
 Background work owns no TUI state. Only `Update`, `UpdateApplication`, command application, `View`,
 layout, and paint may change the application and all run serially on the host task. Each channel
@@ -100,6 +104,9 @@ neither source permanently starves the other. There is no total ordering between
 sources.
 
 The interactive Console reader runs as host-owned work and polls native input with a 50 ms timeout.
+It yields its pool worker after every poll, including polls without input.
+While selecting input, the root host does not execute queued background computations inline;
+those remain on the VM worker pool.
 Application messages wake the selection immediately; a 50 ms host timer probes task groups so even
 a worker that panics before sending a message becomes `BackgroundFailed`. Shutdown
 cancels and joins that reader, then cancels and joins application work, releases the terminal, and
@@ -210,6 +217,7 @@ glyph clears both columns.
 ## See also
 
 - [`Std.Tui`](README.md)
+- [Mandelbrot typed-inbox and replaceable-subscription example](../../../../examples/math/mandelbrot/README.md)
 - [Elements](elements.md)
 - [Text area](text-area.md)
 - [Layout](layout.md)

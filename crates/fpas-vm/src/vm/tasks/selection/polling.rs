@@ -3,7 +3,7 @@
 use super::*;
 use crate::vm::channels::{ReceiveState, SendState};
 use crate::vm::shared::wakeups::{WakeRegistration, WakeSignal};
-use crate::vm::tasks::{TaskSuspension, pool};
+use crate::vm::tasks::TaskSuspension;
 use crate::vm::{TaskAnyPoll, TaskBatchPoll};
 use std::sync::Arc;
 
@@ -130,6 +130,9 @@ impl Worker {
     }
 
     /// Wait or suspend until exactly one source operation commits.
+    ///
+    /// The root keeps probing events instead of running unrelated child work inline.
+    /// See `docs/pascal/std/concurrency/task.md`.
     pub(super) fn run_selection(&mut self, wait: SelectionWait) -> Result<(), VmError> {
         if self.debug_tasks {
             self.poll_selection(wait)?;
@@ -155,24 +158,21 @@ impl Worker {
                 self.park_pool_suspension()?;
                 return Ok(());
             }
-            if let Some(task) = scheduler.try_dequeue() {
-                drop(registrations);
-                pool::run_helped(self, task, scheduler)?;
-            } else {
-                let interval = wait
-                    .cases
-                    .iter()
-                    .filter_map(|case| match case.source {
-                        CaseSource::Timer(ms) => {
-                            Some(Duration::from_millis(ms).saturating_sub(wait.started.elapsed()))
-                        }
-                        _ => None,
-                    })
-                    .min()
-                    .unwrap_or(Duration::from_millis(10))
-                    .min(Duration::from_millis(10));
-                signal.wait(interval);
-            }
+            // Inline helping can hold an event-loop task inside arbitrary CPU work until
+            // that work yields. Pool workers execute queued tasks while the root waits.
+            let interval = wait
+                .cases
+                .iter()
+                .filter_map(|case| match case.source {
+                    CaseSource::Timer(ms) => {
+                        Some(Duration::from_millis(ms).saturating_sub(wait.started.elapsed()))
+                    }
+                    _ => None,
+                })
+                .min()
+                .unwrap_or(Duration::from_millis(10))
+                .min(Duration::from_millis(10));
+            signal.wait(interval);
         }
     }
 

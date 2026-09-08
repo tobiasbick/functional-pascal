@@ -1,0 +1,10 @@
+[project]
+name = "mandelbrot-benchmark"
+kind = "program"
+main = "mandelbrot_benchmark.fpas"
+
+[dependencies]
+projects = ["../../../math/mandelbrot/mandelbrot-core.fpasprj"]
+
+[sources]
+include = ["mandelbrot_benchmark.fpas"]

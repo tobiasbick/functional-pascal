@@ -1,0 +1,43 @@
+program MandelbrotTuiLifecycleTest;
+
+uses
+  Mandelbrot.App, Mandelbrot.Model, Mandelbrot.Render, Mandelbrot.View, Std.Array, Std.Result,
+  Std.Task, Std.Test, Std.Time, Std.Tui;
+
+function MakeLeftKey(): TuiKeyEvent;
+begin
+  return record
+    kind := TuiKeyKind.Left;
+    ch := '';
+    shift := false;
+    ctrl := false;
+    alt := false;
+    meta := false;
+  end
+end;
+
+begin
+  var Inbox: channel of MandelbrotRenderFrame := CreateChannel(4);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(9, 15));
+  mutable var Model: MandelbrotModel := NewMandelbrotModel(Inbox, 9, 15);
+  Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
+  var InitialGeneration: integer := Model.Generation;
+  App.Inject(TuiMsg.Key(MakeLeftKey()));
+  Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
+  AssertEquals(InitialGeneration + 1, Model.Generation);
+  AssertEquals(0, Model.RowsRendered);
+  mutable var Attempts: integer := 0;
+  while (Model.RowsRendered < Model.Grid.Height) and (Attempts < 500) do
+  begin
+    Sleep(1);
+    Model := App.RunBackgroundIterations(Model, Inbox, UpdateMandelbrot, UpdateMandelbrotFrame, ViewMandelbrot, 1, 0);
+    Attempts := Attempts + 1
+  end;
+
+  AssertEquals(Model.Grid.Height, Model.RowsRendered);
+  App.CloseWithBackground(Inbox);
+  AssertTrue(IsError(TrySend(Inbox, record
+    Generation := Model.Generation;
+    Cells := [];
+  end)))
+end.

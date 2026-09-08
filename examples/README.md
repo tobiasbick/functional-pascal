@@ -181,6 +181,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/concurrency/task_array_callbacks_benchmark.fpas` | Resumable `Map`, `Filter`, and `Reduce` callback throughput inside a spawned task |
 | `pascal/tui/headless_render_benchmark.fpas` | Parameterized headless `Std.Tui` render benchmark with an optional elapsed-time limit |
 | `pascal/tui/notes-headless/notes-headless-benchmark.fpasprj` | Real Notes application rendering through a headless `Std.Tui` project benchmark |
+| `pascal/tui/mandelbrot-headless/mandelbrot-benchmark.fpasprj` | Production Mandelbrot tasks and bounded delivery, optionally including headless grid painting; `cargo bench-fpas run --group mandelbrot` |
 | `pascal/vm/integer_loop_benchmark.fpas` | Tight integer arithmetic loop for VM dispatch / int-op throughput |
 | `pascal/vm/array_push_benchmark.fpas` | Growing `Std.Array.Push` for VM array locals / SharedArray COW |
 | `pascal/vm/array_length_benchmark.fpas` | Repeated `Std.Array.Length` on a shared live array (read-only COW path) |
@@ -227,7 +228,7 @@ All `math/` fractal demos are multi-unit `.fpasprj` projects — see the table b
 | `pascal/units-basic/` | `units-basic.fpasprj`, `unit App.Math`, `App.Reporting`, program `UnitsBasic` |
 | `pascal/library-deps/` | Program `LibDemo` + library `MyLib.Core` via `[dependencies].projects` |
 | `pascal/monorepo/` | Workspace + `Demo.Greet` library + `Hello` via `[dependencies].workspace` |
-| `math/mandelbrot/` | `mandelbrot.fpasprj`, program `MandelbrotShowcase`, units `Mandelbrot.Color` / `Mandelbrot.Render` |
+| `math/mandelbrot/` | `mandelbrot.fpasprj` depends on `mandelbrot-core.fpasprj`: canonical background-enabled `Std.Tui` app with focused App, Model, Color, Render, and View units |
 | `math/julia/` | `julia.fpasprj` depends on `julia-core.fpasprj`: `Julia.Color`, `Julia.Compute`, and `Julia.Render` |
 | `math/burning_ship/` | `burning_ship.fpasprj`, program `BurningShipShowcase`, units `BurningShip.Color` / `BurningShip.Render` |
 | `math/tricorn/` | `tricorn.fpasprj`, program `TricornShowcase`, units `Tricorn.Color` / `Tricorn.Render` |
@@ -242,7 +243,7 @@ These run until you exit (for example **Escape**). Run from a real terminal if p
 | Path | Notes |
 |------|--------|
 | `openai-chat/openai-chat.fpasprj` | Line-oriented chat against a configurable OpenAI-compatible HTTP endpoint |
-| `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with truecolor `TuiCellGrid`, gauges, and overlay |
+| `math/mandelbrot/mandelbrot.fpasprj` | Canonical `Std.Tui` MVU example with a bounded typed inbox, cancellable row tasks on the VM pool, atomic image updates, gauges, and overlay |
 | `math/julia/julia.fpasprj` | Fullscreen Julia explorer with four cancellable render workers; `WASD` adjusts the constant |
 | `math/burning_ship/burning_ship.fpasprj` | Fullscreen terminal Burning Ship explorer |
 | `math/tricorn/tricorn.fpasprj` | Fullscreen terminal Tricorn explorer |

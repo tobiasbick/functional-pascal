@@ -1,0 +1,52 @@
+// Built only via mandelbrot-core.fpasprj — not a standalone program.
+
+unit Mandelbrot.View;
+
+uses Std.Array, Std.Conv, Std.Math, Std.Str, Std.Tui, Mandelbrot.Color, Mandelbrot.Model;
+
+// Builds the Tui view while keeping the previous image visible during rendering.
+public function ViewMandelbrot(State: MandelbrotModel): TuiElement;
+begin
+  mutable var Status: string := 'rendering';
+  if State.RowsRendered = State.Grid.Height then
+  begin
+    Status := 'ready'
+  end;
+  var Detail: string := Format('center=(%f, %f)  zoom=%f  palette=%s  %s', State.Explorer.CenterX, State.Explorer.CenterY, State.Explorer.Zoom, PaletteName(State.Explorer.Palette), Status);
+  mutable var MainChildren: array of TuiElement := [
+                                                     TuiElementBuilders.MakePanel('Mandelbrot Explorer', [TuiElementBuilders.MakeCellGrid(State.Grid)]),
+                                                     TuiElementBuilders.MakeRule(Detail),
+                                                     TuiElementBuilders.MakeGauge('Iterations', State.Explorer.MaxIter, 2048),
+                                                     TuiElementBuilders.MakeGauge('Zoom', Min(Trunc(State.Explorer.Zoom * 10.0), 1000), 1000)
+                                                   ];
+  if Std.Str.Length(State.FailureMessage) > 0 then
+  begin
+    Std.Array.Push(MainChildren, TuiElementBuilders.MakeRule('render failed: ' +
+                                                             State.FailureMessage))
+  end;
+
+  Std.Array.Push(MainChildren, TuiElementBuilders.MakeStatusLine([
+                                                                   TuiStatusItemBuilders.MakeKeyHint('Arrows', 'pan'),
+                                                                   TuiStatusItemBuilders.MakeKeyHint('+/-', 'zoom'),
+                                                                   TuiStatusItemBuilders.MakeKeyHint('1/2/3', 'palette'),
+                                                                   TuiStatusItemBuilders.MakeKeyHint('H', 'help'),
+                                                                   TuiStatusItemBuilders.MakeKeyHint('Esc', 'quit')
+                                                                 ]));
+  var Main: TuiElement := TuiElementBuilders.MakeColumn(MainChildren);
+  mutable var Children: array of TuiElement := [Main];
+  if State.HelpOpen then
+  begin
+    Std.Array.Push(Children, TuiElementBuilders.MakeOverlay('Controls', [
+                                                                          TuiElementBuilders.MakeColumnSpaced([
+                                                                                                                TuiElementBuilders.MakeLabel('Arrow keys or click: pan and center'),
+                                                                                                                TuiElementBuilders.MakeLabel('+ / - or wheel: zoom'),
+                                                                                                                TuiElementBuilders.MakeLabel('PageUp / PageDown: iterations'),
+                                                                                                                TuiElementBuilders.MakeLabel('1 / 2 / 3: color palette'),
+                                                                                                                TuiElementBuilders.MakeLabel('R or middle click: reset'),
+                                                                                                                TuiElementBuilders.MakeLabel('Esc: close this overlay')
+                                                                                                              ], 1)
+                                                                        ]))
+  end;
+
+  return TuiElementBuilders.MakeDesktop(None, Children)
+end;

@@ -12,6 +12,32 @@ fn worker() -> Worker {
     worker
 }
 
+#[test]
+fn root_selection_leaves_queued_computation_for_pool_workers() {
+    let mut worker = worker();
+    let scheduler = Arc::clone(worker.scheduler_ref().unwrap());
+    let function = SharedFunction::unbound(FunctionId::new(0), "queued computation".into(), vec![]);
+    let info = &worker.executable.executable().functions[0];
+    scheduler.register_result(1);
+    scheduler.enqueue(crate::vm::tasks::TaskState::entry(
+        1,
+        &function,
+        info,
+        [],
+        true,
+    ));
+    worker
+        .run_selection(wait(vec![CaseSource::Timer(20)]))
+        .unwrap();
+    assert_eq!(
+        scheduler
+            .try_dequeue()
+            .expect("computation must remain queued")
+            .id,
+        1
+    );
+}
+
 fn wait(sources: Vec<CaseSource>) -> SelectionWait {
     SelectionWait {
         cases: sources

@@ -5,6 +5,7 @@ kind = "test"
 [dependencies]
 projects = [
   "../examples/math/julia/julia-core.fpasprj",
+  "../examples/math/mandelbrot/mandelbrot-core.fpasprj",
   "../apps/local-chat/local-chat-core.fpasprj",
   "../apps/notes/notes-core.fpasprj",
 ]

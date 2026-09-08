@@ -16,6 +16,11 @@ Current implemented behavior belongs under `docs/pascal/`, not here.
 | Runtime | [Deferred Cranelift backend](cranelift-backend.md) | Parked second-backend idea with explicit re-entry gates |
 | Performance | [Rust hot-path investigation](performance/index.html) | Evidence-backed runtime hot paths, fast-interpreter stages, and replacement options |
 
+## Ideas without an implementation plan
+
+- [Hardware information](hardware-information.md): access to CPU parallelism, RAM, and related
+  hardware information; recorded as an idea only.
+
 ## Architecture records and development intake
 
 | Area | Document | Scope |

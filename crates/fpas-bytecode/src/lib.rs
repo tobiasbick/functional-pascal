@@ -36,7 +36,8 @@ pub use intrinsic::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
     FsIntrinsic, HttpIntrinsic, Intrinsic, IntrinsicOwner, JsonIntrinsic, MathIntrinsic,
     NetIntrinsic, OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
-    ResultIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
+    TomlIntrinsic,
 };
 pub use metadata::{
     Constant, EnumLayout, EnumVariant, GlobalInfo, GlobalInitializer, RecordField, RecordLayout,

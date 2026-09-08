@@ -4,7 +4,8 @@ use fpas_bytecode::{
     ArgsIntrinsic, ArrayIntrinsic, ConsoleIntrinsic, ConvIntrinsic, DictIntrinsic, EnvIntrinsic,
     FsIntrinsic, HttpIntrinsic, Intrinsic, JsonIntrinsic, MathIntrinsic, NetIntrinsic,
     OptionIntrinsic, ParseIntrinsic, PathIntrinsic, ProcIntrinsic, RandomIntrinsic,
-    ResultIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic, TomlIntrinsic,
+    ResultIntrinsic, ServerIntrinsic, StrIntrinsic, TaskIntrinsic, TestIntrinsic, TimeIntrinsic,
+    TomlIntrinsic,
 };
 use fpas_sema::Ty;
 
@@ -89,6 +90,23 @@ pub(crate) fn resolve(name: &str, first_argument: Option<&Ty>) -> Option<Intrins
             Path,
             PathIntrinsic,
             [Join, BaseName, DirName, Extension, Normalize]
+        ),
+        "Server" => family!(
+            member,
+            Server,
+            ServerIntrinsic,
+            [
+                CreateLifetime,
+                GetWorkGroup,
+                GetStopToken,
+                IsReady,
+                RequestStop,
+                RemainingMillis,
+                OwnListener,
+                FinishShutdown,
+                ObserveSignals,
+                ShutdownErrors
+            ]
         ),
         "Proc" => family!(
             member,

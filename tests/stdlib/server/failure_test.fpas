@@ -1,0 +1,35 @@
+program ServerFailureTest;
+
+uses Std.Server, Std.Net, Std.Task, Std.Result, Std.Test, Std.Array;
+
+function BindListener(): result of Std.Net.Listener, string;
+begin
+  for Port: integer := 28200 to 28299 do
+  begin
+    var Opened: result of Std.Net.Listener, string := Listen('127.0.0.1', Port);
+    if IsOk(Opened) then
+    begin
+      return Opened
+    end
+  end;
+
+  return Error('no test port available')
+end;
+
+begin
+  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, false));
+  var Group: TaskGroup := GetWorkGroup(Life);
+  var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): result of boolean, string begin
+    return Error('session failed')
+  end);
+  var Listener: Std.Net.Listener := Unwrap(BindListener());
+  OwnListener(Life, Listener);
+  // Deliberate ownership misuse: cleanup must preserve this failure.
+  CloseListener(Listener);
+  RequestStop(Life);
+  var Failures: array of TaskFailure := CloseTaskGroup(Group);
+  AssertEquals(1, Std.Array.Length(Failures));
+  AssertEquals('session failed', Failures[0].Message);
+  AssertEquals(1, Std.Array.Length(ShutdownErrors(Life)));
+  AssertTrue(Unwrap(FinishShutdown(Life)))
+end.

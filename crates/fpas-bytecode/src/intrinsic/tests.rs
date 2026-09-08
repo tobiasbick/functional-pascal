@@ -2,6 +2,16 @@ use super::*;
 
 /// All intrinsic variants — used by tests to verify completeness of `from_u16` coverage.
 const ALL_INTRINSICS: &[Intrinsic] = &[
+    Intrinsic::Server(ServerIntrinsic::CreateLifetime),
+    Intrinsic::Server(ServerIntrinsic::GetWorkGroup),
+    Intrinsic::Server(ServerIntrinsic::GetStopToken),
+    Intrinsic::Server(ServerIntrinsic::IsReady),
+    Intrinsic::Server(ServerIntrinsic::RequestStop),
+    Intrinsic::Server(ServerIntrinsic::RemainingMillis),
+    Intrinsic::Server(ServerIntrinsic::OwnListener),
+    Intrinsic::Server(ServerIntrinsic::FinishShutdown),
+    Intrinsic::Server(ServerIntrinsic::ObserveSignals),
+    Intrinsic::Server(ServerIntrinsic::ShutdownErrors),
     Intrinsic::Console(ConsoleIntrinsic::Write),
     Intrinsic::Console(ConsoleIntrinsic::WriteLn),
     Intrinsic::Args(ArgsIntrinsic::ParamCount),

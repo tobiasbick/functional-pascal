@@ -3,6 +3,11 @@
 The `fpas` command-line interface creates scaffolds, builds artifacts, discovers
 projects, type-checks, runs programs, and executes test bundles.
 
+Standalone execution and bundled executables authorize the explicit process-lifecycle operations
+in [`Std.Server`](../std/network/server.md). Programs must still opt into signal observation and
+forced process termination. Embedded VMs deny these operations unless their host authorizes them;
+the source debugger and in-process test hosts do not grant this authority automatically.
+
 ## Usage
 
 - `fpas` (no arguments) — prints usage to stdout and exits successfully.

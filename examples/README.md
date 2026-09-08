@@ -214,7 +214,7 @@ See [pascal/monorepo/README.md](pascal/monorepo/README.md) and [docs/pascal/prog
 | `pascal/std/array_basics.fpas` | `Std.Array` — `Length`, `Sort`, `Any`, `All` |
 | `network/http_server.fpas` + `network/http_client.fpas` | Local HTTP server plus buffered and streaming client |
 | `network/tcp_echo_server.fpas` + `network/tcp_echo_client.fpas` | Raw TCP lifecycle, timeouts, UTF-8, and partial writes |
-| [`network/tcp_parallel_echo_server.fpas`](network/tcp_parallel_echo_server.fpas) | Four connection workers, cancellable byte-stream echo, and timed shutdown on loopback |
+| [`network/tcp_parallel_echo_server.fpas`](network/tcp_parallel_echo_server.fpas) | Four connection workers, owned listener, signal-aware shutdown, and explicit process escalation on loopback |
 | `network/https_server.fpas` + `network/https_client.fpas` | TLS listener credentials and verified HTTPS requests |
 | `network/sse_decoder.fpas` | Incremental Server-Sent Events decoding across fragments |
 | `network/uri_utf8.fpas` | Absolute URI parsing and UTF-8 conversion |

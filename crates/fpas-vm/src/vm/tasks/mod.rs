@@ -335,7 +335,8 @@ impl Worker {
         }
         Ok(())
     }
-    fn scheduler_ref(&self) -> Result<&Arc<TaskScheduler>, VmError> {
+    /// Access the shared scheduler for task and hosted resource ownership.
+    pub(in crate::vm) fn scheduler_ref(&self) -> Result<&Arc<TaskScheduler>, VmError> {
         self.scheduler.as_ref().ok_or_else(|| {
             diagnostics::internal(
                 self.executable.executable(),

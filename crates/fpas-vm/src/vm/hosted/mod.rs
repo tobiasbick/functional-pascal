@@ -14,6 +14,7 @@ mod console;
 mod console_args;
 mod http_handles;
 mod net;
+pub(in crate::vm) mod server;
 mod test_host;
 
 use http_handles::HttpStateRegistry;
@@ -32,6 +33,7 @@ impl Worker {
         location: SourceLocation,
     ) -> Result<Option<Value>, VmError> {
         let result = match intrinsic {
+            Intrinsic::Server(_) => self.execute_server_intrinsic(intrinsic, arguments, location),
             Intrinsic::Args(_) => self.execute_args_intrinsic(intrinsic, arguments, location),
             Intrinsic::Console(_) => self.execute_console_intrinsic(intrinsic, arguments, location),
             Intrinsic::Net(_) => self.execute_net_intrinsic(intrinsic, arguments, location),
@@ -57,6 +59,7 @@ impl Worker {
 
 /// Console, input, network, and process-argument state for one VM instance.
 pub(super) struct HostedState {
+    pub(in crate::vm) servers: server::ServerRegistry,
     pub program_args: Vec<String>,
     pub console: Mutex<Console>,
     pub text_input: Mutex<TextInput>,
@@ -73,6 +76,7 @@ pub(super) struct HostedState {
 impl HostedState {
     pub(super) fn new(console: Console, program_args: Vec<String>) -> Self {
         Self {
+            servers: Default::default(),
             program_args,
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::new()),
@@ -90,6 +94,7 @@ impl HostedState {
     /// Hosted state that never reads process stdin or terminal events.
     pub(super) fn for_debug(console: Console, program_args: Vec<String>) -> Self {
         Self {
+            servers: Default::default(),
             program_args,
             console: Mutex::new(console),
             text_input: Mutex::new(TextInput::without_os_stdin()),

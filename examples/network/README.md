@@ -1,6 +1,6 @@
 # Network examples
 
-These examples cover the implemented `Std.Net`, `Std.Http`, `Std.Net.Uri`, and
+These examples cover the implemented `Std.Net`, `Std.Server`, `Std.Http`, `Std.Net.Uri`, and
 `Std.Net.Utf8` APIs. The OpenAI-compatible chat demo remains in
 [`examples/openai-chat/`](../openai-chat/).
 
@@ -34,6 +34,19 @@ fpas run examples/network/tcp_echo_client.fpas -- 18081
 
 Both programs set explicit I/O timeouts, handle partial reads and writes, use
 an LF-delimited request, close their connections, and exit after one exchange.
+
+## Parallel TCP server lifecycle
+
+```sh
+fpas run examples/network/tcp_parallel_echo_server.fpas -- 18082 10000
+```
+
+Four group-owned workers serve loopback clients. The listener belongs to a `Std.Server`
+lifetime. Its finite duration, a stop signal, or a fatal accept error starts the same cleanup
+path. New work is rejected and workers are cancelled before joining against one remaining
+grace budget. The example explicitly enables whole-process escalation after one second;
+unfinished work or blocked output cannot keep the process alive indefinitely. This is not a
+promise of graceful delivery for active client requests.
 
 ## HTTPS
 
@@ -70,6 +83,7 @@ UTF-8 bytes.
 ## Reference
 
 - [`Std.Net`](../../docs/pascal/std/network/net.md)
+- [`Std.Server`](../../docs/pascal/std/network/server.md)
 - [`Std.Http`](../../docs/pascal/std/network/http.md)
 - [`Std.Net.Uri`](../../docs/pascal/std/network/uri.md)
 - [`Std.Net.Utf8`](../../docs/pascal/std/network/utf8.md)

@@ -10,16 +10,16 @@ pub use units::{
     STD_ROOT_SEGMENT, STD_UNIT_ARGS, STD_UNIT_ARRAY, STD_UNIT_CONSOLE, STD_UNIT_CONV,
     STD_UNIT_DICT, STD_UNIT_ENV, STD_UNIT_FS, STD_UNIT_JSON, STD_UNIT_MATH, STD_UNIT_NET,
     STD_UNIT_OPTION, STD_UNIT_PARSE, STD_UNIT_PATH, STD_UNIT_PROC, STD_UNIT_RANDOM,
-    STD_UNIT_RESULT, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME, STD_UNIT_TOML,
-    STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
+    STD_UNIT_RESULT, STD_UNIT_SERVER, STD_UNIT_STR, STD_UNIT_TASK, STD_UNIT_TEST, STD_UNIT_TIME,
+    STD_UNIT_TOML, STD_UNIT_TUI, STD_UNIT_VERSION, STD_UNITS_INTRINSIC, STD_UNITS_KNOWN,
 };
 
 use symbols::{
     STD_ARGS_SYMBOLS, STD_ARRAY_SYMBOLS, STD_CONSOLE_SYMBOLS, STD_CONV_SYMBOLS, STD_DICT_SYMBOLS,
     STD_ENV_SYMBOLS, STD_FS_SYMBOLS, STD_JSON_SYMBOLS, STD_MATH_SYMBOLS, STD_NET_SYMBOLS,
     STD_OPTION_SYMBOLS, STD_PARSE_SYMBOLS, STD_PATH_SYMBOLS, STD_PROC_SYMBOLS, STD_RANDOM_SYMBOLS,
-    STD_RESULT_SYMBOLS, STD_STR_SYMBOLS, STD_TASK_SYMBOLS, STD_TEST_SYMBOLS, STD_TIME_SYMBOLS,
-    STD_TOML_SYMBOLS,
+    STD_RESULT_SYMBOLS, STD_SERVER_SYMBOLS, STD_STR_SYMBOLS, STD_TASK_SYMBOLS, STD_TEST_SYMBOLS,
+    STD_TIME_SYMBOLS, STD_TOML_SYMBOLS,
 };
 
 /// Returns whether `segment` names the case-insensitive `Std` root namespace.
@@ -30,6 +30,7 @@ pub fn is_std_root_segment(segment: &str) -> bool {
 /// Resolves a case-insensitive unit tail such as `console` to its canonical name.
 pub fn canonical_std_unit_from_tail(tail: &str) -> Option<&'static str> {
     const UNITS: &[(&str, &str)] = &[
+        ("server", STD_UNIT_SERVER),
         ("args", STD_UNIT_ARGS),
         ("env", STD_UNIT_ENV),
         ("proc", STD_UNIT_PROC),
@@ -73,6 +74,7 @@ pub fn canonical_std_unit_from_segments(root: &str, tail: &str) -> Option<&'stat
 /// Returns the intrinsic symbol names registered for a canonical standard unit.
 pub fn std_unit_symbols(unit: &str) -> &'static [&'static str] {
     match unit {
+        STD_UNIT_SERVER => STD_SERVER_SYMBOLS,
         STD_UNIT_ARGS => STD_ARGS_SYMBOLS,
         STD_UNIT_ENV => STD_ENV_SYMBOLS,
         STD_UNIT_PROC => STD_PROC_SYMBOLS,

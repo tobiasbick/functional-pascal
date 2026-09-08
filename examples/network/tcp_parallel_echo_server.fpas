@@ -1,7 +1,8 @@
-// Four connection workers echo byte streams for a fixed lifetime, then cancel and join.
+// Four connection workers with signal-aware shutdown and explicit process escalation.
 program ParallelTcpEchoServer;
 
-uses Std.Args, Std.Conv, Std.Array, Std.Console, Std.Net, Std.Task, Std.Result, Std.Time;
+uses
+  Std.Args, Std.Conv, Std.Array, Std.Console, Std.Net, Std.Task, Std.Result, Std.Time, Std.Server;
 
 function Echo(Client: Connection; Token: CancellationToken): result of boolean, string;
 begin
@@ -53,7 +54,10 @@ begin
     panic('LIFETIME_MS must be 1..300000')
   end;
   var ListenerValue: Listener := Unwrap(Listen('127.0.0.1', Port));
-  var Workers: TaskGroup := CreateTaskGroup();
+  var Life: ServerLifetime := Unwrap(CreateLifetime(1000, true));
+  Unwrap(OwnListener(Life, ListenerValue));
+  Unwrap(ObserveSignals(Life));
+  var Workers: TaskGroup := GetWorkGroup(Life);
   for Index: integer := 1 to 4 do
   begin
     StartTaskInGroup(Workers, function(Token: CancellationToken): result of boolean, string begin
@@ -85,6 +89,7 @@ begin
               return Ok(true)
             end;
 
+            RequestStop(Life);
             return Error(Message)
           end
         end
@@ -95,10 +100,15 @@ begin
   end;
 
   WriteLn('Parallel TCP echo ready');
-  // Sleep does not inline-run a blocking accept on the owner task.
-  Sleep(LifetimeMillis);
+  var Started: integer := MonotonicMillis();
+  while IsReady(Life) and (ElapsedMillis(Started) < LifetimeMillis) do
+  begin
+    Sleep(10)
+  end;
+
+  RequestStop(Life);
   mutable var Failures: array of TaskFailure := [];
-  case CloseTaskGroupWithTimeout(Workers, 1000) of
+  case CloseTaskGroupWithTimeout(Workers, RemainingMillis(Life)) of
     Ok(Reports):
     begin
       Failures := Reports
@@ -106,17 +116,22 @@ begin
     Error(Message):
     begin
       WriteLn(Message);
-      // Retain ownership and join; this is not a hard process shutdown deadline.
-      Failures := CloseTaskGroup(Workers)
+      // The independent host watchdog remains armed even if diagnostic output blocks.
+      panic('Server shutdown incomplete; process escalation remains armed')
     end
   end;
 
-  Unwrap(CloseListener(ListenerValue));
   for Failure: TaskFailure in Failures do
   begin
     WriteLn(Failure.Message)
   end;
 
+  for Message: string in ShutdownErrors(Life) do
+  begin
+    WriteLn(Message)
+  end;
+
+  Unwrap(FinishShutdown(Life));
   if Length(Failures) <> 0 then
   begin
     panic('TCP worker failed')

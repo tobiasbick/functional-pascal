@@ -60,7 +60,8 @@ fn dispatch_intrinsic(
         Intrinsic::Time(_) => time::run(intrinsic, call, location),
         Intrinsic::Toml(_) => toml::run(intrinsic, call, location),
         Intrinsic::Test(_) => crate::test::run(intrinsic, call, location),
-        Intrinsic::Args(_)
+        Intrinsic::Server(_)
+        | Intrinsic::Args(_)
         | Intrinsic::Console(_)
         | Intrinsic::Net(_)
         | Intrinsic::Http(_)

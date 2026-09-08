@@ -15,6 +15,7 @@ A modern, function-first programming language built on Pascal's readable syntax.
 - **Error handling** — Built-in `Result of T, E` and `Option of T` types with a `try` operator for propagation.
 - **Concurrency** — `go` tasks, typed bounded channels, cooperative cancellation, mixed-source `Select`, task groups, and supervised retries. [Std.Task](docs/pascal/std/concurrency/task.md) includes timed group close; timeout retains unfinished work rather than forcibly terminating it.
 - **Standard library** — Built-in `Std.*` units for console I/O, TUI, strings, math, arrays, tasks, and more.
+- **Server lifetime** — [Std.Server](docs/pascal/std/network/server.md) owns worker groups and listeners, handles stop signals, and supports explicitly authorized process escalation after a common grace period.
 - **Editor support** — A repository-owned VS Code-compatible extension provides diagnostics, formatting, navigation, completion, project workflows, integrated tests, and source debugging.
 - **Safe by design** — The VM manages memory. No pointers, no manual allocation, no unsafe operations.
 - **Case-insensitive** — Keywords and identifiers are case-insensitive, following Pascal tradition.

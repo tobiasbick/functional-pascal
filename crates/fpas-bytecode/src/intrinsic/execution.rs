@@ -36,7 +36,7 @@ impl Intrinsic {
     #[must_use]
     pub const fn owner(self) -> IntrinsicOwner {
         match self {
-            Self::Args(_) | Self::Console(_) | Self::Net(_) | Self::Http(_) => {
+            Self::Server(_) | Self::Args(_) | Self::Console(_) | Self::Net(_) | Self::Http(_) => {
                 IntrinsicOwner::Hosted
             }
             Self::Test(

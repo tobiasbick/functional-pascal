@@ -10,6 +10,14 @@ use crate::{CliInput, ResolvedCli, resolve_cli_config};
 use fpas_diagnostics::DiagnosticSeverity;
 use fpas_project as project;
 
+static PROCESS_LIFECYCLE_AUTHORIZED: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
+/// Grant process authority only from the real binary entry point, never in in-process test hosts.
+pub(crate) fn authorize_process_lifecycle() {
+    PROCESS_LIFECYCLE_AUTHORIZED.store(true, std::sync::atomic::Ordering::Release);
+}
+
 pub(crate) fn run_cli(
     args: &[String],
     cwd: &Path,
@@ -348,6 +356,9 @@ fn run_executable(
     stderr: &mut dyn Write,
 ) -> i32 {
     let mut vm = fpas_vm::Vm::with_writer_and_args(executable, stdout, program_args);
+    if PROCESS_LIFECYCLE_AUTHORIZED.load(std::sync::atomic::Ordering::Acquire) {
+        vm.allow_process_lifecycle();
+    }
     if let Err(diagnostic) = vm.run() {
         emit_diagnostic(path, source_paths, &diagnostic, stderr);
         return 2;

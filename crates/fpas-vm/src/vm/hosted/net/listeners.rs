@@ -150,7 +150,7 @@ impl NetworkListeners {
     }
 
     /// Close and invalidate one listener handle.
-    pub(super) fn close(&self, handle: u64) -> Result<(), String> {
+    pub(in crate::vm::hosted) fn close(&self, handle: u64) -> Result<(), String> {
         validate_handle(handle)?;
         let listener = self
             .listeners
@@ -177,6 +177,11 @@ impl NetworkListeners {
         for listener in listeners {
             listener.close();
         }
+    }
+
+    /// Validate a listener before transferring it to a server lifetime.
+    pub(in crate::vm::hosted) fn validate(&self, handle: u64) -> Result<(), String> {
+        self.listener(handle).map(|_| ())
     }
 
     fn listener(&self, handle: u64) -> Result<Arc<Listener>, String> {

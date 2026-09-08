@@ -246,6 +246,18 @@ impl Vm {
         }
     }
 
+    /// Authorize explicit `Std.Server` signal observation and process-wide escalation.
+    ///
+    /// Default VMs never acquire this authority. Standalone hosts may opt in before run;
+    /// a program must still request signal observation or forced exit separately.
+    /// See `docs/pascal/std/network/server.md`.
+    pub fn allow_process_lifecycle(&mut self) {
+        self.hosted
+            .servers
+            .process_authority
+            .store(true, std::sync::atomic::Ordering::Release);
+    }
+
     /// Execute the verified root function once.
     ///
     /// # Errors
@@ -274,7 +286,8 @@ impl Vm {
         .with_local_globals(self.use_local_globals)
         .with_scheduler(Some(Arc::clone(&scheduler)));
         if self.pool_size == 0 {
-            return worker.run();
+            let result = worker.run();
+            return self.finish_server_execution(result);
         }
         let pool_size = self.pool_size;
         std::thread::scope(|scope| {
@@ -286,7 +299,7 @@ impl Vm {
             }
             let timer_scheduler = Arc::clone(&scheduler);
             let timer = scope.spawn(move || timer_scheduler.timer_loop());
-            let main = worker.run();
+            let main = self.finish_server_execution(worker.run());
             if let Err(error) = &main {
                 scheduler.fail(error.clone());
             } else {
@@ -317,6 +330,20 @@ impl Vm {
                 ));
             }
             main.and_then(|value| pool_error.map_or(Ok(value), Err))
+        })
+    }
+
+    fn finish_server_execution(
+        &self,
+        result: Result<Execution, VmError>,
+    ) -> Result<Execution, VmError> {
+        self.hosted.servers.request_stop_all();
+        result.and_then(|execution| {
+            self.hosted.servers.ensure_finished().map_err(|message| diagnostics::at_address(
+                self.executable.executable(), fpas_bytecode::InstructionAddress::new(0),
+                fpas_diagnostics::codes::RUNTIME_VM_SHUTDOWN, message,
+                "Use one shutdown path for normal completion and stop requests. Timeout retains ownership."))?;
+            Ok(execution)
         })
     }
 

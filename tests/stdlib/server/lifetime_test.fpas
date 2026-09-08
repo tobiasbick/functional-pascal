@@ -1,0 +1,32 @@
+program ServerLifetimeTest;
+
+uses Std.Server, Std.Task, Std.Time, Std.Result, Std.Test, Std.Array;
+
+begin
+  AssertTrue(IsError(CreateLifetime(-1, false)));
+  AssertTrue(IsError(CreateLifetime(86400001, false)));
+  var Life: ServerLifetime := Std.Result.Unwrap(CreateLifetime(20, false));
+  var Group: TaskGroup := GetWorkGroup(Life);
+  var Gate: channel of boolean := CreateChannel(1);
+  var Worker: task := StartTaskInGroup(Group, function(Token: CancellationToken): boolean begin
+    return Std.Result.Unwrap(Receive(Gate))
+  end);
+  AssertTrue(IsReady(Life));
+  AssertTrue(not IsCancellationRequested(GetStopToken(Life)));
+  AssertTrue(IsError(FinishShutdown(Life)));
+  AssertTrue(RequestStop(Life));
+  AssertTrue(not IsReady(Life));
+  AssertTrue(IsCancellationRequested(GetStopToken(Life)));
+  AssertTrue(not RequestStop(Life));
+  AssertTrue(IsError(CloseTaskGroupWithTimeout(Group, RemainingMillis(Life))));
+  AssertEquals(0, RemainingMillis(Life));
+  AssertTrue(IsError(FinishShutdown(Life)));
+  AssertTrue(not RequestStop(Life));
+  AssertEquals(0, RemainingMillis(Life));
+  Send(Gate, true);
+  AssertEquals(0, Std.Array.Length(CloseTaskGroup(Group)));
+  AssertTrue(Std.Result.Unwrap(FinishShutdown(Life)));
+  AssertTrue(Std.Result.Unwrap(FinishShutdown(Life)));
+  AssertEquals(0, Std.Array.Length(ShutdownErrors(Life)));
+  CloseChannel(Gate)
+end.

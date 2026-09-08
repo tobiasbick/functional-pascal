@@ -216,6 +216,10 @@ after timeout; returning from the main task does not turn the timeout into compl
 See the [timeout regression](../../../../tests/concurrency/task_group_close_timeout_test.fpas)
 for cancellation, retained ownership, and retrying close after releasing a blocked worker.
 
+[`Std.Server`](../network/server.md) supplies server ownership, one common shutdown budget,
+and separately host-authorized process escalation. Timed task-group close itself never kills
+the process.
+
 ### TryCloseCompletedTaskGroup
 
 `TryCloseCompletedTaskGroup` is the non-blocking completion probe for an owned group. It does not

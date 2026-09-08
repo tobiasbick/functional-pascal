@@ -46,7 +46,7 @@ intrinsic API or handbook change with
 |------|-----|----------------|
 | Console | [console/](console/README.md) | Text I/O, retained cells/frames, CRT screen, keyboard, events |
 | Host I/O | [host/](host/README.md) | Args, Env, Fs, Path, Proc, Time |
-| Networking | [network/](network/README.md) | Net, URI, UTF-8, HTTP |
+| Networking | [network/](network/README.md) | Net, Server lifetime, URI, UTF-8, HTTP |
 | AI clients | [ai/](ai/README.md) | OpenAI-compatible chat completions |
 | Text | [text/](text/README.md) | Str, Conv, Parse, Json, Toml |
 | Collections | [collections/](collections/README.md) | Array, Dict |

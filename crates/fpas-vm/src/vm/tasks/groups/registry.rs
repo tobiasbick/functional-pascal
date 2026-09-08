@@ -109,6 +109,14 @@ pub(in crate::vm) struct GroupRegistry {
 }
 
 impl GroupRegistry {
+    /// Report whether ownership and its child failure reports still require explicit close.
+    pub(in crate::vm) fn is_live(&self, id: u64) -> bool {
+        self.state
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .groups
+            .contains_key(&id)
+    }
     /// Create a group only after checking the live-resource bound.
     pub(in crate::vm) fn create(
         &self,

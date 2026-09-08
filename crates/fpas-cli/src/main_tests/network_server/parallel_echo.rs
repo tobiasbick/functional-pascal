@@ -10,7 +10,11 @@ fn parallel_echo_example_serves_second_client_and_cancels_idle_reads() {
     let port = unused_port();
     let source = include_str!("../../../../../examples/network/tcp_parallel_echo_server.fpas")
         .replace("18082", &port.to_string())
-        .replace("10000", "2500");
+        .replace("10000", "2500")
+        // This socket regression embeds the VM in the test runner. Process policy is
+        // covered by disposable-process tests in fpas-vm, never by this thread.
+        .replace("CreateLifetime(1000, true)", "CreateLifetime(1000, false)")
+        .replace("Unwrap(ObserveSignals(Life));", "");
     let (cwd, server) = start_server("parallel-echo-example", source);
     let mut idle = connect_when_ready(port);
     idle.write_all(b"ready").expect("prime first connection");

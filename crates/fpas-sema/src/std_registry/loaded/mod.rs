@@ -14,6 +14,7 @@ mod path;
 mod proc;
 mod random;
 mod result_option;
+mod server;
 mod str_ops;
 mod test;
 mod time;
@@ -41,6 +42,7 @@ pub fn register_loaded_std(checker: &mut Checker) {
 /// Register symbols for one standard unit (idempotent if the unit was already registered).
 pub fn register_single_std_unit(checker: &mut Checker, unit: &str) {
     match unit {
+        fpas_std::STD_UNIT_SERVER => server::register(checker),
         STD_UNIT_ARGS => args::register_std_args(checker),
         STD_UNIT_ENV => env::register_std_env(checker),
         STD_UNIT_PROC => proc::register_std_proc(checker),

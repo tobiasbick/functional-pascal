@@ -45,6 +45,7 @@ pub(crate) fn pending_unsupported_recording_effect(
 
 const fn unsupported_recording_unit(intrinsic: Intrinsic) -> Option<&'static str> {
     match intrinsic {
+        Intrinsic::Server(_) => Some("Std.Server"),
         Intrinsic::Random(_) => Some("Std.Random"),
         Intrinsic::Time(TimeIntrinsic::Sleep) => None,
         Intrinsic::Time(_) => Some("Std.Time"),

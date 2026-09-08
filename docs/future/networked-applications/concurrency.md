@@ -9,10 +9,11 @@ waiting, and explicit ownership of child-task failure.
 
 ## Progress
 
-### Implementation status (2026-09-07)
+### Implementation status (2026-09-08)
 
 The concurrency primitives are implemented. The approved two-stage shutdown policy separates
-timed cooperative group close (S1a) from the remaining process-level lifecycle work (S1b).
+timed cooperative group close (S1a) from explicit process-level escalation (S1b), now supplied by
+[`Std.Server`](../../pascal/std/network/server.md).
 Existing cancellation, bounded channels, and task-only completion waits are also implemented.
 
 - [x] C1: Mixed task/channel/timer/cancellation selection with typed value delivery, exactly one
@@ -29,9 +30,15 @@ Existing cancellation, bounded channels, and task-only completion waits are also
   high-contention/lifetime regressions for C1-C3, plus complete workspace verification.
 - [x] S1a: Add a timed cooperative group close that retains ownership after timeout, with retry,
   validation, race, and debugger tests. The two-stage shutdown policy was approved on 2026-09-07.
-- [ ] S1b (lifecycle work): Implement explicit process escalation for non-cooperative code and
-  blocking host calls. The selected policy is in [server lifecycle](server-lifecycle.md#selected-shutdown-policy-2026-09-07).
+- [x] S1b (lifecycle work): `Std.Server` adds explicit process escalation for non-cooperative code
+  and blocking host calls, with disposable-process exit confirmation tests. The selected policy is in
+  [server lifecycle](server-lifecycle.md#selected-shutdown-policy-2026-09-07).
   A timeout alone does not establish termination; no in-place forced task-group kill is planned.
+
+The dated entries below describe their original implementation stages. The lifecycle and echo
+example update on 2026-09-08 supersedes their references to pending S1b work. See the
+[lifecycle verification record](server-lifecycle.md#implementation-progress-2026-09-08) for current
+coverage and the completed full workspace verification after build-artifact cleanup.
 
 ### 2026-09-07 — practical concurrency examples
 
@@ -542,6 +549,6 @@ rather than reaching into scheduler implementation details.
 - **Selected S1 split:** Timed group close stops waiting without releasing unfinished work.
   Hard termination of non-cooperative work belongs to explicit process-level lifecycle escalation,
   not forced termination of individual groups in a shared VM. The process-level requirement
-  remains open until S1b is implemented and verified.
+  is implemented separately by `Std.Server`; ordinary group close still never terminates its host.
 - Child panics and ordinary error results follow separately documented paths.
 - High-contention tests demonstrate bounded memory and absence of lost wakeups.

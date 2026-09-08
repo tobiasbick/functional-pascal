@@ -2,7 +2,7 @@
 
 > Capability roadmap with implementation progress recorded in each plan.
 > Concurrency foundations C1-C4 and cooperative timed group close are implemented;
-> process-level shutdown escalation remains planned.
+> `Std.Server` now adds listener/group ownership and explicit process-level shutdown escalation.
 > TUI background events are implemented with bounded typed inboxes and host-owned work.
 > The canonical Mandelbrot TUI uses CPU-pool row tasks, atomic image updates, and nonblocking subscription replacement.
 > Current behavior is documented under [Std.Task](../../pascal/std/concurrency/task.md).

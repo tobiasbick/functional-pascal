@@ -42,6 +42,7 @@ pub mod path;
 pub mod proc;
 pub mod random;
 pub mod result;
+pub mod server;
 pub mod str_ops;
 pub mod task;
 pub mod test;
@@ -66,6 +67,7 @@ pub use path::PathIntrinsic;
 pub use proc::ProcIntrinsic;
 pub use random::RandomIntrinsic;
 pub use result::ResultIntrinsic;
+pub use server::ServerIntrinsic;
 pub use str_ops::StrIntrinsic;
 pub use task::TaskIntrinsic;
 pub use test::TestIntrinsic;
@@ -77,6 +79,8 @@ pub use toml::TomlIntrinsic;
 /// Each variant wraps a domain-specific sub-enum whose discriminant is the stable `u16` wire value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Intrinsic {
+    /// Hosted server lifetime operation.
+    Server(ServerIntrinsic),
     /// Process-argument operation.
     Args(ArgsIntrinsic),
     /// Console operation.
@@ -203,6 +207,7 @@ impl Intrinsic {
 }
 
 intrinsic_wire_ops!(
+    Server(ServerIntrinsic),
     Args(ArgsIntrinsic),
     Console(ConsoleIntrinsic),
     Str(StrIntrinsic),

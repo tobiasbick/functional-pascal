@@ -49,6 +49,7 @@ fn main() {
         }
     };
 
+    cli_run::authorize_process_lifecycle();
     let stdout: Box<dyn std::io::Write + Send> = Box::new(std::io::stdout());
     let mut stderr = std::io::stderr().lock();
     let exit_code = run_cli(&args, &cwd, stdout, &mut stderr);

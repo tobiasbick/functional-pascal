@@ -20,7 +20,9 @@ and add focused units instead of merging unrelated APIs into larger buckets.
 Bounded channels, cooperative cancellation, mixed-source selection, task groups, supervised
 retries, and timed group close are implemented in [Std.Task](../pascal/std/concurrency/task.md).
 Their [concurrency worklist](networked-applications/concurrency.md) records completion evidence.
-Hard process-level shutdown escalation remains part of [server lifecycle](networked-applications/server-lifecycle.md).
+Server lifetime ownership, signals, and explicit process-level escalation are implemented in
+[`Std.Server`](../pascal/std/network/server.md). Additional resource adapters remain in
+[server lifecycle](networked-applications/server-lifecycle.md).
 
 ## Later candidates
 

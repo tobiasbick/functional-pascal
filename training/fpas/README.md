@@ -1,18 +1,26 @@
 # Functional Pascal training dataset
 
 This directory contains a reproducible, local-first supervised fine-tuning
-dataset for Functional Pascal coding assistants. It is derived from the
-repository's examples, regression tests, and implemented documentation. The
-FPAS sources remain authoritative; the JSONL files are generated artifacts.
+dataset for Functional Pascal coding assistants. It combines short curated
+instruction examples with implemented documentation, examples, regression
+programs, application sources, and selected `Std.*` units.
+
+The curated examples explicitly teach that FPAS is the language implemented by
+the `fpas` compiler, not Free Pascal, Delphi, or generic Pascal written in a
+functional style. They also cover common small-model errors: `.fpas` file names,
+`Std.Console`, immutable `var` bindings, `mutable var` accumulators, typed
+`for-in` loops, and the owned `Std.Tui` background-work API.
 
 ## Files
 
-- `generate_dataset.py` scans the repository and writes deterministic splits.
-- `validate_dataset.py` checks the JSONL schema and split invariants.
-- `data/train.jsonl`, `data/validation.jsonl`, and `data/test.jsonl` contain
-  conversational `messages` records accepted by Hugging Face TRL and Unsloth.
-- `manifests/dataset-v1.json` records the generator version, source counts,
-  split counts, and relative source paths without machine-specific metadata.
+- `generate_dataset.py` reads committed sources from `HEAD` and writes the
+  deterministic splits. Uncommitted working-tree changes are never ingested.
+- `validate_dataset.py` checks the JSONL schema, FPAS identity, duplicate split
+  records, manifest counts, and common foreign-Pascal output patterns.
+- `data/train.jsonl`, `data/validation.jsonl`, and `data/test.jsonl` are the only
+  dataset split files. Regeneration replaces them; it does not create a v2 copy.
+- `manifests/dataset-v1.json` records the exact source commit, limits, curated
+  examples, source selection, exclusions, and split counts without local paths.
 
 Regenerate the artifacts from the repository root:
 
@@ -21,24 +29,30 @@ python training/fpas/generate_dataset.py
 python training/fpas/validate_dataset.py
 ```
 
-The generator uses only the Python standard library. It does not call an API,
-upload files, or include absolute paths. The split is deterministic and based
-on a stable digest of each relative source path. Test data is held out from
-training and is intended for compiler-backed evaluation.
+The generator uses only committed files from `docs/pascal`, `examples`,
+`tests`, `apps`, and `lib/Std`. It excludes deliberate compile-error fixtures,
+manual failure demos, and individual sources longer than 12,000 characters.
+This keeps invalid syntax and oversized whole-file completions out of positive
+instruction examples. The split is deterministic and based on each relative
+source path. The manifest's `source_commit` makes every generated snapshot
+traceable.
 
 ## Unsloth
 
-In Unsloth Studio, select the generated local dataset and fine-tune an
-instruction model with LoRA or QLoRA. The records use the Hugging Face
-conversational format:
+Upload `data/train.jsonl` as the training dataset and
+`data/validation.jsonl` as the evaluation dataset. Keep `data/test.jsonl` out
+of training for final compiler-backed checks. The files use the Hugging Face
+conversational format accepted by Unsloth:
 
 ```json
-{"messages":[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]}
+{"messages":[{"role":"system","content":"..."},{"role":"user","content":"..."},{"role":"assistant","content":"..."}]}
 ```
 
-Keep the `test` split out of training. Evaluate generated FPAS with `fpas
-check`, `fpas build`, or the relevant `fpas test` command after training.
+After training, test both ordinary and reasoning-enabled inference. Generated
+FPAS should still be checked with `fpas check`, `fpas build`, or the relevant
+`fpas test` command; a falling evaluation loss does not prove that generated
+programs compile.
 
-The source material is licensed under the repository license. Any publication
-to a model or dataset hub must be reviewed separately; this repository does
-not upload anything automatically.
+The source material is licensed under the repository license. Publishing a
+model or dataset to a hub remains a separate, manual decision; these scripts do
+not upload anything.

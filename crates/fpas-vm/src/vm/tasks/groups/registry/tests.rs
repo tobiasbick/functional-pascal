@@ -101,6 +101,40 @@ fn cancellation_seals_admission_but_does_not_release_children() {
 }
 
 #[test]
+fn completed_probe_neither_cancels_nor_seals_pending_work() {
+    let cancellations = CancellationRegistry::new();
+    let groups = GroupRegistry::default();
+    let group = groups
+        .create(0, || cancellations.create_owned())
+        .expect("group");
+    let token = groups.enroll(group, 0, 1).expect("child");
+    assert!(
+        groups
+            .try_take_completed(group, 0)
+            .expect("pending probe")
+            .is_none()
+    );
+    assert!(!cancellations.is_cancelled(token).expect("active token"));
+    groups.enroll(group, 0, 2).expect("admission remains open");
+    assert!(groups.try_take_completed(group, 9).is_err());
+    assert!(groups.complete(1, None));
+    assert!(groups.complete(2, returned(2, "reported")));
+    let closed = groups
+        .try_take_completed(group, 0)
+        .expect("completed probe")
+        .expect("closed group");
+    assert_eq!(closed.tasks, vec![1, 2]);
+    assert_eq!(closed.failures.len(), 1);
+    assert!(groups.token(group).is_err());
+    assert!(
+        groups
+            .try_take_completed(group, 0)
+            .expect("repeated probe")
+            .is_some()
+    );
+}
+
+#[test]
 fn child_limit_counts_completed_children_until_close() {
     let cancellations = CancellationRegistry::new();
     let groups = GroupRegistry::default();

@@ -60,6 +60,7 @@ After `uses Std.Task;` use short names (`Wait`, `Cancel`, …) or qualified (`St
 | function | `CancelTaskGroup(Group: TaskGroup): boolean` | requests cancellation without joining; true only for the first request |
 | function | `CloseTaskGroup(Group: TaskGroup): array of TaskFailure` | cancels, joins registered children, releases their results, and returns failures |
 | function | `CloseTaskGroupWithTimeout(Group: TaskGroup; TimeoutMillis: integer): result of array of TaskFailure, string` | attempts cooperative close with a waiting budget; timeout retains group ownership |
+| function | `TryCloseCompletedTaskGroup(Group: TaskGroup): option of array of TaskFailure` | closes without cancellation only when every child is already terminal |
 | function | `ReceiveCase(Queue: channel of T; Callback: procedure(Outcome: result of T, string)): WaitCase` | describes one receive and its typed delivery callback |
 | function | `SendCase(Queue: channel of T; Value: T; Callback: procedure(Outcome: result of boolean, string)): WaitCase` | describes one send without enqueueing its value |
 | function | `TaskCase(Handle: task; Callback: procedure()): WaitCase` | describes non-consuming task completion |
@@ -214,6 +215,19 @@ after timeout; returning from the main task does not turn the timeout into compl
 
 See the [timeout regression](../../../../tests/concurrency/task_group_close_timeout_test.fpas)
 for cancellation, retained ownership, and retrying close after releasing a blocked worker.
+
+### TryCloseCompletedTaskGroup
+
+`TryCloseCompletedTaskGroup` is the non-blocking completion probe for an owned group. It does not
+request cancellation and does not wait. `None` means at least one registered child is still running;
+the group remains open and can still admit work. `Some(Failures)` means every child was already
+terminal, so the call atomically seals and closes the group, releases retained child results and the
+group token, and returns the same ordered failure records as `CloseTaskGroup`.
+
+An empty group closes immediately as `Some([])`. Repeating the operation after a successful close
+also returns `Some([])`. Only the creating task may call it. It is useful for event loops that must
+collect grouped panic and runtime diagnostics as data without observing a failed child through
+`Wait`, `WaitAny`, or `TaskCase` and without cancelling work merely to poll it.
 
 ### TaskFailure and TaskFailureKind
 

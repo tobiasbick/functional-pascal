@@ -1,0 +1,57 @@
+program TuiBackgroundInjectionTest;
+
+uses Std.Array, Std.Result, Std.Task, Std.Test, Std.Tui;
+
+type
+  InjectionModel = record
+    Values: array of integer;
+    Starts: integer;
+  end;
+
+function UpdateFramework(State: InjectionModel; Msg: TuiMsg; Cmd: TuiCmdOutput): InjectionModel;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      return record
+        Values := State.Values;
+        Starts := State.Starts + 1;
+      end
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function UpdateApplication(State: InjectionModel; Message: integer; Cmd: TuiCmdOutput): InjectionModel;
+begin
+  return record
+    Values := Std.Array.Concat(State.Values, [Message]);
+    Starts := State.Starts;
+  end
+end;
+
+function View(State: InjectionModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('background')
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(2);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  AssertTrue(Unwrap(App.InjectBackgroundForTest(Inbox, 4)));
+  AssertTrue(Unwrap(App.InjectBackgroundForTest(Inbox, 7)));
+  AssertFalse(Unwrap(App.InjectBackgroundForTest(Inbox, 9)));
+  var Model: InjectionModel := App.RunBackgroundIterations(record
+    Values := [];
+    Starts := 0;
+  end, Inbox, UpdateFramework, UpdateApplication, View, 3, 0);
+  AssertEquals(1, Model.Starts);
+  AssertEquals(2, Std.Array.Length(Model.Values));
+  AssertEquals(4, Model.Values[0]);
+  AssertEquals(7, Model.Values[1]);
+  App.CloseWithBackground(Inbox);
+  AssertTrue(IsError(TrySend(Inbox, 11)))
+end.

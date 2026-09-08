@@ -11,8 +11,8 @@ uses
   Std.Tui.Layout.Measure, Std.Tui.Layout.MeasureConstraint, Std.Tui.Layout.MeasureResult,
   Std.Tui.Layout.MeasureSpec, Std.Tui.Layout.SizePolicy, Std.Tui.Layout.Spacer,
   Std.Tui.Rendering.Canvas, Std.Tui.Rendering.Paint, Std.Tui.Rendering.Surface,
-  Std.Tui.Runtime.Application, Std.Tui.Runtime.Cmd, Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg,
-  Std.Tui.Runtime.PointerEvent;
+  Std.Tui.Runtime.Application, Std.Tui.Runtime.Application.Background, Std.Tui.Runtime.Cmd,
+  Std.Tui.Runtime.Helpers, Std.Tui.Runtime.Msg, Std.Tui.Runtime.PointerEvent;
 
 public type
   // Zero-based terminal-cell coordinate.
@@ -95,6 +95,8 @@ public type
   TuiCmd = Std.Tui.Runtime.Cmd.TuiCmd;
   // Observable command output passed to Update.
   TuiCmdOutput = Std.Tui.Runtime.Cmd.TuiCmdOutput;
+  // Cooperative callback executed as application-owned background work.
+  TuiBackgroundWork = Std.Tui.Runtime.Application.Background.TuiBackgroundWork;
   // Framework message delivered to Update.
   TuiMsg = Std.Tui.Runtime.Msg.TuiMsg;
   // Pointer button carried by a normalized pointer event.

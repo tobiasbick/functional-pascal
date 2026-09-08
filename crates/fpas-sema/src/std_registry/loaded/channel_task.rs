@@ -68,10 +68,19 @@ pub fn register_std_task(c: &mut Checker) {
         c,
         s::STD_TASK_CLOSE_TASK_GROUP_WITH_TIMEOUT,
         vec![
-            p("Group", group, false),
+            p("Group", group.clone(), false),
             p("TimeoutMillis", Ty::Integer, false),
         ],
-        Ty::Result(Box::new(Ty::Array(Box::new(failure))), Box::new(Ty::String)),
+        Ty::Result(
+            Box::new(Ty::Array(Box::new(failure.clone()))),
+            Box::new(Ty::String),
+        ),
+    );
+    define_func(
+        c,
+        s::STD_TASK_TRY_CLOSE_COMPLETED_TASK_GROUP,
+        vec![p("Group", group.clone(), false)],
+        Ty::Option(Box::new(Ty::Array(Box::new(failure.clone())))),
     );
 
     define_func(

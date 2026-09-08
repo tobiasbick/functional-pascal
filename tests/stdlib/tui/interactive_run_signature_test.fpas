@@ -1,6 +1,6 @@
 program TuiInteractiveRunSignatureTest;
 
-uses Std.Test, Std.Tui;
+uses Std.Task, Std.Test, Std.Tui;
 
 type
   DemoModel = record
@@ -39,11 +39,26 @@ begin
   return TuiElementBuilders.MakeLabel('interactive')
 end;
 
+function UpdateBackground(State: DemoModel; Message: integer; Cmd: TuiCmdOutput): DemoModel;
+begin
+  return record
+    Ticks := State.Ticks + Message;
+  end
+end;
+
 function RunSignatureOnly(): DemoModel;
 begin
   return TuiApplication.Run(record
     Ticks := 0;
   end, UpdateDemo, ViewDemo)
+end;
+
+function RunBackgroundSignatureOnly(): DemoModel;
+begin
+  var Inbox: channel of integer := CreateChannel(4);
+  return TuiApplication.RunWithBackground(record
+    Ticks := 0;
+  end, Inbox, UpdateDemo, UpdateBackground, ViewDemo)
 end;
 
 begin

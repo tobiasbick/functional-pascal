@@ -129,6 +129,10 @@ begin
       Cmd.Set(TuiCmd.Quit);
       return EditorState(State, 'SHOULD NOT PAINT', 0, State.Focused, State.ConfirmOpen, State.Saved, true)
     end
+    else
+    begin
+      return State
+    end
   end
 end;
 

@@ -65,6 +65,7 @@ impl Worker {
             | TaskIntrinsic::CancelTaskGroup
             | TaskIntrinsic::CloseTaskGroup
             | TaskIntrinsic::CloseTaskGroupWithTimeout
+            | TaskIntrinsic::TryCloseCompletedTaskGroup
             | TaskIntrinsic::StartSupervisedTask
             | TaskIntrinsic::CreateChannel
             | TaskIntrinsic::Send

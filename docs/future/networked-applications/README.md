@@ -3,6 +3,7 @@
 > Capability roadmap with implementation progress recorded in each plan.
 > Concurrency foundations C1-C4 and cooperative timed group close are implemented;
 > process-level shutdown escalation remains planned.
+> TUI background events are implemented with bounded typed inboxes and host-owned work.
 > Current behavior is documented under [Std.Task](../../pascal/std/concurrency/task.md).
 
 Functional Pascal already provides blocking TCP/TLS connections and listeners, HTTP client and
@@ -24,7 +25,7 @@ explicit decision.
 | Coordination | [Concurrency](concurrency.md) | Bounded channels, cancellation, multi-wait, and supervised task ownership |
 | Bidirectional transport | [WebSocket](websocket.md) | Bounded message transport over existing TCP/TLS and HTTP foundations |
 | Datagrams | [UDP](udp.md) | Explicit datagram endpoints without reliability promises |
-| Interactive clients | [TUI background events](tui-background-events.md) | Wakeable application-owned event delivery onto the main TUI thread |
+| Interactive clients | [TUI background events](tui-background-events.md) | Implemented wakeable application-owned event delivery onto the main TUI thread |
 | Process lifetime | [Server lifecycle](server-lifecycle.md) | Coordinated stop signals, listener closure, draining, and deadlines |
 | Operations | [Observability](observability.md) | Structured events, metrics, and health state independent of presentation |
 | Multiple nodes | [Distributed nodes](distributed-nodes.md) | Authenticated envelopes, durable delivery, synchronization, and conflict policy |
@@ -35,8 +36,8 @@ explicit decision.
    background or distributed interfaces.
 2. Add SQLite as a concrete adapter and server lifecycle support so state and work can shut down
    consistently.
-3. Add WebSocket and TUI background-event integration over the settled cancellation and queueing
-   model.
+3. TUI background-event integration now uses the settled cancellation and queueing model; WebSocket
+   remains to be added at the same boundary.
 4. Add observability at the same seams used for lifecycle, storage, and transport failures.
 5. Start distributed-node work only after identity, durable outbox/inbox storage, idempotency, and
    version negotiation have concrete designs.

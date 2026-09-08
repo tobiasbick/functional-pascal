@@ -266,6 +266,80 @@ end.
     );
 }
 
+#[test]
+fn interactive_background_message_wakes_idle_host_and_repaints() {
+    let cwd = create_temp_dir("tui-background-wakeup");
+    let program = cwd.join("background_wakeup.fpas");
+    write_text(
+        &program,
+        r#"program BackgroundWakeup;
+
+uses Std.Console, Std.Result, Std.Task, Std.Tui;
+
+type
+  Model = record
+    Inbox: channel of integer;
+    Value: integer;
+  end;
+
+function Update(State: Model; Msg: TuiMsg; Cmd: TuiCmdOutput): Model;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      var Target: channel of integer := State.Inbox;
+      Cmd.StartBackground(1, function(Token: CancellationToken): result of boolean, string begin
+        return SendWithCancellation(Target, 42, Token)
+      end);
+      return State
+    end;
+    TuiMsg.BackgroundFailed(Id, Kind, Message, Code, Line, Column):
+    begin
+      panic(Message)
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function UpdateApplication(State: Model; Message: integer; Cmd: TuiCmdOutput): Model;
+begin
+  Cmd.Set(TuiCmd.Quit);
+  return record
+    Inbox := State.Inbox;
+    Value := Message;
+  end
+end;
+
+function View(State: Model): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('value')
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(1);
+  var Final: Model := TuiApplication.RunWithBackground(record
+    Inbox := Inbox;
+    Value := 0;
+  end, Inbox, Update, UpdateApplication, View);
+  WriteLn(Final.Value)
+end.
+"#,
+    );
+    let built =
+        crate::project_build::build_test_program_with_graph(&program, repo_tui_program_graph())
+            .expect("Tui background wakeup regression program must build");
+    let mut vm = fpas_vm::Vm::new(built.executable);
+
+    vm.run()
+        .expect("Tui background wakeup regression program must run");
+    fs::remove_dir_all(&cwd).expect("temp directory must be removed");
+
+    assert_eq!(vm.output().lines, vec!["42"]);
+}
+
 fn run_repo_std_program(rel_path: &str) -> (i32, String, String) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

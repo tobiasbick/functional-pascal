@@ -1,44 +1,56 @@
-# Future: TUI Background Events
+# TUI Background Events
 
-> Deferred. The current `Std.Tui` host remains terminal-input driven.
+> Implemented. The current contract is documented in
+> [`Std.Tui` application host](../../pascal/std/tui/application.md).
 
-Interactive applications need to receive network, database, timer, and worker completions without
-blocking terminal input or requiring application code to rebuild the TUI host. Updates and view
-construction must still run serially on the main thread.
+Interactive applications can receive network, database, timer, and worker completions without
+blocking terminal input or rebuilding the TUI host. Updates and view construction remain serialized
+on the host task.
 
-## Required interface
+## Implemented interface
 
-- Application-defined messages in addition to built-in keyboard, pointer, resize, focus, and
-  control messages.
-- A clonable, task-safe message sink that queues a bounded value and wakes the interactive host.
-- Commands that start owned background work after `Update` returns rather than performing blocking
-  work inside `Update`.
-- Subscriptions for long-lived event sources with explicit cancellation during replacement or host
-  shutdown.
-- Headless injection of the same application-defined messages for deterministic tests.
+- `RunWithBackground` and `RunWithBackgroundAndPalette` receive application-defined messages from a
+  bounded caller-created `channel of TMessage` and wake without terminal input.
+- `TuiMsg.Started` lets the first serialized update queue work after the initial frame.
+- `StartBackground`, `ReplaceSubscription`, and `CancelSubscription` transfer task ownership to the
+  host after an update returns.
+- `RunBackgroundIterations`, `InjectBackgroundForTest`, and `CloseWithBackground` expose the same
+  bounded delivery and lifecycle rules to deterministic headless tests.
+- `BackgroundFailed` forwards task-group failures as data while another update is possible.
 
 ## Ordering and ownership
 
-- `Update`, command application, `View`, layout, and paint remain serialized on the main thread.
-- Each source preserves FIFO ordering; ordering between independent sources must be documented.
-- A full queue follows an explicit policy such as backpressure, coalescing for selected event kinds,
-  or rejection. Silent loss is not permitted.
-- Closing an application rejects new messages, cancels owned work, and wakes a blocked host.
-- Background failures arrive as data that `Update` can handle rather than panicking an unrelated
-  worker silently.
+- Framework update, application-message update, command application, `View`, layout, and paint
+  remain serialized on the host task.
+- Each channel preserves FIFO order. Routed framework messages drain first; the interactive host
+  alternates Console/application case priority when both sources stay ready.
+- `SendWithCancellation` supplies backpressure. `TrySend` and headless injection return `Ok(false)`
+  when full. Neither path silently drops a value.
+- Closing cancels and joins owned work before closing the application inbox, so blocked sends wake
+  and late sends fail.
+- Each operation owns one task group and is reaped after completion, avoiding retained completed
+  children. Applications are limited to 256 simultaneous operations.
 
-## Open design decision
+## Settled design decisions
 
-The concrete type shape should be designed together with channels and cancellation. Candidate
-interfaces include a generic application event wrapper or a separate application-owned inbox. The
-choice must keep built-in routing convenient without forcing application payloads through the
-closed `TuiMsg` variants.
+- Application payloads stay in a separate generic channel rather than extending the closed
+  framework message with application-specific variants.
+- Framework lifecycle and failures use `Started` and `BackgroundFailed` variants on `TuiMsg`.
+- Work uses the fixed `function(Token): result of boolean, string` shape. Its success value is
+  ignored; errors are normalized through task-group failure records.
+- Subscription replacement is cancel-and-join before start. Shutdown is cooperative and has no
+  forced process-level escalation.
 
-## Acceptance requirements
+## Acceptance evidence
 
-- A background completion repaints an idle interactive application without terminal input.
-- Terminal and background events remain responsive under sustained bounded traffic.
-- Closing during blocked network, database, timer, and channel work cannot leak a task.
-- Headless tests reproduce ordering, queue-full, cancellation, and late-delivery cases.
-- Existing keyboard, pointer, resize, focus, and rendering behavior remains compatible unless a
-  separate public-interface change is explicitly approved.
+- The interactive host selects application messages alongside Console input and probes completed
+  groups on its bounded 50 ms host timer.
+- Alternating case priority bounds source preference under sustained ready traffic.
+- The host cancels and joins subscriptions and one-shot work on replacement or shutdown.
+- Headless regressions cover FIFO delivery, queue-full rejection, command execution, task failure,
+  replacement cancellation, shutdown cancellation, and late-send rejection.
+- The complete pre-existing TUI regression group remains the compatibility gate for keyboard,
+  pointer, resize, focus, and rendering behavior.
+
+No performance conclusion is attached to this slice; its acceptance gates are behavior and
+lifecycle correctness.

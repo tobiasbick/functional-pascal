@@ -1,0 +1,58 @@
+program TryCloseCompletedTaskGroupTest;
+
+uses Std.Array, Std.Option, Std.Result, Std.Task, Std.Test, Std.Time;
+
+begin
+  var Empty: TaskGroup := CreateTaskGroup();
+  AssertEquals(0, Std.Array.Length(Std.Option.Unwrap(TryCloseCompletedTaskGroup(Empty))));
+  AssertEquals(0, Std.Array.Length(Std.Option.Unwrap(TryCloseCompletedTaskGroup(Empty))));
+  var Gate: channel of boolean := CreateChannel(1);
+  var Ready: channel of boolean := CreateChannel(1);
+  var Returned: TaskGroup := CreateTaskGroup();
+  StartTaskInGroup(Returned, function(Token: CancellationToken): result of boolean, string begin
+    Send(Ready, true);
+    case ReceiveWithCancellation(Gate, Token) of
+      Ok(_):
+      begin
+        return Error('expected returned error')
+      end;
+      Error(Message):
+      begin
+        return Error('probe cancelled pending work')
+      end
+    end
+  end);
+  AssertTrue(Std.Result.Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  AssertTrue(IsNone(TryCloseCompletedTaskGroup(Returned)));
+  Send(Gate, true);
+  mutable var ReturnedFailures: option of array of TaskFailure := None;
+  while IsNone(ReturnedFailures) do
+  begin
+    Sleep(1);
+    ReturnedFailures := TryCloseCompletedTaskGroup(Returned)
+  end;
+  var ReturnedReport: array of TaskFailure := Std.Option.Unwrap(ReturnedFailures);
+  AssertEquals(1, Std.Array.Length(ReturnedReport));
+  AssertTrue(ReturnedReport[0].Kind = TaskFailureKind.ReturnedError);
+  AssertEquals('expected returned error', ReturnedReport[0].Message);
+  var PanicReady: channel of boolean := CreateChannel(1);
+  var Panicked: TaskGroup := CreateTaskGroup();
+  StartTaskInGroup(Panicked, procedure(Token: CancellationToken) begin
+    Send(PanicReady, true);
+    panic('expected panic report')
+  end);
+  AssertTrue(Std.Result.Unwrap(ReceiveWithTimeout(PanicReady, 10000)));
+  mutable var PanicFailures: option of array of TaskFailure := None;
+  while IsNone(PanicFailures) do
+  begin
+    Sleep(1);
+    PanicFailures := TryCloseCompletedTaskGroup(Panicked)
+  end;
+  var PanicReport: array of TaskFailure := Std.Option.Unwrap(PanicFailures);
+  AssertEquals(1, Std.Array.Length(PanicReport));
+  AssertTrue(PanicReport[0].Kind = TaskFailureKind.Panicked);
+  AssertEquals('panic: expected panic report', PanicReport[0].Message);
+  CloseChannel(Gate);
+  CloseChannel(Ready);
+  CloseChannel(PanicReady)
+end.

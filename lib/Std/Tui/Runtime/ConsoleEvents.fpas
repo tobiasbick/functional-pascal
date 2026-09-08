@@ -62,3 +62,21 @@ public function TuiReadConsoleHostInput(): option of TuiHostInput;
 begin
   return TuiConsoleEventToHostInput(ReadEvent())
 end;
+
+// Waits for one Console event up to the given duration.
+//
+// Parameters:
+// - `TimeoutMillis`: Non-negative relative wait duration.
+public function TuiReadConsoleHostInputWithTimeout(TimeoutMillis: integer): option of TuiHostInput;
+begin
+  case ReadEventTimeout(TimeoutMillis) of
+    Some(Event):
+    begin
+      return TuiConsoleEventToHostInput(Event)
+    end;
+    None:
+    begin
+      return None
+    end
+  end
+end;

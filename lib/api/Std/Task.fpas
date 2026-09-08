@@ -301,6 +301,15 @@ begin
   panic('Intrinsic API declaration')
 end;
 
+// Closes without cancellation only when every child is already terminal.
+//
+// Parameters:
+// - `Group`: `Std.Task.TaskGroup` input value used by `TryCloseCompletedTaskGroup`.
+public function TryCloseCompletedTaskGroup(Group: Std.Task.TaskGroup): option of array of Std.Task.TaskFailure;
+begin
+  panic('Intrinsic API declaration')
+end;
+
 // Receives immediately; `Ok(None)` means the open channel is empty.
 //
 // Parameters:

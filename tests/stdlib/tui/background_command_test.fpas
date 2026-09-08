@@ -1,0 +1,65 @@
+program TuiBackgroundCommandTest;
+
+uses Std.Result, Std.Task, Std.Test, Std.Tui;
+
+type
+  CommandModel = record
+    Inbox: channel of integer;
+    Ready: channel of boolean;
+    Value: integer;
+  end;
+
+function UpdateFramework(State: CommandModel; Msg: TuiMsg; Cmd: TuiCmdOutput): CommandModel;
+begin
+  case Msg of
+    TuiMsg.Started:
+    begin
+      var Target: channel of integer := State.Inbox;
+      var Ready: channel of boolean := State.Ready;
+      Cmd.StartBackground(7, function(Token: CancellationToken): result of boolean, string begin
+        if IsError(SendWithCancellation(Target, 42, Token)) then
+        begin
+          return Ok(true)
+        end;
+
+        Send(Ready, true);
+        return Ok(true)
+      end);
+      return State
+    end
+    else
+    begin
+      return State
+    end
+  end
+end;
+
+function UpdateApplication(State: CommandModel; Message: integer; Cmd: TuiCmdOutput): CommandModel;
+begin
+  return record
+    Inbox := State.Inbox;
+    Ready := State.Ready;
+    Value := Message;
+  end
+end;
+
+function View(State: CommandModel): TuiElement;
+begin
+  return TuiElementBuilders.MakeLabel('command')
+end;
+
+begin
+  var Inbox: channel of integer := CreateChannel(1);
+  var Ready: channel of boolean := CreateChannel(1);
+  var App: TuiApplication := TuiApplication.OpenForTest(TuiSize.Create(24, 4));
+  mutable var Model: CommandModel := App.RunBackgroundIterations(record
+    Inbox := Inbox;
+    Ready := Ready;
+    Value := 0;
+  end, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  AssertTrue(Unwrap(ReceiveWithTimeout(Ready, 10000)));
+  Model := App.RunBackgroundIterations(Model, Inbox, UpdateFramework, UpdateApplication, View, 1, 0);
+  AssertEquals(42, Model.Value);
+  App.CloseWithBackground(Inbox);
+  CloseChannel(Ready)
+end.

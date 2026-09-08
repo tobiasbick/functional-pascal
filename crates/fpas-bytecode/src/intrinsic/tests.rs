@@ -233,6 +233,7 @@ const ALL_INTRINSICS: &[Intrinsic] = &[
     Intrinsic::Task(TaskIntrinsic::CancelTaskGroup),
     Intrinsic::Task(TaskIntrinsic::CloseTaskGroup),
     Intrinsic::Task(TaskIntrinsic::CloseTaskGroupWithTimeout),
+    Intrinsic::Task(TaskIntrinsic::TryCloseCompletedTaskGroup),
     Intrinsic::Task(TaskIntrinsic::StartSupervisedTask),
     Intrinsic::Task(TaskIntrinsic::WaitAnyWithTimeout),
     Intrinsic::Task(TaskIntrinsic::WaitAnyWithCancellation),

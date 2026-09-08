@@ -1,12 +1,14 @@
 unit Std.Tui.Runtime.Msg;
 
 uses
-  Std.Console, Std.Tui.Chrome.MenuNode, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size,
+  Std.Console, Std.Task, Std.Tui.Chrome.MenuNode, Std.Tui.Geometry.Point, Std.Tui.Geometry.Size,
   Std.Tui.Ids.Action, Std.Tui.Ids.ControlId, Std.Tui.Runtime.PointerEvent;
 
 public type
   // Framework messages delivered to an application's Update function.
   TuiMsg = enum
+    // Signals startup after the first frame of a background-enabled host.
+    Started;
     // Represents the `Key` variant of `TuiMsg`.
     //
     // Parameters:
@@ -84,6 +86,8 @@ public type
     // - `Action`: Application action carried by the variant.
     // - `State`: Controlled menu state carried by the variant.
     MenuChanged(Source: TuiControlId; Action: TuiAction; State: TuiMenuState);
+    // Reports a completed host-owned operation that returned or raised a failure.
+    BackgroundFailed(Id: integer; Kind: TaskFailureKind; Message: string; Code: integer; Line: integer; Column: integer);
     // Represents the `QuitRequested` variant of `TuiMsg`.
     QuitRequested;
   end;

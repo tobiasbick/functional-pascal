@@ -42,10 +42,17 @@ implementation details.
 | `TuiMenuNode` / `TuiMenuState` / `TuiKeyGesture` | Hierarchical controlled menus. |
 | `TuiMenuItem` / `TuiStatusItem` | Flat action-bar and status-line descriptions. |
 | `TuiCmd` / `TuiCmdOutput` | Commands emitted by `Update`. |
+| `TuiBackgroundWork` | Cancellable host-owned work returning `result of boolean, string`. |
 | `TuiApplication.OpenForTest(Size)` | Opens a fixed-size headless host. |
 | `App.RunIterations(...)` | Processes a deterministic message budget. |
+| `App.RunBackgroundIterations(...)` | Processes framework and typed application messages headlessly. |
+| `App.InjectBackgroundForTest(...)` | Tries bounded typed message injection without waiting. |
+| `App.CloseWithBackground(Inbox)` | Joins owned work before closing the typed inbox. |
 | `TuiApplication.Run(...)` | Runs the interactive Console terminal host. |
 | `TuiApplication.RunWithPalette(...)` | Runs with a caller-defined initial palette. |
+| `TuiApplication.RunWithBackground(...)` | Runs a wakeable host with a bounded typed inbox. |
+| `Cmd.StartBackground(...)` | Starts one host-owned operation after `Update`. |
+| `Cmd.ReplaceSubscription(...)` / `CancelSubscription(...)` | Replaces or cancels a long-lived source by id. |
 | `App.SurfaceSnapshot()` | Copies the last painted surface for assertions. |
 
 ## Implementation (contributors)

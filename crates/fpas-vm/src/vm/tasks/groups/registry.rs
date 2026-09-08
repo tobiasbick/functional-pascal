@@ -219,21 +219,30 @@ impl GroupRegistry {
         if group.children.iter().any(|child| child.outcome.is_none()) {
             return Ok(None);
         }
-        let Some(group) = state.groups.remove(&id) else {
-            return Err(unknown());
+        Ok(Some(take_complete(&mut state, id)?))
+    }
+
+    /// Seal and release a group only when every child has already reached a terminal outcome.
+    pub(in crate::vm) fn try_take_completed(
+        &self,
+        id: u64,
+        owner: u64,
+    ) -> Result<Option<ClosedGroup>, String> {
+        validate(id)?;
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        let Some(group) = state.groups.get(&id) else {
+            return Ok(Some(ClosedGroup {
+                tasks: vec![],
+                failures: vec![],
+            }));
         };
-        let mut closed = ClosedGroup {
-            tasks: Vec::with_capacity(group.children.len()),
-            failures: vec![],
-        };
-        for child in group.children {
-            state.membership.remove(&child.id);
-            closed.tasks.push(child.id);
-            if let Some(Some(failure)) = child.outcome {
-                closed.failures.push(failure);
-            }
+        if group.owner != owner {
+            return Err("Only the creating task may close a TaskGroup".into());
         }
-        Ok(Some(closed))
+        if group.children.iter().any(|child| child.outcome.is_none()) {
+            return Ok(None);
+        }
+        Ok(Some(take_complete(&mut state, id)?))
     }
 
     /// Request cancellation for all live groups before VM thread joining.
@@ -249,6 +258,24 @@ impl GroupRegistry {
             group.cancellation.cancel();
         }
     }
+}
+
+fn take_complete(state: &mut State, id: u64) -> Result<ClosedGroup, String> {
+    let Some(group) = state.groups.remove(&id) else {
+        return Err(unknown());
+    };
+    let mut closed = ClosedGroup {
+        tasks: Vec::with_capacity(group.children.len()),
+        failures: vec![],
+    };
+    for child in group.children {
+        state.membership.remove(&child.id);
+        closed.tasks.push(child.id);
+        if let Some(Some(failure)) = child.outcome {
+            closed.failures.push(failure);
+        }
+    }
+    Ok(closed)
 }
 
 fn group(state: &State, id: u64) -> Result<&Group, String> {

@@ -5,7 +5,7 @@
 mod close;
 mod registry;
 mod spawn;
-pub(in crate::vm) use registry::{GroupFailure, GroupRegistry};
+pub(in crate::vm) use registry::{ClosedGroup, GroupFailure, GroupRegistry};
 
 use crate::vm::{VmError, worker::Worker};
 use fpas_bytecode::{Intrinsic, Register, SourceLocation, TaskIntrinsic, Value};
@@ -28,7 +28,8 @@ impl Worker {
             TaskIntrinsic::StartSupervisedTask => 4,
             TaskIntrinsic::GetTaskGroupToken
             | TaskIntrinsic::CancelTaskGroup
-            | TaskIntrinsic::CloseTaskGroup => 1,
+            | TaskIntrinsic::CloseTaskGroup
+            | TaskIntrinsic::TryCloseCompletedTaskGroup => 1,
             _ => return Ok(None),
         };
         if args.len() != expected {
@@ -77,6 +78,13 @@ impl Worker {
                     None
                 };
                 return self.start_group_close(id, timeout, destination).map(Some);
+            }
+            TaskIntrinsic::TryCloseCompletedTaskGroup => {
+                let completed = scheduler
+                    .try_close_completed_group(id, self.task_id)?
+                    .map(|failures| self.group_report(failures))
+                    .transpose()?;
+                completed.map_or(Value::OptionNone, Value::option_some)
             }
             _ => unreachable!("group intrinsic dispatch"),
         };

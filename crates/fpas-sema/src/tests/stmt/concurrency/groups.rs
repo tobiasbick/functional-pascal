@@ -13,6 +13,8 @@ fn group_operations_reject_wrong_handles_and_worker_signatures() {
         "CloseTaskGroupWithTimeout(G, true)",
         "CloseTaskGroupWithTimeout(G)",
         "CloseTaskGroupWithTimeout(G, 0, 0)",
+        "TryCloseCompletedTaskGroup(1)",
+        "TryCloseCompletedTaskGroup(G, 0)",
         "StartTaskInGroup(G)",
         "StartTaskInGroup(1, Work)",
         "StartTaskInGroup(G, 1)",
@@ -97,4 +99,17 @@ fn timed_group_close_preserves_result_and_failure_record_types() {
         "program T; uses Std.Task, Std.Result; begin var G: TaskGroup := CreateTaskGroup(); var R: result of array of TaskFailure, string := CloseTaskGroupWithTimeout(G, 0); var Reports: array of TaskFailure := Unwrap(R) end.",
     );
     assert!(!check_errors("program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := CloseTaskGroupWithTimeout(G, 0) end.").is_empty());
+}
+
+#[test]
+fn completed_group_probe_preserves_optional_failure_report_type() {
+    check_ok(
+        "program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var R: option of array of TaskFailure := TryCloseCompletedTaskGroup(G) end.",
+    );
+    assert!(
+        !check_errors(
+            "program T; uses Std.Task; begin var G: TaskGroup := CreateTaskGroup(); var Wrong: boolean := TryCloseCompletedTaskGroup(G) end."
+        )
+        .is_empty()
+    );
 }

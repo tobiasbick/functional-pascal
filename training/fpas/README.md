@@ -21,6 +21,8 @@ functional style. They also cover common small-model errors: `.fpas` file names,
   dataset split files. Regeneration replaces them; it does not create a v2 copy.
 - `manifests/dataset-v1.json` records the exact source commit, limits, curated
   examples, source selection, exclusions, and split counts without local paths.
+- `unsloth-studio-training.md` records the recommended Unsloth Studio settings
+  for Qwen3.5-2B and the current policy for reasoning examples.
 
 Regenerate the artifacts from the repository root:
 

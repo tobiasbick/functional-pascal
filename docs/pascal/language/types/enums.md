@@ -90,6 +90,10 @@ end;
 Each binding name in the pattern is positional — it corresponds to the field at that position in the variant declaration. A variant without fields (like `Point` above) uses no parentheses.
 Each field position uses a plain identifier binding; use an `if` guard on the `case` arm for extra constraints.
 
+Parentheses in a variant declaration must contain at least one field, and semicolons
+separate fields rather than terminate the list. Consequently, `Point()` and
+`Rectangle(Width: real; Height: real;)` are invalid.
+
 A variant uses either backing values or associated data fields, not both on the same variant.
 
 Variant names must be ordinary identifiers. Reserved words remain reserved after a type

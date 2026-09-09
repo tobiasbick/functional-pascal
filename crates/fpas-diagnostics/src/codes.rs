@@ -70,6 +70,22 @@ define_codes!(PARSE_ALLOCATED_CODES => {
     ///
     /// **Documentation:** `docs/pascal/program-structure/cli.md` (Checking without running)
     PARSE_NESTING_LIMIT_EXCEEDED = 1009;
+    /// A record update expression contains no field assignments.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-update.md`
+    PARSE_EMPTY_RECORD_UPDATE = 1010;
+    /// An event declaration places its `write` accessor before its `read` accessor.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/record-events.md`
+    PARSE_INVALID_EVENT_ACCESSOR_ORDER = 1011;
+    /// An enum variant declares an empty associated-data field list.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
+    PARSE_EMPTY_ENUM_FIELD_LIST = 1012;
+    /// An enum variant field list ends with a trailing semicolon.
+    ///
+    /// **Documentation:** `docs/pascal/language/types/enums.md`
+    PARSE_TRAILING_ENUM_FIELD_SEPARATOR = 1013;
 });
 
 define_codes!(SEMA_ALLOCATED_CODES => {

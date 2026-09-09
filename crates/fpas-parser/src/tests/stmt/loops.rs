@@ -82,3 +82,12 @@ fn repeat_until() {
         _ => panic!("expected Repeat"),
     }
 }
+
+#[test]
+fn repeat_allows_trailing_semicolon_before_until() {
+    let stmts = body_stmts("program T; begin repeat X := X + 1; until X = 10 end.");
+    match &stmts[0] {
+        Stmt::Repeat { body, .. } => assert_eq!(body.len(), 1),
+        _ => panic!("expected Repeat"),
+    }
+}

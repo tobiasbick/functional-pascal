@@ -1,5 +1,7 @@
+use super::super::parse_with_errors;
 use super::parse_expr;
-use crate::ast::*;
+use crate::{ParseDiagnostic, ast::*};
+use fpas_diagnostics::codes::PARSE_EMPTY_RECORD_UPDATE;
 
 #[test]
 fn empty_array() {
@@ -25,6 +27,14 @@ fn record_literal() {
             assert_eq!(fields[0].name, "X");
             assert_eq!(fields[1].name, "Y");
         }
+        _ => panic!("expected RecordLiteral"),
+    }
+}
+
+#[test]
+fn empty_record_literal_remains_valid() {
+    match parse_expr("record end") {
+        Expr::RecordLiteral { fields, .. } => assert!(fields.is_empty()),
         _ => panic!("expected RecordLiteral"),
     }
 }
@@ -58,4 +68,24 @@ fn record_update() {
         }
         _ => panic!("expected RecordUpdate"),
     }
+}
+
+#[test]
+fn empty_record_update_is_rejected() {
+    let (_, errors) = parse_with_errors("program T; begin return P with end end.");
+    let diagnostic = errors.iter().find_map(|error| match error {
+        ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EMPTY_RECORD_UPDATE => {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    let diagnostic = diagnostic
+        .unwrap_or_else(|| panic!("expected empty record update diagnostic, got: {errors:#?}"));
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some(
+            "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly."
+        )
+    );
 }

@@ -307,11 +307,11 @@ mod tests {
     }
 
     #[test]
-    fn empty_record_update_has_one_space() {
+    fn nonempty_record_update_formats_field_assignment() {
         let formatted = expr_from_body(
-            "program T; type Empty = record end; begin var Value: Empty := Base with  end; end.",
+            "program T; type Point = record X: integer; end; begin var Value: Point := Base with X := 1; end; end.",
         );
-        assert_eq!(formatted, "Base with end");
+        assert_eq!(formatted, "Base with X := 1; end");
     }
 
     #[test]

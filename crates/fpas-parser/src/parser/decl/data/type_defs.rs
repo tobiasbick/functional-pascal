@@ -1,6 +1,9 @@
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::{PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN};
+use fpas_diagnostics::codes::{
+    PARSE_EMPTY_ENUM_FIELD_LIST, PARSE_EXPECTED_IDENTIFIER, PARSE_EXPECTED_TOKEN,
+    PARSE_TRAILING_ENUM_FIELD_SEPARATOR,
+};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -101,6 +104,14 @@ impl Parser {
 
         let fields = if self.eat(&Token::LParen) {
             let mut field_defs = Vec::new();
+            if self.check(&Token::RParen) {
+                self.error_with_code(
+                    PARSE_EMPTY_ENUM_FIELD_LIST,
+                    "Enum variant field list must contain at least one field",
+                    "Write `Variant;` for a fieldless variant or add a field such as `Variant(Value: integer);`.",
+                    self.current_span(),
+                );
+            }
             while !self.check(&Token::RParen) && !self.at_end() {
                 let field_start = self.current_span();
                 let (field_name, _) = self
@@ -113,7 +124,17 @@ impl Parser {
                     type_expr,
                     span: self.span_from(field_start),
                 });
+                let separator_span = self.current_span();
                 if !self.eat(&Token::Semicolon) {
+                    break;
+                }
+                if self.check(&Token::RParen) {
+                    self.error_with_code(
+                        PARSE_TRAILING_ENUM_FIELD_SEPARATOR,
+                        "Enum variant field list cannot end with `;`",
+                        "Remove the trailing separator: write `Variant(First: integer; Second: integer);`.",
+                        separator_span,
+                    );
                     break;
                 }
             }

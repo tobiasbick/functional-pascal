@@ -21,6 +21,8 @@ end;
 - The header ends with `;` before the body. The body ends with `end;` (including top-level declarations in a program or unit).
 - Use `()` when there are no parameters: `function Pi(): real;`.
 - Parameter lists use `;` between parameters; call sites use `,`.
+- Calls always include parentheses, including calls without arguments: `Pi()` or
+  `SayHello()`. A bare routine name is not call syntax.
 
 ## Functions
 

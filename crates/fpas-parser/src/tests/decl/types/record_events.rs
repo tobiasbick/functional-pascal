@@ -1,4 +1,5 @@
 use super::*;
+use fpas_diagnostics::codes::PARSE_INVALID_EVENT_ACCESSOR_ORDER;
 
 #[test]
 fn record_events_default_to_private_and_accept_public() {
@@ -96,5 +97,46 @@ fn event_with_only_read_is_rejected() {
             .filter_map(ParseDiagnostic::as_parser_error)
             .any(|e| e.message.contains("requires both `read` and `write`")),
         "{errors:#?}"
+    );
+}
+
+#[test]
+fn event_with_only_write_is_rejected() {
+    let (_, errors) = parse_with_errors(
+        "program T; type Button = record \
+         procedure WriteOnClick(Self: Button; H: Option of procedure()); begin end; \
+         event OnClick: procedure() write WriteOnClick; \
+         end; begin end.",
+    );
+    assert!(
+        errors
+            .iter()
+            .filter_map(ParseDiagnostic::as_parser_error)
+            .any(|e| e.message.contains("requires both `read` and `write`")),
+        "{errors:#?}"
+    );
+}
+
+#[test]
+fn event_write_before_read_is_rejected() {
+    let (_, errors) = parse_with_errors(
+        "program T; type Button = record \
+         event OnClick: procedure() write WriteOnClick read ReadOnClick; \
+         end; begin end.",
+    );
+    let diagnostic = errors.iter().find_map(|error| match error {
+        ParseDiagnostic::Parser(diagnostic)
+            if diagnostic.code == PARSE_INVALID_EVENT_ACCESSOR_ORDER =>
+        {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    let diagnostic = diagnostic
+        .unwrap_or_else(|| panic!("expected event accessor order diagnostic, got: {errors:#?}"));
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some("Write `event Name: HandlerType read Getter write Setter;`.")
     );
 }

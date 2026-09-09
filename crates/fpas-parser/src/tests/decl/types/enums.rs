@@ -1,4 +1,5 @@
 use super::*;
+use fpas_diagnostics::codes::{PARSE_EMPTY_ENUM_FIELD_LIST, PARSE_TRAILING_ENUM_FIELD_SEPARATOR};
 
 #[test]
 fn enum_type() {
@@ -128,5 +129,61 @@ fn enum_variant_cannot_mix_fields_with_backing_value() {
     assert!(
         !errors.is_empty(),
         "expected parser error when mixing enum fields with a backing value"
+    );
+}
+
+#[test]
+fn enum_empty_field_list_is_rejected() {
+    let (_, errors) = parse_with_errors("program T; type Token = enum Eof(); end; begin end.");
+    let diagnostic = errors.iter().find_map(|error| match error {
+        ParseDiagnostic::Parser(diagnostic) if diagnostic.code == PARSE_EMPTY_ENUM_FIELD_LIST => {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    let diagnostic = diagnostic
+        .unwrap_or_else(|| panic!("expected empty enum field-list diagnostic, got: {errors:#?}"));
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some(
+            "Write `Variant;` for a fieldless variant or add a field such as `Variant(Value: integer);`."
+        )
+    );
+}
+
+#[test]
+fn enum_empty_field_list_before_backing_value_is_rejected() {
+    let (_, errors) = parse_with_errors("program T; type Token = enum Eof() = 5; end; begin end.");
+    assert!(
+        errors.iter().any(|error| matches!(
+            error,
+            ParseDiagnostic::Parser(diagnostic)
+                if diagnostic.code == PARSE_EMPTY_ENUM_FIELD_LIST
+        )),
+        "{errors:#?}"
+    );
+}
+
+#[test]
+fn enum_trailing_field_separator_is_rejected() {
+    let (_, errors) = parse_with_errors(
+        "program T; type Shape = enum Rectangle(Width: real; Height: real;); end; begin end.",
+    );
+    let diagnostic = errors.iter().find_map(|error| match error {
+        ParseDiagnostic::Parser(diagnostic)
+            if diagnostic.code == PARSE_TRAILING_ENUM_FIELD_SEPARATOR =>
+        {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    let diagnostic = diagnostic.unwrap_or_else(|| {
+        panic!("expected trailing enum field separator diagnostic, got: {errors:#?}")
+    });
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some("Remove the trailing separator: write `Variant(First: integer; Second: integer);`.")
     );
 }

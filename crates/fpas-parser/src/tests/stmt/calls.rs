@@ -1,5 +1,7 @@
+use super::super::parse_with_errors;
 use super::body_stmts;
-use crate::ast::*;
+use crate::{ParseDiagnostic, ast::*};
+use fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM;
 
 #[test]
 fn call_no_args() {
@@ -32,6 +34,41 @@ fn qualified_call() {
         }
         _ => panic!("expected Call"),
     }
+}
+
+#[test]
+fn bare_zero_argument_call_requires_parentheses() {
+    let (_, errors) = parse_with_errors("program T; begin Foo end.");
+    let diagnostic = errors.iter().find_map(|error| match error {
+        ParseDiagnostic::Parser(diagnostic)
+            if diagnostic.code == PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM =>
+        {
+            Some(diagnostic)
+        }
+        _ => None,
+    });
+
+    let diagnostic = diagnostic.unwrap_or_else(|| {
+        panic!("expected invalid call-or-assignment diagnostic, got: {errors:#?}")
+    });
+    assert_eq!(
+        diagnostic.help.as_deref(),
+        Some("Add `()` to call a zero-argument function or procedure.")
+    );
+}
+
+#[test]
+fn bare_qualified_zero_argument_call_requires_parentheses() {
+    let (_, errors) = parse_with_errors("program T; begin Std.Console.Clear end.");
+
+    assert!(
+        errors.iter().any(|error| matches!(
+            error,
+            ParseDiagnostic::Parser(diagnostic)
+                if diagnostic.code == PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM
+        )),
+        "expected invalid call-or-assignment diagnostic, got: {errors:#?}"
+    );
 }
 
 #[test]

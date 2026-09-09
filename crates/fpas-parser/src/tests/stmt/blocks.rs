@@ -18,3 +18,9 @@ fn no_semi_before_end() {
     let stmts = body_stmts("program T; begin X := 1 end.");
     assert_eq!(stmts.len(), 1);
 }
+
+#[test]
+fn trailing_semicolon_before_end() {
+    let stmts = body_stmts("program T; begin X := 1; end.");
+    assert_eq!(stmts.len(), 1);
+}

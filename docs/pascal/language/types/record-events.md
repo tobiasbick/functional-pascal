@@ -38,6 +38,7 @@ Rules:
 
 - `HandlerType` must be a function or procedure type (including a type alias of one).
 - Both `read` and `write` are required in version 1.
+- The accessors must appear in that order: `read Getter` followed by `write Setter`.
 - The getter is an instance function with signature
   `function Getter(Self: R): Option of HandlerType`.
 - The setter is an instance procedure with signature

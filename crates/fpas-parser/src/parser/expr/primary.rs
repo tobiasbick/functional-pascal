@@ -1,6 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
-use fpas_diagnostics::codes::PARSE_EXPECTED_EXPRESSION;
+use fpas_diagnostics::codes::{PARSE_EMPTY_RECORD_UPDATE, PARSE_EXPECTED_EXPRESSION};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -199,6 +199,14 @@ impl Parser {
     /// **Documentation:** `docs/pascal/language/types/record-update.md`
     pub(super) fn parse_record_update(&mut self, base: Expr, start: fpas_lexer::Span) -> Expr {
         self.advance(); // consume `with`
+        if self.check(&Token::End) {
+            self.error_with_code(
+                PARSE_EMPTY_RECORD_UPDATE,
+                "Record update requires at least one field assignment",
+                "Add a field assignment, for example `Value with X := 1; end`, or use the original value directly.",
+                self.current_span(),
+            );
+        }
         let fields = self.parse_field_init_list();
         Expr::RecordUpdate {
             base: Box::new(base),

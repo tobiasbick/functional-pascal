@@ -118,7 +118,7 @@ token           = keyword | identifier | integer_literal
 (* PART 2 — SYNTACTIC GRAMMAR                                      *)
 (* ================================================================ *)
 
-(* Semicolons are SEPARATORS, not terminators.                      *)
+(* Semicolons separate statements. One trailing ';' is permitted.  *)
 (* No ';' is required before 'end', 'else', or 'until'.            *)
 
 (* ---- 2.1 Program / Unit Structure ------------------------------ *)
@@ -258,6 +258,7 @@ property_accessor   = 'read' identifier
 (* Events are specialized properties whose logical type is a callable. *)
 (* Both accessors are required and deal in Option of HandlerType.      *)
 (* See docs/pascal/language/types/record-events.md.                    *)
+(* Events require both accessors in fixed read-then-write order.     *)
 record_event        = 'event' identifier ':' type_expr
                       'read' identifier 'write' identifier ';' ;
 
@@ -266,6 +267,8 @@ enum_member         = identifier [ enum_fields | '=' integer_literal ] ';' ;
 enum_fields         = '(' enum_field { ';' enum_field } ')' ;
 enum_field          = identifier ':' type_expr ;
 
+(* Parentheses require at least one field, and ';' separates fields. *)
+(* Empty field lists and trailing field separators are invalid.     *)
 (* Variants may carry associated data (enum_fields) OR an explicit  *)
 (* backing value, but not both. Fieldless variants in a data enum   *)
 (* are constructed without parentheses: Shape.Point.                *)
@@ -292,7 +295,7 @@ nested_decl         = function_decl
 
 (* ---- 2.6 Statements ------------------------------------------- *)
 
-statement_list      = [ statement { ';' statement } ] ;
+statement_list      = [ statement { ';' statement } [ ';' ] ] ;
 
 statement           = block
                     | var_stmt
@@ -460,6 +463,7 @@ record_update       = 'with' field_init { field_init } 'end' ;
 
 (* record_update is a postfix operator that produces a new record   *)
 (* value identical to the base except for the overridden fields.    *)
+(* At least one field_init is required. `Value with end` is invalid. *)
 (* The base expression must have a record type. Unknown or wrong-   *)
 (* typed field overrides are compile-time errors.                   *)
 (* Example: P with X := 10; end — produces a copy of P with X = 10 *)

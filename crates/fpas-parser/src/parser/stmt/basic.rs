@@ -1,5 +1,6 @@
 use super::super::Parser;
 use crate::ast::*;
+use fpas_diagnostics::codes::PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM;
 use fpas_lexer::Token;
 
 impl Parser {
@@ -92,11 +93,19 @@ impl Parser {
                     args,
                     span,
                 },
-                Expr::Designator(designator) => Stmt::Call {
-                    span: designator.span,
-                    designator,
-                    args: Vec::new(),
-                },
+                Expr::Designator(designator) => {
+                    self.error_with_code(
+                        PARSE_INVALID_CALL_OR_ASSIGNMENT_FORM,
+                        "Expected `(` for a call or `:=` for an assignment after the designator",
+                        "Add `()` to call a zero-argument function or procedure.",
+                        designator.span,
+                    );
+                    Stmt::Call {
+                        span: designator.span,
+                        designator,
+                        args: Vec::new(),
+                    }
+                }
                 expr => Stmt::Expression {
                     span: self.span_from(start),
                     expr,

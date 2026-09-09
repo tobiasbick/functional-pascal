@@ -2,7 +2,9 @@
 
 use crate::ast::*;
 use crate::parser::Parser;
-use fpas_diagnostics::codes::{PARSE_EXPECTED_TOKEN, PARSE_INVALID_STATIC_PLACEMENT};
+use fpas_diagnostics::codes::{
+    PARSE_EXPECTED_TOKEN, PARSE_INVALID_EVENT_ACCESSOR_ORDER, PARSE_INVALID_STATIC_PLACEMENT,
+};
 use fpas_lexer::Token;
 
 impl Parser {
@@ -158,6 +160,14 @@ impl Parser {
                     read = Some(getter);
                 }
             } else if accessor_kw.eq_ignore_ascii_case("write") {
+                if read.is_none() && write.is_none() {
+                    self.error_with_code(
+                        PARSE_INVALID_EVENT_ACCESSOR_ORDER,
+                        "Event accessors must be ordered `read` then `write`",
+                        "Write `event Name: HandlerType read Getter write Setter;`.",
+                        kw_span,
+                    );
+                }
                 let (setter, _) = self
                     .expect_ident()
                     .unwrap_or_else(|| self.error_ident(kw_span));
